@@ -592,6 +592,56 @@ describe 'Owner Resource Entitlement List Tests' do
     end
     found_attr.should == true
   end
+end
 
+describe 'Owner Resource Future Pool Tests' do
+
+  include CandlepinMethods
+
+  before(:each) do
+    @owner = create_owner random_string 'test_owner'
+    @product1 = create_product(random_string('product'), random_string('product'),{:owner => @owner['key']})
+    @product2 = create_product(random_string('product'), random_string('product'),{:owner => @owner['key']})
+    @product3 = create_product(random_string('product'), random_string('product'),{:owner => @owner['key']})
+
+    start1 = Date.today + 400
+    start2 = Date.today + 800
+
+    @cp.create_subscription(@owner['key'], @product1.id, 10)
+    @cp.create_subscription(@owner['key'], @product2.id, 10, [], '', '', '', start1)
+    @cp.create_subscription(@owner['key'], @product3.id, 10, [], '', '', '', start2)
+    @cp.refresh_pools(@owner['key'])
+  end
+
+  it 'can fetch current pools' do
+    pools = @cp.list_owner_pools(@owner['key'])
+    pools.length.should eq(1)
+    pools[0].productId.should eq(@product1.id)
+  end
+
+  it 'can fetch current and future pools' do
+    pools = @cp.list_owner_pools(@owner['key'],{:add_future => "true"})
+    pools.length.should eq(3)
+  end
+
+  it 'can fetch future pools' do
+    pools = @cp.list_owner_pools(@owner['key'],{:only_future => "true"})
+    pools.length.should eq(2)
+    pools[0].productId.should_not eq(@product1.id)
+    pools[1].productId.should_not eq(@product1.id)
+  end
+
+  it 'can fetch future pools based on activeon date' do
+    test_date = Date.today + 500
+    pools = @cp.list_owner_pools(@owner['key'],{:only_future => "true", :activeon => test_date})
+    pools.length.should eq(1)
+    pools[0].productId.should eq(@product3.id)
+  end
+
+  it 'cannot use both add_future and only_future flags' do
+    lambda do
+        pools = @cp.list_owner_pools(@owner['key'],{:only_future => "true", :add_future => "true"})
+     end.should raise_exception(RestClient::BadRequest)
+  end
 end
 

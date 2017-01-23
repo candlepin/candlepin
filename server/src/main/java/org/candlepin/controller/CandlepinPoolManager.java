@@ -591,14 +591,14 @@ public class CandlepinPoolManager implements PoolManager {
         poolFilter.addIdFilters(fromPools);
         List<Pool> allOwnerPools = this.listAvailableEntitlementPools(
             host, null, owner, (String) null, activePoolDate, true, false,
-            poolFilter, null).getPageData();
+            poolFilter, null, false, false).getPageData();
         log.debug("Found {} total pools in org.", allOwnerPools.size());
         logPools(allOwnerPools);
 
         List<Pool> allOwnerPoolsForGuest = this.listAvailableEntitlementPools(
             guest, null, owner, (String) null, activePoolDate,
             true, false, poolFilter,
-            null).getPageData();
+            null, false, false).getPageData();
         log.debug("Found {} total pools already available for guest",
                 allOwnerPoolsForGuest.size());
         logPools(allOwnerPoolsForGuest);
@@ -727,7 +727,7 @@ public class CandlepinPoolManager implements PoolManager {
         poolFilter.addIdFilters(fromPools);
         List<Pool> allOwnerPools = this.listAvailableEntitlementPools(
             consumer, null, owner, (String) null, activePoolDate, true, false,
-            poolFilter, null).getPageData();
+            poolFilter, null, false, false).getPageData();
         List<Pool> filteredPools = new LinkedList<Pool>();
 
         // We have to check compliance status here so we can replace an empty
@@ -1112,7 +1112,7 @@ public class CandlepinPoolManager implements PoolManager {
     @Transactional
     public void regenerateCertificatesOf(String productId, boolean lazy) {
         List<Pool> poolsForProduct = this.listAvailableEntitlementPools(null, null, null,
-            productId, new Date(), false, false, new PoolFilterBuilder(), null)
+            productId, new Date(), false, false, new PoolFilterBuilder(), null, false, false)
             .getPageData();
         for (Pool pool : poolsForProduct) {
             regenerateCertificatesOf(pool.getEntitlements(), lazy);
@@ -1569,7 +1569,7 @@ public class CandlepinPoolManager implements PoolManager {
     public Page<List<Pool>> listAvailableEntitlementPools(Consumer consumer,
         ActivationKey key, Owner owner, String productId, Date activeOn,
         boolean activeOnly, boolean includeWarnings, PoolFilterBuilder filters,
-        PageRequest pageRequest) {
+        PageRequest pageRequest, boolean addFuture, boolean onlyFuture) {
         // Only postfilter if we have to
         boolean postFilter = consumer != null || key != null;
         if (consumer != null && !consumer.isDev()) {
@@ -1577,7 +1577,8 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         Page<List<Pool>> page = this.poolCurator.listAvailableEntitlementPools(consumer,
-            owner, productId, activeOn, activeOnly, filters, pageRequest, postFilter);
+            owner, productId, activeOn, activeOnly, filters, pageRequest, postFilter,
+            addFuture, onlyFuture);
 
         if (consumer == null && key == null) {
             return page;
