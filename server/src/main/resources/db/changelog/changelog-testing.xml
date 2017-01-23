@@ -2027,7 +2027,7 @@
     </changeSet>
     <changeSet author="awood" id="1413225753032-290">
         <comment>
-             Add the default quartz lock columns.
+             Add the default quartz lock columns. 
         </comment>
         <insert tableName="QRTZ_LOCKS">
             <column name="LOCK_NAME" value="TRIGGER_ACCESS"/>
@@ -2272,4 +2272,5 @@
     <include file="db/changelog/20160907121757-add-autobind-disabled-column-to-owner.xml"/>
     <include file="db/changelog/20161025100925-remove-unique-content-name-constraint.xml"/>
     <include file="db/changelog/20161025103454-cleanup-ueber-certs-round2.xml"/>
+    <include file="db/changelog/20170119162948-cleanup-uebercerts-round3.xml"/>
 </databaseChangeLog>

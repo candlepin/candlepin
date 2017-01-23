@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <!-- POSTGRES, ORACLE, HSQLDB QUERIES -->
+    <property
+            dbms="postgresql,oracle,hsqldb"
+            name="round3_0954_cleanup_ueber_subs"
+            value="delete from cp_subscription where id in (select s.id from cp_subscription s inner join cp_product p on s.product_id = p.id where p.name LIKE '%_ueber_product');" />
+
+    <property
+            dbms="postgresql,oracle,hsqldb"
+            name="round3_0954_cleanup_ueber_ent_certs"
+            value="delete from cp_ent_certificate where entitlement_id in (select e.id from cp_entitlement e inner join cp_pool p on e.pool_id = p.id where p.productname LIKE '%_ueber_product');" />
+
+    <property
+            dbms="postgresql,oracle,hsqldb"
+            name="round3_0954_cleanup_ueber_ents"
+            value="delete from cp_entitlement where pool_id in (select id from cp_pool p where p.productname LIKE '%_ueber_product');" />
+
+    <property
+            dbms="postgresql,oracle,hsqldb"
+            name="round3_0954_cleanup_ueber_pools"
+            value="delete from cp_pool where productname like '%_ueber_product%';" />
+
+    <property
+            dbms="postgresql,oracle,hsqldb"
+            name="round3_0954_cleanup_ueber_content"
+            value="delete from cp_content where id in (select id from cp_content where name = 'ueber_content');" />
+
+    <property
+            dbms="postgresql,oracle,hsqldb"
+            name="round3_0954_cleanup_ueber_products"
+            value="delete from cp_product where name like '%_ueber_product';" />
+
+    <property
+            dbms="postgresql,oracle,hsqldb"
+            name="round3_0954_cleanup_ueber_consumers"
+            value="delete from cp_consumer where name = 'ueber_cert_consumer';" />
+
+    <!-- MySQL Queries -->
+    <property
+            dbms="mysql"
+            name="round3_0954_cleanup_ueber_subs"
+            value="delete s from cp_subscription s inner join cp_product p on s.product_id = p.id where p.name LIKE '%_ueber_product';" />
+
+    <property
+            dbms="mysql"
+            name="round3_0954_cleanup_ueber_ent_certs"
+            value="delete ec from cp_ent_certificate ec inner join cp_entitlement e on ec.entitlement_id = e.id inner join cp_pool p on e.pool_id = p.id where p.productname like '%_ueber_product';" />
+
+    <property
+            dbms="mysql"
+            name="round3_0954_cleanup_ueber_ents"
+            value="delete e from cp_entitlement e inner join cp_pool p on e.pool_id = p.id where p.productname like '%_ueber_product';" />
+
+    <property
+            dbms="mysql"
+            name="round3_0954_cleanup_ueber_pools"
+            value="delete p from cp_pool p where p.productname like '%_ueber_product';" />
+
+    <property
+            dbms="mysql"
+            name="round3_0954_cleanup_ueber_content"
+            value="delete c from cp_content c
+               inner join cp_product_content pc on pc.content_id=c.id inner join cp_product p on p.id=pc.product_id where p.name LIKE '%_ueber_product';" />
+
+    <property
+            dbms="mysql"
+            name="round3_0954_cleanup_ueber_products"
+            value="delete p from cp_product p where p.name LIKE '%_ueber_product';" />
+
+    <property
+            dbms="mysql"
+            name="round3_0954_cleanup_ueber_consumers"
+            value="delete c from cp_consumer c where c.name = 'ueber_cert_consumer';" />
+
+    <changeSet id="20170119162948-1" author="mstead">
+        <comment>Round 3 of ueber data cleanup.
+                            The assumption that a Pool would never exist
+                            without its corresponding Product was incorrect.
+                            The combonation of customer work-arounds and the
+                            concurrency issues while generating ueber certs
+                            allow for Pools without its Products. The existing
+                            cleanup queries miss this case. This new changeset
+                            will use the Pool.productname for the query comparisons
+                            so that they will not be missed.</comment>
+
+        <sql>${round3_0954_cleanup_ueber_subs}</sql>
+        <sql>${round3_0954_cleanup_ueber_ent_certs}</sql>
+        <sql>${round3_0954_cleanup_ueber_ents}</sql>
+        <sql>${round3_0954_cleanup_ueber_pools}</sql>
+        <sql>${round3_0954_cleanup_ueber_content}</sql>
+        <sql>${round3_0954_cleanup_ueber_products}</sql>
+        <sql>${round3_0954_cleanup_ueber_consumers}</sql>
+
+    </changeSet>
+
+</databaseChangeLog>
+<!-- vim: set expandtab sts=4 sw=4 ai: -->
