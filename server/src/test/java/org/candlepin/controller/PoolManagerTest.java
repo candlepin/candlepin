@@ -890,6 +890,63 @@ public class PoolManagerTest {
     }
 
     @Test
+    public void poolSortingDuringPostEntitlement() throws EntitlementRefusedException {
+        Product product1 = TestUtil.createProduct();
+        product1.setAttribute("stacking_id", "taylor");
+
+        Product product2 = TestUtil.createProduct();
+
+        Consumer c = TestUtil.createConsumer(owner);
+        Pool pool1 = TestUtil.createPool(owner, product1);
+        Pool pool2 = TestUtil.createPool(owner, product1);
+        Pool pool3 = TestUtil.createPool(owner, product2);
+        Pool pool4 = TestUtil.createPool(owner, product2);
+
+        pool1.setId("pool1");
+        pool2.setId("pool2");
+        pool3.setId("pool3");
+        pool4.setId("pool4");
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool1);
+        pools.add(pool2);
+        pools.add(pool3);
+        pools.add(pool4);
+        Map<String, Integer> poolQuantityMap = new HashMap<String, Integer>();
+        poolQuantityMap.put("pool1", 1);
+        poolQuantityMap.put("pool2", 1);
+        poolQuantityMap.put("pool3", 1);
+        poolQuantityMap.put("pool4", 1);
+
+        //when(entitlementCurator.listByConsumer(eq(c))).thenReturn(entitlementList);
+        when(mockPoolCurator.lockAndLoadBatch(eq(poolQuantityMap.keySet()))).thenReturn(pools);
+
+        manager.addOrUpdateEntitlements(c, poolQuantityMap, null, false, CallerType.BEST_POOLS);
+
+        Class<Map<String, Entitlement>> mapClass = (Class<Map<String, Entitlement>>) (Class) ArrayList.class;
+        ArgumentCaptor<Map<String, Entitlement>> arg = ArgumentCaptor.forClass(mapClass);
+
+        // Verify postEntitlement is called thrice. Once for each pool with stack id taylor,
+        // and one for all the other entitlements.
+        verify(enforcerMock, atMost(3)).postEntitlement(eq(manager), eq(c), arg.capture(), anyList());
+        List<Map<String, Entitlement>> argValue = arg.getAllValues();
+
+        assertEquals(3, argValue.size());
+        Map<String, Integer> countMaps = new HashMap<String, Integer>();
+        for (Map<String, Entitlement> map: argValue) {
+            for (Entry<String, Entitlement> entry : map.entrySet()) {
+                String id = entry.getValue().getPool().getId();
+                int count = countMaps.containsKey(id) ? countMaps.get(id) : 0;
+                countMaps.put(id, count + 1);
+            }
+        }
+        // assert all pools have been called, and exactly once.
+        assertEquals(4, countMaps.size());
+        for (Integer count : countMaps.values()) {
+            assertEquals((Integer) 1, count);
+        }
+    }
+
+    @Test
     public void testRevokeCleansUpPoolsWithSourceEnt() throws Exception {
         Entitlement e = new Entitlement(pool, TestUtil.createConsumer(owner), 1);
         List<Pool> poolsWithSource = createPoolsWithSourceEntitlement(e, product);

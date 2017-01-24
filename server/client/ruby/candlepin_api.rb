@@ -532,8 +532,9 @@ class Candlepin
     delete("/consumers/#{uuid}")
   end
 
-  def revoke_all_entitlements()
-    delete("/consumers/#{@uuid}/entitlements")
+  def revoke_all_entitlements(uuid = nil)
+    uuid = @uuid unless uuid
+    delete("/consumers/#{uuid}/entitlements")
   end
 
   def autoheal_org(owner_key)
