@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+    
+            
+      <property
+      dbms="postgresql,oracle,hsqldb"
+      name="fill_in_quantity_consumed_value"
+      value="update cp_pool
+             set quantity_consumed = coalesce(subquery.quantity, 0)
+             FROM (select pool_id, sum(quantity) quantity from cp_entitlement ent group by pool_id) subquery
+             where cp_pool.id = subquery.pool_id;" />
+      <property
+      dbms="mysql"
+      name="fill_in_quantity_consumed_value"
+      value="update cp_pool p
+             set p.quantity_consumed = (select sum(quantity) quantity from cp_entitlement ent where ent.pool_id = p.id);" />
+  
+
+    <changeSet id="20170124161706-1" author="bcourt">
+        <comment> track-consumed-and-exported-quantity-on-pools</comment>
+        <addColumn tableName="cp_pool">
+            <column name="quantity_consumed" type="INT" defaultValueNumeric="0"/>
+            <column name="quantity_exported" type="INT" defaultValueNumeric="0"/>
+        </addColumn>
+        <sql>${fill_in_quantity_consumed_value}</sql>
+        <!--  TODO SET THE STARTING VALUES FOR THE QUANTITY CONSUMED -->
+   <rollback>
+        alter table cp_pool drop column if exists quantity_consumed;
+        alter table cp_pool drop column if exists quantity_exported;
+    </rollback>
+        <!-- See http://www.liquibase.org/documentation/changes/index.html -->
+        
+    </changeSet>
+
+</databaseChangeLog>
+<!-- vim: set expandtab sts=4 sw=4 ai: -->

@@ -1561,6 +1561,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         // The quantity is calculated at fetch time. We update it here
         // To reflect what we just added to the db.
+        ArrayList poolsToSave = new ArrayList<Pool>();
         for (PoolQuantity poolQuantity : poolQuantities.values()) {
             Pool pool = poolQuantity.getPool();
             Integer quantity = poolQuantity.getQuantity();
@@ -1568,7 +1569,9 @@ public class CandlepinPoolManager implements PoolManager {
             if (consumer.getType().isManifest()) {
                 pool.setExported(pool.getExported() + quantity);
             }
+            poolsToSave.add(pool);
         }
+        poolCurator.updateAll(poolsToSave, false, false);
 
         handler.handlePostEntitlement(this, consumer, entitlements);
         handler.handleSelfCertificates(consumer, poolQuantities, entitlements, generateUeberCert);
@@ -1728,6 +1731,7 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         log.debug("Adjusting consumed quantities on pools");
+        ArrayList poolsToSave = new ArrayList<Pool>();
         for (Entitlement ent : entsToRevoke) {
             //We need to trigger lazy load of provided products
             //to have access to those products later in this method.
@@ -1739,7 +1743,9 @@ public class CandlepinPoolManager implements PoolManager {
             if (consumer.getType().isManifest()) {
                 pool.setExported(pool.getExported() - entQuantity);
             }
+            poolsToSave.add(pool);
         }
+        poolCurator.updateAll(poolsToSave, false, false);
 
         /**
          * Before deleting the entitlements, we need to find out if there are any
