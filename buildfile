@@ -235,6 +235,7 @@ define "candlepin" do
   define "checks" do
     project.version = '0.1'
     eclipse.natures :java
+    package(:jar)
 
     compile_classpath = [
       CHECKSTYLE,

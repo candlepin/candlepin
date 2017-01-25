@@ -13,6 +13,12 @@
 *.swp
 
 **/.classpath
+**/*.iml
+**/*.iws
+**/*.ipr
+**/.idea*
+dataSources/
+
 # The master checkstyle configuration is in project_conf
 **/.checkstyle
 **/.DS_Store
