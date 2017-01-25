@@ -115,6 +115,11 @@ public class ConfigProperties {
     };
 
     public static final String SYNC_WORK_DIR = "candlepin.sync.work_dir";
+
+    /**
+     *  Controls which facts will be stored by Candlepin -- facts with keys that do not match this
+     *  value will be discarded.
+     */
     public static final String CONSUMER_FACTS_MATCHER = "candlepin.consumer.facts.match_regex";
 
     public static final String SHARD_USERNAME = "candlepin.shard.username";

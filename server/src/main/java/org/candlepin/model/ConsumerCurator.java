@@ -19,9 +19,9 @@ import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
-import org.candlepin.config.ConfigProperties;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.service.ProductServiceAdapter;
+import org.candlepin.util.FactValidator;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
@@ -54,21 +54,22 @@ import java.util.Set;
 
 import javax.persistence.LockModeType;
 
+
+
 /**
  * ConsumerCurator
  */
 public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
+    private static Logger log = LoggerFactory.getLogger(ConsumerCurator.class);
 
     @Inject private EntitlementCurator entitlementCurator;
     @Inject private ConsumerTypeCurator consumerTypeCurator;
     @Inject private DeletedConsumerCurator deletedConsumerCurator;
     @Inject private Configuration config;
     @Inject private ProductServiceAdapter productService;
+    @Inject private FactValidator factValidator;
 
-    private static final int MAX_FACT_STR_LENGTH = 255;
-    private static final int NAME_LENGTH = 250;
     private static final int MAX_IN_QUERY_LENGTH = 500;
-    private static Logger log = LoggerFactory.getLogger(ConsumerCurator.class);
 
     public ConsumerCurator() {
         super(Consumer.class);
@@ -78,9 +79,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @Override
     public Consumer create(Consumer entity) {
         entity.ensureUUID();
-        if (entity.getFacts() != null) {
-            entity.setFacts(filterAndVerifyFacts(entity));
-        }
+        this.validateFacts(entity);
+
         return super.create(entity);
     }
 
@@ -93,8 +93,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
         super.delete(entity);
 
-        DeletedConsumer existing = deletedConsumerCurator.
-                    findByConsumerUuid(dc.getConsumerUuid());
+        DeletedConsumer existing = deletedConsumerCurator.findByConsumerUuid(dc.getConsumerUuid());
         if (existing != null) {
             // update the owner ID in case the same UUID was specified by two owners
             existing.setOwnerId(dc.getOwnerId());
@@ -357,53 +356,62 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      */
     @Transactional
     public Consumer update(Consumer updatedConsumer) {
-        Consumer existingConsumer = find(updatedConsumer.getId());
-        if (existingConsumer == null) {
-            return create(updatedConsumer);
-        }
-
-        // TODO: Are any of these read-only?
-        existingConsumer.setEntitlements(entitlementCurator
-            .bulkUpdate(updatedConsumer.getEntitlements()));
-        Map<String, String> newFacts = filterAndVerifyFacts(updatedConsumer);
-        if (factsChanged(newFacts, existingConsumer.getFacts())) {
-            existingConsumer.setFacts(newFacts);
-        }
-        existingConsumer.setName(updatedConsumer.getName());
-        existingConsumer.setOwner(updatedConsumer.getOwner());
-        existingConsumer.setType(updatedConsumer.getType());
-        existingConsumer.setUuid(updatedConsumer.getUuid());
-
-        save(existingConsumer);
-
-        return existingConsumer;
+        return update(updatedConsumer, true);
     }
 
     /**
-     * @param updatedConsumer updated Consumer values.
-     * @return Updated consumers
+     * Updates an existing consumer with the state specified by the given Consumer instance. If the
+     * consumer has not yet been created, it will be created.
+     * <p></p>
+     * <strong>Warning:</strong> Using an pre-existing and persisted Consumer entity as the update
+     * to apply may cause issues, as Hibernate may opt to save changes to nested collections
+     * (facts, guestIds, tags, etc.) when any other database operation is performed. To avoid this
+     * issue, it is advised to use only detached or otherwise unmanaged entities for the updated
+     * consumer to pass to this method.
+     *
+     * @param updatedConsumer
+     *  A Consumer instance representing the updated state of a consumer
+     *
+     * @param flush
+     *  Whether or not to flush pending database operations after creating or updating the given
+     *  consumer
+     *
+     * @return
+     *  The persisted, updated consumer
      */
     @Transactional
-    public Consumer updateNoFlush(Consumer updatedConsumer) {
+    public Consumer update(Consumer updatedConsumer, boolean flush) {
+        // TODO: FIXME:
+        // We really need to use a DTO here. Hibernate has so many pitfalls with this approach that
+        // can and will lead to odd, broken or out-of-order behavior.
+
+        // Validate inbound facts before even attempting to apply the update
+        this.validateFacts(updatedConsumer);
+
         Consumer existingConsumer = find(updatedConsumer.getId());
+
         if (existingConsumer == null) {
-            return create(updatedConsumer);
+            return this.create(updatedConsumer);
         }
 
         // TODO: Are any of these read-only?
-        existingConsumer.setEntitlements(entitlementCurator
-            .bulkUpdate(updatedConsumer.getEntitlements()));
-        Map<String, String> newFacts = filterAndVerifyFacts(updatedConsumer);
-        if (factsChanged(newFacts, existingConsumer.getFacts())) {
-            existingConsumer.setFacts(newFacts);
-        }
+        existingConsumer.setEntitlements(entitlementCurator.bulkUpdate(updatedConsumer.getEntitlements()));
+
+        // This set of updates is strange. We're ignoring the "null-as-no-change" semantics we use
+        // everywhere else, and just blindly copying everything over.
+        existingConsumer.setFacts(updatedConsumer.getFacts());
         existingConsumer.setName(updatedConsumer.getName());
         existingConsumer.setOwner(updatedConsumer.getOwner());
         existingConsumer.setType(updatedConsumer.getType());
         existingConsumer.setUuid(updatedConsumer.getUuid());
 
+        if (flush) {
+            save(existingConsumer);
+        }
+
         return existingConsumer;
     }
+
     /**
      * Modifies the last check in and persists the entity. Make sure that the data
      * is refreshed before using this method.
@@ -416,12 +424,12 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @Transactional
     public void updateLastCheckin(Consumer consumer, Date checkinDate) {
         currentSession().createQuery("update Consumer c " +
-                "set c.lastCheckin = :date, " +
-                "c.updated = :date " +
-                "where c.id = :consumerid")
-                .setTimestamp("date", checkinDate)
-                .setParameter("consumerid", consumer.getId())
-                .executeUpdate();
+            "set c.lastCheckin = :date, " +
+            "c.updated = :date " +
+            "where c.id = :consumerid")
+            .setTimestamp("date", checkinDate)
+            .setParameter("consumerid", consumer.getId())
+            .executeUpdate();
     }
 
     private boolean factsChanged(Map<String, String> updatedFacts,
@@ -430,51 +438,27 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     /**
-     * @param facts
-     * @return the list of facts filtered by the fact filter regex config
+     * Validates the facts associated with the given consumer. If any fact fails validation a
+     * PropertyValidationException will be thrown.
+     *
+     * @param consumer
+     *  The consumer containing the facts to validate
      */
-    private Map<String, String> filterAndVerifyFacts(Consumer consumer) {
-        Map<String, String> factsIn = consumer.getFacts();
-        Map<String, String> facts = new HashMap<String, String>();
-        String factMatch = config.getString(ConfigProperties.CONSUMER_FACTS_MATCHER);
-        Set<String> intFacts = config.getSet(ConfigProperties.INTEGER_FACTS);
-        Set<String> posFacts = config.getSet(ConfigProperties.NON_NEG_INTEGER_FACTS);
+    private void validateFacts(Consumer consumer) {
+        // Impl note:
+        // Unlike the previous implementation, we are no longer attempting to "fix" anything here;
+        // if it's broken at this point, we're in trouble, so we're going to throw an exception
+        // instead of waiting for CP to die with a DB exception sometime in the very near future.
+        //
+        // Also, we're no longer using ConfigProperties.CONSUMER_FACTS_MATCHER at this point, as
+        // it's something that belongs with the other input validation and filtering.
 
-        for (Entry<String, String> entry : factsIn.entrySet()) {
-            if (entry.getKey().matches(factMatch)) {
-                if (intFacts != null && intFacts.contains(entry.getKey()) ||
-                    posFacts != null && posFacts.contains(entry.getKey())) {
-                    int value = -1;
-                    try {
-                        value = Integer.parseInt(entry.getValue());
-                    }
-                    catch (NumberFormatException nfe) {
-                        log.error("The fact " + entry.getKey() +
-                            " for consumer " + consumer.getUuid() +
-                            " must be an integer instead of " + entry.getValue() +
-                            ". " + "No value will exist for that fact.");
-                        continue;
-                    }
-                    if (posFacts != null && posFacts.contains(
-                        entry.getKey()) &&
-                        value < 0) {
-                        log.error("The fact " + entry.getKey() +
-                            " must have a positive integer value instead of " +
-                            entry.getValue() + ". No value will exist for that fact.");
-                        continue;
-                    }
-                }
-                facts.put(sanitizeFact(entry.getKey()), sanitizeFact(entry.getValue()));
+        Map<String, String> facts = consumer.getFacts();
+        if (facts != null) {
+            for (Entry<String, String> fact : facts.entrySet()) {
+                this.factValidator.validate(fact.getKey(), fact.getValue());
             }
         }
-        return facts;
-    }
-
-    private String sanitizeFact(String value) {
-        if (value != null && value.length() > MAX_FACT_STR_LENGTH) {
-            return value.substring(0, MAX_FACT_STR_LENGTH - 3) + "...";
-        }
-        return value;
     }
 
     /**

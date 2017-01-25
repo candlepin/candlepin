@@ -56,6 +56,7 @@ import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
+import org.candlepin.util.FactValidator;
 import org.candlepin.util.ServiceLevelValidator;
 
 import org.apache.commons.lang.StringUtils;
@@ -128,14 +129,14 @@ public class ConsumerResourceCreationTest {
             this.userService, null, null, null, this.ownerCurator,
             this.activationKeyCurator,
             null, this.complianceRules, this.deletedConsumerCurator,
-            null, null, this.config, null, null, null, this.consumerBindUtil);
+            null, null, this.config, null, null, null, this.consumerBindUtil,
+            new FactValidator(this.config, this.i18n));
 
         this.system = initSystem();
 
         owner = new Owner("test_owner");
         user = new User(USER, "");
-        PermissionBlueprint p = new PermissionBlueprint(PermissionType.OWNER, owner,
-            Access.ALL);
+        PermissionBlueprint p = new PermissionBlueprint(PermissionType.OWNER, owner, Access.ALL);
         role = new Role();
         role.addPermission(p);
         role.addUser(user);

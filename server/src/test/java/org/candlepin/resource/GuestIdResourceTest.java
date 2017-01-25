@@ -55,30 +55,17 @@ import java.util.Locale;
 public class GuestIdResourceTest {
 
     private I18n i18n;
-
-    @Mock
-    private ConsumerCurator consumerCurator;
-
-    @Mock
-    private GuestIdCurator guestIdCurator;
-
-    @Mock
-    private ConsumerResourceForTesting consumerResource;
-
-    @Mock
-    private EventFactory eventFactory;
-
-    @Mock
-    private EventSink sink;
-
-    @Mock
-    private ServiceLevelValidator mockedServiceLevelValidator;
-
     private GuestIdResource guestIdResource;
-
     private Consumer consumer;
     private Owner owner;
     private ConsumerType ct;
+
+    @Mock private ConsumerCurator consumerCurator;
+    @Mock private GuestIdCurator guestIdCurator;
+    @Mock private ConsumerResourceForTesting consumerResource;
+    @Mock private EventFactory eventFactory;
+    @Mock private EventSink sink;
+    @Mock private ServiceLevelValidator mockedServiceLevelValidator;
 
     @Before
     public void setUp() {
@@ -89,8 +76,7 @@ public class GuestIdResourceTest {
         guestIdResource = new GuestIdResource(guestIdCurator,
             consumerCurator, consumerResource, i18n, eventFactory, sink);
         when(consumerCurator.findByUuid(consumer.getUuid())).thenReturn(consumer);
-        when(consumerCurator.verifyAndLookupConsumer(
-            consumer.getUuid())).thenReturn(consumer);
+        when(consumerCurator.verifyAndLookupConsumer(consumer.getUuid())).thenReturn(consumer);
     }
 
     @Test
@@ -276,7 +262,7 @@ public class GuestIdResourceTest {
 
         public ConsumerResourceForTesting() {
             super(null, null, null, null, null, null, null, null, null,
-                  null, null, null, null, null, null, null, null, null,
+                  null, null, null, null, null, null, null, null, null, null,
                   null, null, null, null, null, null, null, null, null, null);
         }
 
