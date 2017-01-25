@@ -57,6 +57,7 @@ import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
+import org.candlepin.util.FactValidator;
 import org.candlepin.util.ServiceLevelValidator;
 
 import org.apache.commons.lang.StringUtils;
@@ -128,10 +129,9 @@ public class ConsumerResourceCreationTest {
             this.consumerTypeCurator, null, this.subscriptionService, null,
             this.idCertService, null, this.i18n, this.sink, null, null, null,
             this.userService, null, null, this.ownerCurator,
-            this.activationKeyCurator,
-            null, this.complianceRules, this.deletedConsumerCurator,
+            this.activationKeyCurator, null, this.complianceRules, this.deletedConsumerCurator,
             null, null, this.config, null, null, null, this.consumerBindUtil,
-            productCurator, null, null);
+            productCurator, null, null, new FactValidator(this.config, this.i18n));
 
         this.system = initSystem();
 
