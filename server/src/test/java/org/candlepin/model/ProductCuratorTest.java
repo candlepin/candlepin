@@ -22,24 +22,29 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import org.candlepin.common.config.Configuration;
-import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
+import org.candlepin.util.AttributeValidator;
+import org.candlepin.util.PropertyValidationException;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.ArrayList;
+import java.lang.reflect.Field;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -58,24 +63,26 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     private Product derivedProduct;
     private Product providedProduct;
     private Product derivedProvidedProduct;
-
     private Subscription sub;
+    private Pool pool;
 
     @Before
-    public void setUp() {
-        config.setProperty(ConfigProperties.INTEGER_ATTRIBUTES,
-            "product.count, product.multiplier");
-        config.setProperty(ConfigProperties.NON_NEG_INTEGER_ATTRIBUTES,
-            "product.pos_count");
-        config.setProperty(ConfigProperties.LONG_ATTRIBUTES,
-            "product.long_count, product.long_multiplier");
-        config.setProperty(ConfigProperties.NON_NEG_LONG_ATTRIBUTES,
-            "product.long_pos_count");
-        config.setProperty(ConfigProperties.BOOLEAN_ATTRIBUTES,
-            "product.bool_val_str, product.bool_val_num");
+    public void setUp() throws Exception {
+        I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
+
+        config.setProperty(ConfigProperties.INTEGER_ATTRIBUTES, "product.count, product.multiplier");
+        config.setProperty(ConfigProperties.NON_NEG_INTEGER_ATTRIBUTES, "product.pos_count");
+        config.setProperty(ConfigProperties.LONG_ATTRIBUTES, "product.long_count, product.long_multiplier");
+        config.setProperty(ConfigProperties.NON_NEG_LONG_ATTRIBUTES, "product.long_pos_count");
+        config.setProperty(ConfigProperties.BOOLEAN_ATTRIBUTES, "product.bool_val_str, product.bool_val_num");
 
         Owner owner = createOwner();
         ownerCurator.create(owner);
+
+        // Inject this attributeValidator into the curator
+        Field field = ProductCurator.class.getDeclaredField("attributeValidator");
+        field.setAccessible(true);
+        field.set(this.productCurator, new AttributeValidator(this.config, i18n));
 
         product = TestUtil.createProduct();
         productCurator.create(product);
@@ -388,7 +395,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         productCurator.createOrUpdate(original);
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test(expected = PropertyValidationException.class)
     public void testProductAttributeCreationFailBadInt() {
         Product original = createTestProduct();
         original.addAttribute(new ProductAttribute("product.count", "1.0"));
@@ -402,14 +409,14 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         productCurator.create(original);
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test(expected = PropertyValidationException.class)
     public void testProductAttributeCreationFailBadPosInt() {
         Product original = createTestProduct();
         original.addAttribute(new ProductAttribute("product.pos_count", "-5"));
         productCurator.create(original);
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test(expected = PropertyValidationException.class)
     public void testProductAttributeCreationFailBadLong() {
         Product original = createTestProduct();
         original.addAttribute(new ProductAttribute("product.long_multiplier",
@@ -417,7 +424,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         productCurator.create(original);
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test(expected = PropertyValidationException.class)
     public void testProductAttributeCreationFailBadPosLong() {
         Product original = createTestProduct();
         original.addAttribute(new ProductAttribute("product.long_pos_count",
@@ -425,21 +432,21 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         productCurator.create(original);
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test(expected = PropertyValidationException.class)
     public void testProductAttributeCreationFailBadStringBool() {
         Product original = createTestProduct();
         original.addAttribute(new ProductAttribute("product.bool_val_str", "yes"));
         productCurator.create(original);
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test(expected = PropertyValidationException.class)
     public void testProductAttributeCreationFailNumberBool() {
         Product original = createTestProduct();
         original.addAttribute(new ProductAttribute("product.bool_val_num", "2"));
         productCurator.create(original);
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test(expected = PropertyValidationException.class)
     public void testProductAttributeUpdateFailInt() {
         Product original = createTestProduct();
         productCurator.create(original);
@@ -448,7 +455,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         productCurator.createOrUpdate(original);
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test(expected = PropertyValidationException.class)
     public void testProductAttributeUpdateFailPosInt() {
         Product original = createTestProduct();
         productCurator.create(original);
@@ -466,7 +473,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         productCurator.createOrUpdate(original);
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test(expected = PropertyValidationException.class)
     public void testProductAttributeUpdateFailLong() {
         Product original = createTestProduct();
         productCurator.create(original);
@@ -476,17 +483,16 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         productCurator.createOrUpdate(original);
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test(expected = PropertyValidationException.class)
     public void testProductAttributeUpdateFailPosLong() {
         Product original = createTestProduct();
         productCurator.create(original);
         assertTrue(original.getId() != null);
-        original.addAttribute(new ProductAttribute("product.long_pos_count",
-            "-23"));
+        original.addAttribute(new ProductAttribute("product.long_pos_count", "-23"));
         productCurator.createOrUpdate(original);
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test(expected = PropertyValidationException.class)
     public void testProductAttributeUpdateFailStringBool() {
         Product original = createTestProduct();
         productCurator.create(original);
@@ -495,7 +501,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         productCurator.createOrUpdate(original);
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test(expected = PropertyValidationException.class)
     public void testProductAttributeUpdateFailNumberBool() {
         Product original = createTestProduct();
         productCurator.create(original);

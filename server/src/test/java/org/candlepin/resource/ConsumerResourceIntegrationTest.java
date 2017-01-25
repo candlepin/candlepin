@@ -597,7 +597,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
                 null, null, this.entitlementCurator, null, null, null, null, null,
                 null, null, null, null, this.poolManager, null, null, null,
                 null, null, null, null, null, new CandlepinCommonTestConfig(), null,
-                null, null, mock(ConsumerBindUtil.class));
+                null, null, mock(ConsumerBindUtil.class), null);
 
         Response rsp = consumerResource.bind(
             consumer.getUuid(), pool.getId().toString(), null, 1, null,
@@ -607,8 +607,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         Entitlement ent = resultList.get(0);
         Set<EntitlementCertificate> entCertsBefore = ent.getCertificates();
 
-        cr.regenerateEntitlementCertificates(this.consumer.getUuid(),
-            ent.getId(), true);
+        cr.regenerateEntitlementCertificates(this.consumer.getUuid(), ent.getId(), true);
         Set<EntitlementCertificate> entCertsAfter = ent.getCertificates();
 
         assertFalse(entCertsBefore.equals(entCertsAfter));
