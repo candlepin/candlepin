@@ -445,7 +445,7 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
 
         this.executeUpdate(
             "INSERT INTO cp2_activation_key_products(key_id, product_uuid) " +
-            "SELECT akp.id, p.uuid " +
+            "SELECT akp.key_id, p.uuid " +
             "FROM cp_activationkey_product akp " +
             "JOIN cp2_products p ON akp.product_id = p.product_id"
         );
