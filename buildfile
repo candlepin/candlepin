@@ -72,6 +72,9 @@ CORE_TESTING = [
 
 JUKITO = ['org.jukito:jukito:jar:1.4']
 
+# Since version 2.2.1, DbUnit uses SLF4J for logging purposes.
+DBUNIT = ['org.dbunit:dbunit:jar:2.5.3']
+
 LOGBACK = [group('logback-core', 'logback-classic',
                  :under => 'ch.qos.logback',
                  :version => '1.1.3')]
@@ -478,12 +481,13 @@ define "candlepin" do
       filter(path_to(:src, :main, :resources)).into(path_to(:target, :classes)).run
     end
 
-    # the other dependencies transfer from compile.classpath automagically
+    # the other dependencies transfer from compile.classpath automatically
     test.with([
       CORE_TESTING,
       JUKITO,
       HSQLDB,
       LIQUIBASE_SLF4J,
+      DBUNIT,
     ])
     test.using(:java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ])
 

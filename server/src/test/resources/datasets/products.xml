@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dataset>
+
+	<!-- * We set [NULL] dynamically too. 
+		 Here is explanation why first row of table has to contain columns with [NULL]s:
+		 
+		 DbUnit uses the first tag for a table to define the columns to be populated.
+		 If the following records for this table contain extra columns,
+		 these ones will therefore not be populated. To solve this, either define all the columns 
+		 of the table in the first row (using NULL values for the empty columns), 
+		 or use a DTD to define the metadata of the tables you use. 
+		 Text copied from : http://dbunit.sourceforge.net/faq.html#differentcolumnnumber 
+	 -->
+	<cp2_products 
+		uuid = "uuid"
+		product_id = "product_id"
+		name = "product_name"
+		locked = "0"
+		multiplier = "[NULL]"
+		created = "[NULL]"
+		updated = "[NULL]"
+		entity_version = "[NULL]"
+	 />
+
+</dataset>

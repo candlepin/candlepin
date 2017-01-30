@@ -60,6 +60,9 @@ public class Owner extends AbstractHibernateObject implements Serializable,
 
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp_owner";
+    /** name of DB Columns */
+    public static final String ID_COLUMN = "id";
+
     private static final long serialVersionUID = -7059065874812188165L;
 
     @OneToOne
@@ -339,6 +342,7 @@ public class Owner extends AbstractHibernateObject implements Serializable,
         return upstreamConsumer;
     }
 
+    @Override
     @HateoasInclude
     public String getHref() {
         return "/owners/" + getKey();

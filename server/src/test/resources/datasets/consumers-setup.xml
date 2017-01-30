@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dataset>
+	
+	<cp_consumer_type id = "consumer-type-id-1" label="label-1" manifest="N" created="[NULL]" updated="[NULL]" />
+	
+	<cp_owner id = "owner-uuid-1" displayname = "display-name-1" account = "key-1" created = "[NULL]"
+	updated = "[NULL]" contentprefix = "[NULL]" defaultservicelevel = "[NULL]" parent_owner = "[NULL]"
+    upstream_id = "[NULL]" loglevel = "[NULL]" autobind_disabled = "[NULL]"	/>
+</dataset>
+	

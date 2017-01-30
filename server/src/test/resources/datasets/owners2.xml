@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dataset>
+
+<!-- * We set [NULL] dynamically too. 
+	 Here is explanation why first row of table has to contain columns with [NULL]s:
+	 
+	 DbUnit uses the first tag for a table to define the columns to be populated.
+	 If the following records for this table contain extra columns,
+	 these ones will therefore not be populated. To solve this, either define all the columns 
+	 of the table in the first row (using NULL values for the empty columns), 
+	 or use a DTD to define the metadata of the tables you use. 
+	 Text copied from : http://dbunit.sourceforge.net/faq.html#differentcolumnnumber 
+ -->
+	<cp_owner id = "owner-uuid-1" displayname = "display-name-1" account = "key-1" created = "[NULL]"
+	updated = "[NULL]" contentprefix = "[NULL]" defaultservicelevel = "[NULL]" parent_owner = "[NULL]"
+    upstream_id = "[NULL]" loglevel = "[NULL]" autobind_disabled = "[NULL]"	/>
+    
+    <cp_owner id = "owner-uuid-2" displayname = "display-name-2" account = "key-2" />
+    
+</dataset>

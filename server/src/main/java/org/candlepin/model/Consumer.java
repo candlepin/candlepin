@@ -84,6 +84,9 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp_consumer";
 
+    /** Name of  columns */
+    public static final String ID_COLUMN = "id";
+
     public static final String UEBER_CERT_CONSUMER = "ueber_cert_consumer";
 
     public static final int MAX_LENGTH_OF_CONSUMER_NAME = 255;
@@ -292,6 +295,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     /**
      * @return the name of this consumer.
      */
+    @Override
     @HateoasInclude
     public String getName() {
         return name;

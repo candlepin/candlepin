@@ -14,7 +14,8 @@
  */
 package org.candlepin.test;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.TestingInterceptor;
 import org.candlepin.TestingModules;
@@ -78,24 +79,32 @@ import com.google.inject.Module;
 import com.google.inject.persist.PersistFilter;
 import com.google.inject.util.Modules;
 
+import org.dbunit.dataset.IDataSet;
+import org.dbunit.dataset.ReplacementDataSet;
+import org.dbunit.dataset.xml.FlatXmlDataSet;
+import org.dbunit.dataset.xml.FlatXmlDataSetBuilder;
+import org.dbunit.ext.hsqldb.HsqldbConnection;
 import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
 import org.hibernate.ejb.HibernateEntityManagerFactory;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.SessionFactoryImpl;
-
 import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
+import java.io.InputStream;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -103,6 +112,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Properties;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -164,11 +174,24 @@ public class DatabaseTestFixture {
     protected DateSourceForTesting dateSource;
     protected I18n i18n;
 
+    protected static Connection connection;
+    protected static HsqldbConnection dbunitConnection;
 
     @BeforeClass
-    public static void initClass() {
+    public static void initClass() throws Exception{
         parentInjector = Guice.createInjector(new TestingModules.JpaModule());
         insertValidationEventListeners(parentInjector);
+        setupDbUnitConnections();
+    }
+
+    private static void setupDbUnitConnections() throws Exception{
+        Class.forName("org.hsqldb.jdbcDriver");
+        Properties prop = new Properties();
+        prop.put("user", "sa");
+        prop.put("password", "");
+        connection = DriverManager.getConnection("jdbc:hsqldb:mem:unit-testing-jpa;", prop);
+        String schema = null;
+        dbunitConnection = new HsqldbConnection(connection, schema);
     }
 
     @Before
@@ -215,7 +238,7 @@ public class DatabaseTestFixture {
     }
 
     @AfterClass
-    public static void destroy() {
+    public static void destroy() throws SQLException {
         parentInjector.getInstance(PersistFilter.class).destroy();
         EntityManager em = parentInjector.getInstance(EntityManager.class);
         if (em.isOpen()) {
@@ -225,6 +248,31 @@ public class DatabaseTestFixture {
         if (emf.isOpen()) {
             emf.close();
         }
+        closeDBUnitConnections();
+    }
+
+    private static void closeDBUnitConnections() throws SQLException{
+        if (connection != null) {
+    		connection.close();
+    		connection = null;
+    	}
+
+        if(dbunitConnection != null) {
+            dbunitConnection.close();
+            dbunitConnection = null;
+        }
+    }
+
+    protected IDataSet getDataSet(String name) throws Exception {
+    	InputStream inputStream = DatabaseTestFixture.class.getClassLoader().getResourceAsStream("datasets/"+name);
+        Assert.assertNotNull("file datasets/" + "name" + " not found in classpath", inputStream);
+    	FlatXmlDataSetBuilder builder = new FlatXmlDataSetBuilder();
+    	FlatXmlDataSet original = builder.build(inputStream);
+
+        ReplacementDataSet originalWithNullValues = new ReplacementDataSet(original);
+    	originalWithNullValues.addReplacementObject("[NULL]", null);
+
+    	return originalWithNullValues;
     }
 
     protected Module getGuiceOverrideModule() {

@@ -40,6 +40,8 @@ public class ConsumerType extends AbstractHibernateObject {
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp_consumer_type";
 
+    public static final String ID_COLUMN = "id";
+
     @Id
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
@@ -117,6 +119,7 @@ public class ConsumerType extends AbstractHibernateObject {
     }
 
     /** {@inheritDoc} */
+    @Override
     public String getId() {
         return id;
     }

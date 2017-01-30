@@ -19,8 +19,6 @@ import org.candlepin.model.dto.CandlepinDTO;
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import io.swagger.annotations.ApiModelProperty;
-
 import java.io.Serializable;
 import java.util.Date;
 
@@ -30,6 +28,8 @@ import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
+
+import io.swagger.annotations.ApiModelProperty;
 
 /**
  * Abstract class for hibernate entities
@@ -41,7 +41,9 @@ import javax.xml.bind.annotation.XmlType;
 public abstract class AbstractHibernateObject implements Persisted, Serializable {
     private static final long serialVersionUID = 6677558844288404862L;
 
-    public static final String DEFAULT_SORT_FIELD = "created";
+    public static final String CREATED_COLUMN = "created";
+    public static final String UPDATED_COLUMN = "updated";
+    public static final String DEFAULT_SORT_FIELD = CREATED_COLUMN;
 
     @ApiModelProperty(readOnly = true)
     private Date created;

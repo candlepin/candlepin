@@ -20,6 +20,10 @@ import org.candlepin.model.dto.ProductData;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.util.Util;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
@@ -29,11 +33,6 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.annotations.Type;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -79,6 +78,12 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
 
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp2_products";
+
+    /** Name of columns */
+    public static final String UUID_COLUMN = "uuid";
+    public static final String VERSION_COLUMN = "entity_version";
+
+
     /**
      * Commonly used/recognized product attributes
      */
@@ -454,6 +459,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      * @return
      *  this product's ID.
      */
+    @Override
     public String getId() {
         return this.id;
     }
@@ -1133,6 +1139,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         return this;
     }
 
+    @Override
     public String getHref() {
         return this.uuid != null ? String.format("/products/%s", this.uuid) : null;
     }
@@ -1299,6 +1306,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         Collection<ProductAttributeData> attributes = dto.getAttributes();
         if (attributes != null) {
             Comparator comparator = new Comparator<Object>() {
+                @Override
                 public int compare(Object lhs, Object rhs) {
                     return ((ProductAttribute) lhs).isChangedBy((ProductAttributeData) rhs) ? 1 : 0;
                 }
@@ -1314,6 +1322,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         Collection<ProductContentData> productContent = dto.getProductContent();
         if (productContent != null) {
             Comparator comparator = new Comparator<Object>() {
+                @Override
                 public int compare(Object lhs, Object rhs) {
                     return ((ProductContent) lhs).isChangedBy((ProductContentData) rhs) ? 1 : 0;
                 }
