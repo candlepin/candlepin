@@ -105,4 +105,5 @@
     <include file="db/changelog/20161013145834-add-content-access-cert-column-to-consumer.xml"/>
     <include file="db/changelog/20161109145238-add-owner-environment-content-access.xml"/>
     <include file="db/changelog/20161129104417-add-content-access-mode-column-to-consumer.xml"/>
+    <include file="db/changelog/20170130144529-perorgproducts-phase-2.xml"/>
 </databaseChangeLog>

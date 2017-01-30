@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <changeSet id="20170130144529-1" author="crog">
+        <dropTable tableName="cp2_installed_products"/>
+    </changeSet>
+
+    <changeSet id="20170130144529-2" author="crog">
+        <dropTable tableName="cp_activationkey_product"/>
+    </changeSet>
+
+    <changeSet id="20170130144529-3" author="crog">
+        <dropTable tableName="cp_content_modified_products"/>
+    </changeSet>
+
+    <changeSet id="20170130144529-4" author="crog">
+        <dropTable tableName="cp_env_content"/>
+    </changeSet>
+
+    <changeSet id="20170130144529-5" author="crog">
+        <dropTable tableName="cp_product_content"/>
+    </changeSet>
+
+    <changeSet id="20170130144529-6" author="crog">
+        <dropTable tableName="cp_content"/>
+    </changeSet>
+
+    <changeSet id="20170130144529-7" author="crog">
+        <dropTable tableName="cp_pool_products"/>
+    </changeSet>
+
+    <changeSet id="20170130144529-8" author="crog">
+        <dropTable tableName="cp_product_attribute"/>
+    </changeSet>
+
+    <changeSet id="20170130144529-9" author="crog">
+        <dropTable tableName="cp_product_certificate"/>
+    </changeSet>
+
+    <changeSet id="20170130144529-10" author="crog">
+        <dropTable tableName="cp_product_dependent_products"/>
+    </changeSet>
+
+    <changeSet id="20170130144529-11" author="crog">
+        <dropTable tableName="cp_subscription_products"/>
+    </changeSet>
+
+    <changeSet id="20170130144529-12" author="crog">
+        <dropTable tableName="cp_sub_derivedprods"/>
+    </changeSet>
+
+    <changeSet id="20170130144529-13" author="crog">
+        <dropTable tableName="cp_pool_source_sub"/>
+    </changeSet>
+
+    <changeSet id="20170130144529-14" author="crog">
+        <dropTable tableName="cp_sub_branding"/>
+    </changeSet>
+
+    <changeSet id="20170130144529-15" author="crog">
+        <dropTable tableName="cp_subscription"/>
+    </changeSet>
+
+    <changeSet id="20170130144529-16" author="crog">
+        <dropTable tableName="cp_product"/>
+    </changeSet>
+
+    <changeSet id="20170130144529-17" author="crog">
+        <dropColumn tableName="cp_pool" columnName="product_id_old"/>
+        <dropColumn tableName="cp_pool" columnName="derived_product_id_old"/>
+    </changeSet>
+
+</databaseChangeLog>
+<!-- vim: set expandtab sts=4 sw=4 ai: -->
