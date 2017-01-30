@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.0.22
+Version: 2.0.23
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -220,6 +220,8 @@ fi
 
 #raw
 %changelog
+* Mon Jan 30 2017 Vritant Jain <adarshvritant@gmail.com> 2.0.23-1
+- Fixed a bug that broke CP2 migration with activation keys (crog@redhat.com)
 * Fri Jan 20 2017 Vritant Jain <adarshvritant@gmail.com> 2.0.22-1
 - Fixed deadlock stemming from transaction management during testing
   (crog@redhat.com)
