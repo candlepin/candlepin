@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 0.9.51.20
+Version: 0.9.51.21
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -218,6 +218,18 @@ fi
 
 #raw
 %changelog
+* Mon Jan 30 2017 Vritant Jain <adarshvritant@gmail.com> 0.9.51.21-1
+- 1414425: Future pool listing (wpoteat@redhat.com)
+- Backport content access assignment for owner and distributors
+  (wpoteat@redhat.com)
+- 1371009:  Need clearer error message when register with system name exceeding
+  max characters. -throwing new exceptions with clear description + adding new
+  constant to Consumer -adding unit test (pjonasti@redhat.com)
+- 1388201: Add check to insure constraint has not already been dropped
+  (awood@redhat.com)
+- 1388243: Remove unique constraint on content keys; replace with index.
+  (awood@redhat.com)
+
 * Tue Aug 23 2016 Vritant Jain <vrjain@redhat.com> 0.9.51.20-1
 - 1358742: UniqueTag cannot be cast to Function (nguyen.filip@gmail.com)
 - 1335287: Allow manifest exports to be extended (mstead@redhat.com)
