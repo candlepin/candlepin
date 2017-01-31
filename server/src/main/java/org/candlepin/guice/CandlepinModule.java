@@ -113,6 +113,8 @@ import org.candlepin.sync.EntitlementCertExporter;
 import org.candlepin.sync.Exporter;
 import org.candlepin.sync.MetaExporter;
 import org.candlepin.sync.RulesExporter;
+import org.candlepin.util.AttributeValidator;
+import org.candlepin.util.FactValidator;
 import org.candlepin.util.DateSource;
 import org.candlepin.util.DateSourceImpl;
 import org.candlepin.util.ExpiryDateFunction;
@@ -236,6 +238,8 @@ public class CandlepinModule extends AbstractModule {
         bind(DeletedConsumerResource.class);
         bind(CdnResource.class);
         bind(GuestIdResource.class);
+        bind(AttributeValidator.class);
+        bind(FactValidator.class);
 
         configureInterceptors();
         bind(JsonProvider.class);

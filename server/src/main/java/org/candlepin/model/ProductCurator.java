@@ -15,13 +15,11 @@
 package org.candlepin.model;
 
 import org.candlepin.common.config.Configuration;
-import org.candlepin.common.exceptions.BadRequestException;
-import org.candlepin.config.ConfigProperties;
+import org.candlepin.util.AttributeValidator;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
-import org.apache.commons.lang.StringUtils;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
@@ -31,7 +29,8 @@ import org.xnap.commons.i18n.I18n;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
+
+
 
 /**
  * interact with Products.
@@ -40,6 +39,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
 
     @Inject private Configuration config;
     @Inject private I18n i18n;
+    @Inject private AttributeValidator attributeValidator;
 
     /**
      * default ctor
@@ -92,10 +92,8 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
          * this product. This is useful for products being created from incoming
          * json.
          */
-        for (ProductAttribute attr : entity.getAttributes()) {
-            attr.setProduct(entity);
-            validateAttributeValue(attr);
-        }
+        this.validateProductReferences(entity);
+
         /*
          * Ensure that no circular reference exists
          */
@@ -111,77 +109,13 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
          * this product. This is useful for products being created from incoming
          * json.
          */
-        for (ProductAttribute attr : entity.getAttributes()) {
-            attr.setProduct(entity);
-            validateAttributeValue(attr);
-        }
+        this.validateProductReferences(entity);
+
         /*
          * Ensure that no circular reference exists
          */
 
         return super.merge(entity);
-    }
-
-    private void validateAttributeValue(ProductAttribute attr) {
-        Set<String> intAttrs = config.getSet(ConfigProperties.INTEGER_ATTRIBUTES);
-        Set<String> posIntAttrs = config.getSet(
-            ConfigProperties.NON_NEG_INTEGER_ATTRIBUTES);
-        Set<String> longAttrs = config.getSet(ConfigProperties.LONG_ATTRIBUTES);
-        Set<String> posLongAttrs = config.getSet(
-            ConfigProperties.NON_NEG_LONG_ATTRIBUTES);
-        Set<String> boolAttrs = config.getSet(ConfigProperties.BOOLEAN_ATTRIBUTES);
-
-        if (StringUtils.isBlank(attr.getValue())) { return; }
-
-        if (intAttrs != null && intAttrs.contains(attr.getName()) ||
-            posIntAttrs != null && posIntAttrs.contains(attr.getName())) {
-            int value = -1;
-            try {
-                value = Integer.parseInt(attr.getValue());
-            }
-            catch (NumberFormatException nfe) {
-                throw new BadRequestException(i18n.tr(
-                    "The attribute ''{0}'' must be an integer value.",
-                    attr.getName()));
-            }
-            if (posIntAttrs != null && posIntAttrs.contains(
-                attr.getName()) &&
-                value < 0) {
-                throw new BadRequestException(i18n.tr(
-                    "The attribute ''{0}'' must have a positive value.",
-                    attr.getName()));
-            }
-        }
-        else if (longAttrs != null && longAttrs.contains(attr.getName()) ||
-            posLongAttrs != null && posLongAttrs.contains(attr.getName())) {
-            long value = -1;
-            try {
-                value = Long.parseLong(attr.getValue());
-            }
-            catch (NumberFormatException nfe) {
-                throw new BadRequestException(i18n.tr(
-                    "The attribute ''{0}'' must be a long value.",
-                    attr.getName()));
-            }
-            if (posLongAttrs != null && posLongAttrs.contains(
-                attr.getName()) &&
-                value <= 0) {
-                throw new BadRequestException(i18n.tr(
-                    "The attribute ''{0}'' must have a positive value.",
-                    attr.getName()));
-            }
-        }
-        else if (boolAttrs != null && boolAttrs.contains(attr.getName())) {
-            if (attr.getValue() != null &&
-                !"true".equalsIgnoreCase(attr.getValue().trim()) &&
-                !"false".equalsIgnoreCase(attr.getValue()) &&
-                !"1".equalsIgnoreCase(attr.getValue()) &&
-                !"0".equalsIgnoreCase(attr.getValue())) {
-                throw new BadRequestException(i18n.tr(
-                    "The attribute ''{0}'' must be a boolean value.",
-                    attr.getName()));
-            }
-        }
     }
 
     @Transactional
@@ -192,7 +126,29 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
                 break;
             }
         }
+
         merge(prod);
+    }
+
+    /**
+     * Validates and corrects the object references maintained by the given product instance.
+     *
+     * @param entity
+     *  The product entity to validate
+     */
+    protected void validateProductReferences(Product entity) {
+        if (entity.getAttributes() != null) {
+            for (ProductAttribute pa : entity.getAttributes()) {
+                this.attributeValidator.validate(pa.getName(), pa.getValue());
+                pa.setProduct(entity);
+            }
+        }
+
+        if (entity.getProductContent() != null) {
+            for (ProductContent pc : entity.getProductContent()) {
+                pc.setProduct(entity);
+            }
+        }
     }
 
     public boolean productHasSubscriptions(Product prod) {

@@ -154,7 +154,7 @@ public class ComplianceRules {
 
                 if (updateConsumer && (complianceChanged || entStatusChanged)) {
                     // Merge might work better here, but we use update in other places for this
-                    consumerCurator.updateNoFlush(c);
+                    consumerCurator.update(c, false);
                 }
             }
             return result;

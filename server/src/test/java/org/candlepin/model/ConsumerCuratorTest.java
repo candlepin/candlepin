@@ -22,23 +22,31 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.test.DatabaseTestFixture;
+import org.candlepin.util.FactValidator;
+import org.candlepin.util.PropertyValidationException;
 import org.candlepin.util.Util;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
 
 import java.math.BigInteger;
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
+
+
 
 /**
  * ConsumerCuratorTest JUnit tests for Consumer database code
@@ -58,15 +66,21 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     private Consumer factConsumer;
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
+        I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
+
         owner = new Owner("test-owner", "Test Owner");
         owner = ownerCurator.create(owner);
         ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         ct = consumerTypeCurator.create(ct);
 
-        config.setProperty(ConfigProperties.INTEGER_FACTS,
-            "system.count, system.multiplier");
+        config.setProperty(ConfigProperties.INTEGER_FACTS, "system.count, system.multiplier");
         config.setProperty(ConfigProperties.NON_NEG_INTEGER_FACTS, "system.count");
+
+        // Inject this factValidator into the curator
+        Field field = ConsumerCurator.class.getDeclaredField("factValidator");
+        field.setAccessible(true);
+        field.set(this.consumerCurator, new FactValidator(this.config, i18n));
 
         factConsumer = new Consumer("a consumer", "username", owner, ct);
     }
@@ -427,7 +441,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         assertEquals(factConsumer.getFact("system.multiplier"), "-2");
     }
 
-    @Test
+    @Test(expected = PropertyValidationException.class)
     public void testConsumerFactsVerifyBadInt() {
         Map<String, String> facts = new HashMap<String, String>();
         facts.put("system.count", "zzz");
@@ -435,11 +449,9 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
         factConsumer.setFacts(facts);
         factConsumer = consumerCurator.create(factConsumer);
-        assertEquals(factConsumer.getFact("system.count"), null);
-        assertEquals(factConsumer.getFact("system.multiplier"), "-2");
     }
 
-    @Test
+    @Test(expected = PropertyValidationException.class)
     public void testConsumerFactsVerifyBadPositive() {
         Map<String, String> facts = new HashMap<String, String>();
         facts.put("system.count", "-2");
@@ -447,11 +459,9 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
         factConsumer.setFacts(facts);
         factConsumer = consumerCurator.create(factConsumer);
-        assertEquals(factConsumer.getFact("system.count"), null);
-        assertEquals(factConsumer.getFact("system.multiplier"), "-2");
     }
 
-    @Test
+    @Test(expected = PropertyValidationException.class)
     public void testConsumerFactsVerifyBadUpdateValue() {
         Map<String, String> facts = new HashMap<String, String>();
         facts.put("system.count", "3");
@@ -465,8 +475,6 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
         factConsumer.setFact("system.count", "sss");
         factConsumer = consumerCurator.update(factConsumer);
-        assertEquals(factConsumer.getFact("system.count"), null);
-        assertEquals(factConsumer.getFact("system.multiplier"), "-2");
     }
 
     @Test

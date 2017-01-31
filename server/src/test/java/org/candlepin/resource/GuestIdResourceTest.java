@@ -56,23 +56,12 @@ public class GuestIdResourceTest {
 
     private I18n i18n;
 
-    @Mock
-    private ConsumerCurator consumerCurator;
-
-    @Mock
-    private GuestIdCurator guestIdCurator;
-
-    @Mock
-    private ConsumerResourceForTesting consumerResource;
-
-    @Mock
-    private EventFactory eventFactory;
-
-    @Mock
-    private EventSink sink;
-
-    @Mock
-    private ServiceLevelValidator mockedServiceLevelValidator;
+    @Mock private ConsumerCurator consumerCurator;
+    @Mock private GuestIdCurator guestIdCurator;
+    @Mock private ConsumerResourceForTesting consumerResource;
+    @Mock private EventFactory eventFactory;
+    @Mock private EventSink sink;
+    @Mock private ServiceLevelValidator mockedServiceLevelValidator;
 
     private GuestIdResource guestIdResource;
 
@@ -275,7 +264,7 @@ public class GuestIdResourceTest {
         public ConsumerResourceForTesting() {
             super(null, null, null, null, null, null, null, null, null,
                   null, null, null, null, null, null, null, null, null,
-                  null, null, null, null, null, null, null, null, null, null);
+                  null, null, null, null, null, null, null, null, null, null, null);
         }
 
         public void revokeGuestEntitlementsNotMatchingHost(Consumer host, Consumer guest) {

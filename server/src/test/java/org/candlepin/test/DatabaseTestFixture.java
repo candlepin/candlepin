@@ -305,8 +305,7 @@ public class DatabaseTestFixture {
     }
 
     public Role createAdminRole(Owner owner) {
-        PermissionBlueprint p = new PermissionBlueprint(PermissionType.OWNER, owner,
-            Access.ALL);
+        PermissionBlueprint p = new PermissionBlueprint(PermissionType.OWNER, owner, Access.ALL);
         Role role = new Role("testrole" + TestUtil.randomInt());
         role.addPermission(p);
         return role;

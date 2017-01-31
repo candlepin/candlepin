@@ -26,6 +26,7 @@ import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.SubResource;
 import org.candlepin.auth.UserPrincipal;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.model.Consumer;
@@ -47,6 +48,7 @@ import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
+import org.candlepin.util.FactValidator;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -71,58 +73,30 @@ import java.util.Set;
 @RunWith(MockitoJUnitRunner.class)
 public class HypervisorResourceTest {
 
-    @Mock
-    private UserServiceAdapter userService;
-
-    @Mock
-    private IdentityCertServiceAdapter idCertService;
-
-    @Mock
-    private SubscriptionServiceAdapter subscriptionService;
-
-    @Mock
-    private ConsumerCurator consumerCurator;
-
-    @Mock
-    private ConsumerTypeCurator consumerTypeCurator;
-
-    @Mock
-    private OwnerCurator ownerCurator;
-
-    @Mock
-    private EventSink sink;
-
-    @Mock
-    private EventFactory eventFactory;
-
-    @Mock
-    private ActivationKeyCurator activationKeyCurator;
-
-    @Mock
-    private UserPrincipal principal;
-
-    @Mock
-    private ComplianceRules complianceRules;
-
-    @Mock
-    private DeletedConsumerCurator deletedConsumerCurator;
-
-    @Mock
-    private ConsumerBindUtil consumerBindUtil;
-
-    @Mock
-    private EventBuilder consumerEventBuilder;
+    @Mock private UserServiceAdapter userService;
+    @Mock private IdentityCertServiceAdapter idCertService;
+    @Mock private SubscriptionServiceAdapter subscriptionService;
+    @Mock private ConsumerCurator consumerCurator;
+    @Mock private ConsumerTypeCurator consumerTypeCurator;
+    @Mock private OwnerCurator ownerCurator;
+    @Mock private EventSink sink;
+    @Mock private EventFactory eventFactory;
+    @Mock private ActivationKeyCurator activationKeyCurator;
+    @Mock private UserPrincipal principal;
+    @Mock private ComplianceRules complianceRules;
+    @Mock private DeletedConsumerCurator deletedConsumerCurator;
+    @Mock private ConsumerBindUtil consumerBindUtil;
+    @Mock private EventBuilder consumerEventBuilder;
 
     private ConsumerResource consumerResource;
-
     private I18n i18n;
-
     private ConsumerType hypervisorType;
-
     private HypervisorResource hypervisorResource;
 
     @Before
     public void setupTest() {
+        Configuration config = new CandlepinCommonTestConfig();
+
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         this.hypervisorType = new ConsumerType(ConsumerTypeEnum.HYPERVISOR);
         this.consumerResource = new ConsumerResource(this.consumerCurator,
@@ -131,7 +105,7 @@ public class HypervisorResourceTest {
             this.userService, null, null, null, this.ownerCurator,
             this.activationKeyCurator, null, this.complianceRules,
             this.deletedConsumerCurator, null, null, new CandlepinCommonTestConfig(),
-            null, null, null, this.consumerBindUtil);
+            null, null, null, this.consumerBindUtil, new FactValidator(config, this.i18n));
 
         hypervisorResource = new HypervisorResource(consumerResource,
             consumerCurator, i18n, ownerCurator);
@@ -149,10 +123,8 @@ public class HypervisorResourceTest {
         when(ownerCurator.lookupByKey(any(String.class))).thenReturn(new Owner());
         when(eventFactory.getEventBuilder(any(Target.class), any(Type.class)))
             .thenReturn(consumerEventBuilder);
-        when(consumerEventBuilder.setNewEntity(any(Consumer.class)))
-            .thenReturn(consumerEventBuilder);
-        when(consumerEventBuilder.setOldEntity(any(Consumer.class)))
-            .thenReturn(consumerEventBuilder);
+        when(consumerEventBuilder.setNewEntity(any(Consumer.class))).thenReturn(consumerEventBuilder);
+        when(consumerEventBuilder.setOldEntity(any(Consumer.class))).thenReturn(consumerEventBuilder);
     }
 
     @Test
