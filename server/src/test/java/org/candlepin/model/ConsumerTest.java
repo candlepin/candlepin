@@ -426,33 +426,6 @@ public class ConsumerTest extends DatabaseTestFixture {
         assertEquals(consumer, consumerCurator.findByUser(user));
     }
 
-    // @Test
-    // public void testConsumerFactsFilter() {
-    //     String oldValue = config.getString(ConfigProperties.CONSUMER_FACTS_MATCHER);
-    //     config.setProperty(ConfigProperties.CONSUMER_FACTS_MATCHER, "^goodkey.*");
-
-    //     Consumer consumer = new Consumer("a consumer", "username", owner, consumerType);
-
-    //     Map<String, String> facts = new HashMap<String, String>();
-    //     facts.put("badkey.something", "zaz");
-    //     facts.put("goodkey.something", "foobar");
-
-    //     consumer.setFacts(facts);
-
-    //     consumer = consumerCurator.create(consumer);
-
-    //     assertNull(consumer.getFact("badkey.something"));
-    //     assertEquals("foobar", consumer.getFact("goodkey.something"));
-
-    //     consumer.setFact("anotherbadkey", "zippy");
-
-    //     consumer = consumerCurator.update(consumer);
-
-    //     assertNull(consumer.getFact("anotherbadkey"));
-
-    //     config.setProperty(ConfigProperties.CONSUMER_FACTS_MATCHER, oldValue);
-    // }
-
     @Test
     public void testInstalledProducts() throws Exception {
         Consumer lookedUp = consumerCurator.find(consumer.getId());
