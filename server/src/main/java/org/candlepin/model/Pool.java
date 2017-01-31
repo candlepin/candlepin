@@ -25,7 +25,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
@@ -322,14 +321,18 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
 
     // leave FROM capitalized until hibernate 5.0.3
     // https://hibernate.atlassian.net/browse/HHH-1400
-    @Formula("(select sum(ent.quantity) FROM cp_entitlement ent where ent.pool_id = id)")
+//    @Formula("(select sum(ent.quantity) FROM cp_entitlement ent where ent.pool_id = id)")
+    @Column(name = "quantity_consumed", nullable = false)
+    @NotNull
     private Long consumed;
 
     // leave FROM capitalized until hibernate 5.0.3
     // https://hibernate.atlassian.net/browse/HHH-1400
-    @Formula("(select sum(ent.quantity) FROM cp_entitlement ent, cp_consumer cons, " +
-        "cp_consumer_type ctype where ent.pool_id = id and ent.consumer_id = cons.id " +
-        "and cons.type_id = ctype.id and ctype.manifest = 'Y')")
+//    @Formula("(select sum(ent.quantity) FROM cp_entitlement ent, cp_consumer cons, " +
+//        "cp_consumer_type ctype where ent.pool_id = id and ent.consumer_id = cons.id " +
+//        "and cons.type_id = ctype.id and ctype.manifest = 'Y')")
+    @Column(name = "quantity_exported", nullable = false)
+    @NotNull
     private Long exported;
 
     @OneToMany
@@ -383,6 +386,8 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     private Cdn cdn;
 
     public Pool() {
+    	this.setExported(0L);
+        this.setConsumed(0L);
     }
 
     public Pool(Owner ownerIn, Product product, Collection<Product> providedProducts,
@@ -397,6 +402,8 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         this.contractNumber = contractNumber;
         this.accountNumber = accountNumber;
         this.orderNumber = orderNumber;
+        this.setExported(0L);
+        this.setConsumed(0L);
 
         this.setProvidedProducts(providedProducts);
     }
