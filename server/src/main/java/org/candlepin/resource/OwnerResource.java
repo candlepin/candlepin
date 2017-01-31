@@ -716,13 +716,23 @@ public class OwnerResource {
         @QueryParam("activation_key") String activationKeyName,
         @QueryParam("product") String productId,
         @QueryParam("subscription") String subscriptionId,
+        @ApiParam("Include pools that are not suited to the unit's facts.")
         @QueryParam("listall") @DefaultValue("false") boolean listAll,
+        @ApiParam("Date to use as current time for lookup criteria. Defaults" +
+                " to current date if not specified.")
         @QueryParam("activeon") String activeOn,
         @ApiParam("Find pools matching the given pattern in a variety of fields" +
                 " * and ? wildcards are supported.")
         @QueryParam("matches") String matches,
+        @ApiParam("The attributes to return based on the specified types.")
         @QueryParam("attribute") @CandlepinParam(type = KeyValueParameter.class)
             List<KeyValueParameter> attrFilters,
+        @ApiParam("When set to true, it will add future dated pools to the result, " +
+                "based on the activeon date.")
+        @QueryParam("add_future") @DefaultValue("false") boolean addFuture,
+        @ApiParam("When set to true, it will return only future dated pools to the result, " +
+                "based on the activeon date.")
+        @QueryParam("only_future") @DefaultValue("false") boolean onlyFuture,
         @Context Principal principal,
         @Context PageRequest pageRequest) {
 
@@ -762,6 +772,10 @@ public class OwnerResource {
             }
         }
 
+        if (addFuture && onlyFuture) {
+            throw new BadRequestException(
+                i18n.tr("The flags add_future and only_future cannot be used at the same time."));
+        }
         // Process the filters passed for the attributes
         PoolFilterBuilder poolFilters = new PoolFilterBuilder();
         for (KeyValueParameter filterParam : attrFilters) {
@@ -772,8 +786,8 @@ public class OwnerResource {
         }
 
         Page<List<Pool>> page = poolManager.listAvailableEntitlementPools(
-            c, key, owner, productId, subscriptionId, activeOnDate, true, listAll, poolFilters, pageRequest
-        );
+            c, key, owner, productId, subscriptionId, activeOnDate, listAll, poolFilters, pageRequest,
+        addFuture, onlyFuture);
         List<Pool> poolList = page.getPageData();
         calculatedAttributesUtil.setCalculatedAttributes(poolList, activeOnDate);
         calculatedAttributesUtil.setQuantityAttributes(poolList, c, activeOnDate);

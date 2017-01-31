@@ -455,6 +455,8 @@ class Candlepin
     path << "order=#{params[:order]}&" if params[:order]
     path << "sort_by=#{params[:sort_by]}&" if params[:sort_by]
     path << "matches=#{params[:matches]}&" if params[:matches]
+    path << "add_future=#{params[:add_future]}&" if params[:add_future]
+    path << "only_future=#{params[:only_future]}&" if params[:only_future]
 
     # Attribute filters are specified in the following format:
     #    {attributeName}:{attributeValue}
