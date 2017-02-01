@@ -85,6 +85,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         return super.create(entity);
     }
 
+    @Override
     @Transactional
     public void delete(Consumer entity) {
         log.debug("Deleting consumer: {}", entity);
@@ -793,6 +794,72 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         return listByCriteria(crit, pageRequest);
     }
 
+    /*
+     *  JPQL of below criteria can look like this.
+     *  If all parameters aren't passed then only sub-parts of it are returned.
+     *
+     *   select count(distinct c.id) from Consumer c join c.owner o
+     *       join c.type ct
+     *       join c.entitlements e
+     *       join e.pool po
+     *       join po.product pr
+     *       join pr.attributes pa
+     *       join po.sourceSubscription ss
+     *   where o.key = :key
+     *   and ct.label in (...)
+     *   and pr.id in (...)
+     *   and pa.name = 'type'
+     *   and pa.value = 'MKT'
+     *   and ss.subscriptionId in (...)
+     *   and po.contractNumber in (...)
+     *
+     */
+    public int countConsumers(String ownerKey,
+        Collection<String> typeLabels, Collection<String> skus,
+        Collection<String> subscriptionIds, Collection<String> contracts) {
+
+        if (ownerKey == null || ownerKey.isEmpty()) {
+            throw new IllegalArgumentException("Owner key can't be null or empty");
+        }
+
+        Criteria crit = super.createSecureCriteria("c");
+        crit.createAlias("c.owner", "o")
+            .add(Restrictions.eq("o.key", ownerKey));
+
+        if (!CollectionUtils.isEmpty(typeLabels)) {
+            crit.createAlias("c.type", "ct")
+                .add(Restrictions.in("ct.label", typeLabels));
+        }
+
+        boolean hasSkus = !CollectionUtils.isEmpty(skus);
+        boolean hasSubscriptionIds = !CollectionUtils.isEmpty(subscriptionIds);
+        boolean hasContracts = !CollectionUtils.isEmpty(contracts);
+        if (hasSkus || hasSubscriptionIds || hasContracts) {
+            crit.createAlias("c.entitlements", "e").createAlias("e.pool", "po");
+        }
+
+        if (hasSkus) {
+            crit.createAlias("po.product", "pr")
+                .createAlias("pr.attributes", "pa")
+                .add(Restrictions.in("pr.id", skus))
+                .add(Restrictions.eq("pa.name", "type"))
+                .add(Restrictions.eq("pa.value", "MKT"));
+        }
+
+        if (hasSubscriptionIds) {
+            crit.createAlias("po.sourceSubscription", "ss")
+                .add(Restrictions.in("ss.subscriptionId", subscriptionIds));
+        }
+
+        if (hasContracts) {
+            crit.add(Restrictions.in("po.contractNumber", contracts));
+        }
+
+        crit.setProjection(Projections.countDistinct("c.id"));
+
+        return ((Long) crit.uniqueResult()).intValue();
+    }
+
     /**
      * Finds the consumer count for an Owner based on type.
      *
@@ -830,6 +897,5 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY)
             .list();
     }
-
 
 }

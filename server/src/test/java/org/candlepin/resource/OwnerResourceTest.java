@@ -14,9 +14,20 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isA;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventFactory;
@@ -130,6 +141,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     private Owner owner;
     private List<Owner> owners;
     private Product product;
+    private Set<String> typeLabels;
+    private List<String> skus;
+    private List<String> subscriptionIds;
+    private List<String> contracts;
 
     @SuppressWarnings("checkstyle:visibilitymodifier")
     @Rule
@@ -141,6 +156,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         owners = new ArrayList<Owner>();
         owners.add(owner);
         product = this.createProduct(owner);
+        typeLabels = null;
+        skus = null;
+        subscriptionIds = null;
+        contracts = null;
     }
 
     @Test
@@ -191,7 +210,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Pool pool = createPool(owner, prod, 1000L,
             TestUtil.createDate(2009, 11, 30),
             TestUtil.createDate(2015, 11, 30));
-        Owner owner = pool.getOwner();
 
         List<Subscription> subscriptions = new LinkedList<Subscription>();
         ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
@@ -392,14 +410,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testComplexDeleteOwner() throws Exception {
-
         // Create some consumers:
-        Consumer c1 = TestUtil.createConsumer(owner);
-        consumerTypeCurator.create(c1.getType());
-        consumerCurator.create(c1);
-        Consumer c2 = TestUtil.createConsumer(owner);
-        consumerTypeCurator.create(c2.getType());
-        consumerCurator.create(c2);
+        Consumer c1 = createConsumer(owner);
+        Consumer c2 = createConsumer(owner);
 
         // Create a pool for this owner:
         Pool pool = TestUtil.createPool(owner, product);
@@ -425,9 +438,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test(expected = ForbiddenException.class)
     public void testConsumerRoleCannotGetOwner() {
-        Consumer c = TestUtil.createConsumer(owner);
-        consumerTypeCurator.create(c.getType());
-        consumerCurator.create(c);
+        Consumer c = createConsumer(owner);
         setupPrincipal(new ConsumerPrincipal(c));
 
         securityInterceptor.enable();
@@ -437,9 +448,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testConsumerCanListPools() {
-        Consumer c = TestUtil.createConsumer(owner);
-        consumerTypeCurator.create(c.getType());
-        consumerCurator.create(c);
+        Consumer c = createConsumer(owner);
         Principal principal = setupPrincipal(new ConsumerPrincipal(c));
 
         securityInterceptor.enable();
@@ -609,9 +618,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         // fake the
         // events in the db:
         setupPrincipal(o, Access.ALL);
-        Consumer consumer = TestUtil.createConsumer(o);
-        consumerTypeCurator.create(consumer.getType());
-        consumerCurator.create(consumer);
+        Consumer consumer = createConsumer(o);
         Event e1 = eventFactory.consumerCreated(consumer);
         eventCurator.create(e1);
         return e1;
@@ -656,9 +663,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test(expected = ForbiddenException.class)
     public void testConsumerRoleCannotAccessOwnerAtomFeed() {
-        Consumer c = TestUtil.createConsumer(owner);
-        consumerTypeCurator.create(c.getType());
-        consumerCurator.create(c);
+        Consumer c = createConsumer(owner);
         setupPrincipal(new ConsumerPrincipal(c));
 
         securityInterceptor.enable();
@@ -668,9 +673,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test(expected = ForbiddenException.class)
     public void consumerCannotListAllConsumersInOwner() {
-        Consumer c = TestUtil.createConsumer(owner);
-        consumerTypeCurator.create(c.getType());
-        consumerCurator.create(c);
+        Consumer c = createConsumer(owner);
         setupPrincipal(new ConsumerPrincipal(c));
 
         securityInterceptor.enable();
@@ -681,10 +684,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void consumerCanListConsumersByIdWhenOtherParametersPresent() {
-        Consumer c = TestUtil.createConsumer(owner);
-        consumerTypeCurator.create(c.getType());
-        consumerCurator.create(c);
-
+        Consumer c = createConsumer(owner);
         List<String> uuids = new ArrayList<String>();
         uuids.add(c.getUuid());
 
@@ -702,17 +702,12 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals(0, results.size());
     }
 
-
     @Test
     public void consumerCannotListConsumersFromAnotherOwner() {
-        Consumer c = TestUtil.createConsumer(owner);
-        consumerTypeCurator.create(c.getType());
-        consumerCurator.create(c);
+        Consumer c = createConsumer(owner);
 
         Owner owner2 = ownerCurator.create(new Owner("Owner2"));
-        Consumer c2 = TestUtil.createConsumer(owner2);
-        consumerTypeCurator.create(c2.getType());
-        consumerCurator.create(c2);
+        Consumer c2 = createConsumer(owner2);
 
         List<String> uuids = new ArrayList<String>();
         uuids.add(c.getUuid());
@@ -743,13 +738,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void consumerCanListMultipleConsumers() {
-        Consumer c = TestUtil.createConsumer(owner);
-        consumerTypeCurator.create(c.getType());
-        consumerCurator.create(c);
-
-        Consumer c2 = TestUtil.createConsumer(owner);
-        consumerTypeCurator.create(c2.getType());
-        consumerCurator.create(c2);
+        Consumer c = createConsumer(owner);
+        Consumer c2 = createConsumer(owner);
 
         List<String> uuids = new ArrayList<String>();
         uuids.add(c.getUuid());
@@ -761,6 +751,41 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         List<Consumer> results = ownerResource.listConsumers(owner.getKey(), null,
             null, uuids, null, null, null, null, null, null);
         assertEquals(2, results.size());
+    }
+
+    //copied from consumerCannotListAllConsumersInOwner
+    @Test(expected = ForbiddenException.class)
+    public void consumerCannotCountAllConsumersInOwner() {
+        Consumer c = createConsumer(owner);
+        setupPrincipal(new ConsumerPrincipal(c));
+        securityInterceptor.enable();
+
+        ownerResource.countConsumers(owner.getKey(), typeLabels,
+            skus, subscriptionIds, contracts);
+    }
+
+    //copied from failWhenListingByBadConsumerType
+    @Test
+    public void failWhenCountingByBadConsumerType() {
+        ex.expect(BadRequestException.class);
+        ex.expectMessage(IsEqual.<String>equalTo("No such unit type(s): unknown"));
+
+        Set<String> types = new HashSet<String>();
+        types.add("unknown");
+
+        ownerResource.countConsumers(owner.getKey(), types,
+            skus, subscriptionIds, contracts);
+    }
+
+    @Test
+    public void countShouldThrowExceptionIfUnknownOwner() throws Exception {
+        String key = "unknown";
+        ex.expect(NotFoundException.class);
+        ex.expectMessage(i18n.tr("owner with key: {0} was not found", key));
+        createConsumer(owner);
+
+        ownerResource.countConsumers(key, typeLabels,
+            skus, subscriptionIds, contracts);
     }
 
     @Test
@@ -791,9 +816,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Pool pool1 = TestUtil.createPool(owner, p);
         poolCurator.create(pool1);
 
-        Consumer c = TestUtil.createConsumer(owner);
-        consumerTypeCurator.create(c.getType());
-        consumerCurator.create(c);
+        Consumer c = createConsumer(owner);
 
         securityInterceptor.enable();
 
@@ -995,7 +1018,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource or = new OwnerResource(
             oc, null, null, i18n, null, eventFactory, null, null, null, null, ownerManager, null, null, null,
             null, null, null, null, null, null, contentOverrideValidator, serviceLevelValidator, null, null,
-            null, productManager, contentManager
+            null, productManager, contentManager, null
         );
 
         when(oc.lookupByKey(eq("testOwner"))).thenReturn(o);
@@ -1019,7 +1042,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         OwnerResource ownerres = new OwnerResource(
             oc, akc, null, i18n, null, null, null, null, null, null, null, null, null, null, null, null, null,
-            null, null, null, null, null, null, null, null, productManager, contentManager
+            null, null, null, null, null, null, null, null, productManager, contentManager, null
         );
 
         ownerres.createActivationKey("testOwner", ak);
@@ -1141,7 +1164,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource thisOwnerResource = new OwnerResource(
             ownerCurator, null, null, i18n, es, eventFactory, null, null, manifestManager, null, null, null,
             null, importRecordCurator, null, null, null, null, null, null, contentOverrideValidator,
-            serviceLevelValidator, null, null, null, productManager, contentManager
+            serviceLevelValidator, null, null, null, productManager, contentManager, null
         );
 
         MultipartInput input = mock(MultipartInput.class);
@@ -1174,7 +1197,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource thisOwnerResource = new OwnerResource(
             ownerCurator, null, null, i18n, es, eventFactory, null, null, manifestManager, null, null, null,
             null, importRecordCurator, null, null, null, null, null, null, contentOverrideValidator,
-            serviceLevelValidator, null, null, null, productManager, contentManager
+            serviceLevelValidator, null, null, null, productManager, contentManager, null
         );
 
         MultipartInput input = mock(MultipartInput.class);
@@ -1210,7 +1233,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource thisOwnerResource = new OwnerResource(
             ownerCurator, null, null, i18n, es, eventFactory, null, null, manifestManager, null, null, null,
             null, importRecordCurator, null, null, null, null, null, null, contentOverrideValidator,
-            serviceLevelValidator, null, null, null, productManager, contentManager
+            serviceLevelValidator, null, null, null, productManager, contentManager, null
         );
 
         MultipartInput input = mock(MultipartInput.class);
@@ -1251,7 +1274,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource ownerres = new OwnerResource(
             oc, null, null, i18n, null, null, null, null, null, null, null, null, null, null, null, null,
             null, null, null, null, contentOverrideValidator, serviceLevelValidator, null, null, null,
-            productManager, contentManager
+            productManager, contentManager, null
         );
 
         when(oc.lookupByKey(eq("admin"))).thenReturn(owner);
@@ -1444,7 +1467,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         EntitlementCurator ec = mock(EntitlementCurator.class);
         OwnerResource ownerres = new OwnerResource(
             oc, null, null, i18n, null, null, null, null, null, null, null, null, null, null, null, null, ec,
-            null, null, null, null, null, null, null, null, productManager, contentManager
+            null, null, null, null, null, null, null, null, productManager, contentManager, null
         );
 
         when(oc.lookupByKey(owner.getKey())).thenReturn(owner);
@@ -1466,7 +1489,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerCurator oc = mock(OwnerCurator.class);
         OwnerResource ownerres = new OwnerResource(
             oc, null, null, i18n, null, null, null, null, null, null, null, null, null, null, null, null,
-            null, null, null, null, null, null, null, null, null, productManager, contentManager
+            null, null, null, null, null, null, null, null, null, productManager, contentManager, null
         );
         ownerres.ownerEntitlements("Taylor Swift", null, null, null, req);
     }
@@ -1486,7 +1509,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         OwnerResource resource = new OwnerResource(
             oc, null, cc, i18n, null, null, null, null, null, cpm, null, null, null, null, null, ecc, ec,
-            ucg, null, null, null, null, null, null, null, productManager, contentManager
+            ucg, null, null, null, null, null, null, null, productManager, contentManager, null
         );
 
         when(oc.lookupByKey(eq("admin"))).thenReturn(owner);
@@ -1513,7 +1536,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         OwnerResource resource = new OwnerResource(
             oc, null, cc, i18n, null, null, null, null, null, cpm, null, null, null, null, null, ecc, ec,
-            ucg, null, null, null, null, null, null, null, productManager, contentManager
+            ucg, null, null, null, null, null, null, null, productManager, contentManager, null
         );
 
         when(ucg.generate(eq(owner.getKey()), eq(principal))).thenReturn(entCert);

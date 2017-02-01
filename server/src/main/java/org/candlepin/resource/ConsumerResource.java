@@ -93,6 +93,7 @@ import org.candlepin.resource.dto.ContentAccessListing;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.resource.util.ConsumerInstalledProductEnricher;
+import org.candlepin.resource.util.ConsumerTypeValidator;
 import org.candlepin.resource.util.EntitlementFinderUtil;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.resteasy.DateFormat;
@@ -204,6 +205,7 @@ public class ConsumerResource {
     private ProductCurator productCurator;
     private ManifestManager manifestManager;
     private FactValidator factValidator;
+    private ConsumerTypeValidator consumerTypeValidator;
 
     @Inject
     @SuppressWarnings({"checkstyle:parameternumber"})
@@ -227,7 +229,8 @@ public class ConsumerResource {
         ProductCurator productCurator,
         ManifestManager manifestManager,
         ContentAccessCertServiceAdapter contentAccessCertService,
-        FactValidator factValidator) {
+        FactValidator factValidator,
+        ConsumerTypeValidator consumerTypeValidator) {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -263,6 +266,7 @@ public class ConsumerResource {
         this.manifestManager = manifestManager;
         this.contentAccessCertService = contentAccessCertService;
         this.factValidator = factValidator;
+        this.consumerTypeValidator = consumerTypeValidator;
     }
 
     /**
@@ -358,10 +362,7 @@ public class ConsumerResource {
             }
         }
 
-        List<ConsumerType> types = null;
-        if (typeLabels != null && !typeLabels.isEmpty()) {
-            types = consumerTypeCurator.lookupConsumerTypes(typeLabels);
-        }
+        List<ConsumerType> types =  consumerTypeValidator.findAndValidateTypeLabels(typeLabels);
 
         Page<List<Consumer>> page = consumerCurator.searchOwnerConsumers(
             owner, userName, types, uuids, hypervisorIds, attrFilters,

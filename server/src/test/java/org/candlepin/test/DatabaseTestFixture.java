@@ -14,7 +14,8 @@
  */
 package org.candlepin.test;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.TestingInterceptor;
 import org.candlepin.TestingModules;
@@ -83,7 +84,6 @@ import org.hibernate.ejb.HibernateEntityManagerFactory;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.SessionFactoryImpl;
-
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -92,7 +92,6 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -363,6 +362,20 @@ public class DatabaseTestFixture {
 
         pool.setSourceSubscription(new SourceSubscription(subscriptionId, subscriptionSubKey));
         return poolCurator.create(pool);
+    }
+
+    protected Pool createPool(Owner owner, Product product, Long quantity, Date startDate, Date endDate,
+        String contractNr) {
+        Pool pool = createPool(owner, product, quantity, startDate, endDate);
+        pool.setContractNumber(contractNr);
+        return poolCurator.merge(pool);
+    }
+
+    protected Pool createPool(Owner owner, Product product, Long quantity, Date startDate, Date endDate,
+        String contractNr, String subscriptionId) {
+        Pool pool = createPool(owner, product, quantity, subscriptionId, "master", startDate, endDate);
+        pool.setContractNumber(contractNr);
+        return poolCurator.merge(pool);
     }
 
     protected Owner createOwner() {

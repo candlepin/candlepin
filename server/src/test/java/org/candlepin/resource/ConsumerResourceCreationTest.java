@@ -131,7 +131,7 @@ public class ConsumerResourceCreationTest {
             this.userService, null, null, this.ownerCurator,
             this.activationKeyCurator, null, this.complianceRules, this.deletedConsumerCurator,
             null, null, this.config, null, null, null, this.consumerBindUtil,
-            productCurator, null, null, new FactValidator(this.config, this.i18n));
+            productCurator, null, null, new FactValidator(this.config, this.i18n), null);
 
         this.system = initSystem();
 
