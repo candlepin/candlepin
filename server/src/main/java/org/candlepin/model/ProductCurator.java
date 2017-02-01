@@ -16,13 +16,11 @@ package org.candlepin.model;
 
 import org.candlepin.cache.CandlepinCache;
 import org.candlepin.common.config.Configuration;
-import org.candlepin.common.exceptions.BadRequestException;
-import org.candlepin.config.ConfigProperties;
+import org.candlepin.util.AttributeValidator;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
-import org.apache.commons.lang.StringUtils;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
@@ -54,17 +52,20 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     private Configuration config;
     private I18n i18n;
     private CandlepinCache candlepinCache;
+    private AttributeValidator attributeValidator;
 
     /**
      * default ctor
      */
     @Inject
-    public ProductCurator(Configuration config, I18n i18n, CandlepinCache candlepinCache) {
+    public ProductCurator(Configuration config, I18n i18n, CandlepinCache candlepinCache,
+        AttributeValidator attributeValidator) {
         super(Product.class);
 
         this.config = config;
         this.i18n = i18n;
         this.candlepinCache = candlepinCache;
+        this.attributeValidator = attributeValidator;
     }
 
     /**
@@ -257,70 +258,6 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
         return productsByUuid;
     }
 
-    // TODO:
-    // This seems like something that should happen at the resource level, not in the curator.
-    protected void validateAttributeValue(ProductAttribute attr) {
-        Set<String> intAttrs = config.getSet(ConfigProperties.INTEGER_ATTRIBUTES);
-        Set<String> posIntAttrs = config.getSet(
-            ConfigProperties.NON_NEG_INTEGER_ATTRIBUTES);
-        Set<String> longAttrs = config.getSet(ConfigProperties.LONG_ATTRIBUTES);
-        Set<String> posLongAttrs = config.getSet(
-            ConfigProperties.NON_NEG_LONG_ATTRIBUTES);
-        Set<String> boolAttrs = config.getSet(ConfigProperties.BOOLEAN_ATTRIBUTES);
-
-        if (StringUtils.isBlank(attr.getValue())) { return; }
-
-        if (intAttrs != null && intAttrs.contains(attr.getName()) ||
-            posIntAttrs != null && posIntAttrs.contains(attr.getName())) {
-            int value = -1;
-            try {
-                value = Integer.parseInt(attr.getValue());
-            }
-            catch (NumberFormatException nfe) {
-                throw new BadRequestException(i18n.tr(
-                    "The attribute ''{0}'' must be an integer value.",
-                    attr.getName()));
-            }
-            if (posIntAttrs != null && posIntAttrs.contains(
-                attr.getName()) &&
-                value < 0) {
-                throw new BadRequestException(i18n.tr(
-                    "The attribute ''{0}'' must have a positive value.",
-                    attr.getName()));
-            }
-        }
-        else if (longAttrs != null && longAttrs.contains(attr.getName()) ||
-            posLongAttrs != null && posLongAttrs.contains(attr.getName())) {
-            long value = -1;
-            try {
-                value = Long.parseLong(attr.getValue());
-            }
-            catch (NumberFormatException nfe) {
-                throw new BadRequestException(i18n.tr(
-                    "The attribute ''{0}'' must be a long value.",
-                    attr.getName()));
-            }
-            if (posLongAttrs != null && posLongAttrs.contains(
-                attr.getName()) &&
-                value <= 0) {
-                throw new BadRequestException(i18n.tr(
-                    "The attribute ''{0}'' must have a positive value.",
-                    attr.getName()));
-            }
-        }
-        else if (boolAttrs != null && boolAttrs.contains(attr.getName())) {
-            if (attr.getValue() != null &&
-                !"true".equalsIgnoreCase(attr.getValue().trim()) &&
-                !"false".equalsIgnoreCase(attr.getValue()) &&
-                !"1".equalsIgnoreCase(attr.getValue()) &&
-                !"0".equalsIgnoreCase(attr.getValue())) {
-                throw new BadRequestException(i18n.tr(
-                    "The attribute ''{0}'' must be a Boolean value.",
-                    attr.getName()));
-            }
-        }
-    }
-
     /**
      * Validates and corrects the object references maintained by the given product instance.
      *
@@ -333,8 +270,8 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     protected Product validateProductReferences(Product entity) {
         if (entity.getAttributes() != null) {
             for (ProductAttribute pa : entity.getAttributes()) {
+                this.attributeValidator.validate(pa.getName(), pa.getValue());
                 pa.setProduct(entity);
-                this.validateAttributeValue(pa);
             }
         }
 

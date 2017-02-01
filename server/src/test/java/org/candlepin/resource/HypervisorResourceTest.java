@@ -26,6 +26,7 @@ import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.SubResource;
 import org.candlepin.auth.UserPrincipal;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.model.Consumer;
@@ -49,6 +50,7 @@ import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
+import org.candlepin.util.FactValidator;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -95,6 +97,8 @@ public class HypervisorResourceTest {
 
     @Before
     public void setupTest() {
+        Configuration config = new CandlepinCommonTestConfig();
+
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         this.hypervisorType = new ConsumerType(ConsumerTypeEnum.HYPERVISOR);
         this.consumerResource = new ConsumerResource(this.consumerCurator,
@@ -102,8 +106,9 @@ public class HypervisorResourceTest {
             this.idCertService, null, this.i18n, this.sink, this.eventFactory, null, null,
             this.userService, null, null, this.ownerCurator,
             this.activationKeyCurator, null, this.complianceRules,
-            this.deletedConsumerCurator, null, null, new CandlepinCommonTestConfig(),
-            null, null, null, this.consumerBindUtil, productCurator, null, null);
+            this.deletedConsumerCurator, null, null, config,
+            null, null, null, this.consumerBindUtil, productCurator, null, null,
+            new FactValidator(config, this.i18n));
 
         hypervisorResource = new HypervisorResource(consumerResource,
             consumerCurator, i18n, ownerCurator);

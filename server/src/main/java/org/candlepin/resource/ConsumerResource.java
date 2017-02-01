@@ -104,6 +104,8 @@ import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.sync.ExportCreationException;
+import org.candlepin.util.FactValidator;
+import org.candlepin.util.PropertyValidationException;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
@@ -158,6 +160,8 @@ import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
+
+
 /**
  * API Gateway for Consumers
  */
@@ -199,8 +203,10 @@ public class ConsumerResource {
     private ConsumerBindUtil consumerBindUtil;
     private ProductCurator productCurator;
     private ManifestManager manifestManager;
+    private FactValidator factValidator;
 
     @Inject
+    @SuppressWarnings({"checkstyle:parameternumber"})
     public ConsumerResource(ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator,
         OwnerProductCurator ownerProductCurator,
@@ -220,7 +226,8 @@ public class ConsumerResource {
         ConsumerBindUtil consumerBindUtil,
         ProductCurator productCurator,
         ManifestManager manifestManager,
-        ContentAccessCertServiceAdapter contentAccessCertService) {
+        ContentAccessCertServiceAdapter contentAccessCertService,
+        FactValidator factValidator) {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -255,6 +262,69 @@ public class ConsumerResource {
         this.productCurator = productCurator;
         this.manifestManager = manifestManager;
         this.contentAccessCertService = contentAccessCertService;
+        this.factValidator = factValidator;
+    }
+
+    /**
+     * Sanitizes inbound consumer facts, truncating long facts and dropping invalid or untracked
+     * facts. The consumer will be updated in-place.
+     *
+     * @param consumer
+     *  The consumer containing the facts to sanitize
+     */
+    private void sanitizeConsumerFacts(Consumer consumer) {
+        if (consumer != null) {
+            Map<String, String> facts = consumer.getFacts();
+
+            if (facts != null && facts.size() > 0) {
+                log.info("Sanitizing facts for consumer {}", consumer.getName());
+                Map<String, String> sanitized = new HashMap<String, String>();
+
+                String factPattern = config.getString(ConfigProperties.CONSUMER_FACTS_MATCHER);
+                Pattern pattern = Pattern.compile(factPattern);
+
+                for (Map.Entry<String, String> fact : facts.entrySet()) {
+                    String key = fact.getKey();
+                    String value = fact.getValue();
+
+                    // Check for null fact keys (discard and continue)
+                    if (key == null) {
+                        log.warn("  Consumer contains a fact using a null key. Discarding fact...");
+                        continue;
+                    }
+
+                    // Check for fact match (discard and continue)
+                    if (!pattern.matcher(key).matches()) {
+                        log.warn("  Consumer fact \"{}\" does not match pattern \"{}\"", key, factPattern);
+                        log.warn("  Discarding fact \"{}\"...", key);
+                        continue;
+                    }
+
+                    // Check for long keys or values, truncating as necessary
+                    if (key.length() > FactValidator.FACT_MAX_LENGTH) {
+                        key = key.substring(0, FactValidator.FACT_MAX_LENGTH - 3) + "...";
+                    }
+
+                    if (value != null && value.length() > FactValidator.FACT_MAX_LENGTH) {
+                        value = value.substring(0, FactValidator.FACT_MAX_LENGTH - 3) + "...";
+                    }
+
+                    // Validate fact (discarding malformed facts) (discard and continue)
+                    try {
+                        this.factValidator.validate(key, value);
+                    }
+                    catch (PropertyValidationException e) {
+                        log.warn("  {}", e.getMessage());
+                        log.warn("  Discarding fact \"{}\"...", key);
+                        continue;
+                    }
+
+                    sanitized.put(key, value);
+                }
+
+                consumer.setFacts(sanitized);
+            }
+        }
     }
 
     @ApiOperation(notes = "Retrieves a list of the Consumers", value = "list")
@@ -317,8 +387,7 @@ public class ConsumerResource {
     public void consumerExists(
         @PathParam("consumer_uuid") String uuid) {
         if (!consumerCurator.doesConsumerExist(uuid)) {
-            throw new NotFoundException(i18n.tr(
-                "Consumer with id {0} could not be found.", uuid));
+            throw new NotFoundException(i18n.tr("Consumer with id {0} could not be found.", uuid));
         }
     }
 
@@ -391,19 +460,19 @@ public class ConsumerResource {
         List<ActivationKey> keys = checkActivationKeys(principal, owner, keyStrings);
 
         userName = setUserName(consumer, principal, userName);
-
         checkConsumerName(consumer);
 
         ConsumerType type = lookupConsumerType(consumer.getType().getLabel());
         if (type.isType(ConsumerTypeEnum.PERSON)) {
             if (keys.size() > 0) {
-                throw new BadRequestException(i18n.tr(
-                        "A unit type of ''person'' cannot be used with activation keys"));
+                throw new BadRequestException(
+                    i18n.tr("A unit type of ''person'' cannot be used with activation keys"));
             }
+
             if (!isConsumerPersonNameValid(consumer.getName())) {
-                throw new BadRequestException(i18n.tr(
-                        "System name cannot contain most special characters."));
+                throw new BadRequestException(i18n.tr("System name cannot contain most special characters."));
             }
+
             verifyPersonConsumer(consumer, type, owner, userName, principal);
         }
 
@@ -415,15 +484,20 @@ public class ConsumerResource {
         consumer.setType(type);
         consumer.setCanActivate(subAdapter.canActivateSubscription(consumer));
         consumer.setAutoheal(true); // this is the default
-        if (consumer.getServiceLevel() == null) { consumer.setServiceLevel(""); }
+
+        if (consumer.getServiceLevel() == null) {
+            consumer.setServiceLevel("");
+        }
+
+        // Sanitize the inbound facts
+        this.sanitizeConsumerFacts(consumer);
 
         // If no service level was specified, and the owner has a default set, use it:
-        if (consumer.getServiceLevel().equals("") &&
-            owner.getDefaultServiceLevel() != null) {
+        if (consumer.getServiceLevel().equals("") && owner.getDefaultServiceLevel() != null) {
             consumer.setServiceLevel(owner.getDefaultServiceLevel());
         }
-        updateCapabilities(consumer, null);
 
+        updateCapabilities(consumer, null);
         logNewConsumerDebugInfo(consumer, keys, type);
 
         if (consumer.getInstalledProducts() != null) {
@@ -431,6 +505,7 @@ public class ConsumerResource {
                 p.setConsumer(consumer);
             }
         }
+
         if (consumer.getGuestIds() != null) {
             for (GuestId g : consumer.getGuestIds()) {
                 g.setConsumer(consumer);
@@ -442,6 +517,7 @@ public class ConsumerResource {
             // If a hypervisorId is supplied, make sure the consumer and owner are correct
             hvsrId.setConsumer(consumer);
         }
+
         validateContentAccessMode(consumer);
         consumerBindUtil.validateServiceLevel(owner, consumer.getServiceLevel());
 
@@ -473,7 +549,7 @@ public class ConsumerResource {
             complianceRules.getStatus(consumer, null, false, false);
             consumerCurator.update(consumer);
 
-            log.info("Consumer " + consumer.getUuid() + " created in org " + consumer.getOwner().getKey());
+            log.info("Consumer {} created in org {}", consumer.getUuid(), consumer.getOwner().getKey());
 
             return consumer;
         }
@@ -814,6 +890,7 @@ public class ConsumerResource {
     public void updateConsumer(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid,
         Consumer consumer) {
+
         Consumer toUpdate = consumerCurator.verifyAndLookupConsumer(uuid);
 
         VirtConsumerMap guestConsumerMap = new VirtConsumerMap();
@@ -822,9 +899,12 @@ public class ConsumerResource {
             for (GuestId gid : consumer.getGuestIds()) {
                 allGuestIds.add(gid.getGuestId());
             }
-            guestConsumerMap = consumerCurator.getGuestConsumersMap(
-                toUpdate.getOwner(), allGuestIds);
+
+            guestConsumerMap = consumerCurator.getGuestConsumersMap(toUpdate.getOwner(), allGuestIds);
         }
+
+        // Sanitize the inbound facts before applying the update
+        this.sanitizeConsumerFacts(consumer);
 
         if (performConsumerUpdates(consumer, toUpdate, guestConsumerMap)) {
             try {
@@ -836,24 +916,22 @@ public class ConsumerResource {
             }
             catch (Exception e) {
                 log.error("Problem updating unit:", e);
-                throw new BadRequestException(i18n.tr(
-                    "Problem updating unit {0}", consumer));
+                throw new BadRequestException(i18n.tr("Problem updating unit {0}", consumer));
             }
         }
     }
 
     public boolean performConsumerUpdates(Consumer updated, Consumer toUpdate,
         VirtConsumerMap guestConsumerMap) {
-        return performConsumerUpdates(updated, toUpdate, guestConsumerMap,
-                true);
+
+        return performConsumerUpdates(updated, toUpdate, guestConsumerMap, true);
     }
 
     @Transactional
     public boolean performConsumerUpdates(Consumer updated, Consumer toUpdate,
         VirtConsumerMap guestConsumerMap, boolean isIdCert) {
-        if (log.isDebugEnabled()) {
-            log.debug("Updating consumer: {}", toUpdate.getUuid());
-        }
+
+        log.debug("Updating consumer: {}", toUpdate.getUuid());
 
         // We need a representation of the consumer before making any modifications.
         // If nothing changes we won't send.  The new entity needs to be correct though,
@@ -903,8 +981,7 @@ public class ConsumerResource {
             changesMade = true;
         }
 
-        String environmentId =
-            updated.getEnvironment() == null ? null : updated.getEnvironment().getId();
+        String environmentId = updated.getEnvironment() == null ? null : updated.getEnvironment().getId();
         if (environmentId != null && (toUpdate.getEnvironment() == null ||
             !toUpdate.getEnvironment().getId().equals(environmentId))) {
             Environment e = environmentCurator.find(environmentId);
@@ -912,7 +989,7 @@ public class ConsumerResource {
                 throw new NotFoundException(i18n.tr(
                     "Environment with ID ''{0}'' could not be found.", environmentId));
             }
-            log.info("Updating environment to: " + environmentId);
+            log.info("Updating environment to: {}", environmentId);
             toUpdate.setEnvironment(e);
 
             // lazily regenerate certs, so the client can still work
@@ -946,8 +1023,7 @@ public class ConsumerResource {
             changesMade = true;
         }
         if (!StringUtils.isEmpty(updated.getContentAccessMode()) && !toUpdate.getType().isManifest()) {
-            throw new BadRequestException(i18n.tr(
-                "The consumer cannot be assigned a content access mode."));
+            throw new BadRequestException(i18n.tr("The consumer cannot be assigned a content access mode."));
         }
 
         if (updated.getLastCheckin() != null) {
@@ -969,6 +1045,7 @@ public class ConsumerResource {
             Event event = eventBuilder.setNewEntity(toUpdate).buildEvent();
             sink.queueEvent(event);
         }
+
         return changesMade;
     }
 
@@ -992,8 +1069,7 @@ public class ConsumerResource {
                 }
                 else {
                     // Safer to build a new clean HypervisorId object
-                    existing.setHypervisorId(
-                        new HypervisorId(incomingId.getHypervisorId()));
+                    existing.setHypervisorId(new HypervisorId(incomingId.getHypervisorId()));
                 }
             }
             return true;
@@ -1026,7 +1102,7 @@ public class ConsumerResource {
     /**
      * Check if the consumers installed products have changed. If they do not appear to
      * have been specified in this PUT, skip updating installed products entirely.
-     * <p>
+     * <p></p>
      * It will return true if installed products were included in request and have changed.
      *
      * @param existing existing consumer
@@ -1237,9 +1313,8 @@ public class ConsumerResource {
         }
         catch (ForbiddenException e) {
             String msg = e.message().getDisplayMessage();
-            throw new ForbiddenException(i18n.tr(
-                "Cannot unregister {0} {1} because: {2}", toDelete
-                    .getType().getLabel(), toDelete.getName(), msg), e);
+            throw new ForbiddenException(i18n.tr("Cannot unregister {0} {1} because: {2}",
+                toDelete.getType().getLabel(), toDelete.getName(), msg), e);
 
         }
         consumerRules.onConsumerDelete(toDelete);
