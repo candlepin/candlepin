@@ -1482,24 +1482,13 @@ public class CandlepinPoolManager implements PoolManager {
         Map<String, Integer> poolQuantityMap, Map<String, Entitlement> entitlements,
         boolean generateUeberCert, CallerType caller) throws EntitlementRefusedException {
 
-        // Because there are several paths to this one place where entitlements
-        // are granted, we cannot be positive the caller obtained a lock on the
-        // pool when it was read. As such we're going to reload it with a lock
-        // before starting this process.
+        log.debug("Binding pools: {}", poolQuantityMap.keySet());
 
-        log.debug("Locking pools: {}", poolQuantityMap.keySet());
-
-        List<Pool> pools = poolCurator.lockAndLoadBatch(poolQuantityMap.keySet());
-
-        if (log.isDebugEnabled()) {
-            for (Pool pool : pools) {
-                log.debug("Locked pool: {} consumed: {}", pool, pool.getConsumed());
-            }
-        }
+        List<Pool> unlockedPools = secureFind(poolQuantityMap.keySet());
 
         Map<String, PoolQuantity> poolQuantities = new HashMap<String, PoolQuantity>();
         boolean quantityFound = false;
-        for (Pool pool : pools) {
+        for (Pool pool : unlockedPools) {
             Integer quantity = poolQuantityMap.get(pool.getId());
             if (quantity > 0) {
                 quantityFound = true;
@@ -1513,6 +1502,51 @@ public class CandlepinPoolManager implements PoolManager {
             throw new IllegalArgumentException(i18n.tr("Subscription pool(s) {0} do not exist.",
                 poolQuantityMap.keySet()));
         }
+
+        EntitlementHandler handler = null;
+        if (entitlements == null) {
+            handler = new NewHandler();
+        }
+        else if (!poolQuantities.keySet().equals(entitlements.keySet())) {
+            throw new IllegalArgumentException(i18n.tr(
+                "Argument mismatch in entitlement update, number of pools: {}, number of entitlements: {}",
+                entitlements.keySet().size(), poolQuantityMap.keySet().size()
+            ));
+        }
+        else {
+            handler = new UpdateHandler();
+        }
+
+        // Persist the entitlement after it has been created.  It requires an ID in order to
+        // create an entitlement-derived subpool
+        log.info("Processing entitlements and persisting.");
+        entitlements = handler.handleEntitlement(consumer, poolQuantities, entitlements);
+        handler.handleConsumerAndPool(consumer, poolQuantities, entitlements);
+
+        // generate cert before pool is locked to minimize lock time
+        handler.handleSelfCertificates(consumer, poolQuantities, entitlements, generateUeberCert);
+
+        // Because there are several paths to this one place where entitlements
+        // are granted, we cannot be positive the caller obtained a lock on the
+        // pool when it was read. As such we're going to reload it with a lock
+        // before starting this process.
+
+        log.debug("Locking pools: {}", poolQuantityMap.keySet());
+
+        Set<String> ids = new HashSet<String>();
+        for(Pool p: unlockedPools) {
+        	ids.add(p.getId());
+        }
+
+        handler.unHandleConsumerAndPool(consumer, poolQuantities, entitlements);
+
+        List<Pool> pools = poolCurator.lockAndLoadBatch(ids);
+
+            for (Pool pool : pools) {
+                log.debug("Locked pool: {} consumed: {}", pool, pool.getConsumed());
+            }
+
+
         if (quantityFound) {
             log.info("Running pre-entitlement rules.");
             // XXX preEntitlement is run twice for new entitlement creation
@@ -1530,20 +1564,6 @@ public class CandlepinPoolManager implements PoolManager {
             }
         }
 
-        EntitlementHandler handler = null;
-        if (entitlements == null) {
-            handler = new NewHandler();
-        }
-        else if (!poolQuantities.keySet().equals(entitlements.keySet())) {
-            throw new IllegalArgumentException(i18n.tr(
-                "Argument mismatch in entitlement update, number of pools: {}, number of entitlements: {}",
-                entitlements.keySet().size(), poolQuantityMap.keySet().size()
-            ));
-        }
-        else {
-            handler = new UpdateHandler();
-        }
-
         boolean isDistributor = consumer.getType().isManifest();
 
         /*
@@ -1554,10 +1574,9 @@ public class CandlepinPoolManager implements PoolManager {
             consumer = consumerCurator.lockAndLoad(consumer);
         }
 
-        // Persist the entitlement after it has been created.  It requires an ID in order to
-        // create an entitlement-derived subpool
-        log.info("Processing entitlements and persisting.");
-        entitlements = handler.handleEntitlement(consumer, poolQuantities, entitlements);
+        // entitlement has already been associated with the consumer and pools for cert generation,
+        // now that pre validation is complete we can update the other direction too.
+        handler.handleConsumerAndPool(consumer, poolQuantities, entitlements);
 
         // The quantity is calculated at fetch time. We update it here
         // To reflect what we just added to the db.
@@ -1571,7 +1590,6 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         handler.handlePostEntitlement(this, consumer, entitlements);
-        handler.handleSelfCertificates(consumer, poolQuantities, entitlements, generateUeberCert);
 
         this.ecGenerator.regenerateCertificatesByEntitlementIds(
             this.entitlementCurator.batchListModifying(entitlements.values()), generateUeberCert, true
@@ -2032,6 +2050,12 @@ public class CandlepinPoolManager implements PoolManager {
         Map<String, Entitlement> handleEntitlement(Consumer consumer,
             Map<String, PoolQuantity> poolQuantities, Map<String, Entitlement> entitlements);
 
+        void unHandleConsumerAndPool(Consumer consumer, Map<String, PoolQuantity> poolQuantities,
+				Map<String, Entitlement> entitlements);
+
+		void handleConsumerAndPool(Consumer consumer,
+                Map<String, PoolQuantity> poolQuantities, Map<String, Entitlement> entitlements);
+
         void handlePostEntitlement(PoolManager manager, Consumer consumer,
             Map<String, Entitlement> entitlements);
 
@@ -2065,21 +2089,40 @@ public class CandlepinPoolManager implements PoolManager {
 
             entitlementCurator.saveOrUpdateAll(entsToPersist, false, false);
 
+            return result;
+        }
+
+		@Override
+		public void handleConsumerAndPool(Consumer consumer,
+				Map<String, PoolQuantity> poolQuantities, Map<String, Entitlement> entitlements) {
             /*
              * Why iterate twice? to persist the entitlement before we associate
              * it with the pool or consumer. This is important because we use Id
              * to compare Entitlements in the equals method.
              */
             for (Entry<String, PoolQuantity> entry : poolQuantities.entrySet()) {
-                Entitlement e = result.get(entry.getKey());
+                Entitlement e = entitlements.get(entry.getKey());
                 consumer.addEntitlement(e);
                 entry.getValue().getPool().getEntitlements().add(e);
             }
+		}
 
-            return result;
-        }
+		@Override
+		public void unHandleConsumerAndPool(Consumer consumer,
+				Map<String, PoolQuantity> poolQuantities, Map<String, Entitlement> entitlements) {
+            /*
+             * Why iterate twice? to persist the entitlement before we associate
+             * it with the pool or consumer. This is important because we use Id
+             * to compare Entitlements in the equals method.
+             */
+            for (Entry<String, PoolQuantity> entry : poolQuantities.entrySet()) {
+                Entitlement e = entitlements.get(entry.getKey());
+                consumer.removeEntitlement(e);
+                entry.getValue().getPool().getEntitlements().remove(e);
+            }
+		}
 
-        @Override
+		@Override
         public void handlePostEntitlement(PoolManager manager, Consumer consumer,
             Map<String, Entitlement> entitlements) {
             Set<String> stackIds = new HashSet<String>();
@@ -2120,6 +2163,7 @@ public class CandlepinPoolManager implements PoolManager {
             Map<String, Entitlement> entitlements) {
             checkBonusPoolQuantities(owner, pools, entitlements);
         }
+
     }
 
     /**
@@ -2139,7 +2183,17 @@ public class CandlepinPoolManager implements PoolManager {
             return entitlements;
         }
 
-        @Override
+		@Override
+		public void handleConsumerAndPool(Consumer consumer, Map<String, PoolQuantity> poolQuantities,
+				Map<String, Entitlement> entitlements) {
+		}
+
+		@Override
+		public void unHandleConsumerAndPool(Consumer consumer, Map<String, PoolQuantity> poolQuantities,
+				Map<String, Entitlement> entitlements) {
+		}
+
+		@Override
         public void handlePostEntitlement(PoolManager manager, Consumer consumer,
             Map<String, Entitlement> entitlements) {
         }
@@ -2158,6 +2212,7 @@ public class CandlepinPoolManager implements PoolManager {
             // rather than the older virt_limit * entitlement quantity:
             checkBonusPoolQuantities(owner, pools, entitlements);
         }
+
     }
 
     @Override
