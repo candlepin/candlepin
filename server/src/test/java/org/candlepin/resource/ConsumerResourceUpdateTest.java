@@ -24,6 +24,7 @@ import org.candlepin.audit.Event.Type;
 import org.candlepin.audit.EventBuilder;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.config.CandlepinCommonTestConfig;
@@ -54,6 +55,7 @@ import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ServiceLevelValidator;
+import org.candlepin.util.FactValidator;
 
 import org.junit.Before;
 import org.junit.Ignore;
@@ -98,6 +100,7 @@ public class ConsumerResourceUpdateTest {
 
     @Before
     public void init() throws Exception {
+        Configuration config = new CandlepinCommonTestConfig();
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
 
         this.resource = new ConsumerResource(this.consumerCurator,
@@ -106,11 +109,11 @@ public class ConsumerResourceUpdateTest {
             this.userService, null, poolManager, null, null,
             this.activationKeyCurator, this.entitler, this.complianceRules,
             this.deletedConsumerCurator, this.environmentCurator, null,
-            new CandlepinCommonTestConfig(), null, null, null, this.consumerBindUtil);
+            config, null, null, null, this.consumerBindUtil,
+            new FactValidator(config, this.i18n));
 
         when(complianceRules.getStatus(any(Consumer.class), any(Date.class),
-                any(Boolean.class), any(Boolean.class)))
-            .thenReturn(new ComplianceStatus(new Date()));
+            any(Boolean.class), any(Boolean.class))).thenReturn(new ComplianceStatus(new Date()));
 
         when(idCertService.regenerateIdentityCert(any(Consumer.class)))
             .thenReturn(new IdentityCertificate());

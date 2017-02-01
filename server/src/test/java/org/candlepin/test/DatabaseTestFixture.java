@@ -73,9 +73,13 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 
+import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
+
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Locale;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -83,6 +87,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+
 
 /**
  * Test fixture for test classes requiring access to the database.
@@ -113,7 +119,7 @@ public class DatabaseTestFixture {
 
     protected TestingInterceptor securityInterceptor;
     protected DateSourceForTesting dateSource;
-
+    protected I18n i18n;
 
     @BeforeClass
     public static void initClass() {
@@ -143,6 +149,8 @@ public class DatabaseTestFixture {
 
         HttpServletRequest req = parentInjector.getInstance(HttpServletRequest.class);
         when(req.getAttribute("username")).thenReturn("mock_user");
+
+        this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
     }
 
     @After
@@ -305,8 +313,7 @@ public class DatabaseTestFixture {
     }
 
     public Role createAdminRole(Owner owner) {
-        PermissionBlueprint p = new PermissionBlueprint(PermissionType.OWNER, owner,
-            Access.ALL);
+        PermissionBlueprint p = new PermissionBlueprint(PermissionType.OWNER, owner, Access.ALL);
         Role role = new Role("testrole" + TestUtil.randomInt());
         role.addPermission(p);
         return role;

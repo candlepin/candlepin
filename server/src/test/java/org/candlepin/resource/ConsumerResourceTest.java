@@ -37,6 +37,7 @@ import org.candlepin.auth.Access;
 import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.auth.SubResource;
 import org.candlepin.auth.UserPrincipal;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.config.CandlepinCommonTestConfig;
@@ -74,6 +75,7 @@ import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.test.TestUtil;
+import org.candlepin.util.FactValidator;
 import org.candlepin.util.ServiceLevelValidator;
 
 import org.apache.commons.lang.RandomStringUtils;
@@ -110,45 +112,34 @@ import javax.ws.rs.core.Response;
 public class ConsumerResourceTest {
 
     @SuppressWarnings("checkstyle:visibilitymodifier")
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
+    @Rule public ExpectedException thrown = ExpectedException.none();
 
     private I18n i18n;
+    private Configuration config;
+    private FactValidator factValidator;
 
-    @Mock
-    private ConsumerCurator mockedConsumerCurator;
-    @Mock
-    private OwnerCurator mockedOwnerCurator;
-    @Mock
-    private EntitlementCertServiceAdapter mockedEntitlementCertServiceAdapter;
-    @Mock
-    private SubscriptionServiceAdapter mockedSubscriptionServiceAdapter;
-    @Mock
-    private PoolManager mockedPoolManager;
-    @Mock
-    private EntitlementCurator mockedEntitlementCurator;
-    @Mock
-    private ComplianceRules mockedComplianceRules;
-    @Mock
-    private ServiceLevelValidator mockedServiceLevelValidator;
-    @Mock
-    private ActivationKeyRules mockedActivationKeyRules;
-    @Mock
-    private EventFactory eventFactory;
-    @Mock
-    private EventBuilder eventBuilder;
-    @Mock
-    private ConsumerBindUtil consumerBindUtil;
+    @Mock private ConsumerCurator mockedConsumerCurator;
+    @Mock private OwnerCurator mockedOwnerCurator;
+    @Mock private EntitlementCertServiceAdapter mockedEntitlementCertServiceAdapter;
+    @Mock private SubscriptionServiceAdapter mockedSubscriptionServiceAdapter;
+    @Mock private PoolManager mockedPoolManager;
+    @Mock private EntitlementCurator mockedEntitlementCurator;
+    @Mock private ComplianceRules mockedComplianceRules;
+    @Mock private ServiceLevelValidator mockedServiceLevelValidator;
+    @Mock private ActivationKeyRules mockedActivationKeyRules;
+    @Mock private EventFactory eventFactory;
+    @Mock private EventBuilder eventBuilder;
+    @Mock private ConsumerBindUtil consumerBindUtil;
 
     @Before
     public void setUp() {
-        i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        when(eventBuilder.setOldEntity(any(Consumer.class)))
-            .thenReturn(eventBuilder);
-        when(eventBuilder.setNewEntity(any(Consumer.class)))
-            .thenReturn(eventBuilder);
-        when(eventFactory.getEventBuilder(any(Target.class), any(Type.class)))
-            .thenReturn(eventBuilder);
+        this.config = new CandlepinCommonTestConfig();
+        this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
+        this.factValidator = new FactValidator(this.config, this.i18n);
+
+        when(eventBuilder.setOldEntity(any(Consumer.class))).thenReturn(eventBuilder);
+        when(eventBuilder.setNewEntity(any(Consumer.class))).thenReturn(eventBuilder);
+        when(eventFactory.getEventBuilder(any(Target.class), any(Type.class))).thenReturn(eventBuilder);
     }
 
     @Test
@@ -167,8 +158,8 @@ public class ConsumerResourceTest {
             mockedConsumerCurator, null, null, null, mockedEntitlementCurator, null,
             mockedEntitlementCertServiceAdapter, null, null, null, null, null,
             null, null, mockedPoolManager, null, null, null, null, null,
-            null, null, null, new CandlepinCommonTestConfig(), null, null, null,
-            consumerBindUtil);
+            null, null, null, this.config, null, null, null,
+            consumerBindUtil, this.factValidator);
 
         List<CertificateSerialDto> serials = consumerResource
             .getEntitlementCertificateSerials(consumer.getUuid());
@@ -197,7 +188,7 @@ public class ConsumerResourceTest {
         CandlepinPoolManager poolManager = new CandlepinPoolManager(null,
             mockedSubscriptionServiceAdapter, null,
             mockedEntitlementCertServiceAdapter, null, null,
-            new CandlepinCommonTestConfig(), null, null,
+            this.config, null, null,
             mockedEntitlementCurator, mockedConsumerCurator, null, null, null,
             mockedActivationKeyRules);
 
@@ -205,7 +196,7 @@ public class ConsumerResourceTest {
             mockedConsumerCurator, null, null, null, mockedEntitlementCurator, null,
             mockedEntitlementCertServiceAdapter, null, null, null, null, null, null,
             null, poolManager, null, null, null, null, null, null, null, null,
-            new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil);
+            this.config, null, null, null, consumerBindUtil, this.factValidator);
 
         consumerResource.regenerateEntitlementCertificates(consumer.getUuid(), "9999",
             false);
@@ -240,7 +231,8 @@ public class ConsumerResourceTest {
         ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null,
             null, null, null, null, null, null, null, null, null, null, null,
             null, mgr, null, null, null, null, null, null, null, null,
-            new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil);
+            this.config, null, null, null, consumerBindUtil, this.factValidator);
+
         cr.regenerateEntitlementCertificates(consumer.getUuid(), null, true);
         Mockito.verify(mgr, Mockito.times(1))
             .regenerateEntitlementCertificates(eq(consumer), eq(true));
@@ -270,7 +262,7 @@ public class ConsumerResourceTest {
         ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null,
             null, null, null, mockedIdSvc, null, null, sink, eventFactory, null, null,
             null, null, null, null, mockedOwnerCurator, null, null, null, null,
-            null, null, new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil);
+            null, null, this.config, null, null, null, consumerBindUtil, this.factValidator);
 
         Consumer fooc = cr.regenerateIdentityCertificates(consumer.getUuid());
 
@@ -307,7 +299,8 @@ public class ConsumerResourceTest {
         ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null,
             null, ssa, null, mockedIdSvc, null, null, sink, eventFactory, null, null,
             null, null, null, null, mockedOwnerCurator, null, null, rules, null,
-            null, null, new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil);
+            null, null, this.config, null, null, null, consumerBindUtil, this.factValidator);
+
         Consumer c = cr.getConsumer(consumer.getUuid());
 
         assertFalse(origserial.equals(c.getIdCert().getSerial().getSerial()));
@@ -330,7 +323,7 @@ public class ConsumerResourceTest {
         ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null,
             null, ssa, null, null, null, null, null, null, null, null, null, null,
             null, null, mockedOwnerCurator, null, null, rules, null, null, null,
-            new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil);
+            this.config, null, null, null, consumerBindUtil, this.factValidator);
 
         Consumer c = cr.getConsumer(consumer.getUuid());
 
@@ -360,7 +353,7 @@ public class ConsumerResourceTest {
         ConsumerResource cr = new ConsumerResource(null, ctc,
             null, null, null, null, null, i18n, null, null, null, null,
             null, null, null, null, oc, akc, null, null, null, null,
-            null, new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil);
+            null, this.config, null, null, null, consumerBindUtil, this.factValidator);
         cr.create(c, nap, null, "testOwner", "testKey");
     }
 
@@ -381,7 +374,7 @@ public class ConsumerResourceTest {
         ConsumerResource cr = new ConsumerResource(cc, null,
             null, sa, null, null, null, i18n, null, null, null, null, null,
             null, null, null, null, null, e, null, null, null, null,
-            new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil);
+            this.config, null, null, null, consumerBindUtil, this.factValidator);
         Response r = cr.bind("fakeConsumer", null, prodIds, null, null, null, false, null, null);
         assertEquals(null, r.getEntity());
     }
@@ -405,7 +398,8 @@ public class ConsumerResourceTest {
         ConsumerResource cr = new ConsumerResource(cc, null, null, sa,
             null, null, null, null, null, null, null, null, null, null,
             null, null, null, null, e, null, null, null, null,
-            new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil);
+            this.config, null, null, null, consumerBindUtil, this.factValidator);
+
         String dtStr = "2011-09-26T18:10:50.184081+00:00";
         Date dt = ResourceDateParser.parseDateString(dtStr);
         cr.bind("fakeConsumer", null, null, null, null, null, false, dtStr, null);
@@ -425,7 +419,7 @@ public class ConsumerResourceTest {
         ConsumerResource consumerResource = new ConsumerResource(consumerCurator, null,
             null, null, entitlementCurator, null, null, i18n, null, null, null,
             null, null, null, null, null, null, null, null, null, null, null,
-            null, new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil);
+            null, this.config, null, null, null, consumerBindUtil, this.factValidator);
 
         consumerResource.unbindBySerial("fake uuid",
             Long.valueOf(1234L));
@@ -437,12 +431,11 @@ public class ConsumerResourceTest {
         ConsumerResource consumerResource = new ConsumerResource(consumerCurator, null,
             null, null, null, null, null, i18n, null, null, null,
             null, null, null, null, null, null, null, null, null, null, null,
-            null, new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil);
+            null, this.config, null, null, null, consumerBindUtil, this.factValidator);
 
         consumerResource.bind("fake uuid", "fake pool uuid",
             new String[]{"12232"}, 1, null, null, false, null, null);
     }
-
 
     @Test(expected = NotFoundException.class)
     public void testBindByPoolBadConsumerUuid() throws Exception {
@@ -452,7 +445,7 @@ public class ConsumerResourceTest {
         ConsumerResource consumerResource = new ConsumerResource(consumerCurator, null,
             null, null, null, null, null, i18n, null, null, null,
             null, null, null, null, null, null, null, null, null, null, null,
-            null, new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil);
+            null, this.config, null, null, null, consumerBindUtil, this.factValidator);
 
         consumerResource.bind("notarealuuid", "fake pool uuid", null, null, null,
             null, false, null, null);
@@ -470,7 +463,7 @@ public class ConsumerResourceTest {
         ConsumerResource consumerResource = new ConsumerResource(consumerCurator, null,
             null, null, null, null, null, i18n, null, null, null,
             null, null, null, null, null, null, null, null, null, null, null,
-            null, new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil);
+            null, this.config, null, null, null, consumerBindUtil, this.factValidator);
 
         consumerResource.regenerateEntitlementCertificates("xyz", null, true);
     }
@@ -512,7 +505,7 @@ public class ConsumerResourceTest {
         ConsumerResource cr = new ConsumerResource(null, ctc,
             null, null, null, null, null, i18n, null, null, null, null,
             usa, null, null,  null, oc, null, null, null, null, null,
-            null, new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil);
+            null, this.config, null, null, null, consumerBindUtil, this.factValidator);
         cr.create(c, up, null, "testOwner", null);
     }
 
@@ -543,13 +536,11 @@ public class ConsumerResourceTest {
 
     ConsumerResource createConsumerResource(OwnerCurator oc) {
         ConsumerResource consumerResource = new ConsumerResource(
-            null, null, null, null, null, null, null,
-            i18n,
+            null, null, null, null, null, null, null, i18n,
             null, null, null, null, null, null, null, null,
-            oc,
-            null, null, null, null, null, null,
-            new CandlepinCommonTestConfig(),
-            null, null, null, null);
+            oc, null, null, null, null, null, null, this.config,
+            null, null, null, null, this.factValidator);
+
         return consumerResource;
     }
 
@@ -576,8 +567,8 @@ public class ConsumerResourceTest {
         ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null,
             null, null, null, null, null, i18n, null, null, null,
             null, null, null, null, null, null, null, null, mockedComplianceRules,
-            null, null, null, new CandlepinCommonTestConfig(), null, null, null,
-            consumerBindUtil);
+            null, null, null, this.config, null, null, null,
+            consumerBindUtil, this.factValidator);
 
         Map<String, ComplianceStatus> results = cr.getComplianceStatusList(uuids);
         assertEquals(2, results.size());
@@ -591,8 +582,8 @@ public class ConsumerResourceTest {
         ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null,
             null, null, null, null, null, i18n, null, null, null,
             null, null, null, null, null, null, null, null, mockedComplianceRules,
-            null, null, null, new CandlepinCommonTestConfig(),
-            null, null, null, consumerBindUtil);
+            null, null, null, this.config, null, null, null, consumerBindUtil, this.factValidator);
+
         cr.consumerExists("uuid");
     }
 
@@ -602,8 +593,7 @@ public class ConsumerResourceTest {
         ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null,
             null, null, null, null, null, i18n, null, null, null,
             null, null, null, null, null, null, null, null, mockedComplianceRules,
-            null, null, null, new CandlepinCommonTestConfig(),
-            null, null, null, consumerBindUtil);
+            null, null, null, this.config, null, null, null, consumerBindUtil, this.factValidator);
         cr.consumerExists("uuid");
     }
 
@@ -617,7 +607,7 @@ public class ConsumerResourceTest {
         ConsumerResource consumerResource = new ConsumerResource(consumerCurator, null,
             null, null, null, null, null, i18n, null, null, null,
             null, null, null, null, null, null, null, null, null, null, null,
-            null, new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil);
+            null, this.config, null, null, null, consumerBindUtil, this.factValidator);
 
         try {
             consumerResource.dryBind(consumer.getUuid(), "some-sla");
