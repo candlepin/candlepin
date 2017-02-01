@@ -248,7 +248,7 @@
         value="delete c from cp_consumer c where name like 'ueber_cert_consumer';"/>
 
     <changeSet id="20161025103454-1" author="mstead">
-        <validCheckSum>7:9b3c3db544862eaa6e7ff0cb9f9ef4b5</validCheckSum>
+        <validCheckSum>ALL</validCheckSum>
         <comment>Clean out all ueber cert (debug cert) data to avoid manual cleanup.
                  This changeset will remove both the 0.9.54 (copied data) AND the
                  2.0 ueber cert data. We are required to do this a second time since
