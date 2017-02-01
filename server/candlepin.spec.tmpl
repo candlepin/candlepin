@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.0.23
+Version: 2.0.24
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -220,6 +220,14 @@ fi
 
 #raw
 %changelog
+* Wed Feb 01 2017 Vritant Jain <adarshvritant@gmail.com> 2.0.24-1
+- 1412113: autobind fails when binding 2 pools together with same stackid
+  (adarshvritant@gmail.com)
+- Added a new Liquibase task for cleaning up unused tables (crog@redhat.com)
+- 1416825: Abstracted out property validation to new validator framework
+  (crog@redhat.com)
+- 1414426: Ability to get future pools by owner (wpoteat@redhat.com)
+
 * Mon Jan 30 2017 Vritant Jain <adarshvritant@gmail.com> 2.0.23-1
 - Fixed a bug that broke CP2 migration with activation keys (crog@redhat.com)
 * Fri Jan 20 2017 Vritant Jain <adarshvritant@gmail.com> 2.0.22-1
