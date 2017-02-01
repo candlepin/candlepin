@@ -674,4 +674,16 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 .setLockMode(LockModeType.PESSIMISTIC_WRITE).getResultList();
         log.debug("Done locking pools");
     }
+    /**
+     * Uses a database query to check if the pool is still
+     * in the database.
+     * @param pool pool to be searched in the database
+     * @return true if and only if the pool is still in the database
+     */
+    public boolean exists(Pool pool) {
+        return getEntityManager()
+                .createQuery("SELECT COUNT(p) FROM Pool p WHERE p=:pool", Long.class)
+                .setParameter("pool", pool)
+                .getSingleResult() > 0;
+    }
 }
