@@ -8,21 +8,10 @@
 
     <!-- POSTGRES/ORACLE QUERIES -->
 
-    <!-- Delete any ueber subscriptions that have been carried over from 0.9.54 -->
-    <property
-        dbms="postgresql,oracle,hsqldb"
-        name="delete_ueber_subs"
-        value="delete from cp_subscription
-               where id in (
-                 select s.id from cp_subscription s
-                   inner join cp_product p on s.product_id = p.id
-                   where p.name LIKE '%_ueber_product'
-               );" />
-
     <!-- Delete ueber entitlement certificates -->
     <property
         dbms="postgresql,oracle,hsqldb"
-        name="delete_ueber_certs"
+        name="delete_ueber_certs_round3"
         value="delete from cp_ent_certificate
                where entitlement_id in (
                  select e.id from cp_entitlement e
@@ -34,27 +23,17 @@
     <!-- Delete ueber entitlements -->
     <property
         dbms="postgresql,oracle,hsqldb"
-        name="delete_ueber_ents"
+        name="delete_ueber_ents_round3"
         value="delete from cp_entitlement
                where pool_id in (
                  select p.id from cp_pool p
                  inner join cp2_products prod ON prod.uuid = p.product_uuid
                  where prod.name like '%_ueber_product');"/>
 
-    <!-- Delete any ueber pool source subscriptions (0.9.54 records) -->
+    <!-- Delete any ueber pool source subscriptions -->
     <property
         dbms="postgresql,oracle,hsqldb"
-        name="delete_cp_pool_source_sub"
-        value="delete from cp_pool_source_sub
-               where pool_id in (
-                 select p.id from cp_pool p
-                 inner join cp2_products prod on prod.uuid = p.product_uuid
-                 where prod.name like '%_ueber_product');" />
-
-    <!-- Delete any ueber pool source subscriptions (2.0 records) -->
-    <property
-        dbms="postgresql,oracle,hsqldb"
-        name="delete_cp2_pool_source_sub"
+        name="delete_pool_source_sub_round3"
         value="delete from cp2_pool_source_sub
                where pool_id in (
                  select p.id from cp_pool p
@@ -64,28 +43,17 @@
     <!-- Delete any ueber pools -->
     <property
         dbms="postgresql,oracle,hsqldb"
-        name="delete_ueber_pools"
+        name="delete_ueber_pools_round3"
         value="delete from cp_pool
                where id in (
                  select p.id from cp_pool p
                  inner join cp2_products prod on prod.uuid = p.product_uuid
                  where prod.name like '%_ueber_product');"/>
 
-    <!-- Delete any ueber content (0.9.54 records) -->
-    <property
-        dbms="postgresql,oracle,hsqldb"
-        name="delete_ueber_content"
-        value="delete from cp_content
-               where id in (
-                 select c.id from cp_content c
-                 inner join cp_product_content pc on pc.content_id = c.id
-                 inner join cp_product p on p.id = pc.product_id
-                 where p.name LIKE '%_ueber_product');"/>
-
     <!-- Delete any ueber owner content (2.0 records) -->
     <property
         dbms="postgresql,oracle,hsqldb"
-        name="delete_cp2_owner_content"
+        name="delete_owner_content_round3"
         value="delete from cp2_owner_content
                where content_uuid in (
                  select c.uuid from cp2_content c
@@ -93,10 +61,10 @@
                    inner join cp2_products p on p.uuid=pc.product_uuid
                    where p.name LIKE '%ueber_product');"/>
 
-    <!-- Delete any ueber content (2.0 records) -->
+    <!-- Delete any ueber content  -->
     <property
         dbms="postgresql,oracle,hsqldb"
-        name="delete_cp2_ueber_content"
+        name="delete_ueber_content_round3"
         value="delete from cp2_content
                where uuid in (
                  select c.uuid from cp2_content c
@@ -104,47 +72,33 @@
                inner join cp2_products p on p.uuid=pc.product_uuid
                where p.name LIKE '%ueber_product');"/>
 
-    <!-- Delete any ueber products (0.9.54 records) -->
+    <!-- Delete any ueber owner products -->
     <property
         dbms="postgresql,oracle,hsqldb"
-        name="delete_ueber_products"
-        value="delete from cp_product where name like '%_ueber_product';"/>
-
-    <!-- Delete any ueber owner products (2.0 records) -->
-    <property
-        dbms="postgresql,oracle,hsqldb"
-        name="delete_cp2_owner_products"
+        name="delete_owner_products_round3"
         value="delete from cp2_owner_products
                where product_uuid in (
                     select uuid from cp2_products where name like '%ueber_product'
                );"/>
 
-    <!-- Delete any ueber products (2.0 records) -->
+    <!-- Delete any ueber products  -->
     <property
         dbms="postgresql,oracle,hsqldb"
-        name="delete_cp2_ueber_products"
+        name="delete_ueber_products_round3"
         value="delete from cp2_products where name like '%_ueber_product';"/>
 
     <!-- Delete any ueber consumers -->
     <property
         dbms="postgresql,oracle,hsqldb"
-        name="delete_ueber_consumers"
+        name="delete_ueber_consumers_round3"
         value="delete from cp_consumer where name like 'ueber_cert_consumer';"/>
 
     <!-- MYSQL QUERIES -->
 
-    <!-- Delete any ueber subscriptions that have been carried over from 0.9.54 -->
-    <property
-        dbms="mysql"
-        name="delete_ueber_subs"
-        value="delete s from cp_subscription s
-               inner join cp_product p on s.product_id = p.id
-                   where p.name LIKE '%_ueber_product';"/>
-
     <!-- Delete ueber entitlement certificates -->
     <property
         dbms="mysql"
-        name="delete_ueber_certs"
+        name="delete_ueber_certs_round3"
         value="delete ec from cp_ent_certificate ec
                    inner join cp_entitlement e on ec.entitlement_id = e.id
                    inner join cp_pool p on e.pool_id = p.id
@@ -154,25 +108,16 @@
     <!-- Delete ueber entitlements -->
     <property
         dbms="mysql"
-        name="delete_ueber_ents"
+        name="delete_ueber_ents_round3"
         value="delete e from cp_entitlement e
                    inner join cp_pool p on e.pool_id = p.id
                    inner join cp2_products prod ON prod.uuid = p.product_uuid
                where prod.name like '%_ueber_product';" />
 
-    <!-- Delete any ueber pool source subscriptions (0.9.54 records) -->
+    <!-- Delete any ueber pool source subscriptions  -->
     <property
         dbms="mysql"
-        name="delete_cp_pool_source_sub"
-        value="delete ss from cp_pool_source_sub ss
-                   inner join cp_pool p on ss.pool_id = p.id
-                   inner join cp2_products prod ON prod.uuid = p.product_uuid
-               where prod.name like '%_ueber_product';" />
-
-    <!-- Delete any ueber pool source subscriptions (2.0 records) -->
-    <property
-        dbms="mysql"
-        name="delete_cp2_pool_source_sub"
+        name="delete_pool_source_sub_round3"
         value="delete ss from cp2_pool_source_sub ss
                    inner join cp_pool p on ss.pool_id = p.id
                    inner join cp2_products prod ON prod.uuid = p.product_uuid
@@ -181,93 +126,62 @@
     <!-- Delete any ueber pools -->
     <property
         dbms="mysql"
-        name="delete_ueber_pools"
+        name="delete_ueber_pools_round3"
         value="delete p from cp_pool p
                    inner join cp2_products prod ON prod.uuid = p.product_uuid
                    where prod.name like '%_ueber_product';"/>
 
-    <!-- Delete any ueber content (0.9.54 records) -->
+    <!-- Delete any ueber owner content  -->
     <property
         dbms="mysql"
-        name="delete_ueber_content"
-        value="delete c from cp_content c
-                   inner join cp_product_content pc on pc.content_id = c.id
-                   inner join cp_product p on p.id = pc.product_id
-                   where p.name LIKE '%_ueber_product';"/>
-
-    <!-- Delete any ueber owner content (2.0 records) -->
-    <property
-        dbms="mysql"
-        name="delete_cp2_owner_content"
+        name="delete_owner_content_round3"
         value="delete oc from cp2_owner_content oc
                    inner join cp2_product_content pc on pc.content_uuid=oc.content_uuid
                    inner join cp2_products p on p.uuid=pc.product_uuid
                    where p.name LIKE '%ueber_product';"/>
 
-    <!-- Delete any ueber content (2.0 records) -->
+    <!-- Delete any ueber content  -->
     <property
         dbms="mysql"
-        name="delete_cp2_ueber_content"
+        name="delete_ueber_content_round3"
         value="delete c from cp2_content c
                    inner join cp2_product_content pc on pc.content_uuid=c.uuid
                    inner join cp2_products p on p.uuid=pc.product_uuid
                    where p.name LIKE '%ueber_product';"/>
 
-
-
-
-
-
-
-
-
-    <!-- Delete any ueber products (0.9.54 records) -->
+    <!-- Delete any ueber owner products  -->
     <property
         dbms="mysql"
-        name="delete_ueber_products"
-        value="delete p from cp_product p where name like '%_ueber_product';"/>
-
-    <!-- Delete any ueber owner products (2.0 records) -->
-    <property
-        dbms="mysql"
-        name="delete_cp2_owner_products"
+        name="delete_owner_products_round3"
         value="delete op from cp2_owner_products op
                    inner join cp2_products p on op.product_uuid = p.uuid
                    where name like '%ueber_product';"/>
 
-    <!-- Delete any ueber products (2.0 records) -->
+    <!-- Delete any ueber products -->
     <property
         dbms="mysql"
-        name="delete_cp2_ueber_products"
+        name="delete_ueber_products_round3"
         value="delete p from cp2_products p where name like '%_ueber_product';"/>
 
     <!-- Delete any ueber consumers -->
     <property
         dbms="mysql"
-        name="delete_ueber_consumers"
+        name="delete_ueber_consumers_round3"
         value="delete c from cp_consumer c where name like 'ueber_cert_consumer';"/>
 
-    <changeSet id="20161025103454-1" author="mstead">
+    <changeSet id="20170125112728-1" author="mstead">
         <validCheckSum>ALL</validCheckSum>
-        <comment>Clean out all ueber cert (debug cert) data to avoid manual cleanup.
-                 This changeset will remove both the 0.9.54 (copied data) AND the
-                 2.0 ueber cert data. We are required to do this a second time since
-                 another issue was found that would put the data in a strange state.</comment>
-        <sql>${delete_ueber_subs}</sql>
-        <sql>${delete_ueber_certs}</sql>
-        <sql>${delete_cp_pool_source_sub}</sql>
-        <sql>${delete_cp2_pool_source_sub}</sql>
-        <sql>${delete_ueber_ents}</sql>
-        <sql>${delete_ueber_pools}</sql>
-        <sql>${delete_ueber_content}</sql>
-        <sql>${delete_cp2_owner_content}</sql>
-        <sql>${delete_cp2_ueber_content}</sql>
-        <sql>${delete_ueber_products}</sql>
-        <sql>${delete_cp2_owner_products}</sql>
-        <sql>${delete_cp2_ueber_products}</sql>
-        <sql>${delete_ueber_consumers}</sql>
+        <comment>Round 3 ueber cert data cleanup.</comment>
+        <sql>${delete_ueber_certs_round3}</sql>
+        <sql>${delete_pool_source_sub_round3}</sql>
+        <sql>${delete_ueber_ents_round3}</sql>
+        <sql>${delete_ueber_pools_round3}</sql>
+        <sql>${delete_owner_content_round3}</sql>
+        <sql>${delete_ueber_content_round3}</sql>
+        <sql>${delete_owner_products_round3}</sql>
+        <sql>${delete_ueber_products_round3}</sql>
+        <sql>${delete_ueber_consumers_round3}</sql>
     </changeSet>
 
 </databaseChangeLog>
 <!-- vim: set expandtab sts=4 sw=4 ai: -->
-
