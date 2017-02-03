@@ -24,6 +24,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.Release;
 
 import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.GenericGenerator;
 
 import java.util.Collection;
@@ -84,8 +85,7 @@ public class ActivationKey extends AbstractHibernateObject implements Owned, Nam
     private Owner owner;
 
     @OneToMany(mappedBy = "key")
-    @Cascade({org.hibernate.annotations.CascadeType.ALL,
-        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    @Cascade({CascadeType.ALL, CascadeType.DELETE_ORPHAN})
     private Set<ActivationKeyPool> pools = new HashSet<ActivationKeyPool>();
 
     @ManyToMany
@@ -96,10 +96,8 @@ public class ActivationKey extends AbstractHibernateObject implements Owned, Nam
     private Set<Product> products = new HashSet<Product>();
 
     @OneToMany(targetEntity = ActivationKeyContentOverride.class, mappedBy = "key")
-    @Cascade({org.hibernate.annotations.CascadeType.ALL,
-        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
-    private Set<ActivationKeyContentOverride> contentOverrides =
-        new HashSet<ActivationKeyContentOverride>();
+    @Cascade({CascadeType.ALL, CascadeType.DELETE_ORPHAN})
+    private Set<ActivationKeyContentOverride> contentOverrides = new HashSet<ActivationKeyContentOverride>();
 
     @Column(length = RELEASE_VERSION_LENGTH, nullable =  true)
     @Size(max = RELEASE_VERSION_LENGTH)

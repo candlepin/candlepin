@@ -144,7 +144,7 @@ public class StoreFactory {
             // Do not look for deleted consumers because we do not want to throw
             // an exception and reject the whole request just because one of
             // the requested items is deleted.
-            return consumerCurator.findByUuids(keys);
+            return consumerCurator.findByUuids(keys).list();
         }
 
         @Override

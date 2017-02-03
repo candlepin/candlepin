@@ -51,4 +51,5 @@ public class ConsumerTypeCurator extends AbstractHibernateCurator<ConsumerType> 
         return (List<ConsumerType>) currentSession().createCriteria(ConsumerType.class)
             .add(Restrictions.in("label", labels)).list();
     }
+
 }

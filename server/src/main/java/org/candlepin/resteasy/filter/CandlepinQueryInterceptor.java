@@ -66,6 +66,12 @@ public class CandlepinQueryInterceptor implements PostProcessInterceptor {
         this.emProvider = emProvider;
     }
 
+    /**
+     * Opens a new session from the current session's session factory.
+     *
+     * @return
+     *  a newly opened session
+     */
     protected Session openSession() {
         Session currentSession = (Session) this.emProvider.get().getDelegate();
         SessionFactory factory = currentSession.getSessionFactory();

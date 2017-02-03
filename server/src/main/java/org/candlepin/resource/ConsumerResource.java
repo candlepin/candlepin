@@ -42,6 +42,7 @@ import org.candlepin.controller.AutobindDisabledForOwnerException;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.Certificate;
 import org.candlepin.model.CertificateSerialDto;
@@ -338,7 +339,7 @@ public class ConsumerResource {
     @Wrapped(element = "consumers")
     @Paginate
     @SuppressWarnings("checkstyle:indentation")
-    public List<Consumer> list(@QueryParam("username") String userName,
+    public CandlepinQuery<Consumer> list(@QueryParam("username") String userName,
         @QueryParam("type") Set<String> typeLabels,
         @QueryParam("owner") String ownerKey,
         @QueryParam("uuid") List<String> uuids,
@@ -364,15 +365,10 @@ public class ConsumerResource {
 
         List<ConsumerType> types =  consumerTypeValidator.findAndValidateTypeLabels(typeLabels);
 
-        Page<List<Consumer>> page = consumerCurator.searchOwnerConsumers(
+        return this.consumerCurator.searchOwnerConsumers(
             owner, userName, types, uuids, hypervisorIds, attrFilters,
             Collections.<String>emptyList(), Collections.<String>emptyList(),
-            Collections.<String>emptyList(),
-            pageRequest);
-
-        // Store the page for the LinkHeaderResponseFilter
-        ResteasyProviderFactory.pushContext(Page.class, page);
-        return page.getPageData();
+            Collections.<String>emptyList());
     }
 
     @ApiOperation(
@@ -2267,13 +2263,14 @@ public class ConsumerResource {
     @Transactional
     public Map<String, ComplianceStatus> getComplianceStatusList(
         @QueryParam("uuid") @Verify(value = Consumer.class, nullable = true) List<String> uuids) {
-        List<Consumer> consumers = uuids == null ? new LinkedList<Consumer>() :
-            consumerCurator.findByUuids(uuids);
+
         Map<String, ComplianceStatus> results = new HashMap<String, ComplianceStatus>();
 
-        for (Consumer consumer : consumers) {
-            ComplianceStatus status = complianceRules.getStatus(consumer, null);
-            results.put(consumer.getUuid(), status);
+        if (uuids != null && !uuids.isEmpty()) {
+            for (Consumer consumer : consumerCurator.findByUuids(uuids)) {
+                ComplianceStatus status = complianceRules.getStatus(consumer, null);
+                results.put(consumer.getUuid(), status);
+            }
         }
 
         return results;

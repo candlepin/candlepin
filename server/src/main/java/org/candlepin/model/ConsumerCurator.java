@@ -17,8 +17,6 @@ package org.candlepin.model;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
-import org.candlepin.common.paging.Page;
-import org.candlepin.common.paging.PageRequest;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.util.FactValidator;
 import org.candlepin.util.Util;
@@ -230,9 +228,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             return guestConsumersMap;
         }
 
-        List<Consumer> guestConsumersWithDupes = findByUuidsAndOwner(consumerUuids, owner);
         // At this point we might have duplicates for re-registered consumers:
-        for (Consumer c : guestConsumersWithDupes) {
+        for (Consumer c : this.findByUuidsAndOwner(consumerUuids, owner)) {
             String virtUuid = c.getFact("virt.uuid").toLowerCase();
             if (guestConsumersMap.get(virtUuid) == null) {
                 // Store both big and little endian forms in the result:
@@ -306,24 +303,27 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     @Transactional
-    public List<Consumer> findByUuids(Collection<String> uuids) {
-        return listByCriteria(
-            createSecureCriteria().add(Restrictions.in("uuid", uuids)));
+    public CandlepinQuery<Consumer> findByUuids(Collection<String> uuids) {
+        DetachedCriteria criteria = this.createSecureDetachedCriteria()
+            .add(Restrictions.in("uuid", uuids));
+
+        return this.cpQueryFactory.<Consumer>buildQuery(this.currentSession(), criteria);
     }
 
     @Transactional
-    public List<Consumer> findByUuidsAndOwner(Collection<String> uuids, Owner owner) {
-        Criteria criteria = currentSession().createCriteria(Consumer.class);
-        criteria.add(Restrictions.eq("owner", owner));
-        criteria.add(Restrictions.in("uuid", uuids));
-        return listByCriteria(criteria);
+    public CandlepinQuery<Consumer> findByUuidsAndOwner(Collection<String> uuids, Owner owner) {
+        DetachedCriteria criteria = DetachedCriteria.forClass(Consumer.class)
+            .add(Restrictions.eq("owner", owner))
+            .add(Restrictions.in("uuid", uuids));
+
+        return this.cpQueryFactory.<Consumer>buildQuery(this.currentSession(), criteria);
     }
 
     // NOTE: This is a giant hack that is for use *only* by SSLAuth in order
     // to bypass the authentication. Do not call it!
     // TODO: Come up with a better way to do this!
     public Consumer getConsumer(String uuid) {
-        Criteria criteria = createSecureCriteria()
+        Criteria criteria = this.createSecureCriteria()
             .add(Restrictions.eq("uuid", uuid));
 
         return (Consumer) criteria.uniqueResult();
@@ -348,22 +348,24 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      */
     @SuppressWarnings("unchecked")
     @Transactional
-    public Page<List<Consumer>> listByUsernameAndType(String userName, List<ConsumerType> types, Owner owner,
-        PageRequest pageRequest) {
+    public CandlepinQuery<Consumer> listByUsernameAndType(String userName, List<ConsumerType> types,
+        Owner owner) {
 
-        Criteria criteria = createSecureCriteria();
+        DetachedCriteria criteria = this.createSecureDetachedCriteria();
 
         if (userName != null) {
             criteria.add(Restrictions.eq("username", userName));
         }
+
         if (types != null && !types.isEmpty()) {
             criteria.add(Restrictions.in("type", types));
         }
+
         if (owner != null) {
             criteria.add(Restrictions.eq("owner", owner));
         }
 
-        return listByCriteria(criteria, pageRequest);
+        return this.cpQueryFactory.<Consumer>buildQuery(this.currentSession(), criteria);
     }
 
     /**
@@ -438,17 +440,15 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
     @Transactional
     public void updateLastCheckin(Consumer consumer, Date checkinDate) {
-        currentSession().createQuery("update Consumer c " +
-            "set c.lastCheckin = :date, " +
-            "c.updated = :date " +
-            "where c.id = :consumerid")
+        String hql = "UPDATE Consumer c SET c.lastCheckin = :date, c.updated = :date WHERE c.id = :cid";
+
+        this.currentSession().createQuery(hql)
             .setTimestamp("date", checkinDate)
-            .setParameter("consumerid", consumer.getId())
+            .setParameter("cid", consumer.getId())
             .executeUpdate();
     }
 
-    private boolean factsChanged(Map<String, String> updatedFacts,
-        Map<String, String> existingFacts) {
+    private boolean factsChanged(Map<String, String> updatedFacts, Map<String, String> existingFacts) {
         return !existingFacts.equals(updatedFacts);
     }
 
@@ -486,6 +486,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         for (Consumer toUpdate : consumers) {
             toReturn.add(update(toUpdate));
         }
+
         return toReturn;
     }
 
@@ -517,6 +518,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         for (String possibleId : Util.getPossibleUuids(guestId)) {
             guestIdCrit.add(Restrictions.eq("guestIdLower", possibleId.toLowerCase()));
         }
+
         Criteria crit = currentSession()
             .createCriteria(GuestId.class)
             .createAlias("consumer", "gconsumer")
@@ -525,6 +527,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             .addOrder(Order.desc("updated"))
             .setMaxResults(1)
             .setProjection(Projections.property("consumer"));
+
         Consumer host = (Consumer) crit.uniqueResult();
         cachedHosts.put(guestLower, host);
         return host;
@@ -541,8 +544,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         if (consumer.getFact("virt.uuid") != null &&
             !consumer.getFact("virt.uuid").trim().equals("")) {
             throw new BadRequestException(i18n.tr(
-                "The system with UUID {0} is a virtual guest. " +
-                "It does not have guests.",
+                "The system with UUID {0} is a virtual guest. It does not have guests.",
                 consumer.getUuid()));
         }
         List<Consumer> guests = new ArrayList<Consumer>();
@@ -552,14 +554,14 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
                 // Check if this is the most recent host to report the guest by asking
                 // for the consumer's current host and comparing it to ourselves.
                 if (consumer.equals(getHost(cg.getGuestId(), consumer.getOwner()))) {
-                    Consumer guest = findByVirtUuid(cg.getGuestId(),
-                        consumer.getOwner().getId());
+                    Consumer guest = findByVirtUuid(cg.getGuestId(), consumer.getOwner().getId());
                     if (guest != null) {
                         guests.add(guest);
                     }
                 }
             }
         }
+
         return guests;
     }
 
@@ -635,6 +637,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         for (String hypervisorId : hypervisorIds) {
             ors.add(Restrictions.eq("hvsr.hypervisorId", hypervisorId.toLowerCase()));
         }
+
         return Restrictions.or(ors.toArray(new Criterion[0]));
     }
 
@@ -690,11 +693,12 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     @SuppressWarnings("checkstyle:indentation")
-    public Page<List<Consumer>> searchOwnerConsumers(Owner owner, String userName,
+    public CandlepinQuery<Consumer> searchOwnerConsumers(Owner owner, String userName,
         Collection<ConsumerType> types, List<String> uuids, List<String> hypervisorIds,
         List<KeyValueParameter> factFilters, List<String> skus,
-        List<String> subscriptionIds, List<String> contracts, PageRequest pageRequest) {
-        Criteria crit = super.createSecureCriteria();
+        List<String> subscriptionIds, List<String> contracts) {
+
+        DetachedCriteria crit = super.createSecureDetachedCriteria();
         if (owner != null) {
             crit.add(Restrictions.eq("owner", owner));
         }
@@ -791,7 +795,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             }
         }
 
-        return listByCriteria(crit, pageRequest);
+        return this.cpQueryFactory.<Consumer>buildQuery(this.currentSession(), crit);
     }
 
     /*
@@ -868,10 +872,11 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * @return the number of consumers based on the type.
      */
     public int getConsumerCount(Owner owner, ConsumerType type) {
-        Criteria c = createSecureCriteria()
+        Criteria c = this.createSecureCriteria()
             .add(Restrictions.eq("owner", owner))
-            .add(Restrictions.eq("type", type));
-        c.setProjection(Projections.rowCount());
+            .add(Restrictions.eq("type", type))
+            .setProjection(Projections.rowCount());
+
         return ((Long) c.uniqueResult()).intValue();
     }
 
@@ -882,6 +887,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             .createAlias("entitlements", "ent")
             .setMaxResults(0)
             .setProjection(Projections.sum("ent.quantity"));
+
         Long result = (Long) c.uniqueResult();
         return result == null ? 0 : result.intValue();
     }

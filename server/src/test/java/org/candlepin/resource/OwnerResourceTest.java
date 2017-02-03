@@ -51,6 +51,7 @@ import org.candlepin.controller.ContentManager;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.OwnerManager;
 import org.candlepin.controller.ProductManager;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
@@ -695,11 +696,13 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         types.add("type");
         consumerTypeCurator.create(new ConsumerType("type"));
 
-        List<Consumer> results = ownerResource.listConsumers(
-            owner.getKey(), "username", types, uuids, null, null, null, null, null, new PageRequest()
-        );
+        CandlepinQuery<Consumer> result = ownerResource.listConsumers(
+            owner.getKey(), "username", types, uuids, null, null, null, null, null, new PageRequest());
 
-        assertEquals(0, results.size());
+        assertNotNull(result);
+        List<Consumer> consumers = result.list();
+
+        assertEquals(0, consumers.size());
     }
 
     @Test
@@ -716,8 +719,13 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         setupPrincipal(owner, Access.ALL);
         securityInterceptor.enable();
 
-        assertEquals(1, ownerResource.listConsumers(
-            owner.getKey(), null, null, uuids, null, null, null, null, null, null).size());
+        CandlepinQuery<Consumer> result = ownerResource.listConsumers(
+            owner.getKey(), null, null, uuids, null, null, null, null, null, null);
+
+        assertNotNull(result);
+        List<Consumer> consumers = result.list();
+
+        assertEquals(1, consumers.size());
     }
 
     /**
@@ -748,9 +756,13 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         setupPrincipal(owner, Access.ALL);
         securityInterceptor.enable();
 
-        List<Consumer> results = ownerResource.listConsumers(owner.getKey(), null,
-            null, uuids, null, null, null, null, null, null);
-        assertEquals(2, results.size());
+        CandlepinQuery<Consumer> result = ownerResource.listConsumers(
+            owner.getKey(), null, null, uuids, null, null, null, null, null, null);
+
+        assertNotNull(result);
+        List<Consumer> consumers = result.list();
+
+        assertEquals(2, consumers.size());
     }
 
     //copied from consumerCannotListAllConsumersInOwner

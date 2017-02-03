@@ -65,6 +65,8 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+
+
 /**
  * A Consumer is the entity that uses a given Entitlement. It can be a user,
  * system, or anything else we want to track as using the Entitlement.
