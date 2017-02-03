@@ -808,4 +808,38 @@ describe 'Hypervisor Resource', :type => :virt do
     job_detail['result'].should == "Could not update host/guest mapping. Auto-attach is disabled for owner #{owner['key']}."
   end
 
+  it 'Hypervisor Checkin should complete succesfully when a guest with host specific entitlement is migrated' do
+    owner_key = random_string('test_owner')
+    owner = create_owner owner_key
+
+    prod = create_product('taylorid', 'taylor swift', {:owner => owner_key, :version => "6.1"})
+    prod1 = create_product(nil, nil, {:owner => owner_key, :attributes => {
+      :stacking_id => "ouch",
+      "virt_limit" => 1,
+      "sockets" => 1,
+      "instance_multiplier" => 2,
+      "multi-entitlement" => "yes",
+      "host_limited" => "true"}})
+    create_pool_and_subscription(owner['key'], prod1['id'], 10, [prod['id']])
+
+    guest_facts = {
+      "virt.is_guest"=>"true",
+      "virt.uuid"=>"myGuestId",
+      "system.certificate_version"=>"3.2"
+    }
+    guest = @cp.register('guest.bind.com',:system, nil, guest_facts, 'admin',
+      owner_key, [], [{"productId" => prod.id, "productName" => "taylor swift"}])
+    hypervisor_facts = {
+      "virt.is_guest"=>"false"
+    }
+    hypervisor_guests = [{"guestId"=>"myGuestId"}]
+    hypervisor_id = random_string('hypervisorid')
+    hypervisor = @cp.register('hypervisor.bind.com',:system, nil, hypervisor_facts, 'admin',
+      owner_key, [], [{"productId" => prod.id, "productName" => "taylor swift"}], nil, [], hypervisor_id)
+    hypervisor = @cp.update_consumer({:uuid => hypervisor.uuid, :guestIds => hypervisor_guests})
+    @cp.consume_product(nil, {:uuid => guest.uuid})
+    @cp.list_entitlements({:uuid => guest.uuid}).length.should == 1
+    user = user_client(owner, random_string("user"))
+    job_detail = async_update_hypervisor(owner, user, 'hypervisor.bind.com', hypervisor_id, ["blah"])
+  end
 end
