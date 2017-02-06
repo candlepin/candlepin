@@ -781,6 +781,19 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         return result;
     }
 
+    public List<E> lockAndLoadBatchById(Iterable<String> ids) {
+        List<E> result = new LinkedList<E>();
+        for (String id : ids) {
+            // Load at the current lock level so an existing object in the session will be loaded
+            // if it already exists.
+            E entity = getEntityManager().find(this.entityType(), id);
+            // Use refresh in order to upgrade the lock level & return the new version of the entity
+            getEntityManager().refresh(entity, LockModeType.PESSIMISTIC_WRITE);
+            result.add(entity);
+        }
+        return result;
+    }
+
     /**
      * Performs a bulk update on the given table/column, setting the values from the keys of the
      * provided map to the map's values.

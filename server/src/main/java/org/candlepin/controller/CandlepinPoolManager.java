@@ -1485,7 +1485,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         log.debug("Locking pools: {}", poolQuantityMap.keySet());
 
-        List<Pool> pools = poolCurator.lockAndLoadBatch(poolQuantityMap.keySet());
+        List<Pool> pools = poolCurator.lockAndLoadBatchById(poolQuantityMap.keySet());
 
         if (log.isDebugEnabled()) {
             for (Pool pool : pools) {
@@ -1555,8 +1555,7 @@ public class CandlepinPoolManager implements PoolManager {
         log.info("Processing entitlements and persisting.");
         entitlements = handler.handleEntitlement(consumer, poolQuantities, entitlements);
 
-        // The quantity is calculated at fetch time. We update it here
-        // To reflect what we just added to the db.
+        List<Pool> poolsToSave = new ArrayList<Pool>();
         for (PoolQuantity poolQuantity : poolQuantities.values()) {
             Pool pool = poolQuantity.getPool();
             Integer quantity = poolQuantity.getQuantity();
@@ -1564,7 +1563,9 @@ public class CandlepinPoolManager implements PoolManager {
             if (consumer.getType().isManifest()) {
                 pool.setExported(pool.getExported() + quantity);
             }
+            poolsToSave.add(pool);
         }
+        poolCurator.updateAll(poolsToSave, false, false);
 
         handler.handlePostEntitlement(this, consumer, entitlements);
         handler.handleSelfCertificates(consumer, poolQuantities, entitlements);
@@ -1724,6 +1725,7 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         log.debug("Adjusting consumed quantities on pools");
+        List<Pool> poolsToSave = new ArrayList<Pool>();
         for (Entitlement ent : entsToRevoke) {
             //We need to trigger lazy load of provided products
             //to have access to those products later in this method.
@@ -1735,7 +1737,9 @@ public class CandlepinPoolManager implements PoolManager {
             if (consumer.getType().isManifest()) {
                 pool.setExported(pool.getExported() - entQuantity);
             }
+            poolsToSave.add(pool);
         }
+        poolCurator.updateAll(poolsToSave, false, false);
 
         /**
          * Before deleting the entitlements, we need to find out if there are any
@@ -2361,5 +2365,10 @@ public class CandlepinPoolManager implements PoolManager {
             }
         }
         return filteredPools;
+    }
+
+    public void recalculatePoolQuantitiesForOwner(Owner owner) {
+        poolCurator.calculateConsumedForOwnersPools(owner);
+        poolCurator.calculateExportedForOwnersPools(owner);
     }
 }

@@ -153,6 +153,7 @@ public class Refresher {
 
         for (Owner owner : this.owners.values()) {
             poolManager.refreshPoolsWithRegeneration(subAdapter, owner, lazy);
+            poolManager.recalculatePoolQuantitiesForOwner(owner);
             ownerManager.refreshOwnerForContentAccess(owner);
         }
     }
