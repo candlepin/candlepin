@@ -22,6 +22,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +38,9 @@ import java.util.Set;
  * subscriptions will be migrated over. Unreferenced objects will be silently discarded.
  */
 public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
+
+    /** The maximum number of parameters we can cram into a single statement on all DBs. */
+    private static final int MAX_PARAMETERS_PER_STATEMENT = 32000;
 
     protected Map<String, String> migratedProducts;
     protected Map<String, String> migratedContent;
@@ -244,6 +248,47 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
     }
 
     /**
+     * Performs bulk insertion of product. Used by the migrateProductData method.
+     * <p></p>
+     * Each row present in the specified collection should include seven elements, representing the
+     * following columns: uuid, created, updated, multiplier, product_id, name, locked
+     *
+     * @param productRows
+     *  A collection of object arrays representing a row of product data to insert
+     */
+    private void bulkInsertProductData(List<Object[]> productRows) throws DatabaseException, SQLException {
+        if (productRows.size() > 0) {
+            this.logger.info("  Performing bulk migration of %d product entities", productRows.size());
+
+            PreparedStatement statement = this.generateBulkInsertStatement(
+                "cp2_products", productRows.size(),
+                "uuid", "created", "updated", "multiplier", "product_id", "name", "locked"
+            );
+
+            int index = 0;
+            for (Object[] row : productRows) {
+                for (Object col : row) {
+                    this.setParameter(statement, ++index, col);
+                }
+            }
+
+            int count = statement.executeUpdate();
+            if (count != productRows.size()) {
+                String errmsg = String.format(
+                    "Wrong number of products migrated. Expected: %s, Inserted: %s",
+                    productRows.size(), count
+                );
+
+                this.logger.error(errmsg);
+                throw new DatabaseException(errmsg);
+            }
+
+            this.logger.info("  Migrated %d products", count);
+            statement.close();
+        }
+    }
+
+    /**
      * Migrates product data. Must be called per-org.
      *
      * @param orgid
@@ -307,6 +352,8 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
             orgid, orgid, orgid, orgid, orgid, orgid, orgid
         );
 
+        int maxrows = MAX_PARAMETERS_PER_STATEMENT / 7;
+
         while (productInfo.next()) {
             String productId = productInfo.getString(1);
             String productUuid = this.migratedProducts.get(productId);
@@ -329,6 +376,13 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
                 // The rest of the product information will be migrated in one large batch operation
                 // in the migrateRelatedData method.
 
+                // If we've collected a full "block" of content data, migrate the block
+                if (productRows.size() > maxrows) {
+                    // Impl note: By some miracle, this doesn't close the outer result set.
+                    this.bulkInsertProductData(productRows);
+                    productRows.clear();
+                }
+
                 this.migratedProducts.put(productId, productUuid);
             }
 
@@ -337,59 +391,95 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
 
         productInfo.close();
 
-        // Do a bulk insert of all the unmigrated products we've encountered
-        if (productRows.size() > 0) {
+        // Do a bulk insert of any remaining unmigrated products we've encountered
+        bulkInsertProductData(productRows);
+        productRows.clear();
+
+        // // Do a bulk insert for all the products for this orgs...
+        if (uuidCache.size() > 0) {
+            maxrows = MAX_PARAMETERS_PER_STATEMENT / 2;
+
+            int lastBlock = 0;
+            int blockSize = maxrows / 2; // 79999
+            Iterator<String> uuidIterator = uuidCache.iterator();
+            PreparedStatement statement = null;
+
+            for (int offset = 0; offset < uuidCache.size(); offset += blockSize) {
+                int remaining = Math.min(uuidCache.size() - offset, blockSize);
+                if (remaining != lastBlock) {
+                    if (statement != null) {
+                        statement.close();
+                    }
+
+                    statement = this.generateBulkInsertStatement(
+                        "cp2_owner_products", remaining, "owner_id", "product_uuid"
+                    );
+
+                    lastBlock = remaining;
+                }
+
+                int index = 0;
+                while (remaining-- > 0) {
+                    this.setParameter(statement, ++index, orgid);
+                    this.setParameter(statement, ++index, uuidIterator.next());
+                }
+
+                int count = statement.executeUpdate();
+                if (count != uuidCache.size()) {
+                    String errmsg = String.format(
+                        "Wrong number of products assigned to org: %s. Expected: %s, Inserted: %s",
+                        orgid, uuidCache.size(), count
+                    );
+
+                    this.logger.error(errmsg);
+                    throw new DatabaseException(errmsg);
+                }
+            }
+
+            this.logger.info("  Assigned %d products to org", uuidCache.size());
+            statement.close();
+        }
+    }
+
+    /**
+     * Performs bulk insertion of content. Used by the migrateContentData method. Each row present
+     * in the specified collection should include 15 elements, representing the following columns:
+     * uuid, content_id, created, updated, contenturl, gpgurl, label, metadataexpire, name,
+     * releasever, requiredtags, type, vendor, arches and locked.
+     *
+     * @param contentRows
+     *  A collection of object arrays representing a row of content data to insert
+     */
+    private void bulkInsertContentData(List<Object[]> contentRows) throws DatabaseException, SQLException {
+        if (contentRows.size() > 0) {
+            this.logger.info("  Performing bulk migration of %d content entities", contentRows.size());
+
             PreparedStatement statement = this.generateBulkInsertStatement(
-                "cp2_products", productRows.size(),
-                "uuid", "created", "updated", "multiplier", "product_id", "name", "locked"
+                "cp2_content", contentRows.size(),
+                "uuid", "content_id", "created", "updated", "contenturl", "gpgurl", "label",
+                "metadataexpire", "name", "releasever", "requiredtags", "type", "vendor", "arches",
+                "locked"
             );
 
             int index = 0;
-            for (Object[] row : productRows) {
+            for (Object[] row : contentRows) {
                 for (Object col : row) {
                     this.setParameter(statement, ++index, col);
                 }
             }
 
             int count = statement.executeUpdate();
-            if (count != productRows.size()) {
+            if (count != contentRows.size()) {
                 String errmsg = String.format(
-                    "Wrong number of products migrated. Expected: %s, Inserted: %s",
-                    productRows.size(), count
+                    "Wrong number of contents migrated. Expected: %s, Inserted: %s",
+                    contentRows.size(), count
                 );
 
                 this.logger.error(errmsg);
                 throw new DatabaseException(errmsg);
             }
 
-            this.logger.info("  Migrated %d products", count);
-            statement.close();
-        }
-
-        // // Do a bulk insert for all the products for this orgs...
-        if (uuidCache.size() > 0) {
-            PreparedStatement statement = this.generateBulkInsertStatement(
-                "cp2_owner_products", uuidCache.size(), "owner_id", "product_uuid"
-            );
-            int index = 0;
-
-            for (String uuid : uuidCache) {
-                this.setParameter(statement, ++index, orgid);
-                this.setParameter(statement, ++index, uuid);
-            }
-
-            int count = statement.executeUpdate();
-            if (count != uuidCache.size()) {
-                String errmsg = String.format(
-                    "Wrong number of products assigned to org: %s. Expected: %s, Inserted: %s",
-                    orgid, uuidCache.size(), count
-                );
-
-                this.logger.error(errmsg);
-                throw new DatabaseException(errmsg);
-            }
-
-            this.logger.info("  Assigned %d products to org", count);
+            this.logger.info("  Migrated %d content", count);
             statement.close();
         }
     }
@@ -398,9 +488,7 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
      * Migrates content data.
      */
     @SuppressWarnings("checkstyle:methodlength")
-    protected void migrateContentData(String orgid)
-        throws DatabaseException, SQLException {
-
+    protected void migrateContentData(String orgid) throws DatabaseException, SQLException {
         this.logger.info("  Migrating content data...");
 
         List<Object[]> contentRows = new LinkedList<Object[]>();
@@ -416,6 +504,8 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
             "WHERE op.owner_id = ?",
             orgid
         );
+
+        int maxrows = MAX_PARAMETERS_PER_STATEMENT / 15;
 
         while (contentInfo.next()) {
             String contentId = contentInfo.getString(1);
@@ -448,6 +538,13 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
                 // The rest of the content information will be migrated in one large batch operation
                 // in the migrateRelatedData method.
 
+                // If we've collected a full "block" of content data, migrate the block
+                if (contentRows.size() > maxrows) {
+                    // Impl note: By some miracle, this doesn't close the outer result set.
+                    this.bulkInsertContentData(contentRows);
+                    contentRows.clear();
+                }
+
                 this.migratedContent.put(contentId, contentUuid);
             }
 
@@ -456,61 +553,52 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
 
         contentInfo.close();
 
-        // Do a bulk insert of all the unmigrated content we've encountered
-        if (contentRows.size() > 0) {
-            PreparedStatement statement = this.generateBulkInsertStatement(
-                "cp2_content", contentRows.size(),
-                "uuid", "content_id", "created", "updated", "contenturl", "gpgurl", "label",
-                "metadataexpire", "name", "releasever", "requiredtags", "type", "vendor", "arches",
-                "locked"
-            );
-
-            int index = 0;
-            for (Object[] row : contentRows) {
-                for (Object col : row) {
-                    this.setParameter(statement, ++index, col);
-                }
-            }
-
-            int count = statement.executeUpdate();
-            if (count != contentRows.size()) {
-                String errmsg = String.format(
-                    "Wrong number of contents migrated. Expected: %s, Inserted: %s",
-                    contentRows.size(), count
-                );
-
-                this.logger.error(errmsg);
-                throw new DatabaseException(errmsg);
-            }
-
-            this.logger.info("  Migrated %d content", count);
-            statement.close();
-        }
+        // Do a bulk insert of any remaining unmigrated content we've encountered
+        this.bulkInsertContentData(contentRows);
+        contentRows.clear();
 
         // Do a bulk insert for all the content for this orgs...
         if (uuidCache.size() > 0) {
-            PreparedStatement statement = this.generateBulkInsertStatement(
-                "cp2_owner_content", uuidCache.size(), "owner_id", "content_uuid"
-            );
+            maxrows = MAX_PARAMETERS_PER_STATEMENT / 2;
 
-            int index = 0;
-            for (String cid : uuidCache) {
-                this.setParameter(statement, ++index, orgid);
-                this.setParameter(statement, ++index, cid);
+            int lastBlock = 0;
+            int blockSize = maxrows / 2;
+            Iterator<String> uuidIterator = uuidCache.iterator();
+            PreparedStatement statement = null;
+
+            for (int offset = 0; offset < uuidCache.size(); offset += blockSize) {
+                int remaining = Math.min(uuidCache.size() - offset, blockSize);
+                if (remaining != lastBlock) {
+                    if (statement != null) {
+                        statement.close();
+                    }
+
+                    statement = this.generateBulkInsertStatement(
+                        "cp2_owner_content", remaining, "owner_id", "content_uuid"
+                    );
+
+                    lastBlock = remaining;
+                }
+
+                int index = 0;
+                while (remaining-- > 0) {
+                    this.setParameter(statement, ++index, orgid);
+                    this.setParameter(statement, ++index, uuidIterator.next());
+                }
+
+                int count = statement.executeUpdate();
+                if (count != uuidCache.size()) {
+                    String errmsg = String.format(
+                        "Wrong number of contents assigned to org: %s. Expected: %s, Inserted: %s",
+                        orgid, uuidCache.size(), count
+                    );
+
+                    this.logger.error(errmsg);
+                    throw new DatabaseException(errmsg);
+                }
             }
 
-            int count = statement.executeUpdate();
-            if (count != uuidCache.size()) {
-                String errmsg = String.format(
-                    "Wrong number of contents assigned to org: %s. Expected: %s, Inserted: %s",
-                    orgid, uuidCache.size(), count
-                );
-
-                this.logger.error(errmsg);
-                throw new DatabaseException(errmsg);
-            }
-
-            this.logger.info("  Assigned %d contents to org", count);
+            this.logger.info("  Assigned %d contents to org", uuidCache.size());
             statement.close();
         }
     }
