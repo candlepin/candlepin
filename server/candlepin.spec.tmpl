@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 0.9.54.18
+Version: 0.9.54.19
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -220,6 +220,20 @@ fi
 
 #raw
 %changelog
+* Tue Feb 07 2017 Vritant Jain <adarshvritant@gmail.com> 0.9.54.19-1
+- 1418376: Clean up ueber cert data (mstead@redhat.com)
+- 1416825: Abstracted out property validation to new validator framework
+  (crog@redhat.com)
+- 1394011: log on service level mismatch between guest and host
+  (adarshvritant@gmail.com)
+- 1371009: clearer error message (fixed typo) (pjonasti@redhat.com)
+- 1411304: Fix NPE when selectBestPools finds no pools with debug on
+  (adarshvritant@gmail.com)
+- 1371009:  Need clearer error message when register with system name exceeding
+  max characters. -throwing new exceptions with clear description + adding new
+  constant to Consumer -adding unit test -fix buildfile - repo of
+  org.xnap.commons.i18n was moved (pjonasti@redhat.com)
+
 * Wed Dec 14 2016 Vritant Jain <adarshvritant@gmail.com> 0.9.54.18-1
 - 1378593: Fix ConstraintViolationException when creating repos concurrently
   (adarshvritant@gmail.com)
