@@ -1282,4 +1282,9 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         this.cert = cert;
     }
 
+    @JsonIgnore
+    public boolean isUeberPool() {
+        return product != null && Product.ueberProductNameForOwner(owner).equals(product.getName());
+    }
+
 }
