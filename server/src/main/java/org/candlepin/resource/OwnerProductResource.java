@@ -228,8 +228,7 @@ public class OwnerProductResource {
         return product.toDTO();
     }
 
-    @ApiOperation(notes = "Retreives a Certificate for a Product",
-        value = "getProductCertificate")
+    @ApiOperation(notes = "Retreives a Certificate for a Product", value = "getProductCertificate")
     @ApiResponses({ @ApiResponse(code = 404, message = "") })
     @GET
     @Path("/{product_id}/certificate")
@@ -279,11 +278,7 @@ public class OwnerProductResource {
         }
         else if (!StringUtils.equals(update.getId(), productId)) {
             throw new BadRequestException(
-                    i18n.tr(
-                        "Contradictory ids in update request: {0}, {1}",
-                        productId,
-                        update.getId()
-                    )
+                i18n.tr("Contradictory ids in update request: {0}, {1}", productId, update.getId())
             );
         }
 
@@ -299,7 +294,7 @@ public class OwnerProductResource {
         return updated.toDTO();
     }
 
-    @ApiOperation(notes = "Adds Content to a Product  Batch mode", value = "addBatchContent")
+    @ApiOperation(notes = "Adds one or more Content entities to a Product", value = "addBatchContent")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -331,7 +326,7 @@ public class OwnerProductResource {
         return product.toDTO();
     }
 
-    @ApiOperation(notes = "Adds Content to a Product  Single mode", value = "addContent")
+    @ApiOperation(notes = "Adds a single Content to a Product", value = "addContent")
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.WILDCARD)
@@ -360,7 +355,7 @@ public class OwnerProductResource {
         return product.toDTO();
     }
 
-    @ApiOperation(notes = "Removes Content from a Product", value = "removeContent")
+    @ApiOperation(notes = "Removes a single Content from a Product", value = "removeContent")
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_id}/content/{content_id}")

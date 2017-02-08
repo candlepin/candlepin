@@ -21,6 +21,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.common.exceptions.BadRequestException;
+import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.controller.ProductManager;
 import org.candlepin.model.Content;
 import org.candlepin.model.Owner;
@@ -134,11 +135,8 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
         ProductData update = new ProductData();
         update.setName(product.getName());
         update.setAttribute("attri", "bute");
-        ProductData updated = this.ownerProductResource.updateProduct(
-            owner.getKey(),
-            product.getId(),
-            update);
-        assertEquals("bute", updated.getAttribute("attri").getValue());
+        ProductData result = this.ownerProductResource.updateProduct(owner.getKey(), product.getId(), update);
+        assertEquals("bute", result.getAttribute("attri").getValue());
     }
 
     @Test(expected = BadRequestException.class)
@@ -149,10 +147,7 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
         ProductData product = this.ownerProductResource.createProduct(owner.getKey(), productData);
         ProductData update = this.buildTestProductDTO();
         update.setId("TaylorSwift");
-        ProductData updated = this.ownerProductResource.updateProduct(
-            owner.getKey(),
-            product.getId(),
-            update);
+        ProductData result = this.ownerProductResource.updateProduct(owner.getKey(), product.getId(), update);
     }
 
     @Test(expected = BadRequestException.class)
@@ -178,13 +173,54 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
         pr.deleteProduct("owner", "10");
     }
 
+    @Test(expected = ForbiddenException.class)
+    public void testUpdateLockedProductFails() {
+        Owner owner = this.createOwner("test_owner");
+        Product product = this.createProduct("test_product", "test_product", owner);
+        ProductData productData = TestUtil.createProductDTO("test_product", "updated_name");
+        product.setLocked(true);
+        this.productCurator.merge(product);
+
+        assertNotNull(this.ownerProductCurator.getProductById(owner, productData.getId()));
+
+        try {
+            this.ownerProductResource.updateProduct(owner.getKey(), productData.getId(), productData);
+        }
+        catch (ForbiddenException e) {
+            Product entity = this.ownerProductCurator.getProductById(owner, productData.getId());
+            assertNotNull(entity);
+            assertTrue(entity.isChangedBy(productData));
+
+            throw e;
+        }
+    }
+
+    @Test(expected = ForbiddenException.class)
+    public void testDeleteLockedProductFails() {
+        Owner owner = this.createOwner("test_owner");
+        Product product = this.createProduct("test_product", "test_product", owner);
+        product.setLocked(true);
+        this.productCurator.merge(product);
+
+        assertNotNull(this.ownerProductCurator.getProductById(owner, product.getId()));
+
+        try {
+            this.ownerProductResource.deleteProduct(owner.getKey(), product.getId());
+        }
+        catch (ForbiddenException e) {
+            assertNotNull(this.ownerProductCurator.getProductById(owner, product.getId()));
+
+            throw e;
+        }
+    }
+
     @Test
     public void getProduct() {
         Owner owner = this.createOwner("Example-Corporation");
         Product entity = this.createProduct("test_product", "test_product", owner);
 
         securityInterceptor.enable();
-        ProductData result = ownerProductResource.getProduct(owner.getKey(), entity.getId());
+        ProductData result = this.ownerProductResource.getProduct(owner.getKey(), entity.getId());
 
         assertNotNull(result);
         assertFalse(entity.isChangedBy(result));
