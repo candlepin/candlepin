@@ -256,6 +256,7 @@ public class Entitlement extends AbstractHibernateObject
         this.quantity = quantity;
     }
 
+    @XmlTransient
     public Set<EntitlementCertificate> getCertificates() {
         return certificates;
     }
