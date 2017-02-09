@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.0.24
+Version: 2.0.25
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -220,6 +220,16 @@ fi
 
 #raw
 %changelog
+* Thu Feb 09 2017 Vritant Jain <adarshvritant@gmail.com> 2.0.25-1
+- 1420455: No ueber pool deletion on manifest cleanup (mstead@redhat.com)
+- 1419193: Fixed an issue with bulk insert statements during migration
+  (crog@redhat.com)
+- Made some optimizations to ConsumerCurator (crog@redhat.com)
+- Fix ProvidedProduct serialization (adarshvritant@gmail.com)
+- Fix checksum issue when migrating from 0.9.54 (mstead@redhat.com)
+- Ueber cert cleanup round 3 (mstead@redhat.com)
+- Pinhead counting feature (pjonasti@redhat.com)
+
 * Wed Feb 01 2017 Vritant Jain <adarshvritant@gmail.com> 2.0.24-1
 - 1412113: autobind fails when binding 2 pools together with same stackid
   (adarshvritant@gmail.com)
