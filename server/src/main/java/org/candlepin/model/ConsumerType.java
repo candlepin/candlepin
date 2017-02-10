@@ -61,8 +61,8 @@ public class ConsumerType extends AbstractHibernateObject {
      * Initial DB values that are part of a "basic" install ConsumerTypeEnum
      */
     public enum ConsumerTypeEnum {
-        SYSTEM("system", false), PERSON("person", false), DOMAIN("domain",
-            false), CANDLEPIN("candlepin", true), HYPERVISOR("hypervisor", false);
+        SYSTEM("system", false), PERSON("person", false), DOMAIN("domain", false),
+        CANDLEPIN("candlepin", true), HYPERVISOR("hypervisor", false), SHARE("share", false);
 
         private final String label;
         private final boolean manifest;

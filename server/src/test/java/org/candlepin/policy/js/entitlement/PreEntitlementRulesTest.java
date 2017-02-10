@@ -835,7 +835,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
 
     @Test
     public void devPoolConsumerDoesNotMatch() {
-        // Another comsumer we'll make a dev pool for:
+        // Another consumer we'll make a dev pool for:
         Consumer otherConsumer = new Consumer("test consumer", "test user", owner,
             new ConsumerType(ConsumerTypeEnum.SYSTEM));
         Pool pool = setupDevConsumerRestrictedPool(otherConsumer);

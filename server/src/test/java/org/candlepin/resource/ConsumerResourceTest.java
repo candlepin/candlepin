@@ -14,19 +14,10 @@
  */
 package org.candlepin.resource;
 
-import static org.candlepin.test.TestUtil.createIdCert;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.candlepin.test.TestUtil.*;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
@@ -147,6 +138,7 @@ public class ConsumerResourceTest {
     @Mock private ConsumerBindUtil consumerBindUtil;
     @Mock private OwnerManager mockOwnerManager;
     @Mock private ConsumerEnricher consumerEnricher;
+    @Mock private ConsumerTypeCurator mockConsumerTypeCurator;
 
     @Before
     public void setUp() {
@@ -158,6 +150,92 @@ public class ConsumerResourceTest {
         when(eventFactory.getEventBuilder(any(Target.class), any(Type.class))).thenReturn(eventBuilder);
 
         this.factValidator = new FactValidator(this.config, this.i18n);
+    }
+
+    @Test
+    public void testValidateShareConsumerDoesNotCreateIdentityCerts() {
+        ConsumerType share = new ConsumerType(ConsumerTypeEnum.SHARE);
+        Consumer c = new Consumer("test-consumer", "test-user", new Owner(
+            "Test Owner"), share);
+
+        ConsumerResource consumerResource = new ConsumerResource(
+            mockedConsumerCurator, mockConsumerTypeCurator, null, null, mockedEntitlementCurator, null,
+            mockedEntitlementCertServiceAdapter, i18n, null, null, null, null,
+            null, mockedPoolManager, null, mockedOwnerCurator, null, null, null,
+            null, null, null, new CandlepinCommonTestConfig(), null, null, null,
+            consumerBindUtil, productCurator, null, null, factValidator, null, consumerEnricher);
+
+        UserPrincipal uap = mock(UserPrincipal.class);
+        when(uap.canAccess(any(Object.class), any(SubResource.class), any(Access.class))).thenReturn
+            (Boolean.TRUE);
+
+        Owner o = mock(Owner.class);
+        when(mockedOwnerCurator.lookupByKey(any(String.class))).thenReturn(o);
+        when(mockConsumerTypeCurator.lookupByLabel(any(String.class))).thenReturn(share);
+
+        thrown.expect(BadRequestException.class);
+        thrown.expectMessage("cannot create an identity certificate");
+        consumerResource.create(c, uap, "test-user", "test-owner", null, true);
+    }
+
+    @Test
+    public void testValidateShareConsumerRequiresRecipientFact() {
+        ConsumerType share = new ConsumerType(ConsumerTypeEnum.SHARE);
+        Consumer c = new Consumer("test-consumer", "test-user", new Owner(
+            "Test Owner"), share);
+
+        ConsumerResource consumerResource = new ConsumerResource(
+            mockedConsumerCurator, mockConsumerTypeCurator, null, null, mockedEntitlementCurator, null,
+            mockedEntitlementCertServiceAdapter, i18n, null, null, null, null,
+            null, mockedPoolManager, null, mockedOwnerCurator, null, null, null,
+            null, null, null, new CandlepinCommonTestConfig(), null, null, null,
+            consumerBindUtil, productCurator, null, null, factValidator, null, consumerEnricher);
+
+        UserPrincipal uap = mock(UserPrincipal.class);
+        when(uap.canAccess(any(Object.class), any(SubResource.class), any(Access.class))).thenReturn
+            (Boolean.TRUE);
+
+        Owner o = mock(Owner.class);
+        when(mockedOwnerCurator.lookupByKey(any(String.class))).thenReturn(o);
+        when(mockConsumerTypeCurator.lookupByLabel(any(String.class))).thenReturn(share);
+
+        c.setFact("foo", "bar");
+
+        thrown.expect(BadRequestException.class);
+        thrown.expectMessage("must specify a fact");
+        consumerResource.create(c, uap, "test-user", "test-owner", null, false);
+    }
+
+    @Test
+    public void testValidateShareConsumerRequiresRecipientPermissions() {
+        ConsumerType share = new ConsumerType(ConsumerTypeEnum.SHARE);
+        Consumer c = new Consumer("test-consumer", "test-user", new Owner(
+            "Test Owner"), share);
+
+        ConsumerResource consumerResource = new ConsumerResource(
+            mockedConsumerCurator, mockConsumerTypeCurator, null, null, mockedEntitlementCurator, null,
+            mockedEntitlementCertServiceAdapter, i18n, null, null, null, null,
+            null, mockedPoolManager, null, mockedOwnerCurator, null, null, null,
+            null, null, null, new CandlepinCommonTestConfig(), null, null, null,
+            consumerBindUtil, productCurator, null, null, factValidator, null, consumerEnricher);
+
+        UserPrincipal uap = mock(UserPrincipal.class);
+        when(uap.canAccess(any(Object.class), any(SubResource.class), any(Access.class))).thenReturn
+            (Boolean.TRUE);
+
+        Owner o = mock(Owner.class);
+        when(mockedOwnerCurator.lookupByKey(any(String.class))).thenReturn(o);
+        when(mockConsumerTypeCurator.lookupByLabel(any(String.class))).thenReturn(share);
+
+        Owner o2 = mock(Owner.class);
+        c.setFact("share.recipient", "o2");
+        when(mockedOwnerCurator.lookupByKey(eq("o2"))).thenReturn(o2);
+
+        when(uap.canAccess(eq(o2), eq(SubResource.ENTITLEMENTS), eq(Access.CREATE))).thenReturn(Boolean
+            .FALSE);
+        thrown.expect(NotFoundException.class);
+        thrown.expectMessage("owner with key");
+        consumerResource.create(c, uap, "test-user", "test-owner", null, false);
     }
 
     @Test
@@ -374,15 +452,13 @@ public class ConsumerResourceTest {
 
     @Test
     public void testProductNoPool() throws Exception {
-        Consumer c = mock(Consumer.class);
-        Owner o = mock(Owner.class);
+        Consumer c = createConsumer();
         SubscriptionServiceAdapter sa = mock(SubscriptionServiceAdapter.class);
         Entitler e = mock(Entitler.class);
         ConsumerCurator cc = mock(ConsumerCurator.class);
         String[] prodIds = {"notthere"};
 
-        when(c.getOwner()).thenReturn(o);
-        when(sa.hasUnacceptedSubscriptionTerms(eq(o))).thenReturn(false);
+        when(sa.hasUnacceptedSubscriptionTerms(eq(c.getOwner()))).thenReturn(false);
         when(cc.verifyAndLookupConsumerWithEntitlements(eq("fakeConsumer"))).thenReturn(c);
         when(e.bindByProducts(any(AutobindData.class))).thenReturn(null);
 
@@ -441,8 +517,7 @@ public class ConsumerResourceTest {
 
     @Test
     public void futureHealing() throws Exception {
-        Consumer c = mock(Consumer.class);
-        Owner o = mock(Owner.class);
+        Consumer c = createConsumer();
         SubscriptionServiceAdapter sa = mock(SubscriptionServiceAdapter.class);
         Entitler e = mock(Entitler.class);
         ConsumerCurator cc = mock(ConsumerCurator.class);
@@ -450,10 +525,9 @@ public class ConsumerResourceTest {
         Set<ConsumerInstalledProduct> products = new HashSet<ConsumerInstalledProduct>();
         products.add(cip);
 
-        when(c.getOwner()).thenReturn(o);
         when(cip.getProductId()).thenReturn("product-foo");
-        when(sa.hasUnacceptedSubscriptionTerms(eq(o))).thenReturn(false);
-        when(cc.verifyAndLookupConsumerWithEntitlements(eq("fakeConsumer"))).thenReturn(c);
+        when(sa.hasUnacceptedSubscriptionTerms(eq(c.getOwner()))).thenReturn(false);
+        when(cc.verifyAndLookupConsumerWithEntitlements(eq(c.getUuid()))).thenReturn(c);
 
         ConsumerResource cr = new ConsumerResource(cc, null, null, sa,
             null, null, null, null, null, null, null, null, null, null,
@@ -463,7 +537,9 @@ public class ConsumerResourceTest {
 
         String dtStr = "2011-09-26T18:10:50.184081+00:00";
         Date dt = ResourceDateParser.parseDateString(dtStr);
-        cr.bind("fakeConsumer", null, null, null, null, null, false, dtStr, null, null, null);
+
+        cr.bind(c.getUuid(), null, null, null, null, null, false, dtStr, null, null, null);
+
         AutobindData data = AutobindData.create(c).on(dt);
         verify(e).bindByProducts(eq(data));
     }
@@ -519,7 +595,9 @@ public class ConsumerResourceTest {
             null, this.config, null, null, null, consumerBindUtil,
             null, null, this.factValidator, null, consumerEnricher);
 
-        consumerResource.bind("fake uuid", "fake pool uuid",
+        Consumer c = createConsumer();
+        when(consumerCurator.verifyAndLookupConsumerWithEntitlements(eq(c.getUuid()))).thenReturn(c);
+        consumerResource.bind(c.getUuid(), "fake pool uuid",
             new String[]{"12232"}, 1, null, null, false, null, null, null, null);
     }
 
@@ -536,7 +614,9 @@ public class ConsumerResourceTest {
         pools[0] = new PoolIdAndQuantity("first", 1);
         pools[1] = new PoolIdAndQuantity("second", 2);
 
-        consumerResource.bind("fake uuid", null,
+        Consumer c = createConsumer();
+        when(consumerCurator.verifyAndLookupConsumerWithEntitlements(eq(c.getUuid()))).thenReturn(c);
+        consumerResource.bind(c.getUuid(), null,
             new String[]{"12232"}, null, null, null, false, null, null, pools, null);
     }
 
@@ -553,7 +633,9 @@ public class ConsumerResourceTest {
         pools[0] = new PoolIdAndQuantity("first", 1);
         pools[1] = new PoolIdAndQuantity("second", 2);
 
-        consumerResource.bind("fake uuid", "assad",
+        Consumer c = createConsumer();
+        when(consumerCurator.verifyAndLookupConsumerWithEntitlements(eq(c.getUuid()))).thenReturn(c);
+        consumerResource.bind(c.getUuid(), "assad",
             null, null, null, null, false, null, null, pools, null);
     }
 
@@ -569,8 +651,9 @@ public class ConsumerResourceTest {
         PoolIdAndQuantity[] pools = new PoolIdAndQuantity[2];
         pools[0] = new PoolIdAndQuantity("first", 1);
         pools[1] = new PoolIdAndQuantity("second", 2);
-
-        consumerResource.bind("fake uuid", null,
+        Consumer c = createConsumer();
+        when(consumerCurator.verifyAndLookupConsumerWithEntitlements(eq(c.getUuid()))).thenReturn(c);
+        consumerResource.bind(c.getUuid(), null,
             null, null, null, null, false, null, null, pools, null);
     }
 
@@ -587,7 +670,9 @@ public class ConsumerResourceTest {
         pools[0] = new PoolIdAndQuantity("first", 1);
         pools[1] = new PoolIdAndQuantity("second", 2);
 
-        consumerResource.bind("fake uuid", null,
+        Consumer c = createConsumer();
+        when(consumerCurator.verifyAndLookupConsumerWithEntitlements(eq(c.getUuid()))).thenReturn(c);
+        consumerResource.bind(c.getUuid(), null,
             null, 1, null, null, false, null, null, pools, null);
     }
 
@@ -602,7 +687,9 @@ public class ConsumerResourceTest {
             null, this.config, null, null, null, consumerBindUtil,
             null, null, this.factValidator, null, consumerEnricher);
 
-        consumerResource.bind("notarealuuid", "fake pool uuid", null, null, null,
+        Consumer c = createConsumer();
+        when(consumerCurator.verifyAndLookupConsumerWithEntitlements(eq(c.getUuid()))).thenReturn(c);
+        consumerResource.bind(c.getUuid(), "fake pool uuid", null, null, null,
             null, false, null, null, null, null);
     }
 
