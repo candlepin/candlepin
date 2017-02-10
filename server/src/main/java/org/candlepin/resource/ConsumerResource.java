@@ -492,6 +492,10 @@ public class ConsumerResource {
             throw new BadRequestException(i18n.tr("System name cannot contain most special characters."));
         }
 
+        if (type.isType(ConsumerTypeEnum.SHARE)) {
+            validateShareConsumer(consumer, principal, keys, identityCertCreation);
+        }
+
         consumer.setOwner(owner);
         consumer.setType(type);
         consumer.setCanActivate(subAdapter.canActivateSubscription(consumer));
@@ -543,7 +547,7 @@ public class ConsumerResource {
                 consumer.setCreated(createdDate);
             }
             if (lastCheckIn != null) {
-                log.info("Creating with specific last checkin time: {}", consumer.getLastCheckin());
+                log.info("Creating with specific last check-in time: {}", consumer.getLastCheckin());
                 consumer.setLastCheckin(lastCheckIn);
             }
             if (identityCertCreation) {
@@ -578,6 +582,71 @@ public class ConsumerResource {
             log.error("Problem creating unit:", e);
             throw new BadRequestException(i18n.tr(
                 "Problem creating unit {0}", consumer));
+        }
+    }
+
+    /**
+     * Ensure that certain fields remain unset when creating a share consumer.
+     * @param consumer
+     * @param keys
+     * @param identityCertCreation
+     * @throws BadRequestException
+     */
+    private void validateShareConsumer(Consumer consumer, Principal principal, List<ActivationKey> keys,
+        boolean identityCertCreation) throws BadRequestException {
+        if (keys.size() > 0) {
+            throw new BadRequestException(i18n.tr(
+                "A unit type of \"share\" cannot be used with activation keys"
+            ));
+        }
+        if (identityCertCreation) {
+            throw new BadRequestException(i18n.tr(
+                "A unit of type \"share\" cannot create an identity certificate"
+            ));
+        }
+        if (StringUtils.isNotBlank(consumer.getServiceLevel())) {
+            throw new BadRequestException(i18n.tr(
+                "A unit type of \"share\" cannot have a service level"
+            ));
+        }
+        if (!consumer.getReleaseVer().equals(new Release(null))) {
+            throw new BadRequestException(i18n.tr(
+                "A unit type of \"share\" cannot have a release version"
+            ));
+        }
+        if (!consumer.getInstalledProducts().isEmpty()) {
+            throw new BadRequestException(i18n.tr(
+                "A unit type of \"share\" cannot have installed products"
+            ));
+        }
+        if (StringUtils.isNotBlank(consumer.getContentAccessMode())) {
+            throw new BadRequestException(i18n.tr(
+                "A unit type of \"share\" cannot have a content access mode"
+            ));
+        }
+        if (!consumer.getGuestIds().isEmpty()) {
+            throw new BadRequestException(i18n.tr(
+                "A unit type of \"share\" cannot have guest IDs"
+            ));
+        }
+        if (consumer.getHypervisorId() != null) {
+            throw new BadRequestException(i18n.tr(
+                "A unit type of \"share\" cannot have a hypervisor ID"
+            ));
+        }
+        if (consumer.getFact("share.recipient") == null) {
+            throw new BadRequestException(i18n.tr(
+                "A unit type of \"share\" must specify a fact \"share.recipient\" containing an org key"
+            ));
+        }
+        else {
+            Owner recipientOwner = ownerCurator.lookupByKey(consumer.getFact("share.recipient"));
+            // Check permissions for current principal on the recipient owner
+            if (!principal.canAccess(recipientOwner, SubResource.ENTITLEMENTS, Access.CREATE)) {
+                log.warn("User {} does not have access to create shares to org {}", principal
+                    .getPrincipalName(), recipientOwner.getKey());
+                throw new NotFoundException(i18n.tr("owner with key: {0} was not found.", recipientOwner.getKey()));
+            }
         }
     }
 
@@ -701,8 +770,6 @@ public class ConsumerResource {
 
     /**
      * @param consumer
-     * @param principal
-     * @param userName
      * @return a String object
      */
     private void checkConsumerName(Consumer consumer) {
@@ -1526,8 +1593,14 @@ public class ConsumerResource {
     }
 
     private void validateBindArguments(boolean hasPoolQuantities, String poolIdString, Integer quantity,
-        String[] productIds, List<String> fromPools, Date entitleDate, boolean async) {
+        String[] productIds, List<String> fromPools, Date entitleDate, Consumer consumer, boolean async) {
         short parameters = 0;
+
+        if (consumer.getType().isType(ConsumerTypeEnum.SHARE)) {
+            if (StringUtils.isBlank(poolIdString) || !hasPoolQuantities) {
+                throw new BadRequestException(i18n.tr("Share consumers must be bound to specific pools"));
+            }
+        }
 
         if (hasPoolQuantities) {
             parameters++;
@@ -1570,7 +1643,7 @@ public class ConsumerResource {
         "to the bind by products, but in this case we use the installed products on " +
         "the consumer, and their current compliant status, to determine which product" +
         " IDs should be requested. The entitle date is used the same as with bind by " +
-        "products. The Respose will contain a list of Entitlement objects if async is" +
+        "products. The response will contain a list of Entitlement objects if async is" +
         " false, or a JobDetail object if async is true.", value = "Bind Entitlements")
     @ApiResponses({ @ApiResponse(code = 400, message = ""),
         @ApiResponse(code = 403, message = "Binds Entitlements"), @ApiResponse(code = 404, message = "") })
@@ -1597,14 +1670,13 @@ public class ConsumerResource {
         // so the method takes in a real Date object and not just a String.
         Date entitleDate = ResourceDateParser.parseDateString(entitleDateStr);
 
-        // Check that only one query param was set, and some other validations
-        validateBindArguments(hasPoolQuantities, poolIdString, quantity, productIds, fromPools,
-            entitleDate, async);
-
         // Verify consumer exists:
         Consumer consumer = consumerCurator.verifyAndLookupConsumerWithEntitlements(consumerUuid);
-
         log.debug("Consumer (post verify): {}", consumer);
+
+        // Check that only one query param was set, and some other validations
+        validateBindArguments(hasPoolQuantities, poolIdString, quantity, productIds, fromPools,
+            entitleDate, consumer, async);
 
         if (hasPoolQuantities) {
             Map<String, PoolIdAndQuantity> pqMap = new HashMap<String, PoolIdAndQuantity>();
