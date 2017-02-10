@@ -41,6 +41,7 @@ function pool_type_name_space() {
 // consumer types
 var SYSTEM_TYPE = "system";
 var HYPERVISOR_TYPE = "hypervisor";
+var SHARE_TYPE = "share";
 
 // Consumer fact names
 var SOCKET_FACT="cpu.cpu_socket(s)";
@@ -67,7 +68,9 @@ var UNMAPPED_GUESTS_ONLY = "unmapped_guests_only";
 var GUEST_LIMIT_ATTRIBUTE = "guest_limit";
 var VCPU_ATTRIBUTE = "vcpu";
 var MULTI_ENTITLEMENT_ATTRIBUTE = "multi-entitlement";
+var SHARE_ATTRIBUTE = "share";
 var STACKING_ID_ATTRIBUTE = "stacking_id";
+
 var STORAGE_BAND_ATTRIBUTE = "storage_band";
 
 // caller types
@@ -1305,6 +1308,7 @@ var Entitlement = {
             "physical_only:1:physical_only," +
             "unmapped_guests_only:1:unmapped_guests_only," +
             "storage_band:1:storage_band," +
+            "share:1:share," +
             "requires_consumer:1:requires_consumer";
     },
 
@@ -1507,6 +1511,16 @@ var Entitlement = {
         return this.build_func("do_pre_requires_consumer")();
     },
 
+    do_pre_share: function(context, result) {
+        if (context.consumer.type.label == SHARE_TYPE &&
+            context.getAttribute(context.pool, SHARE_ATTRIBUTE)) {
+            result.addError("rulefailed.sharing.a.share.prohibited")
+        }
+    },
+
+    pre_share: function() {
+        return this.build_func("do_pre_share")();
+    },
 
     do_pre_requires_consumer_type: function(context, result) {
         // Distributors can access everything
