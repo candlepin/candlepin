@@ -40,8 +40,9 @@ public class DeletedConsumerCuratorTest extends DatabaseTestFixture {
 
     @Before
     @Override
-    public void init() {
+    public void init() throws Exception {
         super.init();
+
         DeletedConsumer dc = new DeletedConsumer("abcde", "10", "key", "name");
         dcc.create(dc);
         try {

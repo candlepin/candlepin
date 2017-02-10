@@ -171,7 +171,11 @@ public class DatabaseTestFixture {
     }
 
     @Before
-    public void init() {
+    public void init() throws Exception {
+        this.init(true);
+    }
+
+    public void init(boolean beginTransaction) throws Exception {
         this.config = new CandlepinCommonTestConfig();
         Module testingModule = new TestingModules.StandardTest(this.config);
         this.injector = parentInjector.createChildInjector(
@@ -198,7 +202,9 @@ public class DatabaseTestFixture {
 
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
 
-        this.beginTransaction();
+        if (beginTransaction) {
+            this.beginTransaction();
+        }
     }
 
     @After

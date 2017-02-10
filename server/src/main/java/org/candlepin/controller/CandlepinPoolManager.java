@@ -1039,35 +1039,12 @@ public class CandlepinPoolManager implements PoolManager {
     // NOTE: after calling this method both entitlement pool and consumer
     // parameters will most certainly be stale. beware!
     @Override
-    @Transactional
-    public List<Entitlement> entitleByProducts(AutobindData data)
-        throws EntitlementRefusedException {
-        Consumer consumer = data.getConsumer();
-        String[] productIds = data.getProductIds();
-        Collection<String> fromPools = data.getPossiblePools();
-        Date entitleDate = data.getOnDate();
-        Owner owner = consumer.getOwner();
-
+    public List<Entitlement> entitleByProducts(AutobindData data) throws EntitlementRefusedException {
         int retries = MAX_ENTITLE_RETRIES;
 
         while (true) {
             try {
-                List<PoolQuantity> bestPools = new ArrayList<PoolQuantity>();
-                // fromPools will be empty if the dev pool was already created.
-                if (consumer != null && consumer.isDev() && !fromPools.isEmpty()) {
-                    String poolId = fromPools.iterator().next();
-                    PoolQuantity pq = new PoolQuantity(poolCurator.find(poolId), 1);
-                    bestPools.add(pq);
-                }
-                else {
-                    bestPools = getBestPools(consumer, productIds, entitleDate, owner, null, fromPools);
-                }
-
-                if (bestPools == null) {
-                    return null;
-                }
-
-                return entitleByPools(consumer, convertToMap(bestPools));
+                return this.entitleByProductsImpl(data);
             }
             catch (EntitlementRefusedException e) {
                 // if there are any pools that had only one error, and that was
@@ -1097,6 +1074,45 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     /**
+     * Performs the work of the entitleByProducts method in its own transaction to help unlock
+     * pools which can no longer be bound.
+     * <p></p>
+     * This method should not be called directly, and is only declared protected to allow the
+     * @Transactional annotation to function.
+     *
+     * @param data
+     *  The autobind data to use for entitling a consumer
+     *
+     * @return
+     *  a list of entitlements created as for this autobind operation
+     */
+    @Transactional
+    protected List<Entitlement> entitleByProductsImpl(AutobindData data) throws EntitlementRefusedException {
+        Consumer consumer = data.getConsumer();
+        String[] productIds = data.getProductIds();
+        Collection<String> fromPools = data.getPossiblePools();
+        Date entitleDate = data.getOnDate();
+        Owner owner = consumer.getOwner();
+
+        List<PoolQuantity> bestPools = new ArrayList<PoolQuantity>();
+        // fromPools will be empty if the dev pool was already created.
+        if (consumer != null && consumer.isDev() && !fromPools.isEmpty()) {
+            String poolId = fromPools.iterator().next();
+            PoolQuantity pq = new PoolQuantity(poolCurator.find(poolId), 1);
+            bestPools.add(pq);
+        }
+        else {
+            bestPools = getBestPools(consumer, productIds, entitleDate, owner, null, fromPools);
+        }
+
+        if (bestPools == null) {
+            return null;
+        }
+
+        return entitleByPools(consumer, convertToMap(bestPools));
+    }
+
+    /**
      * Request an entitlement by product for a host system in
      * a host-guest relationship.  Allows getBestPoolsForHost
      * to choose products to bind.
@@ -1112,9 +1128,9 @@ public class CandlepinPoolManager implements PoolManager {
     // parameters will most certainly be stale. beware!
     @Override
     @Transactional
-    public List<Entitlement> entitleByProductsForHost(Consumer guest, Consumer host,
-        Date entitleDate, Collection<String> possiblePools)
-        throws EntitlementRefusedException {
+    public List<Entitlement> entitleByProductsForHost(Consumer guest, Consumer host, Date entitleDate,
+        Collection<String> possiblePools) throws EntitlementRefusedException {
+
         host = consumerCurator.lockAndLoad(host);
         List<Entitlement> entitlements = new LinkedList<Entitlement>();
         if (!host.getOwner().equals(guest.getOwner())) {
@@ -1128,8 +1144,8 @@ public class CandlepinPoolManager implements PoolManager {
             entitleDate = new Date();
         }
 
-        List<PoolQuantity> bestPools = getBestPoolsForHost(guest, host,
-            entitleDate, owner, null, possiblePools);
+        List<PoolQuantity> bestPools = getBestPoolsForHost(guest, host, entitleDate, owner, null,
+            possiblePools);
 
         if (bestPools == null) {
             log.info("No entitlements for host: {}", host.getUuid());
@@ -1154,10 +1170,10 @@ public class CandlepinPoolManager implements PoolManager {
      * @throws EntitlementRefusedException if unable to bind
      */
     @Override
-    public List<PoolQuantity> getBestPoolsForHost(Consumer guest,
-        Consumer host, Date entitleDate, Owner owner,
-        String serviceLevelOverride, Collection<String> fromPools)
+    public List<PoolQuantity> getBestPoolsForHost(Consumer guest, Consumer host, Date entitleDate,
+        Owner owner, String serviceLevelOverride, Collection<String> fromPools)
         throws EntitlementRefusedException {
+
         Map<String, ValidationResult> failedResults = new HashMap<String, ValidationResult>();
         log.debug("Looking up best pools for host: {}", host);
 

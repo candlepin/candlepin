@@ -47,7 +47,7 @@ public class CacheTestFixture extends DatabaseTestFixture {
     }
 
     @Override
-    public void init() {
+    public void init() throws Exception {
         super.init();
 
         CacheContextListener cacheListener = injector.getInstance(CacheContextListener.class);

@@ -32,7 +32,7 @@ public class ProductCertificateCuratorTest extends DatabaseTestFixture {
 
     @Before
     @Override
-    public void init() {
+    public void init() throws Exception {
         super.init();
 
         Owner owner = this.createOwner("Test Corporation");
