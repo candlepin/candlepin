@@ -32,9 +32,12 @@ import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.model.Certificate;
+import org.candlepin.model.CertificateSerial;
+import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.ContentAccessCertificate;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
@@ -47,6 +50,7 @@ import org.candlepin.pki.PKIReader;
 import org.candlepin.pki.impl.BouncyCastlePKIReader;
 import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
+import org.candlepin.service.ContentAccessCertServiceAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestDateUtil;
@@ -63,6 +67,7 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -84,6 +89,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @Inject private PermissionFactory permFactory;
     @Inject private ConsumerResource consumerResource;
     @Inject private IdentityCertServiceAdapter icsa;
+    @Inject private CertificateSerialCurator serialCurator;
 
     private ConsumerType standardSystemType;
     private ConsumerType personType;
@@ -611,5 +617,36 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         Set<String> result = new HashSet<String>();
         result.add(s);
         return result;
+    }
+
+    @Test
+    public void testContentAccessExpireRegen() {
+        owner.setContentAccessModeList(ContentAccessCertServiceAdapter.ORG_ENV_ACCESS_MODE);
+        owner.setContentAccessMode(ContentAccessCertServiceAdapter.ORG_ENV_ACCESS_MODE);
+        ownerCurator.merge(owner);
+
+        consumer = TestUtil.createConsumer(standardSystemType, owner);
+        consumerCurator.create(consumer);
+
+        List<Certificate> serials = consumerResource
+            .getEntitlementCertificates(consumer.getUuid(), null);
+        assertEquals(1, serials.size());
+
+        Certificate original = serials.get(0);
+        assert (original instanceof ContentAccessCertificate);
+        CertificateSerial serial  = original.getSerial();
+
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(serial.getExpiration());
+        cal.add(Calendar.YEAR, -2);
+        serial.setExpiration(cal.getTime());
+        serialCurator.merge(serial);
+
+        serials = consumerResource
+                .getEntitlementCertificates(consumer.getUuid(), null);
+        assertEquals(1, serials.size());
+        Certificate updated = serials.get(0);
+        assert (updated instanceof ContentAccessCertificate);
+        assertFalse(original.getSerial().getId() == updated.getSerial().getId());
     }
 }

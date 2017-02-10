@@ -70,7 +70,7 @@ public class X509V3ExtensionUtil extends X509Util {
     private static Logger log = LoggerFactory.getLogger(X509V3ExtensionUtil.class);
     private Configuration config;
     private EntitlementCurator entCurator;
-    private String thisVersion = "3.2";
+    private String thisVersion = "3.3";
 
     private long pathNodeId = 0;
     private long huffNodeId = 0;
