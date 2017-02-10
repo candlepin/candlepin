@@ -75,9 +75,7 @@ public class HealEntireOrgJob extends UniqueByEntityJob {
 
             Date entitleDate = (Date) map.get("entitle_date");
 
-            // TODO:
-            // Make sure this doesn't choke on MySQL, since we're doing queries with the cursor open.
-            for (String uuid : ownerCurator.getConsumerUuids(ownerId)) {
+            for (String uuid : ownerCurator.getConsumerUuids(ownerId).list()) {
                 // Do not send in product IDs.  CandlepinPoolManager will take care
                 // of looking up the non or partially compliant products to bind.
                 try {
