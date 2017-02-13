@@ -42,8 +42,9 @@ public class GuestIdCuratorTest extends DatabaseTestFixture {
 
     @Before
     @Override
-    public void init() {
+    public void init() throws Exception {
         super.init();
+
         owner = new Owner("test-owner", "Test Owner");
         owner = ownerCurator.create(owner);
         ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);

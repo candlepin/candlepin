@@ -69,7 +69,7 @@ public class CandlepinQueryInterceptorTest extends DatabaseTestFixture {
     protected Provider<EntityManager> emProvider;
 
     @Override
-    public void init() {
+    public void init() throws Exception {
         super.init();
 
         this.mockJsonProvider = mock(JsonProvider.class);

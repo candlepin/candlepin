@@ -38,7 +38,7 @@ public class OwnerAccessControlTest extends DatabaseTestFixture {
 
     @Before
     @Override
-    public void init() {
+    public void init() throws Exception {
         super.init();
         this.owner = createOwner();
     }

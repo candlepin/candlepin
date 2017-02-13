@@ -51,7 +51,7 @@ public class CuratorPaginationTest extends DatabaseTestFixture {
 
     @Before
     @Override
-    public void init() {
+    public void init() throws Exception {
         super.init();
 
         for (int i = 0; i < 10; i++) {

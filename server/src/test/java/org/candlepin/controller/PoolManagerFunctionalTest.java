@@ -101,7 +101,10 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
 
     @Before
-    public void setUp() throws Exception {
+    @Override
+    public void init() throws Exception {
+        super.init();
+
         o = createOwner();
         ownerCurator.create(o);
 

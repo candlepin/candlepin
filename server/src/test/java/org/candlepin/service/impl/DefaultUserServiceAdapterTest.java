@@ -57,7 +57,7 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
 
     @Before
     @Override
-    public void init() {
+    public void init() throws Exception {
         super.init();
         this.owner = ownerCurator.create(new Owner("default_owner"));
         this.service = new DefaultUserServiceAdapter(userCurator, roleCurator);
