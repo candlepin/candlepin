@@ -355,7 +355,14 @@ deploy
 
 eval $START
 
-sleep 10
+printf "Waiting for Candlepin to start..."
+until curl -k -s "https://localhost:8443/candlepin/status" > /dev/null
+do
+    printf "."
+    sleep 1
+done
+echo
+
 initialize_cp
 
 upload_products
