@@ -1403,10 +1403,9 @@ class Candlepin
   end
 
   def post(uri, data=nil)
-    puts ("POST #{uri} #{data}") if @verbose
     data = data.to_json if not data.nil?
-    response = get_client(uri, Net::HTTP::Post, :post)[URI.escape(uri)].post(
-      data, :content_type => :json, :accept => :json)
+    puts ("POST #{uri} #{data}") if @verbose
+    response = get_client(uri, Net::HTTP::Post, :post)[URI.escape(uri)].post(data, :content_type => :json, :accept => :json)
     return JSON.parse(response.body) unless response.body.empty?
   end
 
@@ -1423,8 +1422,8 @@ class Candlepin
   end
 
   def put(uri, data=nil)
-    puts ("PUT #{uri} #{data}") if @verbose
     data = data.to_json if not data.nil?
+    puts ("PUT #{uri} #{data}") if @verbose
     response = get_client(uri, Net::HTTP::Put, :put)[uri].put(
       data, :content_type => :json, :accept => :json)
 
