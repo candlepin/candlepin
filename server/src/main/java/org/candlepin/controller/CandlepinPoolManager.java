@@ -85,6 +85,12 @@ import java.util.Set;
  */
 public class CandlepinPoolManager implements PoolManager {
 
+    /**
+     * The maximum number of times autobind will retry to get entitlements when it fails due to
+     * not having enough quantity after finding pools -- usually the result of a synch error.
+     */
+    public static final int MAX_ENTITLE_RETRIES = 3;
+
     private PoolCurator poolCurator;
     private static Logger log = LoggerFactory.getLogger(CandlepinPoolManager.class);
 
@@ -489,9 +495,40 @@ public class CandlepinPoolManager implements PoolManager {
     // will most certainly be stale. beware!
     //
     @Override
+    public List<Entitlement> entitleByProducts(AutobindData data) throws EntitlementRefusedException {
+        int retries = MAX_ENTITLE_RETRIES;
+
+        while (true) {
+            try {
+                return this.entitleByProductsImpl(data);
+            }
+            catch (EntitlementRefusedException e) {
+                String key = e.getResult().getErrors().get(0).getResourceKey();
+
+                if (!"rulefailed.no.entitlements.available".equals(key) || --retries < 0) {
+                    throw e;
+                }
+
+                log.info("Entitlements exhausted between select best pools and bind operations; retrying");
+            }
+        }
+    }
+
+    /**
+     * Performs the work of the entitleByProducts method in its own transaction to help unlock
+     * pools which can no longer be bound.
+     * <p></p>
+     * This method should not be called directly, and is only declared protected to allow the
+     * @Transactional annotation to function.
+     *
+     * @param data
+     *  The autobind data to use for entitling a consumer
+     *
+     * @return
+     *  a list of entitlements created as for this autobind operation
+     */
     @Transactional
-    public List<Entitlement> entitleByProducts(AutobindData data)
-        throws EntitlementRefusedException {
+    protected List<Entitlement> entitleByProductsImpl(AutobindData data) throws EntitlementRefusedException {
         Consumer consumer = data.getConsumer();
         String[] productIds = data.getProductIds();
         Collection<String> fromPools = data.getPossiblePools();
@@ -507,8 +544,7 @@ public class CandlepinPoolManager implements PoolManager {
             bestPools.add(pq);
         }
         else {
-            bestPools = getBestPools(consumer, productIds,
-                entitleDate, owner, null, fromPools);
+            bestPools = getBestPools(consumer, productIds, entitleDate, owner, null, fromPools);
         }
 
         if (bestPools == null) {
@@ -516,10 +552,12 @@ public class CandlepinPoolManager implements PoolManager {
             if (productIds != null) {
                 fullList.addAll(Arrays.asList(productIds));
             }
+
             for (ConsumerInstalledProduct cip : consumer.getInstalledProducts()) {
                 fullList.add(cip.getId());
             }
-            log.info("No entitlements available for products: " + fullList);
+
+            log.info("No entitlements available for products: {}", fullList);
             return null;
         }
 
