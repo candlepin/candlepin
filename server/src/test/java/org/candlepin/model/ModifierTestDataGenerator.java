@@ -16,6 +16,9 @@ package org.candlepin.model;
 
 import org.candlepin.test.TestUtil;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -41,6 +44,8 @@ import javax.inject.Inject;
  *
  */
 public class ModifierTestDataGenerator {
+    private static Logger log = LoggerFactory.getLogger(ModifierTestDataGenerator.class);
+
     /**
      * All the entitlements of this consumer are expired
      */

@@ -59,6 +59,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.MapKeyColumn;
+import javax.persistence.OneToMany;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 import javax.persistence.Table;
@@ -174,7 +175,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     @NotNull
     private String uuid;
 
-    // Internal RH product ID,
+    // Internal RH product ID
     @Column(name = "product_id")
     @NotNull
     private String id;
@@ -184,9 +185,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     @NotNull
     private String name;
 
-    /**
-     * How many entitlements per quantity
-     */
+    /** How many entitlements per quantity */
     @Column
     private Long multiplier;
 
@@ -201,10 +200,9 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     @JsonDeserialize(using = CandlepinAttributeDeserializer.class)
     private Map<String, String> attributes;
 
-    @ElementCollection
+    @OneToMany(mappedBy = "product", orphanRemoval = true)
     @BatchSize(size = 32)
-    @CollectionTable(name = "cp2_product_content", joinColumns = @JoinColumn(name = "product_uuid"))
-    @Column(name = "content_uuid")
+    @Cascade({ CascadeType.ALL })
     @LazyCollection(LazyCollectionOption.EXTRA) // allows .size() without loading all data
     private List<ProductContent> productContent;
 

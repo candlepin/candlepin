@@ -19,13 +19,16 @@ import org.candlepin.model.dto.ProductContentData;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
-import org.hibernate.annotations.Parent;
+import org.hibernate.annotations.GenericGenerator;
 
 import java.io.Serializable;
 
-import javax.persistence.Embeddable;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlTransient;
 
@@ -34,12 +37,20 @@ import javax.xml.bind.annotation.XmlTransient;
 /**
  * ProductContent
  */
-@Embeddable
+@Entity
+@Table(name = ProductContent.DB_TABLE)
 public class ProductContent extends AbstractHibernateObject {
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp2_product_content";
 
-    @Parent
+    @Id
+    @GeneratedValue(generator = "system-uuid")
+    @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    @NotNull
+    private String id;
+
+    @ManyToOne
+    @JoinColumn(name = "product_uuid", nullable = false)
     @NotNull
     private Product product;
 
@@ -63,7 +74,7 @@ public class ProductContent extends AbstractHibernateObject {
     @Override
     @XmlTransient
     public Serializable getId() {
-        return null; // return new ProductContentKey(this.productUuid, this.contentUuid);
+        return this.id;
     }
 
     /**
@@ -207,8 +218,8 @@ public class ProductContent extends AbstractHibernateObject {
 
     public String toString() {
         return String.format(
-            "ProductContent [product = %s, content = %s, enabled = %s]",
-            this.getProduct(), this.getContent(), this.isEnabled()
+            "ProductContent [id: %s, product = %s, content = %s, enabled = %s -- id: (%s, %s)]",
+            this.getId(), this.getProduct(), this.getContent(), this.isEnabled()
         );
     }
 }

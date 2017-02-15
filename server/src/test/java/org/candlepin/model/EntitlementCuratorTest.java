@@ -32,7 +32,6 @@ import org.candlepin.test.TestUtil;
 
 import org.hamcrest.Matchers;
 import org.hibernate.Hibernate;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.sql.SQLIntegrityConstraintViolationException;
@@ -45,6 +44,8 @@ import java.util.List;
 import java.util.Set;
 
 import javax.inject.Inject;
+
+
 
 /**
  * EntitlementCuratorTest
@@ -70,6 +71,60 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     private Product providedProduct1;
     private Product providedProduct2;
     private Product testProduct;
+
+    @Override
+    public void init() throws Exception {
+        super.init();
+
+        modifyOwner = createOwner();
+        modifierData.createTestData(modifyOwner);
+        owner = createOwner();
+        ownerCurator.create(owner);
+
+        environment = new Environment("env1", "Env 1", owner);
+        environmentCurator.create(environment);
+
+        consumer = createConsumer(owner);
+        consumer.setEnvironment(environment);
+        consumerCurator.create(consumer);
+
+        testProduct = TestUtil.createProduct();
+        testProduct.setAttribute(Product.Attributes.VARIANT, "Starter Pack");
+        productCurator.create(testProduct);
+
+        Pool firstPool = createPool(owner, testProduct, 1L, dateSource.currentDate(), createDate(2020, 1, 1));
+        firstPool.setAttribute("pool_attr_1", "attr1");
+        poolCurator.merge(firstPool);
+
+        firstCertificate = createEntitlementCertificate("key", "certificate");
+
+        firstEntitlement = createEntitlement(owner, consumer, firstPool, firstCertificate);
+        entitlementCurator.create(firstEntitlement);
+
+        Product product1 = TestUtil.createProduct();
+        product1.setAttribute(Pool.Attributes.ENABLED_CONSUMER_TYPES, "satellite");
+        productCurator.create(product1);
+
+        Pool secondPool = createPool(owner, product1, 1L, dateSource.currentDate(), createDate(2020, 1, 1));
+        poolCurator.create(secondPool);
+
+        secondCertificate = createEntitlementCertificate("key", "certificate");
+
+        secondEntitlement = createEntitlement(owner, consumer, secondPool, secondCertificate);
+        entitlementCurator.create(secondEntitlement);
+
+        futureDate = createDate(2050, 1, 1);
+        pastDate = createDate(1998, 1, 1);
+
+        parentProduct = TestUtil.createProduct();
+        parentProduct2 = TestUtil.createProduct();
+        providedProduct1 = TestUtil.createProduct();
+        providedProduct2 = TestUtil.createProduct();
+        productCurator.create(parentProduct);
+        productCurator.create(parentProduct2);
+        productCurator.create(providedProduct1);
+        productCurator.create(providedProduct2);
+    }
 
     /**
      * Reproducer of EXTRA Lazy problem. This test is here mainly to demonstrate
@@ -116,62 +171,6 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         finally {
             rollbackTransaction();
         }
-    }
-
-    @Before
-    public void setUp() {
-        modifyOwner = createOwner();
-        modifierData.createTestData(modifyOwner);
-        owner = createOwner();
-        ownerCurator.create(owner);
-
-        environment = new Environment("env1", "Env 1", owner);
-        environmentCurator.create(environment);
-
-        consumer = createConsumer(owner);
-        consumer.setEnvironment(environment);
-        consumerCurator.create(consumer);
-
-        testProduct = TestUtil.createProduct();
-        testProduct.setAttribute(Product.Attributes.VARIANT, "Starter Pack");
-        productCurator.create(testProduct);
-
-        Pool firstPool = createPool(owner, testProduct, 1L,
-            dateSource.currentDate(), createDate(2020, 1, 1));
-        firstPool.setAttribute("pool_attr_1", "attr1");
-        poolCurator.merge(firstPool);
-
-        firstCertificate = createEntitlementCertificate("key", "certificate");
-
-        firstEntitlement = createEntitlement(owner, consumer, firstPool,
-            firstCertificate);
-        entitlementCurator.create(firstEntitlement);
-
-        Product product1 = TestUtil.createProduct();
-        product1.setAttribute(Pool.Attributes.ENABLED_CONSUMER_TYPES, "satellite");
-        productCurator.create(product1);
-
-        Pool secondPool = createPool(owner, product1, 1L,
-            dateSource.currentDate(), createDate(2020, 1, 1));
-        poolCurator.create(secondPool);
-
-        secondCertificate = createEntitlementCertificate("key", "certificate");
-
-        secondEntitlement = createEntitlement(owner, consumer, secondPool,
-            secondCertificate);
-        entitlementCurator.create(secondEntitlement);
-
-        futureDate = createDate(2050, 1, 1);
-        pastDate = createDate(1998, 1, 1);
-
-        parentProduct = TestUtil.createProduct();
-        parentProduct2 = TestUtil.createProduct();
-        providedProduct1 = TestUtil.createProduct();
-        providedProduct2 = TestUtil.createProduct();
-        productCurator.create(parentProduct);
-        productCurator.create(parentProduct2);
-        productCurator.create(providedProduct1);
-        productCurator.create(providedProduct2);
     }
 
     @Test
