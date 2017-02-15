@@ -113,6 +113,13 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         ContentAccessCertificate result = new ContentAccessCertificate();
         String pem = "";
 
+        if (existing != null &&
+            existing.getSerial().getExpiration().getTime() < (new Date()).getTime()) {
+            consumer.setContentAccessCert(null);
+            contentAccessCertificateCurator.delete(existing);
+            existing = null;
+        }
+
         if (existing == null) {
             Calendar cal = Calendar.getInstance();
             Date startDate = cal.getTime();

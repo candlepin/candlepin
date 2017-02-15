@@ -38,7 +38,7 @@ describe 'Environments Certificate V3' do
     ent = consumer_cp.consume_pool(pool['id'], {:quantity => 1})[0]
 
     value = extension_from_cert(ent['certificates'][0]['cert'], "1.3.6.1.4.1.2312.9.6")
-    value.should == "3.2"
+    value.should == "3.3"
 
     json_body = extract_payload(ent['certificates'][0]['cert'])
 
@@ -72,7 +72,7 @@ describe 'Environments Certificate V3' do
     ent = consumer_cp.consume_pool(pool['id'], {:quantity => 1})[0]
 
     value = extension_from_cert(ent['certificates'][0]['cert'], "1.3.6.1.4.1.2312.9.6")
-    value.should == "3.2"
+    value.should == "3.3"
 
     json_body = extract_payload(ent['certificates'][0]['cert'])
 

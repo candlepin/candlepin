@@ -71,26 +71,26 @@ describe 'Entitlement Certificate V3' do
     @user = user_client(@owner, random_string('billy'))
 
     @system = consumer_client(@user, random_string('system1'), :system, nil,
-                {'system.certificate_version' => '3.2',
+                {'system.certificate_version' => '3.3',
                  'uname.machine' => 'i386'})
   end
 
-  it 'generated a version 3.2 certificate when requesting a 3.0 certificate' do
+  it 'generated a version 3.3 certificate when requesting a 3.0 certificate' do
     # NOTE: This test covers the case where the system supports 3.0 certs, but
-    # the server is creating 3.2 certs, and the product contains attributes
+    # the server is creating 3.3 certs, and the product contains attributes
     # supported by 3.0.
     v3_system = consumer_client(@user, random_string('v3system'), :system, nil,
                                   {'system.certificate_version' => '3.0',
                                    'uname.machine' => 'i386'})
     v3_system.consume_product(@product_30.id)
     value = extension_from_cert(v3_system.list_certificates[0]['cert'], "1.3.6.1.4.1.2312.9.6")
-    value.should == "3.2"
+    value.should == "3.3"
   end
 
-  it 'generated a version 3.2 certificate' do
+  it 'generated a version 3.3 certificate' do
     entitlement = @system.consume_product(@product.id)[0]
     value = extension_from_cert(@system.list_certificates[0]['cert'], "1.3.6.1.4.1.2312.9.6")
-    value.should == "3.2"
+    value.should == "3.3"
     @system.unbind_entitlement entitlement.id
   end
 
@@ -235,7 +235,7 @@ describe 'Entitlement Certificate V3' do
     @system.unbind_entitlement entitlement.id
   end
 
-  it 'generates a version 3.2 certificate on distributors with a cert_v3 capability' do
+  it 'generates a version 3.3 certificate on distributors with a cert_v3 capability' do
     dist_name = random_string("SAMvBillion")
     dist_version = create_distributor_version(dist_name,
       "Subscription Asset Manager Billion",
@@ -247,6 +247,6 @@ describe 'Entitlement Certificate V3' do
     v3_system.consume_product(@product_30.id)
 
     value = extension_from_cert(v3_system.list_certificates[0]['cert'], "1.3.6.1.4.1.2312.9.6")
-    value.should == "3.2"
+    value.should == "3.3"
    end
 end
