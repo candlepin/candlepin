@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <property name="timestamp.type" value="TIMESTAMP WITHOUT TIME ZONE" dbms="oracle"/>
+    <property name="timestamp.type" value="TIMESTAMP WITHOUT TIME ZONE" dbms="postgresql"/>
+    <property name="timestamp.type" value="DATETIME" dbms="mysql"/>
+    <property name="cert.type" value="BLOB" dbms="oracle"/>
+    <property name="cert.type" value="bytea" dbms="postgresql"/>
+    <property name="cert.type" value="BLOB" dbms="mysql"/>
+
+    <changeSet id="20170202093945-1" author="mstead">
+        <comment>Create cp_ueber_cert table</comment>
+        <createTable tableName="cp_ueber_cert">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_ueber_cert_pkey"/>
+            </column>
+            <column name="created" type="${timestamp.type}"/>
+            <column name="updated" type="${timestamp.type}"/>
+            <column name="cert" type="${cert.type}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="privatekey" type="${cert.type}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="serial_id" type="BIGINT"/>
+            <column name="owner_id" type="varchar(32)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20170202093945-2" author="mstead">
+        <comment>Create the foreign key constraints for the ueber cert relationships.</comment>
+        <!-- Owner relationship -->
+        <addForeignKeyConstraint
+            baseTableName="cp_ueber_cert"
+            baseColumnNames="owner_id"
+            constraintName="fk_owner"
+            deferrable="false"
+            initiallyDeferred="false"
+            onDelete="NO ACTION"
+            onUpdate="NO ACTION"
+            referencedColumnNames="id"
+            referencedTableName="cp_owner"
+            referencesUniqueColumn="true" />
+
+        <!-- CertificateSerial relationship -->
+        <addForeignKeyConstraint
+             baseColumnNames="serial_id"
+             baseTableName="cp_ueber_cert"
+             constraintName="ueber_cert_serial_fk"
+             deferrable="false"
+             initiallyDeferred="false"
+             onDelete="NO ACTION"
+             onUpdate="NO ACTION"
+             referencedColumnNames="id"
+             referencedTableName="cp_cert_serial" />
+
+    </changeSet>
+
+    <changeSet id="20170202093945-3" author="mstead" dbms="oracle">
+        <comment>Add indexes for the foreign keys in oracle.</comment>
+        <createIndex indexName="owner_fk" tableName="cp_ueber_cert" unique="true">
+            <column name="ueber_cert_id"/>
+        </createIndex>
+        <createIndex indexName="ueber_cert_serial_fk" tableName="cp_ueber_cert" unique="false">
+            <column name="serial_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>
+<!-- vim: set expandtab sts=4 sw=4 ai: -->

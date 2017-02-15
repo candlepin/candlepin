@@ -47,7 +47,6 @@ import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
-import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EntitlementFilterBuilder;
@@ -66,6 +65,8 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.SourceSubscription;
+import org.candlepin.model.UeberCertificate;
+import org.candlepin.model.UeberCertificateCurator;
 import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.activationkeys.ActivationKey;
@@ -143,7 +144,6 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
 
-
 /**
  * Owner Resource
  */
@@ -173,6 +173,7 @@ public class OwnerResource {
     private ConsumerTypeCurator consumerTypeCurator;
     private EntitlementCertificateCurator entitlementCertCurator;
     private EntitlementCurator entitlementCurator;
+    private UeberCertificateCurator ueberCertCurator;
     private UeberCertificateGenerator ueberCertGenerator;
     private EnvironmentCurator envCurator;
     private CalculatedAttributesUtil calculatedAttributesUtil;
@@ -202,6 +203,7 @@ public class OwnerResource {
         ConsumerTypeCurator consumerTypeCurator,
         EntitlementCertificateCurator entitlementCertCurator,
         EntitlementCurator entitlementCurator,
+        UeberCertificateCurator ueberCertCurator,
         UeberCertificateGenerator ueberCertGenerator,
         EnvironmentCurator envCurator,
         CalculatedAttributesUtil calculatedAttributesUtil,
@@ -231,6 +233,7 @@ public class OwnerResource {
         this.consumerTypeCurator = consumerTypeCurator;
         this.entitlementCertCurator = entitlementCertCurator;
         this.entitlementCurator = entitlementCurator;
+        this.ueberCertCurator = ueberCertCurator;
         this.ueberCertGenerator = ueberCertGenerator;
         this.envCurator = envCurator;
         this.calculatedAttributesUtil = calculatedAttributesUtil;
@@ -1393,11 +1396,12 @@ public class OwnerResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/uebercert")
-    @ApiOperation(notes = "Creates an Ueber Entitlement Certificate",
+    @ApiOperation(notes = "Creates an Ueber Entitlement Certificate. If a certificate " +
+        "already exists, it will be regenerated.",
         value = "Create Ueber Entitlement Certificate")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found"),
         @ApiResponse(code = 400, message = "") })
-    public EntitlementCertificate createUeberCertificate(@Context Principal principal,
+    public UeberCertificate createUeberCertificate(@Context Principal principal,
         @Verify(Owner.class) @PathParam("owner_key") String ownerKey) {
         return ueberCertGenerator.generate(ownerKey, principal);
     }
@@ -1415,29 +1419,21 @@ public class OwnerResource {
     @ApiOperation(notes = "Retrieves the Ueber Entitlement Certificate",
         value = "Get Ueber Entitlement Certificate")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
-    public EntitlementCertificate getUeberCertificate(@Context Principal principal,
+    public UeberCertificate getUeberCertificate(@Context Principal principal,
         @Verify(Owner.class) @PathParam("owner_key") String ownerKey) {
 
         Owner o = findOwner(ownerKey);
         if (o == null) {
-            throw new NotFoundException(i18n.tr(
-                "owner with key: {0} was not found.", ownerKey));
+            throw new NotFoundException(i18n.tr("Owner with key: {0} was not found.", ownerKey));
         }
 
-        Consumer ueberConsumer =
-            consumerCurator.findByName(o, Consumer.UEBER_CERT_CONSUMER);
-
-        if (ueberConsumer == null) {
-            throw new NotFoundException(i18n.tr(
-                "uber certificate for owner {0} was not found. Please generate one.",
-                o.getKey()));
+        UeberCertificate ueberCert = ueberCertCurator.findForOwner(o);
+        if (ueberCert == null) {
+            throw new NotFoundException(
+                i18n.tr("uber certificate for owner {0} was not found. Please generate one.",
+                    o.getKey()));
         }
-
-        // ueber consumer has only one entitlement associated with it
-        List<EntitlementCertificate> ueberCertificate
-            = entitlementCertCurator.listForConsumer(ueberConsumer);
-
-        return ueberCertificate.get(0);
+        return ueberCert;
     }
 
     /**

@@ -298,9 +298,14 @@ class Candlepin
     delete "/owners/#{owner_key}/log"
   end
 
-  def generate_ueber_cert(owner_key)
+  def generate_ueber_cert(owner_key, filename="")
     uri = "/owners/#{owner_key}/uebercert"
-    post uri
+    result_json = post uri
+    if !filename.empty?
+      File.open(filename, 'w') { |f| f.write("#{result_json['key']}\n\n#{result_json['cert']}") }
+      return filename
+    end
+    result_json
   end
 
   def delete_owner(owner_key, revoke=true)

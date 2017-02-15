@@ -640,22 +640,6 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testConsumerCountsByEntitlementStatusExcludesUebercertConsumers() {
-        setupConsumerCountTest("test-user");
-
-        ConsumerType ueberType = consumerTypeCurator.lookupByLabel("uebercert");
-        Consumer ueberConsumer = new Consumer("test-ueber", "test-user", owner,
-            ueberType);
-        ueberConsumer.setEntitlementStatus(ComplianceStatus.GREEN);
-        consumerCurator.create(ueberConsumer);
-
-        // Even though we've added an ubercert consumer, the counts should remain
-        // as expected.
-        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
-        assertConsumerCountsByEntitlementStatus(info);
-    }
-
-    @Test
     public void testPermissionsAppliedWhenDeterminingConsumerCountsByEntStatus() {
         User mySystemsUser = setupOnlyMyConsumersPrincipal();
         setupConsumerCountTest("test-user");

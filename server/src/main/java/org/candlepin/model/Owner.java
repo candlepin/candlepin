@@ -48,7 +48,6 @@ import javax.xml.bind.annotation.XmlTransient;
 import io.swagger.annotations.ApiModelProperty;
 
 
-
 /**
  * Represents the owner of entitlements. This is akin to an organization,
  * whereas a User is an individual account within that organization.

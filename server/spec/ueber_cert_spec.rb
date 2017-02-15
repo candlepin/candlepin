@@ -23,16 +23,6 @@ describe 'Uebercert' do
     end.should raise_exception(RestClient::ResourceNotFound)
   end
 
-  it 'consumers can be deleted' do
-    owner = @cp.create_owner random_string("test_owner1")
-    @cp.generate_ueber_cert(owner['key'])
-    consumers = @cp.list_consumers({:owner => owner['key']})
-    consumers.size.should == 1
-    uber_consumer = consumers[0]
-    @cp.unregister(uber_consumer['uuid'])
-    @cp.list_consumers({:owner => owner['key']}).size.should == 0
-  end
-
   it "contains all content for the entire org" do
     prod_id1 = "test_prod_1"
     prod_id2 = "test_prod_2"
@@ -54,33 +44,16 @@ describe 'Uebercert' do
     @cp.add_content_to_product(owner1['key'], prod2.id, content3.id, true)
 
     create_pool_and_subscription(owner1['key'], prod1.id, 10, [], '12345', '6789', 'order1',
-				nil, nil, true)
+                nil, nil, true)
     create_pool_and_subscription(owner1['key'], prod2.id, 10, [], 'abcde', 'fghi', 'order2',
-				nil, nil, true)
+                nil, nil, true)
     create_pool_and_subscription(owner1['key'], prod3.id, 10, [], 'qwert', 'yuio', 'order3')
 
     # generate and verify cert
     ueber_cert = @cp.generate_ueber_cert(owner1['key'])
     ueber_cert.should_not be_nil
 
-    consumers = @cp.list_consumers({:owner => owner1['key'], :type => "uebercert"})
-    consumers.should_not be_nil
-    consumers.length.should == 1
-
-    ueber_consumer = consumers[0]
-    ueber_consumer["uuid"].should_not be_nil
-    ueber_consumer["uuid"].should_not be_empty
-
-    entitlements = @cp.list_entitlements({:uuid => ueber_consumer["uuid"]})
-    entitlements.should_not be_nil
-    entitlements.length.should == 1
-    entitlements[0].should_not be_nil
-
-    ueber_entitlement = entitlements[0]
-    ueber_entitlement["certificates"].should_not be_nil
-    ueber_entitlement["certificates"].length.should == 1
-
-    x509 = OpenSSL::X509::Certificate.new(ueber_entitlement["certificates"][0]["cert"])
+    x509 = OpenSSL::X509::Certificate.new(ueber_cert["cert"])
 
     # See BZ 1242310
     x509.not_after.should eq(Time.new(2049, 12, 1, 13, 0, 0, "+00:00"))
@@ -133,20 +106,6 @@ describe 'Uebercert' do
     t2 = Thread.new{_generate_cert(owner)}
     t1.join
     t2.join
-
-    # Verify that the consumer has a single cert.
-    consumers = @cp.list_consumers({:owner => owner['key'], :type => "uebercert"})
-    consumers.should_not be_nil
-    consumers.length.should == 1
-
-    ueber_consumer = consumers[0]
-    ueber_consumer["uuid"].should_not be_nil
-    ueber_consumer["uuid"].should_not be_empty
-
-    entitlements = @cp.list_entitlements({:uuid => ueber_consumer["uuid"]})
-    entitlements.should_not be_nil
-    entitlements.length.should == 1
-    entitlements[0].should_not be_nil
 
     # Verify that the cert can be generated again.
     _generate_cert(owner)

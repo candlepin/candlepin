@@ -339,7 +339,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         }
         if (o != null) {
             crit.add(Restrictions.eq("owner", o));
-            crit.add(Restrictions.ne("product.name", Product.ueberProductNameForOwner(o)));
         }
 
         if (activeOn != null) {
@@ -410,15 +409,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return listByCriteria(
             currentSession().createCriteria(Pool.class)
                 .add(Restrictions.eq("restrictedToUsername", username)));
-    }
-
-    @Transactional
-    public Pool findUeberPool(Owner o) {
-        return (Pool) createSecureCriteria()
-            .createAlias("product", "product")
-            .add(Restrictions.eq("owner", o))
-            .add(Restrictions.eq("product.name", Product.ueberProductNameForOwner(o)))
-            .uniqueResult();
     }
 
     @SuppressWarnings("unchecked")
