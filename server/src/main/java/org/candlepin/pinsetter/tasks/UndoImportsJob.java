@@ -17,6 +17,7 @@ package org.candlepin.pinsetter.tasks;
 import static org.quartz.JobBuilder.newJob;
 
 import org.candlepin.auth.Principal;
+import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
@@ -35,6 +36,7 @@ import org.candlepin.util.Util;
 
 import com.google.inject.persist.Transactional;
 
+import org.apache.log4j.MDC;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -210,6 +212,7 @@ public class UndoImportsJob extends UniqueByEntityJob {
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.OWNER);
         map.put(JobStatus.TARGET_ID, owner.getKey());
         map.put(LAZY_REGEN, lazy);
+        map.put(JobStatus.CORRELATION_ID, MDC.get(LoggingFilter.CSID));
 
         // Not sure if this is the best way to go:
         // Give each job a UUID to ensure that it is unique

@@ -18,6 +18,7 @@ import static org.quartz.JobBuilder.newJob;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.common.exceptions.BadRequestException;
+import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
@@ -37,6 +38,7 @@ import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.MDC;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -301,6 +303,7 @@ public class HypervisorUpdateJob extends KingpinJob {
         if (reporterId != null) {
             map.put(REPORTER_ID, reporterId);
         }
+        map.put(JobStatus.CORRELATION_ID, MDC.get(LoggingFilter.CSID));
 
         // Not sure if this is the best way to go:
         // Give each job a UUID to ensure that it is unique

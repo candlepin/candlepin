@@ -16,6 +16,7 @@ package org.candlepin.pinsetter.tasks;
 
 import static org.quartz.JobBuilder.*;
 
+import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.Refresher;
 import org.candlepin.model.OwnerProductCurator;
@@ -27,6 +28,7 @@ import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
 
+import org.apache.log4j.MDC;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -89,6 +91,7 @@ public class RefreshPoolsForProductJob extends KingpinJob {
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.PRODUCT);
         map.put(JobStatus.TARGET_ID, product.getUuid());
         map.put(LAZY_REGEN, lazy);
+        map.put(JobStatus.CORRELATION_ID, MDC.get(LoggingFilter.CSID));
 
         JobDetail detail = newJob(RefreshPoolsForProductJob.class)
             .withIdentity("refresh_pools_for_product" + Util.generateUUID())

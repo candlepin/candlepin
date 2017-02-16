@@ -16,6 +16,7 @@ package org.candlepin.pinsetter.tasks;
 
 import static org.quartz.JobBuilder.*;
 
+import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.controller.AutobindDisabledForOwnerException;
 import org.candlepin.controller.Entitler;
 import org.candlepin.model.Consumer;
@@ -26,6 +27,8 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.util.Util;
+
+import org.apache.log4j.MDC;
 import org.jboss.resteasy.spi.BadRequestException;
 
 import com.google.inject.Inject;
@@ -112,6 +115,7 @@ public class HealEntireOrgJob extends UniqueByEntityJob {
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.OWNER);
         map.put(JobStatus.TARGET_ID, ownerId);
         map.put("entitle_date", entitleDate);
+        map.put(JobStatus.CORRELATION_ID, MDC.get(LoggingFilter.CSID));
 
         JobDetail detail = newJob(HealEntireOrgJob.class)
             .withIdentity("heal_entire_org_" + Util.generateUUID())

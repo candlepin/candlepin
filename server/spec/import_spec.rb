@@ -22,6 +22,7 @@ describe 'Import Test Group:', :serial => true do
       @cp_export = StandardExporter.new
       @cp_export.create_candlepin_export()
       @cp_export_file = @cp_export.export_filename
+      @cp_correlation_id = "testcid"
 
       @candlepin_consumer = @cp_export.candlepin_client.get_consumer()
       @candlepin_consumer.unregister @candlepin_consumer['uuid']
@@ -51,10 +52,12 @@ describe 'Import Test Group:', :serial => true do
 
     def import_and_wait
       lambda { |owner_key, export_file, param_map={}|
+        param_map['correlation_id'] = @cp_correlation_id
         job = @cp.import_async(owner_key, export_file, param_map)
         # Wait a little longer here as import can take a bit of time
         wait_for_job(job["id"], 10)
         status = @cp.get_job(job["id"], true)
+        status["correlationId"].should == @cp_correlation_id
         if status["state"] == "FAILED"
           raise AsyncImportFailure.new(status)
         end

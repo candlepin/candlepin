@@ -59,6 +59,7 @@ public class JobStatus extends AbstractHibernateObject {
     public static final String TARGET_TYPE = "target_type";
     public static final String TARGET_ID = "target_id";
     public static final String OWNER_ID = "owner_id";
+    public static final String CORRELATION_ID = "correlation_id";
     public static final int RESULT_COL_LENGTH = 255;
 
     /**
@@ -112,6 +113,9 @@ public class JobStatus extends AbstractHibernateObject {
     private String ownerId;
 
     @Column(length = 255)
+    private String correlationId;
+
+    @Column(length = 255)
     private Class<? extends KingpinJob> jobClass;
 
     private byte[] resultData;
@@ -134,6 +138,7 @@ public class JobStatus extends AbstractHibernateObject {
         this.targetId = getTargetId(jobDetail);
         this.principalName = getPrincipalName(jobDetail);
         this.jobClass = getJobClass(jobDetail);
+        this.correlationId = getCorrelationId(jobDetail);
     }
 
     private String getPrincipalName(JobDetail detail) {
@@ -152,6 +157,10 @@ public class JobStatus extends AbstractHibernateObject {
 
     private String getOwnerId(JobDetail jobDetail) {
         return (String) jobDetail.getJobDataMap().get(OWNER_ID);
+    }
+
+    public String getCorrelationId(JobDetail jobDetail) {
+        return (String) jobDetail.getJobDataMap().get(CORRELATION_ID);
     }
 
     @SuppressWarnings("unchecked")
@@ -227,6 +236,9 @@ public class JobStatus extends AbstractHibernateObject {
         return targetId;
     }
 
+    public String getCorrelationId() {
+        return correlationId;
+    }
 
     public String getStatusPath() {
         return "/jobs/" + this.id;

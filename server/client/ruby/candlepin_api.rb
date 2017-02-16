@@ -1414,9 +1414,9 @@ class Candlepin
     return JSON.parse(response.body) unless response.body.empty?
   end
 
-  def post_file(uri, file=nil)
+  def post_file(uri, file=nil, params={})
     puts ("POST #{uri} #{file}") if @verbose
-    response = get_client(uri, Net::HTTP::Post, :post)[URI.escape(uri)].post(:import => file)
+    response = get_client(uri, Net::HTTP::Post, :post)[URI.escape(uri)].post({:import => file}, {'x-correlation-id' => params['correlation_id']})
     return JSON.parse(response.body) unless response.body.empty?
   end
 
@@ -1507,7 +1507,7 @@ class Candlepin
         path += "force=#{params[:force]}"
       end
     end
-    post_file path, File.new(filename)
+    post_file path, File.new(filename), params
   end
 
   def do_consumer_export(path, dest_dir, params)

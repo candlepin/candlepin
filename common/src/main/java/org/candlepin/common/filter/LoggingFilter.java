@@ -14,11 +14,13 @@
  */
 package org.candlepin.common.filter;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import java.io.IOException;
+import java.util.Enumeration;
 import java.util.UUID;
 
 import javax.inject.Singleton;
@@ -44,6 +46,8 @@ public class LoggingFilter implements Filter {
     private static Logger log = LoggerFactory.getLogger(LoggingFilter.class);
 
     private String customHeaderName;
+    private final int CORRELATION_ID_LENGTH = 40;
+    public static final String CSID = "csid";
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -71,6 +75,25 @@ public class LoggingFilter implements Filter {
             MDC.put("requestType", "req");
             String requestUUID = UUID.randomUUID().toString();
             MDC.put("requestUuid", requestUUID);
+
+            String correlationId = "";
+            Enumeration<String> headerNames = (Enumeration<String>) ((HttpServletRequest) request)
+                .getHeaderNames();
+            while (headerNames.hasMoreElements()) {
+                String name = (String) headerNames.nextElement();
+                if ("X-Correlation-ID".equalsIgnoreCase(name)) {
+                    correlationId = ((HttpServletRequest) request).getHeader(name);
+                }
+            }
+
+            if (StringUtils.isAlphanumeric(correlationId) &&
+                correlationId.length() <= CORRELATION_ID_LENGTH) {
+                MDC.put(CSID, correlationId);
+            }
+            else if (!StringUtils.isBlank(correlationId)) {
+                log.info("Correlation Id must be alphanumeric and contain {} or fewer characters.",
+                    CORRELATION_ID_LENGTH);
+            }
 
             // Add requestUuid to the serverRequest as an attribute, so Tomcat can
             // log it to the access log with "%{requestUuid}r"
