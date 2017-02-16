@@ -2094,79 +2094,15 @@ public class CandlepinPoolManager implements PoolManager {
             return result;
         }
 
-        /*
-         * selectBestPools can return multiple pools on the same stack.
-         * Hence there can be more than one entitlement with the same stack id here.
-         * enforcer.postEntitlement may try to create more than one stack derived pool
-         * per stack id if we provide that as input, so we sort the entitlements.
-         *
-         * Entitlements that share stack ids are operated individually.
-         * rest of the entitlements are operated in a batch.
-         *
-         * This is a stop gap implementation, and following further work is needed:
-         * 1. Right now for X entitlements that share stack ids, we lookup stack
-         *    derived pools for same stack id X number of times. one lookup per stack id
-         *    should be sufficient, and subsequent lookups can be avoided once a stack
-         *    derived pool is already created.
-         * 2. Today all entitlements maps have pool ids as keys, but trying to maintain
-         *    that consistency leads to redundancy in traversing collections as seen below.
-         *    This needs to be re-visited and possible re-factored.
-         * 3. Once looking up sub pools given a set of stack ids is CandlepinQuer-ized,
-         *    we should take advantage of that for #1.
-         * 4. We need to change enforcer.postEntitlement so it can consume batches of
-         *    entitlements that share stack ids, while maintaining efficiency with #1.
-         * 5. Last and least, There is a lot of method jumping in post bind operations,
-         *    we need some refactoring there.
-         *
-         */
         @Override
         public void handlePostEntitlement(PoolManager manager, Consumer consumer,
             Map<String, Entitlement> entitlements) {
-
-            Map<String, Integer> stackIdCounts = new HashMap<String, Integer>();
+            Set<String> stackIds = new HashSet<String>();
             for (Entitlement entitlement : entitlements.values()) {
                 if (entitlement.getPool().isStacked()) {
-                    String stackId = entitlement.getPool().getStackId();
-                    Integer count = stackIdCounts.containsKey(stackId) ?
-                        stackIdCounts.get(stackId) : 0;
-                    stackIdCounts.put(stackId, count + 1);
+                    stackIds.add(entitlement.getPool().getStackId());
                 }
             }
-            Set<String> uniqueStackIds = new HashSet<String>();
-            Map<String, Entitlement> uniqueEnts = new HashMap<String, Entitlement>();
-            Map<String, Entitlement> nonUniqueEnts = new HashMap<String, Entitlement>();
-            for (Entry<String, Entitlement> entry : entitlements.entrySet()) {
-                Pool p = entry.getValue().getPool();
-                if (p.isStacked() && stackIdCounts.get(p.getStackId()) > 1) {
-                    nonUniqueEnts.put(entry.getKey(), entry.getValue());
-                }
-                else {
-                    uniqueEnts.put(entry.getKey(), entry.getValue());
-                    if (p.isStacked()) {
-                        uniqueStackIds.add(p.getStackId());
-                    }
-                }
-            }
-            // ents with unique stack id can be operated in a batch
-            if (!uniqueEnts.isEmpty()) {
-                handlePostEntitlement(manager, consumer, uniqueEnts, uniqueStackIds);
-            }
-            // others must be operated individually
-            for (Entry<String, Entitlement> entry: nonUniqueEnts.entrySet()) {
-                Entitlement ent = entry.getValue();
-                Map<String, Entitlement> entMap = new HashMap<String, Entitlement>();
-                entMap.put(entry.getKey(), ent);
-                Set<String> stackIdSet = new HashSet<String>();
-                if (ent.getPool().isStacked()) {
-                    stackIdSet.add(ent.getPool().getStackId());
-                }
-                handlePostEntitlement(manager, consumer, entMap, stackIdSet);
-            }
-        }
-
-        private void handlePostEntitlement(PoolManager manager, Consumer consumer,
-            Map<String, Entitlement> entitlements, Set<String> stackIds) {
-
             List<Pool> subPoolsForStackIds = null;
             if (!stackIds.isEmpty()) {
                 subPoolsForStackIds = poolCurator.getSubPoolForStackIds(consumer, stackIds);

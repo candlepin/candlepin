@@ -349,6 +349,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         List<Pool> subPoolsForStackIds) {
 
         Set<String> stackIdsThathaveSubPools = new HashSet<String>();
+        Set<String> alreadyCoveredStackIds = new HashSet<String>();
         if (CollectionUtils.isNotEmpty(subPoolsForStackIds)) {
             for (Pool pool : subPoolsForStackIds) {
                 stackIdsThathaveSubPools.add(pool.getSourceStackId());
@@ -374,7 +375,10 @@ public abstract class AbstractEntitlementRules implements Enforcer {
                 String virtLimit = attributes.get(Product.Attributes.VIRT_LIMIT);
                 String stackId = attributes.get(Product.Attributes.STACKING_ID);
 
-                if (stackId == null || !stackIdsThathaveSubPools.contains(stackId)) {
+                if (stackId == null ||
+                    (!stackIdsThathaveSubPools.contains(stackId) &&
+                    !alreadyCoveredStackIds.contains(stackId))) {
+                    alreadyCoveredStackIds.add(stackId);
                     log.debug("Creating a new sub-pool for {}", pool);
                     try {
                         int virtQuantity = Integer.parseInt(virtLimit);
