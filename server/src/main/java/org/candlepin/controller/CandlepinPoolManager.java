@@ -808,7 +808,7 @@ public class CandlepinPoolManager implements PoolManager {
      * DTOs present on the subscription. If the subscription uses DTOs which cannot be resolved,
      * this method will throw an exception.
      *
-     * @param subscription
+     * @param sub
      *  The subscription to convert to a pool
      *
      * @param owner
@@ -1596,6 +1596,7 @@ public class CandlepinPoolManager implements PoolManager {
         handler.handlePostEntitlement(this, consumer, entitlements);
         handler.handleSelfCertificates(consumer, poolQuantities, entitlements, generateUeberCert);
 
+        // TODO This acquires a RowShareLock on the pool
         this.ecGenerator.regenerateCertificatesByEntitlementIds(
             this.entitlementCurator.batchListModifying(entitlements.values()), generateUeberCert, true
         );
@@ -1618,10 +1619,11 @@ public class CandlepinPoolManager implements PoolManager {
 
         // We only need the check to validate quantity & Product UUID, all other values are irrelevant
         // for rules checking.
-        pools = poolCurator.lockAndLoadBatch(poolQuantityMap.keySet());
+        //use poolQuantities
+        pools = poolCurator.lockAndLoadBatch(poolQuantities.keySet());
 
         for (Pool p : pools) {
-            Integer quantityRequired = poolQuantityMap.get(p.getId());
+            Integer quantityRequired = poolQuantities.get(p.getId()).getQuantity();
             if (p.getConsumed() <=  p.getQuantity() - quantityRequired) {
                 throw new RuleExecutionException("rulefailed.no.entitlements.available");
             }
