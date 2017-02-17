@@ -182,7 +182,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     @ElementCollection
     @BatchSize(size = 32)
     @CollectionTable(name = "cp2_product_content", joinColumns = @JoinColumn(name = "product_uuid"))
-    @Column(name = "element")
+    @Column(name = "content_uuid")
     @LazyCollection(LazyCollectionOption.EXTRA) // allows .size() without loading all data
     private List<ProductContent> productContent;
 

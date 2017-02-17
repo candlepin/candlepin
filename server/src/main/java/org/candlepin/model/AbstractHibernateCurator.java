@@ -70,6 +70,9 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     public static final int CASE_OPERATOR_BLOCK_SIZE = 100;
     public static final int BATCH_BLOCK_SIZE = 500;
 
+    /** The maximum number of parameters a given query can have without breaking our DB. */
+    public static final int QUERY_PARAMETER_LIMIT = 32000;
+
     @Inject protected CandlepinQueryFactory cpQueryFactory;
     @Inject protected Provider<EntityManager> entityManager;
     @Inject protected I18n i18n;

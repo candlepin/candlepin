@@ -449,7 +449,6 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
         return this.cpQueryFactory.<Product>buildQuery();
     }
 
-
     /**
      * Updates the product references currently pointing to the original product to instead point to
      * the updated product for the specified owners.
