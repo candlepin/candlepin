@@ -17,7 +17,6 @@ package org.candlepin.model;
 import org.candlepin.model.dto.ProductAttributeData;
 import org.candlepin.model.dto.ProductContentData;
 import org.candlepin.model.dto.ProductData;
-import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.util.ListView;
 import org.candlepin.util.SetView;
 import org.candlepin.util.Util;
@@ -150,8 +149,6 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
          *  expiring subscription for a given product */
         public static final String WARNING_PERIOD = "warning_period";
     }
-
-    public static final String UEBER_PRODUCT_POSTFIX = "_ueber_product";
 
     // Object ID
     @Id
@@ -414,15 +411,6 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      */
     public ProductData toDTO() {
         return new ProductData(this);
-    }
-
-    public static Product createUeberProductForOwner(UniqueIdGenerator idGenerator, Owner owner) {
-        return new Product(idGenerator.generateId(), ueberProductNameForOwner(owner), 1L);
-    }
-
-
-    public static String ueberProductNameForOwner(Owner owner) {
-        return owner.getKey() + UEBER_PRODUCT_POSTFIX;
     }
 
     /**

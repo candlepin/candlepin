@@ -44,18 +44,35 @@ public class KeyPairCurator extends
         // if multiple exist.
         KeyPair cpKeyPair = c.getKeyPair();
         if (cpKeyPair == null) {
-            try {
-                java.security.KeyPair newPair = pki.generateNewKeyPair();
-                cpKeyPair = new KeyPair(newPair.getPrivate(), newPair.getPublic());
-                create(cpKeyPair);
-                c.setKeyPair(cpKeyPair);
-            }
-            catch (NoSuchAlgorithmException e) {
-                throw new RuntimeException(e);
-            }
+            cpKeyPair = generateKeyPair();
+            c.setKeyPair(cpKeyPair);
         }
         java.security.KeyPair returnMe = new java.security.KeyPair(
             cpKeyPair.getPublicKey(), cpKeyPair.getPrivateKey());
         return returnMe;
     }
+
+    /**
+     * Creates a key pair that is not associated with a known entity.
+     *
+     * @return the the generated key pair.
+     */
+    public java.security.KeyPair getKeyPair() {
+        KeyPair cpKeyPair = this.generateKeyPair();
+        java.security.KeyPair returnMe = new java.security.KeyPair(
+            cpKeyPair.getPublicKey(), cpKeyPair.getPrivateKey());
+        return returnMe;
+    }
+
+    private KeyPair generateKeyPair() {
+        try {
+            java.security.KeyPair newPair = pki.generateNewKeyPair();
+            KeyPair cpKeyPair = new KeyPair(newPair.getPrivate(), newPair.getPublic());
+            return create(cpKeyPair);
+        }
+        catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 }

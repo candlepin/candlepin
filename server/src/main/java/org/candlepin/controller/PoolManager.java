@@ -103,8 +103,6 @@ public interface PoolManager {
     List<Entitlement> entitleByPools(Consumer consumer, Map<String, Integer> poolQuantities)
         throws EntitlementRefusedException;
 
-    Entitlement ueberCertEntitlement(Consumer consumer, Pool pool) throws EntitlementRefusedException;
-
     /**
      * Request an entitlement by product.
      *
@@ -134,11 +132,7 @@ public interface PoolManager {
     Refresher getRefresher(SubscriptionServiceAdapter subAdapter);
     Refresher getRefresher(SubscriptionServiceAdapter subAdapter, boolean lazy);
 
-    /**
-     * @param e
-     * @param ueberCertificate TODO
-     */
-    void regenerateCertificatesOf(Entitlement e, boolean ueberCertificate, boolean lazy);
+    void regenerateCertificatesOf(Entitlement e, boolean lazy);
 
     void regenerateCertificatesOf(Environment env, Set<String> contentIds, boolean lazy);
 
@@ -212,14 +206,6 @@ public interface PoolManager {
      * @return a list of entitlements
      */
     List<Entitlement> findEntitlements(Pool pool);
-
-    /**
-     * Find the Ueber pool for this owner
-     *
-     * @param owner the owner to fetch the pool from
-     * @return the Ueber pool
-     */
-    Pool findUeberPool(Owner owner);
 
     /**
      * Lists the pools for the specified Owner.

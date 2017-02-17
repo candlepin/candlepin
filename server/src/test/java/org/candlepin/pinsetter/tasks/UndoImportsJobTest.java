@@ -27,7 +27,6 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
 import org.candlepin.model.Entitlement;
-import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.Owner;
@@ -35,6 +34,7 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.Product;
+import org.candlepin.model.UeberCertificate;
 import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
@@ -113,7 +113,6 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
             this.i18n, this.ownerCurator, this.poolManager, this.subAdapter,
             this.exportCurator, this.importRecordCurator
         );
-        this.consumerTypeCurator.create(new ConsumerType(ConsumerType.ConsumerTypeEnum.UEBER_CERT));
     }
 
     @Test
@@ -160,14 +159,13 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
         Pool pool9 = this.createPool("pool9", owner2, true, PoolType.ENTITLEMENT_DERIVED);
 
         // Create an ueber certificate for the owner.
-        EntitlementCertificate uebercert = ueberCertGenerator.generate(owner1.getKey(),
+        UeberCertificate uebercert = ueberCertGenerator.generate(owner1.getKey(),
             this.setupAdminPrincipal("test_admin"));
         assertNotNull(uebercert);
-        Pool owner1UeberPool = uebercert.getEntitlement().getPool();
 
         // Verify initial state
         assertEquals(
-            Arrays.asList(pool1, pool2, pool3, pool4, pool5, pool6, owner1UeberPool),
+            Arrays.asList(pool1, pool2, pool3, pool4, pool5, pool6),
             this.poolManager.listPoolsByOwner(owner1).list()
         );
         assertEquals(Arrays.asList(pool7, pool8, pool9), this.poolManager.listPoolsByOwner(owner2).list());
@@ -188,7 +186,7 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
         commitTransaction();
 
         // Verify deletions -- Ueber pools should not get deleted.
-        assertEquals(Arrays.asList(pool3, pool4, pool5, pool6, owner1UeberPool),
+        assertEquals(Arrays.asList(pool3, pool4, pool5, pool6),
             this.poolManager.listPoolsByOwner(owner1).list());
 
         assertEquals(Arrays.asList(pool7, pool8, pool9), this.poolManager.listPoolsByOwner(owner2).list());

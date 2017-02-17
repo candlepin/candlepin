@@ -15,7 +15,6 @@
 package org.candlepin.model;
 
 import org.candlepin.model.dto.ContentData;
-import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.util.SetView;
 import org.candlepin.util.Util;
 
@@ -62,8 +61,6 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
 
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp2_content";
-
-    public static final  String UEBER_CONTENT_NAME = "ueber_content";
 
     // Object ID
     @Id
@@ -248,23 +245,6 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
      */
     public ContentData toDTO() {
         return new ContentData(this);
-    }
-
-    public static Content createUeberContent(UniqueIdGenerator idGenerator, Owner owner, Product product) {
-        Content ueberContent = new Content(idGenerator.generateId());
-        ueberContent.setName(UEBER_CONTENT_NAME);
-        ueberContent.setType("yum");
-        ueberContent.setLabel(ueberContentLabelForProduct(product));
-        ueberContent.setVendor("Custom");
-        ueberContent.setContentUrl("/" + owner.getKey());
-        ueberContent.setGpgUrl("");
-        ueberContent.setArches("");
-
-        return ueberContent;
-    }
-
-    public static String ueberContentLabelForProduct(Product p) {
-        return p.getUuid() + "_" + UEBER_CONTENT_NAME;
     }
 
     /**

@@ -15,107 +15,86 @@
 package org.candlepin.model;
 
 import org.candlepin.auth.Principal;
-import org.candlepin.controller.ContentManager;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
-import org.candlepin.controller.PoolManager;
-import org.candlepin.controller.ProductManager;
-import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
-import org.candlepin.model.dto.ContentData;
-import org.candlepin.model.dto.ProductData;
-import org.candlepin.model.dto.Subscription;
-import org.candlepin.policy.EntitlementRefusedException;
+import org.candlepin.pki.PKIUtility;
+import org.candlepin.pki.X509ByteExtensionWrapper;
+import org.candlepin.pki.X509ExtensionWrapper;
 import org.candlepin.service.UniqueIdGenerator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.candlepin.util.X509ExtensionUtil;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import java.io.IOException;
+import java.math.BigInteger;
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
+import java.security.cert.X509Certificate;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.Set;
 import java.util.TimeZone;
 
 /**
  * UeberCertificateGenerator
  */
 public class UeberCertificateGenerator {
+    private static final String UEBER_CERT_CONSUMER_TYPE = "uebercert";
+    private static final String UEBER_CERT_CONSUMER = "ueber_cert_consumer";
+    private static final  String UEBER_CONTENT_NAME = "ueber_content";
+    private static final String UEBER_PRODUCT_POSTFIX = "_ueber_product";
 
     private static Logger log = LoggerFactory.getLogger(UeberCertificateGenerator.class);
 
-    private PoolManager poolManager;
-    private PoolCurator poolCurator;
-    private ProductManager productManager;
-    private ContentManager contentManager;
     private UniqueIdGenerator idGenerator;
-    private ConsumerTypeCurator consumerTypeCurator;
-    private ConsumerCurator consumerCurator;
-    private EntitlementCurator entitlementCurator;
-    private EntitlementCertificateCurator entitlementCertCurator;
+    private PKIUtility pki;
+    private KeyPairCurator keyPairCurator;
+    private CertificateSerialCurator serialCurator;
+    private X509ExtensionUtil extensionUtil;
     private OwnerCurator ownerCurator;
+    private UeberCertificateCurator ueberCertCurator;
     private I18n i18n;
 
     @Inject
-    public UeberCertificateGenerator(PoolManager poolManager,
-        PoolCurator poolCurator,
-        ProductManager productManager,
-        ContentManager contentManager,
+    public UeberCertificateGenerator(
         UniqueIdGenerator idGenerator,
-        ConsumerTypeCurator consumerTypeCurator,
-        ConsumerCurator consumerCurator,
-        EntitlementCurator entitlementCurator,
-        EntitlementCertificateCurator entitlementCertCurator,
+        PKIUtility pki,
+        X509ExtensionUtil extensionUtil,
+        KeyPairCurator keyPairCurator,
+        CertificateSerialCurator serialCurator,
         OwnerCurator ownerCurator,
+        UeberCertificateCurator ueberCertCurator,
         I18n i18n) {
 
-        this.poolManager = poolManager;
-        this.poolCurator = poolCurator;
-        this.productManager = productManager;
-        this.contentManager = contentManager;
         this.idGenerator = idGenerator;
-        this.consumerTypeCurator = consumerTypeCurator;
-        this.consumerCurator = consumerCurator;
-        this.entitlementCurator = entitlementCurator;
-        this.entitlementCertCurator = entitlementCertCurator;
+        this.pki = pki;
+        this.keyPairCurator = keyPairCurator;
+        this.serialCurator = serialCurator;
+        this.extensionUtil = extensionUtil;
         this.ownerCurator = ownerCurator;
+        this.ueberCertCurator = ueberCertCurator;
         this.i18n = i18n;
     }
 
     @Transactional
-    public EntitlementCertificate generate(String ownerKey, Principal principal) {
+    public UeberCertificate generate(String ownerKey, Principal principal) {
         Owner o = ownerCurator.findAndLock(ownerKey);
         if (o == null) {
             throw new NotFoundException(i18n.tr("owner with key: {0} was not found.", ownerKey));
         }
 
         try {
-            Consumer ueberConsumer = consumerCurator.findByName(o, Consumer.UEBER_CERT_CONSUMER);
-
-            // ueber cert has already been generated - re-generate it now
-            if (ueberConsumer != null) {
-                List<Entitlement> ueberEntitlements = entitlementCurator.listByConsumer(ueberConsumer);
-
-                if (ueberEntitlements.size() > 0) {
-                    // Immediately revoke and regenerate ueber certificates:
-                    poolManager.regenerateCertificatesOf(ueberEntitlements.get(0), true, false);
-                    return entitlementCertCurator.listForConsumer(ueberConsumer).get(0);
-                }
-
-                // If there is a consumer without an entitlement, generate a new one. If an ueber pool
-                // does not exist, create it.
-                Pool ueberPool = poolCurator.findUeberPool(o);
-                if (ueberPool == null) {
-                    createSubscriptionAndPool(o);
-                    ueberPool = poolCurator.findUeberPool(o);
-                }
-                return generateUeberCertificate(ueberConsumer, ueberPool);
-            }
-
-            return this.generateCertificate(o, principal);
+            // There can only be one ueber certificate per owner, so delete the existing and regenerate it.
+            this.ueberCertCurator.deleteForOwner(o);
+            return  this.generateUeberCert(o, principal.getUsername());
         }
         catch (Exception e) {
             log.error("Problem generating ueber cert for owner: " + ownerKey, e);
@@ -124,128 +103,163 @@ public class UeberCertificateGenerator {
         }
     }
 
-    private EntitlementCertificate generateCertificate(Owner o, Principal principal)
-        throws EntitlementRefusedException {
-        createSubscriptionAndPool(o);
-        Consumer consumer = createUeberConsumer(principal, o);
+    private UeberCertificate generateUeberCert(Owner owner, String generatedByUsername) throws Exception {
+        UeberCertData ueberCertData = new UeberCertData(owner, generatedByUsername);
 
-        Pool ueberPool = poolCurator.findUeberPool(o);
-        return generateUeberCertificate(consumer, ueberPool);
+        CertificateSerial serial = new CertificateSerial(ueberCertData.getEndDate());
+        serialCurator.create(serial);
+
+        KeyPair keyPair = keyPairCurator.getKeyPair();
+        byte[] pemEncodedKeyPair = pki.getPemEncoded(keyPair.getPrivate());
+        X509Certificate x509Cert =
+            createX509Certificate(ueberCertData, BigInteger.valueOf(serial.getId()), keyPair);
+
+        UeberCertificate ueberCert = new UeberCertificate();
+        ueberCert.setSerial(serial);
+        ueberCert.setKeyAsBytes(pemEncodedKeyPair);
+        ueberCert.setOwner(owner);
+        ueberCert.setCert(new String(this.pki.getPemEncoded(x509Cert)));
+        ueberCert.setCreated(ueberCertData.getStartDate());
+        ueberCert.setUpdated(ueberCertData.getStartDate());
+        ueberCertCurator.create(ueberCert);
+
+        return ueberCert;
     }
 
-    private void createSubscriptionAndPool(Owner o) {
-        Product ueberProduct = createUeberProduct(o);
-        Subscription ueberSubscription = createUeberSubscription(o, ueberProduct);
-        poolManager.createAndEnrichPools(ueberSubscription);
-    }
+    private X509Certificate createX509Certificate(UeberCertData data, BigInteger serialNumber,
+        KeyPair keyPair) throws GeneralSecurityException, IOException {
+        Set<X509ByteExtensionWrapper> byteExtensions = new LinkedHashSet<X509ByteExtensionWrapper>();
+        Set<X509ExtensionWrapper> extensions = new LinkedHashSet<X509ExtensionWrapper>();
+        extensions.addAll(extensionUtil.productExtensions(data.getProduct()));
+        extensions.addAll(extensionUtil.contentExtensions(data.getProduct().getProductContent(), null,
+            new HashMap<String, EnvironmentContent>(), new Consumer(), data.getProduct()));
+        extensions.addAll(extensionUtil.subscriptionExtensions(data.getEntitlement()));
+        extensions.addAll(extensionUtil.entitlementExtensions(data.getEntitlement()));
+        extensions.addAll(extensionUtil.consumerExtensions(data.getConsumer()));
 
-    public Product createUeberProduct(Owner owner) {
-        // TODO: These ueber objects are (heavily) reliant on implementation details of the
-        // DefaultUniqueIdGenerator returning only numeric IDs, despite the interface and the return
-        // value lacking any such guarantee.
-        // Specifically, the X509 filtering functionality will only properly filter when these are
-        // generated with numeric IDs.
-
-        ProductData productData = new ProductData()
-            .setId(idGenerator.generateId())
-            .setName(owner.getKey() + Product.UEBER_PRODUCT_POSTFIX)
-            .setMultiplier(1L);
-
-        ContentData contentData = new ContentData()
-            .setId(idGenerator.generateId())
-            .setName(Content.UEBER_CONTENT_NAME)
-            .setType("yum")
-            .setLabel(productData.getId() + '-' + Content.UEBER_CONTENT_NAME)
-            .setVendor("Custom")
-            .setContentUrl("/" + owner.getKey())
-            .setGpgUrl("")
-            .setArches("");
-
-        productData.addContent(contentData, true);
-
-        if (this.contentManager.createContent(contentData, owner) == null) {
-            throw new IllegalStateException("Unable to create ueber content for owner: " + owner.getKey());
+        if (log.isDebugEnabled()) {
+            log.debug("Ueber certificate extensions for Owner: {}", data.getOwner().getKey());
+            for (X509ExtensionWrapper eWrapper : extensions) {
+                log.debug("Extension {} with value {}", eWrapper.getOid(), eWrapper.getValue());
+            }
         }
 
-        Product ueberProduct = this.productManager.createProduct(productData, owner);
-        if (ueberProduct == null) {
-            throw new IllegalStateException("Unable to create ueber product for owner: " + owner.getKey());
-        }
-
-        return ueberProduct;
+        String dn = "O=" + data.getOwner().getKey();
+        return this.pki.createX509Certificate(dn, extensions, byteExtensions,  data.getStartDate(),
+            data.getEndDate(), keyPair, serialNumber, null);
     }
 
-    public Subscription createUeberSubscription(Owner o, Product ueberProduct) {
-        Date now = now();
-
-        Subscription subscription = new Subscription(
-            o, ueberProduct.toDTO(), new HashSet<ProductData>(), 1L, now, lateIn2049(), now
-        );
-
-        // We need to fake a subscription ID here so our generated pool's source subscription ends
-        // up with a valid ID.
-        subscription.setId(idGenerator.generateId());
-        subscription.setCreated(now);
-        subscription.setUpdated(now);
-        return subscription;
-    }
-
-    public Consumer createUeberConsumer(Principal principal, Owner o) {
-        ConsumerType type = lookupConsumerType(ConsumerTypeEnum.UEBER_CERT.toString());
-        Consumer consumer = consumerCurator.create(
-            new Consumer(Consumer.UEBER_CERT_CONSUMER, principal.getUsername(), o, type)
-        );
-        return consumer;
-    }
-
-    public EntitlementCertificate generateUeberCertificate(Consumer consumer,
-        Pool ueberPool) throws EntitlementRefusedException {
-        Entitlement e = poolManager.ueberCertEntitlement(consumer, ueberPool);
-        return (EntitlementCertificate) e.getCertificates().toArray()[0];
-    }
-
-    private ConsumerType lookupConsumerType(String label) {
-        ConsumerType type = consumerTypeCurator.lookupByLabel(label);
-
-        if (type == null) {
-            throw new CuratorException(i18n.tr("No such unit type: {0}", label));
-        }
-
-        return type;
-    }
-
-    private Date now() {
-        Calendar now = Calendar.getInstance();
-        Date currentTime = now.getTime();
-        return currentTime;
-    }
-
-    /*
-     * RFC 5280 states in section 4.1.2.5:
+    /**
+     * Contains the data that will be used to create an ueber certificate for the owner.
+     * This class should remain private and is used primarily for allowing a single definition
+     * of an ueber product/content.
      *
-     *     CAs conforming to this profile MUST always encode certificate
-     *     validity dates through the year 2049 as UTCTime; certificate validity
-     *     dates in 2050 or later MUST be encoded as GeneralizedTime.
-     *     Conforming applications MUST be able to process validity dates that
-     *     are encoded in either UTCTime or GeneralizedTime.
-     *
-     * But currently, python-rhsm is parsing certificates with either M2Crypto
-     * or a custom C binding (certificate.c) to OpenSSL's x509v3 (so that we can access
-     * the raw octets in the custom X509 extensions used in version 3 entitlement
-     * certificates).  Both M2Crypto and our binding contain code that automatically
-     * converts the Not After time into a UTCTime.  The conversion "succeeds" but the
-     * value of the resultant object is something like "Bad time value" which, when
-     * fed into Python's datetime, causes an exception.
-     *
-     * The quick fix is to not issue certificates that expire after January 1, 2050.
-     *
-     * See https://bugzilla.redhat.com/show_bug.cgi?id=1242310
      */
-    private Date lateIn2049() {
-        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-        // December 1, 2049 at 13:00 GMT
-        cal.set(1900 + 149, Calendar.DECEMBER, 1, 13, 0, 0);
-        Date late2049 = cal.getTime();
-        return late2049;
+    private class UeberCertData {
+        private Owner owner;
+        private Consumer consumer;
+        private Product product;
+        private Content content;
+        private Pool pool;
+        private Entitlement entitlement;
+
+        private Date startDate;
+        private Date endDate;
+
+        public UeberCertData(Owner owner, String generatedByUsername) {
+            startDate = Calendar.getInstance().getTime();
+            endDate = lateIn2049();
+
+            this.owner = owner;
+            this.consumer = createUeberConsumer(generatedByUsername, owner);
+            this.product = createUeberProductForOwner(idGenerator, owner);
+            this.content = createUeberContent(idGenerator, owner, product);
+            this.product.addContent(this.content, true);
+
+            this.pool = new Pool(this.owner, this.product, new LinkedList<Product>(), 1L, this.startDate,
+                this.endDate, "", "", "");
+            this.entitlement = new Entitlement(this.pool, this.consumer, 1);
+        }
+
+        public Product getProduct() {
+            return product;
+        }
+
+        public Owner getOwner() {
+            return owner;
+        }
+
+        public Date getStartDate() {
+            return startDate;
+        }
+
+        public Date getEndDate() {
+            return endDate;
+        }
+
+        public Content getContent() {
+            return content;
+        }
+
+        public Consumer getConsumer() {
+            return consumer;
+        }
+
+        public Entitlement getEntitlement() {
+            return entitlement;
+        }
+
+        private Consumer createUeberConsumer(String username, Owner owner) {
+            ConsumerType type = new ConsumerType(UEBER_CERT_CONSUMER_TYPE);
+            Consumer consumer = new Consumer(UEBER_CERT_CONSUMER, username, owner, type);
+            return consumer;
+        }
+
+        private Product createUeberProductForOwner(UniqueIdGenerator idGenerator, Owner owner) {
+            String ueberProductName = owner.getKey() + UEBER_PRODUCT_POSTFIX;
+            return new Product(idGenerator.generateId(), ueberProductName, 1L);
+        }
+
+        private Content createUeberContent(UniqueIdGenerator idGenerator, Owner owner, Product product) {
+            Content ueberContent = new Content(idGenerator.generateId());
+            ueberContent.setName(UEBER_CONTENT_NAME);
+            ueberContent.setType("yum");
+            ueberContent.setLabel(product.getId() + "_" + UEBER_CONTENT_NAME);
+            ueberContent.setVendor("Custom");
+            ueberContent.setContentUrl("/" + owner.getKey());
+            ueberContent.setGpgUrl("");
+            ueberContent.setArches("");
+
+            return ueberContent;
+        }
+
+        /*
+         * RFC 5280 states in section 4.1.2.5:
+         *
+         *     CAs conforming to this profile MUST always encode certificate
+         *     validity dates through the year 2049 as UTCTime; certificate validity
+         *     dates in 2050 or later MUST be encoded as GeneralizedTime.
+         *     Conforming applications MUST be able to process validity dates that
+         *     are encoded in either UTCTime or GeneralizedTime.
+         *
+         * But currently, python-rhsm is parsing certificates with either M2Crypto
+         * or a custom C binding (certificate.c) to OpenSSL's x509v3 (so that we can access
+         * the raw octets in the custom X509 extensions used in version 3 entitlement
+         * certificates).  Both M2Crypto and our binding contain code that automatically
+         * converts the Not After time into a UTCTime.  The conversion "succeeds" but the
+         * value of the resultant object is something like "Bad time value" which, when
+         * fed into Python's datetime, causes an exception.
+         *
+         * The quick fix is to not issue certificates that expire after January 1, 2050.
+         *
+         * See https://bugzilla.redhat.com/show_bug.cgi?id=1242310
+         */
+        private Date lateIn2049() {
+            Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+            // December 1, 2049 at 13:00 GMT
+            cal.set(1900 + 149, Calendar.DECEMBER, 1, 13, 0, 0);
+            Date late2049 = cal.getTime();
+            return late2049;
+        }
     }
 }

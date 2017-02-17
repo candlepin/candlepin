@@ -1947,7 +1947,7 @@ public class ConsumerResource {
         @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {
         if (entitlementId != null) {
             Entitlement e = verifyAndLookupEntitlement(entitlementId);
-            poolManager.regenerateCertificatesOf(e, false, lazyRegen);
+            poolManager.regenerateCertificatesOf(e, lazyRegen);
         }
         else {
             Consumer c = consumerCurator.verifyAndLookupConsumer(consumerUuid);

@@ -336,16 +336,11 @@ public class CandlepinPoolManager implements PoolManager {
             this.refreshPoolsForMasterPool(pool, false, lazy, updatedProducts);
         }
 
-        Pool ueberPool = this.findUeberPool(owner);
-        String ueberPoolId = ueberPool != null ? ueberPool.getId() : null;
-
         // delete pools whose subscription disappeared:
         log.debug("Deleting pools for absent subscriptions...");
         List<Pool> poolsToDelete = new ArrayList<Pool>();
         for (Pool pool : poolCurator.getPoolsFromBadSubs(owner, subscriptionMap.keySet())) {
-            if (pool.getSourceSubscription() != null && !pool.getType().isDerivedType() &&
-                (ueberPoolId == null || !ueberPoolId.equals(pool.getId()))) {
-
+            if (pool.getSourceSubscription() != null && !pool.getType().isDerivedType()) {
                 poolsToDelete.add(pool);
             }
         }
@@ -1424,23 +1419,9 @@ public class CandlepinPoolManager implements PoolManager {
     public List<Entitlement> entitleByPools(Consumer consumer, Map<String, Integer> poolQuantities)
         throws EntitlementRefusedException {
         if (MapUtils.isNotEmpty(poolQuantities)) {
-            return addOrUpdateEntitlements(consumer, poolQuantities, null, false, CallerType.BIND);
+            return addOrUpdateEntitlements(consumer, poolQuantities, null, CallerType.BIND);
         }
         return new ArrayList<Entitlement>();
-    }
-
-    @Override
-    public Entitlement ueberCertEntitlement(Consumer consumer, Pool pool)
-        throws EntitlementRefusedException {
-        Map<String, Integer> poolQuantities = new HashMap<String, Integer>();
-        poolQuantities.put(pool.getId(), 1);
-        List<Entitlement> result = addOrUpdateEntitlements(consumer, poolQuantities, null, true,
-            CallerType.UNKNOWN);
-        if (CollectionUtils.isNotEmpty(result)) {
-            // always going to be one entitlement for a single pool
-            return result.get(0);
-        }
-        return null;
     }
 
     @Override
@@ -1457,8 +1438,8 @@ public class CandlepinPoolManager implements PoolManager {
         Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
         entitlements.put(entitlement.getPool().getId(), entitlement);
 
-        List<Entitlement> result = addOrUpdateEntitlements(
-            consumer, poolQuantities, entitlements, true, CallerType.UNKNOWN);
+        List<Entitlement> result = addOrUpdateEntitlements(consumer, poolQuantities, entitlements,
+            CallerType.UNKNOWN);
 
         if (CollectionUtils.isNotEmpty(result)) {
             // always going to be one entitlement for a single pool
@@ -1495,7 +1476,7 @@ public class CandlepinPoolManager implements PoolManager {
     @Transactional
     protected List<Entitlement> addOrUpdateEntitlements(Consumer consumer,
         Map<String, Integer> poolQuantityMap, Map<String, Entitlement> entitlements,
-        boolean generateUeberCert, CallerType caller) throws EntitlementRefusedException {
+        CallerType caller) throws EntitlementRefusedException {
 
         // Because there are several paths to this one place where entitlements
         // are granted, we cannot be positive the caller obtained a lock on the
@@ -1586,10 +1567,10 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         handler.handlePostEntitlement(this, consumer, entitlements);
-        handler.handleSelfCertificates(consumer, poolQuantities, entitlements, generateUeberCert);
+        handler.handleSelfCertificates(consumer, poolQuantities, entitlements);
 
         this.ecGenerator.regenerateCertificatesByEntitlementIds(
-            this.entitlementCurator.batchListModifying(entitlements.values()), generateUeberCert, true
+            this.entitlementCurator.batchListModifying(entitlements.values()), true
         );
 
         // we might have changed the bonus pool quantities, lets find out.
@@ -1654,7 +1635,7 @@ public class CandlepinPoolManager implements PoolManager {
 
     @Transactional
     void regenerateCertificatesByEntIds(Iterable<String> iterable, boolean lazy) {
-        this.ecGenerator.regenerateCertificatesByEntitlementIds(iterable, false, lazy);
+        this.ecGenerator.regenerateCertificatesByEntitlementIds(iterable, lazy);
     }
 
     /**
@@ -1678,8 +1659,8 @@ public class CandlepinPoolManager implements PoolManager {
      */
     @Override
     @Transactional
-    public void regenerateCertificatesOf(Entitlement e, boolean ueberCertificate, boolean lazy) {
-        this.ecGenerator.regenerateCertificatesOf(e, ueberCertificate, lazy);
+    public void regenerateCertificatesOf(Entitlement e, boolean lazy) {
+        this.ecGenerator.regenerateCertificatesOf(e, lazy);
     }
 
     @Override
@@ -1764,7 +1745,7 @@ public class CandlepinPoolManager implements PoolManager {
             Collection<String> modifiedEntIds = this.entitlementCurator.batchListModifying(entsToRevoke);
             log.debug("Regenerating certificates for modifying entitlements: {}", modifiedEntIds);
 
-            this.ecGenerator.regenerateCertificatesByEntitlementIds(modifiedEntIds, false, true);
+            this.ecGenerator.regenerateCertificatesByEntitlementIds(modifiedEntIds,  true);
             log.debug("Modifier entitlements done.");
         }
 
@@ -2024,7 +2005,7 @@ public class CandlepinPoolManager implements PoolManager {
             for (Entitlement entitlement : entitlements) {
                 if (entitlement.isDirty()) {
                     log.info("Found dirty entitlement to regenerate: {}", entitlement);
-                    this.ecGenerator.regenerateCertificatesOf(entitlement, false, false);
+                    this.ecGenerator.regenerateCertificatesOf(entitlement, false);
                 }
             }
         }
@@ -2051,7 +2032,7 @@ public class CandlepinPoolManager implements PoolManager {
             Map<String, Entitlement> entitlements);
 
         void handleSelfCertificates(Consumer consumer, Map<String, PoolQuantity> pools,
-            Map<String, Entitlement> entitlements, boolean generateUeberCert);
+            Map<String, Entitlement> entitlements);
 
         void handleBonusPools(Owner owner, Map<String, PoolQuantity> pools,
             Map<String, Entitlement> entitlements);
@@ -2120,14 +2101,14 @@ public class CandlepinPoolManager implements PoolManager {
 
         @Override
         public void handleSelfCertificates(Consumer consumer, Map<String, PoolQuantity> poolQuantities,
-            Map<String, Entitlement> entitlements, boolean generateUeberCert) {
+            Map<String, Entitlement> entitlements) {
             Map<String, Product> products = new HashMap<String, Product>();
             for (PoolQuantity poolQuantity : poolQuantities.values()) {
                 Pool pool = poolQuantity.getPool();
                 products.put(pool.getId(), pool.getProduct());
             }
 
-            ecGenerator.generateEntitlementCertificates(consumer, products, entitlements, generateUeberCert);
+            ecGenerator.generateEntitlementCertificates(consumer, products, entitlements);
         }
 
         @Override
@@ -2161,9 +2142,9 @@ public class CandlepinPoolManager implements PoolManager {
 
         @Override
         public void handleSelfCertificates(Consumer consumer, Map<String, PoolQuantity> poolQuantities,
-            Map<String, Entitlement> entitlements, boolean generateUeberCert) {
+            Map<String, Entitlement> entitlements) {
             for (Entry<String, Entitlement> entry : entitlements.entrySet()) {
-                regenerateCertificatesOf(entry.getValue(), generateUeberCert, true);
+                regenerateCertificatesOf(entry.getValue(), true);
             }
         }
         @Override
@@ -2341,11 +2322,6 @@ public class CandlepinPoolManager implements PoolManager {
     @Override
     public List<Entitlement> findEntitlements(Pool pool) {
         return poolCurator.entitlementsIn(pool);
-    }
-
-    @Override
-    public Pool findUeberPool(Owner owner) {
-        return poolCurator.findUeberPool(owner);
     }
 
     @Override

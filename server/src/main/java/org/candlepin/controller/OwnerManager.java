@@ -30,6 +30,7 @@ import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.PermissionBlueprintCurator;
 import org.candlepin.model.Pool;
+import org.candlepin.model.UeberCertificateCurator;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.service.ContentAccessCertServiceAdapter;
@@ -66,6 +67,7 @@ public class OwnerManager {
     @Inject private ContentAccessCertServiceAdapter contentAccessCertService;
     @Inject private ContentAccessCertificateCurator contentAccessCertCurator;
     @Inject private OwnerEnvContentAccessCurator ownerEnvContentAccessCurator;
+    @Inject private UeberCertificateCurator uberCertificateCurator;
 
     @Transactional
     public void cleanupAndDelete(Owner owner, boolean revokeCerts) {
@@ -105,20 +107,13 @@ public class OwnerManager {
         log.debug("Deleting environments for owner: {}", owner);
         envCurator.deleteEnvironmentsForOwner(owner);
 
+        // Delete the ueber certificate for this owner, if one exists.
+        log.debug("Deleting uber certificate for owner: {}", owner);
+        this.uberCertificateCurator.deleteForOwner(owner);
+
         for (Pool p : poolManager.listPoolsByOwner(owner)) {
             log.info("Deleting pool: {}", p);
             poolManager.deletePool(p);
-        }
-
-        /*
-         * The pool created when generating a uebercert do not appear in the
-         * normal list of pools for that owner, and so do not get cleaned up by
-         * the normal operations. Instead we must check if they exist and
-         * explicitly delete them.
-         */
-        Pool ueberPool = poolManager.findUeberPool(owner);
-        if (ueberPool != null) {
-            poolManager.deletePool(ueberPool);
         }
 
         ExporterMetadata m = exportCurator.lookupByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner);

@@ -1199,4 +1199,6 @@
     <include file="db/changelog/20161129104417-add-content-access-mode-column-to-consumer.xml"/>
     <include file="db/changelog/20170130144529-perorgproducts-phase-2.xml"/>
     <include file="db/changelog/20170125112728-cleanup-uebercerts-round3-2-0.xml"/>
+    <include file="db/changelog/20170202093945-add-ueber-cert-to-owner.xml"/>
+    <include file="db/changelog/20170214115606-uber-cert-rewrite.xml"/>
 </databaseChangeLog>

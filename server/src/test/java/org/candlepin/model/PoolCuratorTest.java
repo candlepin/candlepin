@@ -64,9 +64,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         ConsumerType systemType = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         consumerTypeCurator.create(systemType);
 
-        ConsumerType ueberCertType = new ConsumerType(ConsumerTypeEnum.UEBER_CERT);
-        consumerTypeCurator.create(ueberCertType);
-
         product = this.createProduct(owner);
 
         consumer = TestUtil.createConsumer(owner);

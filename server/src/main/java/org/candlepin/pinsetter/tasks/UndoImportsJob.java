@@ -126,8 +126,7 @@ public class UndoImportsJob extends UniqueByEntityJob {
 
             List<Pool> pools = this.poolManager.listPoolsByOwner(owner).list();
             for (Pool pool : pools) {
-                if (pool.getSourceSubscription() != null && !pool.getType().isDerivedType() &&
-                    !pool.isUeberPool()) {
+                if (pool.getSourceSubscription() != null && !pool.getType().isDerivedType()) {
                     this.poolManager.deletePool(pool);
                 }
             }

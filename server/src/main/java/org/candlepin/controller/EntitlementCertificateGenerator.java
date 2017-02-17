@@ -99,20 +99,15 @@ public class EntitlementCertificateGenerator {
      * @param entitlements
      *  A mapping of entitlements, indexed by pool ID, to use when generating certificates
      *
-     * @param generateUeberCert
-     *  Whether or not to generate ueber certs
-     *
      * @return
      *  A map of generated entitlement certificates, indexed by pool ID
      */
     @Transactional
     public Map<String, EntitlementCertificate> generateEntitlementCertificates(Consumer consumer,
-        Map<String, Product> products, Map<String, Entitlement> entitlements, boolean generateUeberCert) {
+        Map<String, Product> products, Map<String, Entitlement> entitlements) {
 
         try {
-            return generateUeberCert ?
-                this.entCertServiceAdapter.generateUeberCerts(consumer, entitlements, products) :
-                this.entCertServiceAdapter.generateEntitlementCerts(consumer, entitlements, products);
+            return this.entCertServiceAdapter.generateEntitlementCerts(consumer, entitlements, products);
         }
         catch (CertVersionConflictException cvce) {
             throw cvce;
@@ -134,15 +129,11 @@ public class EntitlementCertificateGenerator {
      * @param entitlement
      *  The entitlement to use when generating the certificate
      *
-     * @param generateUeberCert
-     *  Whether or not to generate an ueber cert
-     *
      * @return
      *  The newly generate entitlement certificate
      */
     @Transactional
-    public EntitlementCertificate generateEntitlementCertificate(Pool pool, Entitlement entitlement,
-        boolean generateUeberCert) {
+    public EntitlementCertificate generateEntitlementCertificate(Pool pool, Entitlement entitlement) {
 
         Map<String, Product> products = new HashMap<String, Product>();
         Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
@@ -150,8 +141,8 @@ public class EntitlementCertificateGenerator {
         products.put(pool.getId(), pool.getProduct());
         entitlements.put(pool.getId(), entitlement);
 
-        return this.generateEntitlementCertificates(entitlement.getConsumer(), products, entitlements,
-            generateUeberCert).get(pool.getId());
+        return this.generateEntitlementCertificates(entitlement.getConsumer(), products,
+            entitlements).get(pool.getId());
     }
 
     /**
@@ -160,16 +151,12 @@ public class EntitlementCertificateGenerator {
      * @param entitlement
      *  The entitlement for which to regenerate certificates
      *
-     * @param ueberCertificate
-     *  Whether or not to generate an ueber certificate
-     *
      * @param lazy
      *  Whether or not to generate the certificate immediately, or mark it dirty and allow it to be
      *  regenerated on-demand
      */
     @Transactional
-    public void regenerateCertificatesOf(Entitlement entitlement, boolean ueberCertificate,
-        boolean lazy) {
+    public void regenerateCertificatesOf(Entitlement entitlement, boolean lazy) {
 
         if (lazy) {
             log.info("Marking certificates dirty for entitlement: {}", entitlement);
@@ -186,7 +173,7 @@ public class EntitlementCertificateGenerator {
         // below call creates new certificates and saves it to the backend.
         try {
             EntitlementCertificate generated = this.generateEntitlementCertificate(
-                entitlement.getPool(), entitlement, ueberCertificate
+                entitlement.getPool(), entitlement
             );
 
             entitlement.setDirty(false);
@@ -220,7 +207,7 @@ public class EntitlementCertificateGenerator {
     @Transactional
     public void regenerateCertificatesOf(Iterable<Entitlement> entitlements, boolean lazy) {
         for (Entitlement entitlement : entitlements) {
-            this.regenerateCertificatesOf(entitlement, false, lazy);
+            this.regenerateCertificatesOf(entitlement, lazy);
         }
     }
 
@@ -231,16 +218,12 @@ public class EntitlementCertificateGenerator {
      * @param entitlementIds
      *  An iterable collection of entitlement IDs for which to regenerate certificates
      *
-     * @param ueberCertificate
-     *  Whether or not to generate an ueber certificate
-     *
      * @param lazy
      *  Whether or not to generate the certificate immediately, or mark it dirty and allow it to be
      *  regenerated on-demand
      */
     @Transactional
-    public void regenerateCertificatesByEntitlementIds(Iterable<String> entitlementIds,
-        boolean ueberCertificate, boolean lazy) {
+    public void regenerateCertificatesByEntitlementIds(Iterable<String> entitlementIds, boolean lazy) {
 
         // If we're regenerating these lazily, we can avoid loading all of them by just updating the
         // DB directly.
@@ -258,7 +241,7 @@ public class EntitlementCertificateGenerator {
                     continue;
                 }
 
-                this.regenerateCertificatesOf(entitlement, ueberCertificate, false);
+                this.regenerateCertificatesOf(entitlement, false);
             }
         }
     }

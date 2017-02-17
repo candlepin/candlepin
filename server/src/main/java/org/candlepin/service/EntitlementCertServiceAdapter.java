@@ -44,20 +44,6 @@ public interface EntitlementCertServiceAdapter {
         throws GeneralSecurityException, IOException;
 
     /**
-     * Generate an ueber certificate, used to grant access to all content for
-     * the owner.
-     * End date specified explicitly to allow for flexible termination policies.
-     *
-     * @param entitlement entitlement which granted this cert.
-     * @param product product being consumed.
-     * @return Client entitlement certificate.
-     * @throws IOException thrown if there's a problem reading the cert.
-     * @throws GeneralSecurityException thrown security problem
-     */
-    EntitlementCertificate generateUeberCert(Entitlement entitlement, Product product)
-        throws GeneralSecurityException, IOException;
-
-    /**
      * Generate an entitlement certificate, used to grant access to some
      * content.
      * End date specified explicitly to allow for flexible termination policies.
@@ -73,25 +59,6 @@ public interface EntitlementCertServiceAdapter {
      * @throws GeneralSecurityException thrown security problem
      */
     Map<String, EntitlementCertificate> generateEntitlementCerts(Consumer consumer,
-        Map<String, Entitlement> entitlements, Map<String, Product> products)
-        throws GeneralSecurityException, IOException;
-
-    /**
-     * Generate an ueber certificate, used to grant access to all content for
-     * the owner.
-     * End date specified explicitly to allow for flexible termination policies.
-     * The Map keys are used to associate the entitlement with its product and
-     * cert generated. While they do not have to be pool ids, and can be any
-     * String, we use pool ids for consistency
-     *
-     * @param consumer
-     * @param entitlements entitlement which granted this cert.
-     * @param products Product being consumed.
-     * @return Client entitlement certificate.
-     * @throws IOException thrown if there's a problem reading the cert.
-     * @throws GeneralSecurityException thrown security problem
-     */
-    Map<String, EntitlementCertificate> generateUeberCerts(Consumer consumer,
         Map<String, Entitlement> entitlements, Map<String, Product> products)
         throws GeneralSecurityException, IOException;
 

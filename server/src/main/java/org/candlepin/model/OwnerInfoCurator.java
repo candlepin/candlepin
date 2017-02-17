@@ -133,15 +133,10 @@ public class OwnerInfoCurator {
 
     @SuppressWarnings("checkstyle:indentation")
     private void setConsumerCountsByComplianceStatus(Owner owner, OwnerInfo info) {
-        // We exclude the following types since they are fake/transparent consumers
-        // and we do not want them included in the totals.
-        String[] typesToFilter = new String[]{"uebercert"};
-
         Criteria countCriteria = consumerCurator.createSecureCriteria()
             .createAlias("type", "t")
             .add(Restrictions.eq("owner", owner))
             .add(Restrictions.isNotNull("entitlementStatus"))
-            .add(Restrictions.not(Restrictions.in("t.label", typesToFilter)))
             .setProjection(Projections.projectionList()
                 .add(Projections.groupProperty("entitlementStatus"))
                 .add(Projections.count("id")));

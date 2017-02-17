@@ -111,23 +111,17 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
     @Override
     public EntitlementCertificate generateEntitlementCert(Entitlement entitlement, Product product)
         throws GeneralSecurityException, IOException {
-        return generateSingleCert(entitlement, product, false);
+        return generateSingleCert(entitlement, product);
     }
 
-    @Override
-    public EntitlementCertificate generateUeberCert(Entitlement entitlement, Product product)
+    private EntitlementCertificate generateSingleCert(Entitlement entitlement, Product product)
         throws GeneralSecurityException, IOException {
-        return generateSingleCert(entitlement, product, true);
-    }
-
-    private EntitlementCertificate generateSingleCert(Entitlement entitlement, Product product,
-        Boolean isUber) throws GeneralSecurityException, IOException {
         Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
         entitlements.put(entitlement.getPool().getId(), entitlement);
         Map<String, Product> products = new HashMap<String, Product>();
         products.put(entitlement.getPool().getId(), product);
         Map<String, EntitlementCertificate> result = generateEntitlementCerts(entitlement.getConsumer(),
-            entitlements, products, false);
+            entitlements, products);
 
         return result.get(entitlement.getPool().getId());
     }
@@ -136,14 +130,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
     public Map<String, EntitlementCertificate> generateEntitlementCerts(Consumer consumer,
         Map<String, Entitlement> entitlements, Map<String, Product> products)
         throws GeneralSecurityException, IOException {
-        return generateEntitlementCerts(consumer, entitlements, products, false);
-    }
-
-    @Override
-    public Map<String, EntitlementCertificate> generateUeberCerts(Consumer consumer,
-        Map<String, Entitlement> entitlements, Map<String, Product> products)
-        throws GeneralSecurityException, IOException {
-        return generateEntitlementCerts(consumer, entitlements, products, true);
+        return doEntitlementCertGeneration(consumer, entitlements, products);
     }
 
     private Set<Product> getDerivedProductsForDistributor(Entitlement ent) {
@@ -364,8 +351,8 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
      * @return entitlementCerts the respective entitlement certs indexed by pool
      *         id
      */
-    private Map<String, EntitlementCertificate> generateEntitlementCerts(Consumer consumer,
-        Map<String, Entitlement> entitlements, Map<String, Product> productMap, boolean thisIsUeberCert)
+    private Map<String, EntitlementCertificate> doEntitlementCertGeneration(Consumer consumer,
+        Map<String, Entitlement> entitlements, Map<String, Product> productMap)
         throws GeneralSecurityException, IOException {
         log.info("Generating entitlement cert for entitlements");
         KeyPair keyPair = keyPairCurator.getConsumerKeyPair(consumer);
@@ -399,7 +386,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
             products.add(product);
 
             Map<String, EnvironmentContent> promotedContent = getPromotedContent(entitlement);
-            String contentPrefix = getContentPrefix(entitlement, !thisIsUeberCert);
+            String contentPrefix = getContentPrefix(entitlement, true);
 
             log.info("Creating X509 cert for product: {}", product);
             log.debug("Provided products: {}", products);
@@ -407,7 +394,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
                 products, contentPrefix, promotedContent, entitlement.getConsumer(), entitlement);
 
             X509Certificate x509Cert = createX509Certificate(entitlement, product, products, productModels,
-                BigInteger.valueOf(serial.getId()), keyPair, !thisIsUeberCert);
+                BigInteger.valueOf(serial.getId()), keyPair, true);
 
             EntitlementCertificate cert = new EntitlementCertificate();
             cert.setSerial(serial);
