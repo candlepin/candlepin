@@ -1567,7 +1567,6 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         handler.handlePostEntitlement(this, consumer, entitlements);
-        handler.handleSelfCertificates(consumer, poolQuantities, entitlements);
 
         this.ecGenerator.regenerateCertificatesByEntitlementIds(
             this.entitlementCurator.batchListModifying(entitlements.values()), true
@@ -1575,7 +1574,6 @@ public class CandlepinPoolManager implements PoolManager {
 
         // we might have changed the bonus pool quantities, lets find out.
         handler.handleBonusPools(consumer.getOwner(), poolQuantities, entitlements);
-
 
         /*
          * If the consumer is not a distributor, check consumer's new compliance
