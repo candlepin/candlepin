@@ -40,9 +40,19 @@ public abstract class X509Util {
     private static Logger log = LoggerFactory.getLogger(X509Util.class);
 
     public static final Predicate<Product> PROD_FILTER_PREDICATE = new Predicate<Product>() {
+        /**
+         * A filter to test if a product contains content that should be used
+         * for certificate generation. This effectively trims out marketing
+         * products & all other products that do not have any associated
+         * content sets.
+         *
+         * @param product The product to test.
+         * @return True if the supplied product contains content that should be included
+         *         in an entitlement certificate.
+         */
         @Override
         public boolean apply(Product product) {
-            return product != null && StringUtils.isNumeric(product.getId());
+            return product != null && product.getProductContent().size() > 0;
         }
     };
 
