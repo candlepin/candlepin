@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.0.25
+Version: 2.0.26
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -220,6 +220,16 @@ fi
 
 #raw
 %changelog
+* Sat Feb 18 2017 Vritant Jain <adarshvritant@gmail.com> 2.0.26-1
+- Fixed an issue with ContentCurator.getContentByProducts not fetching data
+  (crog@redhat.com)
+- Uber certificate rewrite (mstead@redhat.com)
+- 1412113: ensure one sub pool per stack post batch bind
+  (adarshvritant@gmail.com)
+- Bump certificate version and add certificate expiration detection
+  (wpoteat@redhat.com)
+- Moved transaction around autobind to after retry logic (crog@redhat.com)
+- Reverted the use of cursors in the heal entire org job (crog@redhat.com)
 * Thu Feb 09 2017 Vritant Jain <adarshvritant@gmail.com> 2.0.25-1
 - 1420455: No ueber pool deletion on manifest cleanup (mstead@redhat.com)
 - 1419193: Fixed an issue with bulk insert statements during migration
