@@ -27,6 +27,8 @@ import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
@@ -76,6 +78,8 @@ public class EnforcerTest extends DatabaseTestFixture {
     @Mock private Provider<JsRunnerRequestCache> cacheProvider;
     @Mock private JsRunnerRequestCache cache;
     @Mock private ProductCurator mockProductCurator;
+    @Mock private OwnerCurator mockOwnerCurator;
+    @Mock private OwnerProductCurator mockOwnerProductCurator;
 
     private Enforcer enforcer;
     private Owner owner;
@@ -116,7 +120,8 @@ public class EnforcerTest extends DatabaseTestFixture {
         enforcer = new EntitlementRules(
             new DateSourceForTesting(2010, 1, 1), jsRules, i18n, config, consumerCurator, poolCurator,
             mockProductCurator,
-            new RulesObjectMapper(new ProductCachedSerializationModule(mockProductCurator))
+            new RulesObjectMapper(new ProductCachedSerializationModule(mockProductCurator)),
+            mockOwnerCurator, mockOwnerProductCurator
         );
     }
 

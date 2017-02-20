@@ -1777,9 +1777,12 @@ var Entitlement = {
             }
 
             // If the product has no required consumer type, assume it is restricted to "system".
-            // "hypervisor" type are essentially the same as "system".
+            // "hypervisor"/"share" types are essentially the same as "system".
             if (!pool.getProductAttribute(REQUIRES_CONSUMER_TYPE_ATTRIBUTE)) {
-                if (consumer.type.label != SYSTEM_TYPE && consumer.type.label != HYPERVISOR_TYPE) {
+                if (consumer.type.label != SYSTEM_TYPE &&
+                    consumer.type.label != HYPERVISOR_TYPE &&
+                    consumer.type.label != SHARE_TYPE
+                ) {
                     result.addError("rulefailed.consumer.type.mismatch");
                 }
             }

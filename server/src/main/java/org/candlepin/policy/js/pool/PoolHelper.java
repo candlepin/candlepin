@@ -235,6 +235,33 @@ public class PoolHelper {
         return pool;
     }
 
+    public static Pool createSharePool(Owner recipient, Pool sourcePool, Product product,
+        String quantity, Map<String, String> attributes, OwnerProductCurator curator,
+        Entitlement sourceEntitlement, ProductCurator productCurator) {
+
+        Pool pool = createPool(product, recipient, quantity,
+            sourcePool.getStartDate(), sourcePool.getEndDate(),
+            sourcePool.getContractNumber(), sourcePool.getAccountNumber(),
+            sourcePool.getOrderNumber(), new HashSet<Product>(), sourceEntitlement);
+
+        pool.setSourceSubscription(
+            new SourceSubscription(sourcePool.getSubscriptionId(), "derived"));
+
+        copyProvidedProducts(sourcePool, pool, curator, productCurator);
+
+        // Add in the new attributes
+        for (Entry<String, String> entry : attributes.entrySet()) {
+            pool.setAttribute(entry.getKey(), entry.getValue());
+        }
+        pool.setAttribute(Pool.Attributes.SHARE, "true");
+
+        for (Branding b : sourcePool.getBranding()) {
+            pool.getBranding().add(new Branding(b.getProductId(), b.getType(),
+                b.getName()));
+        }
+        return pool;
+    }
+
     private static Pool createPool(Product product, Owner owner, String quantity, Date startDate,
         Date endDate, String contractNumber, String accountNumber, String orderNumber,
         Set<Product> providedProducts, Entitlement sourceEntitlement) {
