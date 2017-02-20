@@ -19,7 +19,11 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
@@ -65,6 +69,8 @@ public abstract class AbstractEntitlementRules implements Enforcer {
     protected PoolCurator poolCurator;
     protected ProductCurator productCurator;
     protected RulesObjectMapper objectMapper = null;
+    protected OwnerCurator ownerCurator;
+    protected OwnerProductCurator ownerProductCurator;
 
     protected static final String POST_PREFIX = "post_";
 
@@ -270,8 +276,11 @@ public abstract class AbstractEntitlementRules implements Enforcer {
 
     protected void runPostEntitlement(PoolManager poolManager, Consumer consumer,
         Map<String, Entitlement> entitlementMap, List<Pool> subPoolsForStackIds) {
+
         Map<String, Map<String, String>> flatAttributeMaps = new HashMap<String, Map<String, String>>();
         Map<String, Entitlement> virtLimitEntitlements = new HashMap<String, Entitlement>();
+        Map<String, Entitlement> sharedEntitlements = new HashMap<String, Entitlement>();
+
         for (Entry<String, Entitlement> entry : entitlementMap.entrySet()) {
             Entitlement entitlement = entry.getValue();
             Map<String, String> attributes = PoolHelper.getFlattenedAttributes(entitlement.getPool());
@@ -279,10 +288,20 @@ public abstract class AbstractEntitlementRules implements Enforcer {
                 virtLimitEntitlements.put(entry.getKey(), entitlement);
                 flatAttributeMaps.put(entry.getKey(), attributes);
             }
+            if (consumer.getType().isType(ConsumerType.ConsumerTypeEnum.SHARE)) {
+                sharedEntitlements.put(entry.getKey(), entitlement);
+                flatAttributeMaps.put(entry.getKey(), attributes);
+            }
         }
         // Perform pool management based on the attributes of the pool:
-        postBindVirtLimit(poolManager, consumer, virtLimitEntitlements, flatAttributeMaps,
-            subPoolsForStackIds);
+        if (!virtLimitEntitlements.isEmpty()) {
+            postBindVirtLimit(poolManager, consumer, virtLimitEntitlements, flatAttributeMaps,
+                subPoolsForStackIds);
+        }
+
+        if (!sharedEntitlements.isEmpty()) {
+            postBindEntitlementDerived(poolManager, consumer, sharedEntitlements, flatAttributeMaps);
+        }
     }
 
     protected void runPostUnbind(PoolManager poolManager, Entitlement entitlement) {
@@ -344,6 +363,29 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         }
     }
 
+    private void postBindEntitlementDerived(PoolManager poolManager, Consumer c,
+        Map<String, Entitlement> entitlementMap, Map<String, Map<String, String>> attributeMaps) {
+        log.debug("Running entitlement derived post-bind");
+
+        Owner recipientOrg = ownerCurator.lookupByKey(c.getFact("share.recipient"));
+        List<Pool> sharedPoolsToCreate = new ArrayList<Pool>();
+
+        for (Entitlement entitlement: entitlementMap.values()) {
+            Pool sourcePool = entitlement.getPool();
+            // Favor derived products if they are available
+            Product sku = sourcePool.getDerivedProduct() != null ? sourcePool.getDerivedProduct() :
+                sourcePool.getProduct();
+            Pool sharedPool = PoolHelper.createSharePool(recipientOrg, sourcePool, sku,
+                String.valueOf(entitlement.getQuantity()), attributeMaps.get(sourcePool.getId()),
+                ownerProductCurator, entitlement, productCurator);
+            sharedPoolsToCreate.add(sharedPool);
+        }
+
+        if (CollectionUtils.isNotEmpty(sharedPoolsToCreate)) {
+            poolManager.createPools(sharedPoolsToCreate);
+        }
+    }
+
     private void postBindVirtLimit(PoolManager poolManager, Consumer c,
         Map<String, Entitlement> entitlementMap, Map<String, Map<String, String>> attributeMaps,
         List<Pool> subPoolsForStackIds) {
@@ -366,7 +408,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         List<Pool> createHostRestrictedPoolFor = new ArrayList<Pool>();
         List<Entitlement> decrementHostedBonusPoolQuantityFor = new ArrayList<Entitlement>();
 
-        for (Entitlement entitlement : entitlementMap.values()) {
+        for (Entitlement entitlement: entitlementMap.values()) {
             Pool pool = entitlement.getPool();
             Map<String, String> attributes = attributeMaps.get(pool.getId());
             boolean hostLimited = "true".equals(attributes.get(Product.Attributes.HOST_LIMITED));

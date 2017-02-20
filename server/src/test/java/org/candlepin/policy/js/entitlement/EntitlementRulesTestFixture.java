@@ -27,6 +27,7 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
@@ -80,8 +81,10 @@ public class EntitlementRulesTestFixture {
     private Provider<JsRunnerRequestCache> cacheProvider;
     @Mock
     private JsRunnerRequestCache cache;
-    @Mock private ProductCurator productCurator;
-
+    @Mock
+    private ProductCurator productCurator;
+    @Mock
+    private OwnerCurator ownerCurator;
     @Mock
     protected PoolCurator poolCurator;
 
@@ -114,7 +117,9 @@ public class EntitlementRulesTestFixture {
             consumerCurator,
             poolCurator,
             productCurator,
-            new RulesObjectMapper(new ProductCachedSerializationModule(productCurator))
+            new RulesObjectMapper(new ProductCachedSerializationModule(productCurator)),
+            ownerCurator,
+            ownerProductCuratorMock
         );
 
         owner = new Owner();

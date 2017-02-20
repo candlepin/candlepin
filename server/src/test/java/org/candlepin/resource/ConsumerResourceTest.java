@@ -153,32 +153,6 @@ public class ConsumerResourceTest {
     }
 
     @Test
-    public void testValidateShareConsumerDoesNotCreateIdentityCerts() {
-        ConsumerType share = new ConsumerType(ConsumerTypeEnum.SHARE);
-        Consumer c = new Consumer("test-consumer", "test-user", new Owner(
-            "Test Owner"), share);
-
-        ConsumerResource consumerResource = new ConsumerResource(
-            mockedConsumerCurator, mockConsumerTypeCurator, null, null, mockedEntitlementCurator, null,
-            mockedEntitlementCertServiceAdapter, i18n, null, null, null, null,
-            null, mockedPoolManager, null, mockedOwnerCurator, null, null, null,
-            null, null, null, new CandlepinCommonTestConfig(), null, null, null,
-            consumerBindUtil, productCurator, null, null, factValidator, null, consumerEnricher);
-
-        UserPrincipal uap = mock(UserPrincipal.class);
-        when(uap.canAccess(any(Object.class), any(SubResource.class), any(Access.class))).thenReturn
-            (Boolean.TRUE);
-
-        Owner o = mock(Owner.class);
-        when(mockedOwnerCurator.lookupByKey(any(String.class))).thenReturn(o);
-        when(mockConsumerTypeCurator.lookupByLabel(any(String.class))).thenReturn(share);
-
-        thrown.expect(BadRequestException.class);
-        thrown.expectMessage("cannot create an identity certificate");
-        consumerResource.create(c, uap, "test-user", "test-owner", null, true);
-    }
-
-    @Test
     public void testValidateShareConsumerRequiresRecipientFact() {
         ConsumerType share = new ConsumerType(ConsumerTypeEnum.SHARE);
         Consumer c = new Consumer("test-consumer", "test-user", new Owner(
