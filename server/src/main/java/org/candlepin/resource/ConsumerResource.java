@@ -493,7 +493,9 @@ public class ConsumerResource {
         }
 
         if (type.isType(ConsumerTypeEnum.SHARE)) {
-            validateShareConsumer(consumer, principal, keys, identityCertCreation);
+            // Share consumers do not need identity certificates so refuse to create them.
+            identityCertCreation = false;
+            validateShareConsumer(consumer, principal, keys);
         }
 
         consumer.setOwner(owner);
@@ -592,16 +594,11 @@ public class ConsumerResource {
      * @param identityCertCreation
      * @throws BadRequestException
      */
-    private void validateShareConsumer(Consumer consumer, Principal principal, List<ActivationKey> keys,
-        boolean identityCertCreation) throws BadRequestException {
+    private void validateShareConsumer(Consumer consumer, Principal principal, List<ActivationKey> keys)
+        throws BadRequestException {
         if (keys.size() > 0) {
             throw new BadRequestException(i18n.tr(
                 "A unit type of \"share\" cannot be used with activation keys"
-            ));
-        }
-        if (identityCertCreation) {
-            throw new BadRequestException(i18n.tr(
-                "A unit of type \"share\" cannot create an identity certificate"
             ));
         }
         if (StringUtils.isNotBlank(consumer.getServiceLevel())) {
@@ -624,7 +621,7 @@ public class ConsumerResource {
                 "A unit type of \"share\" cannot have a content access mode"
             ));
         }
-        if (!consumer.getGuestIds().isEmpty()) {
+        if (consumer.getGuestIds() != null && !consumer.getGuestIds().isEmpty()) {
             throw new BadRequestException(i18n.tr(
                 "A unit type of \"share\" cannot have guest IDs"
             ));
@@ -640,12 +637,16 @@ public class ConsumerResource {
             ));
         }
         else {
+            String recipient = consumer.getFact("share.recipient");
             Owner recipientOwner = ownerCurator.lookupByKey(consumer.getFact("share.recipient"));
+            if (recipientOwner == null) {
+                throw new NotFoundException(i18n.tr("owner with key: {0} was not found.", recipient));
+            }
             // Check permissions for current principal on the recipient owner
             if (!principal.canAccess(recipientOwner, SubResource.ENTITLEMENTS, Access.CREATE)) {
                 log.warn("User {} does not have access to create shares to org {}", principal
-                    .getPrincipalName(), recipientOwner.getKey());
-                throw new NotFoundException(i18n.tr("owner with key: {0} was not found.", recipientOwner.getKey()));
+                    .getPrincipalName(), recipient);
+                throw new NotFoundException(i18n.tr("owner with key: {0} was not found.", recipient));
             }
         }
     }
@@ -1596,10 +1597,8 @@ public class ConsumerResource {
         String[] productIds, List<String> fromPools, Date entitleDate, Consumer consumer, boolean async) {
         short parameters = 0;
 
-        if (consumer.getType().isType(ConsumerTypeEnum.SHARE)) {
-            if (StringUtils.isBlank(poolIdString) || !hasPoolQuantities) {
-                throw new BadRequestException(i18n.tr("Share consumers must be bound to specific pools"));
-            }
+        if (consumer.getType().isType(ConsumerTypeEnum.SHARE) && StringUtils.isBlank(poolIdString)) {
+            throw new BadRequestException(i18n.tr("Share consumers must be bound to a specific pool"));
         }
 
         if (hasPoolQuantities) {

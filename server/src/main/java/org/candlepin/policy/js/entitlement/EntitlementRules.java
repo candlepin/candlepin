@@ -18,6 +18,8 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQuantity;
@@ -51,8 +53,8 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
     public EntitlementRules(DateSource dateSource,
         JsRunner jsRules,
         I18n i18n, Configuration config, ConsumerCurator consumerCurator,
-        PoolCurator poolCurator, ProductCurator productCurator, RulesObjectMapper mapper) {
-
+        PoolCurator poolCurator, ProductCurator productCurator, RulesObjectMapper mapper,
+        OwnerCurator ownerCurator, OwnerProductCurator ownerProductCurator) {
         this.jsRules = jsRules;
         this.dateSource = dateSource;
         this.i18n = i18n;
@@ -62,6 +64,8 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
         this.poolCurator = poolCurator;
         this.productCurator = productCurator;
         this.objectMapper = mapper;
+        this.ownerCurator = ownerCurator;
+        this.ownerProductCurator = ownerProductCurator;
         log = LoggerFactory.getLogger(EntitlementRules.class);
         jsRules.init("entitlement_name_space");
     }
