@@ -446,7 +446,7 @@ public class CandlepinPoolManager implements PoolManager {
      */
     public void cleanupExpiredPools() {
         int count = 0;
-        boolean loop = false;
+        boolean loop;
 
         log.debug("Beginning cleanup expired pools job");
 
@@ -618,8 +618,7 @@ public class CandlepinPoolManager implements PoolManager {
             }
         }
 
-        Set<String> entsToRegen = processPoolUpdates(poolEvents, updatedPools);
-        return entsToRegen;
+        return processPoolUpdates(poolEvents, updatedPools);
     }
 
     protected Set<String> processPoolUpdates(
@@ -802,7 +801,7 @@ public class CandlepinPoolManager implements PoolManager {
      * DTOs present on the subscription. If the subscription uses DTOs which cannot be resolved,
      * this method will throw an exception.
      *
-     * @param subscription
+     * @param sub
      *  The subscription to convert to a pool
      *
      * @param owner
@@ -1186,13 +1185,13 @@ public class CandlepinPoolManager implements PoolManager {
         PoolFilterBuilder poolFilter = new PoolFilterBuilder();
         poolFilter.addIdFilters(fromPools);
         List<Pool> allOwnerPools = this.listAvailableEntitlementPools(
-            host, null, owner, (String) null, null, activePoolDate, false,
+            host, null, owner, null, null, activePoolDate, false,
             poolFilter, null, false, false).getPageData();
         log.debug("Found {} total pools in org.", allOwnerPools.size());
         logPools(allOwnerPools);
 
         List<Pool> allOwnerPoolsForGuest = this.listAvailableEntitlementPools(
-            guest, null, owner, (String) null, null, activePoolDate,
+            guest, null, owner, null, null, activePoolDate,
             false, poolFilter,
             null, false, false).getPageData();
         log.debug("Found {} total pools already available for guest", allOwnerPoolsForGuest.size());
@@ -1387,7 +1386,7 @@ public class CandlepinPoolManager implements PoolManager {
         PoolFilterBuilder poolFilter = new PoolFilterBuilder();
         poolFilter.addIdFilters(fromPools);
         List<Pool> allOwnerPools = this.listAvailableEntitlementPools(
-            consumer, null, owner, (String) null, null, activePoolDate, false,
+            consumer, null, owner, null, null, activePoolDate, false,
             poolFilter, null, false, false).getPageData();
         List<Pool> filteredPools = new LinkedList<Pool>();
 
@@ -1605,7 +1604,7 @@ public class CandlepinPoolManager implements PoolManager {
             }
         }
 
-        EntitlementHandler handler = null;
+        EntitlementHandler handler;
         if (entitlements == null) {
             handler = new NewHandler();
         }
@@ -1679,8 +1678,8 @@ public class CandlepinPoolManager implements PoolManager {
      *  the bonus pools are not over-consumed.
      *
      * @param owner
-     * @param consumer
-     * @param pool
+     * @param poolQuantities
+     * @param entitlements
      */
     private void checkBonusPoolQuantities(Owner owner, Map<String, PoolQuantity> poolQuantities,
         Map<String, Entitlement> entitlements) {
@@ -1827,7 +1826,7 @@ public class CandlepinPoolManager implements PoolManager {
         }
         poolCurator.updateAll(poolsToSave, false, false);
 
-        /**
+        /*
          * Before deleting the entitlements, we need to find out if there are any
          * modifier entitlements that need to have their certificates regenerated
          */
@@ -1910,8 +1909,8 @@ public class CandlepinPoolManager implements PoolManager {
 
     /**
      * Helper method for log debug messages
-     * @param entitlements
-     * @return
+     * @param pools pools to get IDs for
+     * @return List pool ID list
      */
     private List<String> getPoolIds(Collection<Pool> pools) {
         List<String> ids = new ArrayList<String>();
@@ -2324,7 +2323,7 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
 
-        /**
+        /*
          * The following code reconstructs Subscription quantity from the Pool quantity.
          * To understand it, it is important to understand how pool (the parameter)
          * is created in candlepin from a source subscription.
