@@ -1,6 +1,7 @@
 #!/bin/bash
 
 APP_DB_NAME="candlepin"
+MAX_STARTUP_WAIT_TIME=30
 
 gendb() {
     if [ "$USE_ORACLE" == "1" ]; then
@@ -355,9 +356,20 @@ deploy
 
 eval $START
 
+START_TIME=$(date +%s)
+
 printf "Waiting for Candlepin to start..."
 until curl -k -s "https://localhost:8443/candlepin/status" > /dev/null
 do
+    CURRENT_TIME=$(date +%s)
+    ELAPSED_TIME=$((CURRENT_TIME - START_TIME))
+
+    if [ "$ELAPSED_TIME" -gt "$MAX_STARTUP_WAIT_TIME" ]; then
+        echo
+        err_msg "Candlepin failed to start within $MAX_STARTUP_WAIT_TIME seconds. Aborting..."
+        exit 1
+    fi
+
     printf "."
     sleep 1
 done

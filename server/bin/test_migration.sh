@@ -36,16 +36,23 @@ collect_artifacts() {
     if [ -d "/artifacts" ]; then
         echo "Collecting artifacts..."
 
+        CANDLEPIN_ARTIFACTS=(
+            'access.log'
+            'audit.log'
+            'candlepin.log'
+            'error.log'
+            'lint.log'
+            'buildr.log'
+            'unit_tests.log'
+            'rspec.log'
+        )
+
         # It's entirely possible for these to not exist, so we'll copy them if we can, but if we
         # fail, we shouldn't abort
-        move_artifact '/var/log/candlepin/access.log' '/artifacts/'
-        move_artifact '/var/log/candlepin/audit.log' '/artifacts/'
-        move_artifact '/var/log/candlepin/candlepin.log' '/artifacts/'
-        move_artifact '/var/log/candlepin/error.log' '/artifacts/'
-        move_artifact '/var/log/candlepin/lint.log' '/artifacts/'
-        move_artifact '/var/log/candlepin/buildr.log' '/artifacts/'
-        move_artifact '/var/log/candlepin/unit_tests.log' '/artifacts/'
-        move_artifact '/var/log/candlepin/rspec.log' '/artifacts/'
+        for ARTIFACT in ${CANDLEPIN_ARTIFACTS[@]}
+        do
+            move_artifact "/var/log/candlepin/$ARTIFACT" '/artifacts/'
+        done
     fi
 }
 
@@ -108,7 +115,15 @@ while getopts ":cd:s:v" opt; do
         d   ) DEST_GIT_REF="${OPTARG}";;
         s   ) SRC_GIT_REF="${OPTARG}";;
         v   ) VERBOSE="1";;
-        ?  ) usage; exit;;
+
+        ?   ) usage
+              exit 1
+              ;;
+
+        :   ) echo "Option -$OPTARG requires an argument" >&2
+              usage
+              exit 1
+              ;;
     esac
 done
 
@@ -116,7 +131,7 @@ shift $(($OPTIND - 1))
 
 if [ -z "$SRC_GIT_REF" ]; then
     echo "A source ref must be provided"
-    exit
+    exit 1
 fi
 
 # Setup our tee pipe for forking output
@@ -149,8 +164,8 @@ do
 done
 
 if [ -z "$CP_HOME" ]; then
-    echo "ERROR: Unable to locate Candlepin deploy script. Please run this script from the Candlepin server directory"
-    exit
+    echo  "ERROR: Unable to locate Candlepin deploy script. Please run this script from the Candlepin server directory" >&2
+    exit 1
 fi
 
 
