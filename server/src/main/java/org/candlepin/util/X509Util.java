@@ -40,6 +40,23 @@ public abstract class X509Util {
     private static Logger log = LoggerFactory.getLogger(X509Util.class);
 
     public static final Predicate<Product> PROD_FILTER_PREDICATE = new Predicate<Product>() {
+        /**
+         * Test if a product should be used for generating an entitlement certificate.
+         * This test is currently limited to whether or not the product id is numeric.
+         *
+         * This test has to include whether or not the product id is numeric
+         * because V1 certificates include the product ID in the OID
+         * of the certificate extension.
+         *
+         * If the numeric limitation can be lifted then this test may be able to be altered
+         * to only test if a product has content sets associated. That would effectively
+         * trim out marketing products & all other products that do not have any associated
+         * content sets.
+         *
+         * @param product The product to test.
+         * @return True if the supplied product contains content that should be included
+         *         in an entitlement certificate.
+         */
         @Override
         public boolean apply(Product product) {
             return product != null && StringUtils.isNumeric(product.getId());
