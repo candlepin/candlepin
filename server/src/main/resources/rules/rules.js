@@ -1300,6 +1300,7 @@ var Entitlement = {
             "sockets:1:sockets," +
             "ram:1:ram," +
             "cores:1:cores," +
+            "share:1:share," +
             "requires_consumer_type:1:requires_consumer_type," +
             "virt_only:1:virt_only," +
             "requires_host:1:requires_host," +
@@ -1308,7 +1309,6 @@ var Entitlement = {
             "physical_only:1:physical_only," +
             "unmapped_guests_only:1:unmapped_guests_only," +
             "storage_band:1:storage_band," +
-            "share:1:share," +
             "requires_consumer:1:requires_consumer";
     },
 
