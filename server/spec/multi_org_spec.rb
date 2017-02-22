@@ -77,4 +77,31 @@ describe "Multi Org Shares" do
     attributes = recipient_pools.first['attributes']
     expect(attributes.select { |a| a['name'] == 'share' && a['value'] == 'true'}).not_to be_empty
   end
+
+  it 'prohibits sharing a share' do
+    owner1_prod = create_product(nil, nil, :owner => @owner1['key'])
+    pool = create_pool_and_subscription(@owner1['key'], owner1_prod['id'], 10)
+    @user_client.consume_pool(pool['id'], :uuid => consumer1['uuid'])
+    expect(@user_client.list_pool_entitlements(pool['id'])).not_to be_empty
+    recipient_pools = @cp.list_owner_pools(@owner2['key'])
+    expect(recipient_pools).not_to be_empty
+
+    owner3 = create_owner(random_string('orgC'))
+    role = create_role(nil, owner3['key'], 'ALL')
+    @cp.add_role_user(role['id'], @username)
+    consumer2 =
+     @user_client.register(
+      random_string('orgCShare'),
+      :share,
+      nil,
+      {'share.recipient' => owner3['key']},
+      nil,
+      @owner2['key']
+    )
+
+    require 'pry'; binding.pry
+    expect do
+      @user_client.consume_pool(recipient_pools.first['id'], :uuid => consumer2['uuid'])
+    end.to raise_error(RestClient::Forbidden)
+  end
 end
