@@ -8,6 +8,14 @@ require 'date'
 require 'json'
 require 'pp'
 
+# Impl note:
+# We use print instead of puts throughout this script, as a majority of the operations are
+# performed in parallel threads. Internally, puts prints the message and an automatic line break as
+# two separate, non-atomic operations. This allows time for the threads to print their messages to
+# the same line before the line break is written. We work around this here by using print with a
+# line break in the message itself, reducing/eliminating the possibility for two+ threads to write
+# a message to the same line.
+
 
 SMALL_SUB_QUANTITY = 5
 LARGE_SUB_QUANTITY = 10
@@ -25,7 +33,7 @@ data = {'products'=> [], 'content'=> [], 'owners'=> [], 'users'=> [], 'roles'=> 
 @sourceSubId = 0
 
 filenames.each do |filename|
-  puts filename
+  # puts filename
   product_data_buf = File.read(filename)
   product_data = JSON(product_data_buf, {})
   data['products'] = data.fetch('products') + product_data['products'] unless product_data['products'].nil?
@@ -37,12 +45,13 @@ end
 
 cp = Candlepin.new('admin', 'admin', nil, nil, 'localhost', 8443)
 
+print "\nCreating owners\n"
 def create_owner(cp, new_owner)
   owner_name =  new_owner['name']
   displayName = new_owner['displayName']
 
-  puts "owner: #{owner_name}"
-  puts "\t displayName: #{displayName}"
+  print "owner: #{owner_name}\n"
+  print "\t displayName: #{displayName}\n"
 
   owner = cp.create_owner(owner_name, new_owner)
 
@@ -65,38 +74,38 @@ def create_user(cp, new_user)
   user_pass = new_user['password']
   user_super = new_user['superadmin'] || false
 
-  puts "user: #{user_name}"
-  puts "\t password: #{user_pass}"
-  puts "\t super_user: #{user_super}"
+  print "user: #{user_name}\n"
+  print "\t password: #{user_pass}\n"
+  print "\t super_user: #{user_super}\n"
 
   cp.create_user(user_name, user_pass, user_super)
 end
 
-puts "Create some users"
+print "\nCreate some users\n"
 thread_pool = ThreadPool.new(5)
 data['users'].each do |new_user|
     thread_pool.schedule(new_user) {|new_user| create_user(cp, new_user) }
 end
 thread_pool.shutdown
 
-puts
 # Create roles:
-puts "Create some roles"
+print "\nCreate some roles\n"
+
 def create_role(cp, new_role)
   role_name = new_role['name']
   perms = new_role['permissions']
   users = new_role['users']
 
-  puts "role_name: #{role_name}"
+  print "role_name: #{role_name}\n"
   perms.each do |perm|
-    puts "\t owner: #{perm['owner']}"
-    puts "\t access: #{perm['access']}"
+    print "\t owner: #{perm['owner']}\n"
+    print "\t access: #{perm['access']}\n"
   end
 
   role = cp.create_role(role_name, perms)
 
   users.each do |user|
-    puts "\t user: #{user['username']}"
+    print "\t user: #{user['username']}\n"
     cp.add_role_user(role['id'], user['username'])
   end
 
@@ -111,10 +120,10 @@ thread_pool.shutdown
 
 
 # import all the content sets
-puts "Importing content set data..."
+print "\nImporting content set data...\n"
 
 def create_content(cp, owner, content)
-  puts "#{owner['name']}/#{content['name']}"
+  print "#{owner['name']}/#{content['name']}\n"
 
   params = {}
   modified_products = content['modified_products'] || []
@@ -144,15 +153,15 @@ end
 
 thread_pool = ThreadPool.new(5)
 data['owners'].each do |owner|
-    if owner.has_key?('content')
-        owner['content'].each do |content|
-          thread_pool.schedule(owner, content) {|owner, content| create_content(cp, owner, content) }
-        end
+  if owner.has_key?('content')
+    owner['content'].each do |content|
+      thread_pool.schedule(owner, content) {|owner, content| create_content(cp, owner, content) }
     end
+  end
 
-    data['content'].each do |content|
-        thread_pool.schedule(owner, content) {|owner, content| create_content(cp, owner, content) }
-    end
+  data['content'].each do |content|
+    thread_pool.schedule(owner, content) {|owner, content| create_content(cp, owner, content) }
+  end
 end
 thread_pool.shutdown
 
@@ -163,11 +172,10 @@ admin_owner_key = 'admin'
 
 CERT_DIR='generated_certs'
 if not File.directory? CERT_DIR
-	Dir.mkdir(CERT_DIR)
+  Dir.mkdir(CERT_DIR)
 end
 
-puts
-puts "Import product data..."
+print "\nImport product data...\n"
 
 def create_product(cp, owner, product)
   name = product['name']
@@ -189,12 +197,14 @@ def create_product(cp, owner, product)
   attrs['variant'] = variant
   attrs['arch'] = arch
   attrs['type'] = type
-  product_ret = cp.create_product(owner['name'], id, name, {:multiplier => multiplier,
-                                             :attributes => attrs,
-                                             :dependentProductIds => dependent_products,
-                                             :relies_on => relies_on})
-  puts "product name: " + name + " version: " + version + \
-       " arch: " + arch + " type: " + type
+  product_ret = cp.create_product(owner['name'], id, name, {
+    :multiplier => multiplier,
+    :attributes => attrs,
+    :dependentProductIds => dependent_products,
+    :relies_on => relies_on
+  })
+
+  print "product name: #{name} version: #{version} arch: #{arch} type: #{type}\n"
   return product_ret
 end
 
@@ -309,7 +319,7 @@ data['owners'].each do |owner|
     end
 end
 
-puts "creating eng products"
+print "\ncreating eng products\n"
 thread_pool = ThreadPool.new(6)
 eng_products.each do |eng_product|
     thread_pool.schedule(eng_product[0], eng_product[1]) do |owner, product|
@@ -318,7 +328,7 @@ eng_products.each do |eng_product|
 end
 thread_pool.shutdown
 
-puts "creating mkt products and pools"
+print "\ncreating mkt products and pools\n"
 thread_pool = ThreadPool.new(6)
 mkt_products.each do |mkt_product|
     thread_pool.schedule(mkt_product[0], mkt_product[1]) do |owner, product|
@@ -327,9 +337,10 @@ mkt_products.each do |mkt_product|
 end
 thread_pool.shutdown
 
+print "\nCreating activation keys...\n"
 def create_activation_key_for_pool(cp, pool, owner_key)
     key_name = owner_key + '-' + pool['productId'] + '-' + pool['contractNumber'] + '-key'
-    puts "creating activation_key " + key_name
+    print "creating activation_key " + key_name + "\n"
     key = cp.create_activation_key(owner_key, key_name)
     cp.add_pool_to_key(key['id'], pool['id'])
 end
