@@ -54,6 +54,7 @@ import org.candlepin.pinsetter.core.PinsetterKernel;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
+import org.candlepin.policy.js.RuleExecutionException;
 import org.candlepin.policy.js.activationkey.ActivationKeyRules;
 import org.candlepin.policy.js.autobind.AutobindRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
@@ -802,7 +803,7 @@ public class CandlepinPoolManager implements PoolManager {
      * DTOs present on the subscription. If the subscription uses DTOs which cannot be resolved,
      * this method will throw an exception.
      *
-     * @param subscription
+     * @param sub
      *  The subscription to convert to a pool
      *
      * @param owner
@@ -1485,7 +1486,14 @@ public class CandlepinPoolManager implements PoolManager {
 
         log.debug("Locking pools: {}", poolQuantityMap.keySet());
 
-        List<Pool> pools = poolCurator.lockAndLoadBatch(poolQuantityMap.keySet());
+        List<Pool> pools = poolCurator.listAllByIds(poolQuantityMap.keySet()).list();
+//        pools = poolCurator.lockAndLoadBatch(poolQuantityMap.keySet());
+
+        //Build a map of all pools & their versioned product UUID
+        HashMap<String, String> poolProductUuidMap = new HashMap<String, String>();
+        for (Pool p : pools) {
+            poolProductUuidMap.put(p.getId(), p.getProduct().getUuid());
+        }
 
         if (log.isDebugEnabled()) {
             for (Pool pool : pools) {
@@ -1569,6 +1577,7 @@ public class CandlepinPoolManager implements PoolManager {
         handler.handlePostEntitlement(this, consumer, entitlements);
         handler.handleSelfCertificates(consumer, poolQuantities, entitlements);
 
+        // TODO This acquires a RowShareLock on the pool
         this.ecGenerator.regenerateCertificatesByEntitlementIds(
             this.entitlementCurator.batchListModifying(entitlements.values()), true
         );
@@ -1588,6 +1597,22 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         poolCurator.flush();
+
+        // We only need the check to validate quantity & Product UUID, all other values are irrelevant
+        // for rules checking.
+        //use poolQuantities
+        pools = poolCurator.lockAndLoadBatch(poolQuantities.keySet());
+
+        for (Pool p : pools) {
+            Integer quantityRequired = poolQuantities.get(p.getId()).getQuantity();
+            if (p.getConsumed() <=  p.getQuantity() - quantityRequired) {
+                throw new RuleExecutionException("rulefailed.no.entitlements.available");
+            }
+            if (!p.getProduct().getUuid().equals(poolProductUuidMap.get(p.getId()))) {
+                //TODO Create the proper rule string for product changed errors
+                throw new RuleExecutionException("rulefailed.no.entitlements.available");
+            }
+        }
 
         return new ArrayList<Entitlement>(entitlements.values());
     }
