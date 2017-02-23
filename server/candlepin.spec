@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.49.19
+Version: 0.9.49.20
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -401,6 +401,14 @@ fi
 
 
 %changelog
+* Thu Feb 23 2017 Chris Rog <crog@redhat.com> 0.9.49.20-1
+- Added explicit tests for the new validator classes (crog@redhat.com)
+- 1416823: Abstracted out property validation to new validator framework
+  (crog@redhat.com)
+- Fix vrit_spec test (adarshvritant@gmail.com)
+- fix unit tests (adarshvritant@gmail.com)
+- 1390215: NPE on productids (adarshvritant@gmail.com)
+
 * Wed Nov 09 2016 Vritant Jain <adarshvritant@gmail.com> 0.9.49.19-1
 - 1388201: Add check to insure constraint has not already been dropped
   (awood@redhat.com)
