@@ -334,7 +334,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         Page<List<Pool>> results =
             poolManager.listAvailableEntitlementPools(parentSystem, null,
                 parentSystem.getOwner(), null, null, true, true,
-                new PoolFilterBuilder(), new PageRequest());
+                new PoolFilterBuilder(), new PageRequest(), false, false);
         assertEquals(4, results.getPageData().size());
 
         Pool pool = createPoolAndSub(o, socketLimitedProduct, 100L,
@@ -344,7 +344,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         parentSystem.setFact("cpu.sockets", "4");
         results = poolManager.listAvailableEntitlementPools(parentSystem, null,
             parentSystem.getOwner(), null, null, true, true, new PoolFilterBuilder(),
-            new PageRequest());
+            new PageRequest(), false, false);
         // Expect the warnings to be included. Should have one more pool available.
         assertEquals(5, results.getPageData().size());
     }
@@ -357,7 +357,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         Page<List<Pool>> results =
             poolManager.listAvailableEntitlementPools(parentSystem, null,
                 parentSystem.getOwner(), null, null, true, true,
-                new PoolFilterBuilder(), new PageRequest());
+                new PoolFilterBuilder(), new PageRequest(), false, false);
         assertEquals(4, results.getPageData().size());
 
         // Creating a pool with no entitlements available, which will trigger
@@ -368,7 +368,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         results = poolManager.listAvailableEntitlementPools(parentSystem, null,
             parentSystem.getOwner(), null, null, true, true, new PoolFilterBuilder(),
-            new PageRequest());
+            new PageRequest(), false, false);
         // Pool in error should not be included. Should have the same number of
         // initial pools.
         assertEquals(4, results.getPageData().size());
@@ -386,7 +386,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         Page<List<Pool>> results =
             poolManager.listAvailableEntitlementPools(null, ak,
                 parentSystem.getOwner(), null, null, true, true,
-                new PoolFilterBuilder(), new PageRequest());
+                new PoolFilterBuilder(), new PageRequest(), false, false);
         assertEquals(4, results.getPageData().size());
 
         // Creating a pool with no entitlements available, which does not trigger
@@ -397,7 +397,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         results = poolManager.listAvailableEntitlementPools(null, ak,
             parentSystem.getOwner(), null, null, true, true, new PoolFilterBuilder(),
-            new PageRequest());
+            new PageRequest(), false, false);
         // Pool in error should not be included. Should have the same number of
         // initial pools.
         assertEquals(5, results.getPageData().size());
@@ -408,7 +408,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         Page<List<Pool>> results =
             poolManager.listAvailableEntitlementPools(parentSystem, null,
                 parentSystem.getOwner(), (String) null, null, true, false,
-                new PoolFilterBuilder(), new PageRequest());
+                new PoolFilterBuilder(), new PageRequest(), false, false);
         assertEquals(4, results.getPageData().size());
 
         Pool pool = createPoolAndSub(o, socketLimitedProduct, 100L,
@@ -419,7 +419,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         results = poolManager.listAvailableEntitlementPools(parentSystem, null,
             parentSystem.getOwner(), (String) null, null, true, false,
-            new PoolFilterBuilder(), new PageRequest());
+            new PoolFilterBuilder(), new PageRequest(), false, false);
         // Pool in error should not be included. Should have the same number of
         // initial pools.
         assertEquals(4, results.getPageData().size());
@@ -433,7 +433,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         poolCurator.create(pool);
         Page<List<Pool>> results = poolManager.listAvailableEntitlementPools(
             childVirtSystem, null, o, virtGuest.getId(), null, true,
-            true, new PoolFilterBuilder(), new PageRequest());
+            true, new PoolFilterBuilder(), new PageRequest(), false, false);
         int newbornPools = results.getPageData().size();
 
         childVirtSystem.setCreated(TestUtil.createDate(2000, 01, 01));
@@ -441,7 +441,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         results = poolManager.listAvailableEntitlementPools(
             childVirtSystem, null, o, virtGuest.getId(), null, true,
-            true, new PoolFilterBuilder(), new PageRequest());
+            true, new PoolFilterBuilder(), new PageRequest(), false, false);
 
         assertEquals(newbornPools - 1, results.getPageData().size());
     }
@@ -521,11 +521,13 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         nonDevSystem.addInstalledProduct(new ConsumerInstalledProduct(p.getId(), p.getName()));
 
         Page<List<Pool>> results = poolManager.listAvailableEntitlementPools(devSystem, null,
-                owner, null, null, true, true, new PoolFilterBuilder(), new PageRequest());
+                owner, null, null, true, true, new PoolFilterBuilder(), new PageRequest(),
+                false, false);
         assertEquals(2, results.getPageData().size());
 
         results = poolManager.listAvailableEntitlementPools(nonDevSystem, null,
-                owner, null, null, true, true, new PoolFilterBuilder(), new PageRequest());
+                owner, null, null, true, true, new PoolFilterBuilder(), new PageRequest(),
+                false, false);
         assertEquals(1, results.getPageData().size());
         Pool found2 = results.getPageData().get(0);
         assertEquals(pool2, found2);
