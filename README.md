@@ -85,7 +85,6 @@ the shell from interfering.  Also note that any phrase or line number you
 specify will be applied to *all* tests.  So `buildr rspec:vcpu,consumer:62`
 will only run tests that begin on line 62 in either the vcpu or consumer specs.
 This is a limitation of RSpec itself.
-
 When you run RSpec, failed tests are recorded in `target/rspec.failures`.  You
 can then use the `rspec:failures` task to just run failed tests which will then
 update the list of failures again.  Thus, you can keep running `rspec:failures`
