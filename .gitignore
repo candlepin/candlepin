@@ -33,6 +33,7 @@ dataSources/
 
 **/build/
 **/custom.yaml
+**/renderer.chain
 **/generated_certs/
 **/gen_products/
 **/lib/
