@@ -680,7 +680,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testLoookupOverconsumedBySubscriptionId() {
+    public void testLookupOverconsumedBySubscriptionId() {
 
         Pool pool = createPool(owner, product, 1L,
             TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
@@ -690,6 +690,8 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         Entitlement e = new Entitlement(pool, consumer, 1);
         entitlementCurator.create(e);
+        pool.setConsumed(pool.getConsumed() + 1);
+        poolCurator.merge(pool);
 
         Map<String, Entitlement> subMap = new HashMap<String, Entitlement>();
         subMap.put(subid, e);
@@ -697,11 +699,13 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         e = new Entitlement(pool, consumer, 1);
         entitlementCurator.create(e);
+        pool.setConsumed(pool.getConsumed() + 1);
+        poolCurator.merge(pool);
         assertEquals(1, poolCurator.lookupOversubscribedBySubscriptionIds(owner, subMap).size());
     }
 
     @Test
-    public void testBatchLoookupOverconsumedBySubscriptionId() {
+    public void testBatchLookupOverconsumedBySubscriptionId() {
         Map<String, Entitlement> subIdMap = new HashMap<String, Entitlement>();
         List<Pool> expectedPools = new ArrayList<Pool>();
         for (Integer i = 0; i < 5; i++) {
@@ -713,6 +717,8 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
             Entitlement e = new Entitlement(pool, consumer, 2);
             entitlementCurator.create(e);
+            pool.setConsumed(pool.getConsumed() + 2);
+            poolCurator.merge(pool);
             subIdMap.put(subid, e);
         }
 
@@ -724,11 +730,16 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             TestUtil.createDate(2055, 3, 2));
         poolCurator.create(notOverConsumedPool);
         entitlementCurator.create(new Entitlement(notOverConsumedPool, consumer, 1));
+        notOverConsumedPool.setConsumed(notOverConsumedPool.getConsumed() + 1);
+        poolCurator.merge(notOverConsumedPool);
+
 
         Pool overConsumedPool = createPool(owner, product, 1L, TestUtil.createDate(2050, 3, 2),
             TestUtil.createDate(2055, 3, 2));
         poolCurator.create(overConsumedPool);
         entitlementCurator.create(new Entitlement(overConsumedPool, consumer, 2));
+        overConsumedPool.setConsumed(overConsumedPool.getConsumed() + 2);
+        poolCurator.merge(overConsumedPool);
 
         List<Pool> gotPools = poolCurator.lookupOversubscribedBySubscriptionIds(owner, subIdMap);
         assertEquals(5, gotPools.size());
@@ -740,7 +751,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testLoookupOverconsumedIgnoresOtherSourceEntitlementPools() {
+    public void testLookupOverconsumedIgnoresOtherSourceEntitlementPools() {
 
         Pool pool = createPool(owner, product, 1L,
             TestUtil.createDate(2011, 3, 2), TestUtil.createDate(2055, 3, 2));
@@ -750,6 +761,8 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         Entitlement sourceEnt = new Entitlement(pool, consumer, 1);
         entitlementCurator.create(sourceEnt);
+        pool.setConsumed(pool.getConsumed() + 1);
+        poolCurator.merge(pool);
 
         // Create derived pool referencing the entitlement just made:
         Pool derivedPool = new Pool(
@@ -772,9 +785,11 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionIds(owner, subMap).size());
 
         // Oversubscribe to the derived pool:
-        Entitlement derivedEnt = new Entitlement(derivedPool, consumer,
-            2);
+        Entitlement derivedEnt = new Entitlement(derivedPool, consumer, 3);
         entitlementCurator.create(derivedEnt);
+        derivedPool.setConsumed(derivedPool.getConsumed() + 3);
+        poolCurator.merge(derivedPool);
+
 
         // Passing the source entitlement should find the oversubscribed derived pool:
         assertEquals(1, poolCurator.lookupOversubscribedBySubscriptionIds(owner, subMap).size());
@@ -786,7 +801,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testLoookupOverconsumedBySubscriptionIdIgnoresUnlimited() {
+    public void testLookupOverconsumedBySubscriptionIdIgnoresUnlimited() {
 
         Pool pool = createPool(owner, product, -1L,
             TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
@@ -1580,5 +1595,54 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         Pool found = poolCurator.findDevPool(consumer);
         assertNull(found);
+    }
+
+    @Test
+    public void testUpdateQuantityColumnsOnPool() {
+        Consumer consumer = TestUtil.createConsumer(owner);
+        ConsumerType ct = consumer.getType();
+        ct.setManifest(true);
+        consumerTypeCurator.create(ct);
+        consumerCurator.create(consumer);
+
+        Pool pool = createPool(owner, product, 20L,
+            TestUtil.createDate(2010, 3, 2), TestUtil.createDate(
+            Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 2));
+        poolCurator.create(pool);
+        Entitlement e = new Entitlement(pool, consumer, 5);
+        entitlementCurator.create(e);
+        assertEquals(pool.getConsumed().longValue(), 0);
+        assertEquals(pool.getExported().longValue(), 0);
+
+        poolCurator.calculateConsumedForOwnersPools(owner);
+        poolCurator.calculateExportedForOwnersPools(owner);
+        poolCurator.refresh(pool);
+
+        assertEquals(pool.getConsumed().longValue(), 5);
+        assertEquals(pool.getExported().longValue(), 5);
+    }
+
+    @Test
+    public void testUpdateQuantityColumnsOnPoolNotManifest() {
+        Consumer consumer = TestUtil.createConsumer(owner);
+        ConsumerType ct = consumer.getType();
+        consumerTypeCurator.create(ct);
+        consumerCurator.create(consumer);
+
+        Pool pool = createPool(owner, product, 20L,
+            TestUtil.createDate(2010, 3, 2), TestUtil.createDate(
+            Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 2));
+        poolCurator.create(pool);
+        Entitlement e = new Entitlement(pool, consumer, 5);
+        entitlementCurator.create(e);
+        assertEquals(pool.getConsumed().longValue(), 0);
+        assertEquals(pool.getExported().longValue(), 0);
+
+        poolCurator.calculateConsumedForOwnersPools(owner);
+        poolCurator.calculateExportedForOwnersPools(owner);
+        poolCurator.refresh(pool);
+
+        assertEquals(pool.getConsumed().longValue(), 5);
+        assertEquals(pool.getExported().longValue(), 0);
     }
 }

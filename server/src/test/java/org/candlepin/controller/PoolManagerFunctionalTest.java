@@ -691,8 +691,10 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
             createEntitlementCertificate("keycert", "cert"));
         ent.setQuantity(1);
         entitlementCurator.create(ent);
-        //To recompute 'consumed' field
-        poolCurator.refresh(pool1);
+        pool1.setConsumed(pool1.getConsumed() + 1);
+        poolCurator.merge(pool1);
+        poolCurator.flush();
+
         assertEquals(1, poolCurator.find(pool1.getId()).getConsumed().intValue());
         Pool pool2 = createPool(owner, p, 1L, TestUtil.createDate(2000, 3, 2),
             TestUtil.createDate(2050, 3, 2));
@@ -701,8 +703,9 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
             createEntitlementCertificate("keycert", "cert"));
         ent2.setQuantity(1);
         entitlementCurator.create(ent2);
-        //To recompute 'consumed' field
-        poolCurator.refresh(pool2);
+        pool2.setConsumed(pool2.getConsumed() + 1);
+        poolCurator.merge(pool2);
+        poolCurator.flush();
 
         Map<String, Integer> poolQuantities = new HashMap<String, Integer>();
         poolQuantities.put(pool1.getId(), 1);
