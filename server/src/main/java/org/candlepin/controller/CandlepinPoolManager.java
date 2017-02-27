@@ -1563,9 +1563,11 @@ public class CandlepinPoolManager implements PoolManager {
             if (consumer.getType().isManifest()) {
                 pool.setExported(pool.getExported() + quantity);
             }
+            consumer.setEntitlementCount(consumer.getEntitlementCount() + quantity);
             poolsToSave.add(pool);
         }
         poolCurator.updateAll(poolsToSave, false, false);
+        consumerCurator.update(consumer);
 
         handler.handlePostEntitlement(this, consumer, entitlements);
         handler.handleSelfCertificates(consumer, poolQuantities, entitlements);
@@ -1737,6 +1739,8 @@ public class CandlepinPoolManager implements PoolManager {
             if (consumer.getType().isManifest()) {
                 pool.setExported(pool.getExported() - entQuantity);
             }
+            consumer.setEntitlementCount(consumer.getEntitlementCount() - entQuantity);
+            consumerCurator.update(consumer);
             poolsToSave.add(pool);
         }
         poolCurator.updateAll(poolsToSave, false, false);

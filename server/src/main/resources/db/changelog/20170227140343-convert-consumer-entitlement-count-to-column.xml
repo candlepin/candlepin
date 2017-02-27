@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+   <property
+     dbms="postgresql,oracle"
+     name="fill_in_entitlement_count_value"
+     value="update cp_consumer
+         set entitlement_count = coalesce(subquery.quantity, 0)
+         FROM (select consumer_id, sum(quantity) quantity from cp_entitlement ent group by consumer_id) subquery
+         where cp_consumer.id = subquery.consumer_id;" />
+
+     <property
+     dbms="mysql,hsqldb"
+     name="fill_in_entitlement_count_value"
+     value="update cp_consumer c set c.entitlement_count =
+         coalesce((select sum(quantity) quantity from cp_entitlement ent where ent.consumer_id = c.id),0);" />
+
+     <changeSet id="20170227140343-1" author="wpoteat">
+         <comment>Add column for entitlement quantity on consumer</comment>
+         <addColumn tableName="cp_consumer">
+             <column name="entitlement_count" type="${serial.type}" defaultValueNumeric="0">
+                  <constraints nullable="false"/>
+             </column>
+         </addColumn>
+         <sql>${fill_in_entitlement_count_value}</sql>
+         <rollback>
+             alter table cp_consumer drop column if exists entitlement_count;
+         </rollback>
+         <!-- See http://www.liquibase.org/documentation/changes/index.html -->
+     </changeSet>
+
+</databaseChangeLog>
+<!-- vim: set expandtab sts=4 sw=4 ai: -->

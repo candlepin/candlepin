@@ -1014,6 +1014,33 @@ describe 'Consumer Resource' do
       {}, nil, nil, [], [])
     }.should raise_exception(RestClient::BadRequest)
   end
+
+  it 'updates consumer entitlement count on bind and revoke' do
+    consumer = @user1.register(random_string("meow"))
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+    prod = create_product(random_string("product"), random_string("product"), {:owner => @owner1['key']})
+    prod1 = create_product(random_string("product"), random_string("product"), {:owner => @owner1['key']})
+    prod2 = create_product(random_string("product"), random_string("product"), {:owner => @owner1['key']})
+
+    pool = create_pool_and_subscription(@owner1['key'], prod.id)
+    ent = consumer_client.consume_pool(pool['id'], {:quantity => 1}).first
+    @cp.get_consumer(consumer['uuid'])['entitlementCount'].should == 1
+
+    pool1 = create_pool_and_subscription(@owner1['key'], prod1.id)
+    ent1 = consumer_client.consume_pool(pool1['id'], {:quantity => 1}).first
+    @cp.get_consumer(consumer['uuid'])['entitlementCount'].should == 2
+
+    pool2 = create_pool_and_subscription(@owner1['key'], prod2.id)
+    ent2 = consumer_client.consume_pool(pool2['id'], {:quantity => 1}).first
+    @cp.get_consumer(consumer['uuid'])['entitlementCount'].should == 3
+
+    consumer_client.unbind_entitlement(ent1.id)
+    @cp.get_consumer(consumer['uuid'])['entitlementCount'].should == 2
+    consumer_client.unbind_entitlement(ent.id)
+    @cp.get_consumer(consumer['uuid'])['entitlementCount'].should == 1
+    consumer_client.unbind_entitlement(ent2.id)
+    @cp.get_consumer(consumer['uuid'])['entitlementCount'].should == 0
+  end
 end
 
 describe 'Consumer Resource Consumer Fact Filter Tests' do

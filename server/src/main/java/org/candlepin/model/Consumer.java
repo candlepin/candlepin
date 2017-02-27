@@ -27,7 +27,6 @@ import org.apache.commons.lang.StringUtils;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.ForeignKey;
-import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
 import org.hibernate.annotations.Type;
@@ -164,9 +163,8 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @Index(name = "cp_consumer_env_fk_idx")
     private Environment environment;
 
-    // leave FROM capitalized until hibernate 5.0.3
-    // https://hibernate.atlassian.net/browse/HHH-1400
-    @Formula("(select sum(ent.quantity) FROM cp_entitlement ent where ent.consumer_id = id)")
+    @Column(name = "entitlement_count")
+    @NotNull
     private Long entitlementCount;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "consumer", fetch = FetchType.LAZY)
@@ -243,6 +241,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         this.guestIds = new ArrayList<GuestId>();
         this.autoheal = true;
         this.serviceLevel = "";
+        this.entitlementCount = 0L;
     }
 
     public Consumer() {
@@ -250,6 +249,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         // generate a UUID at this point.
         this.ensureUUID();
         this.entitlements = new HashSet<Entitlement>();
+        this.setEntitlementCount(0L);
     }
 
     /**
@@ -463,6 +463,10 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
             return 0;
         }
         return entitlementCount.longValue();
+    }
+
+    public void setEntitlementCount(long count) {
+        this.entitlementCount = count;
     }
 
     /**
