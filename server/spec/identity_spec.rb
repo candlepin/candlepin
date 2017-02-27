@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'candlepin_scenarios'
+require 'time'
 
 class OpenSSL::X509::Certificate
 
@@ -39,4 +40,9 @@ describe 'Identity Certificate' do
     @identity_cert['subjectAltName'].should include(@consumer.name)
   end
 
+  it 'should be pre-dated' do
+    before = (Time.now - 59 * 60)
+    cert_time = @identity_cert.not_before
+    cert_time.should < before
+  end
 end

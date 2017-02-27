@@ -35,6 +35,7 @@ import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
+import java.util.Calendar;
 import java.util.Date;
 
 /**
@@ -119,8 +120,10 @@ public class DefaultIdentityCertServiceAdapter implements
 
     private IdentityCertificate generate(Consumer consumer)
         throws GeneralSecurityException, IOException {
-        Date startDate = new Date();
-        Date endDate = this.endDateGenerator.apply(startDate);
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.HOUR, -1);
+        Date startDate = cal.getTime();
+        Date endDate = this.endDateGenerator.apply(new Date());
 
         CertificateSerial serial = new CertificateSerial(endDate);
         // We need the sequence generated id before we create the EntitlementCertificate,

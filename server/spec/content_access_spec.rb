@@ -294,4 +294,15 @@ describe 'Content Access' do
       @cp.delete_owner(@import_owner['key'])
       @cp_export.cleanup()
  end
+
+ it "does produce a pre-dated content access certificate" do
+      @consumer = consumer_client(@user, @consumername, type=:system, username=nil, facts= {'system.certificate_version' => '3.3'})
+      before = (Time.now - 59 * 60)
+      certs = @consumer.list_certificates
+      certs.length.should == 1
+      access_cert = OpenSSL::X509::Certificate.new(certs[0]['cert'])
+      cert_time = access_cert.not_before
+      cert_time.should < before
+ end
+
 end
