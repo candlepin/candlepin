@@ -19,6 +19,7 @@ import static org.quartz.JobBuilder.newJob;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.IseException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.Owner;
@@ -28,6 +29,8 @@ import org.candlepin.sync.ConflictOverrides;
 import org.candlepin.sync.ImporterException;
 import org.candlepin.sync.SyncDataFormatException;
 import org.candlepin.util.Util;
+
+import org.apache.log4j.MDC;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -124,6 +127,7 @@ public class ImportJob extends UniqueByEntityJob {
         map.put(STORED_FILE_ID, storedFileId);
         map.put(UPLOADED_FILE_NAME, uploadedFileName);
         map.put(CONFLICT_OVERRIDES, overrides.asStringArray());
+        map.put(JobStatus.CORRELATION_ID, MDC.get(LoggingFilter.CSID));
 
         JobDetail detail = newJob(ImportJob.class)
             .withIdentity("import_" + Util.generateUUID())

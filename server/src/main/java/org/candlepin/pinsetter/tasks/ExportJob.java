@@ -18,11 +18,14 @@ import static org.quartz.JobBuilder.newJob;
 
 import java.util.Map;
 
+import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.sync.ExportResult;
 import org.candlepin.util.Util;
+
+import org.apache.log4j.MDC;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -96,6 +99,7 @@ public class ExportJob extends UniqueByEntityJob {
         map.put(WEBAPP_PREFIX, webAppPrefix);
         map.put(API_URL, apiUrl);
         map.put(EXTENSION_DATA, extensionData);
+        map.put(JobStatus.CORRELATION_ID, MDC.get(LoggingFilter.CSID));
 
         return newJob(ExportJob.class)
             .withIdentity("export_" + Util.generateUUID())

@@ -16,6 +16,7 @@ package org.candlepin.pinsetter.tasks;
 
 import static org.quartz.JobBuilder.*;
 
+import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.controller.Entitler;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -25,6 +26,7 @@ import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
 
+import org.apache.log4j.MDC;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -81,6 +83,7 @@ public class EntitleByProductsJob extends KingpinJob {
         map.put("product_ids", prodIds);
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.CONSUMER);
         map.put(JobStatus.TARGET_ID, consumer.getUuid());
+        map.put(JobStatus.CORRELATION_ID, MDC.get(LoggingFilter.CSID));
         map.put("entitle_date", entitleDate);
         map.put("from_pools", fromPools);
 

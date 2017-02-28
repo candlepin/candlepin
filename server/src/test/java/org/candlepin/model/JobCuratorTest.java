@@ -121,6 +121,12 @@ public class JobCuratorTest extends DatabaseTestFixture {
         assertEquals(job, jobs.get(0));
     }
 
+    @Test
+    public void correlationIdOnStatus() {
+        JobStatus job = newJobStatus().principalName("donald").owner("ducks").create();
+        assertEquals("test-csid", job.getCorrelationId());
+    }
+
     @Test(expected = NotFoundException.class)
     public void cancelNonExistentJob() {
         curator.cancel("dont_exist");
@@ -503,6 +509,7 @@ public class JobCuratorTest extends DatabaseTestFixture {
             map.put(JobStatus.TARGET_TYPE, targetType);
             map.put(JobStatus.TARGET_ID, targetValue);
             map.put(JobStatus.OWNER_ID, contextOwner);
+            map.put(JobStatus.CORRELATION_ID, "test-csid");
             JobStatus status = new JobStatus(
                 newJob(jobClass).withIdentity(id, PinsetterKernel.SINGLE_JOB_GROUP)
                 .usingJobData(map).build());
