@@ -20,6 +20,7 @@ import static org.mockito.Mockito.when;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.ProductManager;
 import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -33,6 +34,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.model.ProductShareCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.dto.Subscription;
@@ -87,6 +89,10 @@ public class EntitlementRulesTestFixture {
     private OwnerCurator ownerCurator;
     @Mock
     protected PoolCurator poolCurator;
+    @Mock
+    protected ProductShareCurator productShareCurator;
+    @Mock
+    protected ProductManager productManager;
 
     protected Owner owner;
     protected Consumer consumer;
@@ -119,7 +125,9 @@ public class EntitlementRulesTestFixture {
             productCurator,
             new RulesObjectMapper(new ProductCachedSerializationModule(productCurator)),
             ownerCurator,
-            ownerProductCuratorMock
+            ownerProductCuratorMock,
+            productShareCurator,
+            productManager
         );
 
         owner = new Owner();

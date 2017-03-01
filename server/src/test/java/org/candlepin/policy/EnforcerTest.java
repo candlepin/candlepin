@@ -23,6 +23,7 @@ import static org.mockito.Mockito.when;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.controller.ProductManager;
 import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
@@ -32,6 +33,7 @@ import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.model.ProductShareCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunner;
@@ -80,6 +82,8 @@ public class EnforcerTest extends DatabaseTestFixture {
     @Mock private ProductCurator mockProductCurator;
     @Mock private OwnerCurator mockOwnerCurator;
     @Mock private OwnerProductCurator mockOwnerProductCurator;
+    @Mock private ProductShareCurator mockProductShareCurator;
+    @Mock private ProductManager mockProductManager;
 
     private Enforcer enforcer;
     private Owner owner;
@@ -121,7 +125,7 @@ public class EnforcerTest extends DatabaseTestFixture {
             new DateSourceForTesting(2010, 1, 1), jsRules, i18n, config, consumerCurator, poolCurator,
             mockProductCurator,
             new RulesObjectMapper(new ProductCachedSerializationModule(mockProductCurator)),
-            mockOwnerCurator, mockOwnerProductCurator
+            mockOwnerCurator, mockOwnerProductCurator, mockProductShareCurator, mockProductManager
         );
     }
 

@@ -229,10 +229,10 @@ public class PoolHelper {
         return pool;
     }
 
+
     public static Pool createSharePool(Owner recipient, Pool sourcePool, Product product,
         String quantity, Map<String, String> attributes, OwnerProductCurator curator,
         Entitlement sourceEntitlement, ProductCurator productCurator) {
-
         Pool pool = createPool(product, recipient, quantity,
             sourcePool.getStartDate(), sourcePool.getEndDate(),
             sourcePool.getContractNumber(), sourcePool.getAccountNumber(),

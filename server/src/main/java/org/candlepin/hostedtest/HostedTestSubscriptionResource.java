@@ -188,6 +188,7 @@ public class HostedTestSubscriptionResource {
      * Deletes all subscriptions.
      */
     @DELETE
+    @Produces(MediaType.APPLICATION_JSON)
     public void deleteAllSubscriptions() {
         adapter.deleteAllSubscriptions();
     }
