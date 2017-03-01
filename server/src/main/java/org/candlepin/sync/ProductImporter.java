@@ -63,16 +63,22 @@ public class ProductImporter {
     }
 
     public void store(Set<Product> products) {
+        Set<String> savedContents = new HashSet<String>();
+        /*
+         * Handling the storing/updating of Content here. This is technically a
+         * disjoint entity, but really only makes sense in the concept of
+         * products.
+         * We cannot persist products in this loop due to 1363701 described below
+         */
         for (Product importedProduct : products) {
-            // Handling the storing/updating of Content here. This is technically a
-            // disjoint entity, but really only makes sense in the concept of
-            // products.
-            //
-            // The downside is if multiple products reference the same content, it
-            // will be updated multiple times during the import.
             for (ProductContent content : importedProduct.getProductContent()) {
+                if (savedContents.contains(content.getContent().getId())) {
+                    continue;
+                } else {
+                    savedContents.add(content.getContent().getId());
+                }
                 // BZ 990113 error occurs because incoming content data has
-                //  no value for Vendor. Will place one to avoid DB issues.
+                // no value for Vendor. Will place one to avoid DB issues.
                 Content c = content.getContent();
                 if (StringUtils.isBlank(c.getVendor())) {
                     c.setVendor("unknown");
@@ -92,7 +98,21 @@ public class ProductImporter {
 
                 contentCurator.createOrUpdate(c);
             }
+        }
 
+        /*
+         * 1363701: flushing before we update the products is crucial. older
+         * versions of postgressql driver (postgresql-jdbc-9.2.1002) and
+         * postgresql server (postgresql-server-9.2.15-1) seem to end up in
+         * violating unique constraint rule of product constraint relationship,
+         * as product content is added and then the duplicate is subsequently
+         * removed ( in the wrong order ).
+         * related:
+         * https://vladmihalcea.com/2013/10/16/hibernate-facts-knowing-flush-operations-order-matters/
+         * newer version of driver and server seem to not have this issue.
+         */
+        curator.flush();
+        for (Product importedProduct : products) {
             curator.createOrUpdate(importedProduct);
         }
     }
