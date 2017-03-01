@@ -25,7 +25,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import org.candlepin.test.DatabaseTestFixture;
-import org.candlepin.test.TestUtil;
 
 import org.junit.Test;
 
@@ -75,10 +74,8 @@ public class CertificateSerialCuratorTest extends DatabaseTestFixture {
         public CertificateSerial save() {
             CertificateSerial serial = new CertificateSerial(dt);
             serial.setCollected(collected);
+            serial.setRevoked(revoked);
             serial = certSerialCurator.create(serial);
-            if (!this.revoked) {
-                serial = createEntitlementCertificate(serial).getSerial();
-            }
             return serial;
         }
     }
@@ -248,19 +245,4 @@ public class CertificateSerialCuratorTest extends DatabaseTestFixture {
         assertEquals(null, certSerialCurator.listBySerialIds(null));
     }
 
-    private EntitlementCertificate createEntitlementCertificate(CertificateSerial serial) {
-        Owner owner = this.createOwner();
-        Consumer c = this.createConsumer(owner);
-        Product prod = TestUtil.createProduct();
-        this.productCurator.create(prod);
-        Pool p = this.createPool(owner, prod, 10L, new Date(), new Date(new Date().getTime() + 100000L));
-
-        EntitlementCertificate toReturn = new EntitlementCertificate();
-        toReturn.setKeyAsBytes("key".getBytes());
-        toReturn.setCertAsBytes("cert".getBytes());
-        toReturn.setSerial(serial);
-        Entitlement e = this.createEntitlement(owner, c, p, toReturn);
-        this.entitlementCurator.create(e);
-        return toReturn;
-    }
 }

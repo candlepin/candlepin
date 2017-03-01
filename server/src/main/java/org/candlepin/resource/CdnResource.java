@@ -17,6 +17,7 @@ package org.candlepin.resource;
 import org.candlepin.auth.Principal;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.controller.CdnManager;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCurator;
@@ -53,12 +54,13 @@ public class CdnResource {
 
     private I18n i18n;
     private CdnCurator curator;
+    private CdnManager cdnManager;
 
     @Inject
-    public CdnResource(I18n i18n,
-        CdnCurator curator) {
+    public CdnResource(I18n i18n, CdnCurator curator, CdnManager manager) {
         this.i18n = i18n;
         this.curator = curator;
+        this.cdnManager = manager;
     }
 
     @ApiOperation(notes = "Retrieves a list of CDN's", value = "getContentDeliveryNetworks")
@@ -77,7 +79,7 @@ public class CdnResource {
         @Context Principal principal) {
         Cdn cdn = curator.lookupByLabel(label);
         if (cdn != null) {
-            curator.delete(cdn);
+            cdnManager.deleteCdn(cdn);
         }
     }
 
@@ -91,7 +93,7 @@ public class CdnResource {
         if (existing != null) {
             throw new BadRequestException(i18n.tr("A CDN with the label {0} already exists", cdn.getLabel()));
         }
-        return curator.create(cdn);
+        return cdnManager.createCdn(cdn);
     }
 
     @ApiOperation(notes = "Updates a CDN @return a Cdn object", value = "update")
@@ -112,7 +114,7 @@ public class CdnResource {
         if (cdn.getCertificate() != null) {
             existing.setCertificate(cdn.getCertificate());
         }
-        curator.merge(existing);
+        cdnManager.updateCdn(existing);
         return existing;
     }
 

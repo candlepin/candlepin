@@ -1,10 +1,14 @@
 require 'spec_helper'
 require 'candlepin_scenarios'
 require 'openssl'
+require 'unpack'
 
 describe 'Certificate Revocation List', :serial => true do
 
   include CandlepinMethods
+  include VirtHelper
+  include CertificateMethods
+
 
   before do
     @owner = create_owner random_string('test_owner')
@@ -12,7 +16,7 @@ describe 'Certificate Revocation List', :serial => true do
     @monitoring_prod = create_product random_string('monitoring')
 
     #entitle owner for the virt and monitoring products.
-    create_pool_and_subscription(@owner['key'], @monitoring_prod.id, 6,
+    @monitoring_pool = create_pool_and_subscription(@owner['key'], @monitoring_prod.id, 6,
 				[], '', '', '', nil, nil, true)
     create_pool_and_subscription(@owner['key'], @virt_prod.id, 3)
 
@@ -102,6 +106,39 @@ describe 'Certificate Revocation List', :serial => true do
     new_time.should_not == old_time
   end
 
+  it 'should put revoked CDN cert on CRL' do
+    cdn_label = random_string("test-cdn")
+
+    serial = { 'expiration' => Date.today.next_year }
+
+    certificate = {
+        'key' => 'test-key',
+        'cert' => 'test-cert',
+        'serial' => serial
+    }
+    cdn = create_cdn(cdn_label,
+                     "Test CDN",
+                     "https://cdn.test.com",
+                     certificate)
+    cdn.id.should_not be nil
+
+    @cp.delete_cdn(cdn_label)
+
+    revoked_serials.should include(cdn.certificate.serial.serial)
+  end
+
+  it 'should put revoked ueber cert on CRL' do
+    cert_serial = @cp.generate_ueber_cert(@owner['key']).serial.serial
+    delete_owner(@owner)
+    revoked_serials.should include(cert_serial)
+  end
+
+  it 'should put revoked id cert on CRL' do
+    id_cert = OpenSSL::X509::Certificate.new(@system.identity_certificate)
+    @system.unregister
+    revoked_serials.should include(id_cert.serial.to_i)
+  end
+
   def filter_serial(product, consumer=@system)
     entitlement = consumer.list_entitlements.find do |ent|
       @cp.get_pool(ent.pool.id).productId == product.id
@@ -113,4 +150,5 @@ describe 'Certificate Revocation List', :serial => true do
   def revoked_serials
     return @cp.get_crl.revoked.map {|entry| entry.serial.to_i }
   end
+
 end

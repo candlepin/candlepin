@@ -25,6 +25,7 @@ import org.candlepin.audit.EventSink;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.model.Branding;
+import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
@@ -884,6 +885,22 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         assertNull(this.poolCurator.find(pool2.getId()));
         assertNull(this.poolCurator.find(pool3.getId()));
         assertNull(this.entitlementCurator.find(ent.getId()));
+    }
+
+    @Test
+    public void testRevocationRevokesEntitlementCertSerial() throws Exception {
+        AutobindData data = AutobindData.create(parentSystem).on(new Date())
+            .forProducts(new String [] {monitoring.getId()});
+        Entitlement e = poolManager.entitleByProducts(data).get(0);
+        CertificateSerial serial = e.getCertificates().iterator().next().getSerial();
+        poolManager.revokeEntitlement(e);
+
+        List<Entitlement> entitlements = entitlementCurator.listByConsumer(parentSystem);
+        assertTrue(entitlements.isEmpty());
+
+        CertificateSerial revoked = certSerialCurator.find(serial.getId());
+        assertTrue("Entitlement cert serial should have been marked as revoked once deleted!",
+            revoked.isRevoked());
     }
 }
 

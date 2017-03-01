@@ -36,7 +36,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_ueber_cert")
-public class UeberCertificate extends AbstractCertificate implements Certificate {
+public class UeberCertificate extends RevokableCertificate implements Certificate {
 
     private static final long serialVersionUID = 1L;
 
@@ -48,9 +48,6 @@ public class UeberCertificate extends AbstractCertificate implements Certificate
     private String id;
 
     @OneToOne
-    private CertificateSerial serial;
-
-    @OneToOne
     private Owner owner;
 
     @Override
@@ -60,23 +57,6 @@ public class UeberCertificate extends AbstractCertificate implements Certificate
 
     public void setId(String id) {
         this.id = id;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public CertificateSerial getSerial() {
-        return this.serial;
-    }
-
-    /**
-     * Sets the CertificateSerial for this certificate.
-     *
-     * @param certSerial the CertificateSerial for this certificate.
-     */
-    public void setSerial(CertificateSerial certSerial) {
-        this.serial = certSerial;
     }
 
     /**
