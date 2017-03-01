@@ -421,7 +421,7 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
         Criteria uuidCriteria = this.createSecureCriteria("op")
             .createAlias("op.product", "p")
             .add(disjunction)
-            .setProjection(Projections.property("p.uuid"));
+            .setProjection(Projections.distinct(Projections.property("p.uuid")));
 
         for (Map.Entry<String, Integer> entry : productVersions.entrySet()) {
             disjunction.add(Restrictions.and(
