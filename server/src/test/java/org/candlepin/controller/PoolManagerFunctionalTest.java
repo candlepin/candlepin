@@ -250,9 +250,13 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         List<Entitlement> eList = poolManager.entitleByPools(parentSystem, poolQuantities);
         assertEquals(1, eList.size());
         assertEquals(Long.valueOf(3), monitoringPool.getConsumed());
+        consumerCurator.find(parentSystem.getId());
+        assertEquals(3, parentSystem.getEntitlementCount());
 
         poolManager.revokeEntitlement(eList.get(0));
         assertEquals(Long.valueOf(0), monitoringPool.getConsumed());
+        consumerCurator.find(parentSystem.getId());
+        assertEquals(0, parentSystem.getEntitlementCount());
     }
 
     @Test
