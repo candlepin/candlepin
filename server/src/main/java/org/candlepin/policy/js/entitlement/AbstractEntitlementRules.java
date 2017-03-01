@@ -17,6 +17,7 @@ package org.candlepin.policy.js.entitlement;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.ProductManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
@@ -28,6 +29,8 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.model.ProductShare;
+import org.candlepin.model.ProductShareCurator;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.ValidationWarning;
@@ -72,6 +75,8 @@ public abstract class AbstractEntitlementRules implements Enforcer {
     protected RulesObjectMapper objectMapper = null;
     protected OwnerCurator ownerCurator;
     protected OwnerProductCurator ownerProductCurator;
+    protected ProductShareCurator shareCurator;
+    protected ProductManager productManager;
 
     protected static final String POST_PREFIX = "post_";
 
@@ -301,7 +306,8 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         }
 
         if (!sharedEntitlements.isEmpty()) {
-            postBindEntitlementDerived(poolManager, consumer, sharedEntitlements, flatAttributeMaps);
+            postBindEntitlementDerived(poolManager, consumer, sharedEntitlements,
+                flatAttributeMaps);
         }
     }
 
@@ -368,7 +374,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         Map<String, Entitlement> entitlementMap, Map<String, Map<String, String>> attributeMaps) {
         log.debug("Running entitlement derived post-bind");
 
-        Owner recipientOrg = ownerCurator.lookupByKey(c.getFact("share.recipient"));
+        Owner recipient = ownerCurator.lookupByKey(c.getFact("share.recipient"));
         List<Pool> sharedPoolsToCreate = new ArrayList<Pool>();
 
         for (Entitlement entitlement: entitlementMap.values()) {
@@ -376,7 +382,12 @@ public abstract class AbstractEntitlementRules implements Enforcer {
             // Favor derived products if they are available
             Product sku = sourcePool.getDerivedProduct() != null ? sourcePool.getDerivedProduct() :
                 sourcePool.getProduct();
-            Pool sharedPool = PoolHelper.createSharePool(recipientOrg, sourcePool, sku,
+
+            // Handle any product creation/manipulation incurred by the share action
+            sku = resolveProductShares(sourcePool.getOwner(), sku, recipient, productManager);
+
+            // Now create the entitlement derived pool based on the product we have ended up sharing
+            Pool sharedPool = PoolHelper.createSharePool(recipient, sourcePool, sku,
                 String.valueOf(entitlement.getQuantity()), attributeMaps.get(sourcePool.getId()),
                 ownerProductCurator, entitlement, productCurator);
             sharedPoolsToCreate.add(sharedPool);
@@ -385,6 +396,54 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         if (CollectionUtils.isNotEmpty(sharedPoolsToCreate)) {
             poolManager.createPools(sharedPoolsToCreate);
         }
+    }
+
+    private Product resolveProductShares(Owner sharingOwner, Product product, Owner recipient,
+        ProductManager productManager) {
+        if (ownerProductCurator.productExists(recipient, product.getId())) {
+            // Recipient has a product with the same ID already.  If they are the same instance
+            // use then nothing needs doing.  Everything is already in place.
+            if (!ownerProductCurator.isProductMappedToOwner(product, recipient)) {
+                // The recipient and owner have two products with the same ID but they are different
+                // instances.
+
+                ProductShare existingShare = shareCurator.findProductShareByRecipient(
+                    recipient,
+                    product.getId()
+                );
+
+                if (existingShare == null) {
+                    // If the recipient's product isn't from a share, let the recipient just continue to
+                    // use its existing product definition.
+                    log.debug("Owner {} already has product {} defined", recipient.getKey(), product.getId());
+                    product = ownerProductCurator.getProductById(recipient, product.getId());
+                }
+                else {
+                    // If the recipient's product is a share then two owners are sharing into the same
+                    // recipient and we must resolve the conflict.
+                    log.debug("Owner {} already has a share for product {}",
+                        recipient.getKey(), product.getId());
+                    shareCurator.delete(existingShare);
+                    shareCurator.create(new ProductShare(sharingOwner, product, recipient));
+                    // Now we need to reconcile all of recipient's pools that were using the old product
+                    product = productManager.updateProduct(product.toDTO(), recipient, true);
+                }
+            }
+            else {
+                log.debug("Owner {} has the same product {} as the sharer", recipient.getKey());
+            }
+        }
+        else {
+            // The recipient doesn't have a definition for the product at all.  Link the recipient
+            // and product and create a record of a share.
+            log.debug("Linking {} to owner {} as product share", product.getId(), recipient.getKey());
+            ownerProductCurator.mapProductToOwner(product, recipient);
+            shareCurator.create(
+                new ProductShare(sharingOwner, product, recipient)
+            );
+        }
+
+        return product;
     }
 
     private void postBindVirtLimit(PoolManager poolManager, Consumer c,

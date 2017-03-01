@@ -15,7 +15,7 @@ describe "Multi Org Shares" do
     @cp.add_role_user(role['id'], @username)
   end
 
-  let(:consumer1) do
+  let(:share_consumer) do
      @user_client.register(
       random_string('orgBShare'),
       :share,
@@ -68,20 +68,99 @@ describe "Multi Org Shares" do
   end
 
   it 'binds a pool to a share consumer' do
-    owner1_prod = create_product(nil, nil, :owner => @owner1['key'])
+    name = random_string('name')
+    id = random_string('id')
+
+    # Do not store the product immediately.  We need to instead fetch it after a refresh_pools has run.  In
+    # hosted mode, the refresh pools may result in product changes (since the product we are creating is
+    # marked as "locked" initially whereas all products from the hosted adaptors are marked as "locked" as
+    # soon as they are received).
+    create_product(id, name, :owner => @owner1['key'])
+    pool = create_pool_and_subscription(@owner1['key'], id, 10)
+    @user_client.consume_pool(pool['id'], :uuid => share_consumer['uuid'])
+    expect(@user_client.list_pool_entitlements(pool['id'])).not_to be_empty
+
+    owner1_prod = @user_client.get_product(@owner1['key'], id)
+
+    recipient_pools = @cp.list_owner_pools(@owner2['key'])
+    expect(recipient_pools).not_to be_empty
+    attributes = recipient_pools.first['attributes']
+    expect(attributes.select { |a| a['name'] == 'share' && a['value'] == 'true'}).not_to be_empty
+
+    owner2_prod = @user_client.get_product(@owner2['key'], id)
+
+    # Owner 2 didn't have the shared product defined so it should be linked in
+    expect(owner2_prod['uuid']).to eq(owner1_prod['uuid'])
+  end
+
+  it 'uses an existing product in a share recipient' do
+    name = random_string('name')
+    id = random_string('id')
+
+    # Create products with the same product ID but different attributes
+    owner1_prod = create_product(id, name, :owner => @owner1['key'], :multiplier => 1)
+    create_product(id, name, :owner => @owner2['key'], :multiplier => 2)
+
     pool = create_pool_and_subscription(@owner1['key'], owner1_prod['id'], 10)
-    @user_client.consume_pool(pool['id'], :uuid => consumer1['uuid'])
+    @user_client.consume_pool(pool['id'], :uuid => share_consumer['uuid'])
+
     expect(@user_client.list_pool_entitlements(pool['id'])).not_to be_empty
     recipient_pools = @cp.list_owner_pools(@owner2['key'])
     expect(recipient_pools).not_to be_empty
     attributes = recipient_pools.first['attributes']
     expect(attributes.select { |a| a['name'] == 'share' && a['value'] == 'true'}).not_to be_empty
+
+    # Owner 2 should continue to use its own version of the product
+    owner2_prod = @user_client.get_product(@owner2['key'], id)
+    expect(owner2_prod['id']).to eq(owner1_prod['id'])
+    expect(owner2_prod['uuid']).not_to eq(owner1_prod['uuid'])
+  end
+
+  it 'replaces one product share with a newer product share' do
+    name = random_string('name')
+    id = random_string('id')
+
+    owner3 = create_owner(random_string('orgC'))
+    role = create_role(nil, owner3['key'], 'ALL')
+    @cp.add_role_user(role['id'], @username)
+    share_consumer2 =
+     @user_client.register(
+      random_string('orgCShare'),
+      :share,
+      nil,
+      {'share.recipient' => @owner2['key']},
+      nil,
+      owner3['key']
+    )
+
+    # Create products with the same product ID but different attributes
+    # Do not store the product immediately.  We need to instead fetch it after a refresh_pools has run.  In
+    # hosted mode, the refresh pools may result in product changes (since the product we are creating is
+    # marked as "locked" initially whereas all products from the hosted adaptors are marked as "locked" as
+    # soon as they are received).
+    create_product(id, name, :owner => @owner1['key'], :multiplier => 1)
+    create_product(id, name, :owner => owner3['key'], :multiplier => 2)
+
+    pool = create_pool_and_subscription(@owner1['key'], id, 10)
+    @user_client.consume_pool(pool['id'], :uuid => share_consumer['uuid'])
+
+    owner1_prod = @user_client.get_product(@owner1['key'], id)
+    owner2_prod = @user_client.get_product(@owner2['key'], id)
+    expect(owner2_prod['uuid']).to eq(owner1_prod['uuid'])
+
+    pool = create_pool_and_subscription(owner3['key'], id, 10)
+    owner3_prod = @user_client.get_product(owner3['key'], id)
+    @user_client.consume_pool(pool['id'], :uuid => share_consumer2['uuid'])
+
+    # Owner 2 should now use Owner 3's product
+    owner2_prod = @user_client.get_product(@owner2['key'], id)
+    expect(owner2_prod['uuid']).to eq(owner3_prod['uuid'])
   end
 
   it 'prohibits sharing a share' do
     owner1_prod = create_product(nil, nil, :owner => @owner1['key'])
     pool = create_pool_and_subscription(@owner1['key'], owner1_prod['id'], 10)
-    @user_client.consume_pool(pool['id'], :uuid => consumer1['uuid'])
+    @user_client.consume_pool(pool['id'], :uuid => share_consumer['uuid'])
     expect(@user_client.list_pool_entitlements(pool['id'])).not_to be_empty
     recipient_pools = @cp.list_owner_pools(@owner2['key'])
     expect(recipient_pools).not_to be_empty
@@ -99,7 +178,6 @@ describe "Multi Org Shares" do
       @owner2['key']
     )
 
-    require 'pry'; binding.pry
     expect do
       @user_client.consume_pool(recipient_pools.first['id'], :uuid => consumer2['uuid'])
     end.to raise_error(RestClient::Forbidden)

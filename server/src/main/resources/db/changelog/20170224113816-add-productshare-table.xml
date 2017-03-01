@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <!-- Include definitions for cert.type, timestamp.type, etc. -->
+    <include file="db/changelog/datatypes.xml"/>
+
+    <changeSet id="20170224113816-1" author="awood">
+        <comment>Add ProductShare table</comment>
+        <createTable tableName="cp2_product_shares">
+            <column name="id" type="varchar(32)">
+                <constraints primaryKey="true" primaryKeyName="cp2_product_shares_pk"/>
+            </column>
+            <column name="owner_id" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_uuid" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="recipient_id" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="${timestamp.type}"/>
+            <column name="updated" type="${timestamp.type}"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20170224113816-2" author="awood">
+        <addForeignKeyConstraint constraintName="cp2_product_share_fk1"
+            onDelete="CASCADE"
+            baseTableName="cp2_product_shares"
+            baseColumnNames="owner_id"
+            referencedTableName="cp_owner"
+            referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="20170224113816-3" author="awood">
+        <addForeignKeyConstraint constraintName="cp2_product_share_fk2"
+            onDelete="CASCADE"
+            baseTableName="cp2_product_shares"
+            baseColumnNames="recipient_id"
+            referencedTableName="cp_owner"
+            referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="20170224113816-4" author="awood">
+        <addForeignKeyConstraint constraintName="cp2_product_share_fk3"
+            baseTableName="cp2_product_shares"
+            baseColumnNames="product_uuid"
+            referencedTableName="cp2_products"
+            referencedColumnNames="uuid"/>
+    </changeSet>
+    <changeSet id="20170224113816-5" author="awood">
+        <!-- Only one share per product is allowed. -->
+        <addUniqueConstraint constraintName="cp2_product_share_unq1"
+            tableName="cp2_product_shares"
+            columnNames="product_uuid, recipient_id" />
+    </changeSet>
+</databaseChangeLog>
+<!-- vim: set expandtab sts=4 sw=4 ai: -->

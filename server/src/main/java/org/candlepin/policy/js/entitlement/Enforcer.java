@@ -134,10 +134,9 @@ public interface Enforcer {
 
     /**
      * Run post-entitlement actions.
-     *
      * @param c consumer
-     * @param subPoolsForStackIds
      * @param ents The entitlement that was just granted.
+     * @param subPoolsForStackIds
      */
     void postEntitlement(PoolManager poolManager, Consumer c, Map<String, Entitlement> ents,
         List<Pool> subPoolsForStackIds);
