@@ -268,7 +268,6 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         // add an identity certificate for the export
         IdentityCertificate idCert = TestUtil.createIdCert();
         idCert.setId(null); // needs to be null to persist
-        idCert.getSerial().setId(null);  // needs to be null to persist
         certSerialCurator.create(idCert.getSerial());
         identityCertificateCurator.create(idCert);
         consumer.setIdCert(idCert);

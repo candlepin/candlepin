@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+import com.google.inject.Inject;
 import org.hibernate.criterion.Restrictions;
 
 
@@ -24,6 +25,7 @@ import org.hibernate.criterion.Restrictions;
 public class CdnCurator
     extends AbstractHibernateCurator<Cdn> {
 
+    @Inject
     public CdnCurator() {
         super(Cdn.class);
     }
@@ -39,4 +41,12 @@ public class CdnCurator
             .add(Restrictions.eq("label", label)).uniqueResult();
     }
 
+    /**
+     * Updates the specified {@link Cdn}.
+     *
+     * @param cdn the {@link Cdn} to update.
+     */
+    public void update(Cdn cdn) {
+        save(cdn);
+    }
 }

@@ -20,13 +20,10 @@ import com.google.common.collect.Iterables;
 import com.google.inject.persist.Transactional;
 
 import org.hibernate.Query;
-import org.hibernate.criterion.Conjunction;
-import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.criterion.Subqueries;
 
 import java.util.Collection;
 import java.util.Date;
@@ -42,11 +39,6 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
 
     private static int inClauseLimit = 1000;
 
-    @SuppressWarnings("rawtypes")
-    private static final Class[] CERTCLASSES = {IdentityCertificate.class,
-        EntitlementCertificate.class, SubscriptionsCertificate.class, CdnCertificate.class,
-        UeberCertificate.class, ContentAccessCertificate.class};
-
     public CertificateSerialCurator() {
         super(CertificateSerial.class);
     }
@@ -58,7 +50,7 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
     @SuppressWarnings("unchecked")
     public CandlepinQuery<CertificateSerial> retrieveTobeCollectedSerials() {
         DetachedCriteria criteria = DetachedCriteria.forClass(CertificateSerial.class)
-            .add(getRevokedCriteria())
+            .add(Restrictions.eq("revoked", true))
             .add(Restrictions.eq("collected", false));
 
         return this.cpQueryFactory.<CertificateSerial>buildQuery(this.currentSession(), criteria);
@@ -70,7 +62,7 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
 
         DetachedCriteria criteria = DetachedCriteria.forClass(CertificateSerial.class)
             .add(Restrictions.le("expiration", Util.yesterday()))
-            .add(getRevokedCriteria());
+            .add(Restrictions.eq("revoked", true));
 
         return this.cpQueryFactory.<CertificateSerial>buildQuery(this.currentSession(), criteria);
     }
@@ -88,7 +80,7 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
         List<String> ids = this.currentSession()
             .createCriteria(CertificateSerial.class)
             .add(Restrictions.le("expiration", Util.yesterday()))
-            .add(getRevokedCriteria())
+            .add(Restrictions.eq("revoked", true))
             .setProjection(Projections.id())
             .addOrder(Order.asc("id"))
             .list();
@@ -125,26 +117,6 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
             .add(CPRestrictions.in("id", lids));
 
         return this.cpQueryFactory.<CertificateSerial>buildQuery(this.currentSession(), criteria);
-    }
-
-    /*
-     * Generates criteria to check that no certificates (of any type in
-     * CertificateSerialCurator.CERTCLASSES) reference a serial so we can consider
-     * it revoked
-     */
-    @SuppressWarnings("rawtypes")
-    private Criterion getRevokedCriteria() {
-        Conjunction crit = Restrictions.conjunction();
-
-        for (Class clazz : CERTCLASSES) {
-            DetachedCriteria certSerialQuery = DetachedCriteria.forClass(clazz)
-                .createCriteria("serial")
-                .setProjection(Projections.property("id"));
-
-            crit.add(Subqueries.propertyNotIn("id", certSerialQuery));
-        }
-
-        return crit;
     }
 
     /*

@@ -129,7 +129,6 @@ public class EntitlementImporter {
             cs.setExpiration(cert.getSerial().getExpiration());
             cs.setUpdated(cert.getSerial().getUpdated());
             cs.setCreated(cert.getSerial().getCreated());
-            csCurator.create(cs);
 
             SubscriptionsCertificate sc = new SubscriptionsCertificate();
             sc.setKey(cert.getKey());

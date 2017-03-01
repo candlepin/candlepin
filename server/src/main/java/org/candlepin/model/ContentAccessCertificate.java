@@ -39,7 +39,8 @@ import javax.xml.bind.annotation.XmlTransient;
 @Entity
 @Table(name = "cp_cont_access_cert")
 @JsonFilter("ContentAccessCertificateFilter")
-public class ContentAccessCertificate extends AbstractCertificate implements Certificate {
+public class ContentAccessCertificate extends RevocableCertificate implements Certificate {
+
     @Id
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
@@ -47,19 +48,8 @@ public class ContentAccessCertificate extends AbstractCertificate implements Cer
     @NotNull
     private String id;
 
-    @OneToOne
-    private CertificateSerial serial;
-
     @OneToOne(mappedBy = "idCert", fetch = FetchType.LAZY)
     private Consumer consumer;
-
-    public CertificateSerial getSerial() {
-        return serial;
-    }
-
-    public void setSerial(CertificateSerial serialNumber) {
-        this.serial = serialNumber;
-    }
 
     @Override
     public String getId() {

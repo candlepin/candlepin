@@ -26,7 +26,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -43,7 +42,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @Table(name = EntitlementCertificate.DB_TABLE)
 @JsonFilter("EntitlementCertificateFilter")
 
-public class EntitlementCertificate extends AbstractCertificate implements Certificate {
+public class EntitlementCertificate extends RevocableCertificate implements Certificate {
 
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp_ent_certificate";
@@ -55,23 +54,12 @@ public class EntitlementCertificate extends AbstractCertificate implements Certi
     @NotNull
     private String id;
 
-    @OneToOne
-    private CertificateSerial serial;
-
     @ManyToOne
     @ForeignKey(name = "fk_cert_entitlement")
     @JoinColumn(nullable = false)
     @Index(name = "cp_cert_entitlement_fk_idx")
     @NotNull
     private Entitlement entitlement;
-
-    public CertificateSerial getSerial() {
-        return serial;
-    }
-
-    public void setSerial(CertificateSerial serialNumber) {
-        this.serial = serialNumber;
-    }
 
     @Override
     public String getId() {

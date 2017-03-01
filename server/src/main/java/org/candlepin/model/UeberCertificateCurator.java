@@ -59,10 +59,16 @@ public class UeberCertificateCurator extends AbstractHibernateCurator<UeberCerti
      * @return true if a certificate was deleted for the Owner, false otherwise.
      */
     public boolean deleteForOwner(Owner owner) {
-        String deleteForOwner = "delete from UeberCertificate uc where uc.owner = :owner";
-        Query query = getEntityManager().createQuery(deleteForOwner);
-        query.setParameter("owner", owner);
-        return query.executeUpdate() > 0;
+        // NOTE: We require that the @PreRemove callback be made in order to
+        //       set the revoked state. Doing a direct delete via JPQL does not
+        //       trigger callbacks, so unfortunately, we need to look up the owner's
+        //       certificate and then delete it.
+        UeberCertificate ownerCert = findForOwner(owner);
+        if (ownerCert == null) {
+            return false;
+        }
+        getEntityManager().remove(ownerCert);
+        return true;
     }
 
 }

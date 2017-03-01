@@ -19,8 +19,12 @@ import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.hibernate.criterion.Restrictions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.Query;
 
@@ -30,6 +34,8 @@ import javax.persistence.Query;
  * ContentAccessCertificateCurator
  */
 public class ContentAccessCertificateCurator extends AbstractHibernateCurator<ContentAccessCertificate> {
+
+    private static Logger log = LoggerFactory.getLogger(ContentAccessCertificateCurator.class);
 
     @Inject
     public ContentAccessCertificateCurator() {
@@ -54,22 +60,66 @@ public class ContentAccessCertificateCurator extends AbstractHibernateCurator<Co
         // So we must get ids for this owner, and then delete them
         @SuppressWarnings("unchecked")
 
-        String hql = " SELECT cac.id " +
+        String hql = " SELECT cac.id, s.id " +
             "    FROM Consumer c" +
             "       JOIN c.owner o" +
             "       JOIN c.contentAccessCert cac" +
+            "       JOIN cac.serial s" +
             "    WHERE" +
             "       o.key=:ownerkey";
         Query query = this.getEntityManager().createQuery(hql);
-        List<String> certsToDelete = query.setParameter("ownerkey", owner.getKey()).getResultList();
+        List<Object[]> rows = query.setParameter("ownerkey", owner.getKey()).getResultList();
 
-        hql = "DELETE from ContentAccessCertificate WHERE id IN (:certsToDelete)";
+        Set<String> certsToDelete = new HashSet<String>();
+        Set<Long> certSerialsToRevoke = new HashSet<Long>();
+        for (Object[] row : rows) {
+            if (row[0] != null) {
+                certsToDelete.add((String) row[0]);
+            }
+
+            if (row[1] != null) {
+                certSerialsToRevoke.add((Long) row[1]);
+            }
+        }
+
+        // First ensure that we've marked all of the certificate serials as revoked.
+        // Normally we would let the @PreRemove on CertificateSertial do this for us
+        // when the certificate record is deleted, but since there's a potential for
+        // a lot of certificates to exist for an Owner, we'll batch these updates.
+        log.debug("Marked {} certificate serials as revoked.", revokeCertificateSerials(certSerialsToRevoke));
+
+        int removed = deleteContentAccessCerts(certsToDelete);
+        log.debug("Deleted {} content access certificates.", removed);
+        return removed;
+    }
+
+    /**
+     * Mark the specified content access certificate serials as revoked.
+     *
+     * @param serialIdsToRevoke the ids of the serials to mark as revoked.
+     * @return the number of serials that were marked as revoked.
+     */
+    private int revokeCertificateSerials(Set<Long> serialIdsToRevoke) {
+        String revokeHql = "UPDATE CertificateSerial SET revoked = true WHERE id IN (:serialsToRevoke)";
+        Query revokeQuery = this.getEntityManager().createQuery(revokeHql);
+        int revokedCount = 0;
+        for (List<Long> block : Iterables.partition(serialIdsToRevoke,
+            AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE)) {
+            revokedCount += revokeQuery.setParameter("serialsToRevoke", block).executeUpdate();
+        }
+        return revokedCount;
+    }
+
+    private int deleteContentAccessCerts(Set<String> certIdsToDelete) {
+        String hql = "DELETE from ContentAccessCertificate WHERE id IN (:certsToDelete)";
+        Query query = this.getEntityManager().createQuery(hql);
+
         String hql2 = "UPDATE Consumer set contentAccessCert = null WHERE " +
             "contentAccessCert.id IN (:certsToDelete)";
-        query = this.getEntityManager().createQuery(hql);
         Query query2 = this.getEntityManager().createQuery(hql2);
+
         int removed = 0;
-        for (List<String> block : Iterables.partition(certsToDelete,
+        for (List<String> block : Iterables.partition(certIdsToDelete,
             AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE)) {
             String param = block.toString();
             query2.setParameter("certsToDelete", block).executeUpdate();
