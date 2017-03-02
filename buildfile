@@ -330,6 +330,28 @@ define "candlepin" do
 
     eclipse.natures :java
 
+    # IntelliJ IDEA settings
+    iml.add_facet("Web", "web") do |facet|
+      facet.configuration do |conf|
+        conf.descriptors do |desc|
+          desc.deploymentDescriptor :name => 'web.xml',
+            :url => "file://$MODULE_DIR$/src/main/webapp/WEB-INF/web.xml",
+            :optional => "false", :version => "2.4"
+          end
+        conf.webroots do |webroots|
+          webroots.root :url => "file://$MODULE_DIR$/src/main/webapp", :relative => "/"
+        end
+      end
+    end
+
+    iml.add_facet("JPA", "jpa") do |facet|
+      facet.configuration do |conf|
+        conf.deploymentDescription :name => 'persistence.xml',
+          :url => 'file://$MODULE_DIR$/src/main/resources/META-INF/persistence.xml'
+        conf.setting :name=> 'validation-enabled', :value => 'true'
+      end
+    end
+
     unless use_pmd.nil?
       pmd.enabled = true
     end
@@ -428,6 +450,29 @@ define "candlepin" do
     # eclipse settings
     # http://buildr.apache.org/more_stuff.html#eclipse
     eclipse.natures :java
+
+    # IntelliJ IDEA settings
+    # http://buildr.apache.org/more_stuff.html#idea
+    iml.add_facet("Web", "web") do |facet|
+      facet.configuration do |conf|
+        conf.descriptors do |desc|
+          desc.deploymentDescriptor :name => 'web.xml',
+            :url => "file://$MODULE_DIR$/src/main/webapp/WEB-INF/web.xml",
+            :optional => "false", :version => "2.4"
+          end
+        conf.webroots do |webroots|
+          webroots.root :url => "file://$MODULE_DIR$/src/main/webapp", :relative => "/"
+        end
+      end
+    end
+
+    iml.add_facet("JPA", "jpa") do |facet|
+      facet.configuration do |conf|
+        conf.deploymentDescription :name => 'persistence.xml',
+          :url => 'file://$MODULE_DIR$/src/main/resources/META-INF/persistence.xml'
+        conf.setting :name=> 'validation-enabled', :value => 'true'
+      end
+    end
 
     resource_substitutions = {
       'version' => project.version,
