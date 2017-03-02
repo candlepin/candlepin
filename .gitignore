@@ -16,7 +16,10 @@
 **/*.iml
 **/*.iws
 **/*.ipr
-**/.idea*
+.ideaDataSources
+.idea/*
+!.idea/codeStyleSettings.xml
+!.idea/copyright
 dataSources/
 
 # The master checkstyle configuration is in project_conf
