@@ -216,14 +216,15 @@ public class CandlepinPoolManager implements PoolManager {
     public void cleanupExpiredPools() {
         List<Pool> pools = poolCurator.listExpiredPools();
         log.info("Expired pools: " + pools.size());
+        List<Pool> toDelete = new LinkedList<Pool>();
         for (Pool p : pools) {
-            if (p.hasAttribute("derived_pool")) {
+            if (p.hasAttribute("pool_derived")) {
                 // Derived pools will be cleaned up when their parent entitlement
                 // is revoked.
                 continue;
             }
-            log.info("Cleaning up expired pool: " + p.getId() +
-                " (" + p.getEndDate() + ")");
+            log.debug("Cleaning up expired pool: {} ({})", p.getId(), p.getEndDate());
+            toDelete.add(p);
 
             if (!subAdapter.isReadOnly()) {
                 Subscription sub = subAdapter.getSubscription(p.getSubscriptionId());
@@ -232,8 +233,8 @@ public class CandlepinPoolManager implements PoolManager {
                     subAdapter.deleteSubscription(sub);
                 }
             }
-            deletePool(p);
         }
+        deletePools(toDelete);
     }
 
     private boolean isExpired(Subscription subscription) {
@@ -1396,7 +1397,6 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         List<Entitlement> entitlementsToRevoke = new ArrayList<Entitlement>();
-
         for (Pool p : pools) {
             entitlementsToRevoke.addAll(p.getEntitlements());
         }

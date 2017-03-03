@@ -680,7 +680,7 @@ public class PoolManagerTest {
         manager.cleanupExpiredPools();
 
         // And the pool should be deleted:
-        verify(mockPoolCurator).delete(p);
+        verify(mockPoolCurator).batchDelete(pools);
         verify(mockSubAdapter).getSubscription(eq("subid"));
         verify(mockSubAdapter).deleteSubscription(eq(sub));
     }
@@ -707,7 +707,7 @@ public class PoolManagerTest {
         manager.cleanupExpiredPools();
 
         // And the pool should be deleted:
-        verify(mockPoolCurator).delete(p);
+        verify(mockPoolCurator).batchDelete(pools);
         verify(mockSubAdapter, never()).getSubscription(any(String.class));
         verify(mockSubAdapter, never()).deleteSubscription(any(Subscription.class));
     }
@@ -897,10 +897,10 @@ public class PoolManagerTest {
 
         assertEquals(newPools.size(), 2);
         assert (newPools.get(0).getSourceSubscription().getSubscriptionSubKey()
-            .equals("derived") || newPools.get(0).getSourceSubscription()
+            .equals("derived") || newPools.get(1).getSourceSubscription()
             .getSubscriptionSubKey().equals("derived"));
         assert (newPools.get(0).getSourceSubscription().getSubscriptionSubKey()
-            .equals("master") || newPools.get(0).getSourceSubscription()
+            .equals("master") || newPools.get(1).getSourceSubscription()
             .getSubscriptionSubKey().equals("master"));
     }
 
