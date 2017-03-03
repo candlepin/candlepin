@@ -284,6 +284,7 @@ public class ConsumerResource {
             if (facts != null && facts.size() > 0) {
                 log.info("Sanitizing facts for consumer {}", consumer.getName());
                 Map<String, String> sanitized = new HashMap<String, String>();
+                Set<String> lowerCaseKeys = new HashSet<String>();
 
                 String factPattern = config.getString(ConfigProperties.CONSUMER_FACTS_MATCHER);
                 Pattern pattern = Pattern.compile(factPattern);
@@ -295,6 +296,14 @@ public class ConsumerResource {
                     // Check for null fact keys (discard and continue)
                     if (key == null) {
                         log.warn("  Consumer contains a fact using a null key. Discarding fact...");
+                        continue;
+                    }
+
+                    // facts are case insensitive
+                    String lowerCaseKey = key.toLowerCase();
+                    if (lowerCaseKeys.contains(lowerCaseKey)) {
+                        log.warn("  Consumer contains duplicate fact. Discarding fact \"{}\"" +
+                            " with value \"{}\"", key, value);
                         continue;
                     }
 
@@ -325,6 +334,7 @@ public class ConsumerResource {
                     }
 
                     sanitized.put(key, value);
+                    lowerCaseKeys.add(lowerCaseKey);
                 }
 
                 consumer.setFacts(sanitized);

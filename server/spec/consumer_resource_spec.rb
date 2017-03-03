@@ -894,6 +894,19 @@ describe 'Consumer Resource' do
     end
   end
 
+  it 'should ignore duplicate facts' do
+    user = user_client(@owner1, random_string('billy'))
+    facts = {
+      'system.machine' => 'x86_64',
+      'system.machine' => 'x86_64',
+      'System.machine' => 'x86_64',
+      'System.Machine' => 'x86_64',
+      'SYSTEM.MACHINE' => 'x86_64',
+    }
+    consumer = user.register('machine1', :system, nil, facts, nil, nil, [], nil)
+    consumer['facts'].size.should == 1
+  end
+
   it 'should allow a consumer fact to be removed when updated badly' do
     # typing for certain facts. violation means value for fact is entirely removed
     user = user_client(@owner1, random_string('billy'))
