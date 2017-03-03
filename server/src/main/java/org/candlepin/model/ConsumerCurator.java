@@ -626,25 +626,37 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      */
     @SuppressWarnings("unchecked")
     @Transactional
-    public List<Consumer> getHypervisorsBulk(Collection<String> hypervisorIds,
-            String ownerKey) {
+    public List<Consumer> getHypervisorsBulk(Collection<String> hypervisorIds, String ownerKey) {
         if (hypervisorIds == null || hypervisorIds.isEmpty()) {
             return new LinkedList<Consumer>();
         }
-        return currentSession().createCriteria(Consumer.class)
-            .createAlias("owner", "o")
-            .add(Restrictions.eq("o.key", ownerKey))
-            .createAlias("hypervisorId", "hvsr")
-            .add(getHypervisorIdRestriction(hypervisorIds))
-            .list();
-    }
-
-    private Criterion getHypervisorIdRestriction(Collection<String> hypervisorIds) {
-        List<Criterion> ors = new LinkedList<Criterion>();
+        LinkedList<String> hypervisorIdsUpper = new LinkedList<String>();
+        // Check for hypervisor ids case-insensitively
         for (String hypervisorId : hypervisorIds) {
-            ors.add(Restrictions.eq("hvsr.hypervisorId", hypervisorId).ignoreCase());
+            hypervisorIdsUpper.add(hypervisorId.toUpperCase());
         }
-        return Restrictions.or(ors.toArray(new Criterion[0]));
+        List<Consumer> consumers = new LinkedList<Consumer>();
+        String query = "SELECT c FROM Consumer c WHERE " +
+            "(c.owner.key = :ownerKey AND UPPER(c.hypervisorId.hypervisorId) IN (:hypervisorIds)) " +
+            "ORDER BY c.hypervisorId.hypervisorId ASC";
+        javax.persistence.Query q = getEntityManager().createQuery(query);
+        java.util.Collections.sort(hypervisorIdsUpper);
+        int fromIndex = 0;
+        int toIndex = fromIndex + MAX_IN_QUERY_LENGTH;
+        // Do not exceed the MAX_IN_QUERY_LENGTH
+        while (fromIndex < hypervisorIdsUpper.size()) {
+            if (toIndex > hypervisorIdsUpper.size()) {
+                toIndex = hypervisorIdsUpper.size();
+            }
+            List<String> subList = hypervisorIdsUpper.subList(fromIndex, toIndex);
+            q.setLockMode(LockModeType.PESSIMISTIC_WRITE);
+            q.setParameter("ownerKey", ownerKey);
+            q.setParameter("hypervisorIds", subList);
+            consumers.addAll(q.getResultList());
+            fromIndex = toIndex;
+            toIndex += MAX_IN_QUERY_LENGTH;
+        }
+        return consumers;
     }
 
     @SuppressWarnings("unchecked")
