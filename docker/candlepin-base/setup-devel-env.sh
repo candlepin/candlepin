@@ -32,6 +32,7 @@ PACKAGES=(
     tmux
     qpid-proton-c
     qpid-proton-c-devel
+    rpmlint
 )
 
 yum install -y ${PACKAGES[@]}
