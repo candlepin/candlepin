@@ -32,6 +32,7 @@ PACKAGES=(
     python-pip
     qpid-proton-c
     qpid-proton-c-devel
+    rpmlint
     rsyslog
     tig
     tmux
