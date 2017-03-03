@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.49.20
+Version: 0.9.49.21
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -401,6 +401,9 @@ fi
 
 
 %changelog
+* Fri Mar 03 2017 Alex Wood <awood@redhat.com> 0.9.49.21-1
+- 1428828: Use batch delete when deleting expired pools (mstead@redhat.com)
+
 * Thu Feb 23 2017 Chris Rog <crog@redhat.com> 0.9.49.20-1
 - Added explicit tests for the new validator classes (crog@redhat.com)
 - 1416823: Abstracted out property validation to new validator framework
