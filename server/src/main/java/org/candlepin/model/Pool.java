@@ -1059,22 +1059,6 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     }
 
     /*
-     * Keeping getSourceConsumer to avoid breaking the api
-     */
-    @JsonProperty("sourceConsumer")
-    public Consumer getSourceConsumer() {
-        if (this.getSourceEntitlement() != null) {
-            return this.getSourceEntitlement().getConsumer();
-        }
-
-        if (this.getSourceStack() != null) {
-            return sourceStack.getSourceConsumer();
-        }
-
-        return null;
-    }
-
-    /*
      * Keeping getSourceStackId to avoid breaking the api
      */
     @JsonProperty("sourceStackId")

@@ -337,7 +337,7 @@ public class PoolRules {
      */
     public PoolUpdate updatePoolFromStack(Pool pool, Map<String, Product> changedProducts) {
         List<Entitlement> stackedEnts = this.entCurator
-            .findByStackId(pool.getSourceConsumer(), pool.getSourceStackId())
+            .findByStackId(pool.getSourceStack().getSourceConsumer(), pool.getSourceStackId())
             .list();
 
         return this.updatePoolFromStackedEntitlements(pool, stackedEnts, changedProducts);
