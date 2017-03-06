@@ -801,4 +801,23 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 .setParameter("pool", pool)
                 .getSingleResult() > 0;
     }
+
+    public void calculateConsumedForOwnersPools(Owner owner) {
+        String stmt = "update Pool p set p.consumed = coalesce(" +
+            "(select sum(quantity) from Entitlement ent where ent.pool.id = p.id),0) " +
+            "where p.owner = :owner";
+        Query q = currentSession().createQuery(stmt);
+        q.setParameter("owner", owner);
+        q.executeUpdate();
+    }
+
+    public void calculateExportedForOwnersPools(Owner owner) {
+        String stmt = "update Pool p set p.exported = coalesce(" +
+            "(select sum(ent.quantity) FROM Entitlement ent, Consumer cons, ConsumerType ctype " +
+            "where ent.pool.id = p.id and ent.consumer.id = cons.id and cons.type.id = ctype.id " +
+            "and ctype.manifest = 'Y'),0) where p.owner = :owner";
+        Query q = currentSession().createQuery(stmt);
+        q.setParameter("owner", owner);
+        q.executeUpdate();
+    }
 }

@@ -192,4 +192,105 @@ describe 'Entitlement Resource' do
     end.should raise_exception(RestClient::Forbidden)
   end
 
+  it 'should handle concurrent requests to pool and maintain quanities' do
+    owner_client = user_client(@owner, random_string('owner'))
+    prod = create_product(random_string('product'), random_string('product'),
+      {:attributes => { :'multi-entitlement' => 'yes'},
+       :owner => @owner['key']})
+    pool = @cp.create_subscription(@owner['key'], prod.id, 50)
+    @cp.refresh_pools(@owner['key'])
+    pool = owner_client.list_pools({:owner => @owner['id'], :product =>prod.id}).first
+
+    t1 = Thread.new{register_and_consume(pool, "system", 5)}
+    t2 = Thread.new{register_and_consume(pool, "candlepin", 7)}
+    t3 = Thread.new{register_and_consume(pool, "system", 6)}
+    t4 = Thread.new{register_and_consume(pool, "candlepin", 11)}
+    t1.join
+    t2.join
+    t3.join
+    t4.join
+
+    consumed_pool = owner_client.get_pool(pool.id)
+    consumed_pool['consumed'].should == 29
+    consumed_pool['exported'].should == 18
+
+  end
+
+  it 'should not allow over consumption in pool' do
+    owner_client = user_client(@owner, random_string('owner'))
+    prod = create_product(random_string('product'), random_string('product'),
+      {:attributes => { :'multi-entitlement' => 'yes'},
+       :owner => @owner['key']})
+    pool = @cp.create_subscription(@owner['key'], prod.id, 3)
+    @cp.refresh_pools(@owner['key'])
+    pool = owner_client.list_pools({:owner => @owner['id'], :product =>prod.id}).first
+
+    t1 = Thread.new{register_and_consume(pool, "system", 1)}
+    t2 = Thread.new{register_and_consume(pool, "candlepin", 1)}
+    t3 = Thread.new{register_and_consume(pool, "system", 1)}
+    t4 = Thread.new{register_and_consume(pool, "candlepin", 1)}
+    t5 = Thread.new{register_and_consume(pool, "candlepin", 1)}
+    t6 = Thread.new{register_and_consume(pool, "candlepin", 1)}
+    t1.join
+    t2.join
+    t3.join
+    t4.join
+    t5.join
+    t6.join
+
+    consumed_pool = owner_client.get_pool(pool.id)
+    consumed_pool['consumed'].should == 3
+
+  end
+
+
+  def register_and_consume(pool, consumer_type, quantity)
+    user = user_client(@owner, random_string('user'))
+    cp_client = consumer_client(user, random_string('consumer'), consumer_type)
+    begin
+        cp_client.consume_pool(pool.id, {:quantity => quantity})
+    rescue RestClient::Forbidden => e
+        # tests will run that try to over consume, this is expected
+    end
+  end
+
+  it 'should end at zero quantity consumed when all consumers are unregistered' do
+    owner_client = user_client(@owner, random_string('owner'))
+    prod = create_product(random_string('product'), random_string('product'),
+      {:attributes => { :'multi-entitlement' => 'yes'},
+       :owner => @owner['key']})
+    pool = @cp.create_subscription(@owner['key'], prod.id, 3)
+    @cp.refresh_pools(@owner['key'])
+    pool = owner_client.list_pools({:owner => @owner['id'], :product =>prod.id}).first
+
+    t1 = Thread.new{register_consume_unregister(pool, "system", 1)}
+    t2 = Thread.new{register_consume_unregister(pool, "candlepin", 1)}
+    t3 = Thread.new{register_consume_unregister(pool, "system", 1)}
+    t4 = Thread.new{register_consume_unregister(pool, "candlepin", 1)}
+    t5 = Thread.new{register_consume_unregister(pool, "system", 1)}
+    t6 = Thread.new{register_consume_unregister(pool, "candlepin", 1)}
+    t1.join
+    t2.join
+    t3.join
+    t4.join
+    t5.join
+    t6.join
+
+    consumed_pool = owner_client.get_pool(pool.id)
+    consumed_pool['consumed'].should == 0
+    consumed_pool['exported'].should == 0
+
+  end
+
+  def register_consume_unregister(pool, consumer_type, quantity)
+    user = user_client(@owner, random_string('user'))
+    cp_client = consumer_client(user, random_string('consumer'), consumer_type)
+    begin
+        cp_client.consume_pool(pool.id, {:quantity => quantity})
+    rescue RestClient::Forbidden => e
+        # tests will run that try to over consume, this is expected
+    end
+    cp_client.unregister
+  end
+
 end

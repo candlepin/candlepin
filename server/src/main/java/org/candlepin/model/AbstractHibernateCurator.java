@@ -17,9 +17,9 @@ package org.candlepin.model;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.common.exceptions.ConcurrentModificationException;
-import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
+import org.candlepin.guice.PrincipalProvider;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -41,9 +41,11 @@ import org.xnap.commons.i18n.I18n;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.persistence.LockModeType;
 import javax.persistence.OptimisticLockException;
 
 /**
@@ -428,5 +430,18 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
     private String getConcurrentModificationMessage() {
         return i18n.tr("Request failed due to concurrent modification, please re-try.");
+    }
+
+    public List<E> lockAndLoadBatchById(Iterable<String> ids) {
+        List<E> result = new LinkedList<E>();
+        for (String id : ids) {
+            // Load at the current lock level so an existing object in the session will be loaded
+            // if it already exists.
+            E entity = getEntityManager().find(this.entityType(), id);
+            // Use refresh in order to upgrade the lock level & return the new version of the entity
+            getEntityManager().refresh(entity, LockModeType.PESSIMISTIC_WRITE);
+            result.add(entity);
+        }
+        return result;
     }
 }

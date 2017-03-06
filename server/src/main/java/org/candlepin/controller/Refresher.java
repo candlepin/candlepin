@@ -108,6 +108,7 @@ public class Refresher {
 
         for (Owner owner : owners) {
             poolManager.refreshPoolsWithRegeneration(owner, lazy);
+            poolManager.recalculatePoolQuantitiesForOwner(owner);
         }
     }
 

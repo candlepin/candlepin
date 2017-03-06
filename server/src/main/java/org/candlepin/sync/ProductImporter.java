@@ -74,7 +74,8 @@ public class ProductImporter {
             for (ProductContent content : importedProduct.getProductContent()) {
                 if (savedContents.contains(content.getContent().getId())) {
                     continue;
-                } else {
+                }
+                else {
                     savedContents.add(content.getContent().getId());
                 }
                 // BZ 990113 error occurs because incoming content data has
