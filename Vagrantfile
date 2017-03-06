@@ -4,7 +4,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.box = "centos/7"
   # By default, Vagrant wants to mount the code in /vagrant with NFSv3, which will fail. Let's
   # explicitly mount the code using NFSv4.
-  config.vm.synced_folder ".", "/vagrant", type: "nfs", nfs_version: 4, nfs_udp: false
+  config.vm.synced_folder ".", "/vagrant", type: "nfs", nfs_version: 4, nfs_udp: false unless ENV['CANDLEPIN_VAGRANT_NO_NFS']
 
   # Set up the hostmanager plugin to automatically configure host & guest hostnames
   if Vagrant.has_plugin?("vagrant-hostmanager")
