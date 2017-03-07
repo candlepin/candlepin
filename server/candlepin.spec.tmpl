@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 0.9.54.19
+Version: 0.9.54.20
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -220,6 +220,15 @@ fi
 
 #raw
 %changelog
+* Tue Mar 07 2017 Kevin Howell <khowell@redhat.com> 0.9.54.20-1
+- 1429697: Backport quantity column changes (wpoteat@redhat.com)
+- 1428827: Use batch delete when deleting expired pools (mstead@redhat.com)
+- 1363701: duplicate key value violates unique constraint on product-content
+  (adarshvritant@gmail.com)
+- Move future pool filters to 0.9.54 (wpoteat@redhat.com)
+- 1422126: CPM will attempt to retry entitlements under certain conditions
+  (crog@redhat.com)
+
 * Tue Feb 07 2017 Vritant Jain <adarshvritant@gmail.com> 0.9.54.19-1
 - 1418376: Clean up ueber cert data (mstead@redhat.com)
 - 1416825: Abstracted out property validation to new validator framework
