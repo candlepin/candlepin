@@ -926,7 +926,10 @@ public class CandlepinPoolManager implements PoolManager {
         // when it was read. As such we're going to reload it with a lock
         // before starting this process.
         log.info("Locking pool {}", pool.getId());
-        pool = poolCurator.lockAndLoad(pool);
+        List<String> poolIds = new ArrayList<String>();
+        poolIds.add(pool.getId());
+        List<Pool> pools = poolCurator.lockAndLoadBatchById(poolIds);
+        pool = pools.get(0);
 
         if (quantity > 0) {
             log.info("Running pre-entitlement rules.");
@@ -964,6 +967,8 @@ public class CandlepinPoolManager implements PoolManager {
         if (consumer.getType().isManifest()) {
             pool.setExported(pool.getExported() + quantity);
         }
+        poolCurator.merge(pool);
+
         PoolHelper poolHelper = new PoolHelper(this, productCache, entitlement);
         handler.handlePostEntitlement(consumer, poolHelper, entitlement);
 
@@ -1291,12 +1296,12 @@ public class CandlepinPoolManager implements PoolManager {
             return;
         }
 
-        List<Pool> poolsToLock = new ArrayList<Pool>();
+        List<String> poolIdsToLock = new ArrayList<String>();
         for (Entitlement ent: entsToRevoke) {
-            poolsToLock.add(ent.getPool());
+            poolIdsToLock.add(ent.getPool().getId());
         }
 
-        poolCurator.lock(poolsToLock);
+        poolCurator.lockAndLoadBatchById(poolIdsToLock);
 
         log.info("Batch revoking entitlements: " + entsToRevoke.size());
 
@@ -1321,6 +1326,7 @@ public class CandlepinPoolManager implements PoolManager {
             if (consumer.getType().isManifest()) {
                 pool.setExported(pool.getExported() - ent.getQuantity());
             }
+            poolCurator.merge(pool);
         }
 
         log.info("Starting batch delete of pools and entitlements");
@@ -1723,5 +1729,10 @@ public class CandlepinPoolManager implements PoolManager {
             }
         }
         return filteredPools;
+    }
+
+    public void recalculatePoolQuantitiesForOwner(Owner owner) {
+        poolCurator.calculateConsumedForOwnersPools(owner);
+        poolCurator.calculateExportedForOwnersPools(owner);
     }
 }

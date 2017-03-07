@@ -23,7 +23,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.ForeignKey;
-import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
 import org.hibernate.annotations.LazyCollection;
@@ -38,13 +37,11 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
 import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -270,16 +267,12 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     @Size(max = 255)
     private String orderNumber;
 
-    @Formula("(select sum(ent.quantity) from cp_entitlement ent " +
-             "where ent.pool_id = id)")
+    @Column(name = "quantity_consumed")
+    @NotNull
     private Long consumed;
 
-    @Formula("(select sum(ent.quantity) from cp_entitlement ent, cp_consumer cons, " +
-        "cp_consumer_type ctype where ent.pool_id = id and ent.consumer_id = cons.id " +
-        "and cons.type_id = ctype.id and ctype.manifest = 'Y')")
-    // Only calculate exported lazily due to join fetches from entitlements taking extraordinary
-    // amounts of time
-    @Basic(fetch = FetchType.LAZY)
+    @Column(name = "quantity_exported")
+    @NotNull
     private Long exported;
 
     // TODO: May not still be needed, IIRC a temporary hack for client.
@@ -309,6 +302,8 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     private boolean markedForDelete = false;
 
     public Pool() {
+        this.setExported(0L);
+        this.setConsumed(0L);
     }
 
     public Pool(Owner ownerIn, String productId, String productName,
@@ -326,6 +321,8 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         this.accountNumber = accountNumber;
         this.orderNumber = orderNumber;
         this.setProvidedProducts(providedProducts);
+        this.setExported(0L);
+        this.setConsumed(0L);
     }
 
     /** {@inheritDoc} */
