@@ -81,7 +81,7 @@ convert_to_nssdb() {
 create_client_certs() {
     local existing_ca="$(fp_nss "$CA_DB" "$CA_NAME")"
 
-    clients=("candlepin" "gutterball")
+    clients=("candlepin")
     for client in "${clients[@]}"; do
         sudo mkdir -p /etc/$client/certs/amqp/
         local dest="$CERT_LOC/$client"
@@ -265,7 +265,7 @@ fi
 # vanishes after a restart of the service.  Two different storage packages
 # exist depending on the version of RHEL or Fedora.  Try to get one of
 # them installed.  (The linearstore is the newer implementation).
-if ! is_rpm_installed qpid-cpp-server-linearstore || ! is_rpm_installed qpid-cpp-server-store; then
+if ! is_rpm_installed qpid-cpp-server-linearstore && ! is_rpm_installed qpid-cpp-server-store; then
     sudo yum -y install qpid-cpp-server-linearstore || sudo yum -y install qpid-cpp-server-store
 fi
 
@@ -281,7 +281,6 @@ if [ -n "$CLEAN" ]; then
     else
         sudo rm -rf "$CERT_LOC"
         sudo rm -f /etc/candlepin/certs/amqp/candlepin.*
-        sudo rm -f /etc/gutterball/certs/amqp/gutterball.*
         sudo rm -f /etc/qpid/brokerdb/*
         success_msg "Cleaned all AMQP certs"
         exit 0
@@ -295,7 +294,6 @@ fi
 
 create_client_certs
 set_cert_permissions "candlepin"
-set_cert_permissions "gutterball"
 
 if [ $IS_KATELLO -ne 0 ]; then
     make_cert_db

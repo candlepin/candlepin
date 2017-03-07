@@ -655,12 +655,12 @@ end
 class CandlepinQpid
   def initialize() 
     @address='amqps://localhost:5671/allmsg'
-    @gbcrt = "gutterball/bin/qpid/keys/qpid_ca.crt"
-    @gbkey = "gutterball/bin/qpid/keys/qpid_ca.key"
+    @qpid_crt = "server/bin/qpid/keys/qpid_ca.crt"
+    @qpid_key = "server/bin/qpid/keys/qpid_ca.key"
    end 
 
   def no_keys 
-    !File.file?(@gbcrt) or !File.file?(@gbkey)
+    !File.file?(@qpid_crt) or !File.file?(@qpid_key)
   end 
 
   def stop
@@ -673,23 +673,23 @@ class CandlepinQpid
 
   #Create non-durable queue and bind it to an exchange
   def create_queue(qname, args, exchange)
-    `sudo qpid-config -b amqps://localhost:5671 --ssl-certificate #{@gbcrt} --ssl-key #{@gbkey} add queue #{qname} #{args}`
-    `sudo qpid-config -b amqps://localhost:5671 --ssl-certificate #{@gbcrt} --ssl-key #{@gbkey} bind #{exchange} #{qname} "#"`
+    `sudo qpid-config -b amqps://localhost:5671 --ssl-certificate #{@qpid_crt} --ssl-key #{@qpid_key} add queue #{qname} #{args}`
+    `sudo qpid-config -b amqps://localhost:5671 --ssl-certificate #{@qpid_crt} --ssl-key #{@qpid_key} bind #{exchange} #{qname} "#"`
   end 
  
   #Force removes the queue
   def delete_queue(qname)
-    `sudo qpid-config -b amqps://localhost:5671 --ssl-certificate #{@gbcrt} --ssl-key #{@gbkey} del queue #{qname} --force`
+    `sudo qpid-config -b amqps://localhost:5671 --ssl-certificate #{@qpid_crt} --ssl-key #{@qpid_key} del queue #{qname} --force`
   end 
 
   def receive
     @messenger = Qpid::Proton::Messenger::Messenger.new
    
     if (no_keys)
-      raise "The Qpid keys doesnt exist on paths: #{File.absolute_path(@gbcrt)}; #{File.absolute_path(@gbkey)}" 
+      raise "The Qpid keys doesnt exist on paths: #{File.absolute_path(@qpid_crt)}; #{File.absolute_path(@qpid_key)}"
     end
-    @messenger.certificate = @gbcrt 
-    @messenger.private_key = @gbkey
+    @messenger.certificate = @qpid_crt
+    @messenger.private_key = @qpid_key
     @messenger.blocking = false
  
     msgs = []

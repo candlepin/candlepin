@@ -293,10 +293,17 @@ fi
 # deletion are silenced
 # This deletion is attempted regardless of whether Qpid is enabled. We do that
 # to prevent the queue to grow indefinitely
-QPID_KEYS_DIR=$PROJECT_DIR/../gutterball/bin/qpid/keys
+QPID_KEYS_DIR=$PROJECT_DIR/../server/bin/qpid/keys
 
 if [ "$QPID" == "qpid" ]; then
     info_msg "Enable Qpid"
+
+    if [ "$FORCECERT" == "1" ]; then
+        # clean qpid certs
+        $PROJECT_DIR/bin/qpid/configure-qpid.sh -c
+    fi
+    $PROJECT_DIR/bin/qpid/configure-qpid.sh
+
     QPID="qpid=yes"
 
     qpid-config -b amqps://localhost:5671 --ssl-certificate $QPID_KEYS_DIR/qpid_ca.crt --ssl-key $QPID_KEYS_DIR/qpid_ca.key --force del queue allmsg 2 > /dev/null || true
