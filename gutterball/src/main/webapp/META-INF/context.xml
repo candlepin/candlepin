@@ -1,2 +1,0 @@
-<!-- Gutterball needs symlink support to read its jars -->
-<Context path="/gutterball" allowLinking="true" />

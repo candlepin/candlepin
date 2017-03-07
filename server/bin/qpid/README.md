@@ -18,7 +18,7 @@ have major issues, the best bet is to simply wipe everything and start anew.
 Here's how:
 
 1. `systemctl stop qpidd tomcat`
-2. `rm /etc/{candlepin,gutterball}/certs/amqp/*`
+2. `rm /etc/candlepin/certs/amqp/*`
 3. `rm /etc/qpid/brokerdb/*`
 4. `rm keys/*` if the `keys` directory is already present from a previous run
    of the script.

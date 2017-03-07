@@ -28,7 +28,7 @@ function create_project_deps ()
 set -e
 
 # create the deps for each project
-for proj in "server" "gutterball" "common"; do
+for proj in "server" "common"; do
     export M2_REPO="$deps_dir/repo/$proj"
     create_project_deps $proj
     flatten

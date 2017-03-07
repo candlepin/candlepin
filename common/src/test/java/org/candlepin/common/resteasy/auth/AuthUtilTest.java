@@ -23,7 +23,7 @@ import org.junit.Test;
 public class AuthUtilTest {
     @Test
     public void testGetHeaderExists() throws Exception {
-        MockHttpRequest req = MockHttpRequest.create("GET", "http://localhost/gutterball/status");
+        MockHttpRequest req = MockHttpRequest.create("GET", "http://localhost/candlepin/status");
         req.header("test_header", "value");
 
         String result = AuthUtil.getHeader(req, "test_header");
@@ -32,7 +32,7 @@ public class AuthUtilTest {
 
     @Test
     public void testGetHeaderDoesNotExist() throws Exception {
-        MockHttpRequest req = MockHttpRequest.create("GET", "http://localhost/gutterball/status");
+        MockHttpRequest req = MockHttpRequest.create("GET", "http://localhost/candlepin/status");
         req.header("test_header", "value");
 
         String result = AuthUtil.getHeader(req, "not_found");

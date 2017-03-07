@@ -258,7 +258,7 @@ fi
 if [ "$QPID" == "1" ]; then
     echo "Setting up Qpid"
     pushd . 
-    cd ../gutterball/bin/qpid
+    cd ../server/bin/qpid
     # Do a cleanup 
     ./configure-qpid.sh -c
     # Reconfigure

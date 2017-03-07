@@ -232,40 +232,6 @@ class DbToolTest(unittest.TestCase):
         m_liquibase_wrapper.assert_called_with("candlepinuser", "secret", "some cp:jdbccp", "dbinstance.driver", "dbinstance.jdbcurl", False)
         m_liquibase_wrapper.return_value.migrate.assert_called_with("createclog");
 
-
-    @patch("dbtool.LiquibaseWrapper")
-    @patch("dbtool.PostgresInstance")
-    @patch("dbtool.Gutterball")  
-    def test_tool_gt_postgres_success(self, m_gutterball,  m_postgres_instance, m_liquibase_wrapper):
-        m_gutterball.return_value = self.product_mock();        
-        m_postgres_instance.return_value = self.dbinstance_mock();
-        
-        dbtool.main(["--pg-dbhost", "pghost", "--pg-dbport", "pgdbport" ,"--product", "gutterball", "-u", "gutuser","-p", "secret", "--action", "create"])
-        m_postgres_instance.assert_called_with("gutuser", "secret","pghost","pgdbport")
-        m_postgres_instance.return_value.create.assert_called_with("defaultDbName")
-        m_liquibase_wrapper.assert_called_with("gutuser", "secret", "some cp:jdbccp", "dbinstance.driver", "dbinstance.jdbcurl", False)
-        m_liquibase_wrapper.return_value.migrate.assert_called_with("createclog");
-    
-    @patch("dbtool.LiquibaseWrapper")
-    @patch("dbtool.PostgresInstance")
-    @patch("dbtool.Gutterball.classpath")  
-    def test_tool_gt_assigns_correct_defaults(self, m_gutterball_classpath,  m_postgres_instance, m_liquibase_wrapper):
-        m_gutterball_classpath.return_value = "some cp"       
-        m_postgres_instance.return_value = self.dbinstance_mock();
-        equivalent_arg_lists = [
-                     ["--product", "gutterball", "--action", "create"],
-                     ["--product", "gutterball", "--action", "create", "-u", "gutterball", "-d","gutterball"]
-                    ]
-
-        for arguments in equivalent_arg_lists:
-            m_postgres_instance.reset_mock();
-            m_liquibase_wrapper.reset_mock();  
-            dbtool.main(arguments)
-            m_postgres_instance.assert_called_with("gutterball", None,None,None)
-            m_postgres_instance.return_value.create.assert_called_with("gutterball")
-            m_liquibase_wrapper.assert_called_with("gutterball", None, "some cp:jdbccp", "dbinstance.driver", "dbinstance.jdbcurl", False)
-            m_liquibase_wrapper.return_value.migrate.assert_called_with( "db/changelog/changelog.xml");
-    
     def test_bad_arg_list_should_raise_exception(self):
         with self.assertRaisesRegex(Exception, "You must specify product using --product switch"):
             dbtool.main([])
@@ -313,4 +279,3 @@ if __name__ == "__main__":
    suite = unittest.TestLoader().loadTestsFromTestCase(DbToolTest)
    unittest.TextTestRunner(verbosity=2).run(suite)
    sys.exit(0)
-   
