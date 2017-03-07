@@ -206,13 +206,13 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o,
             String productId, Date activeOn, boolean activeOnly) {
         return listAvailableEntitlementPools(c, o, productId, activeOn, activeOnly,
-            new PoolFilterBuilder(), null, false).getPageData();
+            new PoolFilterBuilder(), null, false, false, false).getPageData();
     }
 
     @Transactional
     public List<Pool> listByFilter(PoolFilterBuilder filters) {
         return listAvailableEntitlementPools(
-                null, null, null, null, false, filters, null, false).getPageData();
+                null, null, null, null, false, filters, null, false, false, false).getPageData();
     }
 
     /**
@@ -235,7 +235,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     @Transactional
     public Page<List<Pool>> listAvailableEntitlementPools(Consumer c, Owner o,
             String productId, Date activeOn, boolean activeOnly, PoolFilterBuilder filters,
-            PageRequest pageRequest, boolean postFilter) {
+            PageRequest pageRequest, boolean postFilter, boolean addFuture, boolean onlyFuture) {
         if (o == null && c != null) {
             o = c.getOwner();
         }
@@ -273,8 +273,18 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             crit.add(Restrictions.ne("productName", Product.ueberProductNameForOwner(o)));
         }
         if (activeOn != null) {
-            crit.add(Restrictions.le("startDate", activeOn));
-            crit.add(Restrictions.ge("endDate", activeOn));
+            if (onlyFuture) {
+                crit.add(Restrictions.ge("startDate", activeOn));
+            }
+            else {
+                if (!addFuture) {
+                    crit.add(Restrictions.le("startDate", activeOn));
+                    crit.add(Restrictions.ge("endDate", activeOn));
+                }
+                else {
+                    crit.add(Restrictions.ge("endDate", activeOn));
+                }
+            }
         }
 
         if (productId != null) {
