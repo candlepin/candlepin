@@ -358,7 +358,7 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
         Criteria uuidCriteria = this.createSecureCriteria("oc")
             .createAlias("oc.content", "c")
             .add(disjunction)
-            .setProjection(Projections.property("c.uuid"));
+            .setProjection(Projections.distinct(Projections.property("c.uuid")));
 
         for (Map.Entry<String, Integer> entry : contentVersions.entrySet()) {
             disjunction.add(Restrictions.and(
