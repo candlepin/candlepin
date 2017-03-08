@@ -14,6 +14,8 @@
  */
 package org.candlepin.policy.js.entitlement;
 
+import org.candlepin.audit.EventFactory;
+import org.candlepin.audit.EventSink;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.ProductManager;
@@ -56,7 +58,8 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
         JsRunner jsRules, I18n i18n, Configuration config, ConsumerCurator consumerCurator,
         PoolCurator poolCurator, ProductCurator productCurator, RulesObjectMapper mapper,
         OwnerCurator ownerCurator, OwnerProductCurator ownerProductCurator,
-        ProductShareCurator productShareCurator, ProductManager productManager) {
+        ProductShareCurator productShareCurator, ProductManager productManager, EventSink eventSink,
+        EventFactory eventFactory) {
         this.jsRules = jsRules;
         this.dateSource = dateSource;
         this.i18n = i18n;
@@ -70,6 +73,8 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
         this.ownerProductCurator = ownerProductCurator;
         this.shareCurator = productShareCurator;
         this.productManager = productManager;
+        this.eventSink = eventSink;
+        this.eventFactory = eventFactory;
         log = LoggerFactory.getLogger(EntitlementRules.class);
         jsRules.init("entitlement_name_space");
     }
