@@ -14,6 +14,10 @@
  */
 package org.candlepin.policy.js.entitlement;
 
+import org.candlepin.audit.Event;
+import org.candlepin.audit.EventBuilder;
+import org.candlepin.audit.EventFactory;
+import org.candlepin.audit.EventSink;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
@@ -77,6 +81,8 @@ public abstract class AbstractEntitlementRules implements Enforcer {
     protected OwnerProductCurator ownerProductCurator;
     protected ProductShareCurator shareCurator;
     protected ProductManager productManager;
+    protected EventSink eventSink;
+    protected EventFactory eventFactory;
 
     protected static final String POST_PREFIX = "post_";
 
@@ -400,6 +406,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
 
     private Product resolveProductShares(Owner sharingOwner, Product product, Owner recipient,
         ProductManager productManager) {
+        Product resolvedProduct = product;
         if (ownerProductCurator.productExists(recipient, product.getId())) {
             // Recipient has a product with the same ID already.  If they are the same instance
             // use then nothing needs doing.  Everything is already in place.
@@ -416,17 +423,25 @@ public abstract class AbstractEntitlementRules implements Enforcer {
                     // If the recipient's product isn't from a share, let the recipient just continue to
                     // use its existing product definition.
                     log.debug("Owner {} already has product {} defined", recipient.getKey(), product.getId());
-                    product = ownerProductCurator.getProductById(recipient, product.getId());
+                    resolvedProduct = ownerProductCurator.getProductById(recipient, product.getId());
                 }
                 else {
                     // If the recipient's product is a share then two owners are sharing into the same
                     // recipient and we must resolve the conflict.
-                    log.debug("Owner {} already has a share for product {}",
+                    log.debug("Owner {} already has a share for product {}.  Resolving conflict.",
                         recipient.getKey(), product.getId());
+
+                    EventBuilder builder = eventFactory
+                        .getEventBuilder(Event.Target.PRODUCT, Event.Type.MODIFIED);
+                    builder.setOldEntity(product);
+
                     shareCurator.delete(existingShare);
                     shareCurator.create(new ProductShare(sharingOwner, product, recipient));
                     // Now we need to reconcile all of recipient's pools that were using the old product
-                    product = productManager.updateProduct(product.toDTO(), recipient, true);
+                    resolvedProduct = productManager.updateProduct(product.toDTO(), recipient, true);
+                    builder.setNewEntity(resolvedProduct);
+
+                    eventSink.queueEvent(builder.buildEvent());
                 }
             }
             else {
@@ -443,7 +458,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
             );
         }
 
-        return product;
+        return resolvedProduct;
     }
 
     private void postBindVirtLimit(PoolManager poolManager, Consumer c,
