@@ -21,6 +21,8 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.audit.EventFactory;
+import org.candlepin.audit.EventSink;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.ProductManager;
@@ -84,6 +86,8 @@ public class EnforcerTest extends DatabaseTestFixture {
     @Mock private OwnerProductCurator mockOwnerProductCurator;
     @Mock private ProductShareCurator mockProductShareCurator;
     @Mock private ProductManager mockProductManager;
+    @Mock private EventSink mockEventSink;
+    @Mock private EventFactory mockEventFactory;
 
     private Enforcer enforcer;
     private Owner owner;
@@ -125,7 +129,8 @@ public class EnforcerTest extends DatabaseTestFixture {
             new DateSourceForTesting(2010, 1, 1), jsRules, i18n, config, consumerCurator, poolCurator,
             mockProductCurator,
             new RulesObjectMapper(new ProductCachedSerializationModule(mockProductCurator)),
-            mockOwnerCurator, mockOwnerProductCurator, mockProductShareCurator, mockProductManager
+            mockOwnerCurator, mockOwnerProductCurator, mockProductShareCurator, mockProductManager,
+            mockEventSink, mockEventFactory
         );
     }
 

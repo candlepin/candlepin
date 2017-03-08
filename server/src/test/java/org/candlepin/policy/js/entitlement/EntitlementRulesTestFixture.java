@@ -17,6 +17,8 @@ package org.candlepin.policy.js.entitlement;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.audit.EventFactory;
+import org.candlepin.audit.EventSink;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
@@ -93,6 +95,10 @@ public class EntitlementRulesTestFixture {
     protected ProductShareCurator productShareCurator;
     @Mock
     protected ProductManager productManager;
+    @Mock
+    protected EventSink eventSink;
+    @Mock
+    protected EventFactory eventFactory;
 
     protected Owner owner;
     protected Consumer consumer;
@@ -127,7 +133,9 @@ public class EntitlementRulesTestFixture {
             ownerCurator,
             ownerProductCuratorMock,
             productShareCurator,
-            productManager
+            productManager,
+            eventSink,
+            eventFactory
         );
 
         owner = new Owner();
