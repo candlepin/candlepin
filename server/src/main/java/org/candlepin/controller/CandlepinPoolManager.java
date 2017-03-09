@@ -24,27 +24,8 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.model.Branding;
-import org.candlepin.model.CandlepinQuery;
-import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerCurator;
-import org.candlepin.model.Content;
-import org.candlepin.model.Entitlement;
-import org.candlepin.model.EntitlementCertificateCurator;
-import org.candlepin.model.EntitlementCurator;
-import org.candlepin.model.Environment;
-import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerContentCurator;
-import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.OwnerProductCurator;
-import org.candlepin.model.Pool;
+import org.candlepin.model.*;
 import org.candlepin.model.Pool.PoolType;
-import org.candlepin.model.PoolCurator;
-import org.candlepin.model.PoolFilterBuilder;
-import org.candlepin.model.PoolQuantity;
-import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
-import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductContentData;
@@ -1490,7 +1471,10 @@ public class CandlepinPoolManager implements PoolManager {
 
         log.debug("Locking pools: {}", poolQuantityMap.keySet());
 
-        List<Pool> pools = poolCurator.lockAndLoadBatchById(poolQuantityMap.keySet());
+        List<Pool> pools = new ArrayList<Pool>();
+        for(String id: poolQuantityMap.keySet())  {
+            pools.add(poolCurator.find(id));
+        }
 
         if (log.isDebugEnabled()) {
             for (Pool pool : pools) {
@@ -1547,13 +1531,6 @@ public class CandlepinPoolManager implements PoolManager {
 
         boolean isDistributor = consumer.getType().isManifest();
 
-        /*
-         * Grab an exclusive lock on the consumer to prevent deadlock.
-         * No need to lock for distributors as we wont compute compliance for it.
-         */
-        if (!isDistributor) {
-            consumer = consumerCurator.lockAndLoad(consumer);
-        }
 
         // Persist the entitlement after it has been created.  It requires an ID in order to
         // create an entitlement-derived subpool
@@ -1571,12 +1548,19 @@ public class CandlepinPoolManager implements PoolManager {
             consumer.setEntitlementCount(consumer.getEntitlementCount() + quantity);
             poolsToSave.add(pool);
         }
+
+        Map<String, EntitlementCertificate> certs = handler.handleSelfCertificates(consumer, poolQuantities, entitlements);
+
+        // Lock the pools and consumers.
+        poolCurator.lockAndLoadBatchById(poolQuantityMap.keySet());
+        consumerCurator.lockAndLoad(consumer);
+
+        //save pool, ents
+        entitlementCurator.saveOrUpdateAll(entitlements.values(), false, false);
         poolCurator.updateAll(poolsToSave, false, false);
-        consumerCurator.update(consumer);
-
         handler.handlePostEntitlement(this, consumer, entitlements);
-        handler.handleSelfCertificates(consumer, poolQuantities, entitlements);
 
+        entitlementCertificateCurator.saveOrUpdateAll(certs.values(), false, false);
         this.ecGenerator.regenerateCertificatesByEntitlementIds(
             this.entitlementCurator.batchListModifying(entitlements.values()), true
         );
@@ -1584,16 +1568,14 @@ public class CandlepinPoolManager implements PoolManager {
         // we might have changed the bonus pool quantities, lets find out.
         handler.handleBonusPools(consumer.getOwner(), poolQuantities, entitlements);
 
-
         /*
          * If the consumer is not a distributor, check consumer's new compliance
          * status and save. the getStatus call does that internally, so we only
          * need to check for the update.
          */
         complianceRules.getStatus(consumer, null, false, false);
-        if (!isDistributor) {
-            consumerCurator.update(consumer);
-        }
+
+        consumerCurator.update(consumer);
 
         poolCurator.flush();
 
@@ -2049,7 +2031,7 @@ public class CandlepinPoolManager implements PoolManager {
         void handlePostEntitlement(PoolManager manager, Consumer consumer,
             Map<String, Entitlement> entitlements);
 
-        void handleSelfCertificates(Consumer consumer, Map<String, PoolQuantity> pools,
+        Map<String, EntitlementCertificate> handleSelfCertificates(Consumer consumer, Map<String, PoolQuantity> pools,
             Map<String, Entitlement> entitlements);
 
         void handleBonusPools(Owner owner, Map<String, PoolQuantity> pools,
@@ -2077,7 +2059,7 @@ public class CandlepinPoolManager implements PoolManager {
                 result.put(entry.getKey(), newEntitlement);
             }
 
-            entitlementCurator.saveOrUpdateAll(entsToPersist, false, false);
+            //entitlementCurator.saveOrUpdateAll(entsToPersist, false, false);
 
             /*
              * Why iterate twice? to persist the entitlement before we associate
@@ -2118,7 +2100,7 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         @Override
-        public void handleSelfCertificates(Consumer consumer, Map<String, PoolQuantity> poolQuantities,
+        public Map<String, EntitlementCertificate> handleSelfCertificates(Consumer consumer, Map<String, PoolQuantity> poolQuantities,
             Map<String, Entitlement> entitlements) {
             Map<String, Product> products = new HashMap<String, Product>();
             for (PoolQuantity poolQuantity : poolQuantities.values()) {
@@ -2126,7 +2108,7 @@ public class CandlepinPoolManager implements PoolManager {
                 products.put(pool.getId(), pool.getProduct());
             }
 
-            ecGenerator.generateEntitlementCertificates(consumer, products, entitlements);
+            return ecGenerator.generateEntitlementCertificates(consumer, products, entitlements);
         }
 
         @Override
@@ -2159,12 +2141,14 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         @Override
-        public void handleSelfCertificates(Consumer consumer, Map<String, PoolQuantity> poolQuantities,
+        public Map<String, EntitlementCertificate> handleSelfCertificates(Consumer consumer, Map<String, PoolQuantity> poolQuantities,
             Map<String, Entitlement> entitlements) {
             for (Entry<String, Entitlement> entry : entitlements.entrySet()) {
                 regenerateCertificatesOf(entry.getValue(), true);
             }
+            return new HashMap<String, EntitlementCertificate>();
         }
+
         @Override
         public void handleBonusPools(Owner owner, Map<String, PoolQuantity> pools,
             Map<String, Entitlement> entitlements) {

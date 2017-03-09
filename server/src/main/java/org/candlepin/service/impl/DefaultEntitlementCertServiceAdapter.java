@@ -456,7 +456,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         }
 
         log.info("Persisting certs.");
-        entCertCurator.saveOrUpdateAll(entitlementCerts.values(), false, false);
+        //entCertCurator.saveOrUpdateAll(entitlementCerts.values(), false, false);
 
         return entitlementCerts;
     }
