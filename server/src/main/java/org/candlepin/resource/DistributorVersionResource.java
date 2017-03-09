@@ -43,12 +43,15 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Authorization;
 
 /**
  * DistributorVersionResource
  */
 @Path("/distributor_versions")
-@Api("distributor_versions")
+@Api(value = "distributor_versions", authorizations = {
+    @Authorization("basic")
+})
 public class DistributorVersionResource {
 
     private I18n i18n;

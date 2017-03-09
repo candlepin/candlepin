@@ -28,14 +28,15 @@ import javax.ws.rs.core.MediaType;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-
-
+import io.swagger.annotations.Authorization;
 
 /**
  * CertificateSerialResource
  */
 @Path("/serials")
-@Api("serials")
+@Api(value = "serials", authorizations = {
+    @Authorization("basic")
+})
 public class CertificateSerialResource {
     private CertificateSerialCurator certificateSerialCurator;
 

@@ -57,16 +57,15 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-
-
+import io.swagger.annotations.Authorization;
 
 /**
  * API Gateway into /product
- *
- * @version $Rev$
  */
 @Path("/products")
-@Api("products")
+@Api(value = "products", authorizations = {
+    @Authorization("basic")
+})
 public class ProductResource {
 
     private static Logger log = LoggerFactory.getLogger(ProductResource.class);

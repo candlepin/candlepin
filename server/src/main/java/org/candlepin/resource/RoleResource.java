@@ -48,12 +48,15 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Authorization;
 
 /**
  *
  */
 @Path("/roles")
-@Api("roles")
+@Api(value = "roles", authorizations = {
+    @Authorization("basic")
+})
 public class RoleResource {
 
     private UserServiceAdapter userService;

@@ -142,13 +142,15 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-
+import io.swagger.annotations.Authorization;
 
 /**
  * Owner Resource
  */
 @Path("/owners")
-@Api("owners")
+@Api(value = "owners", authorizations = {
+    @Authorization("basic")
+})
 public class OwnerResource {
 
     private static Logger log = LoggerFactory.getLogger(OwnerResource.class);

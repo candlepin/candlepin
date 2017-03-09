@@ -51,13 +51,16 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Authorization;
 
 /**
  * SubscriptionResource
  */
 
 @Path("/subscriptions")
-@Api("subscriptions")
+@Api(value = "subscriptions", authorizations = {
+    @Authorization("basic")
+})
 @Consumes(MediaType.APPLICATION_JSON)
 public class SubscriptionResource {
     private static Logger log = LoggerFactory.getLogger(SubscriptionResource.class);

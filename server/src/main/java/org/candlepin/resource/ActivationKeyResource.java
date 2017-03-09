@@ -55,14 +55,15 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-
-
+import io.swagger.annotations.Authorization;
 
 /**
  * ActivationKeyResource
  */
 @Path("/activation_keys")
-@Api("activation_keys")
+@Api(value = "activation_keys", authorizations = {
+    @Authorization("basic")
+})
 public class ActivationKeyResource {
     private static Logger log = LoggerFactory.getLogger(ActivationKeyResource.class);
     private ActivationKeyCurator activationKeyCurator;

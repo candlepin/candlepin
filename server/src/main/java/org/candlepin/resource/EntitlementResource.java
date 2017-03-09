@@ -75,12 +75,15 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Authorization;
 
 /**
  * REST api gateway for the User object.
  */
 @Path("/entitlements")
-@Api("entitlements")
+@Api(value = "entitlements", authorizations = {
+    @Authorization("basic")
+})
 public class EntitlementResource {
     private static Logger log = LoggerFactory.getLogger(EntitlementResource.class);
     private final ConsumerCurator consumerCurator;

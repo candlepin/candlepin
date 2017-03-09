@@ -46,14 +46,15 @@ import javax.ws.rs.core.Response;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-
-
+import io.swagger.annotations.Authorization;
 
 /**
  * CrlResource
  */
 @Path("/crl")
-@Api("crl")
+@Api(value = "crl", authorizations = {
+    @Authorization("basic")
+})
 public class CrlResource {
 
     private Configuration config;

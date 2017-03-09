@@ -62,13 +62,16 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Authorization;
 
 /**
  * API gateway for the EntitlementPool
  */
 
 @Path("/pools")
-@Api("pools")
+@Api(value = "pools", authorizations = {
+    @Authorization("basic")
+})
 public class PoolResource {
 
     private ConsumerCurator consumerCurator;

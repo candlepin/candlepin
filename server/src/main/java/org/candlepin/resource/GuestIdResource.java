@@ -59,12 +59,15 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Authorization;
 
 /**
  * API Gateway for registered consumers guests
  */
 @Path("/consumers/{consumer_uuid}/guestids")
-@Api("consumers")
+@Api(value = "consumers", authorizations = {
+    @Authorization("basic")
+})
 public class GuestIdResource {
 
     private static Logger log = LoggerFactory.getLogger(GuestIdResource.class);

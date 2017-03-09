@@ -57,8 +57,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-
-
+import io.swagger.annotations.Authorization;
 
 /**
  * OwnerContentResource
@@ -66,7 +65,9 @@ import io.swagger.annotations.ApiResponses;
  * Manage the content that exists in an organization.
  */
 @Path("/owners/{owner_key}/content")
-@Api("owners")
+@Api(value = "owners", authorizations = {
+    @Authorization("basic")
+})
 public class OwnerContentResource {
     private static Logger log = LoggerFactory.getLogger(OwnerContentResource.class);
 

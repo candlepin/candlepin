@@ -31,14 +31,15 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-
-
+import io.swagger.annotations.Authorization;
 
 /**
  * DeletedConsumerResource
  */
 @Path("/deleted_consumers")
-@Api("deleted_consumers")
+@Api(value = "deleted_consumers", authorizations = {
+    @Authorization("basic")
+})
 public class DeletedConsumerResource {
     private DeletedConsumerCurator deletedConsumerCurator;
 

@@ -41,14 +41,15 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-
-
+import io.swagger.annotations.Authorization;
 
 /**
  * CdnResource
  */
 @Path("/cdn")
-@Api("cdn")
+@Api(value = "cdn", authorizations = {
+    @Authorization("basic")
+})
 public class CdnResource {
 
     private I18n i18n;

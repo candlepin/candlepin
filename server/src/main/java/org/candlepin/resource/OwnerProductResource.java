@@ -70,8 +70,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-
-
+import io.swagger.annotations.Authorization;
 
 /**
  * API Gateway into /product
@@ -79,7 +78,9 @@ import io.swagger.annotations.ApiResponses;
  * @version $Rev$
  */
 @Path("/owners/{owner_key}/products")
-@Api("owners")
+@Api(value = "owners", authorizations = {
+    @Authorization("basic")
+})
 public class OwnerProductResource {
     private static Logger log = LoggerFactory.getLogger(OwnerProductResource.class);
 

@@ -41,14 +41,15 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-
-
+import io.swagger.annotations.Authorization;
 
 /**
  * Access Path for consumer types
  */
 @Path("/consumertypes")
-@Api("consumertypes")
+@Api(value = "consumertypes", authorizations = {
+    @Authorization("basic")
+})
 public class ConsumerTypeResource {
     private static Logger log = LoggerFactory.getLogger(ConsumerTypeResource.class);
     private ConsumerTypeCurator consumerTypeCurator;

@@ -71,14 +71,15 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-
-
+import io.swagger.annotations.Authorization;
 
 /**
  * REST API for managing Environments.
  */
 @Path("/environments")
-@Api("environments")
+@Api(value = "environments", authorizations = {
+    @Authorization("basic")
+})
 public class EnvironmentResource {
     private static Logger log = LoggerFactory.getLogger(AdminResource.class);
 

@@ -55,12 +55,15 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Authorization;
 
 /**
  * JobResource
  */
 @Path("/jobs")
-@Api("jobs")
+@Api(value = "jobs", authorizations = {
+    @Authorization("basic")
+})
 public class JobResource {
 
     private JobCurator curator;

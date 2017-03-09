@@ -36,12 +36,15 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Authorization;
 
 /**
  * Candlepin Events Resource
  */
 @Path("/events")
-@Api("events")
+@Api(value = "events", authorizations = {
+    @Authorization("basic")
+})
 public class EventResource {
 
     private EventCurator eventCurator;

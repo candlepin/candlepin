@@ -161,14 +161,15 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-
-
+import io.swagger.annotations.Authorization;
 
 /**
  * API Gateway for Consumers
  */
 @Path("/consumers")
-@Api("consumers")
+@Api(value = "consumers", authorizations = {
+    @Authorization("basic")
+})
 public class ConsumerResource {
     private Pattern consumerSystemNamePattern;
     private Pattern consumerPersonNamePattern;
