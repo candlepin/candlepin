@@ -6,6 +6,7 @@ require 'candlepin_scenarios'
 describe 'One Sub Pool Per Stack' do
   include CandlepinMethods
   include VirtHelper
+  include SpecUtils
 
   before(:each) do
     skip("candlepin running in standalone mode") if is_hosted?
@@ -165,7 +166,8 @@ describe 'One Sub Pool Per Stack' do
     sub_pools.length.should eq(1)
     sub_pool = sub_pools[0]
     sub_pool['sourceStackId'].should == @stack_id
-    sub_pool['sourceConsumer']['uuid'].should == @host['uuid']
+    pool_attrs = flatten_attributes(sub_pool['attributes'])
+    verify_attribute(pool_attrs, "requires_host", @host.uuid)
   end
 
   it 'should not include host entitlements from another stack' do
@@ -487,4 +489,8 @@ describe 'One Sub Pool Per Stack' do
     return guest_pools.detect { |i| i['sourceStackId'] == stack_id }
   end
 
+  def verify_attribute(attrs, attr_name, attr_value)
+    attrs.should have_key(attr_name)
+    attrs[attr_name].should == attr_value
+  end
 end

@@ -6,6 +6,7 @@ require 'candlepin_scenarios'
 describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
   include CandlepinMethods
   include VirtHelper
+  include SpecUtils
 
   before(:each) do
     skip("candlepin running in standalone mode") if is_hosted?
@@ -93,7 +94,7 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     pools = @guest1_client.list_pools :consumer => @guest1['uuid'], :listall => true, :product => arch_virt_product.id
     pools.length.should eq(2)
     # Find the correct host-restricted subpool
-    guest_pool_with_arch = pools.find_all { |i| !i['sourceConsumer'].nil? }[0]
+    guest_pool_with_arch = pools.find_all { |i| flatten_attributes(i['attributes'])['requires_host'] == @host1.uuid }[0]
     guest_pool_with_arch.should_not == nil
 
     @guest1_client.update_consumer({:guestIds => [
@@ -444,5 +445,4 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
         :consumer => @guest1_client.uuid).first
     @guest1_client.consume_pool(pool.id, {:quantity => 3})
   end
-
 end

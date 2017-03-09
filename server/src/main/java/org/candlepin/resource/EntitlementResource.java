@@ -254,7 +254,7 @@ public class EntitlementResource {
                 "active entitlements in source stack.");
 
             ent = entitlementCurator.findUpstreamEntitlementForStack(
-                entPool.getSourceConsumer(),
+                entPool.getSourceStack().getSourceConsumer(),
                 entPool.getSourceStackId());
         }
 
