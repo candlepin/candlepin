@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
 require_relative "../client/ruby/candlepin_api"
+require_relative "../client/ruby/hostedtest_api"
 require_relative "./thread_pool"
 
 require 'rubygems'
@@ -16,7 +17,7 @@ require 'pp'
 # line break in the message itself, reducing/eliminating the possibility for two+ threads to write
 # a message to the same line.
 
-
+include HostedTest
 SMALL_SUB_QUANTITY = 5
 LARGE_SUB_QUANTITY = 10
 
@@ -44,6 +45,7 @@ filenames.each do |filename|
 end
 
 cp = Candlepin.new('admin', 'admin', nil, nil, 'localhost', 8443)
+@cp = cp
 
 print "\nCreating owners\n"
 def create_owner(cp, new_owner)
@@ -245,6 +247,7 @@ def create_mkt_product_and_pools(cp, owner, product)
   # Create a SMALL and a LARGE with the slightly similar begin/end dates.
 
   params[:branding] = []
+
   if !params[:provided_products].empty? && product_ret['name'].include?('OS')
     params[:branding] = [
       {
@@ -255,41 +258,62 @@ def create_mkt_product_and_pools(cp, owner, product)
     ]
   end
 
-  params[:contract_number] = 0
-  params[:account_number] = '12331131231'
-  params[:order_number] = 'order-8675309'
+  contract_number = 0
+  account_number = '12331131231'
+  order_number = 'order-8675309'
+  start_date =  Date.today
+  end_date =  start_date + 365
 
-  params[:quantity] = small_quantity
   @sourceSubId += 1
   params[:source_subscription] = { 'id' => "#{@sourceSubId}" }
 
-  pool = cp.create_pool(
+  pool = create_pool_and_subscription(
     owner['name'],
     product_ret['id'],
+    small_quantity,
+    product['provided_products'] || [],
+    contract_number,
+    account_number,
+    order_number,
+    start_date,
+    end_date,
+    true,
     params
   )
 
-  params[:contract_number] += 1
-  params[:quantity] = large_quantity
+  contract_number += 1
   @sourceSubId += 1
   params[:source_subscription] = { 'id' => "#{@sourceSubId}" }
 
-  pool = cp.create_pool(
+  pool = create_pool_and_subscription(
     owner['name'],
     product_ret['id'],
+    large_quantity,
+    product['provided_products'] || [],
+    contract_number,
+    account_number,
+    order_number,
+    start_date,
+    end_date,
+    true,
     params
   )
+
+  @sourceSubId += 1
+  params[:source_subscription] = { 'id' => "#{@sourceSubId}" }
 
   # Create a pool for the future:
-  params[:quantity] = 15
-  params[:start_date] =  params[:end_date] - 10
-  params[:end_date] =  params[:start_date] + 365
-  @sourceSubId += 1
-  params[:source_subscription] = { 'id' => "#{@sourceSubId}" }
-
-  pool = cp.create_pool(
+  pool = create_pool_and_subscription(
     owner['name'],
     product_ret['id'],
+    15,
+    product['provided_products'] || [],
+    contract_number,
+    account_number,
+    order_number,
+    end_date - 10,
+    start_date + 365,
+    true,
     params
   )
 
@@ -333,6 +357,15 @@ thread_pool = ThreadPool.new(6)
 mkt_products.each do |mkt_product|
     thread_pool.schedule(mkt_product[0], mkt_product[1]) do |owner, product|
       create_mkt_product_and_pools(cp, owner, product)
+    end
+end
+thread_pool.shutdown
+
+print "\nrefreshing owners...\n"
+thread_pool = ThreadPool.new(6)
+owner_keys.each do |owner_key|
+    thread_pool.schedule(owner_key) do |owner_key|
+        cp.refresh_pools(owner_key)
     end
 end
 thread_pool.shutdown
