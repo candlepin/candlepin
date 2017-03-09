@@ -22,7 +22,8 @@ USAGE
 while getopts ":bc:dmn:op" opt; do
   case $opt in
     c) TEST_CMD="$OPTARG";;
-    m) COMPOSE_ARGS="-f $DIR/docker-compose-mysql.yml";;
+    m) COMPOSE_ARGS="-f $DIR/docker-compose-mysql.yml";
+       chcon -Rt svirt_sandbox_file_t $DIR/mysql.conf;;
     n) PROJ_NAME="-p $OPTARG";;
     o) COMPOSE_ARGS="-f $DIR/docker-compose-oracle.yml";;
     p) COMPOSE_ARGS="-f $DIR/docker-compose-postgres.yml";;

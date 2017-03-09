@@ -1,10 +1,12 @@
 version: '2'
 services:
   db:
-    image: centos/mysql-56-centos7
+    image: mariadb:10.0
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: password
+    volumes:
+        - ./mysql.cnf:/etc/mysql/conf.d/mysql.cnf
   candlepin:
     image: ${REGISTRY}/candlepin-base
     environment:
