@@ -627,18 +627,20 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             .createAlias("owner", "o")
             .createAlias("hypervisorId", "hvsr")
             .add(Restrictions.eq("o.key", ownerKey))
-            .add(this.getHypervisorIdRestriction(hypervisorIds));
+            .add(this.getHypervisorIdRestriction(hypervisorIds))
+            .addOrder(Order.asc("hvsr.hypervisorId"));
 
-        return this.cpQueryFactory.<Consumer>buildQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.<Consumer>buildQuery(this.currentSession(), criteria)
+            .setLockMode(LockModeType.PESSIMISTIC_WRITE);
     }
 
     private Criterion getHypervisorIdRestriction(Iterable<String> hypervisorIds) {
-        List<Criterion> ors = new LinkedList<Criterion>();
-        for (String hypervisorId : hypervisorIds) {
-            ors.add(Restrictions.eq("hvsr.hypervisorId", hypervisorId.toLowerCase()));
+        Disjunction disjunction = Restrictions.disjunction();
+        for (String hid : hypervisorIds) {
+            disjunction.add(Restrictions.eq("hvsr.hypervisorId", hid.toLowerCase()));
         }
 
-        return Restrictions.or(ors.toArray(new Criterion[0]));
+        return disjunction;
     }
 
     @SuppressWarnings("unchecked")
