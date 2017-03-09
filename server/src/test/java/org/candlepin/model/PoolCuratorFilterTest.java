@@ -61,7 +61,7 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
         this.contentCurator.create(content);
 
         Product searchProduct = TestUtil.createProduct("awesomeos-server", "Awesome OS Server Premium");
-        searchProduct.addAttribute(new ProductAttribute("support_level", "CustomSupportLevel"));
+        searchProduct.setAttribute(Product.Attributes.SUPPORT_LEVEL, "CustomSupportLevel");
         searchProduct = this.createProduct(searchProduct, owner);
 
         Pool searchPool = createPool(owner, searchProduct, 100L, TestUtil.createDate(2005, 3, 2),

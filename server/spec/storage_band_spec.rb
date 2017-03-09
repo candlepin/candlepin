@@ -5,7 +5,6 @@ describe 'Band Limiting' do
   include CandlepinMethods
 
   before(:each) do
-
     @owner = create_owner random_string('test_owner')
 
     # Create a product limiting by band.
@@ -13,21 +12,22 @@ describe 'Band Limiting' do
         random_string("storage-limited-sku"),
         random_string("Storage Limited"),
         :multiplier => 256,
-        :attributes =>
-                {:version => '6.4',
-                 # storage_band will always be defined as 1, or not set.
-                 :storage_band => 1,
-                 :warning_period => 15,
-                 :stacking_id => "ceph-node",
-                 :'multi-entitlement' => "yes",
-                 :support_level => 'standard',
-                 :support_type => 'excellent'}
-         )
+        :attributes => {
+            :version => '6.4',
+             # storage_band will always be defined as 1, or not set.
+            :storage_band => 1,
+            :warning_period => 15,
+            :stacking_id => "ceph-node",
+            :'multi-entitlement' => "yes",
+            :support_level => 'standard',
+            :support_type => 'excellent'
+        }
+    )
+
     @ceph_pool = create_pool_and_subscription(@owner['key'], @ceph_product.id, 2, [], '1888', '1234')
     @ceph_pool.should_not be_nil
 
     @user = user_client(@owner, random_string('test-user'))
-
   end
 
   it 'pool should have the correct quantity based off of the product multiplier' do
@@ -37,8 +37,7 @@ describe 'Band Limiting' do
 
   # band.storage.usage fact is in TB.
   it 'system status should be valid when all storage band usage is covered' do
-    system = consumer_client(@user, random_string("test_system"), :system, nil,
-                             { 'band.storage.usage' => "256" })
+    system = consumer_client(@user, random_string("test_system"), :system, nil, { 'band.storage.usage' => "256" })
     installed_products = [{ 'productId' => @ceph_product.id, 'productName' => @ceph_product.name }]
     system.update_consumer({ :installedProducts => installed_products })
 
@@ -50,8 +49,7 @@ describe 'Band Limiting' do
   end
 
   it 'system status should be partial when only part of the storage band usage is covered' do
-    system = consumer_client(@user, random_string("test_system"), :system, nil,
-                             { 'band.storage.usage' => "256" })
+    system = consumer_client(@user, random_string("test_system"), :system, nil, { 'band.storage.usage' => "256" })
     installed_products = [{ 'productId' => @ceph_product.id, 'productName' => @ceph_product.name }]
     system.update_consumer({ :installedProducts => installed_products })
 
@@ -63,8 +61,7 @@ describe 'Band Limiting' do
   end
 
   it 'storage band entitlements from same subscription can be stacked to cover entire system' do
-    system = consumer_client(@user, random_string("test_system"), :system, nil,
-                             { 'band.storage.usage' => "256" })
+    system = consumer_client(@user, random_string("test_system"), :system, nil, { 'band.storage.usage' => "256" })
     installed_products = [{ 'productId' => @ceph_product.id, 'productName' => @ceph_product.name }]
     system.update_consumer({ :installedProducts => installed_products })
 
@@ -87,8 +84,7 @@ describe 'Band Limiting' do
   end
 
   it 'storage band entitlements will auto-attach correct quantity' do
-    system = consumer_client(@user, random_string("test_system"), :system, nil,
-                             { 'band.storage.usage' => "256" })
+    system = consumer_client(@user, random_string("test_system"), :system, nil, { 'band.storage.usage' => "256" })
     installed_products = [{ 'productId' => @ceph_product.id, 'productName' => @ceph_product.name }]
     system.update_consumer({ :installedProducts => installed_products })
 
@@ -99,17 +95,16 @@ describe 'Band Limiting' do
     status = system.get_compliance(consumer_id = system.uuid)
     status['status'].should == 'valid'
     status['compliant'].should == true
-
   end
 
   it 'storage band entitlements will auto-heal correctly' do
-    system = consumer_client(@user, random_string("test_system"), :system, nil,
-                             { 'band.storage.usage' => "256" })
+    system = consumer_client(@user, random_string("test_system"), :system, nil, { 'band.storage.usage' => "256" })
     installed_products = [{ 'productId' => @ceph_product.id, 'productName' => @ceph_product.name }]
     system.update_consumer({ :installedProducts => installed_products })
 
-    entitlement = system.consume_pool(@ceph_pool.id, {:quantity => 56})
-    entitlement.should_not == nil
+    entitlements = system.consume_pool(@ceph_pool.id, {:quantity => 56})
+    entitlements.size.should == 1
+    entitlements[0].quantity.should == 56
 
     entitlements = system.consume_product()
     entitlements.size.should == 1
@@ -121,8 +116,7 @@ describe 'Band Limiting' do
   end
 
   it 'storage band entitlement auto-attach without fact set consumes one entitlement' do
-    system = consumer_client(@user, random_string("test_system"), :system, nil,
-                             { })
+    system = consumer_client(@user, random_string("test_system"), :system, nil, { })
     installed_products = [{ 'productId' => @ceph_product.id, 'productName' => @ceph_product.name }]
     system.update_consumer({ :installedProducts => installed_products })
 

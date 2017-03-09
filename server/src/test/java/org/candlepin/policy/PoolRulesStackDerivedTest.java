@@ -138,20 +138,20 @@ public class PoolRulesStackDerivedTest {
 
         // Two subtly different products stacked together:
         prod1 = TestUtil.createProduct("prod1", "prod1");
-        prod1.setAttribute("virt_limit", "2");
-        prod1.setAttribute("stacking_id", STACK);
+        prod1.setAttribute(Product.Attributes.VIRT_LIMIT, "2");
+        prod1.setAttribute(Product.Attributes.STACKING_ID, STACK);
         prod1.setAttribute("testattr1", "1");
         when(ownerProductCuratorMock.getProductById(owner, prod1.getId())).thenReturn(prod1);
 
         prod2 = TestUtil.createProduct("prod2", "prod2");
-        prod2.setAttribute("virt_limit", "unlimited");
-        prod2.setAttribute("stacking_id", STACK);
+        prod2.setAttribute(Product.Attributes.VIRT_LIMIT, "unlimited");
+        prod2.setAttribute(Product.Attributes.STACKING_ID, STACK);
         prod2.setAttribute("testattr2", "2");
         when(ownerProductCuratorMock.getProductById(owner, prod2.getId())).thenReturn(prod2);
 
         prod3 = TestUtil.createProduct("prod3", "prod3");
-        prod3.setAttribute("virt_limit", "9");
-        prod3.setAttribute("stacking_id", STACK + "3");
+        prod3.setAttribute(Product.Attributes.VIRT_LIMIT, "9");
+        prod3.setAttribute(Product.Attributes.STACKING_ID, STACK + "3");
         prod3.setAttribute("testattr2", "2");
         when(ownerProductCuratorMock.getProductById(owner, prod3.getId())).thenReturn(prod3);
 
@@ -188,8 +188,8 @@ public class PoolRulesStackDerivedTest {
         when(cqmock.list()).thenReturn(stackedEnts);
         when(entCurMock.findByStackId(consumer, STACK)).thenReturn(cqmock);
 
-        pool2.setAttribute("virt_limit", "60");
-        pool4.setAttribute("virt_limit", "80");
+        pool2.setAttribute(Product.Attributes.VIRT_LIMIT, "60");
+        pool4.setAttribute(Product.Attributes.VIRT_LIMIT, "80");
 
         List<Pool> reqPools = new ArrayList<Pool>();
         reqPools.add(pool2);
@@ -431,7 +431,7 @@ public class PoolRulesStackDerivedTest {
         // as virt limiting.
         Product product = pool1.getProduct();
         product.clearAttributes();
-        product.setAttribute("stacking_id", STACK);
+        product.setAttribute(Product.Attributes.STACKING_ID, STACK);
         product.setAttribute("testattr2", "2");
 
         stackedEnts.clear();

@@ -149,14 +149,14 @@ public class PoolHelperTest {
         targetProduct.setAttribute("A2", "V2");
         Pool targetPool = TestUtil.createPool(targetProduct);
         targetPool.setId("jso_speedwagon");
-        targetPool.setAttribute("virt_limit", "unlimited");
+        targetPool.setAttribute(Product.Attributes.VIRT_LIMIT, "unlimited");
 
         Product targetProduct2 = TestUtil.createProduct();
         targetProduct2.setAttribute("B1", "V1");
         targetProduct2.setAttribute("B2", "V2");
         Pool targetPool2 = TestUtil.createPool(targetProduct2);
         targetPool2.setId("jso_speedwagon2");
-        targetPool2.setAttribute("virt_limit", "unlimited");
+        targetPool2.setAttribute(Product.Attributes.VIRT_LIMIT, "unlimited");
 
         // when(psa.getProductById(targetProduct.getUuid())).thenReturn(targetProduct);
         when(ent.getConsumer()).thenReturn(cons);
@@ -222,7 +222,7 @@ public class PoolHelperTest {
         targetPool.setDerivedProvidedProducts(derivedProducts);
         when(productCurator.getPoolDerivedProvidedProductsCached(targetPool))
             .thenReturn(derivedProducts);
-        targetPool.setAttribute("virt_limit", "unlimited");
+        targetPool.setAttribute(Product.Attributes.VIRT_LIMIT, "unlimited");
         // when(psa.getProductById(subProduct.getUuid())).thenReturn(subProduct);
         when(ent.getConsumer()).thenReturn(cons);
 

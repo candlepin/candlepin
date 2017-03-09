@@ -4,8 +4,8 @@ require 'candlepin_scenarios'
 require 'rexml/document'
 
 describe 'GuestId Resource' do
-
   include CandlepinMethods
+  include AttributeHelper
 
   before(:each) do
     @owner1 = create_owner random_string('test_owner1')
@@ -171,9 +171,8 @@ describe 'GuestId Resource' do
     guest_pool = pools.find_all { |i| !i['sourceEntitlement'].nil? }[0]
 
     # Make sure the required host is actually the host
-    requires_host = guest_pool['attributes'].find_all {
-      |i| i['name'] == 'requires_host' }[0]
-    requires_host['value'].should == host_consumer['uuid']
+    requires_host = get_attribute_value(guest_pool['attributes'], "requires_host")
+    expect(requires_host).to eq(host_consumer['uuid'])
 
     # Consume the host limited pool
     guest_client.consume_pool(guest_pool['id'], {:quantity => 1})
@@ -225,9 +224,8 @@ describe 'GuestId Resource' do
     guest_pool = pools.find_all { |i| !i['sourceEntitlement'].nil? }[0]
 
     # Make sure the required host is actually the host
-    requires_host = guest_pool['attributes'].find_all {
-      |i| i['name'] == 'requires_host' }[0]
-    requires_host['value'].should == host_consumer['uuid']
+    requires_host = get_attribute_value(guest_pool['attributes'], "requires_host")
+    expect(requires_host).to eq(host_consumer['uuid'])
 
     # Consume the host limited pool
     guest_client.consume_pool(guest_pool['id'], {:quantity => 1})

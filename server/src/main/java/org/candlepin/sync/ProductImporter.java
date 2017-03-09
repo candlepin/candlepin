@@ -17,7 +17,6 @@ package org.candlepin.sync;
 import org.candlepin.model.Content;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductContent;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -48,9 +47,6 @@ public class ProductImporter {
         // Make sure the (UU)ID's are null, otherwise Hibernate thinks these are
         // detached entities.
         importedProduct.setUuid(null);
-        for (ProductAttribute a : importedProduct.getAttributes()) {
-            a.setId(null);
-        }
 
         // Multiplication has already happened on the upstream candlepin. set this to 1
         // so we can use multipliers on local products if necessary.

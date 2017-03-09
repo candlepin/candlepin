@@ -181,25 +181,25 @@ public class ExporterTest {
         prod.setMultiplier(1L);
         prod.setCreated(new Date());
         prod.setUpdated(new Date());
-        prod.setAttributes(Collections.EMPTY_SET);
+        prod.setAttributes(Collections.<String, String>emptyMap());
 
         Product prod1 = TestUtil.createProduct("MKT-prod", "RHEL Product");
         prod1.setMultiplier(1L);
         prod1.setCreated(new Date());
         prod1.setUpdated(new Date());
-        prod1.setAttributes(Collections.EMPTY_SET);
+        prod1.setAttributes(Collections.<String, String>emptyMap());
 
         Product subProduct = TestUtil.createProduct("MKT-sub-prod", "Sub Product");
         subProduct.setMultiplier(1L);
         subProduct.setCreated(new Date());
         subProduct.setUpdated(new Date());
-        subProduct.setAttributes(Collections.EMPTY_SET);
+        subProduct.setAttributes(Collections.<String, String>emptyMap());
 
         Product subProvidedProduct = TestUtil.createProduct("332211", "Sub Product");
         subProvidedProduct.setMultiplier(1L);
         subProvidedProduct.setCreated(new Date());
         subProvidedProduct.setUpdated(new Date());
-        subProvidedProduct.setAttributes(Collections.EMPTY_SET);
+        subProvidedProduct.setAttributes(Collections.<String, String>emptyMap());
 
         ProductCertificate pcert = new ProductCertificate();
         pcert.setKey("euh0876puhapodifbvj094");

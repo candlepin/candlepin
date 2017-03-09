@@ -4,8 +4,8 @@ require 'candlepin_scenarios'
 require 'rexml/document'
 
 describe 'Consumer Resource Host/Guest' do
-
   include CandlepinMethods
+  include AttributeHelper
 
   before(:each) do
     @owner1 = create_owner random_string('test_owner1')
@@ -222,7 +222,7 @@ describe 'Consumer Resource Host/Guest' do
     provided_product = create_product(random_string('product'),
       random_string('product'),
       {:owner => @owner1['key']})
-    
+
     create_pool_and_subscription(@owner1['key'], vip_product.id, 10, [provided_product.id],
 				'', '', '', nil, nil, true)
     create_pool_and_subscription(@owner1['key'], std_product.id, 10, [provided_product.id])
@@ -231,8 +231,7 @@ describe 'Consumer Resource Host/Guest' do
         {'productId' => provided_product.id, 'productName' => provided_product.name}]
 
     user_cp = user_client(@owner1, random_string('test-user'))
-    host_consumer = user_cp.register(random_string('host'), :system, nil,
-      {}, nil, nil, [], [])
+    host_consumer = user_cp.register(random_string('host'), :system, nil, {}, nil, nil, [], [])
     host_consumer['serviceLevel'].should == ''
     guest_consumer1 = user_cp.register(random_string('guest'), :system, nil,
       {'virt.uuid' => uuid1, 'virt.is_guest' => 'true'}, nil, nil, [], [])
@@ -256,14 +255,12 @@ describe 'Consumer Resource Host/Guest' do
     guest_ents = guest_client1.list_entitlements()
     guest_ents.size.should == 1
     guest_ent = guest_ents[0]
-    req_host = guest_ent.pool['attributes'].select {|i| i['name'] == 'requires_host' }[0]
-    req_host['value'].should == host_consumer['uuid']
+    expect(get_attribute_value(guest_ent.pool['attributes'], 'requires_host')).to eq(host_consumer['uuid'])
 
     host_ents = host_client.list_entitlements()
     host_ents.size.should == 1
     host_ent = host_ents[0]
-    support_level = host_ent.pool['productAttributes'].select {|i| i['name'] == 'support_level' }[0]
-    support_level['value'].should == 'VIP'
+    expect(get_attribute_value(host_ent.pool['productAttributes'], 'support_level')).to eq('VIP')
     host_consumer = host_client.get_consumer()
     host_consumer['serviceLevel'].should == ''
 
@@ -273,14 +270,12 @@ describe 'Consumer Resource Host/Guest' do
     guest_ents = guest_client2.list_entitlements()
     guest_ents.size.should == 1
     guest_ent = guest_ents[0]
-    req_host = guest_ent.pool['attributes'].select {|i| i['name'] == 'requires_host' }[0]
-    req_host['value'].should == host_consumer['uuid']
+    expect(get_attribute_value(guest_ent.pool['attributes'], 'requires_host')).to eq(host_consumer['uuid'])
 
     host_ents = host_client.list_entitlements()
     host_ents.size.should == 1
     host_ent = host_ents[0]
-    support_level = host_ent.pool['productAttributes'].select {|i| i['name'] == 'support_level' }[0]
-    support_level['value'].should == 'VIP'
+    expect(get_attribute_value(host_ent.pool['productAttributes'], 'support_level')).to eq('VIP')
 
     host_consumer = host_client.get_consumer()
     host_consumer['serviceLevel'].should == ''
@@ -294,10 +289,8 @@ describe 'Consumer Resource Host/Guest' do
     guest_ents.size.should == 1
     guest_ent = guest_ents[0]
 
-    req_host = guest_ent.pool['attributes'].select {|i| i['name'] == 'requires_host' }[0]
-    req_host.should be_nil
-    support_level = guest_ent.pool['productAttributes'].select {|i| i['name'] == 'support_level' }[0]
-    support_level['value'].should == 'Standard'
+    expect(get_attribute_value(guest_ent.pool['attributes'], 'requires_host')).to be_nil
+    expect(get_attribute_value(guest_ent.pool['productAttributes'], 'support_level')).to eq('Standard')
 
     host_consumer = host_client.get_consumer()
     host_consumer['serviceLevel'].should == ''
@@ -308,9 +301,9 @@ describe 'Consumer Resource Host/Guest' do
     # host_limited pool does not spawn a 'requires_host' bonus
     guest_consumer3 = guest_client3.get_consumer()
     @cp.list_owner_pools(@owner1['key']).each do |pool|
-        req_host = pool['attributes'].select {|i| i['name'] == 'requires_host' }[0]
+        req_host = get_attribute_value(pool['attributes'], 'requires_host')
         if !req_host.nil?
-            req_host['value'].should_not == guest_consumer3['uuid']
+            req_host.should_not == guest_consumer3['uuid']
         end
     end
   end

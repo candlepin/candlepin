@@ -60,7 +60,7 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
 
         Pool physicalPool = this.createPool(owner, targetProduct, 1L, new Date(), new Date());
         Pool virtPool = this.createPool(owner, targetProduct, 1L, new Date(), new Date());
-        virtPool.setAttribute("virt_only", "true");
+        virtPool.setAttribute(Product.Attributes.VIRT_ONLY, "true");
         poolCurator.merge(virtPool);
         poolCurator.flush();
 
@@ -85,7 +85,7 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
         consumer = this.createConsumer(owner);
 
         Product targetProduct = TestUtil.createProduct();
-        targetProduct.setAttribute("virt_only", "true");
+        targetProduct.setAttribute(Product.Attributes.VIRT_ONLY, "true");
         targetProduct = this.createProduct(targetProduct, owner);
 
         this.createPool(owner, targetProduct, 1L, new Date(), new Date());
@@ -115,14 +115,14 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
         Product targetProduct = this.createProduct(owner);
 
         Pool virtPool = this.createPool(owner, targetProduct, 1L, new Date(), new Date());
-        virtPool.setAttribute("virt_only", "true");
-        virtPool.setAttribute("requires_host", host.getUuid());
+        virtPool.setAttribute(Product.Attributes.VIRT_ONLY, "true");
+        virtPool.setAttribute(Pool.Attributes.REQUIRES_HOST, host.getUuid());
         poolCurator.merge(virtPool);
 
         // Another pool requiring a different host:
         Pool anotherVirtPool = this.createPool(owner, targetProduct, 1L, new Date(), new Date());
-        anotherVirtPool.setAttribute("virt_only", "true");
-        anotherVirtPool.setAttribute("requires_host", "SOMEOTHERUUID");
+        anotherVirtPool.setAttribute(Product.Attributes.VIRT_ONLY, "true");
+        anotherVirtPool.setAttribute(Pool.Attributes.REQUIRES_HOST, "SOMEOTHERUUID");
         poolCurator.merge(anotherVirtPool);
         poolCurator.flush();
 
@@ -158,8 +158,8 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
         Product targetProduct = this.createProduct(owner);
 
         Pool virtPool = this.createPool(owner, targetProduct, 1L, new Date(), new Date());
-        virtPool.setAttribute("virt_only", "true");
-        virtPool.setAttribute("requires_host", host.getUuid());
+        virtPool.setAttribute(Product.Attributes.VIRT_ONLY, "true");
+        virtPool.setAttribute(Pool.Attributes.REQUIRES_HOST, host.getUuid());
         poolCurator.merge(virtPool);
         poolCurator.flush();
 
@@ -183,7 +183,7 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
         Product targetProduct = this.createProduct(owner);
 
         Pool virtPool = this.createPool(owner, targetProduct, 1L, new Date(), new Date());
-        virtPool.setAttribute("virt_only", "true");
+        virtPool.setAttribute(Product.Attributes.VIRT_ONLY, "true");
         poolCurator.merge(virtPool);
         poolCurator.flush();
 

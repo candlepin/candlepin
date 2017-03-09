@@ -3,6 +3,7 @@ require 'candlepin_scenarios'
 
 describe 'Virt Only Pools' do
   include CandlepinMethods
+  include AttributeHelper
 
   before(:each) do
     @owner = create_owner random_string('virt_owner')
@@ -46,14 +47,11 @@ describe 'Virt Only Pools' do
     })
 
     entitlement = guest.consume_product(virt_product.id)
-    guest.get_pool(entitlement.first.pool.id).attributes.each do |att|
-      found = false
-      if att.name == 'virt_only'
-        att.value.should == 'true'
-        found = true
-      end
-      found.should == true
-    end
+
+    guest_pool = guest.get_pool(entitlement.first.pool.id)
+
+    virt_only = get_attribute_value(guest_pool['attributes'], 'virt_only')
+    expect(virt_only).to eq('true')
   end
 
   it 'should allow virt_only pools to be listed for manifest consumers' do
@@ -62,9 +60,9 @@ describe 'Virt Only Pools' do
 
     pools = manifest.list_pools({:consumer => manifest.uuid})
     pools.size.should == 1
-    virtonly = pools[0]['attributes'].find_all {|i| i['name'] == 'virt_only'}[0]
-    virtonly['value'].should == 'true'
 
+    virt_only = get_attribute_value(pools[0]['attributes'], 'virt_only')
+    expect(virt_only).to eq('true')
   end
 
   private

@@ -32,9 +32,7 @@ import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
-import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
@@ -107,7 +105,7 @@ public class PoolRulesTest {
 
         when(this.ownerProdCuratorMock.getProductById(owner, product.getId())).thenReturn(product);
         Pool p = TestUtil.createPool(owner, product);
-        p.getProduct().addAttribute(new ProductAttribute("virt_limit", "badvalue"));
+        p.getProduct().setAttribute(Product.Attributes.VIRT_LIMIT, "badvalue");
         p.setQuantity(10L);
 
         List<Pool> pools = null;
@@ -269,13 +267,13 @@ public class PoolRulesTest {
     @Test
     public void virtOnlyQuantityChanged() {
         Pool p = TestUtil.createPool(owner, TestUtil.createProduct());
-        p.getProduct().addAttribute(new ProductAttribute("virt_limit", "5"));
+        p.getProduct().setAttribute(Product.Attributes.VIRT_LIMIT, "5");
         p.setQuantity(10L);
 
         // Setup a pool with a single (different) provided product:
         Pool p1 = TestUtil.clone(p);
-        p1.addAttribute(new PoolAttribute("virt_only", "true"));
-        p1.addAttribute(new PoolAttribute("pool_derived", "true"));
+        p1.setAttribute(Product.Attributes.VIRT_ONLY, "true");
+        p1.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
         p1.setQuantity(40L);
 
         List<Pool> existingPools = Arrays.asList(p1);
@@ -317,7 +315,7 @@ public class PoolRulesTest {
 
     private Pool createVirtLimitPool(String productId, int quantity, int virtLimit) {
         Product product = TestUtil.createProduct(productId, productId);
-        product.setAttribute("virt_limit", Integer.toString(virtLimit));
+        product.setAttribute(Product.Attributes.VIRT_LIMIT, Integer.toString(virtLimit));
         Pool p = TestUtil.createPool(owner, product);
         p.setQuantity(new Long(quantity));
         return p;
@@ -332,13 +330,13 @@ public class PoolRulesTest {
     @Test
     public void virtLimitWithHostLimitedCreatesTaggedBonusPool() {
         Pool p1 = createVirtLimitPool("virtLimitProduct", 10, 10);
-        p1.getProduct().setAttribute("host_limited", "true");
+        p1.getProduct().setAttribute(Product.Attributes.HOST_LIMITED, "true");
         List<Pool> pools = poolRules.createAndEnrichPools(p1, new LinkedList<Pool>());
         assertEquals(2, pools.size());
         for (Pool p : pools) {
             if (p.getSourceSubscription().getSubscriptionSubKey().equals("derived")) {
-                assertTrue(p.hasAttribute("unmapped_guests_only"));
-                assertEquals("true", p.getAttributeValue("unmapped_guests_only"));
+                assertTrue(p.hasAttribute(Pool.Attributes.UNMAPPED_GUESTS_ONLY));
+                assertEquals("true", p.getAttributeValue(Pool.Attributes.UNMAPPED_GUESTS_ONLY));
             }
         }
     }
@@ -348,7 +346,7 @@ public class PoolRulesTest {
     public void hostedVirtLimitWithHostLimitedFalseCreatesBonusPools() {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Pool p = createVirtLimitPool("virtLimitProduct", 10, 10);
-        p.getProduct().setAttribute("host_limited", "false");
+        p.getProduct().setAttribute(Product.Attributes.HOST_LIMITED, "false");
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<Pool>());
         assertEquals(2, pools.size());
     }
@@ -368,15 +366,15 @@ public class PoolRulesTest {
 
         // Quantity on bonus pool should be virt limit * sub quantity:
         assertEquals(new Long(100), virtBonusPool.getQuantity());
-        assertEquals("true", virtBonusPool.getAttributeValue("virt_only"));
-        assertEquals("10", virtBonusPool.getProduct().getAttributeValue("virt_limit"));
+        assertEquals("true", virtBonusPool.getAttributeValue(Product.Attributes.VIRT_ONLY));
+        assertEquals("10", virtBonusPool.getProduct().getAttributeValue(Product.Attributes.VIRT_LIMIT));
     }
 
     @Test
     public void hostedVirtLimitSubCreatesUnlimitedBonusVirtOnlyPool() {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Pool p = createVirtLimitPool("virtLimitProduct", 10, 10);
-        p.getProduct().setAttribute("virt_limit", "unlimited");
+        p.getProduct().setAttribute(Product.Attributes.VIRT_LIMIT, "unlimited");
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<Pool>());
         assertEquals(2, pools.size());
 
@@ -390,7 +388,7 @@ public class PoolRulesTest {
     public void hostedVirtLimitSubUpdatesUnlimitedBonusVirtOnlyPool() {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Pool p = createVirtLimitPool("virtLimitProduct", 10, 10);
-        p.getProduct().setAttribute("virt_limit", "unlimited");
+        p.getProduct().setAttribute(Product.Attributes.VIRT_LIMIT, "unlimited");
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<Pool>());
         assertEquals(2, pools.size());
 
@@ -400,7 +398,7 @@ public class PoolRulesTest {
         assertEquals(new Long(-1), virtBonusPool.getQuantity());
 
         // Now we update the sub and see if that unlimited pool gets adjusted:
-        p.getProduct().setAttribute("virt_limit", "10");
+        p.getProduct().setAttribute(Product.Attributes.VIRT_LIMIT, "10");
         List<PoolUpdate> updates = poolRules.updatePools(p, pools, p.getQuantity(),
             TestUtil.stubChangedProducts(p.getProduct()));
         assertEquals(2, updates.size());
@@ -413,7 +411,7 @@ public class PoolRulesTest {
     public void hostedVirtLimitRemoved() {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Pool p = createVirtLimitPool("virtLimitProduct", 10, 10);
-        p.getProduct().setAttribute("virt_limit", "4");
+        p.getProduct().setAttribute(Product.Attributes.VIRT_LIMIT, "4");
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<Pool>());
         assertEquals(2, pools.size());
 
@@ -439,7 +437,7 @@ public class PoolRulesTest {
     public void hostedVirtLimitSubWithMultiplierCreatesUnlimitedBonusVirtOnlyPool() {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Pool p = createVirtLimitPool("virtLimitProduct", 10, 10);
-        p.getProduct().setAttribute("virt_limit", "unlimited");
+        p.getProduct().setAttribute(Product.Attributes.VIRT_LIMIT, "unlimited");
         p.getProduct().setMultiplier(5L);
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<Pool>());
         assertEquals(2, pools.size());
@@ -454,7 +452,7 @@ public class PoolRulesTest {
     public void hostedVirtLimitSubCreateAttributesTest() {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Pool p = createVirtLimitPool("virtLimitProduct", 10, 10);
-        p.getProduct().setAttribute("physical_only", "true");
+        p.getProduct().setAttribute(Pool.Attributes.PHYSICAL_ONLY, "true");
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<Pool>());
 
         // Should be no virt_only bonus pool:
@@ -462,11 +460,14 @@ public class PoolRulesTest {
 
         int virtOnlyCount = 0;
         for (Pool pool : pools) {
-            if (pool.hasAttribute("virt_only") && pool.attributeEquals("virt_only", "true")) {
+            String virtAttr = pool.getAttributeValue(Pool.Attributes.VIRT_ONLY);
+
+            if ("true".equals(virtAttr)) {
                 virtOnlyCount++;
-                assertEquals("false", pool.getAttributeValue("physical_only"));
+                assertEquals("false", pool.getAttributeValue(Pool.Attributes.PHYSICAL_ONLY));
             }
         }
+
         assertEquals(1, virtOnlyCount);
     }
 
@@ -512,8 +513,8 @@ public class PoolRulesTest {
             physicalPool.getDerivedProvidedProducts());
 
         Pool unmappedVirtPool = pools.get(1);
-        assert ("true".equals(unmappedVirtPool.getAttributeValue("virt_only")));
-        assert ("true".equals(unmappedVirtPool.getAttributeValue("unmapped_guests_only")));
+        assert ("true".equals(unmappedVirtPool.getAttributeValue(Product.Attributes.VIRT_ONLY)));
+        assert ("true".equals(unmappedVirtPool.getAttributeValue(Pool.Attributes.UNMAPPED_GUESTS_ONLY)));
 
         // The derived provided products of the sub should be promoted to provided products
         // on the unmappedVirtPool
@@ -545,8 +546,8 @@ public class PoolRulesTest {
         assertFalse(physicalPool.getProduct().hasAttribute(DERIVED_ATTR));
 
         Pool unmappedVirtPool = pools.get(1);
-        assert ("true".equals(unmappedVirtPool.getAttributeValue("virt_only")));
-        assert ("true".equals(unmappedVirtPool.getAttributeValue("unmapped_guests_only")));
+        assert ("true".equals(unmappedVirtPool.getAttributeValue(Product.Attributes.VIRT_ONLY)));
+        assert ("true".equals(unmappedVirtPool.getAttributeValue(Pool.Attributes.UNMAPPED_GUESTS_ONLY)));
         assertEquals("derivedProd", unmappedVirtPool.getProductId());
 
         assertProvidedProductsForSub(s.getDerivedProvidedProducts(), unmappedVirtPool.getProvidedProducts());
@@ -588,7 +589,7 @@ public class PoolRulesTest {
         String derivedProductId, int quantity, int virtLimit) {
 
         Product product = TestUtil.createProduct(productId, productId);
-        product.setAttribute("virt_limit", Integer.toString(virtLimit));
+        product.setAttribute(Product.Attributes.VIRT_LIMIT, Integer.toString(virtLimit));
         when(ownerProdCuratorMock.getProductById(owner, product.getId()))
             .thenReturn(product);
 
@@ -651,7 +652,7 @@ public class PoolRulesTest {
 
     private Pool createVirtOnlyPool(String productId, int quantity) {
         Product product = TestUtil.createProduct(productId, productId);
-        product.setAttribute("virt_only", "true");
+        product.setAttribute(Product.Attributes.VIRT_ONLY, "true");
         Pool p = TestUtil.createPool(owner, product);
         p.setQuantity(new Long(quantity));
         return p;
@@ -663,7 +664,7 @@ public class PoolRulesTest {
         Pool p = createVirtOnlyPool("virtOnlyProduct", 10);
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<Pool>());
         assertEquals(1, pools.size());
-        assertEquals("true", pools.get(0).getProduct().getAttributeValue("virt_only"));
+        assertEquals("true", pools.get(0).getProduct().getAttributeValue(Product.Attributes.VIRT_ONLY));
         assertEquals(new Long(10), pools.get(0).getQuantity());
     }
 
@@ -674,7 +675,7 @@ public class PoolRulesTest {
         p.getProduct().setMultiplier(new Long(5));
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<Pool>());
         assertEquals(1, pools.size());
-        assertEquals("true", pools.get(0).getProduct().getAttributeValue("virt_only"));
+        assertEquals("true", pools.get(0).getProduct().getAttributeValue(Product.Attributes.VIRT_ONLY));
         assertEquals(new Long(50), pools.get(0).getQuantity());
     }
 
@@ -705,9 +706,9 @@ public class PoolRulesTest {
         // Now make a pool that would have been created for guests only after a host
         // bound to the parent pool:
         Pool consumerSpecificPool = TestUtil.clone(p);
-        consumerSpecificPool.setAttribute("requires_host", "FAKEUUID");
-        consumerSpecificPool.setAttribute("pool_derived", "true");
-        consumerSpecificPool.setAttribute("virt_only", "true");
+        consumerSpecificPool.setAttribute(Pool.Attributes.REQUIRES_HOST, "FAKEUUID");
+        consumerSpecificPool.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
+        consumerSpecificPool.setAttribute(Product.Attributes.VIRT_ONLY, "true");
         consumerSpecificPool.setQuantity(10L);
         consumerSpecificPool.setSourceEntitlement(ent);
         pools.add(consumerSpecificPool);
@@ -730,21 +731,21 @@ public class PoolRulesTest {
         // Now make a pool that would have been created for guests only after a host
         // bound to the parent pool:
         Pool consumerSpecificPool = TestUtil.clone(p);
-        consumerSpecificPool.setAttribute("requires_host", "FAKEUUID");
-        consumerSpecificPool.setAttribute("pool_derived", "true");
-        consumerSpecificPool.setAttribute("virt_only", "true");
+        consumerSpecificPool.setAttribute(Pool.Attributes.REQUIRES_HOST, "FAKEUUID");
+        consumerSpecificPool.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
+        consumerSpecificPool.setAttribute(Product.Attributes.VIRT_ONLY, "true");
         consumerSpecificPool.setQuantity(10L);
         consumerSpecificPool.setSourceEntitlement(ent);
         pools.add(consumerSpecificPool);
 
-        p.getProduct().setAttribute("virt_limit", "40");
+        p.getProduct().setAttribute(Product.Attributes.VIRT_LIMIT, "40");
         List<PoolUpdate> updates = poolRules.updatePools(p, pools, p.getQuantity(),
             TestUtil.stubChangedProducts(p.getProduct()));
         assertEquals(3, updates.size());
         Pool regular = updates.get(0).getPool();
         Pool unmappedSubPool = updates.get(1).getPool();
         Pool subPool = updates.get(2).getPool();
-        assertEquals("40", regular.getProduct().getAttributeValue("virt_limit"));
+        assertEquals("40", regular.getProduct().getAttributeValue(Product.Attributes.VIRT_LIMIT));
         assertEquals(new Long(40), subPool.getQuantity());
         assertEquals(new Long(800), unmappedSubPool.getQuantity());
     }
@@ -757,8 +758,8 @@ public class PoolRulesTest {
 
         // Setup a pool with a single (different) provided product:
         Pool p1 = TestUtil.clone(p);
-        p1.addAttribute(new PoolAttribute("virt_only", "true"));
-        p1.addAttribute(new PoolAttribute("pool_derived", "true"));
+        p1.setAttribute(Product.Attributes.VIRT_ONLY, "true");
+        p1.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
         p1.setQuantity(10L);
 
         List<Pool> existingPools = new LinkedList<Pool>();
@@ -777,8 +778,8 @@ public class PoolRulesTest {
 
         // Setup a pool with a single (different) provided product:
         Pool p1 = TestUtil.clone(p);
-        p1.addAttribute(new PoolAttribute("virt_only", "true"));
-        p1.addAttribute(new PoolAttribute("pool_derived", "true"));
+        p1.setAttribute(Product.Attributes.VIRT_ONLY, "true");
+        p1.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
         p1.setQuantity(20L);
 
         List<Pool> existingPools = new LinkedList<Pool>();
@@ -890,7 +891,7 @@ public class PoolRulesTest {
     @Test
     public void derivedPoolCreateCreatedTest() {
         Product product = TestUtil.createProduct();
-        product.setAttribute("virt_limit", "4");
+        product.setAttribute(Product.Attributes.VIRT_LIMIT, "4");
         List<Pool> existingPools = new ArrayList<Pool>();
         Pool masterPool = TestUtil.createPool(product);
         masterPool.setSubscriptionSubKey("master");

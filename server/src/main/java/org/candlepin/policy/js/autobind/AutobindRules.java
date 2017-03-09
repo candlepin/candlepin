@@ -86,6 +86,7 @@ public class AutobindRules {
         if (log.isDebugEnabled()) {
             logProducts("Selecting best entitlement pool for products: {}" +
                 "and consumer installed products: {}", productIds, consumer, true);
+
             if (poolsBeforeContentFilter != pools.size()) {
                 log.debug("{} pools filtered due to too much content",
                     (poolsBeforeContentFilter - pools.size()));
@@ -110,11 +111,11 @@ public class AutobindRules {
             String json = jsRules.invokeMethod(SELECT_POOL_FUNCTION, args);
             result = mapper.toObject(json, Map.class);
             if (log.isDebugEnabled()) {
-                log.debug("Excuted javascript rule: " + SELECT_POOL_FUNCTION);
+                log.debug("Executed javascript rule: {}", SELECT_POOL_FUNCTION);
             }
         }
         catch (NoSuchMethodException e) {
-            log.warn("No method found: " + SELECT_POOL_FUNCTION);
+            log.warn("No method found: {}", SELECT_POOL_FUNCTION);
             log.warn("Resorting to default pool selection behavior.");
             return selectBestPoolDefault(pools);
         }
@@ -131,9 +132,7 @@ public class AutobindRules {
         for (Pool p : pools) {
             for (Entry<String, Integer> entry : result.entrySet()) {
                 if (p.getId().equals(entry.getKey())) {
-                    if (log.isDebugEnabled()) {
-                        log.debug("Best pool: " + p);
-                    }
+                    log.debug("Best pool: {}", p);
 
                     int quantity = entry.getValue();
                     bestPools.add(new PoolQuantity(p, quantity));
@@ -145,13 +144,13 @@ public class AutobindRules {
     }
 
     private void logProducts(String message, String[] productIds, Consumer consumer, boolean debug) {
-
         List<String> consumerProducts = new LinkedList<String>();
         if (consumer != null && consumer.getInstalledProducts() != null) {
             for (ConsumerInstalledProduct product: consumer.getInstalledProducts()) {
                 consumerProducts.add(product.getProductId());
             }
         }
+
         if (debug) {
             log.debug(message, productIds, consumerProducts);
         }

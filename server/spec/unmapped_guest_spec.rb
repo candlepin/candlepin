@@ -6,6 +6,7 @@ require 'candlepin_scenarios'
 describe 'Unmapped Guest Pools' do
   include CandlepinMethods
   include VirtHelper
+  include AttributeHelper
 
   before(:each) do
     @owner = create_owner random_string('owner')
@@ -44,8 +45,8 @@ describe 'Unmapped Guest Pools' do
   it 'allows a new guest with no host to attach to an unmapped guest pool' do
     all_pools = @user.list_pools :owner => @owner.id, :product => @virt_limit_product.id
     all_pools.each do |pool|
-      unmapped = pool['attributes'].select {|i| i['name'] == 'unmapped_guests_only' }[0]
-      if !unmapped.nil? && unmapped['value'] == 'true'
+      unmapped = get_attribute_value(pool['attributes'], 'unmapped_guests_only')
+      if !unmapped.nil? && unmapped == 'true'
         @guest1_client.consume_pool(pool['id'], :quantity => 1)
       end
     end
@@ -57,8 +58,8 @@ describe 'Unmapped Guest Pools' do
     @host1_client.update_consumer({:guestIds => [{'guestId' => @uuid1}]});
     all_pools = @user.list_pools :owner => @owner.id, :product => @virt_limit_product.id
     all_pools.each do |pool|
-      unmapped = pool['attributes'].select {|i| i['name'] == 'unmapped_guests_only' }[0]
-      if !unmapped.nil? && unmapped['value'] == 'true'
+      unmapped = get_attribute_value(pool['attributes'], 'unmapped_guests_only')
+      if !unmapped.nil? && unmapped == 'true'
         lambda do
           @guest1_client.consume_pool(pool['id'], :quantity => 1)
         end.should raise_exception(RestClient::Forbidden)
@@ -69,8 +70,8 @@ describe 'Unmapped Guest Pools' do
   it 'ensures unmapped guest will attach to unmapped guest pool on auto attach' do
     all_pools = @user.list_pools :owner => @owner.id, :product => @virt_limit_product.id
     all_pools.each do |pool|
-      unmapped = pool['attributes'].select {|i| i['name'] == 'unmapped_guests_only' }[0]
-      if unmapped.nil? || unmapped['value'] != 'true'
+      unmapped = get_attribute_value(pool['attributes'], 'unmapped_guests_only')
+      if unmapped.nil? || unmapped != 'true'
         @host1_client.consume_pool(pool['id'], {:quantity => 1})
       end
     end
@@ -85,14 +86,16 @@ describe 'Unmapped Guest Pools' do
     ents.length.should eq(1)
 
     bound_pool = ents[0].pool
-    bound_pool['attributes'].select {|i| i['name'] == 'unmapped_guests_only' }[0].should_not be nil
+
+    unmapped_guests_only = get_attribute_value(bound_pool['attributes'], "unmapped_guests_only")
+    expect(unmapped_guests_only).not_to be_nil
   end
 
   it 'ensures unmapped guest will attach to unmapped guest pool on auto attach only once' do
     all_pools = @user.list_pools :owner => @owner.id, :product => @virt_limit_product.id
     all_pools.each do |pool|
-      unmapped = pool['attributes'].select {|i| i['name'] == 'unmapped_guests_only' }[0]
-      if unmapped.nil? || unmapped['value'] != 'true'
+      unmapped = get_attribute_value(pool['attributes'], 'unmapped_guests_only')
+      if unmapped.nil? || unmapped != 'true'
         @host1_client.consume_pool(pool['id'], {:quantity => 1})
       end
     end
@@ -119,8 +122,8 @@ describe 'Unmapped Guest Pools' do
     all_pools = @user.list_pools :owner => @owner.id, :product => @virt_limit_product.id
     unmapped_pool = nil
     all_pools.each do |pool|
-      unmapped = pool['attributes'].select {|i| i['name'] == 'unmapped_guests_only' }[0]
-      if !unmapped.nil? && unmapped['value'] == 'true'
+      unmapped = get_attribute_value(pool['attributes'], 'unmapped_guests_only')
+      if !unmapped.nil? && unmapped == 'true'
         unmapped_pool = pool
         @guest1_client.consume_pool(pool['id'], :quantity => 1)
       end
@@ -133,8 +136,8 @@ describe 'Unmapped Guest Pools' do
   it 'revokes the unmapped guest pool once the guest is mapped' do
     all_pools = @user.list_pools :owner => @owner.id, :product => @virt_limit_product.id
     all_pools.each do |pool|
-      unmapped = pool['attributes'].select {|i| i['name'] == 'unmapped_guests_only' }[0]
-      if !unmapped.nil? && unmapped['value'] == 'true'
+      unmapped = get_attribute_value(pool['attributes'], 'unmapped_guests_only')
+      if !unmapped.nil? && unmapped == 'true'
         @guest1_client.consume_pool(pool['id'], :quantity => 1)
       end
     end
@@ -171,8 +174,8 @@ describe 'Unmapped Guest Pools' do
     @host1_client.update_consumer({:guestIds => [{'guestId' => @uuid1}]});
 
     all_pools.each do |pool|
-      unmapped = pool['attributes'].select {|i| i['name'] == 'unmapped_guests_only' }[0]
-      if unmapped.nil? || unmapped['value'] != 'true'
+      unmapped = get_attribute_value(pool['attributes'], 'unmapped_guests_only')
+      if unmapped.nil? || unmapped != 'true'
         @host1_client.consume_pool(pool['id'], :quantity => 1)
         @host2_client.consume_pool(pool['id'], :quantity => 1)
       end
@@ -188,9 +191,8 @@ describe 'Unmapped Guest Pools' do
     ents.length.should eq(1)
 
     bound_pool = ents[0].pool
-    requires_att = bound_pool['attributes'].select {|i| i['name'] == 'requires_host' }[0]
-    requires_att.should_not be nil
-    requires_att['value'].should == @host1_client.uuid
+    requires_host = get_attribute_value(bound_pool['attributes'], "requires_host")
+    expect(requires_host).to eq(@host1_client.uuid)
 
     # should not remove until attached to new host
     @host1_client.update_consumer({:guestIds => []});
@@ -205,16 +207,15 @@ describe 'Unmapped Guest Pools' do
     ents.length.should eq(1)
 
     bound_pool = ents[0].pool
-    requires_att = bound_pool['attributes'].select {|i| i['name'] == 'requires_host' }[0]
-    requires_att.should_not be nil
-    requires_att['value'].should == @host2_client.uuid
+    requires_host = get_attribute_value(bound_pool['attributes'], "requires_host")
+    expect(requires_host).to eq(@host2_client.uuid)
   end
 
   it 'compliance status for entitled unmapped guest will be partial' do
     all_pools = @user.list_pools :owner => @owner.id, :product => @virt_limit_product.id
     all_pools.each do |pool|
-      unmapped = pool['attributes'].select {|i| i['name'] == 'unmapped_guests_only' }[0]
-      if !unmapped.nil? && unmapped['value'] == 'true'
+      unmapped = get_attribute_value(pool['attributes'], 'unmapped_guests_only')
+      if !unmapped.nil? && unmapped == 'true'
         @guest1_client.consume_pool(pool['id'], :quantity => 1)
       end
     end
@@ -233,8 +234,8 @@ describe 'Unmapped Guest Pools' do
     @guest1_client.update_consumer({:installedProducts => []})
     all_pools = @user.list_pools :owner => @owner.id, :product => @virt_limit_product.id
     all_pools.each do |pool|
-      unmapped = pool['attributes'].select {|i| i['name'] == 'unmapped_guests_only' }[0]
-      if !unmapped.nil? && unmapped['value'] == 'true'
+      unmapped = get_attribute_value(pool['attributes'], 'unmapped_guests_only')
+      if !unmapped.nil? && unmapped == 'true'
         @guest1_client.consume_pool(pool['id'], :quantity => 1)
       end
     end

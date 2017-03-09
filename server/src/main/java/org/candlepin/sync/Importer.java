@@ -80,6 +80,7 @@ import javax.persistence.LockModeType;
 import javax.persistence.PersistenceException;
 
 
+
 /**
  * Importer
  */
@@ -372,14 +373,12 @@ public class Importer {
             }
 
             boolean verifiedSignature = pki.verifySHA256WithRSAHashAgainstCACerts(
-                new File(exportDir, "consumer_export.zip"),
-                loadSignature(new File(exportDir, "signature"))
-            );
+                new File(exportDir, "consumer_export.zip"), loadSignature(new File(exportDir, "signature")));
 
             if (!verifiedSignature) {
                 log.warn("Archive signature check failed.");
-                if (!overrides.isForced(Conflict.SIGNATURE_CONFLICT)) {
 
+                if (!overrides.isForced(Conflict.SIGNATURE_CONFLICT)) {
                     /*
                      * Normally for import conflicts that can be overridden, we try to
                      * report them all the first time so if the user intends to override,
@@ -428,18 +427,15 @@ public class Importer {
         }
         catch (ConstraintViolationException cve) {
             log.error("Failed to import archive", cve);
-            throw new ImporterException(i18n.tr("Failed to import archive"),
-                cve, result);
+            throw new ImporterException(i18n.tr("Failed to import archive"), cve, result);
         }
         catch (PersistenceException pe) {
             log.error("Failed to import archive", pe);
-            throw new ImporterException(i18n.tr("Failed to import archive"),
-                pe, result);
+            throw new ImporterException(i18n.tr("Failed to import archive"), pe, result);
         }
         catch (IOException e) {
             log.error("Exception caught importing archive", e);
-            throw new ImportExtractionException(
-                i18n.tr("Unable to extract export archive"), e, result);
+            throw new ImportExtractionException(i18n.tr("Unable to extract export archive"), e, result);
         }
         catch (CertificateException e) {
             log.error("Certificate exception checking archive signature", e);
@@ -625,6 +621,7 @@ public class Importer {
         for (File uc : upstreamConsumer) {
             if (uc.getName().endsWith(".json")) {
                 log.debug("Import upstream consumeridentity certificate: {}", uc.getName());
+
                 Reader reader = null;
                 try {
                     reader = new FileReader(uc);
@@ -750,8 +747,8 @@ public class Importer {
         throws IOException, ImportExtractionException {
 
         log.debug("Extracting archive to: {}", tempDir.getAbsolutePath());
-        byte[] buf = new byte[1024];
 
+        byte[] buf = new byte[1024];
         ZipInputStream zipinputstream = null;
 
         try {

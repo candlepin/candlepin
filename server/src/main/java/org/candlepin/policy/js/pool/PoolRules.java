@@ -23,9 +23,7 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
-import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.dto.Subscription;
 
@@ -117,12 +115,12 @@ public class PoolRules {
         masterPool.setQuantity(calculateQuantity(masterPool.getQuantity(),
             masterPool.getProduct(), masterPool.getUpstreamPoolId()));
 
-        ProductAttribute virtAtt = masterPool.getProduct().getAttribute(Product.Attributes.VIRT_ONLY);
+        String virtOnly = masterPool.getProductAttributeValue(Product.Attributes.VIRT_ONLY);
         // The following will make virt_only a pool attribute. That makes the
         // pool explicitly virt_only to subscription manager and any other
         // downstream consumer.
-        if (virtAtt != null && virtAtt.getValue() != null && !virtAtt.getValue().equals("")) {
-            masterPool.addAttribute(new PoolAttribute(Pool.Attributes.VIRT_ONLY, virtAtt.getValue()));
+        if (virtOnly != null && !virtOnly.isEmpty()) {
+            masterPool.setAttribute(Pool.Attributes.VIRT_ONLY, virtOnly);
         }
 
         log.info("Checking if pools need to be created for: {}", masterPool);
@@ -150,7 +148,8 @@ public class PoolRules {
      * virt_limit)
      */
     private Pool createBonusPool(Pool masterPool, List<Pool> existingPools) {
-        Map<String, String> attributes = PoolHelper.getFlattenedAttributes(masterPool.getProduct());
+        Map<String, String> attributes = masterPool.getProductAttributes();
+
         String virtQuantity = getVirtQuantity(
             attributes.get(Product.Attributes.VIRT_LIMIT), masterPool.getQuantity()
         );
@@ -184,6 +183,7 @@ public class PoolRules {
             log.info("Creating new derived pool: {}", bonusPool);
             return bonusPool;
         }
+
         return null;
     }
 
@@ -271,7 +271,7 @@ public class PoolRules {
         log.debug("  existing pools: {}", existingPools.size());
 
         List<PoolUpdate> poolsUpdated = new LinkedList<PoolUpdate>();
-        Map<String, String> attributes = PoolHelper.getFlattenedAttributes(masterPool.getProduct());
+        Map<String, String> attributes = masterPool.getProductAttributes();
 
         for (Pool existingPool : existingPools) {
             log.debug("Checking pool: {}", existingPool);
@@ -652,7 +652,7 @@ public class PoolRules {
          * derived products aren't going to have a virt_limit attribute
          */
         if (existingPool.hasAttribute(Pool.Attributes.DERIVED_POOL) &&
-            existingPool.attributeEquals(Pool.Attributes.VIRT_ONLY, "true") &&
+            "true".equalsIgnoreCase(existingPool.getAttributeValue(Pool.Attributes.VIRT_ONLY)) &&
             (attributes.containsKey(Product.Attributes.VIRT_LIMIT) ||
             existingPool.getProduct().hasAttribute(Product.Attributes.VIRT_LIMIT))) {
 

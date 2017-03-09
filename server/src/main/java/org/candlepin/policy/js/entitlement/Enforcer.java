@@ -69,8 +69,7 @@ public interface Enforcer {
      * @param quantity number of entitlements to consume.
      * @return {@link ValidationResult} a validation result from the pre-entitlement run.
      */
-    ValidationResult preEntitlement(Consumer consumer, Pool entitlementPool,
-        Integer quantity);
+    ValidationResult preEntitlement(Consumer consumer, Pool entitlementPool, Integer quantity);
 
     /**
      * Run pre-entitlement checks.

@@ -3,6 +3,7 @@ require 'candlepin_scenarios'
 
 describe 'Instance Based Subscriptions' do
   include CandlepinMethods
+  include AttributeHelper
 
   before(:each) do
     @owner = create_owner random_string('instance_owner')
@@ -43,7 +44,7 @@ describe 'Instance Based Subscriptions' do
       :product => @instance_product.id
     @pools.size.should == 2
     instance_pools = @pools.reject do |p|
-      p['attributes'].any? { |attr| attr['name'] == 'unmapped_guests_only' }
+      has_attribute(p['attributes'], 'unmapped_guests_only')
     end
     instance_pools.size.should == 1
     @instance_pool = instance_pools.first

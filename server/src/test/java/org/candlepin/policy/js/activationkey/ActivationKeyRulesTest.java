@@ -21,6 +21,7 @@ import static org.mockito.Mockito.when;
 import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
+import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
@@ -259,7 +260,7 @@ public class ActivationKeyRulesTest {
         pool.setId("" + poolid++);
         pool.setQuantity(10L);
         pool.setConsumed(4L);
-        pool.setAttribute("multi-entitlement", "yes");
+        pool.setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes");
         pool.setOwner(owner);
         pool.setProduct(TestUtil.createProduct());
         return pool;
@@ -267,37 +268,37 @@ public class ActivationKeyRulesTest {
 
     private Pool genNonMultiEnt() {
         Pool pool = genPool();
-        pool.setAttribute("multi-entitlement", "no");
+        pool.setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "no");
         return pool;
     }
 
     private Pool genVirtOnlyPool() {
         Pool pool = genPool();
-        pool.setAttribute("virt_only", "true");
+        pool.setAttribute(Product.Attributes.VIRT_ONLY, "true");
         return pool;
     }
 
     private Pool genPhysOnlyPool() {
         Pool pool = genPool();
-        pool.setAttribute("physical_only", "true");
+        pool.setAttribute(Pool.Attributes.PHYSICAL_ONLY, "true");
         return pool;
     }
 
     private Pool genInstanceBased() {
         Pool pool = genPool();
-        pool.setAttribute("instance_multiplier", "2");
+        pool.setAttribute(Product.Attributes.INSTANCE_MULTIPLIER, "2");
         return pool;
     }
 
     private Pool genPoolForType(String type) {
         Pool pool = genPool();
-        pool.setAttribute("requires_consumer_type", type);
+        pool.setAttribute(Pool.Attributes.REQUIRES_CONSUMER_TYPE, type);
         return pool;
     }
 
     private Pool genHostRestricted(String host) {
         Pool pool = genPool();
-        pool.setAttribute("requires_host", host);
+        pool.setAttribute(Pool.Attributes.REQUIRES_HOST, host);
         return pool;
     }
 }

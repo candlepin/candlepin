@@ -24,7 +24,6 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolComplianceType;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.policy.js.quantity.QuantityRules;
 import org.candlepin.policy.js.quantity.SuggestedQuantity;
@@ -142,7 +141,7 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
     @Test
     public void testQuantityIncrement() {
         Product product2 = TestUtil.createProduct("blah", "blah");
-        product2.addAttribute(new ProductAttribute("instance_multiplier", "12"));
+        product2.setAttribute(Product.Attributes.INSTANCE_MULTIPLIER, "12");
         productCurator.create(product2);
 
         Pool pool2 = createPool(owner1, product2, 500L,

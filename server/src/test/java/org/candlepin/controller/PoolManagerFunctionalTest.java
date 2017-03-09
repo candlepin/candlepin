@@ -34,10 +34,8 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
-import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.EntitlementRefusedException;
@@ -99,7 +97,6 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     private Consumer childVirtSystem;
     private EventSink eventSink;
 
-
     @Before
     @Override
     public void init() throws Exception {
@@ -112,21 +109,21 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         virtHostPlatform = TestUtil.createProduct(PRODUCT_VIRT_HOST_PLATFORM, PRODUCT_VIRT_HOST_PLATFORM);
         virtGuest = TestUtil.createProduct(PRODUCT_VIRT_GUEST, PRODUCT_VIRT_GUEST);
         monitoring = TestUtil.createProduct(PRODUCT_MONITORING, PRODUCT_MONITORING);
-        monitoring.addAttribute(new ProductAttribute("multi-entitlement", "yes"));
+        monitoring.setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes");
 
         provisioning = TestUtil.createProduct(PRODUCT_PROVISIONING, PRODUCT_PROVISIONING);
-        provisioning.addAttribute(new ProductAttribute("multi-entitlement", "yes"));
+        provisioning.setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes");
         provisioning.setMultiplier(2L);
-        provisioning.addAttribute(new ProductAttribute("instance-multiplier", "4"));
+        provisioning.setAttribute(Product.Attributes.INSTANCE_MULTIPLIER, "4");
 
-        virtHost.addAttribute(new ProductAttribute(PRODUCT_VIRT_HOST, ""));
-        virtHostPlatform.addAttribute(new ProductAttribute(PRODUCT_VIRT_HOST_PLATFORM, ""));
-        virtGuest.addAttribute(new ProductAttribute(PRODUCT_VIRT_GUEST, ""));
-        monitoring.addAttribute(new ProductAttribute(PRODUCT_MONITORING, ""));
-        provisioning.addAttribute(new ProductAttribute(PRODUCT_PROVISIONING, ""));
+        virtHost.setAttribute(PRODUCT_VIRT_HOST, "");
+        virtHostPlatform.setAttribute(PRODUCT_VIRT_HOST_PLATFORM, "");
+        virtGuest.setAttribute(PRODUCT_VIRT_GUEST, "");
+        monitoring.setAttribute(PRODUCT_MONITORING, "");
+        provisioning.setAttribute(PRODUCT_PROVISIONING, "");
 
         socketLimitedProduct = TestUtil.createProduct("socket-limited-prod", "Socket Limited Product");
-        socketLimitedProduct.addAttribute(new ProductAttribute("sockets", "2"));
+        socketLimitedProduct.setAttribute(Product.Attributes.SOCKETS, "2");
         productCurator.create(socketLimitedProduct);
 
         productCurator.create(virtHost);
@@ -453,7 +450,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         ActivationKey ak = new ActivationKey();
         Pool akpool = new Pool();
-        akpool.setAttribute("physical_only", "true");
+        akpool.setAttribute(Pool.Attributes.PHYSICAL_ONLY, "true");
         ak.addPool(akpool, 1L);
         Page<List<Pool>> results = poolManager.listAvailableEntitlementPools(
             null, ak, parentSystem.getOwner(), null, null, null, true,
@@ -490,6 +487,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         results = poolManager.listAvailableEntitlementPools(parentSystem, null,
             parentSystem.getOwner(), (String) null, null, null, false,
             new PoolFilterBuilder(), new PageRequest(), false, false);
+
         // Pool in error should not be included. Should have the same number of
         // initial pools.
         assertEquals(4, results.getPageData().size());
@@ -499,13 +497,13 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     public void testListAllForOldGuestExcludesTempPools() {
         Pool pool = createPool(o, virtGuest, 100L,
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
-        pool.addAttribute(new PoolAttribute("unmapped_guests_only", "true"));
+        pool.setAttribute(Pool.Attributes.UNMAPPED_GUESTS_ONLY, "true");
         poolCurator.create(pool);
+
         Page<List<Pool>> results = poolManager.listAvailableEntitlementPools(
             childVirtSystem, null, o, virtGuest.getId(), null, null, true,
             new PoolFilterBuilder(), new PageRequest(), false, false);
         int newbornPools = results.getPageData().size();
-
         childVirtSystem.setCreated(TestUtil.createDate(2000, 01, 01));
         consumerCurator.update(childVirtSystem);
 
@@ -578,7 +576,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         Pool pool1 = createPool(owner, p, 10L,
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
-        pool1.addAttribute(new PoolAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true"));
+        pool1.setAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true");
         poolCurator.create(pool1);
         Pool pool2 = createPool(owner, p, 10L,
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
@@ -616,8 +614,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         Pool pool1 = createPool(owner, p, 10L,
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
-        pool1.addAttribute(new PoolAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true"));
-        pool1.addAttribute(new PoolAttribute(Pool.Attributes.REQUIRES_CONSUMER, devSystem.getUuid()));
+        pool1.setAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true");
+        pool1.setAttribute(Pool.Attributes.REQUIRES_CONSUMER, devSystem.getUuid());
         poolCurator.create(pool1);
         Pool pool2 = createPool(owner, p, 10L,
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
@@ -650,8 +648,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         Pool pool1 = createPool(owner, p, 10L, TestUtil.createDate(2000, 3, 2),
             TestUtil.createDate(2050, 3, 2));
-        pool1.addAttribute(new PoolAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true"));
-        pool1.addAttribute(new PoolAttribute(Pool.Attributes.REQUIRES_CONSUMER, devSystem.getUuid()));
+        pool1.setAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true");
+        pool1.setAttribute(Pool.Attributes.REQUIRES_CONSUMER, devSystem.getUuid());
         poolCurator.create(pool1);
         Pool pool2 = createPool(owner, p, 10L, TestUtil.createDate(2000, 3, 2),
             TestUtil.createDate(2050, 3, 2));
@@ -678,7 +676,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     public void testBatchBindError() throws EntitlementRefusedException {
         Owner owner = createOwner();
         Product p = TestUtil.createProduct("test-product", "Test Product");
-        p.addAttribute(new ProductAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes"));
+        p.setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes");
         productCurator.create(p);
 
         Consumer devSystem = new Consumer("dev", "user", owner, systemType);
@@ -688,8 +686,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         Pool pool1 = createPool(owner, p, 1L, TestUtil.createDate(2000, 3, 2),
             TestUtil.createDate(2050, 3, 2));
-        pool1.addAttribute(new PoolAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true"));
-        pool1.addAttribute(new PoolAttribute(Pool.Attributes.REQUIRES_CONSUMER, devSystem.getUuid()));
+        pool1.setAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true");
+        pool1.setAttribute(Pool.Attributes.REQUIRES_CONSUMER, devSystem.getUuid());
         poolCurator.create(pool1);
         Entitlement ent = createEntitlement(owner, devSystem, pool1,
             createEntitlementCertificate("keycert", "cert"));
@@ -743,8 +741,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         Pool pool1 = createPool(owner, p, 1L, TestUtil.createDate(2000, 3, 2),
             TestUtil.createDate(2050, 3, 2));
-        pool1.addAttribute(new PoolAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true"));
-        pool1.addAttribute(new PoolAttribute(Pool.Attributes.REQUIRES_CONSUMER, devSystem.getUuid()));
+        pool1.setAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true");
+        pool1.setAttribute(Pool.Attributes.REQUIRES_CONSUMER, devSystem.getUuid());
         pool1.setConsumed(1L);
         poolCurator.create(pool1);
 

@@ -20,11 +20,9 @@ import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerProduct;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.dto.ContentData;
-import org.candlepin.model.dto.ProductAttributeData;
 import org.candlepin.model.dto.ProductContentData;
 import org.candlepin.model.dto.ProductData;
 
@@ -619,26 +617,7 @@ public class ProductManager {
         }
 
         if (update.getAttributes() != null) {
-            Collection<ProductAttribute> attributes = new LinkedList<ProductAttribute>();
-
-            for (ProductAttributeData attrib : update.getAttributes()) {
-                if (attrib == null || attrib.getName() == null) {
-                    throw new IllegalStateException("Product data contains a null or incomplete attribute: " +
-                        update);
-                }
-
-                ProductAttribute existing = entity.getAttribute(attrib.getName());
-
-                if (existing != null) {
-                    existing.populate(attrib);
-                    attributes.add(existing);
-                }
-                else {
-                    attributes.add(new ProductAttribute(attrib));
-                }
-            }
-
-            entity.setAttributes(attributes);
+            entity.setAttributes(update.getAttributes());
         }
 
         if (update.getProductContent() != null) {

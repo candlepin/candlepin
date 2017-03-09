@@ -93,8 +93,8 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
 
         // create a physical pool with numeric virt_limit
         productLimit = TestUtil.createProduct();
-        productLimit.setAttribute("virt_limit", "10");
-        productLimit.setAttribute("multi-entitlement", "yes");
+        productLimit.setAttribute(Product.Attributes.VIRT_LIMIT, "10");
+        productLimit.setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes");
         productLimit = this.createProduct(productLimit, owner);
 
         Subscription limitSub = TestUtil.createSubscription(owner, productLimit, new HashSet<Product>());
@@ -109,8 +109,8 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
 
         // create a physical pool with unlimited virt_limit
         productUnlimit = TestUtil.createProduct();
-        productUnlimit.setAttribute("virt_limit", "unlimited");
-        productUnlimit.setAttribute("multi-entitlement", "yes");
+        productUnlimit.setAttribute(Product.Attributes.VIRT_LIMIT, "unlimited");
+        productUnlimit.setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes");
         productUnlimit = this.createProduct(productUnlimit, owner);
 
         Subscription unlimitSub = TestUtil.createSubscription(owner, productUnlimit, new HashSet<Product>());
@@ -139,7 +139,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
         assertTrue(limitPools != null && limitPools.size() == 2);
         for (Pool p : limitPools) {
             // bonus pools have the attribute pool_derived
-            if (null != p.getAttributeValue("pool_derived")) {
+            if (null != p.getAttributeValue(Pool.Attributes.DERIVED_POOL)) {
                 // consume 2 times so one can get revoked later.
                 consumerResource.bind(guestConsumer.getUuid(), p.getId(), null,
                     10, null, null, false, null, null, null, null);
@@ -196,7 +196,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
         assertTrue(unlimitPools != null && unlimitPools.size() == 2);
         for (Pool p : unlimitPools) {
             // bonus pools have the attribute pool_derived
-            if (null != p.getAttributeValue("pool_derived")) {
+            if (null != p.getAttributeValue(Pool.Attributes.DERIVED_POOL)) {
                 // consume 2 times so they can get revoked separately.
                 consumerResource.bind(guestConsumer.getUuid(), p.getId(), null,
                     10, null, null, false, null, null, null, null);

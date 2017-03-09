@@ -147,7 +147,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         ActivationKey ak = genActivationKey();
         ActivationKeyCurator akc = mock(ActivationKeyCurator.class);
         Pool p = genPool();
-        p.getProduct().setAttribute("multi-entitlement", "no");
+        p.getProduct().setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "no");
         PoolManager poolManager = mock(PoolManager.class);
 
         when(akc.verifyAndLookupKey(eq("testKey"))).thenReturn(ak);
@@ -181,7 +181,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         ActivationKey ak = genActivationKey();
         ActivationKeyCurator akc = mock(ActivationKeyCurator.class);
         Pool p = genPool();
-        p.getProduct().setAttribute("multi-entitlement", "yes");
+        p.getProduct().setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes");
         p.setQuantity(10L);
         PoolManager poolManager = mock(PoolManager.class);
 
@@ -199,7 +199,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         ActivationKey ak = genActivationKey();
         ActivationKeyCurator akc = mock(ActivationKeyCurator.class);
         Pool p = genPool();
-        p.getProduct().setAttribute("multi-entitlement", "yes");
+        p.getProduct().setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes");
         p.setQuantity(-1L);
         PoolManager poolManager = mock(PoolManager.class);
 
@@ -218,7 +218,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         ActivationKey ak = genActivationKey();
         ActivationKeyCurator akc = mock(ActivationKeyCurator.class);
         Pool p = genPool();
-        p.getProduct().setAttribute("requires_consumer_type", "person");
+        p.getProduct().setAttribute(Pool.Attributes.REQUIRES_CONSUMER_TYPE, "person");
         p.setQuantity(1L);
         PoolManager poolManager = mock(PoolManager.class);
 
@@ -236,7 +236,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         ActivationKey ak = genActivationKey();
         ActivationKeyCurator akc = mock(ActivationKeyCurator.class);
         Pool p = genPool();
-        p.getProduct().setAttribute("requires_consumer_type", "candlepin");
+        p.getProduct().setAttribute(Pool.Attributes.REQUIRES_CONSUMER_TYPE, "candlepin");
         PoolManager poolManager = mock(PoolManager.class);
 
         when(akc.verifyAndLookupKey(eq("testKey"))).thenReturn(ak);
@@ -254,9 +254,9 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         ActivationKeyCurator akc = mock(ActivationKeyCurator.class);
         PoolManager poolManager = mock(PoolManager.class);
         Pool p1 = genPool();
-        p1.setAttribute("requires_host", "host1");
+        p1.setAttribute(Pool.Attributes.REQUIRES_HOST, "host1");
         Pool p2 = genPool();
-        p2.setAttribute("requires_host", "host1");
+        p2.setAttribute(Pool.Attributes.REQUIRES_HOST, "host1");
 
         when(akc.verifyAndLookupKey(eq("testKey"))).thenReturn(ak);
         when(poolManager.find(eq("testPool1"))).thenReturn(p1);
@@ -281,9 +281,9 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         ActivationKeyCurator akc = mock(ActivationKeyCurator.class);
         PoolManager poolManager = mock(PoolManager.class);
         Pool p1 = genPool();
-        p1.setAttribute("requires_host", "host1");
+        p1.setAttribute(Pool.Attributes.REQUIRES_HOST, "host1");
         Pool p2 = genPool();
-        p2.setAttribute("requires_host", "host2");
+        p2.setAttribute(Pool.Attributes.REQUIRES_HOST, "host2");
 
         ak.addPool(p2, 1L);
         when(akc.verifyAndLookupKey(eq("testKey"))).thenReturn(ak);
@@ -301,9 +301,9 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         ActivationKeyCurator akc = mock(ActivationKeyCurator.class);
         PoolManager poolManager = mock(PoolManager.class);
         Pool p1 = genPool();
-        p1.setAttribute("requires_host", "host1");
+        p1.setAttribute(Pool.Attributes.REQUIRES_HOST, "host1");
         Pool p2 = genPool();
-        p2.setAttribute("requires_host", "");
+        p2.setAttribute(Pool.Attributes.REQUIRES_HOST, "");
 
         when(akc.verifyAndLookupKey(eq("testKey"))).thenReturn(ak);
         when(poolManager.find(eq("testPool1"))).thenReturn(p1);
@@ -395,7 +395,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         pool.setId(String.valueOf(poolid++));
         pool.setQuantity(10L);
         pool.setConsumed(4L);
-        pool.setAttribute("multi-entitlement", "yes");
+        pool.setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes");
         pool.setProduct(TestUtil.createProduct());
         return pool;
     }

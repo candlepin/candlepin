@@ -62,8 +62,7 @@ public class CandlepinRequestScope implements Scope {
         CandlepinRequestScopeData scopeData = ResteasyProviderFactory.getContextData(
             CandlepinRequestScopeData.class);
         if (scopeData == null) {
-            throw new OutOfScopeException("Cannot access " + key +
-                " outside of a scoping block");
+            throw new OutOfScopeException("Cannot access " + key + " outside of a scoping block");
         }
         return scopeData.get();
     }

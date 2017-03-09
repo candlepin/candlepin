@@ -644,13 +644,15 @@ describe 'Stacking Compliance Reasons' do
   end
 
   it 'report stack does not cover multiple attributes' do
-    system = consumer_client(@user, random_string('system1'), :system, nil,
-                {'system.certificate_version' => '3.2',
-                 # Non of the following attributes will be covered.
-                 'uname.machine' => 'ppc64',
-                 'memory.memtotal' => '16777216',
-                 'cpu.core(s)_per_socket' => 12,
-                 'cpu.cpu_socket(s)' => '20'})
+    system = consumer_client(@user, random_string('system1'), :system, nil, {
+        'system.certificate_version' => '3.2',
+        # Non of the following attributes will be covered.
+        'uname.machine' => 'ppc64',
+        'memory.memtotal' => '16777216',
+        'cpu.core(s)_per_socket' => 12,
+        'cpu.cpu_socket(s)' => '20'
+    })
+
     installed = [
         {'productId' => @stackable_product_1.id, 'productName' => @stackable_product_1.name}
     ]
@@ -673,63 +675,59 @@ describe 'Stacking Compliance Reasons' do
 
     expected_has = "ppc64"
     expected_covered = "x86_64"
-    expected_message = "Supports architecture %s but the system is %s." % [expected_covered,
-                                                                            expected_has]
+    expected_message = "Supports architecture %s but the system is %s." % [expected_covered, expected_has]
 
     reason_expectations["ARCH"] = {
-            "key" => "ARCH",
-            "attributes" => {
-                              'stack_id' => @stack_id,
-                              "has" => expected_has,
-                              "covered" => expected_covered,
-                              "name" => @stackable_product_1.name
-            },
-            "message" => expected_message
+        "key" => "ARCH",
+        "attributes" => {
+            'stack_id' => @stack_id,
+            "has" => expected_has,
+            "covered" => expected_covered,
+            "name" => @stackable_product_1.name
+        },
+        "message" => expected_message
     }
 
     expected_has = "16"
     expected_covered = "8"
-    expected_message = "Only supports %sGB of %sGB of RAM." % [expected_covered,
-                                                                expected_has]
+    expected_message = "Only supports %sGB of %sGB of RAM." % [expected_covered, expected_has]
     reason_expectations["RAM"] = {
-            "key" => "RAM",
-            "attributes" => {
-                              'stack_id' => @stack_id,
-                              "has" => expected_has,
-                              "covered" => expected_covered,
-                              "name" => @stackable_product_1.name
-            },
-            "message" => expected_message
+        "key" => "RAM",
+        "attributes" => {
+            'stack_id' => @stack_id,
+            "has" => expected_has,
+            "covered" => expected_covered,
+            "name" => @stackable_product_1.name
+        },
+        "message" => expected_message
     }
 
     expected_has = "20"
     expected_covered = "4"
-    expected_message = "Only supports %s of %s sockets." % [expected_covered,
-                                                           expected_has]
+    expected_message = "Only supports %s of %s sockets." % [expected_covered, expected_has]
     reason_expectations["SOCKETS"] = {
-            "key" => "SOCKETS",
-            "attributes" => {
-                              'stack_id' => @stack_id,
-                              "has" => expected_has,
-                              "covered" => expected_covered,
-                              "name" => @stackable_product_1.name
-            },
-            "message" => expected_message
+        "key" => "SOCKETS",
+        "attributes" => {
+            'stack_id' => @stack_id,
+            "has" => expected_has,
+            "covered" => expected_covered,
+            "name" => @stackable_product_1.name
+        },
+        "message" => expected_message
     }
 
     expected_has = "240"
     expected_covered = "20"
-    expected_message = "Only supports %s of %s cores." % [expected_covered,
-                                                           expected_has]
+    expected_message = "Only supports %s of %s cores." % [expected_covered, expected_has]
     reason_expectations["CORES"] = {
-            "key" => "CORES",
-            "attributes" => {
-                              'stack_id' => @stack_id,
-                              "has" => expected_has,
-                              "covered" => expected_covered,
-                              "name" => @stackable_product_1.name
-            },
-            "message" => expected_message
+        "key" => "CORES",
+        "attributes" => {
+            'stack_id' => @stack_id,
+            "has" => expected_has,
+            "covered" => expected_covered,
+            "name" => @stackable_product_1.name
+        },
+        "message" => expected_message
     }
 
     reasons = compliance_status['reasons']

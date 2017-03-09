@@ -34,14 +34,12 @@ describe 'Owner Product Resource' do
 
     prod.name.should_not == prod2.name
     prod.multiplier.should_not == prod2.multiplier
-    prod.attributes.should_not == prod2.attributes
     prod.dependentProductIds.should_not == prod2.dependentProductIds
 
     prod = @cp.update_product(@owner['key'], prod.id, {:name => 'enchiladas'})
 
     prod.name.should == prod2.name
     prod.multiplier.should_not == prod2.multiplier
-    prod.attributes.should_not == prod2.attributes
     prod.dependentProductIds.should_not == prod2.dependentProductIds
 
     #the idea here is attributes should not change if set equal to nil
@@ -311,9 +309,11 @@ describe 'Owner Product Resource' do
 
   it 'should return correct exception for contraint violations' do
     lambda {
-      prod = create_product(random_string("test_id"),
-                          random_string("test_name"),
-                          {:attributes => {:support_level => "a" * 256}})
+      prod = create_product(random_string("test_id"), random_string("test_name"), {
+        :attributes => {
+          :support_level => ("a" * 255) + ("b" * 10)
+        }
+      })
     }.should raise_exception(RestClient::BadRequest)
   end
 

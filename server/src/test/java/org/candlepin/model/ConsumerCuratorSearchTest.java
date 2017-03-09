@@ -585,10 +585,10 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         otherConsumer = consumerCurator.create(otherConsumer);
 
         Product p = TestUtil.createProduct("SKU1", "Product 1");
-        p.addAttribute(new ProductAttribute("type", "MKT"));
+        p.setAttribute(Product.Attributes.TYPE, "MKT");
 
         Product p2 = TestUtil.createProduct("SVC_ID", "Product 2");
-        p2.addAttribute(new ProductAttribute("type", "SVC"));
+        p2.setAttribute(Product.Attributes.TYPE, "SVC");
 
         productCurator.create(p);
         productCurator.create(p2);
@@ -654,10 +654,10 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         otherConsumer = consumerCurator.create(otherConsumer);
 
         Product p = TestUtil.createProduct("SKU1", "Product 1");
-        p.addAttribute(new ProductAttribute("type", "MKT"));
+        p.setAttribute(Product.Attributes.TYPE, "MKT");
 
         Product p2 = TestUtil.createProduct("SKU2", "Product 2");
-        p2.addAttribute(new ProductAttribute("type", "MKT"));
+        p2.setAttribute(Product.Attributes.TYPE, "MKT");
 
         productCurator.create(p);
         productCurator.create(p2);
@@ -737,10 +737,10 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
 
         // Two owners, two different products, but with the same SKU
         Product p = TestUtil.createProduct("SKU1", "Product 1");
-        p.addAttribute(new ProductAttribute("type", "MKT"));
+        p.setAttribute(Product.Attributes.TYPE, "MKT");
 
         Product p2 = TestUtil.createProduct("SKU1", "Product 1");
-        p2.addAttribute(new ProductAttribute("type", "MKT"));
+        p2.setAttribute(Product.Attributes.TYPE, "MKT");
 
         productCurator.create(p);
         productCurator.create(p2);
@@ -813,7 +813,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         otherConsumer = consumerCurator.create(otherConsumer);
 
         Product p = TestUtil.createProduct("SKU1", "Product 1");
-        p.addAttribute(new ProductAttribute("type", "MKT"));
+        p.setAttribute(Product.Attributes.TYPE, "MKT");
 
         productCurator.create(p);
 
@@ -892,10 +892,10 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         consumer3 = consumerCurator.create(consumer3);
 
         Product p = TestUtil.createProduct("SKU1", "Product 1");
-        p.addAttribute(new ProductAttribute("type", "MKT"));
+        p.setAttribute(Product.Attributes.TYPE, "MKT");
 
         Product p2 = TestUtil.createProduct("SKU2", "Product 2");
-        p2.addAttribute(new ProductAttribute("type", "MKT"));
+        p2.setAttribute(Product.Attributes.TYPE, "MKT");
 
         productCurator.create(p);
         productCurator.create(p2);

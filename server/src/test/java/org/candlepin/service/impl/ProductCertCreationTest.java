@@ -92,10 +92,10 @@ public class ProductCertCreationTest extends DatabaseTestFixture {
 
         Product product = TestUtil.createProduct(productId, name);
 
-        product.setAttribute("version", version);
-        product.setAttribute("variant", variant);
-        product.setAttribute("type", type);
-        product.setAttribute("arch", arch);
+        product.setAttribute(Product.Attributes.VERSION, version);
+        product.setAttribute(Product.Attributes.VARIANT, variant);
+        product.setAttribute(Product.Attributes.TYPE, type);
+        product.setAttribute(Product.Attributes.ARCHITECTURE, arch);
 
         return product;
     }

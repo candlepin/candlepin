@@ -14,17 +14,21 @@
  */
 package org.candlepin.model.dto;
 
+import org.candlepin.common.jackson.DynamicPropertyFilter;
 import org.candlepin.model.Content;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductContent;
 import org.candlepin.util.Util;
 
 import static org.junit.Assert.*;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
+
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -32,6 +36,8 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 
 
@@ -40,6 +46,17 @@ import java.util.Collections;
  */
 @RunWith(JUnitParamsRunner.class)
 public class ProductDataTest {
+
+    public static final String PRODUCT_JSON_BASE = "{" +
+        "  \"created\" : \"2016-09-07T15:08:14+0000\"," +
+        "  \"updated\" : \"2016-09-07T15:08:14+0000\"," +
+        "  \"uuid\" : \"8a8d01cb570530d001570531389508c7\"," +
+        "  \"id\" : \"dev-sku-product\"," +
+        "  \"name\" : \"Development SKU Product\"," +
+        "  \"multiplier\" : 1," +
+        "  \"dependentProductIds\" : [ ]," +
+        "  \"href\" : \"/products/8a8d01cb570530d001570531389508c7\"," +
+        "  \"productContent\" : [ ]";
 
     // public .* (?:get|is)(.*)\(\) {\npublic .* set\1\(.*\) {
 
@@ -57,6 +74,16 @@ public class ProductDataTest {
     //     output = dto.get\1();
     //     assertEquals(input, output);
     // }
+
+    private ObjectMapper mapper;
+
+    @Before
+    public void createObjects() {
+        this.mapper = new ObjectMapper();
+        SimpleFilterProvider filterProvider = new SimpleFilterProvider();
+        filterProvider.setDefaultFilter(new DynamicPropertyFilter());
+        this.mapper.setFilters(filterProvider);
+    }
 
     protected Object[][] getBadStringValues() {
         return new Object[][] {
@@ -139,22 +166,21 @@ public class ProductDataTest {
     @Test
     public void testGetSetAttributes() {
         ProductData dto = new ProductData();
-        Collection<ProductAttributeData> input = Arrays.asList(
-            new ProductAttributeData("a1", "v1"),
-            new ProductAttributeData("a2", "v2"),
-            new ProductAttributeData("a3", "v3")
-        );
 
-        Collection<ProductAttributeData> input2 = Arrays.asList(
-            new ProductAttributeData("a1", "old_value"),
-            new ProductAttributeData("a1", "v1"),
-            new ProductAttributeData("a2", "old_value"),
-            new ProductAttributeData("a2", "v2"),
-            new ProductAttributeData("a3", "old_value"),
-            new ProductAttributeData("a3", "v3")
-        );
+        Map<String, String> input = new HashMap<String, String>();
+        input.put("a1", "v1");
+        input.put("a2", "v2");
+        input.put("a3", "v3");
 
-        Collection<ProductAttributeData> output = dto.getAttributes();
+        Map<String, String> input2 = new HashMap<String, String>();
+        input2.put("a1", "old_value");
+        input2.put("a1", "v1");
+        input2.put("a2", "old_value");
+        input2.put("a2", "v2");
+        input2.put("a3", "old_value");
+        input2.put("a3", "v3");
+
+        Map<String, String> output = dto.getAttributes();
         assertNull(output);
 
         ProductData output2 = dto.setAttributes(input);
@@ -180,34 +206,12 @@ public class ProductDataTest {
     }
 
     @Test
-    public void testGetAttribute() {
+    public void testgetAttributeValue() {
         ProductData dto = new ProductData();
-        ProductAttributeData attrib1 = new ProductAttributeData("a1", "v1");
-        ProductAttributeData attrib2 = new ProductAttributeData("a2", "v2");
-        ProductAttributeData attrib3 = new ProductAttributeData("a3", "v3");
-
-        ProductAttributeData output = dto.getAttribute("a1");
-        assertNull(output);
-
-        dto.setAttributes(Arrays.asList(attrib1, attrib2, attrib3));
-        output = dto.getAttribute("a1");
-        assertEquals(attrib1, output);
-
-        output = dto.getAttribute("a3");
-        assertEquals(attrib3, output);
-
-        output = dto.getAttribute("a4");
-        assertNull(output);
-    }
-
-    @Test
-    public void testGetAttributeValue() {
-        ProductData dto = new ProductData();
-        Collection<ProductAttributeData> input = Arrays.asList(
-            new ProductAttributeData("a1", "v1"),
-            new ProductAttributeData("a2", "v2"),
-            new ProductAttributeData("a3", "v3")
-        );
+        Map<String, String> input = new HashMap<String, String>();
+        input.put("a1", "v1");
+        input.put("a2", "v2");
+        input.put("a3", "v3");
 
         String output = dto.getAttributeValue("a1");
         assertNull(output);
@@ -226,11 +230,10 @@ public class ProductDataTest {
     @Test
     public void testHasAttribute() {
         ProductData dto = new ProductData();
-        Collection<ProductAttributeData> input = Arrays.asList(
-            new ProductAttributeData("a1", "v1"),
-            new ProductAttributeData("a2", "v2"),
-            new ProductAttributeData("a3", "v3")
-        );
+        Map<String, String> input = new HashMap<String, String>();
+        input.put("a1", "v1");
+        input.put("a2", "v2");
+        input.put("a3", "v3");
 
         boolean output = dto.hasAttribute("a1");
         assertFalse(output);
@@ -247,126 +250,76 @@ public class ProductDataTest {
     }
 
     @Test
-    public void testAddAttributeByObject() {
-        ProductData dto = new ProductData();
-        ProductAttributeData attrib1 = new ProductAttributeData("a1", "v1");
-        ProductAttributeData attrib2 = new ProductAttributeData("a2", "v2");
-        ProductAttributeData attrib3 = new ProductAttributeData("a2", "v3");
-
-        assertNull(dto.getAttributes());
-
-        boolean output = dto.addAttribute(attrib1);
-        Collection<ProductAttributeData> output2 = dto.getAttributes();
-        assertTrue(output);
-        assertTrue(Util.collectionsAreEqual(Arrays.asList(attrib1), output2));
-
-        output = dto.addAttribute(attrib1);
-        output2 = dto.getAttributes();
-        assertFalse(output);
-        assertTrue(Util.collectionsAreEqual(Arrays.asList(attrib1), output2));
-
-        output = dto.addAttribute(attrib2);
-        output2 = dto.getAttributes();
-        assertTrue(output);
-        assertTrue(Util.collectionsAreEqual(Arrays.asList(attrib1, attrib2), output2));
-
-        output = dto.addAttribute(attrib3);
-        output2 = dto.getAttributes();
-        assertTrue(output);
-        assertEquals(Arrays.asList(attrib1, attrib3), output2);
-    }
-
-    @Test
     public void testSetAttributeByValue() {
         ProductData dto = new ProductData();
-        ProductAttributeData attrib1 = new ProductAttributeData("a1", "v1");
-        ProductAttributeData attrib2 = new ProductAttributeData("a2", "v2");
-        ProductAttributeData attrib3 = new ProductAttributeData("a2", "v3");
+        Map<String, String> input1 = new HashMap<String, String>();
+        input1.put("a1", "v1");
+
+        Map<String, String> input2 = new HashMap<String, String>();
+        input2.put("a1", "v1");
+        input2.put("a2", "v2");
+
+        Map<String, String> input3 = new HashMap<String, String>();
+        input3.put("a1", "v1");
+        input3.put("a2", "v2");
+        input3.put("a3", "v3");
 
         assertNull(dto.getAttributes());
 
-        boolean output = dto.setAttribute(attrib1.getName(), attrib1.getValue());
-        Collection<ProductAttributeData> output2 = dto.getAttributes();
-        assertTrue(output);
-        assertTrue(Util.collectionsAreEqual(Arrays.asList(attrib1), output2));
+        ProductData output = dto.setAttribute("a1", "v1");
+        Map<String, String> output2 = dto.getAttributes();
+        assertSame(output, dto);
+        assertEquals(output2, input1);
 
-        output = dto.setAttribute(attrib1.getName(), attrib1.getValue());
+        output = dto.setAttribute("a1", "v1");
         output2 = dto.getAttributes();
-        assertFalse(output);
-        assertTrue(Util.collectionsAreEqual(Arrays.asList(attrib1), output2));
+        assertSame(output, dto);
+        assertEquals(output2, input1);
 
-        output = dto.setAttribute(attrib2.getName(), attrib2.getValue());
+        output = dto.setAttribute("a2", "v2");
         output2 = dto.getAttributes();
-        assertTrue(output);
-        assertTrue(Util.collectionsAreEqual(Arrays.asList(attrib1, attrib2), output2));
+        assertSame(output, dto);
+        assertEquals(output2, input2);
 
-        output = dto.setAttribute(attrib3.getName(), attrib3.getValue());
+        output = dto.setAttribute("a3", "v3");
         output2 = dto.getAttributes();
-        assertTrue(output);
-        assertEquals(Arrays.asList(attrib1, attrib3), output2);
+        assertSame(output, dto);
+        assertEquals(output2, input3);
     }
 
     @Test
-    public void testRemoveAttributeByObject() {
+    public void testRemoveAttribute() {
         ProductData dto = new ProductData();
-        ProductAttributeData attrib1 = new ProductAttributeData("a1", "v1");
-        ProductAttributeData attrib2 = new ProductAttributeData("a2", "v2");
-        ProductAttributeData attrib3 = new ProductAttributeData("a2", "v3");
+        Map<String, String> input = new HashMap<String, String>();
+        input.put("a1", "v1");
+        input.put("a2", "v2");
+
+        Map<String, String> input2 = new HashMap<String, String>();
+        input2.put("a2", "v2");
 
         assertNull(dto.getAttributes());
-        assertFalse(dto.removeAttribute(attrib1));
-        assertFalse(dto.removeAttribute(attrib2));
-        assertFalse(dto.removeAttribute(attrib3));
+        assertFalse(dto.removeAttribute("a1"));
+        assertFalse(dto.removeAttribute("a2"));
+        assertFalse(dto.removeAttribute("a3"));
 
-        dto.setAttributes(Arrays.asList(attrib1, attrib2));
+        dto.setAttributes(input);
+        assertEquals(input, dto.getAttributes());
 
-        boolean output = dto.removeAttribute(attrib1);
-        Collection<ProductAttributeData> output2 = dto.getAttributes();
+        boolean output = dto.removeAttribute("a1");
+        Map<String, String> output2 = dto.getAttributes();
         assertTrue(output);
-        assertEquals(Arrays.asList(attrib2), output2);
+        assertEquals(input2, output2);
 
-        output = dto.removeAttribute(attrib1);
+        output = dto.removeAttribute("a1");
         output2 = dto.getAttributes();
         assertFalse(output);
-        assertEquals(Arrays.asList(attrib2), output2);
-
-        // This should work because we remove by attribute key, not by exact element match
-        // Also note that the collection should not be nulled by removing the final element
-        output = dto.removeAttribute(attrib3);
-        output2 = dto.getAttributes();
-        assertTrue(output);
-        assertEquals(Arrays.asList(), output2);
-    }
-
-    @Test
-    public void testRemoveAttributeByName() {
-        ProductData dto = new ProductData();
-        ProductAttributeData attrib1 = new ProductAttributeData("a1", "v1");
-        ProductAttributeData attrib2 = new ProductAttributeData("a2", "v2");
-        ProductAttributeData attrib3 = new ProductAttributeData("a2", "v3");
-
-        assertNull(dto.getAttributes());
-        assertFalse(dto.removeAttribute(attrib1.getName()));
-        assertFalse(dto.removeAttribute(attrib2.getName()));
-        assertFalse(dto.removeAttribute(attrib3.getName()));
-
-        dto.setAttributes(Arrays.asList(attrib1, attrib2));
-
-        boolean output = dto.removeAttribute(attrib1.getName());
-        Collection<ProductAttributeData> output2 = dto.getAttributes();
-        assertTrue(output);
-        assertEquals(Arrays.asList(attrib2), output2);
-
-        output = dto.removeAttribute(attrib1.getName());
-        output2 = dto.getAttributes();
-        assertFalse(output);
-        assertEquals(Arrays.asList(attrib2), output2);
+        assertEquals(input2, output2);
 
         // Note that the collection should not be nulled by removing the final element
-        output = dto.removeAttribute(attrib3.getName());
+        output = dto.removeAttribute("a2");
         output2 = dto.getAttributes();
         assertTrue(output);
-        assertEquals(Arrays.asList(), output2);
+        assertEquals(new HashMap<String, String>(), output2);
     }
 
     @Test
@@ -947,17 +900,15 @@ public class ProductDataTest {
     }
 
     protected Object[][] getValuesForEqualityAndReplication() {
-        Collection<ProductAttributeData> attributes1 = Arrays.asList(
-            new ProductAttributeData("a1", "v1"),
-            new ProductAttributeData("a2", "v2"),
-            new ProductAttributeData("a3", "v3")
-        );
+        Map<String, String> attributes1 = new HashMap<String, String>();
+        attributes1.put("a1", "v1");
+        attributes1.put("a2", "v2");
+        attributes1.put("a3", "v3");
 
-        Collection<ProductAttributeData> attributes2 = Arrays.asList(
-            new ProductAttributeData("a4", "v4"),
-            new ProductAttributeData("a5", "v5"),
-            new ProductAttributeData("a6", "v6")
-        );
+        Map<String, String> attributes2 = new HashMap<String, String>();
+        attributes2.put("a4", "v4");
+        attributes2.put("a5", "v5");
+        attributes2.put("a6", "v6");
 
         ContentData[] content = new ContentData[] {
             new ContentData("c1", "content-1", "test_type", "test_label-1", "test_vendor-1"),
@@ -1010,11 +961,15 @@ public class ProductDataTest {
             mutator = ProductData.class.getDeclaredMethod("set" + methodSuffix, mutatorInputClass);
         }
         catch (NoSuchMethodException e) {
-            if (!Collection.class.isAssignableFrom(mutatorInputClass)) {
+            if (Collection.class.isAssignableFrom(mutatorInputClass)) {
+                mutator = ProductData.class.getDeclaredMethod("set" + methodSuffix, Collection.class);
+            }
+            else if (Map.class.isAssignableFrom(mutatorInputClass)) {
+                mutator = ProductData.class.getDeclaredMethod("set" + methodSuffix, Map.class);
+            }
+            else {
                 throw e;
             }
-
-            mutator = ProductData.class.getDeclaredMethod("set" + methodSuffix, Collection.class);
         }
 
         return new Method[] { accessor, mutator };
@@ -1138,12 +1093,17 @@ public class ProductDataTest {
     }
 
     protected Object[][] getValuesPopulationByEntity() {
+        Map<String, String> attributes = new HashMap<String, String>();
+        attributes.put("a1", "v1");
+        attributes.put("a2", "v2");
+        attributes.put("a3", "v3");
+
         return new Object[][] {
             new Object[] { "Uuid", "test_value", null },
             new Object[] { "Id", "test_value", null },
             new Object[] { "Name", "test_value", null },
             new Object[] { "Multiplier", 1234L, null },
-            // new Object[] { "Attributes", attributes, Arrays.asList() },
+            new Object[] { "Attributes", attributes, Collections.<String, String>emptyMap() },
             // new Object[] { "ProductContent", productContent, Arrays.asList() },
             new Object[] { "DependentProductIds", Arrays.asList("1", "2", "3"), Arrays.asList() },
             // new Object[] { "Href", "test_value", null },
@@ -1170,6 +1130,9 @@ public class ProductDataTest {
         catch (NoSuchMethodException e) {
             if (Collection.class.isAssignableFrom(input.getClass())) {
                 mutator = Product.class.getDeclaredMethod("set" + valueName, Collection.class);
+            }
+            else if (Map.class.isAssignableFrom(input.getClass())) {
+                mutator = Product.class.getDeclaredMethod("set" + valueName, Map.class);
             }
             else if (Boolean.class.isAssignableFrom(input.getClass())) {
                 mutator = Product.class.getDeclaredMethod("set" + valueName, boolean.class);
@@ -1225,17 +1188,12 @@ public class ProductDataTest {
         ProductData base = new ProductData();
         Product source = new Product();
 
-        ProductAttribute[] attributeEntities = new ProductAttribute[] {
-            new ProductAttribute("a1", "v1"),
-            new ProductAttribute("a2", "v2"),
-            new ProductAttribute("a3", "v3")
-        };
+        Map<String, String> attributes1 = new HashMap<String, String>();
+        attributes1.put("a1", "v1");
+        attributes1.put("a2", "v2");
+        attributes1.put("a3", "v3");
 
-        ProductAttributeData padata1 = attributeEntities[0].toDTO();
-        ProductAttributeData padata2 = attributeEntities[1].toDTO();
-        ProductAttributeData padata3 = attributeEntities[2].toDTO();
-
-        source.setAttributes(Arrays.asList(attributeEntities[0], attributeEntities[1], attributeEntities[2]));
+        source.setAttributes(attributes1);
 
         // Verify base state
         assertNull(base.getUuid());
@@ -1269,7 +1227,7 @@ public class ProductDataTest {
         assertTrue(base.getDependentProductIds().isEmpty());
 
         assertNotNull(base.getAttributes());
-        assertEquals(Arrays.asList(padata1, padata2, padata3), base.getAttributes());
+        assertEquals(attributes1, base.getAttributes());
     }
 
     @Test
@@ -1376,4 +1334,80 @@ public class ProductDataTest {
         assertEquals("/products/" + uuid, base.getHref());
     }
 
+    @Test
+    public void testProductAttributeJsonDeserializationV1() throws Exception {
+        String attributes = "\"attributes\": [ " +
+            "  {" +
+            "    \"name\" : \"attrib-1\"," +
+            "    \"value\" : \"value-1\"," +
+            "    \"created\" : \"2016-09-07T15:08:14+0000\"," +
+            "    \"updated\" : \"2016-09-07T15:08:14+0000\"" +
+            "  }," +
+            "  {" +
+            "    \"name\" : \"attrib-2\"," +
+            "    \"value\" : \"value-2\"," +
+            "    \"created\" : \"2016-09-07T15:08:14+0000\"," +
+            "    \"updated\" : \"2016-09-07T15:08:14+0000\"" +
+            "  }," +
+            "  {" +
+            "    \"name\" : 3," +
+            "    \"value\" : 3," +
+            "    \"created\" : \"2016-09-07T15:08:14+0000\"," +
+            "    \"updated\" : \"2016-09-07T15:08:14+0000\"" +
+            "  }]";
+
+        Map<String, String> expectedAttrib = new HashMap<String, String>();
+        expectedAttrib.put("attrib-1", "value-1");
+        expectedAttrib.put("attrib-2", "value-2");
+        expectedAttrib.put("3", "3");
+
+        ProductData dto = this.mapper.readValue(
+            PRODUCT_JSON_BASE + "," + attributes + "}", ProductData.class);
+
+        assertEquals(expectedAttrib, dto.getAttributes());
+    }
+
+    @Test
+    public void testProductAttributeJsonDeserializationV2() throws Exception {
+        String attributes = "\"attributes\": { " +
+            "  \"attrib-1\": \"value-1\"," +
+            "  \"attrib-2\": \"value-2\"," +
+            "  \"attrib-3\": 3" +
+            "}";
+
+        Map<String, String> expectedAttrib = new HashMap<String, String>();
+        expectedAttrib.put("attrib-1", "value-1");
+        expectedAttrib.put("attrib-2", "value-2");
+        expectedAttrib.put("attrib-3", "3");
+
+        ProductData dto = this.mapper.readValue(
+            PRODUCT_JSON_BASE + "," + attributes + "}", ProductData.class);
+
+        assertEquals(expectedAttrib, dto.getAttributes());
+    }
+
+    @Test
+    public void testSerializeProductAttributes() throws Exception {
+        String expectedHeader = "\"attributes\":[{";
+        String expectedValue1 = "\"name\":\"attrib-1\",\"value\":\"value-1\"";
+        String expectedValue2 = "\"name\":\"attrib-2\",\"value\":\"value-2\"";
+        String expectedValue3 = "\"name\":\"attrib-3\",\"value\":\"3\"";
+
+        Map<String, String> attributes = new HashMap<String, String>();
+        attributes.put("attrib-1", "value-1");
+        attributes.put("attrib-2", "value-2");
+        attributes.put("attrib-3", "3");
+
+        ProductData dto = new ProductData();
+        dto.setAttributes(attributes);
+
+        String output = this.mapper.writeValueAsString(dto);
+
+        // Since the attributes are stored as a map, we can't guarantee any specific printed order.
+        // To deal with this, we separate the value and each header, then verify them individually.
+        assertTrue(output.contains(expectedHeader));
+        assertTrue(output.contains(expectedValue1));
+        assertTrue(output.contains(expectedValue2));
+        assertTrue(output.contains(expectedValue3));
+    }
 }

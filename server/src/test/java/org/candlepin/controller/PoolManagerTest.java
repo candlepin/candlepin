@@ -53,7 +53,6 @@ import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceStack;
 import org.candlepin.model.SourceSubscription;
@@ -595,7 +594,7 @@ public class PoolManagerTest {
         p.setSourceSubscription(new SourceSubscription("112", "master"));
 
         // Make it look like a hosted virt bonus pool:
-        p.setAttribute("pool_derived", "true");
+        p.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
         p.setSourceStack(null);
         p.setSourceEntitlement(null);
 
@@ -628,7 +627,7 @@ public class PoolManagerTest {
         p.setSourceSubscription(new SourceSubscription("112", "master"));
 
         // Mock a pool with a source entitlement:
-        p.setAttribute("pool_derived", "true");
+        p.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
         p.setSourceStack(null);
         p.setSourceEntitlement(new Entitlement());
 
@@ -660,7 +659,7 @@ public class PoolManagerTest {
         p.setSourceSubscription(new SourceSubscription("112", "master"));
 
         // Mock a pool with a source stack ID:
-        p.setAttribute("pool_derived", "true");
+        p.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
         p.setSourceStack(new SourceStack(new Consumer(), "blah"));
         p.setSourceEntitlement(null);
 
@@ -691,7 +690,7 @@ public class PoolManagerTest {
         p.setSourceSubscription(null);
 
         // Mock a development pool
-        p.setAttribute("dev_pool", "true");
+        p.setAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true");
 
         pools.add(p);
         mockSubsList(subscriptions);
@@ -1363,7 +1362,7 @@ public class PoolManagerTest {
         Product prod = TestUtil.createProduct();
         Set<Product> products = new HashSet<Product>();
         products.add(prod);
-        prod.setAttribute("virt_limit", "4");
+        prod.setAttribute(Product.Attributes.VIRT_LIMIT, "4");
         // productCache.addProducts(products);
         Subscription s = TestUtil.createSubscription(owner, prod);
         subscriptions.add(s);
@@ -1390,7 +1389,7 @@ public class PoolManagerTest {
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator,
             mockOwnerProductCurator, mockProductCurator);
         Product prod = TestUtil.createProduct();
-        prod.setAttribute("virt_limit", "4");
+        prod.setAttribute(Product.Attributes.VIRT_LIMIT, "4");
         Pool p = TestUtil.createPool(owner, prod);
         List<Pool> existingPools = new LinkedList<Pool>();
         List<Pool> newPools = pRules.createAndEnrichPools(p, existingPools);
@@ -1413,7 +1412,7 @@ public class PoolManagerTest {
         Set<Product> products = new HashSet<Product>();
         products.add(prod);
         // productCache.addProducts(products);
-        prod.setAttribute("virt_limit", "4");
+        prod.setAttribute(Product.Attributes.VIRT_LIMIT, "4");
         Subscription s = TestUtil.createSubscription(owner, prod);
         subscriptions.add(s);
 
@@ -1434,7 +1433,7 @@ public class PoolManagerTest {
     public void createPoolsForPoolMasterExist() {
         Owner owner = this.getOwner();
         Product prod = TestUtil.createProduct();
-        prod.setAttribute("virt_limit", "4");
+        prod.setAttribute(Product.Attributes.VIRT_LIMIT, "4");
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator,
             mockOwnerProductCurator, mockProductCurator);
         List<Pool> existingPools = new LinkedList<Pool>();
@@ -1456,7 +1455,7 @@ public class PoolManagerTest {
         Set<Product> products = new HashSet<Product>();
         products.add(prod);
         // productCache.addProducts(products);
-        prod.setAttribute("virt_limit", "4");
+        prod.setAttribute(Product.Attributes.VIRT_LIMIT, "4");
         Subscription s = TestUtil.createSubscription(owner, prod);
         subscriptions.add(s);
 
@@ -1481,7 +1480,7 @@ public class PoolManagerTest {
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator,
             mockOwnerProductCurator, mockProductCurator);
         Product prod = TestUtil.createProduct();
-        prod.setAttribute("virt_limit", "4");
+        prod.setAttribute(Product.Attributes.VIRT_LIMIT, "4");
         List<Pool> existingPools = new LinkedList<Pool>();
         Pool p = TestUtil.createPool(prod);
         p.setSourceSubscription(new SourceSubscription(TestUtil.randomString(), "derived"));
@@ -1575,7 +1574,7 @@ public class PoolManagerTest {
         Long multiplier = new Long(2);
 
         product.setMultiplier(multiplier);
-        product.addAttribute(new ProductAttribute("instance_multiplier", "0"));
+        product.setAttribute(Product.Attributes.INSTANCE_MULTIPLIER, "0");
 
         when(pool.getQuantity()).thenReturn(quantity);
         when(pool.getProduct()).thenReturn(product);
@@ -1594,7 +1593,7 @@ public class PoolManagerTest {
         Long multiplier = new Long(2);
 
         product.setMultiplier(multiplier);
-        product.addAttribute(new ProductAttribute("instance_multiplier", "4"));
+        product.setAttribute(Product.Attributes.INSTANCE_MULTIPLIER, "4");
 
         when(pool.getQuantity()).thenReturn(quantity);
         when(pool.getProduct()).thenReturn(product);
@@ -1636,19 +1635,19 @@ public class PoolManagerTest {
         Date now = new Date();
 
         Product p = TestUtil.createProduct();
-        p.setAttribute("host_limited", "true");
-        p.setAttribute("virt_limit", "unlimited");
+        p.setAttribute(Product.Attributes.HOST_LIMITED, "true");
+        p.setAttribute(Product.Attributes.VIRT_LIMIT, "unlimited");
 
         Consumer guest = TestUtil.createConsumer(owner);
         guest.setFact("virt.is_guest", "true");
         guest.addInstalledProduct(new ConsumerInstalledProduct(p));
 
         Pool pool = TestUtil.createPool(owner, p);
-        pool.setAttribute("unmapped_guests_only", "true");
-        pool.setAttribute("virt_only", "true");
-        pool.setAttribute("pool_derived", "true");
-        pool.setAttribute("physical_only", "false");
-        pool.setAttribute("virt_limit", "0");
+        pool.setAttribute(Pool.Attributes.UNMAPPED_GUESTS_ONLY, "true");
+        pool.setAttribute(Pool.Attributes.VIRT_ONLY, "true");
+        pool.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
+        pool.setAttribute(Pool.Attributes.PHYSICAL_ONLY, "false");
+        pool.setAttribute(Product.Attributes.VIRT_LIMIT, "0");
         pool.setStartDate(new Date(now.getTime() - (1000 * 60 * 60 * 24 * 2)));
 
         Entitlement ent = TestUtil.createEntitlement(owner, guest, pool, null);

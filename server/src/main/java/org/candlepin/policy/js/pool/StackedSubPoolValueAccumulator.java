@@ -92,7 +92,7 @@ public class StackedSubPoolValueAccumulator {
     private void updateEldestWithVirtLimit(Entitlement nextStacked) {
         // Keep track of the eldest with virt limit so that we can change the
         // quantity of the sub pool.
-        if (nextStacked.getPool().hasMergedAttribute("virt_limit")) {
+        if (nextStacked.getPool().hasMergedAttribute(Product.Attributes.VIRT_LIMIT)) {
             if (eldestWithVirtLimit == null ||
                 nextStacked.getCreated().before(eldestWithVirtLimit.getCreated())) {
                 eldestWithVirtLimit = nextStacked;

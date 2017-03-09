@@ -68,8 +68,7 @@ RSpec.configure do |config|
     })
 
     #create two subs, to do migration testing
-    create_pool_and_subscription(@owner['key'], @virt_limit_product.id, 10,
-				[], '', '', '', nil, nil, true)
+    create_pool_and_subscription(@owner['key'], @virt_limit_product.id, 10, [], '', '', '', nil, nil, true)
     create_pool_and_subscription(@owner['key'], @virt_limit_product.id, 10)
 
     @pools = @user.list_pools :owner => @owner.id, \
@@ -106,9 +105,17 @@ module VirtHelper
 
   def filter_unmapped_guest_pools(pools)
     # need to ignore the unmapped guest pools
-    pools.select! do |p|
-      unmapped = p['attributes'].select {|i| i['name'] == 'unmapped_guests_only' }[0]
-      unmapped.nil? || unmapped['value'] == 'false'
+    pools.select! do |pool|
+      unmapped = nil
+      pool["attributes"].each do |attribute|
+        if (attribute["name"] == "unmapped_guests_only")
+          unmapped = attribute["value"]
+          break
+        end
+      end
+
+      # unmapped = get_attribute_value(pool["attributes"], "unmapped_guests_only")
+      unmapped.nil? || unmapped == 'false'
     end
   end
 end
@@ -124,18 +131,49 @@ module CertificateMethods
 end
 
 module SpecUtils
-  def flatten_attributes(attributes)
-    attrs = {}
-    attributes.each do |attribute| attrs[attribute['name']] = attribute['value'] end
-    return attrs
-  end
-
   def parse_file(filename)
     JSON.parse File.read(filename)
   end
 
   def files_in_dir(dir_name)
     Dir.entries(dir_name).select {|e| e != '.' and e != '..' }
+  end
+end
+
+module AttributeHelper
+  def normalize_attributes(attribute_list)
+    attributes = {}
+
+    if attribute_list.is_a?(Array)
+      attribute_list.each do |attribute_obj|
+        if (attribute_obj.is_a?(Hash) && attribute_obj.include?("name"))
+          attributes[attribute_obj["name"]] = attribute_obj.include?("value") ? attribute_obj["value"] : nil
+        end
+      end
+    end
+
+    return attributes
+  end
+
+  def get_attribute(attribute_list, attribute)
+    if attribute_list.is_a?(Array)
+      attribute_list.each do |attribute_obj|
+        if (attribute_obj.is_a?(Hash) && attribute_obj.include?("name") && attribute_obj["name"] == attribute)
+          return attribute_obj
+        end
+      end
+    end
+
+    return nil
+  end
+
+  def has_attribute(attribute_list, attribute)
+    return !get_attribute(attribute_list, attribute).nil?
+  end
+
+  def get_attribute_value(attribute_list, attribute)
+    attribute_obj = get_attribute(attribute_list, attribute)
+    return !attribute_obj.nil? && attribute_obj.include?("value") ? attribute_obj["value"] : nil
   end
 end
 

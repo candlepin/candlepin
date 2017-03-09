@@ -137,7 +137,7 @@ public class X509V3ExtensionUtilTest {
         String brandedName = "Branded Eng Product";
         Owner owner = new Owner("Test Corporation");
         Product p = new Product(engProdId, "Eng Product 1000");
-        p.setAttribute("brand_type", "OS");
+        p.setAttribute(Product.Attributes.BRANDING_TYPE, "OS");
         Set<Product> prods = new HashSet<Product>(Arrays.asList(p));
         Product mktProd = new Product("mkt", "MKT SKU");
         Pool pool = TestUtil.createPool(mktProd);
@@ -159,7 +159,7 @@ public class X509V3ExtensionUtilTest {
         String brandedName = "Branded Eng Product";
         Owner owner = new Owner("Test Corporation");
         Product p = new Product(engProdId, "Eng Product 1000");
-        p.setAttribute("brand_type", "OS");
+        p.setAttribute(Product.Attributes.BRANDING_TYPE, "OS");
         Set<Product> prods = new HashSet<Product>(Arrays.asList(p));
         Product mktProd = new Product("mkt", "MKT SKU");
         Pool pool = TestUtil.createPool(mktProd);

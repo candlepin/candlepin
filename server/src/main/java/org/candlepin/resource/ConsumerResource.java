@@ -1300,8 +1300,7 @@ public class ConsumerResource {
     }
 
     private boolean isUnmappedGuestPool(Pool pool) {
-        String value = pool.getAttributeValue(Pool.Attributes.UNMAPPED_GUESTS_ONLY);
-        return "true".equalsIgnoreCase(value);
+        return "true".equalsIgnoreCase(pool.getAttributeValue(Pool.Attributes.UNMAPPED_GUESTS_ONLY));
     }
 
     @ApiOperation(notes = "Removes a Consumer", value = "deleteConsumer")
@@ -1615,8 +1614,9 @@ public class ConsumerResource {
             int batchBindLimit = config.getInt(ConfigProperties.BATCH_BIND_NUMBER_OF_POOLS_LIMIT);
             if (pqMap.keySet().size() > batchBindLimit) {
                 throw new BadRequestException(i18n.tr(
-                        "Cannot bind more than {0} pools per request, found: {1}", batchBindLimit,
-                        pqMap.keySet().size()));
+                    "Cannot bind more than {0} pools per request, found: {1}",
+                    batchBindLimit, pqMap.keySet().size()
+                ));
             }
 
             List<Pool> pools = poolManager.secureFind(pqMap.keySet());

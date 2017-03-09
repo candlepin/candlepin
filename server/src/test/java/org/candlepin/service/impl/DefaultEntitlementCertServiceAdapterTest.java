@@ -46,9 +46,7 @@ import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.KeyPairCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
-import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.dto.ProductContentData;
@@ -226,16 +224,16 @@ public class DefaultEntitlementCertServiceAdapterTest {
             config, productCurator);
 
         product = TestUtil.createProduct("12345", "a product");
-        product.setAttribute("version", "version");
-        product.setAttribute("variant", "variant");
-        product.setAttribute("type", "SVC");
-        product.setAttribute("arch", ARCH_LABEL);
+        product.setAttribute(Product.Attributes.VERSION, "version");
+        product.setAttribute(Product.Attributes.VARIANT, "variant");
+        product.setAttribute(Product.Attributes.TYPE, "SVC");
+        product.setAttribute(Product.Attributes.ARCHITECTURE, ARCH_LABEL);
 
         largeContentProduct = TestUtil.createProduct("67890", "large content product");
-        largeContentProduct.setAttribute("version", "version");
-        largeContentProduct.setAttribute("variant", "variant");
-        largeContentProduct.setAttribute("type", "SVC");
-        largeContentProduct.setAttribute("arch", ARCH_LABEL);
+        largeContentProduct.setAttribute(Product.Attributes.VERSION, "version");
+        largeContentProduct.setAttribute(Product.Attributes.VARIANT, "variant");
+        largeContentProduct.setAttribute(Product.Attributes.TYPE, "SVC");
+        largeContentProduct.setAttribute(Product.Attributes.ARCHITECTURE, ARCH_LABEL);
 
         content = createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
             CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL, CONTENT_GPG_URL, ARCH_LABEL);
@@ -343,7 +341,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     public void temporaryCertificateForUnmappedGuests() throws Exception {
         Date now = new Date();
         consumer.setCreated(now);
-        pool.addAttribute(new PoolAttribute("unmapped_guests_only", "true"));
+        pool.setAttribute(Pool.Attributes.UNMAPPED_GUESTS_ONLY, "true");
 
         // Set up an adapter with a real PKIUtil
         certServiceAdapter = new DefaultEntitlementCertServiceAdapter(
@@ -660,10 +658,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         consumer.setEnvironment(environment);
 
         Map<String, EnvironmentContent> promotedContent = new HashMap<String, EnvironmentContent>();
-        promotedContent.put(
-            normalContent.getId(),
-            new EnvironmentContent(environment, normalContent, true)
-        );
+        promotedContent.put(normalContent.getId(), new EnvironmentContent(environment, normalContent, true));
 
         assertEquals(1, extensionUtil.filterProductContent(
             modProduct, entitlement, entCurator, promotedContent, true, entitledProdIds).size());
@@ -701,7 +696,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     @Test
     public void managementDisabledByDefault() throws Exception {
-
         certServiceAdapter.createX509Certificate(entitlement,
             product, new HashSet<Product>(),
             getProductModels(product, new HashSet<Product>(), "prefix", entitlement),
@@ -715,8 +709,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     @Test
     public void managementEnabledByAttribute() throws Exception {
+        pool.getProduct().setAttribute(Product.Attributes.MANAGEMENT_ENABLED, "1");
 
-        pool.getProduct().setAttribute("management_enabled", "1");
         certServiceAdapter.createX509Certificate(entitlement,
             product, new HashSet<Product>(),
             getProductModels(product, new HashSet<Product>(), "prefix", entitlement),
@@ -730,8 +724,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     @Test
     public void stackingIdByAttribute() throws Exception {
+        pool.getProduct().setAttribute(Product.Attributes.STACKING_ID, "3456");
 
-        pool.getProduct().setAttribute("stacking_id", "3456");
         certServiceAdapter.createX509Certificate(entitlement,
             product, new HashSet<Product>(),
             getProductModels(product, new HashSet<Product>(), "prefix", entitlement),
@@ -745,8 +739,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
     @Test
     public void virtOnlyByAttribute() throws Exception {
         //note that "true" gets recoded to "1" to match other bools in the cert
-        PoolAttribute attr = new PoolAttribute("virt_only", "true");
-        entitlement.getPool().addAttribute(attr);
+        entitlement.getPool().setAttribute(Product.Attributes.VIRT_ONLY, "true");
+
         certServiceAdapter.createX509Certificate(entitlement,
             product, new HashSet<Product>(),
             getProductModels(product, new HashSet<Product>(), "prefix", entitlement),
@@ -776,8 +770,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
     @Test
     public void supportValuesPresentOnCertIfAttributePresent() throws Exception {
 
-        pool.getProduct().setAttribute("support_level", "Premium");
-        pool.getProduct().setAttribute("support_type", "Level 3");
+        pool.getProduct().setAttribute(Product.Attributes.SUPPORT_LEVEL, "Premium");
+        pool.getProduct().setAttribute(Product.Attributes.SUPPORT_TYPE, "Level 3");
 
         certServiceAdapter.createX509Certificate(entitlement,
             product, new HashSet<Product>(),
@@ -800,8 +794,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Configuration mockConfig = mock(Configuration.class);
 
         consumer.setFact("system.certificate_version", "3.3");
-        ProductAttribute attr = new ProductAttribute("ram", "4");
-        subscription.getProduct().addAttribute(attr.toDTO());
+        subscription.getProduct().setAttribute(Product.Attributes.RAM, "4");
 
         X509V3ExtensionUtil mockV3extensionUtil = mock(X509V3ExtensionUtil.class);
         X509ExtensionUtil mockExtensionUtil = mock(X509ExtensionUtil.class);
@@ -1008,8 +1001,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         GeneralSecurityException {
         Set<Product> products = new HashSet<Product>();
 
-        ProductAttribute brandAttr = new ProductAttribute("brand_type", "os");
-        product.addAttribute(brandAttr);
+        product.setAttribute(Product.Attributes.BRANDING_TYPE, "os");
         products.add(product);
         setupEntitlements(ARCH_LABEL, "1.0");
 
@@ -1031,10 +1023,10 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         // product with no compatible content, but marked as 'ALL' arch
         Product wrongArchProduct = TestUtil.createProduct("12345", "a product");
-        wrongArchProduct.setAttribute("version", "version");
-        wrongArchProduct.setAttribute("variant", "variant");
-        wrongArchProduct.setAttribute("type", "SVC");
-        wrongArchProduct.setAttribute("arch", "ALL");
+        wrongArchProduct.setAttribute(Product.Attributes.VERSION, "version");
+        wrongArchProduct.setAttribute(Product.Attributes.VARIANT, "variant");
+        wrongArchProduct.setAttribute(Product.Attributes.TYPE, "SVC");
+        wrongArchProduct.setAttribute(Product.Attributes.ARCHITECTURE, "ALL");
 
         // no x86_64, ie ARCH_LABEL
         String wrongArches = "s390x,s390,ppc64,ia64";
@@ -1064,10 +1056,10 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         // product with a kickstart content
         Product kickstartProduct = TestUtil.createProduct("12345", "a product");
-        kickstartProduct.setAttribute("version", "version");
-        kickstartProduct.setAttribute("variant", "variant");
-        kickstartProduct.setAttribute("type", "SVC");
-        kickstartProduct.setAttribute("arch", "ALL");
+        kickstartProduct.setAttribute(Product.Attributes.VERSION, "version");
+        kickstartProduct.setAttribute(Product.Attributes.VARIANT, "variant");
+        kickstartProduct.setAttribute(Product.Attributes.TYPE, "SVC");
+        kickstartProduct.setAttribute(Product.Attributes.ARCHITECTURE, "ALL");
 
         kickstartProduct.addContent(kickstartContent, false);
 
@@ -1097,10 +1089,10 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         // product with a kickstart content
         Product fileProduct = TestUtil.createProduct("12345", "a product");
-        fileProduct.setAttribute("version", "version");
-        fileProduct.setAttribute("variant", "variant");
-        fileProduct.setAttribute("type", "SVC");
-        fileProduct.setAttribute("arch", "ALL");
+        fileProduct.setAttribute(Product.Attributes.VERSION, "version");
+        fileProduct.setAttribute(Product.Attributes.VARIANT, "variant");
+        fileProduct.setAttribute(Product.Attributes.TYPE, "SVC");
+        fileProduct.setAttribute(Product.Attributes.ARCHITECTURE, "ALL");
 
         fileProduct.addContent(fileContent, false);
         products.clear();
@@ -1131,10 +1123,10 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         // product with a kickstart content
         Product unknownContentTypeProduct = TestUtil.createProduct("12345", "a product");
-        unknownContentTypeProduct.setAttribute("version", "version");
-        unknownContentTypeProduct.setAttribute("variant", "variant");
-        unknownContentTypeProduct.setAttribute("type", "SVC");
-        unknownContentTypeProduct.setAttribute("arch", ARCH_LABEL);
+        unknownContentTypeProduct.setAttribute(Product.Attributes.VERSION, "version");
+        unknownContentTypeProduct.setAttribute(Product.Attributes.VARIANT, "variant");
+        unknownContentTypeProduct.setAttribute(Product.Attributes.TYPE, "SVC");
+        unknownContentTypeProduct.setAttribute(Product.Attributes.ARCHITECTURE, ARCH_LABEL);
 
         unknownContentTypeProduct.addContent(unknownTypeContent, false);
         products.clear();
@@ -1166,10 +1158,10 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         // product with a kickstart content
         Product product = TestUtil.createProduct("12345", "a product");
-        product.setAttribute("version", "version");
-        product.setAttribute("variant", "variant");
-        product.setAttribute("type", "SVC");
-        product.setAttribute("arch", ARCH_LABEL);
+        product.setAttribute(Product.Attributes.VERSION, "version");
+        product.setAttribute(Product.Attributes.VARIANT, "variant");
+        product.setAttribute(Product.Attributes.TYPE, "SVC");
+        product.setAttribute(Product.Attributes.ARCHITECTURE, ARCH_LABEL);
 
         product.addContent(content, false);
         product.addContent(fileContent, false);
@@ -1229,15 +1221,15 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         Product product = pool.getProduct();
 
-        product.setAttribute("warning_period", "20");
-        product.setAttribute("sockets", "4");
-        product.setAttribute("ram", "8");
-        product.setAttribute("cores", "4");
-        product.setAttribute("management_enabled", "true");
-        product.setAttribute("stacking_id", "45678");
-        pool.setAttribute("virt_only", "true");
-        product.setAttribute("support_level", "slevel");
-        product.setAttribute("support_type", "stype");
+        product.setAttribute(Product.Attributes.WARNING_PERIOD, "20");
+        product.setAttribute(Product.Attributes.SOCKETS, "4");
+        product.setAttribute(Product.Attributes.RAM, "8");
+        product.setAttribute(Product.Attributes.CORES, "4");
+        product.setAttribute(Product.Attributes.MANAGEMENT_ENABLED, "true");
+        product.setAttribute(Product.Attributes.STACKING_ID, "45678");
+        pool.setAttribute(Product.Attributes.VIRT_ONLY, "true");
+        product.setAttribute(Product.Attributes.SUPPORT_LEVEL, "slevel");
+        product.setAttribute(Product.Attributes.SUPPORT_TYPE, "stype");
         pool.setAccountNumber("account1");
         pool.setContractNumber("contract1");
         pool.setOrderNumber("order1");
@@ -1297,9 +1289,9 @@ public class DefaultEntitlementCertServiceAdapterTest {
         for (Map<String, Object> prod : prods) {
             assertEquals(prod.get("id"), product.getId());
             assertEquals(prod.get("name"), product.getName());
-            assertEquals(prod.get("version"), product.getAttributeValue("version"));
-            String arch = product.hasAttribute("arch") ?
-                product.getAttributeValue("arch") : "";
+            assertEquals(prod.get("version"), product.getAttributeValue(Product.Attributes.VERSION));
+            String arch = product.hasAttribute(Product.Attributes.ARCHITECTURE) ?
+                product.getAttributeValue(Product.Attributes.ARCHITECTURE) : "";
             StringTokenizer st = new StringTokenizer(arch, ",");
             while (st.hasMoreElements()) {
                 assertTrue(((List) prod.get("architectures")).contains(st.nextElement()));
@@ -1337,16 +1329,16 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         ProductData pdata = subscription.getProduct();
 
-        pdata.setAttribute("warning_period", "20");
-        pdata.setAttribute("sockets", "4");
-        pdata.setAttribute("ram", "8");
-        pdata.setAttribute("cores", "4");
-        pdata.setAttribute("management_enabled", "true");
-        pdata.setAttribute("stacking_id", "45678");
+        pdata.setAttribute(Product.Attributes.WARNING_PERIOD, "20");
+        pdata.setAttribute(Product.Attributes.SOCKETS, "4");
+        pdata.setAttribute(Product.Attributes.RAM, "8");
+        pdata.setAttribute(Product.Attributes.CORES, "4");
+        pdata.setAttribute(Product.Attributes.MANAGEMENT_ENABLED, "true");
+        pdata.setAttribute(Product.Attributes.STACKING_ID, "45678");
 
-        entitlement.getPool().setAttribute("virt_only", "true");
-        pdata.setAttribute("support_level", "slevel");
-        pdata.setAttribute("support_type", "stype");
+        entitlement.getPool().setAttribute(Product.Attributes.VIRT_ONLY, "true");
+        pdata.setAttribute(Product.Attributes.SUPPORT_LEVEL, "slevel");
+        pdata.setAttribute(Product.Attributes.SUPPORT_TYPE, "stype");
 
         subscription.setAccountNumber("account1");
         subscription.setContractNumber("contract1");
@@ -1391,8 +1383,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         List<Map<String, Object>> prods = (List<Map<String, Object>>) data.get("products");
         List<Map<String, Object>> contents = null;
         for (Map<String, Object> prod : prods) {
-            String arch = product.hasAttribute("arch") ?
-                product.getAttributeValue("arch") : "";
+            String arch = product.hasAttribute(Product.Attributes.ARCHITECTURE) ?
+                product.getAttributeValue(Product.Attributes.ARCHITECTURE) : "";
             StringTokenizer st = new StringTokenizer(arch, ",");
             while (st.hasMoreElements()) {
                 assertTrue(((List) prod.get("architectures")).contains(st.nextElement()));
@@ -1421,10 +1413,10 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         // our content with no arch should inherit this arch
         Product inheritedArchProduct = TestUtil.createProduct("12345", "a product");
-        inheritedArchProduct.setAttribute("version", "version");
-        inheritedArchProduct.setAttribute("variant", "variant");
-        inheritedArchProduct.setAttribute("type", "SVC");
-        inheritedArchProduct.setAttribute("arch", ARCH_LABEL);
+        inheritedArchProduct.setAttribute(Product.Attributes.VERSION, "version");
+        inheritedArchProduct.setAttribute(Product.Attributes.VARIANT, "variant");
+        inheritedArchProduct.setAttribute(Product.Attributes.TYPE, "SVC");
+        inheritedArchProduct.setAttribute(Product.Attributes.ARCHITECTURE, ARCH_LABEL);
         inheritedArchProduct.addContent(noArchContent, false);
         products.add(inheritedArchProduct);
 
@@ -1458,8 +1450,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         List<Map<String, Object>> contents = null;
         for (Map<String, Object> prod : prods) {
 
-            String arch = product.hasAttribute("arch") ?
-                product.getAttributeValue("arch") : "";
+            String arch = product.hasAttribute(Product.Attributes.ARCHITECTURE) ?
+                product.getAttributeValue(Product.Attributes.ARCHITECTURE) : "";
             StringTokenizer st = new StringTokenizer(arch, ",");
             while (st.hasMoreElements()) {
                 assertTrue(((List) prod.get("architectures")).contains(st.nextElement()));
@@ -1486,10 +1478,10 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         // product with no compatible content, but marked as 'ALL' arch
         Product wrongArchProduct = TestUtil.createProduct("12345", "a product");
-        wrongArchProduct.setAttribute("version", "version");
-        wrongArchProduct.setAttribute("variant", "variant");
-        wrongArchProduct.setAttribute("type", "SVC");
-        wrongArchProduct.setAttribute("arch", "ALL");
+        wrongArchProduct.setAttribute(Product.Attributes.VERSION, "version");
+        wrongArchProduct.setAttribute(Product.Attributes.VARIANT, "variant");
+        wrongArchProduct.setAttribute(Product.Attributes.TYPE, "SVC");
+        wrongArchProduct.setAttribute(Product.Attributes.ARCHITECTURE, "ALL");
 
         // no x86_64, ie ARCH_LABEL
         String wrongArches = "s390x,s390,ppc64,ia64";
@@ -1529,8 +1521,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         List<Map<String, Object>> contents = null;
         for (Map<String, Object> prod : prods) {
 
-            String arch = wrongArchProduct.hasAttribute("arch") ?
-                wrongArchProduct.getAttributeValue("arch") : "";
+            String arch = wrongArchProduct.hasAttribute(Product.Attributes.ARCHITECTURE) ?
+                wrongArchProduct.getAttributeValue(Product.Attributes.ARCHITECTURE) : "";
             StringTokenizer st = new StringTokenizer(arch, ",");
             while (st.hasMoreElements()) {
                 assertTrue(((List) prod.get("architectures")).contains(st.nextElement()));
@@ -1550,9 +1542,9 @@ public class DefaultEntitlementCertServiceAdapterTest {
         consumer.setFact("system.certificate_version", "3.3");
         consumer.setFact("uname.machine", "x86_64");
 
-        subscription.getProduct().setAttribute("warning_period", "0");
-        subscription.getProduct().setAttribute("management_enabled", "false");
-        entitlement.getPool().setAttribute("virt_only", "false");
+        subscription.getProduct().setAttribute(Product.Attributes.WARNING_PERIOD, "0");
+        subscription.getProduct().setAttribute(Product.Attributes.MANAGEMENT_ENABLED, "false");
+        entitlement.getPool().setAttribute(Product.Attributes.VIRT_ONLY, "false");
         for (ProductContent pc : product.getProductContent()) {
             pc.setEnabled(true);
         }
@@ -1606,8 +1598,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         consumer.setFact("system.certificate_version", "3.3");
         consumer.setFact("uname.machine", "x86_64");
 
-        pool.getProduct().setAttribute("management_enabled", "1");
-        entitlement.getPool().setAttribute("virt_only", "1");
+        pool.getProduct().setAttribute(Product.Attributes.MANAGEMENT_ENABLED, "1");
+        entitlement.getPool().setAttribute(Product.Attributes.VIRT_ONLY, "1");
 
         Set<X509ExtensionWrapper> extensions =
             certServiceAdapter.prepareV3Extensions(entitlement, "prefix", null);
@@ -1831,10 +1823,10 @@ public class DefaultEntitlementCertServiceAdapterTest {
     public void testContentExtensionLargeSet() throws IOException {
         Set<Product> products = new HashSet<Product>();
         Product extremeProduct = TestUtil.createProduct("12345", "a product");
-        extremeProduct.setAttribute("version", "version");
-        extremeProduct.setAttribute("variant", "variant");
-        extremeProduct.setAttribute("type", "SVC");
-        extremeProduct.setAttribute("arch", ARCH_LABEL);
+        extremeProduct.setAttribute(Product.Attributes.VERSION, "version");
+        extremeProduct.setAttribute(Product.Attributes.VARIANT, "variant");
+        extremeProduct.setAttribute(Product.Attributes.TYPE, "SVC");
+        extremeProduct.setAttribute(Product.Attributes.ARCHITECTURE, ARCH_LABEL);
         products.add(extremeProduct);
 
         for (int i = 0; i < 550; i++) {

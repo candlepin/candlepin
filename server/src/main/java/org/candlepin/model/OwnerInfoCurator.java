@@ -20,12 +20,20 @@ import com.google.inject.Provider;
 import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.Session;
+import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Disjunction;
+import org.hibernate.criterion.LikeExpression;
 import org.hibernate.criterion.Projections;
+import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.criterion.Subqueries;
+import org.hibernate.type.StringType;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -36,10 +44,11 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
+
+
 /**
  * OwnerInfoCurator
  */
-
 public class OwnerInfoCurator {
     private static Logger log = LoggerFactory.getLogger(OwnerInfoCurator.class);
 
@@ -158,46 +167,158 @@ public class OwnerInfoCurator {
         return ((Long) activePoolCountCrit.uniqueResult()).intValue();
     }
 
+    @SuppressWarnings("checkstyle:indentation")
     private int getRequiresConsumerTypeCount(ConsumerType type, Owner owner, Date date) {
-        PoolFilterBuilder filterBuilder = new PoolFilterBuilder();
-        filterBuilder.addAttributeFilter("requires_consumer_type", type.getLabel());
-        Criteria typeCountCrit = poolCurator.createSecureCriteria()
-            .add(Restrictions.eq("owner", owner))
+        Criteria criteria = poolCurator.createSecureCriteria("Pool")
+            .createAlias("product", "Product")
+            .setProjection(Projections.countDistinct("Pool.id"));
+
+        criteria.add(Restrictions.eq("owner", owner))
             .add(Restrictions.le("startDate", date))
             .add(Restrictions.ge("endDate", date))
-            .setProjection(Projections.count("id"));
-        filterBuilder.applyTo(typeCountCrit);
+            .add(this.addAttributeFilterSubquery(Pool.Attributes.REQUIRES_CONSUMER_TYPE, Arrays.asList(
+                type.getLabel()
+            )));
 
-        return ((Long) typeCountCrit.uniqueResult()).intValue();
+        return ((Long) criteria.uniqueResult()).intValue();
     }
 
+    @SuppressWarnings("checkstyle:indentation")
     private int getEnabledConsumerTypeCount(ConsumerType type, Owner owner, Date date) {
-        PoolFilterBuilder filterBuilder = new PoolFilterBuilder();
-        filterBuilder.addAttributeFilter("enabled_consumer_types", type.getLabel() + ",*");
-        filterBuilder.addAttributeFilter("enabled_consumer_types", "*," + type.getLabel() + ",*");
-        filterBuilder.addAttributeFilter("enabled_consumer_types", "*," + type.getLabel());
-        filterBuilder.addAttributeFilter("enabled_consumer_types", type.getLabel());
-        Criteria enabledCountCrit = poolCurator.createSecureCriteria()
-            .add(Restrictions.eq("owner", owner))
+        Criteria criteria = poolCurator.createSecureCriteria("Pool")
+            .createAlias("product", "Product")
+            .setProjection(Projections.countDistinct("Pool.id"));
+
+        criteria.add(Restrictions.eq("owner", owner))
             .add(Restrictions.le("startDate", date))
             .add(Restrictions.ge("endDate", date))
-            .setProjection(Projections.countDistinct("id"));
-        filterBuilder.applyTo(enabledCountCrit);
+            .add(this.addAttributeFilterSubquery(Pool.Attributes.ENABLED_CONSUMER_TYPES, Arrays.asList(
+                type.getLabel() + ",*", "*," + type.getLabel(), "*," + type.getLabel() + ",*", type.getLabel()
+            )));
 
-        return ((Long) enabledCountCrit.uniqueResult()).intValue();
+        return ((Long) criteria.uniqueResult()).intValue();
+    }
+
+    @SuppressWarnings("checkstyle:indentation")
+    private Criterion addAttributeFilterSubquery(String key, Collection<String> values) {
+        key = this.sanitizeMatchesFilter(key);
+
+        // Find all pools which have the given attribute (and values) on a product, unless the pool
+        // defines that same attribute
+        DetachedCriteria poolAttrSubquery = DetachedCriteria.forClass(Pool.class, "PoolI")
+            .createAlias("PoolI.attributes", "attrib")
+            .setProjection(Projections.id())
+            .add(Property.forName("Pool.id").eqProperty("PoolI.id"))
+            .add(new CPLikeExpression("attrib.indices", key, '!', false));
+
+        // Impl note:
+        // The SQL restriction below uses some Hibernate magic value to get the pool ID from the
+        // outer-most query. We can't use {alias} here, since we're basing the subquery on Product
+        // instead of Pool to save ourselves an unnecessary join. Similarly, we use an SQL
+        // restriction here because we can query the information we need, hitting only one table
+        // with direct SQL, whereas the matching criteria query would end up requiring a minimum of
+        // one join to get from pool to pool attributes.
+        DetachedCriteria prodAttrSubquery = DetachedCriteria.forClass(Product.class, "ProdI")
+            .createAlias("ProdI.attributes", "attrib")
+            .setProjection(Projections.id())
+            .add(Property.forName("Product.uuid").eqProperty("ProdI.uuid"))
+            .add(new CPLikeExpression("attrib.indices", key, '!', false))
+            .add(Restrictions.sqlRestriction(
+                "NOT EXISTS (SELECT poolattr.pool_id FROM cp_pool_attribute poolattr " +
+                "WHERE poolattr.pool_id = this_.id AND LOWER(poolattr.name) LIKE LOWER(?) ESCAPE '!')",
+                key, StringType.INSTANCE
+            ));
+
+        if (values != null && !values.isEmpty()) {
+            Disjunction poolAttrValueDisjunction = Restrictions.disjunction();
+            Disjunction prodAttrValueDisjunction = Restrictions.disjunction();
+
+            for (String attrValue : values) {
+                if (attrValue == null || attrValue.isEmpty()) {
+                    poolAttrValueDisjunction.add(Restrictions.isNull("attrib.elements"))
+                        .add(Restrictions.eq("attrib.elements", ""));
+
+                    prodAttrValueDisjunction.add(Restrictions.isNull("attrib.elements"))
+                        .add(Restrictions.eq("attrib.elements", ""));
+                }
+                else {
+                    attrValue = this.sanitizeMatchesFilter(attrValue);
+                    poolAttrValueDisjunction.add(
+                        new CPLikeExpression("attrib.elements", attrValue, '!', true));
+                    prodAttrValueDisjunction.add(
+                        new CPLikeExpression("attrib.elements", attrValue, '!', true));
+                }
+            }
+
+            poolAttrSubquery.add(poolAttrValueDisjunction);
+            prodAttrSubquery.add(prodAttrValueDisjunction);
+        }
+
+        return Restrictions.or(
+            Subqueries.exists(poolAttrSubquery),
+            Subqueries.exists(prodAttrSubquery)
+        );
+    }
+
+    private String sanitizeMatchesFilter(String matches) {
+        StringBuilder output = new StringBuilder();
+        boolean escaped = false;
+
+        for (int index = 0; index < matches.length(); ++index) {
+            char c = matches.charAt(index);
+
+            switch (c) {
+                case '!':
+                case '_':
+                case '%':
+                    output.append('!').append(c);
+                    break;
+
+                case '\\':
+                    if (escaped) {
+                        output.append(c);
+                    }
+
+                    escaped = !escaped;
+                    break;
+
+                case '*':
+                case '?':
+                    if (!escaped) {
+                        output.append(c == '*' ? '%' : '_');
+                        break;
+                    }
+
+                default:
+                    output.append(c);
+                    escaped = false;
+            }
+        }
+
+        return output.toString();
+    }
+
+    // TODO: Move this to the CPRestrictions class (as a pair of .like and .ilike methods) once
+    // this branch and the branch that contain it are merged together.
+    private static class CPLikeExpression extends LikeExpression {
+        public CPLikeExpression(String property, String value, char escape, boolean ignoreCase) {
+            super(property, value, escape, ignoreCase);
+        }
     }
 
     private Collection<String> getProductFamilies(Owner owner, Date date) {
         Set<String> families = new HashSet<String>();
 
-        String queryStr = "select distinct attr.value from Pool p " +
+        String queryStr = "select distinct value(attr) from Pool p " +
             "join p.attributes as attr " +
             "where p.owner = :owner " +
             "and p.startDate < :date and p.endDate > :date " +
-            "and attr.name = 'product_family'";
+            "and key(attr) = :attribute";
+
         Query query = currentSession().createQuery(queryStr)
             .setEntity("owner", owner)
-            .setParameter("date", date);
+            .setParameter("date", date)
+            .setParameter("attribute", Pool.Attributes.PRODUCT_FAMILY);
 
         Iterator iter = query.iterate();
         while (iter.hasNext()) {
@@ -205,17 +326,18 @@ public class OwnerInfoCurator {
             families.add(family);
         }
 
-        queryStr = "select distinct prod.value from Pool p " +
+        queryStr = "select distinct value(prod) from Pool p " +
             "join p.product.attributes as prod " +
             "where p.owner = :owner " +
             "and p.startDate < :date and p.endDate > :date " +
-            "and prod.name = 'product_family' " +
-            "and p not in (select distinct pa.pool from PoolAttribute pa" +
-            "              where pa.name = 'product_family')";
+            "and key(prod) = :attribute " +
+            "and p not in (SELECT DISTINCT p2 FROM Pool p2 JOIN p2.attributes AS attr2 " +
+            "    WHERE key(attr2) = :attribute)";
 
         query = currentSession().createQuery(queryStr)
             .setEntity("owner", owner)
-            .setParameter("date", date);
+            .setParameter("date", date)
+            .setParameter("attribute", Pool.Attributes.PRODUCT_FAMILY);
 
         iter = query.iterate();
         while (iter.hasNext()) {
@@ -234,52 +356,29 @@ public class OwnerInfoCurator {
      * use family = null to get counts for all pools.
      */
     private int getProductFamilyCount(Owner owner, Date date, String family, boolean virt) {
-        String queryStr = "select sum(ent.quantity) from Pool p" +
-            "              join p.entitlements as ent " +
-            "              where p.owner = :owner " +
-            "              and p.startDate < :date and p.endDate > :date ";
+        Criteria criteria = poolCurator.createSecureCriteria("Pool")
+            .createAlias("entitlements", "Ent")
+            .createAlias("product", "Product")
+            .setProjection(Projections.sum("Ent.quantity"));
+
+        criteria.add(Restrictions.eq("owner", owner))
+            .add(Restrictions.le("startDate", date))
+            .add(Restrictions.ge("endDate", date));
 
         if (family != null) {
-            queryStr +=
-                "and (p in (select p from Pool p join p.attributes as attr " +
-                "           where p.owner = :owner " +
-                "           and attr.name = 'product_family' and attr.value = :family)" +
-                "     or (p in (select p from Pool p join p.product.attributes as prod " +
-                "              where p.owner = :owner " +
-                "              and prod.name = 'product_family' " +
-                "              and prod.value = :family) " +
-                "         and p not in (select p from Pool p join p.attributes as attr " +
-                "                       where p.owner = :owner " +
-                "                       and attr.name = 'product_family')" +
-                "        )" +
-                ")";
+            criteria.add(this.addAttributeFilterSubquery(
+                Pool.Attributes.PRODUCT_FAMILY, Arrays.asList(family)
+            ));
         }
 
         if (virt) {
-            queryStr += "and (p in (select p from Pool p join p.attributes as attr " +
-                        "           where attr.name = 'virt_only' " +
-                        "           and attr.value = 'true') " +
-                        "     or (p in (select p from Pool p " +
-                        "               join p.product.attributes as prod " +
-                        "               where p.owner = :owner " +
-                        "               and prod.name = 'virt_only' " +
-                        "               and prod.value = 'true')" +
-                        "         and p not in (select p from Pool p " +
-                        "                       join p.attributes as attr " +
-                        "                       where p.owner = :owner " +
-                        "                       and attr.name = 'virt_only')" +
-                        "     )" +
-                        ")";
-        }
-        Query query = currentSession().createQuery(queryStr)
-            .setEntity("owner", owner)
-            .setParameter("date", date);
-
-        if (family != null) {
-            query.setParameter("family", family);
+            criteria.add(this.addAttributeFilterSubquery(Pool.Attributes.VIRT_ONLY, Arrays.asList("true")));
         }
 
-        Long res = (Long) query.uniqueResult();
+        Long res = (Long) criteria.uniqueResult();
+        if (res == null) {
+            return 0;
+        }
 
         return res != null ? res.intValue() : 0;
     }

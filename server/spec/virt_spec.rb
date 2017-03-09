@@ -4,6 +4,7 @@ require 'candlepin_scenarios'
 # This spec tests virt limited products in a standalone Candlepin deployment.
 # (which we assume to be testing against)
 describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
+  include AttributeHelper
   include CandlepinMethods
   include VirtHelper
   include SpecUtils
@@ -47,9 +48,8 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
 
   it 'should create a virt_only pool for hosts guests' do
     # Get the attribute that indicates which host:
-    requires_host = @guest_pool['attributes'].find_all {
-      |i| i['name'] == 'requires_host' }[0]
-    requires_host['value'].should == @host1['uuid']
+    host = get_attribute_value(@guest_pool['attributes'], "requires_host")
+    expect(host).to eq(@host1['uuid'])
 
     # Guest 1 should be able to use the pool:
     @guest1_client.consume_pool(@guest_pool['id'], {:quantity => 1})
@@ -94,7 +94,7 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     pools = @guest1_client.list_pools :consumer => @guest1['uuid'], :listall => true, :product => arch_virt_product.id
     pools.length.should eq(2)
     # Find the correct host-restricted subpool
-    guest_pool_with_arch = pools.find_all { |i| flatten_attributes(i['attributes'])['requires_host'] == @host1.uuid }[0]
+    guest_pool_with_arch = pools.find_all { |i| get_attribute_value(i['attributes'], 'requires_host') == @host1.uuid }[0]
     guest_pool_with_arch.should_not == nil
 
     @guest1_client.update_consumer({:guestIds => [

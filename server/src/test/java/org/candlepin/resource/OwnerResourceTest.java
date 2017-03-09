@@ -307,7 +307,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Test
     public void testRefreshPoolsWithRemovedMasterPool() {
         Product prod = this.createProduct(owner);
-        prod.setAttribute("virt_limit", "4");
+        prod.setAttribute(Product.Attributes.VIRT_LIMIT, "4");
         productCurator.merge(prod);
         config.setProperty(ConfigProperties.STANDALONE, "false");
 
@@ -361,7 +361,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Test
     public void testRefreshPoolsWithRemovedBonusPool() {
         Product prod = this.createProduct(owner);
-        prod.setAttribute("virt_limit", "4");
+        prod.setAttribute(Product.Attributes.VIRT_LIMIT, "4");
         productCurator.merge(prod);
         config.setProperty(ConfigProperties.STANDALONE, "false");
 
@@ -481,17 +481,17 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Date now = new Date();
         Product p = this.createProduct(owner);
         Pool pool1 = TestUtil.createPool(owner, p);
-        pool1.setAttribute("virt_only", "true");
-        pool1.setAttribute("pool_derived", "true");
-        pool1.setAttribute("physical_only", "false");
-        pool1.setAttribute("unmapped_guests_only", "true");
+        pool1.setAttribute(Pool.Attributes.VIRT_ONLY, "true");
+        pool1.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
+        pool1.setAttribute(Pool.Attributes.PHYSICAL_ONLY, "false");
+        pool1.setAttribute(Pool.Attributes.UNMAPPED_GUESTS_ONLY, "true");
         pool1.setStartDate(now);
         pool1.setEndDate(new Date(now.getTime() + 1000L * 60 * 60 * 24 * 365));
         Pool pool2 = TestUtil.createPool(owner, p);
-        pool2.setAttribute("virt_only", "true");
-        pool2.setAttribute("pool_derived", "true");
-        pool2.setAttribute("physical_only", "false");
-        pool2.setAttribute("unmapped_guests_only", "true");
+        pool2.setAttribute(Pool.Attributes.VIRT_ONLY, "true");
+        pool2.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
+        pool2.setAttribute(Pool.Attributes.PHYSICAL_ONLY, "false");
+        pool2.setAttribute(Pool.Attributes.UNMAPPED_GUESTS_ONLY, "true");
         pool2.setStartDate(new Date(now.getTime() + 2 * 1000L * 60 * 60 * 24 * 365));
         pool2.setEndDate(new Date(now.getTime() + 3 * 1000L * 60 * 60 * 24 * 365));
         poolCurator.create(pool1);
@@ -533,11 +533,11 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         Product p = this.createProduct(owner);
         Pool pool1 = TestUtil.createPool(owner, p);
-        pool1.setAttribute("virt_only", "true");
+        pool1.setAttribute(Product.Attributes.VIRT_ONLY, "true");
         poolCurator.create(pool1);
 
         Product p2 = this.createProduct(owner);
-        p2.setAttribute("cores", "12");
+        p2.setAttribute(Product.Attributes.CORES, "12");
         productCurator.merge(p2);
         Pool pool2 = TestUtil.createPool(owner, p2);
         poolCurator.create(pool2);
@@ -1076,10 +1076,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ownerCurator.create(owner);
 
         Product prod1 = this.createProduct(owner);
-        prod1.setAttribute("support_level", "premium");
+        prod1.setAttribute(Product.Attributes.SUPPORT_LEVEL, "premium");
         productCurator.merge(prod1);
         Product prod2 = this.createProduct(owner);
-        prod2.setAttribute("support_level", "standard");
+        prod2.setAttribute(Product.Attributes.SUPPORT_LEVEL, "standard");
         productCurator.merge(prod2);
 
         List<Subscription> subscriptions = new LinkedList<Subscription>();
@@ -1381,7 +1381,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Test
     public void createBonusPool() {
         Product prod = this.createProduct(owner);
-        prod.setAttribute("virt_limit", "2");
+        prod.setAttribute(Product.Attributes.VIRT_LIMIT, "2");
         productCurator.merge(prod);
         Pool pool = TestUtil.createPool(owner, prod);
         assertEquals(0, poolCurator.listByOwner(owner).list().size());
@@ -1397,7 +1397,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Test
     public void createBonusPoolForUpdate() {
         Product prod = this.createProduct(owner);
-        prod.setAttribute("virt_limit", "3");
+        prod.setAttribute(Product.Attributes.VIRT_LIMIT, "3");
         productCurator.merge(prod);
         Pool pool = TestUtil.createPool(owner, prod);
         pool.setSubscriptionSubKey("master");
@@ -1417,7 +1417,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Test
     public void removePoolsForExpiredUpdate() {
         Product prod = this.createProduct(owner);
-        prod.setAttribute("virt_limit", "3");
+        prod.setAttribute(Product.Attributes.VIRT_LIMIT, "3");
         productCurator.merge(prod);
         Pool pool = TestUtil.createPool(owner, prod);
         pool.setSubscriptionSubKey("master");
@@ -1434,7 +1434,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Test(expected = BadRequestException.class)
     public void cantUpdateBonusPool() {
         Product prod = this.createProduct(owner);
-        prod.setAttribute("virt_limit", "3");
+        prod.setAttribute(Product.Attributes.VIRT_LIMIT, "3");
         productCurator.merge(prod);
         Pool pool = TestUtil.createPool(owner, prod);
         pool.setSubscriptionSubKey("master");
@@ -1454,7 +1454,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Test
     public void enrichPool() {
         Product prod = this.createProduct(owner);
-        prod.setAttribute("virt_only", "true");
+        prod.setAttribute(Product.Attributes.VIRT_ONLY, "true");
         prod.setMultiplier(2L);
         productCurator.merge(prod);
         Pool pool = TestUtil.createPool(owner, prod);
@@ -1463,7 +1463,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ownerResource.createPool(owner.getKey(), pool);
         List<Pool> pools = poolCurator.listByOwner(owner).list();
         assertEquals(1, pools.size());
-        assertTrue(Boolean.parseBoolean(pools.get(0).getAttributeValue("virt_only")));
+        assertTrue(Boolean.parseBoolean(pools.get(0).getAttributeValue(Product.Attributes.VIRT_ONLY)));
         assertEquals(200L, pools.get(0).getQuantity().intValue());
     }
 

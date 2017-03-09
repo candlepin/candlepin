@@ -95,7 +95,7 @@ public class X509ExtensionUtil  extends X509Util{
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
             OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_QUANTITY_KEY), false, pool
             .getQuantity().toString()));
-        String socketLimit = pool.getProduct().getAttributeValue("sockets");
+        String socketLimit = pool.getProduct().getAttributeValue(Product.Attributes.SOCKETS);
         if (socketLimit != null) {
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SOCKETLIMIT_KEY), false,

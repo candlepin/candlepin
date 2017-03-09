@@ -26,6 +26,7 @@ import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
+import org.candlepin.model.Product;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.test.TestUtil;
 
@@ -80,8 +81,8 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
 
         // Quantity on bonus pool should be virt limit * sub quantity:
         assertEquals(new Long(100), virtBonusPool.getQuantity());
-        assertEquals("true", virtBonusPool.getAttributeValue("virt_only"));
-        assertEquals("10", virtBonusPool.getProduct().getAttributeValue("virt_limit"));
+        assertEquals("true", virtBonusPool.getAttributeValue(Product.Attributes.VIRT_ONLY));
+        assertEquals("10", virtBonusPool.getProduct().getAttributeValue(Product.Attributes.VIRT_LIMIT));
 
         Entitlement e = new Entitlement(physicalPool, consumer, 1);
         List<Pool> poolList = new ArrayList<Pool>();
@@ -128,8 +129,8 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
 
         // Quantity on bonus pool should be virt limit * sub quantity:
         assertEquals(new Long(100), virtBonusPool.getQuantity());
-        assertEquals("true", virtBonusPool.getAttributeValue("virt_only"));
-        assertEquals("10", virtBonusPool.getProduct().getAttributeValue("virt_limit"));
+        assertEquals("true", virtBonusPool.getAttributeValue(Product.Attributes.VIRT_ONLY));
+        assertEquals("10", virtBonusPool.getProduct().getAttributeValue(Product.Attributes.VIRT_LIMIT));
         Entitlement e = new Entitlement(physicalPool, consumer, 1);
 
         Subscription s2 = createVirtLimitSub("virtLimitProduct2", 10, "10");
@@ -147,8 +148,8 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
 
         // Quantity on bonus pool should be virt limit * sub quantity:
         assertEquals(new Long(100), virtBonusPool2.getQuantity());
-        assertEquals("true", virtBonusPool2.getAttributeValue("virt_only"));
-        assertEquals("10", virtBonusPool2.getProduct().getAttributeValue("virt_limit"));
+        assertEquals("true", virtBonusPool2.getAttributeValue(Product.Attributes.VIRT_ONLY));
+        assertEquals("10", virtBonusPool2.getProduct().getAttributeValue(Product.Attributes.VIRT_LIMIT));
         Entitlement e2 = new Entitlement(physicalPool2, consumer, 1);
 
         List<Pool> poolList = new ArrayList<Pool>();
@@ -194,7 +195,7 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
     public void hostedVirtLimitWithHostLimitedCreatesBonusPoolsOnBind() {
         when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, "unlimited");
-        s.getProduct().setAttribute("host_limited", "true");
+        s.getProduct().setAttribute(Product.Attributes.HOST_LIMITED, "true");
         List<Pool> pools = poolRules.createAndEnrichPools(TestUtil.copyFromSub(s), new LinkedList<Pool>());
         assertEquals(2, pools.size());
 
@@ -228,8 +229,9 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
 
         // Quantity on bonus pool should be -1:
         assertEquals(new Long(-1), virtBonusPool.getQuantity());
-        assertEquals("true", virtBonusPool.getAttributeValue("virt_only"));
-        assertEquals("unlimited", virtBonusPool.getProduct().getAttributeValue("virt_limit"));
+        assertEquals("true", virtBonusPool.getAttributeValue(Product.Attributes.VIRT_ONLY));
+        assertEquals("unlimited",
+            virtBonusPool.getProduct().getAttributeValue(Product.Attributes.VIRT_LIMIT));
 
         Entitlement e = new Entitlement(physicalPool, consumer, 1);
         List<Pool> poolList = new ArrayList<Pool>();
@@ -268,8 +270,9 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
 
         // Quantity on bonus pool should be -1:
         assertEquals(new Long(-1), virtBonusPool.getQuantity());
-        assertEquals("true", virtBonusPool.getAttributeValue("virt_only"));
-        assertEquals("unlimited", virtBonusPool.getProduct().getAttributeValue("virt_limit"));
+        assertEquals("true", virtBonusPool.getAttributeValue(Product.Attributes.VIRT_ONLY));
+        assertEquals("unlimited",
+            virtBonusPool.getProduct().getAttributeValue(Product.Attributes.VIRT_LIMIT));
 
         Entitlement e = new Entitlement(physicalPool, consumer, 1);
 
@@ -302,8 +305,9 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
 
         // Quantity on bonus pool should be -1:
         assertEquals(new Long(-1), virtBonusPool.getQuantity());
-        assertEquals("true", virtBonusPool.getAttributeValue("virt_only"));
-        assertEquals("unlimited", virtBonusPool.getProduct().getAttributeValue("virt_limit"));
+        assertEquals("true", virtBonusPool.getAttributeValue(Product.Attributes.VIRT_ONLY));
+        assertEquals("unlimited",
+            virtBonusPool.getProduct().getAttributeValue(Product.Attributes.VIRT_LIMIT));
 
         Entitlement e = new Entitlement(physicalPool, consumer, 10);
         physicalPool.setConsumed(10L);
@@ -339,10 +343,10 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
 
         Pool virtBonusPool = setupVirtLimitPool();
         virtBonusPool.setQuantity(100L);
-        virtBonusPool.setAttribute("host_limited", "true");
-        virtBonusPool.setAttribute("virt_only", "true");
-        virtBonusPool.setAttribute("virt_limit", "10");
-        virtBonusPool.setAttribute("pool_derived", "true");
+        virtBonusPool.setAttribute(Product.Attributes.HOST_LIMITED, "true");
+        virtBonusPool.setAttribute(Product.Attributes.VIRT_ONLY, "true");
+        virtBonusPool.setAttribute(Product.Attributes.VIRT_LIMIT, "10");
+        virtBonusPool.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
 
         Entitlement e = new Entitlement(virtBonusPool, consumer, 1);
         List<Pool> poolList = new ArrayList<Pool>();

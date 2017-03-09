@@ -42,9 +42,7 @@ public class ListenerWrapper implements MessageHandler {
     @Override
     public void onMessage(ClientMessage msg) {
         String body = msg.getBodyBuffer().readString();
-        if (log.isDebugEnabled()) {
-            log.debug("Got event: {}", body);
-        }
+        log.debug("Got event: {}", body);
 
         // Exceptions thrown here will cause the event to remain in hornetq:
         try {

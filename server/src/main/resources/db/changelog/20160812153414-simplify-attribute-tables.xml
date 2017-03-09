@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <changeSet id="20160812153414-1" author="crog">
+        <dropPrimaryKey tableName="cp_pool_attribute"/>
+    </changeSet>
+
+    <changeSet id="20160812153414-2" author="crog">
+        <dropIndex tableName="cp_pool_attribute" indexName="cp_pool_attr_lower_idx"/>
+    </changeSet>
+
+    <changeSet id="20160812153414-3" author="crog" dbms="postgresql">
+        <dropIndex tableName="cp_pool_attribute" indexName="cp_pool_attribute_pool_id_idx"/>
+    </changeSet>
+
+    <changeSet id="20160812153414-4" author="crog">
+        <dropColumn tableName="cp_pool_attribute" columnName="id"/>
+    </changeSet>
+
+    <changeSet id="20160812153414-5" author="crog">
+        <dropColumn tableName="cp_pool_attribute" columnName="created"/>
+    </changeSet>
+
+    <changeSet id="20160812153414-6" author="crog">
+        <dropColumn tableName="cp_pool_attribute" columnName="updated"/>
+    </changeSet>
+
+    <changeSet id="20160812153414-7" author="crog">
+        <dropColumn tableName="cp_pool_attribute" columnName="value_lower"/>
+    </changeSet>
+
+    <changeSet id="20160812153414-8" author="crog">
+        <addPrimaryKey tableName="cp_pool_attribute" columnNames="pool_id, name"/>
+    </changeSet>
+
+    <changeSet id="20160812153414-9" author="crog">
+        <dropPrimaryKey tableName="cp2_product_attributes"/>
+    </changeSet>
+
+    <changeSet id="20160812153414-10" author="crog">
+        <dropColumn tableName="cp2_product_attributes" columnName="id"/>
+    </changeSet>
+
+    <changeSet id="20160812153414-11" author="crog">
+        <dropColumn tableName="cp2_product_attributes" columnName="created"/>
+    </changeSet>
+
+    <changeSet id="20160812153414-12" author="crog">
+        <dropColumn tableName="cp2_product_attributes" columnName="updated"/>
+    </changeSet>
+
+    <changeSet id="20160812153414-13" author="crog">
+        <addPrimaryKey tableName="cp2_product_attributes" columnNames="product_uuid, name"/>
+    </changeSet>
+
+</databaseChangeLog>
+<!-- vim: set expandtab sts=4 sw=4 ai: -->

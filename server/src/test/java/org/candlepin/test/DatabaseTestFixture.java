@@ -59,7 +59,6 @@ import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductAttributeCurator;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Role;
@@ -117,7 +116,7 @@ import javax.servlet.http.HttpServletResponse;
  * Test fixture for test classes requiring access to the database.
  */
 public class DatabaseTestFixture {
-    private static Logger log = LoggerFactory.getLogger(DatabaseTestFixture.class);
+    protected static Logger log = LoggerFactory.getLogger(DatabaseTestFixture.class);
 
     private static final String DEFAULT_CONTRACT = "SUB349923";
     private static final String DEFAULT_ACCOUNT = "ACC123";
@@ -147,7 +146,6 @@ public class DatabaseTestFixture {
     @Inject protected OwnerCurator ownerCurator;
     @Inject protected OwnerInfoCurator ownerInfoCurator;
     @Inject protected OwnerProductCurator ownerProductCurator;
-    @Inject protected ProductAttributeCurator productAttributeCurator;
     @Inject protected ProductCertificateCurator productCertificateCurator;
     @Inject protected ProductCurator productCurator;
     @Inject protected PoolCurator poolCurator;
