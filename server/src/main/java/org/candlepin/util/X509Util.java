@@ -81,7 +81,7 @@ public abstract class X509Util {
      * @param filterEnvironment show content also be filtered by environment.
      * @return ProductContent to include in the certificate.
      */
-    public Set<ProductContent> filterProductContent(Product prod, Entitlement ent,
+    public Set<ProductContent> filterProductContent(Product prod, Consumer consumer,
         EntitlementCurator entCurator, Map<String, EnvironmentContent> promotedContent,
         boolean filterEnvironment, Set<String> entitledProductIds) {
         Set<ProductContent> filtered = new HashSet<ProductContent>();
@@ -89,7 +89,7 @@ public abstract class X509Util {
         for (ProductContent pc : prod.getProductContent()) {
             // Filter any content not promoted to environment.
             if (filterEnvironment &&
-                (ent.getConsumer().getEnvironment() != null &&
+                (consumer.getEnvironment() != null &&
                 !promotedContent.containsKey(pc.getContent().getId()))) {
 
                 log.debug("Skipping content not promoted to environment: " +
