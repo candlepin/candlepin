@@ -2264,4 +2264,5 @@
     <include file="db/changelog/20150311151612-force-all-content-metadataexpire-to-0.xml"/>
     <include file="db/changelog/20160711104547-remove-fk-checkins.xml"/>
     <include file="db/changelog/20161025100925-remove-unique-content-name-constraint.xml"/>
+    <include file="db/changelog/20170206114359-convert-quanity-consumed-exported-to-columns.xml"/>
 </databaseChangeLog>

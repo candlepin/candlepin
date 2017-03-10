@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <property name="serial.type" value="BIGINT" dbms="oracle,mysql,hsqldb"/>
+    <property name="serial.type" value="int8" dbms="postgresql"/>
+
+    <property
+    dbms="postgresql,oracle"
+    name="fill_in_quantity_consumed_value"
+    value="update cp_pool
+        set quantity_consumed = coalesce(subquery.quantity, 0)
+        FROM (select pool_id, sum(quantity) quantity from cp_entitlement ent group by pool_id) subquery
+        where cp_pool.id = subquery.pool_id;" />
+
+    <property
+    dbms="mysql,hsqldb"
+    name="fill_in_quantity_consumed_value"
+    value="update cp_pool p set p.quantity_consumed =
+        coalesce((select sum(quantity) quantity from cp_entitlement ent where ent.pool_id = p.id),0);" />
+
+    <property
+    dbms="postgresql,oracle"
+    name="fill_in_quantity_exported_value"
+    value="update cp_pool
+        set quantity_exported = coalesce(subquery.quantity, 0)
+        FROM (select ent.pool_id pool_id, sum(ent.quantity) quantity
+              from cp_entitlement ent, cp_consumer cons, cp_consumer_type ctype
+              where ent.consumer_id = cons.id
+              and cons.type_id = ctype.id
+              and ctype.manifest = 'Y'
+              group by ent.pool_id) subquery
+        where cp_pool.id = subquery.pool_id;" />
+
+    <property
+    dbms="mysql, hsqldb"
+    name="fill_in_quantity_exported_value"
+    value="update cp_pool p set p.quantity_exported =
+        coalesce((select sum(ent.quantity) quantity
+              from cp_entitlement ent, cp_consumer cons, cp_consumer_type ctype
+              where ent.pool_id = p.id
+              and ent.consumer_id = cons.id
+              and cons.type_id = ctype.id
+              and ctype.manifest = 'Y'),0);" />
+
+    <changeSet id="20170206114359-1" author="wpoteat">
+        <comment>Add columns for consumed and exported quantities to pool</comment>
+        <addColumn tableName="cp_pool">
+            <column name="quantity_consumed" type="${serial.type}" defaultValueNumeric="0">
+                 <constraints nullable="false"/>
+            </column>
+            <column name="quantity_exported" type="${serial.type}" defaultValueNumeric="0">
+                 <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <sql>${fill_in_quantity_consumed_value}</sql>
+        <sql>${fill_in_quantity_exported_value}</sql>
+        <rollback>
+            alter table cp_pool drop column if exists quantity_consumed;
+            alter table cp_pool drop column if exists quantity_exported;
+        </rollback>
+        <!-- See http://www.liquibase.org/documentation/changes/index.html -->
+    </changeSet>
+
+</databaseChangeLog>
+<!-- vim: set expandtab sts=4 sw=4 ai: -->
