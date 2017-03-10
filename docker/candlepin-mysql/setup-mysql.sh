@@ -15,6 +15,18 @@ setup_mysql() {
     echo "autostart=true" >> $CP_MYSQL_CONFIG
     echo "autorestart=false" >> $CP_MYSQL_CONFIG
 
+    # Add options to match what IT uses
+    mkdir /etc/mysql
+    cat > /etc/mysql/my.cnf <<MYSQL_CONF
+[mysqld]
+symbolic-links=0
+transaction-isolation=READ-COMMITTED
+
+[mysqld_safe]
+symbolic-links=0
+transaction-isolation=READ-COMMITTED
+MYSQL_CONF
+
     su - mysql -c "mysql_install_db" -s "/bin/bash"
     /usr/bin/supervisord -c /etc/supervisord.conf
     sleep 5
