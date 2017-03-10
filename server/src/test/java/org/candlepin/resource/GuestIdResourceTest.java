@@ -36,6 +36,7 @@ import org.candlepin.model.GuestIdCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.VirtConsumerMap;
+import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.util.ServiceLevelValidator;
 
 import org.junit.Before;
@@ -50,6 +51,8 @@ import org.xnap.commons.i18n.I18nFactory;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+
+
 
 /**
  * GuestIdResourceTest
@@ -66,6 +69,7 @@ public class GuestIdResourceTest {
     @Mock private EventSink sink;
     @Mock private ServiceLevelValidator mockedServiceLevelValidator;
     @Mock private ProductCurator productCurator;
+    @Mock private ConsumerEnricher consumerEnricher;
 
     private GuestIdResource guestIdResource;
 
@@ -240,12 +244,13 @@ public class GuestIdResourceTest {
     @Test
     public void deleteGuestNotFound() {
         GuestId guest = new GuestId("guest-id", consumer);
-        when(guestIdCurator.findByConsumerAndId(eq(consumer),
-            eq(guest.getGuestId()))).thenReturn(guest);
-        when(consumerCurator.findByVirtUuid(guest.getGuestId(),
-            consumer.getOwner().getId())).thenReturn(null);
-        guestIdResource.deleteGuest(consumer.getUuid(),
-            guest.getGuestId(), true, null);
+
+        when(guestIdCurator.findByConsumerAndId(eq(consumer), eq(guest.getGuestId()))).thenReturn(guest);
+        when(consumerCurator.findByVirtUuid(guest.getGuestId(), consumer.getOwner().getId()))
+            .thenReturn(null);
+
+        guestIdResource.deleteGuest(consumer.getUuid(), guest.getGuestId(), true, null);
+
         Mockito.verify(guestIdCurator, Mockito.times(1)).delete(eq(guest));
         Mockito.verify(consumerResource, Mockito.never())
             .checkForMigration(eq(consumer), any(Consumer.class));
@@ -263,15 +268,14 @@ public class GuestIdResourceTest {
      * This class allows us to override the methods to make sure they have been used.
      */
     private class ConsumerResourceForTesting extends ConsumerResource {
-
         public ConsumerResourceForTesting() {
-            super(null, null, null, null, null, null, null, null, null,
-                  null, null, null, null, null, null, null, null,
-                  null, null, null, null, null, null, null, null, null, null, productCurator,
-                  null, null, null, null);
+            super(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, null, null, null, productCurator,
+                null, null, null, null, consumerEnricher);
         }
 
         public void checkForMigration(Consumer host, Consumer guest) {
+            // Intentionally left empty
         }
     }
 }

@@ -12,19 +12,35 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.resource.util;
+package org.candlepin.policy.js.compliance;
 
 import java.util.Date;
+
+
 
 /**
  * Represents a range in time -- Start date to End Date inclusive.
  */
 public class DateRange {
+    private static final String DATE_FORMAT = "%1$tF %1$tT.%1$tL%1$tz";
+
     private Date startDate;
     private Date endDate;
 
+    public DateRange() {
+        // Intentionally left empty
+    }
+
     public DateRange(Date start, Date end) {
         this.startDate = start;
+        this.endDate = end;
+    }
+
+    public void setStartDate(Date start) {
+        this.startDate = start;
+    }
+
+    public void setEndDate(Date end) {
         this.endDate = end;
     }
 
@@ -37,21 +53,21 @@ public class DateRange {
     }
 
     /**
-     * Determines if the specified date is within the range (inclusive of start and end
-     * dates).
+     * Determines if the specified date is within the range (inclusive of start and end dates).
      *
      * @param date to check
      * @return true if the range contains date, false otherwise.
      */
     public boolean contains(Date date) {
-        boolean startContains = this.startDate.compareTo(date) <= 0;
-        boolean endContains = this.endDate.compareTo(date) >= 0;
-        return startContains && endContains;
+        return (this.startDate != null && this.startDate.compareTo(date) <= 0) &&
+            (this.endDate != null && this.endDate.compareTo(date) >= 0);
     }
 
     @Override
     public String toString() {
-        return "Start: " + this.startDate + "\n End: " + this.endDate;
+        return String.format("DateRange [%s - %s]",
+            (this.startDate != null ? String.format(DATE_FORMAT, this.startDate) : null),
+            (this.endDate != null ? String.format(DATE_FORMAT, this.endDate) : null));
     }
 
 }

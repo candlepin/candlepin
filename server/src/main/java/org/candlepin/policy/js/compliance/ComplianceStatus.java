@@ -24,6 +24,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+
+
 /**
  * ComplianceStatus
  *
@@ -42,6 +44,7 @@ public class ComplianceStatus {
     private Map<String, Set<Entitlement>> compliantProducts;
     private Map<String, Set<Entitlement>> partiallyCompliantProducts; // stacked
     private Map<String, Set<Entitlement>> partialStacks;
+    private Map<String, DateRange> productComplianceDateRanges;
     private Set<ComplianceReason> reasons;
 
     public ComplianceStatus() {
@@ -49,6 +52,7 @@ public class ComplianceStatus {
         this.compliantProducts = new HashMap<String, Set<Entitlement>>();
         this.partiallyCompliantProducts = new HashMap<String, Set<Entitlement>>();
         this.partialStacks = new HashMap<String, Set<Entitlement>>();
+        this.productComplianceDateRanges = new HashMap<String, DateRange>();
         this.reasons = new HashSet<ComplianceReason>();
     }
 
@@ -99,6 +103,7 @@ public class ComplianceStatus {
         if (!partiallyCompliantProducts.containsKey(productId)) {
             partiallyCompliantProducts.put(productId, new HashSet<Entitlement>());
         }
+
         partiallyCompliantProducts.get(productId).add(entitlement);
     }
 
@@ -106,6 +111,7 @@ public class ComplianceStatus {
         if (!compliantProducts.containsKey(productId)) {
             compliantProducts.put(productId, new HashSet<Entitlement>());
         }
+
         compliantProducts.get(productId).add(entitlement);
     }
 
@@ -123,7 +129,12 @@ public class ComplianceStatus {
         if (!partialStacks.containsKey(stackId)) {
             partialStacks.put(stackId, new HashSet<Entitlement>());
         }
+
         partialStacks.get(stackId).add(entitlement);
+    }
+
+    public Map<String, DateRange> getProductComplianceDateRanges() {
+        return this.productComplianceDateRanges;
     }
 
     public Date getCompliantUntil() {
@@ -142,9 +153,11 @@ public class ComplianceStatus {
         if (isCompliant()) {
             return GREEN;
         }
+
         if (nonCompliantProducts.isEmpty()) {
             return YELLOW;
         }
+
         return RED;
     }
 
@@ -156,6 +169,7 @@ public class ComplianceStatus {
         if (reasons == null) {
             reasons = new HashSet<ComplianceReason>();
         }
+
         this.reasons = reasons;
     }
 }

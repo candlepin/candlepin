@@ -48,6 +48,7 @@ import org.candlepin.model.User;
 import org.candlepin.pki.PKIReader;
 import org.candlepin.pki.impl.BouncyCastlePKIReader;
 import org.candlepin.resource.util.ConsumerBindUtil;
+import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.service.ContentAccessCertServiceAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
@@ -75,6 +76,8 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
 
+
+
 /**
  * ConsumerResourceTest
  */
@@ -89,6 +92,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @Inject private ConsumerResource consumerResource;
     @Inject private IdentityCertServiceAdapter icsa;
     @Inject private CertificateSerialCurator serialCurator;
+    @Inject private ConsumerEnricher consumerEnricher;
 
     private ConsumerType standardSystemType;
     private ConsumerType personType;
@@ -111,8 +115,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
     @Before
     public void setUp() {
-        standardSystemType = consumerTypeCurator.create(new ConsumerType(
-            "standard-system"));
+        standardSystemType = consumerTypeCurator.create(new ConsumerType("standard-system"));
 
         personType = consumerTypeCurator.create(new ConsumerType(
             ConsumerTypeEnum.PERSON));
@@ -126,8 +129,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         ownerAdminRole.addUser(someuser);
         roleCurator.create(ownerAdminRole);
 
-        List<Permission> perms = permFactory.createPermissions(someuser,
-            ownerAdminRole.getPermissions());
+        List<Permission> perms = permFactory.createPermissions(someuser, ownerAdminRole.getPermissions());
         principal = new UserPrincipal(USER_NAME, perms, false);
         setupPrincipal(principal);
 
@@ -176,8 +178,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
         String serialsToFilter = serial1.toString() + "," + serial2.toString();
 
-        certificates = consumerResource.getEntitlementCertificates(
-            consumer.getUuid(), serialsToFilter);
+        certificates = consumerResource.getEntitlementCertificates(consumer.getUuid(), serialsToFilter);
         assertEquals(2, certificates.size());
         assertEquals(serial1, certificates.get(0).getSerial().getId());
         assertEquals(serial2, certificates.get(1).getSerial().getId());
@@ -198,16 +199,14 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
         assertNotNull(submitted);
         assertNotNull(consumerCurator.find(submitted.getId()));
-        assertEquals(standardSystemType.getLabel(), submitted.getType()
-            .getLabel());
+        assertEquals(standardSystemType.getLabel(), submitted.getType().getLabel());
         assertEquals(METADATA_VALUE, submitted.getFact(METADATA_NAME));
     }
 
     @Test
     @SuppressWarnings("checkstyle:indentation")
     public void testCreateConsumerVsDefaultServiceLevelForOwner() {
-        Consumer toSubmit = new Consumer(CONSUMER_NAME, USER_NAME, null,
-            standardSystemType);
+        Consumer toSubmit = new Consumer(CONSUMER_NAME, USER_NAME, null, standardSystemType);
         Consumer submitted = consumerResource.create(
             toSubmit,
             new UserPrincipal(someuser.getUsername(), Arrays.asList(new Permission [] {
@@ -222,14 +221,12 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @Test(expected = BadRequestException.class)
     public void testCreateConsumerWithUUID() {
         String uuid = "Jar Jar Binks";
-        Consumer toSubmit = new Consumer(CONSUMER_NAME, USER_NAME, null,
-            standardSystemType);
+        Consumer toSubmit = new Consumer(CONSUMER_NAME, USER_NAME, null, standardSystemType);
         assertNull(toSubmit.getId());
         toSubmit.setUuid(uuid);
         toSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
 
-        Consumer submitted = consumerResource.create(toSubmit, principal, null,
-            owner.getKey(), null, true);
+        Consumer submitted = consumerResource.create(toSubmit, principal, null, owner.getKey(), null, true);
         assertNotNull(submitted);
         assertNotNull(submitted.getId());
         assertNotNull(consumerCurator.find(submitted.getId()));
@@ -240,8 +237,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         assertEquals("The Uuids do not match", uuid, submitted.getUuid());
 
         // The second post should fail because of constraint failures
-        Consumer anotherToSubmit = new Consumer(CONSUMER_NAME, USER_NAME, null,
-            standardSystemType);
+        Consumer anotherToSubmit = new Consumer(CONSUMER_NAME, USER_NAME, null, standardSystemType);
         anotherToSubmit.setUuid(uuid);
         anotherToSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
         anotherToSubmit.setId(null);
@@ -261,11 +257,8 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
         // not setting the username here - this should be set by
         // examining the user principal
-        Consumer consumer = new Consumer("random-consumer", null, null,
-            standardSystemType);
-
-        consumer = consumerResource.create(consumer, principal, null, null,
-            null, true);
+        Consumer consumer = new Consumer("random-consumer", null, null, standardSystemType);
+        consumer = consumerResource.create(consumer, principal, null, null, null, true);
 
         assertEquals(USER_NAME, consumer.getUsername());
     }
@@ -280,13 +273,11 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         identityCertificateCurator.create(idCert);
         consumer.setIdCert(idCert);
 
-        consumer.setType(consumerTypeCurator.create(
-            new ConsumerType(ConsumerTypeEnum.CANDLEPIN)));
+        consumer.setType(consumerTypeCurator.create(new ConsumerType(ConsumerTypeEnum.CANDLEPIN)));
         consumerCurator.update(consumer);
         setupPrincipal(owner, Access.READ_ONLY);
         securityInterceptor.enable();
-        consumerResource.exportData(mock(HttpServletResponse.class),
-            consumer.getUuid(), null, null, null);
+        consumerResource.exportData(mock(HttpServletResponse.class), consumer.getUuid(), null, null, null);
         // if no exception, we're good
     }
 
@@ -311,21 +302,18 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
     @Test
     public void testRegisterWithConsumerId() {
-        Consumer toSubmit = new Consumer(CONSUMER_NAME, USER_NAME, null,
-            standardSystemType);
+        Consumer toSubmit = new Consumer(CONSUMER_NAME, USER_NAME, null, standardSystemType);
         toSubmit.setUuid("1023131");
         toSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
 
         Consumer submitted = consumerResource.create(
-            toSubmit,
-            TestUtil.createPrincipal(someuser.getUsername(), owner, Access.ALL),
+            toSubmit, TestUtil.createPrincipal(someuser.getUsername(), owner, Access.ALL),
             null, null, null, true);
 
         assertNotNull(submitted);
         assertEquals(toSubmit.getUuid(), submitted.getUuid());
         assertNotNull(consumerCurator.find(submitted.getId()));
-        assertEquals(standardSystemType.getLabel(), submitted.getType()
-            .getLabel());
+        assertEquals(standardSystemType.getLabel(), submitted.getType().getLabel());
         assertEquals(METADATA_VALUE, submitted.getFact(METADATA_NAME));
 
         // now pass in consumer type with null id just like the client would
@@ -333,8 +321,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         assertNull(type.getId());
         Consumer nulltypeid = new Consumer(CONSUMER_NAME, USER_NAME, null, type);
         submitted = consumerResource.create(
-            nulltypeid,
-            TestUtil.createPrincipal(someuser.getUsername(), owner, Access.ALL),
+            nulltypeid, TestUtil.createPrincipal(someuser.getUsername(), owner, Access.ALL),
             null, null, null, true);
         assertNotNull(submitted);
         assertEquals(nulltypeid.getUuid(), submitted.getUuid());
@@ -349,8 +336,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             .getEntitlementCertificates(consumer.getUuid(), null);
         assertEquals(1, serials.size());
 
-        consumerResource.unbindBySerial(consumer.getUuid(), serials.get(0)
-            .getSerial().getId());
+        consumerResource.unbindBySerial(consumer.getUuid(), serials.get(0).getSerial().getId());
         assertEquals(0, consumerResource.listEntitlements(
             consumer.getUuid(), null, true, "", new ArrayList<KeyValueParameter>(), null).size());
     }
@@ -364,8 +350,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
             null, 1, null, null, false, null, null, null, null);
 
-        Consumer evilConsumer = TestUtil.createConsumer(standardSystemType,
-            owner);
+        Consumer evilConsumer = TestUtil.createConsumer(standardSystemType, owner);
         consumerCurator.create(evilConsumer);
         setupPrincipal(new ConsumerPrincipal(evilConsumer));
 
@@ -385,14 +370,12 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
         setupPrincipal(new ConsumerPrincipal(consumer));
 
-        assertEquals(3, consumerResource.getEntitlementCertificates(
-            consumer.getUuid(), null).size());
+        assertEquals(3, consumerResource.getEntitlementCertificates(consumer.getUuid(), null).size());
     }
 
     @Test(expected = NotFoundException.class)
     public void canNotDeleteConsumerOtherThanSelf() {
-        Consumer evilConsumer = TestUtil.createConsumer(standardSystemType,
-            owner);
+        Consumer evilConsumer = TestUtil.createConsumer(standardSystemType, owner);
         consumerCurator.create(evilConsumer);
         setupPrincipal(new ConsumerPrincipal(evilConsumer));
 
@@ -402,10 +385,8 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void consumerCanDeleteSelf() throws GeneralSecurityException,
-        IOException {
-        Consumer toSubmit = new Consumer(CONSUMER_NAME, USER_NAME, owner,
-            standardSystemType);
+    public void consumerCanDeleteSelf() throws GeneralSecurityException, IOException {
+        Consumer toSubmit = new Consumer(CONSUMER_NAME, USER_NAME, owner, standardSystemType);
 
         toSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
         Consumer c = consumerCurator.create(toSubmit);
@@ -427,8 +408,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
     @Test(expected = NotFoundException.class)
     public void testCannotGetAnotherOwnersConsumersCerts() {
-        Consumer evilConsumer = TestUtil.createConsumer(standardSystemType,
-            owner);
+        Consumer evilConsumer = TestUtil.createConsumer(standardSystemType, owner);
         consumerCurator.create(evilConsumer);
 
         Owner evilOwner = ownerCurator.create(new Owner("another-owner"));
@@ -479,8 +459,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
     @Test(expected = NotFoundException.class)
     public void consumerShouldNotSeeAnotherConsumersEntitlements() {
-        Consumer evilConsumer = TestUtil.createConsumer(standardSystemType,
-            owner);
+        Consumer evilConsumer = TestUtil.createConsumer(standardSystemType, owner);
         consumerCurator.create(evilConsumer);
 
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
@@ -548,8 +527,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         ownerAdminRole.addUser(u);
         roleCurator.merge(ownerAdminRole);
 
-        Principal emailuser = TestUtil.createPrincipal(username, owner,
-            Access.ALL);
+        Principal emailuser = TestUtil.createPrincipal(username, owner, Access.ALL);
         setupPrincipal(emailuser);
 
         Consumer personal = TestUtil.createConsumer(personType, owner);
@@ -576,11 +554,11 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @SuppressWarnings("unchecked")
     @Test
     public void testRegenerateEntitlementCertificateWithValidConsumerByEntitlement() {
-        ConsumerResource cr = new ConsumerResource(this.consumerCurator, null,
-            null, null, this.entitlementCurator, null, null, null, null, null,
-            null, null, null, this.poolManager, null, null, null,
-            null, null, null, null, null, new CandlepinCommonTestConfig(), null,
-            null, null, mock(ConsumerBindUtil.class), productCurator, null, null, null, null);
+        ConsumerResource cr = new ConsumerResource(
+            this.consumerCurator, null, null, null, this.entitlementCurator, null, null, null, null, null,
+            null, null, null, this.poolManager, null, null, null, null, null, null, null, null,
+            new CandlepinCommonTestConfig(), null, null, null, mock(ConsumerBindUtil.class), productCurator,
+            null, null, null, null, consumerEnricher);
 
         Response rsp = consumerResource.bind(consumer.getUuid(), pool.getId().toString(), null, 1, null,
             null, false, null, null, null, null);
@@ -599,16 +577,15 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
     @Test(expected = BadRequestException.class)
     public void testInvalidProductId() {
-        consumerResource.bind(consumer.getUuid(), "JarjarBinks", null,
-            null, null, null, false, null, null, null, null);
+        consumerResource.bind(consumer.getUuid(), "JarjarBinks", null, null, null, null, false, null, null,
+            null, null);
     }
 
     private static class ProductCertCreationModule extends AbstractModule {
         @Override
         protected void configure() {
             bind(Configuration.class).to(CandlepinCommonTestConfig.class);
-            bind(PKIReader.class).to(BouncyCastlePKIReader.class)
-                .asEagerSingleton();
+            bind(PKIReader.class).to(BouncyCastlePKIReader.class).asEagerSingleton();
         }
     }
 
@@ -627,8 +604,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         consumer = TestUtil.createConsumer(standardSystemType, owner);
         consumerCurator.create(consumer);
 
-        List<Certificate> serials = consumerResource
-            .getEntitlementCertificates(consumer.getUuid(), null);
+        List<Certificate> serials = consumerResource.getEntitlementCertificates(consumer.getUuid(), null);
         assertEquals(1, serials.size());
 
         Certificate original = serials.get(0);
@@ -641,8 +617,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         serial.setExpiration(cal.getTime());
         serialCurator.merge(serial);
 
-        serials = consumerResource
-                .getEntitlementCertificates(consumer.getUuid(), null);
+        serials = consumerResource.getEntitlementCertificates(consumer.getUuid(), null);
         assertEquals(1, serials.size());
         Certificate updated = serials.get(0);
         assert (updated instanceof ContentAccessCertificate);

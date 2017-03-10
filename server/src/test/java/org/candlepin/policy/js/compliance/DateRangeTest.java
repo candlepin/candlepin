@@ -12,7 +12,8 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.resource.util;
+package org.candlepin.policy.js.compliance;
+
 import static org.junit.Assert.*;
 
 import org.candlepin.test.TestDateUtil;
@@ -20,17 +21,19 @@ import org.candlepin.test.TestDateUtil;
 import org.junit.Test;
 
 import java.util.Date;
+
+
+
 /**
  * DateRangeTest
  */
 public class DateRangeTest {
-    private DateRange range;
 
     @Test
     public void getters() {
         Date start = TestDateUtil.date(2012, 5, 22);
         Date end = TestDateUtil.date(2012, 7, 4);
-        range = new DateRange(start, end);
+        DateRange range = new DateRange(start, end);
 
         assertEquals(start, range.getStartDate());
         assertEquals(end, range.getEndDate());
@@ -38,8 +41,7 @@ public class DateRangeTest {
 
     @Test
     public void contains() {
-        range = new DateRange(TestDateUtil.date(2001, 7, 5),
-            TestDateUtil.date(2010, 7, 4));
+        DateRange range = new DateRange(TestDateUtil.date(2001, 7, 5), TestDateUtil.date(2010, 7, 4));
 
         assertTrue(range.contains(TestDateUtil.date(2005, 6, 9)));
         assertFalse(range.contains(TestDateUtil.date(1971, 7, 19)));
@@ -50,12 +52,14 @@ public class DateRangeTest {
 
     @Test
     public void string() {
-        range = new DateRange(TestDateUtil.date(2012, 5, 22),
-            TestDateUtil.date(2012, 7, 4));
+        DateRange range = new DateRange(TestDateUtil.date(2012, 5, 22), TestDateUtil.date(2013, 7, 4));
 
         String result = range.toString();
-        assertTrue(result.contains("Start:"));
-        assertTrue(result.contains("End:"));
-        assertTrue(result.contains("2012"));
+
+        String dateFormat = "\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}.\\d{3}[-+]\\d{4}";
+        String expectedRegex = String.format("DateRange \\[%1$s - %1$s\\]", dateFormat);
+
+        assertTrue(String.format("\"%s\" did not match the expected format: %s", result, expectedRegex),
+            result.matches(expectedRegex));
     }
 }

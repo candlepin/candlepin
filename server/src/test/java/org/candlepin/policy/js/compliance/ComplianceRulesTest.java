@@ -143,9 +143,11 @@ public class ComplianceRulesTest {
     private Consumer mockConsumer(Product ... installedProducts) {
         Consumer consumer = new Consumer();
         consumer.setType(new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM));
+
         for (Product product : installedProducts) {
             consumer.addInstalledProduct(new ConsumerInstalledProduct(product.getId(), product.getName()));
         }
+
         consumer.setFact("cpu.cpu_socket(s)", "8"); // 8 socket machine
         return consumer;
     }
@@ -883,6 +885,7 @@ public class ComplianceRulesTest {
                 new Date(start.getTime() + i + interval),
                 PRODUCT_1
             ));
+
             ents.add(mockEntitlement(
                 consumer,
                 TestUtil.createProduct("Provides Product 2 For Short Period"),
@@ -894,8 +897,7 @@ public class ComplianceRulesTest {
 
         mockEntCurator(consumer, ents);
 
-        Date expectedDate = addSecond(
-            new Date(start.getTime() + interval * (iterations - 1) + interval));
+        Date expectedDate = addSecond(new Date(start.getTime() + interval * (iterations - 1) + interval));
         ComplianceStatus status = compliance.getStatus(consumer, start);
         assertEquals("valid", status.getStatus());
         assertEquals(expectedDate, status.getCompliantUntil());

@@ -105,7 +105,8 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         /** Attribute specifying the number of cores that can be covered by an entitlement using the SKU */
         public static final String CORES = "cores";
 
-        /** Attribute specifying the maximum number of guests that can consume pools using this product */
+        /** Attribute specifying the maximum number of guests that can be covered by an entitlement using
+         *  this SKU. -1 specifies no limit */
         public static final String GUEST_LIMIT = "guest_limit";
 
         /** Attribute specifying whether or not derived pools created for a given product will be

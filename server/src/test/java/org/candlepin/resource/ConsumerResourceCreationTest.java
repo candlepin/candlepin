@@ -54,6 +54,7 @@ import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.resource.util.ConsumerBindUtil;
+import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
@@ -110,6 +111,7 @@ public class ConsumerResourceCreationTest {
     @Mock private ServiceLevelValidator serviceLevelValidator;
     @Mock private ConsumerBindUtil consumerBindUtil;
     @Mock private ProductCurator productCurator;
+    @Mock private ConsumerEnricher consumerEnricher;
 
     private I18n i18n;
 
@@ -125,13 +127,12 @@ public class ConsumerResourceCreationTest {
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
 
         this.config = initConfig();
-        this.resource = new ConsumerResource(this.consumerCurator,
-            this.consumerTypeCurator, null, this.subscriptionService, null,
-            this.idCertService, null, this.i18n, this.sink, null, null, null,
-            this.userService, null, null, this.ownerCurator,
-            this.activationKeyCurator, null, this.complianceRules, this.deletedConsumerCurator,
-            null, null, this.config, null, null, null, this.consumerBindUtil,
-            productCurator, null, null, new FactValidator(this.config, this.i18n), null);
+        this.resource = new ConsumerResource(
+            this.consumerCurator, this.consumerTypeCurator, null, this.subscriptionService, null,
+            this.idCertService, null, this.i18n, this.sink, null, null, null, this.userService, null, null,
+            this.ownerCurator, this.activationKeyCurator, null, this.complianceRules,
+            this.deletedConsumerCurator, null, null, this.config, null, null, null, this.consumerBindUtil,
+            productCurator, null, null, new FactValidator(this.config, this.i18n), null, consumerEnricher);
 
         this.system = initSystem();
 

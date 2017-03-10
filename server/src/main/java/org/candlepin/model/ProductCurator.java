@@ -81,7 +81,8 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      */
     public Boolean provides(Pool pool, String providedProductId) {
         TypedQuery<Long> query = getEntityManager().createQuery(
-            "SELECT count(product.uuid) FROM Pool p " + "LEFT JOIN p.providedProducts pproduct " +
+            "SELECT count(product.uuid) FROM Pool p " +
+            "LEFT JOIN p.providedProducts pproduct " +
             "LEFT JOIN p.product product " +
             "WHERE p.id = :poolid and (pproduct.id = :providedProductId OR product.id = :providedProductId)",
             Long.class);
@@ -117,6 +118,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             return provides(pool, derivedProvidedProductId);
         }
     }
+
     /**
      * Retrieves a Product instance for the product with the specified name. If a matching product
      * could not be found, this method returns null.

@@ -179,7 +179,7 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
             return this.cpQueryFactory.<Product>buildQuery();
         }
 
-        // Impl note: See getOwnersByProduct for details on why we're doing this in two queries
+        // Impl note: See getOwnersByProduct for details on why we're doing this in two queries.
         String jpql = "SELECT op.product.uuid FROM OwnerProduct op WHERE op.owner.id = :owner_id";
 
         List<String> uuids = this.getEntityManager()
