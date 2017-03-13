@@ -73,8 +73,6 @@ public class Entitlement extends AbstractHibernateObject
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
     @NotNull
     private String id;

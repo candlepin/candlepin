@@ -1518,6 +1518,7 @@ public class CandlepinPoolManager implements PoolManager {
         EntitlementHandler handler = null;
         if (entitlements == null) {
             handler = new NewHandler();
+            entitlements = handler.createEntitlement(poolQuantities);
         }
         else if (!poolQuantities.keySet().equals(entitlements.keySet())) {
             throw new IllegalArgumentException(i18n.tr(
@@ -1532,12 +1533,17 @@ public class CandlepinPoolManager implements PoolManager {
         boolean isDistributor = consumer.getType().isManifest();
 
 
-        Map<String, EntitlementCertificate> certs = handler.handleSelfCertificates(consumer, poolQuantities);
+        Map<String, EntitlementCertificate> certs = handler.handleSelfCertificates(consumer, poolQuantities, entitlements);
+
+
+        // Lock the pools and consumers.
+        poolCurator.lockAndLoadBatchById(poolQuantityMap.keySet());
+        consumerCurator.lockAndLoad(consumer);
 
         // Persist the entitlement after it has been created.  It requires an ID in order to
         // create an entitlement-derived subpool
         log.info("Processing entitlements and persisting.");
-        entitlements = handler.handleEntitlement(consumer, poolQuantities, entitlements);
+        entitlements = handler.handleEntitlement(consumer, poolQuantities, entitlements, certs);
 
         List<Pool> poolsToSave = new ArrayList<Pool>();
         for (PoolQuantity poolQuantity : poolQuantities.values()) {
@@ -1551,13 +1557,7 @@ public class CandlepinPoolManager implements PoolManager {
             poolsToSave.add(pool);
         }
 
-
-        // Lock the pools and consumers.
-        poolCurator.lockAndLoadBatchById(poolQuantityMap.keySet());
-        consumerCurator.lockAndLoad(consumer);
-
         //save pool, ents
-        entitlementCurator.saveOrUpdateAll(entitlements.values(), false, false);
         poolCurator.updateAll(poolsToSave, false, false);
         handler.handlePostEntitlement(this, consumer, entitlements);
 
@@ -2026,13 +2026,16 @@ public class CandlepinPoolManager implements PoolManager {
      * EntitlementHandler
      */
     private interface EntitlementHandler {
+        Map<String, Entitlement> createEntitlement(Map<String, PoolQuantity> poolQuantities);
         Map<String, Entitlement> handleEntitlement(Consumer consumer,
-            Map<String, PoolQuantity> poolQuantities, Map<String, Entitlement> entitlements);
+            Map<String, PoolQuantity> poolQuantities, Map<String, Entitlement> entitlements,
+            Map<String, EntitlementCertificate> certs);
 
         void handlePostEntitlement(PoolManager manager, Consumer consumer,
             Map<String, Entitlement> entitlements);
 
-        Map<String, EntitlementCertificate> handleSelfCertificates(Consumer consumer, Map<String, PoolQuantity> pools);
+        Map<String, EntitlementCertificate> handleSelfCertificates(Consumer consumer, Map<String, PoolQuantity> pools,
+            Map<String, Entitlement> entitlementMap);
 
         void handleBonusPools(Owner owner, Map<String, PoolQuantity> pools,
             Map<String, Entitlement> entitlements);
@@ -2044,35 +2047,41 @@ public class CandlepinPoolManager implements PoolManager {
     private class NewHandler implements EntitlementHandler {
 
         @Override
+        public Map<String, Entitlement> createEntitlement(Map<String, PoolQuantity> poolQuantities) {
+
+            Map<String, Entitlement> result = new HashMap<String, Entitlement>();
+            for (Entry<String, PoolQuantity> entry : poolQuantities.entrySet()) {
+                Entitlement newEntitlement = new Entitlement();
+                newEntitlement.setId(Util.generateDbUUID());
+                result.put(entry.getKey(), newEntitlement);
+            }
+            return result;
+        }
+
+        @Override
         public Map<String, Entitlement> handleEntitlement(Consumer consumer,
-            Map<String, PoolQuantity> poolQuantities, Map<String, Entitlement> entitlements) {
+            Map<String, PoolQuantity> poolQuantities, Map<String, Entitlement> entitlements,
+            Map<String, EntitlementCertificate> certs) {
 
             List<Entitlement> entsToPersist = new ArrayList<Entitlement>();
             Map<String, Entitlement> result = new HashMap<String, Entitlement>();
 
             for (Entry<String, PoolQuantity> entry : poolQuantities.entrySet()) {
-                Entitlement newEntitlement = new Entitlement(
-                    entry.getValue().getPool(), consumer, entry.getValue().getQuantity()
-                );
-
-                entsToPersist.add(newEntitlement);
-                result.put(entry.getKey(), newEntitlement);
+                Entitlement entitlement = entitlements.get(entry.getKey());
+                entitlement.setPool(entry.getValue().getPool());
+                entitlement.setQuantity(entry.getValue().getQuantity());
+                entitlement.setConsumer(consumer);
+                entitlement.setOwner(consumer.getOwner());
+                entsToPersist.add(entitlement);
+                consumer.addEntitlement(entitlement);
+                entry.getValue().getPool().getEntitlements().add(entitlement);
+                EntitlementCertificate cert = certs.get(entry.getKey());
+                entitlement.getCertificates().add(cert);
+                cert.setEntitlement(entitlement);
             }
+            entitlementCurator.saveOrUpdateAll(entsToPersist, false, false);
 
-            //entitlementCurator.saveOrUpdateAll(entsToPersist, false, false);
-
-            /*
-             * Why iterate twice? to persist the entitlement before we associate
-             * it with the pool or consumer. This is important because we use Id
-             * to compare Entitlements in the equals method.
-             */
-            for (Entry<String, PoolQuantity> entry : poolQuantities.entrySet()) {
-                Entitlement e = result.get(entry.getKey());
-                consumer.addEntitlement(e);
-                entry.getValue().getPool().getEntitlements().add(e);
-            }
-
-            return result;
+            return entitlements;
         }
 
         @Override
@@ -2100,14 +2109,15 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         @Override
-        public Map<String, EntitlementCertificate> handleSelfCertificates(Consumer consumer, Map<String, PoolQuantity> poolQuantities) {
+        public Map<String, EntitlementCertificate> handleSelfCertificates(Consumer consumer, Map<String, PoolQuantity> poolQuantities,
+            Map<String, Entitlement> entitlementMap) {
             Map<String, Product> products = new HashMap<String, Product>();
             for (PoolQuantity poolQuantity : poolQuantities.values()) {
                 Pool pool = poolQuantity.getPool();
                 products.put(pool.getId(), pool.getProduct());
             }
 
-            return ecGenerator.generateEntitlementCertificates2(consumer, products, poolQuantities);
+            return ecGenerator.generateEntitlementCertificates2(consumer, products, poolQuantities, entitlementMap);
         }
 
         @Override
@@ -2122,8 +2132,14 @@ public class CandlepinPoolManager implements PoolManager {
      */
     private class UpdateHandler implements EntitlementHandler {
         @Override
+        public Map<String, Entitlement> createEntitlement(Map<String, PoolQuantity> poolQuantities) {
+            return null;
+        }
+
+        @Override
         public Map<String, Entitlement> handleEntitlement(Consumer consumer,
-            Map<String, PoolQuantity> poolQuantities, Map<String, Entitlement> entitlements) {
+            Map<String, PoolQuantity> poolQuantities, Map<String, Entitlement> entitlements,
+            Map<String, EntitlementCertificate> certs) {
             for (Entry<String, Entitlement> entry : entitlements.entrySet()) {
                 Entitlement entitlement = entry.getValue();
                 entitlement.setQuantity(entitlement.getQuantity() +
@@ -2140,7 +2156,8 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         @Override
-        public Map<String, EntitlementCertificate> handleSelfCertificates(Consumer consumer, Map<String, PoolQuantity> poolQuantities) {
+        public Map<String, EntitlementCertificate> handleSelfCertificates(Consumer consumer, Map<String, PoolQuantity> poolQuantities,
+            Map<String, Entitlement> entitlementMap) {
             //for (Entry<String, Entitlement> entry : entitlements.entrySet()) {
             //    regenerateCertificatesOf(entry.getValue(), true);
            // }

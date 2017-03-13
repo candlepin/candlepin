@@ -128,10 +128,10 @@ public class EntitlementCertificateGenerator {
      */
     @Transactional
     public Map<String, EntitlementCertificate> generateEntitlementCertificates2(Consumer consumer,
-                                                                               Map<String, Product> products, Map<String, PoolQuantity> poolQuantityMap) {
+        Map<String, Product> products, Map<String, PoolQuantity> poolQuantityMap, Map<String, Entitlement> entitlementMap) {
 
         try {
-            return this.entCertServiceAdapter.generateEntitlementCerts2(consumer, poolQuantityMap, products);
+            return this.entCertServiceAdapter.generateEntitlementCerts2(consumer, poolQuantityMap, entitlementMap, products);
         }
         catch (CertVersionConflictException cvce) {
             throw cvce;

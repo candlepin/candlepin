@@ -80,6 +80,7 @@ public interface EntitlementCertServiceAdapter {
     List<Long> listEntitlementSerialIds(Consumer consumer);
 
 	Map<String, EntitlementCertificate> generateEntitlementCerts2(Consumer consumer,
-			Map<String, PoolQuantity> poolQuantities, Map<String, Product> products)
+			Map<String, PoolQuantity> poolQuantities, Map<String, Entitlement> entitlementMap,
+            Map<String, Product> products)
 			throws GeneralSecurityException, IOException;
 }

@@ -123,12 +123,10 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
 
     @Override
     public Map<String, EntitlementCertificate> generateEntitlementCerts2(Consumer consumer,
-            Map<String, PoolQuantity> poolQuantities, Map<String, Product> products)
+            Map<String, PoolQuantity> poolQuantities, Map<String, Entitlement> entitlementMap, Map<String, Product> products)
             throws GeneralSecurityException, IOException {
-        return doEntitlementCertGeneration2(consumer, poolQuantities , products);
+        return doEntitlementCertGeneration2(consumer, poolQuantities, entitlementMap, products);
     }
-
-
 
     private Set<Product> getDerivedProductsForDistributor(Pool pool, Consumer c) {
         Set<Product> derivedProducts = new HashSet<Product>();
@@ -146,7 +144,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
     // TODO: productModels not used by V1 certificates. This whole v1/v3 split needs
     // a re-org. Passing them here because it eliminates a substantial performance hit
     // recalculating this for the entitlement body in v3 certs.
-    public X509Certificate createX509Certificate(Consumer consumer, Pool pool, Integer quantity, Product product, Set<Product> products,
+    public X509Certificate createX509Certificate(Consumer consumer, Pool pool, Entitlement entitlement, Integer quantity, Product product, Set<Product> products,
         List<org.candlepin.model.dto.Product> productModels, BigInteger serialNumber, KeyPair keyPair,
         boolean useContentPrefix)
         throws GeneralSecurityException, IOException {
@@ -174,7 +172,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         cal.add(Calendar.HOUR, -1);
         Date startDate = pool.getStartDate().before(cal.getTime()) ? pool.getStartDate() : cal.getTime();
         X509Certificate x509Cert =  this.pki.createX509Certificate(
-            null, extensions, byteExtensions, pool.getStartDate(),
+            createDN(entitlement, consumer.getOwner()), extensions, byteExtensions, pool.getStartDate(),
             pool.getEndDate(), keyPair, serialNumber, null);
         return x509Cert;
     }
@@ -360,7 +358,8 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
      *         id
      */
     private Map<String, EntitlementCertificate> doEntitlementCertGeneration2(Consumer consumer,
-            Map<String, PoolQuantity> poolQuantities, Map<String, Product> productMap)
+            Map<String, PoolQuantity> poolQuantities, Map<String, Entitlement> entitlementMap,
+            Map<String, Product> productMap)
             throws GeneralSecurityException, IOException {
         log.info("Generating entitlement cert for entitlements");
         KeyPair keyPair = keyPairCurator.getConsumerKeyPair(consumer);
@@ -385,12 +384,13 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
 
         for (Entry<String, PoolQuantity> entry : poolQuantities.entrySet()) {
             Pool pool = entry.getValue().getPool();
+            Entitlement entitlement = entitlementMap.get(entry.getKey());
             Integer quantity = entry.getValue().getQuantity();
 >>>>>>> create cert before ent
             CertificateSerial serial = serialMap.get(entry.getKey());
             Product product = productMap.get(entry.getKey());
 
-            log.info("Generating entitlement cert for entitlement: {}", pool);
+            log.info("VRITANT Generating entitlement cert for entitlement: {}", pool);
 
             Set<Product> products = new HashSet<Product>(
                     productCurator.getPoolProvidedProductsCached(pool));
@@ -409,7 +409,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
             List<org.candlepin.model.dto.Product> productModels = v3extensionUtil.createProducts(product,
                     products, contentPrefix, promotedContent, consumer, pool);
 
-            X509Certificate x509Cert = createX509Certificate(consumer, pool, quantity, product, products, productModels,
+            X509Certificate x509Cert = createX509Certificate(consumer, pool, entitlement, quantity, product, products, productModels,
                     BigInteger.valueOf(serial.getId()), keyPair, true);
 
             log.info("Getting PEM encoded cert.");
@@ -477,11 +477,11 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         return entitlementCerts;
     }
 
-    private String createDN(Entitlement ent) {
+    private String createDN(Entitlement ent, Owner owner) {
         StringBuilder sb = new StringBuilder("CN=");
         sb.append(ent.getId());
         sb.append(", O=");
-        sb.append(ent.getOwner().getKey());
+        sb.append(owner.getKey());
         return sb.toString();
     }
 
