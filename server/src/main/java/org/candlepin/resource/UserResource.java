@@ -49,7 +49,10 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Authorization;
@@ -118,10 +121,14 @@ public class UserResource {
     }
 
     @ApiOperation(notes = "Creates a User", value = "createUser")
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "user", paramType = "body", required = true,
+            dataType = "org.candlepin.model.User$UserCreationRequest")
+    })
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public User createUser(User user) {
+    public User createUser(@ApiParam(hidden = true) User user) {
         if (userService.findByLogin(user.getUsername()) != null) {
             throw new ConflictException("user " + user.getUsername() + " already exists");
         }
