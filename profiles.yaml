@@ -9,10 +9,6 @@ common:
     <<: *common_static
     username: "candlepin"
     password: ""
-  gutterball: &common_gutterball
-    <<: *common_static
-    username: "gutterball"
-    password: ""
 
 postgresql: &default
   static: &postgresql_static
@@ -21,10 +17,6 @@ postgresql: &default
     quartz_driver: "org.quartz.impl.jdbcjobstore.PostgreSQLDelegate"
   server:
     <<: *common_server
-    <<: *postgresql_static
-    jdbc_url: "jdbc:postgresql:$DB_NAME"
-  gutterball:
-    <<: *common_gutterball
     <<: *postgresql_static
     jdbc_url: "jdbc:postgresql:$DB_NAME"
 
@@ -43,11 +35,6 @@ oracle:
     <<: *oracle_static
     jdbc_url: "jdbc:oracle:thin:@//localhost:1521/XE"
     password: "candlepin"
-  gutterball:
-    <<: *common_gutterball
-    <<: *oracle_static
-    jdbc_url: "jdbc:oracle:thin:@//localhost:1521/XE"
-    password: "gutterball"
 
 mysql:
   static: &mysql_static
@@ -55,10 +42,6 @@ mysql:
     dialect: "org.hibernate.dialect.MySQL5InnoDBDialect"
     quartz_driver: "org.quartz.impl.jdbcjobstore.StdJDBCDelegate"
   server:
-    <<: *common_server
-    <<: *mysql_static
-    jdbc_url: "jdbc:mysql:///$DB_NAME"
-  gutterball:
     <<: *common_server
     <<: *mysql_static
     jdbc_url: "jdbc:mysql:///$DB_NAME"

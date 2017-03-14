@@ -203,7 +203,7 @@ class OracleInstance():
         out = self.runSql('drop user %s cascade;' % dbname)
         print(out)
 
-# Helper method for Candlepin and Gutterball objects
+# Helper method for Candlepin objects
 def classpath_for_war(warName):
         cp_items=[];
          
@@ -237,19 +237,7 @@ class Candlepin():
         return "candlepin"
     def default_user(self):
         return self.default_db_name();  
-            
-class Gutterball():
-    def classpath(self):
-        return classpath_for_war("gutterball")
-    def create_changelog_location(self):
-        return "db/changelog/changelog.xml";
-    def update_changelog_location(self):
-        return self.create_changelog_location();
-    def default_db_name(self):
-        return "gutterball"
-    def default_user(self):
-        return self.default_db_name();      
-    
+
 def build_cp(*args):
     
     non_empty_args = []
@@ -315,8 +303,9 @@ def main(cmd_args):
     parser.add_option("--product",
             dest="product",
             type="choice",
-            choices=["candlepin","gutterball"],
-            help="Product. Valid values are: candlepin, gutterball.")
+            default="candlepin",
+            choices=["candlepin"],
+            help="Product. Valid values are: candlepin.")
         
     groupOracle = OptionGroup(parser, "Oracle specific options")
 
@@ -332,19 +321,12 @@ def main(cmd_args):
     
     (options, args) = parser.parse_args(cmd_args)
     
-    if not options.product:
-        raise Exception("You must specify product using --product switch")
-    
     if not options.action:
         raise Exception("You must specify action using --action switch")
     
     if options.product == "candlepin":
         product = Candlepin();
                     
-    if options.product == "gutterball":
-        product = Gutterball();
-    
-    
     #If user or dbname is not explicitly set, use the default name for a product e.g. candlepin for Candlepin product
     if options.dbuser is None:
         options.dbuser = product.default_user()

@@ -29,7 +29,6 @@
 
     <modules>
         <module>common</module>
-        <module>gutterball</module>
         <module>server</module>
     </modules>
 
