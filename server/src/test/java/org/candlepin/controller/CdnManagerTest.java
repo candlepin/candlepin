@@ -36,7 +36,7 @@ public class CdnManagerTest extends DatabaseTestFixture {
     @Inject private CdnCurator curator;
 
     @Test
-    public void createCdn() throws Exception {
+    public void testCreateCdn() throws Exception {
         Cdn cdn = createCdn("test_cdn");
         Cdn fetched = curator.lookupByLabel(cdn.getLabel());
         assertNotNull(fetched);
@@ -78,6 +78,8 @@ public class CdnManagerTest extends DatabaseTestFixture {
 
         manager.deleteCdn(cdn);
         assertNull(curator.lookupByLabel(cdn.getLabel()));
+        poolCurator.clear();
+
         Pool updatedPool = poolCurator.find(pool.getId());
         assertNull(updatedPool.getCdn());
     }

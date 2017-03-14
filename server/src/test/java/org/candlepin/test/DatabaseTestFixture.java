@@ -30,6 +30,8 @@ import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.guice.CandlepinRequestScope;
 import org.candlepin.guice.TestPrincipalProviderSetter;
 import org.candlepin.junit.CandlepinLiquibaseResource;
+import org.candlepin.model.Cdn;
+import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
@@ -130,6 +132,7 @@ public class DatabaseTestFixture {
     protected Configuration config;
 
     @Inject protected ActivationKeyCurator activationKeyCurator;
+    @Inject protected CdnCurator cdnCurator;
     @Inject protected ConsumerCurator consumerCurator;
     @Inject protected ConsumerTypeCurator consumerTypeCurator;
     @Inject protected CertificateSerialCurator certSerialCurator;
@@ -166,6 +169,30 @@ public class DatabaseTestFixture {
     public static void initClass() {
         parentInjector = Guice.createInjector(new TestingModules.JpaModule());
         insertValidationEventListeners(parentInjector);
+    }
+
+    /**
+     * There's no way to really get Guice to perform injections on stuff that
+     * the JpaPersistModule is creating, so we resort to grabbing the EntityManagerFactory
+     * after the fact and adding the Validation EventListener ourselves.
+     * @param inj
+     */
+    private static void insertValidationEventListeners(Injector inj) {
+        Provider<EntityManagerFactory> emfProvider = inj.getProvider(EntityManagerFactory.class);
+        HibernateEntityManagerFactory hibernateEntityManagerFactory =
+            (HibernateEntityManagerFactory) emfProvider.get();
+        SessionFactoryImpl sessionFactoryImpl =
+            (SessionFactoryImpl) hibernateEntityManagerFactory.getSessionFactory();
+        EventListenerRegistry registry = sessionFactoryImpl
+            .getServiceRegistry()
+            .getService(EventListenerRegistry.class);
+
+        Provider<BeanValidationEventListener> listenerProvider =
+            inj.getProvider(BeanValidationEventListener.class);
+
+        registry.getEventListenerGroup(EventType.PRE_INSERT).appendListener(listenerProvider.get());
+        registry.getEventListenerGroup(EventType.PRE_UPDATE).appendListener(listenerProvider.get());
+        registry.getEventListenerGroup(EventType.PRE_DELETE).appendListener(listenerProvider.get());
     }
 
     @Before
@@ -322,96 +349,34 @@ public class DatabaseTestFixture {
         }
     }
 
-    protected Pool createPool(Owner owner, Product product) {
-        return this.createPool(
-            owner, product, 1L, TestUtil.createDate(2000, 1, 1), TestUtil.createDate(2100, 1, 1)
-        );
+    // Entity creation methods
+    protected ActivationKey createActivationKey(Owner owner) {
+        return TestUtil.createActivationKey(owner, null);
     }
 
-    /**
-     * Create an entitlement pool.
-     *
-     * @return an entitlement pool
-     */
-    protected Pool createPool(Owner owner, Product product, Long quantity, Date startDate, Date endDate) {
-        Pool pool = new Pool(
-            owner,
-            product,
-            new HashSet<Product>(),
-            quantity,
-            startDate,
-            endDate,
-            DEFAULT_CONTRACT,
-            DEFAULT_ACCOUNT,
-            DEFAULT_ORDER
-        );
-
-        pool.setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
-        return poolCurator.create(pool);
+    public Role createAdminRole(Owner owner) {
+        PermissionBlueprint p = new PermissionBlueprint(PermissionType.OWNER, owner, Access.ALL);
+        Role role = new Role("testrole" + TestUtil.randomInt());
+        role.addPermission(p);
+        return role;
     }
 
-    protected Pool createPool(Owner owner, Product product, Long quantity, String subscriptionId,
-        String subscriptionSubKey, Date startDate, Date endDate) {
-        Pool pool = new Pool(
-            owner,
-            product,
-            new HashSet<Product>(),
-            quantity,
-            startDate,
-            endDate,
-            DEFAULT_CONTRACT,
-            DEFAULT_ACCOUNT,
-            DEFAULT_ORDER
-        );
+    protected Cdn createCdn() {
+        int rand = TestUtil.randomInt();
+        String name = "test-cdn-" + rand;
+        String url = "https://" + rand + ".cdn.com";
 
-        pool.setSourceSubscription(new SourceSubscription(subscriptionId, subscriptionSubKey));
-        return poolCurator.create(pool);
+        return this.createCdn(name, name, url);
     }
 
-    protected Pool createPool(Owner owner, Product product, Long quantity, Date startDate, Date endDate,
-        String contractNr) {
-        Pool pool = createPool(owner, product, quantity, startDate, endDate);
-        pool.setContractNumber(contractNr);
-        return poolCurator.merge(pool);
+    protected Cdn createCdn(String name, String url) {
+        return this.createCdn(name, name, url);
     }
 
-    protected Pool createPool(Owner owner, Product product, Long quantity, Date startDate, Date endDate,
-        String contractNr, String subscriptionId) {
-        Pool pool = createPool(owner, product, quantity, subscriptionId, "master", startDate, endDate);
-        pool.setContractNumber(contractNr);
-        return poolCurator.merge(pool);
-    }
+    protected Cdn createCdn(String name, String label, String url) {
+        Cdn cdn = new Cdn(name, label, url);
 
-    protected Owner createOwner() {
-        return this.createOwner("Test Owner " + TestUtil.randomInt());
-    }
-
-    protected Owner createOwner(String key) {
-        return this.createOwner(key, key);
-    }
-
-    protected Owner createOwner(String key, String name) {
-        Owner owner = TestUtil.createOwner(key, name);
-        this.ownerCurator.create(owner);
-
-        return owner;
-    }
-
-    protected Product createProduct(Owner... owners) {
-        String productId = "test-product-" + TestUtil.randomInt();
-        return this.createProduct(productId, productId, owners);
-    }
-
-    protected Product createProduct(String id, String name, Owner... owners) {
-        Product product = TestUtil.createProduct(id, name);
-        return this.createProduct(product, owners);
-    }
-
-    protected Product createProduct(Product product, Owner... owners) {
-        product = this.productCurator.create(product);
-        this.ownerProductCurator.mapProductToOwners(product, owners);
-
-        return product;
+        return this.cdnCurator.create(cdn);
     }
 
     protected Content createContent(Owner... owners) {
@@ -433,10 +398,6 @@ public class DatabaseTestFixture {
         Consumer c = new Consumer("test-consumer", "test-user", owner, type);
         consumerCurator.create(c);
         return c;
-    }
-
-    protected ActivationKey createActivationKey(Owner owner) {
-        return TestUtil.createActivationKey(owner, null);
     }
 
     protected Entitlement createEntitlement(Owner owner, Consumer consumer, Pool pool,
@@ -513,6 +474,98 @@ public class DatabaseTestFixture {
         return this.environmentCurator.create(environment);
     }
 
+    protected Owner createOwner() {
+        return this.createOwner("Test Owner " + TestUtil.randomInt());
+    }
+
+    protected Owner createOwner(String key) {
+        return this.createOwner(key, key);
+    }
+
+    protected Owner createOwner(String key, String name) {
+        Owner owner = TestUtil.createOwner(key, name);
+        this.ownerCurator.create(owner);
+
+        return owner;
+    }
+
+    protected Pool createPool(Owner owner, Product product) {
+        return this.createPool(
+            owner, product, 1L, TestUtil.createDate(2000, 1, 1), TestUtil.createDate(2100, 1, 1)
+        );
+    }
+
+    /**
+     * Create an entitlement pool.
+     *
+     * @return an entitlement pool
+     */
+    protected Pool createPool(Owner owner, Product product, Long quantity, Date startDate, Date endDate) {
+        Pool pool = new Pool(
+            owner,
+            product,
+            new HashSet<Product>(),
+            quantity,
+            startDate,
+            endDate,
+            DEFAULT_CONTRACT,
+            DEFAULT_ACCOUNT,
+            DEFAULT_ORDER
+        );
+
+        pool.setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
+        return poolCurator.create(pool);
+    }
+
+    protected Pool createPool(Owner owner, Product product, Long quantity, String subscriptionId,
+        String subscriptionSubKey, Date startDate, Date endDate) {
+        Pool pool = new Pool(
+            owner,
+            product,
+            new HashSet<Product>(),
+            quantity,
+            startDate,
+            endDate,
+            DEFAULT_CONTRACT,
+            DEFAULT_ACCOUNT,
+            DEFAULT_ORDER
+        );
+
+        pool.setSourceSubscription(new SourceSubscription(subscriptionId, subscriptionSubKey));
+        return poolCurator.create(pool);
+    }
+
+    protected Pool createPool(Owner owner, Product product, Long quantity, Date startDate, Date endDate,
+        String contractNr) {
+        Pool pool = createPool(owner, product, quantity, startDate, endDate);
+        pool.setContractNumber(contractNr);
+        return poolCurator.merge(pool);
+    }
+
+    protected Pool createPool(Owner owner, Product product, Long quantity, Date startDate, Date endDate,
+        String contractNr, String subscriptionId) {
+        Pool pool = createPool(owner, product, quantity, subscriptionId, "master", startDate, endDate);
+        pool.setContractNumber(contractNr);
+        return poolCurator.merge(pool);
+    }
+
+    protected Product createProduct(Owner... owners) {
+        String productId = "test-product-" + TestUtil.randomInt();
+        return this.createProduct(productId, productId, owners);
+    }
+
+    protected Product createProduct(String id, String name, Owner... owners) {
+        Product product = TestUtil.createProduct(id, name);
+        return this.createProduct(product, owners);
+    }
+
+    protected Product createProduct(Product product, Owner... owners) {
+        product = this.productCurator.create(product);
+        this.ownerProductCurator.mapProductToOwners(product, owners);
+
+        return product;
+    }
+
     protected Principal setupPrincipal(Owner owner, Access role) {
         return setupPrincipal("someuser", owner, role);
     }
@@ -537,34 +590,4 @@ public class DatabaseTestFixture {
         return p;
     }
 
-    public Role createAdminRole(Owner owner) {
-        PermissionBlueprint p = new PermissionBlueprint(PermissionType.OWNER, owner, Access.ALL);
-        Role role = new Role("testrole" + TestUtil.randomInt());
-        role.addPermission(p);
-        return role;
-    }
-
-    /**
-     * There's no way to really get Guice to perform injections on stuff that
-     * the JpaPersistModule is creating, so we resort to grabbing the EntityManagerFactory
-     * after the fact and adding the Validation EventListener ourselves.
-     * @param inj
-     */
-    private static void insertValidationEventListeners(Injector inj) {
-        Provider<EntityManagerFactory> emfProvider = inj.getProvider(EntityManagerFactory.class);
-        HibernateEntityManagerFactory hibernateEntityManagerFactory =
-            (HibernateEntityManagerFactory) emfProvider.get();
-        SessionFactoryImpl sessionFactoryImpl =
-            (SessionFactoryImpl) hibernateEntityManagerFactory.getSessionFactory();
-        EventListenerRegistry registry = sessionFactoryImpl
-            .getServiceRegistry()
-            .getService(EventListenerRegistry.class);
-
-        Provider<BeanValidationEventListener> listenerProvider =
-            inj.getProvider(BeanValidationEventListener.class);
-
-        registry.getEventListenerGroup(EventType.PRE_INSERT).appendListener(listenerProvider.get());
-        registry.getEventListenerGroup(EventType.PRE_UPDATE).appendListener(listenerProvider.get());
-        registry.getEventListenerGroup(EventType.PRE_DELETE).appendListener(listenerProvider.get());
-    }
 }

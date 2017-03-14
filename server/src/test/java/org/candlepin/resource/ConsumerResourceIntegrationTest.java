@@ -116,9 +116,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @Before
     public void setUp() {
         standardSystemType = consumerTypeCurator.create(new ConsumerType("standard-system"));
-
-        personType = consumerTypeCurator.create(new ConsumerType(
-            ConsumerTypeEnum.PERSON));
+        personType = consumerTypeCurator.create(new ConsumerType(ConsumerTypeEnum.PERSON));
         owner = ownerCurator.create(new Owner("test-owner"));
         owner.setDefaultServiceLevel(DEFAULT_SERVICE_LEVEL);
         ownerCurator.create(owner);
@@ -557,7 +555,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         ConsumerResource cr = new ConsumerResource(
             this.consumerCurator, null, null, null, this.entitlementCurator, null, null, null, null, null,
             null, null, null, this.poolManager, null, null, null, null, null, null, null, null,
-            new CandlepinCommonTestConfig(), null, null, null, mock(ConsumerBindUtil.class), productCurator,
+            new CandlepinCommonTestConfig(), null, null, null, mock(ConsumerBindUtil.class),
             null, null, null, null, consumerEnricher);
 
         Response rsp = consumerResource.bind(consumer.getUuid(), pool.getId().toString(), null, 1, null,

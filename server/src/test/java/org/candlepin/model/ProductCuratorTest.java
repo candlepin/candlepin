@@ -590,47 +590,4 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         Set<String> uuids = productCurator.getDerivedPoolProvidedProductUuids(pool.getId());
         assertEquals(new HashSet<String>(Arrays.asList(derivedProvidedProduct.getUuid())), uuids);
     }
-
-
-    @Test
-    public void testProvidesPoolProduct() {
-        assertTrue(productCurator.provides(pool, pool.getProductId()));
-    }
-
-    @Test
-    public void testProvidesProvidedProduct() {
-        assertTrue(productCurator.provides(pool, providedProduct.getId()));
-    }
-
-    @Test
-    public void testDoesntProvideRandomProduct() {
-        Product prod = TestUtil.createProduct("test-label-hydrated", "test-product-name-hydrated");
-        productCurator.create(prod);
-        assertFalse(productCurator.provides(pool, prod.getId()));
-    }
-
-    @Test
-    public void testProvidesDerivedPoolProduct() {
-        assertTrue(productCurator.providesDerived(pool, pool.getDerivedProduct().getId()));
-    }
-
-    @Test
-    public void testProvidesDerivedProvidedProduct() {
-        assertFalse(productCurator.providesDerived(pool, providedProduct.getId()));
-        assertTrue(productCurator.providesDerived(pool, derivedProduct.getId()));
-    }
-
-    @Test
-    public void testDoesntProvideDerivedRandomProduct() {
-        Product prod = TestUtil.createProduct("test-label-hydrated", "test-product-name-hydrated");
-        productCurator.create(prod);
-        assertFalse(productCurator.providesDerived(pool, prod.getId()));
-    }
-
-    @Test
-    public void testConsidersPlainProvidedProductWhenDerivedIsMissing() {
-        pool.setDerivedProduct(null);
-        assertFalse(productCurator.providesDerived(pool, derivedProduct.getId()));
-        assertTrue(productCurator.providesDerived(pool, providedProduct.getId()));
-    }
 }

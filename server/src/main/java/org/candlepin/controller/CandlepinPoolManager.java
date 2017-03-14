@@ -1165,13 +1165,10 @@ public class CandlepinPoolManager implements PoolManager {
      * @throws EntitlementRefusedException if unable to bind
      */
     @Override
+    @SuppressWarnings("checkstyle:methodlength")
     public List<PoolQuantity> getBestPoolsForHost(Consumer guest, Consumer host, Date entitleDate,
         Owner owner, String serviceLevelOverride, Collection<String> fromPools)
         throws EntitlementRefusedException {
-
-        // TODO: FIXME:
-        // Update this method to clean up some repetitive database hits, and unnecessary work when
-        // debug logging is disabled
 
         Map<String, ValidationResult> failedResults = new HashMap<String, ValidationResult>();
         log.debug("Looking up best pools for host: {}", host);
@@ -1225,9 +1222,16 @@ public class CandlepinPoolManager implements PoolManager {
         String[] productIds = tmpSet.toArray(new String [] {});
 
         if (log.isDebugEnabled()) {
-            log.debug("Attempting host autobind for guest products: {}",
-                Util.collectionToString(tmpSet));
+            log.debug("Attempting host autobind for guest products: {}", Util.collectionToString(tmpSet));
         }
+
+        // Bulk fetch our provided and derived provided product IDs so we're not hitting the DB
+        // several times for this lookup.
+        Map<String, Set<String>> providedProductIds = this.poolCurator
+            .getProvidedProductIds(allOwnerPools);
+
+        Map<String, Set<String>> derivedProvidedProductIds = this.poolCurator
+            .getDerivedProvidedProductIds(allOwnerPools);
 
         for (Pool pool : allOwnerPools) {
             boolean providesProduct = false;
@@ -1236,13 +1240,40 @@ public class CandlepinPoolManager implements PoolManager {
             if (pool.getProduct().hasAttribute(Product.Attributes.VIRT_LIMIT) &&
                 !pool.getProduct().getAttributeValue(Product.Attributes.VIRT_LIMIT).equals("0")) {
 
-                for (String productId : productIds) {
-                    // If this is a derived pool, we need to see if the derived product
-                    // provides anything for the guest, otherwise we use the parent.
-                    if (productCurator.providesDerived(pool, productId)) {
-                        log.debug("Found virt_limit pool providing product {}: {}", productId, pool);
-                        providesProduct = true;
-                        break;
+                Map<String, Set<String>> providedProductMap;
+                String baseProductId;
+
+                // Determine which set of provided products we should use...
+                if (pool.getDerivedProduct() != null) {
+                    providedProductMap = derivedProvidedProductIds;
+                    baseProductId = pool.getDerivedProduct().getId();
+                }
+                else {
+                    providedProductMap = providedProductIds;
+                    baseProductId = pool.getProduct().getId();
+                }
+
+                // Add the base product to the list of derived provided products...
+                Set<String> poolProvidedProductIds = providedProductMap.get(pool.getId());
+                if (baseProductId != null) {
+                    if (poolProvidedProductIds != null) {
+                        poolProvidedProductIds.add(baseProductId);
+                    }
+                    else {
+                        poolProvidedProductIds = Collections.<String>singleton(baseProductId);
+                    }
+                }
+
+                // Check if the pool provides any of the specified products
+                if (poolProvidedProductIds != null) {
+                    for (String productId : productIds) {
+                        // If this is a derived pool, we need to see if the derived product
+                        // provides anything for the guest, otherwise we use the parent.
+                        if (poolProvidedProductIds.contains(productId)) {
+                            log.debug("Found virt_limit pool providing product {}: {}", productId, pool);
+                            providesProduct = true;
+                            break;
+                        }
                     }
                 }
             }
@@ -1296,17 +1327,39 @@ public class CandlepinPoolManager implements PoolManager {
      */
     private Set<String> getProductsToRemove(List<Pool> allOwnerPoolsForGuest, Set<String> tmpSet) {
         Set<String> productsToRemove = new HashSet<String>();
-        for (Pool pool : allOwnerPoolsForGuest) {
-            if (pool.getProduct().hasAttribute(Product.Attributes.VIRT_ONLY) ||
-                pool.hasAttribute(Pool.Attributes.VIRT_ONLY)) {
 
-                for (String prodId : tmpSet) {
-                    if (productCurator.provides(pool, prodId)) {
-                        productsToRemove.add(prodId);
+        // Bulk fetch our provided product IDs so we're not hitting the DB several times
+        // for this lookup.
+        Map<String, Set<String>> providedProductIds = this.poolCurator
+            .getProvidedProductIds(allOwnerPoolsForGuest);
+
+        for (Pool pool : allOwnerPoolsForGuest) {
+            if (pool.getProduct() != null && (pool.getProduct().hasAttribute(Product.Attributes.VIRT_ONLY) ||
+                pool.hasAttribute(Pool.Attributes.VIRT_ONLY))) {
+
+                Set<String> poolProvidedProductIds = providedProductIds.get(pool.getId());
+                String poolProductId = pool.getProduct().getId();
+
+                if (poolProductId != null) {
+                    // Add the base product to our list of "provided" products
+                    if (poolProvidedProductIds != null) {
+                        poolProvidedProductIds.add(poolProductId);
+                    }
+                    else {
+                        poolProvidedProductIds = Collections.singleton(poolProductId);
+                    }
+                }
+
+                if (poolProvidedProductIds != null) {
+                    for (String prodId : tmpSet) {
+                        if (poolProvidedProductIds.contains(prodId)) {
+                            productsToRemove.add(prodId);
+                        }
                     }
                 }
             }
         }
+
         return productsToRemove;
     }
 
@@ -1357,6 +1410,10 @@ public class CandlepinPoolManager implements PoolManager {
             }
         }
 
+        // Bulk fetch our provided product IDs so we're not hitting the DB several times
+        // for this lookup.
+        Map<String, Set<String>> providedProductIds = this.poolCurator.getProvidedProductIds(allOwnerPools);
+
         for (Pool pool : allOwnerPools) {
             boolean providesProduct = false;
             // We want to complete partial stacks if possible, even if they do not provide any products
@@ -1367,13 +1424,29 @@ public class CandlepinPoolManager implements PoolManager {
                 providesProduct = true;
             }
             else {
-                for (String productId : productIds) {
-                    if (productCurator.provides(pool, productId)) {
-                        providesProduct = true;
-                        break;
+                Set<String> poolProvidedProductIds = providedProductIds.get(pool.getId());
+                String poolProductId = pool.getProduct() != null ? pool.getProduct().getId() : null;
+
+                if (poolProductId != null) {
+                    // Add the base product to our list of "provided" products
+                    if (poolProvidedProductIds != null) {
+                        poolProvidedProductIds.add(poolProductId);
+                    }
+                    else {
+                        poolProvidedProductIds = Collections.singleton(poolProductId);
+                    }
+                }
+
+                if (poolProvidedProductIds != null) {
+                    for (String productId : productIds) {
+                        if (poolProvidedProductIds.contains(productId)) {
+                            providesProduct = true;
+                            break;
+                        }
                     }
                 }
             }
+
             if (providesProduct) {
                 ValidationResult result = enforcer.preEntitlement(consumer, pool, 1, CallerType.BEST_POOLS);
 
@@ -1480,8 +1553,8 @@ public class CandlepinPoolManager implements PoolManager {
      */
     @Transactional
     protected List<Entitlement> addOrUpdateEntitlements(Consumer consumer,
-        Map<String, Integer> poolQuantityMap, Map<String, Entitlement> entitlements,
-        CallerType caller) throws EntitlementRefusedException {
+        Map<String, Integer> poolQuantityMap, Map<String, Entitlement> entitlements, CallerType caller)
+        throws EntitlementRefusedException {
 
         // Because there are several paths to this one place where entitlements
         // are granted, we cannot be positive the caller obtained a lock on the
@@ -1514,6 +1587,7 @@ public class CandlepinPoolManager implements PoolManager {
             throw new IllegalArgumentException(i18n.tr("Subscription pool(s) {0} do not exist.",
                 poolQuantityMap.keySet()));
         }
+
         if (quantityFound) {
             log.info("Running pre-entitlement rules.");
             // XXX preEntitlement is run twice for new entitlement creation
