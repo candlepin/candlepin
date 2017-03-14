@@ -363,10 +363,7 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
         for (Map.Entry<String, Integer> entry : contentVersions.entrySet()) {
             disjunction.add(Restrictions.and(
                 Restrictions.eq("c.id", entry.getKey()),
-                Restrictions.or(
-                    Restrictions.isNull("c.entityVersion"),
-                    Restrictions.eq("c.entityVersion", entry.getValue())
-                )
+                Restrictions.eq("c.entityVersion", entry.getValue())
             ));
         }
 
