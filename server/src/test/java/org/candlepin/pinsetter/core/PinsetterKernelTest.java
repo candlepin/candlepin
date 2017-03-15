@@ -27,6 +27,7 @@ import org.candlepin.auth.Principal;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.model.CandlepinModeChange;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.controller.ModeManager;
 import org.candlepin.model.JobCurator;
@@ -56,6 +57,7 @@ import org.quartz.impl.StdSchedulerFactory;
 import org.quartz.spi.JobFactory;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -107,6 +109,10 @@ public class PinsetterKernelTest {
             });
         when(sfactory.getScheduler()).thenReturn(sched);
         when(sched.getListenerManager()).thenReturn(lm);
+        when(modeManager.getLastCandlepinModeChange()).thenReturn(
+            new CandlepinModeChange(new Date(System.currentTimeMillis()),
+            CandlepinModeChange.Mode.NORMAL,
+            CandlepinModeChange.Reason.STARTUP));
     }
 
     @Test(expected = InstantiationException.class)

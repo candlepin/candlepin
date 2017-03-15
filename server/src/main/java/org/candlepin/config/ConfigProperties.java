@@ -153,11 +153,6 @@ public class ConfigProperties {
      */
     public static final String SUSPEND_MODE_ENABLED = "candlepin.suspend_mode_enabled";
     /**
-     * Candlepin will by default use QMF at startup to check if the Qpid is available. When it isn't its gonna
-     * fail fast.
-     */
-    public static final String QPID_STARTUP_CHECK_ENABLED = "candlepin.amqp.qmf.startup_check_enabled";
-    /**
      * Timeout that is used for QpidQmf while receiving messages. It shouldn't be necessary
      * to modify this unless the environment and Qpid Broker is so heavily utilized, that
      * reception takes longer.
@@ -378,7 +373,6 @@ public class ConfigProperties {
             this.put(AMQP_KEYSTORE_PASSWORD, "password");
             this.put(AMQP_TRUSTSTORE, "/etc/candlepin/certs/amqp/candlepin.truststore");
             this.put(AMQP_TRUSTSTORE_PASSWORD, "password");
-            this.put(QPID_STARTUP_CHECK_ENABLED, "true");
             this.put(SUSPEND_MODE_ENABLED, "true");
             this.put(QPID_QMF_RECEIVE_TIMEOUT, "5000");
             this.put(QPID_MODE_TANSITIONER_DELAY_GROWTH, "10");

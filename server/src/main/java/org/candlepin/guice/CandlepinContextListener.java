@@ -140,7 +140,7 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         map.init();
 
         if (config.getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED) &&
-            config.getBoolean(ConfigProperties.QPID_STARTUP_CHECK_ENABLED)) {
+            !config.getBoolean(ConfigProperties.SUSPEND_MODE_ENABLED)) {
             QpidQmf qmf = injector.getInstance(QpidQmf.class);
             QpidStatus status = qmf.getStatus();
             if (status != QpidStatus.CONNECTED) {
@@ -151,20 +151,25 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
             }
         }
 
+        cacheListener = injector.getInstance(CacheContextListener.class);
+        cacheListener.contextInitialized(injector);
+
         if (config.getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED) &&
             config.getBoolean(ConfigProperties.SUSPEND_MODE_ENABLED)) {
             SuspendModeTransitioner mw = injector.getInstance(SuspendModeTransitioner.class);
+            mw.transitionAppropriately();
             mw.startPeriodicExecutions();
         }
 
         if (config.getBoolean(HORNETQ_ENABLED)) {
-            hornetqListener = injector.getInstance(HornetqContextListener.class);
-            hornetqListener.contextInitialized(injector);
+            try {
+                hornetqListener = injector.getInstance(HornetqContextListener.class);
+                hornetqListener.contextInitialized(injector);
+            }
+            catch (Exception e) {
+                log.error("Exception occurred while trying to load HornetQ", e);
+            }
         }
-
-
-        cacheListener = injector.getInstance(CacheContextListener.class);
-        cacheListener.contextInitialized(injector);
 
         if (config.getBoolean(ConfigProperties.CACHE_JMX_STATS)) {
             MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
