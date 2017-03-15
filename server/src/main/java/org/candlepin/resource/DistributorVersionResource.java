@@ -41,6 +41,7 @@ import javax.ws.rs.core.MediaType;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Authorization;
@@ -49,9 +50,7 @@ import io.swagger.annotations.Authorization;
  * DistributorVersionResource
  */
 @Path("/distributor_versions")
-@Api(value = "distributor_versions", authorizations = {
-    @Authorization("basic")
-})
+@Api(value = "distributor_versions", authorizations = { @Authorization("basic") })
 public class DistributorVersionResource {
 
     private I18n i18n;
@@ -98,7 +97,8 @@ public class DistributorVersionResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public DistributorVersion create(DistributorVersion dv,
+    public DistributorVersion create(
+        @ApiParam(name = "distributorVersion", required = true) DistributorVersion dv,
         @Context Principal principal) {
         DistributorVersion existing = curator.findByName(dv.getName());
         if (existing != null) {
@@ -115,7 +115,7 @@ public class DistributorVersionResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{id}")
     public DistributorVersion update(@PathParam("id") String id,
-        DistributorVersion dv,
+        @ApiParam(name = "distributorVersion", required = true) DistributorVersion dv,
         @Context Principal principal) {
         DistributorVersion existing = verifyAndLookupDistributorVersion(id);
         existing.setDisplayName(dv.getDisplayName());

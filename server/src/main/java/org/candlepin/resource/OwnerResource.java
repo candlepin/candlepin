@@ -148,9 +148,7 @@ import io.swagger.annotations.Authorization;
  * Owner Resource
  */
 @Path("/owners")
-@Api(value = "owners", authorizations = {
-    @Authorization("basic")
-})
+@Api(value = "owners", authorizations = { @Authorization("basic") })
 public class OwnerResource {
 
     private static Logger log = LoggerFactory.getLogger(OwnerResource.class);
@@ -258,7 +256,8 @@ public class OwnerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "owners")
-    @ApiOperation(notes = "Retrieves a list of Owners", value = "List Owners", responseContainer = "owners")
+    @ApiOperation(notes = "Retrieves a list of Owners", value = "List Owners", response = Owner.class,
+        responseContainer = "list")
     public CandlepinQuery<Owner> list(@QueryParam("key") String keyFilter) {
         return keyFilter != null ?
             this.ownerCurator.lookupByKeys(Arrays.asList(keyFilter)) :
@@ -328,14 +327,18 @@ public class OwnerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     @ApiOperation(notes = "Creates an Owner", value = "Create Owner")
-    @ApiResponses({ @ApiResponse(code = 400, message = "Invalid owner specified in body") })
-    public Owner createOwner(Owner owner) {
+    @ApiResponses({
+        @ApiResponse(code = 400, message = "Invalid owner specified in body"),
+        }
+    )
+    public Owner createOwner(@ApiParam(name = "owner", required = true) Owner owner) {
         Owner parent = owner.getParentOwner();
         if (parent != null && ownerCurator.find(parent.getId()) == null) {
             throw new BadRequestException(i18n.tr(
                 "Could not create the Owner: {0}. Parent {1} does not exist.",
                 owner, parent));
         }
+
         Owner toReturn = ownerCurator.create(owner);
         sink.emitOwnerCreated(owner);
 
@@ -518,7 +521,7 @@ public class OwnerResource {
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found"),
         @ApiResponse(code = 400, message = "Invalid activation key") })
     public ActivationKey createActivationKey(@PathParam("owner_key") @Verify(Owner.class) String ownerKey,
-        ActivationKey activationKey) {
+        @ApiParam(name = "activation_key", required = true) ActivationKey activationKey) {
 
         Owner owner = findOwner(ownerKey);
         activationKey.setOwner(owner);
@@ -567,7 +570,8 @@ public class OwnerResource {
     @ApiOperation(notes = "Creates an Environment for an Owner", value = "Create environment")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found")})
     public Environment createEnv(
-        @PathParam("owner_key") @Verify(Owner.class) String ownerKey, Environment env) {
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
+        @ApiParam(name = "environment", required = true) Environment env) {
         Owner owner = findOwner(ownerKey);
         env.setOwner(owner);
         env = envCurator.create(env);
@@ -616,7 +620,8 @@ public class OwnerResource {
     @ApiOperation(notes = "Sets the Log Level for an Owner", value = "Set Log Level")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found")})
     public Owner setLogLevel(@PathParam("owner_key") String ownerKey,
-        @QueryParam("level") @DefaultValue("DEBUG") String level) {
+        @QueryParam("level") @DefaultValue("DEBUG")
+        @ApiParam(allowableValues = "ALL, TRACE, DEBUG, INFO, WARN, ERROR, OFF") String level) {
         Owner owner = findOwner(ownerKey);
         level = level.toUpperCase();
 
@@ -668,9 +673,12 @@ public class OwnerResource {
     @Path("{owner_key}/consumers")
     @Paginate
     @SuppressWarnings("checkstyle:indentation")
-    @ApiOperation(notes = "Retrieve a list of Consumers for the Owner", value = "List Consumers")
-    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found"),
-            @ApiResponse(code = 400, message = "Invalid request")})
+    @ApiOperation(notes = "Retrieve a list of Consumers for the Owner", value = "List Consumers",
+        response = Consumer.class, responseContainer = "list")
+    @ApiResponses({
+        @ApiResponse(code = 404, message = "Owner not found"),
+        @ApiResponse(code = 400, message = "Invalid request")
+    })
     public CandlepinQuery<Consumer> listConsumers(
         @PathParam("owner_key")
         @Verify(value = Owner.class, subResource = SubResource.CONSUMERS) String ownerKey,
@@ -698,8 +706,10 @@ public class OwnerResource {
     @Path("{owner_key}/consumers/count")
     @SuppressWarnings("checkstyle:indentation")
     @ApiOperation(notes = "Retrieve a count of Consumers for the Owner", value = "consumers count")
-    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found"),
-        @ApiResponse(code = 400, message = "Invalid request")})
+    @ApiResponses({
+        @ApiResponse(code = 404, message = "Owner not found"),
+        @ApiResponse(code = 400, message = "Invalid request")
+    })
     public int countConsumers(
         @PathParam("owner_key")
         @Verify(value = Owner.class, subResource = SubResource.CONSUMERS) String ownerKey,
@@ -731,8 +741,10 @@ public class OwnerResource {
     @Paginate
     @SuppressWarnings("checkstyle:indentation")
     @ApiOperation(notes = "Retrieves a list of Pools for an Owner", value = "List Pools")
-    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found"),
-            @ApiResponse(code = 400, message = "Invalid request")})
+    @ApiResponses({
+        @ApiResponse(code = 404, message = "Owner not found"),
+        @ApiResponse(code = 400, message = "Invalid request")
+    })
     public List<Pool> listPools(
         @PathParam("owner_key") @Verify(value = Owner.class, subResource = SubResource.POOLS) String ownerKey,
         @QueryParam("consumer") String consumerUuid,
@@ -905,7 +917,8 @@ public class OwnerResource {
     @ApiOperation(notes = "To un-set the defaultServiceLevel for an owner, submit an empty string.",
         value = "Update Owner")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
-    public Owner updateOwner(@PathParam("owner_key") @Verify(Owner.class) String key, Owner owner) {
+    public Owner updateOwner(@PathParam("owner_key") @Verify(Owner.class) String key,
+        @ApiParam(name = "owner", required = true) Owner owner) {
         Owner toUpdate = findOwner(key);
         EventBuilder eventBuilder = eventFactory.getEventBuilder(Target.OWNER, Type.MODIFIED)
             .setOldEntity(toUpdate);
@@ -1050,7 +1063,8 @@ public class OwnerResource {
         notes = "Updates a Subscription for an Owner.  Please " + "update pools directly with POST /pools.",
         value = "Update Subscription")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
-    public void updateSubscription(Subscription subscription) {
+    public void updateSubscription(
+        @ApiParam(name = "subscription", required = true) Subscription subscription) {
         Pool existingPool = this.poolManager.getMasterPoolBySubscriptionId(subscription.getId());
         if (existingPool == null) {
             throw new NotFoundException(i18n.tr(
@@ -1133,7 +1147,8 @@ public class OwnerResource {
         "upstream subscription, and are most commonly used for custom content delivery " +
         "in Satellite. Also helps in on-site deployment testing", value = "Create Pool")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
-    public Pool createPool(@PathParam("owner_key") @Verify(Owner.class) String ownerKey, Pool pool) {
+    public Pool createPool(@PathParam("owner_key") @Verify(Owner.class) String ownerKey,
+        @ApiParam(name = "pool", required = true) Pool pool) {
 
         log.info("Creating custom pool for owner {}: {}" + ownerKey, pool);
 
@@ -1168,7 +1183,7 @@ public class OwnerResource {
         value = "Update Pool")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
     public void updatePool(@PathParam("owner_key") @Verify(Owner.class) String ownerKey,
-        Pool newPool) {
+        @ApiParam(name = "pool", required = true) Pool newPool) {
 
         Pool currentPool = this.poolManager.find(newPool.getId());
         if (currentPool == null) {
@@ -1377,7 +1392,8 @@ public class OwnerResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/imports")
-    @ApiOperation(notes = " Retrieves a list of Import Records for an Owner", value = "Get Imports")
+    @ApiOperation(notes = " Retrieves a list of Import Records for an Owner", value = "Get Imports",
+        response = ImportRecord.class, responseContainer = "list")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
     public CandlepinQuery<ImportRecord> getImports(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
@@ -1401,8 +1417,11 @@ public class OwnerResource {
     @ApiOperation(notes = "Creates an Ueber Entitlement Certificate. If a certificate " +
         "already exists, it will be regenerated.",
         value = "Create Ueber Entitlement Certificate")
-    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found"),
-        @ApiResponse(code = 400, message = "") })
+    @ApiResponses({
+        @ApiResponse(code = 404, message = "Owner not found"),
+        @ApiResponse(code = 400, message = "")
+        }
+    )
     public UeberCertificate createUeberCertificate(@Context Principal principal,
         @Verify(Owner.class) @PathParam("owner_key") String ownerKey) {
         return ueberCertGenerator.generate(ownerKey, principal);
@@ -1478,7 +1497,8 @@ public class OwnerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{owner_key}/hypervisors")
-    @ApiOperation(notes = "Retrieves a list of Hypervisors for an Owner", value = "Get Hypervisors")
+    @ApiOperation(notes = "Retrieves a list of Hypervisors for an Owner", value = "Get Hypervisors",
+        response = Consumer.class, responseContainer = "list")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
     public CandlepinQuery<Consumer> getHypervisors(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,

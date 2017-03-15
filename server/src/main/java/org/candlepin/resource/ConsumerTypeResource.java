@@ -39,6 +39,7 @@ import javax.ws.rs.core.MediaType;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Authorization;
@@ -47,9 +48,7 @@ import io.swagger.annotations.Authorization;
  * Access Path for consumer types
  */
 @Path("/consumertypes")
-@Api(value = "consumertypes", authorizations = {
-    @Authorization("basic")
-})
+@Api(value = "consumertypes", authorizations = { @Authorization("basic") })
 public class ConsumerTypeResource {
     private static Logger log = LoggerFactory.getLogger(ConsumerTypeResource.class);
     private ConsumerTypeCurator consumerTypeCurator;
@@ -62,7 +61,8 @@ public class ConsumerTypeResource {
         this.i18n = i18n;
     }
 
-    @ApiOperation(notes = "Retrieves a list of Consumer Types", value = "list")
+    @ApiOperation(notes = "Retrieves a list of Consumer Types", value = "list",
+        response = ConsumerType.class, responseContainer = "list")
     @GET
     @Produces({MediaType.APPLICATION_JSON })
     @Wrapped(element = "consumertypes")
@@ -92,7 +92,8 @@ public class ConsumerTypeResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public ConsumerType create(ConsumerType in) throws BadRequestException {
+    public ConsumerType create(
+        @ApiParam(name = "consumerType", required = true) ConsumerType in) throws BadRequestException {
         try {
             ConsumerType toReturn = consumerTypeCurator.create(in);
             return toReturn;
@@ -110,7 +111,8 @@ public class ConsumerTypeResource {
     @Path("/{id}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public ConsumerType update(ConsumerType in) throws BadRequestException {
+    public ConsumerType update(
+        @ApiParam(name = "consumerType", required = true) ConsumerType in) throws BadRequestException {
         ConsumerType type = consumerTypeCurator.find(in.getId());
 
         if (type == null) {

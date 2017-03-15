@@ -37,9 +37,7 @@ import io.swagger.annotations.Authorization;
  * DeletedConsumerResource
  */
 @Path("/deleted_consumers")
-@Api(value = "deleted_consumers", authorizations = {
-    @Authorization("basic")
-})
+@Api(value = "deleted_consumers", authorizations = { @Authorization("basic") })
 public class DeletedConsumerResource {
     private DeletedConsumerCurator deletedConsumerCurator;
 
@@ -51,7 +49,7 @@ public class DeletedConsumerResource {
     @ApiOperation(
         notes = "Retrieves a list of Deleted Consumers By deletion date or all. " +
         "List returned is the deleted Consumers.",
-        value = "listByDate")
+        value = "listByDate", response = DeletedConsumer.class, responseContainer = "list")
     @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 404, message = "") })
     @GET
     @Produces(MediaType.APPLICATION_JSON)

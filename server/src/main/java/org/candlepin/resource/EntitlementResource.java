@@ -73,6 +73,7 @@ import javax.ws.rs.core.Response;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Authorization;
@@ -81,9 +82,7 @@ import io.swagger.annotations.Authorization;
  * REST api gateway for the User object.
  */
 @Path("/entitlements")
-@Api(value = "entitlements", authorizations = {
-    @Authorization("basic")
-})
+@Api(value = "entitlements", authorizations = { @Authorization("basic") })
 public class EntitlementResource {
     private static Logger log = LoggerFactory.getLogger(EntitlementResource.class);
     private final ConsumerCurator consumerCurator;
@@ -203,7 +202,7 @@ public class EntitlementResource {
     @Path("{entitlement_id}")
     public void updateEntitlement(
         @PathParam("entitlement_id") @Verify(Entitlement.class) String id,
-        Entitlement update) {
+        @ApiParam(name = "update", required = true) Entitlement update) {
 
         // Check that quantity param was set and is not 0:
         if (update.getQuantity() <= 0) {

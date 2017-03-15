@@ -72,9 +72,7 @@ import io.swagger.annotations.Authorization;
  * HypervisorResource
  */
 @Path("/hypervisors")
-@Api(value = "hypervisors", authorizations = {
-    @Authorization("basic")
-})
+@Api(value = "hypervisors", authorizations = { @Authorization("basic") })
 public class HypervisorResource {
     private static Logger log = LoggerFactory.getLogger(HypervisorResource.class);
     private ConsumerCurator consumerCurator;

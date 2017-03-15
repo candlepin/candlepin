@@ -34,9 +34,7 @@ import io.swagger.annotations.Authorization;
  * CertificateSerialResource
  */
 @Path("/serials")
-@Api(value = "serials", authorizations = {
-    @Authorization("basic")
-})
+@Api(value = "serials", authorizations = { @Authorization("basic") })
 public class CertificateSerialResource {
     private CertificateSerialCurator certificateSerialCurator;
 
@@ -45,7 +43,8 @@ public class CertificateSerialResource {
         this.certificateSerialCurator = certificateSerialCurator;
     }
 
-    @ApiOperation(notes = "Retrieves a list of Certificate Serials", value = "getCertificateSerials")
+    @ApiOperation(notes = "Retrieves a list of Certificate Serials", value = "getCertificateSerials",
+        response = CertificateSerial.class, responseContainer = "list")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public CandlepinQuery<CertificateSerial> getCertificateSerials() {

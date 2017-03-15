@@ -46,6 +46,7 @@ import javax.ws.rs.core.MediaType;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Authorization;
@@ -54,9 +55,7 @@ import io.swagger.annotations.Authorization;
  *
  */
 @Path("/roles")
-@Api(value = "roles", authorizations = {
-    @Authorization("basic")
-})
+@Api(value = "roles", authorizations = { @Authorization("basic") })
 public class RoleResource {
 
     private UserServiceAdapter userService;
@@ -78,7 +77,7 @@ public class RoleResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Role createRole(Role role) {
+    public Role createRole(@ApiParam(name = "role", required = true) Role role) {
 
         // Attach actual owner objects to each incoming permission:
         for (PermissionBlueprint p : role.getPermissions()) {
@@ -103,7 +102,8 @@ public class RoleResource {
     @Path("{role_id}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Role updateRole(@PathParam("role_id") String roleId, Role role) {
+    public Role updateRole(@PathParam("role_id") String roleId,
+        @ApiParam(name = "role", required = true) Role role) {
         //Only operate here if you only have 1 ID to pull,
         //but if the user passes in an ID in the body of the JSON
         //and that ID is NOT equal to what the ID in the URL is, then throw an error
@@ -123,7 +123,7 @@ public class RoleResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Role addRolePermission(@PathParam("role_id") String roleId,
-        PermissionBlueprint permission) {
+        @ApiParam(name = "permissionBlueprint", required = true) PermissionBlueprint permission) {
 
         Role existingRole = lookupRole(roleId);
 

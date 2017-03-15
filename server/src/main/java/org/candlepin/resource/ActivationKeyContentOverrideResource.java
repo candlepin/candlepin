@@ -33,9 +33,7 @@ import io.swagger.annotations.Authorization;
  * ActivationKeyContentOverrideResource
  */
 @Path("/activation_keys/{activation_key_id}/content_overrides")
-@Api(value = "activation_keys", authorizations = {
-    @Authorization("basic")
-})
+@Api(value = "activation_keys", authorizations = { @Authorization("basic") })
 public class ActivationKeyContentOverrideResource extends
     ContentOverrideResource<ActivationKeyContentOverride,
     ActivationKeyContentOverrideCurator,

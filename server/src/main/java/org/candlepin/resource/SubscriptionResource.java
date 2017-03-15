@@ -49,6 +49,7 @@ import javax.ws.rs.core.Response.Status;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Authorization;
@@ -58,9 +59,7 @@ import io.swagger.annotations.Authorization;
  */
 
 @Path("/subscriptions")
-@Api(value = "subscriptions", authorizations = {
-    @Authorization("basic")
-})
+@Api(value = "subscriptions", authorizations = { @Authorization("basic") })
 @Consumes(MediaType.APPLICATION_JSON)
 public class SubscriptionResource {
     private static Logger log = LoggerFactory.getLogger(SubscriptionResource.class);
@@ -81,7 +80,6 @@ public class SubscriptionResource {
 
         this.i18n = i18n;
     }
-
 
     /**
      * Retrieves the master pool generated from the specified subscription. If an appropriate master
@@ -189,9 +187,9 @@ public class SubscriptionResource {
     @Produces(MediaType.WILDCARD)
     @Consumes(MediaType.WILDCARD)
     public Response activateSubscription(
-        @QueryParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-        @QueryParam("email") String email,
-        @QueryParam("email_locale") String emailLocale) {
+        @ApiParam(required = true) @QueryParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
+        @ApiParam(required = true) @QueryParam("email") String email,
+        @ApiParam(required = true) @QueryParam("email_locale") String emailLocale) {
 
         if (email == null) {
             throw new BadRequestException(i18n.tr("email is required for notification"));

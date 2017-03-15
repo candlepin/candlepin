@@ -55,6 +55,7 @@ import javax.ws.rs.core.MediaType;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Authorization;
@@ -63,9 +64,7 @@ import io.swagger.annotations.Authorization;
  * API Gateway into /product
  */
 @Path("/products")
-@Api(value = "products", authorizations = {
-    @Authorization("basic")
-})
+@Api(value = "products", authorizations = { @Authorization("basic") })
 public class ProductResource {
 
     private static Logger log = LoggerFactory.getLogger(ProductResource.class);
@@ -168,7 +167,7 @@ public class ProductResource {
     @Deprecated
     public ProductData updateProduct(
         @PathParam("product_uuid") String productUuid,
-        ProductData product) {
+        @ApiParam(name = "product", required = true) ProductData product) {
         throw new BadRequestException(this.i18n.tr(
             "Organization-agnostic product write operations are no longer supported."
         ));
@@ -252,12 +251,14 @@ public class ProductResource {
         ));
     }
 
-    @ApiOperation(notes = "Retrieves a list of Owners by Product", value = "getProductOwners")
+    @ApiOperation(notes = "Retrieves a list of Owners by Product", value = "getProductOwners",
+        response = Owner.class, responseContainer = "list")
     @ApiResponses({ @ApiResponse(code = 400, message = "") })
     @GET
     @Path("/owners")
     @Produces(MediaType.APPLICATION_JSON)
     public CandlepinQuery<Owner> getProductOwners(
+        @ApiParam(value = "Multiple product UUIDs", required = true)
         @QueryParam("product") List<String> productUuids) {
 
         if (productUuids.isEmpty()) {
@@ -273,6 +274,7 @@ public class ProductResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.WILDCARD)
     public JobDetail[] refreshPoolsForProduct(
+        @ApiParam(value = "Multiple product UUIDs", required = true)
         @QueryParam("product") List<String> productUuids,
         @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {
 

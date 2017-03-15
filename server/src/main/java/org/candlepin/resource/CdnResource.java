@@ -39,6 +39,7 @@ import javax.ws.rs.core.MediaType;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Authorization;
@@ -47,9 +48,7 @@ import io.swagger.annotations.Authorization;
  * CdnResource
  */
 @Path("/cdn")
-@Api(value = "cdn", authorizations = {
-    @Authorization("basic")
-})
+@Api(value = "cdn", authorizations = { @Authorization("basic") })
 public class CdnResource {
 
     private I18n i18n;
@@ -62,7 +61,8 @@ public class CdnResource {
         this.curator = curator;
     }
 
-    @ApiOperation(notes = "Retrieves a list of CDN's", value = "getContentDeliveryNetworks")
+    @ApiOperation(notes = "Retrieves a list of CDN's", value = "getContentDeliveryNetworks",
+        response = Cdn.class, responseContainer = "list")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public CandlepinQuery<Cdn> getContentDeliveryNetworks() {
@@ -86,7 +86,8 @@ public class CdnResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Cdn create(Cdn cdn,
+    public Cdn create(
+        @ApiParam(name = "cdn", required = true) Cdn cdn,
         @Context Principal principal) {
         Cdn existing = curator.lookupByLabel(cdn.getLabel());
         if (existing != null) {
@@ -101,7 +102,7 @@ public class CdnResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{label}")
     public Cdn update(@PathParam("label") String label,
-        Cdn cdn,
+        @ApiParam(name = "cdn", required = true) Cdn cdn,
         @Context Principal principal) {
         Cdn existing = verifyAndLookupCdn(label);
         if (!StringUtils.isBlank(cdn.getName())) {

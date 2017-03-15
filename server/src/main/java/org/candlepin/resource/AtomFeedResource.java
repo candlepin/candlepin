@@ -37,9 +37,7 @@ import io.swagger.annotations.Authorization;
  * Resource exposing an Atom feed of Candlepin events.
  */
 @Path("/atom")
-@Api(value = "atom", authorizations = {
-    @Authorization("basic")
-})
+@Api(value = "atom", authorizations = { @Authorization("basic") })
 public class AtomFeedResource {
 
     private static final int ATOM_FEED_LIMIT = 1000;

@@ -53,6 +53,7 @@ import javax.ws.rs.core.MediaType;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Authorization;
@@ -61,9 +62,7 @@ import io.swagger.annotations.Authorization;
  * ActivationKeyResource
  */
 @Path("/activation_keys")
-@Api(value = "activation_keys", authorizations = {
-    @Authorization("basic")
-})
+@Api(value = "activation_keys", authorizations = { @Authorization("basic") })
 public class ActivationKeyResource {
     private static Logger log = LoggerFactory.getLogger(ActivationKeyResource.class);
     private ActivationKeyCurator activationKeyCurator;
@@ -104,7 +103,7 @@ public class ActivationKeyResource {
     }
 
     @ApiOperation(notes = "Retrieves a list of Pools based on the Activation Key",
-        value = "Get Activation Key Pools")
+        value = "Get Activation Key Pools", response = Pool.class, responseContainer = "list")
     @ApiResponses({ @ApiResponse(code = 400, message = "")})
     @GET
     @Path("{activation_key_id}/pools")
@@ -132,7 +131,7 @@ public class ActivationKeyResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public ActivationKeyData updateActivationKey(
         @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId,
-        ActivationKeyData update) {
+        @ApiParam(name = "update", required = true) ActivationKeyData update) {
 
         ActivationKey toUpdate = activationKeyCurator.verifyAndLookupKey(activationKeyId);
         if (update.getName() != null) {
@@ -247,8 +246,8 @@ public class ActivationKeyResource {
         return new ActivationKeyData(key);
     }
 
-    @ApiOperation(notes = "Retrieves a list of Activation Keys", value = "findActivationKey")
-    @ApiResponses({ @ApiResponse(code = 200, message = "") })
+    @ApiOperation(notes = "Retrieves a list of Activation Keys", value = "findActivationKey",
+        response = ActivationKey.class, responseContainer = "list")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public CandlepinQuery<ActivationKey> findActivationKey() {

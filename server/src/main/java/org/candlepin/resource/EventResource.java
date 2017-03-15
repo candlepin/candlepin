@@ -42,9 +42,7 @@ import io.swagger.annotations.Authorization;
  * Candlepin Events Resource
  */
 @Path("/events")
-@Api(value = "events", authorizations = {
-    @Authorization("basic")
-})
+@Api(value = "events", authorizations = { @Authorization("basic") })
 public class EventResource {
 
     private EventCurator eventCurator;

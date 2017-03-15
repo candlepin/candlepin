@@ -69,9 +69,7 @@ import io.swagger.annotations.Authorization;
  */
 
 @Path("/pools")
-@Api(value = "pools", authorizations = {
-    @Authorization("basic")
-})
+@Api(value = "pools", authorizations = { @Authorization("basic") })
 public class PoolResource {
 
     private ConsumerCurator consumerCurator;
@@ -118,7 +116,7 @@ public class PoolResource {
         " warning. (i.e. not recommended) Pools that trigger an error however will" +
         " still be omitted. (no entitlements available, consumer type mismatch, etc)")
         @QueryParam("listall") @DefaultValue("false") boolean listAll,
-        @QueryParam("activeon") String activeOn,
+        @ApiParam("Uses ISO 8601 format") @QueryParam("activeon") String activeOn,
         @Context Principal principal,
         @Context PageRequest pageRequest) {
 
@@ -197,7 +195,7 @@ public class PoolResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Pool getPool(@PathParam("pool_id") @Verify(Pool.class) String id,
         @QueryParam("consumer") String consumerUuid,
-        @QueryParam("activeon") String activeOn,
+        @ApiParam("Uses ISO 8601 format") @QueryParam("activeon") String activeOn,
         @Context Principal principal) {
         Pool toReturn = poolManager.find(id);
 

@@ -52,9 +52,7 @@ import io.swagger.annotations.Authorization;
  * CrlResource
  */
 @Path("/crl")
-@Api(value = "crl", authorizations = {
-    @Authorization("basic")
-})
+@Api(value = "crl", authorizations = { @Authorization("basic") })
 public class CrlResource {
 
     private Configuration config;
@@ -73,7 +71,8 @@ public class CrlResource {
         this.certificateSerialCurator = certificateSerialCurator;
     }
 
-    @ApiOperation(notes = "Retrieves the Certificate Revocation List", value = "getCurrentCrl")
+    @ApiOperation(notes = "Retrieves the Certificate Revocation List", value = "getCurrentCrl", response =
+        String.class)
     @GET
     @Produces(MediaType.TEXT_PLAIN)
     public Response getCurrentCrl(@Context Principal principal) throws CRLException {

@@ -49,9 +49,7 @@ import io.swagger.annotations.Authorization;
  * Rules API entry path
  */
 @Path("/rules")
-@Api(value = "rules", authorizations = {
-    @Authorization("basic")
-})
+@Api(value = "rules", authorizations = { @Authorization("basic") })
 public class RulesResource {
     private static Logger log = LoggerFactory.getLogger(RulesResource.class);
     private RulesCurator rulesCurator;

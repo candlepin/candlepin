@@ -68,6 +68,7 @@ import javax.ws.rs.core.MediaType;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Authorization;
@@ -78,9 +79,7 @@ import io.swagger.annotations.Authorization;
  * @version $Rev$
  */
 @Path("/owners/{owner_key}/products")
-@Api(value = "owners", authorizations = {
-    @Authorization("basic")
-})
+@Api(value = "owners", authorizations = { @Authorization("basic") })
 public class OwnerProductResource {
     private static Logger log = LoggerFactory.getLogger(OwnerProductResource.class);
 
@@ -191,11 +190,11 @@ public class OwnerProductResource {
         return content;
     }
 
-    @ApiOperation(notes = "Retrieves a list of Products", response = Product.class,
-        responseContainer = "List", value = "list")
+    @ApiOperation(notes = "Retrieves a list of Products", value = "List Products for an Owner",
+        response = Product.class, responseContainer = "list")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public CandlepinQuery<ProductData> list(
+    public CandlepinQuery<ProductData> listProducts(
         @Verify(Owner.class) @PathParam("owner_key") String ownerKey,
         @QueryParam("product") List<String> productIds) {
 
@@ -272,7 +271,7 @@ public class OwnerProductResource {
     public ProductData updateProduct(
         @PathParam("owner_key") String ownerKey,
         @PathParam("product_id") String productId,
-        ProductData update) {
+        @ApiParam(name = "update", required = true) ProductData update) {
 
         if (StringUtils.isEmpty(update.getId())) {
             update.setId(productId);
@@ -304,7 +303,7 @@ public class OwnerProductResource {
     public ProductData addBatchContent(
         @PathParam("owner_key") String ownerKey,
         @PathParam("product_id") String productId,
-        Map<String, Boolean> contentMap) {
+        @ApiParam(name = "contentMap", required = true) Map<String, Boolean> contentMap) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
         Product product = this.fetchProduct(owner, productId);
