@@ -1005,9 +1005,9 @@ describe 'Consumer Resource' do
     consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
     consumer_client.update_consumer({:guestIds => guests})
 
-    consumer = @cp.get_consumer(consumer['uuid'])
-    consumer['guestIds'].length.should == 1
-    consumer['guestIds'][0]['guestId'].should == 'guest1'
+    guestIds = consumer_client.get_guestids()
+    guestIds.length.should == 1
+    guestIds[0]['guestId'].should == 'guest1'
   end
 
   it 'should return correct exception for contraint violations' do

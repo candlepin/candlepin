@@ -185,8 +185,9 @@ class Candlepin
     delete(path)
   end
 
-  def get_guestids()
-    path = "/consumers/#{@uuid}/guestids"
+  def get_guestids(uuid = nil)
+    uuid = uuid || @uuid
+    path = "/consumers/#{uuid}/guestids"
     results = get(path)
     return results
   end

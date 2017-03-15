@@ -32,9 +32,9 @@ describe 'Consumer Resource Host/Guest' do
     consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
     consumer_client.update_consumer({:guestIds => guests})
 
-    consumer = @cp.get_consumer(consumer['uuid'])
-    consumer['guestIds'].length.should == 1
-    consumer['guestIds'][0]['guestId'].should == 'guest1'
+    guestIds = consumer_client.get_guestids()
+    guestIds.length.should == 1
+    guestIds[0]['guestId'].should == 'guest1'
   end
 
   it 'should allow updating guest ids from host consumer on update' do
@@ -48,13 +48,12 @@ describe 'Consumer Resource Host/Guest' do
     consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
     consumer_client.update_consumer({:guestIds => guests})
 
-    consumer = @cp.get_consumer(consumer['uuid'])
-    consumer['guestIds'].length.should == 2
+    consumer_client.get_guestids().length.should == 2
 
     consumer_client.update_consumer({:guestIds => [guests[1]]})
-    consumer = @cp.get_consumer(consumer['uuid'])
-    consumer['guestIds'].length.should == 1
-    consumer['guestIds'][0]['guestId'].should == 'guest2'
+    guestIds = consumer_client.get_guestids()
+    guestIds.length.should == 1
+    guestIds[0]['guestId'].should == 'guest2'
   end
 
   it 'should not modify guest id list if guestIds list is null on update' do
@@ -66,15 +65,13 @@ describe 'Consumer Resource Host/Guest' do
 
     consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
     consumer_client.update_consumer({:guestIds => guests})
-
-    consumer = @cp.get_consumer(consumer['uuid'])
-    consumer['guestIds'].length.should == 1
+    consumer_client.get_guestids().length.should == 1
 
     consumer_client.update_consumer({:guestIds => nil})
     consumer_client.update_consumer({})
-    consumer = @cp.get_consumer(consumer['uuid'])
-    consumer['guestIds'].length.should == 1
-    consumer['guestIds'][0]['guestId'].should == 'guest1'
+    guestIds = consumer_client.get_guestids()
+    guestIds.length.should == 1
+    guestIds[0]['guestId'].should == 'guest1'
   end
 
   it 'should clear guest ids when empty list is provided on update' do
@@ -86,13 +83,10 @@ describe 'Consumer Resource Host/Guest' do
 
     consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
     consumer_client.update_consumer({:guestIds => guests})
-
-    consumer = @cp.get_consumer(consumer['uuid'])
-    consumer['guestIds'].length.should == 1
+    consumer_client.get_guestids().length.should == 1
 
     consumer_client.update_consumer({:guestIds => []})
-    consumer = @cp.get_consumer(consumer['uuid'])
-    consumer['guestIds'].length.should == 0
+    consumer_client.get_guestids().length.should == 0
   end
 
   it 'should allow host to list guests' do
