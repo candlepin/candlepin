@@ -170,7 +170,7 @@
         value="delete c from cp_consumer c where name like 'ueber_cert_consumer';"/>
 
     <changeSet id="20170125112728-1" author="mstead">
-        <validCheckSum>ALL</validCheckSum>
+        <validCheckSum>7:ad63fc8bcde413c0f8b22331f7458d36</validCheckSum>
         <comment>Round 3 ueber cert data cleanup.</comment>
         <sql>${delete_ueber_certs_round3}</sql>
         <sql>${delete_pool_source_sub_round3}</sql>
