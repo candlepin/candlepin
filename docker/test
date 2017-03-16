@@ -42,10 +42,12 @@ done
 
 # PROJ_NAME should be set in a jenkins environment. It allows multiple
 #  instaces of the compose to run without clobbering eachother.
+cd $DIR
 docker-compose $PROJ_NAME stop
 docker-compose $PROJ_NAME rm -f
 docker-compose $PROJ_NAME $COMPOSE_ARGS run --rm candlepin $TEST_CMD
 RETVAL=$?
 docker-compose $PROJ_NAME stop
 echo "return value: $RETVAL"
+cd -
 exit $RETVAL

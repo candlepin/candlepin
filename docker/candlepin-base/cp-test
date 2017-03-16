@@ -43,19 +43,20 @@ move_artifact() {
 
 collect_artifacts() {
     # If the caller mounted a volume at /artifacts, copy server logs out:
-    if [ -d "/artifacts" ]; then
+    ARTIFACT_DIR="/candlepin-dev/artifacts/"
+    if [ -d "${ARTIFACT_DIR}" ]; then
         echo "Collecting artifacts..."
 
         # It's entirely possible for these to not exist, so we'll copy them if we can, but if we
         # fail, we shouldn't abort
-        move_artifact '/var/log/candlepin/access.log' '/artifacts/'
-        move_artifact '/var/log/candlepin/audit.log' '/artifacts/'
-        move_artifact '/var/log/candlepin/candlepin.log' '/artifacts/'
-        move_artifact '/var/log/candlepin/error.log' '/artifacts/'
-        move_artifact '/var/log/candlepin/lint.log' '/artifacts/'
-        move_artifact '/var/log/candlepin/buildr.log' '/artifacts/'
-        move_artifact '/var/log/candlepin/unit_tests.log' '/artifacts/'
-        move_artifact '/var/log/candlepin/rspec.log' '/artifacts/'
+        move_artifact '/var/log/candlepin/access.log' "${ARTIFACT_DIR}"
+        move_artifact '/var/log/candlepin/audit.log' "${ARTIFACT_DIR}"
+        move_artifact '/var/log/candlepin/candlepin.log' "${ARTIFACT_DIR}"
+        move_artifact '/var/log/candlepin/error.log' "${ARTIFACT_DIR}"
+        move_artifact '/var/log/candlepin/lint.log' "${ARTIFACT_DIR}"
+        move_artifact '/var/log/candlepin/buildr.log' "${ARTIFACT_DIR}"
+        move_artifact '/var/log/candlepin/unit_tests.log' "${ARTIFACT_DIR}"
+        move_artifact '/var/log/candlepin/rspec.log' "${ARTIFACT_DIR}"
     fi
 }
 

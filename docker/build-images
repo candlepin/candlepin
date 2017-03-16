@@ -63,7 +63,7 @@ if [ "$1" != "" ]; then
 fi
 
 get_image_names() {
-  python -c 'import yaml,sys;y=yaml.safe_load(sys.stdin); print " ".join(y["services"].keys())' < docker-compose-build.yml
+  python -c 'import yaml,sys;y=yaml.safe_load(sys.stdin); print " ".join(y["services"].keys())' < $SCRIPT_HOME/docker-compose-build.yml
 }
 
 # get oracle binary
