@@ -22,7 +22,7 @@ describe 'Import Test Group:', :serial => true do
       @cp_export = StandardExporter.new
       @cp_export.create_candlepin_export()
       @cp_export_file = @cp_export.export_filename
-      @cp_correlation_id = "testcid"
+      @cp_correlation_id = "a7b79f6d-63ca-40d8-8bfb-f255041f4e3a"
 
       @candlepin_consumer = @cp_export.candlepin_client.get_consumer()
       @candlepin_consumer.unregister @candlepin_consumer['uuid']

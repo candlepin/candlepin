@@ -85,14 +85,13 @@ public class LoggingFilter implements Filter {
                     correlationId = ((HttpServletRequest) request).getHeader(name);
                 }
             }
-
-            if (StringUtils.isAlphanumeric(correlationId) &&
+            if (correlationId.matches("^([a-zA-Z0-9-])+$") &&
                 correlationId.length() <= CORRELATION_ID_LENGTH) {
                 MDC.put(CSID, correlationId);
             }
             else if (!StringUtils.isBlank(correlationId)) {
-                log.info("Correlation Id must be alphanumeric and contain {} or fewer characters.",
-                    CORRELATION_ID_LENGTH);
+                log.info("Correlation Id must contain alphanumeric characters or hypens and " +
+                    "be {} or fewer characters in length.", CORRELATION_ID_LENGTH);
             }
 
             // Add requestUuid to the serverRequest as an attribute, so Tomcat can
