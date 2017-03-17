@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.0.27
+Version: 2.0.28
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -220,6 +220,11 @@ fi
 
 #raw
 %changelog
+* Fri Mar 17 2017 Kevin Howell <khowell@redhat.com> 2.0.28-1
+- 1432653: Liquibase scripts need hashes (wpoteat@redhat.com)
+- Remove gutterball (khowell@redhat.com)
+- 1362535: Remove pool source consumer from API (wpoteat@redhat.com)
+
 * Thu Mar 09 2017 Vritant Jain <adarshvritant@gmail.com> 2.0.27-1
 - Move qpid scripts ({gutterball->server}/bin/qpid) (khowell@redhat.com)
 - 1397434: silently drop duplicate facts (adarshvritant@gmail.com)
