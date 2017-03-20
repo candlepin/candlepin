@@ -353,7 +353,7 @@ describe 'Hypervisor Resource', :type => :virt do
     results = @consumer.hypervisor_check_in(@owner['key'], host_guest_mapping)
     # Host consumer should have been created.
     results.created.size.should == 1
-    results.created[0]['guestIds'].should_not == nil
+    @cp.get_guestids(results.created[0]['uuid']).should_not == nil
   end
 
   it 'should initialize guest ids to empty when creating new host - async' do
@@ -361,7 +361,7 @@ describe 'Hypervisor Resource', :type => :virt do
     result_data = job_detail['resultData']
     # Host consumer should have been created.
     result_data.created.size.should == 1
-    result_data.created[0]['guestIds'].should_not == nil
+    @cp.get_guestids(result_data.created[0]['uuid']).should_not == nil
   end
 
   it 'should support multiple orgs reporting the same cluster' do
@@ -549,8 +549,9 @@ describe 'Hypervisor Resource', :type => :virt do
     result.should_not be_nil
     expect(result['updated'].length).to eq(1)
     updated_consumer = result['updated'][0]
-    expect(updated_consumer['guestIds'].length).to eq(1)
-    guest_id = updated_consumer['guestIds'][0]['guestId']
+    guestIds = @cp.get_guestids(updated_consumer['uuid'])
+    expect(guestIds.length).to eq(1)
+    guest_id = guestIds[0]['guestId']
     expect(guest_id).to eq(expected_guest_id)
   end
 
@@ -564,8 +565,9 @@ describe 'Hypervisor Resource', :type => :virt do
     result.should_not be_nil
     expect(result['resultData']['updated'].length).to eq(1)
     updated_consumer = result['resultData']['updated'][0]
-    expect(updated_consumer['guestIds'].length).to eq(1)
-    guest_id = updated_consumer['guestIds'][0]['guestId']
+    guestIds = @cp.get_guestids(updated_consumer['uuid'])
+    expect(guestIds.length).to eq(1)
+    guest_id = guestIds[0]['guestId']
     expect(guest_id).to eq(expected_guest_id)
   end
 
@@ -617,7 +619,8 @@ describe 'Hypervisor Resource', :type => :virt do
   def check_hypervisor_consumer(consumer, expected_host_name, expected_guest_ids, reporter_id=nil)
     consumer['name'].should == expected_host_name
 
-    guest_ids = consumer['guestIds']
+    guest_ids = @cp.get_guestids(consumer['uuid'])
+    # guest_ids = consumer['guestIds']
     guest_ids.size.should == expected_guest_ids.size
 
     # sort the ids to make sure that we have the same list.

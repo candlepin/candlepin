@@ -1,4 +1,4 @@
-// Version: 5.21
+// Version: 5.22
 
 /*
  * Default Candlepin rule set.
@@ -561,12 +561,13 @@ var FactValueCalculator = {
         },
 
         guest_limit: function (prodAttr, consumer) {
-            if (consumer.guestIds === null) {
+            var context = JSON.parse(json_context);
+            if (context.guestIds === null) {
                 return 0;
             }
             var activeGuestCount = 0;
-            for (var guestIdx = 0; guestIdx < consumer.guestIds.length; guestIdx++) {
-                var guest = consumer.guestIds[guestIdx];
+            for (var guestIdx = 0; guestIdx < context.guestIds.length; guestIdx++) {
+                var guest = context.guestIds[guestIdx];
                 if (Utils.isGuestActive(guest)) {
                     activeGuestCount++;
                 }

@@ -138,6 +138,7 @@ public class ComplianceRules {
         args.put("ondate", date);
         args.put("calculateCompliantUntil", calculateCompliantUntil);
         args.put("log", log, false);
+        args.put("guestIds", c.getGuestIds());
 
         // Convert the JSON returned into a ComplianceStatus object:
         String json = jsRules.runJsFunction(String.class, "get_status", args);
@@ -178,6 +179,7 @@ public class ComplianceRules {
         args.put("consumer", consumer);
         args.put("entitlements", entsToConsider);
         args.put("log", log, false);
+        args.put("guestIds", consumer.getGuestIds());
 
         return jsRules.runJsFunction(Boolean.class, "is_stack_compliant", args);
     }
@@ -190,6 +192,7 @@ public class ComplianceRules {
         args.put("entitlement", ent);
         args.put("entitlements", ents);
         args.put("log", log, false);
+        args.put("guestIds", consumer.getGuestIds());
 
         return jsRules.runJsFunction(Boolean.class, "is_ent_compliant", args);
     }

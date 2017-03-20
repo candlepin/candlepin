@@ -14,6 +14,8 @@
  */
 package org.candlepin.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.candlepin.common.jackson.HateoasArrayExclude;
 import org.candlepin.common.jackson.HateoasInclude;
 import org.candlepin.jackson.StringTrimmingConverter;
@@ -585,6 +587,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     /**
      * @param guests the GuestIds to set
      */
+    @JsonProperty
     public void setGuestIds(List<GuestId> guests) {
         this.guestIds = guests;
     }
@@ -592,6 +595,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     /**
      * @return the guestIds
      */
+    @JsonIgnore
     public List<GuestId> getGuestIds() {
         return guestIds;
     }

@@ -65,6 +65,7 @@ public class QuantityRules {
         args.put("consumer", c);
         args.put("validEntitlements", validEntitlements);
         args.put("log", log, false);
+        args.put("guestIds", c.getGuestIds());
 
         String json = jsRules.runJsFunction(String.class, "get_suggested_quantity", args);
         SuggestedQuantity dto = mapper.toObject(json, SuggestedQuantity.class);
@@ -101,6 +102,7 @@ public class QuantityRules {
         args.put("consumer", c);
         args.put("validEntitlements", validEntitlements);
         args.put("log", log, false);
+        args.put("guestIds", c.getGuestIds());
 
         String json = jsRules.runJsFunction(String.class, "get_suggested_quantities", args);
         Map<String, SuggestedQuantity> resultMap;
