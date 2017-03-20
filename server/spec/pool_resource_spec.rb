@@ -185,4 +185,36 @@ describe 'Pool Resource' do
     @cp_export.cleanup
   end
 
+  it 'dispatches the correct number of events' do
+    skip("candlepin running in hosted mode") if is_hosted?
+    owner = create_owner random_string('some-owner')
+    owner_client = user_client(owner, random_string('testuser'))
+
+    # Create 6 subscriptions to different products
+    6.times do |i|
+      name = random_string("product-#{i}")
+      product = create_product(name, name, :owner => owner['key'])
+
+      create_pool_and_subscription(owner['key'], product.id)
+      pool = @cp.list_owner_pools(owner['key'], {:product => product.id})[0]
+
+      consumer_cp = consumer_client(owner_client, random_string('testsystem'))
+      ent = consumer_cp.consume_pool(pool['id'], {:quantity => 1}).first
+
+      @cp.delete_pool(pool['id'])
+    end
+
+    pools = @cp.list_pools
+
+    events = @cp.list_owner_events(owner['key'])
+    pool_created_events = events.find_all { |event| event['target'] == 'POOL' && event['type'] == 'CREATED'}
+    pool_created_events.size.should eq(6)
+    pool_deleted_events = events.find_all { |event| event['target'] == 'POOL' && event['type'] == 'DELETED'}
+    pool_deleted_events.size.should eq(6)
+    ent_created_events = events.find_all { |event| event['target'] == 'ENTITLEMENT' && event['type'] == 'CREATED'}
+    ent_created_events.size.should eq(6)
+    ent_deleted_events = events.find_all { |event| event['target'] == 'ENTITLEMENT' && event['type'] == 'DELETED'}
+    ent_deleted_events.size.should eq(0)
+  end
+
 end

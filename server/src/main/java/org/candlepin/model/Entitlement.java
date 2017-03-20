@@ -36,6 +36,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -116,6 +117,11 @@ public class Entitlement extends AbstractHibernateObject
 
     private Date endDateOverride;
 
+    // We don't want to send entitlement delete events when the pool is
+    //  entirely deleted
+    @Transient
+    private boolean deletedFromPool;
+
     /**
      * default ctor
      */
@@ -150,6 +156,7 @@ public class Entitlement extends AbstractHibernateObject
         quantity = quantityIn == null || quantityIn.intValue() < 1 ?
             1 : quantityIn;
         updatedOnStart = poolIn.getStartDate().after(new Date());
+        deletedFromPool = false;
     }
 
     /**
@@ -374,4 +381,14 @@ public class Entitlement extends AbstractHibernateObject
     public void setUpdatedOnStart(boolean updatedOnStart) {
         this.updatedOnStart = updatedOnStart;
     }
+
+    @XmlTransient
+    public boolean deletedFromPool() {
+        return deletedFromPool;
+    }
+
+    public void setDeletedFromPool(boolean deletedFromPool) {
+        this.deletedFromPool = deletedFromPool;
+    }
+
 }

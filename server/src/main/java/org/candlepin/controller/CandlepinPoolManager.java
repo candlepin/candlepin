@@ -1728,7 +1728,10 @@ public class CandlepinPoolManager implements PoolManager {
         entsToRevoke = new ArrayList<Entitlement>(entsToRevoke);
 
         for (Pool pool : poolsToDelete) {
-            entsToRevoke.addAll(pool.getEntitlements());
+            for (Entitlement ent : pool.getEntitlements()) {
+                ent.setDeletedFromPool(true);
+                entsToRevoke.add(ent);
+            }
         }
 
         log.debug("Adjusting consumed quantities on pools");
@@ -1805,6 +1808,7 @@ public class CandlepinPoolManager implements PoolManager {
     private void sendDeletedEvents(List<Entitlement> entsToRevoke) {
         // for each deleted entitlement, create an event
         for (Entitlement entitlement : entsToRevoke) {
+            if (entitlement.deletedFromPool()) { continue; }
             Consumer consumer = entitlement.getConsumer();
             Event event = eventFactory.entitlementDeleted(entitlement);
             if (!entitlement.isValid() && entitlement.getPool().isUnmappedGuestPool() &&
@@ -1924,6 +1928,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         // Must do a full revoke for all entitlements:
         for (Entitlement e : poolCurator.entitlementsIn(pool)) {
+            e.setDeletedFromPool(true);
             revokeEntitlement(e);
         }
 
