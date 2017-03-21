@@ -602,6 +602,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         ownerCurator.merge(owner);
 
         consumer = TestUtil.createConsumer(standardSystemType, owner);
+        consumer.setFact("system.certificate_version", "3.3");
         consumerCurator.create(consumer);
 
         List<Certificate> serials = consumerResource.getEntitlementCertificates(consumer.getUuid(), null);
