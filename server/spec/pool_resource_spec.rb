@@ -91,8 +91,7 @@ describe 'Pool Resource' do
     # Consume that one entitlement:
     consumer1_cp.consume_pool(pool.id, {:quantity => 1}).size.should == 1
 
-    pools = consumer2_cp.list_pools({:consumer => consumer2_cp.uuid,
-      :listall => true})
+    pools = consumer2_cp.list_pools({:consumer => consumer2_cp.uuid, :listall => true})
 
     # Pool should be omitted if we query for a consumer and use listall:
     pools.size.should == 0
@@ -111,8 +110,7 @@ describe 'Pool Resource' do
     consumer1_cp = consumer_client(admin_cp, random_string('testsystem'),
       :system, nil, {"uname.machine" => "X86_64"})
 
-    pools = consumer1_cp.list_pools({:consumer => consumer1_cp.uuid,
-      :listall => true})
+    pools = consumer1_cp.list_pools({:consumer => consumer1_cp.uuid, :listall => true})
 
     # Should see the pool despite rules warning because we used listall:
     pools.size.should == 1
@@ -164,9 +162,7 @@ describe 'Pool Resource' do
   it 'should allow fetching content delivery network by pool id' do
     skip("candlepin running in hosted mode") if is_hosted?
     cdn_label = random_string("test-cdn")
-    cdn = create_cdn(cdn_label,
-                     "Test CDN",
-                     "https://cdn.test.com")
+    cdn = create_cdn(cdn_label, "Test CDN", "https://cdn.test.com")
     cdn.id.should_not be nil
     @opts = {"cdn_label"=> cdn_label}
     @cp_export = StandardExporter.new

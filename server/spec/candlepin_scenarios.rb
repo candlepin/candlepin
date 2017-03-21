@@ -476,17 +476,17 @@ class StandardExporter < Exporter
                                   {:attributes => {:virt_only => true}})
 
     @products[:product3] = create_product(random_string('sub-prod'), random_string(), {
-        :attributes => { :arch => "x86_64", :virt_limit => "unlimited"}
+        :attributes => { :arch => "x86_64", :virt_limit => "unlimited" }
     })
     @products[:product_vdc] = create_product(random_string('prod-vdc'), random_string(), {
-        :attributes => { :arch => "x86_64", :virt_limit => "unlimited", 'stacking_id' => 'stack-vdc'}
+        :attributes => { :arch => "x86_64", :virt_limit => "unlimited", 'stacking_id' => 'stack-vdc' }
     })
     @products[:product_dc] = create_product(random_string('prod-dc'), random_string(), {
-        :attributes => { :arch => "x86_64", 'stacking_id' => 'stack-dc'}
+        :attributes => { :arch => "x86_64", 'stacking_id' => 'stack-dc' }
     })
 
     @products[:derived_product] = create_product(random_string('sub-prov-prod'), random_string(),
-        {"sockets" => "2"})
+        { "sockets" => "2" })
     @products[:derived_provided_prod] = create_product(random_string(nil, true), random_string());
 
     #this is for the update process

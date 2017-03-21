@@ -128,6 +128,7 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
     @Override
     public List<Pool> filterPools(Consumer consumer, List<Pool> pools, boolean showAll) {
         JsonJsContext args = new JsonJsContext(objectMapper);
+
         args.put("consumer", consumer);
         args.put("hostConsumer", getHost(consumer));
         args.put("consumerEntitlements", consumer.getEntitlements());

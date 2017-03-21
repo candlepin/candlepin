@@ -14,12 +14,16 @@
  */
 package org.candlepin.model.dto;
 
+import org.candlepin.jackson.CandlepinAttributeDeserializer;
+import org.candlepin.jackson.CandlepinLegacyAttributeSerializer;
 import org.candlepin.model.Content;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductContent;
-import org.candlepin.util.ListView;
+import org.candlepin.util.MapView;
 import org.candlepin.util.SetView;
+
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -30,8 +34,6 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -75,7 +77,9 @@ public class ProductData extends CandlepinDTO {
     @ApiModelProperty(example = "1")
     protected Long multiplier;
 
-    protected List<ProductAttributeData> attributes;
+    @JsonSerialize(using = CandlepinLegacyAttributeSerializer.class)
+    @JsonDeserialize(using = CandlepinAttributeDeserializer.class)
+    protected Map<String, String> attributes;
 
     protected Map<String, ProductContentData> content;
 
@@ -266,38 +270,8 @@ public class ProductData extends CandlepinDTO {
      * @return
      *  the attributes of the product, or null if the attributes have not yet been defined
      */
-    public Collection<ProductAttributeData> getAttributes() {
-        return this.attributes != null ? new ListView(this.attributes) : null;
-    }
-
-    /**
-     * Retrieves the attribute data associated with the given attribute. If the attribute is not
-     * set, this method returns null.
-     *
-     * @param key
-     *  The key (name) of the attribute to lookup
-     *
-     * @throws IllegalArgumentException
-     *  if key is null
-     *
-     * @return
-     *  the attribute data for the given attribute, or null if the attribute is not set
-     */
-    @XmlTransient
-    public ProductAttributeData getAttribute(String key) {
-        if (key == null) {
-            throw new IllegalArgumentException("key is null");
-        }
-
-        if (this.attributes != null) {
-            for (ProductAttributeData attrib : this.attributes) {
-                if (key.equals(attrib.getName())) {
-                    return attrib;
-                }
-            }
-        }
-
-        return null;
+    public Map<String, String> getAttributes() {
+        return this.attributes != null ? new MapView(this.attributes) : null;
     }
 
     /**
@@ -319,8 +293,7 @@ public class ProductData extends CandlepinDTO {
             throw new IllegalArgumentException("key is null");
         }
 
-        ProductAttributeData attrib = this.getAttribute(key);
-        return attrib != null ? attrib.getValue() : null;
+        return this.attributes != null ? this.attributes.get(key) : null;
     }
 
     /**
@@ -341,62 +314,7 @@ public class ProductData extends CandlepinDTO {
             throw new IllegalArgumentException("key is null");
         }
 
-        return this.getAttribute(key) != null;
-    }
-
-    /**
-     * Adds the specified product attribute DTO to the this product DTO. If the attribute has
-     * already been added to this product, the existing value will be overwritten.
-     *
-     * @param attribute
-     *  The product attribute DTO to add to this product DTO
-     *
-     * @throws IllegalArgumentException
-     *  if attribute is null or incomplete
-     *
-     * @return
-     *  true if adding the attribute resulted in a change of this product; false otherwise
-     */
-    public boolean addAttribute(ProductAttributeData attribute) {
-        if (attribute == null) {
-            throw new IllegalArgumentException("attribute is null");
-        }
-
-        if (attribute.getName() == null) {
-            throw new IllegalArgumentException("attribute name/key is null");
-        }
-
-        boolean changed = false;
-
-        if (this.attributes == null) {
-            this.attributes = new LinkedList<ProductAttributeData>();
-            changed = this.attributes.add(attribute);
-        }
-        else {
-            // TODO:
-            // Replace this with a map of attribute key/value pairs so we don't have this mess
-            boolean matched = false;
-            Set<ProductAttributeData> remove = new HashSet<ProductAttributeData>();
-
-            for (ProductAttributeData attribdata : this.attributes) {
-                if (attribute.getName().equals(attribdata.getName())) {
-                    matched = true;
-
-                    if (!(attribdata.getValue() != null ? attribdata.getValue().equals(attribute.getValue()) :
-                        attribute.getValue() == null)) {
-
-                        remove.add(attribdata);
-                    }
-                }
-            }
-
-            if (!matched || remove.size() > 0) {
-                this.attributes.removeAll(remove);
-                changed = this.attributes.add(attribute);
-            }
-        }
-
-        return changed;
+        return this.attributes != null && this.attributes.containsKey(key);
     }
 
     /**
@@ -413,47 +331,31 @@ public class ProductData extends CandlepinDTO {
      *  if key is null
      *
      * @return
-     *  true if adding the attribute resulted in a change of this product; false otherwise
+     *  a reference to this DTO
      */
-    public boolean setAttribute(String key, String value) {
+    public ProductData setAttribute(String key, String value) {
         if (key == null) {
             throw new IllegalArgumentException("key is null");
         }
 
-        return this.addAttribute(new ProductAttributeData(key, value));
-    }
-
-    /**
-     * Removes the product attribute represented by the given product attribute DTO from this
-     * product. Any product attribute with the same key as the key of the given attribute DTO will
-     * be removed.
-     *
-     * @param attribute
-     *  The product attribute to remove from this product DTO
-     *
-     * @throws IllegalArgumentException
-     *  if attribute is null or incomplete
-     *
-     * @return
-     *  true if the attribute was removed successfully; false otherwise
-     */
-    public boolean removeAttribute(ProductAttributeData attribute) {
-        if (attribute == null) {
-            throw new IllegalArgumentException("attribute is null");
+        if (this.attributes == null) {
+            this.attributes = new HashMap<String, String>();
         }
 
-        if (attribute.getName() == null) {
-            throw new IllegalArgumentException("attribute name is null");
-        }
-
-        return this.removeAttribute(attribute.getName());
+        // Impl note:
+        // We can't standardize the value at all here; some attributes allow null, some expect
+        // empty strings, and others have their own sential values. Unless we make a concerted
+        // effort to fix all of these inconsistencies with a massive database update, we can't
+        // perform any input sanitation/massaging.
+        this.attributes.put(key, value);
+        return this;
     }
 
     /**
      * Removes the product attribute with the given attribute key from this product DTO.
      *
      * @param key
-     *  The name/key of the attribute to remove
+     *  The key (name) of the attribute to remove
      *
      * @throws IllegalArgumentException
      *  if key is null
@@ -466,44 +368,33 @@ public class ProductData extends CandlepinDTO {
             throw new IllegalArgumentException("key is null");
         }
 
-        boolean changed = false;
-        Set<ProductAttributeData> remove = new HashSet<ProductAttributeData>();
-
-        if (this.attributes != null) {
-            for (ProductAttributeData attribdata : this.attributes) {
-                if (key.equals(attribdata.getName())) {
-                    remove.add(attribdata);
-                }
-            }
-
-            changed = this.attributes.removeAll(remove);
+        if (this.attributes != null && this.attributes.containsKey(key)) {
+            this.attributes.remove(key);
+            return true;
         }
 
-        return changed;
+        return false;
     }
 
     /**
      * Sets the attributes of the product represented by this DTO.
      *
      * @param attributes
-     *  A collection of product attributes DTO to attach to this DTO, or null to clear the
-     *  attributes
+     *  A map of product attributes to attach to this DTO, or null to clear the attributes
      *
      * @return
      *  a reference to this DTO
      */
-    public ProductData setAttributes(Collection<ProductAttributeData> attributes) {
+    public ProductData setAttributes(Map<String, String> attributes) {
         if (attributes != null) {
             if (this.attributes == null) {
-                this.attributes = new LinkedList<ProductAttributeData>();
+                this.attributes = new HashMap<String, String>();
             }
             else {
                 this.attributes.clear();
             }
 
-            for (ProductAttributeData attribute : attributes) {
-                this.addAttribute(attribute);
-            }
+            this.attributes.putAll(attributes);
         }
         else {
             this.attributes = null;
@@ -1024,11 +915,8 @@ public class ProductData extends CandlepinDTO {
         ProductData copy = (ProductData) super.clone();
 
         if (this.attributes != null) {
-            copy.attributes = new LinkedList<ProductAttributeData>();
-
-            for (ProductAttributeData pad : this.attributes) {
-                copy.attributes.add((ProductAttributeData) pad.clone());
-            }
+            copy.attributes = new HashMap<String, String>();
+            copy.attributes.putAll(this.attributes);
         }
 
         if (this.content != null) {
@@ -1106,21 +994,7 @@ public class ProductData extends CandlepinDTO {
         this.href = source.getHref();
         this.locked = source.isLocked();
 
-        if (source.getAttributes() != null) {
-            if (this.attributes == null) {
-                this.attributes = new LinkedList<ProductAttributeData>();
-            }
-            else {
-                this.attributes.clear();
-            }
-
-            for (ProductAttribute entity : source.getAttributes()) {
-                this.addAttribute(entity.toDTO());
-            }
-        }
-        else {
-            this.setAttributes(null);
-        }
+        this.setAttributes(source.getAttributes());
 
         if (source.getProductContent() != null) {
             if (this.content == null) {

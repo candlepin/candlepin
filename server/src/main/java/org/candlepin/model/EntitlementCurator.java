@@ -26,16 +26,23 @@ import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.CriteriaSpecification;
+import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Order;
+import org.hibernate.criterion.Projections;
+import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.criterion.Subqueries;
 import org.hibernate.sql.JoinType;
+import org.hibernate.type.StringType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -91,22 +98,260 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         return toReturn;
     }
 
+    @SuppressWarnings("checkstyle:indentation")
     private Criteria createCriteriaFromFilters(EntitlementFilterBuilder filterBuilder) {
-        Criteria criteria = createSecureCriteria();
-        criteria.createAlias("pool", "p");
+        Criteria criteria = createSecureCriteria()
+            .createAlias("pool", "Pool")
+            .createAlias("Pool.product", "Product")
+            .setProjection(Projections.distinct(Projections.id()))
+            .add(Restrictions.ge("Pool.endDate", new Date()));
 
-        // Add the required aliases for the filter builder only if required.
-        if (filterBuilder != null && filterBuilder.hasMatchFilters()) {
-            criteria.createAlias("p.product", "product");
-            criteria.createAlias("p.providedProducts", "provProd", CriteriaSpecification.LEFT_JOIN);
-            criteria.createAlias("provProd.productContent", "ppcw", CriteriaSpecification.LEFT_JOIN);
-            criteria.createAlias("ppcw.content", "ppContent", CriteriaSpecification.LEFT_JOIN);
-            criteria.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
+
+        boolean joinedProvided = false;
+
+        if (filterBuilder != null) {
+            Collection<String> values = filterBuilder.getIdFilters();
+
+            if (values != null && !values.isEmpty()) {
+                criteria.add(CPRestrictions.in("Pool.id", values));
+            }
+
+            // Product ID filters
+            values = filterBuilder.getProductIdFilter();
+
+            if (values != null && !values.isEmpty()) {
+                if (!joinedProvided) {
+                    criteria.createAlias("Pool.providedProducts", "Provided", JoinType.LEFT_OUTER_JOIN);
+                    joinedProvided = true;
+                }
+
+                criteria.add(Restrictions.or(
+                    CPRestrictions.in("Product.id", values),
+                    CPRestrictions.in("Provided.id", values)
+                ));
+            }
+
+            // Subscription ID filter
+            String value = filterBuilder.getSubscriptionIdFilter();
+
+            if (value != null && !value.isEmpty()) {
+                criteria.createAlias("Pool.sourceSubscription", "srcsub")
+                    .add(Restrictions.eq("srcsub.subscriptionId", value));
+            }
+
+            // Matches stuff
+            values = filterBuilder.getMatchesFilters();
+            if (values != null && !values.isEmpty()) {
+                if (!joinedProvided) {
+                    // This was an inner join -- might end up being important later
+                    criteria.createAlias("Pool.providedProducts", "Provided", JoinType.LEFT_OUTER_JOIN);
+                    joinedProvided = true;
+                }
+
+                criteria.createAlias("Provided.productContent", "PPC", JoinType.LEFT_OUTER_JOIN);
+                criteria.createAlias("PPC.content", "Content", JoinType.LEFT_OUTER_JOIN);
+
+                for (String matches : values) {
+                    String sanitized = this.sanitizeMatchesFilter(matches);
+
+                    Disjunction matchesDisjunction = Restrictions.disjunction();
+
+                    matchesDisjunction.add(CPRestrictions.ilike("Pool.contractNumber", sanitized, '!'))
+                        .add(CPRestrictions.ilike("Pool.orderNumber", sanitized, '!'))
+                        .add(CPRestrictions.ilike("Product.id", sanitized, '!'))
+                        .add(CPRestrictions.ilike("Product.name", sanitized, '!'))
+                        .add(CPRestrictions.ilike("Provided.id", sanitized, '!'))
+                        .add(CPRestrictions.ilike("Provided.name", sanitized, '!'))
+                        .add(CPRestrictions.ilike("Content.name", sanitized, '!'))
+                        .add(CPRestrictions.ilike("Content.label", sanitized, '!'))
+                        .add(this.addProductAttributeFilterSubquery(Product.Attributes.SUPPORT_LEVEL,
+                            Arrays.asList(matches)));
+
+                    criteria.add(matchesDisjunction);
+                }
+            }
+
+            // Attribute filters
+            for (Map.Entry<String, List<String>> entry : filterBuilder.getAttributeFilters().entrySet()) {
+                String attrib = entry.getKey();
+                values = entry.getValue();
+
+                if (attrib != null && !attrib.isEmpty()) {
+                    // TODO:
+                    // Searching both pool and product attributes is likely an artifact from the days
+                    // when we copied SKU product attributes to the pool. I don't believe there's any
+                    // precedence for attribute lookups now that they're no longer being copied over.
+                    // If this is not the case, then the following logic is broken and will need to be
+                    // adjusted to account for one having priority over the other.
+
+                    if (values != null && !values.isEmpty()) {
+                        List<String> positives = new LinkedList<String>();
+                        List<String> negatives = new LinkedList<String>();
+
+                        for (String attrValue : values) {
+                            if (attrValue.startsWith("!")) {
+                                negatives.add(attrValue.substring(1));
+                            }
+                            else {
+                                positives.add(attrValue);
+                            }
+                        }
+
+                        if (!positives.isEmpty()) {
+                            criteria.add(this.addAttributeFilterSubquery(attrib, positives));
+                        }
+
+                        if (!negatives.isEmpty()) {
+                            criteria.add(Restrictions.not(
+                                this.addAttributeFilterSubquery(attrib, negatives)));
+                        }
+                    }
+                    else {
+                        criteria.add(this.addAttributeFilterSubquery(attrib, values));
+                    }
+                }
+            }
         }
-        // Never show a consumer expired entitlements
-        criteria.add(Restrictions.ge("p.endDate", new Date()));
-        filterBuilder.applyTo(criteria);
+
         return criteria;
+    }
+
+    @SuppressWarnings("checkstyle:indentation")
+    private Criterion addAttributeFilterSubquery(String key, Collection<String> values) {
+        // Find all pools which have the given attribute (and values) on a product, unless the pool
+        // defines that same attribute
+        DetachedCriteria poolAttrSubquery = DetachedCriteria.forClass(Pool.class, "PoolI")
+            .createAlias("PoolI.attributes", "attrib")
+            .setProjection(Projections.id())
+            .add(Property.forName("Pool.id").eqProperty("PoolI.id"))
+            .add(Restrictions.eq("attrib.indices", key));
+
+        // Impl note:
+        // The SQL restriction below uses some Hibernate magic value to get the pool ID from the
+        // outer-most query. We can't use {alias} here, since we're basing the subquery on Product
+        // instead of Pool to save ourselves an unnecessary join. Similarly, we use an SQL
+        // restriction here because we can query the information we need, hitting only one table
+        // with direct SQL, whereas the matching criteria query would end up requiring a minimum of
+        // one join to get from pool to pool attributes.
+        DetachedCriteria prodAttrSubquery = DetachedCriteria.forClass(Product.class, "ProdI")
+            .createAlias("ProdI.attributes", "attrib")
+            .setProjection(Projections.id())
+            .add(Property.forName("Product.uuid").eqProperty("ProdI.uuid"))
+            .add(Restrictions.eq("attrib.indices", key))
+            .add(Restrictions.sqlRestriction(
+                "NOT EXISTS (SELECT poolattr.pool_id FROM cp_pool_attribute poolattr " +
+                "WHERE poolattr.pool_id = pool1_.id AND poolattr.name = ?)",
+                key, StringType.INSTANCE
+            ));
+
+        if (values != null && !values.isEmpty()) {
+            Disjunction poolAttrValueDisjunction = Restrictions.disjunction();
+            Disjunction prodAttrValueDisjunction = Restrictions.disjunction();
+
+            for (String attrValue : values) {
+                if (attrValue == null || attrValue.isEmpty()) {
+                    poolAttrValueDisjunction.add(Restrictions.isNull("attrib.elements"))
+                        .add(Restrictions.eq("attrib.elements", ""));
+
+                    prodAttrValueDisjunction.add(Restrictions.isNull("attrib.elements"))
+                        .add(Restrictions.eq("attrib.elements", ""));
+                }
+                else {
+                    attrValue = this.sanitizeMatchesFilter(attrValue);
+                    poolAttrValueDisjunction.add(CPRestrictions.ilike("attrib.elements", attrValue, '!'));
+                    prodAttrValueDisjunction.add(CPRestrictions.ilike("attrib.elements", attrValue, '!'));
+                }
+            }
+
+            poolAttrSubquery.add(poolAttrValueDisjunction);
+            prodAttrSubquery.add(prodAttrValueDisjunction);
+        }
+
+        return Restrictions.or(
+            Subqueries.exists(poolAttrSubquery),
+            Subqueries.exists(prodAttrSubquery)
+        );
+    }
+
+    @SuppressWarnings("checkstyle:indentation")
+    private Criterion addProductAttributeFilterSubquery(String key, Collection<String> values) {
+        // Find all pools which have the given attribute (and values) on a product, unless the pool
+        // defines that same attribute
+
+        // Impl note:
+        // The SQL restriction below uses some Hibernate magic value to get the pool ID from the
+        // outer-most query. We can't use {alias} here, since we're basing the subquery on Product
+        // instead of Pool to save ourselves an unnecessary join. Similarly, we use an SQL
+        // restriction here because we can query the information we need, hitting only one table
+        // with direct SQL, whereas the matching criteria query would end up requiring a minimum of
+        // one join to get from pool to pool attributes.
+        DetachedCriteria prodAttrSubquery = DetachedCriteria.forClass(Product.class, "ProdI")
+            .createAlias("ProdI.attributes", "attrib")
+            .setProjection(Projections.id())
+            .add(Property.forName("Product.uuid").eqProperty("ProdI.uuid"))
+            .add(Restrictions.eq("attrib.indices", key))
+            .add(Restrictions.sqlRestriction(
+                "NOT EXISTS (SELECT poolattr.pool_id FROM cp_pool_attribute poolattr " +
+                "WHERE poolattr.pool_id = pool1_.id AND LOWER(poolattr.name) LIKE LOWER(?) ESCAPE '!')",
+                key, StringType.INSTANCE
+            ));
+
+        if (values != null && !values.isEmpty()) {
+            Disjunction prodAttrValueDisjunction = Restrictions.disjunction();
+
+            for (String attrValue : values) {
+                if (attrValue == null || attrValue.isEmpty()) {
+                    prodAttrValueDisjunction.add(Restrictions.isNull("attrib.elements"))
+                        .add(Restrictions.eq("attrib.elements", ""));
+                }
+                else {
+                    attrValue = this.sanitizeMatchesFilter(attrValue);
+                    prodAttrValueDisjunction.add(CPRestrictions.ilike("attrib.elements", attrValue, '!'));
+                }
+            }
+
+            prodAttrSubquery.add(prodAttrValueDisjunction);
+        }
+
+        return Subqueries.exists(prodAttrSubquery);
+    }
+
+    private String sanitizeMatchesFilter(String matches) {
+        StringBuilder output = new StringBuilder();
+        boolean escaped = false;
+
+        for (int index = 0; index < matches.length(); ++index) {
+            char c = matches.charAt(index);
+
+            switch (c) {
+                case '!':
+                case '_':
+                case '%':
+                    output.append('!').append(c);
+                    break;
+
+                case '\\':
+                    if (escaped) {
+                        output.append(c);
+                    }
+
+                    escaped = !escaped;
+                    break;
+
+                case '*':
+                case '?':
+                    if (!escaped) {
+                        output.append(c == '*' ? '%' : '_');
+                        break;
+                    }
+
+                default:
+                    output.append(c);
+                    escaped = false;
+            }
+        }
+
+        return output.toString();
     }
 
     /**
@@ -122,10 +367,22 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
 
     @SuppressWarnings("unchecked")
     public List<Entitlement> listByConsumer(Consumer consumer, EntitlementFilterBuilder filters) {
-        Criteria criteria = createCriteriaFromFilters(filters);
-        criteria.add(Restrictions.eq("consumer", consumer));
-        criteria.addOrder(Order.asc("p.id"));
-        return criteria.list();
+        Criteria criteria = this.createCriteriaFromFilters(filters)
+            .add(Restrictions.eq("consumer", consumer));
+            // .addOrder(Order.asc("Pool.id")); // Why do we care about the order?
+
+        List<String> entitlementIds = criteria.list();
+
+        if (entitlementIds != null && !entitlementIds.isEmpty()) {
+            criteria = this.currentSession()
+                .createCriteria(Entitlement.class)
+                .add(CPRestrictions.in("id", entitlementIds));
+
+            return criteria.list();
+        }
+
+        return Collections.<Entitlement>emptyList();
+
     }
 
     @SuppressWarnings("unchecked")
@@ -169,11 +426,25 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         }
         else {
             // Build up any provided entitlement filters from query params.
-            Criteria criteria = createCriteriaFromFilters(filters);
+            Criteria criteria = this.createCriteriaFromFilters(filters);
             if (object != null) {
                 criteria.add(Restrictions.eq(objectType, object));
             }
-            entitlementsPage = listByCriteria(criteria, pageRequest);
+
+            List<String> entitlementIds = criteria.list();
+
+            if (entitlementIds != null && !entitlementIds.isEmpty()) {
+                criteria = this.currentSession()
+                    .createCriteria(Entitlement.class)
+                    .add(CPRestrictions.in("id", entitlementIds));
+
+                entitlementsPage = listByCriteria(criteria, pageRequest);
+            }
+            else {
+                entitlementsPage = new Page<List<Entitlement>>();
+                entitlementsPage.setPageData(Collections.<Entitlement>emptyList());
+                entitlementsPage.setMaxRecords(0);
+            }
         }
 
         return entitlementsPage;
@@ -504,8 +775,8 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             .createAlias("pool", "ent_pool")
             .createAlias("ent_pool.product", "product")
             .createAlias("product.attributes", "attrs")
-            .add(Restrictions.eq("attrs.name", "stacking_id"))
-            .add(CPRestrictions.in("attrs.value", stackIds))
+            .add(Restrictions.eq("attrs.indices", Product.Attributes.STACKING_ID))
+            .add(CPRestrictions.in("attrs.elements", stackIds))
             .add(Restrictions.isNull("ent_pool.sourceEntitlement"))
             .createAlias("ent_pool.sourceStack", "ss", JoinType.LEFT_OUTER_JOIN)
             .add(Restrictions.isNull("ss.id"));
@@ -520,8 +791,8 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         DetachedCriteria criteria = DetachedCriteria.forClass(Entitlement.class)
             .createAlias("pool", "ent_pool")
             .createAlias("ent_pool.attributes", "attrs")
-            .add(Restrictions.eq("attrs.name", attributeName))
-            .add(Restrictions.eq("attrs.value", value));
+            .add(Restrictions.eq("attrs.indices", attributeName))
+            .add(Restrictions.eq("attrs.elements", value));
 
         if (consumer != null) {
             criteria.add(Restrictions.eq("consumer", consumer));
@@ -554,8 +825,8 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             .createAlias("product.attributes", "attrs")
             .add(Restrictions.le("ent_pool.startDate", currentDate))
             .add(Restrictions.ge("ent_pool.endDate", currentDate))
-            .add(Restrictions.eq("attrs.name", "stacking_id"))
-            .add(Restrictions.eq("attrs.value", stackId))
+            .add(Restrictions.eq("attrs.indices", Product.Attributes.STACKING_ID))
+            .add(Restrictions.eq("attrs.elements", stackId).ignoreCase())
             .add(Restrictions.isNull("ent_pool.sourceEntitlement"))
             .createAlias("ent_pool.sourceSubscription", "sourceSub")
             .add(Restrictions.isNotNull("sourceSub.id"))

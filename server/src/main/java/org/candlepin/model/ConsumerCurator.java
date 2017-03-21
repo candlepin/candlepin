@@ -744,12 +744,11 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
                     subCrit.createCriteria("entitlements")
                         .createCriteria("pool")
-                        .createCriteria("product").add(Restrictions.eq("id", sku))
-                        .createCriteria("attributes").add(
-                            Restrictions.and(
-                                Restrictions.eq("name", "type"),
-                                Restrictions.eq("value", "MKT"))
-                        );
+                        .createCriteria("product")
+                        .createAlias("attributes", "attrib")
+                        .add(Restrictions.eq("id", sku))
+                        .add(Restrictions.eq("attrib.indices", "type"))
+                        .add(Restrictions.eq("attrib.elements", "MKT"));
 
                     subCrit.add(Restrictions.eqProperty("this.id", "subquery_consumer.id"));
 
@@ -846,8 +845,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             crit.createAlias("po.product", "pr")
                 .createAlias("pr.attributes", "pa")
                 .add(Restrictions.in("pr.id", skus))
-                .add(Restrictions.eq("pa.name", "type"))
-                .add(Restrictions.eq("pa.value", "MKT"));
+                .add(Restrictions.eq("pa.indices", "type"))
+                .add(Restrictions.eq("pa.elements", "MKT"));
         }
 
         if (hasSubscriptionIds) {

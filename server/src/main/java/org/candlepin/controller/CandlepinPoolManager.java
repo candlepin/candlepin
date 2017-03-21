@@ -1348,14 +1348,13 @@ public class CandlepinPoolManager implements PoolManager {
         if (log.isDebugEnabled()) {
             log.debug("Attempting for products on date: {}", entitleDate);
             for (String productId : productIds) {
-                log.debug("  " + productId);
+                log.debug("  {}", productId);
             }
         }
 
         for (Pool pool : allOwnerPools) {
             boolean providesProduct = false;
-            // If We want to complete partial stacks if possible,
-            // even if they do not provide any products
+            // We want to complete partial stacks if possible, even if they do not provide any products
             Product poolProduct = pool.getProduct();
             String stackingId = poolProduct.getAttributeValue(Product.Attributes.STACKING_ID);
 
@@ -1401,6 +1400,7 @@ public class CandlepinPoolManager implements PoolManager {
         for (PoolQuantity poolQuantity : poolQuantities) {
             result.put(poolQuantity.getPool().getId(), poolQuantity.getQuantity());
         }
+
         return result;
     }
 
@@ -2172,6 +2172,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         // Only postfilter if we have to
         boolean postFilter = consumer != null || key != null;
+
         if (consumer != null && !consumer.isDev()) {
             filters.addAttributeFilter(Pool.Attributes.DEVELOPMENT_POOL, "!true");
         }
@@ -2192,13 +2193,13 @@ public class CandlepinPoolManager implements PoolManager {
         // available, and the consumer requests the actual entitlement, and the
         // request still could fail.
         List<Pool> resultingPools = page.getPageData();
+
         if (consumer != null) {
-            resultingPools = enforcer.filterPools(
-                consumer, resultingPools, includeWarnings);
+            resultingPools = enforcer.filterPools(consumer, resultingPools, includeWarnings);
         }
+
         if (key != null) {
-            resultingPools = this.filterPoolsForActKey(
-                key, resultingPools, includeWarnings);
+            resultingPools = this.filterPoolsForActKey(key, resultingPools, includeWarnings);
         }
 
         // Set maxRecords once we are done filtering
@@ -2259,7 +2260,7 @@ public class CandlepinPoolManager implements PoolManager {
          * It seems that we also need to account account for
          * instance_multiplier (again logic is in calculateQuantity). If the attribute
          * is present, we must further divide the poolQuantity by
-         * product.getAttributeValue("instance_multiplier").
+         * product.getAttributeValue(Product.Attributes.INSTANCE_MULTIPLIER).
          */
         Product sku = pool.getProduct();
 

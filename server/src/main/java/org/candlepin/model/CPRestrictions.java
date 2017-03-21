@@ -17,6 +17,7 @@ package org.candlepin.model;
 import com.google.common.collect.Iterables;
 
 import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.LikeExpression;
 import org.hibernate.criterion.Restrictions;
 
 import java.util.Arrays;
@@ -30,6 +31,11 @@ import java.util.List;
  * fluent-style query building.
  */
 public class CPRestrictions {
+    private static class CPLikeExpression extends LikeExpression {
+        public CPLikeExpression(String property, String value, Character escape, boolean ignoreCase) {
+            super(property, value, escape, ignoreCase);
+        }
+    }
 
     protected CPRestrictions() {
         throw new UnsupportedOperationException("CPRestriction should not be instantiated");
@@ -89,6 +95,82 @@ public class CPRestrictions {
      */
     public static Criterion in(String expression, Object[] values) {
         return in(expression, Arrays.asList(values));
+    }
+
+    /**
+     * Applies a case-sensitive "like" constraint to the named property or expression.
+     *
+     * @param expression
+     *  the string expression to apply the restriction
+     *
+     * @param value
+     *  the value to compare to the expression
+     *
+     * @return
+     *  a Criterion representing a case-sensitive "like" constraint on the given property or
+     *  expression
+     */
+    public static Criterion like(String expression, String value) {
+        return new CPLikeExpression(expression, value, null, false);
+    }
+
+    /**
+     * Applies a case-sensitive "like" constraint to the named property or expression, using the
+     * given character as an escape character.
+     *
+     * @param expression
+     *  the string expression to apply the restriction
+     *
+     * @param value
+     *  the value to compare to the expression
+     *
+     * @param escapeChar
+     *  the character to use to denote a character literal
+     *
+     * @return
+     *  a Criterion representing a case-sensitive "like" constraint on the given property or
+     *  expression
+     */
+    public static Criterion like(String expression, String value, char escapeChar) {
+        return new CPLikeExpression(expression, value, escapeChar, false);
+    }
+
+    /**
+     * Applies a case-insensitive "like" constraint to the named property or expression.
+     *
+     * @param expression
+     *  the string expression to apply the restriction
+     *
+     * @param value
+     *  the value to compare to the expression
+     *
+     * @return
+     *  a Criterion representing a case-sensitive "like" constraint on the given property or
+     *  expression
+     */
+    public static Criterion ilike(String expression, String value) {
+        return new CPLikeExpression(expression, value, null, true);
+    }
+
+    /**
+     * Applies a case-insensitive "like" constraint to the named property or expression, using the
+     * given character as an escape character.
+     *
+     * @param expression
+     *  the string expression to apply the restriction
+     *
+     * @param value
+     *  the value to compare to the expression
+     *
+     * @param escapeChar
+     *  the character to use to denote a character literal
+     *
+     * @return
+     *  a Criterion representing a case-sensitive "like" constraint on the given property or
+     *  expression
+     */
+    public static Criterion ilike(String expression, String value, char escapeChar) {
+        return new CPLikeExpression(expression, value, escapeChar, true);
     }
 
 }

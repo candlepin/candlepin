@@ -71,10 +71,10 @@ public class ProductResourceTest extends DatabaseTestFixture {
     private ProductData buildTestProductDTO() {
         ProductData dto = TestUtil.createProductDTO("test_product");
 
-        dto.setAttribute("version", "1.0");
-        dto.setAttribute("variant", "server");
-        dto.setAttribute("type", "SVC");
-        dto.setAttribute("arch", "ALL");
+        dto.setAttribute(Product.Attributes.VERSION, "1.0");
+        dto.setAttribute(Product.Attributes.VARIANT, "server");
+        dto.setAttribute(Product.Attributes.TYPE, "SVC");
+        dto.setAttribute(Product.Attributes.ARCHITECTURE, "ALL");
 
         return dto;
     }
@@ -82,10 +82,10 @@ public class ProductResourceTest extends DatabaseTestFixture {
     private Product buildTestProduct() {
         Product entity = TestUtil.createProduct("test_product");
 
-        entity.setAttribute("version", "1.0");
-        entity.setAttribute("variant", "server");
-        entity.setAttribute("type", "SVC");
-        entity.setAttribute("arch", "ALL");
+        entity.setAttribute(Product.Attributes.VERSION, "1.0");
+        entity.setAttribute(Product.Attributes.VARIANT, "server");
+        entity.setAttribute(Product.Attributes.TYPE, "SVC");
+        entity.setAttribute(Product.Attributes.ARCHITECTURE, "ALL");
 
         return entity;
     }

@@ -16,13 +16,19 @@ package org.candlepin.model;
 
 import static org.junit.Assert.*;
 
+import org.candlepin.common.jackson.DynamicPropertyFilter;
+import org.candlepin.common.jackson.HateoasBeanPropertyFilter;
 import org.candlepin.controller.CandlepinPoolManager;
+import org.candlepin.jackson.PoolEventFilter;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -40,6 +46,24 @@ import javax.inject.Inject;
 
 
 public class PoolTest extends DatabaseTestFixture {
+
+    public static final String POOL_JSON_BASE = "{\"id\": \"5\", \"owner\": {}, \"activeSubscription\": tr" +
+        "ue, \"subscriptionId\": \"3\", \"subscriptionSubKey\": null, \"sourceStackId\": null, \"sourceCon" +
+        "sumer\": {\"id\": \"5\", \"uuid\": \"\", \"name\": \"10023\", \"username\": null, \"entitlementSt" +
+        "atus\": \"valid\", \"serviceLevel\": \"\", \"releaseVer\": {\"releaseVer\": null }, \"type\": {\"" +
+        "id\": \"1004\", \"label\": \"hypervisor\", \"manifest\": false }, \"owner\": {}, \"environment\":" +
+        " {\"owner\": {}, \"name\": \"Library\", \"description\": null, \"id\": \"2\", \"environmentConten" +
+        "t\": [{\"id\": \"023947982374\", \"contentId\": \"166\", \"enabled\": null }, {\"id\": \"11\", \"" +
+        "contentId\": \"168\", \"enabled\": null }, {\"id\": \"192837123\", \"contentId\": \"867\", \"enab" +
+        "led\": null } ] }, \"entitlementCount\": 1, \"facts\": {}, \"lastCheckin\": 1381236857266, \"inst" +
+        "alledProducts\": [], \"canActivate\": false, \"guestIds\": [], \"capabilities\": [], \"autoheal\"" +
+        ": true, \"href\": \"\\/consumers\\/4\"}, \"quantity\": -1, \"startDate\": 1377057600000, \"endDat" +
+        "e\": 1471751999000, \"productId\": \"MYSKU\", \"providedProducts\": [], \"restrictedToUsername\":" +
+        " null, \"contractNumber\": \"2\", \"accountNumber\": \"1\", \"orderNumber\": null, \"consumed\": " +
+        "1, \"exported\": 0, \"productName\": \"Awesome OS Enterprise Server\", \"calculatedAttributes\": " +
+        "null, \"type\": \"ENTITLEMENT_DERIVED\", \"href\": \"\\/pools\\/5\", \"stacked\": false, \"stackI" +
+        "d\": null, \"product_list\": []";
+
     @Inject private OwnerCurator ownerCurator;
     @Inject private ProductCurator productCurator;
     @Inject private PoolCurator poolCurator;
@@ -47,6 +71,8 @@ public class PoolTest extends DatabaseTestFixture {
     @Inject private ConsumerTypeCurator consumerTypeCurator;
     @Inject private EntitlementCurator entitlementCurator;
     @Inject private CandlepinPoolManager poolManager;
+
+    private ObjectMapper mapper;
 
     private Pool pool;
     private Product prod1;
@@ -57,6 +83,13 @@ public class PoolTest extends DatabaseTestFixture {
 
     @Before
     public void createObjects() {
+        this.mapper = new ObjectMapper();
+        SimpleFilterProvider filterProvider = new SimpleFilterProvider();
+        filterProvider = filterProvider.addFilter("PoolFilter", new PoolEventFilter());
+        filterProvider = filterProvider.addFilter("OwnerFilter", new HateoasBeanPropertyFilter());
+        filterProvider.setDefaultFilter(new DynamicPropertyFilter());
+        this.mapper.setFilters(filterProvider);
+
         beginTransaction();
 
         try {
@@ -294,16 +327,6 @@ public class PoolTest extends DatabaseTestFixture {
         assertEquals(2, pool.getProvidedProducts().size());
     }
 
-    @Test
-    public void nullAttributeValue() {
-        ProductAttribute ppa = new ProductAttribute("Name", null);
-        PoolAttribute pa = new PoolAttribute("Name", null);
-        ppa.toString();
-        pa.toString();
-        ppa.hashCode();
-        pa.hashCode();
-    }
-
     // sunny test - real rules not invoked here. Can only be sure the counts are recorded.
     // Rule tests already exist for quantity filter.
     // Will use spec tests to see if quantity rules are followed in this scenario.
@@ -412,5 +435,123 @@ public class PoolTest extends DatabaseTestFixture {
         pool.getSourceSubscription().setSubscriptionId(null);
         pool.setSubscriptionSubKey("");
         assertNull(pool.getSourceSubscription());
+    }
+
+    @Test
+    public void testDeserializePoolAttributesJsonV1() throws Exception {
+        String attributes = "\"attributes\": [" +
+            "    {" +
+            "        \"name\" : \"attrib-1\"," +
+            "        \"value\" : \"value-1\"," +
+            "        \"entityVersion\" : 1498458083," +
+            "        \"created\" : \"2016-09-07T15:08:13+0000\"," +
+            "        \"updated\" : \"2016-09-07T15:08:13+0000\"" +
+            "    }," +
+            "    {" +
+            "        \"name\" : \"attrib-2\"," +
+            "        \"value\" : \"value-2\"," +
+            "        \"entityVersion\" : 1498458083," +
+            "        \"created\" : \"2016-09-07T15:08:13+0000\"," +
+            "        \"updated\" : \"2016-09-07T15:08:13+0000\"" +
+            "    }," +
+            "    {" +
+            "        \"name\" : 3," +
+            "        \"value\" : 3," +
+            "        \"entityVersion\" : 1498458083," +
+            "        \"created\" : \"2016-09-07T15:08:13+0000\"," +
+            "        \"updated\" : \"2016-09-07T15:08:13+0000\"" +
+            "    }" +
+            "]," +
+            "\"productAttributes\": [" +
+            "    {" +
+            "        \"name\" : \"prod_attrib-1\"," +
+            "        \"value\" : \"prod_value-1\"," +
+            "        \"entityVersion\" : 1498458083," +
+            "        \"created\" : \"2016-09-07T15:08:13+0000\"," +
+            "        \"updated\" : \"2016-09-07T15:08:13+0000\"" +
+            "    }," +
+            "    {" +
+            "        \"name\" : \"prod_attrib-2\"," +
+            "        \"value\" : \"prod_value-2\"," +
+            "        \"entityVersion\" : 1498458083," +
+            "        \"created\" : \"2016-09-07T15:08:13+0000\"," +
+            "        \"updated\" : \"2016-09-07T15:08:13+0000\"" +
+            "    }," +
+            "    {" +
+            "        \"name\" : 3," +
+            "        \"value\" : 3," +
+            "        \"entityVersion\" : 1498458083," +
+            "        \"created\" : \"2016-09-07T15:08:13+0000\"," +
+            "        \"updated\" : \"2016-09-07T15:08:13+0000\"" +
+            "    }" +
+            "]";
+
+        Map<String, String> expectedAttrib = new HashMap<String, String>();
+        expectedAttrib.put("attrib-1", "value-1");
+        expectedAttrib.put("attrib-2", "value-2");
+        expectedAttrib.put("3", "3");
+
+        Map<String, String> expectedProdAttrib = new HashMap<String, String>();
+        expectedProdAttrib.put("prod_attrib-1", "prod_value-1");
+        expectedProdAttrib.put("prod_attrib-2", "prod_value-2");
+        expectedProdAttrib.put("3", "3");
+
+        Pool pool = this.mapper.readValue(POOL_JSON_BASE + "," + attributes + "}", Pool.class);
+
+        assertEquals(expectedAttrib, pool.getAttributes());
+        assertEquals(expectedProdAttrib, pool.getProductAttributes());
+    }
+
+    @Test
+    public void testDeserializePoolAttributesJsonV2() throws Exception {
+        String attributes = "\"attributes\": {" +
+            "    \"attrib-1\": \"value-1\"," +
+            "    \"attrib-2\": \"value-2\"," +
+            "    \"attrib-3\": 3" +
+            "}," +
+            "\"productAttributes\": {" +
+            "    \"prod_attrib-1\": \"prod_value-1\"," +
+            "    \"prod_attrib-2\": \"prod_value-2\"," +
+            "    \"prod_attrib-3\": 3" +
+            "}";
+
+        Map<String, String> expectedAttrib = new HashMap<String, String>();
+        expectedAttrib.put("attrib-1", "value-1");
+        expectedAttrib.put("attrib-2", "value-2");
+        expectedAttrib.put("attrib-3", "3");
+
+        Map<String, String> expectedProdAttrib = new HashMap<String, String>();
+        expectedProdAttrib.put("prod_attrib-1", "prod_value-1");
+        expectedProdAttrib.put("prod_attrib-2", "prod_value-2");
+        expectedProdAttrib.put("prod_attrib-3", "3");
+
+        Pool pool = this.mapper.readValue(POOL_JSON_BASE + "," + attributes + "}", Pool.class);
+
+        assertEquals(expectedAttrib, pool.getAttributes());
+        assertEquals(expectedProdAttrib, pool.getProductAttributes());
+    }
+
+    @Test
+    public void testSerializePoolAttributes() throws Exception {
+        String expectedHeader = "\"attributes\":[{";
+        String expectedValue1 = "\"name\":\"attrib-1\",\"value\":\"value-1\"";
+        String expectedValue2 = "\"name\":\"attrib-2\",\"value\":\"value-2\"";
+        String expectedValue3 = "\"name\":\"attrib-3\",\"value\":\"3\"";
+
+        Map<String, String> attributes = new HashMap<String, String>();
+        attributes.put("attrib-1", "value-1");
+        attributes.put("attrib-2", "value-2");
+        attributes.put("attrib-3", "3");
+
+        this.pool.setAttributes(attributes);
+
+        String output = this.mapper.writeValueAsString(pool);
+
+        // Since the attributes are stored as a map, we can't guarantee any specific printed order.
+        // To deal with this, we separate the value and each header, then verify them individually.
+        assertTrue(output.contains(expectedHeader));
+        assertTrue(output.contains(expectedValue1));
+        assertTrue(output.contains(expectedValue2));
+        assertTrue(output.contains(expectedValue3));
     }
 }

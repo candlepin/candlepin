@@ -7,6 +7,7 @@ describe 'One Sub Pool Per Stack' do
   include CandlepinMethods
   include VirtHelper
   include SpecUtils
+  include AttributeHelper
 
   before(:each) do
     skip("candlepin running in standalone mode") if is_hosted?
@@ -166,8 +167,9 @@ describe 'One Sub Pool Per Stack' do
     sub_pools.length.should eq(1)
     sub_pool = sub_pools[0]
     sub_pool['sourceStackId'].should == @stack_id
-    pool_attrs = flatten_attributes(sub_pool['attributes'])
-    verify_attribute(pool_attrs, "requires_host", @host.uuid)
+
+    actual_value = get_attribute_value(sub_pool['attributes'], 'requires_host')
+    expect(actual_value).to eq(@host.uuid)
   end
 
   it 'should not include host entitlements from another stack' do
@@ -176,7 +178,7 @@ describe 'One Sub Pool Per Stack' do
 
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
     sub_pool.should_not be_nil
-    find_product_attribute(sub_pool, "sockets").should be_nil
+    expect(has_attribute(sub_pool["productAttributes"], "sockets")).to be false
 
     sub_pool['startDate'].should == ent1['startDate']
     sub_pool['endDate'].should == ent1['endDate']
@@ -218,8 +220,8 @@ describe 'One Sub Pool Per Stack' do
     sub_pool.should_not be_nil
 
     # Check that the product data was copied.
-    check_product_attr_value(sub_pool, "virt_limit", '3')
-    check_product_attr_value(sub_pool, "multi-entitlement", 'yes')
+    check_product_attr_value(sub_pool, "virt_limit", "3")
+    check_product_attr_value(sub_pool, "multi-entitlement", "yes")
     check_product_attr_value(sub_pool, "stacking_id", @stack_id)
   end
 
@@ -278,7 +280,7 @@ describe 'One Sub Pool Per Stack' do
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
     sub_pool.should_not be_nil
 
-    find_product_attribute(sub_pool, "virt_limit").should be_nil
+    expect(has_attribute(sub_pool["productAttributes"], "virt_limit")).to be false
     check_product_attr_value(sub_pool, "multi-entitlement", 'yes')
     check_product_attr_value(sub_pool, "sockets", "6")
     check_product_attr_value(sub_pool, "stacking_id", @stack_id)
@@ -293,7 +295,7 @@ describe 'One Sub Pool Per Stack' do
     sub_pool.should_not be_nil
 
     # Check that cores was not added from the non stacked ent.
-    find_product_attribute(sub_pool, "cores").should be_nil
+    expect(has_attribute(sub_pool["productAttributes"], "cores")).to be false
   end
 
   it 'should revoke guest entitlement from sub pool when last host ent in stack is removed' do
@@ -368,7 +370,7 @@ describe 'One Sub Pool Per Stack' do
   #   # Consumer ent for guest
   #   initial_guest_ent = @guest_client.consume_pool(sub_pool['id'], {:quantity => 1})[0]
   #   initial_guest_ent.should_not be_nil
-  #   find_product_attribute(initial_guest_ent.pool, "sockets").should be_nil
+  #   expect(has_attribute(initial_guest_ent.pool["productAttributes"], "sockets")).to be false
 
   #   attrs = @virt_limit_product['attributes']
   #   attrs << {"name" => "sockets", "value" => "4"}
@@ -398,7 +400,7 @@ describe 'One Sub Pool Per Stack' do
     check_product_attr_value(updated_ent.pool, "virt_limit", '3')
     check_product_attr_value(updated_ent.pool, "multi-entitlement", 'yes')
     check_product_attr_value(updated_ent.pool, "stacking_id", @stack_id)
-    find_product_attribute(updated_ent.pool, "sockets").should be_nil
+    expect(has_attribute(updated_ent.pool["productAttributes"], "sockets")).to be false
   end
 
   it 'should update quantity of sub pool when stack changes' do
@@ -474,23 +476,13 @@ describe 'One Sub Pool Per Stack' do
     regenerated_cert['id'].should == initial_guest_cert['id']
   end
 
-  def find_product_attribute(pool, attribute_name)
-    return pool['productAttributes'].detect { |a| a['name'] == attribute_name }
-  end
-
   def check_product_attr_value(pool, attribute_name, expected_value)
-    attribute = find_product_attribute(pool, attribute_name)
-    attribute.should_not be_nil
-    attribute['value'].should == expected_value
+    actual_value = get_attribute_value(pool['productAttributes'], attribute_name)
+    expect(actual_value).to eq(expected_value)
   end
 
   def find_sub_pool(guest_client, guest_uuid, stack_id)
     guest_pools = guest_client.list_pools(:consumer => guest_uuid)
     return guest_pools.detect { |i| i['sourceStackId'] == stack_id }
-  end
-
-  def verify_attribute(attrs, attr_name, attr_value)
-    attrs.should have_key(attr_name)
-    attrs[attr_name].should == attr_value
   end
 end

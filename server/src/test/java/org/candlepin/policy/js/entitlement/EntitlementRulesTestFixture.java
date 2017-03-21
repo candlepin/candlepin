@@ -29,7 +29,6 @@ import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
-import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
@@ -129,7 +128,7 @@ public class EntitlementRulesTestFixture {
     protected Subscription createVirtLimitSub(String productId, int quantity,
         String virtLimit) {
         Product product = TestUtil.createProduct(productId, productId);
-        product.setAttribute("virt_limit", virtLimit);
+        product.setAttribute(Product.Attributes.VIRT_LIMIT, virtLimit);
         when(ownerProductCuratorMock.getProductById(owner, productId)).thenReturn(product);
         Subscription s = TestUtil.createSubscription(owner, product);
         s.setQuantity(new Long(quantity));
@@ -146,7 +145,7 @@ public class EntitlementRulesTestFixture {
     protected Pool setupVirtLimitPool() {
         Product product = TestUtil.createProduct(productId, "A virt_limit product");
         Pool pool = TestUtil.createPool(owner, product);
-        pool.addAttribute(new PoolAttribute("virt_limit", "10"));
+        pool.setAttribute(Product.Attributes.VIRT_LIMIT, "10");
         pool.setId("fakeid" + TestUtil.randomInt());
         return pool;
     }

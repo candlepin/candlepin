@@ -17,7 +17,7 @@ package org.candlepin.policy.criteria;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
-import org.candlepin.model.PoolAttribute;
+import org.candlepin.model.Pool;
 import org.candlepin.model.PoolFilterBuilder;
 
 import com.google.inject.Inject;
@@ -25,20 +25,19 @@ import com.google.inject.Inject;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
 
 import java.util.LinkedList;
 import java.util.List;
 
+
+
 /**
  * CriteriaRules
  *
- * A class used to generate database criteria for filtering
- * out rules that are not applicable for a consumer before
- * running them through a rules check.
- *
+ * A class used to generate database criteria for filtering out rules that are not applicable for a
+ * consumer before running them through a rules check.
  */
 public class CriteriaRules  {
 
@@ -66,8 +65,7 @@ public class CriteriaRules  {
         // consumer UUID
         Consumer hostConsumer = null;
         if (consumer.getFact("virt.uuid") != null) {
-            hostConsumer = consumerCurator.getHost(
-                consumer.getFact("virt.uuid"), consumer.getOwner());
+            hostConsumer = consumerCurator.getHost(consumer.getFact("virt.uuid"), consumer.getOwner());
         }
 
         List<Criterion> criteriaFilters = new LinkedList<Criterion>();
@@ -75,10 +73,11 @@ public class CriteriaRules  {
         // Don't load virt_only pools if this consumer isn't a guest
         // or a manifest consumer
         if (consumer.getType().isManifest()) {
-            DetachedCriteria requiresHost = DetachedCriteria.forClass(PoolAttribute.class, "attr")
-                .add(Restrictions.eq("name", "requires_host"))
-                .add(Property.forName("this.id").eqProperty("attr.pool.id"))
-                .setProjection(Projections.property("attr.id"));
+            DetachedCriteria requiresHost = DetachedCriteria.forClass(Pool.class, "pool2")
+                .createAlias("pool2.attributes", "attrib")
+                .add(Restrictions.eqProperty("pool2.id", "id"))
+                .add(Restrictions.eq("attrib.indicies", Pool.Attributes.REQUIRES_HOST))
+                .setProjection(Projections.id());
 
             // we do want everything else
             criteriaFilters.add(Subqueries.notExists(requiresHost));
@@ -96,17 +95,19 @@ public class CriteriaRules  {
                 if (hostConsumer != null) {
                     hostUuid = hostConsumer.getUuid();
                 }
-                DetachedCriteria wrongRequiresHost = DetachedCriteria.forClass(
-                        PoolAttribute.class, "attr")
-                        .add(Restrictions.eq("name", "requires_host"))
-                        //  Note: looking for pools that are not for this guest
-                        .add(Restrictions.ne("valueLower", hostUuid.toLowerCase()))
-                        .add(Property.forName("this.id")
-                                .eqProperty("attr.pool.id"))
-                                .setProjection(Projections.property("attr.id"));
+
+                // Note: looking for pools that are not for this guest
                 // we do want everything else
+                DetachedCriteria wrongRequiresHost = DetachedCriteria.forClass(Pool.class, "pool2")
+                    .createAlias("pool2.attributes", "attrib")
+                    .add(Restrictions.eqProperty("pool2.id", "id"))
+                    .add(Restrictions.eq("attrib.indicies", Pool.Attributes.REQUIRES_HOST))
+                    .add(Restrictions.ne("attrib.elements", hostUuid).ignoreCase())
+                    .setProjection(Projections.id());
+
                 criteriaFilters.add(Subqueries.notExists(wrongRequiresHost));
             }
+
             // no virt.uuid, we can't try to filter
         }
 

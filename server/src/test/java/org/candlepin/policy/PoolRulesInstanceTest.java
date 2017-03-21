@@ -119,7 +119,7 @@ public class PoolRulesInstanceTest {
 
         p = TestUtil.copyFromSub(s);
         // Change the value of instance multiplier:
-        p.getProduct().setAttribute("instance_multiplier", "4");
+        p.getProduct().setAttribute(Product.Attributes.INSTANCE_MULTIPLIER, "4");
         // Change the quantity:
         p.setQuantity(new Long(200));
 
@@ -146,7 +146,7 @@ public class PoolRulesInstanceTest {
         // revert to half of what it was. No existing entitlements need to be adjusted,
         // we will let a (future) overconsumption routine handle that.
         masterPool = TestUtil.copyFromSub(s);
-        masterPool.getProduct().removeAttribute("instance_multiplier");
+        masterPool.getProduct().removeAttribute(Product.Attributes.INSTANCE_MULTIPLIER);
 
         List<Pool> existingPools = new LinkedList<Pool>();
         existingPools.add(pool);
@@ -157,7 +157,7 @@ public class PoolRulesInstanceTest {
         PoolUpdate update = updates.get(0);
         assertTrue(update.getQuantityChanged());
         assertEquals(new Long(100), update.getPool().getQuantity());
-        assertFalse(update.getPool().getProduct().hasAttribute("instance_multiplier"));
+        assertFalse(update.getPool().getProduct().hasAttribute(Product.Attributes.INSTANCE_MULTIPLIER));
     }
 
     @Test
@@ -170,7 +170,7 @@ public class PoolRulesInstanceTest {
 
         masterPool = TestUtil.copyFromSub(s);
         // Change the value of instance multiplier:
-        masterPool.getProduct().setAttribute("instance_multiplier", "4");
+        masterPool.getProduct().setAttribute(Product.Attributes.INSTANCE_MULTIPLIER, "4");
         // Change the quantity as well:
         masterPool.setQuantity(new Long(200));
 
@@ -192,7 +192,7 @@ public class PoolRulesInstanceTest {
         boolean exported) {
         Owner owner = new Owner("Test Corporation");
         Product product = TestUtil.createProduct(productId, productId);
-        product.setAttribute("instance_multiplier", Integer.toString(instanceMultiplier));
+        product.setAttribute(Product.Attributes.INSTANCE_MULTIPLIER, Integer.toString(instanceMultiplier));
         Subscription s = TestUtil.createSubscription(owner, product);
         if (exported) {
             s.setUpstreamPoolId("SOMETHING");

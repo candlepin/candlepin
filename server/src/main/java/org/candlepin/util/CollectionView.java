@@ -159,8 +159,9 @@ public class CollectionView<E> implements Collection<E> {
      * {@inheritDoc}
      */
     public String toString() {
-        StringBuilder builder = new StringBuilder('[');
+        StringBuilder builder = new StringBuilder(this.getClass().getName());
 
+        builder.append(" [");
         Iterator<E> iterator = this.collection.iterator();
         while (iterator.hasNext()) {
             builder.append(iterator.next());

@@ -72,7 +72,6 @@ public class EntitlementImporter {
 
         log.debug("Building subscription for owner: {}", owner);
         log.debug("Using pool from entitlement: {}", entitlement.getPool());
-        log.debug("Pool derivedProduct: {}", entitlement.getPool().getDerivedProduct());
 
         // Now that we no longer store Subscriptions in the on-site database, we need to
         // manually give the subscription a downstream ID. Note that this may later be

@@ -52,6 +52,7 @@ import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
+import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Release;
@@ -470,8 +471,8 @@ public class ConsumerResourceUpdateTest {
         existingHost.setUuid(uuid);
 
         Entitlement entitlement = TestUtil.createEntitlement();
-        entitlement.getPool().setAttribute("virt_only", "1");
-        entitlement.getPool().setAttribute("requires_host", uuid);
+        entitlement.getPool().setAttribute(Product.Attributes.VIRT_ONLY, "1");
+        entitlement.getPool().setAttribute(Pool.Attributes.REQUIRES_HOST, uuid);
 
         Consumer guest1 = new Consumer();
         guest1.setUuid("Guest 1");
@@ -507,8 +508,8 @@ public class ConsumerResourceUpdateTest {
         existingHost.setUuid(uuid);
 
         Entitlement entitlement = TestUtil.createEntitlement();
-        entitlement.getPool().setAttribute("virt_only", "1");
-        entitlement.getPool().setAttribute("requires_host", uuid);
+        entitlement.getPool().setAttribute(Product.Attributes.VIRT_ONLY, "1");
+        entitlement.getPool().setAttribute(Pool.Attributes.REQUIRES_HOST, uuid);
 
         Consumer guest1 = new Consumer();
         guest1.setUuid("Guest 1");
@@ -542,8 +543,8 @@ public class ConsumerResourceUpdateTest {
         updatedHost.setUuid(uuid);
 
         Entitlement entitlement = TestUtil.createEntitlement();
-        entitlement.getPool().setAttribute("virt_only", "1");
-        entitlement.getPool().setAttribute("requires_host", uuid);
+        entitlement.getPool().setAttribute(Product.Attributes.VIRT_ONLY, "1");
+        entitlement.getPool().setAttribute(Pool.Attributes.REQUIRES_HOST, uuid);
 
         Consumer guest1 = new Consumer();
         guest1.setUuid("Guest 1");
@@ -571,8 +572,8 @@ public class ConsumerResourceUpdateTest {
         updatedHost.setUuid(uuid);
 
         Entitlement entitlement = TestUtil.createEntitlement();
-        entitlement.getPool().setAttribute("virt_only", "1");
-        entitlement.getPool().setAttribute("requires_host", uuid);
+        entitlement.getPool().setAttribute(Product.Attributes.VIRT_ONLY, "1");
+        entitlement.getPool().setAttribute(Pool.Attributes.REQUIRES_HOST, uuid);
 
         Consumer guest1 = new Consumer();
         guest1.setUuid("Guest 1");
@@ -597,8 +598,8 @@ public class ConsumerResourceUpdateTest {
         updatedHost.setUuid(uuid);
 
         Entitlement entitlement = TestUtil.createEntitlement();
-        entitlement.getPool().setAttribute("virt_only", "1");
-        entitlement.getPool().setAttribute("requires_host", uuid);
+        entitlement.getPool().setAttribute(Product.Attributes.VIRT_ONLY, "1");
+        entitlement.getPool().setAttribute(Pool.Attributes.REQUIRES_HOST, uuid);
 
         Consumer guest1 = new Consumer();
         guest1.setUuid("Guest 1");
@@ -630,8 +631,8 @@ public class ConsumerResourceUpdateTest {
         updatedHost.setUuid(uuid);
 
         Entitlement entitlement = TestUtil.createEntitlement();
-        entitlement.getPool().setAttribute("virt_only", "1");
-        entitlement.getPool().setAttribute("requires_host", uuid);
+        entitlement.getPool().setAttribute(Product.Attributes.VIRT_ONLY, "1");
+        entitlement.getPool().setAttribute(Pool.Attributes.REQUIRES_HOST, uuid);
 
         Consumer guest1 = new Consumer();
         guest1.setUuid("Guest 1");
@@ -657,7 +658,7 @@ public class ConsumerResourceUpdateTest {
         updatedHost.setUuid(uuid);
 
         Entitlement entitlement = TestUtil.createEntitlement();
-        entitlement.getPool().setAttribute("virt_only", "1");
+        entitlement.getPool().setAttribute(Product.Attributes.VIRT_ONLY, "1");
 
         Consumer guest1 = new Consumer();
         guest1.setUuid("Guest 1");

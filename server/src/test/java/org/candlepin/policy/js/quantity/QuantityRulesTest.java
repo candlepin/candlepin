@@ -106,8 +106,8 @@ public class QuantityRulesTest {
         entSet.add(e);
 
         pool.setEntitlements(entSet);
-        pool.getProduct().setAttribute("multi-entitlement", "yes");
-        pool.getProduct().setAttribute("stacking_id", "1");
+        pool.getProduct().setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes");
+        pool.getProduct().setAttribute(Product.Attributes.STACKING_ID, "1");
     }
 
     private Entitlement createValidEntitlement(Pool p) {
@@ -129,7 +129,7 @@ public class QuantityRulesTest {
 
     @Test
     public void testNonMultiEntitlementPool() {
-        pool.getProduct().setAttribute("multi-entitlement", "no");
+        pool.getProduct().setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "no");
         SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(pool,
             new Consumer(), new Date());
         assertEquals(new Long(1), suggested.getSuggested());
@@ -137,7 +137,7 @@ public class QuantityRulesTest {
 
     @Test
     public void testNonMultiEntitlementPoolMultiPool() {
-        pool.getProduct().setAttribute("multi-entitlement", "no");
+        pool.getProduct().setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "no");
         List<Pool> pools = new LinkedList<Pool>();
         pools.add(pool);
         Map<String, SuggestedQuantity> results = quantityRules.getSuggestedQuantities(
@@ -433,8 +433,8 @@ public class QuantityRulesTest {
         Pool currentPool = TestUtil.createPool(owner, product);
         currentPool.setStartDate(TestUtil.createDate(2000, 1, 1));
         currentPool.setEndDate(TestUtil.createDate(5000, 1, 1));
-        currentPool.getProduct().setAttribute("multi-entitlement", "yes");
-        currentPool.getProduct().setAttribute("stacking_id", "1");
+        currentPool.getProduct().setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes");
+        currentPool.getProduct().setAttribute(Product.Attributes.STACKING_ID, "1");
 
         pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
         currentPool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
@@ -465,11 +465,11 @@ public class QuantityRulesTest {
         futurePool.setStartDate(TestUtil.createDate(2050, 1, 1));
         futurePool.setEndDate(TestUtil.createDate(2060, 1, 1));
 
-        pool.getProduct().setAttribute("multi-entitlement", "yes");
-        pool.getProduct().setAttribute("stacking_id", "1");
+        pool.getProduct().setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes");
+        pool.getProduct().setAttribute(Product.Attributes.STACKING_ID, "1");
         pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "1");
-        futurePool.getProduct().setAttribute("multi-entitlement", "yes");
-        futurePool.getProduct().setAttribute("stacking_id", "1");
+        futurePool.getProduct().setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes");
+        futurePool.getProduct().setAttribute(Product.Attributes.STACKING_ID, "1");
         futurePool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "1");
 
         consumer.setFact(SOCKET_FACT, "4");
@@ -490,8 +490,8 @@ public class QuantityRulesTest {
 
     @Test
     public void testPhysicalIgnoresPastConsumed() {
-        pool.getProduct().setAttribute("multi-entitlement", "yes");
-        pool.getProduct().setAttribute("stacking_id", "1");
+        pool.getProduct().setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes");
+        pool.getProduct().setAttribute(Product.Attributes.STACKING_ID, "1");
         pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "1");
 
         consumer.setFact(SOCKET_FACT, "4");
@@ -528,8 +528,8 @@ public class QuantityRulesTest {
         Set<Entitlement> entSet = new HashSet<Entitlement>();
         entSet.add(e);
         pool1.setEntitlements(entSet);
-        pool1.getProduct().setAttribute("multi-entitlement", "yes");
-        pool1.getProduct().setAttribute("stacking_id", "2");
+        pool1.getProduct().setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes");
+        pool1.getProduct().setAttribute(Product.Attributes.STACKING_ID, "2");
         pool1.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
         pool1.setQuantity(10L);
 

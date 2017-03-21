@@ -43,7 +43,6 @@ import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
 import org.candlepin.pki.PKIReader;
@@ -136,7 +135,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         consumerCurator.create(consumer);
 
         product = TestUtil.createProduct();
-        product.addAttribute(new ProductAttribute("support_level", DEFAULT_SERVICE_LEVEL));
+        product.setAttribute(Product.Attributes.SUPPORT_LEVEL, DEFAULT_SERVICE_LEVEL);
         productCurator.create(product);
 
         pool = createPool(owner, product, 10L,

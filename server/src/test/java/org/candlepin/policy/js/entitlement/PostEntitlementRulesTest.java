@@ -27,6 +27,7 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
+import org.candlepin.model.Product;
 
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -49,7 +50,7 @@ public class PostEntitlementRulesTest extends EntitlementRulesTestFixture {
     @Test
     public void virtLimitSubPool() {
         Pool pool = setupVirtLimitPool();
-        pool.setAttribute("virt_limit", "10");
+        pool.setAttribute(Product.Attributes.VIRT_LIMIT, "10");
         Entitlement e = new Entitlement(pool, consumer, 5);
 
         Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
@@ -69,11 +70,11 @@ public class PostEntitlementRulesTest extends EntitlementRulesTestFixture {
     @Test
     public void virtLimitSubPoolBatch() {
         Pool pool = setupVirtLimitPool();
-        pool.setAttribute("virt_limit", "10");
+        pool.setAttribute(Product.Attributes.VIRT_LIMIT, "10");
         Entitlement e = new Entitlement(pool, consumer, 5);
 
         Pool pool2 = setupVirtLimitPool();
-        pool2.setAttribute("virt_limit", "10");
+        pool2.setAttribute(Product.Attributes.VIRT_LIMIT, "10");
         Entitlement e2 = new Entitlement(pool2, consumer, 5);
 
         Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
@@ -95,7 +96,7 @@ public class PostEntitlementRulesTest extends EntitlementRulesTestFixture {
     @Test
     public void unlimitedVirtLimitSubPool() {
         Pool pool = setupVirtLimitPool();
-        pool.setAttribute("virt_limit", "unlimited");
+        pool.setAttribute(Product.Attributes.VIRT_LIMIT, "unlimited");
         Entitlement e = new Entitlement(pool, consumer, 5);
 
         when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
@@ -115,11 +116,11 @@ public class PostEntitlementRulesTest extends EntitlementRulesTestFixture {
     @Test
     public void unlimitedVirtLimitSubPoolBatch() {
         Pool pool = setupVirtLimitPool();
-        pool.setAttribute("virt_limit", "unlimited");
+        pool.setAttribute(Product.Attributes.VIRT_LIMIT, "unlimited");
         Entitlement e = new Entitlement(pool, consumer, 5);
 
         Pool pool2 = setupVirtLimitPool();
-        pool2.setAttribute("virt_limit", "unlimited");
+        pool2.setAttribute(Product.Attributes.VIRT_LIMIT, "unlimited");
         Entitlement e2 = new Entitlement(pool2, consumer, 5);
 
         when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);

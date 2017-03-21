@@ -23,9 +23,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
-import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.export.ExportRules;
@@ -40,8 +38,9 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import java.io.InputStream;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
+
 
 
 /**
@@ -58,8 +57,7 @@ public class ExportRulesTest {
     public void setUp() {
 
         // Load the default production rules:
-        InputStream is = this.getClass().getResourceAsStream(
-            RulesCurator.DEFAULT_RULES_FILE);
+        InputStream is = this.getClass().getResourceAsStream(RulesCurator.DEFAULT_RULES_FILE);
         Rules rules = new Rules(Util.readFile(is));
 
         when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
@@ -75,7 +73,7 @@ public class ExportRulesTest {
         ConsumerType type = mock(ConsumerType.class);
         Product p = TestUtil.createProduct("12345");
         Pool pool = new Pool();
-        pool.setAttribute("pool_derived", "true");
+        pool.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
 
         when(entitlement.getPool()).thenReturn(pool);
         when(entitlement.getConsumer()).thenReturn(consumer);
@@ -92,14 +90,14 @@ public class ExportRulesTest {
         ConsumerType consumerType = mock(ConsumerType.class);
         Pool pool = mock(Pool.class);
         Product product = mock(Product.class);
-        Set<PoolAttribute> attributes = new HashSet<PoolAttribute>();
-        attributes.add(new PoolAttribute("pool_derived", "true"));
 
+        Map<String, String> attributes = new HashMap<String, String>();
+        attributes.put(Pool.Attributes.DERIVED_POOL, "true");
 
         when(entitlement.getPool()).thenReturn(pool);
         when(entitlement.getConsumer()).thenReturn(consumer);
         when(pool.getProductId()).thenReturn("12345");
-        when(product.getAttributes()).thenReturn(new HashSet<ProductAttribute>());
+        when(product.getAttributes()).thenReturn(new HashMap<String, String>());
         when(pool.getAttributes()).thenReturn(attributes);
         when(consumer.getType()).thenReturn(consumerType);
         when(consumerType.getLabel()).thenReturn("system");
@@ -114,13 +112,12 @@ public class ExportRulesTest {
         ConsumerType consumerType = mock(ConsumerType.class);
         Pool pool = mock(Pool.class);
         Product product = mock(Product.class);
-        Set<PoolAttribute> attributes = new HashSet<PoolAttribute>();
 
         when(entitlement.getPool()).thenReturn(pool);
         when(entitlement.getConsumer()).thenReturn(consumer);
         when(pool.getProductId()).thenReturn("12345");
-        when(product.getAttributes()).thenReturn(new HashSet<ProductAttribute>());
-        when(pool.getAttributes()).thenReturn(attributes);
+        when(product.getAttributes()).thenReturn(new HashMap<String, String>());
+        when(pool.getAttributes()).thenReturn(new HashMap<String, String>());
         when(consumer.getType()).thenReturn(consumerType);
         when(consumerType.getLabel()).thenReturn("candlepin");
 

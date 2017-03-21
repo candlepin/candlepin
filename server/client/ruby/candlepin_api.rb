@@ -750,7 +750,7 @@ class Candlepin
       'name' => name,
       'id' => id,
       'multiplier' => multiplier,
-      'attributes' => attributes.collect {|k,v| {'name' => k, 'value' => v}},
+      'attributes' => attributes,
       'dependentProductIds' => dependentProductIds,
       'reliesOn' => relies_on
     }

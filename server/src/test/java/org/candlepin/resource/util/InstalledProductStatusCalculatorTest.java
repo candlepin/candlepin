@@ -256,8 +256,8 @@ public class InstalledProductStatusCalculatorTest {
         ConsumerInstalledProductEnricher calculator =
             new ConsumerInstalledProductEnricher(c, status, compliance, productCurator);
         Product p = TestUtil.createProduct(baseProduct.getId(), "Awesome Product");
-        p.setAttribute("version", "candlepin version");
-        p.setAttribute("arch", "candlepin arch");
+        p.setAttribute(Product.Attributes.VERSION, "candlepin version");
+        p.setAttribute(Product.Attributes.ARCHITECTURE, "candlepin arch");
         calculator.enrich(cip, p);
         assertEquals("4.5", cip.getVersion());
         assertEquals("x86_64", cip.getArch());
@@ -661,10 +661,8 @@ public class InstalledProductStatusCalculatorTest {
         Date now = cal.getTime();
         DateRange range1 = rangeRelativeToDate(now, -4, 4);
         DateRange range2 = rangeRelativeToDate(range1.getEndDate(), 5, 6);
-        c.addEntitlement(mockStackedEntitlement(c, range1, STACK_ID_1, PRODUCT_1, 1,
-            PRODUCT_1));
-        c.addEntitlement(mockStackedEntitlement(c, range2, STACK_ID_1, PRODUCT_1, 1,
-            PRODUCT_1));
+        c.addEntitlement(mockStackedEntitlement(c, range1, STACK_ID_1, PRODUCT_1, 1, PRODUCT_1));
+        c.addEntitlement(mockStackedEntitlement(c, range2, STACK_ID_1, PRODUCT_1, 1, PRODUCT_1));
         List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
         mockEntCurator(c, ents);
         ComplianceStatus status = compliance.getStatus(c, now);
@@ -683,10 +681,8 @@ public class InstalledProductStatusCalculatorTest {
         DateRange range3 = rangeRelativeToDate(now, -1, 4);
 
         c.addEntitlement(mockEntitlement(c, PRODUCT_1, range1, PRODUCT_1));
-        c.addEntitlement(mockStackedEntitlement(c, range3, STACK_ID_1, PRODUCT_1, 1,
-            PRODUCT_1));
-        c.addEntitlement(mockStackedEntitlement(c, range2, STACK_ID_1, PRODUCT_1, 1,
-            PRODUCT_1));
+        c.addEntitlement(mockStackedEntitlement(c, range3, STACK_ID_1, PRODUCT_1, 1, PRODUCT_1));
+        c.addEntitlement(mockStackedEntitlement(c, range2, STACK_ID_1, PRODUCT_1, 1, PRODUCT_1));
 
         List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
         mockEntCurator(c, ents);
@@ -695,6 +691,7 @@ public class InstalledProductStatusCalculatorTest {
         ConsumerInstalledProductEnricher calculator =
             new ConsumerInstalledProductEnricher(c, status, compliance, productCurator);
         Product p = TestUtil.createProduct(PRODUCT_1.getId(), "Awesome Product");
+
         DateRange validRange = calculator.getValidDateRange(p);
         assertEquals(range3.getStartDate(), validRange.getStartDate());
         assertEquals(range2.getEndDate(), validRange.getEndDate());
@@ -738,7 +735,7 @@ public class InstalledProductStatusCalculatorTest {
         DateRange range2 = rangeRelativeToDate(now, -2, 6);
 
         Product socketsProd = TestUtil.createProduct("socketsprod", "s");
-        socketsProd.setAttribute("sockets", "2");
+        socketsProd.setAttribute(Product.Attributes.SOCKETS, "2");
         Entitlement ent = mockEntitlement(c, socketsProd, range1, PRODUCT_1);
         c.addEntitlement(ent);
 
@@ -770,11 +767,11 @@ public class InstalledProductStatusCalculatorTest {
         DateRange hypervisorRange = rangeRelativeToDate(now, -2, 2);
 
         Entitlement ent = mockStackedEntitlement(c, range, STACK_ID_1, PRODUCT_1, 10, PRODUCT_1);
-        ent.getPool().getProduct().setAttribute("guest_limit", "2");
+        ent.getPool().getProduct().setAttribute(Product.Attributes.GUEST_LIMIT, "2");
         c.addEntitlement(ent);
         Entitlement hpvsrEnt = mockStackedEntitlement(c, hypervisorRange,
             "other_stack_id", TestUtil.createProduct("other"), 10, TestUtil.createProduct("prod2"));
-        hpvsrEnt.getPool().getProduct().setAttribute("guest_limit", "-1");
+        hpvsrEnt.getPool().getProduct().setAttribute(Product.Attributes.GUEST_LIMIT, "-1");
         c.addEntitlement(hpvsrEnt);
 
         List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
@@ -837,9 +834,9 @@ public class InstalledProductStatusCalculatorTest {
         e.setEndDateOverride(endDateOverride);
 
         // Setup the attributes for stacking:
-        p.setAttribute("virt_only", "true");
-        p.setAttribute("unmapped_guests_only", "true");
-        product.setAttribute("virt_limit", "unlimited");
+        p.setAttribute(Product.Attributes.VIRT_ONLY, "true");
+        p.setAttribute(Pool.Attributes.UNMAPPED_GUESTS_ONLY, "true");
+        product.setAttribute(Product.Attributes.VIRT_LIMIT, "unlimited");
 
         return e;
     }
@@ -862,8 +859,8 @@ public class InstalledProductStatusCalculatorTest {
         Pool p = e.getPool();
 
         // Setup the attributes for stacking:
-        p.getProduct().setAttribute("stacking_id", stackId);
-        p.getProduct().setAttribute("sockets", "2");
+        p.getProduct().setAttribute(Product.Attributes.STACKING_ID, stackId);
+        p.getProduct().setAttribute(Product.Attributes.SOCKETS, "2");
 
         return e;
     }

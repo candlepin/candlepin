@@ -24,9 +24,7 @@ import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
-import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.test.TestUtil;
@@ -37,13 +35,14 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import java.io.InputStream;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+
 
 /**
  * RulesObjectMapperTest
@@ -116,15 +115,8 @@ public class RulesObjectMapperTest {
         Pool p = new Pool();
         p.setProduct(prod);
 
-        ProductAttribute prodAttr = new ProductAttribute("a", "1");
-        prodAttr.setCreated(new Date());
-        prodAttr.setUpdated(new Date());
-        prod.addAttribute(prodAttr);
-
-        PoolAttribute poolAttr = new PoolAttribute("a", "1");
-        poolAttr.setCreated(new Date());
-        poolAttr.setUpdated(new Date());
-        p.addAttribute(poolAttr);
+        prod.setAttribute("a", "1");
+        p.setAttribute("a", "1");
 
         context.put("pool", p);
 
@@ -144,12 +136,24 @@ public class RulesObjectMapperTest {
      */
     @Test
     public void testComplianceStatusWithSourceConsumerInEnv() {
-        InputStream is = this.getClass().getResourceAsStream(
-            "/json/compliancestatus-with-env.json");
+        InputStream is = this.getClass().getResourceAsStream("/json/compliancestatus-with-env.json");
         String json = Util.readFile(is);
 
         // Just need this to parse without error:
         ComplianceStatus cs = objMapper.toObject(json, ComplianceStatus.class);
     }
 
+    /*
+     * Tests a bug found where consumer environment content is serialized without
+     * an environment (as it would be a circular dep), resulting in a null environment
+     * on the object and a very upset hashCode method.
+     */
+    @Test
+    public void testComplianceStatusWithSourceConsumerInEnvV2() {
+        InputStream is = this.getClass().getResourceAsStream("/json/compliancestatus-with-env-v2.json");
+        String json = Util.readFile(is);
+
+        // Just need this to parse without error:
+        ComplianceStatus cs = objMapper.toObject(json, ComplianceStatus.class);
+    }
 }

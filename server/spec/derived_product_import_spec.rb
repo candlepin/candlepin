@@ -3,9 +3,9 @@ require 'candlepin_scenarios'
 require 'json'
 
 describe 'Import', :serial => true do
-
   include CandlepinMethods
   include VirtHelper
+  include AttributeHelper
 
   before(:all) do
     @cp = Candlepin.new('admin', 'admin')
@@ -99,11 +99,9 @@ describe 'Import', :serial => true do
     # need to ignore the unmapped guest pool
     filter_unmapped_guest_pools(pools)
 
-    pools.each do |p|
-      p.attributes.each do |a|
-        if a.name == 'pool_derived' and a.value == 'true'
-            dist_ent = dist_consumer_client_2.consume_pool(p['id'])[0]
-        end
+    pools.each do |pool|
+      if (get_attribute_value(pool.attributes, 'pool_derived') == 'true')
+        dist_ent = dist_consumer_client_2.consume_pool(pool['id'])[0]
       end
     end
 

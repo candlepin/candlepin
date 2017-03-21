@@ -35,12 +35,10 @@ import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
-import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.dto.ContentData;
-import org.candlepin.model.dto.ProductAttributeData;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.ValidationError;
@@ -488,7 +486,7 @@ public class EntitlerTest {
 
         Pool p1 = TestUtil.createPool(owner1, product);
 
-        p1.addAttribute(new PoolAttribute("unmapped_guests_only", "true"));
+        p1.setAttribute(Pool.Attributes.UNMAPPED_GUESTS_ONLY, "true");
 
         Date thirtySixHoursAgo = new Date(new Date().getTime() - 36L * 60L * 60L * 1000L);
         Date twelveHoursAgo = new Date(new Date().getTime() - 12L * 60L * 60L * 1000L);
@@ -530,8 +528,8 @@ public class EntitlerTest {
         Pool p1 = TestUtil.createPool(owner1, product1);
         Pool p2 = TestUtil.createPool(owner2, product2);
 
-        p1.addAttribute(new PoolAttribute("unmapped_guests_only", "true"));
-        p2.addAttribute(new PoolAttribute("unmapped_guests_only", "true"));
+        p1.setAttribute(Pool.Attributes.UNMAPPED_GUESTS_ONLY, "true");
+        p2.setAttribute(Pool.Attributes.UNMAPPED_GUESTS_ONLY, "true");
 
         Date thirtySixHoursAgo = new Date(new Date().getTime() - 36L * 60L * 60L * 1000L);
         Date twelveHoursAgo =  new Date(new Date().getTime() - 12L * 60L * 60L * 1000L);
@@ -575,7 +573,7 @@ public class EntitlerTest {
         List<ProductData> devProdDTOs = new ArrayList<ProductData>();
         Product p = TestUtil.createProduct("test-product", "Test Product");
 
-        p.setAttribute("support_level", "Premium");
+        p.setAttribute(Product.Attributes.SUPPORT_LEVEL, "Premium");
         devProdDTOs.add(p.toDTO());
         Pool activePool = TestUtil.createPool(owner, p);
         List<Pool> activeList = new ArrayList<Pool>();
@@ -733,7 +731,7 @@ public class EntitlerTest {
         Owner owner = TestUtil.createOwner("o");
         List<ProductData> devProdDTOs = new ArrayList<ProductData>();
         Product p1 = TestUtil.createProduct("dev-product", "Dev Product");
-        p1.setAttribute("support_level", "Premium");
+        p1.setAttribute(Product.Attributes.SUPPORT_LEVEL, "Premium");
         p1.setAttribute("expires_after", "47");
         Product p2 = TestUtil.createProduct("provided-product1", "Provided Product 1");
         Product p3 = TestUtil.createProduct("provided-product2", "Provided Product 2");
@@ -759,7 +757,7 @@ public class EntitlerTest {
         assertEquals(devSystem.getUuid(), created.getAttributeValue(Pool.Attributes.REQUIRES_CONSUMER));
         assertEquals(p1.getId(), created.getProductId());
         assertEquals(2, created.getProvidedProducts().size());
-        assertEquals("Premium", created.getProduct().getAttributeValue("support_level"));
+        assertEquals("Premium", created.getProduct().getAttributeValue(Product.Attributes.SUPPORT_LEVEL));
         assertEquals(1L, created.getQuantity().longValue());
     }
 
@@ -776,6 +774,7 @@ public class EntitlerTest {
         mockUpdateProduct(p1, owner);
 
         this.mockContentImport(owner, Collections.<String, Content>emptyMap());
+
         when(productManager.importProducts(eq(owner), any(Map.class), any(Map.class)))
             .thenAnswer(new Answer<ImportResult<Product>>() {
                 @Override
@@ -792,9 +791,7 @@ public class EntitlerTest {
                             if (p1.getId().equals(pdata.getId())) {
                                 p1.clearAttributes();
                                 if (pdata.getAttributes() != null) {
-                                    for (ProductAttributeData attrib : pdata.getAttributes()) {
-                                        p1.setAttribute(attrib.getName(), attrib.getValue());
-                                    }
+                                    p1.setAttributes(pdata.getAttributes());
                                 }
 
                                 output.put(p1.getId(), p1);
@@ -812,37 +809,7 @@ public class EntitlerTest {
             });
 
         Pool created = entitler.assembleDevPool(devSystem, devSystem.getFact("dev_sku"));
-        assertEquals(entitler.DEFAULT_DEV_SLA, created.getProduct().getAttributeValue("support_level"));
+        assertEquals(entitler.DEFAULT_DEV_SLA,
+            created.getProduct().getAttributeValue(Product.Attributes.SUPPORT_LEVEL));
     }
-
-    // TODO:
-    // Do we need to fix this test? Seems like it may be unnecessary now.
-
-    // @Test
-    // public void testEnsureOwnerOnDevProduct() {
-    //     Owner owner = TestUtil.createOwner("o");
-    //     List<ProductData> devProdDTOs = new ArrayList<ProductData>();
-    //     Product p1 = TestUtil.createProduct("dev-product-1", "Dev Product 1");
-    //     Content c1 = new Content();
-    //     p1.addContent(c1);
-    //     devProdDTOs.add(p1.toDTO());
-    //     Product p2 = TestUtil.createProduct("dev-product-2", "Dev Product 2");
-    //     Content c2 = new Content();
-    //     p2.addContent(c2);
-    //     devProdDTOs.add(p2.toDTO());
-    //     Consumer devSystem = TestUtil.createConsumer(owner);
-    //     devSystem.setFact("dev_sku", p1.getId());
-    //     devSystem.addInstalledProduct(new ConsumerInstalledProduct(p2));
-
-    //     when(productAdapter.getProductsByIds(eq(owner), any(List.class))).thenReturn(devProdDTOs);
-    //     when(productManager.updateProduct(eq(p1), eq(owner), anyBoolean())).thenReturn(p1);
-    //     when(productManager.updateProduct(eq(p2), eq(owner), anyBoolean())).thenReturn(p2);
-
-    //     Pool created = entitler.assembleDevPool(devSystem, devSystem.getFact("dev_sku"));
-
-    //     assertTrue(created.getProduct().getOwners().contains(owner));
-    //     for (Product p : created.getProvidedProducts()) {
-    //         assertTrue(p.getOwners().contains(owner));
-    //     }
-    // }
 }

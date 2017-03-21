@@ -41,29 +41,29 @@ describe 'Import cleanup', :serial => true do
            :product => @cp_export.products[:product_vdc].id})
     # NORMAL pool
     normal.length.should == 1
- 
+
     unmapped = @import_owner_client.list_pools({
            :owner => @import_owner['id'],
            :product => @cp_export.products[:product_dc].id})
-    # UNMAPPED GUEST POOL 
+    # UNMAPPED GUEST POOL
     unmapped.length.should == 1
-    
+
     consumer = consumer_client(@import_owner_client, 'test-consumer')
-    # Consume NORMAL Pool 
+    # Consume NORMAL Pool
     entitlement = consumer.consume_pool(normal[0].id, {:quantity => 1})
     entitlement.length.should == 1
-    
-    # STACK DERIVED POOL is created 
+
+    # STACK DERIVED POOL is created
     stack = @import_owner_client.list_pools({
            :owner => @import_owner['id'],
            :product => @cp_export.products[:product_dc].id})
            .select{ |p| p.type=="STACK_DERIVED"}
     stack.length.should == 1
-    
+
     #Create a new manifest without product_vdc subscription!
     updated_export = @cp_export.create_candlepin_export_update_no_ent()
     @cp.import(@import_owner['key'], updated_export.export_filename)
-    
+
     # All the pools for that owner should be removed
     normal = @import_owner_client.list_pools({
            :owner => @import_owner['id']} )

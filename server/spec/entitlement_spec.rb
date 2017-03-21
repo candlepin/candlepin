@@ -2,8 +2,8 @@ require 'spec_helper'
 require 'candlepin_scenarios'
 
 describe 'Entitlements' do
-
   include CandlepinMethods
+  include AttributeHelper
 
   before(:each) do
     @owner = create_owner random_string 'test_owner'
@@ -112,14 +112,8 @@ describe 'Entitlements' do
     entitlements = @system.list_entitlements(:attr_filters => {:variant => "Satellite*"})
     entitlements.length.should eq(1)
 
-    found_attr = false
-    entitlements[0].pool.productAttributes.each do |attr|
-      if attr["name"] == 'variant' && attr["value"] == "Satellite Starter Pack"
-        found_attr = true
-        break
-      end
-    end
-    found_attr.should == true
+    variant = get_attribute_value(entitlements[0].pool.productAttributes, "variant")
+    expect(variant).to eq("Satellite Starter Pack")
   end
 
   it 'should filter consumer entitlements by matches parameter' do

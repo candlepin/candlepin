@@ -37,7 +37,6 @@ import org.candlepin.model.User;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.candlepin.model.dto.ContentData;
-import org.candlepin.model.dto.ProductAttributeData;
 import org.candlepin.model.dto.ProductContentData;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
@@ -233,13 +232,7 @@ public class TestUtil {
             product.setUuid(productData.getUuid());
             product.setMultiplier(productData.getMultiplier());
 
-            if (productData.getAttributes() != null) {
-                for (ProductAttributeData attrib : productData.getAttributes()) {
-                    if (attrib != null) {
-                        product.setAttribute(attrib.getName(), attrib.getValue());
-                    }
-                }
-            }
+            product.setAttributes(productData.getAttributes());
 
             if (productData.getProductContent() != null) {
                 for (ProductContentData pcd : productData.getProductContent()) {
@@ -667,7 +660,6 @@ public class TestUtil {
         assertEquals(pool1.getBranding(), pool2.getBranding());
         assertEquals(pool1.getCalculatedAttributes(), pool2.getCalculatedAttributes());
         assertEquals(pool1.isMarkedForDelete(), pool2.isMarkedForDelete());
-        assertEquals(pool1.getImportedProductId(), pool2.getImportedProductId());
         assertEquals(pool1.getUpstreamConsumerId(), pool2.getUpstreamConsumerId());
         assertEquals(pool1.getUpstreamEntitlementId(), pool2.getUpstreamEntitlementId());
         assertEquals(pool1.getUpstreamPoolId(), pool2.getUpstreamPoolId());

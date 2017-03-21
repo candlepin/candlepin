@@ -523,7 +523,7 @@ var Entitlement = {
                         var pools = post.lookupBySubscriptionId(pool.getSubscriptionId());
                         for (var idex = 0 ; idex < pools.size(); idex++ ) {
                             var derivedPool = pools.get(idex);
-                            if (derivedPool.getAttributeValue("pool_derived")) {
+                            if (derivedPool.getAttribute("pool_derived")) {
                                 derivedPool = post.updatePoolQuantity(derivedPool, -1 * virt_quantity);
                             }
                         }
@@ -538,7 +538,7 @@ var Entitlement = {
                         var pools = post.lookupBySubscriptionId(pool.getSubscriptionId());
                         for (var idex = 0 ; idex < pools.size(); idex++ ) {
                             var derivedPool = pools.get(idex);
-                            if (derivedPool.getAttributeValue("pool_derived")) {
+                            if (derivedPool.getAttribute("pool_derived")) {
                                 derivedPool = post.setPoolQuantity(derivedPool, 0);
                             }
                         }
@@ -1007,7 +1007,7 @@ var Pool = {
                             var adjust = 0;
                             for (var idex = 0 ; idex < pools.size(); idex++ ) {
                                 var derivedPool = pools.get(idex);
-                                if (!derivedPool.getAttributeValue("pool_derived")) {
+                                if (!derivedPool.getAttribute("pool_derived")) {
                                     adjust = derivedPool.getExported();
                                 }
                             }
@@ -1338,7 +1338,7 @@ var Unbind = {
                     var pools = post.lookupBySubscriptionId(pool.getSubscriptionId());
                     for (var idex = 0 ; idex < pools.size(); idex++ ) {
                         var derivedPool = pools.get(idex);
-                        if (derivedPool.getAttributeValue("pool_derived")) {
+                        if (derivedPool.getAttribute("pool_derived")) {
                             post.updatePoolQuantity(derivedPool, virt_quantity);
                         }
                     }
@@ -1350,7 +1350,7 @@ var Unbind = {
                 var pools = post.lookupBySubscriptionId(pool.getSubscriptionId());
                 for (var idex = 0 ; idex < pools.size(); idex++ ) {
                     var derivedPool = pools.get(idex);
-                    if (derivedPool.getAttributeValue("pool_derived")) {
+                    if (derivedPool.getAttribute("pool_derived")) {
                         if(derivedPool.getQuantity() == 0) {
                             post.setPoolQuantity(derivedPool, -1);
                         }

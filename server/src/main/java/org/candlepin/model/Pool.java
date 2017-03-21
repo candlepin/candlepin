@@ -15,8 +15,12 @@
 package org.candlepin.model;
 
 import org.candlepin.common.jackson.HateoasInclude;
+import org.candlepin.jackson.CandlepinAttributeDeserializer;
+import org.candlepin.jackson.CandlepinLegacyAttributeSerializer;
 import org.candlepin.util.DateSource;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -25,18 +29,24 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -46,6 +56,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
+import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
@@ -57,6 +68,8 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
+
 
 /**
  * Represents a pool of products eligible to be consumed (entitled).
@@ -83,11 +96,14 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         /** Attribute used to determine whether or not the pool was created for a development entitlement */
         public static final String DEVELOPMENT_POOL = "dev_pool";
 
-        /** Attribute used to identify unmapped guest pools. Pool must also be a derived pool */
-        public static final String UNMAPPED_GUESTS_ONLY = "unmapped_guests_only";
+        /** Attribute used to specify consumer types allowed to consume this pool */
+        public static final String ENABLED_CONSUMER_TYPES = "enabled_consumer_types";
 
-        /** Product attribute used to identify multi-entitlement enabled pools. */
+        /** Attribute used to identify multi-entitlement enabled pools. */
         public static final String MULTI_ENTITLEMENT = "multi-entitlement";
+
+        /** Attribute specifying the product family of a given pool */
+        public static final String PRODUCT_FAMILY = "product_family";
 
         /** Attribute for specifying the pool is only available to physical systems */
         public static final String PHYSICAL_ONLY = "physical_only";
@@ -106,6 +122,9 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
 
         /** Attribute for specifying the pool is only available to guests */
         public static final String VIRT_ONLY = "virt_only";
+
+        /** Attribute used to identify unmapped guest pools. Pool must also be a derived pool */
+        public static final String UNMAPPED_GUESTS_ONLY = "unmapped_guests_only";
     }
 
     /**
@@ -200,7 +219,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     @NotNull
     private Owner owner;
 
-    private Boolean activeSubscription = Boolean.TRUE;
+    private Boolean activeSubscription;
 
     /** Indicates this pool was created as a result of granting an entitlement.
      * Allows us to know that we need to clean this pool up if that entitlement
@@ -264,7 +283,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         joinColumns = {@JoinColumn(name = "pool_id", insertable = false, updatable = false)},
         inverseJoinColumns = {@JoinColumn(name = "product_uuid")})
     @BatchSize(size = 1000)
-    private Set<Product> providedProducts = new HashSet<Product>();
+    private Set<Product> providedProducts;
 
     @ManyToMany
     @JoinTable(
@@ -272,40 +291,22 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         joinColumns = {@JoinColumn(name = "pool_id", insertable = false, updatable = false)},
         inverseJoinColumns = {@JoinColumn(name = "product_uuid")})
     @BatchSize(size = 1000)
-    private Set<Product> derivedProvidedProducts = new HashSet<Product>();
+    private Set<Product> derivedProvidedProducts;
 
-    /**
-     * Set of provided product DTOs used for compatibility with the pre-2.0 JSON.
-     * Used when serializing a pool to JSON over the API, and when importing a manifest.
-     * Collection is transient and should never make it to the database.
-     */
-    @Transient
-    private Set<ProvidedProduct> providedProductDtos = new HashSet<ProvidedProduct>();
-
-    /**
-     * Set of provided product DTOs used for compatibility with the pre-2.0 JSON.
-     * Used when serializing a pool to JSON over the API, and when importing a manifest.
-     * Collection is transient and should never make it to the database.
-     */
-    @Transient
-    private Set<ProvidedProduct> derivedProvidedProductDtos = new HashSet<ProvidedProduct>();;
-
-    /**
-     * Transient property that holds derived provided products from database. It is
-     * populated before serialization happens.
-     */
-    @Transient
-    private Set<ProvidedProduct> derivedProvidedProductDtosCached = new HashSet<ProvidedProduct>();;
-
-    @OneToMany(mappedBy = "pool")
-    @Cascade({org.hibernate.annotations.CascadeType.ALL,
-        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    @ElementCollection
     @BatchSize(size = 1000)
-    private Set<PoolAttribute> attributes = new HashSet<PoolAttribute>();
+    @CollectionTable(name = "cp_pool_attribute", joinColumns = @JoinColumn(name = "pool_id"))
+    @MapKeyColumn(name = "name")
+    @Column(name = "value")
+    @Cascade({ org.hibernate.annotations.CascadeType.ALL })
+    @Fetch(FetchMode.SUBSELECT)
+    @JsonSerialize(using = CandlepinLegacyAttributeSerializer.class)
+    @JsonDeserialize(using = CandlepinAttributeDeserializer.class)
+    private Map<String, String> attributes;
 
     @OneToMany(mappedBy = "pool")
     @LazyCollection(LazyCollectionOption.EXTRA)
-    private Set<Entitlement> entitlements = new HashSet<Entitlement>();
+    private Set<Entitlement> entitlements;
 
     @Size(max = 255)
     private String restrictedToUsername;
@@ -334,27 +335,53 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     @BatchSize(size = 1000)
-    private Set<Branding> branding = new HashSet<Branding>();
+    private Set<Branding> branding;
 
     @Version
     private int version;
 
+    // Impl note:
+    // These properties are only used as temporary stores to hold information that's only present
+    // in the pool JSON due to the product itself not being serialized with it. These will be
+    // ignored if a product or derived product object is present.
     @Transient
-    private Set<ProductAttribute> productAttributes = new HashSet<ProductAttribute>();
+    private String importedProductId;
+
+    @Transient
+    private String importedDerivedProductId;
+
+    @Transient
+    private Set<ProvidedProduct> providedProductDtos;
+
+    @Transient
+    private Set<ProvidedProduct> derivedProvidedProductDtos;
+
+    /**
+     * Transient property that holds derived provided products from database. It is
+     * populated before serialization happens.
+     */
+    @Transient
+    private Set<ProvidedProduct> derivedProvidedProductDtosCached;
+
+    @Transient
+    @JsonSerialize(using = CandlepinLegacyAttributeSerializer.class)
+    @JsonDeserialize(using = CandlepinAttributeDeserializer.class)
+    @JsonProperty("productAttributes")
+    private Map<String, String> importedProductAttributes;
+
+    @Transient
+    @JsonSerialize(using = CandlepinLegacyAttributeSerializer.class)
+    @JsonDeserialize(using = CandlepinAttributeDeserializer.class)
+    @JsonProperty("derivedProductAttributes")
+    private Map<String, String> importedDerivedProductAttributes;
+
+    // End legacy manifest/pool JSON properties
 
     @Transient
     private Map<String, String> calculatedAttributes;
 
     @Transient
     private boolean markedForDelete = false;
-
-    /*
-     * Only used for importing legacy manifests.
-     */
-    @Transient
-    private String importedProductId = null;
-    @Transient
-    private String importedDerivedProductId = null;
 
     @Column(name = "upstream_pool_id")
     @Size(max = 255)
@@ -377,7 +404,31 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     @JsonIgnore
     private Cdn cdn;
 
+
     public Pool() {
+        this.activeSubscription = Boolean.TRUE;
+        this.providedProducts = new HashSet<Product>();
+        this.derivedProvidedProducts = new HashSet<Product>();
+        this.attributes = new HashMap<String, String>();
+        this.branding = new HashSet<Branding>();
+        this.entitlements = new HashSet<Entitlement>();
+
+        // TODO:
+        // This set of properties is used entirely to deal with a strange case that occurs during
+        // while using entitlements kicked back from the rules as JSON. Since the JSON for a pool
+        // does not encode the product object itself, we have to temporarily store product
+        // information to return if, and only if, we do not have an authoritative product object.
+        // These values can be set via setters, but will be ignored if a product is present.
+        this.importedProductId = null;
+        this.importedProductAttributes = null;
+        this.importedDerivedProductId = null;
+        this.importedDerivedProductAttributes = null;
+        this.providedProductDtos = null;
+        this.derivedProvidedProductDtos = null;
+        this.derivedProvidedProductDtosCached = null;
+
+        this.markedForDelete = false;
+
         this.setExported(0L);
         this.setConsumed(0L);
     }
@@ -385,6 +436,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     public Pool(Owner ownerIn, Product product, Collection<Product> providedProducts,
         Long quantityIn, Date startDateIn, Date endDateIn, String contractNumber,
         String accountNumber, String orderNumber) {
+        this();
 
         this.product = product;
         this.owner = ownerIn;
@@ -394,8 +446,6 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         this.contractNumber = contractNumber;
         this.accountNumber = accountNumber;
         this.orderNumber = orderNumber;
-        this.setExported(0L);
-        this.setConsumed(0L);
 
         this.setProvidedProducts(providedProducts);
     }
@@ -552,107 +602,186 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         this.orderNumber = orderNumber;
     }
 
-    public boolean hasAttribute(String key) {
-        return this.findAttribute(key) != null;
+    /**
+     * Retrieves the attributes for this pool. If this pool does not have any attributes,
+     * this method returns an empty map.
+     *
+     * @return
+     *  a map containing the attributes for this pool
+     */
+    public Map<String, String> getAttributes() {
+        return Collections.unmodifiableMap(this.attributes);
     }
 
     /**
-     * Attribute comparison helper, safe to use even if property is null.
+     * Retrieves the value associated with the given attribute. If the attribute is not set, this
+     * method returns null.
      *
-     * Used primarily in the javascript rules.
+     * @param key
+     *  The key (name) of the attribute to lookup
      *
-     * @param key Desired attribute.
-     * @param expectedValue Expected value.
-     * @return true if the pool has the given attribute and it is equal to the value,
-     * false otherwise.
+     * @throws IllegalArgumentException
+     *  if key is null
+     *
+     * @return
+     *  the value set for the given attribute, or null if the attribute is not set
      */
-    public boolean attributeEquals(String key, String expectedValue) {
-        String val = getAttributeValue(key);
-        if (val != null && val.equals(expectedValue))  {
-            return true;
+    @XmlTransient
+    public String getAttributeValue(String key) {
+        if (key == null) {
+            throw new IllegalArgumentException("key is null");
         }
-        return false;
+
+        return this.attributes.get(key);
     }
 
-    public Set<PoolAttribute> getAttributes() {
-        return attributes;
+    /**
+     * Checks if the given attribute has been defined on this pool.
+     *
+     * @param key
+     *  The key (name) of the attribute to lookup
+     *
+     * @throws IllegalArgumentException
+     *  if key is null
+     *
+     * @return
+     *  true if the attribute is defined for this pool; false otherwise
+     */
+    @XmlTransient
+    public boolean hasAttribute(String key) {
+        if (key == null) {
+            throw new IllegalArgumentException("key is null");
+        }
+
+        return this.attributes.containsKey(key);
     }
 
-    public String getAttributeValue(String name) {
-        PoolAttribute attribute = this.findAttribute(name);
-        return attribute != null ? attribute.getValue() : null;
+    /**
+     * Sets the specified attribute for this pool. If the attribute has already been set for
+     * this pool, the existing value will be overwritten. If the given attribute value is null
+     * or empty, the attribute will be removed.
+     *
+     * @param key
+     *  The name or key of the attribute to set
+     *
+     * @param value
+     *  The value to assign to the attribute, or null to remove the attribute
+     *
+     * @throws IllegalArgumentException
+     *  if key is null
+     *
+     * @return
+     *  a reference to this pool
+     */
+    public Pool setAttribute(String key, String value) {
+        if (key == null) {
+            throw new IllegalArgumentException("key is null");
+        }
+
+        // Impl note:
+        // We can't standardize the value at all here; some attributes allow null, some expect
+        // empty strings, and others have their own sential values. Unless we make a concerted
+        // effort to fix all of these inconsistencies with a massive database update, we can't
+        // perform any input sanitation/massaging.
+        this.attributes.put(key, value);
+        return this;
     }
 
-    public void setAttributes(Set<PoolAttribute> attributes) {
+    /**
+     * Removes the attribute with the given attribute key from this pool.
+     *
+     * @param key
+     *  The name/key of the attribute to remove
+     *
+     * @throws IllegalArgumentException
+     *  if key is null
+     *
+     * @return
+     *  true if the attribute was removed successfully; false otherwise
+     */
+    public boolean removeAttribute(String key) {
+        if (key == null) {
+            throw new IllegalArgumentException("key is null");
+        }
+
+        boolean present = this.attributes.containsKey(key);
+
+        this.attributes.remove(key);
+        return present;
+    }
+
+    /**
+     * Clears all attributes currently set for this pool.
+     *
+     * @return
+     *  a reference to this pool
+     */
+    public Pool clearAttributes() {
+        this.attributes.clear();
+        return this;
+    }
+
+    /**
+     * Sets the attributes for this pool.
+     *
+     * @param attributes
+     *  A map of attribute key, value pairs to assign to this pool, or null to clear the
+     *  attributes
+     *
+     * @return
+     *  a reference to this pool
+     */
+    public Pool setAttributes(Map<String, String> attributes) {
         this.attributes.clear();
 
         if (attributes != null) {
-            this.attributes.addAll(attributes);
-        }
-    }
-
-    public void addAttribute(PoolAttribute attrib) {
-        attrib.setPool(this);
-        this.attributes.add(attrib);
-    }
-
-    public void setAttribute(String key, String value) {
-        PoolAttribute existing = this.findAttribute(key);
-
-        if (existing != null) {
-            existing.setValue(value);
-        }
-        else {
-            this.addAttribute(new PoolAttribute(key, value));
-        }
-    }
-
-    private PoolAttribute findAttribute(String name) {
-        for (PoolAttribute attribute : this.attributes) {
-            if (attribute.getName().equals(name)) {
-                return attribute;
-            }
+            this.attributes.putAll(attributes);
         }
 
-        return null;
-    }
-
-    public boolean hasMergedAttribute(String name) {
-        return this.getMergedAttribute(name) != null;
-    }
-
-    public Attribute getMergedAttribute(String name) {
-        Attribute attribute = this.findAttribute(name);
-
-        if (attribute == null) {
-            attribute = this.product.getAttribute(name);
-        }
-
-        return attribute;
+        return this;
     }
 
     /**
-     * Removes the specified attribute from this pool, returning its last known value. If the
-     * attribute does not exist, this method returns null.
+     * Checks if the given attribute is defined on this pool or its product.
      *
      * @param key
-     *  The attribute to remove from this pool
+     *  The key (name) of the attribute to check
+     *
+     * @throws IllegalArgumentException
+     *  if key is null
      *
      * @return
-     *  the last value of the removed attribute, or null if the attribute did not exist
+     *  true if the attribute is set on this pool or its product; false otherwise
      */
-    public String removeAttribute(String key) {
-        PoolAttribute attrib = this.findAttribute(key);
-        String value = null;
-
-        if (attrib != null) {
-            this.attributes.remove(attrib);
-            attrib.setPool(null);
-
-            value = attrib.getValue();
+    public boolean hasMergedAttribute(String key) {
+        if (key == null) {
+            throw new IllegalArgumentException("key is null");
         }
 
-        return value;
+        return this.attributes.containsKey(key) || (this.product != null && this.product.hasAttribute(key));
+    }
+
+    /**
+     * Retrieves the value for the given attribute on this pool. If the attribute is not set on
+     * this pool, its product, if available, will be checked instead.
+     *
+     * @param key
+     *  The key (name) of the attribute for which to fetch the value
+     *
+     * @throws IllegalArgumentException
+     *  if key is null
+     *
+     * @return
+     *  the value of the attribute for this pool or its product, or null if the attribute is not
+     *  set on either
+     */
+    public String getMergedAttribute(String key) {
+        if (key == null) {
+            throw new IllegalArgumentException("key is null");
+        }
+
+        String value = this.attributes.get(key);
+        return (value == null && this.product != null) ? this.product.getAttributeValue(key) : value;
     }
 
     /**
@@ -826,31 +955,15 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      */
     @HateoasInclude
     public String getProductId() {
-        if (getProduct() != null) {
-            return this.getProduct().getId();
-        }
-        else if (getImportedProductId() != null) {
-            return getImportedProductId();
-        }
-        return null;
+        return this.product != null ? this.product.getId() : this.importedProductId;
     }
 
     public void setProductId(String productId) {
         this.importedProductId = productId;
     }
 
-    @XmlTransient
-    public String getImportedProductId() {
-        return this.importedProductId;
-    }
-
     public void setDerivedProductId(String productId) {
         this.importedDerivedProductId = productId;
-    }
-
-    @XmlTransient
-    public String getDerivedImportedProductId() {
-        return this.importedDerivedProductId;
     }
 
     /**
@@ -874,6 +987,13 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public void setProduct(Product product) {
         this.product = product;
+
+        if (product != null) {
+            this.importedProductId = null;
+            this.importedProductAttributes = null;
+            this.importedDerivedProductId = null;
+            this.importedDerivedProductAttributes = null;
+        }
     }
 
     /**
@@ -922,10 +1042,6 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         return "/pools/" + getId();
     }
 
-    public void setProductAttributes(Set<ProductAttribute> attrs) {
-        this.productAttributes = attrs;
-    }
-
     /**
      * @return the subscriptionSubKey
      */
@@ -952,14 +1068,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     }
 
     public String getDerivedProductId() {
-        if (getDerivedProduct() != null) {
-            return this.getDerivedProduct().getId();
-        }
-        else if (getDerivedImportedProductId() != null) {
-            return getDerivedImportedProductId();
-        }
-
-        return null;
+        return this.derivedProduct != null ? this.derivedProduct.getId() : this.importedDerivedProductId;
     }
 
     /**
@@ -970,10 +1079,34 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      * @return
      *  The attributes associated with the marketing product (SKU) for this pool
      */
-    public Collection<ProductAttribute> getProductAttributes() {
-        return this.getProduct() != null ?
-            this.getProduct().getAttributes() :
-            this.productAttributes;
+    public Map<String, String> getProductAttributes() {
+        if (this.product != null) {
+            return this.product.getAttributes();
+        }
+
+        if (this.importedProductAttributes != null) {
+            return Collections.unmodifiableMap(this.importedProductAttributes);
+        }
+
+        return Collections.<String, String>emptyMap();
+    }
+
+    /**
+     * Dummy method used to allow us to ignore the productAttributes field during JSON
+     * deserialization. This method does nothing.
+     *
+     * @param attributes
+     *  ignored
+     *
+     * @deprecated
+     *  This method should be removed when we upgrade to Jackson 2.6, as it provides functionality
+     *  for doing this type of filtering without requiring dummy methods.
+     */
+    @Deprecated
+    public void setProductAttributes(Map<String, String> attributes) {
+        if (this.product == null && this.derivedProduct == null) {
+            this.importedProductAttributes = new HashMap<String, String>(attributes);
+        }
     }
 
     /**
@@ -982,37 +1115,54 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      * returned by this method is not modifiable.
      *
      * @return
-     *  The attributes associated with the derived product (???) for this pool
+     *  The attributes associated with the derived product for this pool
      */
-    public Collection<ProductAttribute> getDerivedProductAttributes() {
-        return this.getDerivedProduct() != null ?
-            this.getDerivedProduct().getAttributes() :
-            new HashSet<ProductAttribute>();
-    }
-
-    @XmlTransient
-    public ProductAttribute getProductAttribute(String key) {
-        if (key != null) {
-            for (ProductAttribute attribute : this.getProductAttributes()) {
-                if (key.equalsIgnoreCase(attribute.getName())) {
-                    return attribute;
-                }
-            }
+    public Map<String, String> getDerivedProductAttributes() {
+        if (this.derivedProduct != null) {
+            return this.derivedProduct.getAttributes();
         }
 
-        return null;
+        if (this.importedDerivedProductAttributes != null) {
+            return Collections.unmodifiableMap(this.importedDerivedProductAttributes);
+        }
+
+        return Collections.<String, String>emptyMap();
+    }
+
+    /**
+     * Dummy method used to allow us to ignore the derivedProductAttributes field during JSON
+     * deserialization. This method does nothing.
+     *
+     * @param attributes
+     *  ignored
+     *
+     * @deprecated
+     *  This method should be removed when we upgrade to Jackson 2.6, as it provides functionality
+     *  for doing this type of filtering without requiring dummy methods.
+     */
+    @Deprecated
+    public void setDerivedProductAttributes(Map<String, String> attributes) {
+        if (this.product == null) {
+            this.importedDerivedProductAttributes = new HashMap<String, String>(attributes);
+        }
     }
 
     @XmlTransient
     public String getProductAttributeValue(String key) {
-        ProductAttribute attribute = this.getProductAttribute(key);
-        return attribute != null ? attribute.getValue() : null;
+        return this.getProductAttributes().get(key);
     }
 
     @JsonProperty
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public void setDerivedProduct(Product derived) {
         this.derivedProduct = derived;
+
+        if (derived != null) {
+            this.importedProductId = null;
+            this.importedProductAttributes = null;
+            this.importedDerivedProductId = null;
+            this.importedDerivedProductAttributes = null;
+        }
     }
 
     @JsonIgnore
@@ -1036,14 +1186,18 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         Set<ProvidedProduct> pp = new HashSet<ProvidedProduct>();
         Set<String> added = new HashSet<String>();
 
-        for (ProvidedProduct p : derivedProvidedProductDtosCached) {
-            pp.add(p);
-            added.add(p.getProductId());
+        if (this.derivedProvidedProductDtosCached != null) {
+            for (ProvidedProduct p : this.derivedProvidedProductDtosCached) {
+                pp.add(p);
+                added.add(p.getProductId());
+            }
         }
 
-        for (ProvidedProduct p : derivedProvidedProductDtos) {
-            if (!added.contains(p.getProductId())) {
-                pp.add(p);
+        if (this.derivedProvidedProductDtos != null) {
+            for (ProvidedProduct p : this.derivedProvidedProductDtos) {
+                if (!added.contains(p.getProductId())) {
+                    pp.add(p);
+                }
             }
         }
 
@@ -1104,8 +1258,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         if (product != null) {
             boolean isStacking = product.hasAttribute(Product.Attributes.STACKING_ID);
             boolean isMultiEnt = "yes".equalsIgnoreCase(
-                product.getAttributeValue(Attributes.MULTI_ENTITLEMENT)
-            );
+                product.getAttributeValue(Attributes.MULTI_ENTITLEMENT));
 
             if (product.hasAttribute(Product.Attributes.INSTANCE_MULTIPLIER)) {
                 if (isStacking && isMultiEnt) {

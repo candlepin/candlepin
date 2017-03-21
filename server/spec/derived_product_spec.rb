@@ -5,6 +5,7 @@ describe 'Derived Products' do
   include CandlepinMethods
   include SpecUtils
   include CertificateMethods
+  include AttributeHelper
 
   before(:each) do
     @owner = create_owner random_string('instance_owner')
@@ -28,8 +29,7 @@ describe 'Derived Products' do
     @cp.add_content_to_product(@owner['key'], @eng_product.id, @eng_product_content.id, true)
     @cp.add_content_to_product(@owner['key'], @eng_product_2.id, @product_modifier_content.id, true)
 
-    installed_prods = [{'productId' => @eng_product['id'],
-      'productName' => @eng_product['name']}]
+    installed_prods = [{'productId' => @eng_product['id'], 'productName' => @eng_product['name']}]
 
     # For linking the host and the guest:
     @uuid = random_string('system.uuid')
@@ -45,7 +45,7 @@ describe 'Derived Products' do
       [], installed_prods)
     @guest_client = Candlepin.new(nil, nil, @guest1['idCert']['cert'], @guest1['idCert']['key'])
     # create subscription with sub-pool data:
-    @datacenter_product = create_product(nil, nil, {
+    @datacenter_product = create_product(nil, "datacenter product", {
       :attributes => {
         :virt_limit => "unlimited",
         :stacking_id => "stackme",
@@ -55,21 +55,21 @@ describe 'Derived Products' do
       }
     })
 
-    @datacenter_product_2 = create_product(nil, nil, {
+    @datacenter_product_2 = create_product(nil, "datacenter product 2", {
       :attributes => {
         :virt_limit => "unlimited",
         'host_limited' => "true"
       }
     })
 
-    @derived_product = create_product(nil, nil, {
+    @derived_product = create_product(nil, "derived product 1", {
       :attributes => {
           :cores => 2,
-          :sockets=>4
+          :sockets => 4
       }
     })
 
-    @derived_product_2 = create_product(nil, nil, {
+    @derived_product_2 = create_product(nil, "derived product 2", {
       :attributes => {
           :cores => 2
       }
@@ -112,8 +112,7 @@ describe 'Derived Products' do
         'multi-entitlement' => "yes"
       }
     })
-    create_pool_and_subscription(@owner['key'], instance_product.id,
-      10, [@eng_product['id']])
+    create_pool_and_subscription(@owner['key'], instance_product.id, 10, [@eng_product['id']])
 
     @guest_client.consume_product
 
@@ -126,8 +125,6 @@ describe 'Derived Products' do
     guest_ents = @guest_client.list_entitlements
     guest_ents.length.should == 1
     guest_ents[0]['pool']['productId'].should == @derived_product['id']
-
-
   end
 
   it 'transfers sub-product data to main pool' do
@@ -141,23 +138,22 @@ describe 'Derived Products' do
 
     # Guest should now see additional sub-pool:
     @guest_client.list_pools({:consumer => @guest_client.uuid}).size.should == 3
-    guest_pools = @guest_client.list_pools({:consumer => @guest_client.uuid,
-        :product => @derived_product['id']})
+    guest_pools = @guest_client.list_pools({:consumer => @guest_client.uuid, :product => @derived_product['id']})
     guest_pools.size.should == 1
     derived_prod_pool = guest_pools[0]
     derived_prod_pool['quantity'].should == -1 # unlimited
 
     derived_prod_pool['sourceStackId'].should == "stackme"
 
-    pool_attrs = flatten_attributes(derived_prod_pool['attributes'])
-    verify_attribute(pool_attrs, "requires_consumer_type", 'system')
-    verify_attribute(pool_attrs, "requires_host", @physical_sys.uuid)
-    verify_attribute(pool_attrs, "virt_only", "true")
-    verify_attribute(pool_attrs, "pool_derived", "true")
+    pool_attrs = derived_prod_pool['attributes']
+    expect(get_attribute_value(pool_attrs, "requires_consumer_type")).to eq('system')
+    expect(get_attribute_value(pool_attrs, "requires_host")).to eq(@physical_sys.uuid)
+    expect(get_attribute_value(pool_attrs, "virt_only")).to eq("true")
+    expect(get_attribute_value(pool_attrs, "pool_derived")).to eq("true")
 
-    product_attrs = flatten_attributes(derived_prod_pool['productAttributes'])
-    verify_attribute(product_attrs, "sockets", "4")
-    verify_attribute(product_attrs, "cores", "2")
+    product_attrs = derived_prod_pool['productAttributes']
+    expect(get_attribute_value(product_attrs, "sockets")).to eq("4")
+    expect(get_attribute_value(product_attrs, "cores")).to eq("2")
   end
 
   it 'allows guest to consume sub product pool' do
@@ -201,11 +197,8 @@ describe 'Derived Products' do
   end
 
   it 'distributor entitlement cert includes derived content' do
-
     dist_name = random_string("CP Distributor")
-    create_distributor_version(dist_name,
-      "Subscription Asset Manager",
-      ["cert_v3", "derived_product"])
+    create_distributor_version(dist_name, "Subscription Asset Manager", ["cert_v3", "derived_product"])
 
     @distributor_client.update_consumer({:facts => {'distributor_version' => dist_name}})
 
@@ -275,10 +268,5 @@ describe 'Derived Products' do
     product = products[0]
     product['id'].should == @datacenter_product.id
     product['content'].size.should == 0
-  end
-
-  def verify_attribute(attrs, attr_name, attr_value)
-    attrs.should have_key(attr_name)
-    attrs[attr_name].should == attr_value
   end
 end

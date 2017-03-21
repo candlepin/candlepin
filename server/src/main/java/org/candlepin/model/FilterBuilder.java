@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -68,6 +69,16 @@ public abstract class FilterBuilder {
         return this;
     }
 
+    public Collection<String> getIdFilters() {
+        return Collections.unmodifiableList(this.idFilters);
+    }
+
+    public void addAttributeFilter(String attrName) {
+        if (!attributeFilters.containsKey(attrName)) {
+            attributeFilters.put(attrName, new LinkedList<String>());
+        }
+    }
+
     public void addAttributeFilter(String attrName, String attrValue) {
         if (!attributeFilters.containsKey(attrName)) {
             attributeFilters.put(attrName, new LinkedList<String>());
@@ -75,6 +86,27 @@ public abstract class FilterBuilder {
         attributeFilters.get(attrName).add(attrValue);
     }
 
+    public Map<String, List<String>> getAttributeFilters() {
+        return Collections.unmodifiableMap(this.attributeFilters);
+    }
+
+    public List<String> getAttributeFilters(String attrName) {
+        return this.attributeFilters.get(attrName);
+    }
+
+    /**
+     * Adds the constructed filters to the given criteria object.
+     *
+     * @param parentCriteria
+     *  The criteria to which filters should be added
+     *
+     * @deprecated
+     *  Applying filtering to criteria through this class has been deprecated, as it requires too
+     *  much pre-configuration to the criteria to be general enough for generic use. As such, it
+     *  is often better, faster and overall more efficient to hand-craft the criteria filtering
+     *  than it is to use this class, which adds its filters via subqueries off the main query.
+     */
+    @Deprecated
     public void applyTo(Criteria parentCriteria) {
         if (!attributeFilters.isEmpty() || !idFilters.isEmpty() || !otherCriteria.isEmpty()) {
             parentCriteria.add(getCriteria());

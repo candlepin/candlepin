@@ -14,10 +14,12 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.model.dto.ProductAttributeData;
+import org.candlepin.jackson.CandlepinAttributeDeserializer;
+import org.candlepin.jackson.CandlepinLegacyAttributeSerializer;
 import org.candlepin.model.dto.ProductContentData;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.util.ListView;
+import org.candlepin.util.MapView;
 import org.candlepin.util.SetView;
 import org.candlepin.util.Util;
 
@@ -31,6 +33,8 @@ import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.annotations.Type;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -39,9 +43,11 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
@@ -52,7 +58,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.OneToMany;
+import javax.persistence.MapKeyColumn;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 import javax.persistence.Table;
@@ -99,6 +105,9 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         /** Attribute specifying the number of cores that can be covered by an entitlement using the SKU */
         public static final String CORES = "cores";
 
+        /** Attribute specifying the maximum number of guests that can consume pools using this product */
+        public static final String GUEST_LIMIT = "guest_limit";
+
         /** Attribute specifying whether or not derived pools created for a given product will be
          *  host-limited */
         public static final String HOST_LIMITED = "host_limited";
@@ -124,6 +133,9 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         /** Attribute for specifying the provided support level provided by a given product */
         public static final String SUPPORT_LEVEL = "support_level";
 
+        /** Attribute for specifying if the product is exempt from the support level */
+        public static final String SUPPORT_LEVEL_EXEMPT = "support_level_exempt";
+
         /** Attribute providing a human-readable description of the support type; passed to the certificate */
         public static final String SUPPORT_TYPE = "support_type";
 
@@ -135,6 +147,10 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
 
         /** Attribute representing the product variant; passed down to the certificate */
         public static final String VARIANT = "variant";
+
+        /** Attribute specifying the number of virtual CPUs that can be covered by an entitlement using
+         *  this SKU */
+        public static final String VCPU = "vcpu";
 
         /** Attribute for specifying the number of guests that can use a given product */
         public static final String VIRT_LIMIT = "virt_limit";
@@ -173,11 +189,16 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     @Column
     private Long multiplier;
 
-    @OneToMany(mappedBy = "product", orphanRemoval = true)
+    @ElementCollection
     @BatchSize(size = 32)
+    @CollectionTable(name = "cp2_product_attributes", joinColumns = @JoinColumn(name = "product_uuid"))
+    @MapKeyColumn(name = "name")
+    @Column(name = "value")
     @Cascade({ CascadeType.ALL })
     @Fetch(FetchMode.SUBSELECT)
-    private List<ProductAttribute> attributes;
+    @JsonSerialize(using = CandlepinLegacyAttributeSerializer.class)
+    @JsonDeserialize(using = CandlepinAttributeDeserializer.class)
+    private Map<String, String> attributes;
 
     @ElementCollection
     @BatchSize(size = 32)
@@ -209,7 +230,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     private boolean locked;
 
     public Product() {
-        this.attributes = new LinkedList<ProductAttribute>();
+        this.attributes = new HashMap<String, String>();
         this.productContent = new LinkedList<ProductContent>();
         this.dependentProductIds = new HashSet<String>();
     }
@@ -267,17 +288,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         this.setMultiplier(source.getMultiplier());
 
         // Copy attributes
-        Set<ProductAttribute> attributes = new HashSet<ProductAttribute>();
-        for (ProductAttribute src : source.getAttributes()) {
-            ProductAttribute dest = new ProductAttribute(src.getName(), src.getValue());
-            dest.setCreated(src.getCreated() != null ? (Date) src.getCreated().clone() : null);
-            dest.setUpdated(src.getUpdated() != null ? (Date) src.getUpdated().clone() : null);
-            dest.setProduct(this);
-
-            attributes.add(dest);
-        }
-
-        this.setAttributes(attributes);
+        this.setAttributes(source.getAttributes());
 
         // Copy content
         List<ProductContent> content = new LinkedList<ProductContent>();
@@ -288,9 +299,9 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
 
             content.add(dest);
         }
-
         this.setProductContent(content);
 
+        // Copy dependent product IDs
         this.setDependentProductIds(source.getDependentProductIds());
 
         this.setCreated(source.getCreated() != null ? (Date) source.getCreated().clone() : null);
@@ -319,19 +330,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         }
 
         // Copy attributes
-        if (!Util.collectionsAreEqual(source.getAttributes(), this.getAttributes())) {
-            Set<ProductAttribute> attributes = new HashSet<ProductAttribute>();
-            for (ProductAttribute src : source.getAttributes()) {
-                ProductAttribute dest = new ProductAttribute(src.getName(), src.getValue());
-                dest.setCreated(src.getCreated() != null ? (Date) src.getCreated().clone() : null);
-                dest.setUpdated(src.getUpdated() != null ? (Date) src.getUpdated().clone() : null);
-                dest.setProduct(this);
-
-                attributes.add(dest);
-            }
-
-            this.setAttributes(attributes);
-        }
+        this.setAttributes(source.getAttributes());
 
         // Copy content
         if (!Util.collectionsAreEqual(source.getProductContent(), this.getProductContent())) {
@@ -348,6 +347,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             this.setProductContent(content);
         }
 
+        // Copy dependent product IDs
         this.setDependentProductIds(source.getDependentProductIds());
 
         this.setUpdated(source.getUpdated() != null ? (Date) source.getUpdated().clone() : null);
@@ -373,15 +373,8 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         // collection.
 
         // Copy attributes
-        copy.attributes = new LinkedList<ProductAttribute>();
-        for (ProductAttribute src : this.getAttributes()) {
-            ProductAttribute dest = new ProductAttribute(src.getName(), src.getValue());
-            dest.setCreated(src.getCreated() != null ? (Date) src.getCreated().clone() : null);
-            dest.setUpdated(src.getUpdated() != null ? (Date) src.getUpdated().clone() : null);
-            dest.setProduct(copy);
-
-            copy.attributes.add(dest);
-        }
+        copy.attributes = new HashMap<String, String>();
+        copy.attributes.putAll(this.attributes);
 
         // Copy content
         copy.productContent = new LinkedList<ProductContent>();
@@ -494,42 +487,14 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     }
 
     /**
-     * Retrieves the attributes of the product represented by this product. If this product does
-     * not have any attributes, this method returns an empty collection.
+     * Retrieves the attributes for this product. If this product does not have any attributes,
+     * this method returns an empty map.
      *
      * @return
-     *  a collection containing the attributes of the product
+     *  a map containing the attributes for this product
      */
-    public Collection<ProductAttribute> getAttributes() {
-        return new ListView(this.attributes);
-    }
-
-    /**
-     * Retrieves the attribute data associated with the given attribute. If the attribute is not
-     * set, this method returns null.
-     *
-     * @param key
-     *  The key (name) of the attribute to lookup
-     *
-     * @throws IllegalArgumentException
-     *  if key is null
-     *
-     * @return
-     *  the attribute data for the given attribute, or null if the attribute is not set
-     */
-    @XmlTransient
-    public ProductAttribute getAttribute(String key) {
-        if (key == null) {
-            throw new IllegalArgumentException("key is null");
-        }
-
-        for (ProductAttribute attrib : this.attributes) {
-            if (key.equals(attrib.getName())) {
-                return attrib;
-            }
-        }
-
-        return null;
+    public Map<String, String> getAttributes() {
+        return new MapView(this.attributes);
     }
 
     /**
@@ -551,8 +516,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             throw new IllegalArgumentException("key is null");
         }
 
-        ProductAttribute attrib = this.getAttribute(key);
-        return attrib != null ? attrib.getValue() : null;
+        return this.attributes.get(key);
     }
 
     /**
@@ -573,68 +537,19 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             throw new IllegalArgumentException("key is null");
         }
 
-        return this.getAttribute(key) != null;
-    }
-
-    /**
-     * Adds the specified product attribute to the this product. If the attribute has already been
-     * added to this product, the existing value will be overwritten.
-     *
-     * @param attribute
-     *  The product attribute to add to this product
-     *
-     * @throws IllegalArgumentException
-     *  if attribute is null or incomplete
-     *
-     * @return
-     *  a reference to this product
-     */
-    public boolean addAttribute(ProductAttribute attribute) {
-        if (attribute == null) {
-            throw new IllegalArgumentException("attribute is null");
-        }
-
-        if (attribute.getName() == null) {
-            throw new IllegalArgumentException("attribute name/key is null");
-        }
-
-        // TODO:
-        // Replace this with a map of attribute key/value pairs so we don't have this mess
-        boolean changed = false;
-        boolean matched = false;
-        Set<ProductAttribute> remove = new HashSet<ProductAttribute>();
-
-        for (ProductAttribute attribdata : this.attributes) {
-            if (attribute.getName().equals(attribdata.getName())) {
-                matched = true;
-
-                if (!(attribdata.getValue() != null ? attribdata.getValue().equals(attribute.getValue()) :
-                    attribute.getValue() == null)) {
-
-                    remove.add(attribdata);
-                }
-            }
-        }
-
-        if (!matched || remove.size() > 0) {
-            attribute.setProduct(this);
-
-            this.attributes.removeAll(remove);
-            changed = this.attributes.add(attribute);
-        }
-
-        return changed;
+        return this.attributes.containsKey(key);
     }
 
     /**
      * Sets the specified attribute for this product. If the attribute has already been set for
-     * this product, the existing value will be overwritten.
+     * this product, the existing value will be overwritten. If the given attribute value is null
+     * or empty, the attribute will be removed.
      *
      * @param key
      *  The name or key of the attribute to set
      *
      * @param value
-     *  The value to assign to the attribute
+     *  The value to assign to the attribute, or null to remove the attribute
      *
      * @throws IllegalArgumentException
      *  if key is null
@@ -642,42 +557,22 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      * @return
      *  a reference to this product
      */
-    public boolean setAttribute(String key, String value) {
+    public Product setAttribute(String key, String value) {
         if (key == null) {
             throw new IllegalArgumentException("key is null");
         }
 
-        return this.addAttribute(new ProductAttribute(key, value));
+        // Impl note:
+        // We can't standardize the value at all here; some attributes allow null, some expect
+        // empty strings, and others have their own sential values. Unless we make a concerted
+        // effort to fix all of these inconsistencies with a massive database update, we can't
+        // perform any input sanitation/massaging.
+        this.attributes.put(key, value);
+        return this;
     }
 
     /**
-     * Removes the product attribute represented by the given product attribute DTO from this
-     * product. Any product attribute with the same key as the key of the given attribute DTO will
-     * be removed.
-     *
-     * @param attribute
-     *  The product attribute to remove from this product DTO
-     *
-     * @throws IllegalArgumentException
-     *  if attribute is null or incomplete
-     *
-     * @return
-     *  true if the attribute was removed successfully; false otherwise
-     */
-    public boolean removeAttribute(ProductAttribute attribute) {
-        if (attribute == null) {
-            throw new IllegalArgumentException("attribute is null");
-        }
-
-        if (attribute.getName() == null) {
-            throw new IllegalArgumentException("attribute name is null");
-        }
-
-        return this.removeAttribute(attribute.getName());
-    }
-
-    /**
-     * Removes the product attribute with the given attribute key from this product.
+     * Removes the attribute with the given attribute key from this product.
      *
      * @param key
      *  The name/key of the attribute to remove
@@ -693,19 +588,14 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             throw new IllegalArgumentException("key is null");
         }
 
-        Set<ProductAttribute> remove = new HashSet<ProductAttribute>();
+        boolean present = this.attributes.containsKey(key);
 
-        for (ProductAttribute attribdata : this.attributes) {
-            if (key.equals(attribdata.getName())) {
-                remove.add(attribdata);
-            }
-        }
-
-        return this.attributes.removeAll(remove);
+        this.attributes.remove(key);
+        return present;
     }
 
     /**
-     * Clears all product attributes currently set for this product.
+     * Clears all attributes currently set for this product.
      *
      * @return
      *  a reference to this product
@@ -716,22 +606,20 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     }
 
     /**
-     * Sets the attributes of the product represented by this product.
+     * Sets the attributes for this product.
      *
      * @param attributes
-     *  A collection of product attributes to attach to this product, or null to clear the
+     *  A map of attribute key, value pairs to assign to this product, or null to clear the
      *  attributes
      *
      * @return
      *  a reference to this product
      */
-    public Product setAttributes(Collection<ProductAttribute> attributes) {
+    public Product setAttributes(Map<String, String> attributes) {
         this.attributes.clear();
 
         if (attributes != null) {
-            for (ProductAttribute attribute : attributes) {
-                this.addAttribute(attribute);
-            }
+            this.attributes.putAll(attributes);
         }
 
         return this;
@@ -741,10 +629,10 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     public List<String> getSkuEnabledContentIds() {
         List<String> skus = new LinkedList<String>();
 
-        ProductAttribute attrib = this.getAttribute(Attributes.CONTENT_OVERRIDE_ENABLED);
+        String attrib = this.getAttributeValue(Attributes.CONTENT_OVERRIDE_ENABLED);
 
-        if (attrib != null && attrib.getValue() != null && attrib.getValue().length() > 0) {
-            StringTokenizer tokenizer = new StringTokenizer(attrib.getValue(), ",");
+        if (attrib != null && !attrib.isEmpty()) {
+            StringTokenizer tokenizer = new StringTokenizer(attrib, ",");
 
             while (tokenizer.hasMoreElements()) {
                 skus.add((String) tokenizer.nextElement());
@@ -758,10 +646,10 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     public List<String> getSkuDisabledContentIds() {
         List<String> skus = new LinkedList<String>();
 
-        ProductAttribute attrib = this.getAttribute(Attributes.CONTENT_OVERRIDE_DISABLED);
+        String attrib = this.getAttributeValue(Attributes.CONTENT_OVERRIDE_DISABLED);
 
-        if (attrib != null && attrib.getValue() != null && attrib.getValue().length() > 0) {
-            StringTokenizer tokenizer = new StringTokenizer(attrib.getValue(), ",");
+        if (attrib != null && !attrib.isEmpty()) {
+            StringTokenizer tokenizer = new StringTokenizer(attrib, ",");
 
             while (tokenizer.hasMoreElements()) {
                 skus.add((String) tokenizer.nextElement());
@@ -1166,6 +1054,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
                 .append(this.name, that.name)
                 .append(this.multiplier, that.multiplier)
                 .append(this.locked, that.locked)
+                .append(this.attributes, that.attributes)
                 .isEquals();
 
             // Check our collections.
@@ -1173,7 +1062,6 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             // collections explicitly state that they break the contract on .equals. As such, we
             // have to step through each collection and do a manual comparison. Ugh.
             equals = equals &&
-                Util.collectionsAreEqual(this.attributes, that.attributes) &&
                 Util.collectionsAreEqual(this.dependentProductIds, that.dependentProductIds) &&
                 Util.collectionsAreEqual(this.productContent, that.productContent);
         }
@@ -1202,26 +1090,16 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             .append(this.id)
             .append(this.name)
             .append(this.multiplier)
-            .append(this.locked);
-
-        // We need to be certain that the hash code is calculated in a way that's order
-        // independent and not subject to Hibernate's poor hashCode implementation on proxy
-        // collections. This calculation follows that defined by the Set.hashCode method.
-        int accumulator = 0;
-
-        if (this.attributes.size() > 0) {
-            for (ProductAttribute attrib : this.attributes) {
-                accumulator += (attrib != null ? attrib.getEntityVersion() : 0);
-            }
-
-            builder.append(accumulator);
-        }
+            .append(this.locked)
+            .append(this.attributes);
 
         // Impl note:
         // Stepping through the collections here is as painful as it looks, but Hibernate, once
         // again, doesn't implement .hashCode reliably on the proxy collections. So, we have to
         // manually step through these and add the elements to ensure the hash code is
         // generated properly.
+        int accumulator = 0;
+
         if (!this.dependentProductIds.isEmpty()) {
             accumulator = 0;
             for (String pid : this.dependentProductIds) {
@@ -1285,19 +1163,15 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             return true;
         }
 
-        Collection<ProductAttributeData> attributes = dto.getAttributes();
-        if (attributes != null) {
-            Comparator comparator = new Comparator<Object>() {
-                public int compare(Object lhs, Object rhs) {
-                    return ((ProductAttribute) lhs).isChangedBy((ProductAttributeData) rhs) ? 1 : 0;
-                }
-            };
-
-            if (!Util.collectionsAreEqual(
-                (Collection) this.attributes, (Collection) attributes, comparator)) {
-
-                return true;
-            }
+        // Impl note:
+        // Depending on how strict we are regarding case-sensitivity and value-representation,
+        // this may get us in to trouble. We may need to iterate through the attributes, performing
+        // case-insensitive key/value comparison and similiarities (i.e. management_enabled: 1 is
+        // functionally identical to Management_Enabled: true, but it will be detected as a change
+        // in attributes.
+        Map<String, String> attributes = dto.getAttributes();
+        if (attributes != null && !this.attributes.equals(attributes)) {
+            return true;
         }
 
         Collection<ProductContentData> productContent = dto.getProductContent();

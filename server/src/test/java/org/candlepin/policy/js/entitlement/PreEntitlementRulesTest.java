@@ -23,10 +23,8 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
-import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductAttribute;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.entitlement.Enforcer.CallerType;
 import org.candlepin.test.TestUtil;
@@ -41,7 +39,6 @@ import java.util.List;
 import java.util.Map;
 
 public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
-
     @Test
     public void testBindForSameProductNotAllowed() {
         Product product = TestUtil.createProduct(productId, "A product for testing");
@@ -59,7 +56,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
     @Test
     public void testListForSufficientCores() {
         Product product = TestUtil.createProduct(productId, "A product for testing");
-        product.addAttribute(new ProductAttribute("cores", "10"));
+        product.setAttribute(Product.Attributes.CORES, "10");
         Pool pool = createPool(owner, product);
 
         consumer.setFacts(new HashMap<String, String>());
@@ -76,7 +73,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
     @Test
     public void testListForInsufficientCores() {
         Product product = TestUtil.createProduct(productId, "A product for testing");
-        product.addAttribute(new ProductAttribute("cores", "10"));
+        product.setAttribute(Product.Attributes.CORES, "10");
         Pool pool = createPool(owner, product);
 
         consumer.setFacts(new HashMap<String, String>());
@@ -95,7 +92,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
     @Test
     public void testListForSufficientRAM() {
         Product product = TestUtil.createProduct(productId, "A product for testing");
-        product.addAttribute(new ProductAttribute("ram", "16"));
+        product.setAttribute(Product.Attributes.RAM, "16");
         Pool pool = createPool(owner, product);
 
         consumer.setFacts(new HashMap<String, String>());
@@ -111,7 +108,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
     @Test
     public void testListForInsufficientRAM() {
         Product product = TestUtil.createProduct(productId, "A product for testing");
-        product.addAttribute(new ProductAttribute("ram", "10"));
+        product.setAttribute(Product.Attributes.RAM, "10");
         Pool pool = createPool(owner, product);
 
         consumer.setFacts(new HashMap<String, String>());
@@ -129,7 +126,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
     @Test
     public void testListForSufficientSockets() {
         Product product = TestUtil.createProduct(productId, "A product for testing");
-        product.addAttribute(new ProductAttribute("sockets", "2"));
+        product.setAttribute(Product.Attributes.SOCKETS, "2");
         Pool pool = createPool(owner, product);
 
         consumer.setFacts(new HashMap<String, String>());
@@ -145,7 +142,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
     @Test
     public void testListForInsufficientSockets() {
         Product product = TestUtil.createProduct(productId, "A product for testing");
-        product.addAttribute(new ProductAttribute("sockets", "2"));
+        product.setAttribute(Product.Attributes.SOCKETS, "2");
         Pool pool = createPool(owner, product);
 
         consumer.setFacts(new HashMap<String, String>());
@@ -201,7 +198,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
     @Test
     public void testBindFromSameProductAllowedWithMultiEntitlementAttribute() {
         Product product = TestUtil.createProduct(productId, "A product for testing");
-        product.addAttribute(new ProductAttribute("multi-entitlement", "yes"));
+        product.setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes");
         Pool pool = createPool(owner, product);
 
         Entitlement e = new Entitlement(pool, consumer, 1);
@@ -264,8 +261,8 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
 
         String nonSystemType = "somethingElse";
         Product product = TestUtil.createProduct(productId, "A product for testing");
-        product.addAttribute(new ProductAttribute("arch", "x86_64"));
-        product.setAttribute("requires_consumer_type", nonSystemType);
+        product.setAttribute(Product.Attributes.ARCHITECTURE, "x86_64");
+        product.setAttribute(Pool.Attributes.REQUIRES_CONSUMER_TYPE, nonSystemType);
         Pool pool = TestUtil.createPool(owner, product);
         pool.setId("fakeid" + TestUtil.randomInt());
         consumer.setType(new ConsumerType(nonSystemType));
@@ -325,8 +322,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
 
     @Test
     public void testDuplicateArchesMatches() {
-        Pool pool = setupArchTest("arch", "x86_64,x86_64", "uname.machine",
-            "x86_64");
+        Pool pool = setupArchTest("arch", "x86_64,x86_64", "uname.machine", "x86_64");
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
         assertFalse(result.hasWarnings());
@@ -334,8 +330,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
 
     @Test
     public void testDuplicateArchesNoMatches() {
-        Pool pool = setupArchTest("arch", "x86_64,x86_64", "uname.machine",
-            "z80");
+        Pool pool = setupArchTest("arch", "x86_64,x86_64", "uname.machine", "z80");
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
         assertTrue(result.hasWarnings());
@@ -343,8 +338,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
 
     @Test
     public void testCommaSplitArchesTrailingComma() {
-        Pool pool = setupArchTest("arch", "x86_64,x86_64,", "uname.machine",
-            "x86_64");
+        Pool pool = setupArchTest("arch", "x86_64,x86_64,", "uname.machine", "x86_64");
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
         assertFalse(result.hasWarnings());
@@ -352,8 +346,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
 
     @Test
     public void testCommaSplitArchesExtraSpaces() {
-        Pool pool = setupArchTest("arch", "x86_64,  z80 ", "uname.machine",
-            "x86_64");
+        Pool pool = setupArchTest("arch", "x86_64,  z80 ", "uname.machine", "x86_64");
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
         assertFalse(result.hasWarnings());
@@ -361,8 +354,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
 
     @Test
     public void multipleArchesNoMatches() {
-        Pool pool = setupArchTest("arch", "s390x,z80,ppc64", "uname.machine",
-            "i686");
+        Pool pool = setupArchTest("arch", "s390x,z80,ppc64", "uname.machine", "i686");
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
         assertTrue(result.hasWarnings());
@@ -457,7 +449,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
 
         Product product = TestUtil.createProduct(productId, "A product for testing");
         product
-            .addAttribute(new ProductAttribute(attributeName, attributeValue));
+            .setAttribute(attributeName, attributeValue);
         Pool pool = TestUtil.createPool(owner, product);
         pool.setId("fakeid" + TestUtil.randomInt());
 
@@ -738,29 +730,29 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
 
     private Pool setupHostRestrictedPool(Consumer parent) {
         Pool pool = setupVirtOnlyPool();
-        pool.addAttribute(new PoolAttribute("requires_host", parent.getUuid()));
+        pool.setAttribute(Pool.Attributes.REQUIRES_HOST, parent.getUuid());
         return pool;
     }
 
     private Pool setupDevConsumerRestrictedPool(Consumer consumer) {
         Product product = TestUtil.createProduct(productId, "product");
         Pool pool = TestUtil.createPool(owner, product);
-        pool.addAttribute(new PoolAttribute("dev_pool", "true"));
+        pool.setAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true");
         pool.setId("fakeid" + TestUtil.randomInt());
-        pool.addAttribute(new PoolAttribute("requires_consumer", consumer.getUuid()));
+        pool.setAttribute(Pool.Attributes.REQUIRES_CONSUMER, consumer.getUuid());
         return pool;
     }
 
     private Pool setupUnmappedGuestPool() {
         Pool pool = setupVirtOnlyPool();
-        pool.addAttribute(new PoolAttribute("unmapped_guests_only", "true"));
+        pool.setAttribute(Pool.Attributes.UNMAPPED_GUESTS_ONLY, "true");
         return pool;
     }
 
     private Pool setupVirtOnlyPool() {
         Product product = TestUtil.createProduct(productId, "virt only product");
         Pool pool = TestUtil.createPool(owner, product);
-        pool.addAttribute(new PoolAttribute("virt_only", "true"));
+        pool.setAttribute(Product.Attributes.VIRT_ONLY, "true");
         pool.setId("fakeid" + TestUtil.randomInt());
         return pool;
     }
@@ -768,7 +760,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
     private Pool setupPhysOnlyPool() {
         Product product = TestUtil.createProduct(productId, "physical only product");
         Pool pool = TestUtil.createPool(owner, product);
-        pool.addAttribute(new PoolAttribute("physical_only", "true"));
+        pool.setAttribute(Pool.Attributes.PHYSICAL_ONLY, "true");
         pool.setId("fakeid" + TestUtil.randomInt());
         return pool;
     }
@@ -795,7 +787,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
 
     private Pool setupProductWithConsumerTypeAttribute(ConsumerTypeEnum consumerType) {
         Product product = TestUtil.createProduct(productId, "A product for testing");
-        product.setAttribute("requires_consumer_type",
+        product.setAttribute(Pool.Attributes.REQUIRES_CONSUMER_TYPE,
             consumerType.toString());
         Pool pool = createPool(owner, product);
         return pool;
@@ -818,7 +810,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
     @Test
     public void testListForSufficientCoresList() {
         Product product = TestUtil.createProduct(productId, "A product for testing");
-        product.addAttribute(new ProductAttribute("cores", "10"));
+        product.setAttribute(Product.Attributes.CORES, "10");
         Pool pool = createPool(owner, product);
 
         consumer.setFacts(new HashMap<String, String>());

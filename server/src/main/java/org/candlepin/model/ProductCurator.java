@@ -60,6 +60,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     @Inject
     public ProductCurator(Configuration config, I18n i18n, CandlepinCache candlepinCache,
         AttributeValidator attributeValidator) {
+
         super(Product.class);
 
         this.config = config;
@@ -268,17 +269,12 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      *  The provided product reference
      */
     protected Product validateProductReferences(Product entity) {
-        if (entity.getAttributes() != null) {
-            for (ProductAttribute pa : entity.getAttributes()) {
-                this.attributeValidator.validate(pa.getName(), pa.getValue());
-                pa.setProduct(entity);
-            }
+        for (Map.Entry<String, String> entry : entity.getAttributes().entrySet()) {
+            this.attributeValidator.validate(entry.getKey(), entry.getValue());
         }
 
-        if (entity.getProductContent() != null) {
-            for (ProductContent pc : entity.getProductContent()) {
-                pc.setProduct(entity);
-            }
+        for (ProductContent pc : entity.getProductContent()) {
+            pc.setProduct(entity);
         }
 
         // TODO: Add more reference checks here.

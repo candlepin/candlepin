@@ -5,6 +5,7 @@ describe 'Unlimited Master Pools' do
   include CandlepinMethods
   include SpecUtils
   include CertificateMethods
+  include AttributeHelper
 
   before(:each) do
     @owner = create_owner random_string('owner')
@@ -77,7 +78,7 @@ describe 'Unlimited Master Pools' do
     @pools = @cp.list_pools :owner => @owner.id, :product => @product_virt.id
     guest_pool = nil
     @pools.each do |pool|
-        if flatten_attributes(pool['attributes'])["pool_derived"] == "true" and pool.type == 'UNMAPPED_GUEST'
+        if get_attribute_value(pool['attributes'], "pool_derived") == "true" and pool.type == 'UNMAPPED_GUEST'
            guest_pool = pool
         end
     end
@@ -93,7 +94,7 @@ describe 'Unlimited Master Pools' do
     @pools = @cp.list_pools :owner => @owner.id, :product => @product_unlimited_virt.id
     guest_pool = nil
     @pools.each do |pool|
-        if flatten_attributes(pool['attributes'])["pool_derived"] == "true" and pool.type == 'ENTITLEMENT_DERIVED'
+        if get_attribute_value(pool['attributes'], "pool_derived") == "true" and pool.type == 'ENTITLEMENT_DERIVED'
            guest_pool = pool
         end
     end
@@ -109,7 +110,7 @@ describe 'Unlimited Master Pools' do
     @pools = @cp.list_pools :owner => @owner.id, :product => @product_virt_host_dep.id
     guest_pool = nil
     @pools.each do |pool|
-        if flatten_attributes(pool['attributes'])["pool_derived"] == "true" and pool.type == 'ENTITLEMENT_DERIVED'
+        if get_attribute_value(pool['attributes'], "pool_derived") == "true" and pool.type == 'ENTITLEMENT_DERIVED'
            pool.quantity.should == 5
            guest_pool = pool
         end
@@ -125,7 +126,7 @@ describe 'Unlimited Master Pools' do
     @pools = @cp.list_pools :owner => @owner.id, :product => @product_unlimited_virt.id
     guest_pool = nil
     @pools.each do |pool|
-        if flatten_attributes(pool['attributes'])["pool_derived"] == "true" and pool.type == 'UNMAPPED_GUEST'
+        if get_attribute_value(pool['attributes'], "pool_derived") == "true" and pool.type == 'UNMAPPED_GUEST'
            guest_pool = pool
         end
     end

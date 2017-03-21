@@ -190,7 +190,7 @@ public class StatusReasonMessageGeneratorTest {
         e.setId(String.valueOf(id));
         Pool p = e.getPool();
         // Setup the attributes for stacking:
-        p.getProduct().setAttribute("stacking_id", stackId);
+        p.getProduct().setAttribute(Product.Attributes.STACKING_ID, stackId);
         return e;
     }
 

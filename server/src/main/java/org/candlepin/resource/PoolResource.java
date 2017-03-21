@@ -121,26 +121,22 @@ public class PoolResource {
 
         // Make sure we were given sane query parameters:
         if (consumerUuid != null && ownerId != null) {
-            throw new BadRequestException(
-                i18n.tr("Cannot filter on both owner and unit"));
+            throw new BadRequestException(i18n.tr("Cannot filter on both owner and unit"));
         }
         if (consumerUuid == null && ownerId == null && productId != null) {
-            throw new BadRequestException(
-                i18n.tr("A unit or owner is needed to filter on product"));
+            throw new BadRequestException(i18n.tr("A unit or owner is needed to filter on product"));
         }
 
-        Date activeOnDate = new Date();
-        if (activeOn != null) {
-            activeOnDate = ResourceDateParser.parseDateString(activeOn);
-        }
+        Date activeOnDate = activeOn != null ?
+            ResourceDateParser.parseDateString(activeOn) :
+            new Date();
 
         Consumer c = null;
         Owner o = null;
         if (consumerUuid != null) {
             c = consumerCurator.findByUuid(consumerUuid);
             if (c == null) {
-                throw new NotFoundException(i18n.tr("Unit: {0} not found",
-                    consumerUuid));
+                throw new NotFoundException(i18n.tr("Unit: {0} not found", consumerUuid));
             }
 
             // Now that we have a consumer, check that this principal can access it:
@@ -170,7 +166,7 @@ public class PoolResource {
         // the system).
         if (consumerUuid == null && ownerId == null && !principal.hasFullAccess()) {
             throw new ForbiddenException(i18n.tr("User {0} cannot access all pools.",
-                    principal.getPrincipalName()));
+                principal.getPrincipalName()));
         }
 
         Page<List<Pool>> page = poolManager.listAvailableEntitlementPools(c, null, o,

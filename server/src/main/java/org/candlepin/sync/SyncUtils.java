@@ -34,6 +34,7 @@ import java.io.File;
 import java.io.IOException;
 
 
+
 /**
  * SyncUtils
  */
@@ -44,8 +45,7 @@ class SyncUtils {
     File makeTempDir(String baseName) throws IOException {
         File baseDir = new File(config.getString(ConfigProperties.SYNC_WORK_DIR));
         if (!baseDir.exists() && !baseDir.mkdirs()) {
-            throw new IseException(
-                "Unable to create base dir for sync: " + baseDir);
+            throw new IseException("Unable to create base dir for sync: " + baseDir);
         }
         File tmp = File.createTempFile(baseName, Long.toString(System.nanoTime()),
             baseDir);
@@ -71,8 +71,7 @@ class SyncUtils {
     public ObjectMapper getObjectMapper() {
         ObjectMapper mapper = new ObjectMapper();
         AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
-        AnnotationIntrospector secondary =
-            new JaxbAnnotationIntrospector(mapper.getTypeFactory());
+        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector(mapper.getTypeFactory());
         AnnotationIntrospector pair = new AnnotationIntrospectorPair(primary, secondary);
 
         mapper.setAnnotationIntrospector(pair);
@@ -96,9 +95,9 @@ class SyncUtils {
     File tempFileReference(String name) throws IOException {
         File baseDir = new File(config.getString(ConfigProperties.SYNC_WORK_DIR));
         if (!baseDir.exists() && !baseDir.mkdirs()) {
-            throw new IseException(
-                "Unable to create base dir for sync: " + baseDir);
+            throw new IseException("Unable to create base dir for sync: " + baseDir);
         }
+
         return new File(baseDir, name);
     }
 

@@ -6,7 +6,6 @@ require 'rubygems'
 require 'rest_client'
 
 describe 'Owner Resource' do
-
   include CandlepinMethods
 
   it 'lets an owner see only their system consumer types' do
@@ -607,11 +606,11 @@ describe 'Owner Resource Pool Filter Tests' do
     pools[0].productId.should == @product1.id
 
     # Now with wildcards:
-    pools = @cp.list_owner_pools(@owner['key'], {}, ["sup*evel:V*P"])
+    pools = @cp.list_owner_pools(@owner['key'], {}, ["support_level:V*P"])
     pools.length.should == 1
     pools[0].productId.should == @product1.id
 
-    pools = @cp.list_owner_pools(@owner['key'], {}, ["sup?ort_level:V??"])
+    pools = @cp.list_owner_pools(@owner['key'], {}, ["support_level:V??"])
     pools.length.should == 1
     pools[0].productId.should == @product1.id
   end
@@ -776,7 +775,7 @@ describe 'Owner Resource Owner Info Tests' do
 end
 
 describe 'Owner Resource Entitlement List Tests' do
-
+  include AttributeHelper
   include CandlepinMethods
 
   before(:each) do
@@ -812,14 +811,8 @@ describe 'Owner Resource Entitlement List Tests' do
       :attr_filters => { "variant" => "Satellite Starter Pack" })
     ents.length.should eq(1)
 
-    found_attr = false
-    ents[0].pool.productAttributes.each do |attr|
-      if attr["name"] == 'variant' && attr["value"] == "Satellite Starter Pack"
-        found_attr = true
-        break
-      end
-    end
-    found_attr.should == true
+    variant = get_attribute_value(ents[0].pool.productAttributes, "variant")
+    expect(variant).to eq("Satellite Starter Pack")
   end
 end
 

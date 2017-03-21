@@ -27,6 +27,8 @@ import org.junit.runner.RunWith;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.inject.Inject;
 
@@ -54,17 +56,15 @@ public class ProductTest extends DatabaseTestFixture {
     }
 
     protected Object[][] getValuesForEqualityAndReplication() {
-        Collection<ProductAttribute> attributes1 = Arrays.asList(
-            new ProductAttribute("a1", "v1"),
-            new ProductAttribute("a2", "v2"),
-            new ProductAttribute("a3", "v3")
-        );
+        Map<String, String> attributes1 = new HashMap<String, String>();
+        attributes1.put("a1", "v1");
+        attributes1.put("a2", "v2");
+        attributes1.put("a3", "v3");
 
-        Collection<ProductAttribute> attributes2 = Arrays.asList(
-            new ProductAttribute("a4", "v4"),
-            new ProductAttribute("a5", "v5"),
-            new ProductAttribute("a6", "v6")
-        );
+        Map<String, String> attributes2 = new HashMap<String, String>();
+        attributes2.put("a4", "v4");
+        attributes2.put("a5", "v5");
+        attributes2.put("a6", "v6");
 
         Content[] content = new Content[] {
             new Content("c1", "content-1", "test_type", "test_label-1", "test_vendor-1"),
@@ -118,6 +118,9 @@ public class ProductTest extends DatabaseTestFixture {
         catch (NoSuchMethodException e) {
             if (Collection.class.isAssignableFrom(mutatorInputClass)) {
                 mutator = Product.class.getDeclaredMethod("set" + methodSuffix, Collection.class);
+            }
+            else if (Map.class.isAssignableFrom(mutatorInputClass)) {
+                mutator = Product.class.getDeclaredMethod("set" + methodSuffix, Map.class);
             }
             else if (Boolean.class.isAssignableFrom(mutatorInputClass)) {
                 mutator = Product.class.getDeclaredMethod("set" + methodSuffix, boolean.class);

@@ -66,7 +66,7 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
         Long numAvailEntitlements = 2L;
 
         Product newProduct = TestUtil.createProduct();
-        newProduct.addAttribute(new ProductAttribute("multi-entitlement", "yes"));
+        newProduct.setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes");
         newProduct = this.createProduct(newProduct, owner);
 
         Pool consumerPool = createPool(owner, newProduct,

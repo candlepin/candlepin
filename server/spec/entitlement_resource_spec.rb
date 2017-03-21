@@ -2,8 +2,8 @@ require 'spec_helper'
 require 'candlepin_scenarios'
 
 describe 'Entitlement Resource' do
-
   include CandlepinMethods
+  include AttributeHelper
 
   before do
     @owner = create_owner random_string 'test_owner'
@@ -12,8 +12,7 @@ describe 'Entitlement Resource' do
     @virt_prod= create_product(nil, 'virtualization')
 
     #entitle owner for the virt and monitoring products.
-    create_pool_and_subscription(@owner['key'], @monitoring_prod.id, 6,
-				 [], '', '', '', nil, nil, true)
+    create_pool_and_subscription(@owner['key'], @monitoring_prod.id, 6, [], '', '', '', nil, nil, true)
     create_pool_and_subscription(@owner['key'], @virt_prod.id, 6)
 
     #create consumer
@@ -47,14 +46,8 @@ describe 'Entitlement Resource' do
       :attr_filters => { "variant" => "Satellite Starter Pack" })
     ents.length.should eq(1)
 
-    found_attr = false
-    ents[0].pool.productAttributes.each do |attr|
-      if attr["name"] == 'variant' && attr["value"] == "Satellite Starter Pack"
-        found_attr = true
-        break
-      end
-    end
-    found_attr.should == true
+    variant = get_attribute_value(ents[0].pool.productAttributes, "variant")
+    expect(variant).to eq("Satellite Starter Pack")
   end
 
   it 'can filter consumer entitlements by product attribute' do
@@ -66,14 +59,8 @@ describe 'Entitlement Resource' do
       :attr_filters => { "variant" => "Satellite Starter Pack" })
     ents.length.should eq(1)
 
-    found_attr = false
-    ents[0].pool.productAttributes.each do |attr|
-      if attr["name"] == 'variant' && attr["value"] == "Satellite Starter Pack"
-        found_attr = true
-        break
-      end
-    end
-    found_attr.should == true
+    variant = get_attribute_value(ents[0].pool.productAttributes, "variant")
+    expect(variant).to eq("Satellite Starter Pack")
   end
 
   it 'can filter consumer entitlements by using matches param' do

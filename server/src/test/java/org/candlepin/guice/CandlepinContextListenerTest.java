@@ -195,12 +195,9 @@ public class CandlepinContextListenerTest {
         Registry registry = mock(Registry.class);
         ResteasyProviderFactory rpfactory = mock(ResteasyProviderFactory.class);
         when(evt.getServletContext()).thenReturn(ctx);
-        when(ctx.getAttribute(eq(
-            Registry.class.getName()))).thenReturn(registry);
-        when(ctx.getAttribute(eq(
-            ResteasyProviderFactory.class.getName()))).thenReturn(rpfactory);
-        when(ctx.getAttribute(eq(
-            CandlepinContextListener.CONFIGURATION_NAME))).thenReturn(config);
+        when(ctx.getAttribute(eq(Registry.class.getName()))).thenReturn(registry);
+        when(ctx.getAttribute(eq(ResteasyProviderFactory.class.getName()))).thenReturn(rpfactory);
+        when(ctx.getAttribute(eq(CandlepinContextListener.CONFIGURATION_NAME))).thenReturn(config);
     }
 
     public class ContextListenerTestModule extends AbstractModule {

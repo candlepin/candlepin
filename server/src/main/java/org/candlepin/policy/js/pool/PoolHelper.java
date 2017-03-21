@@ -15,7 +15,6 @@
 package org.candlepin.policy.js.pool;
 
 import org.candlepin.controller.PoolManager;
-import org.candlepin.model.Attribute;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
@@ -31,7 +30,6 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -61,24 +59,14 @@ public class PoolHelper {
      *         have priority.
      */
     public static Map<String, String> getFlattenedAttributes(Pool pool) {
-        Map<String, String> allAttributes = new HashMap<String, String>();
+        Map<String, String> attributes = new HashMap<String, String>();
+
         if (pool != null) {
-            allAttributes.putAll(getFlattenedAttributes(pool.getProductAttributes()));
-            allAttributes.putAll(getFlattenedAttributes(pool.getAttributes()));
+            attributes.putAll(pool.getProductAttributes());
+            attributes.putAll(pool.getAttributes());
         }
-        return allAttributes;
-    }
 
-    public static Map<String, String> getFlattenedAttributes(Collection<? extends Attribute> attrs) {
-        Map<String, String> flattened = new HashMap<String, String>();
-        for (Attribute a : attrs) {
-            flattened.put(a.getName(), a.getValue());
-        }
-        return flattened;
-    }
-
-    public static Map<String, String> getFlattenedAttributes(Product product) {
-        return getFlattenedAttributes(product.getAttributes());
+        return attributes;
     }
 
     /**
@@ -97,18 +85,19 @@ public class PoolHelper {
             Pool consumerSpecificPool = null;
             Map<String, String> attributes = attributeMaps.get(pool.getId());
             String quantity = attributes.get("virt_limit");
+
             if (pool.getDerivedProduct() == null) {
                 consumerSpecificPool = createPool(
-                        product,
-                        pool.getOwner(),
-                        quantity,
-                        pool.getStartDate(),
-                        pool.getEndDate(),
-                        pool.getContractNumber(),
-                        pool.getAccountNumber(),
-                        pool.getOrderNumber(),
-                        productCurator.getPoolProvidedProductsCached(pool)                        ,
-                        sourceEntitlements.get(pool.getId()));
+                    product,
+                    pool.getOwner(),
+                    quantity,
+                    pool.getStartDate(),
+                    pool.getEndDate(),
+                    pool.getContractNumber(),
+                    pool.getAccountNumber(),
+                    pool.getOrderNumber(),
+                    productCurator.getPoolProvidedProductsCached(pool),
+                    sourceEntitlements.get(pool.getId()));
             }
             else {
                 // If a derived product is on the pool, we want to define the
@@ -118,16 +107,16 @@ public class PoolHelper {
                 // allowing the derived pool to have different attributes than
                 // the parent.
                 consumerSpecificPool = createPool(
-                        pool.getDerivedProduct(),
-                        pool.getOwner(),
-                        quantity,
-                        pool.getStartDate(),
-                        pool.getEndDate(),
-                        pool.getContractNumber(),
-                        pool.getAccountNumber(),
-                        pool.getOrderNumber(),
-                        productCurator.getPoolDerivedProvidedProductsCached(pool),
-                        sourceEntitlements.get(pool.getId()));
+                    pool.getDerivedProduct(),
+                    pool.getOwner(),
+                    quantity,
+                    pool.getStartDate(),
+                    pool.getEndDate(),
+                    pool.getContractNumber(),
+                    pool.getAccountNumber(),
+                    pool.getOrderNumber(),
+                    productCurator.getPoolDerivedProvidedProductsCached(pool),
+                    sourceEntitlements.get(pool.getId()));
             }
 
             consumerSpecificPool.setAttribute(Pool.Attributes.REQUIRES_HOST, consumer.getUuid());
@@ -153,6 +142,7 @@ public class PoolHelper {
         if (CollectionUtils.isNotEmpty(poolsToUpdateFromStack)) {
             poolManager.updatePoolsFromStack(consumer, poolsToUpdateFromStack);
         }
+
         return poolManager.createPools(poolsToCreate);
     }
 
@@ -230,8 +220,7 @@ public class PoolHelper {
             sourcePool.getContractNumber(), sourcePool.getAccountNumber(),
             sourcePool.getOrderNumber(), new HashSet<Product>(), sourceEntitlement);
 
-        pool.setSourceSubscription(
-            new SourceSubscription(sourcePool.getSubscriptionId(), subKey));
+        pool.setSourceSubscription(new SourceSubscription(sourcePool.getSubscriptionId(), subKey));
 
         copyProvidedProducts(sourcePool, pool, curator, productCurator);
 
@@ -241,8 +230,7 @@ public class PoolHelper {
         }
 
         for (Branding b : sourcePool.getBranding()) {
-            pool.getBranding().add(new Branding(b.getProductId(), b.getType(),
-                b.getName()));
+            pool.getBranding().add(new Branding(b.getProductId(), b.getType(), b.getName()));
         }
         return pool;
     }
@@ -277,9 +265,7 @@ public class PoolHelper {
         );
 
         // Must be sure to copy the provided products, not try to re-use them directly:
-        for (Product pp : providedProducts) {
-            pool.addProvidedProduct(pp);
-        }
+        pool.setProvidedProducts(providedProducts);
 
         if (sourceEntitlement != null && sourceEntitlement.getPool() != null) {
             if (sourceEntitlement.getPool().isStacked()) {
@@ -299,7 +285,7 @@ public class PoolHelper {
 
     public static boolean checkForOrderChanges(Pool existingPool, Pool pool) {
         return (!StringUtils.equals(existingPool.getOrderNumber(), pool.getOrderNumber()) ||
-                !StringUtils.equals(existingPool.getAccountNumber(), pool.getAccountNumber()) || !StringUtils
-                    .equals(existingPool.getContractNumber(), pool.getContractNumber()));
+            !StringUtils.equals(existingPool.getAccountNumber(), pool.getAccountNumber()) ||
+            !StringUtils.equals(existingPool.getContractNumber(), pool.getContractNumber()));
     }
 }
