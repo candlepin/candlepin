@@ -95,7 +95,7 @@ public class ComplianceRules {
      * @return Compliance status.
      */
     public ComplianceStatus getStatus(Consumer c, Date date, boolean calculateCompliantUntil) {
-        return getStatus(c, date, calculateCompliantUntil, true);
+        return getStatus(c, date, calculateCompliantUntil, true, false);
     }
 
     /**
@@ -110,13 +110,31 @@ public class ComplianceRules {
     public ComplianceStatus getStatus(Consumer c, Date date, boolean calculateCompliantUntil,
         boolean updateConsumer) {
 
+        return this.getStatus(c, date, calculateCompliantUntil, updateConsumer, false);
+    }
+
+    /**
+     * Check compliance status for a consumer on a specific date.
+     *
+     * @param c Consumer to check.
+     * @param date Date to check compliance status for.
+     * @param calculateCompliantUntil calculate how long the system will remain compliant (expensive)
+     * @param updateConsumer whether or not to use consumerCurator.update
+     * @param calculateProductComplianceDateRanges calculate the individual compliance ranges for each product
+     *        (also expensive)
+     * @return Compliance status.
+     */
+    public ComplianceStatus getStatus(Consumer c, Date date, boolean calculateCompliantUntil,
+        boolean updateConsumer, boolean calculateProductComplianceDateRanges) {
+
         // If this is true, we send an updated compliance event
         boolean currentCompliance = false;
+
         if (date == null) {
             date = new Date();
             currentCompliance = true;
-
         }
+
         if (currentCompliance) {
             for (Entitlement ent : c.getEntitlements()) {
                 if (!ent.isUpdatedOnStart() && ent.isValid()) {
@@ -139,6 +157,7 @@ public class ComplianceRules {
         args.put("entitlements", c.getEntitlements());
         args.put("ondate", date);
         args.put("calculateCompliantUntil", calculateCompliantUntil);
+        args.put("calculateProductComplianceDateRanges", calculateProductComplianceDateRanges);
         args.put("log", log, false);
         args.put("guestIds", c.getGuestIds());
 

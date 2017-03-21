@@ -29,6 +29,7 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
@@ -39,8 +40,10 @@ import org.candlepin.policy.js.JsRunnerRequestCache;
 import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
+import org.candlepin.policy.js.compliance.DateRange;
 import org.candlepin.policy.js.compliance.StatusReasonMessageGenerator;
 import org.candlepin.test.TestUtil;
+import org.candlepin.test.MockResultIterator;
 import org.candlepin.util.Util;
 
 import com.google.inject.Provider;
@@ -50,12 +53,17 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.stubbing.Answer;
+
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -66,17 +74,14 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+
+
 /**
  * InstalledProductStatusCalculatorTest
  */
 @RunWith(MockitoJUnitRunner.class)
 public class InstalledProductStatusCalculatorTest {
-    private Owner owner;
-    private ComplianceRules compliance;
-
-    private final Owner PRODUCT_OWNER = new Owner("Test Corporation");
-    private final Product PRODUCT_1 = TestUtil.createProduct("p1", "product1");
-    private final String STACK_ID_1 = "my-stack-1";
+    private ComplianceRules complianceRules;
 
     @Mock private ConsumerCurator consumerCurator;
     @Mock private EntitlementCurator entCurator;
@@ -85,9 +90,11 @@ public class InstalledProductStatusCalculatorTest {
     @Mock private Provider<JsRunnerRequestCache> cacheProvider;
     @Mock private JsRunnerRequestCache cache;
     @Mock private ProductCurator productCurator;
+    @Mock private OwnerProductCurator ownerProductCurator;
 
     private JsRunnerProvider provider;
     private I18n i18n;
+    private ConsumerEnricher consumerEnricher;
 
     @Before
     public void setUp() {
@@ -96,707 +103,700 @@ public class InstalledProductStatusCalculatorTest {
         // Load the default production rules:
         InputStream is = this.getClass().getResourceAsStream(RulesCurator.DEFAULT_RULES_FILE);
         Rules rules = new Rules(Util.readFile(is));
+        Locale locale = new Locale("en_US");
+
         when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
         when(rulesCuratorMock.getRules()).thenReturn(rules);
         when(cacheProvider.get()).thenReturn(cache);
-        provider = new JsRunnerProvider(rulesCuratorMock, cacheProvider);
-        Locale locale = new Locale("en_US");
+
+        this.provider = new JsRunnerProvider(rulesCuratorMock, cacheProvider);
         i18n = I18nFactory.getI18n(getClass(), "org.candlepin.i18n.Messages", locale, I18nFactory.FALLBACK);
-        compliance = new ComplianceRules(provider.get(), entCurator, new StatusReasonMessageGenerator(i18n),
-            eventSink, consumerCurator, new RulesObjectMapper(
-                new ProductCachedSerializationModule(productCurator)));
-        owner = new Owner("test");
+
+        RulesObjectMapper objectMapper =
+            new RulesObjectMapper(new ProductCachedSerializationModule(productCurator));
+
+        this.complianceRules = new ComplianceRules(provider.get(), this.entCurator,
+            new StatusReasonMessageGenerator(i18n), eventSink, this.consumerCurator, objectMapper);
+
+        this.consumerEnricher = new ConsumerEnricher(this.complianceRules, this.ownerProductCurator);
     }
 
     @Test
     public void validRangeForSingleValidEnitlement() {
-        Consumer c = mockConsumer(PRODUCT_1);
+        Owner owner = TestUtil.createOwner();
+        Product product = TestUtil.createProduct("p1", "product1");
+        Consumer consumer = this.mockConsumer(owner, product);
 
-        Calendar cal = Calendar.getInstance();
-        Date now = cal.getTime();
+        DateRange range = this.rangeRelativeToDate(new Date(), -6, 6);
+        Entitlement entitlement = this.mockEntitlement(owner, consumer, product, range, product);
+        consumer.addEntitlement(entitlement);
 
-        DateRange entRange = rangeRelativeToDate(now, -6, 6);
-        c.addEntitlement(mockEntitlement(c, PRODUCT_1, entRange, PRODUCT_1));
+        this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
+        this.mockOwnerProducts(owner, Arrays.asList(product));
 
-        List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        mockEntCurator(c, ents);
+        this.consumerEnricher.enrich(consumer);
 
-        ComplianceStatus status = compliance.getStatus(c, now);
-        ConsumerInstalledProductEnricher calculator =
-            new ConsumerInstalledProductEnricher(c, status, compliance, productCurator);
-        Product p = TestUtil.createProduct(PRODUCT_1.getId(), "Awesome Product");
-        DateRange validRange = calculator.getValidDateRange(p);
-        assertEquals(entRange.getStartDate(), validRange.getStartDate());
-        assertEquals(entRange.getEndDate(), validRange.getEndDate());
+        ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
+        assertEquals(range.getStartDate(), cip.getStartDate());
+        assertEquals(range.getEndDate(), cip.getEndDate());
     }
 
     @Test
     public void validRangeForUnmappedGuestEntitlement() {
-        Consumer c = mockConsumer(PRODUCT_1);
-        Date registration = new Date();
-        c.setCreated(registration);
+        Date now = new Date();
 
-        Calendar cal = Calendar.getInstance();
-        Date now = cal.getTime();
+        Owner owner = TestUtil.createOwner();
+        Product product = TestUtil.createProduct("p1", "product1");
+        Consumer consumer = this.mockConsumer(owner, product);
+        consumer.setCreated(now);
 
-        DateRange entRange = rangeRelativeToDate(now, -6, 6);
-        c.addEntitlement(mockUnmappedGuestEntitlement(c, PRODUCT_1, entRange, PRODUCT_1));
+        DateRange range = this.rangeRelativeToDate(now, -6, 6);
+        Entitlement entitlement = this.mockUnmappedGuestEntitlement(owner, consumer, product, range, product);
+        consumer.addEntitlement(entitlement);
 
-        List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        mockEntCurator(c, ents);
+        this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
+        this.mockOwnerProducts(owner, Arrays.asList(product));
 
-        Date expectedEnd = new Date(registration.getTime() + (24 * 60 * 60 * 1000));
+        this.consumerEnricher.enrich(consumer);
 
-        ComplianceStatus status = compliance.getStatus(c, now);
-        ConsumerInstalledProductEnricher calculator =
-            new ConsumerInstalledProductEnricher(c, status, compliance, productCurator);
-        Product p = TestUtil.createProduct(PRODUCT_1.getId(), "Awesome Product");
-        DateRange validRange = calculator.getValidDateRange(p);
-        assertEquals(entRange.getStartDate(), validRange.getStartDate());
-        assertEquals(expectedEnd, validRange.getEndDate());
+        Date expectedEnd = new Date(now.getTime() + (24 * 60 * 60 * 1000));
+
+        ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
+        assertEquals(range.getStartDate(), cip.getStartDate());
+        assertEquals(expectedEnd, cip.getEndDate());
     }
 
     @Test
     public void validRangeIgnoresExpiredWithNoOverlap() {
-        Consumer c = mockConsumer(PRODUCT_1);
+        Date now = new Date();
 
-        Calendar cal = Calendar.getInstance();
-        Date now = cal.getTime();
-        DateRange range1 = rangeRelativeToDate(now, -6, -3);
-        DateRange range2 = rangeRelativeToDate(now, -1, 6);
+        Owner owner = TestUtil.createOwner();
+        Product product = TestUtil.createProduct("p1", "product1");
+        Consumer consumer = this.mockConsumer(owner, product);
+        consumer.setCreated(now);
 
-        // Add current entitlement
-        c.addEntitlement(mockEntitlement(c, PRODUCT_1, range2, PRODUCT_1));
-        // Add expired entitlement
-        c.addEntitlement(mockEntitlement(c, PRODUCT_1, range1, PRODUCT_1));
+        DateRange range1 = this.rangeRelativeToDate(now, -6, -3);
+        DateRange range2 = this.rangeRelativeToDate(now, -1, 6);
+        consumer.addEntitlement(this.mockEntitlement(owner, consumer, product, range2, product));
+        consumer.addEntitlement(this.mockEntitlement(owner, consumer, product, range1, product));
 
-        List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        mockEntCurator(c, ents);
+        this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
+        this.mockOwnerProducts(owner, Arrays.asList(product));
 
-        ComplianceStatus status = compliance.getStatus(c, now);
-        ConsumerInstalledProductEnricher calculator =
-            new ConsumerInstalledProductEnricher(c, status, compliance, productCurator);
-        Product p = TestUtil.createProduct(PRODUCT_1.getId(), "Awesome Product");
-        DateRange validRange = calculator.getValidDateRange(p);
-        assertEquals(range2.getStartDate(), validRange.getStartDate());
-        assertEquals(range2.getEndDate(), validRange.getEndDate());
+        this.consumerEnricher.enrich(consumer);
+
+        ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
+        assertEquals(range2.getStartDate(), cip.getStartDate());
+        assertEquals(range2.getEndDate(), cip.getEndDate());
     }
 
     @Test
     public void validRangeIgnoresFutureWithNoOverlap() {
-        Consumer c = mockConsumer(PRODUCT_1);
+        Date now = new Date();
 
-        Calendar cal = Calendar.getInstance();
-        Date now = cal.getTime();
-        DateRange range1 = rangeRelativeToDate(now, 6, 12);
-        DateRange range2 = rangeRelativeToDate(now, -1, 4);
+        Owner owner = TestUtil.createOwner();
+        Product product = TestUtil.createProduct("p1", "product1");
+        Consumer consumer = this.mockConsumer(owner, product);
+        consumer.setCreated(now);
 
-        // Add current entitlement
-        c.addEntitlement(mockEntitlement(c, PRODUCT_1, range2, PRODUCT_1));
-        // Add future entitlement
-        c.addEntitlement(mockEntitlement(c, PRODUCT_1, range1, PRODUCT_1));
+        DateRange range1 = this.rangeRelativeToDate(now, 6, 12);
+        DateRange range2 = this.rangeRelativeToDate(now, -1, 4);
+        consumer.addEntitlement(this.mockEntitlement(owner, consumer, product, range2, product));
+        consumer.addEntitlement(this.mockEntitlement(owner, consumer, product, range1, product));
 
-        List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        mockEntCurator(c, ents);
+        this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
+        this.mockOwnerProducts(owner, Arrays.asList(product));
 
-        ComplianceStatus status = compliance.getStatus(c, now);
-        ConsumerInstalledProductEnricher calculator =
-            new ConsumerInstalledProductEnricher(c, status, compliance, productCurator);
-        Product p = TestUtil.createProduct(PRODUCT_1.getId(), "Awesome Product");
-        DateRange validRange = calculator.getValidDateRange(p);
-        assertEquals(range2.getStartDate(), validRange.getStartDate());
-        assertEquals(range2.getEndDate(), validRange.getEndDate());
+        this.consumerEnricher.enrich(consumer);
+        ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
+        assertEquals(range2.getStartDate(), cip.getStartDate());
+        assertEquals(range2.getEndDate(), cip.getEndDate());
     }
 
     @Test
     public void enricherSetsArchVersion() {
-        //test that the enricher sets the arch and version
-        //when they are supplied as null
-        Consumer c = mockConsumer(PRODUCT_1);
+        //test that the enricher sets the arch and version when they are null in the CIP
 
-        Calendar cal = Calendar.getInstance();
-        Date now = cal.getTime();
-        DateRange range2 = rangeRelativeToDate(now, -1, 4);
-        c.addEntitlement(mockEntitlement(c, PRODUCT_1, range2, PRODUCT_1));
-        List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        mockEntCurator(c, ents);
-        ComplianceStatus status = compliance.getStatus(c, now);
-        status.addNonCompliantProduct(PRODUCT_1.getId());
+        Owner owner = TestUtil.createOwner();
+        Product product = TestUtil.createProduct("p1", "product1");
+        Consumer consumer = this.mockConsumer(owner, product);
+
+        DateRange range = this.rangeRelativeToDate(new Date(), -1, 4);
+        Entitlement entitlement = this.mockEntitlement(owner, consumer, product, range, product);
+        consumer.addEntitlement(entitlement);
+
+        this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
+
         ConsumerInstalledProduct cip = new ConsumerInstalledProduct();
-        c.addInstalledProduct(cip);
-        ConsumerInstalledProductEnricher calculator =
-            new ConsumerInstalledProductEnricher(c, status, compliance, productCurator);
-        Product p = TestUtil.createProduct(PRODUCT_1.getId(), "Awesome Product");
-        cip.setVersion("candlepin version");
-        cip.setArch("candlepin arch");
-        calculator.enrich(cip, p);
-        assertEquals("candlepin version", cip.getVersion());
+        cip.setProductId(product.getId());
+        consumer.addInstalledProduct(cip);
+
+        this.mockOwnerProducts(owner, Arrays.asList(product));
+
+        product.setAttribute(Product.Attributes.ARCHITECTURE, "candlepin arch");
+        product.setAttribute(Product.Attributes.VERSION, "candlepin version");
+
+        this.consumerEnricher.enrich(consumer);
+
         assertEquals("candlepin arch", cip.getArch());
+        assertEquals("candlepin version", cip.getVersion());
     }
 
     @Test
     public void enricherDoesntSetArchVersion() {
-        //test that the enricher does not set the arch and version
-        //when they are supplied with values
-        Product baseProduct = TestUtil.createProduct(PRODUCT_1.getId(), "Awesome Product");
-        Consumer c = mockConsumer(baseProduct);
+        //test that the enricher does not set the arch and version when they are populated
+        // in the CIP
+        Owner owner = TestUtil.createOwner();
+        Product product = TestUtil.createProduct("p1", "product1");
+        Consumer consumer = this.mockConsumer(owner, product);
 
-        Calendar cal = Calendar.getInstance();
-        Date now = cal.getTime();
-        DateRange range2 = rangeRelativeToDate(now, -1, 4);
-        c.addEntitlement(mockEntitlement(c, baseProduct, range2, baseProduct));
-        List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        mockEntCurator(c, ents);
-        ComplianceStatus status = compliance.getStatus(c, now);
-        status.addNonCompliantProduct(baseProduct.getId());
-        ConsumerInstalledProduct cip = new ConsumerInstalledProduct(c, baseProduct);
-        cip.setArch("x86_64");
-        cip.setVersion("4.5");
-        c.addInstalledProduct(cip);
-        ConsumerInstalledProductEnricher calculator =
-            new ConsumerInstalledProductEnricher(c, status, compliance, productCurator);
-        Product p = TestUtil.createProduct(baseProduct.getId(), "Awesome Product");
-        p.setAttribute(Product.Attributes.VERSION, "candlepin version");
-        p.setAttribute(Product.Attributes.ARCHITECTURE, "candlepin arch");
-        calculator.enrich(cip, p);
-        assertEquals("4.5", cip.getVersion());
-        assertEquals("x86_64", cip.getArch());
+        DateRange range = this.rangeRelativeToDate(new Date(), -1, 4);
+        Entitlement entitlement = this.mockEntitlement(owner, consumer, product, range, product);
+        consumer.addEntitlement(entitlement);
+
+        this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
+
+        ConsumerInstalledProduct cip = new ConsumerInstalledProduct();
+        cip.setProductId(product.getId());
+        consumer.addInstalledProduct(cip);
+
+        this.mockOwnerProducts(owner, Arrays.asList(product));
+
+        // Set these to non-null values to show they aren't overwritten
+        cip.setArch("original arch");
+        cip.setVersion("original version");
+
+        product.setAttribute(Product.Attributes.ARCHITECTURE, "candlepin arch");
+        product.setAttribute(Product.Attributes.VERSION, "candlepin version");
+
+        this.consumerEnricher.enrich(consumer);
+
+        assertEquals("original arch", cip.getArch());
+        assertEquals("original version", cip.getVersion());
     }
 
     @Test
     public void validRangeIgnoresFutureWithOverlap() {
-        Consumer c = mockConsumer(PRODUCT_1);
+        Date now = new Date();
 
-        Calendar cal = Calendar.getInstance();
-        Date now = cal.getTime();
-        DateRange future = rangeRelativeToDate(now, 12, 24);
-        DateRange current = rangeRelativeToDate(now, 0, 13);
+        Owner owner = TestUtil.createOwner();
+        Product product = TestUtil.createProduct("p1", "product1");
+        Consumer consumer = this.mockConsumer(owner, product);
+        consumer.setCreated(now);
 
-        // Add current entitlement
-        c.addEntitlement(mockEntitlement(c, PRODUCT_1, current, PRODUCT_1));
-        // Add future entitlement
-        c.addEntitlement(mockEntitlement(c, PRODUCT_1, future, PRODUCT_1));
-        // Add future entitlement
-        c.addEntitlement(mockEntitlement(c, PRODUCT_1, future, PRODUCT_1));
+        DateRange range1 = this.rangeRelativeToDate(now, 12, 24);
+        DateRange range2 = this.rangeRelativeToDate(now, 0, 13);
+        consumer.addEntitlement(this.mockEntitlement(owner, consumer, product, range2, product));
+        consumer.addEntitlement(this.mockEntitlement(owner, consumer, product, range1, product));
+        consumer.addEntitlement(this.mockEntitlement(owner, consumer, product, range1, product));
 
-        List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        mockEntCurator(c, ents);
+        this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
+        this.mockOwnerProducts(owner, Arrays.asList(product));
 
-        ComplianceStatus status = compliance.getStatus(c, now);
-        ConsumerInstalledProductEnricher calculator =
-            new ConsumerInstalledProductEnricher(c, status, compliance, productCurator);
-        Product p = TestUtil.createProduct(PRODUCT_1.getId(), "Awesome Product");
-        DateRange validRange = calculator.getValidDateRange(p);
-        assertEquals(current.getStartDate(), validRange.getStartDate());
-        assertEquals(future.getEndDate(), validRange.getEndDate());
+        this.consumerEnricher.enrich(consumer);
+        ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
+        assertEquals(range2.getStartDate(), cip.getStartDate());
+        assertEquals(range1.getEndDate(), cip.getEndDate());
     }
 
     @Test
     public void validRangeIgnoresFutureBackToBack() {
-        Consumer c = mockConsumer(PRODUCT_1);
+        Date now = new Date();
 
-        Calendar cal = Calendar.getInstance();
-        Date now = cal.getTime();
-        DateRange future = rangeRelativeToDate(now, 12, 24);
-        DateRange current = rangeRelativeToDate(now, 0, 12);
+        Owner owner = TestUtil.createOwner();
+        Product product = TestUtil.createProduct("p1", "product1");
+        Consumer consumer = this.mockConsumer(owner, product);
+        consumer.setCreated(now);
 
-        // Add current entitlement
-        c.addEntitlement(mockEntitlement(c, PRODUCT_1, current, PRODUCT_1));
-        // Add future entitlement
-        c.addEntitlement(mockEntitlement(c, PRODUCT_1, future, PRODUCT_1));
-        // Add future entitlement
-        c.addEntitlement(mockEntitlement(c, PRODUCT_1, future, PRODUCT_1));
+        DateRange range1 = this.rangeRelativeToDate(now, 12, 24);
+        DateRange range2 = this.rangeRelativeToDate(now, 0, 12);
+        consumer.addEntitlement(this.mockEntitlement(owner, consumer, product, range2, product));
+        consumer.addEntitlement(this.mockEntitlement(owner, consumer, product, range1, product));
+        consumer.addEntitlement(this.mockEntitlement(owner, consumer, product, range1, product));
 
-        List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        mockEntCurator(c, ents);
+        this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
+        this.mockOwnerProducts(owner, Arrays.asList(product));
 
-        ComplianceStatus status = compliance.getStatus(c, now);
-        ConsumerInstalledProductEnricher calculator =
-            new ConsumerInstalledProductEnricher(c, status, compliance, productCurator);
-        Product p = TestUtil.createProduct(PRODUCT_1.getId(), "Awesome Product");
-        DateRange validRange = calculator.getValidDateRange(p);
-        assertEquals(current.getStartDate(), validRange.getStartDate());
-        assertEquals(future.getEndDate(), validRange.getEndDate());
+        this.consumerEnricher.enrich(consumer);
+        ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
+        assertEquals(range2.getStartDate(), cip.getStartDate());
+        assertEquals(range1.getEndDate(), cip.getEndDate());
     }
 
     @Test
     public void validRangeWithMultipleEntsWithOverlap() {
-        Consumer c = mockConsumer(PRODUCT_1);
+        Date now = new Date();
 
-        Calendar cal = Calendar.getInstance();
-        Date now = cal.getTime();
-        DateRange range1 = rangeRelativeToDate(now, -4, 4);
-        DateRange range2 = rangeRelativeToDate(now, 1, 8);
+        Owner owner = TestUtil.createOwner();
+        Product product = TestUtil.createProduct("p1", "product1");
+        Consumer consumer = this.mockConsumer(owner, product);
+        consumer.setCreated(now);
 
-        c.addEntitlement(mockEntitlement(c, PRODUCT_1, range2, PRODUCT_1));
-        c.addEntitlement(mockEntitlement(c, PRODUCT_1, range1, PRODUCT_1));
+        DateRange range1 = this.rangeRelativeToDate(now, -4, 4);
+        DateRange range2 = this.rangeRelativeToDate(now, 1, 8);
+        consumer.addEntitlement(this.mockEntitlement(owner, consumer, product, range2, product));
+        consumer.addEntitlement(this.mockEntitlement(owner, consumer, product, range1, product));
 
-        List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        mockEntCurator(c, ents);
+        this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
+        this.mockOwnerProducts(owner, Arrays.asList(product));
 
-        ComplianceStatus status = compliance.getStatus(c, now);
-        ConsumerInstalledProductEnricher calculator =
-            new ConsumerInstalledProductEnricher(c, status, compliance, productCurator);
-        Product p = TestUtil.createProduct(PRODUCT_1.getId(), "Awesome Product");
-        DateRange validRange = calculator.getValidDateRange(p);
-        assertEquals(range1.getStartDate(), validRange.getStartDate());
-        assertEquals(range2.getEndDate(), validRange.getEndDate());
+        this.consumerEnricher.enrich(consumer);
+        ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
+        assertEquals(range1.getStartDate(), cip.getStartDate());
+        assertEquals(range2.getEndDate(), cip.getEndDate());
     }
 
     @Test
     public void validRangeWithMultipleWhereOneConsumesTheOthersSpan() {
-        Consumer c = mockConsumer(PRODUCT_1);
+        Date now = new Date();
 
-        Calendar cal = Calendar.getInstance();
-        Date now = cal.getTime();
-        DateRange range1 = rangeRelativeToDate(now, -4, 4);
-        DateRange range2 = rangeRelativeToDate(now, 0, 2);
+        Owner owner = TestUtil.createOwner();
+        Product product = TestUtil.createProduct("p1", "product1");
+        Consumer consumer = this.mockConsumer(owner, product);
+        consumer.setCreated(now);
 
-        c.addEntitlement(mockEntitlement(c, PRODUCT_1, range2, PRODUCT_1));
-        c.addEntitlement(mockEntitlement(c, PRODUCT_1, range1, PRODUCT_1));
+        DateRange range1 = this.rangeRelativeToDate(now, -4, 4);
+        DateRange range2 = this.rangeRelativeToDate(now, 0, 2);
+        consumer.addEntitlement(this.mockEntitlement(owner, consumer, product, range2, product));
+        consumer.addEntitlement(this.mockEntitlement(owner, consumer, product, range1, product));
 
-        List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        mockEntCurator(c, ents);
+        this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
+        this.mockOwnerProducts(owner, Arrays.asList(product));
 
-        ComplianceStatus status = compliance.getStatus(c, now);
-        ConsumerInstalledProductEnricher calculator =
-            new ConsumerInstalledProductEnricher(c, status, compliance, productCurator);
-        Product p = TestUtil.createProduct(PRODUCT_1.getId(), "Awesome Product");
-        DateRange validRange = calculator.getValidDateRange(p);
-        assertEquals(range1.getStartDate(), validRange.getStartDate());
-        assertEquals(range1.getEndDate(), validRange.getEndDate());
+        this.consumerEnricher.enrich(consumer);
+        ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
+        assertEquals(range1.getStartDate(), cip.getStartDate());
+        assertEquals(range1.getEndDate(), cip.getEndDate());
     }
 
     @Test
     public void validRangeWithMultipleWhereFutureEntitlementOverlaps() {
-        Consumer c = mockConsumer(PRODUCT_1);
+        Date now = new Date();
 
-        Calendar cal = Calendar.getInstance();
-        Date now = cal.getTime();
-        DateRange range1 = rangeRelativeToDate(now, -4, 2);
-        DateRange range2 = rangeRelativeToDate(now, 2, 4);
+        Owner owner = TestUtil.createOwner();
+        Product product = TestUtil.createProduct("p1", "product1");
+        Consumer consumer = this.mockConsumer(owner, product);
+        consumer.setCreated(now);
 
-        c.addEntitlement(mockEntitlement(c, PRODUCT_1, range2, PRODUCT_1));
-        c.addEntitlement(mockEntitlement(c, PRODUCT_1, range1, PRODUCT_1));
+        DateRange range1 = this.rangeRelativeToDate(now, -4, 2);
+        DateRange range2 = this.rangeRelativeToDate(now, 2, 4);
+        consumer.addEntitlement(this.mockEntitlement(owner, consumer, product, range2, product));
+        consumer.addEntitlement(this.mockEntitlement(owner, consumer, product, range1, product));
 
-        List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        mockEntCurator(c, ents);
+        this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
+        this.mockOwnerProducts(owner, Arrays.asList(product));
 
-        ComplianceStatus status = compliance.getStatus(c, now);
-        ConsumerInstalledProductEnricher calculator =
-            new ConsumerInstalledProductEnricher(c, status, compliance, productCurator);
-        Product p = TestUtil.createProduct(PRODUCT_1.getId(), "Awesome Product");
-        DateRange validRange = calculator.getValidDateRange(p);
-        assertEquals(range1.getStartDate(), validRange.getStartDate());
-        assertEquals(range2.getEndDate(), validRange.getEndDate());
+        this.consumerEnricher.enrich(consumer);
+        ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
+        assertEquals(range1.getStartDate(), cip.getStartDate());
+        assertEquals(range2.getEndDate(), cip.getEndDate());
     }
 
     @Test
     public void validRangeWithMultipleWhereExpiredEntitlementOverlaps() {
-        Consumer c = mockConsumer(PRODUCT_1);
+        Date now = new Date();
 
-        Calendar cal = Calendar.getInstance();
-        Date now = cal.getTime();
-        DateRange range1 = rangeRelativeToDate(now, -4, 2);
-        DateRange range2 = rangeRelativeToDate(now, -7, -3);
+        Owner owner = TestUtil.createOwner();
+        Product product = TestUtil.createProduct("p1", "product1");
+        Consumer consumer = this.mockConsumer(owner, product);
+        consumer.setCreated(now);
 
-        c.addEntitlement(mockEntitlement(c, PRODUCT_1, range2, PRODUCT_1));
-        c.addEntitlement(mockEntitlement(c, PRODUCT_1, range1, PRODUCT_1));
+        DateRange range1 = this.rangeRelativeToDate(now, -4, 2);
+        DateRange range2 = this.rangeRelativeToDate(now, -7, -3);
+        consumer.addEntitlement(this.mockEntitlement(owner, consumer, product, range2, product));
+        consumer.addEntitlement(this.mockEntitlement(owner, consumer, product, range1, product));
 
-        List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        mockEntCurator(c, ents);
+        this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
+        this.mockOwnerProducts(owner, Arrays.asList(product));
 
-        ComplianceStatus status = compliance.getStatus(c, now);
-        ConsumerInstalledProductEnricher calculator =
-            new ConsumerInstalledProductEnricher(c, status, compliance, productCurator);
-        Product p = TestUtil.createProduct(PRODUCT_1.getId(), "Awesome Product");
-        DateRange validRange = calculator.getValidDateRange(p);
-        assertEquals(range2.getStartDate(), validRange.getStartDate());
-        assertEquals(range1.getEndDate(), validRange.getEndDate());
+        this.consumerEnricher.enrich(consumer);
+        ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
+        assertEquals(range2.getStartDate(), cip.getStartDate());
+        assertEquals(range1.getEndDate(), cip.getEndDate());
     }
 
     @Test
     public void validRangeIsNullWhenOnlyFutureEntitlementExists() {
-        Consumer c = mockConsumer(PRODUCT_1);
+        Date now = new Date();
 
-        Calendar cal = Calendar.getInstance();
-        Date now = cal.getTime();
-        DateRange range1 = rangeRelativeToDate(now, 4, 2);
+        Owner owner = TestUtil.createOwner();
+        Product product = TestUtil.createProduct("p1", "product1");
+        Consumer consumer = this.mockConsumer(owner, product);
+        consumer.setCreated(now);
 
-        c.addEntitlement(mockEntitlement(c, PRODUCT_1, range1, PRODUCT_1));
+        DateRange range1 = this.rangeRelativeToDate(now, 4, 2);
+        consumer.addEntitlement(this.mockEntitlement(owner, consumer, product, range1, product));
 
-        List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        mockEntCurator(c, ents);
+        this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
+        this.mockOwnerProducts(owner, Arrays.asList(product));
 
-        ComplianceStatus status = compliance.getStatus(c, now);
-        ConsumerInstalledProductEnricher calculator =
-            new ConsumerInstalledProductEnricher(c, status, compliance, productCurator);
-        Product p = TestUtil.createProduct(PRODUCT_1.getId(), "Awesome Product");
-        DateRange validRange = calculator.getValidDateRange(p);
-        assertNull(validRange);
+        this.consumerEnricher.enrich(consumer);
+        ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
+        assertEquals(null, cip.getStartDate());
+        assertEquals(null, cip.getEndDate());
     }
 
     @Test
     public void validRangeIsNullWhenOnlyExpiredEntitlementExists() {
-        Consumer c = mockConsumer(PRODUCT_1);
+        Date now = new Date();
 
-        Calendar cal = Calendar.getInstance();
-        Date now = cal.getTime();
-        DateRange range1 = rangeRelativeToDate(now, -4, -2);
+        Owner owner = TestUtil.createOwner();
+        Product product = TestUtil.createProduct("p1", "product1");
+        Consumer consumer = this.mockConsumer(owner, product);
+        consumer.setCreated(now);
 
-        c.addEntitlement(mockEntitlement(c, PRODUCT_1, range1, PRODUCT_1));
+        DateRange range1 = this.rangeRelativeToDate(now, -4, -2);
+        consumer.addEntitlement(this.mockEntitlement(owner, consumer, product, range1, product));
 
-        List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        mockEntCurator(c, ents);
+        this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
+        this.mockOwnerProducts(owner, Arrays.asList(product));
 
-        ComplianceStatus status = compliance.getStatus(c, now);
-        ConsumerInstalledProductEnricher calculator =
-            new ConsumerInstalledProductEnricher(c, status, compliance, productCurator);
-        Product p = TestUtil.createProduct(PRODUCT_1.getId(), "Awesome Product");
-        DateRange validRange = calculator.getValidDateRange(p);
-        assertNull(validRange);
+        this.consumerEnricher.enrich(consumer);
+        ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
+        assertEquals(null, cip.getStartDate());
+        assertEquals(null, cip.getEndDate());
     }
 
     // Stacking becomes involved here.
     @Test
     public void validRangeNotNullWhenOnlyPartialEntitlement() {
-        Consumer c = mockConsumer(PRODUCT_1);
+        Date now = new Date();
 
-        Calendar cal = Calendar.getInstance();
-        Date now = cal.getTime();
-        DateRange range = rangeRelativeToDate(now, -4, 4);
+        Owner owner = TestUtil.createOwner();
+        Product product = TestUtil.createProduct("p1", "product1");
+        Consumer consumer = this.mockConsumer(owner, product);
+        consumer.setCreated(now);
 
-        c.addEntitlement(mockStackedEntitlement(c, range, STACK_ID_1, PRODUCT_1, 1,
-            PRODUCT_1));
+        DateRange range1 = this.rangeRelativeToDate(now, -4, 4);
+        consumer.addEntitlement(
+            this.mockStackedEntitlement(owner, consumer, "stack_id_1", product, 1, range1, product));
 
-        List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        mockEntCurator(c, ents);
+        this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
+        this.mockOwnerProducts(owner, Arrays.asList(product));
 
-        ComplianceStatus status = compliance.getStatus(c, now);
-        ConsumerInstalledProductEnricher calculator =
-            new ConsumerInstalledProductEnricher(c, status, compliance, productCurator);
-        Product p = TestUtil.createProduct(PRODUCT_1.getId(), "Awesome Product");
-        DateRange validRange = calculator.getValidDateRange(p);
-        assertNotNull(validRange);
-        assertEquals(range.getStartDate(), validRange.getStartDate());
-        assertEquals(range.getEndDate(), validRange.getEndDate());
+        this.consumerEnricher.enrich(consumer);
+        ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
+        assertEquals(range1.getStartDate(), cip.getStartDate());
+        assertEquals(range1.getEndDate(), cip.getEndDate());
     }
 
     @Test
     public void validRangeCorrectPartialEntitlementNoGap() {
-        Consumer c = mockConsumer(PRODUCT_1);
+        Date now = new Date();
 
-        Calendar cal = Calendar.getInstance();
-        Date now = cal.getTime();
-        DateRange range1 = rangeRelativeToDate(now, -4, 4);
-        DateRange range2 = rangeRelativeToDate(now, 4, 9);
+        Owner owner = TestUtil.createOwner();
+        Product product = TestUtil.createProduct("p1", "product1");
+        Consumer consumer = this.mockConsumer(owner, product);
+        consumer.setCreated(now);
 
-        c.addEntitlement(mockStackedEntitlement(c, range1, STACK_ID_1, PRODUCT_1, 1,
-            PRODUCT_1));
-        c.addEntitlement(mockStackedEntitlement(c, range2, STACK_ID_1, PRODUCT_1, 1,
-            PRODUCT_1));
+        DateRange range1 = this.rangeRelativeToDate(now, -4, 4);
+        DateRange range2 = this.rangeRelativeToDate(now, 4, 9);
+        consumer.addEntitlement(
+            this.mockStackedEntitlement(owner, consumer, "stack_id_1", product, 1, range1, product));
+        consumer.addEntitlement(
+            this.mockStackedEntitlement(owner, consumer, "stack_id_1", product, 1, range2, product));
 
-        List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        mockEntCurator(c, ents);
+        this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
+        this.mockOwnerProducts(owner, Arrays.asList(product));
 
-        ComplianceStatus status = compliance.getStatus(c, now);
-        ConsumerInstalledProductEnricher calculator =
-            new ConsumerInstalledProductEnricher(c, status, compliance, productCurator);
-        Product p = TestUtil.createProduct(PRODUCT_1.getId(), "Awesome Product");
-        DateRange validRange = calculator.getValidDateRange(p);
-        assertNotNull(validRange);
-        assertEquals(range1.getStartDate(), validRange.getStartDate());
-        assertEquals(range2.getEndDate(), validRange.getEndDate());
+        this.consumerEnricher.enrich(consumer);
+
+        ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
+        assertEquals(range1.getStartDate(), cip.getStartDate());
+        assertEquals(range2.getEndDate(), cip.getEndDate());
     }
 
     @Test
     public void validRangeCorrectPartialEntitlementGap() {
-        Consumer c = mockConsumer(PRODUCT_1);
+        Date now = new Date();
 
-        Calendar cal = Calendar.getInstance();
-        Date now = cal.getTime();
-        DateRange range1 = rangeRelativeToDate(now, -4, 4);
-        DateRange range2 = rangeRelativeToDate(now, 5, 9);
+        Owner owner = TestUtil.createOwner();
+        Product product = TestUtil.createProduct("p1", "product1");
+        Consumer consumer = this.mockConsumer(owner, product);
+        consumer.setCreated(now);
 
-        c.addEntitlement(mockStackedEntitlement(c, range1, STACK_ID_1, PRODUCT_1, 1,
-            PRODUCT_1));
-        c.addEntitlement(mockStackedEntitlement(c, range2, STACK_ID_1, PRODUCT_1, 1,
-            PRODUCT_1));
+        DateRange range1 = this.rangeRelativeToDate(now, -4, 4);
+        DateRange range2 = this.rangeRelativeToDate(now, 5, 9);
+        consumer.addEntitlement(
+            this.mockStackedEntitlement(owner, consumer, "stack_id_1", product, 1, range1, product));
+        consumer.addEntitlement(
+            this.mockStackedEntitlement(owner, consumer, "stack_id_1", product, 1, range2, product));
 
-        List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        mockEntCurator(c, ents);
+        this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
+        this.mockOwnerProducts(owner, Arrays.asList(product));
 
-        ComplianceStatus status = compliance.getStatus(c, now);
-        ConsumerInstalledProductEnricher calculator =
-            new ConsumerInstalledProductEnricher(c, status, compliance, productCurator);
-        Product p = TestUtil.createProduct(PRODUCT_1.getId(), "Awesome Product");
-        DateRange validRange = calculator.getValidDateRange(p);
-        assertNotNull(validRange);
-        assertEquals(range1.getStartDate(), validRange.getStartDate());
-        assertEquals(range1.getEndDate(), validRange.getEndDate());
+        this.consumerEnricher.enrich(consumer);
+        ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
+        assertEquals(range1.getStartDate(), cip.getStartDate());
+        assertEquals(range1.getEndDate(), cip.getEndDate());
     }
 
     @Test
     public void multiEntGreenNowYellowFutureWithOverlap() {
-        Consumer c = mockConsumer(PRODUCT_1);
+        Date now = new Date();
 
-        Calendar cal = Calendar.getInstance();
-        Date now = cal.getTime();
+        Owner owner = TestUtil.createOwner();
+        Product product = TestUtil.createProduct("p1", "product1");
+        Consumer consumer = this.mockConsumer(owner, product);
+        consumer.setCreated(now);
 
-        DateRange range1 = rangeRelativeToDate(now, -4, 12);
-        DateRange range2 = rangeRelativeToDate(now, 11, 24);
+        DateRange range1 = this.rangeRelativeToDate(now, -4, 12);
+        DateRange range2 = this.rangeRelativeToDate(now, 11, 24);
+        consumer.addEntitlement(
+            this.mockStackedEntitlement(owner, consumer, "stack_id_1", product, 1, range1, product));
+        consumer.addEntitlement(
+            this.mockStackedEntitlement(owner, consumer, "stack_id_1", product, 1, range1, product));
+        consumer.addEntitlement(
+            this.mockStackedEntitlement(owner, consumer, "stack_id_1", product, 1, range2, product));
 
-        // Two entitlements make us green right now, both have same start/end date:
-        c.addEntitlement(mockStackedEntitlement(c, range1, STACK_ID_1, PRODUCT_1, 1,
-            PRODUCT_1));
-        c.addEntitlement(mockStackedEntitlement(c, range1, STACK_ID_1, PRODUCT_1, 1,
-            PRODUCT_1));
-        c.addEntitlement(mockStackedEntitlement(c, range2, STACK_ID_1, PRODUCT_1, 1,
-            PRODUCT_1));
+        this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
+        this.mockOwnerProducts(owner, Arrays.asList(product));
 
-        List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        mockEntCurator(c, ents);
-
-        ComplianceStatus status = compliance.getStatus(c, now);
-        ConsumerInstalledProductEnricher calculator =
-            new ConsumerInstalledProductEnricher(c, status, compliance, productCurator);
-        Product p = TestUtil.createProduct(PRODUCT_1.getId(), "Awesome Product");
-        DateRange validRange = calculator.getValidDateRange(p);
-        assertEquals(range1.getStartDate(), validRange.getStartDate());
-        assertEquals(range1.getEndDate(), validRange.getEndDate());
+        this.consumerEnricher.enrich(consumer);
+        ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
+        assertEquals(range1.getStartDate(), cip.getStartDate());
+        assertEquals(range1.getEndDate(), cip.getEndDate());
     }
 
     @Test
     public void multiEntGreenNowInnerDatesYellowFutureWithOverlap() {
-        Consumer c = mockConsumer(PRODUCT_1);
+        Date now = new Date();
 
-        Calendar cal = Calendar.getInstance();
-        Date now = cal.getTime();
+        Owner owner = TestUtil.createOwner();
+        Product product = TestUtil.createProduct("p1", "product1");
+        Consumer consumer = this.mockConsumer(owner, product);
+        consumer.setCreated(now);
 
-        DateRange range1 = rangeRelativeToDate(now, -4, 12);
-        DateRange range2 = rangeRelativeToDate(now, -3, 10);
-        DateRange range3 = rangeRelativeToDate(now, 11, 24);
+        DateRange range1 = this.rangeRelativeToDate(now, -4, 12);
+        DateRange range2 = this.rangeRelativeToDate(now, -3, 10);
+        DateRange range3 = this.rangeRelativeToDate(now, 11, 24);
+        consumer.addEntitlement(
+            this.mockStackedEntitlement(owner, consumer, "stack_id_1", product, 1, range1, product));
+        consumer.addEntitlement(
+            this.mockStackedEntitlement(owner, consumer, "stack_id_1", product, 1, range2, product));
+        consumer.addEntitlement(
+            this.mockStackedEntitlement(owner, consumer, "stack_id_1", product, 1, range3, product));
 
-        // Two entitlements make us green right now, one has a later start date,
-        // but an earlier end date:
-        c.addEntitlement(mockStackedEntitlement(c, range3, STACK_ID_1, PRODUCT_1, 1,
-            PRODUCT_1));
-        c.addEntitlement(mockStackedEntitlement(c, range1, STACK_ID_1, PRODUCT_1, 1,
-            PRODUCT_1));
-        c.addEntitlement(mockStackedEntitlement(c, range2, STACK_ID_1, PRODUCT_1, 1,
-            PRODUCT_1));
+        this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
+        this.mockOwnerProducts(owner, Arrays.asList(product));
 
-        List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        mockEntCurator(c, ents);
-
-        ComplianceStatus status = compliance.getStatus(c, now);
-        ConsumerInstalledProductEnricher calculator =
-            new ConsumerInstalledProductEnricher(c, status, compliance, productCurator);
-        Product p = TestUtil.createProduct(PRODUCT_1.getId(), "Awesome Product");
-        DateRange validRange = calculator.getValidDateRange(p);
-        assertEquals(range2.getStartDate(), validRange.getStartDate());
-        assertEquals(range2.getEndDate(), validRange.getEndDate());
+        this.consumerEnricher.enrich(consumer);
+        ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
+        assertEquals(range2.getStartDate(), cip.getStartDate());
+        assertEquals(range2.getEndDate(), cip.getEndDate());
     }
 
-    //Test valid range with a full stack where one stacked entitlement provides the product
+    // Test valid range with a full stack where one stacked entitlement provides the product
     @Test
     public void validRangeWhenStackedButOneProvides() {
-        Consumer c = mockConsumer(PRODUCT_1);
+        Date now = new Date();
 
-        Calendar cal = Calendar.getInstance();
-        Date now = cal.getTime();
-        DateRange range = rangeRelativeToDate(now, -4, 4);
+        Owner owner = TestUtil.createOwner();
+        Product product = TestUtil.createProduct("p1", "product1");
+        Product product2 = TestUtil.createProduct("p2", "product2");
+        Consumer consumer = this.mockConsumer(owner, product);
+        consumer.setCreated(now);
 
-        c.addEntitlement(mockStackedEntitlement(c, range, STACK_ID_1, PRODUCT_1, 1, PRODUCT_1));
-        c.addEntitlement(mockStackedEntitlement(c, range, STACK_ID_1,
-            TestUtil.createProduct("other"), 1, PRODUCT_1));
+        DateRange range1 = this.rangeRelativeToDate(now, -4, 4);
 
-        List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        mockEntCurator(c, ents);
+        consumer.addEntitlement(
+            this.mockStackedEntitlement(owner, consumer, "stack_id_1", product, 1, range1, product));
+        consumer.addEntitlement(
+            this.mockStackedEntitlement(owner, consumer, "stack_id_1", product2, 1, range1, product));
 
-        ComplianceStatus status = compliance.getStatus(c, now);
-        ConsumerInstalledProductEnricher calculator =
-            new ConsumerInstalledProductEnricher(c, status, compliance, productCurator);
-        Product p = TestUtil.createProduct(PRODUCT_1.getId(), "Awesome Product");
-        DateRange validRange = calculator.getValidDateRange(p);
-        assertNotNull(validRange);
+        this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
+        this.mockOwnerProducts(owner, Arrays.asList(product));
+
+        this.consumerEnricher.enrich(consumer);
+        ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
+        assertEquals(range1.getStartDate(), cip.getStartDate());
+        assertEquals(range1.getEndDate(), cip.getEndDate());
     }
 
     @Test
     public void validRangeEndDateSetToFirstDateOfLosingValidStatus() {
-        Consumer c = mockConsumer(PRODUCT_1);
+        Date now = new Date();
 
-        Calendar cal = Calendar.getInstance();
-        Date now = cal.getTime();
-        DateRange range1 = rangeRelativeToDate(now, -4, 4);
-        DateRange range2 = rangeRelativeToDate(now, -2, 10);
-        DateRange range3 = rangeRelativeToDate(now, -3, -1);
-        DateRange range4 = rangeRelativeToDate(range1.getEndDate(), 0, 10);
+        Owner owner = TestUtil.createOwner();
+        Product product = TestUtil.createProduct("p1", "product1");
+        Consumer consumer = this.mockConsumer(owner, product);
+        consumer.setCreated(now);
 
-        c.addEntitlement(mockStackedEntitlement(c, range4, STACK_ID_1, PRODUCT_1, 1,
-            PRODUCT_1));
-        c.addEntitlement(mockStackedEntitlement(c, range1, STACK_ID_1, PRODUCT_1, 1,
-            PRODUCT_1));
-        c.addEntitlement(mockStackedEntitlement(c, range2, STACK_ID_1, PRODUCT_1, 1,
-            PRODUCT_1));
-        c.addEntitlement(mockStackedEntitlement(c, range3, STACK_ID_1, PRODUCT_1, 1,
-            PRODUCT_1));
+        DateRange range1 = this.rangeRelativeToDate(now, -4, 4);
+        DateRange range2 = this.rangeRelativeToDate(now, -2, 10);
+        DateRange range3 = this.rangeRelativeToDate(now, -3, -1);
+        DateRange range4 = this.rangeRelativeToDate(range1.getEndDate(), 0, 10);
 
-        List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        mockEntCurator(c, ents);
+        consumer.addEntitlement(
+            this.mockStackedEntitlement(owner, consumer, "stack_id_1", product, 1, range1, product));
+        consumer.addEntitlement(
+            this.mockStackedEntitlement(owner, consumer, "stack_id_1", product, 1, range2, product));
+        consumer.addEntitlement(
+            this.mockStackedEntitlement(owner, consumer, "stack_id_1", product, 1, range3, product));
+        consumer.addEntitlement(
+            this.mockStackedEntitlement(owner, consumer, "stack_id_1", product, 1, range4, product));
 
-        ComplianceStatus status = compliance.getStatus(c, now);
-        ConsumerInstalledProductEnricher calculator =
-            new ConsumerInstalledProductEnricher(c, status, compliance, productCurator);
-        Product p = TestUtil.createProduct(PRODUCT_1.getId(), "Awesome Product");
-        DateRange validRange = calculator.getValidDateRange(p);
-        assertEquals(range3.getStartDate(), validRange.getStartDate());
-        assertEquals(range2.getEndDate(), validRange.getEndDate());
+        this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
+        this.mockOwnerProducts(owner, Arrays.asList(product));
+
+        this.consumerEnricher.enrich(consumer);
+        ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
+        assertEquals(range3.getStartDate(), cip.getStartDate());
+        assertEquals(range2.getEndDate(), cip.getEndDate());
     }
 
     @Test
     public void cannotStackFutureSubs() {
-        Consumer c = mockConsumer(PRODUCT_1);
-        Calendar cal = Calendar.getInstance();
-        Date now = cal.getTime();
-        DateRange range1 = rangeRelativeToDate(now, -4, 4);
-        DateRange range2 = rangeRelativeToDate(range1.getEndDate(), 5, 6);
-        c.addEntitlement(mockStackedEntitlement(c, range1, STACK_ID_1, PRODUCT_1, 1, PRODUCT_1));
-        c.addEntitlement(mockStackedEntitlement(c, range2, STACK_ID_1, PRODUCT_1, 1, PRODUCT_1));
-        List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        mockEntCurator(c, ents);
-        ComplianceStatus status = compliance.getStatus(c, now);
+        Date now = new Date();
+
+        Owner owner = TestUtil.createOwner();
+        Product product = TestUtil.createProduct("p1", "product1");
+        Consumer consumer = this.mockConsumer(owner, product);
+        consumer.setCreated(now);
+
+        DateRange range1 = this.rangeRelativeToDate(now, -4, 12);
+        DateRange range2 = this.rangeRelativeToDate(range1.getEndDate(), 5, 6);
+
+        consumer.addEntitlement(
+            this.mockStackedEntitlement(owner, consumer, "stack_id_1", product, 1, range1, product));
+        consumer.addEntitlement(
+            this.mockStackedEntitlement(owner, consumer, "stack_id_1", product, 1, range2, product));
+
+        this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
+        this.mockOwnerProducts(owner, Arrays.asList(product));
+
+        ComplianceStatus status = complianceRules.getStatus(consumer, now);
         assertEquals("partial", status.getStatus());
-        assertTrue(status.getPartialStacks().containsKey(STACK_ID_1));
+        assertTrue(status.getPartialStacks().containsKey("stack_id_1"));
     }
 
     @Test
     public void validRangeConsidersInvalidGapBetweenNonStackedAndPartialEntitlement() {
-        Consumer c = mockConsumer(PRODUCT_1);
+        Date now = new Date();
 
-        Calendar cal = Calendar.getInstance();
-        Date now = cal.getTime();
-        DateRange range1 = rangeRelativeToDate(now, -4, -2);
-        DateRange range2 = rangeRelativeToDate(now, -3, 2);
-        DateRange range3 = rangeRelativeToDate(now, -1, 4);
+        Owner owner = TestUtil.createOwner();
+        Product product = TestUtil.createProduct("p1", "product1");
+        Consumer consumer = this.mockConsumer(owner, product);
+        consumer.setCreated(now);
 
-        c.addEntitlement(mockEntitlement(c, PRODUCT_1, range1, PRODUCT_1));
-        c.addEntitlement(mockStackedEntitlement(c, range3, STACK_ID_1, PRODUCT_1, 1, PRODUCT_1));
-        c.addEntitlement(mockStackedEntitlement(c, range2, STACK_ID_1, PRODUCT_1, 1, PRODUCT_1));
+        DateRange range1 = this.rangeRelativeToDate(now, -4, -2);
+        DateRange range2 = this.rangeRelativeToDate(now, -3, 2);
+        DateRange range3 = this.rangeRelativeToDate(now, -1, 4);
 
-        List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        mockEntCurator(c, ents);
+        consumer.addEntitlement(this.mockEntitlement(owner, consumer, product, range1, product));
+        consumer.addEntitlement(
+            this.mockStackedEntitlement(owner, consumer, "stack_id_1", product, 1, range2, product));
+        consumer.addEntitlement(
+            this.mockStackedEntitlement(owner, consumer, "stack_id_1", product, 1, range3, product));
 
-        ComplianceStatus status = compliance.getStatus(c, now);
-        ConsumerInstalledProductEnricher calculator =
-            new ConsumerInstalledProductEnricher(c, status, compliance, productCurator);
-        Product p = TestUtil.createProduct(PRODUCT_1.getId(), "Awesome Product");
+        this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
+        this.mockOwnerProducts(owner, Arrays.asList(product));
 
-        DateRange validRange = calculator.getValidDateRange(p);
-        assertEquals(range3.getStartDate(), validRange.getStartDate());
-        assertEquals(range2.getEndDate(), validRange.getEndDate());
+        this.consumerEnricher.enrich(consumer);
+        ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
+        assertEquals(range3.getStartDate(), cip.getStartDate());
+        assertEquals(range2.getEndDate(), cip.getEndDate());
     }
 
     @Test
     public void validRangeConsidersInvalidGapBetweenNonStackedEntitlement() {
-        Consumer c = mockConsumer(PRODUCT_1);
+        Date now = new Date();
 
-        Calendar cal = Calendar.getInstance();
-        Date now = cal.getTime();
-        DateRange range1 = rangeRelativeToDate(now, -4, -2);
-        DateRange range2 = rangeRelativeToDate(now, -3, 2);
-        DateRange range3 = rangeRelativeToDate(now, -1, 4);
+        Owner owner = TestUtil.createOwner();
+        Product product = TestUtil.createProduct("p1", "product1");
+        Product stacked = TestUtil.createProduct("p1_stack", "product1-stacked");
+        Consumer consumer = this.mockConsumer(owner, product);
+        consumer.setCreated(now);
 
-        c.addEntitlement(mockEntitlement(c, PRODUCT_1, range1, PRODUCT_1));
-        Product stackedProduct = TestUtil.createProduct("p1stacked", "product1stacked");
-        c.addEntitlement(mockStackedEntitlement(c, range2, STACK_ID_1, stackedProduct, 1,
-            PRODUCT_1));
-        c.addEntitlement(mockEntitlement(c, PRODUCT_1, range3, PRODUCT_1));
+        DateRange range1 = this.rangeRelativeToDate(now, -4, -2);
+        DateRange range2 = this.rangeRelativeToDate(now, -3, 2);
+        DateRange range3 = this.rangeRelativeToDate(now, -1, 4);
 
-        List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        mockEntCurator(c, ents);
+        consumer.addEntitlement(this.mockEntitlement(owner, consumer, product, range1, product));
+        consumer.addEntitlement(
+            this.mockStackedEntitlement(owner, consumer, "stack_id_1", stacked, 1, range2, product));
+        consumer.addEntitlement(this.mockEntitlement(owner, consumer, product, range3, product));
 
-        ComplianceStatus status = compliance.getStatus(c, now);
-        ConsumerInstalledProductEnricher calculator =
-            new ConsumerInstalledProductEnricher(c, status, compliance, productCurator);
-//        Product p = TestUtil.createProduct(PRODUCT_1.getProductId(), "Awesome Product");
-        DateRange validRange = calculator.getValidDateRange(PRODUCT_1);
-        assertEquals(range3.getStartDate(), validRange.getStartDate());
-        assertEquals(range3.getEndDate(), validRange.getEndDate());
+        this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
+        this.mockOwnerProducts(owner, Arrays.asList(product));
+
+        this.consumerEnricher.enrich(consumer);
+        ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
+        assertEquals(range3.getStartDate(), cip.getStartDate());
+        assertEquals(range3.getEndDate(), cip.getEndDate());
     }
 
     @Test
     public void validRangeConsidersNonStackingEntNotCoveringMachineSocketsInvalid() {
-        Consumer c = mockConsumer(PRODUCT_1);
+        Date now = new Date();
 
-        Calendar cal = Calendar.getInstance();
-        Date now = cal.getTime();
-        DateRange range1 = rangeRelativeToDate(now, -4, 4);
-        DateRange range2 = rangeRelativeToDate(now, -2, 6);
+        Owner owner = TestUtil.createOwner();
+        Product product = TestUtil.createProduct("p1", "product1");
+        Product sockets = TestUtil.createProduct("socketed", "socketed_product");
+        sockets.setAttribute(Product.Attributes.SOCKETS, "2");
+        Consumer consumer = this.mockConsumer(owner, product);
+        consumer.setCreated(now);
 
-        Product socketsProd = TestUtil.createProduct("socketsprod", "s");
-        socketsProd.setAttribute(Product.Attributes.SOCKETS, "2");
-        Entitlement ent = mockEntitlement(c, socketsProd, range1, PRODUCT_1);
-        c.addEntitlement(ent);
+        DateRange range1 = this.rangeRelativeToDate(now, -4, 4);
+        DateRange range2 = this.rangeRelativeToDate(now, -2, 6);
 
-        c.addEntitlement(mockEntitlement(c, PRODUCT_1, range2, PRODUCT_1));
+        consumer.addEntitlement(this.mockEntitlement(owner, consumer, sockets, range1, product));
+        consumer.addEntitlement(this.mockEntitlement(owner, consumer, product, range2, product));
 
-        List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        mockEntCurator(c, ents);
+        this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
+        this.mockOwnerProducts(owner, Arrays.asList(product));
 
-        ComplianceStatus status = compliance.getStatus(c, now);
-        ConsumerInstalledProductEnricher calculator =
-            new ConsumerInstalledProductEnricher(c, status, compliance, productCurator);
-        Product p = TestUtil.createProduct(PRODUCT_1.getId(), "Awesome Product");
-        DateRange validRange = calculator.getValidDateRange(p);
-        assertEquals(range2.getStartDate(), validRange.getStartDate());
-        assertEquals(range2.getEndDate(), validRange.getEndDate());
+        this.consumerEnricher.enrich(consumer);
+        ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
+        assertEquals(range2.getStartDate(), cip.getStartDate());
+        assertEquals(range2.getEndDate(), cip.getEndDate());
     }
 
     @Test
     public void validRangeWhenGuestLimitOverridden() {
-        Consumer c = mockConsumer(PRODUCT_1);
+        Date now = new Date();
+
+        Owner owner = TestUtil.createOwner();
+        Product product = TestUtil.createProduct("p1", "product1");
+        product.setAttribute(Product.Attributes.GUEST_LIMIT, "2");
+
+        Product product2 = TestUtil.createProduct("p2", "product2");
+        product2.setAttribute(Product.Attributes.GUEST_LIMIT, "-1");
+
+        Product product3 = TestUtil.createProduct("p3", "product3");
+
+        Consumer consumer = this.mockConsumer(owner, product);
         for (int i = 0; i < 5; i++) {
-            c.addGuestId(new GuestId("" + i, c, getActiveGuestAttrs()));
+            consumer.addGuestId(new GuestId(String.valueOf(i), consumer, this.getActiveGuestAttrs()));
         }
 
-        Calendar cal = Calendar.getInstance();
-        Date now = cal.getTime();
-        DateRange range = rangeRelativeToDate(now, -4, 4);
+        DateRange range1 = this.rangeRelativeToDate(now, -4, 4);
+        DateRange range2 = this.rangeRelativeToDate(now, -2, 2);
 
-        DateRange hypervisorRange = rangeRelativeToDate(now, -2, 2);
+        consumer.addEntitlement(
+            this.mockStackedEntitlement(owner, consumer, "stack_id_1", product, 10, range1, product));
+        consumer.addEntitlement(
+            this.mockStackedEntitlement(owner, consumer, "stack_id_2", product2, 10, range2, product3));
 
-        Entitlement ent = mockStackedEntitlement(c, range, STACK_ID_1, PRODUCT_1, 10, PRODUCT_1);
-        ent.getPool().getProduct().setAttribute(Product.Attributes.GUEST_LIMIT, "2");
-        c.addEntitlement(ent);
-        Entitlement hpvsrEnt = mockStackedEntitlement(c, hypervisorRange,
-            "other_stack_id", TestUtil.createProduct("other"), 10, TestUtil.createProduct("prod2"));
-        hpvsrEnt.getPool().getProduct().setAttribute(Product.Attributes.GUEST_LIMIT, "-1");
-        c.addEntitlement(hpvsrEnt);
+        this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
+        this.mockOwnerProducts(owner, Arrays.asList(product, product2, product3));
 
-        List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        mockEntCurator(c, ents);
+        this.consumerEnricher.enrich(consumer);
 
-        ComplianceStatus status = compliance.getStatus(c, now);
-        assertEquals("valid", status.getStatus());
-        ConsumerInstalledProductEnricher calculator =
-            new ConsumerInstalledProductEnricher(c, status, compliance, productCurator);
-        Product p1 = TestUtil.createProduct(PRODUCT_1.getId(), "Awesome Product");
-        DateRange validRange = calculator.getValidDateRange(p1);
-        assertNotNull(validRange);
-
-        assertEquals(hypervisorRange.getStartDate(), validRange.getStartDate());
-        assertEquals(hypervisorRange.getEndDate(), validRange.getEndDate());
+        ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
+        assertEquals(range2.getStartDate(), cip.getStartDate());
+        assertEquals(range2.getEndDate(), cip.getEndDate());
     }
 
     private static int lastPoolId = 1;
-    private Entitlement mockEntitlement(Consumer consumer, Product product, DateRange range,
+    private Entitlement mockEntitlement(Owner owner, Consumer consumer, Product product, DateRange range,
         Product... providedProducts) {
 
         Set<Product> provided = new HashSet<Product>();
         for (Product pp : providedProducts) {
             provided.add(pp);
         }
+
         final Pool p = new Pool(
             owner,
             product,
@@ -808,6 +808,7 @@ public class InstalledProductStatusCalculatorTest {
             "1000",
             "1000"
         );
+
         p.setId("" + lastPoolId++);
         Entitlement e = new Entitlement(p, consumer, 1);
 
@@ -824,45 +825,51 @@ public class InstalledProductStatusCalculatorTest {
         return e;
     }
 
-    private Entitlement mockUnmappedGuestEntitlement(Consumer consumer, Product product,
+    private Entitlement mockUnmappedGuestEntitlement(Owner owner, Consumer consumer, Product product,
         DateRange range, Product ... providedProducts) {
 
         consumer.setFact("virt.is_guest", "True");
-        Entitlement e = mockEntitlement(consumer, product, range, providedProducts);
+        Entitlement e = mockEntitlement(owner, consumer, product, range, providedProducts);
         Pool p = e.getPool();
         Date endDateOverride = new Date(consumer.getCreated().getTime() + (24 * 60 * 60 * 1000));
         e.setEndDateOverride(endDateOverride);
 
         // Setup the attributes for stacking:
-        p.setAttribute(Product.Attributes.VIRT_ONLY, "true");
-        p.setAttribute(Pool.Attributes.UNMAPPED_GUESTS_ONLY, "true");
-        product.setAttribute(Product.Attributes.VIRT_LIMIT, "unlimited");
+        p.setAttribute("virt_only", "true");
+        p.setAttribute("unmapped_guests_only", "true");
+        product.setAttribute("virt_limit", "unlimited");
 
         return e;
     }
 
-    private Consumer mockConsumer(Product... installedProducts) {
-        Consumer c = new Consumer();
-        c.setType(new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM));
+    private Consumer mockConsumer(Owner owner, Product... installedProducts) {
+        Consumer consumer = new Consumer();
+
+        consumer.setType(new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM));
+        consumer.setOwner(owner);
+
         for (Product product : installedProducts) {
-            c.addInstalledProduct(new ConsumerInstalledProduct(c, product));
+            consumer.addInstalledProduct(new ConsumerInstalledProduct(consumer, product));
         }
-        c.setFact("cpu.cpu_socket(s)", "4");
-        return c;
+
+        consumer.setFact("cpu.cpu_socket(s)", "4");
+
+        return consumer;
     }
 
-    private Entitlement mockStackedEntitlement(Consumer consumer, DateRange range, String stackId,
-        Product product, int quantity, Product ... providedProducts) {
+    private Entitlement mockStackedEntitlement(Owner owner, Consumer consumer, String stackId,
+        Product product, int quantity, DateRange range, Product ... providedProducts) {
 
-        Entitlement e = mockEntitlement(consumer, product, range, providedProducts);
-        e.setQuantity(quantity);
-        Pool p = e.getPool();
+        Entitlement entitlement = this.mockEntitlement(owner, consumer, product, range, providedProducts);
+        entitlement.setQuantity(quantity);
+
+        Pool pool = entitlement.getPool();
 
         // Setup the attributes for stacking:
-        p.getProduct().setAttribute(Product.Attributes.STACKING_ID, stackId);
-        p.getProduct().setAttribute(Product.Attributes.SOCKETS, "2");
+        pool.getProduct().setAttribute("stacking_id", stackId);
+        pool.getProduct().setAttribute("sockets", "2");
 
-        return e;
+        return entitlement;
     }
 
     private DateRange rangeRelativeToDate(Date relativeTo, int startMonths, int endMonths) {
@@ -874,21 +881,66 @@ public class InstalledProductStatusCalculatorTest {
         cal.setTime(relativeTo);
         cal.add(Calendar.MONTH, endMonths);
         Date end = cal.getTime();
+
         return new DateRange(start, end);
     }
 
-    private void mockEntCurator(Consumer c, List<Entitlement> ents) {
-        CandlepinQuery mockCPQuery = mock(CandlepinQuery.class);
-        when(mockCPQuery.list()).thenReturn(ents);
+    private void mockConsumerEntitlements(Consumer consumer, Collection<Entitlement> entitlements) {
+        List<Entitlement> entList = new LinkedList(entitlements);
 
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
-        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(mockCPQuery);
+        CandlepinQuery mockCPQuery = mock(CandlepinQuery.class);
+        when(mockCPQuery.list()).thenReturn(entList);
+        when(mockCPQuery.iterator()).thenReturn(entitlements.iterator());
+
+        when(entCurator.listByConsumer(eq(consumer))).thenReturn(entList);
+        when(entCurator.listByConsumerAndDate(eq(consumer), any(Date.class))).thenReturn(mockCPQuery);
     }
 
     private Map<String, String> getActiveGuestAttrs() {
         Map<String, String> activeGuestAttrs = new HashMap<String, String>();
         activeGuestAttrs.put("virtWhoType", "libvirt");
         activeGuestAttrs.put("active", "1");
+
         return activeGuestAttrs;
+    }
+
+    private void mockOwnerProducts(Owner owner, Collection<Product> products) {
+        final Map<String, Product> productMap = new HashMap<String, Product>();
+        for (Product product : products) {
+            productMap.put(product.getId(), product);
+        }
+
+        doAnswer(new Answer<CandlepinQuery<Product>>() {
+            @Override
+            public CandlepinQuery<Product> answer(InvocationOnMock invocation) throws Throwable {
+                Object[] args = invocation.getArguments();
+                Collection<String> productIds = (Collection<String>) args[1];
+
+                Collection<Product> products = new LinkedList<Product>();
+                for (String productId : productIds) {
+                    Product product = productMap.get(productId);
+
+                    if (product != null) {
+                        products.add(product);
+                    }
+                }
+
+                CandlepinQuery cqmock = mock(CandlepinQuery.class);
+                when(cqmock.iterator()).thenReturn(products.iterator());
+                when(cqmock.iterate()).thenReturn(new MockResultIterator(products.iterator()));
+
+                return cqmock;
+            }
+        }).when(this.ownerProductCurator).getProductsByIds(eq(owner), anyCollection());
+    }
+
+    private ConsumerInstalledProduct getInstalledProduct(Consumer consumer, Product product) {
+        for (ConsumerInstalledProduct cip : consumer.getInstalledProducts()) {
+            if (cip.getProductId().equals(product.getId())) {
+                return cip;
+            }
+        }
+
+        return null;
     }
 }

@@ -1169,6 +1169,10 @@ public class CandlepinPoolManager implements PoolManager {
         Owner owner, String serviceLevelOverride, Collection<String> fromPools)
         throws EntitlementRefusedException {
 
+        // TODO: FIXME:
+        // Update this method to clean up some repetitive database hits, and unnecessary work when
+        // debug logging is disabled
+
         Map<String, ValidationResult> failedResults = new HashMap<String, ValidationResult>();
         log.debug("Looking up best pools for host: {}", host);
 
@@ -1231,6 +1235,7 @@ public class CandlepinPoolManager implements PoolManager {
             // and we only need to check that it's non-zero
             if (pool.getProduct().hasAttribute(Product.Attributes.VIRT_LIMIT) &&
                 !pool.getProduct().getAttributeValue(Product.Attributes.VIRT_LIMIT).equals("0")) {
+
                 for (String productId : productIds) {
                     // If this is a derived pool, we need to see if the derived product
                     // provides anything for the guest, otherwise we use the parent.
@@ -1241,9 +1246,9 @@ public class CandlepinPoolManager implements PoolManager {
                     }
                 }
             }
+
             if (providesProduct) {
-                ValidationResult result = enforcer.preEntitlement(host,
-                    pool, 1, CallerType.BEST_POOLS);
+                ValidationResult result = enforcer.preEntitlement(host, pool, 1, CallerType.BEST_POOLS);
 
                 if (result.hasErrors() || result.hasWarnings()) {
                     // Just keep the last one around, if we need it

@@ -51,6 +51,7 @@ import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.resource.dto.HypervisorCheckInResult;
 import org.candlepin.resource.util.ConsumerBindUtil;
+import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
@@ -93,6 +94,7 @@ public class HypervisorResourceTest {
     @Mock private ConsumerBindUtil consumerBindUtil;
     @Mock private EventBuilder consumerEventBuilder;
     @Mock private ProductCurator productCurator;
+    @Mock private ConsumerEnricher consumerEnricher;
 
     private ConsumerResource consumerResource;
     private I18n i18n;
@@ -112,7 +114,7 @@ public class HypervisorResourceTest {
             this.activationKeyCurator, null, this.complianceRules,
             this.deletedConsumerCurator, null, null, config,
             null, null, null, this.consumerBindUtil, productCurator, null, null,
-            new FactValidator(config, this.i18n), null);
+            new FactValidator(config, this.i18n), null, consumerEnricher);
 
         hypervisorResource = new HypervisorResource(consumerResource,
             consumerCurator, i18n, ownerCurator);

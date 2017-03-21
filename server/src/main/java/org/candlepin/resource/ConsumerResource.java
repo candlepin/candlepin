@@ -76,7 +76,6 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
-import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Release;
 import org.candlepin.model.User;
@@ -93,7 +92,7 @@ import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.resource.dto.ContentAccessListing;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ConsumerBindUtil;
-import org.candlepin.resource.util.ConsumerInstalledProductEnricher;
+import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resource.util.ConsumerTypeValidator;
 import org.candlepin.resource.util.EntitlementFinderUtil;
 import org.candlepin.resource.util.ResourceDateParser;
@@ -207,6 +206,7 @@ public class ConsumerResource {
     private ManifestManager manifestManager;
     private FactValidator factValidator;
     private ConsumerTypeValidator consumerTypeValidator;
+    private ConsumerEnricher consumerEnricher;
 
     @Inject
     @SuppressWarnings({"checkstyle:parameternumber"})
@@ -231,7 +231,8 @@ public class ConsumerResource {
         ManifestManager manifestManager,
         ContentAccessCertServiceAdapter contentAccessCertService,
         FactValidator factValidator,
-        ConsumerTypeValidator consumerTypeValidator) {
+        ConsumerTypeValidator consumerTypeValidator,
+        ConsumerEnricher consumerEnricher) {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -268,6 +269,7 @@ public class ConsumerResource {
         this.contentAccessCertService = contentAccessCertService;
         this.factValidator = factValidator;
         this.consumerTypeValidator = consumerTypeValidator;
+        this.consumerEnricher = consumerEnricher;
     }
 
     /**
@@ -425,8 +427,9 @@ public class ConsumerResource {
 
             // enrich with subscription data
             consumer.setCanActivate(subAdapter.canActivateSubscription(consumer));
+
             // enrich with installed product data
-            addDataToInstalledProducts(consumer);
+            this.consumerEnricher.enrich(consumer);
         }
 
         return consumer;
@@ -2284,35 +2287,6 @@ public class ConsumerResource {
         }
 
         return results;
-    }
-
-    private void addDataToInstalledProducts(Consumer consumer) {
-
-        if (consumer.getInstalledProducts().size() == 0) {
-            /*
-             * No installed products implies nothing to enrich.
-             *
-             * Distributors can have many entitlements, but no installed products.
-             * Calculating the status can be quite expensive but the data isn't
-             * actually used if there's nothing installed.
-             */
-            return;
-        }
-
-        ComplianceStatus complianceStatus = complianceRules.getStatus(consumer, null, false);
-
-        ConsumerInstalledProductEnricher enricher = new ConsumerInstalledProductEnricher(
-            consumer, complianceStatus, complianceRules, productCurator
-        );
-
-        for (ConsumerInstalledProduct cip : consumer.getInstalledProducts()) {
-            String prodId = cip.getProductId();
-            Product prod = this.ownerProductCurator.getProductById(consumer.getOwner(), prodId);
-
-            if (prod != null) {
-                enricher.enrich(cip, prod);
-            }
-        }
     }
 
     @ApiOperation(

@@ -62,6 +62,7 @@ import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.resource.util.ConsumerBindUtil;
+import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
@@ -106,6 +107,7 @@ public class ConsumerResourceUpdateTest {
     @Mock private EventBuilder consumerEventBuilder;
     @Mock private ConsumerBindUtil consumerBindUtil;
     @Mock private ProductCurator productCurator;
+    @Mock private ConsumerEnricher consumerEnricher;
 
     private I18n i18n;
 
@@ -124,11 +126,10 @@ public class ConsumerResourceUpdateTest {
             this.activationKeyCurator, this.entitler, this.complianceRules,
             this.deletedConsumerCurator, this.environmentCurator, null,
             config, null, null, null, this.consumerBindUtil, productCurator,
-            null, null, new FactValidator(config, this.i18n), null);
+            null, null, new FactValidator(config, this.i18n), null, consumerEnricher);
 
-        when(complianceRules.getStatus(any(Consumer.class), any(Date.class),
-                any(Boolean.class), any(Boolean.class)))
-            .thenReturn(new ComplianceStatus(new Date()));
+        when(complianceRules.getStatus(any(Consumer.class), any(Date.class), any(Boolean.class),
+            any(Boolean.class))).thenReturn(new ComplianceStatus(new Date()));
 
         when(idCertService.regenerateIdentityCert(any(Consumer.class)))
             .thenReturn(new IdentityCertificate());

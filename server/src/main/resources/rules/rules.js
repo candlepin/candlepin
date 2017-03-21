@@ -1,4 +1,4 @@
-// Version: 5.22
+// Version: 5.23
 
 /*
  * Default Candlepin rule set.
@@ -830,9 +830,7 @@ var CoverageCalculator = {
             var nextAttr = complianceAttributes[attrIdx];
             if (complianceTracker.enforces(nextAttr)) {
                 complianceTracker.setAccumulatedValue(nextAttr, this.adjustCoverage(nextAttr,
-                            consumer,
-                            complianceTracker.getAccumulatedValue(nextAttr),
-                            entitlements));
+                    consumer, complianceTracker.getAccumulatedValue(nextAttr), entitlements));
             }
         }
         var coverage = this.getCoverageForTracker(complianceTracker, consumer, conditions);
@@ -1124,10 +1122,12 @@ function createComplianceTracker(consumer, id) {
             if (this.type == "ENTITLEMENT" && this.entitlementIds.length == 0) {
                 this.id = ent.id;
             }
+
             if (ent.id in this.entitlementIds) {
                 // This entitlement was already added.
                 return;
             }
+
             this.empty = false;
 
             // Keep track of any entitlements that we've already
@@ -1141,6 +1141,7 @@ function createComplianceTracker(consumer, id) {
             if (!is_stacked(ent) && ent.quantity > 1) {
                 quantity = 1;
             }
+
             this.updateAccumulatedFromPool(ent.pool, quantity);
         }
 
@@ -1457,8 +1458,7 @@ var Entitlement = {
             }
             var now = new Date();
             var startDate = new Date(context.pool.startDate);
-            if (BIND_CALLER == caller &&
-                    Utils.date_compare(startDate, now) > 0) {
+            if (BIND_CALLER == caller && Utils.date_compare(startDate, now) > 0) {
                 result.addError("virt.guest.cannot.bind.future.unmapped.guest.pool");
             }
         }
@@ -2303,8 +2303,7 @@ var Autobind = {
         if (poolSLA && poolSLA != "" && !poolSLAExempt &&
             consumerSLA && consumerSLA != "" &&
             !Utils.equalsIgnoreCase(consumerSLA, poolSLA)) {
-            log.debug("Skipping pool " + pool.id +
-                    " since SLA does not match that of the consumer.");
+            log.debug("Skipping pool " + pool.id + " since SLA does not match that of the consumer.");
             return false;
         }
         return true;
@@ -2578,7 +2577,7 @@ var Autobind = {
             }
         }
         var ent_groups = this.build_entitlement_groups(valid_pools, installed, context.consumer, attached_ents, context.considerDerived);
-        log.debug("Total ent groups: "+ent_groups.length);
+        log.debug("Total ent groups: " + ent_groups.length);
 
         var valid_groups = [];
         for (var i = ent_groups.length - 1; i >= 0; i--) {
@@ -2590,10 +2589,10 @@ var Autobind = {
                     ent_group.remove_extra_attrs();
                     ent_group.prune_pools();
                 } else {
-                    log.debug("Group "+ent_group.stack_id+" provides no installed products");
+                    log.debug("Group " + ent_group.stack_id + " provides no installed products");
                 }
             } else {
-                log.debug("Group "+ent_group.stack_id+" failed validation.");
+                log.debug("Group " + ent_group.stack_id + " failed validation.");
             }
         }
         log.debug("valid ent groups size: " + valid_groups.length);
@@ -2601,7 +2600,7 @@ var Autobind = {
         log.debug("finding best ent groups");
         var best_groups = this.get_best_entitlement_groups(valid_groups, installed, context.compliance,
                                                            context.considerDerived);
-        log.debug("best_groups size: "+best_groups.length);
+        log.debug("best_groups size: " + best_groups.length);
 
         selected_pools = Utils.getJsMap();
         for (var i = 0; i < best_groups.length; i++) {
@@ -2667,34 +2666,43 @@ var Compliance = {
             var e = context.entitlements[k];
             e.pool = createPool(e.pool);
         }
+
         if ("entitlement" in context) {
             context.entitlement.pool = createPool(context.entitlement.pool);
         }
+
         // Older candlepins don't send this value, assume they need to calculate compliantUntil
         if (!"calculateCompliantUntil" in context) {
             context.calculateCompliantUntil = true;
         }
+
         return context;
     },
 
     get_status: function() {
         var context = Compliance.get_status_context();
-        var compStatus = this.getComplianceStatusOnDate(context.consumer,
-            context.entitlements, context.ondate, log);
+        var compStatus = this.getComplianceStatusOnDate(context.consumer, context.entitlements, context.ondate);
         var compliantUntil = null;
+        var productComplianceDateRanges = null;
+
         if (compStatus.isCompliant() && context.calculateCompliantUntil && context.entitlements.length > 0) {
-            compliantUntil = this.determineCompliantUntilDate(context.consumer,
-                context.entitlements, context.ondate, log);
+            compliantUntil = this.determineCompliantUntilDate(context.consumer, context.entitlements, context.ondate);
         }
+
+        if (compStatus.isPartiallyCompliant() && context.calculateProductComplianceDateRanges && context.entitlements.length > 0) {
+            productComplianceDateRanges = this.getProductComplianceDateRanges(context.consumer, context.entitlements, context.ondate, compStatus);
+        }
+
         compStatus.compliantUntil = compliantUntil;
-        var output = JSON.stringify(compStatus);
-        return output;
+        compStatus.productComplianceDateRanges = productComplianceDateRanges;
+
+        return JSON.stringify(compStatus);
     },
 
     is_stack_compliant: function() {
         var context = Compliance.get_status_context();
-        var stackCoverage = Compliance.getStackCoverage(context.consumer, context.stack_id,
-            context.entitlements);
+        var stackCoverage = Compliance.getStackCoverage(context.consumer, context.stack_id, context.entitlements);
+
         return stackCoverage.covered;
     },
 
@@ -2718,21 +2726,164 @@ var Compliance = {
         return filtered_ents;
     },
 
-    getSortedEndDates: function(entitlements) {
+    getSortedEntitlementDates: function(entitlements, useStartDates, useEndDates) {
         var dates = [];
-        for (var k = 0; k < entitlements.length; k++) {
-            var ent = entitlements[k];
 
-            dates.push(new Date(ent.endDate));
+        for (var i = entitlements.length - 1; i >= 0; --i) {
+            var entitlement = entitlements[i];
+
+            if (useStartDates === true) {
+                dates.push(new Date(entitlement.startDate));
+            }
+
+            if (useEndDates === true) {
+                dates.push(new Date(entitlement.endDate));
+            }
         }
-        dates.sort(function(d1, d2) { return Utils.date_compare(d1, d2) });
+
+        // Sort the dates
+        dates.sort(Utils.date_compare);
+
+        // Filter duplicates
+        last = null
+        dates.filter(function(date) { return last === null || last - date != 0; });
+
         return dates;
+    },
+
+    getProductComplianceDateRanges: function(consumer, entitlements, ondate, compStatus) {
+        var prodDateRanges = {};
+
+        if (consumer.installedProducts === null || consumer.installedProducts.length == 0) {
+            // Nothing to do here, no reason to waste more time
+            return prodDateRanges;
+        }
+
+        // Get the sorted dates for our entitlements
+        var dates = this.getSortedEntitlementDates(entitlements, true, true);
+        var dateCount = dates.length;
+        var nextDate = -1;
+
+        // Find our next date in the future...
+        for (var i = dates.length - 1; i >= 0; --i) {
+            if (dates[i] - ondate <= 0) {
+                nextDate = i + 1; // Warning: this may end up out of range.
+                break;
+            }
+        }
+
+        // Initialize date ranges object for compliant-ish products
+        for (var i = consumer.installedProducts.length - 1; i >= 0; --i) {
+            var pid = consumer.installedProducts[i].productId;
+
+            if (compStatus.nonCompliantProducts.indexOf(pid) == -1) {
+                prodDateRanges[pid] = {
+                    startDate: null,
+                    endDate: null
+                };
+            }
+        }
+
+        var isCompliant = function(status, productId) {
+            return status.compliantProducts.hasOwnProperty(productId);
+        };
+
+        var isPartiallyCompliant = function(status, productId) {
+            return status.partiallyCompliantProducts.hasOwnProperty(productId);
+        };
+
+        // Step into the future first
+        var pids = Object.keys(prodDateRanges);
+
+        if (pids.length > 0) {
+
+            // Find start dates
+            var complete = 0;
+            var lastValidDate = ondate;
+
+            for (var i = nextDate - 1; i >= 0; --i) {
+                // Impl note:
+                // We add a millisecond to the date here to (potentially) move us outside the
+                // range of a given entitlement. For start dates this won't affect anything, but
+                // for end dates, it puts us just outside the range of the entitlement from which
+                // the date came. Without this shift, we run the risk of bridging certain coverage
+                // gaps.
+                var status = this.getComplianceStatusOnDate(consumer, entitlements, new Date(dates[i].getTime() + 1));
+
+                for (var p = pids.length - 1; p >= 0; --p) {
+                    var pid = pids[p];
+
+                    if (prodDateRanges[pid].startDate === null) {
+                        // If the product is non-compliant here or changed between compliant and
+                        // partially compliant, or there was a gap in the coverage, we've found the
+                        // end of the current range
+                        if (status.nonCompliantProducts.indexOf(pid) != -1 ||
+                            (isCompliant(compStatus, pid) && !isCompliant(status, pid)) ||
+                            (isPartiallyCompliant(compStatus, pid) && !isPartiallyCompliant(status, pid))) {
+
+                            prodDateRanges[pid].startDate = lastValidDate;
+                            ++complete;
+                        }
+                    }
+                }
+
+                if (complete >= pids.length) {
+                    break; // We're done here
+                }
+
+                lastValidDate = dates[i];
+            }
+
+            // Find end dates
+            complete = 0;
+            for (var i = nextDate; i < dateCount; ++i) {
+                // See the note above for why we're adding a millisecond to the date here
+                var status = this.getComplianceStatusOnDate(consumer, entitlements, new Date(dates[i].getTime() + 1));
+
+                for (var p = pids.length - 1; p >= 0; --p) {
+                    var pid = pids[p];
+
+                    if (prodDateRanges[pid].endDate === null) {
+                        // If the product is non-compliant here, became less compliant, or had a
+                        // gap in coverage, we've found the end of the current range
+                        if (status.nonCompliantProducts.indexOf(pid) != -1 ||
+                            (isCompliant(compStatus, pid) && !isCompliant(status, pid)) ||
+                            (isPartiallyCompliant(compStatus, pid) && !isPartiallyCompliant(status, pid) && !isCompliant(status, pid))) {
+
+                            prodDateRanges[pid].endDate = dates[i];
+                            ++complete;
+                        }
+                    }
+                }
+
+                if (complete >= pids.length) {
+                    break; // We're done here
+                }
+            }
+
+            // Final bit of cleanup: Any products which were valid all the way to the ends of our
+            // date ranges will have null dates. Set those to our extremes and we should be safe.
+            for (var p = pids.length - 1; p >= 0; --p) {
+                var pid = pids[p];
+
+                if (prodDateRanges[pid].startDate === null) {
+                    prodDateRanges[pid].startDate = dates[0];
+                }
+
+                if (prodDateRanges[pid].endDate === null) {
+                    prodDateRanges[pid].endDate = dates[dateCount - 1];
+                }
+            }
+        }
+
+        // Return!
+        return prodDateRanges;
     },
 
     /**
      * Checks compliance status for a consumer on a given date.
      */
-    getComplianceStatusOnDate: function(consumer, entitlements, ondate, log) {
+    getComplianceStatusOnDate: function(consumer, entitlements, ondate) {
         var compStatus = {
 
             date: ondate,
@@ -2749,9 +2900,7 @@ var Compliance = {
             // List of non-compliant product IDs:
             nonCompliantProducts: [],
 
-            /*
-             * Keep track of the reasons why we are not compliant.
-             */
+            // Keep track of the reasons why we are not compliant.
             reasons: [],
 
             /*
@@ -2794,8 +2943,15 @@ var Compliance = {
             isCompliant: function() {
                 return this.nonCompliantProducts.length == 0 &&
                     Object.keys(this.partiallyCompliantProducts).length == 0;
-            }
+            },
 
+            /**
+             * Checks if this consumer's status is at least partially compliant
+             */
+            isPartiallyCompliant: function() {
+                return Object.keys(this.compliantProducts).length > 0 ||
+                    Object.keys(this.partiallyCompliantProducts).length > 0;
+            }
         };
 
         // Track the stack IDs we've already checked to save some time:
@@ -2896,16 +3052,18 @@ var Compliance = {
         // didn't find an entitlement for along the way:
         for (var k = 0; k < ((consumer.installedProducts) ? consumer.installedProducts.length : 0); k++) {
             var installed_prod = consumer.installedProducts[k];
-
             var installed_pid = installed_prod.productId;
+
             // Not compliant if we didn't find any entitlements for this product:
             if (typeof compStatus.compliantProducts[installed_pid] === "undefined" &&
-                    typeof compStatus.partiallyCompliantProducts[installed_pid] === "undefined") {
+                typeof compStatus.partiallyCompliantProducts[installed_pid] === "undefined") {
+
                 compStatus.nonCompliantProducts.push(installed_pid);
                 var installedProductReason = StatusReasonGenerator.buildInstalledProductReason(installed_pid);
                 compStatus.add_reasons([installedProductReason]);
             }
         }
+
         return compStatus;
     },
 
@@ -2913,7 +3071,7 @@ var Compliance = {
      * Determine the compliant until date for a consumer based on the specified start date
      * and entitlements.
      */
-    determineCompliantUntilDate: function(consumer, entitlements, startDate, log) {
+    determineCompliantUntilDate: function(consumer, entitlements, startDate) {
         var installedProducts = [];
         if (consumer.installedProducts === null || consumer.installedProducts.length == 0) {
             return null;
@@ -2940,28 +3098,29 @@ var Compliance = {
         }
 
         // Get all end dates from current entitlements sorted ascending.
-        var dates = Compliance.getSortedEndDates(entitlementsProvidingProducts);
+        var dates = Compliance.getSortedEntitlementDates(entitlementsProvidingProducts, false, true);
 
         var lastDate = startDate;
         for (var k = 0; k < dates.length; k++) {
             var dateToCheck = dates[k];
 
             // Ignore past dates and duplicates
-            if (Utils.date_compare(dateToCheck, lastDate) != 1) {
+            if (Utils.date_compare(dateToCheck, lastDate) <= 0) {
                 continue;
             }
+
             lastDate = dateToCheck;
 
             // Need to check if we are still compliant after the end date,
             // so we add one second.
             dateToCheck.setSeconds(dateToCheck.getSeconds() + 1);
 
-            var compStatus = Compliance.getComplianceStatusOnDate(consumer, entitlements,
-                                                       dateToCheck, log);
+            var compStatus = Compliance.getComplianceStatusOnDate(consumer, entitlements, dateToCheck);
             if (!compStatus.isCompliant()) {
                 return dateToCheck;
             }
         }
+
         return null;
     },
 
@@ -2970,8 +3129,9 @@ var Compliance = {
      * a consumer's socket count.
      */
     getStackCoverage: function(consumer, stack_id, ents) {
-        log.debug("Checking stack compliance for: " + stack_id);
+        log.debug("Checking stack compliance for: {}", stack_id);
         var complianceTracker = createComplianceTracker(consumer, stack_id);
+
         for (var k = 0; k < ents.length; k++) {
             var ent = ents[k];
 
@@ -2982,6 +3142,7 @@ var Compliance = {
                 }
             }
         }
+
         return CoverageCalculator.getStackCoverage(complianceTracker, consumer, ents);
     },
 
@@ -3185,15 +3346,7 @@ var Utils = {
     },
 
     date_compare: function(d1, d2) {
-        if (d1 - d2 > 0) {
-            return 1;
-        }
-
-        if (d1 - d2 < 0) {
-            return -1;
-        }
-
-        return 0;
+        return d1 - d2;
     },
 
     /**
@@ -3203,12 +3356,12 @@ var Utils = {
      * Active can also be 0 (inactive) or -1 (error)
      */
     isGuestActive: function(guest) {
-        if ("attributes" in guest &&
-                "virtWhoType" in guest.attributes &&
-                guest.attributes.virtWhoType == "libvirt" &&
-                "active" in guest.attributes) {
-                    return guest.attributes.active == "1";
-                }
+        if ("attributes" in guest && "virtWhoType" in guest.attributes &&
+            guest.attributes.virtWhoType == "libvirt" && "active" in guest.attributes) {
+
+            return guest.attributes.active == "1";
+        }
+
         return false;
     },
 
@@ -3221,6 +3374,7 @@ var Utils = {
         if (str1) {
             str1 = str1.toLowerCase();
         }
+
         if (str2) {
             str2 = str2.toLowerCase();
         }
@@ -3243,16 +3397,14 @@ var Utils = {
 
             putAll: function (add_js_map) {
                 var add_map = add_js_map.map
-                for(key in add_map)
-                {
+                for(key in add_map) {
                     this.map[key] = add_map[key];
                 }
              },
 
              values: function () {
                 values = [];
-                for(key in this.map)
-                {
+                for(key in this.map) {
                     values.push(this.map[key]);
                 }
                 return values;
@@ -3268,8 +3420,8 @@ var Utils = {
              dump: function (name) {
                 if (!log.debug) { return; }
                 log.debug("Map name: " + name);
-                for(key in this.map)
-                {
+
+                for(key in this.map) {
                     log.debug("    Key: " + key + ", value: " + this.map[key]);
                 }
              }

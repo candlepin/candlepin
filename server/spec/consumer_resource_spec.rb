@@ -524,17 +524,17 @@ describe 'Consumer Resource' do
 
     consumer = @cp.get_consumer(cp_client.uuid)
     for installed_product in consumer['installedProducts'] do
-         installed_product['arch'].should == 'ALL'
-         installed_product['version'].should == '3.11'
-         installed_product['status'].should == 'green'
-         start_date = Date.strptime(installed_product['startDate'])
-         start_date.year.should == Date.today.year
-         start_date.month.should == Date.today.month
-         start_date.day.should == Date.today.day
-         end_date = Date.strptime(installed_product['endDate'])
-         end_date.year.should == (Date.today + 365).year
-         end_date.month.should == (Date.today + 365).month
-         end_date.day.should == (Date.today + 365).day
+        installed_product['arch'].should == 'ALL'
+        installed_product['version'].should == '3.11'
+        installed_product['status'].should == 'green'
+        start_date = Date.strptime(installed_product['startDate'])
+        start_date.year.should == Date.today.year
+        start_date.month.should == Date.today.month
+        start_date.day.should == Date.today.day
+        end_date = Date.strptime(installed_product['endDate'])
+        end_date.year.should == (Date.today + 365).year
+        end_date.month.should == (Date.today + 365).month
+        end_date.day.should == (Date.today + 365).day
     end
   end
 
@@ -897,7 +897,6 @@ describe 'Consumer Resource' do
   it 'should ignore duplicate facts' do
     user = user_client(@owner1, random_string('billy'))
     facts = {
-      'system.machine' => 'x86_64',
       'system.machine' => 'x86_64',
       'System.machine' => 'x86_64',
       'System.Machine' => 'x86_64',

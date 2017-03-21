@@ -188,6 +188,7 @@ public class Entitlement extends AbstractHibernateObject
         if (pool == null) {
             return null;
         }
+
         return pool.getStartDate();
     }
 
