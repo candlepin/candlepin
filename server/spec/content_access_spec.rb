@@ -42,7 +42,7 @@ describe 'Content Access' do
   end
 
   it "does produce a content access certificate for the consumer on registration" do
-      @consumer = consumer_client(@user, @consumername)
+      @consumer = consumer_client(@user, @consumername, type=:system, username=nil, facts= {'system.certificate_version' => '3.3'})
       certs = @consumer.list_certificates
       certs.length.should == 1
 
@@ -64,6 +64,12 @@ describe 'Content Access' do
       type.should == 'OrgLevel'
   end
 
+  it "does not produce a content access certificate a V1 consumer on registration" do
+      @consumer = consumer_client(@user, @consumername, type=:system, username=nil, facts= {'system.certificate_version' => '1.0'})
+      certs = @consumer.list_certificates
+      certs.length.should == 0
+  end
+
   it "does have both owner and environment in the path for the content access cert" do
       @env = @user.create_environment(@owner['key'], random_string('testenv'),
         "My Test Env 1", "For test systems only.")
@@ -76,7 +82,7 @@ describe 'Content Access' do
       wait_for_job(job['id'], 15)
 
       consumer = @user.register(random_string('consumer'), :system, nil,
-          {},nil, nil, [], [], @env['id'])
+          {'system.certificate_version' => '3.3'},nil, nil, [], [], @env['id'])
       consumer['environment'].should_not be_nil
       @consumer = Candlepin.new(nil, nil, consumer['idCert']['cert'],
           consumer['idCert']['key'])
@@ -97,7 +103,7 @@ describe 'Content Access' do
 
   it "can remove the content access certificate from the consumer when org content access mode removed" do
       skip("candlepin running in standalone mode") unless is_hosted?
-      @consumer = consumer_client(@user, @consumername)
+      @consumer = consumer_client(@user, @consumername, type=:system, username=nil, facts= {'system.certificate_version' => '3.3'})
       certs = @consumer.list_certificates
       certs.length.should == 1
 
@@ -109,7 +115,7 @@ describe 'Content Access' do
   it "can create the content access certificate for the consumer when org content access mode added" do
       skip("candlepin running in standalone mode") unless is_hosted?
       @cp.update_owner(@owner['key'], {'contentAccessMode' => ""})
-      @consumer = consumer_client(@user, @consumername)
+      @consumer = consumer_client(@user, @consumername, type=:system, username=nil, facts= {'system.certificate_version' => '3.3'})
 
       certs = @consumer.list_certificates
       certs.length.should == 0
@@ -121,7 +127,7 @@ describe 'Content Access' do
   end
 
   it "can retrieve the content access cert body for the consumer" do
-      @consumer = consumer_client(@user, @consumername)
+      @consumer = consumer_client(@user, @consumername, type=:system, username=nil, facts= {'system.certificate_version' => '3.3'})
 
       content_body = @consumer.get_content_access_body()
 
@@ -137,7 +143,7 @@ describe 'Content Access' do
   end
 
   it "does return a not modified return code when the data has not been updated since date" do
-      @consumer = consumer_client(@user, @consumername)
+      @consumer = consumer_client(@user, @consumername, type=:system, username=nil, facts= {'system.certificate_version' => '3.3'})
       certs = @consumer.list_certificates
       certs.length.should == 1
       sleep 1
@@ -149,7 +155,7 @@ describe 'Content Access' do
 
 
  it "does update exisitng content access cert content when product data changes" do
-      @consumer = consumer_client(@user, @consumername)
+      @consumer = consumer_client(@user, @consumername, type=:system, username=nil, facts= {'system.certificate_version' => '3.3'})
       certs = @consumer.list_certificates
       certs.length.should == 1
       serial_id = certs[0]['serial']['serial']
@@ -165,8 +171,8 @@ describe 'Content Access' do
  end
 
  it "does update second exisitng content access cert content when product data changes" do
-      @consumer1 = consumer_client(@user, @consumername)
-      @consumer2 = consumer_client(@user, @consumername2)
+      @consumer1 = consumer_client(@user, @consumername, type=:system, username=nil, facts= {'system.certificate_version' => '3.3'})
+      @consumer2 = consumer_client(@user, @consumername2, type=:system, username=nil, facts= {'system.certificate_version' => '3.3'})
       certs1 = @consumer1.list_certificates
       certs2 = @consumer2.list_certificates
       certs2.length.should == 1
@@ -184,7 +190,7 @@ describe 'Content Access' do
  end
 
  it "does not update exisitng content access cert content when no data changes" do
-      @consumer1 = consumer_client(@user, @consumername)
+      @consumer1 = consumer_client(@user, @consumername, type=:system, username=nil, facts= {'system.certificate_version' => '3.3'})
       certs = @consumer1.list_certificates
       serial_id = certs[0]['serial']['serial']
       updated = certs[0]['updated']
@@ -196,7 +202,7 @@ describe 'Content Access' do
  end
 
  it "does include the content access cert serial in serial list" do
-      @consumer1 = consumer_client(@user, @consumername)
+      @consumer1 = consumer_client(@user, @consumername, type=:system, username=nil, facts= {'system.certificate_version' => '3.3'})
       certs = @consumer1.list_certificates
       serial_id = certs[0]['serial']['serial']
 
@@ -220,7 +226,7 @@ describe 'Content Access' do
  end
 
  it "will not set the content access mode for a regular consumer" do
-      @consumer = consumer_client(@user, @consumername)
+      @consumer = consumer_client(@user, @consumername, type=:system, username=nil, facts= {'system.certificate_version' => '3.3'})
       lambda do
           @consumer.update_consumer({'contentAccessMode' => "org_environment"})
       end.should raise_exception(RestClient::BadRequest)
@@ -281,14 +287,11 @@ describe 'Content Access' do
 
       owner = @cp.get_owner(@import_owner['key'])
       @user = user_client(owner, random_string("user"))
-      @consumer = consumer_client(@user, random_string("consumer"))
+      @consumer = consumer_client(@user, random_string("consumer"), type=:system, username=nil, facts= {'system.certificate_version' => '3.3'})
       @consumer.list_certificate_serials.size.should == 1
       @consumer.list_certificates.size.should == 1
 
       @cp.delete_owner(@import_owner['key'])
       @cp_export.cleanup()
  end
-
-
-
 end
