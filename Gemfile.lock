@@ -39,7 +39,7 @@ GEM
       rake (>= 0.8, < 11.0)
     httpclient (2.7.1)
     i18n (0.7.0)
-    json (1.8.3)
+    json (1.8.6)
     json_pure (1.8.0)
     method_source (0.8.2)
     mime-types (1.25.1)
@@ -67,7 +67,7 @@ GEM
     pry-stack_explorer (0.4.9.2)
       binding_of_caller (>= 0.7)
       pry (>= 0.9.11)
-    qpid_proton (0.14.0)
+    qpid_proton (0.17.0)
       json
     rainbow (2.1.0)
     rake (0.9.2.2)
@@ -127,4 +127,4 @@ DEPENDENCIES
   webrick
 
 BUNDLED WITH
-   1.13.2
+   1.14.6
