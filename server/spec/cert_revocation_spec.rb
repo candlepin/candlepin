@@ -136,8 +136,8 @@ describe 'Certificate Revocation List', :serial => true do
     username = random_string('bob')
     user = create_user(cam_owner, username, 'password')
     user_client = Candlepin.new(username, 'password')
-    new_system = consumer_client(user_client, random_string('system'))
-
+    new_system = consumer_client(user_client, random_string('system'),:system, nil,
+                                 {'system.certificate_version' => '3.2'})
     certs = new_system.list_certificates
     certs.length.should == 1
 
