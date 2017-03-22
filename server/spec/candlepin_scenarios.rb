@@ -15,7 +15,7 @@ module CandlepinMethods
   def create_owner(owner_name, parent=nil, params={})
     params[:parent] = parent
     # this will only affect the ability to set the mode on the owner
-    params['contentAccessModeList'] = 'org_environment,test_access_mode'
+    params['contentAccessModeList'] = 'org_environment,test_access_mode,entitlement'
     owner = @cp.create_owner(owner_name, params)
     @owners << owner
 
