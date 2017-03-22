@@ -20,13 +20,10 @@ import com.fasterxml.jackson.annotation.JsonFilter;
 
 import org.hibernate.annotations.GenericGenerator;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -43,7 +40,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Entity
 @Table(name = SubscriptionsCertificate.DB_TABLE)
 @JsonFilter("SubscriptionCertificateFilter")
-public class SubscriptionsCertificate extends AbstractCertificate {
+public class SubscriptionsCertificate extends RevokableCertificate {
 
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp_certificate";
@@ -54,18 +51,6 @@ public class SubscriptionsCertificate extends AbstractCertificate {
     @Column(length = 32)
     @NotNull
     private String id;
-
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "serial_id")
-    private CertificateSerial serial;
-
-    public CertificateSerial getSerial() {
-        return serial;
-    }
-
-    public void setSerial(CertificateSerial serialNumber) {
-        this.serial = serialNumber;
-    }
 
     /**
      * @return the id
@@ -84,8 +69,8 @@ public class SubscriptionsCertificate extends AbstractCertificate {
     public String toString() {
         String serial = null;
 
-        if (this.serial != null) {
-            serial = String.format("Serial [id=%s]", this.serial.getId());
+        if (super.serial != null) {
+            serial = String.format("Serial [id=%s]", super.serial.getId());
         }
 
         return String.format("Cert [id=%s, serial=%s]", this.id, serial);

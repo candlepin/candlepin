@@ -18,12 +18,10 @@ package org.candlepin.model;
 
 import org.hibernate.annotations.GenericGenerator;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -38,7 +36,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = CdnCertificate.DB_TABLE)
-public class CdnCertificate extends AbstractCertificate {
+public class CdnCertificate extends RevokableCertificate {
 
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp_cdn_certificate";
@@ -49,9 +47,6 @@ public class CdnCertificate extends AbstractCertificate {
     @Column(length = 32)
     @NotNull
     private String id;
-
-    @OneToOne(cascade = CascadeType.ALL)
-    private CertificateSerial serial;
 
     /**
      * @return the id
@@ -67,11 +62,4 @@ public class CdnCertificate extends AbstractCertificate {
         this.id = id;
     }
 
-    public CertificateSerial getSerial() {
-        return serial;
-    }
-
-    public void setSerial(CertificateSerial serialNumber) {
-        this.serial = serialNumber;
-    }
 }

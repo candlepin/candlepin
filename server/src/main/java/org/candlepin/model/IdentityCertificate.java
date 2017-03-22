@@ -40,7 +40,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @Entity
 @Table(name = IdentityCertificate.DB_TABLE)
 @JsonFilter("IdentityCertificateFilter")
-public class IdentityCertificate extends AbstractCertificate implements Certificate {
+public class IdentityCertificate extends RevokableCertificate implements Certificate {
 
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp_id_cert";
@@ -52,19 +52,8 @@ public class IdentityCertificate extends AbstractCertificate implements Certific
     @NotNull
     private String id;
 
-    @OneToOne
-    private CertificateSerial serial;
-
     @OneToOne(mappedBy = "idCert", fetch = FetchType.LAZY)
     private Consumer consumer;
-
-    public CertificateSerial getSerial() {
-        return serial;
-    }
-
-    public void setSerial(CertificateSerial serialNumber) {
-        this.serial = serialNumber;
-    }
 
     public String getId() {
         return id;

@@ -70,4 +70,84 @@ describe 'Content Delivery Network' do
     cdn.certificate['cert'].should == "test-cert"
   end
 
+  it 'should allow candlepin to create certificate serial' do
+    count = @cp.get_cdns.size
+    cdn_label = random_string("test-cdn")
+
+    serial = { 'expiration' => Date.today.next_year }
+
+    certificate = {
+        'key' => 'test-key',
+        'cert' => 'test-cert',
+        'serial' => serial
+    }
+    cdn = create_cdn(cdn_label,
+                     "Test CDN",
+                     "https://cdn.test.com",
+                     certificate)
+    cdn.id.should_not be nil
+    @cp.get_cdns.size.should == count+1
+    cdn.certificate['key'].should == "test-key"
+    cdn.certificate['cert'].should == "test-cert"
+    cdn.certificate['serial'].should_not be_nil
+  end
+
+  it 'should allow candlepin to update certificate serial' do
+    count = @cp.get_cdns.size
+    cdn_label = random_string("test-cdn")
+
+    serial = { 'expiration' => Date.today.next_year }
+
+    certificate = {
+        'key' => 'test-key',
+        'cert' => 'test-cert',
+        'serial' => serial
+    }
+    cdn = create_cdn(cdn_label,
+                     "Test CDN",
+                     "https://cdn.test.com",
+                     certificate)
+    cdn.id.should_not be nil
+
+    @cp.get_cdns.size.should == count+1
+    cdn.certificate['key'].should == "test-key"
+    cdn.certificate['cert'].should == "test-cert"
+    cdn.certificate['serial'].should_not be_nil
+
+    updated_key = 'm_test_key'
+    updated_cert = 'm_test_cert'
+    updated_expiration = Date.today.next_month.next_year
+    certificate['key'] = updated_key
+    certificate['cert'] = updated_cert
+    certificate['serial']['expiration'] = updated_expiration
+
+    cdn = update_cdn(cdn_label, nil, nil, certificate)
+    @cp.get_cdns.size.should == count+1
+    cdn.certificate['key'].should == updated_key
+    cdn.certificate['cert'].should == updated_cert
+    Date.parse(cdn.certificate['serial']['expiration']).should == updated_expiration
+  end
+
+  it 'should allow deletion with certificate' do
+    count = @cp.get_cdns.size
+    cdn_label = random_string("test-cdn")
+
+    serial = { 'expiration' => Date.today.next_year }
+
+    certificate = {
+        'key' => 'test-key',
+        'cert' => 'test-cert',
+        'serial' => serial
+    }
+    cdn = create_cdn(cdn_label,
+                     "Test CDN",
+                     "https://cdn.test.com",
+                     certificate)
+    cdn.id.should_not be nil
+    @cp.get_cdns.size.should == count+1
+
+    @cp.delete_cdn(cdn_label)
+    @cp.get_cdns.size.should == count
+  end
+
 end

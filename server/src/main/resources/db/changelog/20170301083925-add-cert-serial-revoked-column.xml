@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <changeSet id="20170301083925-1" author="mstead">
+        <comment>
+            Add cp_cert_serial.revoked column to support removing
+            the hibernate formula off of the CertificateSerial entity.
+        </comment>
+        <addColumn tableName="cp_cert_serial">
+            <column name="revoked" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false" />
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20170301083925-2" dbms="postgresql,oracle" author="mstead">
+        <comment>
+            [POSTGRESQL, ORACLE, HSQLDB]
+            Calculate the value of the field for all known serials
+            based on existence of entitlement certificates.
+        </comment>
+
+        <sql>
+            update cp_cert_serial cs
+            set revoked = true
+            from
+                (select cs.id from cp_cert_serial cs
+                 left outer join cp_ent_certificate ec on ec.serial_id = cs.id
+                 left outer join cp_cdn_certificate cdnc on cs.id = cdnc.serial_id
+                 left outer join cp_certificate subcert on cs.id = subcert.serial_id
+                 left outer join cp_id_cert idcert on cs.id = idcert.serial_id
+                 left outer join cp_cont_access_cert cacert on cs.id = cacert.serial_id
+                 left outer join cp_ueber_cert ueber on cs.id = ueber.serial_id
+                 where ec.id is null and cdnc.id is null and subcert.id is null and idcert.id is null and cacert.id is null and ueber.id is null
+                 ) revoked_cert
+            where cs.id = revoked_cert.id;
+        </sql>
+        <rollback>
+            alter table cp_cert_serial drop column if exists revoked;
+        </rollback>
+
+    </changeSet>
+
+    <changeSet id="20170301083925-3" dbms="mysql" author="mstead">
+        <comment>
+            [MySQL]
+            Calculate the value of the field for all known serials
+            based on existence of entitlement certificates.
+        </comment>
+
+        <sql>
+            update cp_cert_serial cs
+                left outer join cp_ent_certificate ec on ec.serial_id = cs.id
+                left outer join cp_cdn_certificate cdnc on cs.id = cdnc.serial_id
+                left outer join cp_certificate subcert on cs.id = subcert.serial_id
+                left outer join cp_id_cert idcert on cs.id = idcert.serial_id
+                left outer join cp_cont_access_cert cacert on cs.id = cacert.serial_id
+                left outer join cp_ueber_cert ueber on cs.id = ueber.serial_id
+            set revoked = true
+            where ec.id is null and cdnc.id is null and subcert.id is null and idcert.id is null and cacert.id is null and ueber.id is null;
+        </sql>
+        <rollback>
+            alter table cp_cert_serial drop column if exists revoked;
+        </rollback>
+
+    </changeSet>
+
+</databaseChangeLog>
+<!-- vim: set expandtab sts=4 sw=4 ai: -->

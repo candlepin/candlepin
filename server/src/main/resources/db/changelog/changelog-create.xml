@@ -1205,4 +1205,5 @@
     <include file="db/changelog/20170214115606-uber-cert-rewrite.xml"/>
     <include file="db/changelog/20170220133446-add-correlation-id-to-job.xml"/>
     <include file="db/changelog/20170227140343-convert-consumer-entitlement-count-to-column.xml"/>
+    <include file="db/changelog/20170301083925-add-cert-serial-revoked-column.xml"/>
 </databaseChangeLog>
