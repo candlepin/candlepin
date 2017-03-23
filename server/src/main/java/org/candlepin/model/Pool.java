@@ -156,6 +156,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         NORMAL,
         ENTITLEMENT_DERIVED,
         STACK_DERIVED,
+        SHARE_DERIVED,
         BONUS,
         UNMAPPED_GUEST,
         DEVELOPMENT;
@@ -170,6 +171,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
             switch (this) {
                 case ENTITLEMENT_DERIVED:
                 case STACK_DERIVED:
+                case SHARE_DERIVED:
                     return true;
 
                 default:
@@ -1241,6 +1243,9 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         if (hasAttribute(Attributes.DERIVED_POOL)) {
             if (hasAttribute(Attributes.UNMAPPED_GUESTS_ONLY)) {
                 return PoolType.UNMAPPED_GUEST;
+            }
+            else if (hasAttribute(Attributes.SHARE)) {
+                return PoolType.SHARE_DERIVED;
             }
             else if (getSourceEntitlement() != null) {
                 return PoolType.ENTITLEMENT_DERIVED;
