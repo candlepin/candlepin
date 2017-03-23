@@ -1125,7 +1125,7 @@ public class PoolManagerTest {
 
         // Check that appropriate events were sent out:
         verify(eventFactory).poolDeleted(p);
-        verify(mockEventSink, times(3)).queueEvent((Event) any());
+        verify(mockEventSink, times(1)).queueEvent((Event) any());
     }
 
     @Test
