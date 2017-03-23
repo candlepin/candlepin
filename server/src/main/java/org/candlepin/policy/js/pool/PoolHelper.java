@@ -248,6 +248,7 @@ public class PoolHelper {
             pool.setAttribute(entry.getKey(), entry.getValue());
         }
         pool.setAttribute(Pool.Attributes.SHARE, "true");
+        pool.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
 
         for (Branding b : sourcePool.getBranding()) {
             pool.getBranding().add(new Branding(b.getProductId(), b.getType(),

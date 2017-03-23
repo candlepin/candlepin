@@ -312,7 +312,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         }
 
         if (!sharedEntitlements.isEmpty()) {
-            postBindEntitlementDerived(poolManager, consumer, sharedEntitlements,
+            postBindShareDerived(poolManager, consumer, sharedEntitlements,
                 flatAttributeMaps);
         }
     }
@@ -376,7 +376,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         }
     }
 
-    private void postBindEntitlementDerived(PoolManager poolManager, Consumer c,
+    private void postBindShareDerived(PoolManager poolManager, Consumer c,
         Map<String, Entitlement> entitlementMap, Map<String, Map<String, String>> attributeMaps) {
         log.debug("Running entitlement derived post-bind");
 
