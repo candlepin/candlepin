@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.0.28
+Version: 2.0.29
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -220,6 +220,19 @@ fi
 
 #raw
 %changelog
+* Thu Mar 23 2017 Kevin Howell <khowell@redhat.com> 2.0.29-1
+- Add revoked column to cp_cert_serial table (mstead@redhat.com)
+- Fix system fact for test that broke due to colliding merges in master
+  (bcourt@redhat.com)
+- Fix premature addition of ContentAccessCertificates to CRL
+  (bcourt@redhat.com)
+- 1430413: Cert V1 consumers don't get Golden Tickets (wpoteat@redhat.com)
+- Optimized how consumers are enriched with compliance details
+  (crog@redhat.com)
+- 1431639: Allow hyphen for correlation id (wpoteat@redhat.com)
+- Remove guestIds from the consumer json output (wpoteat@redhat.com)
+- Refactored pool and product attribute storage and access (crog@redhat.com)
+
 * Fri Mar 17 2017 Kevin Howell <khowell@redhat.com> 2.0.28-1
 - 1432653: Liquibase scripts need hashes (wpoteat@redhat.com)
 - Remove gutterball (khowell@redhat.com)
