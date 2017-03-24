@@ -61,6 +61,14 @@ describe 'Qpid Broker' do
      expect(mode["mode"]).to eq(mode_name)
   end
 
+  def stop_tomcat()
+     `sudo systemctl stop tomcat || sudo supervisorctl stop tomcat`
+  end
+
+  def start_tomcat()
+     `sudo systemctl start tomcat || sudo supervisorctl start tomcat`
+  end
+
   it 'transition to SUSPEND mode' do
      assert_mode("NORMAL")
 
@@ -116,5 +124,16 @@ describe 'Qpid Broker' do
      msgs[0].subject.should == 'owner.created'
   end
 
+  it 'Candlepin startup without qpid ends in suspend mode' do
+     assert_mode("NORMAL")
+     stop_tomcat
+     @cq.stop
+     start_tomcat
+     sleep 10
+     assert_mode("SUSPEND")
+     @cq.start
+     sleep 12
+     assert_mode("NORMAL")
+  end
 
 end

@@ -204,7 +204,6 @@ public class HornetqContextListener {
         }
         catch (Exception e) {
             log.error("Error starting AMQP client", e);
-            throw new RuntimeException(e);
         }
     }
 

@@ -138,6 +138,9 @@ public class PinsetterKernel implements ModeChangeListener {
     public void startup() throws PinsetterException {
         try {
             scheduler.start();
+            if (modeManager.getLastCandlepinModeChange().getMode() != Mode.NORMAL) {
+                scheduler.pauseAll();
+            }
             modeManager.registerModeChangeListener(this);
             configure();
         }
