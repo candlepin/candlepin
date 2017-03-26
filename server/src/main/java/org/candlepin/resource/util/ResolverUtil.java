@@ -31,6 +31,8 @@ import com.google.inject.Inject;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Convinience util for resolving owners, products, pools & subscriptions
@@ -78,35 +80,57 @@ public class ResolverUtil {
         return owner;
     }
 
-    public Product resolveProduct(Owner owner, Product product) {
-        String id = null;
+    public Product resolveProduct(Owner owner, String productId, boolean allowNull) {
+        Product product = new Product();
+        product.setId(productId);
+        return resolveProduct(owner, product, allowNull);
+    }
+
+    public ProductData resolveProduct(Owner owner, ProductData product, boolean allowNull) {
+        Product argProduct = new Product();
+        ProductData result = null;
         if (product != null) {
-            id = product.getId();
+            argProduct.setId(product.getId());
+            argProduct.setUuid(product.getUuid());
         }
-        return resolveProduct(owner, id);
+        if (product != null) {
+            result = new ProductData(resolveProduct(owner, argProduct, allowNull));
+        }
+        return result;
     }
 
-    public Product resolveProduct(Owner owner, String productId) {
-        if (productId == null) {
-            throw new BadRequestException(
-                    i18n.tr("No product specified, or product lacks identifying information"));
+    public Product resolveProduct(Owner owner, Product product, boolean allowNull) {
+        Product result = null;
+        if (product != null) {
+            if (product.getUuid() != null) {
+                result = this.productCurator.find(product.getUuid());
+                if (result == null) {
+                    throw new NotFoundException(i18n.tr(
+                        "Unable to find a product with the UUID \"{0}\"", product.getUuid()
+                    ));
+                }
+            }
+            else if (product.getId() != null) {
+                result = this.ownerProductCurator.getProductById(owner, product.getId());
+                if (result == null) {
+                    throw new NotFoundException(i18n.tr(
+                        "Unable to find a product with the ID \"{0}\" for owner \"{1}\"",
+                            product.getId(), owner.getKey()
+                    ));
+                }
+            }
+            else {
+                throw new BadRequestException(i18n.tr(
+                   "No product specified, or product lacks identifying information"
+                ));
+            }
         }
-
-        // TODO: Maybe add UUID resolution as well?
-        return findProduct(owner, productId);
-    }
-
-    public Product findProduct(Owner owner, String productId) {
-        Product product = this.ownerProductCurator.getProductById(owner, productId);
-
-        if (product == null) {
-            throw new NotFoundException(i18n.tr(
-                "Unable to find a product with the ID \"{0}\" for owner \"{1}\"",
-                productId, owner.getKey()
+        else if (!allowNull) {
+            throw new BadRequestException(i18n.tr(
+                "No product specified, or product lacks identifying information"
             ));
         }
-
-        return product;
+        return result;
     }
 
     public Pool resolvePool(Pool pool) {
@@ -124,25 +148,30 @@ public class ResolverUtil {
         pool.setOwner(owner);
 
         // Ensure the specified product(s) exists for the given owner
-        pool.setProduct(this.resolveProduct(owner, pool.getProduct()));
+        pool.setProduct(this.resolveProduct(owner, pool.getProduct(), false));
 
         if (pool.getDerivedProduct() != null) {
-            pool.setDerivedProduct(this.resolveProduct(owner, pool.getDerivedProduct()));
+            pool.setDerivedProduct(this.resolveProduct(owner, pool.getDerivedProduct(), true));
         }
 
         HashSet<Product> presolved = new HashSet<Product>();
 
         pool.populateAllTransientProvidedProducts(productCurator);
         for (ProvidedProduct product : pool.getProvidedProductDtos()) {
-            // TODO: Maybe add UUID resolution as well?
-            presolved.add(resolveProduct(owner, product.getProductId()));
+            Product result = resolveProduct(owner, product.getProductId(), true);
+            if (result != null) {
+                presolved.add(result);
+            }
         }
 
         pool.setProvidedProducts(presolved);
         presolved.clear();
 
         for (ProvidedProduct product : pool.getDerivedProvidedProductDtos()) {
-            presolved.add(this.resolveProduct(owner, product.getProductId()));
+            Product result = this.resolveProduct(owner, product.getProductId(), true);
+            if (result != null) {
+                presolved.add(result);
+            }
         }
 
         pool.setDerivedProvidedProducts(presolved);
@@ -150,43 +179,6 @@ public class ResolverUtil {
         // TODO: Do we need to resolve Branding objects?
 
         return pool;
-    }
-
-    public void validateProductData(ProductData pdata, Owner owner, boolean allowNull) {
-        if (pdata != null) {
-            if (pdata.getUuid() != null) {
-                // UUID is set. Verify that product exists and matches the ID provided, if any
-                Product product = this.productCurator.find(pdata.getUuid());
-
-                if (product == null) {
-                    throw new NotFoundException(i18n.tr(
-                        "Unable to find a product with the UUID \"{0}\"", pdata.getUuid()
-                    ));
-                }
-
-                pdata.setId(product.getId());
-            }
-            else if (pdata.getId() != null) {
-                Product product = this.ownerProductCurator.getProductById(owner, pdata.getId());
-
-                if (product == null) {
-                    throw new NotFoundException(i18n.tr(
-                        "Unable to find a product with the ID \"{0}\" for owner \"{1}\"",
-                        pdata.getId(), owner.getKey()
-                    ));
-                }
-            }
-            else {
-                throw new BadRequestException(
-                    i18n.tr("No product specified, or product lacks identifying information")
-                );
-            }
-        }
-        else if (!allowNull) {
-            throw new BadRequestException(
-                i18n.tr("No product specified, or product lacks identifying information")
-            );
-        }
     }
 
     public Subscription resolveSubscription(Subscription subscription) {
@@ -204,16 +196,26 @@ public class ResolverUtil {
         subscription.setOwner(owner);
 
         // Ensure the specified product(s) exists for the given owner
-        this.validateProductData(subscription.getProduct(), owner, false);
-        this.validateProductData(subscription.getDerivedProduct(), owner, true);
+        subscription.setProduct(resolveProduct(owner, subscription.getProduct(), false));
+        subscription.setDerivedProduct(resolveProduct(owner, subscription.getDerivedProduct(), true));
 
+        List<ProductData> providedProductList = new LinkedList<ProductData>();
         for (ProductData product : subscription.getProvidedProducts()) {
-            this.validateProductData(product, owner, true);
+            ProductData result = resolveProduct(owner, product, true);
+            if (result != null) {
+                providedProductList.add(result);
+            }
         }
+        subscription.setProvidedProducts(providedProductList);
 
+        List<ProductData> derivedProvidedProductList = new LinkedList<ProductData>();
         for (ProductData product : subscription.getDerivedProvidedProducts()) {
-            this.validateProductData(product, owner, true);
+            ProductData result = resolveProduct(owner, product, true);
+            if (result != null) {
+                derivedProvidedProductList.add(result);
+            }
         }
+        subscription.setDerivedProvidedProducts(derivedProvidedProductList);
 
         // TODO: Do we need to resolve Branding objects?
 

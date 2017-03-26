@@ -21,6 +21,16 @@ describe 'Product Versioning' do
     prod1["uuid"].should eq(prod2["uuid"])
   end
 
+  it 'should not change uuid of a product after refresh' do
+    owner1 = create_owner random_string('test_owner')
+    prod = create_product(random_string('name'), random_string('id'), :owner => owner1['key'])
+    pool = create_pool_and_subscription(owner1['key'], prod['id'], 10,
+      [],'','','',nil,nil,true)
+    @cp.get_product(owner1['key'], prod['id'])['uuid'].should == prod['uuid']
+    @cp.refresh_pools(owner1['key'])
+    @cp.get_product(owner1['key'], prod['id'])['uuid'].should == prod['uuid']
+  end
+
   it "creates two distinct product instances when details differ" do
     owner1 = create_owner random_string('test_owner')
     owner2 = create_owner random_string('test_owner')
