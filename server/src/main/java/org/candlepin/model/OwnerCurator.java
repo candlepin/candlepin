@@ -145,4 +145,19 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
             .setProjection(Property.forName("uuid"))
             .list();
     }
+
+    /**
+     * Apply a SELECT FOR UPDATE on an owner.
+     *
+     * Note this method is not transactional.  It is meant to be used within
+     * a larger transaction.  Starting a transaction, running a select for update,
+     * and then ending the transaction is pointless.
+     *
+     * @return An owner locked in the database
+     */
+    public Owner lockAndLoad(Owner o) {
+        getEntityManager().lock(o, LockModeType.PESSIMISTIC_WRITE);
+        return o;
+    }
+
 }
