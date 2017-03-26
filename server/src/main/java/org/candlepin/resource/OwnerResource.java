@@ -322,28 +322,22 @@ public class OwnerResource {
     @Path("/{owner_key}")
     @Produces(MediaType.APPLICATION_JSON)
     public void deleteOwner(@PathParam("owner_key") String ownerKey,
-        @QueryParam("revoke") @DefaultValue("true") boolean revoke) {
+        @QueryParam("revoke") @DefaultValue("true") @Deprecated boolean revoke) {
         Owner owner = findOwner(ownerKey);
         Event e = eventFactory.ownerDeleted(owner);
 
-        cleanupAndDelete(owner, revoke);
+        cleanupAndDelete(owner);
 
         sink.queueEvent(e);
     }
 
-    private void cleanupAndDelete(Owner owner, boolean revokeCerts) {
+    private void cleanupAndDelete(Owner owner) {
         log.info("Cleaning up owner: " + owner);
         List<Consumer> consumers = consumerCurator.listByOwner(owner);
         for (Consumer c : consumers) {
             log.info("Removing all entitlements for consumer: " + c);
 
-            if (revokeCerts) {
-                poolManager.revokeAllEntitlements(c);
-            }
-            else {
-                // otherwise just remove them without touching the CRL
-                poolManager.revokeAllEntitlements(c);
-            }
+            poolManager.revokeAllEntitlements(c);
         }
 
         // Actual consumer deletion had to be moved out of
@@ -852,6 +846,17 @@ public class OwnerResource {
         return subService.getSubscriptions(o);
     }
 
+    private Owner findOwnerAndLockByKey(String key) {
+        Owner owner = ownerCurator.lookupAndLockByKey(key);
+
+        if (owner == null) {
+            throw new NotFoundException(i18n.tr(
+                "owner with key: {0} was not found.", key));
+        }
+
+        return owner;
+    }
+
     private Owner findOwner(String key) {
         Owner owner = ownerCurator.lookupByKey(key);
 
@@ -1000,11 +1005,12 @@ public class OwnerResource {
     @DELETE
     @Path("{owner_key}/imports")
     @Produces(MediaType.APPLICATION_JSON)
+    @Transactional
     public JobDetail undoImports(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @Context Principal principal) {
 
-        Owner owner = findOwner(ownerKey);
+        Owner owner = findOwnerAndLockByKey(ownerKey);
         log.info("Deleting all subscriptions from manifests for owner: " + ownerKey);
 
         // In this situation we know we should be querying the curator rather than the
