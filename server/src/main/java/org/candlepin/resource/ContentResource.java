@@ -47,14 +47,13 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-
-
+import io.swagger.annotations.Authorization;
 
 /**
  * ContentResource
  */
 @Path("/content")
-@Api("content")
+@Api(value = "content", authorizations = { @Authorization("basic") })
 public class ContentResource {
 
     private ContentCurator contentCurator;
@@ -79,7 +78,8 @@ public class ContentResource {
         this.ownerCurator = ownerCurator;
     }
 
-    @ApiOperation(notes = "Retrieves list of Content", value = "list")
+    @ApiOperation(notes = "Retrieves list of Content", value = "list", response = ContentData.class,
+        responseContainer = "list")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public CandlepinQuery<ContentData> list() {

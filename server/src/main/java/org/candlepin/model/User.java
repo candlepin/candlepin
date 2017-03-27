@@ -20,7 +20,13 @@ import org.candlepin.auth.permissions.Permission;
 import org.candlepin.auth.permissions.PermissionFactory;
 import org.candlepin.util.Util;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import org.hibernate.annotations.GenericGenerator;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 
 import java.util.Formatter;
 import java.util.HashSet;
@@ -51,7 +57,48 @@ import javax.xml.bind.annotation.XmlTransient;
 @Table(name = User.DB_TABLE)
 public class User extends AbstractHibernateObject {
 
-    /** Name of the table backing this object in the database */
+    /**
+     * This class only exists so that Swagger can generate a separate model.  Users are not
+     * symmetrical when serialized versus deserialized (e.g. the plaintext password is never deserialized);
+     * accordingly, Swagger requires two separate models. The UserCreationRequest class below is to allow
+     * swagger-codegen to generate a model object that will allow us to set the password on a request.
+     *
+     * See https://github.com/swagger-api/swagger-core/issues/1214
+     */
+    @ApiModel("UserCreationRequest")
+    public static final class UserCreationRequest {
+        @ApiModelProperty(required = true) private String username;
+        @ApiModelProperty(required = true) private String password;
+        @ApiModelProperty private boolean superAdmin;
+
+        public String getUsername() {
+            return username;
+        }
+
+        public void setUsername(String username) {
+            this.username = username;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+
+        public void setPassword(String password) {
+            this.password = password;
+        }
+
+        public boolean isSuperAdmin() {
+            return superAdmin;
+        }
+
+        public void setSuperAdmin(boolean superAdmin) {
+            this.superAdmin = superAdmin;
+        }
+    }
+
+    /**
+     * Name of the table backing this object in the database
+     */
     public static final String DB_TABLE = "cp_user";
 
     @Id
@@ -59,6 +106,7 @@ public class User extends AbstractHibernateObject {
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
     @NotNull
+    @ApiModelProperty(readOnly = true)
     private String id;
 
     @ManyToMany(targetEntity = Role.class, mappedBy = "users")
@@ -69,6 +117,7 @@ public class User extends AbstractHibernateObject {
     @NotNull
     private String username;
 
+    @ApiModelProperty(readOnly = true)
     @Size(max = 255)
     private String hashedPassword;
 
@@ -123,12 +172,14 @@ public class User extends AbstractHibernateObject {
     public String getUsername() {
         return username;
     }
+
     /**
      * @param username the login to set
      */
     public void setUsername(String username) {
         this.username = username;
     }
+
     /**
      * @return the hashed password
      */
@@ -146,8 +197,20 @@ public class User extends AbstractHibernateObject {
     /**
      * @param password the password to set
      */
+    @JsonProperty
     public void setPassword(String password) {
         this.hashedPassword = Util.hash(password);
+    }
+
+    /**
+     * Password is a "split property" in Jackson's terminology.  The JsonProperty annotation on the
+     * setter means it can be written, but the @JsonIgnore on the getter means it will not be included when
+     * a User is serialized.
+     * @return the hashed password
+     */
+    @JsonIgnore
+    public String getPassword() {
+        return getHashedPassword();
     }
 
     /**
@@ -170,7 +233,6 @@ public class User extends AbstractHibernateObject {
         }
         return owners;
     }
-
 
     /**
      * @return the roles
@@ -231,12 +293,12 @@ public class User extends AbstractHibernateObject {
 
     /**
      * Return string representation of the user object
+     *
      * @return string representation of the user object
      */
     @Override
     public String toString() {
-        return new Formatter().format("User :{login: %s, password: %s}",
-                username, hashedPassword).toString();
+        return new Formatter().format("User :{login: %s, password: %s}", username, hashedPassword).toString();
     }
 
 }

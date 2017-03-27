@@ -27,12 +27,13 @@ import org.xnap.commons.i18n.I18n;
 import javax.ws.rs.Path;
 
 import io.swagger.annotations.Api;
+import io.swagger.annotations.Authorization;
 
 /**
  * API Gateway for Consumers Content Overrides
  */
 @Path("/consumers/{consumer_uuid}/content_overrides")
-@Api("consumers")
+@Api(value = "consumers", authorizations = { @Authorization("basic") })
 public class ConsumerContentOverrideResource extends
     ContentOverrideResource<ConsumerContentOverride,
     ConsumerContentOverrideCurator, Consumer> {

@@ -160,14 +160,13 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-
-
+import io.swagger.annotations.Authorization;
 
 /**
  * API Gateway for Consumers
  */
 @Path("/consumers")
-@Api("consumers")
+@Api(value = "consumers", authorizations = { @Authorization("basic") })
 public class ConsumerResource {
     private Pattern consumerSystemNamePattern;
     private Pattern consumerPersonNamePattern;
@@ -344,7 +343,8 @@ public class ConsumerResource {
         }
     }
 
-    @ApiOperation(notes = "Retrieves a list of the Consumers", value = "list")
+    @ApiOperation(notes = "Retrieves a list of the Consumers", value = "list", response = Consumer.class,
+        responseContainer = "list")
     @ApiResponses({ @ApiResponse(code =  400, message = ""), @ApiResponse(code =  404, message = "") })
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -449,7 +449,9 @@ public class ConsumerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @SecurityHole(noAuth = true)
     @Transactional
-    public Consumer create(Consumer consumer, @Context Principal principal,
+    public Consumer create(
+        @ApiParam(name = "consumer", required = true) Consumer consumer,
+        @Context Principal principal,
         @QueryParam("username") String userName,
         @QueryParam("owner") String ownerKey,
         @QueryParam("activation_keys") String activationKeys,
@@ -899,7 +901,7 @@ public class ConsumerResource {
     @Transactional
     public void updateConsumer(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid,
-        Consumer consumer) {
+        @ApiParam(name = "consumer", required = true) Consumer consumer) {
 
         Consumer toUpdate = consumerCurator.verifyAndLookupConsumer(uuid);
 
@@ -1380,7 +1382,7 @@ public class ConsumerResource {
     }
 
     @ApiOperation(notes = "Retrieves the body of the Content Access Certificate for the Consumer",
-        value = "getContentAccessBody")
+        value = "getContentAccessBody", response = String.class)
     @ApiResponses({ @ApiResponse(code = 404, message = ""), @ApiResponse(code = 304, message = "") })
     @GET
     @Path("{consumer_uuid}/accessible_content")

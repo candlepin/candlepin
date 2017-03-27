@@ -69,16 +69,16 @@ import javax.ws.rs.core.MediaType;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-
-
+import io.swagger.annotations.Authorization;
 
 /**
  * REST API for managing Environments.
  */
 @Path("/environments")
-@Api("environments")
+@Api(value = "environments", authorizations = { @Authorization("basic") })
 public class EnvironmentResource {
     private static Logger log = LoggerFactory.getLogger(AdminResource.class);
 
@@ -149,7 +149,7 @@ public class EnvironmentResource {
     }
 
     @ApiOperation(notes = "Lists the Environments.  Only available to super admins.",
-        value = "getEnvironments")
+        value = "getEnvironments", response = Environment.class, responseContainer = "list")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "environments")
@@ -209,6 +209,7 @@ public class EnvironmentResource {
     @Path("/{env_id}/content")
     public JobDetail promoteContent(
         @PathParam("env_id") @Verify(Environment.class) String envId,
+        @ApiParam(name = "contentToPromote", required = true)
         List<org.candlepin.model.dto.EnvironmentContent> contentToPromote,
         @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {
 
@@ -374,7 +375,8 @@ public class EnvironmentResource {
     @Produces(MediaType.APPLICATION_JSON)
     @SecurityHole(noAuth = true)
     @Path("/{env_id}/consumers")
-    public Consumer create(@PathParam("env_id") String envId, Consumer consumer,
+    public Consumer create(@PathParam("env_id") String envId,
+        @ApiParam(name = "consumer", required = true) Consumer consumer,
         @Context Principal principal, @QueryParam("username") String userName,
         @QueryParam("owner") String ownerKey,
         @QueryParam("activation_keys") String activationKeys)

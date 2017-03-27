@@ -55,10 +55,10 @@ import javax.ws.rs.core.MediaType;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-
-
+import io.swagger.annotations.Authorization;
 
 /**
  * OwnerContentResource
@@ -66,7 +66,7 @@ import io.swagger.annotations.ApiResponses;
  * Manage the content that exists in an organization.
  */
 @Path("/owners/{owner_key}/content")
-@Api("owners")
+@Api(value = "owners", authorizations = { @Authorization("basic") })
 public class OwnerContentResource {
     private static Logger log = LoggerFactory.getLogger(OwnerContentResource.class);
 
@@ -153,10 +153,11 @@ public class OwnerContentResource {
         return content;
     }
 
-    @ApiOperation(notes = "Retrieves list of Content", value = "list")
+    @ApiOperation(notes = "Retrieves list of Content", value = "list", response = Content.class,
+        responseContainer = "list")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public CandlepinQuery<Content> list(@Verify(Owner.class) @PathParam("owner_key") String ownerKey) {
+    public CandlepinQuery<Content> listContent(@Verify(Owner.class) @PathParam("owner_key") String ownerKey) {
         final Owner owner = this.getOwnerByKey(ownerKey);
 
         return this.ownerContentCurator.getContentByOwner(owner);
@@ -221,7 +222,7 @@ public class OwnerContentResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     public ContentData createContent(@PathParam("owner_key") String ownerKey,
-        ContentData content) {
+        @ApiParam(name = "content", required = true) ContentData content) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
         Content entity = this.createContentImpl(owner, content);
@@ -237,7 +238,7 @@ public class OwnerContentResource {
     @Path("/batch")
     @Transactional
     public Collection<ContentData> createBatchContent(@PathParam("owner_key") String ownerKey,
-        List<ContentData> contents) {
+        @ApiParam(name = "contents", required = true) List<ContentData> contents) {
 
         Collection<ContentData> result = new LinkedList<ContentData>();
         Owner owner = this.getOwnerByKey(ownerKey);
@@ -258,7 +259,7 @@ public class OwnerContentResource {
     @Path("/{content_id}")
     public ContentData updateContent(@PathParam("owner_key") String ownerKey,
         @PathParam("content_id") String contentId,
-        ContentData content) {
+        @ApiParam(name = "content", required = true) ContentData content) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
         Content existing  = this.fetchContent(owner, contentId);

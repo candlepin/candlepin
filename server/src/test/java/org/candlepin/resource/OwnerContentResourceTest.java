@@ -64,7 +64,7 @@ public class OwnerContentResourceTest extends DatabaseTestFixture {
         Owner owner = this.createOwner("test_owner");
         Content content = this.createContent("test_content", "test_content", owner);
 
-        CandlepinQuery<Content> response = this.ownerContentResource.list(owner.getKey());
+        CandlepinQuery<Content> response = this.ownerContentResource.listContent(owner.getKey());
 
         assertNotNull(response);
 
@@ -78,7 +78,7 @@ public class OwnerContentResourceTest extends DatabaseTestFixture {
     public void listContentNoContent() throws Exception {
         Owner owner = this.createOwner("test_owner");
 
-        CandlepinQuery<Content> response = this.ownerContentResource.list(owner.getKey());
+        CandlepinQuery<Content> response = this.ownerContentResource.listContent(owner.getKey());
 
         assertNotNull(response);
 

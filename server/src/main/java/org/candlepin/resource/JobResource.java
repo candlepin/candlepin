@@ -55,12 +55,13 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Authorization;
 
 /**
  * JobResource
  */
 @Path("/jobs")
-@Api("jobs")
+@Api(value = "jobs", authorizations = { @Authorization("basic") })
 public class JobResource {
 
     private JobCurator curator;
@@ -105,7 +106,8 @@ public class JobResource {
         return true;
     }
 
-    @ApiOperation(notes = "Retrieves a list of Job Status", value = "getStatuses")
+    @ApiOperation(notes = "Retrieves a list of Job Status", value = "getStatuses",
+        response = JobStatus.class, responseContainer = "list")
     @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 404, message = "") })
     @GET
     @Produces(MediaType.APPLICATION_JSON)

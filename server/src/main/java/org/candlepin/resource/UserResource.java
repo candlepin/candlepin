@@ -49,15 +49,19 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Authorization;
 
 /**
  * UserResource
  */
 @Path("/users")
-@Api("users")
+@Api(value = "users", authorizations = { @Authorization("basic") })
 public class UserResource {
 
     private UserServiceAdapter userService;
@@ -115,10 +119,16 @@ public class UserResource {
     }
 
     @ApiOperation(notes = "Creates a User", value = "createUser")
+    // We declare an implict parameter to get the Swagger generated client to submit passwords but not to
+    // expect them back.
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "user", paramType = "body", required = true,
+        dataType = "org.candlepin.model.User$UserCreationRequest")
+        })
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public User createUser(User user) {
+    public User createUser(@ApiParam(hidden = true) User user) {
         if (userService.findByLogin(user.getUsername()) != null) {
             throw new ConflictException("user " + user.getUsername() + " already exists");
         }
@@ -133,7 +143,7 @@ public class UserResource {
     @Path("/{username}")
     public User updateUser(@PathParam("username")
         @Verify(User.class) String username,
-        User user) {
+        @ApiParam(name = "user", required = true) User user) {
 
         // Note, to change the username, the old username needs to be provided.
         if (userService.findByLogin(username) == null) {

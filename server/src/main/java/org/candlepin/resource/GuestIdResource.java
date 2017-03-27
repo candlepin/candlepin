@@ -59,12 +59,13 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Authorization;
 
 /**
  * API Gateway for registered consumers guests
  */
 @Path("/consumers/{consumer_uuid}/guestids")
-@Api("consumers")
+@Api(value = "consumers", authorizations = { @Authorization("basic") })
 public class GuestIdResource {
 
     private static Logger log = LoggerFactory.getLogger(GuestIdResource.class);
@@ -126,7 +127,7 @@ public class GuestIdResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public void updateGuests(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-        List<GuestId> guestIds) {
+        @ApiParam(name = "guestIds", required = true) List<GuestId> guestIds) {
         Consumer toUpdate = consumerCurator.findByUuid(consumerUuid);
 
         // Create a skeleton consumer for consumerResource.performConsumerUpdates
@@ -156,8 +157,7 @@ public class GuestIdResource {
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @ApiParam("guest virtual uuid")
         @PathParam("guest_id") String guestId,
-        @ApiParam("updated guest data to use")
-        GuestId updated) {
+        @ApiParam(name = "updated", required = true, value = "updated guest data to use") GuestId updated) {
 
         // I'm not sure this can happen
         if (guestId == null || guestId.isEmpty()) {
