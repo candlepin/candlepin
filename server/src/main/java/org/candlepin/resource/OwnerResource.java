@@ -327,10 +327,7 @@ public class OwnerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     @ApiOperation(notes = "Creates an Owner", value = "Create Owner")
-    @ApiResponses({
-        @ApiResponse(code = 400, message = "Invalid owner specified in body"),
-        }
-    )
+    @ApiResponses({ @ApiResponse(code = 400, message = "Invalid owner specified in body") })
     public Owner createOwner(@ApiParam(name = "owner", required = true) Owner owner) {
         Owner parent = owner.getParentOwner();
         if (parent != null && ownerCurator.find(parent.getId()) == null) {

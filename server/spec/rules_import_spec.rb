@@ -10,12 +10,16 @@ describe 'Rules Import', :serial => true do
     # Make sure we're using the rpm rules by deleting any custom
     # ones that may have been left in the database:
     @cp.delete_rules
-   
+
     sleep 6 #The status resource response is being cached for 5 seconds
     @orig_ver = @cp.get_status()['rulesVersion']
-    rules_major_ver = @orig_ver.split(".")[0]
+
+    rules_version_parts = @orig_ver.split(".")
+    rules_major_ver = Integer(rules_version_parts[0])
+    rules_minor_ver = Integer(rules_version_parts[1])
+
     # Come up with a rules version we know is greater than the current:
-    @new_ver = "#{rules_major_ver}.10000"
+    @new_ver = "#{rules_major_ver}." + (rules_minor_ver + 1).to_s
 
     # Dummy rules we can upload:
     @rules = "//Version: #{@new_ver}\nvar a=1.0;"
@@ -28,6 +32,7 @@ describe 'Rules Import', :serial => true do
 
   it 'gets rules' do
     js_rules = @cp.list_rules
+    expect(js_rules).to_not be_nil
   end
 
   def upload_dummy_rules
@@ -35,10 +40,12 @@ describe 'Rules Import', :serial => true do
     sleep 2
     encoded_rules = Base64.encode64(@rules)
     result = @cp.upload_rules(encoded_rules)
+
     fetched_rules = @cp.list_rules
     decoded_fetched_rules = Base64.decode64(fetched_rules)
     (decoded_fetched_rules == @rules).should be true
     sleep 6 #The status resource response is being cached for 5 seconds
+
     @cp.get_status()['rulesVersion'].should == @new_ver
   end
 
@@ -54,6 +61,7 @@ describe 'Rules Import', :serial => true do
 
     # Version should be back to original:
     sleep 6 #The status resource response is being cached for 5 seconds
+
     @cp.get_status()['rulesVersion'].should == @orig_ver
 
     # Shouldn't cause an error if there are none in db:

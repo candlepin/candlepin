@@ -124,8 +124,8 @@ public class Rules extends AbstractHibernateObject implements Named, Eventful {
                 "Rules version must be specified on the top of the rules file. " +
                 "For example: // Version: x.y");
         }
-        this.version = m.group(1);
 
+        this.version = m.group(1);
     }
 
 
@@ -183,4 +183,7 @@ public class Rules extends AbstractHibernateObject implements Named, Eventful {
         return getVersion();
     }
 
+    public String toString() {
+        return String.format("Rules [Version: %s, Source: %s]", this.version, this.rulesSource);
+    }
 }

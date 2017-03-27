@@ -77,7 +77,7 @@ public class RulesResource {
     @Produces({ MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON })
     public String upload(String rulesBuffer) {
 
-        if (rulesBuffer == null || "".equals(rulesBuffer)) {
+        if (rulesBuffer == null || rulesBuffer.isEmpty()) {
             throw new WebApplicationException(Response.Status.BAD_REQUEST);
         }
 
@@ -91,6 +91,7 @@ public class RulesResource {
             throw new BadRequestException(
                 i18n.tr("Error decoding the rules. The text should be base 64 encoded"));
         }
+
         Rules oldRules = rulesCurator.getRules();
         rulesCurator.update(rules);
 
