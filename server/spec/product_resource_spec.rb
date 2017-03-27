@@ -32,15 +32,15 @@ describe 'Product Resource' do
     end.should raise_exception(RestClient::BadRequest)
 
     lambda do
-      @cp.put("/products/#{@product.id}", {})
+      @cp.put("/products/#{@product.id}", {}, {})
     end.should raise_exception(RestClient::BadRequest)
 
     lambda do
-      @cp.post("/products/#{@product.id}/batch_content", {})
+      @cp.post("/products/#{@product.id}/batch_content", {}, {})
     end.should raise_exception(RestClient::BadRequest)
 
     lambda do
-      @cp.post("/products/#{@product.id}/content/contentid", {})
+      @cp.post("/products/#{@product.id}/content/contentid", {}, {})
     end.should raise_exception(RestClient::BadRequest)
 
     lambda do

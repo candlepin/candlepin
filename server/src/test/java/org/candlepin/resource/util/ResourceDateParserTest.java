@@ -95,8 +95,7 @@ public class ResourceDateParserTest {
 
     @Test
     public void parseDateTime() {
-        Date parsed = ResourceDateParser.parseDateString(
-            "1997-07-16T19:20:30-00:00");
+        Date parsed = ResourceDateParser.parseDateString("1997-07-16T19:20:30-00:00");
 
         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
         cal.setTime(parsed);

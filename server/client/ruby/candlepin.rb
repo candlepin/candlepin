@@ -529,7 +529,7 @@ module Candlepin
 
       def bind(opts = {})
         # Entitle dates are not allowed in bind by product.
-        default_date = Date.today
+        default_date = DateTime.now
         if opts.key?(:pool_id)
           default_date = nil
         end
@@ -1634,8 +1634,8 @@ module Candlepin
       def create_pool(opts = {})
         defaults = {
           :owner => key,
-          :start_date => Date.today,
-          :end_date => Date.today + 365,
+          :start_date => DateTime.now,
+          :end_date => DateTime.now + 365,
           :quantity => 1,
           :account_number => '',
           :order_number => '',

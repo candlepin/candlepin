@@ -19,9 +19,9 @@ describe 'Import Update', :serial => true do
   end
 
   after(:all) do
-    @cp.delete_user(@import_username)
-    @cp.delete_owner(@import_owner['key'])
-    @exporter.cleanup()
+    @cp.delete_user(@import_username) if @import_username
+    @cp.delete_owner(@import_owner['key']) if @import_owner
+    @exporter.cleanup() if @exporter
   end
 
   it 'should successfully update the import' do
@@ -31,12 +31,12 @@ describe 'Import Update', :serial => true do
     @host1_client = Candlepin.new(nil, nil, @host1['idCert']['cert'], @host1['idCert']['key'])
     all_pools = @user.list_pools :owner => @import_owner.id
     normal_pool = all_pools.select{|i| i['type']=='NORMAL'}[0]
-    all_pools.size.should == 2  
+    all_pools.size.should == 2
     @host1_client.consume_pool(normal_pool.id, {:quantity => 2})
     all_pools = @user.list_pools :owner => @import_owner.id
-    all_pools.size.should == 3  
-    
-    # Now lets import 
+    all_pools.size.should == 3
+
+    # Now lets import
     updated_export = @exporter.create_candlepin_export_update()
     @cp.import(@import_owner['key'], updated_export.export_filename)
 

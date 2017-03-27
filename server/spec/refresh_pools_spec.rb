@@ -102,9 +102,10 @@ describe 'Refresh Pools' do
     consumer.consume_pool(pools.first.id, {:quantity => 1}).size.should == 1
 
     # Update the subscription to be expired so that pool, and entitlements are removed.
+    now = DateTime.now
     sub = get_hostedtest_subscription(pool.subscriptionId)
-    sub.startDate = Date.today - 20
-    sub.endDate = Date.today - 10
+    sub.startDate = now - 20
+    sub.endDate = now - 10
     update_hostedtest_subscription(sub)
     @cp.refresh_pools(owner['key'])
     @cp.list_pools({:owner => owner.id}).size.should == 0

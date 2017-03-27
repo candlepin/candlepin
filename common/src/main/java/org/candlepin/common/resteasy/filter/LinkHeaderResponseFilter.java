@@ -65,8 +65,8 @@ public class LinkHeaderResponseFilter implements ContainerResponseFilter {
     public void filter(ContainerRequestContext reqContext, ContainerResponseContext respContext) {
         Page page = ResteasyProviderFactory.getContextData(Page.class);
 
+        // Make sure we have page information in the context
         if (page == null) {
-            log.warn("Method marked for pagination, but no page exists in the context.");
             return;
         }
 

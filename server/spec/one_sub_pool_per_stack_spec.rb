@@ -10,7 +10,9 @@ describe 'One Sub Pool Per Stack' do
   include AttributeHelper
 
   before(:each) do
-    skip("candlepin not running in standalone mode") if is_hosted?
+    @now = DateTime.now
+
+    skip("candlepin running in standalone mode") if is_hosted?
     @owner = create_owner random_string('virt_owner')
     @user = user_client(@owner, random_string('virt_user'))
 
@@ -85,9 +87,9 @@ describe 'One Sub Pool Per Stack' do
       @virt_limit_product.id, 10, [@virt_limit_provided_product.id], "123", "321", "333",
       nil, nil, true)
     create_pool_and_subscription(@owner['key'],
-      @virt_limit_product.id, 10, [], "456", '', '', nil, Date.today + 380, true)
+      @virt_limit_product.id, 10, [], "456", '', '', nil, @now + 380, true)
     create_pool_and_subscription(@owner['key'],
-      @virt_limit_product2.id, 10, [], "444", '', '', nil, Date.today + 380, true)
+      @virt_limit_product2.id, 10, [], "444", '', '', nil, @now + 380, true)
     create_pool_and_subscription(@owner['key'],
       @regular_stacked_product.id, 4, [@regular_stacked_provided_product.id], "789",
       "","", nil, nil, true)

@@ -67,7 +67,7 @@ describe 'Unbind' do
     ent = consumer.consume_pool(pool.id, {:quantity => 1}).first
 
     # Gather up the serials
-    serials = consumer.list_entitlements(:product_id => @monitoring.id).collect do |ent|
+    serials = consumer.list_entitlements(:product => @monitoring.id).collect do |ent|
       ent.certificates.collect { |cert| cert.serial.id }
     end.flatten
 
@@ -77,7 +77,7 @@ describe 'Unbind' do
     serials.each { |serial| @cp.get_serial(serial).revoked.should be true }
   end
 
-  it 'should leave other entitlements in tact' do
+  it 'should leave other entitlements intact' do
     virt_host = create_product(nil, random_string('virt_host'))
     pool = create_pool_and_subscription(@owner['key'], virt_host.id, 5)
 
@@ -93,7 +93,7 @@ describe 'Unbind' do
     virt_host_ent = consumer.consume_pool(pool.id, {:quantity => 1}).first
 
     # Gather up the serials
-    serials = consumer.list_entitlements(:product_id => @monitoring.id).collect do |ent|
+    serials = consumer.list_entitlements(:product => @monitoring.id).collect do |ent|
       ent.certificates.collect { |cert| cert.serial.id }
     end.flatten
 

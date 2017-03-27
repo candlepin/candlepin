@@ -165,11 +165,9 @@ describe 'Entitlement Certificate V3' do
   it 'verify branding info is correct in json blob' do
     product = create_product(nil, nil)
 
-    branding = [{:productId => product['id'],
-        :type => 'Some Type', :name => 'Super Branded Name'}]
-    create_pool_and_subscription(@owner['key'], product.id, 10, [],
-        '12345', '6789', 'order1', Date.today - 10, Date.today + 365, false,
-        {:branding => branding})
+    now = DateTime.now
+    branding = [{:productId => product['id'], :type => 'Some Type', :name => 'Super Branded Name'}]
+    create_pool_and_subscription(@owner['key'], product.id, 10, [], '12345', '6789', 'order1', now - 10, now + 365, false, {:branding => branding})
     entitlement = @system.consume_product(product.id)[0]
     json_body = extract_payload(@system.list_certificates[0]['cert'])
 

@@ -98,11 +98,15 @@ describe 'Owner Resource' do
     product = create_product(nil, nil, :owner => owner['key'])
     pool = create_pool_and_subscription(owner['key'], product.id, 10)
     poolOrSub = get_pool_or_subscription(pool)
-    tomorrow = (Time.now + 24 * 60 * 60).utc.iso8601
+    tomorrow = (DateTime.now + 1)
     poolOrSub.startDate = tomorrow
     update_pool_or_subscription(poolOrSub)
     updatedSub = @cp.get_subscription(pool.subscriptionId)
-    Time.parse(updatedSub.startDate) == Time.parse(tomorrow)
+
+    # parse the received start date and convert it back to our local time zone
+    startDate = DateTime.strptime(updatedSub.startDate).new_offset(tomorrow.offset)
+
+    expect(startDate.to_s).to eq(tomorrow.to_s)
   end
 
   it "lets owners list pools in pages for a consumer" do
@@ -797,18 +801,20 @@ describe 'Owner Resource Entitlement List Tests' do
   end
 
   it 'can fetch all entitlements of an owner' do
-    ents = @cp.list_ents_via_owners_resource(:owner_key => @owner['key'])
+    ents = @cp.list_ents_via_owners_resource(@owner['key'])
     ents.length.should eq(2)
   end
 
   it 'can filter all entitlements by using matches param' do
-    ents = @cp.list_ents_via_owners_resource(:owner_key => @owner['key'],:matches => "virtualization")
+    ents = @cp.list_ents_via_owners_resource(@owner['key'], {:matches => "virtualization"})
     ents.length.should eq(1)
   end
 
   it 'can filter consumer entitlements by product attribute' do
-    ents = @cp.list_ents_via_owners_resource(:owner_key => @owner['key'],
-      :attr_filters => { "variant" => "Satellite Starter Pack" })
+    ents = @cp.list_ents_via_owners_resource(@owner['key'], {
+      :attr_filters => { "variant" => "Satellite Starter Pack" }
+    })
+
     ents.length.should eq(1)
 
     variant = get_attribute_value(ents[0].pool.productAttributes, "variant")
@@ -821,12 +827,13 @@ describe 'Owner Resource Future Pool Tests' do
   include CandlepinMethods
 
   before(:each) do
+    @now = DateTime.now
     @owner = create_owner random_string 'test_owner'
     @product1 = create_product(random_string('product'), random_string('product'),{:owner => @owner['key']})
     @product2 = create_product(random_string('product'), random_string('product'),{:owner => @owner['key']})
     @current_pool = create_pool_and_subscription(@owner['key'], @product1.id, 10)
-    start1 = Date.today + 400
-    start2 = Date.today + 800
+    start1 = @now + 400
+    start2 = @now + 800
     @future_pool1 = create_pool_and_subscription(@owner['key'], @product2.id, 10, [], '', '', '', start1)
     @future_pool2 = create_pool_and_subscription(@owner['key'], @product2.id, 10, [], '', '', '', start2)
   end
@@ -850,8 +857,9 @@ describe 'Owner Resource Future Pool Tests' do
   end
 
   it 'can fetch future pools based on activeon date' do
-    test_date = Date.today + 500
-    pools = @cp.list_owner_pools(@owner['key'],{:only_future => "true", :activeon => test_date})
+    test_date = @now + 500
+
+    pools = @cp.list_owner_pools(@owner['key'],{:only_future => "true", :activeon => test_date.to_s})
     pools.length.should eq(1)
     pools[0].id.should eq(@future_pool2.id)
   end

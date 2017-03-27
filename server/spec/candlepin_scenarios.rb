@@ -314,8 +314,7 @@ class Exporter
 
     owner_client = Candlepin.new(user['username'], 'password')
 
-    @candlepin_client = consumer_client(owner_client, random_string('test_client'),
-        "candlepin", user['username'])
+    @candlepin_client = consumer_client(owner_client, random_string('test_client'), "candlepin", user['username'])
   end
 
   def do_export(client, dest_dir, opts={}, uuid=nil)
@@ -548,9 +547,7 @@ class StandardExporter < Exporter
     # pool3 is special
     @candlepin_client.consume_pool(@pool3.id, {:quantity => 1})
 
-    @cdn = create_cdn(@cdn_label,
-                "Test CDN",
-                "https://cdn.test.com")
+    @cdn = create_cdn(@cdn_label, "Test CDN", "https://cdn.test.com")
   end
 
   def create_candlepin_export_update
@@ -619,9 +616,7 @@ class VirtLimitExporter < Exporter
 
     @candlepin_client.consume_pool(@pool3.id, {:quantity => 2})
 
-    @cdn = create_cdn(@cdn_label,
-                "Test CDN",
-                "https://cdn.test.com")
+    @cdn = create_cdn(@cdn_label, "Test CDN", "https://cdn.test.com")
 
   end
 
@@ -653,45 +648,45 @@ end
 
 # We assume existence of queue allmsg that is bound to event exchange
 class CandlepinQpid
-  def initialize() 
+  def initialize()
     @address='amqps://localhost:5671/allmsg'
     @qpid_crt = "server/bin/qpid/keys/qpid_ca.crt"
     @qpid_key = "server/bin/qpid/keys/qpid_ca.key"
-   end 
+   end
 
-  def no_keys 
+  def no_keys
     !File.file?(@qpid_crt) or !File.file?(@qpid_key)
-  end 
+  end
 
   def stop
     `sudo systemctl stop qpidd || sudo supervisorctl stop qpidd`
-  end 
+  end
 
   def start
     `sudo systemctl start qpidd || sudo supervisorctl start qpidd`
-  end 
+  end
 
   #Create non-durable queue and bind it to an exchange
   def create_queue(qname, args, exchange)
     `sudo qpid-config -b amqps://localhost:5671 --ssl-certificate #{@qpid_crt} --ssl-key #{@qpid_key} add queue #{qname} #{args}`
     `sudo qpid-config -b amqps://localhost:5671 --ssl-certificate #{@qpid_crt} --ssl-key #{@qpid_key} bind #{exchange} #{qname} "#"`
-  end 
- 
+  end
+
   #Force removes the queue
   def delete_queue(qname)
     `sudo qpid-config -b amqps://localhost:5671 --ssl-certificate #{@qpid_crt} --ssl-key #{@qpid_key} del queue #{qname} --force`
-  end 
+  end
 
   def receive
     @messenger = Qpid::Proton::Messenger::Messenger.new
-   
+
     if (no_keys)
       raise "The Qpid keys doesnt exist on paths: #{File.absolute_path(@qpid_crt)}; #{File.absolute_path(@qpid_key)}"
     end
     @messenger.certificate = @qpid_crt
     @messenger.private_key = @qpid_key
     @messenger.blocking = false
- 
+
     msgs = []
     @messenger.start
     @messenger.subscribe(@address)
@@ -701,20 +696,20 @@ class CandlepinQpid
      # The receive method is non blocking but
      # it seems you need to call it several times to
      # establish connection to the broker
-     5.times do  
+     5.times do
        @messenger.receive
        sleep(0.3)
-     end 
+     end
 
-     break if @messenger.incoming.zero? 
+     break if @messenger.incoming.zero?
      while @messenger.incoming.nonzero?
       msg = Qpid::Proton::Message.new
       @messenger.get(msg)
-      msgs << msg 
-     end 
-    end 
+      msgs << msg
+     end
+    end
     @messenger.stop
 
    return msgs
-  end 
+  end
 end

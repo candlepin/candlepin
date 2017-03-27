@@ -178,7 +178,7 @@ describe 'Consumer Resource' do
     # Create a consumer that should not be in the list of returned results
     consumer_client(@user2, random_string("consumer3"))
     returned_uuids = []
-    @cp.list_consumers({:uuids => [@consumer1.uuid, @consumer2.uuid]}).each do |c|
+    @cp.list_consumers({:uuid => [@consumer1.uuid, @consumer2.uuid]}).each do |c|
       returned_uuids << c['uuid']
     end
     returned_uuids.include?(@consumer1.uuid).should be true
@@ -209,8 +209,7 @@ describe 'Consumer Resource' do
     consumer_client(@cp, random_string("consumer1"), 'person',
                                 username, {}, owner1['key'])
 
-    @cp.list_consumers({:type => 'person',
-        :username => username, :owner => owner1['key']}).length.should == 1
+    @cp.list_consumers({:type => 'person', :username => username, :owner => owner1['key']}).length.should == 1
   end
 
   it 'does not let an owner admin create person consumer for another owner' do
@@ -222,8 +221,7 @@ describe 'Consumer Resource' do
     user2 = user_client(owner2, random_string("user2"))
 
     lambda do
-      consumer_client(user2, random_string("consumer1"), 'person',
-                      username)
+      consumer_client(user2, random_string("consumer1"), 'person', username)
     end.should raise_exception(RestClient::ResourceNotFound)
   end
 
@@ -516,7 +514,8 @@ describe 'Consumer Resource' do
     ]
     cp_client.update_consumer({:installedProducts => installed})
 
-    create_pool_and_subscription(owner['key'], product1.id, 1, [], '', '', '', Date.today, Date.today + 365)
+    now = DateTime.now
+    create_pool_and_subscription(owner['key'], product1.id, 1, [], '', '', '', now, now + 365)
 
     for pool in @cp.list_owner_pools(owner['key']) do
         cp_client.consume_pool(pool.id, {:quantity => 1})
@@ -527,14 +526,16 @@ describe 'Consumer Resource' do
         installed_product['arch'].should == 'ALL'
         installed_product['version'].should == '3.11'
         installed_product['status'].should == 'green'
-        start_date = Date.strptime(installed_product['startDate'])
-        start_date.year.should == Date.today.year
-        start_date.month.should == Date.today.month
-        start_date.day.should == Date.today.day
-        end_date = Date.strptime(installed_product['endDate'])
-        end_date.year.should == (Date.today + 365).year
-        end_date.month.should == (Date.today + 365).month
-        end_date.day.should == (Date.today + 365).day
+
+        start_date = DateTime.strptime(installed_product['startDate']).new_offset(now.offset)
+        start_date.year.should == now.year
+        start_date.month.should == now.month
+        start_date.day.should == now.day
+
+        end_date = DateTime.strptime(installed_product['endDate']).new_offset(now.offset)
+        end_date.year.should == (now + 365).year
+        end_date.month.should == (now + 365).month
+        end_date.day.should == (now + 365).day
     end
   end
 
@@ -672,16 +673,18 @@ describe 'Consumer Resource' do
   end
 
   it 'should not list service levels from expired pools' do
-    product = create_product(random_string('product'),
-                              random_string('product'),
-                              {:attributes => {:support_level => 'Expired'},
-                               :owner => @owner1['key']})
-    create_pool_and_subscription(@owner1['key'], product.id,
-                                 1, [], '', '', '', Date.today - 2, Date.today - 1)
+    product = create_product(random_string('product'), random_string('product'), {
+      :owner => @owner1['key'],
+      :attributes => {
+        :support_level => 'Expired'
+      }
+    })
+
+    now = DateTime.now
+    create_pool_and_subscription(@owner1['key'], product.id, 1, [], '', '', '', now - 2, now - 1)
 
     user_cp = user_client(@owner1, random_string('billy'))
-    consumer = user_cp.register(random_string('system'), :system, nil,
-                                {}, nil, nil, [], [])
+    consumer = user_cp.register(random_string('system'), :system, nil, {}, nil, nil, [], [])
     consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
     consumer = @cp.get_consumer(consumer['uuid'])
 
@@ -981,7 +984,7 @@ describe 'Consumer Resource' do
     product1 = create_product(random_string('product'), random_string('product-multiple-arch'),
       {:attributes => { :sockets => '2', :'multi-entitlement' => 'yes', :stacking_id => 'consumer-bind-test'}, :owner => @owner1['key']})
     current_pool = create_pool_and_subscription(@owner1['key'], product1.id, 10)
-    start = Date.today + 400
+    start = DateTime.now + 400
     future_pool = create_pool_and_subscription(@owner1['key'], product1.id, 10, [], '', '', '', start)
     installed = [
         {'productId' => product1.id, 'productName' => product1.name}
@@ -1068,13 +1071,13 @@ describe 'Consumer Resource Consumer Fact Filter Tests' do
   end
 
   it 'can filter by facts and nothing else' do
-    consumers = @cp.list_consumers({:facts => ['*key*:*val*']})
+    consumers = @cp.list_consumers({:fact => ['*key*:*val*']})
     # Length should be at least the three we have defined, however there could be other rows...
     consumers.length.should >= 3
   end
 
   it 'can filter by facts and uuids' do
-    consumers = @cp.list_consumers({:facts => ['oth*key*:*val'], :uuids => [@consumer1['uuid'], @consumer2['uuid'], @consumer3['uuid']]})
+    consumers = @cp.list_consumers({:fact => ['oth*key*:*val'], :uuid => [@consumer1['uuid'], @consumer2['uuid'], @consumer3['uuid']]})
     consumers.length.should == 2
     expected_uuids = [@consumer1['uuid'], @consumer2['uuid']]
     consumers.each do |consumer|
@@ -1086,7 +1089,7 @@ describe 'Consumer Resource Consumer Fact Filter Tests' do
 
   it 'should properly escape values to avoid sql injection' do
     odd_consumer =  @owner_client.register('c4', :system, nil, {'trolol' => "'); DROP TABLE cp_consumer;"})
-    consumers = @cp.list_consumers({:owner => @owner['key'], :facts => ["trolol:'); DROP TABLE cp_consumer;"]})
+    consumers = @cp.list_consumers({:owner => @owner['key'], :fact => ["trolol:'); DROP TABLE cp_consumer;"]})
     consumers.length.should == 1
     consumers[0]['uuid'].should == odd_consumer['uuid']
   end

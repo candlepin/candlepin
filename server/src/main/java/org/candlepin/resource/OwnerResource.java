@@ -80,7 +80,7 @@ import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ConsumerTypeValidator;
 import org.candlepin.resource.util.EntitlementFinderUtil;
 import org.candlepin.resource.util.ResolverUtil;
-import org.candlepin.resource.util.ResourceDateParser;
+import org.candlepin.resteasy.DateFormat;
 import org.candlepin.resteasy.parameter.CandlepinParam;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.service.ContentAccessCertServiceAdapter;
@@ -752,7 +752,7 @@ public class OwnerResource {
         @QueryParam("listall") @DefaultValue("false") boolean listAll,
         @ApiParam("Date to use as current time for lookup criteria. Defaults" +
                 " to current date if not specified.")
-        @QueryParam("activeon") String activeOn,
+        @QueryParam("activeon") @DefaultValue(DateFormat.NOW) @DateFormat Date activeOn,
         @ApiParam("Find pools matching the given pattern in a variety of fields" +
                 " * and ? wildcards are supported.")
         @QueryParam("matches") String matches,
@@ -769,11 +769,6 @@ public class OwnerResource {
         @Context PageRequest pageRequest) {
 
         Owner owner = findOwner(ownerKey);
-
-        Date activeOnDate = new Date();
-        if (activeOn != null) {
-            activeOnDate = ResourceDateParser.parseDateString(activeOn);
-        }
 
         Consumer c = null;
         if (consumerUuid != null) {
@@ -818,11 +813,11 @@ public class OwnerResource {
         }
 
         Page<List<Pool>> page = poolManager.listAvailableEntitlementPools(
-            c, key, owner, productId, subscriptionId, activeOnDate, listAll, poolFilters, pageRequest,
+            c, key, owner, productId, subscriptionId, activeOn, listAll, poolFilters, pageRequest,
         addFuture, onlyFuture);
         List<Pool> poolList = page.getPageData();
-        calculatedAttributesUtil.setCalculatedAttributes(poolList, activeOnDate);
-        calculatedAttributesUtil.setQuantityAttributes(poolList, c, activeOnDate);
+        calculatedAttributesUtil.setCalculatedAttributes(poolList, activeOn);
+        calculatedAttributesUtil.setQuantityAttributes(poolList, c, activeOn);
 
         // Store the page for the LinkHeaderResponseFilter
         ResteasyProviderFactory.pushContext(Page.class, page);

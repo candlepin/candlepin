@@ -21,8 +21,13 @@ describe 'Activation Keys' do
     @pool = @cp.list_pools(:owner => @owner.id, :product => @product['id']).first
     @pool2 = @cp.list_pools(:owner => @owner.id, :product => @product2['id']).first
 
+    expect(@pool).to_not be_nil
+    expect(@pool2).to_not be_nil
+
     @activation_key = @cp.create_activation_key(@owner['key'], random_string('test_token'))
-    @activation_key['id'].should_not be_nil
+
+    expect(@activation_key).to_not be_nil
+    expect(@activation_key['id']).to_not be_nil
   end
 
   it 'should allow owners to list existing activation keys' do

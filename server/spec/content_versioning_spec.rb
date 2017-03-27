@@ -17,7 +17,7 @@ describe 'Content Versioning' do
     label = "shared content"
     type = "shared_content_type"
     vendor = "generous vendor"
-    updated_upstream = Date.today
+    updated_upstream = DateTime.now
 
     content1 = @cp.create_content(owner1["key"], name, id, label, type, vendor)
     content2 = @cp.create_content(owner2["key"], name, id, label, type, vendor)
@@ -34,7 +34,7 @@ describe 'Content Versioning' do
     label = "shared content"
     type = "shared_content_type"
     vendor = "generous vendor"
-    updated_upstream = Date.today
+    updated_upstream = DateTime.now
 
     content1 = @cp.create_content(owner1["key"], name, id, label, type, vendor)
     content2 = @cp.create_content(owner2["key"], name + "-2", id, label, type, vendor)
@@ -52,7 +52,7 @@ describe 'Content Versioning' do
     label = "shared content"
     type = "shared_content_type"
     vendor = "generous vendor"
-    updated_upstream = Date.today
+    updated_upstream = DateTime.now
 
     content1 = @cp.create_content(owner1["key"], name, id, label, type, vendor)
     content2 = @cp.create_content(owner2["key"], name, id, label, type, vendor)

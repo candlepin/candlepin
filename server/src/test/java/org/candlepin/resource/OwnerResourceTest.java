@@ -498,14 +498,14 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         poolCurator.create(pool2);
 
         List<Pool> nowList = ownerResource.listPools(owner.getKey(), c.getUuid(), null, null, null, false,
-            null, null, new ArrayList<KeyValueParameter>(), false, false, principal, null);
+            new Date(), null, new ArrayList<KeyValueParameter>(), false, false, principal, null);
+
         assertEquals(1, nowList.size());
         assert (nowList.get(0).getId().equals(pool1.getId()));
 
         Date activeOn = new Date(pool2.getStartDate().getTime() + 1000L * 60 * 60 * 24);
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         List<Pool> futureList = ownerResource.listPools(owner.getKey(), c.getUuid(), null, null, null,
-            false, sdf.format(activeOn), null, new ArrayList<KeyValueParameter>(), false, false,
+            false, activeOn, null, new ArrayList<KeyValueParameter>(), false, false,
             principal, null);
         assertEquals(1, futureList.size());
         assert (futureList.get(0).getId().equals(pool2.getId()));

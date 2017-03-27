@@ -314,6 +314,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             log.debug("    owner: {}", owner);
             log.debug("    products: {}", productIds);
             log.debug("    subscription: {}", subscriptionId);
+            log.debug("    active on: {}", activeOn);
         }
 
         boolean joinedProvided = false;

@@ -51,8 +51,7 @@ public abstract class AbstractAuthorizationFilter
     private Marker duplicate = MarkerFactory.getMarker("DUPLICATE");
 
     @Override
-    public void filter(ContainerRequestContext requestContext)
-        throws IOException {
+    public void filter(ContainerRequestContext requestContext) throws IOException {
         try {
             runFilter(requestContext);
         }

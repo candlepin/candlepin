@@ -22,15 +22,15 @@ describe 'Content Resource' do
 
   it 'should throw exceptions on write operations' do
     lambda do
-      @cp.post("/content", {})
+      @cp.post("/content", {}, {})
     end.should raise_exception(RestClient::BadRequest)
 
     lambda do
-      @cp.put("/content/dummyid", {})
+      @cp.put("/content/dummyid", {}, {})
     end.should raise_exception(RestClient::BadRequest)
 
     lambda do
-      @cp.post("/content/batch", [])
+      @cp.post("/content/batch", {}, [])
     end.should raise_exception(RestClient::BadRequest)
 
     lambda do

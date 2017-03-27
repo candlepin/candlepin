@@ -1389,7 +1389,9 @@ public class ConsumerResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response getContentAccessBody(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-        @HeaderParam("If-Modified-Since") @DateFormat ("EEE, dd MMM yyyy HH:mm:ss z") Date since) {
+        @HeaderParam("If-Modified-Since") @DefaultValue("Thu, 01 Jan 1970 00:00:00 GMT")
+        @DateFormat({"EEE, dd MMM yyyy HH:mm:ss z"}) Date since) {
+
         log.debug("Getting content access certificate for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         if (consumer.getOwner().contentAccessMode()

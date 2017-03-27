@@ -21,11 +21,16 @@ describe 'Import', :serial => true do
   end
 
   after(:all) do
-    @owners.each do |o|
-      @cp.delete_owner(o['key'])
+    if @owners
+      @owners.each do |o|
+        @cp.delete_owner(o['key'])
+      end
     end
-    @exporters.each do |e|
-      e.cleanup()
+
+    if @exporters
+      @exporters.each do |e|
+        e.cleanup()
+      end
     end
   end
 

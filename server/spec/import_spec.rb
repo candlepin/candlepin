@@ -37,10 +37,13 @@ describe 'Import Test Group:', :serial => true do
     end
 
     after(:all) do
-      @cp.delete_user(@import_username)
-      @cp.delete_owner(@import_owner['key'])
-      @exporters.each do |e|
-        e.cleanup()
+      @cp.delete_user(@import_username) if @import_username
+      @cp.delete_owner(@import_owner['key']) if @import_owner
+
+      if @exporters
+        @exporters.each do |e|
+          e.cleanup()
+        end
       end
     end
 
@@ -52,8 +55,8 @@ describe 'Import Test Group:', :serial => true do
 
     def import_and_wait
       lambda { |owner_key, export_file, param_map={}|
-        param_map['correlation_id'] = @cp_correlation_id
-        job = @cp.import_async(owner_key, export_file, param_map)
+        headers = { :correlation_id => @cp_correlation_id }
+        job = @cp.import_async(owner_key, export_file, param_map, headers)
         # Wait a little longer here as import can take a bit of time
         wait_for_job(job["id"], 10)
         status = @cp.get_job(job["id"], true)

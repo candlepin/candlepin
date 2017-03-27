@@ -215,8 +215,8 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     # The old host-specific entitlement should not be on the guest anymore (see 768872 comment #41)
     # Instead the guest should be auto-healed for host2
     # second_product's entitlement should still be there, though.
-    @guest1_client.list_entitlements(:product_id => @second_product.id).length.should == 1
-    ents = @guest1_client.list_entitlements(:product_id => @virt_limit_product.id).first
+    @guest1_client.list_entitlements(:product => @second_product.id).length.should == 1
+    ents = @guest1_client.list_entitlements(:product => @virt_limit_product.id).first
 
     ents['pool']['id'].should_not == original_virt_limit_pool
 

@@ -28,10 +28,13 @@ describe 'Import cleanup', :serial => true do
   end
 
   after(:all) do
-    @cp.delete_user(@import_username)
-    @cp.delete_owner(@import_owner['key'])
-    @exporters.each do |e|
-      e.cleanup()
+    @cp.delete_user(@import_username) if @import_username
+    @cp.delete_owner(@import_owner['key']) if @import_owner
+
+    if @exporters
+      @exporters.each do |e|
+        e.cleanup()
+      end
     end
   end
 
