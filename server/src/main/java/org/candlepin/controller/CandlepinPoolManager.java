@@ -1575,7 +1575,6 @@ public class CandlepinPoolManager implements PoolManager {
         consumerCurator.update(consumer);
 
         handler.handlePostEntitlement(this, consumer, entitlements);
-        handler.handleSelfCertificates(consumer, poolQuantities, entitlements);
 
         this.ecGenerator.regenerateCertificatesByEntitlementIds(
             this.entitlementCurator.batchListModifying(entitlements.values()), true
@@ -1583,7 +1582,6 @@ public class CandlepinPoolManager implements PoolManager {
 
         // we might have changed the bonus pool quantities, lets find out.
         handler.handleBonusPools(consumer.getOwner(), poolQuantities, entitlements);
-
 
         /*
          * If the consumer is not a distributor, check consumer's new compliance
@@ -2049,9 +2047,6 @@ public class CandlepinPoolManager implements PoolManager {
         void handlePostEntitlement(PoolManager manager, Consumer consumer,
             Map<String, Entitlement> entitlements);
 
-        void handleSelfCertificates(Consumer consumer, Map<String, PoolQuantity> pools,
-            Map<String, Entitlement> entitlements);
-
         void handleBonusPools(Owner owner, Map<String, PoolQuantity> pools,
             Map<String, Entitlement> entitlements);
     }
@@ -2072,7 +2067,8 @@ public class CandlepinPoolManager implements PoolManager {
                 Entitlement newEntitlement = new Entitlement(
                     entry.getValue().getPool(), consumer, entry.getValue().getQuantity()
                 );
-
+                //Set entitlement to dirty so it will generate certificates when they are first asked for
+                newEntitlement.setDirty(true);
                 entsToPersist.add(newEntitlement);
                 result.put(entry.getKey(), newEntitlement);
             }
@@ -2118,18 +2114,6 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         @Override
-        public void handleSelfCertificates(Consumer consumer, Map<String, PoolQuantity> poolQuantities,
-            Map<String, Entitlement> entitlements) {
-            Map<String, Product> products = new HashMap<String, Product>();
-            for (PoolQuantity poolQuantity : poolQuantities.values()) {
-                Pool pool = poolQuantity.getPool();
-                products.put(pool.getId(), pool.getProduct());
-            }
-
-            ecGenerator.generateEntitlementCertificates(consumer, products, entitlements);
-        }
-
-        @Override
         public void handleBonusPools(Owner owner, Map<String, PoolQuantity> pools,
             Map<String, Entitlement> entitlements) {
             checkBonusPoolQuantities(owner, pools, entitlements);
@@ -2158,13 +2142,6 @@ public class CandlepinPoolManager implements PoolManager {
             Map<String, Entitlement> entitlements) {
         }
 
-        @Override
-        public void handleSelfCertificates(Consumer consumer, Map<String, PoolQuantity> poolQuantities,
-            Map<String, Entitlement> entitlements) {
-            for (Entry<String, Entitlement> entry : entitlements.entrySet()) {
-                regenerateCertificatesOf(entry.getValue(), true);
-            }
-        }
         @Override
         public void handleBonusPools(Owner owner, Map<String, PoolQuantity> pools,
             Map<String, Entitlement> entitlements) {

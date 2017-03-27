@@ -261,7 +261,14 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         throws Exception {
         AutobindData data = AutobindData.create(childVirtSystem).on(new Date())
             .forProducts(new String [] {provisioning.getId()});
-        this.entitlementCurator.refresh(poolManager.entitleByProducts(data).get(0));
+        //Entitle the system
+        Entitlement ent = poolManager.entitleByProducts(data).get(0);
+        //Regenerate dirty entitlements because certificates are created lazily
+        poolManager.regenerateDirtyEntitlements(childVirtSystem);
+        reset(this.eventSink);
+        //Refresh and assert new certs
+        this.entitlementCurator.refresh(ent);
+
         regenerateECAndAssertNotSameCertificates();
     }
 
@@ -296,8 +303,17 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         throws EntitlementRefusedException {
         AutobindData data = AutobindData.create(childVirtSystem).on(new Date())
             .forProducts(new String [] {provisioning.getId()});
-        this.entitlementCurator.refresh(poolManager.entitleByProducts(data).get(0));
-        this.entitlementCurator.refresh(poolManager.entitleByProducts(data).get(0));
+
+        // Entitle the system
+        Entitlement ent1 = poolManager.entitleByProducts(data).get(0);
+        Entitlement ent2 = poolManager.entitleByProducts(data).get(0);
+        // Regenerate dirty entitlements because certificates are created lazily
+        poolManager.regenerateDirtyEntitlements(childVirtSystem);
+        // Reset the event sink for the above regenerate
+        reset(this.eventSink);
+        // Refresh and assert new certs
+        this.entitlementCurator.refresh(ent1);
+        this.entitlementCurator.refresh(ent2);
         regenerateECAndAssertNotSameCertificates();
     }
 
