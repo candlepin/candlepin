@@ -56,6 +56,7 @@ import java.net.URLEncoder;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -171,10 +172,12 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
             extensions = prepareV1Extensions(products, ent, contentPrefix,
                 promotedContent);
         }
-
         setupEntitlementEndDate(ent);
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.HOUR, -1);
+        Date startDate = ent.getStartDate().before(cal.getTime()) ? ent.getStartDate() : cal.getTime();
         X509Certificate x509Cert =  this.pki.createX509Certificate(
-            createDN(ent), extensions, byteExtensions, ent.getStartDate(),
+            createDN(ent), extensions, byteExtensions, startDate,
             ent.getEndDate(), keyPair, serialNumber, null);
         return x509Cert;
     }

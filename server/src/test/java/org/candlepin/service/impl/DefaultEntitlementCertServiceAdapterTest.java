@@ -98,6 +98,7 @@ import java.security.cert.CertificateExpiredException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -363,6 +364,38 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         thrown.expect(CertificateExpiredException.class);
         result.checkValidity(twentyFiveHoursOut);
+    }
+
+    @Test
+    public void predateEntitlementCerts() throws Exception {
+        consumer.setCreated(new Date());
+
+        // Set up an adapter with a real PKIUtil
+        certServiceAdapter = new DefaultEntitlementCertServiceAdapter(
+            realPKI, extensionUtil, v3extensionUtil,
+            mock(EntitlementCertificateCurator.class),
+            keyPairCurator, serialCurator, entCurator,
+            I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
+            config, productCurator);
+
+        // pool start date is more than an hour ago, use it
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.HOUR, -2);
+        pool.setStartDate(cal.getTime());
+        X509Certificate result = certServiceAdapter.createX509Certificate(entitlement,
+            product, new HashSet<Product>(),
+            getProductModels(product, new HashSet<Product>(), "prefix", entitlement),
+            new BigInteger("1234"), keyPair, true);
+        // cert does not capture the milliseconds. truncating.
+        assertTrue(result.getNotBefore().getTime() == pool.getStartDate().getTime() / 1000 * 1000);
+        // pool start date is less than an hour ago, so an hour gets used
+        cal.add(Calendar.MINUTE, 90);
+        pool.setStartDate(cal.getTime());
+        result = certServiceAdapter.createX509Certificate(entitlement,
+                product, new HashSet<Product>(),
+                getProductModels(product, new HashSet<Product>(), "prefix", entitlement),
+                new BigInteger("1234"), keyPair, true);
+        assertTrue(result.getNotBefore().getTime() < pool.getStartDate().getTime() / 1000 * 1000);
     }
 
     @Test(expected = CertificateSizeException.class)

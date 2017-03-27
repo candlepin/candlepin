@@ -122,6 +122,7 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
 
         if (existing == null) {
             Calendar cal = Calendar.getInstance();
+            cal.add(Calendar.HOUR, -1);
             Date startDate = cal.getTime();
             cal.add(Calendar.YEAR, 1);
             Date endDate = cal.getTime();
