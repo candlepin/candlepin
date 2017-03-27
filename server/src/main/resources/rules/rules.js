@@ -79,6 +79,15 @@ var BIND_CALLER = "bind";
 var LIST_POOLS_CALLER = "list_pools";
 var UNKNOWN_CALLER = "unknown";
 
+// pool types
+var NORMAL = "NORMAL";
+var ENTITLEMENT_DERIVED = "ENTITLEMENT_DERIVED";
+var STACK_DERIVED = "STACK_DERIVED";
+var SHARE_DERIVED = "SHARE_DERIVED";
+var BONUS = "BONUS";
+var UNMAPPED_GUEST = "UNMAPPED_GUEST";
+var DEVELOPMENT = "DEVELOPMENT";
+
 /**
  * A FactValueCalculator allows the rules to determine which
  * consumer fact is associated with a particular product
@@ -1512,9 +1521,20 @@ var Entitlement = {
     },
 
     do_pre_share: function(context, result) {
-        if (context.consumer.type.label == SHARE_TYPE &&
-            context.getAttribute(context.pool, SHARE_ATTRIBUTE)) {
-            result.addError("rulefailed.sharing.a.share.prohibited")
+        if (context.consumer.type.label != SHARE_TYPE) {
+            return;
+        }
+
+        if (context.pool.type === DEVELOPMENT) {
+            result.addError("rulefailed.sharing.a.development.pool.prohibited")
+        }
+
+        if (context.getAttribute(context.pool, SHARE_ATTRIBUTE)) {
+            result.addError("rulefailed.sharing.a.share.prohibited");
+        }
+
+        if (context.getAttribute(context.pool, UNMAPPED_GUESTS_ONLY)) {
+            result.addError("rulefailed.sharing.an.unmapped.guest.pool.prohibited");
         }
     },
 
