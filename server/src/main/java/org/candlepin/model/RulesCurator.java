@@ -68,16 +68,20 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
         Rules current = getDbRules();
         if (current != null && !VersionUtil.getRulesVersionCompatibility(
             current.getVersion(), toCreate.getVersion())) {
+
+            log.debug("Inbound rules not compatible with current rules; rejecting creation");
             return current;
         }
+
+        log.debug("Creating new rules: {}", toCreate);
         return super.create(toCreate);
     }
 
     public Rules getDbRules() {
         return (Rules) this.currentSession().createCriteria(Rules.class)
-        .addOrder(Order.desc("updated"))
-        .setMaxResults(1)
-        .uniqueResult();
+            .addOrder(Order.desc("updated"))
+            .setMaxResults(1)
+            .uniqueResult();
     }
 
     public void updateDbRules() {
@@ -86,7 +90,7 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
         // Load rules from RPM, we need to know it's version before we know which
         // rules to use:
         Rules rpmRules = rulesFromFile(getDefaultRulesFile());
-        log.debug("RPM Rules version: " + rpmRules.getVersion());
+        log.debug("RPM Rules version: {}", rpmRules.getVersion());
 
         if (dbRules == null ||
             !VersionUtil.getRulesVersionCompatibility(rpmRules.getVersion(), dbRules.getVersion())) {
@@ -103,6 +107,7 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
             log.error("There is no rules file in the database, something is very wrong.");
             throw new NotFoundException(i18n.tr("No rules file found in the database"));
         }
+
         return dbRules;
     }
 
@@ -110,8 +115,7 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
         return (Date) this.currentSession().createCriteria(Rules.class)
             .setCacheable(true)
             .setCacheRegion(CandlepinCacheRegions.FIVE_SECONDS_QUERY_CACHE)
-        .setProjection(Projections.projectionList()
-            .add(Projections.max("updated")))
+            .setProjection(Projections.max("updated"))
             .uniqueResult();
     }
 
