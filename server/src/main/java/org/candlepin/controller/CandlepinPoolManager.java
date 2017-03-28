@@ -1176,11 +1176,16 @@ public class CandlepinPoolManager implements PoolManager {
     @Override
     @Transactional
     public void regenerateCertificatesOf(String productId, boolean lazy) {
-        List<Pool> poolsForProduct = this.listAvailableEntitlementPools(null, null, null,
-            productId, new Date(), false, false, new PoolFilterBuilder(), null, false, false)
-            .getPageData();
-        for (Pool pool : poolsForProduct) {
-            regenerateCertificatesOf(pool.getEntitlements(), lazy);
+        if (lazy) {
+            poolCurator.markCertificatesDirtyForProductId(productId);
+        }
+        else {
+            List<Pool> poolsForProduct = this.listAvailableEntitlementPools(null, null, null,
+                productId, new Date(), false, false, new PoolFilterBuilder(), null, false, false)
+                .getPageData();
+            for (Pool pool : poolsForProduct) {
+                regenerateCertificatesOf(pool.getEntitlements(), false);
+            }
         }
     }
 

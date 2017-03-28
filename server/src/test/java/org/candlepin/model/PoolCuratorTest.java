@@ -1149,6 +1149,45 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertNull(found);
     }
 
+    @Test
+    public void testMarkCertificatesDirtyForProductId() {
+
+        Pool pool = createPoolAndSub(owner, product, -1L, TestUtil.createDate(2017, 3, 27),
+            TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 27));
+        EntitlementCertificate cert = createEntitlementCertificate("fake", "fake");
+        Entitlement entitlement = createEntitlement(owner, consumer, pool, cert);
+        assertFalse("entitlement should not be dirty initially", entitlement.getDirty());
+
+        poolCurator.create(pool);
+        entitlementCurator.create(entitlement);
+        poolCurator.markCertificatesDirtyForProductId(product.getId());
+        entitlementCurator.refresh(entitlement);
+
+        assertTrue("entitlement should be marked dirty", entitlement.getDirty());
+    }
+
+    @Test
+    public void testMarkCertificatesDirtyForProvidedProduct() {
+        Product parent = TestUtil.createProduct();
+        productCurator.create(parent);
+
+        Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
+        ProvidedProduct providedProduct = new ProvidedProduct(product.getId(), "Test Provided Product");
+        providedProducts.add(providedProduct);
+
+        Pool pool = TestUtil.createPool(owner, parent, providedProducts, 5);
+        EntitlementCertificate cert = createEntitlementCertificate("fake", "fake");
+        Entitlement entitlement = createEntitlement(owner, consumer, pool, cert);
+        assertFalse("entitlement should not be dirty initially", entitlement.getDirty());
+
+        poolCurator.create(pool);
+        entitlementCurator.create(entitlement);
+        poolCurator.markCertificatesDirtyForProductId(product.getId());
+        entitlementCurator.refresh(entitlement);
+        assertTrue("entitlement should be marked dirty", entitlement.getDirty());
+    }
+
+
     private Product generateProduct(String id, String name) {
         Product product = TestUtil.createProduct(id, name);
         this.productCurator.create(product);

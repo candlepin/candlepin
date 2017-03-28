@@ -830,4 +830,25 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         q.setParameter("owner", owner);
         q.executeUpdate();
     }
+
+    public void markCertificatesDirtyForProductId(String productId) {
+        markCertificatesDirtyForProductIdForNormalProduct(productId);
+        markCertificatesDirtyForProductIdForProvidedProduct(productId);
+    }
+
+    private void markCertificatesDirtyForProductIdForNormalProduct(String productId) {
+        String statement = "update Entitlement e set e.dirty=true where e.pool.id in " +
+            "(select p.id from Pool p where p.productId = :productId)";
+        Query query = currentSession().createQuery(statement);
+        query.setParameter("productId", productId);
+        query.executeUpdate();
+    }
+
+    private void markCertificatesDirtyForProductIdForProvidedProduct(String productId) {
+        String statement = "update Entitlement e set e.dirty=true where e.pool.id in " +
+            "(select pp.pool.id from ProvidedProduct pp where pp.productId = :productId)";
+        Query query = currentSession().createQuery(statement);
+        query.setParameter("productId", productId);
+        query.executeUpdate();
+    }
 }
