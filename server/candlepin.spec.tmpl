@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 0.9.54.20
+Version: 0.9.54.21
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -220,6 +220,11 @@ fi
 
 #raw
 %changelog
+* Wed Mar 29 2017 Kevin Howell <khowell@redhat.com> 0.9.54.21-1
+- 1435807: Optimize cert regen from content update (khowell@redhat.com)
+- 1428146: Do not deadlock on multiple synchronous hypervisor checkins
+  (csnyder@redhat.com)
+
 * Tue Mar 07 2017 Kevin Howell <khowell@redhat.com> 0.9.54.20-1
 - 1429697: Backport quantity column changes (wpoteat@redhat.com)
 - 1428827: Use batch delete when deleting expired pools (mstead@redhat.com)
