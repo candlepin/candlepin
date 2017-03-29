@@ -399,6 +399,9 @@ public abstract class AbstractEntitlementRules implements Enforcer {
             sharedPoolsToCreate.add(sharedPool);
         }
 
+        /* TODO Create temporary guest pool in OrgB and decrement unmapped guest pool quantity in OrgA to
+         * balance the books */
+
         if (CollectionUtils.isNotEmpty(sharedPoolsToCreate)) {
             poolManager.createPools(sharedPoolsToCreate);
         }
@@ -519,11 +522,14 @@ public abstract class AbstractEntitlementRules implements Enforcer {
             }
         }
 
-        if (CollectionUtils.isNotEmpty(createHostRestrictedPoolFor)) {
+        // Share consumers do not have host restricted pools
+        if (CollectionUtils.isNotEmpty(createHostRestrictedPoolFor) &&
+            !c.getType().isType(ConsumerType.ConsumerTypeEnum.SHARE)) {
             log.debug("creating host restricted pools for: {}", createHostRestrictedPoolFor);
             PoolHelper.createHostRestrictedPools(new HostRestrictedPoolCommand(poolManager), c,
                 createHostRestrictedPoolFor, entitlementMap, attributeMaps, productCurator).execute(c);
         }
+
         if (CollectionUtils.isNotEmpty(decrementHostedBonusPoolQuantityFor)) {
             log.debug("decrementHostedBonusPoolQuantity for: {}", decrementHostedBonusPoolQuantityFor);
             decrementHostedBonusPoolQuantity(poolManager, c, decrementHostedBonusPoolQuantityFor,
