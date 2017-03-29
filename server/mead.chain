@@ -11,7 +11,7 @@ packages=gettext
 scmurl=${mead_scm}?server#${git_ref}
 buildrequires=org.candlepin-candlepin-common
 
-[candlepin-wrapper]
+[candlepin]
 type=wrapper
 scmurl=${mead_scm}?server#${git_ref}
 buildrequires=org.candlepin-candlepin
