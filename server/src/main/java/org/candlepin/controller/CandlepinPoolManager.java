@@ -28,6 +28,7 @@ import org.candlepin.model.Branding;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificateCurator;
@@ -1619,6 +1620,7 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         boolean isDistributor = consumer.getType().isManifest();
+        boolean isShare = consumer.getType().isType(ConsumerType.ConsumerTypeEnum.SHARE);
 
         /*
          * Grab an exclusive lock on the consumer to prevent deadlock.
@@ -1635,6 +1637,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         List<Pool> poolsToSave = new ArrayList<Pool>();
         for (PoolQuantity poolQuantity : poolQuantities.values()) {
+            // TODO Will need to make changes here.  Update shared quantity fields
             Pool pool = poolQuantity.getPool();
             Integer quantity = poolQuantity.getQuantity();
             pool.setConsumed(pool.getConsumed() + quantity);
@@ -1648,7 +1651,11 @@ public class CandlepinPoolManager implements PoolManager {
         consumerCurator.update(consumer);
 
         handler.handlePostEntitlement(this, consumer, entitlements);
-        handler.handleSelfCertificates(consumer, poolQuantities, entitlements);
+
+        // Distributors and shares don't need entitlement certificate since they don't talk to the CDN
+        if (!isDistributor && !isShare) {
+            handler.handleSelfCertificates(consumer, poolQuantities, entitlements);
+        }
 
         this.ecGenerator.regenerateCertificatesByEntitlementIds(
             this.entitlementCurator.batchListModifying(entitlements.values()), true
@@ -1657,14 +1664,13 @@ public class CandlepinPoolManager implements PoolManager {
         // we might have changed the bonus pool quantities, lets find out.
         handler.handleBonusPools(consumer.getOwner(), poolQuantities, entitlements);
 
-
         /*
-         * If the consumer is not a distributor, check consumer's new compliance
-         * status and save. the getStatus call does that internally, so we only
+         * If the consumer is not a distributor or share, check consumer's new compliance
+         * status and save.  The getStatus call does that internally, so we only
          * need to check for the update.
          */
         complianceRules.getStatus(consumer, null, false, false);
-        if (!isDistributor) {
+        if (!isDistributor && !isShare) {
             consumerCurator.update(consumer);
         }
 
@@ -2170,13 +2176,15 @@ public class CandlepinPoolManager implements PoolManager {
         public void handlePostEntitlement(PoolManager manager, Consumer consumer,
             Map<String, Entitlement> entitlements) {
             Set<String> stackIds = new HashSet<String>();
+
             for (Entitlement entitlement : entitlements.values()) {
                 if (entitlement.getPool().isStacked()) {
                     stackIds.add(entitlement.getPool().getStackId());
                 }
             }
             List<Pool> subPoolsForStackIds = null;
-            if (!stackIds.isEmpty()) {
+            // Share consumers should not contribute to the sharing org's stack
+            if (!stackIds.isEmpty() && !consumer.getType().isType(ConsumerType.ConsumerTypeEnum.SHARE)) {
                 subPoolsForStackIds = poolCurator.getSubPoolForStackIds(consumer, stackIds);
                 if (CollectionUtils.isNotEmpty(subPoolsForStackIds)) {
                     poolRules.updatePoolsFromStack(consumer, subPoolsForStackIds, false);
