@@ -363,15 +363,11 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
 
         Map<String, CertificateSerial> serialMap = new HashMap<String, CertificateSerial>();
         for (Entry<String, Entitlement> entry : entitlements.entrySet()) {
+            // No need to persist the cert serial here as the IDs are generated on object creation.
             serialMap.put(entry.getKey(), new CertificateSerial(entry.getValue().getEndDate()));
         }
 
-        // We need the sequence generated id before we create the
-        // EntitlementCertificate, otherwise we could have used cascading create
-        serialCurator.saveOrUpdateAll(serialMap);
-
         Map<String, EntitlementCertificate> entitlementCerts = new HashMap<String, EntitlementCertificate>();
-
         for (Entry<String, Entitlement> entry : entitlements.entrySet()) {
             Entitlement entitlement = entry.getValue();
             CertificateSerial serial = serialMap.get(entry.getKey());
@@ -399,10 +395,6 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
             X509Certificate x509Cert = createX509Certificate(entitlement, product, products, productModels,
                 BigInteger.valueOf(serial.getId()), keyPair, true);
 
-            EntitlementCertificate cert = new EntitlementCertificate();
-            cert.setSerial(serial);
-            cert.setKeyAsBytes(pemEncodedKeyPair);
-
             log.info("Getting PEM encoded cert.");
             String pem = new String(this.pki.getPemEncoded(x509Cert));
 
@@ -424,6 +416,9 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
                 pem += payload + signature;
             }
 
+            // Build a skeleton cert as part of the entitlement processing.
+            EntitlementCertificate cert = new EntitlementCertificate();
+            cert.setKeyAsBytes(pemEncodedKeyPair);
             cert.setCert(pem);
             cert.setEntitlement(entitlement);
 
@@ -433,8 +428,31 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
                 log.debug("Cert: {}", cert.getCert());
             }
 
-            entitlement.getCertificates().add(cert);
             entitlementCerts.put(entry.getKey(), cert);
+        }
+
+        // Serials need to be saved before the certs.
+        log.info("Persisting new certificate serials");
+        serialCurator.saveOrUpdateAll(serialMap);
+
+        // Now that the serials have been saved, update the newly created
+        // certs with their serials and add them to the entitlements.
+        for (Entry<String, Entitlement> entry : entitlements.entrySet()) {
+            CertificateSerial nextSerial = serialMap.get(entry.getKey());
+            if (nextSerial == null) {
+                // This should never happen, but checking to be safe.
+                throw new RuntimeException(
+                    "Certificate serial not found for entitlement during cert generation.");
+            }
+
+            EntitlementCertificate nextCert = entitlementCerts.get(entry.getKey());
+            if (nextCert == null) {
+                // This should never happen, but checking to be safe.
+                throw new RuntimeException(
+                    "Entitlement certificate not found for entitlement during cert generation");
+            }
+            nextCert.setSerial(nextSerial);
+            entry.getValue().getCertificates().add(nextCert);
         }
 
         log.info("Persisting certs.");

@@ -106,6 +106,27 @@ describe 'Certificate Revocation List', :serial => true do
     new_time.should_not == old_time
   end
 
+  it 'should put revoked CDN cert on CRL' do
+    cdn_label = random_string("test-cdn")
+
+    serial = { 'expiration' => Date.today.next_year }
+
+    certificate = {
+        'key' => 'test-key',
+        'cert' => 'test-cert',
+        'serial' => serial
+    }
+    cdn = create_cdn(cdn_label,
+                     "Test CDN",
+                     "https://cdn.test.com",
+                     certificate)
+    cdn.id.should_not be nil
+
+    @cp.delete_cdn(cdn_label)
+
+    revoked_serials.should include(cdn.certificate.serial.serial)
+  end
+
   it 'should put revoked ueber cert on CRL' do
     cert_serial = @cp.generate_ueber_cert(@owner['key']).serial.serial
     delete_owner(@owner)
@@ -116,18 +137,6 @@ describe 'Certificate Revocation List', :serial => true do
     id_cert = OpenSSL::X509::Certificate.new(@system.identity_certificate)
     @system.unregister
     revoked_serials.should include(id_cert.serial.to_i)
-  end
-
-  def filter_serial(product, consumer=@system)
-    entitlement = consumer.list_entitlements.find do |ent|
-      @cp.get_pool(ent.pool.id).productId == product.id
-    end
-
-    return entitlement.certificates[0].serial.id unless entitlement.certificates.empty?
-  end
-
-  def revoked_serials
-    return @cp.get_crl.revoked.map {|entry| entry.serial.to_i }
   end
 
   it 'should put revoked content access cert on CRL' do
@@ -147,6 +156,18 @@ describe 'Certificate Revocation List', :serial => true do
     @cp.update_owner(cam_owner['key'], {'contentAccessMode' => "entitlement"})
     new_system.list_certificates.length.should == 0
     revoked_serials.should include(cert_serial)
+  end
+
+  def filter_serial(product, consumer=@system)
+    entitlement = consumer.list_entitlements.find do |ent|
+      @cp.get_pool(ent.pool.id).productId == product.id
+    end
+
+    return entitlement.certificates[0].serial.id unless entitlement.certificates.empty?
+  end
+
+  def revoked_serials
+    return @cp.get_crl.revoked.map {|entry| entry.serial.to_i }
   end
 
 end

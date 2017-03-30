@@ -2028,7 +2028,7 @@
     </changeSet>
     <changeSet author="awood" id="1413225753032-290">
         <comment>
-             Add the default quartz lock columns. 
+             Add the default quartz lock columns.
         </comment>
         <insert tableName="QRTZ_LOCKS">
             <column name="LOCK_NAME" value="TRIGGER_ACCESS"/>
@@ -2296,4 +2296,5 @@
     <include file="db/changelog/20170220133446-add-correlation-id-to-job.xml"/>
     <include file="db/changelog/20170227140343-convert-consumer-entitlement-count-to-column.xml"/>
     <include file="db/changelog/20170323142254-add-revoked-column-to-cert-serial.xml"/>
+    <include file="db/changelog/20170301083925-update-revoked-cert-serial-data.xml"/>
 </databaseChangeLog>

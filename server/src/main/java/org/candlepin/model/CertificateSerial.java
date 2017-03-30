@@ -16,14 +16,11 @@ package org.candlepin.model;
 
 import org.candlepin.util.Util;
 
-import org.hibernate.annotations.Formula;
-import org.hibernate.annotations.GenericGenerator;
-
 import java.math.BigInteger;
 import java.util.Date;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
@@ -40,29 +37,16 @@ public class CertificateSerial extends AbstractHibernateObject {
     public static final String DB_TABLE = "cp_cert_serial";
 
     @Id
-    @GeneratedValue(generator = "serial-number")
-    @GenericGenerator(name = "serial-number",
-        strategy = "org.candlepin.util.SerialNumberGenerator")
     @NotNull
     private Long id;
 
-    /*
-     * A CertificateSerial is considered revoked when no certificates reference it
-     * TODO: put different kinds of serials into different tables.  More specifically,
-     * those that we own (can revoke) vs those that we don't
-     */
-    @Formula("(CASE (" +
-        "(SELECT count(entcert.id) FROM cp_ent_certificate entcert where entcert.serial_id = id) + " +
-        "(SELECT count(cdncert.id) FROM cp_cdn_certificate cdncert where cdncert.serial_id = id) + " +
-        "(SELECT count(subcert.id) FROM cp_certificate subcert where subcert.serial_id = id) + " +
-        "(SELECT count(idcert.id) FROM cp_id_cert idcert where idcert.serial_id = id) + " +
-        "(SELECT count(contacccert.id) FROM cp_cont_access_cert contacccert where " +
-        "contacccert.serial_id = id)" +
-        ") WHEN 0 THEN 1 ELSE 0 END)")
+    @NotNull
+    @Column(nullable = false)
     private boolean revoked;
 
     // Set to true if this serial is already a part of the CRL
     @NotNull
+    @Column(nullable = false)
     private boolean collected;
 
     // The expiration.
@@ -72,10 +56,11 @@ public class CertificateSerial extends AbstractHibernateObject {
      * Default constructor for serialization - DO NOT REMOVE!
      */
     public CertificateSerial() {
-        super();
+        this.id = Util.generateUniqueLong();
     }
 
     public CertificateSerial(Date expiration) {
+        this();
         this.expiration = expiration;
     }
 
@@ -101,6 +86,13 @@ public class CertificateSerial extends AbstractHibernateObject {
      */
     public boolean isRevoked() {
         return revoked;
+    }
+
+    /**
+     * @param isRevoked whether or not this serial is revoked.
+     */
+    public void setRevoked(boolean isRevoked) {
+        this.revoked = isRevoked;
     }
 
     /**

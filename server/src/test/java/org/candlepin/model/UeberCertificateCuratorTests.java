@@ -71,6 +71,16 @@ public class UeberCertificateCuratorTests extends DatabaseTestFixture {
         }
     }
 
+    @Test
+    public void ensureCertificateDeletionRevokesCertSerial() {
+        UeberCertificate cert = this.createUeberCert(owner);
+        CertificateSerial serial = cert.getSerial();
+        this.ueberCertificateCurator.deleteForOwner(owner);
+        assertNull(this.ueberCertificateCurator.findForOwner(owner));
+        CertificateSerial fetchedSerial = certSerialCurator.find(serial.getId());
+        assertTrue("Serial should have been revoked", fetchedSerial.isRevoked());
+    }
+
     private UeberCertificate createUeberCert(Owner owner) {
         CertificateSerial serial = new CertificateSerial();
         this.certSerialCurator.create(serial);
