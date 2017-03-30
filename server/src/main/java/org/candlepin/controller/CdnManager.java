@@ -20,6 +20,7 @@ import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCertificate;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerialCurator;
+import org.candlepin.model.PoolCurator;
 
 import java.util.Arrays;
 
@@ -30,11 +31,14 @@ public class CdnManager {
 
     private CdnCurator cdnCurator;
     private CertificateSerialCurator certSerialCurator;
+    private PoolCurator poolCurator;
 
     @Inject
-    public CdnManager(CdnCurator cdnCurator, CertificateSerialCurator certSerialCurator) {
+    public CdnManager(CdnCurator cdnCurator, PoolCurator poolCurator,
+        CertificateSerialCurator certSerialCurator) {
         this.cdnCurator = cdnCurator;
         this.certSerialCurator = certSerialCurator;
+        this.poolCurator = poolCurator;
     }
 
     /**
@@ -76,8 +80,7 @@ public class CdnManager {
      */
     @Transactional
     public void deleteCdn(Cdn cdn) {
-        // FIXME When a Cdn is referenced by a Pool, and is deleted, an exception occurs.
-        //       We should handle this here.
+        poolCurator.removeCdn(cdn);
         cdnCurator.delete(cdn);
     }
 }

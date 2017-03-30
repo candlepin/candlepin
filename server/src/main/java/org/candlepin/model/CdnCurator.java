@@ -15,8 +15,8 @@
 package org.candlepin.model;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 import org.hibernate.criterion.Restrictions;
-
 
 
 /**
@@ -48,5 +48,10 @@ public class CdnCurator
      */
     public void update(Cdn cdn) {
         save(cdn);
+    }
+
+    @Transactional
+    public void delete(Cdn toDelete) {
+        getEntityManager().remove(toDelete);
     }
 }

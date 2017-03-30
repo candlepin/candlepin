@@ -1394,4 +1394,19 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         query.setParameterList("productIds", productIds);
         query.executeUpdate();
     }
+
+    @Transactional
+    public void removeCdn(Cdn cdn) {
+        if (cdn == null) {
+            throw new IllegalArgumentException("Attempt to remove pool's cdn with null cdn value.");
+        }
+        List<Pool> pools = getEntityManager()
+            .createQuery("select p from Pool p where p.cdn = :cdn")
+            .setParameter("cdn", cdn)
+            .getResultList();
+        if (pools.isEmpty()) {
+            return;
+        }
+        pools.get(0).setCdn(null);
+    }
 }
