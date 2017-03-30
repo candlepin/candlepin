@@ -53,6 +53,62 @@ describe 'Hypervisor Resource', :type => :virt do
     hypervisors.size.should == 0
   end
 
+  it 'should not deadlock when two synchronous hypervisor checkins are performed' do
+    hypervisor_ids = [random_string('host'), random_string('host')]
+    # The guest ids that will be reported
+    guest_id_lists = [['g1', 'g2'], ['g3', 'g4'], ['g5', 'g6']]
+    mapping1 = {hypervisor_ids[0] => guest_id_lists[0], hypervisor_ids[1] => guest_id_lists[0]}
+    # Do an initial checkin to ensure the consumers for each hypervisor exists
+    # This is done to be more sure of the occurance of a deadlock
+    @consumer.hypervisor_check_in(@owner['key'], mapping1)
+    # The mappings used to create the deadlock will use different guest ids
+    # The first mapping will use guest_id_lists[1]
+    # The second will use guest_id_lists[2]
+    deadlock_mapping = {hypervisor_ids[0] => guest_id_lists[1], hypervisor_ids[1] => guest_id_lists[1]}
+    reversed_deadlock_mapping = {}
+    deadlock_mapping.keys.reverse.each {|key| reversed_deadlock_mapping[key] = guest_id_lists[2]}
+    completed_queue = Queue.new
+    result1 = nil
+    result2 = nil
+    thread1 = Thread.new {
+      result1 = @consumer.hypervisor_check_in(@owner['key'], deadlock_mapping)
+      completed_queue << 1
+    }
+    thread2 = Thread.new {
+      result2 = @consumer.hypervisor_check_in(@owner['key'], reversed_deadlock_mapping)
+      completed_queue << 2
+    }
+    thread1.join
+    thread2.join
+    first_complete = completed_queue.pop  # We do not need to know which was completed first
+    second_complete = completed_queue.pop
+    # Check that both reports were processed
+    # Since we are submitting different guestIds
+    # we expect each hypervisor check in to update both hypervisors
+    result1.should_not be_nil
+    result1.created.size.should == 0
+    result1.updated.size.should == 2
+    result1.unchanged.size.should == 0
+    result1.failedUpdate.size.should == 0
+    result2.should_not be_nil
+    result2.created.size.should == 0
+    result2.updated.size.should == 2
+    result2.unchanged.size.should == 0
+    result2.failedUpdate.size.should == 0
+    # Show that the last report completed is the one that is persisted
+    hypervisors = @user.get_owner_hypervisors(@owner['key'])
+    guest_ids_to_check = guest_id_lists[second_complete]
+    hypervisors.each { |hypervisor|
+      # Only check the hypervisors created in this test
+      if hypervisor_ids.include? hypervisor.name
+        hypervisor.guestIds.size.should == guest_ids_to_check.size
+        hypervisor.guestIds.each { |guestId|
+          guest_ids_to_check.should include(guestId.guestId)
+        }
+      end
+    }
+  end
+
   it 'should add consumer to created when new host id and guests were reported' do
     consumer_uuid = random_string('host')
     mapping = get_host_guest_mapping(consumer_uuid, ['g1'])
