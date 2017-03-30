@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.0.29
+Version: 2.0.30
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -220,6 +220,18 @@ fi
 
 #raw
 %changelog
+* Thu Mar 30 2017 Kevin Howell <khowell@redhat.com> 2.0.30-1
+- Update required liquibase version (mstead@redhat.com)
+- Removed @Formula for  CertificateSerial.revoked (mstead@redhat.com)
+- 1419576: Pre-date certs to ease clock skew issues (wpoteat@redhat.com)
+- 1431784: Remove entitlement deleted events on pool deletion
+  (wpoteat@redhat.com)
+- Entering suspend mode on startup (david.sarman@gmail.com)
+- Add and correct Swagger annotations so Swagger code-gen works better.
+  (awood@redhat.com)
+- Annotate User object as a "split" model. (awood@redhat.com)
+- Update resources to tell Swagger when to use Basic auth (awood@redhat.com)
+
 * Thu Mar 23 2017 Kevin Howell <khowell@redhat.com> 2.0.29-1
 - Add revoked column to cp_cert_serial table (mstead@redhat.com)
 - Fix system fact for test that broke due to colliding merges in master
