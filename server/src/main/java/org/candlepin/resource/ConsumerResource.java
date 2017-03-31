@@ -1597,7 +1597,7 @@ public class ConsumerResource {
         String[] productIds, List<String> fromPools, Date entitleDate, Consumer consumer, boolean async) {
         short parameters = 0;
 
-        if (consumer.getType().isType(ConsumerTypeEnum.SHARE) && StringUtils.isBlank(poolIdString)) {
+        if (consumer.isShare() && StringUtils.isBlank(poolIdString)) {
             throw new BadRequestException(i18n.tr("Share consumers must be bound to a specific pool"));
         }
 
