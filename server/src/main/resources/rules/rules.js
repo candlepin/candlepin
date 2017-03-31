@@ -41,7 +41,6 @@ function pool_type_name_space() {
 // consumer types
 var SYSTEM_TYPE = "system";
 var HYPERVISOR_TYPE = "hypervisor";
-var SHARE_TYPE = "share";
 
 // Consumer fact names
 var SOCKET_FACT="cpu.cpu_socket(s)";
@@ -68,7 +67,6 @@ var UNMAPPED_GUESTS_ONLY = "unmapped_guests_only";
 var GUEST_LIMIT_ATTRIBUTE = "guest_limit";
 var VCPU_ATTRIBUTE = "vcpu";
 var MULTI_ENTITLEMENT_ATTRIBUTE = "multi-entitlement";
-var SHARE_ATTRIBUTE = "share";
 var STACKING_ID_ATTRIBUTE = "stacking_id";
 
 var STORAGE_BAND_ATTRIBUTE = "storage_band";
@@ -78,15 +76,6 @@ var BEST_POOLS_CALLER = "best_pools";
 var BIND_CALLER = "bind";
 var LIST_POOLS_CALLER = "list_pools";
 var UNKNOWN_CALLER = "unknown";
-
-// pool types
-var NORMAL = "NORMAL";
-var ENTITLEMENT_DERIVED = "ENTITLEMENT_DERIVED";
-var STACK_DERIVED = "STACK_DERIVED";
-var SHARE_DERIVED = "SHARE_DERIVED";
-var BONUS = "BONUS";
-var UNMAPPED_GUEST = "UNMAPPED_GUEST";
-var DEVELOPMENT = "DEVELOPMENT";
 
 /**
  * A FactValueCalculator allows the rules to determine which
@@ -1309,7 +1298,6 @@ var Entitlement = {
             "sockets:1:sockets," +
             "ram:1:ram," +
             "cores:1:cores," +
-            "share:1:share," +
             "requires_consumer_type:1:requires_consumer_type," +
             "virt_only:1:virt_only," +
             "requires_host:1:requires_host," +
@@ -1518,28 +1506,6 @@ var Entitlement = {
 
     pre_requires_consumer: function() {
         return this.build_func("do_pre_requires_consumer")();
-    },
-
-    do_pre_share: function(context, result) {
-        if (context.consumer.type.label != SHARE_TYPE) {
-            return;
-        }
-
-        if (context.pool.type === DEVELOPMENT) {
-            result.addError("rulefailed.sharing.a.development.pool.prohibited")
-        }
-
-        if (context.getAttribute(context.pool, SHARE_ATTRIBUTE)) {
-            result.addError("rulefailed.sharing.a.share.prohibited");
-        }
-
-        if (context.getAttribute(context.pool, UNMAPPED_GUESTS_ONLY)) {
-            result.addError("rulefailed.sharing.an.unmapped.guest.pool.prohibited");
-        }
-    },
-
-    pre_share: function() {
-        return this.build_func("do_pre_share")();
     },
 
     do_pre_requires_consumer_type: function(context, result) {
@@ -1797,11 +1763,10 @@ var Entitlement = {
             }
 
             // If the product has no required consumer type, assume it is restricted to "system".
-            // "hypervisor"/"share" types are essentially the same as "system".
+            // "hypervisor" types are essentially the same as "system".
             if (!pool.getProductAttribute(REQUIRES_CONSUMER_TYPE_ATTRIBUTE)) {
                 if (consumer.type.label != SYSTEM_TYPE &&
-                    consumer.type.label != HYPERVISOR_TYPE &&
-                    consumer.type.label != SHARE_TYPE
+                    consumer.type.label != HYPERVISOR_TYPE
                 ) {
                     result.addError("rulefailed.consumer.type.mismatch");
                 }

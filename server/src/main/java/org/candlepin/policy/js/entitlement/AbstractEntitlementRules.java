@@ -24,7 +24,6 @@ import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.ProductManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
-import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
@@ -190,6 +189,18 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         int quantity) {
         if (!pool.entitlementsAvailable(quantity)) {
             result.addError("rulefailed.no.entitlements.available");
+        }
+    }
+
+    protected void validatePoolSharingEligibility(ValidationResult result, Pool pool) {
+        if (pool.getType() == Pool.PoolType.UNMAPPED_GUEST) {
+            result.addError(EntitlementRulesTranslator.PoolErrorKeys.SHARING_UNMAPPED_GUEST_POOL);
+        }
+        else if (pool.getType() == Pool.PoolType.DEVELOPMENT) {
+            result.addError(EntitlementRulesTranslator.PoolErrorKeys.SHARING_DEVELOPMENT_POOL);
+        }
+        else if (pool.getType() == Pool.PoolType.SHARE_DERIVED) {
+            result.addError(EntitlementRulesTranslator.PoolErrorKeys.SHARING_A_SHARE);
         }
     }
 
