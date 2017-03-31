@@ -128,8 +128,8 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
                     resultMap.put(poolQuantity.getPool().getId(), new ValidationResult());
                     log.info("no result returned for pool: {}", poolQuantity.getPool());
                 }
-                finishValidation(resultMap.get(poolQuantity.getPool().getId()), poolQuantity.getPool(),
-                    poolQuantity.getQuantity());
+                finishValidation(consumer, resultMap.get(poolQuantity.getPool().getId()),
+                    poolQuantity.getPool(), poolQuantity.getQuantity());
             }
         }
         catch (Exception e) {
@@ -164,7 +164,7 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
         List<Pool> filteredPools = new LinkedList<Pool>();
         for (Pool pool : pools) {
             ValidationResult result = resultMap.get(pool.getId());
-            finishValidation(result, pool, 1);
+            finishValidation(consumer, result, pool, 1);
 
             if (result.isSuccessful() && (!result.hasWarnings() || showAll)) {
                 filteredPools.add(pool);
@@ -188,8 +188,11 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
         return host;
     }
 
-    private void finishValidation(ValidationResult result, Pool pool, Integer quantity) {
+    private void finishValidation(Consumer consumer, ValidationResult result, Pool pool, Integer quantity) {
         validatePoolQuantity(result, pool, quantity);
+        if (consumer.isShare()) {
+            validatePoolSharingEligibility(result, pool);
+        }
         if (pool.isExpired(dateSource)) {
             result.addError(new ValidationError(i18n.tr("Subscriptions for {0} expired on: {1}",
                 pool.getProductId(),
