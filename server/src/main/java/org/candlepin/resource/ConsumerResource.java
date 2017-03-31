@@ -636,18 +636,17 @@ public class ConsumerResource {
                 "A unit type of \"share\" must specify a fact \"share.recipient\" containing an org key"
             ));
         }
-        else {
-            String recipient = consumer.getFact("share.recipient");
-            Owner recipientOwner = ownerCurator.lookupByKey(consumer.getFact("share.recipient"));
-            if (recipientOwner == null) {
-                throw new NotFoundException(i18n.tr("owner with key: {0} was not found.", recipient));
-            }
-            // Check permissions for current principal on the recipient owner
-            if (!principal.canAccess(recipientOwner, SubResource.ENTITLEMENTS, Access.CREATE)) {
-                log.warn("User {} does not have access to create shares to org {}", principal
-                    .getPrincipalName(), recipient);
-                throw new NotFoundException(i18n.tr("owner with key: {0} was not found.", recipient));
-            }
+
+        String recipient = consumer.getFact("share.recipient");
+        Owner recipientOwner = ownerCurator.lookupByKey(consumer.getFact("share.recipient"));
+        if (recipientOwner == null) {
+            throw new NotFoundException(i18n.tr("owner with key: {0} was not found.", recipient));
+        }
+        // Check permissions for current principal on the recipient owner
+        if (!principal.canAccess(recipientOwner, SubResource.ENTITLEMENTS, Access.CREATE)) {
+            log.warn("User {} does not have access to create shares to org {}", principal
+                .getPrincipalName(), recipient);
+            throw new NotFoundException(i18n.tr("owner with key: {0} was not found.", recipient));
         }
     }
 

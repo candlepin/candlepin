@@ -118,7 +118,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         public static final String REQUIRES_HOST = "requires_host";
 
         /** Attribute used to determine if a pool was created by sharing */
-        public static final String SHARE = "share";
+        public static final String SHARE = "share_derived";
 
         /** Attribute for specifying the source pool from which a derived pool originates */
         public static final String SOURCE_POOL_ID = "source_pool_id";
