@@ -14,8 +14,6 @@
  */
 package org.candlepin.policy.js.pool;
 
-import org.candlepin.controller.PoolManager;
-import org.candlepin.model.Attribute;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
@@ -29,8 +27,6 @@ import org.candlepin.model.SourceSubscription;
 
 import org.apache.commons.lang.StringUtils;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
