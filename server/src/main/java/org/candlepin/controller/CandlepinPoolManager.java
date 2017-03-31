@@ -1620,7 +1620,6 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         boolean isDistributor = consumer.getType().isManifest();
-        boolean isShare = consumer.getType().isType(ConsumerType.ConsumerTypeEnum.SHARE);
 
         /*
          * Grab an exclusive lock on the consumer to prevent deadlock.
@@ -1652,8 +1651,8 @@ public class CandlepinPoolManager implements PoolManager {
 
         handler.handlePostEntitlement(this, consumer, entitlements);
 
-        // Distributors and shares don't need entitlement certificate since they don't talk to the CDN
-        if (!isDistributor && !isShare) {
+        // shares don't need entitlement certificate since they don't talk to the CDN
+        if (!consumer.isShare()) {
             handler.handleSelfCertificates(consumer, poolQuantities, entitlements);
         }
 
@@ -1670,7 +1669,7 @@ public class CandlepinPoolManager implements PoolManager {
          * need to check for the update.
          */
         complianceRules.getStatus(consumer, null, false, false);
-        if (!isDistributor && !isShare) {
+        if (!isDistributor && !consumer.isShare()) {
             consumerCurator.update(consumer);
         }
 
@@ -2184,7 +2183,7 @@ public class CandlepinPoolManager implements PoolManager {
             }
             List<Pool> subPoolsForStackIds = null;
             // Share consumers should not contribute to the sharing org's stack
-            if (!stackIds.isEmpty() && !consumer.getType().isType(ConsumerType.ConsumerTypeEnum.SHARE)) {
+            if (!stackIds.isEmpty() && !consumer.isShare()) {
                 subPoolsForStackIds = poolCurator.getSubPoolForStackIds(consumer, stackIds);
                 if (CollectionUtils.isNotEmpty(subPoolsForStackIds)) {
                     poolRules.updatePoolsFromStack(consumer, subPoolsForStackIds, false);
