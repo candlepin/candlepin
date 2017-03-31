@@ -300,7 +300,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
                 virtLimitEntitlements.put(entry.getKey(), entitlement);
                 flatAttributeMaps.put(entry.getKey(), attributes);
             }
-            if (consumer.getType().isType(ConsumerType.ConsumerTypeEnum.SHARE)) {
+            if (consumer.isShare()) {
                 sharedEntitlements.put(entry.getKey(), entitlement);
                 flatAttributeMaps.put(entry.getKey(), attributes);
             }
@@ -523,8 +523,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         }
 
         // Share consumers do not have host restricted pools
-        if (CollectionUtils.isNotEmpty(createHostRestrictedPoolFor) &&
-            !c.getType().isType(ConsumerType.ConsumerTypeEnum.SHARE)) {
+        if (CollectionUtils.isNotEmpty(createHostRestrictedPoolFor) && !c.isShare()) {
             log.debug("creating host restricted pools for: {}", createHostRestrictedPoolFor);
             PoolHelper.createHostRestrictedPools(new HostRestrictedPoolCommand(poolManager), c,
                 createHostRestrictedPoolFor, entitlementMap, attributeMaps, productCurator).execute(c);
