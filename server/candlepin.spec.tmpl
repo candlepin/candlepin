@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.0.30
+Version: 2.1.0
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -220,6 +220,10 @@ fi
 
 #raw
 %changelog
+* Fri Mar 31 2017 Kevin Howell <khowell@redhat.com> 2.1.0-1
+- 1428150: Do not deadlock when processing hypervisor check ins
+  (csnyder@redhat.com)
+
 * Thu Mar 30 2017 Kevin Howell <khowell@redhat.com> 2.0.30-1
 - Update required liquibase version (mstead@redhat.com)
 - Removed @Formula for  CertificateSerial.revoked (mstead@redhat.com)
