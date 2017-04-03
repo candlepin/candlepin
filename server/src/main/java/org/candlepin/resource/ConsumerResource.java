@@ -588,11 +588,30 @@ public class ConsumerResource {
     }
 
     /**
+     * Validate any updates performed on a share consumer
+     * @param oldShare the consumer being updated
+     * @param newShare the consumer posted to the resource method
+     * @param principal the principal performing the operation
+     * @throws BadRequestException if any validations fail
+     */
+    private void validateShareConsumerUpdate(Consumer oldShare, Consumer newShare, Principal principal)
+        throws BadRequestException {
+        String oldRecipient = oldShare.getFact("share.recipient");
+        String newRecipient = newShare.getFact("share.recipient");
+
+        if (!oldRecipient.equals(newRecipient)) {
+            throw new BadRequestException(i18n.tr(
+                "The share recipient cannot be modified once the share has been created"
+            ));
+        }
+        validateShareConsumer(newShare, principal, Collections.<ActivationKey>emptyList());
+    }
+    /**
      * Ensure that certain fields remain unset when creating a share consumer.
-     * @param consumer
-     * @param keys
-     * @param identityCertCreation
-     * @throws BadRequestException
+     * @param consumer the consumer to validate
+     * @param principal the principal performing the operation
+     * @param keys any provided activation keys
+     * @throws BadRequestException if any validations fail
      */
     private void validateShareConsumer(Consumer consumer, Principal principal, List<ActivationKey> keys)
         throws BadRequestException {
@@ -634,6 +653,11 @@ public class ConsumerResource {
         if (consumer.getFact("share.recipient") == null) {
             throw new BadRequestException(i18n.tr(
                 "A unit type of \"share\" must specify a fact \"share.recipient\" containing an org key"
+            ));
+        }
+        if ("true".equalsIgnoreCase(consumer.getFact("virt.is_guest"))) {
+            throw new BadRequestException(i18n.tr(
+                "A unit type of \"share\" cannot be a virtual guest"
             ));
         }
 
@@ -968,7 +992,8 @@ public class ConsumerResource {
     @Transactional
     public void updateConsumer(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid,
-        @ApiParam(name = "consumer", required = true) Consumer consumer) {
+        @ApiParam(name = "consumer", required = true) Consumer consumer,
+        @Context Principal principal) {
 
         Consumer toUpdate = consumerCurator.verifyAndLookupConsumer(uuid);
 
@@ -984,6 +1009,10 @@ public class ConsumerResource {
 
         // Sanitize the inbound facts before applying the update
         this.sanitizeConsumerFacts(consumer);
+
+        if (toUpdate.getType().isType(ConsumerTypeEnum.SHARE)) {
+            validateShareConsumerUpdate(toUpdate, consumer, principal);
+        }
 
         if (performConsumerUpdates(consumer, toUpdate, guestConsumerMap)) {
             try {
