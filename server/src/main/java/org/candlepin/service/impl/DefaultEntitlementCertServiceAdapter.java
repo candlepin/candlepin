@@ -366,27 +366,17 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         byte[] pemEncodedKeyPair = pki.getPemEncoded(keyPair.getPrivate());
 
         Map<String, CertificateSerial> serialMap = new HashMap<String, CertificateSerial>();
-<<<<<<< 01d2eb7fd1b2d611e9592898df9f2c066d2f7e00
-        for (Entry<String, Entitlement> entry : entitlements.entrySet()) {
-            // No need to persist the cert serial here as the IDs are generated on object creation.
-            serialMap.put(entry.getKey(), new CertificateSerial(entry.getValue().getEndDate()));
-=======
         for (Entry<String, PoolQuantity> entry : poolQuantities.entrySet()) {
+            // No need to persist the cert serial here as the IDs are generated on object creation.
             serialMap.put(entry.getKey(), new CertificateSerial(entry.getValue().getPool().getEndDate()));
->>>>>>> create cert before ent
         }
 
         Map<String, EntitlementCertificate> entitlementCerts = new HashMap<String, EntitlementCertificate>();
-<<<<<<< 01d2eb7fd1b2d611e9592898df9f2c066d2f7e00
-        for (Entry<String, Entitlement> entry : entitlements.entrySet()) {
-            Entitlement entitlement = entry.getValue();
-=======
 
         for (Entry<String, PoolQuantity> entry : poolQuantities.entrySet()) {
             Pool pool = entry.getValue().getPool();
             Entitlement entitlement = entitlementMap.get(entry.getKey());
             Integer quantity = entry.getValue().getQuantity();
->>>>>>> create cert before ent
             CertificateSerial serial = serialMap.get(entry.getKey());
             Product product = productMap.get(entry.getKey());
 
@@ -453,7 +443,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
 
         // Now that the serials have been saved, update the newly created
         // certs with their serials and add them to the entitlements.
-        for (Entry<String, Entitlement> entry : entitlements.entrySet()) {
+        for (Entry<String, PoolQuantity> entry : poolQuantities.entrySet()) {
             CertificateSerial nextSerial = serialMap.get(entry.getKey());
             if (nextSerial == null) {
                 // This should never happen, but checking to be safe.
@@ -468,7 +458,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
                     "Entitlement certificate not found for entitlement during cert generation");
             }
             nextCert.setSerial(nextSerial);
-            entry.getValue().getCertificates().add(nextCert);
+            //entry.getValue().getCertificates().add(nextCert);
         }
 
         log.info("Persisting certs.");
