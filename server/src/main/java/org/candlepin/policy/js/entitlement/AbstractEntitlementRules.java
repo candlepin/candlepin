@@ -318,8 +318,11 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         }
         // Perform pool management based on the attributes of the pool:
         if (!virtLimitEntitlements.isEmpty()) {
-            postBindVirtLimit(poolManager, consumer, virtLimitEntitlements, flatAttributeMaps,
-                subPoolsForStackIds);
+            // Share consumers only need to compute postBindVirtLimit in hosted mode
+            if (!consumer.isShare() || !config.getBoolean(ConfigProperties.STANDALONE)) {
+                postBindVirtLimit(poolManager, consumer, virtLimitEntitlements, flatAttributeMaps,
+                    subPoolsForStackIds);
+            }
         }
 
         if (!sharedEntitlements.isEmpty()) {
@@ -389,7 +392,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
 
     private void postBindShareDerived(PoolManager poolManager, Consumer c,
         Map<String, Entitlement> entitlementMap, Map<String, Map<String, String>> attributeMaps) {
-        log.debug("Running entitlement derived post-bind");
+        log.debug("Running share derived post-bind");
 
         Owner recipient = ownerCurator.lookupByKey(c.getFact("share.recipient"));
         List<Pool> sharedPoolsToCreate = new ArrayList<Pool>();

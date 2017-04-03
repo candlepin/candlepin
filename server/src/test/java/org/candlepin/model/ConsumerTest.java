@@ -15,8 +15,10 @@
 package org.candlepin.model;
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
 
 import org.candlepin.auth.ConsumerPrincipal;
+import org.candlepin.auth.Principal;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.resource.ConsumerResource;
@@ -138,7 +140,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         newConsumer.setUuid(consumer.getUuid());
         newConsumer.setFact("FACT", "FACT_VALUE");
 
-        consumerResource.updateConsumer(consumer.getUuid(), newConsumer);
+        consumerResource.updateConsumer(consumer.getUuid(), newConsumer, mock(Principal.class));
 
         Consumer lookedUp = consumerCurator.find(consumer.getId());
         Date lookedUpDate = lookedUp.getUpdated();
