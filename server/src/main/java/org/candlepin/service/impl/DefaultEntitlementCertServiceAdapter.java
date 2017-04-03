@@ -104,7 +104,13 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
 
     @Override
     public Map<String, EntitlementCertificate> generateEntitlementCerts(Consumer consumer, Map<String, Entitlement> entitlements, Map<String, Product> products) throws GeneralSecurityException, IOException {
-        return null;
+        Map<String, PoolQuantity> poolQuantities = new HashMap<String, PoolQuantity>();
+        for(Entry<String, Entitlement> entry: entitlements.entrySet()) {
+            Entitlement e = entry.getValue();
+            PoolQuantity pq = new PoolQuantity(e.getPool(), e.getQuantity());
+            poolQuantities.put(entry.getKey(), pq);
+        }
+        return generateEntitlementCerts2(consumer, poolQuantities, entitlements, products);
     }
 
     private EntitlementCertificate generateSingleCert(Entitlement entitlement, Product product)
