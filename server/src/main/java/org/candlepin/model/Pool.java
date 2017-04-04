@@ -62,6 +62,7 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.persistence.Version;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -333,6 +334,11 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     @NotNull
     private Long exported;
 
+    @Column(name = "quantity_shared")
+    @NotNull
+    @Min(0)
+    private Long shared;
+
     @OneToMany
     @JoinTable(name = "cp_pool_branding",
         joinColumns = @JoinColumn(name = "pool_id"),
@@ -436,6 +442,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
 
         this.setExported(0L);
         this.setConsumed(0L);
+        this.setShared(0L);
     }
 
     public Pool(Owner ownerIn, Product product, Collection<Product> providedProducts,
@@ -541,6 +548,20 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         // Even though this is calculated at DB fetch time, we allow
         // setting it for changes in a single transaction
         this.exported = exported;
+    }
+
+    /**
+     * @return the quantity of entitlements in this pool shared to another org.
+     */
+    public Long getShared() {
+        return (shared == null) ? 0 : shared;
+    }
+
+    /**
+     * @param shared the number to set the share count to
+     */
+    public void setShared(Long shared) {
+        this.shared = shared;
     }
 
     /**

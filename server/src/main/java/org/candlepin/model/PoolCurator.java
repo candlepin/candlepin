@@ -1640,4 +1640,16 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
         log.debug("CDN removed from {} pools: {}", updated, cdn);
     }
+
+    @Transactional
+    public void calculateSharedForOwnerPools(Owner owner) {
+        String stmt = "update Pool p set p.shared = coalesce(" +
+            "(select sum(ent.quantity) FROM Entitlement ent, Consumer cons, ConsumerType ctype " +
+            "where ent.pool.id = p.id and ent.consumer.id = cons.id and cons.type.id = ctype.id " +
+            "and ctype.label = 'share'), 0) where p.owner = :owner";
+
+        Query q = currentSession().createQuery(stmt);
+        q.setParameter("owner", owner);
+        q.executeUpdate();
+    }
 }

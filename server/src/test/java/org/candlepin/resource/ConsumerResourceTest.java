@@ -163,7 +163,7 @@ public class ConsumerResourceTest {
             mockedEntitlementCertServiceAdapter, i18n, null, null, null, null,
             null, mockedPoolManager, null, mockedOwnerCurator, null, null, null,
             null, null, null, new CandlepinCommonTestConfig(), null, null, null,
-            consumerBindUtil, productCurator, null, null, factValidator, null, consumerEnricher);
+            consumerBindUtil, null, null, factValidator, null, consumerEnricher);
 
         UserPrincipal uap = mock(UserPrincipal.class);
         when(uap.canAccess(any(Object.class), any(SubResource.class), any(Access.class))).thenReturn
@@ -191,7 +191,7 @@ public class ConsumerResourceTest {
             mockedEntitlementCertServiceAdapter, i18n, null, null, null, null,
             null, mockedPoolManager, null, mockedOwnerCurator, null, null, null,
             null, null, null, new CandlepinCommonTestConfig(), null, null, null,
-            consumerBindUtil, productCurator, null, null, factValidator, null, consumerEnricher);
+            consumerBindUtil, null, null, factValidator, null, consumerEnricher);
 
         UserPrincipal uap = mock(UserPrincipal.class);
         when(uap.canAccess(any(Object.class), any(SubResource.class), any(Access.class))).thenReturn
