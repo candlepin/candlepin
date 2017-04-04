@@ -85,7 +85,10 @@ describe "Multi Org Shares" do
     recipient_pools = @cp.list_owner_pools(@owner2['key'])
     expect(recipient_pools).not_to be_empty
     attributes = recipient_pools.first['attributes']
-    expect(attributes.select { |a| a['name'] == 'share' && a['value'] == 'true'}).not_to be_empty
+    expect(attributes.select { |a| a['name'] == 'share_derived' && a['value'] == 'true'}).not_to be_empty
+
+    shared_pools = @cp.list_owner_pools(@owner1['key'])
+    expect(shared_pools.first['shared']).to eq(1)
 
     owner2_prod = @user_client.get_product(@owner2['key'], id)
 
@@ -108,7 +111,7 @@ describe "Multi Org Shares" do
     recipient_pools = @cp.list_owner_pools(@owner2['key'])
     expect(recipient_pools).not_to be_empty
     attributes = recipient_pools.first['attributes']
-    expect(attributes.select { |a| a['name'] == 'share' && a['value'] == 'true'}).not_to be_empty
+    expect(attributes.select { |a| a['name'] == 'share_derived' && a['value'] == 'true'}).not_to be_empty
 
     # Owner 2 should continue to use its own version of the product
     owner2_prod = @user_client.get_product(@owner2['key'], id)

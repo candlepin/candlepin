@@ -1645,4 +1645,29 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertEquals(pool.getConsumed().longValue(), 5);
         assertEquals(pool.getExported().longValue(), 0);
     }
+
+    @Test
+    public void testUpdateQuantityColumnsOnSharedPool() {
+        Consumer consumer = TestUtil.createConsumer(owner);
+        ConsumerType shareType = new ConsumerType("share");
+        consumer.setType(shareType);
+        consumerTypeCurator.create(shareType);
+        consumerCurator.create(consumer);
+
+        Pool pool = createPool(owner, product, 20L,
+            TestUtil.createDate(2010, 3, 2), TestUtil.createDate(
+            Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 2));
+        poolCurator.create(pool);
+        Entitlement e = new Entitlement(pool, consumer, 5);
+        entitlementCurator.create(e);
+        assertEquals(pool.getConsumed().longValue(), 0);
+        assertEquals(pool.getShared().longValue(), 0);
+
+        poolCurator.calculateConsumedForOwnersPools(owner);
+        poolCurator.calculateSharedForOwnerPools(owner);
+        poolCurator.refresh(pool);
+
+        assertEquals(pool.getShared().longValue(), 5);
+        assertEquals(pool.getExported().longValue(), 0);
+    }
 }
