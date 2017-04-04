@@ -1537,7 +1537,11 @@ public class CandlepinPoolManager implements PoolManager {
 
 
         // Lock the pools and consumers.
+        Date preLock = new Date();
         List<Pool> newPools =  poolCurator.lockAndLoadBatch(poolQuantities.keySet());
+        Date afterLock = new Date();
+
+        log.error("VRITANT LOCKWAIT: "+(afterLock.getTime() - preLock.getTime()) );
         for(Pool pool: pools) {
             poolQuantities.get(pool.getId()).setPool(pool);
         }
@@ -1582,6 +1586,10 @@ public class CandlepinPoolManager implements PoolManager {
         consumerCurator.update(consumer);
 
         poolCurator.flush();
+
+        Date end = new Date();
+
+        log.error("VRITANT LOCKHELD: "+(end.getTime() - afterLock.getTime()) );
 
         return new ArrayList<Entitlement>(entitlements.values());
     }
