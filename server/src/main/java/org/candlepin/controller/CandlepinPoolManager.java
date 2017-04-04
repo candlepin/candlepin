@@ -1536,8 +1536,16 @@ public class CandlepinPoolManager implements PoolManager {
         Map<String, EntitlementCertificate> certs = handler.handleSelfCertificates(consumer, poolQuantities, entitlements);
 
 
+        for(Entry<String, PoolQuantity> entry: poolQuantities.entrySet()) {
+            log.error("VRITANT version before: "+entry.getValue().getPool().getVersion());
+        }
         // Lock the pools and consumers.
-        poolCurator.lockAndLoadBatchById(poolQuantityMap.keySet());
+        List<Pool> newPools =  poolCurator.lockAndLoadBatch(poolQuantities.keySet());
+        for(Pool pool: pools) {
+            log.error("VRITANT version after: "+pool.getVersion());
+            poolQuantities.get(pool.getId()).setPool(pool);
+        }
+
         consumerCurator.lockAndLoad(consumer);
 
         // Persist the entitlement after it has been created.  It requires an ID in order to
@@ -1561,7 +1569,6 @@ public class CandlepinPoolManager implements PoolManager {
         poolCurator.updateAll(poolsToSave, false, false);
         handler.handlePostEntitlement(this, consumer, entitlements);
 
-        entitlementCertificateCurator.saveOrUpdateAll(certs.values(), false, false);
         this.ecGenerator.regenerateCertificatesByEntitlementIds(
             this.entitlementCurator.batchListModifying(entitlements.values()), true
         );
@@ -2080,7 +2087,7 @@ public class CandlepinPoolManager implements PoolManager {
                 cert.setEntitlement(entitlement);
             }
             entitlementCurator.saveOrUpdateAll(entsToPersist, false, false);
-
+            entitlementCertificateCurator.saveOrUpdateAll(certs.values(), false, false);
             return entitlements;
         }
 
