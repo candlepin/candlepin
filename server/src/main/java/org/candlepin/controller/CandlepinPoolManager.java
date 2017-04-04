@@ -1513,7 +1513,9 @@ public class CandlepinPoolManager implements PoolManager {
             throw new IllegalArgumentException(i18n.tr("Subscription pool(s) {0} do not exist.",
                 poolQuantityMap.keySet()));
         }
-        if (quantityFound) {
+
+        // Share consumers do not go through the rules
+        if (quantityFound && !consumer.isShare()) {
             log.info("Running pre-entitlement rules.");
             // XXX preEntitlement is run twice for new entitlement creation
             Map<String, ValidationResult> results = enforcer.preEntitlement(consumer,
@@ -1561,12 +1563,14 @@ public class CandlepinPoolManager implements PoolManager {
 
         List<Pool> poolsToSave = new ArrayList<Pool>();
         for (PoolQuantity poolQuantity : poolQuantities.values()) {
-            // TODO Will need to make changes here.  Update shared quantity fields
             Pool pool = poolQuantity.getPool();
             Integer quantity = poolQuantity.getQuantity();
             pool.setConsumed(pool.getConsumed() + quantity);
             if (consumer.getType().isManifest()) {
                 pool.setExported(pool.getExported() + quantity);
+            }
+            else if (consumer.isShare()) {
+                pool.setShared(pool.getShared() + quantity);
             }
             consumer.setEntitlementCount(consumer.getEntitlementCount() + quantity);
             poolsToSave.add(pool);
@@ -1749,6 +1753,9 @@ public class CandlepinPoolManager implements PoolManager {
             Consumer consumer = ent.getConsumer();
             if (consumer.getType().isManifest()) {
                 pool.setExported(pool.getExported() - entQuantity);
+            }
+            else if (consumer.isShare()) {
+                pool.setShared(pool.getShared() - entQuantity);
             }
             consumer.setEntitlementCount(consumer.getEntitlementCount() - entQuantity);
             consumerCurator.update(consumer);
@@ -2390,5 +2397,6 @@ public class CandlepinPoolManager implements PoolManager {
     public void recalculatePoolQuantitiesForOwner(Owner owner) {
         poolCurator.calculateConsumedForOwnersPools(owner);
         poolCurator.calculateExportedForOwnersPools(owner);
+        poolCurator.calculateSharedForOwnerPools(owner);
     }
 }

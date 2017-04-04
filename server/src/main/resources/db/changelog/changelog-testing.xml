@@ -2300,4 +2300,5 @@
     <!-- Consumer Types are not populated in testing -->
     <!-- <include file="db/changelog/20170206133825-add-share-consumer-type.xml"/> -->
     <include file="db/changelog/20170224113816-add-productshare-table.xml"/>
+    <include file="db/changelog/20170404164458-add-share-quantity-column-to-pools.xml"/>
 </databaseChangeLog>
