@@ -1536,13 +1536,9 @@ public class CandlepinPoolManager implements PoolManager {
         Map<String, EntitlementCertificate> certs = handler.handleSelfCertificates(consumer, poolQuantities, entitlements);
 
 
-        for(Entry<String, PoolQuantity> entry: poolQuantities.entrySet()) {
-            log.error("VRITANT version before: "+entry.getValue().getPool().getVersion());
-        }
         // Lock the pools and consumers.
         List<Pool> newPools =  poolCurator.lockAndLoadBatch(poolQuantities.keySet());
         for(Pool pool: pools) {
-            log.error("VRITANT version after: "+pool.getVersion());
             poolQuantities.get(pool.getId()).setPool(pool);
         }
 
