@@ -14,6 +14,7 @@
  */
 package org.candlepin.policy.js.pool;
 
+import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
@@ -25,8 +26,10 @@ import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceStack;
 import org.candlepin.model.SourceSubscription;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -72,9 +75,11 @@ public class PoolHelper {
      * @param pools Pools these host restricted pools are being derived from.
      * @return pools the created pools
      */
-    public static HostRestrictedPoolCommand createHostRestrictedPools(HostRestrictedPoolCommand command,
-        Consumer consumer, List<Pool> pools, Map<String, Entitlement> sourceEntitlements,
+    public static List<Pool> createHostRestrictedPools(PoolManager poolManager, Consumer consumer,
+        List<Pool> pools, Map<String, Entitlement> sourceEntitlements,
         Map<String, Map<String, String>> attributeMaps, ProductCurator productCurator) {
+        List<Pool> poolsToCreate = new ArrayList<Pool>();
+        List<Pool> poolsToUpdateFromStack = new ArrayList<Pool>();
         for (Pool pool : pools) {
             Product product = pool.getProduct();
             Pool consumerSpecificPool = null;
@@ -123,7 +128,7 @@ public class PoolHelper {
             // pool based on the entitlements in the stack, instead of just the
             // parent pool.
             if (pool.isStacked()) {
-                command.addPoolToUpdateFromStack(consumerSpecificPool);
+                poolsToUpdateFromStack.add(consumerSpecificPool);
             }
             else {
                 // attribute per 795431, useful for rolling up pool info in headpin
@@ -131,9 +136,14 @@ public class PoolHelper {
                 consumerSpecificPool.setSourceSubscription(new SourceSubscription(pool.getSubscriptionId(),
                     sourceEntitlements.get(pool.getId()).getId()));
             }
-            command.addPoolToCreate(consumerSpecificPool);
+            poolsToCreate.add(consumerSpecificPool);
         }
-        return command;
+
+        if (CollectionUtils.isNotEmpty(poolsToUpdateFromStack)) {
+            poolManager.updatePoolsFromStack(consumer, poolsToUpdateFromStack);
+        }
+
+        return poolManager.createPools(poolsToCreate);
     }
 
     /**
