@@ -491,7 +491,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
 
         log.debug("Running virt_limit post-bind.");
 
-        boolean consumerFactExpression = !c.getType().isManifest() &&
+        boolean consumerFactExpression = !c.getType().isManifest() && !c.isShare() &&
             !"true".equalsIgnoreCase(c.getFact("virt.is_guest"));
 
         boolean isStandalone = config.getBoolean(ConfigProperties.STANDALONE);
@@ -550,12 +550,12 @@ public abstract class AbstractEntitlementRules implements Enforcer {
     }
 
     /*
-     * When distributors bind to virt_limit pools in hosted, we need to go adjust the
-     * quantity on the bonus pool, as those entitlements have now been exported to on-site.
+     * When distributors/share consumers bind to virt_limit pools in hosted, we need to go adjust the
+     * quantity on the bonus pool, as those entitlements have now been exported to on-site or to the share.
      */
     private void decrementHostedBonusPoolQuantity(PoolManager poolManager, Consumer c,
         List<Entitlement> entitlements, Map<String, Map<String, String>> attributesMaps) {
-        boolean consumerFactExpression = c.getType().isManifest() &&
+        boolean consumerFactExpression = (c.getType().isManifest() || c.isShare()) &&
             !config.getBoolean(ConfigProperties.STANDALONE);
 
         // pre-fetch subscription and respective pools in a batch
