@@ -39,7 +39,6 @@ import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.ValidationWarning;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.RulesObjectMapper;
-import org.candlepin.policy.js.pool.HostRestrictedPoolCommand;
 import org.candlepin.policy.js.pool.PoolHelper;
 import org.candlepin.util.DateSource;
 
@@ -539,8 +538,8 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         // Share consumers do not have host restricted pools
         if (CollectionUtils.isNotEmpty(createHostRestrictedPoolFor) && !c.isShare()) {
             log.debug("creating host restricted pools for: {}", createHostRestrictedPoolFor);
-            PoolHelper.createHostRestrictedPools(new HostRestrictedPoolCommand(poolManager), c,
-                createHostRestrictedPoolFor, entitlementMap, attributeMaps, productCurator).execute(c);
+            PoolHelper.createHostRestrictedPools(poolManager, c, createHostRestrictedPoolFor, entitlementMap,
+                attributeMaps, productCurator);
         }
 
         if (CollectionUtils.isNotEmpty(decrementHostedBonusPoolQuantityFor)) {

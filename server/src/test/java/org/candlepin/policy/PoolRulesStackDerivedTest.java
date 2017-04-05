@@ -41,7 +41,6 @@ import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.dto.Subscription;
-import org.candlepin.policy.js.pool.HostRestrictedPoolCommand;
 import org.candlepin.policy.js.pool.PoolHelper;
 import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.policy.js.pool.PoolUpdate;
@@ -199,13 +198,8 @@ public class PoolRulesStackDerivedTest {
         Map<String, Map<String, String>> attributes = new HashMap<String, Map<String, String>>();
         attributes.put(pool2.getId(), PoolHelper.getFlattenedAttributes(pool2));
         when(poolManagerMock.createPools(Matchers.anyListOf(Pool.class))).then(returnsFirstArg());
-        List<Pool> resPools = PoolHelper.createHostRestrictedPools(
-            new HostRestrictedPoolCommand(poolManagerMock),
-            consumer,
-            reqPools,
-            entitlements,
-            attributes,
-            productCurator).execute(consumer);
+        List<Pool> resPools = PoolHelper.createHostRestrictedPools(poolManagerMock, consumer, reqPools,
+            entitlements, attributes, productCurator);
         stackDerivedPool = resPools.get(0);
 
         reqPools.clear();
@@ -214,13 +208,8 @@ public class PoolRulesStackDerivedTest {
         entitlements.put(pool4.getId(), createEntFromPool(pool4));
         attributes.clear();
         attributes.put(pool4.getId(), PoolHelper.getFlattenedAttributes(pool4));
-        stackDerivedPool2 = PoolHelper.createHostRestrictedPools(
-            new HostRestrictedPoolCommand(poolManagerMock),
-            consumer,
-            reqPools,
-            entitlements,
-            attributes,
-            productCurator).execute(consumer).get(0);
+        stackDerivedPool2 = PoolHelper.createHostRestrictedPools(poolManagerMock, consumer, reqPools,
+            entitlements, attributes, productCurator).get(0);
     }
 
     private static int lastPoolId = 1;

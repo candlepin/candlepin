@@ -173,13 +173,8 @@ public class PoolHelperTest {
         attributes.put(targetPool2.getId(), PoolHelper.getFlattenedAttributes(targetPool2));
 
         when(pm.createPools(anyListOf(Pool.class))).then(returnsFirstArg());
-        List<Pool> pools = PoolHelper.createHostRestrictedPools(
-            new HostRestrictedPoolCommand(pm),
-            cons,
-            targetPools,
-            entitlements,
-            attributes,
-            productCurator).execute(cons);
+        List<Pool> pools = PoolHelper.createHostRestrictedPools(pm, cons, targetPools, entitlements,
+            attributes, productCurator);
 
         assertEquals(2, pools.size());
         Pool first = null, second = null;
@@ -240,13 +235,8 @@ public class PoolHelperTest {
         Map<String, Map<String, String>> attributes = new HashMap<String, Map<String, String>>();
         attributes.put(targetPool.getId(), PoolHelper.getFlattenedAttributes(targetPool));
         when(pm.createPools(anyListOf(Pool.class))).then(returnsFirstArg());
-        List<Pool> hostRestrictedPools = PoolHelper.createHostRestrictedPools(
-            new HostRestrictedPoolCommand(pm),
-            cons,
-            targetPools,
-            entitlements,
-            attributes,
-            productCurator).execute(cons);
+        List<Pool> hostRestrictedPools = PoolHelper.createHostRestrictedPools(pm, cons, targetPools,
+            entitlements, attributes, productCurator);
 
         assertEquals(1, hostRestrictedPools.size());
         Pool hostRestrictedPool = hostRestrictedPools.get(0);
