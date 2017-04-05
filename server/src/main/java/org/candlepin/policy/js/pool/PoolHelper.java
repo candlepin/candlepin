@@ -239,10 +239,23 @@ public class PoolHelper {
     public static Pool createSharePool(Owner recipient, Pool sourcePool, Product product,
         String quantity, Map<String, String> attributes, OwnerProductCurator curator,
         Entitlement sourceEntitlement, ProductCurator productCurator) {
-        Pool pool = createPool(product, recipient, quantity,
-            sourcePool.getStartDate(), sourcePool.getEndDate(),
-            sourcePool.getContractNumber(), sourcePool.getAccountNumber(),
-            sourcePool.getOrderNumber(), new HashSet<Product>(), sourceEntitlement);
+
+        Long q = getQuantity(quantity);
+        Pool pool = new Pool(
+            recipient,
+            product,
+            new HashSet<Product>(),
+            q,
+            sourcePool.getStartDate(),
+            sourcePool.getEndDate(),
+            sourcePool.getContractNumber(),
+            sourcePool.getAccountNumber(),
+            sourcePool.getOrderNumber()
+        );
+
+        if (sourceEntitlement != null && sourceEntitlement.getPool() != null) {
+            pool.setSourceEntitlement(sourceEntitlement);
+        }
 
         pool.setSourceSubscription(
             new SourceSubscription(sourcePool.getSubscriptionId(), "derived"));
@@ -267,18 +280,7 @@ public class PoolHelper {
         Date endDate, String contractNumber, String accountNumber, String orderNumber,
         Set<Product> providedProducts, Entitlement sourceEntitlement) {
 
-        Long q = null;
-        if (quantity.equalsIgnoreCase("unlimited")) {
-            q = -1L;
-        }
-        else {
-            try {
-                q = Long.parseLong(quantity);
-            }
-            catch (NumberFormatException e) {
-                q = 0L;
-            }
-        }
+        Long q = getQuantity(quantity);
 
         Pool pool = new Pool(
             owner,
@@ -309,6 +311,22 @@ public class PoolHelper {
         pool.setAttribute(Pool.Attributes.REQUIRES_CONSUMER_TYPE, "system");
 
         return pool;
+    }
+
+    private static Long getQuantity(String quantity) {
+        Long q;
+        if (quantity.equalsIgnoreCase("unlimited")) {
+            q = -1L;
+        }
+        else {
+            try {
+                q = Long.parseLong(quantity);
+            }
+            catch (NumberFormatException e) {
+                q = 0L;
+            }
+        }
+        return q;
     }
 
     public static boolean checkForOrderChanges(Pool existingPool, Pool pool) {
