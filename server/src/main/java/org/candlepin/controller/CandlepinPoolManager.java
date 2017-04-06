@@ -1514,8 +1514,8 @@ public class CandlepinPoolManager implements PoolManager {
                 poolQuantityMap.keySet()));
         }
 
-        // Share consumers do not go through the rules
-        if (quantityFound && !consumer.isShare()) {
+
+        if (quantityFound) {
             log.info("Running pre-entitlement rules.");
             // XXX preEntitlement is run twice for new entitlement creation
             Map<String, ValidationResult> results = enforcer.preEntitlement(consumer,
@@ -1583,11 +1583,12 @@ public class CandlepinPoolManager implements PoolManager {
         // shares don't need entitlement certificate since they don't talk to the CDN
         if (!consumer.isShare()) {
             handler.handleSelfCertificates(consumer, poolQuantities, entitlements);
+            this.ecGenerator.regenerateCertificatesByEntitlementIds(
+                this.entitlementCurator.batchListModifying(entitlements.values()), true
+            );
         }
 
-        this.ecGenerator.regenerateCertificatesByEntitlementIds(
-            this.entitlementCurator.batchListModifying(entitlements.values()), true
-        );
+
 
         // we might have changed the bonus pool quantities, lets find out.
         handler.handleBonusPools(consumer.getOwner(), poolQuantities, entitlements);
@@ -2114,8 +2115,9 @@ public class CandlepinPoolManager implements PoolManager {
                 }
             }
             List<Pool> subPoolsForStackIds = null;
-            // Share consumers should not contribute to the sharing org's stack
-            if (!stackIds.isEmpty() && !consumer.isShare()) {
+            // Manifest and Share consumers should not contribute to the sharing org's stack,
+            // as Share consumers should not have created a stack derived pool in the first place.
+            if (!stackIds.isEmpty() && !consumer.isShare() && !consumer.getType().isManifest()) {
                 subPoolsForStackIds = poolCurator.getSubPoolForStackIds(consumer, stackIds);
                 if (CollectionUtils.isNotEmpty(subPoolsForStackIds)) {
                     poolRules.updatePoolsFromStack(consumer, subPoolsForStackIds, false);
@@ -2168,6 +2170,18 @@ public class CandlepinPoolManager implements PoolManager {
         @Override
         public void handlePostEntitlement(PoolManager manager, Consumer consumer,
             Map<String, Entitlement> entitlements) {
+            // if shared ents, update shared pool quantity
+            if (consumer.isShare()) {
+                List<Entitlement> ents = new ArrayList<Entitlement>(entitlements.values());
+                List<Pool> sharedPools = poolCurator.listBySourceEntitlements(ents);
+                Map<String, Pool> sharedPoolMap = new HashMap<String, Pool>();
+                for (Pool pool: sharedPools) {
+                    sharedPoolMap.put(pool.getSourceEntitlement().getId(), pool);
+                }
+                for (Entitlement ent: entitlements.values()) {
+                    setPoolQuantity(sharedPoolMap.get(ent.getId()), ent.getQuantity().longValue());
+                }
+            }
         }
 
         @Override

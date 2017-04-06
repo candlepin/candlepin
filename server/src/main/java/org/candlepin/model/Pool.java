@@ -1371,6 +1371,23 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         }
     }
 
+    @JsonIgnore
+    public static Long parseQuantity(String quantity) {
+        Long q;
+        if (quantity.equalsIgnoreCase("unlimited")) {
+            q = -1L;
+        }
+        else {
+            try {
+                q = Long.parseLong(quantity);
+            }
+            catch (NumberFormatException e) {
+                q = 0L;
+            }
+        }
+        return q;
+    }
+
     @Override
     public int compareTo(Pool other) {
         return (this.getId() == null ^ other.getId() == null) ?

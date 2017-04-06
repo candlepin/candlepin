@@ -82,7 +82,7 @@ public class CriteriaRules  {
             // we do want everything else
             criteriaFilters.add(Subqueries.notExists(requiresHost));
         }
-        else if (!"true".equalsIgnoreCase(consumer.getFact("virt.is_guest"))) {
+        else if (!consumer.isGuest()) {
             PoolFilterBuilder filterBuilder = new PoolFilterBuilder();
             filterBuilder.addAttributeFilter("virt_only", "true");
             criteriaFilters.add(Restrictions.not(filterBuilder.getCriteria()));

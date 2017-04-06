@@ -756,7 +756,14 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     }
 
     public boolean isShare() {
-        return getType().isType(ConsumerTypeEnum.SHARE);
+        if (getType() != null && getType().isType(ConsumerTypeEnum.SHARE)) {
+            return true;
+        }
+        return false;
+    }
+
+    public boolean isGuest() {
+        return "true".equalsIgnoreCase(this.getFact("virt.is_guest"));
     }
 
     public String getContentAccessMode() {
