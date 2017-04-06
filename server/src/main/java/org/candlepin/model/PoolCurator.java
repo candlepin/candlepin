@@ -352,7 +352,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
                 criteria.add(Subqueries.notExists(hostPoolSubquery));
             }
-            else if (!"true".equalsIgnoreCase(consumer.getFact("virt.is_guest"))) {
+            else if (!consumer.isGuest()) {
                 criteria.add(Restrictions.not(
                     this.addAttributeFilterSubquery(Pool.Attributes.VIRT_ONLY, Arrays.asList("true"))
                 ));

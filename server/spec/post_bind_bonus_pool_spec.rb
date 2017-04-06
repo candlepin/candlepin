@@ -130,6 +130,13 @@ describe 'Post bind bonus pool updates' do
   @hypervisor_cp = Candlepin.new(nil, nil,
     @hypervisor['idCert']['cert'], @hypervisor['idCert']['key'])
 
+  @owner2_key = random_string('another_owner')
+  create_owner @owner2_key
+  share_facts = {
+    "share.recipient"=>@owner2_key
+  }
+  @share_consumer = @cp.register('share_consumer',:share, random_string('share_uuid'), share_facts, 'admin',
+    @owner_key, [], [])
   end
 
   #verifies whether bind time pool ( stack or ent derived ) was created or not
@@ -161,6 +168,9 @@ describe 'Post bind bonus pool updates' do
 
     #does create ent derived if host_limited == true
     verify_bind_time_pool_creation(@hypervisor_cp, @hostlimited_master_pool, 'ENTITLEMENT_DERIVED', true)
+
+    #should not create entitlement derived pool for shares
+    verify_bind_time_pool_creation(@share_consumer, @hostlimited_master_pool, 'ENTITLEMENT_DERIVED', false)
   end
 
   it 'should create entitlement derived pool in standalone mode' do
@@ -171,6 +181,9 @@ describe 'Post bind bonus pool updates' do
 
     #does create ent derived pool irrespective of host_limited attribute
     verify_bind_time_pool_creation(@hypervisor_cp, @hostlimited_master_pool, 'ENTITLEMENT_DERIVED', true)
+
+    #does not create ent derived pool for shares
+    verify_bind_time_pool_creation(@share_consumer, @hostlimited_master_pool, 'ENTITLEMENT_DERIVED', false)
   end
 
 
@@ -182,6 +195,9 @@ describe 'Post bind bonus pool updates' do
 
     #does create stack derived if host_limited == true
     verify_bind_time_pool_creation(@hypervisor_cp, @hostlimited_master_stacked_pool, 'STACK_DERIVED', true)
+
+    #does not create stack derived for shares
+    verify_bind_time_pool_creation(@share_consumer, @hostlimited_master_stacked_pool, 'STACK_DERIVED', false)
   end
 
   it 'should create stack derived pool in standalone mode' do
@@ -192,6 +208,9 @@ describe 'Post bind bonus pool updates' do
 
     #does create stack derived pool irrespective of host_limited attribute
     verify_bind_time_pool_creation(@hypervisor_cp, @hostlimited_master_stacked_pool, 'STACK_DERIVED', true)
+
+    #does not create stack derived pool for shares
+    verify_bind_time_pool_creation(@share_consumer, @hostlimited_master_stacked_pool, 'STACK_DERIVED', false)
   end
 
   it 'should create entitlement derived pool for every bind' do
@@ -216,6 +235,17 @@ describe 'Post bind bonus pool updates' do
     @cp.get_pool(@limited_bonus_pool['id'])['quantity'].should == 0
   end
 
+  it 'should decrement bonus pool quantity when finite virt limited master pool is partially shared' do
+    skip("candlepin running in standalone mode") unless is_hosted?
+    # reduce by quantity * virt_limit
+    @cp.consume_pool(@limited_master_pool['id'], {:quantity => 2, :uuid => @share_consumer['uuid']})
+    @cp.get_pool(@limited_bonus_pool['id'])['quantity'].should == 32
+
+    # now set to 0 when fully exported
+    @cp.consume_pool(@limited_master_pool['id'], {:quantity => 8, :uuid => @share_consumer['uuid']})
+    @cp.get_pool(@limited_bonus_pool['id'])['quantity'].should == 0
+  end
+
   it 'should not change bonus pool quantity when unlimited virt limited master pool is partially exported' do
     skip("candlepin running in standalone mode") unless is_hosted?
     @satellite_cp.consume_pool(@unlimited_master_pool['id'], {:quantity => 9})
@@ -223,6 +253,16 @@ describe 'Post bind bonus pool updates' do
 
     # once it is fully consumed, set to 0
     @satellite_cp.consume_pool(@unlimited_master_pool['id'], {:quantity => 1})
+    @cp.get_pool(@unlimited_bonus_pool['id'])['quantity'].should == 0
+  end
+
+  it 'should not change bonus pool quantity when unlimited virt limited master pool is partially shared' do
+    skip("candlepin running in standalone mode") unless is_hosted?
+    @cp.consume_pool(@unlimited_master_pool['id'], {:quantity => 9, :uuid => @share_consumer['uuid']})
+    @cp.get_pool(@unlimited_bonus_pool['id'])['quantity'].should == -1
+
+    # once it is fully consumed, set to 0
+    @cp.consume_pool(@unlimited_master_pool['id'], {:quantity => 1, :uuid => @share_consumer['uuid']})
     @cp.get_pool(@unlimited_bonus_pool['id'])['quantity'].should == 0
   end
 
@@ -238,6 +278,21 @@ describe 'Post bind bonus pool updates' do
     @unlimited_master_pool = @cp.get_pool(@unlimited_master_pool['id'])
     @unlimited_master_pool['consumed'].should == @unlimited_master_pool['quantity']
     @unlimited_master_pool['exported'].should_not == @unlimited_master_pool['consumed']
+    @cp.get_pool(@unlimited_bonus_pool['id'])['quantity'].should == -1
+  end
+
+  it 'should not change bonus pool quantity when unlimited virt limited master pool is consumed by non sharing consumer' do
+    @guest_cp.consume_pool(@unlimited_master_pool['id'], {:quantity => 1})
+    @cp.get_pool(@unlimited_bonus_pool['id'])['quantity'].should == -1
+    @unlimited_master_pool = @cp.get_pool(@unlimited_master_pool['id'])
+    @unlimited_master_pool['consumed'].should == 1
+    @unlimited_master_pool['shared'].should == 0
+
+    #even if one quantity was consumed but not shared, do not update quantity of the bonus pool
+    @cp.consume_pool(@unlimited_master_pool['id'], {:quantity => 9, :uuid => @share_consumer['uuid']})
+    @unlimited_master_pool = @cp.get_pool(@unlimited_master_pool['id'])
+    @unlimited_master_pool['consumed'].should == @unlimited_master_pool['quantity']
+    @unlimited_master_pool['shared'].should_not == @unlimited_master_pool['consumed']
     @cp.get_pool(@unlimited_bonus_pool['id'])['quantity'].should == -1
   end
 
