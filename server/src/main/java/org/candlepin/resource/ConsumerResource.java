@@ -488,16 +488,20 @@ public class ConsumerResource {
             throw new BadRequestException(i18n.tr("System name cannot contain most special characters."));
         }
 
-        if (type.isType(ConsumerTypeEnum.SHARE)) {
+        if (consumer.isShare()) {
             // Share consumers do not need identity certificates so refuse to create them.
             identityCertCreation = false;
             validateShareConsumer(consumer, principal, keys);
+            consumer.setAutoheal(false);
+
+        }
+        else {
+            consumer.setCanActivate(subAdapter.canActivateSubscription(consumer));
+            consumer.setAutoheal(true); // this is the default
         }
 
         consumer.setOwner(owner);
         consumer.setType(type);
-        consumer.setCanActivate(subAdapter.canActivateSubscription(consumer));
-        consumer.setAutoheal(true); // this is the default
 
         if (consumer.getServiceLevel() == null) {
             consumer.setServiceLevel("");
@@ -507,7 +511,9 @@ public class ConsumerResource {
         this.sanitizeConsumerFacts(consumer);
 
         // If no service level was specified, and the owner has a default set, use it:
-        if (consumer.getServiceLevel().equals("") && owner.getDefaultServiceLevel() != null) {
+        if (consumer.getServiceLevel().equals("") &&
+            owner.getDefaultServiceLevel() != null &&
+            !consumer.isShare()) {
             consumer.setServiceLevel(owner.getDefaultServiceLevel());
         }
 
@@ -595,6 +601,18 @@ public class ConsumerResource {
         String oldRecipient = oldShare.getFact("share.recipient");
         String newRecipient = newShare.getFact("share.recipient");
 
+        if (oldRecipient == null) {
+            throw new BadRequestException(i18n.tr(
+                    "A consumer cannot be converted to a share type once it has been created"
+            ));
+        }
+
+        if (newRecipient == null) {
+            throw new BadRequestException(i18n.tr(
+                    "A share consumer cannot be converted to a non share type once it has been created"
+            ));
+        }
+
         if (!oldRecipient.equals(newRecipient)) {
             throw new BadRequestException(i18n.tr(
                 "The share recipient cannot be modified once the share has been created"
@@ -651,7 +669,7 @@ public class ConsumerResource {
                 "A unit type of \"share\" must specify a fact \"share.recipient\" containing an org key"
             ));
         }
-        if ("true".equalsIgnoreCase(consumer.getFact("virt.is_guest"))) {
+        if (consumer.isGuest()) {
             throw new BadRequestException(i18n.tr(
                 "A unit type of \"share\" cannot be a virtual guest"
             ));
@@ -1006,7 +1024,7 @@ public class ConsumerResource {
         // Sanitize the inbound facts before applying the update
         this.sanitizeConsumerFacts(consumer);
 
-        if (toUpdate.getType().isType(ConsumerTypeEnum.SHARE)) {
+        if (toUpdate.isShare() || consumer.isShare()) {
             validateShareConsumerUpdate(toUpdate, consumer, principal);
         }
 
@@ -1322,7 +1340,7 @@ public class ConsumerResource {
      * from the old host are still removed, but no auto-bind occurs.
      */
     protected void checkForGuestMigration(Consumer guest) {
-        if (!"true".equalsIgnoreCase(guest.getFact("virt.is_guest"))) {
+        if (!guest.isGuest()) {
             // This isn't a guest, skip this entire step.
             return;
         }
@@ -1428,6 +1446,11 @@ public class ConsumerResource {
         sink.queueEvent(event);
     }
 
+    private void logShareConsumerRequestWarning(String api, Consumer consumer) {
+        log.warn("skipping {} request for share consumer {} of org {} and of recipient org {}",
+            api, consumer.getUuid(), consumer.getOwner().getKey(), consumer.getFact("share.recipient"));
+    }
+
     @ApiOperation(notes = "Retrieves a list of Entitlement Certificates for the Consumer",
         value = "getEntitlementCertificates")
     @ApiResponses({ @ApiResponse(code = 404, message = "") })
@@ -1440,6 +1463,12 @@ public class ConsumerResource {
 
         log.debug("Getting client certificates for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
+
+        if (consumer.isShare()) {
+            logShareConsumerRequestWarning("cert fetch", consumer);
+            return new ArrayList<Certificate>();
+        }
+
         checkForGuestMigration(consumer);
         poolManager.regenerateDirtyEntitlements(consumer);
 
@@ -1486,6 +1515,10 @@ public class ConsumerResource {
 
         log.debug("Getting content access certificate for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
+        if (consumer.isShare()) {
+            throw new BadRequestException(i18n.tr("Content access body " +
+               "can not be requested for a share consumer"));
+        }
         if (consumer.getOwner().contentAccessMode()
             .equals(ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE)) {
             throw new BadRequestException(i18n.tr("No content access mode assigned"));
@@ -1532,6 +1565,12 @@ public class ConsumerResource {
         @QueryParam("serials") String serials) {
 
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
+
+        if (consumer.isShare()) {
+            logShareConsumerRequestWarning("cert export", consumer);
+            return null;
+        }
+
         checkForGuestMigration(consumer);
         Set<Long> serialSet = this.extractSerials(serials);
         // filtering requires a null set, so make this null if it is
@@ -1593,6 +1632,12 @@ public class ConsumerResource {
 
         log.debug("Getting client certificate serials for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
+
+        if (consumer.isShare()) {
+            logShareConsumerRequestWarning("cert serial fetch", consumer);
+            return new ArrayList<CertificateSerialDto>();
+        }
+
         checkForGuestMigration(consumer);
         poolManager.regenerateDirtyEntitlements(consumer);
 
@@ -1623,7 +1668,7 @@ public class ConsumerResource {
         String[] productIds, List<String> fromPools, Date entitleDate, Consumer consumer, boolean async) {
         short parameters = 0;
 
-        if (consumer.isShare() && StringUtils.isBlank(poolIdString)) {
+        if (consumer.isShare() && StringUtils.isBlank(poolIdString) && !hasPoolQuantities) {
             throw new BadRequestException(i18n.tr("Share consumers must be bound to a specific pool"));
         }
 
@@ -1732,7 +1777,7 @@ public class ConsumerResource {
             // I hate double negatives, but if they have accepted all
             // terms, we want comeToTerms to be true.
             long subTermsStart = System.currentTimeMillis();
-            if (subAdapter.hasUnacceptedSubscriptionTerms(consumer.getOwner())) {
+            if (!consumer.isShare() && subAdapter.hasUnacceptedSubscriptionTerms(consumer.getOwner())) {
                 return Response.serverError().build();
             }
             log.info("Checked if consumer has unaccepted subscription terms in {}ms",
@@ -2056,12 +2101,18 @@ public class ConsumerResource {
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @QueryParam("entitlement") String entitlementId,
         @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {
+
+        Consumer c = consumerCurator.verifyAndLookupConsumer(consumerUuid);
+        if (c.isShare()) {
+            logShareConsumerRequestWarning("cert regen", c);
+            return;
+        }
+
         if (entitlementId != null) {
             Entitlement e = verifyAndLookupEntitlement(entitlementId);
             poolManager.regenerateCertificatesOf(e, lazyRegen);
         }
         else {
-            Consumer c = consumerCurator.verifyAndLookupConsumer(consumerUuid);
             poolManager.regenerateCertificatesOf(c, lazyRegen);
         }
     }
@@ -2097,6 +2148,11 @@ public class ConsumerResource {
         @ApiParam(value = "Key/Value pairs to be passed to the extension adapter when generating a manifest",
         required = false, example = "ext=version:1.2.3&ext=extension_key:EXT1")
         List<KeyValueParameter> extensionArgs) {
+
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
+        if (consumer.isShare()) {
+            throw new BadRequestException(i18n.tr("Can not export manifest of a share consumer"));
+        }
 
         try {
             File archive = manifestManager.generateManifest(consumerUuid, cdnLabel, webAppPrefix, apiUrl,
@@ -2149,6 +2205,11 @@ public class ConsumerResource {
         @ApiParam(value = "Key/Value pairs to be passed to the extension adapter when generating a manifest",
         required = false, example = "ext=version:1.2.3&ext=extension_key:EXT1")
         List<KeyValueParameter> extensionArgs) {
+
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
+        if (consumer.isShare()) {
+            throw new BadRequestException(i18n.tr("Can not export manifest of a share consumer"));
+        }
         return manifestManager.generateManifestAsync(consumerUuid, cdnLabel, webAppPrefix, apiUrl,
             getExtensionParamMap(extensionArgs));
     }
@@ -2189,7 +2250,10 @@ public class ConsumerResource {
         @Context HttpServletResponse response,
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @PathParam("export_id") String exportId) {
-
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
+        if (consumer.isShare()) {
+            throw new BadRequestException(i18n.tr("Can not export manifest of a share consumer"));
+        }
         // *******************************************************************************
         // NOTE: If changing the path or parameters of this end point, be sure to update
         // the HREF generation in ConsumerResource.buildAsyncDownloadManifestHref.
@@ -2240,8 +2304,11 @@ public class ConsumerResource {
     @Path("{consumer_uuid}")
     public Consumer regenerateIdentityCertificates(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid) {
-
         Consumer c = consumerCurator.verifyAndLookupConsumer(uuid);
+        if (c.isShare()) {
+            logShareConsumerRequestWarning("regenerate identity certificate", c);
+            return c;
+        }
         return regenerateIdentityCertificate(c);
     }
 
@@ -2367,6 +2434,10 @@ public class ConsumerResource {
         @QueryParam("on_date") String onDate) {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(uuid);
         Date date = ResourceDateParser.parseDateString(onDate);
+        if (consumer.isShare()) {
+            logShareConsumerRequestWarning("fetch compliance", consumer);
+            return new ComplianceStatus(date);
+        }
         return this.complianceRules.getStatus(consumer, date);
     }
 
@@ -2383,7 +2454,14 @@ public class ConsumerResource {
 
         if (uuids != null && !uuids.isEmpty()) {
             for (Consumer consumer : consumerCurator.findByUuids(uuids)) {
-                ComplianceStatus status = complianceRules.getStatus(consumer, null);
+                ComplianceStatus status;
+                if (consumer.isShare()) {
+                    logShareConsumerRequestWarning("fetch compliance", consumer);
+                    status = new ComplianceStatus(null);
+                }
+                else {
+                    status = complianceRules.getStatus(consumer, null);
+                }
                 results.put(consumer.getUuid(), status);
             }
         }

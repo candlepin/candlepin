@@ -22,6 +22,7 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.ProductManager;
+import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
@@ -34,6 +35,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.ProductShare;
 import org.candlepin.model.ProductShareCurator;
+import org.candlepin.model.SourceSubscription;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.ValidationWarning;
@@ -51,6 +53,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -187,7 +190,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
     protected void validatePoolQuantity(ValidationResult result, Pool pool,
         int quantity) {
         if (!pool.entitlementsAvailable(quantity)) {
-            result.addError("rulefailed.no.entitlements.available");
+            result.addError(EntitlementRulesTranslator.PoolErrorKeys.NO_ENTITLEMENTS_AVAILABLE);
         }
     }
 
@@ -312,21 +315,25 @@ public abstract class AbstractEntitlementRules implements Enforcer {
             }
             if (consumer.isShare()) {
                 sharedEntitlements.put(entry.getKey(), entitlement);
-                flatAttributeMaps.put(entry.getKey(), attributes);
             }
         }
         // Perform pool management based on the attributes of the pool:
         if (!virtLimitEntitlements.isEmpty()) {
-            // Share consumers only need to compute postBindVirtLimit in hosted mode
-            if (!consumer.isShare() || !config.getBoolean(ConfigProperties.STANDALONE)) {
+            /* Share and manifest consumers only need to compute postBindVirtLimit in hosted mode
+               because for both these types, of all the operations implemented in postBindVirtLimit today,
+               we only care about decrementing host bonus pool quantity and that is only implemented
+               in hosted mode. These checks are done further below, but doing this up-front to save
+                us some computation.
+             */
+            if (!(consumer.isShare() || consumer.getType().isManifest()) ||
+                !config.getBoolean(ConfigProperties.STANDALONE)) {
                 postBindVirtLimit(poolManager, consumer, virtLimitEntitlements, flatAttributeMaps,
                     subPoolsForStackIds);
             }
         }
 
         if (!sharedEntitlements.isEmpty()) {
-            postBindShareDerived(poolManager, consumer, sharedEntitlements,
-                flatAttributeMaps);
+            postBindShareCreate(poolManager, consumer, sharedEntitlements);
         }
     }
 
@@ -389,39 +396,93 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         }
     }
 
-    private void postBindShareDerived(PoolManager poolManager, Consumer c,
-        Map<String, Entitlement> entitlementMap, Map<String, Map<String, String>> attributeMaps) {
-        log.debug("Running share derived post-bind");
+    private void postBindShareCreate(PoolManager poolManager, Consumer c,
+        Map<String, Entitlement> entitlementMap) {
+        log.debug("Running post-bind share create");
 
+        Owner sharingOwner = c.getOwner();
         Owner recipient = ownerCurator.lookupByKey(c.getFact("share.recipient"));
         List<Pool> sharedPoolsToCreate = new ArrayList<Pool>();
 
         for (Entitlement entitlement: entitlementMap.values()) {
             Pool sourcePool = entitlement.getPool();
-            // Favor derived products if they are available
-            Product sku = sourcePool.getDerivedProduct() != null ? sourcePool.getDerivedProduct() :
-                sourcePool.getProduct();
-
+            // resolve and copy all products
             // Handle any product creation/manipulation incurred by the share action
-            sku = resolveProductShares(sourcePool.getOwner(), sku, recipient, productManager);
+            Product product = resolveProductShares(sharingOwner, recipient, sourcePool.getProduct());
+            Set<Product> providedProducts = resolveAndCopyProductSet(sharingOwner,
+                recipient,
+                sourcePool.getProvidedProducts());
+            Long q = Long.valueOf(entitlement.getQuantity());
+            // endDateOverride doesnt really apply here , this is just for posterity.
+            Date endDate = (entitlement.getEndDateOverride() == null) ?
+                sourcePool.getEndDate() : entitlement.getEndDateOverride();
+            Pool sharedPool = new Pool(
+                recipient,
+                product,
+                providedProducts,
+                q,
+                sourcePool.getStartDate(),
+                endDate,
+                sourcePool.getContractNumber(),
+                sourcePool.getAccountNumber(),
+                sourcePool.getOrderNumber()
+            );
+            if (sourcePool.getDerivedProduct() != null) {
+                Product derivedProduct = resolveProductShares(sharingOwner,
+                    recipient,
+                    sourcePool.getDerivedProduct());
+                sharedPool.setDerivedProduct(derivedProduct);
+            }
+            Set<Product> derivedProvidedProducts = resolveAndCopyProductSet(sharingOwner,
+                recipient,
+                sourcePool.getDerivedProvidedProducts());
+            sharedPool.setDerivedProvidedProducts(derivedProvidedProducts);
 
-            // Now create the entitlement derived pool based on the product we have ended up sharing
-            Pool sharedPool = PoolHelper.createSharePool(recipient, sourcePool, sku,
-                String.valueOf(entitlement.getQuantity()), attributeMaps.get(sourcePool.getId()),
-                ownerProductCurator, entitlement, productCurator);
+            if (entitlement != null && entitlement.getPool() != null) {
+                sharedPool.setSourceEntitlement(entitlement);
+            }
+
+            /* Since we set the source entitlement id as the subscription sub key for
+               entitlement derived pools, it makes sense to do the same for share pools,
+               as share pools are also entitlement derived, sort of.
+             */
+            sharedPool.setSourceSubscription(
+                new SourceSubscription(sourcePool.getSubscriptionId(), entitlement.getId()));
+
+            // Copy the pool's attributes
+            for (Entry<String, String> entry : sourcePool.getAttributes().entrySet()) {
+                sharedPool.setAttribute(entry.getKey(), entry.getValue());
+            }
+            sharedPool.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
+            sharedPool.setAttribute(Pool.Attributes.SHARE, "true");
+
+            for (Branding b : sourcePool.getBranding()) {
+                sharedPool.getBranding().add(new Branding(b.getProductId(), b.getType(),
+                    b.getName()));
+            }
             sharedPoolsToCreate.add(sharedPool);
         }
 
-        /* TODO Create temporary guest pool in OrgB and decrement unmapped guest pool quantity in OrgA to
-         * balance the books */
+        /* TODO Create temporary guest pool in OrgB */
 
         if (CollectionUtils.isNotEmpty(sharedPoolsToCreate)) {
             poolManager.createPools(sharedPoolsToCreate);
         }
     }
 
-    private Product resolveProductShares(Owner sharingOwner, Product product, Owner recipient,
-        ProductManager productManager) {
+    private Set<Product> resolveAndCopyProductSet(Owner sharingOwner,
+        Owner recipient,
+        Set<Product> products) {
+        Set<Product> result = new HashSet<Product>();
+        if (products != null) {
+            for (Product product : products) {
+                result.add(resolveProductShares(sharingOwner, recipient, product));
+            }
+        }
+        return result;
+    }
+
+    private Product resolveProductShares(Owner sharingOwner, Owner recipient, Product product) {
         Product resolvedProduct = product;
         if (ownerProductCurator.productExists(recipient, product.getId())) {
             // Recipient has a product with the same ID already.  If they are the same instance
@@ -491,8 +552,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
 
         log.debug("Running virt_limit post-bind.");
 
-        boolean consumerFactExpression = !c.getType().isManifest() && !c.isShare() &&
-            !"true".equalsIgnoreCase(c.getFact("virt.is_guest"));
+        boolean consumerFactExpression = !c.getType().isManifest() && !c.isShare() && !c.isGuest();
 
         boolean isStandalone = config.getBoolean(ConfigProperties.STANDALONE);
 
@@ -558,6 +618,10 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         boolean consumerFactExpression = (c.getType().isManifest() || c.isShare()) &&
             !config.getBoolean(ConfigProperties.STANDALONE);
 
+        if (!consumerFactExpression) {
+            return;
+        }
+
         // pre-fetch subscription and respective pools in a batch
         Set<String> subscriptionIds = new HashSet<String>();
         for (Entitlement entitlement : entitlements) {
@@ -578,7 +642,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
 
             boolean hostLimited = "true".equals(attributes.get(Product.Attributes.HOST_LIMITED));
 
-            if (consumerFactExpression && !hostLimited) {
+            if (!hostLimited) {
                 String virtLimit = attributes.get(Product.Attributes.VIRT_LIMIT);
                 if (!"unlimited".equals(virtLimit)) {
                     // if the bonus pool is not unlimited, then the bonus pool
@@ -597,9 +661,10 @@ public abstract class AbstractEntitlementRules implements Enforcer {
                 else {
                     // if the bonus pool is unlimited, then the quantity needs
                     // to go to 0 when the physical pool is exhausted completely
-                    // by export. A quantity of 0 will block future binds,
+                    // by export or share. A quantity of 0 will block future binds,
                     // whereas -1 does not.
-                    if (pool.getQuantity().equals(pool.getExported())) {
+                    Long notConsumedLocally = pool.getExported() + pool.getShared();
+                    if (pool.getQuantity().equals(notConsumedLocally)) {
                         // getting all pools matching the sub id. Filtering out
                         // the 'parent'.
                         List<Pool> pools = subscriptionPoolMap.get(pool.getSubscriptionId());

@@ -426,8 +426,7 @@ public class PoolRules {
             String virtLimit =
                 eldestWithVirtLimit.getPool().getProductAttributeValue(Product.Attributes.VIRT_LIMIT);
 
-            Long quantity =
-                virtLimit.equalsIgnoreCase("unlimited") ? -1L : Long.parseLong(virtLimit);
+            Long quantity = Pool.parseQuantity(virtLimit);
 
             if (!quantity.equals(pool.getQuantity())) {
                 pool.setQuantity(quantity);
