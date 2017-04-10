@@ -20,6 +20,7 @@ import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
 
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.persist.Transactional;
@@ -1364,5 +1365,33 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         q.executeUpdate();
     }
 
+    public void markCertificatesDirtyForPoolsWithProducts(Owner owner, Collection<String> productIds) {
+        for (List<String> batch : Iterables.partition(productIds, IN_OPERATOR_BLOCK_SIZE)) {
+            markCertificatesDirtyForPoolsWithNormalProducts(owner, batch);
+            markCertificatesDirtyForPoolsWithProvidedProducts(owner, batch);
+        }
+    }
 
+    private void markCertificatesDirtyForPoolsWithNormalProducts(Owner owner,
+        Collection<String> productIds) {
+
+        String statement = "update Entitlement e set e.dirty=true where e.pool.id in " +
+            "(select p.id from Pool p where p.product.id in :productIds) and e.owner = :owner";
+        Query query = currentSession().createQuery(statement);
+        query.setParameter("owner", owner);
+        query.setParameterList("productIds", productIds);
+        query.executeUpdate();
+    }
+
+    private void markCertificatesDirtyForPoolsWithProvidedProducts(Owner owner,
+        Collection<String> productIds) {
+
+        String statement = "update Entitlement e set e.dirty=true where e.pool.id in " +
+            "(select p.id from Pool p join p.providedProducts pp where pp.id in :productIds)" +
+            "and e.owner = :owner";
+        Query query = currentSession().createQuery(statement);
+        query.setParameter("owner", owner);
+        query.setParameterList("productIds", productIds);
+        query.executeUpdate();
+    }
 }

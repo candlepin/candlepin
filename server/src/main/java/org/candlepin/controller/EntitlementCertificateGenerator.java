@@ -377,7 +377,6 @@ public class EntitlementCertificateGenerator {
     @Transactional
     public void regenerateCertificatesOf(Collection<Owner> owners, Collection<Product> products,
         boolean lazy) {
-
         List<Pool> pools = new LinkedList<Pool>();
 
         Set<String> productIds = new HashSet<String>();
@@ -390,9 +389,14 @@ public class EntitlementCertificateGenerator {
         // TODO: This is a very expensive operation. Update pool curator with something to let us
         // do this without hitting the DB several times over.
         for (Owner owner : owners) {
-            pools.addAll(
-                this.poolCurator.listAvailableEntitlementPools(null, owner, productIds, now)
-            );
+            if (lazy) {
+                poolCurator.markCertificatesDirtyForPoolsWithProducts(owner, productIds);
+            }
+            else {
+                pools.addAll(
+                    this.poolCurator.listAvailableEntitlementPools(null, owner, productIds, now)
+                );
+            }
         }
 
         for (Pool pool : pools) {

@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+import static org.candlepin.model.AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE;
 import static org.junit.Assert.*;
 import static org.hamcrest.Matchers.*;
 
@@ -36,6 +37,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1644,5 +1646,86 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         assertEquals(pool.getConsumed().longValue(), 5);
         assertEquals(pool.getExported().longValue(), 0);
+    }
+
+    @Test
+    public void testMarkCertificatesDirtyForPoolsWithNormalProduct() {
+        Consumer consumer = TestUtil.createConsumer(owner);
+        ConsumerType ct = consumer.getType();
+        consumerTypeCurator.create(ct);
+        consumerCurator.create(consumer);
+
+        Pool pool = createPool(owner, product, -1L, TestUtil.createDate(2017, 3, 27),
+            TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 27));
+
+        poolCurator.create(pool);
+        EntitlementCertificate cert = createEntitlementCertificate("fake", "fake");
+        Entitlement entitlement = createEntitlement(owner, consumer, pool, cert);
+        assertFalse("entitlement should not be dirty initially", entitlement.isDirty());
+
+        poolCurator.create(pool);
+        entitlementCurator.create(entitlement);
+        poolCurator.markCertificatesDirtyForPoolsWithProducts(owner, Collections.singleton(product.getId()));
+
+        entitlementCurator.refresh(entitlement);
+
+        assertTrue("entitlement should be be marked dirty", entitlement.isDirty());
+    }
+
+    @Test
+    public void testMarkCertificatesDirtyForPoolsWithNormalProductHavingLargeNumberOfProducts() {
+        List<String> productIds = new ArrayList<String>();
+        for (int i = 0; i < IN_OPERATOR_BLOCK_SIZE; i++) {
+            productIds.add("productId" + i);
+        }
+        productIds.add(product.getId());
+
+        Consumer consumer = TestUtil.createConsumer(owner);
+        ConsumerType ct = consumer.getType();
+        consumerTypeCurator.create(ct);
+        consumerCurator.create(consumer);
+
+        Pool pool = createPool(owner, product, -1L, TestUtil.createDate(2017, 3, 27),
+            TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 27));
+
+        poolCurator.create(pool);
+        EntitlementCertificate cert = createEntitlementCertificate("fake", "fake");
+        Entitlement entitlement = createEntitlement(owner, consumer, pool, cert);
+        assertFalse("entitlement should not be dirty initially", entitlement.isDirty());
+
+        poolCurator.create(pool);
+        entitlementCurator.create(entitlement);
+        poolCurator.markCertificatesDirtyForPoolsWithProducts(owner, productIds);
+
+        entitlementCurator.refresh(entitlement);
+
+        assertTrue("entitlement should be be marked dirty", entitlement.isDirty());
+    }
+
+    @Test
+    public void testMarkCertificatesDirtyForPoolsWithProvidedProduct() {
+        Consumer consumer = TestUtil.createConsumer(owner);
+        ConsumerType ct = consumer.getType();
+        consumerTypeCurator.create(ct);
+        consumerCurator.create(consumer);
+
+        Product parent = TestUtil.createProduct();
+        productCurator.create(parent);
+
+        Set<Product> providedProducts = new HashSet<Product>();
+        Product providedProduct = new Product(product.getId(), "Test Provided Product");
+        providedProducts.add(providedProduct);
+        productCurator.create(providedProduct);
+
+        Pool pool = TestUtil.createPool(owner, parent, providedProducts, 5);
+        poolCurator.create(pool);
+        EntitlementCertificate cert = createEntitlementCertificate("fake", "fake");
+        Entitlement entitlement = createEntitlement(owner, consumer, pool, cert);
+        assertFalse("entitlement should not be dirty initially", entitlement.isDirty());
+
+        entitlementCurator.create(entitlement);
+        poolCurator.markCertificatesDirtyForPoolsWithProducts(owner, Collections.singleton(product.getId()));
+        entitlementCurator.refresh(entitlement);
+        assertTrue("entitlement should be marked dirty", entitlement.isDirty());
     }
 }
