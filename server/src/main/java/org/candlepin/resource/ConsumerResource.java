@@ -1996,11 +1996,15 @@ public class ConsumerResource {
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @QueryParam("cdn_label") String cdnLabel,
         @QueryParam("webapp_prefix") String webAppPrefix,
-        @QueryParam("api_url") String apiUrl) {
+        @QueryParam("api_url") String apiUrl,
+        @QueryParam("ext") @CandlepinParam(type = KeyValueParameter.class)
+        @ApiParam(value = "Key/Value pairs to be passed to the extension adapter when generating a manifest",
+        required = false, example = "ext=version:1.2.3&ext=extension_key:EXT1")
+        List<KeyValueParameter> extensionArgs) {
 
         try {
             File archive = manifestManager.generateManifest(consumerUuid, cdnLabel, webAppPrefix, apiUrl,
-                new HashMap<String, String>());
+                getExtensionParamMap(extensionArgs));
             response.addHeader("Content-Disposition", "attachment; filename=" + archive.getName());
             return archive;
         }
