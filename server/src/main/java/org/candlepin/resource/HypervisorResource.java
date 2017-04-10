@@ -41,6 +41,7 @@ import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -207,6 +208,9 @@ public class HypervisorResource {
                 boolean guestIdsUpdated = addGuestIds(consumer, hostEntry.getValue(),
                         guestConsumersMap);
 
+                Date now = new Date();
+                consumerCurator.updateLastCheckin(consumer, now);
+                consumer.setLastCheckin(now);
                 // Populate the result with the processed consumer.
                 if (hostConsumerCreated) {
                     result.created(consumer);
