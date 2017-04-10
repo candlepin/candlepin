@@ -10,7 +10,7 @@ describe 'One Sub Pool Per Stack' do
   include AttributeHelper
 
   before(:each) do
-    skip("candlepin running in standalone mode") if is_hosted?
+    skip("candlepin not running in standalone mode") if is_hosted?
     @owner = create_owner random_string('virt_owner')
     @user = user_client(@owner, random_string('virt_user'))
 
@@ -213,16 +213,31 @@ describe 'One Sub Pool Per Stack' do
   end
 
   it 'should update product data on adding entitlement of same stack' do
-    @host_client.consume_pool(@stacked_virt_pool1['id'], {:quantity => 1})[0]
+    ent = @host_client.consume_pool(@stacked_virt_pool1['id'], {:quantity => 1})[0]
+    sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
+    sub_pool.should_not be_nil
+    sub_pool['productId'].should == @stacked_virt_pool1['productId']
+
     @host_client.consume_pool(@stacked_non_virt_pool['id'], {:quantity => 1})[0]
 
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
     sub_pool.should_not be_nil
-
-    # Check that the product data was copied.
-    check_product_attr_value(sub_pool, "virt_limit", "3")
-    check_product_attr_value(sub_pool, "multi-entitlement", "yes")
+    #verify product has not changed
+    sub_pool['productId'].should == @stacked_virt_pool1['productId']
+    check_product_attr_value(sub_pool, "virt_limit", '3')
+    check_product_attr_value(sub_pool, "multi-entitlement", 'yes')
     check_product_attr_value(sub_pool, "stacking_id", @stack_id)
+
+    @host_client.unbind_entitlement(ent['id'])
+    sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
+    sub_pool.should_not be_nil
+    #verify product has changed
+    sub_pool['productId'].should == @stacked_non_virt_pool['productId']
+    attr = sub_pool['productAttributes'].detect { |a| a['name'] == 'virt_limit' }
+    attr.should == nil
+    check_product_attr_value(sub_pool, "multi-entitlement", 'yes')
+    check_product_attr_value(sub_pool, "stacking_id", @stack_id)
+
   end
 
   it 'should update provided products when stacked entitlements change' do
@@ -403,27 +418,31 @@ describe 'One Sub Pool Per Stack' do
     expect(has_attribute(updated_ent.pool["productAttributes"], "sockets")).to be false
   end
 
+  def verify_qty_and_product(qty, productId)
+    sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
+    sub_pool.should_not be_nil
+    sub_pool['quantity'].should == qty
+    sub_pool.productId.should == productId
+  end
+
   it 'should update quantity of sub pool when stack changes' do
     ent1 = @host_client.consume_pool(@stacked_virt_pool1['id'], {:quantity => 1})[0]
+    verify_qty_and_product(3,@stacked_virt_pool1.productId)
     @host_client.consume_pool(@stacked_non_virt_pool['id'], {:quantity => 1})[0]
+    verify_qty_and_product(3,@stacked_virt_pool1.productId)
+    #sleep to ensure ent3 is later in mysql
+    sleep 2
     ent3 = @host_client.consume_pool(@stacked_virt_pool3['id'], {:quantity => 1})[0]
+    verify_qty_and_product(3,@stacked_virt_pool1.productId)
     @host_client.list_entitlements.length.should == 3
 
-    sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
-    sub_pool.should_not be_nil
-    sub_pool['quantity'].should == 3
 
     @host_client.unbind_entitlement(ent1['id'])
-    sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
-    sub_pool.should_not be_nil
-    sub_pool['quantity'].should == 6
-
+    verify_qty_and_product(6,@stacked_non_virt_pool.productId)
     @host_client.unbind_entitlement(ent3['id'])
-    sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
-    sub_pool.should_not be_nil
     # quantity should not have changed since there was no entitlement
     # specifying virt_limit -- use the last instead.
-    sub_pool['quantity'].should == 6
+    verify_qty_and_product(6,@stacked_non_virt_pool.productId)
   end
 
   it 'should regenerate ent certs when sub pool is update and client checks in' do
