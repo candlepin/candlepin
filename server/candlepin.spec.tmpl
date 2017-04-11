@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.0.30
+Version: 2.0.31
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -220,6 +220,9 @@ fi
 
 #raw
 %changelog
+* Tue Apr 11 2017 Kevin Howell <khowell@redhat.com> 2.0.31-1
+- 1440936: Support manifest ext params in deprecated API (mstead@redhat.com)
+
 * Thu Mar 30 2017 Kevin Howell <khowell@redhat.com> 2.0.30-1
 - Update required liquibase version (mstead@redhat.com)
 - Removed @Formula for  CertificateSerial.revoked (mstead@redhat.com)
