@@ -19,7 +19,11 @@ import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCertificate;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerial;
+import org.candlepin.model.Owner;
+import org.candlepin.model.Pool;
+import org.candlepin.model.Product;
 import org.candlepin.test.DatabaseTestFixture;
+import org.candlepin.test.TestUtil;
 import org.junit.Test;
 
 import java.util.Date;
@@ -60,13 +64,31 @@ public class CdnManagerTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void deleteCdnUpdatesPoolAssociation() {
+        Cdn cdn = createCdn("MyTestCdn");
+
+        Owner owner = TestUtil.createOwner();
+        ownerCurator.create(owner);
+
+        Product product = createProduct(owner);
+        Pool pool = createPool(owner, product);
+        pool.setCdn(cdn);
+        poolCurator.create(pool);
+        assertNotNull(pool.getCdn());
+
+        manager.deleteCdn(cdn);
+        assertNull(curator.lookupByLabel(cdn.getLabel()));
+        Pool updatedPool = poolCurator.find(pool.getId());
+        assertNull(updatedPool.getCdn());
+    }
+
+    @Test
     public void cdnCertSerialIsRevokedOnCdnDeletion() throws Exception {
         Cdn cdn = createCdn("test_cdn");
         CertificateSerial serial = cdn.getCertificate().getSerial();
         assertNotNull(serial);
         assertFalse(serial.isRevoked());
         manager.deleteCdn(cdn);
-
         CertificateSerial fetched = certSerialCurator.find(serial.getId());
         assertNotNull(fetched);
         assertTrue(fetched.isRevoked());
