@@ -41,8 +41,25 @@ describe 'Import Test Group:', :serial => true do
       @cp.delete_owner(@import_owner['key'])
       @exporters.each do |e|
         e.cleanup()
+
+  it 'creates pools' do
+    pools = @import_owner_client.list_pools({:owner => @import_owner['id']})
+    pools.length.should == 8
+
+    # Some of these pools must carry provided/derived provided products,
+    # don't care which pool just need to be sure that they're getting
+    # imported at all:
+    provided_found = false
+    derived_found = false
+    pools.each do |pool|
+      if pool['providedProducts'].size > 0
+        provided_found = true
+      end
+      if pool['derivedProvidedProducts'].size > 0
+        derived_found = true
       end
     end
+  end
 
     def import_now
       lambda { |owner_key, export_file, param_map={}|
@@ -64,6 +81,20 @@ describe 'Import Test Group:', :serial => true do
         status["resultData"]
       }
     end
+
+  it 'ignores multiplier for pool quantity' do
+    pools = @import_owner_client.list_pools({:owner => @import_owner['id']})
+    pools.length.should == 8
+    # 1 product has a multiplier of 2 upstream, the others 1.
+    # 1 entitlement is consumed from each pool for the export, so
+    # quantity should be 1 on each.
+    # remove unmapped guest pool, not part of test
+    filter_unmapped_guest_pools(pools)
+
+    pools.each do |p|
+      p['quantity'].should == 1
+    end
+  end
 
     it 'creates pools' do
       pools = @import_owner_client.list_pools({:owner => @import_owner['id']})

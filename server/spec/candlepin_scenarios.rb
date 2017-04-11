@@ -485,6 +485,29 @@ class StandardExporter < Exporter
         :attributes => { :arch => "x86_64", 'stacking_id' => 'stack-dc' }
     })
 
+    @products[:product_virt_limit] = create_product('product_virt_limit', random_string(), {
+        :attributes => { :arch => "x86_64", :virt_limit => "7"}
+    })
+    @products[:product_virt_limit_2] = create_product('product_virt_limit_2', random_string(), {
+        :attributes => { :arch => "x86_64", :virt_limit => "7"}
+    })
+    @products[:derived_product_virt_limit] = create_product('derived_product_virt_limit', random_string())
+
+    @products[:product_virt_limit_stack] = create_product('product_virt_limit_stack', random_string(), {
+        :attributes => { :arch => "x86_64", :virt_limit => "10", :stacking_id => "stack-44"}
+    })
+
+    @products[:product_virt_limit_stack_2] = create_product('product_virt_limit_stack_2', random_string(), {
+        :attributes => { :arch => "x86_64", :virt_limit => "10", :stacking_id => "stack-44"}
+    })
+
+    @products[:product_virt_limit_hosted] = create_product('product_virt_limit_hosted', random_string(), {
+        :attributes => { :arch => "x86_64", :virt_limit => "15", :host_limited => "true", :stacking_id => "stack-25"}
+    })
+    @products[:derived_product_virt_limit_hosted] = create_product('derived_product_virt_limit_hosted', random_string(),
+        {"sockets" => "2"})
+
+
     @products[:derived_product] = create_product(random_string('sub-prov-prod'), random_string(),
         { "sockets" => "2" })
     @products[:derived_provided_prod] = create_product(random_string(nil, true), random_string());
@@ -521,6 +544,12 @@ class StandardExporter < Exporter
       {:branding => brandings})
     create_pool_and_subscription(@owner['key'], @products[:product2].id, 4, [], '', '12345', '6789', nil, end_date, true)
     create_pool_and_subscription(@owner['key'], @products[:virt_product].id, 10, [], '', '12345', '6789', nil, end_date, true)
+    create_pool_and_subscription(@owner['key'], @products[:product_virt_limit_stack].id, 10, [], '', '12345', '6789', nil, end_date, true)
+    create_pool_and_subscription(@owner['key'], @products[:product_virt_limit_stack_2].id, 10, [], '', '12345', '6789', nil, end_date, true)
+    create_pool_and_subscription(@owner['key'], @products[:product_virt_limit].id, 10, [], '', '12345', '6789', nil, end_date, true)
+#     ,{:derived_product_id => @products[:derived_product_virt_limit]['id']})
+    create_pool_and_subscription(@owner['key'], @products[:product_virt_limit_hosted].id, 10, [], '', '12345', '6789', nil, end_date, true,
+      {:derived_product_id => @products[:derived_product_virt_limit_hosted]['id']})
     create_pool_and_subscription(@owner['key'], @products[:product3].id, 5, [], '', '12345', '6789', nil, end_date, true,
       {:derived_product_id => @products[:derived_product]['id'],  :derived_provided_products => [@products[:derived_provided_prod]['id']]})
     create_pool_and_subscription(@owner['key'], @products[:product_up].id, 10, [], '', '12345', '6789', nil, end_date, true)
@@ -528,21 +557,26 @@ class StandardExporter < Exporter
       {:derived_product_id => @products[:product_dc]['id']})
 
     # Pool names is a list of names of instance variables that will be created
-    pool_names = ["pool1", "pool2", "pool3", "pool4", "pool_up", "pool_vdc"]
-    pool_products = [:product1, :product2, :product3, :virt_product, :product_up, :product_vdc]
+    pool_names = ["pool1", "pool2", "pool3", "pool4", "pool_up", "pool_virt_limit", "pool_virt_limit_hosted", "pool_virt_limit_stack", "pool_virt_limit_stack_2"]
+    pool_products = [:product1, :product2, :product3, :virt_product, :product_up, :product_virt_limit, :product_virt_limit_hosted, :product_virt_limit_stack, :product_virt_limit_stack_2]
 
     # Take the names and couple them together with keys in the @products hash.
     # Then for each pair, set an instance variable with the value of the list_pools
     # for that product.
     pool_names.zip(pool_products).each do |name, product|
-      instance_variable_set("@#{name}", @cp.list_pools(:owner => @owner.id, :product => @products[product].id)[0] )
+      product_pools = @cp.list_pools(:owner => @owner.id, :product => @products[product].id)
+      product_pools.each do |pp|
+         if (pp.type == "NORMAL")
+            instance_variable_set("@#{name}", pp )
+         end
+      end
     end
 
     @candlepin_client.update_consumer({:facts => {"distributor_version" => "sam-1.3"}})
     @candlepin_consumer = @candlepin_client.get_consumer()
 
-    ent_names = ["entitlement1", "entitlement2", "entitlement3", "entitlement_up", "entitlement_vdc"]
-    ent_names.zip([@pool1, @pool2, @pool4, @pool_up, @pool_vdc]).each do |ent_name, pool|
+    ent_names = ["entitlement1", "entitlement2", "entitlement3", "entitlement_up", "entitlement_virt_limit", "entitlement_virt_limit_hosted", "entitlement_virt_limit_stack", "entitlement_virt_limit_stack_2"]
+    ent_names.zip([@pool1, @pool2, @pool4, @pool_up, @pool_virt_limit, @pool_virt_limit_hosted, @pool_virt_limit_stack, @pool_virt_limit_stack_2]).each do |ent_name, pool|
       instance_variable_set("@#{ent_name}", @candlepin_client.consume_pool(pool.id, {:quantity => 1})[0])
     end
     # pool3 is special
