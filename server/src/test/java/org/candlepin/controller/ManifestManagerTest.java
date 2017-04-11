@@ -113,6 +113,7 @@ public class ManifestManagerTest {
         String webAppPrefix = "webapp-prefix";
         String apiUrl = "api-url";
         Map<String, String> extData = new HashMap<String, String>();
+        extData.put("version", "1.0");
 
         List<Entitlement> ents = new ArrayList<Entitlement>();
         when(entitlementCurator.listByConsumer(eq(consumer))).thenReturn(ents);
