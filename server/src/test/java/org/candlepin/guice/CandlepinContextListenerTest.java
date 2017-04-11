@@ -21,7 +21,6 @@ import static org.mockito.Mockito.*;
 import org.candlepin.TestingModules;
 import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.HornetqContextListener;
-import org.candlepin.cache.CacheContextListener;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.ConfigurationException;
 import org.candlepin.common.config.ConfigurationPrefixes;
@@ -56,7 +55,6 @@ public class CandlepinContextListenerTest {
     private Configuration config;
     private CandlepinContextListener listener;
     private HornetqContextListener hqlistener;
-    private CacheContextListener cacheListener;
     private PinsetterContextListener pinlistener;
     private AMQPBusPublisher buspublisher;
     private ScheduledExecutorService executorService;
@@ -82,7 +80,6 @@ public class CandlepinContextListenerTest {
         buspublisher = mock(AMQPBusPublisher.class);
         executorService = mock(ScheduledExecutorService.class);
         configRead = mock(VerifyConfigRead.class);
-        cacheListener = mock(CacheContextListener.class);
 
         // for testing we override the getModules and readConfiguration methods
         // so we can insert our mock versions of listeners to verify
@@ -211,7 +208,6 @@ public class CandlepinContextListenerTest {
             bind(PinsetterContextListener.class).toInstance(pinlistener);
             bind(HornetqContextListener.class).toInstance(hqlistener);
             bind(AMQPBusPublisher.class).toInstance(buspublisher);
-            bind(CacheContextListener.class).toInstance(cacheListener);
             bind(ScheduledExecutorService.class).toInstance(executorService);
         }
     }

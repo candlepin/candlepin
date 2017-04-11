@@ -15,6 +15,7 @@
 package org.candlepin.resource;
 
 import org.candlepin.cache.CandlepinCache;
+import org.candlepin.cache.StatusCache;
 import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.util.VersionUtil;
@@ -33,7 +34,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
-import javax.cache.Cache;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -110,10 +110,8 @@ public class StatusResource {
     @Produces({ MediaType.APPLICATION_JSON})
     @SecurityHole(noAuth = true, anon = true)
     public Status status() {
-        Cache<String, Status> statusCache = candlepinCache.getStatusCache();
-
-        Status cached = statusCache.get(CandlepinCache.STATUS_KEY);
-
+        StatusCache statusCache = candlepinCache.getStatusCache();
+        Status cached = statusCache.getStatus();
         if (cached != null) {
             return cached;
         }
@@ -142,7 +140,7 @@ public class StatusResource {
             jsProvider.getRulesVersion(), jsProvider.getRulesSource(),
             modeChange.getMode(), modeChange.getReason(), modeChange.getChangeTime());
 
-        statusCache.put(CandlepinCache.STATUS_KEY, status);
+        statusCache.setStatus(status);
         return status;
     }
 }

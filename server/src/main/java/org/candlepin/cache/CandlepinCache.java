@@ -15,7 +15,6 @@
 package org.candlepin.cache;
 
 import org.candlepin.model.Product;
-import org.candlepin.model.Status;
 
 import com.google.inject.Inject;
 
@@ -28,22 +27,36 @@ import javax.cache.CacheManager;
  *
  */
 public class CandlepinCache {
+    private static final String CACHE_PRODUCT_FULL = "productfullcache";
+
+    /**
+     * Cache manager for Ehcache configured caches.
+     */
     private CacheManager cacheManager;
-    public static final String STATUS_KEY = "status";
+
+    /**
+     * We use our own version of a status cache as we ran
+     * into some issues with ehcache-jcache impl.
+     */
+    private StatusCache statusCache;
 
     @Inject
     public CandlepinCache(CacheManager cacheManager) {
         this.cacheManager = cacheManager;
+        // Safe to create this as many times as you'd like
+        // since the same static Status instance will be
+        // reused across all instances.
+        this.statusCache = new StatusCache();
     }
 
     /**
      * Retrieves Candlepin Status cache. This cache will be used only to cache
-     * status resource responses using single key STATUS_KEY
+     * status resource responses.
      *
-     * @return Cache for Status entity
+     * @return StatusCache for Status entity
      */
-    public Cache<String, Status> getStatusCache() {
-        return cacheManager.getCache(CacheContextListener.CACHE_STATUS, String.class, Status.class);
+    public StatusCache getStatusCache() {
+        return this.statusCache;
     }
 
     /**
@@ -52,6 +65,6 @@ public class CandlepinCache {
      * @return Cache for Status entity
      */
     public Cache<String, Product> getProductCache() {
-        return cacheManager.getCache(CacheContextListener.CACHE_PRODUCT_FULL);
+        return cacheManager.getCache(CACHE_PRODUCT_FULL);
     }
 }
