@@ -1542,6 +1542,10 @@ public class CandlepinPoolManager implements PoolManager {
         Date afterLock = new Date();
 
         log.error("VRITANT LOCKWAIT: "+(afterLock.getTime() - preLock.getTime()) );
+
+        Date anotherAfterLock = new Date();
+        log.error("VRITANT TIME IMMEDIATE: "+ (anotherAfterLock.getTime() - afterLock.getTime()));
+
         for(Pool pool: pools) {
             poolQuantities.get(pool.getId()).setPool(pool);
         }
@@ -1567,15 +1571,26 @@ public class CandlepinPoolManager implements PoolManager {
 
         //save pool, ents
         poolCurator.updateAll(poolsToSave, false, false);
+
+
+        Date beforePostBind = new Date();
+        log.error("VRITANT TIME PREPOSTBIND: "+ (beforePostBind.getTime() - anotherAfterLock.getTime()));
+
         handler.handlePostEntitlement(this, consumer, entitlements);
 
+        Date afterPostBind = new Date();
+        log.error("VRITANT TIME POSTBIND: "+ (afterPostBind.getTime() - afterPostBind.getTime()));
         this.ecGenerator.regenerateCertificatesByEntitlementIds(
             this.entitlementCurator.batchListModifying(entitlements.values()), true
         );
 
+        Date beforeOverConsumption = new Date();
+        log.error("VRITANT TIME LAZYREGEN: "+ (beforeOverConsumption.getTime() - afterPostBind.getTime()));
         // we might have changed the bonus pool quantities, lets find out.
         handler.handleBonusPools(consumer.getOwner(), poolQuantities, entitlements);
 
+        Date afterOverConsumption = new Date();
+        log.error("VRITANT TIME OVERCONSUME: "+ (afterOverConsumption.getTime() - beforeOverConsumption.getTime()));
         /*
          * If the consumer is not a distributor, check consumer's new compliance
          * status and save. the getStatus call does that internally, so we only
@@ -1585,11 +1600,16 @@ public class CandlepinPoolManager implements PoolManager {
 
         consumerCurator.update(consumer);
 
+        Date afterCompliance = new Date();
+        log.error("VRITANT TIME COMPLIANCE: "+ (afterCompliance.getTime() - afterOverConsumption.getTime()));
+
         poolCurator.flush();
+        Date afterFlush = new Date();
+        log.error("VRITANT TIME FLUSH: "+ (afterFlush.getTime() - afterCompliance.getTime()));
 
         Date end = new Date();
 
-        log.error("VRITANT LOCKHELD: "+(end.getTime() - afterLock.getTime()) );
+        log.error("VRITANT TOTAL LOCKHELD: "+(end.getTime() - afterLock.getTime()) );
 
         return new ArrayList<Entitlement>(entitlements.values());
     }
