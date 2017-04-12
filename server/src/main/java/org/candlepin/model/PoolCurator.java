@@ -350,7 +350,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             // We'll set the owner restriction later
             owner = consumer.getOwner();
 
-            if (consumer.getType().isManifest()) {
+            if (consumer.isManifest()) {
                 DetachedCriteria hostPoolSubquery = DetachedCriteria.forClass(Pool.class, "PoolI")
                     .createAlias("PoolI.attributes", "attrib")
                     .setProjection(Projections.id())

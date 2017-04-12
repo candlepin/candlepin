@@ -325,7 +325,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
                in hosted mode. These checks are done further below, but doing this up-front to save
                 us some computation.
              */
-            if (!(consumer.isShare() || consumer.getType().isManifest()) ||
+            if (!(consumer.isShare() || consumer.isManifest()) ||
                 !config.getBoolean(ConfigProperties.STANDALONE)) {
                 postBindVirtLimit(poolManager, consumer, virtLimitEntitlements, flatAttributeMaps,
                     subPoolsForStackIds);
@@ -357,7 +357,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
 
         boolean hostLimited = "true".equals(attributes.get(Product.Attributes.HOST_LIMITED));
 
-        if (!config.getBoolean(ConfigProperties.STANDALONE) && !hostLimited && c.getType().isManifest()) {
+        if (!config.getBoolean(ConfigProperties.STANDALONE) && !hostLimited && c.isManifest()) {
             // We're making an assumption that VIRT_LIMIT is defined the same way in every possible
             // source for the attributes map.
             String virtLimit = attributes.get(Product.Attributes.VIRT_LIMIT);
@@ -552,7 +552,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
 
         log.debug("Running virt_limit post-bind.");
 
-        boolean consumerFactExpression = !c.getType().isManifest() && !c.isShare() && !c.isGuest();
+        boolean consumerFactExpression = !c.isManifest() && !c.isShare() && !c.isGuest();
 
         boolean isStandalone = config.getBoolean(ConfigProperties.STANDALONE);
 
@@ -615,7 +615,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
      */
     private void decrementHostedBonusPoolQuantity(PoolManager poolManager, Consumer c,
         List<Entitlement> entitlements, Map<String, Map<String, String>> attributesMaps) {
-        boolean consumerFactExpression = (c.getType().isManifest() || c.isShare()) &&
+        boolean consumerFactExpression = (c.isManifest() || c.isShare()) &&
             !config.getBoolean(ConfigProperties.STANDALONE);
 
         if (!consumerFactExpression) {

@@ -723,7 +723,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
      */
     @XmlTransient
     public boolean isCertV3Capable() {
-        if (getType().isManifest()) {
+        if (isManifest()) {
             for (ConsumerCapability capability : getCapabilities()) {
                 if ("cert_v3".equals(capability.getName())) {
                     return true;
@@ -756,10 +756,11 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     }
 
     public boolean isShare() {
-        if (getType() != null && getType().isType(ConsumerTypeEnum.SHARE)) {
-            return true;
-        }
-        return false;
+        return getType() != null && getType().isType(ConsumerTypeEnum.SHARE);
+    }
+
+    public boolean isManifest() {
+        return getType() != null && getType().isManifest();
     }
 
     public boolean isGuest() {

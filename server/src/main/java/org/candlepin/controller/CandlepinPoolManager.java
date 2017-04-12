@@ -1619,7 +1619,7 @@ public class CandlepinPoolManager implements PoolManager {
             handler = new UpdateHandler();
         }
 
-        boolean isDistributor = consumer.getType().isManifest();
+        boolean isDistributor = consumer.isManifest();
 
         /*
          * Grab an exclusive lock on the consumer to prevent deadlock.
@@ -1639,7 +1639,7 @@ public class CandlepinPoolManager implements PoolManager {
             Pool pool = poolQuantity.getPool();
             Integer quantity = poolQuantity.getQuantity();
             pool.setConsumed(pool.getConsumed() + quantity);
-            if (consumer.getType().isManifest()) {
+            if (consumer.isManifest()) {
                 pool.setExported(pool.getExported() + quantity);
             }
             else if (consumer.isShare()) {
@@ -1825,7 +1825,7 @@ public class CandlepinPoolManager implements PoolManager {
 
             pool.setConsumed(pool.getConsumed() - entQuantity);
             Consumer consumer = ent.getConsumer();
-            if (consumer.getType().isManifest()) {
+            if (consumer.isManifest()) {
                 pool.setExported(pool.getExported() - entQuantity);
             }
             else if (consumer.isShare()) {
@@ -2190,7 +2190,7 @@ public class CandlepinPoolManager implements PoolManager {
             List<Pool> subPoolsForStackIds = null;
             // Manifest and Share consumers should not contribute to the sharing org's stack,
             // as Share consumers should not have created a stack derived pool in the first place.
-            if (!stackIds.isEmpty() && !consumer.isShare() && !consumer.getType().isManifest()) {
+            if (!stackIds.isEmpty() && !consumer.isShare() && !consumer.isManifest()) {
                 subPoolsForStackIds = poolCurator.getSubPoolForStackIds(consumer, stackIds);
                 if (CollectionUtils.isNotEmpty(subPoolsForStackIds)) {
                     poolRules.updatePoolsFromStack(consumer, subPoolsForStackIds, false);

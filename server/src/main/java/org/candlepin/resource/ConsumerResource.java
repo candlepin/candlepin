@@ -693,7 +693,7 @@ public class ConsumerResource {
             throw new BadRequestException(i18n.tr(
                 "The consumer cannot use the supplied content access mode."));
         }
-        if (consumer.getContentAccessMode() != null && !consumer.getType().isManifest()) {
+        if (consumer.getContentAccessMode() != null && !consumer.isManifest()) {
             throw new BadRequestException(i18n.tr(
                 "The consumer cannot be assigned a content access mode."));
         }
@@ -1136,7 +1136,7 @@ public class ConsumerResource {
 
         if (updated.getContentAccessMode() != null &&
             !updated.getContentAccessMode().equals(toUpdate.getContentAccessMode()) &&
-            toUpdate.getType().isManifest()) {
+            toUpdate.isManifest()) {
             if (!toUpdate.getOwner().isAllowedContentAccessMode(updated.getContentAccessMode())) {
                 throw new BadRequestException(i18n.tr(
                     "The consumer cannot use the supplied content access mode."));
@@ -1144,7 +1144,7 @@ public class ConsumerResource {
             toUpdate.setContentAccessMode(updated.getContentAccessMode());
             changesMade = true;
         }
-        if (!StringUtils.isEmpty(updated.getContentAccessMode()) && !toUpdate.getType().isManifest()) {
+        if (!StringUtils.isEmpty(updated.getContentAccessMode()) && !toUpdate.isManifest()) {
             throw new BadRequestException(i18n.tr("The consumer cannot be assigned a content access mode."));
         }
 

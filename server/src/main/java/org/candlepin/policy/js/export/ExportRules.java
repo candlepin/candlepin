@@ -35,7 +35,7 @@ public class ExportRules {
         // applied to pools internally by candlepin, but some tests were doing this so
         // we will continue doing the same.
         Boolean poolDerived = pool.hasAttribute(Pool.Attributes.DERIVED_POOL);
-        return !entitlement.getConsumer().getType().isManifest() || !poolDerived;
+        return !entitlement.getConsumer().isManifest() || !poolDerived;
     }
 
 }
