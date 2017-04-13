@@ -246,6 +246,29 @@ module CandlepinMethods
     asn1_body
   end
 
+  def assert_broker_state(mode_name, state)
+    mode = get_mode
+    expect(mode["mode"]).to eq(mode_name)
+    expect(mode["brokerState"]).to eq(state)
+  end
+
+  def assert_db_state(mode_name, state)
+    mode = get_mode
+    expect(mode["mode"]).to eq(mode_name)
+    expect(mode["dbState"]).to eq(state)
+  end
+
+  def assert_mode(mode_name)
+    mode = get_mode
+    expect(mode["mode"]).to eq(mode_name)
+  end
+
+  def get_mode
+    mode = @cp.get('/status')
+    expect(mode).to have_key("mode")
+    return mode
+  end
+
 end
 
 class Export

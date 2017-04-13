@@ -14,6 +14,9 @@
  */
 package org.candlepin.controller;
 
+import com.google.inject.Provider;
+import com.mchange.v2.c3p0.C3P0Registry;
+import com.mchange.v2.c3p0.PooledDataSource;
 import org.candlepin.audit.QpidConnection;
 import org.candlepin.audit.QpidConnection.STATUS;
 import org.candlepin.audit.QpidQmf;
@@ -23,13 +26,15 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.CandlepinModeChange;
 import org.candlepin.model.CandlepinModeChange.Mode;
-import org.candlepin.model.CandlepinModeChange.Reason;
+import org.candlepin.model.CandlepinModeChange.BrokerState;
+import org.candlepin.model.CandlepinModeChange.DbState;
 
 import com.google.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.persistence.EntityManager;
 import java.math.BigInteger;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -78,15 +83,21 @@ public class SuspendModeTransitioner implements Runnable {
     private QpidQmf qmf;
     private QpidConnection qpidConnection;
     private CandlepinCache candlepinCache;
+    private Provider<EntityManager> entityManager;
+    private Configuration candlepinConfig;
+    private PooledDataSource dataSource;
 
     @Inject
     public SuspendModeTransitioner(Configuration config, ScheduledExecutorService execService,
-        CandlepinCache cache) {
+        CandlepinCache cache, Provider<EntityManager> entityManager, Configuration candlepinConfig) {
         this.execService = execService;
         delayGrowth = config.getInt(ConfigProperties.QPID_MODE_TANSITIONER_DELAY_GROWTH);
         initialDelay = config.getInt(ConfigProperties.QPID_MODE_TRANSITIONER_INITIAL_DELAY);
         maxDelay = config.getInt(ConfigProperties.QPID_MODE_TRANSITIONER_MAX_DELAY);
         this.candlepinCache = cache;
+        this.entityManager = entityManager;
+        this.candlepinConfig = candlepinConfig;
+        dataSource = C3P0Registry.pooledDataSourceByName("hibernateDataSource");
     }
 
     /**
@@ -142,7 +153,7 @@ public class SuspendModeTransitioner implements Runnable {
 
         log.debug("Next Transitioner check will run after {} seconds", delay);
         if (failedAttempts.compareTo(BigInteger.ZERO) > 0) {
-            log.info("SuspendModeTransitioner failed to reconnect to the Qpid Broker " +
+            log.info("SuspendModeTransitioner failed to reconnect to the Qpid Broker or DB" +
                 "{} times, backing off with next reconnect {} seconds", failedAttempts,
                 delay);
         }
@@ -167,9 +178,33 @@ public class SuspendModeTransitioner implements Runnable {
     }
 
     /**
-     * Attempts to transition Candlepin according to current Mode and current status of
-     * the Qpid Broker. Logs and swallows possible exceptions - theoretically
-     * there should be none.
+     * Tests the connection to the database by running a fast query.
+     * To make the testing query as lightweight as possible, a DB specific SQL query is used.
+     * TODO: Add Oracle support. The used query "SELECT 1" is implemented in mysql and postgres.
+     *
+     * @return true if the test query executed successfully, false otherwise.
+     */
+    public boolean isDbConnected() {
+        log.debug("Testing database connection");
+        boolean connectionIsValid = false;
+        try {
+            Integer result = (Integer) entityManager.get().createNativeQuery("SELECT 1").getSingleResult();
+            log.debug("Database testing query result is \"{}\"", result);
+            if (result == 1) {
+                connectionIsValid = true;
+            }
+        }
+        catch (Exception e) {
+            log.warn("Error occurred while testing database connection, will switch to SUSPEND mode.", e);
+        }
+
+        return connectionIsValid;
+    }
+
+    /**
+     * Attempts to transition Candlepin according to current Mode, current status of
+     * the Qpid Broker, and the status of database connection.
+     * Logs and swallows possible exceptions - theoretically there should be none.
      *
      * Most of the time the transition won't be required and this method will be no-op.
      * There is an edge-case when transitioning from SUSPEND to NORMAL mode.
@@ -179,65 +214,96 @@ public class SuspendModeTransitioner implements Runnable {
      * may fail. In that case the transition to NORMAL mode shouldn't go through
      */
     public synchronized void transitionAppropriately() {
-        log.debug("Attempting to transition to appropriate Mode");
         try {
-            QpidStatus status = qmf.getStatus();
-            CandlepinModeChange modeChange = modeManager.getLastCandlepinModeChange();
+            QpidStatus qpidStatus = null;
+            if (candlepinConfig.getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED)) {
+                qpidStatus = qmf.getStatus();
 
-            log.debug("Qpid status is {}, the current mode is {}", status, modeChange);
-
-            if (status != QpidStatus.CONNECTED) {
-                qpidConnection.setConnectionStatus(STATUS.JMS_OBJECTS_STALE);
-            }
-
-            if (modeChange.getMode() == Mode.SUSPEND) {
-                switch (status) {
-                    case CONNECTED:
-                        log.info("Connection to qpid is restored! Reconnecting Qpid and" +
-                            " Entering NORMAL mode");
-                        failedAttempts = BigInteger.ZERO;
-                        modeManager.enterMode(Mode.NORMAL, Reason.QPID_UP);
-                        cleanStatusCache();
-                        break;
-                    case FLOW_STOPPED:
-                    case DOWN:
-                        failedAttempts = failedAttempts.add(BigInteger.ONE);
-                        log.debug("Staying in {} mode. So far {} failed attempts",
-                            status,
-                            failedAttempts);
-                        break;
-                    default:
-                        throw new RuntimeException("Unknown status: " + status);
+                if (qpidStatus != QpidStatus.CONNECTED) {
+                    qpidConnection.setConnectionStatus(STATUS.JMS_OBJECTS_STALE);
                 }
             }
-            else if (modeChange.getMode() == Mode.NORMAL) {
-                switch (status) {
-                    case FLOW_STOPPED:
-                        log.debug("Will need to transition Candlepin into SUSPEND Mode because " +
-                            "the Qpid connection is flow stopped");
-                        modeManager.enterMode(Mode.SUSPEND, Reason.QPID_FLOW_STOPPED);
-                        cleanStatusCache();
+            boolean dbConnected = isDbConnected();
+            BrokerState brokerState;
+            DbState dbState;
+
+            if (qpidStatus != null) {
+                switch (qpidStatus) {
+                    case CONNECTED:
+                        brokerState = BrokerState.UP;
                         break;
                     case DOWN:
-                        log.debug("Will need to transition Candlepin into SUSPEND Mode because " +
-                            "the Qpid connection is down");
-                        modeManager.enterMode(Mode.SUSPEND, Reason.QPID_DOWN);
-                        cleanStatusCache();
+                        brokerState = BrokerState.DOWN;
                         break;
-                    case CONNECTED:
-                        log.debug("Connection to Qpid is ok and current mode is NORMAL. No-op!");
+                    case FLOW_STOPPED:
+                        brokerState = BrokerState.FLOW_STOPPED;
                         break;
                     default:
-                        throw new RuntimeException("Unknown status: " + status);
+                        throw new RuntimeException("Unknown Qpid status: " + qpidStatus);
+                }
+            }
+            else {
+                //AMQP integration is turned off
+                brokerState = BrokerState.OFF;
+            }
+
+            if (dbConnected) {
+                dbState = DbState.UP;
+            }
+            else {
+                dbState = DbState.DOWN;
+            }
+
+            CandlepinModeChange modeChange  = modeManager.getLastCandlepinModeChange();
+            boolean qpidOk = (brokerState == BrokerState.UP || brokerState == BrokerState.OFF);
+            boolean dbOk = dbState == DbState.UP;
+
+            if (modeChange.getMode() == Mode.NORMAL) {
+                if (!qpidOk || !dbOk) {
+                    log.debug("Need to enter SUSPEND mode with Qpid status {} and DB status {}",
+                        brokerState, dbState);
+                    modeManager.enterMode(Mode.SUSPEND, brokerState, dbState);
+                    cleanStatusCache();
+                }
+                else {
+                    writeModeIfStateChanged(modeChange, brokerState, dbState);
+                }
+            }
+            else if (modeChange.getMode() == Mode.SUSPEND) {
+                if (qpidOk && dbOk) {
+                    if (modeChange.getDbState() != DbState.UP) {
+                        dataSource.hardReset();
+                    }
+                    failedAttempts = BigInteger.ZERO;
+                    log.debug("DB and QPID are up, changing to NORMAL mode.");
+                    modeManager.enterMode(Mode.NORMAL, brokerState, dbState);
+                    cleanStatusCache();
+                }
+                else {
+                    failedAttempts = failedAttempts.add(BigInteger.ONE);
+                    log.debug("Staying in SUSPEND mode. So far {} failed attempts", failedAttempts);
+                    writeModeIfStateChanged(modeChange, brokerState, dbState);
                 }
             }
         }
         catch (Throwable t) {
-            log.error("Error while executing period Suspend Transitioner check", t);
-            /**
+            log.error("Error while executing period Suspend Transitioner Qpid check", t);
+            /*
              * Nothing more we can do here, since this is scheduled thread. We must
              * hope that this error won't infinitely recur with each scheduled execution
              */
+        }
+    }
+
+    private void writeModeIfStateChanged(CandlepinModeChange modeChange, BrokerState brokerState,
+        DbState dbState) {
+        if (modeManager.stateChanged(modeChange, brokerState, dbState)) {
+            log.debug("DB or Qpid state changed, changing the CandlepinModeChange");
+            modeManager.enterMode(modeChange.getMode(), brokerState, dbState);
+            cleanStatusCache();
+        }
+        else {
+            log.debug("DB or Qpid state did not change, Suspend mode transition check is no-op.");
         }
     }
 

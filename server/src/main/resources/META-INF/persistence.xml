@@ -25,6 +25,7 @@
             <property name="hibernate.c3p0.idle_test_period" value="300" />
             <!-- max_statements should always be 0 -->
             <property name="hibernate.c3p0.max_statements" value="0" />
+            <property name="hibernate.c3p0.dataSourceName" value="hibernateDataSource" />
         </properties>
     </persistence-unit>
 

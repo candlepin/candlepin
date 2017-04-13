@@ -19,7 +19,8 @@ import org.candlepin.common.exceptions.SuspendedException;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.CandlepinModeChange;
 import org.candlepin.model.CandlepinModeChange.Mode;
-import org.candlepin.model.CandlepinModeChange.Reason;
+import org.candlepin.model.CandlepinModeChange.BrokerState;
+import org.candlepin.model.CandlepinModeChange.DbState;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -43,7 +44,7 @@ import java.util.List;
 public class ModeManagerImpl implements ModeManager {
     private static Logger log = LoggerFactory.getLogger(ModeManagerImpl.class);
     private CandlepinModeChange cpMode = new CandlepinModeChange(
-        new Date(), Mode.NORMAL, Reason.STARTUP);
+        new Date(), Mode.NORMAL, CandlepinModeChange.BrokerState.UP, CandlepinModeChange.DbState.UP);
     private List<ModeChangeListener> listeners = new ArrayList<ModeChangeListener>();
     private Configuration config;
     private I18n i18n;
@@ -60,7 +61,7 @@ public class ModeManagerImpl implements ModeManager {
     }
 
     @Override
-    public void enterMode(Mode m, Reason reason) {
+    public void enterMode(Mode m, BrokerState brokerState, DbState dbState) {
         /**
          * When suspend mode is disabled, the Candlepin should never get into Suspend Mode.
          * Candlepin is starting always in NORMAL mode, so disalowing the transition here should
@@ -74,22 +75,33 @@ public class ModeManagerImpl implements ModeManager {
             return;
         }
 
-        if (reason == null) {
-            String noReasonErrorString = "No reason supplied when trying to change CandlepinModeChange.";
+        if (brokerState == null) {
+            String noReasonErrorString = "No Qpid state supplied when trying to change CandlepinModeChange.";
             log.error(noReasonErrorString);
             throw new IllegalArgumentException(noReasonErrorString);
         }
-        log.info("Entering new mode {} for reason {}", m, reason);
+        else if (dbState == null) {
+            String noReasonErrorString = "No DB state supplied when trying to change CandlepinModeChange.";
+            log.error(noReasonErrorString);
+            throw new IllegalArgumentException(noReasonErrorString);
+        }
+
+
+        log.info("Entering new mode {} with DB state {} and Qpid state {}", m, brokerState, dbState);
 
         Mode previousMode = cpMode.getMode();
-        if (previousMode != m) {
+        boolean modeChanged = previousMode != m;
+        boolean dbOk = dbState == DbState.UP;
+        if ((modeChanged || stateChanged(cpMode, brokerState, dbState)) && dbOk) {
             fireModeChangeEvent(m);
         }
-        if (m.equals(Mode.SUSPEND)) {
-            log.warn("Candlepin is entering suspend mode for the following reason: {}", reason);
-        }
 
-        cpMode = new CandlepinModeChange(new Date(), m, reason);
+        cpMode = new CandlepinModeChange(new Date(), m, brokerState, dbState);
+    }
+
+    @Override
+    public boolean stateChanged(CandlepinModeChange modeChange, BrokerState brokerState, DbState dbState) {
+        return (brokerState != modeChange.getBrokerState() || dbState != modeChange.getDbState());
     }
 
     @Override

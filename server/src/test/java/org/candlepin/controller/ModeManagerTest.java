@@ -21,7 +21,8 @@ import static org.junit.Assert.assertTrue;
 import org.candlepin.common.exceptions.SuspendedException;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.model.CandlepinModeChange.Mode;
-import org.candlepin.model.CandlepinModeChange.Reason;
+import org.candlepin.model.CandlepinModeChange.BrokerState;
+import org.candlepin.model.CandlepinModeChange.DbState;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -34,14 +35,16 @@ import java.util.Locale;
 
 public class ModeManagerTest {
     private ModeManager modeManager;
-    private Reason testReason;
+    private BrokerState brokerState;
+    private DbState dbState;
     private boolean modeChanged;
 
     @Before
     public void setUp() {
         I18n mockedi18 = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         modeManager = new ModeManagerImpl(new CandlepinCommonTestConfig(), mockedi18);
-        testReason = Reason.STARTUP;
+        brokerState = BrokerState.UP;
+        dbState = DbState.UP;
         modeChanged = false;
     }
 
@@ -55,20 +58,26 @@ public class ModeManagerTest {
         Date previousTime = modeManager.getLastCandlepinModeChange().getChangeTime();
         Mode mode = Mode.SUSPEND;
         sleep(1);
-        modeManager.enterMode(mode, testReason);
+        modeManager.enterMode(mode, brokerState, dbState);
         assertEquals(mode, modeManager.getLastCandlepinModeChange().getMode());
-        assertEquals(testReason, modeManager.getLastCandlepinModeChange().getReason());
+        assertEquals(brokerState, modeManager.getLastCandlepinModeChange().getBrokerState());
+        assertEquals(dbState, modeManager.getLastCandlepinModeChange().getDbState());
         assertTrue(previousTime.before(modeManager.getLastCandlepinModeChange().getChangeTime()));
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testEnterModeNeedsReason() {
-        modeManager.enterMode(Mode.NORMAL, null);
+    public void testEnterModeNeedsBrokerState() {
+        modeManager.enterMode(Mode.NORMAL, null, dbState);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testEnterModeNeedsDbState() {
+        modeManager.enterMode(Mode.NORMAL, brokerState, null);
     }
 
     @Test(expected = SuspendedException.class)
     public void throwRestEasyExceptionIfInSuspendMode() {
-        modeManager.enterMode(Mode.SUSPEND, testReason);
+        modeManager.enterMode(Mode.SUSPEND, brokerState, dbState);
         modeManager.throwRestEasyExceptionIfInSuspendMode();
     }
 
@@ -82,7 +91,7 @@ public class ModeManagerTest {
         };
 
         modeManager.registerModeChangeListener(listener);
-        modeManager.enterMode(Mode.SUSPEND, testReason);
+        modeManager.enterMode(Mode.SUSPEND, brokerState, dbState);
         assertEquals(true, modeChanged);
     }
 

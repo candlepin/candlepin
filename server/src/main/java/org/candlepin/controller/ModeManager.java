@@ -16,7 +16,8 @@ package org.candlepin.controller;
 
 import org.candlepin.model.CandlepinModeChange;
 import org.candlepin.model.CandlepinModeChange.Mode;
-import org.candlepin.model.CandlepinModeChange.Reason;
+import org.candlepin.model.CandlepinModeChange.BrokerState;
+import org.candlepin.model.CandlepinModeChange.DbState;
 
 /**
  * Class responsible for storing and managing the current Candlepin mode.
@@ -30,11 +31,21 @@ public interface ModeManager {
      */
     CandlepinModeChange getLastCandlepinModeChange();
     /**
-     * Enters a mode m. Reason should be a machine readable enumeration
+     * Enters a mode m.
      * @param m new Mode into which Candlepin should enter
-     * @param reason why is Candlepin entering this mode?
+     * @param brokerState State of Qpid when entering mode m.
+     * @param dbState State of Database when entering mode m.
      */
-    void enterMode(Mode m, Reason reason);
+    void enterMode(Mode m, BrokerState brokerState, DbState dbState);
+
+    /**
+     * Checks if given Qpid or DB state differ from the ones in modeChange
+     * @param modeChange Old mode and states
+     * @param brokerState New broker state
+     * @param dbState New DB state
+     * @return true if one of the new states differ from old, false otherwise.
+     */
+    boolean stateChanged(CandlepinModeChange modeChange, BrokerState brokerState, DbState dbState);
     /**
      * Checks if Candlepin is in suspend mode. In case it is, this method
      * will throw an error. This method is useful to quickly fail requests

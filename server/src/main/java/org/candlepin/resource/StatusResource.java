@@ -116,29 +116,31 @@ public class StatusResource {
             return cached;
         }
 
+        CandlepinModeChange modeChange = modeManager.getLastCandlepinModeChange();
+
         /*
          * Originally this was used to indicate database connectivity being good/bad.
          * In reality it could never be false, the request would fail. This check has
          * been moved to GET /status/db.
          */
         boolean good = true;
-        try {
-            rulesCurator.getUpdatedFromDB();
+        if (modeChange.getDbState() == CandlepinModeChange.DbState.UP) {
+            try {
+                rulesCurator.getUpdatedFromDB();
+            }
+            catch (Exception e) {
+                log.error("Error checking database connection", e);
+                good = false;
+            }
         }
-        catch (Exception e) {
-            log.error("Error checking database connection", e);
-            good = false;
-        }
-
-        CandlepinModeChange modeChange = modeManager.getLastCandlepinModeChange();
 
         if (modeChange.getMode() != Mode.NORMAL) {
             good = false;
         }
 
         Status status = new Status(good, version, release, standalone,
-            jsProvider.getRulesVersion(), jsProvider.getRulesSource(),
-            modeChange.getMode(), modeChange.getReason(), modeChange.getChangeTime());
+            jsProvider.getRulesVersion(), jsProvider.getRulesSource(), modeChange.getMode(),
+            modeChange.getBrokerState(), modeChange.getDbState(), modeChange.getChangeTime());
 
         statusCache.setStatus(status);
         return status;

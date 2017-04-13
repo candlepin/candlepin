@@ -112,7 +112,8 @@ public class PinsetterKernelTest {
         when(modeManager.getLastCandlepinModeChange()).thenReturn(
             new CandlepinModeChange(new Date(System.currentTimeMillis()),
             CandlepinModeChange.Mode.NORMAL,
-            CandlepinModeChange.Reason.STARTUP));
+            CandlepinModeChange.BrokerState.UP,
+            CandlepinModeChange.DbState.UP));
     }
 
     @Test(expected = InstantiationException.class)
