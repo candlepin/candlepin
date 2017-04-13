@@ -22,6 +22,7 @@ import org.candlepin.audit.EventSink;
 import org.candlepin.audit.NoopEventSinkImpl;
 import org.candlepin.auth.Principal;
 import org.candlepin.cache.CandlepinCache;
+import org.candlepin.cache.StatusCache;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.guice.HttpMethodMatcher;
 import org.candlepin.common.guice.JPAInitializer;
@@ -250,7 +251,7 @@ public class TestingModules {
             bindScope(TestSingleton.class, TestScope.SINGLETON);
             CandlepinCache mockedCandlepinCache = mock(CandlepinCache.class);
             when(mockedCandlepinCache.getProductCache()).thenReturn(mock(Cache.class));
-            when(mockedCandlepinCache.getStatusCache()).thenReturn(mock(Cache.class));
+            when(mockedCandlepinCache.getStatusCache()).thenReturn(mock(StatusCache.class));
             // This is not necessary in the normal module because the config is bound in the
             // context listener
             bind(Configuration.class).toInstance(config);

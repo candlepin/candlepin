@@ -22,7 +22,6 @@ import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.HornetqContextListener;
 import org.candlepin.audit.QpidQmf;
 import org.candlepin.audit.QpidQmf.QpidStatus;
-import org.candlepin.cache.CacheContextListener;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.ConfigurationException;
 import org.candlepin.common.config.EncryptedConfiguration;
@@ -83,7 +82,6 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
     public static final String CONFIGURATION_NAME = Configuration.class.getName();
 
     private HornetqContextListener hornetqListener;
-    private CacheContextListener cacheListener;
     private PinsetterContextListener pinsetterListener;
     private LoggerContextListener loggerListener;
 
@@ -150,9 +148,6 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
                 throw new RuntimeException("Error during Startup: Qpid is in status " + status);
             }
         }
-
-        cacheListener = injector.getInstance(CacheContextListener.class);
-        cacheListener.contextInitialized(injector);
 
         if (config.getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED) &&
             config.getBoolean(ConfigProperties.SUSPEND_MODE_ENABLED)) {

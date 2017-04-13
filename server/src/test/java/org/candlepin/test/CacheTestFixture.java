@@ -14,7 +14,6 @@
  */
 package org.candlepin.test;
 
-import org.candlepin.cache.CacheContextListener;
 import org.candlepin.cache.CandlepinCache;
 import org.candlepin.cache.JCacheManagerProvider;
 
@@ -44,14 +43,6 @@ public class CacheTestFixture extends DatabaseTestFixture {
                 bind(CacheManager.class).toProvider(JCacheManagerProvider.class).in(Singleton.class);
             }
         };
-    }
-
-    @Override
-    public void init() throws Exception {
-        super.init();
-
-        CacheContextListener cacheListener = injector.getInstance(CacheContextListener.class);
-        cacheListener.contextInitialized(injector);
     }
 
     @Override

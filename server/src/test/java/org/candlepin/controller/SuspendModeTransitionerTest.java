@@ -19,11 +19,11 @@ import org.candlepin.audit.QpidConnection.STATUS;
 import org.candlepin.audit.QpidQmf;
 import org.candlepin.audit.QpidQmf.QpidStatus;
 import org.candlepin.cache.CandlepinCache;
+import org.candlepin.cache.StatusCache;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.model.CandlepinModeChange;
 import org.candlepin.model.CandlepinModeChange.Mode;
 import org.candlepin.model.CandlepinModeChange.Reason;
-import org.candlepin.model.Status;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -36,7 +36,6 @@ import java.util.Date;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import javax.cache.Cache;
 
 @RunWith(MockitoJUnitRunner.class)
 public class SuspendModeTransitionerTest {
@@ -55,7 +54,7 @@ public class SuspendModeTransitionerTest {
     @Mock
     private CandlepinCache candlepinCache;
     @Mock
-    private Cache<String, Status> cache;
+    private StatusCache cache;
 
     @Before
     public void setUp() {

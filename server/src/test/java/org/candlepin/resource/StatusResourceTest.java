@@ -24,6 +24,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.cache.CandlepinCache;
+import org.candlepin.cache.StatusCache;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.controller.ModeManager;
 import org.candlepin.model.CandlepinModeChange;
@@ -39,7 +40,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.slf4j.LoggerFactory;
 
@@ -54,9 +54,6 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Date;
 
-import javax.cache.Cache;
-
-
 
 /**
  * StatusResourceTest
@@ -67,7 +64,7 @@ public class StatusResourceTest {
     @Mock private Configuration config;
     @Mock private JsRunnerProvider jsProvider;
     @Mock private CandlepinCache candlepinCache;
-    @Mock private Cache mockedStatusCache;
+    @Mock private StatusCache mockedStatusCache;
     @Mock private ModeManager modeManager;
 
     @Before
@@ -81,7 +78,7 @@ public class StatusResourceTest {
 
         when(rulesCurator.listAll()).thenReturn(mockCPQuery);
         when(rulesCurator.getRules()).thenReturn(new Rules("// Version: 2.0\nBLAH"));
-        when(mockedStatusCache.get(Mockito.any())).thenReturn(null);
+        when(mockedStatusCache.getStatus()).thenReturn(null);
         when(candlepinCache.getStatusCache()).thenReturn(mockedStatusCache);
         when(modeManager.getLastCandlepinModeChange()).thenReturn(mockModeChange);
     }
