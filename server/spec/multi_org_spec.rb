@@ -67,7 +67,7 @@ describe "Multi Org Shares" do
         random_string('orgBShare'),
         :share,
         nil,
-	{'share.recipient' => @owner2['key'], 'virt.is_guest' => 'true'},
+    {'share.recipient' => @owner2['key'], 'virt.is_guest' => 'true'},
         nil,
         @owner1['key'],
         []
@@ -91,17 +91,19 @@ describe "Multi Org Shares" do
 
   it 'cannot update recipient owner' do
      @user_client.register(
-      random_string('orgBShare'),
-      :share,
-      nil,
-      {'share.recipient' => @owner2['key']},
-      nil,
-      @owner1['key']
+       random_string('orgBShare'),
+       :share,
+       nil,
+       {'share.recipient' => @owner2['key']},
+       nil,
+       @owner1['key']
      )
      share = @cp.list_consumers(:owner => @owner1['key']).first
      owner3 = create_owner(random_string('owner'))
      facts = {'share.recipient' => owner3['key']}
-     @cp.update_consumer({:uuid => share.uuid, :facts => facts})
+     expect do
+       @cp.update_consumer({:uuid => share.uuid, :facts => facts})
+     end.to raise_error(RestClient::BadRequest)
   end
 
   it 'cannot create a share without permissions to the recipient org' do
