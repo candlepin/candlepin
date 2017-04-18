@@ -426,10 +426,7 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
         for (Map.Entry<String, Integer> entry : productVersions.entrySet()) {
             disjunction.add(Restrictions.and(
                 Restrictions.eq("p.id", entry.getKey()),
-                Restrictions.or(
-                    Restrictions.isNull("p.entityVersion"),
-                    Restrictions.eq("p.entityVersion", entry.getValue())
-                )
+                Restrictions.eq("p.entityVersion", entry.getValue())
             ));
         }
 
