@@ -69,11 +69,11 @@ describe 'Pool Resource' do
   end
 
   it 'should not return expired pools' do
+    now = DateTime.now
     owner = create_owner random_string('donaldduck')
     client = user_client(owner, random_string('testusr'))
     product = create_product(nil, nil, :owner => owner['key'])
-    create_pool_and_subscription(owner['key'], product.id, 5,
-      [], '', '', '', Date.today - 60, Date.today - 1)
+    create_pool_and_subscription(owner['key'], product.id, 5, [], '', '', '', now - 60, now - 1)
     (@cp.list_pools :owner => owner.id).size.should == 0
   end
 

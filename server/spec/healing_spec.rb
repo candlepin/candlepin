@@ -7,6 +7,7 @@ describe 'Healing' do
   include CandlepinMethods
 
   before(:each) do
+    @now = DateTime.now
     @owner = create_owner random_string('test_owner1')
     @username = random_string("user1")
     consumername1 = random_string("consumer1")
@@ -19,8 +20,7 @@ describe 'Healing' do
         {'productId' => @product1['id'], 'productName' => @product1['name']},
         {'productId' => @product2['id'], 'productName' => @product2['name']}]
 
-    @consumer = @user_cp.register(consumername1, :system, nil,
-      {'cpu.cpu_socket(s)' => '8'}, nil, @owner['key'], [], installed)
+    @consumer = @user_cp.register(consumername1, :system, nil, {'cpu.cpu_socket(s)' => '8'}, nil, @owner['key'], [], installed)
     @consumer_cp = Candlepin.new(nil, nil, @consumer.idCert.cert, @consumer.idCert['key'])
   end
 
@@ -31,8 +31,8 @@ describe 'Healing' do
 
     # Create a future sub, the entitlement should not come from this one:
     future_pool = create_pool_and_subscription(@owner['key'], parent_prod['id'],
-      10, [@product1['id'], @product2['id']], '', '', Date.today + 30,
-        Date.today + 60)
+      10, [@product1['id'], @product2['id']], '', '', @now + 30,
+        @now + 60)
 
     ents = @consumer_cp.consume_product()
     ents.size.should == 1
@@ -46,8 +46,7 @@ describe 'Healing' do
 
     # Create a future sub, the entitlement should not come from this one:
     future_pool = create_pool_and_subscription(@owner['key'], parent_prod['id'],
-      10, [@product1['id'], @product2['id']], '', '', '', Date.today + 30,
-        Date.today + 60)
+      10, [@product1['id'], @product2['id']], '', '', '', @now + 30, @now + 60)
 
     # 35 days in future should land in our sub:
     future_iso8601 = (Time.now + (60 * 60 * 24 * 35)).utc.iso8601 # a string
@@ -68,8 +67,7 @@ describe 'Healing' do
 
     # Create a future sub, entitlement should end up coming from here:
     future_pool = create_pool_and_subscription(@owner['key'], parent_prod['id'],
-      10, [@product1['id'], @product2['id']], '', '', '', Date.today + 365 * 2,
-        Date.today + 365 * 4) # valid 2-4 years from now
+      10, [@product1['id'], @product2['id']], '', '', '', @now + 365 * 2, @now + 365 * 4) # valid 2-4 years from now
 
     future_iso8601 = (Time.now + (60 * 60 * 24 * 365 * 3)).utc.iso8601 # a string
 

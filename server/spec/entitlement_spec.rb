@@ -60,7 +60,7 @@ describe 'Entitlements' do
 
   it 'should throw an error when filtering by a non-existant product ID' do
     lambda do
-      @system.list_entitlements(:product_id => 'non_existant')
+      @system.list_entitlements(:product => 'non_existant')
     end.should raise_exception(RestClient::BadRequest)
   end
 
@@ -93,14 +93,14 @@ describe 'Entitlements' do
   it 'should have the correct product ID when subscribing by product' do
     @system.consume_product @monitoring.id
 
-    entitlements = @system.list_entitlements(:product_id => @monitoring.id)
+    entitlements = @system.list_entitlements(:product => @monitoring.id)
     entitlements.length.should eq(1)
   end
 
   it 'should have the correct product ID when subscribing by pool' do
     @system.consume_pool find_pool_for_product(@monitoring).id
 
-    entitlements = @system.list_entitlements(:product_id => @monitoring.id)
+    entitlements = @system.list_entitlements(:product => @monitoring.id)
     entitlements.length.should eq(1)
   end
 

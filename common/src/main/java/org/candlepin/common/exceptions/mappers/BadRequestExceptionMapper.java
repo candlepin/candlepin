@@ -22,6 +22,8 @@ import com.google.inject.Inject;
 
 import org.jboss.resteasy.spi.BadRequestException;
 
+import org.xnap.commons.i18n.I18n;
+
 import java.util.Map;
 
 import javax.ws.rs.core.Response;
@@ -29,6 +31,8 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
+
+
 
 /**
  * BadRequestExceptionMapper maps the RESTEasy BadRequestException into JSON and
@@ -57,8 +61,19 @@ public class BadRequestExceptionMapper extends CandlepinExceptionMapper
             ResponseBuilder bldr = Response.status(Status.BAD_REQUEST)
                 .type(determineBestMediaType())
                 .header(VersionUtil.VERSION_HEADER, map.get("version") + "-" + map.get("release"));
-            bldr.entity(new ExceptionMessage(i18n.get().tr("Bad Request")));
-            return bldr.build();
+
+            // Use the message in the original exception if we have it
+            String message = null;
+            for (Throwable current = exception; current != null; current = current.getCause()) {
+                message = current.getMessage();
+            }
+
+            // Set default message if we didn't have anything...
+            if (message == null || message.isEmpty()) {
+                message = I18n.marktr("Bad Request");
+            }
+
+            return bldr.entity(new ExceptionMessage(i18n.get().tr(message))).build();
         }
     }
 }

@@ -33,11 +33,11 @@ public class ResourceDateParser {
 
     public static Date getFromDate(String from, String to, String days) {
         if (days != null && !days.trim().equals("") &&
-            (to != null && !to.trim().equals("") ||
-            from != null && !from.trim().equals(""))) {
-            throw new BadRequestException("You can use either the to/from " +
-                                           "date parameters or the number of " +
-                                           "days parameter, but not both");
+            (to != null && !to.trim().equals("") || from != null && !from.trim().equals(""))) {
+
+            throw new BadRequestException(
+                "You can use either the to/from date parameters or the number of days parameter, but not both"
+            );
         }
 
         Date daysDate = null;
@@ -63,13 +63,14 @@ public class ResourceDateParser {
         if (StringUtils.isBlank(activeOn)) {
             return null;
         }
+
         try {
             d = DatatypeConverter.parseDateTime(activeOn).getTime();
         }
         catch (IllegalArgumentException e) {
-            throw new BadRequestException(
-                "Invalid date, must use ISO 8601 format");
+            throw new BadRequestException("Invalid date, must use ISO 8601 format");
         }
+
         return d;
     }
 }

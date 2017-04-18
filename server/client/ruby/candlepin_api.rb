@@ -1,12 +1,13 @@
 require 'base64'
-require 'openssl'
+require 'cgi'
 require 'date'
-require 'rubygems'
-require 'rest_client'
 require 'json'
-require 'uri'
-require 'pp'
 require 'oauth'
+require 'openssl'
+require 'pp'
+require 'rest_client'
+require 'rubygems'
+require 'uri'
 
 class Candlepin
 
@@ -78,6 +79,7 @@ class Candlepin
               environment=nil, capabilities=[], hypervisor_id=nil,
               content_tags=[], created_date=nil, last_checkin_date=nil,
               annotations=nil)
+
     consumer = {
       :type => {:label => type},
       :name => name,
@@ -85,65 +87,66 @@ class Candlepin
       :installedProducts => installedProducts,
       :contentTags => content_tags,
     }
+
     consumer[:capabilities] = capabilities.collect { |name| {'name' => name} } if capabilities
-
     consumer[:uuid] = uuid if not uuid.nil?
-
     consumer[:hypervisorId] = {:hypervisorId => hypervisor_id} if hypervisor_id
-
     consumer[:created] = created_date if created_date
-
     consumer[:lastCheckin] = last_checkin_date if last_checkin_date
-
     consumer[:annotations] = annotations if annotations
 
+    params = {}
+
     if environment.nil?
-      path = get_path("consumers") + "?"
-      path = path + "owner=#{owner_key}&" if not owner_key.nil?
+      path = get_path("consumers")
+      params[:owner] = owner_key if not owner_key.nil?
     else
-      path = "/environments/#{environment}/consumers?"
+      path = "/environments/#{environment}/consumers"
     end
-    path += "username=#{username}&" if username
-    path += "activation_keys=" + activation_keys.join(",") if activation_keys.length > 1
-    path += "activation_keys=" + activation_keys[0] if activation_keys.length == 1
-    @consumer = post(path, consumer)
+
+    params[:username] = username if username
+    params[:activation_keys] = activation_keys.join(",") if activation_keys.length > 1
+    params[:activation_keys] = activation_keys[0] if activation_keys.length == 1
+
+    @consumer = post(path, params, consumer)
     return @consumer
   end
 
   def hypervisor_check_in(owner, host_guest_mapping={}, create_missing=nil)
-    path = get_path("hypervisors") + "?owner=#{owner}"
-    unless create_missing.nil?
-      path << "&create_missing=#{create_missing}"
-    end
-    consumers = post(path, host_guest_mapping)
-    return consumers
+    path = get_path("hypervisors")
+    params = {
+      :owner => owner
+    }
+
+    params[:create_missing] = create_missing unless create_missing.nil?
+
+    return post(path, params, host_guest_mapping)
   end
 
   def hypervisor_update(owner, json_data, create_missing=nil, reporter_id=nil)
-    path = get_path("hypervisors") + "/#{owner}?"
-    unless create_missing.nil?
-      path << "create_missing=#{create_missing}&"
-    end
-    unless reporter_id.nil?
-      path << "reporter_id=#{reporter_id}&"
-    end
-    job_detail = post_text(path, json_data, 'json')
-    return job_detail
+    path = get_path("hypervisors") + "/#{owner}"
+    params = {}
+
+    params[:create_missing] = create_missing unless create_missing.nil?
+    params[:reporter_id] = reporter_id unless reporter_id.nil?
+
+    return post_text(path, params, json_data, 'json')
   end
 
   def remove_deletion_record(deleted_uuid)
     path = get_path("consumers") + "/#{deleted_uuid}/deletionrecord"
-    result = delete(path)
-    return result
+    return delete(path)
   end
 
   def get_deleted_consumers(date = nil)
     path = get_path("deleted_consumers")
+    params = {}
+
     if !date.nil?
-        path += "?date=#{date}"
+      params[:date] = date
     end
-    result = get(path)
-    return result
+
+    return get(path, params)
   end
 
   def update_consumer(params)
@@ -153,10 +156,8 @@ class Candlepin
       :uuid => uuid
     }
     consumer[:facts] = params[:facts] if params[:facts]
-    consumer[:installedProducts] = \
-        params[:installedProducts] if params[:installedProducts]
-    consumer[:guestIds] = \
-        params[:guestIds] if params[:guestIds]
+    consumer[:installedProducts] = params[:installedProducts] if params[:installedProducts]
+    consumer[:guestIds] = params[:guestIds] if params[:guestIds]
     consumer[:autoheal] = params[:autoheal] if params.has_key?(:autoheal)
     consumer[:serviceLevel] = params[:serviceLevel] if params.has_key?(:serviceLevel)
     consumer[:capabilities] = params[:capabilities].collect { |name| {'name' => name} } if params[:capabilities]
@@ -164,54 +165,61 @@ class Candlepin
     consumer['contentAccessMode'] = params['contentAccessMode'] if params.key?('contentAccessMode')
 
     path = get_path("consumers")
-    put("#{path}/#{uuid}", consumer)
+    put("#{path}/#{uuid}", {}, consumer)
   end
 
   def update_guestids(guestIds)
     path = "/consumers/#{@uuid}/guestids"
-    put(path, guestIds)
+    put(path, {}, guestIds)
   end
 
   def update_guestid(guest)
     path = "/consumers/#{@uuid}/guestids/#{guest[:guestId]}"
-    put(path, guest)
+    put(path, {}, guest)
   end
 
   def delete_guestid(guestuuid, unregister = false)
     path = "/consumers/#{@uuid}/guestids/#{guestuuid}"
+    params = {}
+
     if unregister
-        path << "?unregister=true"
+        params[:unregister] = true
     end
-    delete(path)
+
+    delete(path, params)
   end
 
   def get_guestids(uuid = nil)
     uuid = uuid || @uuid
     path = "/consumers/#{uuid}/guestids"
-    results = get(path)
-    return results
+    return get(path)
   end
 
   def get_guestid(guestuuid)
     path = "/consumers/#{@uuid}/guestids/#{guestuuid}"
-    result = get(path)
-    return result
+    return get(path)
   end
 
   def update_entitlement(params)
     entitlement = {
-        :id => params[:id]
+      :id => params[:id],
+      :quantity => params[:quantity]
     }
-    entitlement[:quantity] = params[:quantity]
-    put("/entitlements/#{params[:id]}", entitlement)
+
+    put("/entitlements/#{params[:id]}", {}, entitlement)
   end
 
   def migrate_entitlement(params)
-    path = "/entitlements/#{params[:id]}/migrate?to_consumer=#{params[:dest]}"
+    path = "/entitlements/#{params[:id]}/migrate"
+    qparams = {
+      :to_consumer => params[:dest]
+    }
+
     if params[:quantity]
-      path << "&quantity=#{params[:quantity]}"
+      qparams[:quantity] = params[:quantity]
     end
-    put(path)
+
+    put(path, qparams, params)
   end
 
   def get_user_info(user)
@@ -224,14 +232,12 @@ class Candlepin
 
   def list_owners(params = {})
     path = "/owners"
-    results = get(path)
-    return results
+    return get(path)
   end
 
   def list_users_owners(username, params = {})
     path = "/users/#{username}/owners"
-    results = get(path)
-    return results
+    return get(path)
   end
 
   # Can pass an owner key, or an href to follow:
@@ -252,21 +258,21 @@ class Candlepin
   end
 
   def get_owner_hypervisors(owner, hypervisor_ids = [])
-    url = "/owners/#{owner}/hypervisors?"
-    hypervisor_ids.each do |hid|
-      url << "hypervisor_id=#{hid}&"
-    end
-    get(url)
+    url = "/owners/#{owner}/hypervisors"
+    params = {
+      :hypervisor_id => hypervisor_ids
+    }
+
+    get(url, params)
   end
 
   def get_owners_with_product(product_ids = [])
-    path = "/products/owners?"
+    path = "/products/owners"
+    params = {
+      :product => product_ids
+    }
 
-    product_ids.each do |pid|
-      path << "product=#{pid}&"
-    end
-
-    return get(path)
+    return get(path, params)
   end
 
   def create_owner(key, params={})
@@ -275,24 +281,30 @@ class Candlepin
     displayName = params['displayName'] || name
     contentAccessModeList = params['contentAccessModeList'] || nil
     contentAccessMode = params['contentAccessMode'] || nil
+
     owner = {
       'key' => key,
       'displayName' => displayName
     }
+
     owner['contentAccessModeList'] = contentAccessModeList unless contentAccessModeList.nil?
     owner['contentAccessMode'] = contentAccessMode unless contentAccessMode.nil?
     owner['parentOwner'] = parent if !parent.nil?
-    post('/owners', owner)
+
+    post('/owners', {}, owner)
   end
 
   def update_owner(owner_key, owner)
-    put("/owners/#{owner_key}", owner)
+    put("/owners/#{owner_key}",{},  owner)
   end
 
   def set_owner_log_level(owner_key, log_level=nil)
     uri = "/owners/#{owner_key}/log"
-    uri << "?level=#{log_level}" if log_level
-    put uri
+
+    params = {}
+    params[:level] = log_level if log_level
+
+    put(uri, params)
   end
 
   def delete_owner_log_level(owner_key)
@@ -311,14 +323,21 @@ class Candlepin
 
   def delete_owner(owner_key, revoke=true)
     uri = "/owners/#{owner_key}"
-    uri << '?revoke=false' unless revoke
 
-    delete uri
+    params = {}
+    params[:revoke] = false if !revoke
+
+    delete(uri, params)
   end
 
   def migrate_owner(owner_key, uri, immediate=false)
+    params = {
+      :id => owner_key,
+      :uri => uri
+    }
+
     return async_call(immediate) do
-      put("owners/migrate?id=#{owner_key}&uri=#{uri}")
+      put("owners/migrate", params)
     end
   end
 
@@ -333,12 +352,12 @@ class Candlepin
       'superAdmin' => superadmin
     }
 
-    post("/users", user)
+    post("/users", {}, user)
   end
 
   def update_user(user, username = nil)
     username ||= user[:username]
-    put("/users/#{username}", user)
+    put("/users/#{username}", {}, user)
   end
 
   def list_users()
@@ -352,11 +371,11 @@ class Candlepin
       :name => name,
       :permissions => perms,
     }
-    post("/roles", role)
+    post("/roles", {}, role)
   end
 
   def update_role(role)
-    put("/roles/#{role['id']}", role)
+    put("/roles/#{role['id']}", {}, role)
   end
 
   def delete_role(roleid)
@@ -372,7 +391,7 @@ class Candlepin
   end
 
   def add_role_permission(role_id, permission)
-    post("/roles/#{role_id}/permissions", permission)
+    post("/roles/#{role_id}/permissions", {}, permission)
   end
 
   def delete_role_permission(role_id, permission_id)
@@ -388,8 +407,7 @@ class Candlepin
   end
 
   def delete_user(username)
-    uri = "/users/#{username}"
-    delete uri
+    delete("/users/#{username}")
   end
 
   def list_consumer_types
@@ -405,7 +423,7 @@ class Candlepin
   end
 
   def set_scheduler_status(status)
-    post("/jobs/scheduler", status)
+    post("/jobs/scheduler", {}, status)
   end
 
   def trigger_job(job, async=false)
@@ -420,7 +438,7 @@ class Candlepin
       'manifest' => manifest
     }
 
-    post('/consumertypes', consumer_type)
+    post('/consumertypes', {}, consumer_type)
   end
 
   def delete_consumer_type(type_id)
@@ -428,9 +446,12 @@ class Candlepin
   end
 
   def get_pool(poolid, uuid=nil)
-    path = "/pools/#{poolid}?"
-    path += "consumer=#{uuid}" if uuid
-    get(path)
+    path = "/pools/#{poolid}"
+
+    params = {}
+    params[:consumer] = uuid if uuid
+
+    get(path, params)
   end
 
   def delete_pool(pool_id)
@@ -439,55 +460,35 @@ class Candlepin
 
   # Deprecated, unless you're a super admin actually looking to list all pools:
   def list_pools(params = {})
-    path = "/pools?"
-    path << "consumer=#{params[:consumer]}&" if params[:consumer]
-    path << "owner=#{params[:owner]}&" if params[:owner]
-    path << "product=#{params[:product]}&" if params[:product]
-    path << "listall=#{params[:listall]}&" if params[:listall]
-    path << "activeon=#{params[:activeon]}&" if params[:activeon]
-    results = get(path)
-
-    return results
+    return get("/pools", params)
   end
 
   def list_owner_pools(owner_key, params = {}, attribute_filters=[])
-    path = "/owners/#{owner_key}/pools?"
-    path << "consumer=#{params[:consumer]}&" if params[:consumer]
-    path << "product=#{params[:product]}&" if params[:product]
-    path << "listall=#{params[:listall]}&" if params[:listall]
-    path << "activeon=#{params[:activeon]}&" if params[:activeon]
-    path << "page=#{params[:page]}&" if params[:page]
-    path << "per_page=#{params[:per_page]}&" if params[:per_page]
-    path << "order=#{params[:order]}&" if params[:order]
-    path << "sort_by=#{params[:sort_by]}&" if params[:sort_by]
-    path << "matches=#{params[:matches]}&" if params[:matches]
-    path << "add_future=#{params[:add_future]}&" if params[:add_future]
-    path << "only_future=#{params[:only_future]}&" if params[:only_future]
+    path = "/owners/#{owner_key}/pools"
 
-    # Attribute filters are specified in the following format:
-    #    {attributeName}:{attributeValue}
-    attribute_filters.each do |filter|
-        path << "attribute=%s&" % [filter]
-    end
+    params[:attribute] = attribute_filters if !attribute_filters.empty?
 
-    results = get(path)
-    return results
+    return get(path, params)
   end
 
   def list_owner_service_levels(owner_key, exempt=false)
     path = "/owners/#{owner_key}/servicelevels"
-    path << "?exempt=#{exempt}" if exempt
-    results = get(path)
 
-    return results
+    params = {}
+    params[:exempt] = exempt if exempt
+
+    return get(path, params)
   end
 
   def refresh_pools(owner_key, immediate=false, create_owner=false, lazy_regen=true)
     return async_call(immediate) do
-      url = "/owners/#{owner_key}/subscriptions?"
-      url += "auto_create_owner=true&" if create_owner
-      url += "lazy_regen=false&" if !lazy_regen
-      put(url)
+      url = "/owners/#{owner_key}/subscriptions"
+
+      params = {}
+      params[:auto_create_owner] = true if create_owner
+      params[:lazy_regen] = false if !lazy_regen
+
+      put(url, params)
     end
   end
 
@@ -501,15 +502,26 @@ class Candlepin
     end
 
     return status if immediate
+
     # otherwise poll the server to make this call synchronous
     finished_states = ['FINISHED', 'CANCELED', 'FAILED']
-    while !finished_states.include? status['state'].upcase
-      sleep 1
-      # POSTing here will delete the job once it has finished
-      status = post(status['statusPath'])
+
+    # We toss this into a new array since async_call is sometimes used with endpoints which return multiple
+    # job details
+    if !status.kind_of?(Array)
+      status = [status]
     end
 
-    return status['result']
+    status.each_index do |index|
+      while !finished_states.include? status[index]['state'].upcase
+        sleep 1
+        # POSTing here will delete the job once it has finished
+        status[index] = post(status[index]['statusPath'])
+      end
+    end
+
+    # If we only have one job detail, return the status directly; otherwise return a collection of job results
+    return (status.length == 1 ? status[0]['result'] : status.map {|detail| detail['result']})
   end
 
   def export_consumer(dest_dir, params={}, uuid=nil)
@@ -526,7 +538,7 @@ class Candlepin
 
   def download_consumer_export(uuid, export_id, dest_dir)
     path = "/consumers/#{uuid}/export/#{export_id}"
-    get_file(path, dest_dir)
+    get_file(path, {}, dest_dir)
   end
 
   def get_entitlement(entitlement_id)
@@ -555,35 +567,17 @@ class Candlepin
   end
 
   def list_products(product_ids=nil, params={})
-    path = "/products?"
-    if product_ids
-      product_ids.each { |id|
-        path << "product=#{id}&"
-      }
-    end
+    path = "/products"
+    params[:product] = product_ids if product_ids
 
-    # add paging params
-    path << "page=#{params[:page]}&" if params[:page]
-    path << "per_page=#{params[:per_page]}&" if params[:per_page]
-    path << "sort_by=#{params[:sort_by]}&" if params[:sort_by]
-
-    get(path)
+    get(path, params)
   end
 
   def list_products_by_owner(owner_key, product_ids=nil, params={})
-    path = "/owners/#{owner_key}/products?"
-    if product_ids
-      product_ids.each { |id|
-        path << "product=#{id}&"
-      }
-    end
+    path = "/owners/#{owner_key}/products"
+    params[:product] = product_ids if product_ids
 
-    # add paging params
-    path << "page=#{params[:page]}&" if params[:page]
-    path << "per_page=#{params[:per_page]}&" if params[:per_page]
-    path << "sort_by=#{params[:sort_by]}&" if params[:sort_by]
-
-    get(path)
+    get(path, params)
   end
 
   def create_content(owner_key, name, id, label, type, vendor, params={}, post=true)
@@ -610,25 +604,19 @@ class Candlepin
     content['requiredTags'] = required_tags if not required_tags.nil?
 
     if post
-      post("/owners/#{owner_key}/content", content)
+      post("/owners/#{owner_key}/content", {}, content)
     else
       return content
     end
   end
 
   def create_batch_content(owner_key, contents=[])
-    post("/owners/#{owner_key}/content/batch", contents)
+    post("/owners/#{owner_key}/content/batch", {}, contents)
   end
 
   def list_content(owner_key, params={})
-    path = "/owners/#{owner_key}/content?"
-
-    # add paging params
-    path << "page=#{params[:page]}&" if params[:page]
-    path << "per_page=#{params[:per_page]}&" if params[:per_page]
-    path << "sort_by=#{params[:sort_by]}&" if params[:sort_by]
-
-    get(path)
+    path = "/owners/#{owner_key}/content"
+    get(path, params)
   end
 
   def get_content(owner_key, content_id)
@@ -649,11 +637,11 @@ class Candlepin
       current_content[key] = value
     end
 
-    put("/owners/#{owner_key}/content/#{content_id}", current_content)
+    put("/owners/#{owner_key}/content/#{content_id}", {}, current_content)
   end
 
   def add_content_to_product(owner_key, product_id, content_id, enabled=true)
-    post("/owners/#{owner_key}/products/#{product_id}/content/#{content_id}?enabled=#{enabled}")
+    post("/owners/#{owner_key}/products/#{product_id}/content/#{content_id}", {:enabled => enabled})
   end
 
   def add_batch_content_to_product(owner_key, product_id, content_ids, enabled=true)
@@ -661,7 +649,7 @@ class Candlepin
     content_ids.each do |id|
       data[id] = enabled
     end
-    post("/owners/#{owner_key}/products/#{product_id}/batch_content", data)
+    post("/owners/#{owner_key}/products/#{product_id}/batch_content", {}, data)
   end
 
   def add_all_content_to_product(owner_key, product_id, content)
@@ -669,7 +657,7 @@ class Candlepin
     content.each do |id, enabled|
       data[id] = enabled
     end
-    post("/owners/#{owner_key}/products/#{product_id}/batch_content", data)
+    post("/owners/#{owner_key}/products/#{product_id}/batch_content", {}, data)
   end
 
   def remove_content_from_product(owner_key, product_id, content_id)
@@ -696,7 +684,7 @@ class Candlepin
   # enabled flag from the content.
   def promote_content(env_id, content_promotions)
     url = "/environments/#{env_id}/content"
-    post(url, content_promotions)
+    return post(url, {}, content_promotions)
   end
 
   # Demomote content from a particular environment.
@@ -704,36 +692,43 @@ class Candlepin
   # Pass the actual content IDs here, rather than the ID assigned to the
   # EnvironmentContent object.
   def demote_content(env_id, content_ids)
-    url = "/environments/#{env_id}/content?"
-    content_ids.each do |cid|
-      url << "content=#{cid}&"
-    end
-    delete(url)
+    url = "/environments/#{env_id}/content"
+
+    params = {}
+    params[:content] = content_ids if content_ids
+
+    return delete(url, params)
   end
 
   def get_product_owners(product_ids)
-    url = "/products/owners?"
-    product_ids.each do |pid|
-      url << "product=#{pid}&"
-    end
-    get(url)
+    url = "/products/owners"
+
+    params = {}
+    params[:product] = product_ids if product_ids
+
+    return get(url, params)
   end
 
-  def refresh_pools_for_orgs_with_product(product_ids, immediate=false, lazy_regen=true)
-    url = "/products/subscriptions?"
-    product_ids.each do |pid|
-      url << "product=#{pid}&"
-    end
-    url << "lazy_regen=false&" if !lazy_regen
+  def refresh_pools_for_orgs_with_product(product_ids, immediate=true, lazy_regen=true)
+    return async_call(immediate) do
+      url = "/products/subscriptions"
 
-    put(url)
+      params = {}
+      params[:product] = product_ids if product_ids
+      params[:lazy_regen] = false if !lazy_regen
+
+      put(url, params)
+    end
   end
 
   def refresh_pools_for_product(owner_key, product_id, immediate=false, lazy_regen=true)
     return async_call(immediate) do
-      url="/owners/#{owner_key}/products/#{product_id}/subscriptions?"
-      url += "lazy_regen=false&" if !lazy_regen
-      return put(url)
+      url = "/owners/#{owner_key}/products/#{product_id}/subscriptions"
+
+      params = {}
+      params[:lazy_regen] = false if !lazy_regen
+
+      return put(url, params)
     end
   end
 
@@ -755,7 +750,7 @@ class Candlepin
       'reliesOn' => relies_on
     }
 
-    post("/owners/#{owner_key}/products", product)
+    post("/owners/#{owner_key}/products", {}, product)
   end
 
   def update_product(owner_key, product_id, params={})
@@ -769,7 +764,7 @@ class Candlepin
     product[:dependentProductIds] = params[:dependentProductIds] if params[:dependentProductIds]
     product[:relies_on] = params[:relies_on] if params[:relies_on]
 
-    put("/owners/#{owner_key}/products/#{product_id}", product)
+    put("/owners/#{owner_key}/products/#{product_id}", {}, product)
   end
 
   def get_product(owner_key, product_id)
@@ -790,85 +785,79 @@ class Candlepin
 
   # TODO: Should we change these to bind to better match terminology?
   def consume_pool(pool_id, params={})
-    quantity = params[:quantity] || nil
     uuid = params[:uuid] || @uuid
-    async = params[:async] || nil
-    path = "/consumers/#{uuid}/entitlements?pool=#{pool_id}"
-    path << "&quantity=#{quantity}" if quantity
-    path << "&async=#{async}" if async
+    path = "/consumers/#{uuid}/entitlements"
 
-    post(path)
+    qparams = {
+      :pool => pool_id
+    }
+
+    qparams[:quantity] = params[:quantity] if params[:quantity]
+    qparams[:async] = params[:async] if params[:async]
+
+    return post(path, qparams)
   end
 
   def consume_pools(poolAndQuantities, params={})
     uuid = params[:uuid] || @uuid
-    path = "/consumers/#{uuid}/entitlements?async=true"
+    path = "/consumers/#{uuid}/entitlements"
+    params = {
+      :async => true
+    }
 
-    return post(path, poolAndQuantities)
+    return post(path, params, poolAndQuantities)
   end
 
   def consume_product(product=nil, params={})
-    quantity = params[:quantity] || nil
     uuid = params[:uuid] || @uuid
-    async = params[:async] || nil
-    entitle_date = params[:entitle_date] || nil
-    path = "/consumers/#{uuid}/entitlements?"
-    path << "product=#{product}&" if product
-    path << "quantity=#{quantity}&" if quantity
-    path << "async=#{async}&" if async
-    path << "entitle_date=#{entitle_date}" if entitle_date
+    path = "/consumers/#{uuid}/entitlements"
+    params[:product] = product if product
 
-    post(path)
+    post(path, params)
   end
 
-  def get_entitlement_list_path(params={})
-    path = "entitlements?"
-    path << "product=#{params[:product_id]}&" if params[:product_id]
-    path << "page=#{params[:page]}&" if params[:page]
-    path << "per_page=#{params[:per_page]}&" if params[:per_page]
-    path << "order=#{params[:order]}&" if params[:order]
-    path << "sort_by=#{params[:sort_by]}&" if params[:sort_by]
-    path << "regen=false&" if params[:regen]
+  def fix_entitlement_list_params(params={})
+    params.delete(:uuid)
 
-    attr_filters = params[:attr_filters] || []
-    attr_filters.each do | attr_name, attr_value |
-      path << "attribute=#{attr_name}:#{attr_value}&"
+    params[:regen] = false if params.delete(:regen)
+
+    attr_filters = params.delete(:attr_filters) || []
+    if !attr_filters.empty?
+      params[:attribute] = []
+
+      attr_filters.each do | attr_name, attr_value |
+        params[:attribute] << "#{attr_name}:#{attr_value}"
+      end
     end
-    path << "matches=#{params[:matches]}&" if params[:matches]
-    return path
+
+    return params
   end
 
   # TODO: Could also fetch from /entitlements, a bit ambiguous:
   def list_entitlements(params={})
-    path = get_entitlement_list_path(params)
     uuid = params[:uuid] || @uuid
-    path = "/consumers/#{uuid}/#{path}"
-    results = get(path)
-    return results
+    path = "/consumers/#{uuid}/entitlements"
+
+    return get(path, fix_entitlement_list_params(params))
   end
 
   # NOTE: Purely for testing via the entitlement resource.
   #       Very similar to list_entitlements above (consumer resource)
   def list_ents_via_entitlements_resource(params={})
-    path = get_entitlement_list_path(params)
-    path << "consumer=#{params[:consumer_uuid]}&" if params[:consumer_uuid]
-    get(path)
+    get("/entitlements", fix_entitlement_list_params(params))
   end
 
   # NOTE: Purely for testing via the owner resource.
   #       expects an owner_key param
-  def list_ents_via_owners_resource(params={})
-    path = get_entitlement_list_path(params)
-    path = "/owners/#{params[:owner_key]}/#{path}"
-    get(path)
+  def list_ents_via_owners_resource(owner_key, params={})
+    path = "/owners/#{owner_key}/entitlements"
+    return get(path, fix_entitlement_list_params(params))
   end
 
-  def list_pool_entitlements(pool_id, params={})
+  def list_pool_entitlements(pool_id)
     path = "/pools/#{pool_id}/entitlements"
-    results = get(path)
-    return results
+    return get(path)
   end
-
 
   def list_rules()
     get_text("/rules")
@@ -883,67 +872,42 @@ class Candlepin
     end
 
     post_data = Base64.encode64(lines.join(""))
-    post_text("/rules/", post_data)
+    post_text("/rules/", {}, post_data)
   end
 
   def upload_rules(encoded_rules)
-    post_text("/rules/", encoded_rules)
+    post_text("/rules/", {}, encoded_rules)
   end
 
   def delete_rules()
     delete("/rules")
   end
 
-  def list_consumers(args={})
-    query = "/consumers?"
-
-    query << "owner=#{args[:owner]}&" if args[:owner]
-    query << "username=#{args[:username]}&" if args[:username]
-    query << "type=#{args[:type]}&" if args[:type]
-    query << "page=#{args[:page]}&" if args[:page]
-    query << "per_page=#{args[:per_page]}&" if args[:per_page]
-    query << "order=#{args[:order]}&" if args[:order]
-    query << "sort_by=#{args[:sort_by]}&" if args[:sort_by]
-    # We could join("&") but that would not leave a trailing ampersand
-    # which is nice for the next person who needs to add an argument to
-    # the query.
-    query << args[:uuids].map {|uuid| "uuid=#{uuid}&"}.join("") if args[:uuids]
-    query << args[:facts].map {|fact| "fact=#{fact}&"}.join("") if args[:facts]
-    get(query)
+  def list_consumers(params={})
+    path = "/consumers"
+    return get(path, params)
   end
 
   def list_owner_consumers(owner_key, consumer_types=[], facts=[])
-    query = "/owners/#{owner_key}/consumers?"
-    if !consumer_types.empty?
-      query += "&type=" + consumer_types.join("&type=")
-    end
-    facts.each do |fact|
-      query << "&fact=%s" % [fact]
-    end
+    path = "/owners/#{owner_key}/consumers"
+    params = {}
 
-    get(query)
+    params[:type] = consumer_types if !consumer_types.empty?
+    params[:fact] = facts if !facts.empty?
+
+    return get(path, params)
   end
 
   def count_owner_consumers(owner_key, consumer_types=[], skus=[], subscription_ids=[], contracts=[])
-    query = "/owners/#{owner_key}/consumers/count?"
+    path = "/owners/#{owner_key}/consumers/count"
 
-    if !consumer_types.empty?
-      query += "&type=" + consumer_types.join("&type=")
-    end
+    params = {}
+    params[:type] = consumer_types if !consumer_types.empty?
+    params[:sku] = skus if !skus.empty?
+    params[:subscription_id] = subscription_ids if !subscription_ids.empty?
+    params[:contract] = contracts if !contracts.empty?
 
-    if !skus.empty?
-      query += "&sku=" + skus.join("&sku=")
-    end
-
-    if !subscription_ids.empty?
-      query += "&subscription_id=" + subscription_ids.join("&subscription_id=")
-    end
-
-    if !contracts.empty?
-      query += "&contract=" + contracts.join("&contract=")
-    end
-
-    get(query,accept_header=:json, dont_parse=true)
+    return get(path, params, accept_header=:json, dont_parse=true)
   end
 
   def get_consumer(consumer_id=nil)
@@ -954,17 +918,20 @@ class Candlepin
   def get_compliance(consumer_id=nil, on_date=nil)
     consumer_id ||= @uuid
     query = "/consumers/#{consumer_id}/compliance"
-    if on_date
-        query << "?on_date=#{on_date}"
-    end
-    get(query)
+
+    params = {}
+    params[:on_date] = on_date if on_date
+
+    get(query, params)
   end
 
   def get_compliance_list(consumer_ids=nil)
     consumer_ids ||= [@uuid]
-    query = "/consumers/compliance?"
-    query << consumer_ids.map {|uuid| "uuid=#{uuid}"}.join("&")
-    get(query)
+    query = "/consumers/compliance"
+    params = {}
+    params[:uuid] = consumer_ids if !consumer_ids.empty?
+
+    get(query, params)
   end
 
   def get_consumer_host(consumer_id=nil)
@@ -990,13 +957,13 @@ class Candlepin
   def autobind_dryrun(consumer_id=nil, service_level=nil)
     consumer_id ||= @uuid
     query = "/consumers/#{consumer_id}/entitlements/dry-run"
-    query << "?service_level=#{service_level}" if service_level
-    get(query)
+    params = {}
+    params[:service_level] = service_level if service_level
+    return get(query, params)
   end
 
   def list_subscriptions(owner_key, params={})
-    results = get("/owners/#{owner_key}/subscriptions")
-    return results
+    return get("/owners/#{owner_key}/subscriptions")
   end
 
   def get_subscription(sub_id)
@@ -1004,15 +971,15 @@ class Candlepin
   end
 
   def get_pools_for_subscription(owner_key, sub_id)
-    return get("/owners/#{owner_key}/pools?subscription=#{sub_id}")
+    return get("/owners/#{owner_key}/pools", {:subscription => sub_id})
   end
 
   def get_subscription_cert(sub_id)
-    return get_text("/subscriptions/#{sub_id}/cert", 'text/plain')
+    return get_text("/subscriptions/#{sub_id}/cert", {}, 'text/plain')
   end
 
   def get_subscription_cert_by_ent_id(ent_id)
-    return get_text("/entitlements/#{ent_id}/upstream_cert", 'text/plain')
+    return get_text("/entitlements/#{ent_id}/upstream_cert", {}, 'text/plain')
   end
 
   def create_subscription(owner_key, product_id, quantity=1,
@@ -1034,7 +1001,7 @@ class Candlepin
     quantity = params[:quantity] || 1
     provided_products = params[:provided_products] || []
 
-    start_date = params[:start_date] || Date.today
+    start_date = params[:start_date] || DateTime.now
     end_date = params[:end_date] || start_date + 365
 
     pool = {
@@ -1075,25 +1042,28 @@ class Candlepin
       pool['derivedProvidedProducts'] = params[:derived_provided_products].collect { |pid| {'productId' => pid} }
     end
 
-    return post("/owners/#{owner_key}/pools", pool)
+    return post("/owners/#{owner_key}/pools", {}, pool)
   end
 
   def update_pool(owner_key, pool)
-    put("/owners/#{owner_key}/pools", pool)
+    put("/owners/#{owner_key}/pools", {}, pool)
   end
 
   def list_activation_keys(owner_key=nil, key_name=nil)
     return get("/activation_keys") if owner_key.nil?
 
     path = "/owner/#{owner_key}/activation_keys"
-    path << "?name=#{key_name}" if key_name
-    return get(path)
+    params = {}
+    params[:name] = key_name if key_name
+
+    return get(path, params)
   end
 
   def create_activation_key(owner_key, name, service_level=nil, autobind=false)
     key = {
       :name => name,
     }
+
     if service_level
       key['serviceLevel'] = service_level
     end
@@ -1101,7 +1071,8 @@ class Candlepin
     if autobind
       key['autoAttach'] = true
     end
-    return post("/owners/#{owner_key}/activation_keys", key)
+
+    return post("/owners/#{owner_key}/activation_keys", {}, key)
   end
 
   def get_activation_key(key_id)
@@ -1114,13 +1085,15 @@ class Candlepin
       :name => env_name,
       :description => description,
     }
-    return post("/owners/#{owner_key}/environments", env)
+    return post("/owners/#{owner_key}/environments", {}, env)
   end
 
   def list_environments(owner_key, env_name=nil)
     path = "/owners/#{owner_key}/environments"
-    path << "?name=#{env_name}&" if env_name
-    return get(path)
+    params = {}
+    params[:name] = env_name if env_name
+
+    return get(path, params)
   end
 
   def get_environment(env_id)
@@ -1132,7 +1105,7 @@ class Candlepin
   end
 
   def update_activation_key(key)
-    return put("/activation_keys/#{key['id']}", key)
+    return put("/activation_keys/#{key['id']}", {}, key)
   end
 
   def delete_activation_key(key_id)
@@ -1145,7 +1118,7 @@ class Candlepin
 
   def add_pool_to_key(key_id, pool_id, quantity=nil)
     if(quantity)
-      return post("/activation_keys/#{key_id}/pools/#{pool_id}?quantity=#{quantity}")
+      return post("/activation_keys/#{key_id}/pools/#{pool_id}", {:quantity => quantity})
     else
       return post("/activation_keys/#{key_id}/pools/#{pool_id}")
     end
@@ -1164,15 +1137,15 @@ class Candlepin
   end
 
   def add_content_overrides_to_key(key_id, overrides)
-      return put("/activation_keys/#{key_id}/content_overrides", overrides)
+    return put("/activation_keys/#{key_id}/content_overrides", {}, overrides)
   end
 
   def remove_activation_key_overrides(key_id, overrides)
-      return delete("/activation_keys/#{key_id}/content_overrides", overrides)
+    return delete("/activation_keys/#{key_id}/content_overrides", {}, overrides)
   end
 
   def get_content_overrides_for_key(key_id)
-      return get("/activation_keys/#{key_id}/content_overrides")
+    return get("/activation_keys/#{key_id}/content_overrides")
   end
 
   def list_certificates(serials = [], params = {})
@@ -1183,8 +1156,10 @@ class Candlepin
     end
 
     path = "/consumers/#{uuid}/certificates"
-    path += "?serials=" + serials.join(",") if serials.length > 0
-    return get(path)
+    qparams = {}
+    qparams[:serials] = serials.join(",") if serials.length > 0
+
+    return get(path, qparams)
   end
 
   def get_content_access_body(params = {})
@@ -1201,31 +1176,37 @@ class Candlepin
 
   def export_certificates(dest_dir, serials = [])
     path = "/consumers/#{@uuid}/certificates"
-    path += "?serials=" + serials.join(",") if serials.length > 0
+    params = {}
+    params[:serials] = serials.join(",") if serials.length > 0
+
     begin
-      get_file(path, dest_dir)
+      get_file(path, params, dest_dir)
     rescue Exception => e
       puts e.response
     end
   end
 
   def regenerate_entitlement_certificates(lazy_regen=true)
-    url = "/consumers/#{@uuid}/certificates?"
-    url += "?lazy_regen=false" if !lazy_regen
-    return put(url)
+    url = "/consumers/#{@uuid}/certificates"
+    params = {}
+    params[:lazy_regen] = false if !lazy_regen
+
+    return put(url, params)
   end
 
   def regenerate_entitlement_certificates_for_product(product_id, immediate=false, lazy_regen=true)
     return async_call(immediate) do
       url = "/entitlements/product/#{product_id}"
-      url += "?lazy_regen=false" if !lazy_regen
-      put(url)
+      params = {}
+      params[:lazy_regen] = false if !lazy_regen
+
+      put(url, params)
     end
   end
 
   def regenerate_entitlement_certificates_for_entitlement(entitlement_id, consumer_uuid=nil)
     consumer_uuid ||= @uuid
-    return put("/consumers/#{consumer_uuid}/certificates?entitlement=#{entitlement_id}")
+    return put("/consumers/#{consumer_uuid}/certificates", {:entitlement => entitlement_id})
   end
 
   def regenerate_identity_certificate(uuid=nil)
@@ -1273,20 +1254,22 @@ class Candlepin
 
   def get_job(job_id, result_data=false)
     url = "/jobs/#{job_id}"
-    url += "?result_data=true" if result_data
-    get url
+    params = {}
+    params[:result_data] = true if result_data
+
+    return get(url, params)
   end
 
   def cancel_job(job_id)
     delete "/jobs/#{job_id}"
   end
 
-  def import(owner_key, filename, params = {})
-    do_import("/owners/#{owner_key}/imports", filename, params)
+  def import(owner_key, filename, params = {}, headers = {})
+    do_import("/owners/#{owner_key}/imports", filename, params, headers)
   end
 
-  def import_async(owner_key, filename, params = {})
-    do_import("/owners/#{owner_key}/imports/async", filename, params)
+  def import_async(owner_key, filename, params = {}, headers = {})
+    do_import("/owners/#{owner_key}/imports/async", filename, params, headers)
   end
 
   def undo_import(owner_key)
@@ -1305,23 +1288,14 @@ class Candlepin
     get("/consumers/#{consumer_id}/guests")
   end
 
-  def get(uri, accept_header=:json, dont_parse=false)
-    puts ("GET #{uri}") if @verbose
-    response = get_client(uri, Net::HTTP::Get, :get)[URI.escape(uri)].get \
-      :accept => accept_header
-    if dont_parse
-      return response
-    end
-    return JSON.parse(response.body)
-  end
-
   def create_distributor_version(name, display_name, capabilities=[])
     version =  {
       'name' => name,
       'displayName' => display_name,
       'capabilities' => capabilities.collect { |name| {'name' => name} }
     }
-    post('/distributor_versions', version)
+
+    post('/distributor_versions', {}, version)
   end
 
   def update_distributor_version(id, name, display_name, capabilities=[])
@@ -1330,7 +1304,8 @@ class Candlepin
       'displayName' => display_name,
       'capabilities' => capabilities.collect { |name| {'name' => name} }
     }
-    put("/distributor_versions/#{id}", version)
+
+    put("/distributor_versions/#{id}", {}, version)
   end
 
   def delete_distributor_version(id)
@@ -1338,12 +1313,13 @@ class Candlepin
   end
 
   def get_distributor_versions(name_search = nil, capability = nil)
-    query = "/distributor_versions"
-    query << "?" if name_search or capability
-    query << "name_search=#{name_search}" if name_search
-    query << "&" if name_search and capability
-    query << "capability=#{capability}" if capability
-    get(query)
+    path = "/distributor_versions"
+
+    params = {}
+    params[:name_search] = name_search if name_search
+    params[:capability] = capability if capability
+
+    return get(path, params)
   end
 
   def create_cdn(label, name, url, cert=nil)
@@ -1353,7 +1329,8 @@ class Candlepin
       'url' => url,
       'certificate' => cert
     }
-    post('/cdn', cdn)
+
+    return post('/cdn', {}, cdn)
   end
 
   def update_cdn(label, name, url, cert=nil)
@@ -1362,7 +1339,8 @@ class Candlepin
       'url' => url,
       'certificate' => cert
     }
-    put("/cdn/#{label}", cdn)
+
+    return put("/cdn/#{label}", {}, cdn)
   end
 
   def delete_cdn(label)
@@ -1378,72 +1356,158 @@ class Candlepin
   end
 
   def add_content_overrides(uuid, overrides=[])
-    put("consumers/#{uuid}/content_overrides", overrides)
+    put("consumers/#{uuid}/content_overrides", {}, overrides)
   end
 
   def delete_content_overrides(uuid, overrides=[])
-    delete("consumers/#{uuid}/content_overrides", overrides)
+    delete("consumers/#{uuid}/content_overrides", {}, overrides)
   end
 
   def get_content_overrides(uuid)
     get("consumers/#{uuid}/content_overrides")
   end
 
+  def get(uri, params={}, accept_header=:json, dont_parse=false)
+    # escape and build uri
+    euri = URI.escape(uri)
+    if !params.empty?
+      euri << '?'
+      euri << URI.encode_www_form(params)
+    end
+
+    # execute
+    puts ("GET #{euri}") if @verbose
+    response = get_client(uri, Net::HTTP::Get, :get)[euri].get :accept => accept_header
+
+    if dont_parse
+      return response
+    end
+
+    return JSON.parse(response.body)
+  end
+
   # Assumes a zip archive currently. Returns filename (random#.zip) of the
   # temp file created.
-  def get_file(uri, dest_dir)
-    response = get_client(uri, Net::HTTP::Get, :get)[URI.escape(uri)].get :accept => "application/zip"
+  def get_file(uri, params={}, dest_dir)
+    # escape and build uri
+    euri = URI.escape(uri)
+    if !params.empty?
+      euri << '?'
+      euri << URI.encode_www_form(params)
+    end
+
+    # execute
+    puts ("GET #{euri}") if @verbose
+    response = get_client(euri, Net::HTTP::Get, :get)[euri].get :accept => "application/zip"
     filename = response.headers[:content_disposition] == nil ? "tmp_#{rand}.zip" : response.headers[:content_disposition].split("filename=")[1]
     filename = File.join(dest_dir, filename)
     File.open(filename, 'w') { |f| f.write(response.body) }
     filename
   end
 
-  def get_text(uri, accept_header = nil)
-    if accept_header.nil?
-      response = get_client(uri, Net::HTTP::Get, :get)[URI.escape(uri)].get :content_type => 'text/plain'
-    else
-      response = get_client(uri, Net::HTTP::Get, :get)[URI.escape(uri)].get :content_type => 'text/plain', :accept => accept_header
+  def get_text(uri, params={}, accept_header=nil)
+    # escape and build uri
+    euri = URI.escape(uri)
+    if !params.empty?
+      euri << '?'
+      euri << URI.encode_www_form(params)
     end
+
+    # execute
+    puts ("GET #{euri}") if @verbose
+    if accept_header.nil?
+      response = get_client(euri, Net::HTTP::Get, :get)[euri].get :content_type => 'text/plain'
+    else
+      response = get_client(euri, Net::HTTP::Get, :get)[euri].get :content_type => 'text/plain', :accept => accept_header
+    end
+
     return (response.body)
   end
 
-  def post(uri, data=nil)
+  def post(uri, params={}, data=nil)
+    # escape and build uri
+    euri = URI.escape(uri)
+    if !params.empty?
+      euri << '?'
+      euri << URI.encode_www_form(params)
+    end
+
+    # encode data
     data = data.to_json if not data.nil?
-    puts ("POST #{uri} #{data}") if @verbose
-    response = get_client(uri, Net::HTTP::Post, :post)[URI.escape(uri)].post(data, :content_type => :json, :accept => :json)
+
+    # execute
+    puts ("POST #{euri} #{data}") if @verbose
+    response = get_client(uri, Net::HTTP::Post, :post)[euri].post(data, :content_type => :json, :accept => :json)
+
     return JSON.parse(response.body) unless response.body.empty?
   end
 
-  def post_file(uri, file=nil, params={})
-    puts ("POST #{uri} #{file}") if @verbose
-    response = get_client(uri, Net::HTTP::Post, :post)[URI.escape(uri)].post({:import => file}, {'x-correlation-id' => params['correlation_id']})
+  def post_file(uri, params={}, file=nil, headers={})
+    # escape and build uri
+    euri = URI.escape(uri)
+    if !params.empty?
+      euri << '?'
+      euri << URI.encode_www_form(params)
+    end
+
+    # execute
+    puts ("POST #{euri} #{file}") if @verbose
+    response = get_client(uri, Net::HTTP::Post, :post)[euri].post({:import => file}, {'x-correlation-id' => headers[:correlation_id]})
+
     return JSON.parse(response.body) unless response.body.empty?
   end
 
-  def post_text(uri, data=nil, accept='text/plain')
-    puts ("POST #{uri} #{data} #{accept}") if @verbose
-    response = get_client(uri, Net::HTTP::Post, :post)[URI.escape(uri)].post(data, :content_type => 'text/plain', :accept => accept )
+  def post_text(uri, params={}, data=nil, accept='text/plain')
+    # escape and build uri
+    euri = URI.escape(uri)
+    if !params.empty?
+      euri << '?'
+      euri << URI.encode_www_form(params)
+    end
+
+    # execute
+    puts ("POST #{euri} #{data} #{accept}") if @verbose
+    response = get_client(euri, Net::HTTP::Post, :post)[euri].post(data, :content_type => 'text/plain', :accept => accept)
+
     return response.body
   end
 
-  def put(uri, data=nil)
+  def put(uri, params={}, data=nil)
+    # escape and build uri
+    euri = URI.escape(uri)
+    if !params.empty?
+      euri << '?'
+      euri << URI.encode_www_form(params)
+    end
+
+    # encode data
     data = data.to_json if not data.nil?
-    puts ("PUT #{uri} #{data}") if @verbose
-    response = get_client(uri, Net::HTTP::Put, :put)[uri].put(
-      data, :content_type => :json, :accept => :json)
+
+    # execute
+    puts ("PUT #{euri} #{data}") if @verbose
+    response = get_client(uri, Net::HTTP::Put, :put)[euri].put(data, :content_type => :json, :accept => :json)
 
     return JSON.parse(response.body) unless response.body.empty?
   end
 
-  def delete(uri, data=nil, dont_parse=false)
-    puts ("DELETE #{uri}") if @verbose
-    client = get_client(uri, Net::HTTP::Delete, :delete)
+  def delete(uri, params={}, data=nil, dont_parse=false)
+    # escape and build uri
+    euri = URI.escape(uri)
+    if !params.empty?
+      euri << '?'
+      euri << URI.encode_www_form(params)
+    end
+
+    # execute
+    puts ("DELETE #{euri}") if @verbose
+    client = get_client(euri, Net::HTTP::Delete, :delete)
     client.options[:payload] = data.to_json if not data.nil?
-    response = client[URI.escape(uri)].delete(:content_type => :json, :accepts => :json)
+    response = client[euri].delete(:content_type => :json, :accepts => :json)
+
     if dont_parse
       return response
     end
+
     return JSON.parse(response.body) unless response.body.empty?
   end
 
@@ -1480,48 +1544,30 @@ class Candlepin
   def create_trusted_consumer_client(uuid)
     @uuid = uuid
     @client = RestClient::Resource.new(@base_url,
-                                       :headers => {"cp-consumer" => uuid,
-                                                    :accept_language => @lang},
+                                       :headers => {"cp-consumer" => uuid, :accept_language => @lang},
                                        :verify_ssl => @verify_ssl)
   end
 
   def create_trusted_user_client(username)
     @username = username
     @client = RestClient::Resource.new(@base_url,
-                                       :headers => {"cp-user" => username,
-                                                    :accept_language => @lang},
+                                       :headers => {"cp-user" => username, :accept_language => @lang},
                                        :verify_ssl => @verify_ssl)
   end
 
   private
 
-  def do_import(path, filename, params = {})
-    path += "?"
-    if params.has_key? :force
-      if params[:force].kind_of? Array
-        # New style, array of conflict keys to force:
-        params[:force].each do |f|
-          path += "force=#{f}&"
-        end
-      else
-        # Old style, force=true/false:
-        path += "force=#{params[:force]}"
-      end
-    end
-    post_file path, File.new(filename), params
+  def do_import(path, filename, params = {}, headers = {})
+    return post_file(path, params, File.new(filename), headers)
   end
 
   def do_consumer_export(path, dest_dir, params)
-    path += "?" if params
-    path += "cdn_label=#{params[:cdn_label]}&" if params[:cdn_label]
-    path += "webapp_prefix=#{params[:webapp_prefix]}&" if params[:webapp_prefix]
-    path += "api_url=#{params[:api_url]}&" if params[:api_url]
     begin
       if dest_dir.nil?
         # support async call
-        get(path)
+        get(path, params)
       else
-        get_file(path, dest_dir)
+        get_file(path, params, dest_dir)
       end
     rescue Exception => e
       puts e.response
@@ -1533,7 +1579,6 @@ end
 class OauthCandlepinApi < Candlepin
 
   def initialize(username, password, oauth_consumer_key, oauth_consumer_secret, params={})
-
     @oauth_consumer_key = oauth_consumer_key
     @oauth_consumer_secret = oauth_consumer_secret
 
@@ -1555,11 +1600,11 @@ class OauthCandlepinApi < Candlepin
       :http_method => method,
       :request_token_path => "",
       :authorize_path => "",
-      :access_token_path => ""}
+      :access_token_path => ""
+    }
     #params[:ca_file] = self.ca_cert_file unless self.ca_cert_file.nil?
 
-    consumer = OAuth::Consumer.new(@oauth_consumer_key,
-      @oauth_consumer_secret, params)
+    consumer = OAuth::Consumer.new(@oauth_consumer_key, @oauth_consumer_secret, params)
     request = http_type.new(final_url)
     consumer.sign!(request)
     headers = {
@@ -1569,8 +1614,7 @@ class OauthCandlepinApi < Candlepin
     }
 
     # Creating a new client for every request:
-    client = RestClient::Resource.new(@base_url,
-      :headers => headers)
+    client = RestClient::Resource.new(@base_url, :headers => headers)
     return client
   end
 end

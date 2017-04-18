@@ -36,12 +36,10 @@ import javax.servlet.http.HttpServletRequest;
  * I18nProvider
  */
 public class I18nProvider extends CommonI18nProvider implements Provider<I18n> {
-    private I18n i18n;
-
     private static Logger log = LoggerFactory.getLogger(I18nProvider.class);
+    private static Map<Locale, I18n> cache = new ConcurrentHashMap<Locale, I18n>();
 
-    private static Map<Locale, I18n>
-        cache = new ConcurrentHashMap<Locale, I18n>();
+    private I18n i18n;
 
     @Inject
     public I18nProvider(Injector injector) {
@@ -71,13 +69,9 @@ public class I18nProvider extends CommonI18nProvider implements Provider<I18n> {
         synchronized (cache) {
             i18n = cache.get(locale);
             if (i18n == null) {
-                i18n = I18nFactory.getI18n(getClass(), getBaseName(), locale,
-                    I18nFactory.FALLBACK);
+                log.debug("Getting i18n engine for locale {}", locale);
 
-                if (log.isDebugEnabled()) {
-                    log.debug("Getting i18n engine for locale " + locale);
-                }
-
+                i18n = I18nFactory.getI18n(getClass(), getBaseName(), locale, I18nFactory.FALLBACK);
                 cache.put(locale, i18n);
             }
         }

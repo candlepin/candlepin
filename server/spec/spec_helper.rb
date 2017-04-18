@@ -28,7 +28,7 @@ module CleanupHooks
 
     if !@cp.get_status()['standalone']
       begin
-        @cp.delete('/hostedtest/subscriptions/', nil, true)
+        @cp.delete('/hostedtest/subscriptions/', {}, nil, true)
       rescue RestClient::ResourceNotFound
         puts "skipping hostedtest cleanup"
       end

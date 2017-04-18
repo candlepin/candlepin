@@ -6,7 +6,7 @@ module HostedTest
   def is_hostedtest_alive?
     if @@hostedtest_alive.nil?
       begin
-        @@hostedtest_alive = @cp.get('/hostedtest/subscriptions/is_alive','json', true)
+        @@hostedtest_alive = @cp.get('/hostedtest/subscriptions/is_alive', {}, 'json', true)
       rescue RestClient::ResourceNotFound
         @@hostedttest_alive = false
       end
@@ -14,11 +14,10 @@ module HostedTest
     return @@hostedtest_alive
   end
 
-  def create_hostedtest_subscription(owner_key, product_id, quantity=1,
-                          params={})
+  def create_hostedtest_subscription(owner_key, product_id, quantity=1, params={})
 
     provided_products = params[:provided_products] || []
-    start_date = params[:start_date] || Date.today
+    start_date = params[:start_date] || DateTime.now
     end_date = params[:end_date] || start_date + 365
 
     subscription = {
@@ -60,11 +59,11 @@ module HostedTest
     if params[:derived_provided_products]
       subscription['derivedProvidedProducts'] = params[:derived_provided_products].collect { |pid| {'id' => pid} }
     end
-    return @cp.post("/hostedtest/subscriptions", subscription)
+    return @cp.post("/hostedtest/subscriptions", {}, subscription)
   end
 
   def update_hostedtest_subscription(subscription)
-    return @cp.put("/hostedtest/subscriptions", subscription)
+    return @cp.put("/hostedtest/subscriptions", {}, subscription)
   end
 
   def get_all_hostedtest_subscriptions()
@@ -76,11 +75,11 @@ module HostedTest
   end
 
   def delete_hostedtest_subscription(id)
-    return @cp.delete("/hostedtest/subscriptions/#{id}", nil, true)
+    return @cp.delete("/hostedtest/subscriptions/#{id}", {}, nil, true)
   end
 
   def delete_all_hostedtest_subscriptions()
-    @cp.delete('/hostedtest/subscriptions/', nil, true)
+    @cp.delete('/hostedtest/subscriptions/', {}, nil, true)
   end
 
   def is_hosted?
@@ -106,19 +105,19 @@ module HostedTest
 
   def add_batch_content_to_product(owner_key, product_id, content_ids, enabled=true)
     if is_hosted?
-      data = {} 
-      content_ids.each do |id| 
+      data = {}
+      content_ids.each do |id|
         data[id] = enabled
-      end      
-      @cp.post("/hostedtest/subscriptions/owners/#{owner_key}/products/#{product_id}/batch_content", data)
+      end
+      @cp.post("/hostedtest/subscriptions/owners/#{owner_key}/products/#{product_id}/batch_content", {}, data)
     else
       @cp.add_batch_content_to_product(owner_key, product_id, content_ids, true)
     end
   end
 
-  def add_content_to_product(owner_key, product_id, content_id, enabled=true) 
+  def add_content_to_product(owner_key, product_id, content_id, enabled=true)
     if is_hosted?
-      @cp.post("/hostedtest/subscriptions/owners/#{owner_key}/products/#{product_id}/content/#{content_id}?enabled=#{enabled}")
+      @cp.post("/hostedtest/subscriptions/owners/#{owner_key}/products/#{product_id}/content/#{content_id}", {:enabled => enabled})
     else
       @cp.add_content_to_product(owner_key, product_id, content_id, true)
     end
@@ -128,14 +127,14 @@ module HostedTest
     if is_hosted?
       product = {
         :id => product_id
-      } 
+      }
       product[:name] = params[:name] if params[:name]
       product[:multiplier] = params[:multiplier] if params[:multiplier]
       product[:attributes] = params[:attributes] if params[:attributes]
       product[:dependentProductIds] = params[:dependentProductIds] if params[:dependentProductIds]
       product[:relies_on] = params[:relies_on] if params[:relies_on]
 
-      @cp.put("/hostedtest/subscriptions/owners/#{owner_key}/products/#{product_id}", product)
+      @cp.put("/hostedtest/subscriptions/owners/#{owner_key}/products/#{product_id}", {}, product)
     else
       @cp.update_product(owner_key, product_id, params)
     end
@@ -224,7 +223,7 @@ module HostedTest
   end
 
   # Lets users be agnostic of what mode we are in, standalone or hosted.
-  # This method is used when we need to update the dependent entities of a 
+  # This method is used when we need to update the dependent entities of a
   # upstream subscription or pool. simply fetching and updating the subscription forces
   # a re-resolve of products, owners, etc.
   #

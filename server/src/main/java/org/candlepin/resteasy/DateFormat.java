@@ -19,11 +19,16 @@ import org.jboss.resteasy.annotations.StringParameterUnmarshallerBinder;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
+
+
 /**
  * Interface for dates on REST API parameters
  */
 @Retention(RetentionPolicy.RUNTIME)
 @StringParameterUnmarshallerBinder(DateFormatter.class)
 public @interface DateFormat {
-    String value();
+    /** Special value representing the current time when parsing */
+    String NOW = "now";
+
+    String[] value() default {};
 }

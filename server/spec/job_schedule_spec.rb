@@ -25,12 +25,13 @@ describe 'Scheduled Jobs' do
 
   it 'should purge expired pools' do
     @owner = create_owner random_string 'test_owner'
-    @monitoring_prod = create_product(nil, 'monitoring',
-      :attributes => { 'variant' => "Satellite Starter Pack" })
+    @monitoring_prod = create_product(nil, 'monitoring', :attributes => { 'variant' => "Satellite Starter Pack" })
+
+    now = DateTime.now
     pool = @cp.create_pool(@owner['key'], @monitoring_prod.id, {
       :quantity => 6,
-      :start_date => Date.today - 20,
-      :end_date => Date.today - 10
+      :start_date => now - 20,
+      :end_date => now - 10
     });
     #verify pool exists before
     @cp.get_pool(pool['id']).should_not be_nil
