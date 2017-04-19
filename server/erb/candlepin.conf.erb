@@ -10,7 +10,7 @@ else
   _.jdbc_url = jdbc_url || profile.jdbc_url
 end
 
-_.jdbc_url.gsub!('$DB_NAME', ENV['app_db_name'])
+_.jdbc_url.gsub!('$DB_NAME', ENV['app_db_name']) unless ENV['app_db_name'].nil?
 -%>
 <%- if ENV['logdriver'] -%>
 log4j.logger.net.rkbloom.logdriver.LogPreparedStatement=DEBUG
@@ -34,10 +34,10 @@ candlepin.auth.oauth.consumer.thumbslug.secret=thumbslug-secret
 candlepin.importer.fail_on_unknown=<%= fail_on_unknown || false %>
 candlepin.pretty_print=<%= cp_pretty_print || true %>
 
-<%- if ENV['qpid'] 
-      amqp_enabled = true 
-    end -%>
-candlepin.amqp.enable=<%= amqp_enabled || false %>
+<%-
+_.amqp_enabled = ENV.key?('qpid') ? ENV['qpid'] : false
+-%>
+candlepin.amqp.enable=<%= amqp_enabled || _.amqp_enabled %>
 candlepin.amqp.connect=<%= amqp_server || "tcp://localhost:5671?ssl='true'&ssl_cert_alias='candlepin'" %>
 
 <%- if hidden_resources -%>
