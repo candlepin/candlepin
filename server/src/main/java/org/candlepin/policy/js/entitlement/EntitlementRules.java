@@ -111,7 +111,12 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
         Collection<PoolQuantity> entitlementPoolQuantities, CallerType caller) {
 
         Map<String, ValidationResult> resultMap = new HashMap<String, ValidationResult>();
-        // Share consumers do not go through the rules
+
+        /* This document describes the java script portion of the pre entitlement rules check:
+         * http://www.candlepinproject.org/docs/candlepin/pre_entitlement_rules_check.html
+         * As described in the document, none of the checks are related to share binds, so we
+         * skip that step for share consumers.
+         */
         if (!consumer.isShare()) {
             JsonJsContext args = new JsonJsContext(objectMapper);
             args.put("consumer", consumer);

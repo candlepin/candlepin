@@ -331,12 +331,12 @@ public class EntitlementResource {
             if (quantity > 0 && quantity <= entitlement.getQuantity()) {
                 Consumer sourceConsumer = entitlement.getConsumer();
                 Consumer destinationConsumer = consumerCurator.verifyAndLookupConsumer(uuid);
-                if (!sourceConsumer.isManifest()) {
+                if (!sourceConsumer.isManifestDistributor()) {
                     throw new BadRequestException(i18n.tr(
                         "Entitlement migration is not permissible for units of type ''{0}''",
                         sourceConsumer.getType().getLabel()));
                 }
-                if (!destinationConsumer.isManifest()) {
+                if (!destinationConsumer.isManifestDistributor()) {
                     throw new BadRequestException(i18n.tr(
                         "Entitlement migration is not permissible for units of type ''{0}''",
                         destinationConsumer.getType().getLabel()));

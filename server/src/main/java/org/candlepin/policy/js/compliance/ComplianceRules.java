@@ -148,7 +148,7 @@ public class ComplianceRules {
          * Do not calculate compliance status for distributors and shares. It is prohibitively
          * expensive and meaningless
          */
-        if (c.isManifest() || c.isShare()) {
+        if (c.isManifestDistributor() || c.isShare()) {
             return new ComplianceStatus(new Date());
         }
 

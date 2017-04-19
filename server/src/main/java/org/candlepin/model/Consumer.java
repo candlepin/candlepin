@@ -723,7 +723,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
      */
     @XmlTransient
     public boolean isCertV3Capable() {
-        if (isManifest()) {
+        if (isManifestDistributor()) {
             for (ConsumerCapability capability : getCapabilities()) {
                 if ("cert_v3".equals(capability.getName())) {
                     return true;
@@ -761,10 +761,11 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     }
 
     @JsonIgnore
-    public boolean isManifest() {
+    public boolean isManifestDistributor() {
         return getType() != null && getType().isManifest();
     }
 
+    @JsonIgnore
     public boolean isGuest() {
         return "true".equalsIgnoreCase(this.getFact("virt.is_guest"));
     }

@@ -137,7 +137,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
     private Set<Product> getDerivedProductsForDistributor(Entitlement ent) {
         Set<Product> derivedProducts = new HashSet<Product>();
         boolean derived = ent.getPool().hasAttribute(Pool.Attributes.DERIVED_POOL);
-        if (!derived && ent.getConsumer().isManifest() &&
+        if (!derived && ent.getConsumer().isManifestDistributor() &&
             ent.getPool().getDerivedProduct() != null) {
             derivedProducts.add(ent.getPool().getDerivedProduct());
             derivedProducts

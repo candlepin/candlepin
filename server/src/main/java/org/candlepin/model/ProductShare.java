@@ -29,8 +29,10 @@ import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
- * A class representing the sharing of a product between two organizations.  Note that this object
- * is never returned via the REST API and is intended for internal bookkeeping only.
+ * When a pool is shared to an org, The product may or may not already exist in the recipient
+ * org. This class represents the sharing of a product between two organizations.  Note that this object
+ * is never returned via the REST API and is intended for internal bookkeeping only, specifically used
+ * only during a share bind.
  */
 @XmlRootElement
 @Entity

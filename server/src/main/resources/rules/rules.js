@@ -68,7 +68,6 @@ var GUEST_LIMIT_ATTRIBUTE = "guest_limit";
 var VCPU_ATTRIBUTE = "vcpu";
 var MULTI_ENTITLEMENT_ATTRIBUTE = "multi-entitlement";
 var STACKING_ID_ATTRIBUTE = "stacking_id";
-
 var STORAGE_BAND_ATTRIBUTE = "storage_band";
 
 // caller types
@@ -1508,6 +1507,7 @@ var Entitlement = {
         return this.build_func("do_pre_requires_consumer")();
     },
 
+
     do_pre_requires_consumer_type: function(context, result) {
         // Distributors can access everything
         if (context.consumer.type.manifest) {
@@ -1763,11 +1763,9 @@ var Entitlement = {
             }
 
             // If the product has no required consumer type, assume it is restricted to "system".
-            // "hypervisor" types are essentially the same as "system".
+            // "hypervisor" type are essentially the same as "system".
             if (!pool.getProductAttribute(REQUIRES_CONSUMER_TYPE_ATTRIBUTE)) {
-                if (consumer.type.label != SYSTEM_TYPE &&
-                    consumer.type.label != HYPERVISOR_TYPE
-                ) {
+                if (consumer.type.label != SYSTEM_TYPE && consumer.type.label != HYPERVISOR_TYPE) {
                     result.addError("rulefailed.consumer.type.mismatch");
                 }
             }
