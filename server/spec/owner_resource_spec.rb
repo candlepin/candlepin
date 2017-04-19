@@ -831,7 +831,7 @@ describe 'Owner Resource Future Pool Tests' do
     @owner = create_owner random_string 'test_owner'
     @product1 = create_product(random_string('product'), random_string('product'),{:owner => @owner['key']})
     @product2 = create_product(random_string('product'), random_string('product'),{:owner => @owner['key']})
-    @current_pool = create_pool_and_subscription(@owner['key'], @product1.id, 10)
+    @current_pool = create_pool_and_subscription(@owner['key'], @product1.id, 10, [], '', '', '', @now - 1)
     start1 = @now + 400
     start2 = @now + 800
     @future_pool1 = create_pool_and_subscription(@owner['key'], @product2.id, 10, [], '', '', '', start1)

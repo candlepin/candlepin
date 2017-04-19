@@ -102,7 +102,7 @@ describe 'One Sub Pool Per Stack' do
         :derived_provided_products => [@derived_provided_product.id]
       })
     create_pool_and_subscription(@owner['key'],
-      @stacked_product_diff_id.id, 2, [], "888")
+      @stacked_product_diff_id.id, 2, [], "888", '', '', @now - 3, @now + 6)
 
     # Determine our pools by matching on contract number.
     pools = @user.list_pools :owner => @owner.id
@@ -175,13 +175,11 @@ describe 'One Sub Pool Per Stack' do
   end
 
   it 'should not include host entitlements from another stack' do
-    ent1 = @host_client.consume_pool(@regular_stacked_with_diff_stackid['id'], {:quantity => 1})[0]
-    @host_client.consume_pool(@stacked_virt_pool1['id'], {:quantity => 1})[0]
-
+    ent1 = @host_client.consume_pool(@stacked_virt_pool1['id'], {:quantity => 1})[0]
+    ent2 = @host_client.consume_pool(@regular_stacked_with_diff_stackid['id'], {:quantity => 1})[0]
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
     sub_pool.should_not be_nil
     expect(has_attribute(sub_pool["productAttributes"], "sockets")).to be false
-
     sub_pool['startDate'].should == ent1['startDate']
     sub_pool['endDate'].should == ent1['endDate']
   end
@@ -430,9 +428,11 @@ describe 'One Sub Pool Per Stack' do
   it 'should update quantity of sub pool when stack changes' do
     ent1 = @host_client.consume_pool(@stacked_virt_pool1['id'], {:quantity => 1})[0]
     verify_qty_and_product(3,@stacked_virt_pool1.productId)
+    #sleep to ensure ent2 is later
+    sleep 2
     @host_client.consume_pool(@stacked_non_virt_pool['id'], {:quantity => 1})[0]
     verify_qty_and_product(3,@stacked_virt_pool1.productId)
-    #sleep to ensure ent3 is later in mysql
+    #sleep to ensure ent3 is later
     sleep 2
     ent3 = @host_client.consume_pool(@stacked_virt_pool3['id'], {:quantity => 1})[0]
     verify_qty_and_product(3,@stacked_virt_pool1.productId)
