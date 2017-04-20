@@ -7,7 +7,7 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
     <!-- ********************************************************************* -->
-    <!-- *** Postgres/Oracle cleanup                                                                                                   ** -->
+    <!-- *** Postgres/Oracle cleanup                                        ** -->
     <!-- ********************************************************************* -->
     <changeSet id="20170214115606-1" dbms="postgresql,oracle,hsqldb" author="mstead">
         <comment>Cleanup all ueber data so that the new style ueber certs can be used.</comment>
@@ -89,7 +89,7 @@
     </changeSet>
 
     <!-- ********************************************************************* -->
-    <!-- *** MySQL cleanup                                                                                                                  ** -->
+    <!-- *** MySQL cleanup                                                  ** -->
     <!-- ********************************************************************* -->
     <changeSet id="20170214115606-3" dbms="mysql" author="mstead">
         <comment>Cleanup all ueber data so that the new style ueber certs can be used.</comment>
