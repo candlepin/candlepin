@@ -76,7 +76,6 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Release;
 import org.candlepin.model.User;
 import org.candlepin.model.VirtConsumerMap;
@@ -201,7 +200,6 @@ public class ConsumerResource {
     private Configuration config;
     private CalculatedAttributesUtil calculatedAttributesUtil;
     private ConsumerBindUtil consumerBindUtil;
-    private ProductCurator productCurator;
     private ManifestManager manifestManager;
     private FactValidator factValidator;
     private ConsumerTypeValidator consumerTypeValidator;
@@ -226,7 +224,6 @@ public class ConsumerResource {
         Configuration config, ContentCurator contentCurator,
         CdnCurator cdnCurator, CalculatedAttributesUtil calculatedAttributesUtil,
         ConsumerBindUtil consumerBindUtil,
-        ProductCurator productCurator,
         ManifestManager manifestManager,
         ContentAccessCertServiceAdapter contentAccessCertService,
         FactValidator factValidator,
@@ -263,7 +260,6 @@ public class ConsumerResource {
         this.config = config;
         this.calculatedAttributesUtil = calculatedAttributesUtil;
         this.consumerBindUtil = consumerBindUtil;
-        this.productCurator = productCurator;
         this.manifestManager = manifestManager;
         this.contentAccessCertService = contentAccessCertService;
         this.factValidator = factValidator;
@@ -1671,8 +1667,7 @@ public class ConsumerResource {
                 detail = EntitlerJob.bindByPoolAndQuantities(consumer, poolQuantities);
             }
             else {
-                detail = EntitleByProductsJob.bindByProducts(productIds,
-                        consumer, entitleDate, fromPools);
+                detail = EntitleByProductsJob.bindByProducts(productIds, consumer, entitleDate, fromPools);
             }
 
             // events will be triggered by the job

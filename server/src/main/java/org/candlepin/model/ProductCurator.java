@@ -70,56 +70,6 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
 
     /**
-     * Check if this pool provides the given product
-     *
-     * Figures out if the pool with poolId provides a product providedProductId.
-     * 'provides' means that the product is either Pool product or is linked through
-     * cp2_pool_provided_products table
-     * @param poolId
-     * @param providedProductId
-     * @return True if and only if providedProductId is provided product or pool product
-     */
-    public Boolean provides(Pool pool, String providedProductId) {
-        TypedQuery<Long> query = getEntityManager().createQuery(
-            "SELECT count(product.uuid) FROM Pool p " +
-            "LEFT JOIN p.providedProducts pproduct " +
-            "LEFT JOIN p.product product " +
-            "WHERE p.id = :poolid and (pproduct.id = :providedProductId OR product.id = :providedProductId)",
-            Long.class);
-        query.setParameter("poolid", pool.getId());
-        query.setParameter("providedProductId", providedProductId);
-        return query.getSingleResult() > 0;
-    }
-
-    /**
-     * Check if this pool provides the given product ID as a derived provided product.
-     * Used when we're looking for pools we could give to a host that will create
-     * sub-pools for guest products.
-     *
-     * If derived product ID is not set, we just use the normal set of products.
-     *
-     * @param pool
-     * @param derivedProvidedProductId
-     * @return True if and only if derivedProvidedProductId is provided product or derived product
-     */
-    public Boolean providesDerived(Pool pool, String derivedProvidedProductId) {
-        if (pool.getDerivedProduct() != null) {
-            TypedQuery<Long> query = getEntityManager().createQuery(
-                "SELECT count(product.uuid) FROM Pool p " +
-                "LEFT JOIN p.derivedProvidedProducts pproduct " +
-                "LEFT JOIN p.derivedProduct product " + "WHERE p.id = :poolid and " +
-                "(pproduct.id = :providedProductId OR product.id = :providedProductId)",
-                Long.class);
-            query.setParameter("poolid", pool.getId());
-            query.setParameter("providedProductId", derivedProvidedProductId);
-            return query.getSingleResult() > 0;
-        }
-        else {
-            return provides(pool, derivedProvidedProductId);
-        }
-    }
-
-    /**
      * Retrieves a Product instance for the product with the specified name. If a matching product
      * could not be found, this method returns null.
      *

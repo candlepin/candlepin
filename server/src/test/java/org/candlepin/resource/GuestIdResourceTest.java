@@ -34,7 +34,6 @@ import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.GuestIdCurator;
 import org.candlepin.model.Owner;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.util.ServiceLevelValidator;
@@ -68,7 +67,6 @@ public class GuestIdResourceTest {
     @Mock private EventFactory eventFactory;
     @Mock private EventSink sink;
     @Mock private ServiceLevelValidator mockedServiceLevelValidator;
-    @Mock private ProductCurator productCurator;
     @Mock private ConsumerEnricher consumerEnricher;
 
     private GuestIdResource guestIdResource;
@@ -270,7 +268,7 @@ public class GuestIdResourceTest {
     private class ConsumerResourceForTesting extends ConsumerResource {
         public ConsumerResourceForTesting() {
             super(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null, null, null, productCurator,
+                null, null, null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, consumerEnricher);
         }
 

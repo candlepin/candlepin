@@ -31,6 +31,7 @@ import org.candlepin.model.GuestId;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
@@ -89,6 +90,7 @@ public class InstalledProductStatusCalculatorTest {
     @Mock private EventSink eventSink;
     @Mock private Provider<JsRunnerRequestCache> cacheProvider;
     @Mock private JsRunnerRequestCache cache;
+    @Mock private PoolCurator poolCurator;
     @Mock private ProductCurator productCurator;
     @Mock private OwnerProductCurator ownerProductCurator;
 
@@ -237,7 +239,6 @@ public class InstalledProductStatusCalculatorTest {
         product.setAttribute(Product.Attributes.VERSION, "candlepin version");
 
         this.consumerEnricher.enrich(consumer);
-
         assertEquals("candlepin arch", cip.getArch());
         assertEquals("candlepin version", cip.getVersion());
     }
@@ -812,10 +813,10 @@ public class InstalledProductStatusCalculatorTest {
         p.setId("" + lastPoolId++);
         Entitlement e = new Entitlement(p, consumer, 1);
 
-        when(productCurator.provides(p, product.getId())).thenReturn(true);
+        when(poolCurator.provides(p, product.getId())).thenReturn(true);
 
         for (Product pp : providedProducts) {
-            when(productCurator.provides(p, pp.getId())).thenReturn(true);
+            when(poolCurator.provides(p, pp.getId())).thenReturn(true);
         }
 
         Random gen = new Random();
