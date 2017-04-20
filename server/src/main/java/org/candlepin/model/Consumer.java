@@ -755,10 +755,12 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         return !StringUtils.isEmpty(getFact("dev_sku"));
     }
 
+    @JsonIgnore
     public boolean isShare() {
         return getType() != null && getType().isType(ConsumerTypeEnum.SHARE);
     }
 
+    @JsonIgnore
     public boolean isManifest() {
         return getType() != null && getType().isManifest();
     }
