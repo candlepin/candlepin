@@ -419,7 +419,8 @@ public abstract class AbstractEntitlementRules implements Enforcer {
             if (sourcePool.getDerivedProvidedProducts() != null) {
                 allProducts.addAll(sourcePool.getDerivedProvidedProducts());
             }
-            Map<String, Product> resolvedProducts = resolveProductShares(sharingOwner, recipient, allProducts);
+            Map<String, Product> resolvedProducts =
+                resolveProductShares(sharingOwner, recipient, allProducts);
             Product product = resolvedProducts.get(sourcePool.getProduct().getId());
 
             Set<Product> providedProducts = copySetFromResolved(sourcePool.getProvidedProducts(),
@@ -443,8 +444,8 @@ public abstract class AbstractEntitlementRules implements Enforcer {
                 Product derivedProduct = resolvedProducts.get(sourcePool.getDerivedProduct().getId());
                 sharedPool.setDerivedProduct(derivedProduct);
             }
-            Set<Product> derivedProvidedProducts = copySetFromResolved(sourcePool.getDerivedProvidedProducts(),
-                resolvedProducts);
+            Set<Product> derivedProvidedProducts = copySetFromResolved(
+                sourcePool.getDerivedProvidedProducts(), resolvedProducts);
             sharedPool.setDerivedProvidedProducts(derivedProvidedProducts);
 
             if (entitlement != null && entitlement.getPool() != null) {
@@ -479,8 +480,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         }
     }
 
-    private Set<Product> copySetFromResolved(Set<Product> products,
-                                             Map<String, Product> resolvedProducts) {
+    private Set<Product> copySetFromResolved(Set<Product> products, Map<String, Product> resolvedProducts) {
         Set<Product> result = new HashSet<Product>();
         if (products != null) {
             for (Product product : products) {
@@ -490,7 +490,8 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         return result;
     }
 
-    private Map<String, Product> resolveProductShares(Owner sharingOwner, Owner recipient, Set<Product> products) {
+    private Map<String, Product> resolveProductShares(Owner sharingOwner, Owner recipient,
+        Set<Product> products) {
         Map<String, Product> sharedProductsIdMap = new HashMap<String, Product>();
         Map<String, Product> sharedProductsUuidMap = new HashMap<String, Product>();
         Map<String, Product> resolvedProducts = new HashMap<String, Product>();
@@ -501,28 +502,32 @@ public abstract class AbstractEntitlementRules implements Enforcer {
             sharedProductsIdMap.put(product.getId(), product);
             sharedProductsUuidMap.put(product.getUuid(), product);
         }
-        List<Product> recipientProducts = ownerProductCurator.getProductsByIds(recipient, sharedProductsIdMap.keySet()).list();
-        for(Product product: recipientProducts) {
+        List<Product> recipientProducts = ownerProductCurator.getProductsByIds(
+            recipient, sharedProductsIdMap.keySet()).list();
+
+        for (Product product: recipientProducts) {
             Map<String, Product> conflictedRecipientProducts = new HashMap<String, Product>();
-            if(sharedProductsUuidMap.containsKey(product.getUuid())) {
+            if (sharedProductsUuidMap.containsKey(product.getUuid())) {
                 // Recipient has a product with the same ID already.  If they are the same instance
                 // use then nothing needs doing.  Everything is already in place.
                 resolvedProducts.put(product.getId(), product);
                 log.debug("Owner {} has the same product {} as the sharer {}",
                     recipient.getKey(), product.getId(), sharingOwner.getKey());
-            } else {
+            }
+            else {
                 // The recipient and owner have two products with the same ID but they are different
                 // instances since their uuids do not match.
                 conflictedRecipientProducts.put(product.getId(), product);
             }
-            List<ProductShare> existingShares = shareCurator.findProductSharesByRecipient(recipient, conflictedRecipientProducts.keySet());
+            List<ProductShare> existingShares = shareCurator.findProductSharesByRecipient(
+                recipient, conflictedRecipientProducts.keySet());
             Map<String, ProductShare> existingSharesMap = new HashMap<String, ProductShare>();
-            for(ProductShare pShare: existingShares) {
-                existingSharesMap.put(pShare.getProduct().getId(),pShare);
+            for (ProductShare pShare: existingShares) {
+                existingSharesMap.put(pShare.getProduct().getId(), pShare);
             }
 
-            for(String id: conflictedRecipientProducts.keySet()) {
-                if(!existingSharesMap.containsKey(id)) {
+            for (String id: conflictedRecipientProducts.keySet()) {
+                if (!existingSharesMap.containsKey(id)) {
                     // If the recipient's product isn't from a share, let the recipient just continue to
                     // use its existing product definition.
                     log.debug("Owner {} already has product {} defined that is not a share",
@@ -535,16 +540,17 @@ public abstract class AbstractEntitlementRules implements Enforcer {
                     Product sharingOwnerProduct = sharedProductsIdMap.get(id);
                     Product existingProduct = conflictedRecipientProducts.get(id);
                     ProductShare existingShare = existingSharesMap.get(id);
-                    log.debug("Owner {} already has a share for Product {} shared from owner {}. Resolving conflict.",
-                            recipient.getKey(), id, existingShare.getOwner());
+                    log.debug("Owner {} already has a share for Product {} from owner {}. Solving conflict.",
+                        recipient.getKey(), id, existingShare.getOwner());
 
-                    EventBuilder builder = eventFactory
-                            .getEventBuilder(Event.Target.PRODUCT, Event.Type.MODIFIED);
+                    EventBuilder builder = eventFactory.getEventBuilder(
+                        Event.Target.PRODUCT, Event.Type.MODIFIED);
                     builder.setOldEntity(existingProduct);
                     sharesToDelete.add(existingShare);
                     sharesToCreate.add(new ProductShare(sharingOwner, sharingOwnerProduct, recipient));
                     // Now we need to reconcile all of recipient's pools that were using the old product.
-                    Product resolvedProduct = productManager.updateProduct(sharingOwnerProduct.toDTO(), recipient, true);
+                    Product resolvedProduct = productManager.updateProduct(
+                        sharingOwnerProduct.toDTO(), recipient, true);
                     builder.setNewEntity(resolvedProduct);
                     resolvedProducts.put(resolvedProduct.getId(), resolvedProduct);
                     events.add(builder.buildEvent());
@@ -556,7 +562,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         Set<String> idsNonExisting = new HashSet<String>(sharedProductsIdMap.keySet());
         idsNonExisting.removeAll(resolvedProducts.keySet());
 
-        for(String id: idsNonExisting) {
+        for (String id: idsNonExisting) {
             // The recipient doesn't have a definition for the product at all.  Link the recipient
             // and product and create a record of a share.
             log.debug("Linking product {} from owner {} to owner {} as product share",
@@ -569,7 +575,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
 
         shareCurator.bulkDelete(sharesToDelete);
         shareCurator.saveOrUpdateAll(sharesToCreate, false, false);
-        for(Event event: events) {
+        for (Event event: events) {
             eventSink.queueEvent(event);
         }
         return resolvedProducts;

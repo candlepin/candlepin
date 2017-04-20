@@ -42,7 +42,9 @@ public class ProductShareCuratorTest extends DatabaseTestFixture {
         ProductShare share = new ProductShare(owner, product, recipientOwner);
         productShareCurator.save(share);
 
-        ProductShare result = productShareCurator.findProductSharesByRecipient(recipientOwner, productIds).get(0);
+        ProductShare result = productShareCurator
+            .findProductSharesByRecipient(recipientOwner, productIds)
+            .get(0);
 
         assertEquals(result.getOwner(), owner);
         assertEquals(result.getProduct(), product);
@@ -70,7 +72,8 @@ public class ProductShareCuratorTest extends DatabaseTestFixture {
         ProductShare share2 = new ProductShare(owner, product2, recipientOwner);
         productShareCurator.save(share2);
 
-        List<ProductShare> shares = productShareCurator.findProductSharesByRecipient(recipientOwner, productIds);
+        List<ProductShare> shares = productShareCurator.findProductSharesByRecipient(
+            recipientOwner, productIds);
         assertEquals(2, shares.size());
     }
 }
