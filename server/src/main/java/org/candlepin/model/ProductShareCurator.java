@@ -16,7 +16,10 @@ package org.candlepin.model;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
+import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Restrictions;
 
+import java.util.Collection;
 import java.util.List;
 
 import javax.persistence.TypedQuery;
@@ -31,55 +34,13 @@ public class ProductShareCurator extends AbstractHibernateCurator<ProductShare> 
         super(ProductShare.class);
     }
 
-    @Transactional
-    public ProductShare findProductShare(Owner owner, Product product, Owner recipient) {
-        String jpql = "FROM ProductShare ps WHERE ps.product.uuid = :product_uuid " +
-            "AND ps.owner.id = :owner_id AND ps.recipient.id = :recipient_id";
+    public List<ProductShare> findProductSharesByRecipient(Owner owner, Collection<String> productIds) {
+        String jpql = "FROM ProductShare ps WHERE ps.product.id in (:product_ids) " +
+            "AND ps.recipient.id = :owner_id";
 
         TypedQuery<ProductShare> query = getEntityManager()
             .createQuery(jpql, ProductShare.class)
-            .setParameter("product_uuid", product.getUuid())
-            .setParameter("owner_id", owner.getId())
-            .setParameter("recipient_id", recipient.getId());
-
-        // An owner, recipient, and product should combine to be unique
-        return getSingleResult(query);
-    }
-
-    @Transactional
-    public List<ProductShare> findProductSharesByOwner(Owner owner, Product product) {
-        String jpql = "FROM ProductShare ps WHERE ps.product.uuid = :product_uuid " +
-            "AND ps.owner.id = :owner_id";
-
-        TypedQuery<ProductShare> query = getEntityManager()
-            .createQuery(jpql, ProductShare.class)
-            .setParameter("product_uuid", product.getUuid())
-            .setParameter("owner_id", owner.getId());
-
-        return query.getResultList();
-    }
-
-    @Transactional
-    public ProductShare findProductShareByRecipient(Owner recipient, String productId) {
-        String jpql = "FROM ProductShare ps WHERE ps.recipient.id = :recipient_id " +
-            "AND ps.product.id = :product_id";
-
-        TypedQuery<ProductShare> query = getEntityManager()
-            .createQuery(jpql, ProductShare.class)
-            .setParameter("product_id", productId)
-            .setParameter("recipient_id", recipient.getId());
-
-        return getSingleResult(query);
-    }
-
-    @Transactional
-    public List<ProductShare> findProductSharesBetweenOwners(Owner owner, Owner recipient) {
-        String jpql = "FROM ProductShare ps WHERE ps.recipient.id = :recipient_id " +
-            "AND ps.owner.id = :owner_id";
-
-        TypedQuery<ProductShare> query = getEntityManager()
-            .createQuery(jpql, ProductShare.class)
-            .setParameter("recipient_id", recipient.getId())
+            .setParameter("product_ids", productIds)
             .setParameter("owner_id", owner.getId());
 
         return query.getResultList();

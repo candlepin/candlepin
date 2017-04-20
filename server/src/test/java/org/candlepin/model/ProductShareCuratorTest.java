@@ -20,7 +20,10 @@ import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.Test;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Test suite for ProductShareCurator.
@@ -33,19 +36,20 @@ public class ProductShareCuratorTest extends DatabaseTestFixture {
         Owner recipientOwner = createOwner();
         Product product = createProduct();
 
-        assertNull(productShareCurator.findProductShare(owner, product, recipientOwner));
+        Set<String> productIds = Collections.singleton(product.getId());
+        assertTrue(productShareCurator.findProductSharesByRecipient(recipientOwner, productIds).isEmpty());
 
         ProductShare share = new ProductShare(owner, product, recipientOwner);
         productShareCurator.save(share);
 
-        ProductShare result = productShareCurator.findProductShare(owner, product, recipientOwner);
+        ProductShare result = productShareCurator.findProductSharesByRecipient(recipientOwner, productIds).get(0);
 
         assertEquals(result.getOwner(), owner);
         assertEquals(result.getProduct(), product);
         assertEquals(result.getRecipient(), recipientOwner);
 
         productShareCurator.delete(share);
-        assertNull(productShareCurator.findProductShare(owner, product, recipientOwner));
+        assertTrue(productShareCurator.findProductSharesByRecipient(recipientOwner, productIds).isEmpty());
     }
 
     @Test
@@ -55,7 +59,10 @@ public class ProductShareCuratorTest extends DatabaseTestFixture {
         Product product = createProduct();
         Product product2 = createProduct();
 
-        assertEquals(0, productShareCurator.findProductSharesBetweenOwners(owner, recipientOwner).size());
+        Set<String> productIds = new HashSet<String>();
+        productIds.add(product.getId());
+        productIds.add(product2.getId());
+        assertTrue(productShareCurator.findProductSharesByRecipient(recipientOwner, productIds).isEmpty());
 
         ProductShare share = new ProductShare(owner, product, recipientOwner);
         productShareCurator.save(share);
@@ -63,8 +70,7 @@ public class ProductShareCuratorTest extends DatabaseTestFixture {
         ProductShare share2 = new ProductShare(owner, product2, recipientOwner);
         productShareCurator.save(share2);
 
-        List<ProductShare> result = productShareCurator.findProductSharesBetweenOwners(owner, recipientOwner);
-
-        assertEquals(2, result.size());
+        List<ProductShare> shares = productShareCurator.findProductSharesByRecipient(recipientOwner, productIds);
+        assertEquals(2, shares.size());
     }
 }

@@ -260,7 +260,6 @@ describe "Multi Org Shares" do
     expect(recipient_pools).not_to be_empty
     attributes = recipient_pools.first['attributes']
     expect(attributes.select { |a| a['name'] == 'share_derived' && a['value'] == 'true'}).not_to be_empty
-
     # Owner 2 should continue to use its own version of the product
     owner2_prod = @user_client.get_product(@owner2['key'], id)
     expect(owner2_prod['id']).to eq(owner1_prod['id'])

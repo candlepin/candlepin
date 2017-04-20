@@ -408,10 +408,22 @@ public abstract class AbstractEntitlementRules implements Enforcer {
             Pool sourcePool = entitlement.getPool();
             // resolve and copy all products
             // Handle any product creation/manipulation incurred by the share action
-            Product product = resolveProductShares(sharingOwner, recipient, sourcePool.getProduct());
-            Set<Product> providedProducts = resolveAndCopyProductSet(sharingOwner,
-                recipient,
-                sourcePool.getProvidedProducts());
+            Set<Product> allProducts = new HashSet<Product>();
+            allProducts.add(sourcePool.getProduct());
+            if (sourcePool.getProvidedProducts() != null) {
+                allProducts.addAll(sourcePool.getProvidedProducts());
+            }
+            if (sourcePool.getDerivedProduct() != null) {
+                allProducts.add(sourcePool.getDerivedProduct());
+            }
+            if (sourcePool.getDerivedProvidedProducts() != null) {
+                allProducts.addAll(sourcePool.getDerivedProvidedProducts());
+            }
+            Map<String, Product> resolvedProducts = resolveProductShares(sharingOwner, recipient, allProducts);
+            Product product = resolvedProducts.get(sourcePool.getProduct().getId());
+
+            Set<Product> providedProducts = copySetFromResolved(sourcePool.getProvidedProducts(),
+                resolvedProducts);
             Long q = Long.valueOf(entitlement.getQuantity());
             // endDateOverride doesnt really apply here , this is just for posterity.
             Date endDate = (entitlement.getEndDateOverride() == null) ?
@@ -428,14 +440,11 @@ public abstract class AbstractEntitlementRules implements Enforcer {
                 sourcePool.getOrderNumber()
             );
             if (sourcePool.getDerivedProduct() != null) {
-                Product derivedProduct = resolveProductShares(sharingOwner,
-                    recipient,
-                    sourcePool.getDerivedProduct());
+                Product derivedProduct = resolvedProducts.get(sourcePool.getDerivedProduct().getId());
                 sharedPool.setDerivedProduct(derivedProduct);
             }
-            Set<Product> derivedProvidedProducts = resolveAndCopyProductSet(sharingOwner,
-                recipient,
-                sourcePool.getDerivedProvidedProducts());
+            Set<Product> derivedProvidedProducts = copySetFromResolved(sourcePool.getDerivedProvidedProducts(),
+                resolvedProducts);
             sharedPool.setDerivedProvidedProducts(derivedProvidedProducts);
 
             if (entitlement != null && entitlement.getPool() != null) {
@@ -470,72 +479,100 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         }
     }
 
-    private Set<Product> resolveAndCopyProductSet(Owner sharingOwner,
-        Owner recipient,
-        Set<Product> products) {
+    private Set<Product> copySetFromResolved(Set<Product> products,
+                                             Map<String, Product> resolvedProducts) {
         Set<Product> result = new HashSet<Product>();
         if (products != null) {
             for (Product product : products) {
-                result.add(resolveProductShares(sharingOwner, recipient, product));
+                result.add(resolvedProducts.get(product.getId()));
             }
         }
         return result;
     }
 
-    private Product resolveProductShares(Owner sharingOwner, Owner recipient, Product product) {
-        Product resolvedProduct = product;
-        if (ownerProductCurator.productExists(recipient, product.getId())) {
-            // Recipient has a product with the same ID already.  If they are the same instance
-            // use then nothing needs doing.  Everything is already in place.
-            if (!ownerProductCurator.isProductMappedToOwner(product, recipient)) {
+    private Map<String, Product> resolveProductShares(Owner sharingOwner, Owner recipient, Set<Product> products) {
+        Map<String, Product> sharedProductsIdMap = new HashMap<String, Product>();
+        Map<String, Product> sharedProductsUuidMap = new HashMap<String, Product>();
+        Map<String, Product> resolvedProducts = new HashMap<String, Product>();
+        List<Event> events = new LinkedList<Event>();
+        List<ProductShare> sharesToDelete = new LinkedList<ProductShare>();
+        List<ProductShare> sharesToCreate = new LinkedList<ProductShare>();
+        for (Product product: products) {
+            sharedProductsIdMap.put(product.getId(), product);
+            sharedProductsUuidMap.put(product.getUuid(), product);
+        }
+        List<Product> recipientProducts = ownerProductCurator.getProductsByIds(recipient, sharedProductsIdMap.keySet()).list();
+        for(Product product: recipientProducts) {
+            Map<String, Product> conflictedRecipientProducts = new HashMap<String, Product>();
+            if(sharedProductsUuidMap.containsKey(product.getUuid())) {
+                // Recipient has a product with the same ID already.  If they are the same instance
+                // use then nothing needs doing.  Everything is already in place.
+                resolvedProducts.put(product.getId(), product);
+                log.debug("Owner {} has the same product {} as the sharer {}",
+                    recipient.getKey(), product.getId(), sharingOwner.getKey());
+            } else {
                 // The recipient and owner have two products with the same ID but they are different
-                // instances.
+                // instances since their uuids do not match.
+                conflictedRecipientProducts.put(product.getId(), product);
+            }
+            List<ProductShare> existingShares = shareCurator.findProductSharesByRecipient(recipient, conflictedRecipientProducts.keySet());
+            Map<String, ProductShare> existingSharesMap = new HashMap<String, ProductShare>();
+            for(ProductShare pShare: existingShares) {
+                existingSharesMap.put(pShare.getProduct().getId(),pShare);
+            }
 
-                ProductShare existingShare = shareCurator.findProductShareByRecipient(
-                    recipient,
-                    product.getId()
-                );
-
-                if (existingShare == null) {
+            for(String id: conflictedRecipientProducts.keySet()) {
+                if(!existingSharesMap.containsKey(id)) {
                     // If the recipient's product isn't from a share, let the recipient just continue to
                     // use its existing product definition.
-                    log.debug("Owner {} already has product {} defined", recipient.getKey(), product.getId());
-                    resolvedProduct = ownerProductCurator.getProductById(recipient, product.getId());
+                    log.debug("Owner {} already has product {} defined that is not a share",
+                        recipient.getKey(), id);
+                    resolvedProducts.put(id, conflictedRecipientProducts.get(id));
                 }
                 else {
                     // If the recipient's product is a share then two owners are sharing into the same
                     // recipient and we must resolve the conflict.
-                    log.debug("Owner {} already has a share for product {}.  Resolving conflict.",
-                        recipient.getKey(), product.getId());
+                    Product sharingOwnerProduct = sharedProductsIdMap.get(id);
+                    Product existingProduct = conflictedRecipientProducts.get(id);
+                    ProductShare existingShare = existingSharesMap.get(id);
+                    log.debug("Owner {} already has a share for Product {} shared from owner {}. Resolving conflict.",
+                            recipient.getKey(), id, existingShare.getOwner());
 
                     EventBuilder builder = eventFactory
-                        .getEventBuilder(Event.Target.PRODUCT, Event.Type.MODIFIED);
-                    builder.setOldEntity(product);
-
-                    shareCurator.delete(existingShare);
-                    shareCurator.create(new ProductShare(sharingOwner, product, recipient));
-                    // Now we need to reconcile all of recipient's pools that were using the old product
-                    resolvedProduct = productManager.updateProduct(product.toDTO(), recipient, true);
+                            .getEventBuilder(Event.Target.PRODUCT, Event.Type.MODIFIED);
+                    builder.setOldEntity(existingProduct);
+                    sharesToDelete.add(existingShare);
+                    sharesToCreate.add(new ProductShare(sharingOwner, sharingOwnerProduct, recipient));
+                    // Now we need to reconcile all of recipient's pools that were using the old product.
+                    Product resolvedProduct = productManager.updateProduct(sharingOwnerProduct.toDTO(), recipient, true);
                     builder.setNewEntity(resolvedProduct);
-
-                    eventSink.queueEvent(builder.buildEvent());
+                    resolvedProducts.put(resolvedProduct.getId(), resolvedProduct);
+                    events.add(builder.buildEvent());
                 }
             }
-            else {
-                log.debug("Owner {} has the same product {} as the sharer", recipient.getKey());
-            }
-        }
-        else {
-            // The recipient doesn't have a definition for the product at all.  Link the recipient
-            // and product and create a record of a share.
-            log.debug("Linking {} to owner {} as product share", product.getId(), recipient.getKey());
-            ownerProductCurator.mapProductToOwner(product, recipient);
-            shareCurator.create(
-                new ProductShare(sharingOwner, product, recipient)
-            );
+
         }
 
-        return resolvedProduct;
+        Set<String> idsNonExisting = new HashSet<String>(sharedProductsIdMap.keySet());
+        idsNonExisting.removeAll(resolvedProducts.keySet());
+
+        for(String id: idsNonExisting) {
+            // The recipient doesn't have a definition for the product at all.  Link the recipient
+            // and product and create a record of a share.
+            log.debug("Linking product {} from owner {} to owner {} as product share",
+                id, sharingOwner.getKey(), recipient.getKey());
+            Product sharedProduct = sharedProductsIdMap.get(id);
+            ownerProductCurator.mapProductToOwner(sharedProduct, recipient);
+            sharesToCreate.add(new ProductShare(sharingOwner, sharedProduct, recipient));
+            resolvedProducts.put(id, sharedProduct);
+        }
+
+        shareCurator.bulkDelete(sharesToDelete);
+        shareCurator.saveOrUpdateAll(sharesToCreate, false, false);
+        for(Event event: events) {
+            eventSink.queueEvent(event);
+        }
+        return resolvedProducts;
     }
 
     private void postBindVirtLimit(PoolManager poolManager, Consumer c,
