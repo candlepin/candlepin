@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.0.31
+Version: 2.0.32
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -220,6 +220,9 @@ fi
 
 #raw
 %changelog
+* Fri Apr 21 2017 Kevin Howell <khowell@redhat.com> 2.0.32-1
+- Added indexes to various tables (crog@redhat.com)
+
 * Tue Apr 11 2017 Kevin Howell <khowell@redhat.com> 2.0.31-1
 - 1440936: Support manifest ext params in deprecated API (mstead@redhat.com)
 
