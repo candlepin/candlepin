@@ -132,11 +132,8 @@ describe 'Post bind bonus pool updates' do
 
   @owner2_key = random_string('another_owner')
   create_owner @owner2_key
-  share_facts = {
-    "share.recipient"=>@owner2_key
-  }
-  @share_consumer = @cp.register('share_consumer',:share, random_string('share_uuid'), share_facts, 'admin',
-    @owner_key, [], [])
+  @share_consumer = @cp.register('share_consumer',:share, random_string('share_uuid'), {}, 'admin',
+    @owner_key, [], [], nil, [], nil, [], nil, nil, nil, @owner2_key)
   end
 
   #verifies whether bind time pool ( stack or ent derived ) was created or not

@@ -401,7 +401,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         log.debug("Running post-bind share create");
 
         Owner sharingOwner = c.getOwner();
-        Owner recipient = ownerCurator.lookupByKey(c.getFact("share.recipient"));
+        Owner recipient = ownerCurator.lookupByKey(c.getRecipientOwnerKey());
         List<Pool> sharedPoolsToCreate = new ArrayList<Pool>();
 
         for (Entitlement entitlement: entitlementMap.values()) {
@@ -524,7 +524,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
 
             if (conflictedRecipientProducts.size() > 0) {
                 List<ProductShare> existingShares = shareCurator.findProductSharesByRecipient(
-                        recipient, conflictedRecipientProducts.keySet());
+                    recipient, conflictedRecipientProducts.keySet());
 
                 for (ProductShare pShare: existingShares) {
                     existingSharesMap.put(pShare.getProduct().getId(), pShare);

@@ -176,7 +176,7 @@ public class ConsumerResourceTest {
         c.setFact("foo", "bar");
 
         thrown.expect(BadRequestException.class);
-        thrown.expectMessage("must specify a fact");
+        thrown.expectMessage("must specify a recipient org");
         consumerResource.create(c, uap, "test-user", "test-owner", null, false);
     }
 
@@ -202,7 +202,7 @@ public class ConsumerResourceTest {
         when(mockConsumerTypeCurator.lookupByLabel(any(String.class))).thenReturn(share);
 
         Owner o2 = mock(Owner.class);
-        c.setFact("share.recipient", "o2");
+        c.setRecipientOwnerKey("o2");
         when(mockedOwnerCurator.lookupByKey(eq("o2"))).thenReturn(o2);
 
         when(uap.canAccess(eq(o2), eq(SubResource.ENTITLEMENTS), eq(Access.CREATE))).thenReturn(Boolean

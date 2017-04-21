@@ -20,9 +20,19 @@ describe "Multi Org Shares" do
       random_string('orgBShare'),
       :share,
       nil,
-      {'share.recipient' => @owner2['key']},
+      {},
       nil,
-      @owner1['key']
+      @owner1['key'],
+      [],
+      [],
+      nil,
+      [],
+      nil,
+      [],
+      nil,
+      nil,
+      nil,
+      @owner2['key']
     )
   end
 
@@ -31,9 +41,19 @@ describe "Multi Org Shares" do
       random_string('orgBShare'),
       :share,
       nil,
-      {'share.recipient' => @owner2['key']},
+      {},
       nil,
-      @owner1['key']
+      @owner1['key'],
+      [],
+      [],
+      nil,
+      [],
+      nil,
+      [],
+      nil,
+      nil,
+      nil,
+      @owner2['key']
     )
 
     share = @cp.list_consumers(:owner => @owner1['key']).first
@@ -52,12 +72,20 @@ describe "Multi Org Shares" do
         random_string('orgBShare'),
         :share,
         nil,
-        {'share.recipient' => @owner2['key']},
+        {},
         nil,
         @owner1['key'],
         [],
-        installed
-      )
+        installed,
+        nil,
+        [],
+        nil,
+        [],
+        nil,
+        nil,
+        nil,
+        @owner2['key'])
+
     end.to raise_error(RestClient::BadRequest)
   end
 
@@ -67,11 +95,19 @@ describe "Multi Org Shares" do
         random_string('orgBShare'),
         :share,
         nil,
-    {'share.recipient' => @owner2['key'], 'virt.is_guest' => 'true'},
+        {'virt.is_guest' => 'true'},
         nil,
         @owner1['key'],
-        []
-      )
+        [],
+        [],
+        nil,
+        [],
+        nil,
+        [],
+        nil,
+        nil,
+        nil,
+        @owner2['key'])
     end.to raise_error(RestClient::BadRequest)
   end
 
@@ -83,9 +119,7 @@ describe "Multi Org Shares" do
         nil,
         {},
         nil,
-        @owner1['key'],
-        []
-      )
+        @owner1['key'])
     end.to raise_error(RestClient::BadRequest)
   end
 
@@ -94,15 +128,23 @@ describe "Multi Org Shares" do
        random_string('orgBShare'),
        :share,
        nil,
-       {'share.recipient' => @owner2['key']},
+       {},
        nil,
-       @owner1['key']
-     )
+       @owner1['key'],
+       [],
+       [],
+       nil,
+       [],
+       nil,
+       [],
+       nil,
+       nil,
+       nil,
+       @owner2['key'])
      share = @cp.list_consumers(:owner => @owner1['key']).first
      owner3 = create_owner(random_string('owner'))
-     facts = {'share.recipient' => owner3['key']}
      expect do
-       @cp.update_consumer({:uuid => share.uuid, :facts => facts})
+       @cp.update_consumer({:uuid => share.uuid, :recipientOwnerKey => owner3['key']})
      end.to raise_error(RestClient::BadRequest)
   end
 
@@ -113,10 +155,19 @@ describe "Multi Org Shares" do
         random_string('orgBShare'),
         :share,
         nil,
-        {'share.recipient' => other_owner['key']},
+        {},
         nil,
-        @owner1['key']
-      )
+        @owner1['key'],
+        [],
+        [],
+        nil,
+        [],
+        nil,
+        [],
+        nil,
+        nil,
+        nil,
+        other_owner['key'])
     end.to raise_error(RestClient::ResourceNotFound)
   end
 
@@ -126,10 +177,19 @@ describe "Multi Org Shares" do
         random_string('orgBShare'),
         :share,
         nil,
-        {'share.recipient' => 'bogus_org'},
+        {},
         nil,
-        @owner1['key']
-      )
+        @owner1['key'],
+        [],
+        [],
+        nil,
+        [],
+        nil,
+        [],
+        nil,
+        nil,
+        nil,
+        'bogus_org')
     end.to raise_error(RestClient::ResourceNotFound)
   end
 
@@ -278,10 +338,19 @@ describe "Multi Org Shares" do
       random_string('orgCShare'),
       :share,
       nil,
-      {'share.recipient' => @owner2['key']},
+      {},
       nil,
-      owner3['key']
-    )
+      owner3['key'],
+      [],
+      [],
+      nil,
+      [],
+      nil,
+      [],
+      nil,
+      nil,
+      nil,
+      @owner2['key'])
 
     # Create products with the same product ID but different attributes
     # Do not store the product immediately.  We need to instead fetch it after a refresh_pools has run.  In
@@ -323,10 +392,19 @@ describe "Multi Org Shares" do
       random_string('orgCShare'),
       :share,
       nil,
-      {'share.recipient' => owner3['key']},
+      {},
       nil,
-      @owner2['key']
-    )
+      @owner2['key'],
+      [],
+      [],
+      nil,
+      [],
+      nil,
+      [],
+      nil,
+      nil,
+      nil,
+      owner3['key'])
 
     expect do
       @user_client.consume_pool(recipient_pools.first['id'], :uuid => consumer2['uuid'])

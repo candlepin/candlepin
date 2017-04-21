@@ -598,8 +598,8 @@ public class ConsumerResource {
      */
     private void validateShareConsumerUpdate(Consumer oldShare, Consumer newShare, Principal principal)
         throws BadRequestException {
-        String oldRecipient = oldShare.getFact("share.recipient");
-        String newRecipient = newShare.getFact("share.recipient");
+        String oldRecipient = oldShare.getRecipientOwnerKey();
+        String newRecipient = newShare.getRecipientOwnerKey();
 
         if (oldRecipient == null) {
             throw new BadRequestException(i18n.tr(
@@ -664,9 +664,9 @@ public class ConsumerResource {
                 "A unit type of \"share\" cannot have a hypervisor ID"
             ));
         }
-        if (consumer.getFact("share.recipient") == null) {
+        if (consumer.getRecipientOwnerKey() == null) {
             throw new BadRequestException(i18n.tr(
-                "A unit type of \"share\" must specify a fact \"share.recipient\" containing an org key"
+                "A unit type of \"share\" must specify a recipient org key"
             ));
         }
         if (consumer.isGuest()) {
@@ -675,8 +675,8 @@ public class ConsumerResource {
             ));
         }
 
-        String recipient = consumer.getFact("share.recipient");
-        Owner recipientOwner = ownerCurator.lookupByKey(consumer.getFact("share.recipient"));
+        String recipient = consumer.getRecipientOwnerKey();
+        Owner recipientOwner = ownerCurator.lookupByKey(recipient);
         if (recipientOwner == null) {
             throw new NotFoundException(i18n.tr("owner with key: {0} was not found.", recipient));
         }
@@ -1448,7 +1448,7 @@ public class ConsumerResource {
 
     private void logShareConsumerRequestWarning(String api, Consumer consumer) {
         log.warn("skipping {} request for share consumer {} of org {} and of recipient org {}",
-            api, consumer.getUuid(), consumer.getOwner().getKey(), consumer.getFact("share.recipient"));
+            api, consumer.getUuid(), consumer.getOwner().getKey(), consumer.getRecipientOwnerKey());
     }
 
     @ApiOperation(notes = "Retrieves a list of Entitlement Certificates for the Consumer",

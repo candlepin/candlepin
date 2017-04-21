@@ -2187,7 +2187,8 @@ public class CandlepinPoolManager implements PoolManager {
             }
             List<Pool> subPoolsForStackIds = null;
             // Manifest and Share consumers should not contribute to the sharing org's stack,
-            // as Share consumers should not have created a stack derived pool in the first place.
+            // as these consumer types should not have created a stack derived pool in the first place.
+            // Therefore, we do not need to check if any stack derived pools need updating
             if (!stackIds.isEmpty() && !consumer.isShare() && !consumer.isManifestDistributor()) {
                 subPoolsForStackIds = poolCurator.getSubPoolForStackIds(consumer, stackIds);
                 if (CollectionUtils.isNotEmpty(subPoolsForStackIds)) {
