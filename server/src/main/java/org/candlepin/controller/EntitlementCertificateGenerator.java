@@ -16,17 +16,7 @@ package org.candlepin.controller;
 
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
-import org.candlepin.model.Consumer;
-import org.candlepin.model.Entitlement;
-import org.candlepin.model.EntitlementCertificate;
-import org.candlepin.model.EntitlementCertificateCurator;
-import org.candlepin.model.EntitlementCurator;
-import org.candlepin.model.Environment;
-import org.candlepin.model.Owner;
-import org.candlepin.model.Pool;
-import org.candlepin.model.PoolCurator;
-import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
+import org.candlepin.model.*;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.util.CertificateSizeException;
 import org.candlepin.version.CertVersionConflictException;
@@ -119,6 +109,41 @@ public class EntitlementCertificateGenerator {
             throw new RuntimeException(ex);
         }
     }
+
+    /**
+     * Generates new entitlement certificates for the given consumer using the provided products and
+     * entitlements.
+     *
+     * @param consumer
+     *  The consumer for which to generate new entitlement certificates
+     *
+     * @param products
+     *  A mapping of products, indexed by pool ID, to use when generating certificates
+     *
+     * @param entitlements
+     *  A mapping of entitlements, indexed by pool ID, to use when generating certificates
+     *
+     * @return
+     *  A map of generated entitlement certificates, indexed by pool ID
+     */
+    @Transactional
+    public Map<String, EntitlementCertificate> generateEntitlementCertificates2(Consumer consumer,
+        Map<String, Product> products, Map<String, PoolQuantity> poolQuantityMap, Map<String, Entitlement> entitlementMap) {
+
+        try {
+            return this.entCertServiceAdapter.generateEntitlementCerts2(consumer, poolQuantityMap, entitlementMap, products);
+        }
+        catch (CertVersionConflictException cvce) {
+            throw cvce;
+        }
+        catch (CertificateSizeException cse) {
+            throw cse;
+        }
+        catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
 
     /**
      * Generates a new entitlement certificate for the given entitlement and pool.

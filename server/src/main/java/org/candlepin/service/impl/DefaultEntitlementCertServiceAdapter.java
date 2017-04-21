@@ -16,20 +16,7 @@ package org.candlepin.service.impl;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.model.CertificateSerial;
-import org.candlepin.model.CertificateSerialCurator;
-import org.candlepin.model.Consumer;
-import org.candlepin.model.Entitlement;
-import org.candlepin.model.EntitlementCertificate;
-import org.candlepin.model.EntitlementCertificateCurator;
-import org.candlepin.model.EntitlementCurator;
-import org.candlepin.model.Environment;
-import org.candlepin.model.EnvironmentContent;
-import org.candlepin.model.KeyPairCurator;
-import org.candlepin.model.Pool;
-import org.candlepin.model.Product;
-import org.candlepin.model.ProductContent;
-import org.candlepin.model.ProductCurator;
+import org.candlepin.model.*;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
@@ -115,6 +102,17 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         return generateSingleCert(entitlement, product);
     }
 
+    @Override
+    public Map<String, EntitlementCertificate> generateEntitlementCerts(Consumer consumer, Map<String, Entitlement> entitlements, Map<String, Product> products) throws GeneralSecurityException, IOException {
+        Map<String, PoolQuantity> poolQuantities = new HashMap<String, PoolQuantity>();
+        for(Entry<String, Entitlement> entry: entitlements.entrySet()) {
+            Entitlement e = entry.getValue();
+            PoolQuantity pq = new PoolQuantity(e.getPool(), e.getQuantity());
+            poolQuantities.put(entry.getKey(), pq);
+        }
+        return generateEntitlementCerts2(consumer, poolQuantities, entitlements, products);
+    }
+
     private EntitlementCertificate generateSingleCert(Entitlement entitlement, Product product)
         throws GeneralSecurityException, IOException {
         Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
@@ -127,29 +125,32 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         return result.get(entitlement.getPool().getId());
     }
 
+
+
     @Override
-    public Map<String, EntitlementCertificate> generateEntitlementCerts(Consumer consumer,
-        Map<String, Entitlement> entitlements, Map<String, Product> products)
-        throws GeneralSecurityException, IOException {
-        return doEntitlementCertGeneration(consumer, entitlements, products);
+    public Map<String, EntitlementCertificate> generateEntitlementCerts2(Consumer consumer,
+            Map<String, PoolQuantity> poolQuantities, Map<String, Entitlement> entitlementMap, Map<String, Product> products)
+            throws GeneralSecurityException, IOException {
+        return doEntitlementCertGeneration2(consumer, poolQuantities, entitlementMap, products);
     }
 
-    private Set<Product> getDerivedProductsForDistributor(Entitlement ent) {
+    private Set<Product> getDerivedProductsForDistributor(Pool pool, Consumer c) {
         Set<Product> derivedProducts = new HashSet<Product>();
-        boolean derived = ent.getPool().hasAttribute(Pool.Attributes.DERIVED_POOL);
-        if (!derived && ent.getConsumer().getType().isManifest() &&
-            ent.getPool().getDerivedProduct() != null) {
-            derivedProducts.add(ent.getPool().getDerivedProduct());
+        boolean derived = pool.hasAttribute(Pool.Attributes.DERIVED_POOL);
+        if (!derived && c.getType().isManifest() &&
+                pool.getDerivedProduct() != null) {
+            derivedProducts.add(pool.getDerivedProduct());
             derivedProducts
-                .addAll(productCurator.getPoolDerivedProvidedProductsCached(ent.getPool()));
+                    .addAll(productCurator.getPoolDerivedProvidedProductsCached(pool));
         }
         return derivedProducts;
     }
 
+
     // TODO: productModels not used by V1 certificates. This whole v1/v3 split needs
     // a re-org. Passing them here because it eliminates a substantial performance hit
     // recalculating this for the entitlement body in v3 certs.
-    public X509Certificate createX509Certificate(Entitlement ent, Product product, Set<Product> products,
+    public X509Certificate createX509Certificate(Consumer consumer, Pool pool, Entitlement entitlement, Integer quantity, Product product, Set<Product> products,
         List<org.candlepin.model.dto.Product> productModels, BigInteger serialNumber, KeyPair keyPair,
         boolean useContentPrefix)
         throws GeneralSecurityException, IOException {
@@ -159,37 +160,35 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         Set<X509ByteExtensionWrapper> byteExtensions = new LinkedHashSet<X509ByteExtensionWrapper>();
         products.add(product);
 
-        Map<String, EnvironmentContent> promotedContent = getPromotedContent(ent);
-        String contentPrefix = getContentPrefix(ent, useContentPrefix);
+        Map<String, EnvironmentContent> promotedContent = getPromotedContent(consumer);
+        String contentPrefix = getContentPrefix(consumer, useContentPrefix);
 
 
-        if (shouldGenerateV3(ent)) {
-            extensions = prepareV3Extensions(ent, contentPrefix, promotedContent);
+        if (shouldGenerateV3(consumer)) {
+            extensions = prepareV3Extensions(contentPrefix, promotedContent);
             byteExtensions = prepareV3ByteExtensions(product, productModels,
-                    ent, contentPrefix, promotedContent);
+                    contentPrefix, promotedContent);
         }
         else {
-            extensions = prepareV1Extensions(products, ent, contentPrefix,
+            extensions = prepareV1Extensions(products, consumer,pool, quantity, contentPrefix,
                 promotedContent);
         }
-        setupEntitlementEndDate(ent);
+        setupEntitlementEndDate(consumer, pool);
         Calendar cal = Calendar.getInstance();
         cal.add(Calendar.HOUR, -1);
-        Date startDate = ent.getStartDate().before(cal.getTime()) ? ent.getStartDate() : cal.getTime();
+        Date startDate = pool.getStartDate().before(cal.getTime()) ? pool.getStartDate() : cal.getTime();
         X509Certificate x509Cert =  this.pki.createX509Certificate(
-            createDN(ent), extensions, byteExtensions, startDate,
-            ent.getEndDate(), keyPair, serialNumber, null);
+            createDN(entitlement, consumer.getOwner()), extensions, byteExtensions, pool.getStartDate(),
+            pool.getEndDate(), keyPair, serialNumber, null);
         return x509Cert;
     }
 
     /**
      * Modify the entitlements end date
-     * @param ent
+     * @param consumer
+     * @param pool
      */
-    private void setupEntitlementEndDate(Entitlement ent) {
-        Pool pool = ent.getPool();
-        Consumer consumer = ent.getConsumer();
-
+    private Date setupEntitlementEndDate(Consumer consumer, Pool pool) {
         Date startDate = new Date();
         if (consumer.getCreated() != null) {
             startDate = consumer.getCreated();
@@ -201,28 +200,22 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         if (isUnmappedGuestPool) {
             Date oneDayFromRegistration = new Date(startDate.getTime() + 24L * 60L * 60L * 1000L);
             log.info("Setting 24h expiration for unmapped guest pool entilement: {}", oneDayFromRegistration);
-            ent.setEndDateOverride(oneDayFromRegistration);
-            entCurator.merge(ent);
+            return oneDayFromRegistration;
         }
+        return pool.getEndDate();
     }
 
-    private boolean shouldGenerateV3(Entitlement entitlement) {
-        Consumer consumer = entitlement.getConsumer();
+    private boolean shouldGenerateV3(Consumer consumer) {
         return consumer != null && consumer.isCertV3Capable();
     }
 
-    /**
-     * @param ent
-     * @param useContentPrefix
-     * @return
-     * @throws IOException
-     */
-    private String getContentPrefix(Entitlement ent, boolean useContentPrefix)
-        throws IOException {
+
+    private String getContentPrefix(Consumer consumer, boolean useContentPrefix)
+            throws IOException {
         String contentPrefix = null;
         if (useContentPrefix) {
-            contentPrefix = ent.getOwner().getContentPrefix();
-            Environment env = ent.getConsumer().getEnvironment();
+            contentPrefix = consumer.getOwner().getContentPrefix();
+            Environment env = consumer.getEnvironment();
             if (contentPrefix != null && !contentPrefix.equals("")) {
                 if (env != null) {
                     contentPrefix = contentPrefix.replaceAll("\\$env", env.getName());
@@ -233,20 +226,18 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         return contentPrefix;
     }
 
-    /**
-     * @param ent
-     * @return
-     */
-    private Map<String, EnvironmentContent> getPromotedContent(Entitlement ent) {
+
+
+    private Map<String, EnvironmentContent> getPromotedContent(Consumer consumer) {
         // Build a set of all content IDs promoted to the consumer's environment so
         // we can determine if anything needs to be skipped:
         Map<String, EnvironmentContent> promotedContent =
-            new HashMap<String, EnvironmentContent>();
-        if (ent.getConsumer().getEnvironment() != null) {
+                new HashMap<String, EnvironmentContent>();
+        if (consumer.getEnvironment() != null) {
             log.debug("Consumer has environment, checking for promoted content in: " +
-                ent.getConsumer().getEnvironment());
+                    consumer.getEnvironment());
             for (EnvironmentContent envContent :
-                ent.getConsumer().getEnvironment().getEnvironmentContent()) {
+                    consumer.getEnvironment().getEnvironmentContent()) {
                 log.debug("  promoted content: " + envContent.getContent().getId());
                 promotedContent.put(envContent.getContent().getId(), envContent);
             }
@@ -255,35 +246,35 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
     }
 
     public Set<X509ExtensionWrapper> prepareV1Extensions(Set<Product> products,
-        Entitlement ent, String contentPrefix,
+        Consumer consumer, Pool pool, Integer quantity, String contentPrefix,
         Map<String, EnvironmentContent> promotedContent) {
         Set<X509ExtensionWrapper> result =  new LinkedHashSet<X509ExtensionWrapper>();
 
         Set<String> entitledProductIds = entCurator.listEntitledProductIds(
-            ent.getConsumer(), ent.getPool().getStartDate(),
-            ent.getPool().getEndDate());
+            consumer, pool.getStartDate(),
+            pool.getEndDate());
 
         int contentCounter = 0;
         boolean enableEnvironmentFiltering = config.getBoolean(ConfigProperties.ENV_CONTENT_FILTERING);
 
-        Product skuProd = ent.getPool().getProduct();
+        Product skuProd = pool.getProduct();
 
         for (Product prod : Collections2.filter(products, X509Util.PROD_FILTER_PREDICATE)) {
             log.debug("Adding X509 extensions for product: {}", prod);
             result.addAll(extensionUtil.productExtensions(prod));
 
             Set<ProductContent> filteredContent = extensionUtil.filterProductContent(
-                prod, ent, entCurator, promotedContent, enableEnvironmentFiltering, entitledProductIds);
+                prod, consumer, entCurator, promotedContent, enableEnvironmentFiltering, entitledProductIds);
 
             filteredContent = extensionUtil.filterContentByContentArch(filteredContent,
-                ent.getConsumer(), prod);
+                consumer, prod);
 
             // Keep track of the number of content sets that are being added.
             contentCounter += filteredContent.size();
 
             log.debug("Adding X509 extensions for content: {}", filteredContent);
             result.addAll(extensionUtil.contentExtensions(filteredContent,
-                contentPrefix, promotedContent, ent.getConsumer(), skuProd));
+                contentPrefix, promotedContent, consumer, skuProd));
         }
 
         // For V1 certificates we're going to error out if we exceed a limit which is
@@ -293,14 +284,14 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
             String cause = i18n.tr("Too many content sets for certificate {0}. A newer " +
                 "client may be available to address this problem. " +
                 "See knowledge database https://access.redhat.com/knowledge/node/129003 for more " +
-                "information.", ent.getPool().getProductName());
+                "information.", pool.getProductName());
             throw new CertificateSizeException(cause);
         }
 
-        result.addAll(extensionUtil.subscriptionExtensions(ent));
+        result.addAll(extensionUtil.subscriptionExtensions(pool));
 
-        result.addAll(extensionUtil.entitlementExtensions(ent));
-        result.addAll(extensionUtil.consumerExtensions(ent.getConsumer()));
+        result.addAll(extensionUtil.entitlementExtensions(quantity));
+        result.addAll(extensionUtil.consumerExtensions(consumer));
 
         if (log.isDebugEnabled()) {
             for (X509ExtensionWrapper eWrapper : result) {
@@ -310,9 +301,9 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         return result;
     }
 
-    public Set<X509ExtensionWrapper> prepareV3Extensions(Entitlement ent,
+    public Set<X509ExtensionWrapper> prepareV3Extensions(
         String contentPrefix, Map<String, EnvironmentContent> promotedContent) {
-        Set<X509ExtensionWrapper> result = v3extensionUtil.getExtensions(ent,
+        Set<X509ExtensionWrapper> result = v3extensionUtil.getExtensions(
             contentPrefix, promotedContent);
         X509ExtensionWrapper typeExtension = new X509ExtensionWrapper(OIDUtil.REDHAT_OID + "." +
             OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ENTITLEMENT_TYPE_KEY), false, "Basic");
@@ -320,12 +311,13 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         return result;
     }
 
+
     public Set<X509ByteExtensionWrapper> prepareV3ByteExtensions(Product sku,
-        List<org.candlepin.model.dto.Product> productModels, Entitlement ent, String contentPrefix,
+        List<org.candlepin.model.dto.Product> productModels, String contentPrefix,
         Map<String, EnvironmentContent> promotedContent) throws IOException {
 
         Set<X509ByteExtensionWrapper> result = v3extensionUtil.getByteExtensions(sku,
-            productModels, ent, contentPrefix, promotedContent);
+            productModels, contentPrefix, promotedContent);
         return result;
     }
 
@@ -357,52 +349,73 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
     private Map<String, EntitlementCertificate> doEntitlementCertGeneration(Consumer consumer,
         Map<String, Entitlement> entitlements, Map<String, Product> productMap)
         throws GeneralSecurityException, IOException {
+
+        throw new RuntimeException("UNDER CONSTRUCTION");
+
+    }
+
+    /**
+     * @param poolQuantities a map of entitlements indexed by pool ids to generate
+     *        the certs of
+     * @param productMap a map of respective products indexed by pool id
+     * @throws IOException
+     * @throws GeneralSecurityException
+     * @return entitlementCerts the respective entitlement certs indexed by pool
+     *         id
+     */
+    private Map<String, EntitlementCertificate> doEntitlementCertGeneration2(Consumer consumer,
+            Map<String, PoolQuantity> poolQuantities, Map<String, Entitlement> entitlementMap,
+            Map<String, Product> productMap)
+            throws GeneralSecurityException, IOException {
         log.info("Generating entitlement cert for entitlements");
         KeyPair keyPair = keyPairCurator.getConsumerKeyPair(consumer);
         byte[] pemEncodedKeyPair = pki.getPemEncoded(keyPair.getPrivate());
 
         Map<String, CertificateSerial> serialMap = new HashMap<String, CertificateSerial>();
-        for (Entry<String, Entitlement> entry : entitlements.entrySet()) {
+        for (Entry<String, PoolQuantity> entry : poolQuantities.entrySet()) {
             // No need to persist the cert serial here as the IDs are generated on object creation.
-            serialMap.put(entry.getKey(), new CertificateSerial(entry.getValue().getEndDate()));
+            serialMap.put(entry.getKey(), new CertificateSerial(entry.getValue().getPool().getEndDate()));
         }
 
         Map<String, EntitlementCertificate> entitlementCerts = new HashMap<String, EntitlementCertificate>();
-        for (Entry<String, Entitlement> entry : entitlements.entrySet()) {
-            Entitlement entitlement = entry.getValue();
+
+        for (Entry<String, PoolQuantity> entry : poolQuantities.entrySet()) {
+            Pool pool = entry.getValue().getPool();
+            Entitlement entitlement = entitlementMap.get(entry.getKey());
+            Integer quantity = entry.getValue().getQuantity();
             CertificateSerial serial = serialMap.get(entry.getKey());
             Product product = productMap.get(entry.getKey());
 
-            log.info("Generating entitlement cert for entitlement: {}", entitlement);
+            log.info("VRITANT Generating entitlement cert for entitlement: {}", pool);
 
             Set<Product> products = new HashSet<Product>(
-                productCurator.getPoolProvidedProductsCached(entitlement.getPool()));
+                    productCurator.getPoolProvidedProductsCached(pool));
 
             // If creating a certificate for a distributor, we need
             // to add any derived products as well so that their content
             // is available in the upstream certificate.
-            products.addAll(getDerivedProductsForDistributor(entitlement));
+            products.addAll(getDerivedProductsForDistributor(pool, consumer));
             products.add(product);
 
-            Map<String, EnvironmentContent> promotedContent = getPromotedContent(entitlement);
-            String contentPrefix = getContentPrefix(entitlement, true);
+            Map<String, EnvironmentContent> promotedContent = getPromotedContent(consumer);
+            String contentPrefix = getContentPrefix(consumer, true);
 
             log.info("Creating X509 cert for product: {}", product);
             log.debug("Provided products: {}", products);
             List<org.candlepin.model.dto.Product> productModels = v3extensionUtil.createProducts(product,
-                products, contentPrefix, promotedContent, entitlement.getConsumer(), entitlement);
+                    products, contentPrefix, promotedContent, consumer, pool);
 
-            X509Certificate x509Cert = createX509Certificate(entitlement, product, products, productModels,
-                BigInteger.valueOf(serial.getId()), keyPair, true);
+            X509Certificate x509Cert = createX509Certificate(consumer, pool, entitlement, quantity, product, products, productModels,
+                    BigInteger.valueOf(serial.getId()), keyPair, true);
 
             log.info("Getting PEM encoded cert.");
             String pem = new String(this.pki.getPemEncoded(x509Cert));
 
-            if (shouldGenerateV3(entitlement)) {
+            if (shouldGenerateV3(consumer)) {
                 log.debug("Generating v3 entitlement data");
 
                 byte[] payloadBytes = v3extensionUtil.createEntitlementDataPayload(product, productModels,
-                        entitlement, contentPrefix, promotedContent);
+                        consumer, pool, quantity, contentPrefix, promotedContent);
 
                 String payload = "-----BEGIN ENTITLEMENT DATA-----\n";
                 payload += Util.toBase64(payloadBytes);
@@ -420,7 +433,6 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
             EntitlementCertificate cert = new EntitlementCertificate();
             cert.setKeyAsBytes(pemEncodedKeyPair);
             cert.setCert(pem);
-            cert.setEntitlement(entitlement);
 
             if (log.isDebugEnabled()) {
                 log.debug("Generated cert serial number: {}", serial.getId());
@@ -437,7 +449,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
 
         // Now that the serials have been saved, update the newly created
         // certs with their serials and add them to the entitlements.
-        for (Entry<String, Entitlement> entry : entitlements.entrySet()) {
+        for (Entry<String, PoolQuantity> entry : poolQuantities.entrySet()) {
             CertificateSerial nextSerial = serialMap.get(entry.getKey());
             if (nextSerial == null) {
                 // This should never happen, but checking to be safe.
@@ -452,20 +464,20 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
                     "Entitlement certificate not found for entitlement during cert generation");
             }
             nextCert.setSerial(nextSerial);
-            entry.getValue().getCertificates().add(nextCert);
+            //entry.getValue().getCertificates().add(nextCert);
         }
 
         log.info("Persisting certs.");
-        entCertCurator.saveOrUpdateAll(entitlementCerts.values(), false, false);
+        //entCertCurator.saveOrUpdateAll(entitlementCerts.values(), false, false);
 
         return entitlementCerts;
     }
 
-    private String createDN(Entitlement ent) {
+    private String createDN(Entitlement ent, Owner owner) {
         StringBuilder sb = new StringBuilder("CN=");
         sb.append(ent.getId());
         sb.append(", O=");
-        sb.append(ent.getOwner().getKey());
+        sb.append(owner.getKey());
         return sb.toString();
     }
 

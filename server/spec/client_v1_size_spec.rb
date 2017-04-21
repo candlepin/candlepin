@@ -46,7 +46,9 @@ describe 'Entitlement Certificate V1 Size' do
     end
     add_batch_content_to_product(@owner['key'], @product1.id, content_ids, true)
     @cp.regenerate_entitlement_certificates_for_product(@product1.id)
+    puts "now"
     ent2 = @system.get_entitlement(ent1.id)
+    puts ent2
     ent2.certificates[0].serial.id.should_not == ent1.certificates[0].serial.id
     revoked_serials.should include(ent1.certificates[0].serial.id)
 

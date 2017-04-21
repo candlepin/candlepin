@@ -591,6 +591,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
                 "    WHERE" +
                 "        outPool.endDate >= current_date AND" +
                 "        eOut.owner = :owner AND" +
+                "        eOut.dirty = false AND" +
                 "        eOut NOT IN (:ein) AND" +
                 "        EXISTS (" +
                 "            SELECT eIn" +

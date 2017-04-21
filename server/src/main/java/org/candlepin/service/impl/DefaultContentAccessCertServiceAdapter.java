@@ -265,8 +265,7 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
 
     public Set<X509ExtensionWrapper> prepareV3Extensions(Consumer consumer,
         String contentPrefix, Map<String, EnvironmentContent> promotedContent) {
-        Set<X509ExtensionWrapper> result = v3extensionUtil.getExtensions(null,
-            contentPrefix, promotedContent);
+        Set<X509ExtensionWrapper> result = v3extensionUtil.getExtensions(contentPrefix, promotedContent);
         X509ExtensionWrapper typeExtension = new X509ExtensionWrapper(OIDUtil.REDHAT_OID + "." +
             OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ENTITLEMENT_TYPE_KEY), false, "OrgLevel");
 
@@ -279,7 +278,7 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         List<org.candlepin.model.dto.Product> products = new ArrayList<org.candlepin.model.dto.Product>();
         products.add(container);
         Set<X509ByteExtensionWrapper> result = v3extensionUtil.getByteExtensions(null,
-            products, null, null, null);
+            products,null, null);
         return result;
     }
 
@@ -293,7 +292,6 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         Map<String, EnvironmentContent> promotedContent = getPromotedContent(environment);
         String contentPrefix = getContentPrefix(owner, environment);
         Product container = new Product();
-        Entitlement emptyEnt = new Entitlement();
         Pool emptyPool = new Pool();
         Product skuProduct = new Product();
         Consumer emptyConsumer = new Consumer();
@@ -306,8 +304,6 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         }
 
         emptyConsumer.setEnvironment(environment);
-        emptyEnt.setPool(emptyPool);
-        emptyEnt.setConsumer(emptyConsumer);
         emptyPool.setProduct(skuProduct);
         emptyPool.setStartDate(new Date());
         emptyPool.setEndDate(new Date());
@@ -316,11 +312,11 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         entitledProductIds.add("content-access");
 
         org.candlepin.model.dto.Product productModel = v3extensionUtil.mapProduct(container, skuProduct,
-            contentPrefix, promotedContent, emptyConsumer, emptyEnt, entitledProductIds);
+            contentPrefix, promotedContent, emptyConsumer,  emptyPool, entitledProductIds);
 
         productModels.add(productModel);
 
         return v3extensionUtil.createEntitlementDataPayload(skuProduct, productModels,
-            emptyEnt, contentPrefix, promotedContent);
+            emptyConsumer, emptyPool, 1, contentPrefix, promotedContent);
     }
 }

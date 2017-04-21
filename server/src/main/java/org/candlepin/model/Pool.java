@@ -337,7 +337,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     @BatchSize(size = 1000)
     private Set<Branding> branding;
 
-    @Version
+    //@Version
     private int version;
 
     // Impl note:
@@ -498,6 +498,8 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     public Long getQuantity() {
         return quantity;
     }
+
+    public Integer getVersion() { return version;}
 
     /**
      * @param quantity quantity
