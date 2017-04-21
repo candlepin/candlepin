@@ -30,6 +30,12 @@
         </createTable>
     </changeSet>
 
+    <changeSet id="20150210094558-01b" author="crog">
+        <createIndex indexName="cp2_products_idx2" tableName="cp2_products" unique="false">
+            <column name="product_id"/>
+        </createIndex>
+    </changeSet>
+
 
 
     <!-- cp2_owner_products -->
@@ -120,6 +126,15 @@
         </createTable>
     </changeSet>
 
+    <changeSet id="20150210094558-06b" author="crog">
+        <createIndex indexName="cp2_content_idx2" tableName="cp2_content" unique="false">
+            <column name="content_id"/>
+        </createIndex>
+    </changeSet>
+
+
+
+    <!-- cp2_owner_content -->
     <changeSet id="20150210094558-07" author="crog">
         <createTable tableName="cp2_owner_content">
             <column name="owner_id" type="varchar(32)">
@@ -493,6 +508,19 @@
             columnNames="pool_id, subscription_id, subscription_sub_key"
             constraintName="cp2_pool_source_sub_unq1"
         />
+    </changeSet>
+
+    <changeSet id="20150210094558-34b" author="crog">
+        <!-- Since this is a retroactive addition to a table that we delete in a future changeset, we need
+             to ensure that the table still exists before we go attempting to add an index to it. -->
+        <preConditions onFail="MARK_RAN" onError="HALT">
+            <tableExists tableName="cp_pool_products"/>
+        </preConditions>
+
+        <!-- This table won't last after the migration, but this index drastically reduces migration time -->
+        <createIndex indexName="cp_pool_products_idx1" tableName="cp_pool_products" unique="false">
+            <column name="product_id"/>
+        </createIndex>
     </changeSet>
 
 
