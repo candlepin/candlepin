@@ -498,6 +498,8 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         List<Event> events = new LinkedList<Event>();
         List<ProductShare> sharesToDelete = new LinkedList<ProductShare>();
         List<ProductShare> sharesToCreate = new LinkedList<ProductShare>();
+        Map<String, ProductShare> existingSharesMap = new HashMap<String, ProductShare>();
+
         for (Product product: products) {
             sharedProductsIdMap.put(product.getId(), product);
             sharedProductsUuidMap.put(product.getUuid(), product);
@@ -519,11 +521,14 @@ public abstract class AbstractEntitlementRules implements Enforcer {
                 // instances since their uuids do not match.
                 conflictedRecipientProducts.put(product.getId(), product);
             }
-            List<ProductShare> existingShares = shareCurator.findProductSharesByRecipient(
-                recipient, conflictedRecipientProducts.keySet());
-            Map<String, ProductShare> existingSharesMap = new HashMap<String, ProductShare>();
-            for (ProductShare pShare: existingShares) {
-                existingSharesMap.put(pShare.getProduct().getId(), pShare);
+
+            if (conflictedRecipientProducts.size() > 0) {
+                List<ProductShare> existingShares = shareCurator.findProductSharesByRecipient(
+                        recipient, conflictedRecipientProducts.keySet());
+
+                for (ProductShare pShare: existingShares) {
+                    existingSharesMap.put(pShare.getProduct().getId(), pShare);
+                }
             }
 
             for (String id: conflictedRecipientProducts.keySet()) {
