@@ -28,6 +28,7 @@ import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.PoolQuantity;
 
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -55,12 +56,14 @@ public class PostEntitlementRulesTest extends EntitlementRulesTestFixture {
 
         Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
         entitlements.put(pool.getId(), e);
+        Map<String, PoolQuantity> poolQuantityMap = new HashMap<String, PoolQuantity>();
+        poolQuantityMap.put(pool.getId(), new PoolQuantity(pool, 5));
         when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
         // Pool quantity should be virt_limit:
         Class<List<Pool>> listClass = (Class<List<Pool>>) (Class) ArrayList.class;
         ArgumentCaptor<List<Pool>> poolsArg = ArgumentCaptor.forClass(listClass);
         when(poolManagerMock.createPools(poolsArg.capture())).thenReturn(new LinkedList<Pool>());
-        enforcer.postEntitlement(poolManagerMock, consumer, entitlements, null);
+        enforcer.postEntitlement(poolManagerMock, consumer, entitlements, null, false, poolQuantityMap);
 
         List<Pool> pools = poolsArg.getValue();
         assertEquals(1, pools.size());
@@ -80,12 +83,16 @@ public class PostEntitlementRulesTest extends EntitlementRulesTestFixture {
         Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
         entitlements.put(pool.getId(), e);
         entitlements.put(pool2.getId(), e2);
+        Map<String, PoolQuantity> poolQuantityMap = new HashMap<String, PoolQuantity>();
+        poolQuantityMap.put(pool.getId(), new PoolQuantity(pool, 5));
+        poolQuantityMap.put(pool2.getId(), new PoolQuantity(pool2, 5));
+
         when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
         // Pool quantity should be virt_limit:
         Class<List<Pool>> listClass = (Class<List<Pool>>) (Class) ArrayList.class;
         ArgumentCaptor<List<Pool>> poolsArg = ArgumentCaptor.forClass(listClass);
         when(poolManagerMock.createPools(poolsArg.capture())).thenReturn(new LinkedList<Pool>());
-        enforcer.postEntitlement(poolManagerMock, consumer, entitlements, null);
+        enforcer.postEntitlement(poolManagerMock, consumer, entitlements, null, false, poolQuantityMap);
 
         List<Pool> pools = poolsArg.getValue();
         assertEquals(2, pools.size());
@@ -102,10 +109,13 @@ public class PostEntitlementRulesTest extends EntitlementRulesTestFixture {
         when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
         Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
         entitlements.put(pool.getId(), e);
+        Map<String, PoolQuantity> poolQuantityMap = new HashMap<String, PoolQuantity>();
+        poolQuantityMap.put(pool.getId(), new PoolQuantity(pool, 5));
+
         Class<List<Pool>> listClass = (Class<List<Pool>>) (Class) ArrayList.class;
         ArgumentCaptor<List<Pool>> poolsArg = ArgumentCaptor.forClass(listClass);
         when(poolManagerMock.createPools(poolsArg.capture())).thenReturn(new LinkedList<Pool>());
-        enforcer.postEntitlement(poolManagerMock, consumer, entitlements, null);
+        enforcer.postEntitlement(poolManagerMock, consumer, entitlements, null, false, poolQuantityMap);
 
         // Pool quantity should be virt_limit:
         List<Pool> pools = poolsArg.getValue();
@@ -127,10 +137,14 @@ public class PostEntitlementRulesTest extends EntitlementRulesTestFixture {
         Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
         entitlements.put(pool.getId(), e);
         entitlements.put(pool2.getId(), e2);
+        Map<String, PoolQuantity> poolQuantityMap = new HashMap<String, PoolQuantity>();
+        poolQuantityMap.put(pool.getId(), new PoolQuantity(pool, 5));
+        poolQuantityMap.put(pool2.getId(), new PoolQuantity(pool2, 5));
+
         Class<List<Pool>> listClass = (Class<List<Pool>>) (Class) ArrayList.class;
         ArgumentCaptor<List<Pool>> poolsArg = ArgumentCaptor.forClass(listClass);
         when(poolManagerMock.createPools(poolsArg.capture())).thenReturn(new LinkedList<Pool>());
-        enforcer.postEntitlement(poolManagerMock, consumer, entitlements, null);
+        enforcer.postEntitlement(poolManagerMock, consumer, entitlements, null, false, poolQuantityMap);
 
         // Pool quantity should be virt_limit:
         List<Pool> pools = poolsArg.getValue();
@@ -149,7 +163,9 @@ public class PostEntitlementRulesTest extends EntitlementRulesTestFixture {
 
         Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
         entitlements.put(pool.getId(), e);
-        enforcer.postEntitlement(poolManagerMock, consumer, entitlements, null);
+        Map<String, PoolQuantity> poolQuantityMap = new HashMap<String, PoolQuantity>();
+        poolQuantityMap.put(pool.getId(), new PoolQuantity(pool, 1));
+        enforcer.postEntitlement(poolManagerMock, consumer, entitlements, null, false, poolQuantityMap);
 
         verify(poolManagerMock, never()).createPools(any(List.class));
         verify(poolManagerMock, never()).updatePoolQuantity(any(Pool.class), anyInt());
@@ -169,7 +185,9 @@ public class PostEntitlementRulesTest extends EntitlementRulesTestFixture {
 
         Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
         entitlements.put(pool.getId(), e);
-        enforcer.postEntitlement(poolManagerMock, consumer, entitlements, null);
+        Map<String, PoolQuantity> poolQuantityMap = new HashMap<String, PoolQuantity>();
+        poolQuantityMap.put(pool.getId(), new PoolQuantity(pool, 1));
+        enforcer.postEntitlement(poolManagerMock, consumer, entitlements, null, false, poolQuantityMap);
         verify(poolManagerMock, never()).createPools(any(List.class));
         verify(poolManagerMock, never()).updatePoolQuantity(any(Pool.class), anyInt());
 
