@@ -25,6 +25,7 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.PoolQuantity;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.ValidationWarning;
@@ -62,7 +63,9 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
 
         Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
         entitlements.put("pool", e);
-        enforcer.postEntitlement(pm, c, entitlements, null);
+        Map<String, PoolQuantity> poolQuantityMap = new HashMap<String, PoolQuantity>();
+        poolQuantityMap.put("pool", new PoolQuantity(pool, 1));
+        enforcer.postEntitlement(pm, c, entitlements, null, false, poolQuantityMap);
     }
 
     @Test
