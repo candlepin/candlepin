@@ -36,7 +36,7 @@ public class EnforcerForTesting implements Enforcer {
 
     @Override
     public void postEntitlement(PoolManager manager, Consumer consumer, Map<String, Entitlement> ent,
-        List<Pool> subPoolsForStackIds) {
+        List<Pool> subPoolsForStackIds, boolean isUpdate, Map<String, PoolQuantity> poolQuantityMap) {
     }
 
     @Override
