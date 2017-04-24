@@ -23,9 +23,11 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerProductCurator;
+import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQuantity;
+import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.ProductShareCurator;
 import org.candlepin.policy.ValidationError;
@@ -152,7 +154,7 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
                 resultMap.put(poolQuantity.getPool().getId(), result);
                 validatePoolSharingEligibility(result, poolQuantity.getPool());
             }
-            finishValidation(consumer, resultMap.get(poolQuantity.getPool().getId()),
+            finishValidation(resultMap.get(poolQuantity.getPool().getId()),
                 poolQuantity.getPool(), poolQuantity.getQuantity());
         }
 
@@ -195,7 +197,7 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
             else {
                 result = resultMap.get(pool.getId());
             }
-            finishValidation(consumer, result, pool, 1);
+            finishValidation(result, pool, 1);
 
             if (result.isSuccessful() && (!result.hasWarnings() || showAll)) {
                 filteredPools.add(pool);
@@ -219,12 +221,42 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
         return host;
     }
 
-    private void finishValidation(Consumer consumer, ValidationResult result, Pool pool, Integer quantity) {
+    private void finishValidation(ValidationResult result, Pool pool, Integer quantity) {
         validatePoolQuantity(result, pool, quantity);
         if (pool.isExpired(dateSource)) {
             result.addError(new ValidationError(i18n.tr("Subscriptions for {0} expired on: {1}",
                 pool.getProductId(),
                 pool.getEndDate())));
         }
+    }
+
+    @Override
+    public ValidationResult update(Consumer consumer, Entitlement entitlement, Integer change) {
+
+        ValidationResult result = new ValidationResult();
+        if (!consumer.getType().isManifest()) {
+            Pool pool = entitlement.getPool();
+            // multi ent check
+            if (!"yes".equalsIgnoreCase(pool.getProductAttributeValue(Pool.Attributes.MULTI_ENTITLEMENT)) &&
+                entitlement.getQuantity() + change > 1) {
+                result.addError(new ValidationError(
+                    EntitlementRulesTranslator.PoolErrorKeys.MULTI_ENTITLEMENT_UNSUPPORTED));
+            }
+            if (!consumer.isGuest()) {
+                String multiplier = pool.getProductAttributeValue(Product.Attributes.INSTANCE_MULTIPLIER);
+                if (multiplier != null) {
+                    int instanceMultiplier = Integer.parseInt(multiplier);
+                    // quantity should be divisible by multiplier
+                    if ((entitlement.getQuantity() + change) % instanceMultiplier != 0) {
+                        result.addError(new ValidationError(
+                            EntitlementRulesTranslator.PoolErrorKeys.QUANTITY_MISMATCH
+                        ));
+                    }
+                }
+            }
+        }
+
+        finishValidation(result, entitlement.getPool(), change);
+        return result;
     }
 }

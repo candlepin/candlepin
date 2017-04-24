@@ -305,7 +305,6 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         Map<String, PoolQuantity> poolQuantityMap) {
         Map<String, Map<String, String>> flatAttributeMaps = new HashMap<String, Map<String, String>>();
         Map<String, Entitlement> virtLimitEntitlements = new HashMap<String, Entitlement>();
-        Map<String, Entitlement> sharedEntitlements = new HashMap<String, Entitlement>();
 
         for (Entry<String, Entitlement> entry : entitlementMap.entrySet()) {
             Entitlement entitlement = entry.getValue();
@@ -313,9 +312,6 @@ public abstract class AbstractEntitlementRules implements Enforcer {
             if (attributes.containsKey("virt_limit")) {
                 virtLimitEntitlements.put(entry.getKey(), entitlement);
                 flatAttributeMaps.put(entry.getKey(), attributes);
-            }
-            if (consumer.isShare()) {
-                sharedEntitlements.put(entry.getKey(), entitlement);
             }
         }
         // Perform pool management based on the attributes of the pool:
@@ -333,8 +329,8 @@ public abstract class AbstractEntitlementRules implements Enforcer {
             }
         }
 
-        if (!sharedEntitlements.isEmpty()) {
-            postBindShareCreate(poolManager, consumer, sharedEntitlements);
+        if (consumer.isShare() && !isUpdate) {
+            postBindShareCreate(poolManager, consumer, entitlementMap);
         }
     }
 

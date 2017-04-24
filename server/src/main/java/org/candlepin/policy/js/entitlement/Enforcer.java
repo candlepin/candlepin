@@ -150,4 +150,6 @@ public interface Enforcer {
      */
     void postUnbind(Consumer c, PoolManager poolManager, Entitlement ent);
 
+    ValidationResult update(Consumer consumer, Entitlement entitlement, Integer change);
+
 }
