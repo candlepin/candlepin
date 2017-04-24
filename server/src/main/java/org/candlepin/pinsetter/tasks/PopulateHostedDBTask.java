@@ -27,12 +27,14 @@ import org.candlepin.util.Util;
 import com.google.inject.Inject;
 
 import org.quartz.JobBuilder;
+import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -45,6 +47,9 @@ import java.util.Set;
  */
 public class PopulateHostedDBTask extends KingpinJob {
     private static Logger log = LoggerFactory.getLogger(PopulateHostedDBTask.class);
+
+    /** Constant config name used to store the "skip_existing" variable in the JobDataMap */
+    private static final String SKIP_EXISTING = "skip_existing";
 
     private ProductServiceAdapter productService;
     private ProductCurator productCurator;
@@ -72,15 +77,30 @@ public class PopulateHostedDBTask extends KingpinJob {
             return;
         }
 
+        JobDataMap map = context.getMergedJobDataMap();
+        Boolean skipExisting = map.getBoolean(SKIP_EXISTING);
+
         int pcount = 0;
         int ccount = 0;
         log.info("Populating Hosted DB");
 
         Set<String> productCache = new HashSet<String>();
         Set<String> productIds = this.poolCurator.getAllKnownProductIds();
-        log.info("Importing data for known products...");
 
-        do {
+        if (Boolean.TRUE.equals(skipExisting)) {
+            log.info("Checking known new products...");
+
+            Collection<String> existingProductIds = this.productCurator.getExistingProductIds();
+            log.info("Skipping {} existing products...", existingProductIds.size());
+
+            productIds.removeAll(existingProductIds);
+            log.info("Importing data for {} known new products...", productIds.size());
+        }
+        else {
+            log.info("Importing data for all {} known products...", productIds.size());
+        }
+
+        while (productIds.size() > 0) {
             Set<String> dependentProducts = new HashSet<String>();
 
             for (Product product : this.productService.getProductsByIds(productIds)) {
@@ -102,11 +122,11 @@ public class PopulateHostedDBTask extends KingpinJob {
             productCache.addAll(productIds);
             dependentProducts.removeAll(productCache);
             productIds = dependentProducts;
-        } while (productIds.size() > 0);
+        }
 
         // TODO: Should this be translated?
         String result = String.format(
-            "Finished populating Hosted DB. Received %d product(s) and %d content",
+            "Finished populating hosted DB. Received %d product(s) and %d content",
             pcount, ccount
         );
 
@@ -116,9 +136,13 @@ public class PopulateHostedDBTask extends KingpinJob {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public static JobDetail createAsyncTask() {
+    public static JobDetail createAsyncTask(boolean skipExisting) {
+        JobDataMap map = new JobDataMap();
+        map.put(SKIP_EXISTING, skipExisting);
+
         JobDetail detail = JobBuilder.newJob(PopulateHostedDBTask.class)
             .withIdentity("populated_hosted_db-" + Util.generateUUID())
+            .usingJobData(map)
             .requestRecovery(true)
             .build();
 
