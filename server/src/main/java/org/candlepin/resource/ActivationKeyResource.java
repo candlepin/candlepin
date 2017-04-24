@@ -109,7 +109,7 @@ public class ActivationKeyResource {
     @Path("{activation_key_id}/pools")
     @Produces(MediaType.APPLICATION_JSON)
     public Iterator<Pool> getActivationKeyPools(
-        @PathParam("activation_key_id") String activationKeyId) {
+        @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId) {
 
         ActivationKey key = activationKeyCurator.verifyAndLookupKey(activationKeyId);
 
