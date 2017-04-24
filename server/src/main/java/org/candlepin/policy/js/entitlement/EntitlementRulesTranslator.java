@@ -84,6 +84,15 @@ public class EntitlementRulesTranslator {
         public static final String DERIVED_PRODUCT_DATA_UNSUPPORTED =
             "rulefailed.derivedproduct.unsupported.by.consumer";
 
+        public static final String SHARING_A_SHARE =
+            "rulefailed.sharing.a.share.prohibited";
+
+        public static final String SHARING_UNMAPPED_GUEST_POOL =
+            "rulefailed.sharing.an.unmapped.guest.pool.prohibited";
+
+        public static final String SHARING_DEVELOPMENT_POOL =
+            "rulefailed.sharing.a.development.pool.prohibited";
+
         public static final String UNMAPPED_GUEST_RESTRICTED =
             "virt.guest.cannot.use.unmapped.guest.pool.has.host";
 
@@ -178,6 +187,12 @@ public class EntitlementRulesTranslator {
             I18n.marktr("Pool is restricted to unmapped virtual guests: ''{1}''"));
         POOL_ERROR_MESSAGES.put(PoolErrorKeys.VIRTUAL_GUEST_RESTRICTED,
             I18n.marktr("Pool is restricted to virtual guests in their first day of existence: ''{1}''"));
+        POOL_ERROR_MESSAGES.put(PoolErrorKeys.SHARING_A_SHARE,
+            I18n.marktr("Pool ''{1}'' is a shared pool and sharing a shared pool is prohibited."));
+        POOL_ERROR_MESSAGES.put(PoolErrorKeys.SHARING_DEVELOPMENT_POOL,
+            I18n.marktr("Pool ''{1}'' is a development pool and sharing it is prohibited."));
+        POOL_ERROR_MESSAGES.put(PoolErrorKeys.SHARING_UNMAPPED_GUEST_POOL,
+            I18n.marktr("Pool ''{1}'' is an unmapped guest pool and sharing it is prohibited."));
         POOL_ERROR_MESSAGES.put(PoolErrorKeys.TEMPORARY_FUTURE_POOL,
             I18n.marktr("Pool is restricted when it is temporary and begins in the future: ''{1}''"));
         DEFAULT_POOL_ERROR_MESSAGE =

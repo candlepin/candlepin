@@ -446,7 +446,7 @@ public class CandlepinPoolManager implements PoolManager {
      */
     public void cleanupExpiredPools() {
         int count = 0;
-        boolean loop = false;
+        boolean loop;
 
         log.debug("Beginning cleanup expired pools job");
 
@@ -618,8 +618,7 @@ public class CandlepinPoolManager implements PoolManager {
             }
         }
 
-        Set<String> entsToRegen = processPoolUpdates(poolEvents, updatedPools);
-        return entsToRegen;
+        return processPoolUpdates(poolEvents, updatedPools);
     }
 
     protected Set<String> processPoolUpdates(
@@ -802,7 +801,7 @@ public class CandlepinPoolManager implements PoolManager {
      * DTOs present on the subscription. If the subscription uses DTOs which cannot be resolved,
      * this method will throw an exception.
      *
-     * @param subscription
+     * @param sub
      *  The subscription to convert to a pool
      *
      * @param owner
@@ -1186,13 +1185,13 @@ public class CandlepinPoolManager implements PoolManager {
         PoolFilterBuilder poolFilter = new PoolFilterBuilder();
         poolFilter.addIdFilters(fromPools);
         List<Pool> allOwnerPools = this.listAvailableEntitlementPools(
-            host, null, owner, (String) null, null, activePoolDate, false,
+            host, null, owner, null, null, activePoolDate, false,
             poolFilter, null, false, false).getPageData();
         log.debug("Found {} total pools in org.", allOwnerPools.size());
         logPools(allOwnerPools);
 
         List<Pool> allOwnerPoolsForGuest = this.listAvailableEntitlementPools(
-            guest, null, owner, (String) null, null, activePoolDate,
+            guest, null, owner, null, null, activePoolDate,
             false, poolFilter,
             null, false, false).getPageData();
         log.debug("Found {} total pools already available for guest", allOwnerPoolsForGuest.size());
@@ -1387,7 +1386,7 @@ public class CandlepinPoolManager implements PoolManager {
         PoolFilterBuilder poolFilter = new PoolFilterBuilder();
         poolFilter.addIdFilters(fromPools);
         List<Pool> allOwnerPools = this.listAvailableEntitlementPools(
-            consumer, null, owner, (String) null, null, activePoolDate, false,
+            consumer, null, owner, null, null, activePoolDate, false,
             poolFilter, null, false, false).getPageData();
         List<Pool> filteredPools = new LinkedList<Pool>();
 
@@ -1588,6 +1587,7 @@ public class CandlepinPoolManager implements PoolManager {
                 poolQuantityMap.keySet()));
         }
 
+
         if (quantityFound) {
             log.info("Running pre-entitlement rules.");
             // XXX preEntitlement is run twice for new entitlement creation
@@ -1605,7 +1605,7 @@ public class CandlepinPoolManager implements PoolManager {
             }
         }
 
-        EntitlementHandler handler = null;
+        EntitlementHandler handler;
         if (entitlements == null) {
             handler = new NewHandler();
         }
@@ -1619,7 +1619,7 @@ public class CandlepinPoolManager implements PoolManager {
             handler = new UpdateHandler();
         }
 
-        boolean isDistributor = consumer.getType().isManifest();
+        boolean isDistributor = consumer.isManifestDistributor();
 
         /*
          * Grab an exclusive lock on the consumer to prevent deadlock.
@@ -1639,8 +1639,11 @@ public class CandlepinPoolManager implements PoolManager {
             Pool pool = poolQuantity.getPool();
             Integer quantity = poolQuantity.getQuantity();
             pool.setConsumed(pool.getConsumed() + quantity);
-            if (consumer.getType().isManifest()) {
+            if (consumer.isManifestDistributor()) {
                 pool.setExported(pool.getExported() + quantity);
+            }
+            else if (consumer.isShare()) {
+                pool.setShared(pool.getShared() + quantity);
             }
             consumer.setEntitlementCount(consumer.getEntitlementCount() + quantity);
             poolsToSave.add(pool);
@@ -1649,23 +1652,25 @@ public class CandlepinPoolManager implements PoolManager {
         consumerCurator.update(consumer);
 
         handler.handlePostEntitlement(this, consumer, entitlements);
-        handler.handleSelfCertificates(consumer, poolQuantities, entitlements);
 
-        this.ecGenerator.regenerateCertificatesByEntitlementIds(
-            this.entitlementCurator.batchListModifying(entitlements.values()), true
-        );
+        // shares don't need entitlement certificate since they don't talk to the CDN
+        if (!consumer.isShare()) {
+            handler.handleSelfCertificates(consumer, poolQuantities, entitlements);
+            this.ecGenerator.regenerateCertificatesByEntitlementIds(
+                this.entitlementCurator.batchListModifying(entitlements.values()), true
+            );
+        }
 
         // we might have changed the bonus pool quantities, lets find out.
         handler.handleBonusPools(consumer.getOwner(), poolQuantities, entitlements);
 
-
         /*
-         * If the consumer is not a distributor, check consumer's new compliance
-         * status and save. the getStatus call does that internally, so we only
+         * If the consumer is not a distributor or share, check consumer's new compliance
+         * status and save.  The getStatus call does that internally, so we only
          * need to check for the update.
          */
         complianceRules.getStatus(consumer, null, false, false);
-        if (!isDistributor) {
+        if (!isDistributor && !consumer.isShare()) {
             consumerCurator.update(consumer);
         }
 
@@ -1679,8 +1684,8 @@ public class CandlepinPoolManager implements PoolManager {
      *  the bonus pools are not over-consumed.
      *
      * @param owner
-     * @param consumer
-     * @param pool
+     * @param poolQuantities
+     * @param entitlements
      */
     private void checkBonusPoolQuantities(Owner owner, Map<String, PoolQuantity> poolQuantities,
         Map<String, Entitlement> entitlements) {
@@ -1818,8 +1823,11 @@ public class CandlepinPoolManager implements PoolManager {
 
             pool.setConsumed(pool.getConsumed() - entQuantity);
             Consumer consumer = ent.getConsumer();
-            if (consumer.getType().isManifest()) {
+            if (consumer.isManifestDistributor()) {
                 pool.setExported(pool.getExported() - entQuantity);
+            }
+            else if (consumer.isShare()) {
+                pool.setShared(pool.getShared() - entQuantity);
             }
             consumer.setEntitlementCount(consumer.getEntitlementCount() - entQuantity);
             consumerCurator.update(consumer);
@@ -1827,7 +1835,7 @@ public class CandlepinPoolManager implements PoolManager {
         }
         poolCurator.updateAll(poolsToSave, false, false);
 
-        /**
+        /*
          * Before deleting the entitlements, we need to find out if there are any
          * modifier entitlements that need to have their certificates regenerated
          */
@@ -1910,8 +1918,8 @@ public class CandlepinPoolManager implements PoolManager {
 
     /**
      * Helper method for log debug messages
-     * @param entitlements
-     * @return
+     * @param pools pools to get IDs for
+     * @return List pool ID list
      */
     private List<String> getPoolIds(Collection<Pool> pools) {
         List<String> ids = new ArrayList<String>();
@@ -2171,13 +2179,17 @@ public class CandlepinPoolManager implements PoolManager {
         public void handlePostEntitlement(PoolManager manager, Consumer consumer,
             Map<String, Entitlement> entitlements) {
             Set<String> stackIds = new HashSet<String>();
+
             for (Entitlement entitlement : entitlements.values()) {
                 if (entitlement.getPool().isStacked()) {
                     stackIds.add(entitlement.getPool().getStackId());
                 }
             }
             List<Pool> subPoolsForStackIds = null;
-            if (!stackIds.isEmpty()) {
+            // Manifest and Share consumers should not contribute to the sharing org's stack,
+            // as these consumer types should not have created a stack derived pool in the first place.
+            // Therefore, we do not need to check if any stack derived pools need updating
+            if (!stackIds.isEmpty() && !consumer.isShare() && !consumer.isManifestDistributor()) {
                 subPoolsForStackIds = poolCurator.getSubPoolForStackIds(consumer, stackIds);
                 if (CollectionUtils.isNotEmpty(subPoolsForStackIds)) {
                     poolRules.updatePoolsFromStack(consumer, subPoolsForStackIds, false);
@@ -2230,6 +2242,18 @@ public class CandlepinPoolManager implements PoolManager {
         @Override
         public void handlePostEntitlement(PoolManager manager, Consumer consumer,
             Map<String, Entitlement> entitlements) {
+            // if shared ents, update shared pool quantity
+            if (consumer.isShare()) {
+                List<Entitlement> ents = new ArrayList<Entitlement>(entitlements.values());
+                List<Pool> sharedPools = poolCurator.listBySourceEntitlements(ents);
+                Map<String, Pool> sharedPoolMap = new HashMap<String, Pool>();
+                for (Pool pool: sharedPools) {
+                    sharedPoolMap.put(pool.getSourceEntitlement().getId(), pool);
+                }
+                for (Entitlement ent: entitlements.values()) {
+                    setPoolQuantity(sharedPoolMap.get(ent.getId()), ent.getQuantity().longValue());
+                }
+            }
         }
 
         @Override
@@ -2324,7 +2348,7 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
 
-        /**
+        /*
          * The following code reconstructs Subscription quantity from the Pool quantity.
          * To understand it, it is important to understand how pool (the parameter)
          * is created in candlepin from a source subscription.
@@ -2459,5 +2483,6 @@ public class CandlepinPoolManager implements PoolManager {
     public void recalculatePoolQuantitiesForOwner(Owner owner) {
         poolCurator.calculateConsumedForOwnersPools(owner);
         poolCurator.calculateExportedForOwnersPools(owner);
+        poolCurator.calculateSharedForOwnerPools(owner);
     }
 }

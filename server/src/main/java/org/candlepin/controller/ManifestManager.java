@@ -295,7 +295,7 @@ public class ManifestManager {
         // FIXME Should this be testing the CdnLabel as well?
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         if (consumer.getType() == null ||
-            !consumer.getType().isManifest()) {
+            !consumer.isManifestDistributor()) {
             throw new ForbiddenException(
                 i18n.tr("Unit {0} cannot be exported. A manifest cannot be made for units of type ''{1}''.",
                     consumerUuid, consumer.getType().getLabel()));

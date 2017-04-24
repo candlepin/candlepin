@@ -239,18 +239,7 @@ public class PoolHelper {
         Date endDate, String contractNumber, String accountNumber, String orderNumber,
         Set<Product> providedProducts, Entitlement sourceEntitlement) {
 
-        Long q = null;
-        if (quantity.equalsIgnoreCase("unlimited")) {
-            q = -1L;
-        }
-        else {
-            try {
-                q = Long.parseLong(quantity);
-            }
-            catch (NumberFormatException e) {
-                q = 0L;
-            }
-        }
+        Long q = Pool.parseQuantity(quantity);
 
         Pool pool = new Pool(
             owner,

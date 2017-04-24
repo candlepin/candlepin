@@ -77,8 +77,7 @@ public class ExportRulesTest {
 
         when(entitlement.getPool()).thenReturn(pool);
         when(entitlement.getConsumer()).thenReturn(consumer);
-        when(consumer.getType()).thenReturn(type);
-        when(type.isManifest()).thenReturn(true);
+        when(consumer.isManifestDistributor()).thenReturn(true);
 
         assertFalse(exportRules.canExport(entitlement));
     }

@@ -131,7 +131,7 @@ public class QuantityRulesTest {
     public void testNonMultiEntitlementPool() {
         pool.getProduct().setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "no");
         SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(pool,
-            new Consumer(), new Date());
+            TestUtil.createConsumer(), new Date());
         assertEquals(new Long(1), suggested.getSuggested());
     }
 
@@ -141,7 +141,7 @@ public class QuantityRulesTest {
         List<Pool> pools = new LinkedList<Pool>();
         pools.add(pool);
         Map<String, SuggestedQuantity> results = quantityRules.getSuggestedQuantities(
-            pools, new Consumer(), new Date());
+            pools, TestUtil.createConsumer(), new Date());
         assertTrue(results.containsKey(pool.getId()));
         SuggestedQuantity suggested = results.get(pool.getId());
         assertEquals(new Long(1), suggested.getSuggested());

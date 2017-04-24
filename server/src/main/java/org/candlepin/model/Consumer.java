@@ -223,6 +223,12 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     private String contentAccessMode;
 
     /**
+     * Identifies the share recipient owner
+     */
+    @Column(name = "recipient_owner_key")
+    private String recipientOwnerKey;
+
+    /**
      * Length of field is required by hypersonic in the unit tests only
      *
      * 4194304 bytes = 4 MB
@@ -723,7 +729,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
      */
     @XmlTransient
     public boolean isCertV3Capable() {
-        if (getType().isManifest()) {
+        if (isManifestDistributor()) {
             for (ConsumerCapability capability : getCapabilities()) {
                 if ("cert_v3".equals(capability.getName())) {
                     return true;
@@ -754,12 +760,35 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     public boolean isDev() {
         return !StringUtils.isEmpty(getFact("dev_sku"));
     }
+
+    @JsonIgnore
+    public boolean isShare() {
+        return getType() != null && getType().isType(ConsumerTypeEnum.SHARE);
+    }
+
+    @JsonIgnore
+    public boolean isManifestDistributor() {
+        return getType() != null && getType().isManifest();
+    }
+
+    @JsonIgnore
+    public boolean isGuest() {
+        return "true".equalsIgnoreCase(this.getFact("virt.is_guest"));
+    }
+
     public String getContentAccessMode() {
         return this.contentAccessMode;
     }
 
     public void setContentAccessMode(String contentAccessMode) {
         this.contentAccessMode = contentAccessMode;
+    }
+
+    public String getRecipientOwnerKey() {
+        return recipientOwnerKey; }
+
+    public void setRecipientOwnerKey(String recipientOwnerKey) {
+        this.recipientOwnerKey = recipientOwnerKey;
     }
 
 }

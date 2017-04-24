@@ -62,6 +62,7 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.persistence.Version;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -117,6 +118,9 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         /** Attribute used to determine which specific host the pool was created for */
         public static final String REQUIRES_HOST = "requires_host";
 
+        /** Attribute used to determine if a pool was created by sharing */
+        public static final String SHARE = "share_derived";
+
         /** Attribute for specifying the source pool from which a derived pool originates */
         public static final String SOURCE_POOL_ID = "source_pool_id";
 
@@ -153,6 +157,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         NORMAL,
         ENTITLEMENT_DERIVED,
         STACK_DERIVED,
+        SHARE_DERIVED,
         BONUS,
         UNMAPPED_GUEST,
         DEVELOPMENT;
@@ -167,6 +172,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
             switch (this) {
                 case ENTITLEMENT_DERIVED:
                 case STACK_DERIVED:
+                case SHARE_DERIVED:
                     return true;
 
                 default:
@@ -328,6 +334,11 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     @NotNull
     private Long exported;
 
+    @Column(name = "quantity_shared")
+    @NotNull
+    @Min(0)
+    private Long shared;
+
     @OneToMany
     @JoinTable(name = "cp_pool_branding",
         joinColumns = @JoinColumn(name = "pool_id"),
@@ -431,6 +442,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
 
         this.setExported(0L);
         this.setConsumed(0L);
+        this.setShared(0L);
     }
 
     public Pool(Owner ownerIn, Product product, Collection<Product> providedProducts,
@@ -536,6 +548,20 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         // Even though this is calculated at DB fetch time, we allow
         // setting it for changes in a single transaction
         this.exported = exported;
+    }
+
+    /**
+     * @return the quantity of entitlements in this pool shared to another org.
+     */
+    public Long getShared() {
+        return (shared == null) ? 0 : shared;
+    }
+
+    /**
+     * @param shared the number to set the share count to
+     */
+    public void setShared(Long shared) {
+        this.shared = shared;
     }
 
     /**
@@ -1239,6 +1265,9 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
             if (hasAttribute(Attributes.UNMAPPED_GUESTS_ONLY)) {
                 return PoolType.UNMAPPED_GUEST;
             }
+            else if (hasAttribute(Attributes.SHARE)) {
+                return PoolType.SHARE_DERIVED;
+            }
             else if (getSourceEntitlement() != null) {
                 return PoolType.ENTITLEMENT_DERIVED;
             }
@@ -1344,6 +1373,23 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
                 sourceSubscription = null;
             }
         }
+    }
+
+    @JsonIgnore
+    public static Long parseQuantity(String quantity) {
+        Long q;
+        if (quantity.equalsIgnoreCase("unlimited")) {
+            q = -1L;
+        }
+        else {
+            try {
+                q = Long.parseLong(quantity);
+            }
+            catch (NumberFormatException e) {
+                q = 0L;
+            }
+        }
+        return q;
     }
 
     @Override

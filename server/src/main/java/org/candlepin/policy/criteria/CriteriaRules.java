@@ -72,7 +72,7 @@ public class CriteriaRules  {
 
         // Don't load virt_only pools if this consumer isn't a guest
         // or a manifest consumer
-        if (consumer.getType().isManifest()) {
+        if (consumer.isManifestDistributor()) {
             DetachedCriteria requiresHost = DetachedCriteria.forClass(Pool.class, "pool2")
                 .createAlias("pool2.attributes", "attrib")
                 .add(Restrictions.eqProperty("pool2.id", "id"))
@@ -82,7 +82,7 @@ public class CriteriaRules  {
             // we do want everything else
             criteriaFilters.add(Subqueries.notExists(requiresHost));
         }
-        else if (!"true".equalsIgnoreCase(consumer.getFact("virt.is_guest"))) {
+        else if (!consumer.isGuest()) {
             PoolFilterBuilder filterBuilder = new PoolFilterBuilder();
             filterBuilder.addAttributeFilter("virt_only", "true");
             criteriaFilters.add(Restrictions.not(filterBuilder.getCriteria()));

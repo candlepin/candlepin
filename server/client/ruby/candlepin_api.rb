@@ -78,7 +78,7 @@ class Candlepin
               owner_key=nil, activation_keys=[], installedProducts=[],
               environment=nil, capabilities=[], hypervisor_id=nil,
               content_tags=[], created_date=nil, last_checkin_date=nil,
-              annotations=nil)
+              annotations=nil, recipient_owner_key=nil)
 
     consumer = {
       :type => {:label => type},
@@ -94,6 +94,7 @@ class Candlepin
     consumer[:created] = created_date if created_date
     consumer[:lastCheckin] = last_checkin_date if last_checkin_date
     consumer[:annotations] = annotations if annotations
+    consumer[:recipientOwnerKey] = recipient_owner_key if recipient_owner_key
 
     params = {}
 
@@ -163,6 +164,7 @@ class Candlepin
     consumer[:capabilities] = params[:capabilities].collect { |name| {'name' => name} } if params[:capabilities]
     consumer[:hypervisorId] = {:hypervisorId => params[:hypervisorId]} if params[:hypervisorId]
     consumer['contentAccessMode'] = params['contentAccessMode'] if params.key?('contentAccessMode')
+    consumer['recipientOwnerKey'] = params[':recipientOwnerKey'] if params.key?(':recipientOwnerKey')
 
     path = get_path("consumers")
     put("#{path}/#{uuid}", {}, consumer)

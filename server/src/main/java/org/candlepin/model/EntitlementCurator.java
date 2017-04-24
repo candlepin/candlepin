@@ -538,7 +538,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
 
             // A distributor should technically be entitled to derived products and
             // will need to be able to sync content downstream.
-            if (c.getType().isManifest() && p.getDerivedProduct() != null) {
+            if (c.isManifestDistributor() && p.getDerivedProduct() != null) {
                 entitledProductIds.add(p.getDerivedProduct().getId());
 
                 for (Product dpp : productCurator.getPoolDerivedProvidedProductsCached(p)) {

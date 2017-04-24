@@ -14,14 +14,20 @@
  */
 package org.candlepin.policy.js.entitlement;
 
+import org.candlepin.audit.EventFactory;
+import org.candlepin.audit.EventSink;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.controller.ProductManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.model.ProductShareCurator;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.JsRunner;
@@ -38,6 +44,7 @@ import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -49,10 +56,11 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
 
     @Inject
     public EntitlementRules(DateSource dateSource,
-        JsRunner jsRules,
-        I18n i18n, Configuration config, ConsumerCurator consumerCurator,
-        PoolCurator poolCurator, ProductCurator productCurator, RulesObjectMapper mapper) {
-
+        JsRunner jsRules, I18n i18n, Configuration config, ConsumerCurator consumerCurator,
+        PoolCurator poolCurator, ProductCurator productCurator, RulesObjectMapper mapper,
+        OwnerCurator ownerCurator, OwnerProductCurator ownerProductCurator,
+        ProductShareCurator productShareCurator, ProductManager productManager, EventSink eventSink,
+        EventFactory eventFactory) {
         this.jsRules = jsRules;
         this.dateSource = dateSource;
         this.i18n = i18n;
@@ -62,6 +70,12 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
         this.poolCurator = poolCurator;
         this.productCurator = productCurator;
         this.objectMapper = mapper;
+        this.ownerCurator = ownerCurator;
+        this.ownerProductCurator = ownerProductCurator;
+        this.shareCurator = productShareCurator;
+        this.productManager = productManager;
+        this.eventSink = eventSink;
+        this.eventFactory = eventFactory;
         log = LoggerFactory.getLogger(EntitlementRules.class);
         jsRules.init("entitlement_name_space");
     }
@@ -95,33 +109,53 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
     @Override
     public Map<String, ValidationResult> preEntitlement(Consumer consumer, Consumer host,
         Collection<PoolQuantity> entitlementPoolQuantities, CallerType caller) {
-        JsonJsContext args = new JsonJsContext(objectMapper);
-        args.put("consumer", consumer);
-        args.put("hostConsumer", host);
-        args.put("consumerEntitlements", consumer.getEntitlements());
-        args.put("standalone", config.getBoolean(ConfigProperties.STANDALONE));
-        args.put("poolQuantities", entitlementPoolQuantities);
-        args.put("caller", caller.getLabel());
-        args.put("log", log, false);
 
-        String json = jsRules.runJsFunction(String.class, "validate_pools_batch", args);
-        Map<String, ValidationResult> resultMap;
-        TypeReference<Map<String, ValidationResult>> typeref =
-            new TypeReference<Map<String, ValidationResult>>() {};
-        try {
-            resultMap = objectMapper.toObject(json, typeref);
-            for (PoolQuantity poolQuantity : entitlementPoolQuantities) {
-                if (!resultMap.containsKey(poolQuantity.getPool().getId())) {
-                    resultMap.put(poolQuantity.getPool().getId(), new ValidationResult());
-                    log.info("no result returned for pool: {}", poolQuantity.getPool());
+        Map<String, ValidationResult> resultMap = new HashMap<String, ValidationResult>();
+
+        /* This document describes the java script portion of the pre entitlement rules check:
+         * http://www.candlepinproject.org/docs/candlepin/pre_entitlement_rules_check.html
+         * As described in the document, none of the checks are related to share binds, so we
+         * skip that step for share consumers.
+         */
+        if (!consumer.isShare()) {
+            JsonJsContext args = new JsonJsContext(objectMapper);
+            args.put("consumer", consumer);
+            args.put("hostConsumer", host);
+            args.put("consumerEntitlements", consumer.getEntitlements());
+            args.put("standalone", config.getBoolean(ConfigProperties.STANDALONE));
+            args.put("poolQuantities", entitlementPoolQuantities);
+            args.put("caller", caller.getLabel());
+            args.put("log", log, false);
+
+            String json = jsRules.runJsFunction(String.class, "validate_pools_batch", args);
+
+            TypeReference<Map<String, ValidationResult>> typeref =
+                new TypeReference<Map<String, ValidationResult>>() {};
+            try {
+                resultMap = objectMapper.toObject(json, typeref);
+                for (PoolQuantity poolQuantity : entitlementPoolQuantities) {
+                    if (!resultMap.containsKey(poolQuantity.getPool().getId())) {
+                        resultMap.put(poolQuantity.getPool().getId(), new ValidationResult());
+                        log.info("no result returned for pool: {}", poolQuantity.getPool());
+                    }
+
                 }
-                finishValidation(resultMap.get(poolQuantity.getPool().getId()), poolQuantity.getPool(),
-                    poolQuantity.getQuantity());
+            }
+            catch (Exception e) {
+                throw new RuleExecutionException(e);
             }
         }
-        catch (Exception e) {
-            throw new RuleExecutionException(e);
+
+        for (PoolQuantity poolQuantity : entitlementPoolQuantities) {
+            if (consumer.isShare()) {
+                ValidationResult result = new ValidationResult();
+                resultMap.put(poolQuantity.getPool().getId(), result);
+                validatePoolSharingEligibility(result, poolQuantity.getPool());
+            }
+            finishValidation(consumer, resultMap.get(poolQuantity.getPool().getId()),
+                poolQuantity.getPool(), poolQuantity.getQuantity());
         }
+
         return resultMap;
     }
 
@@ -151,7 +185,7 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
         List<Pool> filteredPools = new LinkedList<Pool>();
         for (Pool pool : pools) {
             ValidationResult result = resultMap.get(pool.getId());
-            finishValidation(result, pool, 1);
+            finishValidation(consumer, result, pool, 1);
 
             if (result.isSuccessful() && (!result.hasWarnings() || showAll)) {
                 filteredPools.add(pool);
@@ -175,7 +209,7 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
         return host;
     }
 
-    private void finishValidation(ValidationResult result, Pool pool, Integer quantity) {
+    private void finishValidation(Consumer consumer, ValidationResult result, Pool pool, Integer quantity) {
         validatePoolQuantity(result, pool, quantity);
         if (pool.isExpired(dateSource)) {
             result.addError(new ValidationError(i18n.tr("Subscriptions for {0} expired on: {1}",

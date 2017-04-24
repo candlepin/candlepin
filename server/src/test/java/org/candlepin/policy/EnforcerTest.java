@@ -21,15 +21,21 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.audit.EventFactory;
+import org.candlepin.audit.EventSink;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.controller.ProductManager;
 import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.model.ProductShareCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunner;
@@ -76,6 +82,12 @@ public class EnforcerTest extends DatabaseTestFixture {
     @Mock private Provider<JsRunnerRequestCache> cacheProvider;
     @Mock private JsRunnerRequestCache cache;
     @Mock private ProductCurator mockProductCurator;
+    @Mock private OwnerCurator mockOwnerCurator;
+    @Mock private OwnerProductCurator mockOwnerProductCurator;
+    @Mock private ProductShareCurator mockProductShareCurator;
+    @Mock private ProductManager mockProductManager;
+    @Mock private EventSink mockEventSink;
+    @Mock private EventFactory mockEventFactory;
 
     private Enforcer enforcer;
     private Owner owner;
@@ -116,7 +128,9 @@ public class EnforcerTest extends DatabaseTestFixture {
         enforcer = new EntitlementRules(
             new DateSourceForTesting(2010, 1, 1), jsRules, i18n, config, consumerCurator, poolCurator,
             mockProductCurator,
-            new RulesObjectMapper(new ProductCachedSerializationModule(mockProductCurator))
+            new RulesObjectMapper(new ProductCachedSerializationModule(mockProductCurator)),
+            mockOwnerCurator, mockOwnerProductCurator, mockProductShareCurator, mockProductManager,
+            mockEventSink, mockEventFactory
         );
     }
 

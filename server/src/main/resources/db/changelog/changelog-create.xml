@@ -1207,4 +1207,8 @@
     <include file="db/changelog/20170227140343-convert-consumer-entitlement-count-to-column.xml"/>
     <include file="db/changelog/20170323142254-add-revoked-column-to-cert-serial.xml"/>
     <include file="db/changelog/20170301083925-update-revoked-cert-serial-data.xml"/>
+    <include file="db/changelog/20170206133825-add-share-consumer-type.xml"/>
+    <include file="db/changelog/20170224113816-add-productshare-table.xml"/>
+    <include file="db/changelog/20170404164458-add-share-quantity-column-to-pools.xml"/>
+    <include file="db/changelog/20170421055601-add-recipient-owner-to-consumer.xml"/>
 </databaseChangeLog>

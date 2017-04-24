@@ -52,9 +52,9 @@ import java.util.Map;
 
 import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
+import javax.persistence.NonUniqueResultException;
 import javax.persistence.OptimisticLockException;
-
-
+import javax.persistence.TypedQuery;
 
 /**
  * AbstractHibernateCurator base class for all Candlepin curators. Curators are
@@ -89,6 +89,23 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
     public Class<E> entityType() {
         return entityType;
+    }
+
+    /**
+     * Get one or zero items.  Thanks http://stackoverflow.com/a/6378045/6124862
+     * @param query
+     * @param <E>
+     * @return one and only one object of type E
+     */
+    public <E> E getSingleResult(TypedQuery<E> query) {
+        List<E> list = query.getResultList();
+        if (list.isEmpty()) {
+            return null;
+        }
+        else if (list.size() == 1) {
+            return list.get(0);
+        }
+        throw new NonUniqueResultException();
     }
 
     public void enableFilter(String filterName, String parameterName, Object value) {
