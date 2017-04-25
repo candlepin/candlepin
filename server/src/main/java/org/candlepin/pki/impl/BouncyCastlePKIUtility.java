@@ -26,8 +26,10 @@ import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
 
+import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.DEROctetString;
+import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.DERUTF8String;
 import org.bouncycastle.asn1.misc.MiscObjectIdentifiers;
 import org.bouncycastle.asn1.misc.NetscapeCertType;
@@ -141,12 +143,24 @@ public class BouncyCastlePKIUtility extends PKIUtility {
         certGen.addExtension(X509Extensions.ExtendedKeyUsage, false,
             new ExtendedKeyUsage(KeyPurposeId.id_kp_clientAuth));
 
-        // Add an alternate name if provided
+        // Add an additional alternative name if provided.
         if (alternateName != null) {
-            GeneralName name = new GeneralName(GeneralName.uniformResourceIdentifier,
-                "CN=" + alternateName);
-            certGen.addExtension(X509Extensions.SubjectAlternativeName, false,
-                new GeneralNames(name));
+            /*
+             Why add the certificate subject again as an alternative name?  RFC 6125 Section 6.4.4
+             stipulates that if SANs are provided, a validator MUST use them instead of the certificate
+             subject.  If no SANs are present, the RFC allows the validator to use the subject field.  So,
+             if we do have an SAN to add, we need to add the subject field again as an SAN.
+
+             See http://stackoverflow.com/questions/5935369 and
+             https://tools.ietf.org/html/rfc6125#section-6.4.4 and
+
+             NB: These extensions should *not* be marked critical since the subject field is not empty.
+            */
+            GeneralName subject = new GeneralName(GeneralName.directoryName, dn);
+            GeneralName name = new GeneralName(GeneralName.directoryName, "CN=" + alternateName);
+            ASN1Encodable[] altNameArray = {subject, name};
+            GeneralNames altNames = new GeneralNames(new DERSequence(altNameArray));
+            certGen.addExtension(X509Extensions.SubjectAlternativeName, false, altNames);
         }
 
         if (extensions != null) {
