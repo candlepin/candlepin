@@ -49,7 +49,7 @@ public class PopulateHostedDBTask extends KingpinJob {
     private static Logger log = LoggerFactory.getLogger(PopulateHostedDBTask.class);
 
     /** Constant config name used to store the "skip_existing" variable in the JobDataMap */
-    private static final String SKIP_EXISTING = "skip_existing";
+    public static final String SKIP_EXISTING = "skip_existing";
 
     private ProductServiceAdapter productService;
     private ProductCurator productCurator;
@@ -82,10 +82,12 @@ public class PopulateHostedDBTask extends KingpinJob {
 
         int pcount = 0;
         int ccount = 0;
+        int ecount = 0;
         log.info("Populating Hosted DB");
 
         Set<String> productCache = new HashSet<String>();
         Set<String> productIds = this.poolCurator.getAllKnownProductIds();
+        Set<String> dependentProducts = new HashSet<String>();
 
         if (Boolean.TRUE.equals(skipExisting)) {
             log.info("Checking known new products...");
@@ -101,33 +103,50 @@ public class PopulateHostedDBTask extends KingpinJob {
         }
 
         while (productIds.size() > 0) {
-            Set<String> dependentProducts = new HashSet<String>();
-
             for (Product product : this.productService.getProductsByIds(productIds)) {
-                log.info("Storing product: {}", product);
+                if (product != null) {
+                    log.info("Storing product: {}", product);
 
-                dependentProducts.addAll(product.getDependentProductIds());
+                    dependentProducts.addAll(product.getDependentProductIds());
 
-                for (ProductContent pcontent : product.getProductContent()) {
-                    log.info("  Storing product content: {}", pcontent.getContent());
-                    this.contentCurator.createOrUpdate(pcontent.getContent());
-                    ++ccount;
+                    for (ProductContent pcontent : product.getProductContent()) {
+                        log.info("  Storing product content: {}", pcontent.getContent());
+                        this.contentCurator.createOrUpdate(pcontent.getContent());
+                        ++ccount;
+                    }
+
+                    this.productCurator.createOrUpdate(product);
+                    productCache.add(product.getId());
+                    ++pcount;
                 }
-
-                this.productCurator.createOrUpdate(product);
-                ++pcount;
             }
 
+            // Verify that we received the products we expected to receive...
+            productIds.removeAll(productCache);
+            if (productIds.size() > 0) {
+                ecount += productIds.size();
+
+                for (String productId : productIds) {
+                    log.warn("Unable to find product for referenced product ID: {}", productId);
+                }
+            }
+
+            // Process dependent products
             log.info("Importing data for dependent products...");
-            productCache.addAll(productIds);
             dependentProducts.removeAll(productCache);
+
+            // Clear the product ID set and swap with the dependent products set
+            productIds.clear();
+            Set<String> temp = productIds;
             productIds = dependentProducts;
+            dependentProducts = temp;
         }
 
         // TODO: Should this be translated?
         String result = String.format(
-            "Finished populating hosted DB. Received %d product(s) and %d content",
-            pcount, ccount
+            "Finished populating hosted DB. Received %d product(s) and %d content " +
+            "with %d unresolved reference(s)",
+            pcount, ccount, ecount
         );
 
         log.info(result);
