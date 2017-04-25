@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.0.32
+Version: 2.0.33
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -220,6 +220,11 @@ fi
 
 #raw
 %changelog
+* Tue Apr 25 2017 Kevin Howell <khowell@redhat.com> 2.0.33-1
+- 1445010: Fix permission issue on getting pools for an AK (mstead@redhat.com)
+- 1444719: Update bonus pool quantity when master entitlement is updated
+  (adarshvritant@gmail.com)
+
 * Fri Apr 21 2017 Kevin Howell <khowell@redhat.com> 2.0.32-1
 - Added indexes to various tables (crog@redhat.com)
 
