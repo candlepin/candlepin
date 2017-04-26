@@ -53,7 +53,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.persistence.LockModeType;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -313,8 +312,7 @@ public class OwnerProductResource {
             throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", product.getId()));
         }
 
-        this.productCurator.lock(product, LockModeType.PESSIMISTIC_WRITE);
-        boolean change = false;
+        this.productCurator.lock(product);
 
         for (Entry<String, Boolean> entry : contentMap.entrySet()) {
             Content content = this.fetchContent(owner, entry.getKey());
@@ -346,7 +344,7 @@ public class OwnerProductResource {
             throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", product.getId()));
         }
 
-        this.productCurator.lock(product, LockModeType.PESSIMISTIC_WRITE);
+        this.productCurator.lock(product);
 
         product = this.productManager.addContentToProduct(
             product, Arrays.asList(new ProductContent(product, content, enabled)), owner, true

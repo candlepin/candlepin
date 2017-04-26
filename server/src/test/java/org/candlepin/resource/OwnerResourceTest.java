@@ -436,8 +436,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         // Generate an ueber certificate for the Owner. This will need to
         // be cleaned up along with the owner deletion.
-        UeberCertificate uCert = ueberCertGenerator.generate(
-            owner.getKey(), setupAdminPrincipal("test"));
+        UeberCertificate uCert = ueberCertGenerator.generate(owner.getKey(), setupAdminPrincipal("test"));
         assertNotNull(uCert);
 
         ownerResource.deleteOwner(owner.getKey(), true);

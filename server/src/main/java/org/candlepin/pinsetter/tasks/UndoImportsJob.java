@@ -64,6 +64,7 @@ public class UndoImportsJob extends UniqueByEntityJob {
     private static Logger log = LoggerFactory.getLogger(UndoImportsJob.class);
 
     public static final String LAZY_REGEN = "lazy_regen";
+    public static final String OWNER_KEY = "owner_key";
     public static final String JOB_NAME_PREFIX = "undo_imports_";
 
     protected I18n i18n;
@@ -100,8 +101,9 @@ public class UndoImportsJob extends UniqueByEntityJob {
     public void toExecute(JobExecutionContext context) throws JobExecutionException {
         try {
             JobDataMap map = context.getMergedJobDataMap();
-            String ownerKey = map.getString(JobStatus.TARGET_ID);
-            Owner owner = this.ownerCurator.lookupByKeyAndLock(ownerKey);
+            String ownerId = map.getString(JobStatus.TARGET_ID);
+            String ownerKey = map.getString(OWNER_KEY);
+            Owner owner = this.ownerCurator.lockAndLoadById(ownerId);
             Boolean lazy = map.getBoolean(LAZY_REGEN);
             Principal principal = (Principal) map.get(PinsetterJobListener.PRINCIPAL_KEY);
 
@@ -113,18 +115,19 @@ public class UndoImportsJob extends UniqueByEntityJob {
                 return;
             }
 
+            String displayName = owner.getDisplayName();
+
             // Remove imports
             ExporterMetadata metadata = this.exportCurator.lookupByTypeAndOwner(
-                ExporterMetadata.TYPE_PER_USER, owner
-            );
+                ExporterMetadata.TYPE_PER_USER, owner);
 
             if (metadata == null) {
-                log.debug("No imports exist for owner {}", ownerKey);
-                context.setResult("Nothing to do; imports no longer exist for owner: " + ownerKey);
+                log.debug("No imports exist for owner {}", displayName);
+                context.setResult("Nothing to do; imports no longer exist for owner: " + displayName);
                 return;
             }
 
-            log.info("Deleting all pools originating from manifests for owner/org: {}", ownerKey);
+            log.info("Deleting all pools originating from manifests for owner/org: {}", displayName);
 
             List<Pool> pools = this.poolManager.listPoolsByOwner(owner).list();
             for (Pool pool : pools) {
@@ -140,7 +143,7 @@ public class UndoImportsJob extends UniqueByEntityJob {
             this.exportCurator.delete(metadata);
             this.recordManifestDeletion(owner, principal.getUsername(), uc);
 
-            context.setResult("Imported pools removed for owner " + owner.getDisplayName());
+            context.setResult("Imported pools removed for owner " + displayName);
         }
         catch (PersistenceException e) {
             throw new RetryJobException("UndoImportsJob encountered a problem.", e);
@@ -210,7 +213,8 @@ public class UndoImportsJob extends UniqueByEntityJob {
     public static JobDetail forOwner(Owner owner, Boolean lazy) {
         JobDataMap map = new JobDataMap();
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.OWNER);
-        map.put(JobStatus.TARGET_ID, owner.getKey());
+        map.put(JobStatus.TARGET_ID, owner.getId());
+        map.put(OWNER_KEY, owner.getKey());
         map.put(LAZY_REGEN, lazy);
         map.put(JobStatus.CORRELATION_ID, MDC.get(LoggingFilter.CSID));
 

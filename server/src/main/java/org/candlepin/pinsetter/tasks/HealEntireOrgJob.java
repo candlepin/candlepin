@@ -68,6 +68,8 @@ public class HealEntireOrgJob extends UniqueByEntityJob {
     @Override
     public void toExecute(JobExecutionContext ctx) throws JobExecutionException {
         try {
+            // NOTE: ownerId is actually the owner key here.
+
             JobDataMap map = ctx.getMergedJobDataMap();
             String ownerId = (String) map.get("ownerId");
             Owner owner = ownerCurator.lookupByKey(ownerId);
@@ -78,7 +80,7 @@ public class HealEntireOrgJob extends UniqueByEntityJob {
 
             Date entitleDate = (Date) map.get("entitle_date");
 
-            for (String uuid : ownerCurator.getConsumerUuids(ownerId).list()) {
+            for (String uuid : ownerCurator.getConsumerUuids(owner).list()) {
                 // Do not send in product IDs.  CandlepinPoolManager will take care
                 // of looking up the non or partially compliant products to bind.
                 try {

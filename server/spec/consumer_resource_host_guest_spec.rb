@@ -195,7 +195,7 @@ describe 'Consumer Resource Host/Guest' do
     host2['uuid'].should == host_consumer2['uuid']
   end
 
-  it 'guest should impose SLA on host auto-attach' do
+  it 'guest should not impose SLA on host auto-attach' do
     uuid1 = random_string('system.uuid')
     uuid2 = random_string('system.uuid')
     uuid3 = random_string('system.uuid')

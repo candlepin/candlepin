@@ -117,7 +117,7 @@ public class HypervisorResource {
             "Default is true.  If false is specified, hypervisorIds that are not found" +
             "will result in failed entries in the resulting HypervisorCheckInResult")
         @QueryParam("create_missing") @DefaultValue("true") boolean createMissing) {
-        log.debug("Hypervisor check-in by principal: " + principal);
+        log.debug("Hypervisor check-in by principal: {}", principal);
 
         if (hostGuestMap == null) {
             log.debug("Host/Guest mapping provided during hypervisor checkin was null.");
