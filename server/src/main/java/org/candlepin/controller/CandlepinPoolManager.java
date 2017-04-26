@@ -1650,9 +1650,7 @@ public class CandlepinPoolManager implements PoolManager {
         }
         poolCurator.updateAll(poolsToSave, false, false);
         consumerCurator.update(consumer);
-
-        handler.handlePostEntitlement(this, consumer, entitlements);
-
+        handler.handlePostEntitlement(this, consumer, entitlements, poolQuantities);
         // shares don't need entitlement certificate since they don't talk to the CDN
         if (!consumer.isShare()) {
             handler.handleSelfCertificates(consumer, poolQuantities, entitlements);
@@ -2129,7 +2127,7 @@ public class CandlepinPoolManager implements PoolManager {
             Map<String, PoolQuantity> poolQuantities, Map<String, Entitlement> entitlements);
 
         void handlePostEntitlement(PoolManager manager, Consumer consumer,
-            Map<String, Entitlement> entitlements);
+            Map<String, Entitlement> entitlements, Map<String, PoolQuantity> poolQuantities);
 
         void handleSelfCertificates(Consumer consumer, Map<String, PoolQuantity> pools,
             Map<String, Entitlement> entitlements);
@@ -2177,7 +2175,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         @Override
         public void handlePostEntitlement(PoolManager manager, Consumer consumer,
-            Map<String, Entitlement> entitlements) {
+            Map<String, Entitlement> entitlements, Map<String, PoolQuantity> poolQuantityMap) {
             Set<String> stackIds = new HashSet<String>();
 
             for (Entitlement entitlement : entitlements.values()) {
@@ -2200,7 +2198,12 @@ public class CandlepinPoolManager implements PoolManager {
                 subPoolsForStackIds = new ArrayList<Pool>();
             }
 
-            enforcer.postEntitlement(manager, consumer, entitlements, subPoolsForStackIds);
+            enforcer.postEntitlement(manager,
+                consumer,
+                entitlements,
+                subPoolsForStackIds,
+                false,
+                poolQuantityMap);
         }
 
         @Override
@@ -2241,7 +2244,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         @Override
         public void handlePostEntitlement(PoolManager manager, Consumer consumer,
-            Map<String, Entitlement> entitlements) {
+            Map<String, Entitlement> entitlements, Map<String, PoolQuantity> poolQuantityMap) {
             // if shared ents, update shared pool quantity
             if (consumer.isShare()) {
                 List<Entitlement> ents = new ArrayList<Entitlement>(entitlements.values());
@@ -2254,6 +2257,12 @@ public class CandlepinPoolManager implements PoolManager {
                     setPoolQuantity(sharedPoolMap.get(ent.getId()), ent.getQuantity().longValue());
                 }
             }
+            enforcer.postEntitlement(manager,
+                consumer,
+                entitlements,
+                new ArrayList<Pool>(),
+                true,
+                poolQuantityMap);
         }
 
         @Override

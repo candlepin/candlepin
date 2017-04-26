@@ -243,6 +243,19 @@ describe 'Post bind bonus pool updates' do
     @cp.get_pool(@limited_bonus_pool['id'])['quantity'].should == 0
   end
 
+  it 'should update bonus pool quantity when export entitlement quantity is updated' do
+    skip("candlepin running in standalone mode") unless is_hosted?
+    # bonus pool quantity adjusted by quantity * virt_limit
+    ent = @satellite_cp.consume_pool(@limited_master_pool['id'], {:quantity => 2})[0]
+    @cp.get_pool(@limited_bonus_pool['id'])['quantity'].should == 32
+
+    @cp.update_entitlement(:id => ent['id'], :quantity => 1)
+    @cp.get_pool(@limited_bonus_pool['id'])['quantity'].should == 36
+
+    @cp.update_entitlement(:id => ent['id'], :quantity => 3)
+    @cp.get_pool(@limited_bonus_pool['id'])['quantity'].should == 28
+  end
+
   it 'should not change bonus pool quantity when unlimited virt limited master pool is partially exported' do
     skip("candlepin running in standalone mode") unless is_hosted?
     @satellite_cp.consume_pool(@unlimited_master_pool['id'], {:quantity => 9})
@@ -379,6 +392,34 @@ describe 'Post bind bonus pool updates' do
     end
   end
   
+  it 'should revoke sufficient entitlements when entitlement quantity is updated' do
+    skip("candlepin running in standalone mode") unless is_hosted?
+    @cp.get_pool(@limited_bonus_pool['id'])['quantity'].should == 40
+    @cp.get_pool(@limited_bonus_pool['id'])['consumed'].should == 0
+
+    #create a bonus pool ent
+    bonus_ent = @guest_cp.consume_pool(@limited_bonus_pool['id'], {:quantity => 4})[0]
+    bonus_ent.quantity.should == 4
+
+    @cp.get_pool(@limited_bonus_pool['id'])['consumed'].should == 4
+
+    # reduce by quantity * virt_limit
+    master_ent = @satellite_cp.consume_pool(@limited_master_pool['id'], {:quantity => 9})[0]
+    @cp.get_pool(@limited_bonus_pool['id'])['quantity'].should == 4
+
+    #verify ent still exists
+    @cp.get_entitlement(bonus_ent['id'])
+
+    @cp.update_entitlement(:id => master_ent['id'], :quantity => 10)
+    #verify bonus pool quantity was updated
+    @cp.get_pool(@limited_bonus_pool['id'])['quantity'].should == 0
+
+    #verify the ent was revoked
+    lambda do
+      @cp.get_entitlement(bonus_ent['id'])
+    end.should raise_exception(RestClient::ResourceNotFound)
+  end
+
   it 'should not revoke excess entitlements when unlimited virt limited master pool is partially exported' do
     skip("candlepin running in standalone mode") unless is_hosted?
     ent = @guest_cp.consume_pool(@unlimited_bonus_pool['id'], {:quantity => 10})[0]
