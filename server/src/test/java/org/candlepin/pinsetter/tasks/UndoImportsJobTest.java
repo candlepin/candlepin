@@ -178,7 +178,8 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
         Principal principal = new UserPrincipal("JarJarBinks", null, true);
 
         this.jobDataMap.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.OWNER);
-        this.jobDataMap.put(JobStatus.TARGET_ID, owner1.getKey());
+        this.jobDataMap.put(JobStatus.TARGET_ID, owner1.getId());
+        this.jobDataMap.put(UndoImportsJob.OWNER_KEY, owner1.getKey());
         this.jobDataMap.put(PinsetterJobListener.PRINCIPAL_KEY, principal);
 
         beginTransaction(); //since we locking owner we need start transaction
@@ -245,7 +246,7 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
     @Test
     public void handleException() throws JobExecutionException {
         // the real thing we want to handle
-        doThrow(new NullPointerException()).when(this.ownerCurator).lookupByKeyAndLock(anyString());
+        doThrow(new NullPointerException()).when(this.ownerCurator).lockAndLoadById(anyString());
 
         try {
             this.undoImportsJob.execute(this.jobContext);
@@ -261,7 +262,7 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
     @Test
     public void refireOnWrappedSQLException() throws JobExecutionException {
         RuntimeException e = new RuntimeException("uh oh", new SQLException("not good"));
-        doThrow(e).when(this.ownerCurator).lookupByKeyAndLock(anyString());
+        doThrow(e).when(this.ownerCurator).lockAndLoadById(anyString());
 
         try {
             this.undoImportsJob.execute(this.jobContext);
@@ -278,7 +279,7 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
     public void refireOnMultiLayerWrappedSQLException() throws JobExecutionException {
         RuntimeException e = new RuntimeException("uh oh", new SQLException("not good"));
         RuntimeException e2 = new RuntimeException("trouble!", e);
-        doThrow(e2).when(this.ownerCurator).lookupByKeyAndLock(anyString());
+        doThrow(e2).when(this.ownerCurator).lockAndLoadById(anyString());
 
         try {
             this.undoImportsJob.execute(this.jobContext);
@@ -292,7 +293,7 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
     @Test
     public void noRefireOnRegularRuntimeException() throws JobExecutionException {
         RuntimeException e = new RuntimeException("uh oh", new NullPointerException());
-        doThrow(e).when(this.ownerCurator).lookupByKeyAndLock(anyString());
+        doThrow(e).when(this.ownerCurator).lockAndLoadById(anyString());
 
         try {
             this.undoImportsJob.execute(this.jobContext);

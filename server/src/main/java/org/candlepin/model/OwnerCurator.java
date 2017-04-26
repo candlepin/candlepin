@@ -33,10 +33,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
-import javax.persistence.LockModeType;
-
-
-
 
 
 /**
@@ -65,25 +61,6 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
     }
 
     /**
-     * Find an owner by ownerKey and lock it.
-     *
-     * @param ownerKey the target Owner's key
-     * @return the Owner with the specified key, or null if not found.
-     */
-    @Transactional
-    public Owner findAndLock(String ownerKey) {
-        List<Owner> result = getEntityManager().createQuery("select o from Owner o where o.key = :ownerKey",
-            Owner.class)
-            .setParameter("ownerKey", ownerKey)
-            .setLockMode(LockModeType.PESSIMISTIC_WRITE)
-            .getResultList();
-        if (result == null || result.isEmpty()) {
-            return null;
-        }
-        return result.get(0);
-    }
-
-    /**
      * @param key owner's unique key to lookup.
      * @return the owner whose key matches the one given.
      */
@@ -100,14 +77,6 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
             .add(CPRestrictions.in("key", keys));
 
         return this.cpQueryFactory.<Owner>buildQuery(this.currentSession(), criteria);
-    }
-
-    public Owner lookupByKeyAndLock(String key) {
-        return getEntityManager()
-            .createQuery("select o from Owner o WHERE o.key = :key", Owner.class)
-            .setParameter("key", key)
-            .setLockMode(LockModeType.PESSIMISTIC_WRITE)
-            .getSingleResult();
     }
 
     public Owner lookupWithUpstreamUuid(String upstreamUuid) {
@@ -196,14 +165,27 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
         return this.cpQueryFactory.<Owner>buildQuery();
     }
 
+    public CandlepinQuery<String> getConsumerIds(Owner owner) {
+        return this.getConsumerIds(owner.getId());
+    }
+
     @SuppressWarnings("unchecked")
-    public CandlepinQuery<String> getConsumerUuids(String ownerKey) {
-        DetachedCriteria ownerQuery = DetachedCriteria.forClass(Owner.class)
-            .add(Restrictions.eq("key", ownerKey))
+    public CandlepinQuery<String> getConsumerIds(String ownerId) {
+        DetachedCriteria criteria = DetachedCriteria.forClass(Consumer.class)
+            .add(Restrictions.eq("owner.id", ownerId))
             .setProjection(Property.forName("id"));
 
+        return this.cpQueryFactory.<String>buildQuery(this.currentSession(), criteria);
+    }
+
+    public CandlepinQuery<String> getConsumerUuids(Owner owner) {
+        return this.getConsumerUuids(owner.getId());
+    }
+
+    @SuppressWarnings("unchecked")
+    public CandlepinQuery<String> getConsumerUuids(String ownerId) {
         DetachedCriteria criteria = DetachedCriteria.forClass(Consumer.class)
-            .add(Subqueries.propertyEq("owner.id", ownerQuery))
+            .add(Restrictions.eq("owner.id", ownerId))
             .setProjection(Property.forName("uuid"));
 
         return this.cpQueryFactory.<String>buildQuery(this.currentSession(), criteria);

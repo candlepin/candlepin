@@ -965,6 +965,7 @@ public class OwnerResource {
         }
 
         ownerCurator.merge(toUpdate);
+        ownerCurator.flush();
 
         if (toUpdate.isContentAccessModeDirty()) {
             ownerManager.refreshOwnerForContentAccess(toUpdate);

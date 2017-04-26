@@ -28,6 +28,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.io.Serializable;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.LinkedHashMap;
@@ -55,6 +58,16 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
             Map<String, Object> criteria) {
 
             return super.bulkSQLUpdate(table, column, values, criteria);
+        }
+
+        @Override
+        public E lockAndLoadById(Class<E> entityClass, Serializable id) {
+            return super.lockAndLoadById(entityClass, id);
+        }
+
+        @Override
+        protected Collection<E> lockAndLoadByIds(Class<E> entityClass, Iterable<? extends Serializable> ids) {
+            return super.lockAndLoadByIds(entityClass, ids);
         }
     }
 
@@ -339,5 +352,609 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
         }
     }
 
+    @Test
+    public void testLockAndLoadSingleEntityRefresh() {
+        Owner owner = this.createOwner();
+        Content content = this.createContent("c1", "content-1", owner);
 
+        // Verify that we're getting an equal entity back out
+        Content output = this.testContentCurator.lockAndLoad(content);
+        assertEquals(content, output);
+    }
+
+    @Test
+    public void testLockAndLoadSingleEntityRevertsPropertyChange() {
+        Owner owner = this.createOwner();
+        Content content = this.createContent("c1", "content-1", owner);
+
+        // Verify that lockAndLoad's refresh reverts our name change
+        content.setName("changed_name");
+        this.testContentCurator.lockAndLoad(content);
+        assertEquals("content-1", content.getName());
+    }
+
+    @Test
+    public void testLockAndLoadSingleEntityRevertsUnflushedMerge() {
+        Owner owner = this.createOwner();
+        Content content = this.createContent("c1", "content-1", owner);
+
+        // Verify that even a pending merge will be reverted
+        content.setName("changed_name");
+        testContentCurator.merge(content);
+        this.testContentCurator.lockAndLoad(content);
+        assertEquals("content-1", content.getName());
+    }
+
+    @Test
+    public void testLockAndLoadSingleEntityRefreshIgnoresEvicted() {
+        Owner owner = this.createOwner();
+        Content content = this.createContent("c1", "content-1", owner);
+
+        // Verify evicted/detached elements aren't affected
+        content.setName("detached");
+        testContentCurator.evict(content);
+        Content output = this.testContentCurator.lockAndLoad(content);
+        assertNotEquals(content, output);
+        assertEquals("content-1", output.getName());
+        assertEquals("detached", content.getName());
+    }
+
+    @Test
+    public void testLockAndLoadSingleEntityRefreshRetainsFlushedChanged() {
+        Owner owner = this.createOwner();
+        Content content = this.createContent("c1", "content-1", owner);
+
+        // Verify that a flush will make the change persistent
+        content.setName("changed_name");
+        testContentCurator.merge(content);
+        testContentCurator.flush();
+        this.testContentCurator.lockAndLoad(content);
+        assertEquals("changed_name", content.getName());
+    }
+
+    @Test
+    public void testLockAndLoadSingleEntityByIdRefresh() {
+        Owner owner = this.createOwner();
+        Content content = this.createContent("c1", "content-1", owner);
+
+        // Verify that we're getting an equal entity back out
+        Content output = this.testContentCurator.lockAndLoadById(content.getUuid());
+        assertEquals(content, output);
+    }
+
+    @Test
+    public void testLockAndLoadSingleEntityByIdRevertsPropertyChange() {
+        Owner owner = this.createOwner();
+        Content content = this.createContent("c1", "content-1", owner);
+
+        // Verify that lockAndLoad's refresh reverts our name change
+        content.setName("changed_name");
+        this.testContentCurator.lockAndLoadById(content.getUuid());
+        assertEquals("content-1", content.getName());
+    }
+
+    @Test
+    public void testLockAndLoadSingleEntityByIdRevertsUnflushedMerge() {
+        Owner owner = this.createOwner();
+        Content content = this.createContent("c1", "content-1", owner);
+
+        // Verify that even a pending merge will be reverted
+        content.setName("changed_name");
+        testContentCurator.merge(content);
+        this.testContentCurator.lockAndLoadById(content.getUuid());
+        assertEquals("content-1", content.getName());
+    }
+
+    @Test
+    public void testLockAndLoadSingleEntityByIdRefreshIgnoresEvicted() {
+        Owner owner = this.createOwner();
+        Content content = this.createContent("c1", "content-1", owner);
+
+        // Verify evicted/detached elements aren't affected
+        content.setName("detached");
+        testContentCurator.evict(content);
+        Content output = this.testContentCurator.lockAndLoadById(content.getUuid());
+        assertNotNull(output);
+        assertNotEquals(content, output);
+        assertEquals("content-1", output.getName());
+        assertEquals("detached", content.getName());
+    }
+
+    @Test
+    public void testLockAndLoadSingleEntityByIdRefreshRetainsFlushedChanged() {
+        Owner owner = this.createOwner();
+        Content content = this.createContent("c1", "content-1", owner);
+
+        // Verify that a flush will make the change persistent
+        content.setName("changed_name");
+        testContentCurator.merge(content);
+        testContentCurator.flush();
+        this.testContentCurator.lockAndLoadById(content.getUuid());
+        assertEquals("changed_name", content.getName());
+    }
+
+    @Test
+    public void testLockAndLoadSingleEntityByClassAndIdRefresh() {
+        Owner owner = this.createOwner();
+        Content content = this.createContent("c1", "content-1", owner);
+
+        // Verify that we're getting an equal entity back out
+        Content output = this.testContentCurator.lockAndLoadById(Content.class, content.getUuid());
+        assertEquals(content, output);
+    }
+
+    @Test
+    public void testLockAndLoadSingleEntityByClassAndIdRevertsPropertyChange() {
+        Owner owner = this.createOwner();
+        Content content = this.createContent("c1", "content-1", owner);
+
+        // Verify that lockAndLoad's refresh reverts our name change
+        content.setName("changed_name");
+        this.testContentCurator.lockAndLoadById(Content.class, content.getUuid());
+        assertEquals("content-1", content.getName());
+    }
+
+    @Test
+    public void testLockAndLoadSingleEntityByClassAndIdRevertsUnflushedMerge() {
+        Owner owner = this.createOwner();
+        Content content = this.createContent("c1", "content-1", owner);
+
+        // Verify that even a pending merge will be reverted
+        content.setName("changed_name");
+        testContentCurator.merge(content);
+        this.testContentCurator.lockAndLoadById(Content.class, content.getUuid());
+        assertEquals("content-1", content.getName());
+    }
+
+    @Test
+    public void testLockAndLoadSingleEntityByClassAndIdRefreshIgnoresEvicted() {
+        Owner owner = this.createOwner();
+        Content content = this.createContent("c1", "content-1", owner);
+
+        // Verify evicted/detached elements aren't affected
+        content.setName("detached");
+        testContentCurator.evict(content);
+        Content output = this.testContentCurator.lockAndLoadById(Content.class, content.getUuid());
+        assertNotNull(output);
+        assertNotEquals(content, output);
+        assertEquals("content-1", output.getName());
+        assertEquals("detached", content.getName());
+    }
+
+    @Test
+    public void testLockAndLoadSingleEntityByClassAndIdRefreshRetainsFlushedChanged() {
+        Owner owner = this.createOwner();
+        Content content = this.createContent("c1", "content-1", owner);
+
+        // Verify that a flush will make the change persistent
+        content.setName("changed_name");
+        testContentCurator.merge(content);
+        testContentCurator.flush();
+        this.testContentCurator.lockAndLoadById(Content.class, content.getUuid());
+        assertEquals("changed_name", content.getName());
+    }
+
+    @Test
+    public void testLockAndLoadMultiEntity() {
+        Owner owner = this.createOwner();
+        Content content1 = this.createContent("c1", "content-1", owner);
+        Content content2 = this.createContent("c2", "content-2", owner);
+        Content content3 = this.createContent("c3", "content-3", owner);
+
+        // Verify we're getting the correct number of entities out
+        Collection<Content> input = Arrays.asList(content1, content2, content3);
+        Collection<Content> output = this.testContentCurator.lockAndLoad(input);
+
+        assertEquals(3, output.size());
+
+        // Note: the instances may be different here, but as long as they're equal (including UUID),
+        // we're okay.
+        for (Content expected : input) {
+            boolean found = false;
+
+            for (Content content : output) {
+                if (expected.equals(content)) {
+                    assertFalse(found);
+                    assertEquals(expected.getUuid(), content.getUuid());
+                    found = true;
+
+                    // We don't break here because we're verifying we didn't receive any duplicates.
+                }
+            }
+
+            assertTrue("expected entity was not found in output: " + expected.getId(), found);
+        }
+    }
+
+    @Test
+    public void testLockAndLoadMultiEntityRefreshRevertsPropertyChange() {
+        Owner owner = this.createOwner();
+        Content content1 = this.createContent("c1", "content-1", owner);
+        Content content2 = this.createContent("c2", "content-2", owner);
+        Content content3 = this.createContent("c3", "content-3", owner);
+
+        // Verify that lockAndLoad's refresh reverts our name changes only where applicable
+        content1.setName("name change 1");
+        content2.setName("name change 2");
+        content3.setName("name change 3");
+
+        Collection<Content> output = this.testContentCurator.lockAndLoad(Arrays.asList(content1, content3));
+
+        assertEquals(2, output.size());
+        assertTrue(output.contains(content1));
+        assertFalse(output.contains(content2));
+        assertTrue(output.contains(content3));
+        assertEquals("content-1", content1.getName());
+        assertEquals("name change 2", content2.getName());
+        assertEquals("content-3", content3.getName());
+    }
+
+    @Test
+    public void testLockAndLoadMultiEntityRefreshRevertsUnflushedMerge() {
+        Owner owner = this.createOwner();
+        Content content1 = this.createContent("c1", "content-1", owner);
+        Content content2 = this.createContent("c2", "content-2", owner);
+        Content content3 = this.createContent("c3", "content-3", owner);
+
+        // Verify that even a pending merge will be reverted
+        content1.setName("name change 1");
+        content2.setName("name change 2");
+        content3.setName("name change 3");
+        this.testContentCurator.merge(content1);
+        this.testContentCurator.merge(content2);
+        this.testContentCurator.merge(content3);
+
+        Collection<Content> output = this.testContentCurator.lockAndLoad(Arrays.asList(content1, content3));
+
+        assertEquals(2, output.size());
+        assertTrue(output.contains(content1));
+        assertFalse(output.contains(content2));
+        assertTrue(output.contains(content3));
+        assertEquals("content-1", content1.getName());
+        assertEquals("name change 2", content2.getName());
+        assertEquals("content-3", content3.getName());
+    }
+
+    @Test
+    public void testLockAndLoadMultiEntityRefreshRetainsFlushedChanged() {
+        Owner owner = this.createOwner();
+        Content content1 = this.createContent("c1", "content-1", owner);
+        Content content2 = this.createContent("c2", "content-2", owner);
+        Content content3 = this.createContent("c3", "content-3", owner);
+
+        // Verify that a flush will make the change persistent
+        content1.setName("name change 1");
+        content2.setName("name change 2");
+        content3.setName("name change 3");
+        this.testContentCurator.merge(content1);
+        this.testContentCurator.merge(content2);
+        this.testContentCurator.merge(content3);
+        this.testContentCurator.flush();
+
+        Collection<Content> output = this.testContentCurator.lockAndLoad(Arrays.asList(content1, content3));
+
+        assertEquals(2, output.size());
+        assertTrue(output.contains(content1));
+        assertFalse(output.contains(content2));
+        assertTrue(output.contains(content3));
+        assertEquals("name change 1", content1.getName());
+        assertEquals("name change 2", content2.getName());
+        assertEquals("name change 3", content3.getName());
+    }
+
+    @Test
+    public void testLockAndLoadMultiEntityRefreshIgnoresEvicted() {
+        Owner owner = this.createOwner();
+        Content content1 = this.createContent("c1", "content-1", owner);
+        Content content2 = this.createContent("c2", "content-2", owner);
+        Content content3 = this.createContent("c3", "content-3", owner);
+
+        // Verify evicted/detached elements aren't affected
+        content1.setName("name change 1");
+        content2.setName("name change 2");
+        content3.setName("name change 3");
+        this.testContentCurator.evict(content1);
+        this.testContentCurator.evict(content2);
+        this.testContentCurator.evict(content3);
+
+        Collection<Content> output = this.testContentCurator.lockAndLoad(Arrays.asList(content1, content3));
+
+        assertEquals(2, output.size());
+        assertFalse(output.contains(content1));
+        assertFalse(output.contains(content2));
+        assertFalse(output.contains(content3));
+        assertEquals("name change 1", content1.getName());
+        assertEquals("name change 2", content2.getName());
+        assertEquals("name change 3", content3.getName());
+
+        for (Content entity : output) {
+            assertTrue(entity.getName().matches("content-\\d"));
+        }
+    }
+
+    @Test
+    public void testLockAndLoadMultiEntityByIds() {
+        Owner owner = this.createOwner();
+        Content content1 = this.createContent("c1", "content-1", owner);
+        Content content2 = this.createContent("c2", "content-2", owner);
+        Content content3 = this.createContent("c3", "content-3", owner);
+
+        // Verify we're getting the correct number of entities out
+        Collection<String> input = Arrays.asList(content1.getUuid(), content2.getUuid(), content3.getUuid());
+        Collection<Content> output = this.testContentCurator.lockAndLoadByIds(input);
+
+        assertEquals(3, output.size());
+
+        // Note: the instances may be different here, but as long as they're equal (including UUID),
+        // we're okay.
+        for (Content expected : Arrays.asList(content1, content2, content3)) {
+            boolean found = false;
+
+            for (Content content : output) {
+                if (expected.equals(content)) {
+                    assertFalse(found);
+                    assertEquals(expected.getUuid(), content.getUuid());
+                    found = true;
+
+                    // We don't break here because we're verifying we didn't receive any duplicates.
+                }
+            }
+
+            assertTrue("expected entity was not found in output: " + expected.getId(), found);
+        }
+    }
+
+    @Test
+    public void testLockAndLoadMultiEntityByIdsRefreshRevertsPropertyChange() {
+        Owner owner = this.createOwner();
+        Content content1 = this.createContent("c1", "content-1", owner);
+        Content content2 = this.createContent("c2", "content-2", owner);
+        Content content3 = this.createContent("c3", "content-3", owner);
+
+        // Verify that lockAndLoad's refresh reverts our name changes only where applicable
+        content1.setName("name change 1");
+        content2.setName("name change 2");
+        content3.setName("name change 3");
+
+        Collection<String> input = Arrays.asList(content1.getUuid(), content3.getUuid());
+        Collection<Content> output = this.testContentCurator.lockAndLoadByIds(input);
+
+        assertEquals(2, output.size());
+        assertTrue(output.contains(content1));
+        assertFalse(output.contains(content2));
+        assertTrue(output.contains(content3));
+        assertEquals("content-1", content1.getName());
+        assertEquals("name change 2", content2.getName());
+        assertEquals("content-3", content3.getName());
+    }
+
+    @Test
+    public void testLockAndLoadMultiEntityByIdsRefreshRevertsUnflushedMerge() {
+        Owner owner = this.createOwner();
+        Content content1 = this.createContent("c1", "content-1", owner);
+        Content content2 = this.createContent("c2", "content-2", owner);
+        Content content3 = this.createContent("c3", "content-3", owner);
+
+        // Verify that even a pending merge will be reverted
+        content1.setName("name change 1");
+        content2.setName("name change 2");
+        content3.setName("name change 3");
+        this.testContentCurator.merge(content1);
+        this.testContentCurator.merge(content2);
+        this.testContentCurator.merge(content3);
+
+        Collection<String> input = Arrays.asList(content1.getUuid(), content3.getUuid());
+        Collection<Content> output = this.testContentCurator.lockAndLoadByIds(input);
+
+        assertEquals(2, output.size());
+        assertTrue(output.contains(content1));
+        assertFalse(output.contains(content2));
+        assertTrue(output.contains(content3));
+        assertEquals("content-1", content1.getName());
+        assertEquals("name change 2", content2.getName());
+        assertEquals("content-3", content3.getName());
+    }
+
+    @Test
+    public void testLockAndLoadMultiEntityByIdsRefreshRetainsFlushedChanged() {
+        Owner owner = this.createOwner();
+        Content content1 = this.createContent("c1", "content-1", owner);
+        Content content2 = this.createContent("c2", "content-2", owner);
+        Content content3 = this.createContent("c3", "content-3", owner);
+
+        // Verify that a flush will make the change persistent
+        content1.setName("name change 1");
+        content2.setName("name change 2");
+        content3.setName("name change 3");
+        this.testContentCurator.merge(content1);
+        this.testContentCurator.merge(content2);
+        this.testContentCurator.merge(content3);
+        this.testContentCurator.flush();
+
+        Collection<String> input = Arrays.asList(content1.getUuid(), content3.getUuid());
+        Collection<Content> output = this.testContentCurator.lockAndLoadByIds(input);
+
+        assertEquals(2, output.size());
+        assertTrue(output.contains(content1));
+        assertFalse(output.contains(content2));
+        assertTrue(output.contains(content3));
+        assertEquals("name change 1", content1.getName());
+        assertEquals("name change 2", content2.getName());
+        assertEquals("name change 3", content3.getName());
+    }
+
+    @Test
+    public void testLockAndLoadMultiEntityByIdsRefreshIgnoresEvicted() {
+        Owner owner = this.createOwner();
+        Content content1 = this.createContent("c1", "content-1", owner);
+        Content content2 = this.createContent("c2", "content-2", owner);
+        Content content3 = this.createContent("c3", "content-3", owner);
+
+        // Verify evicted/detached elements aren't affected
+        content1.setName("name change 1");
+        content2.setName("name change 2");
+        content3.setName("name change 3");
+        this.testContentCurator.evict(content1);
+        this.testContentCurator.evict(content2);
+        this.testContentCurator.evict(content3);
+
+        Collection<String> input = Arrays.asList(content1.getUuid(), content3.getUuid());
+        Collection<Content> output = this.testContentCurator.lockAndLoadByIds(input);
+
+        assertEquals(2, output.size());
+        assertFalse(output.contains(content1));
+        assertFalse(output.contains(content2));
+        assertFalse(output.contains(content3));
+        assertEquals("name change 1", content1.getName());
+        assertEquals("name change 2", content2.getName());
+        assertEquals("name change 3", content3.getName());
+
+        for (Content entity : output) {
+            assertTrue(entity.getName().matches("content-\\d"));
+        }
+    }
+
+
+
+    @Test
+    public void testLockAndLoadMultiEntityByClassAndIds() {
+        Owner owner = this.createOwner();
+        Content content1 = this.createContent("c1", "content-1", owner);
+        Content content2 = this.createContent("c2", "content-2", owner);
+        Content content3 = this.createContent("c3", "content-3", owner);
+
+        // Verify we're getting the correct number of entities out
+        Collection<String> input = Arrays.asList(content1.getUuid(), content2.getUuid(), content3.getUuid());
+        Collection<Content> output = this.testContentCurator.lockAndLoadByIds(Content.class, input);
+
+        assertEquals(3, output.size());
+
+        // Note: the instances may be different here, but as long as they're equal (including UUID),
+        // we're okay.
+        for (Content expected : Arrays.asList(content1, content2, content3)) {
+            boolean found = false;
+
+            for (Content content : output) {
+                if (expected.equals(content)) {
+                    assertFalse(found);
+                    assertEquals(expected.getUuid(), content.getUuid());
+                    found = true;
+
+                    // We don't break here because we're verifying we didn't receive any duplicates.
+                }
+            }
+
+            assertTrue("expected entity was not found in output: " + expected.getId(), found);
+        }
+    }
+
+    @Test
+    public void testLockAndLoadMultiEntityByClassAndIdsRefreshRevertsPropertyChange() {
+        Owner owner = this.createOwner();
+        Content content1 = this.createContent("c1", "content-1", owner);
+        Content content2 = this.createContent("c2", "content-2", owner);
+        Content content3 = this.createContent("c3", "content-3", owner);
+
+        // Verify that lockAndLoad's refresh reverts our name changes only where applicable
+        content1.setName("name change 1");
+        content2.setName("name change 2");
+        content3.setName("name change 3");
+
+        Collection<String> input = Arrays.asList(content1.getUuid(), content3.getUuid());
+        Collection<Content> output = this.testContentCurator.lockAndLoadByIds(Content.class, input);
+
+        assertEquals(2, output.size());
+        assertTrue(output.contains(content1));
+        assertFalse(output.contains(content2));
+        assertTrue(output.contains(content3));
+        assertEquals("content-1", content1.getName());
+        assertEquals("name change 2", content2.getName());
+        assertEquals("content-3", content3.getName());
+    }
+
+    @Test
+    public void testLockAndLoadMultiEntityByClassAndIdsRefreshRevertsUnflushedMerge() {
+        Owner owner = this.createOwner();
+        Content content1 = this.createContent("c1", "content-1", owner);
+        Content content2 = this.createContent("c2", "content-2", owner);
+        Content content3 = this.createContent("c3", "content-3", owner);
+
+        // Verify that even a pending merge will be reverted
+        content1.setName("name change 1");
+        content2.setName("name change 2");
+        content3.setName("name change 3");
+        this.testContentCurator.merge(content1);
+        this.testContentCurator.merge(content2);
+        this.testContentCurator.merge(content3);
+
+        Collection<String> input = Arrays.asList(content1.getUuid(), content3.getUuid());
+        Collection<Content> output = this.testContentCurator.lockAndLoadByIds(Content.class, input);
+
+        assertEquals(2, output.size());
+        assertTrue(output.contains(content1));
+        assertFalse(output.contains(content2));
+        assertTrue(output.contains(content3));
+        assertEquals("content-1", content1.getName());
+        assertEquals("name change 2", content2.getName());
+        assertEquals("content-3", content3.getName());
+    }
+
+    @Test
+    public void testLockAndLoadMultiEntityByClassAndIdsRefreshRetainsFlushedChanged() {
+        Owner owner = this.createOwner();
+        Content content1 = this.createContent("c1", "content-1", owner);
+        Content content2 = this.createContent("c2", "content-2", owner);
+        Content content3 = this.createContent("c3", "content-3", owner);
+
+        // Verify that a flush will make the change persistent
+        content1.setName("name change 1");
+        content2.setName("name change 2");
+        content3.setName("name change 3");
+        this.testContentCurator.merge(content1);
+        this.testContentCurator.merge(content2);
+        this.testContentCurator.merge(content3);
+        this.testContentCurator.flush();
+
+        Collection<String> input = Arrays.asList(content1.getUuid(), content3.getUuid());
+        Collection<Content> output = this.testContentCurator.lockAndLoadByIds(Content.class, input);
+
+        assertEquals(2, output.size());
+        assertTrue(output.contains(content1));
+        assertFalse(output.contains(content2));
+        assertTrue(output.contains(content3));
+        assertEquals("name change 1", content1.getName());
+        assertEquals("name change 2", content2.getName());
+        assertEquals("name change 3", content3.getName());
+    }
+
+    @Test
+    public void testLockAndLoadMultiEntityByClassAndIdsRefreshIgnoresEvicted() {
+        Owner owner = this.createOwner();
+        Content content1 = this.createContent("c1", "content-1", owner);
+        Content content2 = this.createContent("c2", "content-2", owner);
+        Content content3 = this.createContent("c3", "content-3", owner);
+
+        // Verify evicted/detached elements aren't affected
+        content1.setName("name change 1");
+        content2.setName("name change 2");
+        content3.setName("name change 3");
+        this.testContentCurator.evict(content1);
+        this.testContentCurator.evict(content2);
+        this.testContentCurator.evict(content3);
+
+        Collection<String> input = Arrays.asList(content1.getUuid(), content3.getUuid());
+        Collection<Content> output = this.testContentCurator.lockAndLoadByIds(Content.class, input);
+
+        assertEquals(2, output.size());
+        assertFalse(output.contains(content1));
+        assertFalse(output.contains(content2));
+        assertFalse(output.contains(content3));
+        assertEquals("name change 1", content1.getName());
+        assertEquals("name change 2", content2.getName());
+        assertEquals("name change 3", content3.getName());
+
+        for (Content entity : output) {
+            assertTrue(entity.getName().matches("content-\\d"));
+        }
+    }
 }

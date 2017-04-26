@@ -76,7 +76,6 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import javax.persistence.LockModeType;
 import javax.persistence.PersistenceException;
 
 
@@ -459,7 +458,7 @@ public class Importer {
     // WARNING: Keep this method public, otherwise @Transactional is ignored:
     public List<Subscription> importObjects(Owner owner, Map<String, File> importFiles,
         ConflictOverrides overrides) throws IOException, ImporterException {
-        ownerCurator.lock(owner, LockModeType.PESSIMISTIC_WRITE);
+        ownerCurator.lock(owner);
 
         log.debug("Importing objects for owner: {}", owner);
 

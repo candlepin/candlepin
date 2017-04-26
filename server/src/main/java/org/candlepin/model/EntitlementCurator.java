@@ -369,7 +369,6 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     public List<Entitlement> listByConsumer(Consumer consumer, EntitlementFilterBuilder filters) {
         Criteria criteria = this.createCriteriaFromFilters(filters)
             .add(Restrictions.eq("consumer", consumer));
-            // .addOrder(Order.asc("Pool.id")); // Why do we care about the order?
 
         List<String> entitlementIds = criteria.list();
 
