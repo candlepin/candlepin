@@ -53,6 +53,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import javax.persistence.LockModeType;
+import javax.persistence.TypedQuery;
 
 /**
  * EntitlementPoolCurator
@@ -810,6 +811,23 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 .createQuery("SELECT COUNT(p) FROM Pool p WHERE p=:pool", Long.class)
                 .setParameter("pool", pool)
                 .getSingleResult() > 0;
+    }
+
+    /**
+     * Uses a database query to list pool ids of pools that require the given host for the given owner
+     * @param host the host consumer that is required
+     * @param owner the owner of the desired pools
+     * @return A list of pool ids that require the given host owned by the given owner
+     */
+    public List<String> getPoolsProvidedByHost(Consumer host) {
+        Owner owner = host.getOwner();
+        String stmt = "SELECT p.id FROM Pool p INNER JOIN p.attributes AS attr WHERE attr.name='requires_host' AND attr.value=:hostUuid AND p.owner=:owner";
+        Query q = currentSession().createQuery(stmt);
+        q.setParameter("hostUuid", host.getUuid());
+        q.setParameter("owner", owner);
+        List<String> pools = new ArrayList<String>();
+        pools.addAll(q.list());
+        return pools;
     }
 
     public void calculateConsumedForOwnersPools(Owner owner) {
