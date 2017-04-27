@@ -27,6 +27,7 @@ import org.hibernate.sql.JoinType;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -174,4 +175,23 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             .setProjection(Projections.id())
             .list();
     }
+
+    /**
+     * Fetches the list of existing product IDs currently available in the Candlepin database. If
+     * there are no existing products, this method returns an empty list.
+     *
+     * @return
+     *  The list of currently existing product IDs
+     */
+    public List<String> getExistingProductIds() {
+        // Impl notes:
+        // - At this point in CP, id is the primary key for Product, so we don't need to explicitly
+        //   request distinct IDs.
+        List<String> ids = this.getEntityManager()
+            .createQuery("SELECT id FROM Product", String.class)
+            .getResultList();
+
+        return ids != null ? ids : Collections.<String>emptyList();
+    }
+
 }
