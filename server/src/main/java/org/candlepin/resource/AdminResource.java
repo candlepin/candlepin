@@ -36,10 +36,14 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+
+
 
 /**
  * Candlepin server administration REST calls.
@@ -121,16 +125,17 @@ public class AdminResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("pophosteddb")
-    public JobDetail populatedHostedDB() {
+    public JobDetail populatedHostedDB(
+        @QueryParam("skip_existing") @DefaultValue("false") boolean skipExisting) {
         // TODO: Remove this method once we no longer need the task.
 
-        // Impl note: We don't need to bother doing this
+        // Impl note: We don't need to bother doing this task in standalone mode
         if (config.getBoolean(ConfigProperties.STANDALONE)) {
             log.warn("Ignoring populate DB request in standalone environment");
             return null;
         }
 
-        return PopulateHostedDBTask.createAsyncTask();
+        return PopulateHostedDBTask.createAsyncTask(skipExisting);
     }
 
 }
