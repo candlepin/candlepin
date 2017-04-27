@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.49.21
+Version: 0.9.49.22
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -401,6 +401,11 @@ fi
 
 
 %changelog
+* Thu Apr 27 2017 Kevin Howell <khowell@redhat.com> 0.9.49.22-1
+- 1428145: Do not deadlock on simultaneous hypervisor checkin
+  (csnyder@redhat.com)
+- Backport quantity column changes to 0.9.49 (bcourt@redhat.com)
+
 * Fri Mar 03 2017 Alex Wood <awood@redhat.com> 0.9.49.21-1
 - 1428828: Use batch delete when deleting expired pools (mstead@redhat.com)
 
