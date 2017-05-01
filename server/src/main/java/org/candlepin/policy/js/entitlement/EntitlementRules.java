@@ -162,29 +162,39 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
     @Override
     public List<Pool> filterPools(Consumer consumer, List<Pool> pools, boolean showAll) {
         JsonJsContext args = new JsonJsContext(objectMapper);
+        Map<String, ValidationResult> resultMap = new HashMap<String, ValidationResult>();
 
-        args.put("consumer", consumer);
-        args.put("hostConsumer", getHost(consumer));
-        args.put("consumerEntitlements", consumer.getEntitlements());
-        args.put("standalone", config.getBoolean(ConfigProperties.STANDALONE));
-        args.put("pools", pools);
-        args.put("caller", CallerType.LIST_POOLS.getLabel());
-        args.put("log", log, false);
+        if (!consumer.isShare()) {
+            args.put("consumer", consumer);
+            args.put("hostConsumer", getHost(consumer));
+            args.put("consumerEntitlements", consumer.getEntitlements());
+            args.put("standalone", config.getBoolean(ConfigProperties.STANDALONE));
+            args.put("pools", pools);
+            args.put("caller", CallerType.LIST_POOLS.getLabel());
+            args.put("log", log, false);
 
-        String json = jsRules.runJsFunction(String.class, "validate_pools_list", args);
-        Map<String, ValidationResult> resultMap;
-        TypeReference<Map<String, ValidationResult>> typeref =
-            new TypeReference<Map<String, ValidationResult>>() {};
-        try {
-            resultMap = objectMapper.toObject(json, typeref);
-        }
-        catch (Exception e) {
-            throw new RuleExecutionException(e);
+            String json = jsRules.runJsFunction(String.class, "validate_pools_list", args);
+            TypeReference<Map<String, ValidationResult>> typeref =
+                new TypeReference<Map<String, ValidationResult>>() {};
+            try {
+                resultMap = objectMapper.toObject(json, typeref);
+            }
+            catch (Exception e) {
+                throw new RuleExecutionException(e);
+            }
         }
 
         List<Pool> filteredPools = new LinkedList<Pool>();
         for (Pool pool : pools) {
-            ValidationResult result = resultMap.get(pool.getId());
+            ValidationResult result;
+            if (consumer.isShare()) {
+                result = new ValidationResult();
+                resultMap.put(pool.getId(), result);
+                validatePoolSharingEligibility(result, pool);
+            }
+            else {
+                result = resultMap.get(pool.getId());
+            }
             finishValidation(consumer, result, pool, 1);
 
             if (result.isSuccessful() && (!result.hasWarnings() || showAll)) {

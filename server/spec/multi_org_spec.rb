@@ -447,4 +447,32 @@ describe "Multi Org Shares" do
     end.to raise_error(RestClient::Forbidden)
   end
 
+  it 'does not list unsharable pools for share consumers' do
+    product = create_product(nil, nil,
+        {:attributes => {:virt_limit => "4", :host_limited => 'true'}, :owner => @owner1['key']})
+    # Will create an unmapped guest pool
+    create_pool_and_subscription(@owner1['key'], product.id, 10, [])
+
+    owner_pools = @user_client.list_owner_pools(@owner1['key'])
+    owner_pools.size.should == 2
+
+    owner_pools = @user_client.list_owner_pools(@owner1['key'], :consumer => share_consumer['uuid'])
+    owner_pools.size.should == 1
+  end
+
+  it 'lists pools for share correctly based on quantity' do
+    prod = create_product(nil, nil, :owner => @owner1['key'])
+    pool = create_pool_and_subscription(@owner1['key'], prod.id, 10)
+    pools_length = @user_client.list_owner_pools(@owner1['key'], :consumer => share_consumer['uuid']).length
+    expect(pools_length).to eq 1
+
+    @user_client.consume_pool(pool['id'], :uuid => share_consumer['uuid'], :quantity => 5)[0]
+    pools_length =  @user_client.list_owner_pools(@owner1['key'], :consumer => share_consumer['uuid']).length
+    expect(pools_length).to eq 1
+
+    @user_client.consume_pool(pool['id'], :uuid => share_consumer['uuid'], :quantity => 5)[0]
+    pools_length =  @user_client.list_owner_pools(@owner1['key'], :consumer => share_consumer['uuid']).length
+    expect(pools_length).to eq 0
+  end
+
 end
