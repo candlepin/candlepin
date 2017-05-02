@@ -1153,10 +1153,6 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             return true;
         }
 
-        if (dto.isLocked() != null && !dto.isLocked().equals(this.locked)) {
-            return true;
-        }
-
         Collection<String> dependentProductIds = dto.getDependentProductIds();
         if (dependentProductIds != null &&
             !Util.collectionsAreEqual(this.dependentProductIds, dependentProductIds)) {
