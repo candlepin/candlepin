@@ -63,6 +63,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 
+import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 
 
@@ -1486,6 +1487,22 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      *  A mapping of pool IDs to provided product IDs
      */
     public Map<String, Set<String>> getProvidedProductIdsByPoolIds(Collection<String> poolIds) {
+        return getProvidedProductIdsByPoolIdsForTesting(this.getEntityManager(), poolIds);
+    }
+
+    /**
+     * @param em
+     *  The entity manager to use for the queries, in tests this is a mock.
+     * @param poolIds
+     *  A collection of pool IDs for which to fetch provided product IDs
+     *
+     * @return
+     *  A mapping of pool IDs to provided product IDs
+     *  This is a convenience method for testing and should not be used except by the method above.
+     */
+    public Map<String, Set<String>> getProvidedProductIdsByPoolIdsForTesting(
+        EntityManager em, Collection<String> poolIds) {
+
         Map<String, Set<String>> providedProductMap = new HashMap<String, Set<String>>();
 
         if (poolIds != null && !poolIds.isEmpty()) {
@@ -1507,7 +1524,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                     builder.append(" p.id IN (:block").append(i).append(')');
                 }
 
-                query = this.getEntityManager().createQuery(builder.toString());
+                query = em.createQuery(builder.toString());
                 int i = -1;
 
                 for (List<String> block : blocks) {
@@ -1517,7 +1534,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             else {
                 builder.append(" p.id IN (:pids)");
 
-                query = this.getEntityManager().createQuery(builder.toString())
+                query = em.createQuery(builder.toString())
                     .setParameter("pids", poolIds);
             }
 
