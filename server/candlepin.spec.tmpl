@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 0.9.51.21
+Version: 0.9.51.22
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -218,6 +218,10 @@ fi
 
 #raw
 %changelog
+* Tue May 02 2017 Kevin Howell <khowell@redhat.com> 0.9.51.22-1
+- Added the skip_existing option to the populate hosted DB task
+  (crog@redhat.com)
+
 * Mon Jan 30 2017 Vritant Jain <adarshvritant@gmail.com> 0.9.51.21-1
 - 1414425: Future pool listing (wpoteat@redhat.com)
 - Backport content access assignment for owner and distributors
