@@ -1698,8 +1698,9 @@ public class PoolManagerTest {
         assertEquals(3, derivedPool.getConsumed().intValue());
         assertEquals(1, derivedPool.getEntitlements().size());
 
-        when(mockPoolCurator.lockAndLoadBatchById(anyCollection())).thenReturn(Arrays.asList(pool));
-
+        when(mockPoolCurator.lockAndLoad(pool)).thenReturn(pool);
+        when(enforcerMock.update(any(Consumer.class), any(Entitlement.class), any(Integer.class)))
+            .thenReturn(new ValidationResult());
         when(mockPoolCurator.lookupOversubscribedBySubscriptionIds(any(Owner.class), anyMap()))
             .thenReturn(Arrays.asList(derivedPool));
         when(mockPoolCurator.retrieveFreeEntitlementsOfPools(anyListOf(Pool.class), eq(true)))
@@ -1764,8 +1765,9 @@ public class PoolManagerTest {
         assertEquals(2, derivedPool2.getConsumed().intValue());
         assertEquals(2, derivedPool2.getConsumed().intValue());
 
-        when(mockPoolCurator.lockAndLoadBatchById(anyCollection())).thenReturn(Arrays.asList(pool));
-
+        when(mockPoolCurator.lockAndLoad(pool)).thenReturn(pool);
+        when(enforcerMock.update(any(Consumer.class), any(Entitlement.class), any(Integer.class)))
+            .thenReturn(new ValidationResult());
         when(mockPoolCurator.lookupOversubscribedBySubscriptionIds(any(Owner.class), anyMap())).thenReturn(
             Arrays.asList(derivedPool, derivedPool2, derivedPool3));
         when(mockPoolCurator.retrieveFreeEntitlementsOfPools(anyListOf(Pool.class), eq(true))).thenReturn(

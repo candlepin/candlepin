@@ -61,6 +61,11 @@ public class EnforcerForTesting implements Enforcer {
     }
 
     @Override
+    public ValidationResult update(Consumer consumer, Entitlement entitlement, Integer change) {
+        return new ValidationResult();
+    }
+
+    @Override
     public List<Pool> filterPools(Consumer consumer, List<Pool> pools,
         boolean showAll) {
         return pools;
