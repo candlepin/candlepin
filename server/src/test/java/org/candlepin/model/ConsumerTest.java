@@ -24,6 +24,7 @@ import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.resource.ConsumerResource;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
+import org.candlepin.util.Util;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -228,6 +229,7 @@ public class ConsumerTest extends DatabaseTestFixture {
 
     private Entitlement createEntitlement(Pool pool, Consumer c) {
         Entitlement e = new Entitlement(pool, c, 1);
+        e.setId(Util.generateDbUUID());
         return e;
     }
 

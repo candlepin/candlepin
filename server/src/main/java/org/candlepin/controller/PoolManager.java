@@ -333,4 +333,10 @@ public interface PoolManager {
     void deletePools(Collection<Pool> pools);
 
     void deletePools(Collection<Pool> pools, Set<String> alreadyDeletedPools);
+
+    void handlePostEntitlement(PoolManager manager, Consumer consumer,
+        Map<String, Entitlement> entitlements, Map<String, PoolQuantity> poolQuantityMap);
+
+    void checkBonusPoolQuantities(Owner owner,
+        Map<String, Entitlement> entitlements);
 }

@@ -20,6 +20,8 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
+import org.candlepin.model.Pool;
+import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.service.BaseEntitlementCertServiceAdapter;
 
@@ -60,42 +62,54 @@ public class StubEntitlementCertServiceAdapter extends BaseEntitlementCertServic
         Product product)
         throws GeneralSecurityException, IOException {
 
-        log.debug("Generating entitlement cert for:");
-        log.debug("   consumer: " + entitlement.getConsumer().getUuid());
-        log.debug("   product: " + product.getUuid());
-        log.debug("   end date: " + entitlement.getEndDate());
+        Map<String, Entitlement> ents = new HashMap<String, Entitlement>();
+        Map<String, PoolQuantity> poolQuantityMap = new HashMap<String, PoolQuantity>();
+        Map<String, Product> productMap = new HashMap<String, Product>();
 
-        EntitlementCertificate cert = new EntitlementCertificate();
-        CertificateSerial serial = new CertificateSerial(entitlement.getEndDate());
-        serialCurator.create(serial);
+        Pool pool = entitlement.getPool();
+        ents.put(pool.getId(), entitlement);
+        poolQuantityMap.put(pool.getId(), new PoolQuantity(pool, entitlement.getQuantity()));
+        productMap.put(pool.getId(), product);
 
-        cert.setSerial(serial);
-        cert.setKeyAsBytes(("---- STUB KEY -----" + Math.random())
-            .getBytes());
-        cert.setCertAsBytes(("---- STUB CERT -----" + Math.random())
-            .getBytes());
-        cert.setEntitlement(entitlement);
-        entitlement.getCertificates().add(cert);
-
-        log.debug("Generated cert: " + serial.getId());
-        log.debug("Key: " + cert.getKey());
-        log.debug("Cert: " + cert.getCert());
-        entCertCurator.create(cert);
-
-        return cert;
+        return generateEntitlementCerts(entitlement.getConsumer(),
+            poolQuantityMap, ents, productMap, true).get(pool.getId());
     }
 
     @Override
     public Map<String, EntitlementCertificate> generateEntitlementCerts(Consumer consumer,
-        Map<String, Entitlement> entitlements, Map<String, Product> products)
-        throws GeneralSecurityException, IOException {
-
+        Map<String, PoolQuantity> poolQuantityMap, Map<String, Entitlement> entitlements,
+        Map<String, Product> products, boolean save) throws GeneralSecurityException, IOException {
         Map<String, EntitlementCertificate> result = new HashMap<String, EntitlementCertificate>();
-        for (Entry<String, Entitlement> entry : entitlements.entrySet()) {
-            EntitlementCertificate cert = generateEntitlementCert(entry.getValue(),
-                products.get(entry.getKey()));
+
+        for (Entry<String, Entitlement> entry: entitlements.entrySet()) {
+            Entitlement entitlement = entry.getValue();
+            Product product = products.get(entry.getKey());
+            log.debug("Generating entitlement cert for:");
+            log.debug("   consumer: " + consumer.getUuid());
+            log.debug("   product: " + product.getUuid());
+            log.debug("   end date: " + entitlement.getEndDate());
+
+            EntitlementCertificate cert = new EntitlementCertificate();
+            CertificateSerial serial = new CertificateSerial(entitlement.getEndDate());
+            serialCurator.create(serial);
+
+            cert.setSerial(serial);
+            cert.setKeyAsBytes(("---- STUB KEY -----" + Math.random())
+                .getBytes());
+            cert.setCertAsBytes(("---- STUB CERT -----" + Math.random())
+                .getBytes());
+            cert.setEntitlement(entitlement);
+            entitlement.getCertificates().add(cert);
+
+            log.debug("Generated cert: " + serial.getId());
+            log.debug("Key: " + cert.getKey());
+            log.debug("Cert: " + cert.getCert());
+            if (save) {
+                cert = entCertCurator.create(cert);
+            }
             result.put(entry.getKey(), cert);
         }
+
         return result;
     }
 

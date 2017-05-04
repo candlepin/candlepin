@@ -66,6 +66,10 @@ public class EnforcerForTesting implements Enforcer {
     }
 
     @Override
+    public void finishValidation(ValidationResult result, Pool pool, Integer quantity) {
+    }
+
+    @Override
     public List<Pool> filterPools(Consumer consumer, List<Pool> pools,
         boolean showAll) {
         return pools;

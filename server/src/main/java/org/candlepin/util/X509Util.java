@@ -15,8 +15,6 @@
 package org.candlepin.util;
 
 import org.candlepin.model.Consumer;
-import org.candlepin.model.Entitlement;
-import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
@@ -75,21 +73,19 @@ public abstract class X509Util {
      * if environment filtering is enabled.
      *
      * @param prod the product who's content we should filter
-     * @param ent the original entitlement
-     * @param entCurator
      * @param promotedContent
      * @param filterEnvironment show content also be filtered by environment.
      * @return ProductContent to include in the certificate.
      */
-    public Set<ProductContent> filterProductContent(Product prod, Entitlement ent,
-        EntitlementCurator entCurator, Map<String, EnvironmentContent> promotedContent,
-        boolean filterEnvironment, Set<String> entitledProductIds) {
+    public Set<ProductContent> filterProductContent(Product prod, Consumer consumer,
+        Map<String, EnvironmentContent> promotedContent, boolean filterEnvironment,
+        Set<String> entitledProductIds) {
         Set<ProductContent> filtered = new HashSet<ProductContent>();
 
         for (ProductContent pc : prod.getProductContent()) {
             // Filter any content not promoted to environment.
             if (filterEnvironment &&
-                (ent.getConsumer().getEnvironment() != null &&
+                (consumer.getEnvironment() != null &&
                 !promotedContent.containsKey(pc.getContent().getId()))) {
 
                 log.debug("Skipping content not promoted to environment: " +

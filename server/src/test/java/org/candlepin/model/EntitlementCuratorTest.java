@@ -66,6 +66,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     private Date futureDate;
     private Date pastDate;
     private Product parentProduct;
+    private Product parentProduct2;
     private Product providedProduct1;
     private Product providedProduct2;
     private Product testProduct;
@@ -164,9 +165,11 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         pastDate = createDate(1998, 1, 1);
 
         parentProduct = TestUtil.createProduct();
+        parentProduct2 = TestUtil.createProduct();
         providedProduct1 = TestUtil.createProduct();
         providedProduct2 = TestUtil.createProduct();
         productCurator.create(parentProduct);
+        productCurator.create(parentProduct2);
         productCurator.create(providedProduct1);
         productCurator.create(providedProduct2);
     }
@@ -176,7 +179,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Entitlement e1 = TestUtil.createEntitlement();
         Entitlement e2 = TestUtil.createEntitlement(e1.getOwner(), e1.getConsumer(), e1.getPool(), null);
         e2.getCertificates().addAll(e1.getCertificates());
-
+        e2.setId(e1.getId());
         assertTrue(e1.equals(e2));
         assertEquals(0, e1.compareTo(e2));
     }
@@ -548,7 +551,11 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     private Entitlement setupListProvidingEntitlement() {
         Date startDate = createDate(2000, 1, 1);
         Date endDate = createDate(2005, 1, 1);
-        Pool testPool = createPool(owner, parentProduct, 1L,
+        return setupListProvidingEntitlement(parentProduct, startDate, endDate);
+    }
+
+    private Entitlement setupListProvidingEntitlement(Product product, Date startDate, Date endDate) {
+        Pool testPool = createPool(owner, product, 1L,
             startDate, endDate);
 
         // Add some provided products to this pool:
@@ -566,49 +573,68 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void listEntitledProductIds() {
-        Entitlement ent = setupListProvidingEntitlement();
-        Set<String> results = entitlementCurator.listEntitledProductIds(consumer,
-            ent.getStartDate(), ent.getEndDate());
+        Pool pool = setupListProvidingEntitlement().getPool();
+        Set<String> results = entitlementCurator.listEntitledProductIds(consumer, pool);
         assertEquals(3, results.size());
         assertTrue(results.contains(providedProduct1.getId()));
         assertTrue(results.contains(providedProduct2.getId()));
-        assertTrue(results.contains(ent.getPool().getProduct().getId()));
+        assertTrue(results.contains(pool.getProduct().getId()));
+    }
+
+    private Pool newPoolUsingProducts(Pool pool, Date startDate, Date endDate) {
+        Pool anotherPool = new Pool();
+        anotherPool.setProduct(pool.getProduct());
+        anotherPool.setProvidedProducts(pool.getProvidedProducts());
+        anotherPool.setDerivedProduct(pool.getDerivedProduct());
+        anotherPool.setDerivedProvidedProducts(pool.getDerivedProvidedProducts());
+        anotherPool.setStartDate(startDate);
+        anotherPool.setEndDate(endDate);
+        return anotherPool;
     }
 
     @Test
     public void listEntitledProductIdsStartDateOverlap() {
-        Entitlement ent = setupListProvidingEntitlement();
-        Set<String> results = entitlementCurator.listEntitledProductIds(consumer,
-            createDate(2002, 1, 1), createDate(2006, 1, 1));
+        Pool existingEntPool = setupListProvidingEntitlement().getPool();
+        Pool anotherPool = newPoolUsingProducts(existingEntPool,
+            createDate(2002, 1, 1),
+            createDate(2006, 1, 1));
+        Set<String> results = entitlementCurator.listEntitledProductIds(consumer, anotherPool);
         assertEquals(3, results.size());
-        assertTrue(results.contains(ent.getPool().getProductId()));
+        assertTrue(results.contains(existingEntPool.getProductId()));
     }
 
     @Test
     public void listEntitledProductIdsEndDateOverlap() {
-        Entitlement ent = setupListProvidingEntitlement();
+        Pool existingEntPool = setupListProvidingEntitlement().getPool();
+        Pool anotherPool = newPoolUsingProducts(existingEntPool,
+            pastDate,
+            createDate(2002, 1, 1));
+
         Set<String> results = entitlementCurator.listEntitledProductIds(consumer,
-            pastDate, createDate(2002, 1, 1));
+            anotherPool);
         assertEquals(3, results.size());
-        assertTrue(results.contains(ent.getPool().getProductId()));
+        assertTrue(results.contains(existingEntPool.getProductId()));
     }
 
     @Test
     public void listEntitledProductIdsTotalOverlap() {
-        Entitlement ent = setupListProvidingEntitlement();
+        Pool existingEntPool = setupListProvidingEntitlement().getPool();
+        Pool anotherPool = newPoolUsingProducts(existingEntPool, pastDate, futureDate);
         Set<String> results = entitlementCurator.listEntitledProductIds(consumer,
-            pastDate, futureDate);
+            anotherPool);
         // Picks up suite pools as well:
         assertEquals(5, results.size());
-        assertTrue(results.contains(ent.getPool().getProductId()));
+        assertTrue(results.contains(existingEntPool.getProductId()));
     }
 
     @Test
     public void listEntitledProductIdsNoOverlap() {
-        setupListProvidingEntitlement();
+        Pool existingEntPool = setupListProvidingEntitlement().getPool();
+        Pool anotherPool = setupListProvidingEntitlement(parentProduct2, pastDate, pastDate).getPool();
         Set<String> results = entitlementCurator.listEntitledProductIds(consumer,
-            pastDate, pastDate);
-        assertEquals(0, results.size());
+            anotherPool);
+        assertEquals(3, results.size());
+        assertFalse(results.contains(existingEntPool.getProductId()));
     }
 
     @Test

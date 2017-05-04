@@ -22,6 +22,7 @@ import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.ReplicationMode;
@@ -515,18 +516,24 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
      * or the given start date must be before the entitlement *and* the given end date
      * must be after entitlement. (i.e. we are looking for *any* overlap)
      *
+     * also assumes the consumer is about to create an entitlement with the pool provided
+     * as an argument, so includes the products from that pool
+     *
      * @param c
-     * @param startDate
-     * @param endDate
+     * @param pool
      * @return entitled product IDs
      */
-    public Set<String> listEntitledProductIds(Consumer c, Date startDate, Date endDate) {
+    public Set<String> listEntitledProductIds(Consumer c, Pool pool) {
         // FIXME Either address the TODO below, or move this method out of the curator.
         // TODO: Swap this to a db query if we're worried about memory:
         Set<String> entitledProductIds = new HashSet<String>();
+        List<Pool> pools = new LinkedList<Pool>();
         for (Entitlement e : c.getEntitlements()) {
-            Pool p = e.getPool();
-            if (!poolOverlapsRange(p, startDate, endDate)) {
+            pools.add(e.getPool());
+        }
+        pools.add(pool);
+        for (Pool p : pools) {
+            if (!poolOverlapsRange(p, pool.getStartDate(), pool.getEndDate())) {
                 // Skip this entitlement:
                 continue;
             }
@@ -571,7 +578,9 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
      * A version of list Modifying that finds Entitlements that modify
      * input entitlements.
      * When dealing with large amount of entitlements for which it is necessary
-     * to determine their modifier products.
+     * to determine their modifier products. Today this is used in the revoke case
+     * or when we update ent quantity. In an uncoming PR, we will change this implementation
+     * to directly mark these ents as dirty, instead of returning the ids.
      * @param entitlement
      * @return Entitlements that are being modified by the input entitlements
      */
@@ -579,6 +588,17 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         List<String> eids = new LinkedList<String>();
 
         if (entitlements != null && entitlements.iterator().hasNext()) {
+
+            String eidClause = "";
+            List<List<Entitlement>> splitEnts = new ArrayList<List<Entitlement>>();
+            Iterable<List<Entitlement>> blocks = Iterables.partition(entitlements, getInBlockSize());
+            int i = 0;
+            for (List<Entitlement> block : blocks) {
+                eidClause += " eOut NOT IN (:not_in_" + i + ") AND ";
+                splitEnts.add(block);
+                i++;
+            }
+
             String hql =
                 "SELECT DISTINCT eOut.id" +
                 "    FROM Entitlement eOut" +
@@ -589,8 +609,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
                 "        JOIN outContent.modifiedProductIds outModProdId" +
                 "    WHERE" +
                 "        outPool.endDate >= current_date AND" +
-                "        eOut.owner = :owner AND" +
-                "        eOut NOT IN (:ein) AND" +
+                "        eOut.owner = :owner AND " + eidClause +
                 "        EXISTS (" +
                 "            SELECT eIn" +
                 "                FROM Entitlement eIn" +
@@ -606,12 +625,71 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
 
             Query query = this.getEntityManager().createQuery(hql);
 
-            Iterable<List<Entitlement>> blocks = Iterables.partition(entitlements, getInBlockSize());
-
-            for (List<Entitlement> block : blocks) {
+            for (List<Entitlement> block : splitEnts) {
                 Owner sampleOwner = block.get(0).getOwner();
-                eids.addAll(query.setParameter("ein", block)
-                    .setParameter("owner", sampleOwner).getResultList());
+                query.setParameter("ein", block)
+                    .setParameter("owner", sampleOwner);
+                int j = 0;
+                for (List<Entitlement> splitEntBlock: splitEnts) {
+                    query.setParameter("not_in_" + j, splitEntBlock);
+                }
+
+                eids.addAll(query.getResultList());
+            }
+        }
+
+        return eids;
+    }
+
+    /**
+     * A version of list Modifying that finds Entitlements  of a consumer that modify
+     * input pools .
+     * When dealing with creating entitlements for which it is necessary
+     * to determine their modifier products. We fetch the modifying ents outside the lock,
+     * and once the pool is locked we simply mark the modifying ents as dirty.
+     * @param consumer
+     * @param pools
+     *
+     * @return Entitlements that are being modified by the input entitlements
+     */
+    public Collection<String> batchListModifying(Consumer consumer, Collection<Pool> pools) {
+        List<String> eids = new LinkedList<String>();
+
+        if (CollectionUtils.isNotEmpty(pools)) {
+
+            String hql =
+                "SELECT DISTINCT eOut.id" +
+                "    FROM Entitlement eOut" +
+                "        JOIN eOut.pool outPool" +
+                "        JOIN outPool.providedProducts outProvided" +
+                "        JOIN outProvided.productContent outProvContent" +
+                "        JOIN outProvContent.content outContent" +
+                "        JOIN outContent.modifiedProductIds outModProdId" +
+                "    WHERE" +
+                "        outPool.endDate >= current_date AND" +
+                "        eOut.owner = :owner AND" +
+                "        eOut.consumer = :consumer AND " +
+                "        EXISTS (" +
+                "            SELECT pIn" +
+                "            FROM Pool pIn" +
+                "                JOIN pIn.product inMktProd" +
+                "                LEFT JOIN pIn.providedProducts inProvidedProd" +
+                "            WHERE pIn in (:pin) AND" +
+                "                  pIn.endDate >= outPool.startDate AND" +
+                "                  pIn.startDate <= outPool.endDate AND" +
+                "                  (inProvidedProd.id = outModProdId OR inMktProd.id = outModProdId))";
+
+            Query query = this.getEntityManager().createQuery(hql);
+
+            Iterable<List<Pool>> blocks = Iterables.partition(pools, getInBlockSize());
+            Owner owner = consumer.getOwner();
+            for (List<Pool> block : blocks) {
+
+                query.setParameter("pin", block)
+                     .setParameter("consumer", consumer)
+                     .setParameter("owner", owner);
+
+                eids.addAll(query.getResultList());
             }
         }
 

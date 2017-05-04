@@ -18,7 +18,17 @@ package org.candlepin.bind;
  * Defines the workflow for the binding chain of responsibility
  */
 public interface BindOperation {
-    void preProcess(BindContext context, BindChain chain);
-    void acquireLock(BindContext context, BindChain chain);
-    void execute(BindContext context, BindChain chain);
+
+    /* Pre lock step. In this step, none of the entities except the
+     * consumer is locked. The intent is to gather as much as information
+     * as we can before we lock the respective entities.
+     * Returns true if we can continue processing, false otherwise.
+     */
+    boolean preProcess(BindContext context);
+
+    /* Post lock step. Usually in this step, we simply persist the pre-calculated
+     * creates or updates from the pre=process step.
+     * Returns true if we can continue processing, false otherwise.
+     */
+    boolean execute(BindContext context);
 }

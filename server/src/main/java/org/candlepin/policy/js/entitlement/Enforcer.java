@@ -152,4 +152,5 @@ public interface Enforcer {
 
     ValidationResult update(Consumer consumer, Entitlement entitlement, Integer change);
 
+    void finishValidation(ValidationResult result, Pool pool, Integer quantity);
 }

@@ -61,7 +61,8 @@ public class ConsumerEnricher {
             return;
         }
 
-        ComplianceStatus status = this.complianceRules.getStatus(consumer, null, false, true, true);
+        ComplianceStatus status = this.complianceRules.getStatus(consumer, null, null, false, true,
+            true, true);
         Map<String, DateRange> ranges = status.getProductComplianceDateRanges();
 
         // Compile the product IDs for the products we're going to be enriching

@@ -21,6 +21,9 @@ import org.candlepin.audit.NoopEventSinkImpl;
 import org.candlepin.audit.QpidConfigBuilder;
 import org.candlepin.audit.QpidConnection;
 import org.candlepin.auth.Principal;
+import org.candlepin.bind.BindChainFactory;
+import org.candlepin.bind.BindContextFactory;
+import org.candlepin.bind.PreEntitlementRulesCheckOpFactory;
 import org.candlepin.cache.JCacheManagerProvider;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.ConfigurationPrefixes;
@@ -147,6 +150,7 @@ import com.google.common.base.Function;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.google.inject.persist.jpa.JpaPersistModule;
@@ -271,16 +275,8 @@ public class CandlepinModule extends AbstractModule {
         bind(DateFormatter.class);
         requestStaticInjection(CPRestrictions.class);
 
-        configureInterceptors();
-        configureAuth();
         bind(JsonProvider.class);
-        configureEventSink();
-
-        configurePinsetter();
-
-        configureExporter();
-
-        configureSwagger();
+        miscConfigurations();
 
         // Async Jobs
         bind(RefreshPoolsJob.class);
@@ -301,6 +297,17 @@ public class CandlepinModule extends AbstractModule {
         }
 
         bind(CacheManager.class).toProvider(JCacheManagerProvider.class).in(Singleton.class);
+
+    }
+
+    private void miscConfigurations() {
+        configureInterceptors();
+        configureAuth();
+        configureEventSink();
+        configurePinsetter();
+        configureExporter();
+        configureSwagger();
+        configureBindFactories();
     }
 
     @Provides @Named("ValidationProperties")
@@ -321,6 +328,12 @@ public class CandlepinModule extends AbstractModule {
         Configuration jpaConfig = config.strippedSubset(ConfigurationPrefixes.JPA_CONFIG_PREFIX);
         install(new JpaPersistModule("default").properties(jpaConfig.toProperties()));
         bind(JPAInitializer.class).asEagerSingleton();
+    }
+
+    private void configureBindFactories() {
+        install(new FactoryModuleBuilder().build(BindChainFactory.class));
+        install(new FactoryModuleBuilder().build(BindContextFactory.class));
+        install(new FactoryModuleBuilder().build(PreEntitlementRulesCheckOpFactory.class));
     }
 
     private void configureAuth() {

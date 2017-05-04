@@ -406,6 +406,7 @@ public class DatabaseTestFixture {
         EntitlementCertificate cert) {
 
         Entitlement entitlement = new Entitlement();
+        entitlement.setId(Util.generateDbUUID());
         entitlement.setOwner(owner);
         entitlement.setPool(pool);
         entitlement.setConsumer(consumer);

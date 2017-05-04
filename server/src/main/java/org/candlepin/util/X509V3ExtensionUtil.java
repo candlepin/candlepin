@@ -18,7 +18,6 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.Pool;
@@ -84,8 +83,7 @@ public class X509V3ExtensionUtil extends X509Util {
         this.entCurator = entCurator;
     }
 
-    public Set<X509ExtensionWrapper> getExtensions(Entitlement ent,
-        String contentPrefix, Map<String, EnvironmentContent> promotedContent) {
+    public Set<X509ExtensionWrapper> getExtensions() {
         Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<X509ExtensionWrapper>();
 
         X509ExtensionWrapper versionExtension = new X509ExtensionWrapper(OIDUtil.REDHAT_OID + "." +
@@ -97,12 +95,11 @@ public class X509V3ExtensionUtil extends X509Util {
 
     public Set<X509ByteExtensionWrapper> getByteExtensions(Product sku,
         List<org.candlepin.model.dto.Product> productModels,
-        Entitlement ent, String contentPrefix,
-        Map<String, EnvironmentContent> promotedContent) throws IOException {
+        String contentPrefix, Map<String, EnvironmentContent> promotedContent) throws IOException {
         Set<X509ByteExtensionWrapper> toReturn =
             new LinkedHashSet<X509ByteExtensionWrapper>();
 
-        EntitlementBody eb = createEntitlementBodyContent(sku, productModels, ent,
+        EntitlementBody eb = createEntitlementBodyContent(sku, productModels,
             contentPrefix, promotedContent);
 
         X509ByteExtensionWrapper bodyExtension = new X509ByteExtensionWrapper(OIDUtil.REDHAT_OID + "." +
@@ -112,14 +109,12 @@ public class X509V3ExtensionUtil extends X509Util {
         return toReturn;
     }
 
-    public byte[] createEntitlementDataPayload(Product skuProduct,
-        List<org.candlepin.model.dto.Product> productModels,
-        Entitlement ent, String contentPrefix,
-        Map<String, EnvironmentContent> promotedContent)
+    public byte[] createEntitlementDataPayload(List<org.candlepin.model.dto.Product> productModels,
+        Consumer consumer, Pool pool, Integer quantity)
         throws UnsupportedEncodingException, IOException {
 
-        EntitlementBody map = createEntitlementBody(skuProduct, productModels, ent,
-            contentPrefix, promotedContent);
+        EntitlementBody map = createEntitlementBody(productModels,
+            consumer, pool, quantity);
 
         String json = toJson(map);
         return processPayload(json);
@@ -146,26 +141,23 @@ public class X509V3ExtensionUtil extends X509Util {
         return data.toByteArray();
     }
 
-    public EntitlementBody createEntitlementBody(Product skuProduct,
-        List<org.candlepin.model.dto.Product> productModels,
-        Entitlement ent, String contentPrefix,
-        Map<String, EnvironmentContent> promotedContent) {
+    public EntitlementBody createEntitlementBody(List<org.candlepin.model.dto.Product> productModels,
+        Consumer consumer, Pool pool, Integer quantity) {
 
         EntitlementBody toReturn = new EntitlementBody();
-        toReturn.setConsumer(ent.getConsumer().getUuid());
-        toReturn.setQuantity(ent.getQuantity());
-        toReturn.setSubscription(createSubscription(ent));
-        toReturn.setOrder(createOrder(ent.getPool()));
+        toReturn.setConsumer(consumer.getUuid());
+        toReturn.setQuantity(quantity);
+        toReturn.setSubscription(createSubscription(pool));
+        toReturn.setOrder(createOrder(pool));
         toReturn.setProducts(productModels);
-        toReturn.setPool(createPool(ent));
+        toReturn.setPool(createPool(pool));
 
         return toReturn;
     }
 
     public EntitlementBody createEntitlementBodyContent(Product sku,
         List<org.candlepin.model.dto.Product> productModels,
-        Entitlement ent, String contentPrefix,
-        Map<String, EnvironmentContent> promotedContent) {
+        String contentPrefix, Map<String, EnvironmentContent> promotedContent) {
 
         EntitlementBody toReturn = new EntitlementBody();
         toReturn.setProducts(productModels);
@@ -174,9 +166,8 @@ public class X509V3ExtensionUtil extends X509Util {
     }
 
     public TinySubscription createSubscription(
-        Entitlement ent) {
+        Pool pool) {
         TinySubscription toReturn = new TinySubscription();
-        Pool pool = ent.getPool();
         Product product = pool.getProduct();
 
         toReturn.setSku(product.getId());
@@ -218,7 +209,7 @@ public class X509V3ExtensionUtil extends X509Util {
             toReturn.setStackingId(stackingId);
         }
 
-        String virtOnly = ent.getPool().getAttributeValue(Product.Attributes.VIRT_ONLY);
+        String virtOnly = pool.getAttributeValue(Product.Attributes.VIRT_ONLY);
         if (virtOnly != null && !virtOnly.trim().equals("")) {
             // only included if not the default value of false
             Boolean vo = Boolean.valueOf(virtOnly.equalsIgnoreCase("true") ||
@@ -268,31 +259,31 @@ public class X509V3ExtensionUtil extends X509Util {
 
     public List<org.candlepin.model.dto.Product> createProducts(Product sku,
         Set<Product> products, String contentPrefix, Map<String, EnvironmentContent> promotedContent,
-        Consumer consumer, Entitlement ent) {
+        Consumer consumer, Pool pool) {
 
         List<org.candlepin.model.dto.Product> toReturn =
             new ArrayList<org.candlepin.model.dto.Product>();
 
         Set<String> entitledProductIds = entCurator.listEntitledProductIds(consumer,
-            ent.getStartDate(), ent.getEndDate());
+            pool);
 
         for (Product p : Collections2.filter(products, PROD_FILTER_PREDICATE)) {
-            toReturn.add(mapProduct(p, sku, contentPrefix, promotedContent, consumer, ent,
+            toReturn.add(mapProduct(p, sku, contentPrefix, promotedContent, consumer, pool,
                 entitledProductIds));
         }
 
         return toReturn;
     }
 
-    public org.candlepin.model.dto.Pool createPool(Entitlement ent) {
+    public org.candlepin.model.dto.Pool createPool(Pool pool) {
         org.candlepin.model.dto.Pool toReturn = new org.candlepin.model.dto.Pool();
-        toReturn.setId(ent.getPool().getId());
+        toReturn.setId(pool.getId());
         return toReturn;
     }
 
     public org.candlepin.model.dto.Product mapProduct(Product engProduct, Product sku,
         String contentPrefix, Map<String, EnvironmentContent> promotedContent,
-        Consumer consumer, Entitlement ent, Set<String> entitledProductIds) {
+        Consumer consumer, Pool pool, Set<String> entitledProductIds) {
 
         org.candlepin.model.dto.Product toReturn = new org.candlepin.model.dto.Product();
 
@@ -302,7 +293,7 @@ public class X509V3ExtensionUtil extends X509Util {
         String version = engProduct.getAttributeValue(Product.Attributes.VERSION);
         toReturn.setVersion(version != null ? version : "");
 
-        Branding brand = getBranding(ent.getPool(), engProduct.getId());
+        Branding brand = getBranding(pool, engProduct.getId());
         toReturn.setBrandType(brand.getType());
         toReturn.setBrandName(brand.getName());
 
@@ -315,8 +306,8 @@ public class X509V3ExtensionUtil extends X509Util {
             archList.add(arch);
         }
         toReturn.setArchitectures(archList);
-        toReturn.setContent(createContent(filterProductContent(engProduct, ent, entitledProductIds), sku,
-            contentPrefix, promotedContent, consumer, engProduct, ent));
+        toReturn.setContent(createContent(filterProductContent(engProduct, entitledProductIds), sku,
+            contentPrefix, promotedContent, consumer, engProduct));
 
         return toReturn;
     }
@@ -352,8 +343,7 @@ public class X509V3ExtensionUtil extends X509Util {
      *   product attributes.
      */
     public List<Content> createContent(Set<ProductContent> productContent, Product sku, String contentPrefix,
-        Map<String, EnvironmentContent> promotedContent, Consumer consumer, Product product,
-        Entitlement ent) {
+        Map<String, EnvironmentContent> promotedContent, Consumer consumer, Product product) {
 
         List<Content> toReturn = new ArrayList<Content>();
 
@@ -455,10 +445,9 @@ public class X509V3ExtensionUtil extends X509Util {
      * to that modified product. If they do not, we should filter out this content.
      *
      * @param prod
-     * @param ent
      * @return ProductContent to include in the certificate.
      */
-    public Set<ProductContent> filterProductContent(Product prod, Entitlement ent,
+    public Set<ProductContent> filterProductContent(Product prod,
         Set<String> entitledProductIds) {
         Set<ProductContent> filtered = new HashSet<ProductContent>();
 

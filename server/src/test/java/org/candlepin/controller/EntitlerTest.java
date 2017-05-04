@@ -564,7 +564,7 @@ public class EntitlerTest {
         int total = entitler.revokeUnmappedGuestEntitlements();
         assertEquals(1, total);
 
-        verify(pm).revokeEntitlement(e1);
+        verify(pm).revokeEntitlement(e2);
     }
 
     @Test

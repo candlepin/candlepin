@@ -221,7 +221,8 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
         return host;
     }
 
-    private void finishValidation(ValidationResult result, Pool pool, Integer quantity) {
+    @Override
+    public void finishValidation(ValidationResult result, Pool pool, Integer quantity) {
         validatePoolQuantity(result, pool, quantity);
         if (pool.isExpired(dateSource)) {
             result.addError(new ValidationError(i18n.tr("Subscriptions for {0} expired on: {1}",

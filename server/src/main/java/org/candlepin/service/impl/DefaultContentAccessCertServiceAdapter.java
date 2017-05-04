@@ -214,8 +214,8 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         dContent.setPath(getContentPrefix(consumer.getOwner(), consumer.getEnvironment()));
         container.setContent(dtoContents);
 
-        Set<X509ExtensionWrapper> extensions = prepareV3Extensions(consumer, null, null);
-        Set<X509ByteExtensionWrapper> byteExtensions = prepareV3ByteExtensions(consumer, container);
+        Set<X509ExtensionWrapper> extensions = prepareV3Extensions();
+        Set<X509ByteExtensionWrapper> byteExtensions = prepareV3ByteExtensions(container);
 
         X509Certificate x509Cert =  this.pki.createX509Certificate(
             createDN(consumer), extensions, byteExtensions, startDate,
@@ -263,10 +263,8 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         return sb.toString();
     }
 
-    public Set<X509ExtensionWrapper> prepareV3Extensions(Consumer consumer,
-        String contentPrefix, Map<String, EnvironmentContent> promotedContent) {
-        Set<X509ExtensionWrapper> result = v3extensionUtil.getExtensions(null,
-            contentPrefix, promotedContent);
+    public Set<X509ExtensionWrapper> prepareV3Extensions() {
+        Set<X509ExtensionWrapper> result = v3extensionUtil.getExtensions();
         X509ExtensionWrapper typeExtension = new X509ExtensionWrapper(OIDUtil.REDHAT_OID + "." +
             OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ENTITLEMENT_TYPE_KEY), false, "OrgLevel");
 
@@ -274,12 +272,12 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         return result;
     }
 
-    public Set<X509ByteExtensionWrapper> prepareV3ByteExtensions(Consumer consumer,
-        org.candlepin.model.dto.Product container) throws IOException {
+    public Set<X509ByteExtensionWrapper> prepareV3ByteExtensions(org.candlepin.model.dto.Product container)
+        throws IOException {
         List<org.candlepin.model.dto.Product> products = new ArrayList<org.candlepin.model.dto.Product>();
         products.add(container);
-        Set<X509ByteExtensionWrapper> result = v3extensionUtil.getByteExtensions(null,
-            products, null, null, null);
+        Set<X509ByteExtensionWrapper> result = v3extensionUtil.getByteExtensions(null, products,
+            null,  null);
         return result;
     }
 
@@ -316,11 +314,11 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         entitledProductIds.add("content-access");
 
         org.candlepin.model.dto.Product productModel = v3extensionUtil.mapProduct(container, skuProduct,
-            contentPrefix, promotedContent, emptyConsumer, emptyEnt, entitledProductIds);
+            contentPrefix, promotedContent, emptyConsumer, emptyPool, entitledProductIds);
 
         productModels.add(productModel);
 
-        return v3extensionUtil.createEntitlementDataPayload(skuProduct, productModels,
-            emptyEnt, contentPrefix, promotedContent);
+        return v3extensionUtil.createEntitlementDataPayload(productModels,
+            emptyConsumer, emptyPool, null);
     }
 }

@@ -14,45 +14,93 @@
  */
 package org.candlepin.bind;
 
+import org.candlepin.model.Consumer;
+import org.candlepin.model.Entitlement;
+import org.candlepin.policy.EntitlementRefusedException;
+import org.candlepin.policy.js.entitlement.Enforcer;
+
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
-/** Holds and represents the binding chain of responsibility.  Inspired by the servlet filter interfaces. */
+/**
+ * Holds and represents the binding chain of responsibility.
+ * Inspired by the servlet filter interfaces.
+ */
 public class BindChain {
-    private List<BindOperation> operations;
-    private int preProcessIndex = -1;
-    private int lockIndex = -1;
-    private int executeIndex = -1;
+    private BindContext context;
+    private List<BindOperation> operations = new ArrayList<BindOperation>();
+    private static Logger log = LoggerFactory.getLogger(BindChain.class);
 
-    public BindChain() {
-        operations = new ArrayList<BindOperation>();
+    @Inject
+    public BindChain(
+        BindContextFactory bindContextFactory,
+        PreEntitlementRulesCheckOpFactory rulesCheckOpFactory,
+        HandleEntitlementsOp handleEntitlementsOp,
+        PostBindBonusPoolsOp postBindBonusPoolsOp,
+        HandleCertificatesOp handleCertificatesOp,
+        ComplianceOp complianceOp,
+        @Assisted Consumer consumer,
+        @Assisted Map<String, Integer> poolQuantityMap,
+        @Assisted Enforcer.CallerType caller) {
+
+        context = bindContextFactory.create(consumer, poolQuantityMap);
+        operations.add(rulesCheckOpFactory.create(caller));
+        operations.add(handleEntitlementsOp);
+        operations.add(postBindBonusPoolsOp);
+        operations.add(handleCertificatesOp);
+        operations.add(complianceOp);
     }
 
-    public void preProcess(BindContext context) {
-        preProcessIndex++;
-        if (preProcessIndex < operations.size()) {
-            operations.get(preProcessIndex).preProcess(context, this);
+    private boolean preProcess(BindContext context) {
+        for (BindOperation operation : operations) {
+            log.debug("Starting preprocess of {}", operation.getClass().getSimpleName());
+            if (operation.preProcess(context)) {
+                log.debug("Finished preprocess of {}", operation.getClass().getSimpleName());
+            }
+            else {
+                log.error("Skipped chain in preprocess of operation {}",
+                    operation.getClass().getSimpleName());
+                return false;
+            }
         }
+        return true;
     }
 
-    public void acquireLock(BindContext context) {
-        lockIndex++;
-        if (lockIndex < operations.size()) {
-            operations.get(lockIndex).acquireLock(context, this);
+    private void lock(BindContext context) {
+        log.debug("Requesting locks");
+        context.lockPools();
+        log.debug("Successfully achieved locks");
+    }
+
+    private boolean execute(BindContext context) {
+        for (BindOperation operation : operations) {
+            log.debug("Starting execute of {}", operation.getClass().getSimpleName());
+            if (operation.execute(context)) {
+                log.debug("Finished execute of {}", operation.getClass().getSimpleName());
+            }
+            else {
+                log.error("Skipped chain execute in operation {}", operation.getClass().getSimpleName());
+                return false;
+            }
         }
+        return true;
     }
 
-    public void execute(BindContext context) {
-        executeIndex++;
-
-        if (executeIndex < operations.size()) {
-            operations.get(executeIndex).execute(context, this);
+    public Collection<Entitlement> run() throws EntitlementRefusedException {
+        if (preProcess(context)) {
+            lock(context);
+            if (execute(context)) {
+                return context.getEntitlementMap().values();
+            }
         }
+        throw context.getException();
     }
-
-    public void addOperation(BindOperation operation) {
-        operations.add(operation);
-    }
-
-    // TODO Implement other assorted list methods if desired.
 }

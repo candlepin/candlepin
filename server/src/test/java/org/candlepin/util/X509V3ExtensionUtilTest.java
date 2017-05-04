@@ -146,7 +146,7 @@ public class X509V3ExtensionUtilTest {
         Entitlement e = new Entitlement(pool, consumer, 10);
 
         List<org.candlepin.model.dto.Product> certProds = util.createProducts(mktProd,
-            prods, "", new HashMap<String, EnvironmentContent>(),  new Consumer(), e);
+            prods, "", new HashMap<String, EnvironmentContent>(),  new Consumer(), pool);
 
         assertEquals(1, certProds.size());
         assertEquals(brandedName, certProds.get(0).getBrandName());
@@ -170,11 +170,9 @@ public class X509V3ExtensionUtilTest {
         for (Branding b : pool.getBranding()) {
             possibleBrandNames.add(b.getName());
         }
-        Consumer consumer = new Consumer();
-        Entitlement e = new Entitlement(pool, consumer, 10);
 
         List<org.candlepin.model.dto.Product> certProds = util.createProducts(mktProd,
-            prods, "", new HashMap<String, EnvironmentContent>(),  new Consumer(), e);
+            prods, "", new HashMap<String, EnvironmentContent>(),  new Consumer(), pool);
 
         assertEquals(1, certProds.size());
         // Should get the first name we encountered

@@ -40,6 +40,7 @@ import org.candlepin.model.Environment;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
+import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceSubscription;
@@ -84,6 +85,7 @@ public class EntitlementCertificateGeneratorTest {
 
     @Captor private ArgumentCaptor<Map<String, Entitlement>> entMapCaptor;
     @Captor private ArgumentCaptor<Map<String, Product>> productMapCaptor;
+    @Captor private ArgumentCaptor<Map<String, PoolQuantity>> poolQuantityMapCaptor;
 
     private EntitlementCertificateGenerator ecGenerator;
 
@@ -111,8 +113,11 @@ public class EntitlementCertificateGeneratorTest {
         expectedProducts.put("Swift", product);
         Map<String, Entitlement> expected = new HashMap<String, Entitlement>();
         expected.put("Swift", entitlement);
+        Map<String, PoolQuantity> poolQuantityMap = new HashMap<String, PoolQuantity>();
+        poolQuantityMap.put("Swift", new PoolQuantity(pool, 0));
         ecGenerator.generateEntitlementCertificate(pool, entitlement);
-        verify(mockEntCertAdapter).generateEntitlementCerts(eq(consumer), eq(expected), eq(expectedProducts));
+        verify(mockEntCertAdapter).generateEntitlementCerts(eq(consumer), eq(poolQuantityMap), eq(expected),
+            eq(expectedProducts), eq(true));
     }
 
     @Test
@@ -123,12 +128,16 @@ public class EntitlementCertificateGeneratorTest {
         Consumer consumer = mock(Consumer.class);
         Product product = mock(Product.class);
         Entitlement entitlement = mock(Entitlement.class);
+        Pool pool = mock(Pool.class);
         Map<String, Product> products = new HashMap<String, Product>();
         products.put("Taylor", product);
         Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
         entitlements.put("Taylor", entitlement);
-        ecGenerator.generateEntitlementCertificates(consumer, products, entitlements);
-        verify(mockEntCertAdapter).generateEntitlementCerts(eq(consumer), eq(entitlements), eq(products));
+        Map<String, PoolQuantity> poolQuantities = new HashMap<String, PoolQuantity>();
+        poolQuantities.put("Taylor", new PoolQuantity(pool, 1));
+        ecGenerator.generateEntitlementCertificates(consumer, products, poolQuantities, entitlements, true);
+        verify(mockEntCertAdapter).generateEntitlementCerts(eq(consumer), eq(poolQuantities), eq
+            (entitlements), eq(products), eq(true));
     }
 
     @Test
@@ -242,7 +251,7 @@ public class EntitlementCertificateGeneratorTest {
         when(cqmock.iterator()).thenReturn(entitlements.iterator());
         when(this.mockEntitlementCurator.listByEnvironment(environment)).thenReturn(cqmock);
         when(this.mockEntCertAdapter.generateEntitlementCerts(any(Consumer.class), any(Map.class),
-            any(Map.class))).thenReturn(ecMap);
+            any(Map.class), any(Map.class), eq(true))).thenReturn(ecMap);
 
         this.ecGenerator.regenerateCertificatesOf(environment, Arrays.asList("c1", "c2", "c4"), false);
 
@@ -251,7 +260,8 @@ public class EntitlementCertificateGeneratorTest {
         assertFalse(entitlements.get(2).isDirty());
 
         verify(this.mockEntCertAdapter, times(2)).generateEntitlementCerts(any(Consumer.class),
-            this.entMapCaptor.capture(), this.productMapCaptor.capture());
+            this.poolQuantityMapCaptor.capture(), this.entMapCaptor.capture(), this.productMapCaptor
+            .capture(), eq(true));
 
         verify(this.mockEventSink, times(2)).queueEvent(any(Event.class));
     }
@@ -294,14 +304,15 @@ public class EntitlementCertificateGeneratorTest {
         when(this.mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class), eq(owner),
             eq(product.getId()), any(Date.class))).thenReturn(Arrays.asList(pool));
         when(this.mockEntCertAdapter.generateEntitlementCerts(any(Consumer.class), any(Map.class),
-            any(Map.class))).thenReturn(ecMap);
+            any(Map.class), any(Map.class), eq(true))).thenReturn(ecMap);
 
         this.ecGenerator.regenerateCertificatesOf(owner, product.getId(), false);
 
         assertFalse(entitlement.isDirty());
 
         verify(this.mockEntCertAdapter, times(1)).generateEntitlementCerts(any(Consumer.class),
-            this.entMapCaptor.capture(), this.productMapCaptor.capture());
+            this.poolQuantityMapCaptor.capture(), this.entMapCaptor.capture(),
+            this.productMapCaptor.capture(), eq(true));
 
         verify(this.mockEventSink, times(1)).queueEvent(any(Event.class));
     }
@@ -330,8 +341,9 @@ public class EntitlementCertificateGeneratorTest {
         entCerts.put(pool.getId(), new EntitlementCertificate());
 
         when(this.mockEntCertAdapter.generateEntitlementCerts(
-            any(Consumer.class), anyMapOf(String.class, Entitlement.class),
-            anyMapOf(String.class, Product.class))).thenReturn(entCerts);
+            any(Consumer.class), anyMapOf(String.class, PoolQuantity.class),
+            anyMapOf(String.class, Entitlement.class),
+            anyMapOf(String.class, Product.class), eq(true))).thenReturn(entCerts);
 
         Consumer consumer = TestUtil.createConsumer(owner);
         Entitlement entitlement = new Entitlement(pool, consumer, 1);
@@ -341,7 +353,8 @@ public class EntitlementCertificateGeneratorTest {
         assertFalse(entitlement.isDirty());
 
         verify(this.mockEntCertAdapter).generateEntitlementCerts(eq(consumer),
-            this.entMapCaptor.capture(), this.productMapCaptor.capture());
+            this.poolQuantityMapCaptor.capture(), this.entMapCaptor.capture(), this.productMapCaptor
+            .capture(), eq(true));
 
         assertEquals(entitlement, this.entMapCaptor.getValue().get(pool.getId()));
         assertEquals(product, this.productMapCaptor.getValue().get(pool.getId()));
@@ -388,14 +401,15 @@ public class EntitlementCertificateGeneratorTest {
 
         when(this.mockEntitlementCurator.find(eq(entitlement.getId()))).thenReturn(entitlement);
         when(this.mockEntCertAdapter.generateEntitlementCerts(any(Consumer.class), any(Map.class),
-            any(Map.class))).thenReturn(ecMap);
+            any(Map.class), any(Map.class), eq(true))).thenReturn(ecMap);
 
         this.ecGenerator.regenerateCertificatesByEntitlementIds(entitlements, false);
 
         assertFalse(entitlement.isDirty());
 
         verify(this.mockEntCertAdapter, times(1)).generateEntitlementCerts(any(Consumer.class),
-            this.entMapCaptor.capture(), this.productMapCaptor.capture());
+            this.poolQuantityMapCaptor.capture(), this.entMapCaptor.capture(), this.productMapCaptor
+            .capture(), eq(true));
 
         verify(this.mockEventSink, times(1)).queueEvent(any(Event.class));
     }

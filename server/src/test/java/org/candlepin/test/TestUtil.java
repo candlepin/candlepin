@@ -40,6 +40,7 @@ import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductContentData;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
+import org.candlepin.util.Util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -461,6 +462,7 @@ public class TestUtil {
         EntitlementCertificate cert) {
 
         Entitlement toReturn = new Entitlement();
+        toReturn.setId(Util.generateDbUUID());
         toReturn.setOwner(owner);
         toReturn.setPool(pool);
 

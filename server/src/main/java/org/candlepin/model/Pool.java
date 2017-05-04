@@ -61,7 +61,6 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
-import javax.persistence.Version;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -346,9 +345,6 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     @Cascade({org.hibernate.annotations.CascadeType.ALL, org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     @BatchSize(size = 1000)
     private Set<Branding> branding;
-
-    @Version
-    private int version;
 
     // Impl note:
     // These properties are only used as temporary stores to hold information that's only present

@@ -17,7 +17,6 @@ package org.candlepin.util;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.Entitlement;
 import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
@@ -70,8 +69,7 @@ public class X509ExtensionUtil  extends X509Util{
         return toReturn;
     }
 
-    public Set<X509ExtensionWrapper> subscriptionExtensions(Entitlement ent) {
-        Pool pool = ent.getPool();
+    public Set<X509ExtensionWrapper> subscriptionExtensions(Pool pool) {
         SimpleDateFormat iso8601DateFormat = Util.getUTCDateFormat();
         Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<X509ExtensionWrapper>();
         // Subscription/order info
@@ -83,8 +81,7 @@ public class X509ExtensionUtil  extends X509Util{
             OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ORDER_NAMESPACE_KEY);
         if (pool.getProductId() != null) {
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
-                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_NAME_KEY), false, ent
-                .getPool().getProductName()));
+                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_NAME_KEY), false, pool.getProductName()));
         }
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
             OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_NUMBER_KEY), false, pool
@@ -152,7 +149,7 @@ public class X509ExtensionUtil  extends X509Util{
                 stackingId));
         }
         //code "true" as "1" so it matches other bools in the cert
-        String virtOnly = ent.getPool().getAttributeValue(Product.Attributes.VIRT_ONLY);
+        String virtOnly = pool.getAttributeValue(Product.Attributes.VIRT_ONLY);
         if (virtOnly != null && virtOnly.equals("true")) {
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_VIRT_ONLY_KEY), false,
@@ -163,13 +160,13 @@ public class X509ExtensionUtil  extends X509Util{
     }
 
     public List<X509ExtensionWrapper> entitlementExtensions(
-        Entitlement entitlement) {
+        Integer quantity) {
         String entitlementOid = OIDUtil.REDHAT_OID + "." +
             OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ORDER_NAMESPACE_KEY);
         return Collections.singletonList(new X509ExtensionWrapper(
             entitlementOid + "." +
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_QUANTITY_USED), false,
-            entitlement.getQuantity().toString()));
+            quantity.toString()));
     }
 
     public Set<X509ExtensionWrapper> productExtensions(Product product) {
