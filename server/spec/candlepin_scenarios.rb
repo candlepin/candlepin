@@ -22,8 +22,8 @@ module CandlepinMethods
     return owner
   end
 
-  def delete_owner(owner, revoke=true)
-    @cp.delete_owner(owner['key'], revoke)
+  def delete_owner(owner, revoke=true, force=false)
+    @cp.delete_owner(owner['key'], revoke, force)
     @owners.delete owner
   end
 

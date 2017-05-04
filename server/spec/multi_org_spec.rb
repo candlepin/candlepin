@@ -475,4 +475,75 @@ describe "Multi Org Shares" do
     expect(pools_length).to eq 0
   end
 
+  it 'share consumer gets removed when recipient org is removed' do
+    @user_client.register(
+      random_string('orgBShare'),
+      :share,
+      nil,
+      {},
+      nil,
+      @owner1['key'],
+      [],
+      [],
+      nil,
+      [],
+      nil,
+      [],
+      nil,
+      nil,
+      nil,
+      @owner2['key']
+    )
+
+    share = @cp.list_consumers(:owner => @owner1['key']).first
+    delete_owner(@owner2)
+    @cp.list_consumers(:owner => @owner1['key']).size.should == 0
+  end
+
+  it 'cannot delete org when share consumer exists' do
+    @user_client.register(
+      random_string('orgBShare'),
+      :share,
+      nil,
+      {},
+      nil,
+      @owner1['key'],
+      [],
+      [],
+      nil,
+      [],
+      nil,
+      [],
+      nil,
+      nil,
+      nil,
+      @owner2['key']
+    )
+
+    expect do
+      delete_owner(@owner1)
+    end.to raise_error(RestClient::BadRequest)
+  end
+
+  it 'can delete org when share consumer exists with force' do
+    @user_client.register(
+      random_string('orgBShare'),
+      :share,
+      nil,
+      {},
+      nil,
+      @owner1['key'],
+      [],
+      [],
+      nil,
+      [],
+      nil,
+      [],
+      nil,
+      nil,
+      nil,
+      @owner2['key']
+    )
+    delete_owner(@owner1, true, true)
+  end
 end

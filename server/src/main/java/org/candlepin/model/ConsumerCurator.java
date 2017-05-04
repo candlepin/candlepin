@@ -305,6 +305,25 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         return this.cpQueryFactory.<Consumer>buildQuery(this.currentSession(), criteria);
     }
 
+    @SuppressWarnings("unchecked")
+    @Transactional
+    public CandlepinQuery<Consumer> listByRecipientOwner(Owner owner) {
+        DetachedCriteria criteria = this.createSecureDetachedCriteria()
+            .add(Restrictions.eq("recipientOwnerKey", owner.getKey()));
+
+        return this.cpQueryFactory.<Consumer>buildQuery(this.currentSession(), criteria);
+    }
+
+    public boolean doesShareConsumerExist(Owner owner) {
+        long result = (Long) createSecureCriteria()
+            .add(Restrictions.eq("owner", owner))
+            .add(Restrictions.isNotNull("recipientOwnerKey"))
+            .setProjection(Projections.count("id"))
+            .uniqueResult();
+
+        return result != 0;
+    }
+
     /**
      * Search for Consumers with fields matching those provided.
      *
