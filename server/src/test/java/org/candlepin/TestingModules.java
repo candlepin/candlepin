@@ -40,6 +40,7 @@ import org.candlepin.guice.ScriptEngineProvider;
 import org.candlepin.guice.TestPrincipalProvider;
 import org.candlepin.guice.TestingRequestScope;
 import org.candlepin.guice.ValidationListenerProvider;
+import org.candlepin.model.CPRestrictions;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.pinsetter.core.GuiceJobFactory;
@@ -299,6 +300,8 @@ public class TestingModules {
             bind(PrincipalProvider.class).to(TestPrincipalProvider.class);
             bind(Principal.class).toProvider(TestPrincipalProvider.class);
             bind(EventSink.class).to(NoopEventSinkImpl.class);
+
+            bind(CPRestrictions.class);
 
             bind(ExportExtensionAdapter.class).to(DefaultExportExtensionAdapter.class);
 

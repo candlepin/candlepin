@@ -16,27 +16,51 @@ package org.candlepin.model;
 
 import static org.junit.Assert.*;
 
+import org.candlepin.TestingModules;
+import org.candlepin.common.config.Configuration;
+import org.candlepin.config.DatabaseConfigFactory;
+
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.InExpression;
 import org.hibernate.criterion.LogicalExpression;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.inject.Inject;
 
+/**
+ * CPRestrictionsTest
+ */
 public class CPRestrictionsTest {
+    @Inject private Configuration config;
+    @Inject private CPRestrictions cpRestrictions;
+
+    @Before
+    public void init() {
+        Injector injector = Guice.createInjector(
+            new TestingModules.MockJpaModule(),
+            new TestingModules.ServletEnvironmentModule(),
+            new TestingModules.StandardTest());
+        injector.injectMembers(this);
+    }
 
     @Test
     public void testIn() {
         List<String> items = new LinkedList<String>();
         StringBuilder expected = new StringBuilder("taylor in (");
 
-        for (int i = 0; i < AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE * 3; ++i) {
+        int inBlockSize = config.getInt(DatabaseConfigFactory.IN_OPERATOR_BLOCK_SIZE);
+        for (int i = 0; i < inBlockSize * 3; ++i) {
             items.add(String.valueOf(i));
 
-            if (items.size() % AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE == 0) {
+            if (items.size() % inBlockSize == 0) {
                 expected.append(i).append(") or taylor in (");
             }
             else {
@@ -45,7 +69,7 @@ public class CPRestrictionsTest {
         }
         expected.setLength(expected.length() - 15);
 
-        Criterion crit = CPRestrictions.in("taylor", items);
+        Criterion crit = cpRestrictions.in("taylor", items);
         LogicalExpression le = (LogicalExpression) crit;
         assertEquals("or", le.getOp());
         assertEquals(expected.toString(), le.toString());
@@ -57,14 +81,15 @@ public class CPRestrictionsTest {
         String expected = "swift in (";
         int i = 0;
 
-        for (; i < AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE - 1; i++) {
+        int inBlockSize = config.getInt(DatabaseConfigFactory.IN_OPERATOR_BLOCK_SIZE);
+        for (; i < inBlockSize - 1; i++) {
             expected += i + ", ";
             items.add("" + i);
         }
 
         expected += i + ")";
         items.add("" + i);
-        Criterion crit = CPRestrictions.in("swift", items);
+        Criterion crit = cpRestrictions.in("swift", items);
         InExpression ie = (InExpression) crit;
         assertEquals(expected, ie.toString());
     }
@@ -74,10 +99,11 @@ public class CPRestrictionsTest {
         List<String> items = new LinkedList<String>();
         StringBuilder expected = new StringBuilder("taylor in (");
 
-        for (int i = 0; i < AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE * 3; ++i) {
+        int inBlockSize = config.getInt(DatabaseConfigFactory.IN_OPERATOR_BLOCK_SIZE);
+        for (int i = 0; i < inBlockSize * 3; ++i) {
             items.add(String.valueOf(i));
 
-            if (items.size() % AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE == 0) {
+            if (items.size() % inBlockSize == 0) {
                 expected.append(i).append(") or taylor in (");
             }
             else {
@@ -86,7 +112,7 @@ public class CPRestrictionsTest {
         }
         expected.setLength(expected.length() - 15);
 
-        Criterion crit = CPRestrictions.in("taylor", items.toArray());
+        Criterion crit = cpRestrictions.in("taylor", items.toArray());
         LogicalExpression le = (LogicalExpression) crit;
         assertEquals("or", le.getOp());
         assertEquals(expected.toString(), le.toString());
@@ -98,16 +124,16 @@ public class CPRestrictionsTest {
         String expected = "swift in (";
         int i = 0;
 
-        for (; i < AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE - 1; i++) {
+        int inBlockSize = config.getInt(DatabaseConfigFactory.IN_OPERATOR_BLOCK_SIZE);
+        for (; i < inBlockSize - 1; i++) {
             expected += i + ", ";
             items.add("" + i);
         }
 
         expected += i + ")";
         items.add("" + i);
-        Criterion crit = CPRestrictions.in("swift", items.toArray());
+        Criterion crit = cpRestrictions.in("swift", items.toArray());
         InExpression ie = (InExpression) crit;
         assertEquals(expected, ie.toString());
     }
 }
-

@@ -94,7 +94,7 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
 
         int removed = 0;
 
-        for (List<String> block : Iterables.partition(ids, AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE)) {
+        for (List<String> block : Iterables.partition(ids, getInBlockSize())) {
             removed += query.setParameterList("expiredIds", block).executeUpdate();
         }
 
@@ -114,7 +114,7 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
         }
 
         DetachedCriteria criteria = DetachedCriteria.forClass(CertificateSerial.class)
-            .add(CPRestrictions.in("id", lids));
+            .add(cpRestrictions.in("id", lids));
 
         return this.cpQueryFactory.<CertificateSerial>buildQuery(this.currentSession(), criteria);
     }

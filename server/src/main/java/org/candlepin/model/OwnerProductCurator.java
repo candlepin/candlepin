@@ -92,7 +92,7 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
 
         if (ids != null && !ids.isEmpty()) {
             DetachedCriteria criteria = this.createSecureDetachedCriteria(Owner.class, null)
-                .add(CPRestrictions.in("id", ids));
+                .add(cpRestrictions.in("id", ids));
 
             return this.cpQueryFactory.<Owner>buildQuery(this.currentSession(), criteria);
         }
@@ -163,7 +163,7 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
 
         if (!uuids.isEmpty()) {
             DetachedCriteria criteria = this.createSecureDetachedCriteria(Product.class, null)
-                .add(CPRestrictions.in("uuid", uuids));
+                .add(cpRestrictions.in("uuid", uuids));
 
             return this.cpQueryFactory.<Product>buildQuery(this.currentSession(), criteria);
         }
@@ -190,8 +190,8 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
 
         if (uuids != null && !uuids.isEmpty()) {
             DetachedCriteria criteria = this.createSecureDetachedCriteria(Product.class, null)
-                .add(CPRestrictions.in("uuid", uuids))
-                .add(CPRestrictions.in("id", productIds));
+                .add(cpRestrictions.in("uuid", uuids))
+                .add(cpRestrictions.in("id", productIds));
 
             return this.cpQueryFactory.<Product>buildQuery(this.currentSession(), criteria);
         }
@@ -262,7 +262,7 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
                 .createAlias("product", "product")
                 .setProjection(Projections.property("product.id"))
                 .add(Restrictions.eq("owner.id", owner.getId()))
-                .add(CPRestrictions.in("product.id", productIds))
+                .add(cpRestrictions.in("product.id", productIds))
                 .list());
         }
 
@@ -379,7 +379,7 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
 
         if (uuids != null && !uuids.isEmpty()) {
             DetachedCriteria criteria = DetachedCriteria.forClass(Product.class)
-                .add(CPRestrictions.in("uuid", uuids))
+                .add(cpRestrictions.in("uuid", uuids))
                 .addOrder(Order.asc("uuid"));
 
             return this.cpQueryFactory.<Product>buildQuery(this.currentSession(), criteria);
@@ -440,7 +440,7 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
 
         if (uuids != null && !uuids.isEmpty()) {
             DetachedCriteria criteria = this.createSecureDetachedCriteria(Product.class, null)
-                .add(CPRestrictions.in("uuid", uuids));
+                .add(cpRestrictions.in("uuid", uuids));
 
             return this.cpQueryFactory.<Product>buildQuery(this.currentSession(), criteria);
         }
@@ -593,10 +593,10 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
                 .createAlias("derivedProvidedProducts", "derivedProvidedProd", JoinType.LEFT_OUTER_JOIN)
                 .add(Restrictions.eq("owner", owner))
                 .add(Restrictions.or(
-                    CPRestrictions.in("product.uuid", productUuids),
-                    CPRestrictions.in("derivedProduct.uuid", productUuids),
-                    CPRestrictions.in("providedProd.uuid", productUuids),
-                    CPRestrictions.in("derivedProvidedProd.uuid", productUuids)))
+                    cpRestrictions.in("product.uuid", productUuids),
+                    cpRestrictions.in("derivedProduct.uuid", productUuids),
+                    cpRestrictions.in("providedProd.uuid", productUuids),
+                    cpRestrictions.in("derivedProvidedProd.uuid", productUuids)))
                 .setProjection(Projections.count("id"))
                 .uniqueResult();
 

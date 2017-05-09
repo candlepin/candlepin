@@ -40,6 +40,11 @@ public class CandlepinCommonTestConfig extends MapConfiguration {
             setProperty(ConfigProperties.CA_KEY_PASSWORD, "password");
             setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp");
             setProperty(ConfigProperties.HORNETQ_LARGE_MSG_SIZE, "0");
+
+            setProperty(DatabaseConfigFactory.IN_OPERATOR_BLOCK_SIZE, "10");
+            setProperty(DatabaseConfigFactory.CASE_OPERATOR_BLOCK_SIZE, "10");
+            setProperty(DatabaseConfigFactory.BATCH_BLOCK_SIZE, "10");
+            setProperty(DatabaseConfigFactory.QUERY_PARAMETER_LIMIT, "32000");
         }
         catch (URISyntaxException e) {
             throw new RuntimeException("Error loading cert/key resources!", e);

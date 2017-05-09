@@ -58,6 +58,7 @@ import org.candlepin.controller.OwnerManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.ScheduledExecutorServiceProvider;
 import org.candlepin.controller.SuspendModeTransitioner;
+import org.candlepin.model.CPRestrictions;
 import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.pinsetter.core.GuiceJobFactory;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
@@ -268,6 +269,7 @@ public class CandlepinModule extends AbstractModule {
         bind(AttributeValidator.class);
         bind(FactValidator.class);
         bind(DateFormatter.class);
+        bind(CPRestrictions.class);
 
         configureInterceptors();
         configureAuth();

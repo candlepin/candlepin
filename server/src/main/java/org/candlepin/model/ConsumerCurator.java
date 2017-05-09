@@ -210,9 +210,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
         List<String> consumerUuids = new LinkedList<String>();
 
-        Iterable<List<String>> blocks = Iterables.partition(
-            possibleGuestIds, AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE
-        );
+        Iterable<List<String>> blocks = Iterables.partition(possibleGuestIds, getInBlockSize());
 
         Query query = this.currentSession()
             .createSQLQuery(sql)

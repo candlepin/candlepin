@@ -103,8 +103,7 @@ public class ContentAccessCertificateCurator extends AbstractHibernateCurator<Co
         String revokeHql = "UPDATE CertificateSerial SET revoked = true WHERE id IN (:serialsToRevoke)";
         Query revokeQuery = this.getEntityManager().createQuery(revokeHql);
         int revokedCount = 0;
-        for (List<Long> block : Iterables.partition(serialIdsToRevoke,
-            AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE)) {
+        for (List<Long> block : Iterables.partition(serialIdsToRevoke, getInBlockSize())) {
             revokedCount += revokeQuery.setParameter("serialsToRevoke", block).executeUpdate();
         }
         return revokedCount;
@@ -119,8 +118,7 @@ public class ContentAccessCertificateCurator extends AbstractHibernateCurator<Co
         Query query2 = this.getEntityManager().createQuery(hql2);
 
         int removed = 0;
-        for (List<String> block : Iterables.partition(certIdsToDelete,
-            AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE)) {
+        for (List<String> block : Iterables.partition(certIdsToDelete, getInBlockSize())) {
             String param = block.toString();
             query2.setParameter("certsToDelete", block).executeUpdate();
             removed += query.setParameter("certsToDelete", block).executeUpdate();

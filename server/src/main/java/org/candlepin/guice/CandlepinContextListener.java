@@ -28,6 +28,7 @@ import org.candlepin.common.config.EncryptedConfiguration;
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.common.logging.LoggingConfigurator;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.DatabaseConfigFactory;
 import org.candlepin.controller.SuspendModeTransitioner;
 import org.candlepin.logging.LoggerContextListener;
 import org.candlepin.pinsetter.core.PinsetterContextListener;
@@ -41,7 +42,9 @@ import com.google.inject.Module;
 import com.google.inject.Stage;
 import com.google.inject.util.Modules;
 
+import org.apache.commons.lang.StringUtils;
 import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.SessionFactoryImpl;
@@ -224,9 +227,29 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         // load the defaults
         MapConfiguration defaults = new MapConfiguration(ConfigProperties.DEFAULT_PROPERTIES);
 
-        // merge the defaults with the system configuration. ORDER MATTERS.
-        // system config must be read FIRST otherwise settings won't be applied.
-        return EncryptedConfiguration.merge(systemConfig, defaults);
+        // Default to Postgresql if jpa.config.hibernate.dialect is unset
+        DatabaseConfigFactory.SupportedDatabase db = determinDatabaseConfiguration(systemConfig.getString
+            ("jpa.config.hibernate.dialect", PostgreSQLDialect.class.getName()));
+        log.info("Running under {}", db.getLabel());
+        Configuration databaseConfig = DatabaseConfigFactory.fetchConfig(db);
+
+        // merge the defaults with the system configuration. PARAMETER ORDER MATTERS.
+        // systemConfig must be FIRST to override subsequent configs.  This set up allows
+        // the systemConfig to override databaseConfig if necessary, but that's not really something
+        // users should be doing unbidden so it is undocumented.
+        return EncryptedConfiguration.merge(systemConfig, databaseConfig, defaults);
+    }
+
+    private DatabaseConfigFactory.SupportedDatabase determinDatabaseConfiguration(String dialect) {
+        if (StringUtils.containsIgnoreCase(
+            dialect, DatabaseConfigFactory.SupportedDatabase.MYSQL.getLabel())) {
+            return DatabaseConfigFactory.SupportedDatabase.MYSQL;
+        }
+        else if (StringUtils.containsIgnoreCase(
+            dialect, DatabaseConfigFactory.SupportedDatabase.ORACLE.getLabel())) {
+            return DatabaseConfigFactory.SupportedDatabase.ORACLE;
+        }
+        return DatabaseConfigFactory.SupportedDatabase.POSTGRESQL;
     }
 
     @Override

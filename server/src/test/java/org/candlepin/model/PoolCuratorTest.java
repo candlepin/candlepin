@@ -14,13 +14,13 @@
  */
 package org.candlepin.model;
 
-import static org.candlepin.model.AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE;
-import static org.junit.Assert.*;
 import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
 
 import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
+import org.candlepin.config.DatabaseConfigFactory;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.activationkeys.ActivationKey;
@@ -29,13 +29,13 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
-
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -1744,7 +1744,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     @Test
     public void testMarkCertificatesDirtyForPoolsWithNormalProductHavingLargeNumberOfProducts() {
         List<String> productIds = new ArrayList<String>();
-        for (int i = 0; i < IN_OPERATOR_BLOCK_SIZE; i++) {
+        for (int i = 0; i < config.getInt(DatabaseConfigFactory.IN_OPERATOR_BLOCK_SIZE); i++) {
             productIds.add("productId" + i);
         }
         productIds.add(product.getId());
@@ -2081,7 +2081,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     }
 
     protected Object[][] getPoolSetSizes() {
-        int inBlockSize = AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE;
+        int inBlockSize = getConfigForParameters().getInt(DatabaseConfigFactory.IN_OPERATOR_BLOCK_SIZE);
         int halfBlockSize = inBlockSize / 2;
 
         return new Object[][] {
@@ -2094,20 +2094,17 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             new Object[] { inBlockSize + 1 },
             new Object[] { inBlockSize + 10 },
 
-            // These tests would be nice to run, but they start adding 5 minutes to the test runtime
-            // each. Only enable if we're having block size issues or we don't care how long the
-            // tests will take to run.
-            // new Object[] { inBlockSize + halfBlockSize },
+            new Object[] { inBlockSize + halfBlockSize },
 
-            // new Object[] { 2 * inBlockSize },
-            // new Object[] { 2 * inBlockSize + 1 },
-            // new Object[] { 2 * inBlockSize + 10 },
-            // new Object[] { 2 * inBlockSize + halfBlockSize },
+            new Object[] { 2 * inBlockSize },
+            new Object[] { 2 * inBlockSize + 1 },
+            new Object[] { 2 * inBlockSize + 10 },
+            new Object[] { 2 * inBlockSize + halfBlockSize },
 
-            // new Object[] { 3 * inBlockSize },
-            // new Object[] { 3 * inBlockSize + 1 },
-            // new Object[] { 3 * inBlockSize + 10 },
-            // new Object[] { 3 * inBlockSize + halfBlockSize },
+            new Object[] { 3 * inBlockSize },
+            new Object[] { 3 * inBlockSize + 1 },
+            new Object[] { 3 * inBlockSize + 10 },
+            new Object[] { 3 * inBlockSize + halfBlockSize },
         };
     }
 
