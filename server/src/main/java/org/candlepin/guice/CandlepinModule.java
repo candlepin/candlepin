@@ -269,7 +269,7 @@ public class CandlepinModule extends AbstractModule {
         bind(AttributeValidator.class);
         bind(FactValidator.class);
         bind(DateFormatter.class);
-        bind(CPRestrictions.class);
+        requestStaticInjection(CPRestrictions.class);
 
         configureInterceptors();
         configureAuth();

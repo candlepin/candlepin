@@ -95,7 +95,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
 
     public CandlepinQuery<Product> listAllByUuids(Collection<? extends Serializable> uuids) {
         DetachedCriteria criteria = this.createSecureDetachedCriteria()
-            .add(cpRestrictions.in("uuid", uuids));
+            .add(CPRestrictions.in("uuid", uuids));
 
         return this.cpQueryFactory.<Product>buildQuery(this.currentSession(), criteria);
     }
@@ -310,18 +310,18 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
                 .createAlias("pcontent.content", "content")
                 .createAlias("owner", "owner")
                 .add(Restrictions.eq("owner.id", owner.getId()))
-                .add(cpRestrictions.in("content.id", contentIds))
+                .add(CPRestrictions.in("content.id", contentIds))
                 .setProjection(Projections.distinct(Projections.property("product.uuid")));
 
             if (productsToOmit != null && !productsToOmit.isEmpty()) {
-                idCriteria.add(Restrictions.not(cpRestrictions.in("product.id", productsToOmit)));
+                idCriteria.add(Restrictions.not(CPRestrictions.in("product.id", productsToOmit)));
             }
 
             List<String> productUuids = idCriteria.list();
 
             if (productUuids != null && !productUuids.isEmpty()) {
                 DetachedCriteria criteria = this.createSecureDetachedCriteria()
-                    .add(cpRestrictions.in("uuid", productUuids));
+                    .add(CPRestrictions.in("uuid", productUuids));
 
                 return this.cpQueryFactory.<Product>buildQuery(this.currentSession(), criteria);
             }
@@ -338,14 +338,14 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             Criteria idCriteria = this.createSecureCriteria()
                 .createAlias("productContent", "pcontent")
                 .createAlias("pcontent.content", "content")
-                .add(cpRestrictions.in("content.uuid", contentUuids))
+                .add(CPRestrictions.in("content.uuid", contentUuids))
                 .setProjection(Projections.distinct(Projections.id()));
 
             List<String> productUuids = idCriteria.list();
 
             if (productUuids != null && !productUuids.isEmpty()) {
                 DetachedCriteria criteria = this.createSecureDetachedCriteria()
-                    .add(cpRestrictions.in("uuid", productUuids));
+                    .add(CPRestrictions.in("uuid", productUuids));
 
                 return this.cpQueryFactory.<Product>buildQuery(this.currentSession(), criteria);
             }
@@ -365,14 +365,14 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
                 .createAlias("pcontent.content", "content")
                 .createAlias("owner", "owner")
                 .add(Restrictions.eq("owner.id", owner.getId()))
-                .add(cpRestrictions.in("content.uuid", contentUuids))
+                .add(CPRestrictions.in("content.uuid", contentUuids))
                 .setProjection(Projections.distinct(Projections.property("product.uuid")));
 
             List<String> productUuids = idCriteria.list();
 
             if (productUuids != null && !productUuids.isEmpty()) {
                 DetachedCriteria criteria = this.createSecureDetachedCriteria()
-                    .add(cpRestrictions.in("uuid", productUuids));
+                    .add(CPRestrictions.in("uuid", productUuids));
 
                 return this.cpQueryFactory.<Product>buildQuery(this.currentSession(), criteria);
             }

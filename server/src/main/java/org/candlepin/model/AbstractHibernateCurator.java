@@ -93,7 +93,6 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     @Inject protected Provider<EntityManager> entityManager;
     @Inject protected I18n i18n;
     @Inject protected Configuration config;
-    @Inject protected CPRestrictions cpRestrictions;
     private final Class<E> entityType;
 
     @Inject private PrincipalProvider principalProvider;
@@ -195,7 +194,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
     public CandlepinQuery<E> listAllByIds(Collection<? extends Serializable> ids) {
         DetachedCriteria criteria = this.createSecureDetachedCriteria()
-            .add(cpRestrictions.in("id", ids));
+            .add(CPRestrictions.in("id", ids));
 
         return this.cpQueryFactory.<E>buildQuery(this.currentSession(), criteria);
     }

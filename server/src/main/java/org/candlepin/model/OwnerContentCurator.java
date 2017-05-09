@@ -87,7 +87,7 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
 
         if (ids != null && !ids.isEmpty()) {
             DetachedCriteria criteria = this.createSecureDetachedCriteria(Owner.class, null)
-                .add(cpRestrictions.in("id", ids));
+                .add(CPRestrictions.in("id", ids));
 
             return this.cpQueryFactory.<Owner>buildQuery(this.currentSession(), criteria);
         }
@@ -158,7 +158,7 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
 
         if (!uuids.isEmpty()) {
             DetachedCriteria criteria = this.createSecureDetachedCriteria(Content.class, null)
-                .add(cpRestrictions.in("uuid", uuids));
+                .add(CPRestrictions.in("uuid", uuids));
 
             return this.cpQueryFactory.<Content>buildQuery(this.currentSession(), criteria);
         }
@@ -185,8 +185,8 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
 
         if (uuids != null && !uuids.isEmpty()) {
             DetachedCriteria criteria = this.createSecureDetachedCriteria(Content.class, null)
-                .add(cpRestrictions.in("uuid", uuids))
-                .add(cpRestrictions.in("id", contentIds));
+                .add(CPRestrictions.in("uuid", uuids))
+                .add(CPRestrictions.in("id", contentIds));
 
             return this.cpQueryFactory.<Content>buildQuery(this.currentSession(), criteria);
         }
@@ -376,7 +376,7 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
 
         if (uuids != null && !uuids.isEmpty()) {
             DetachedCriteria criteria = this.createSecureDetachedCriteria(Content.class, null)
-                .add(cpRestrictions.in("uuid", uuids));
+                .add(CPRestrictions.in("uuid", uuids));
 
             return this.cpQueryFactory.<Content>buildQuery(this.currentSession(), criteria);
         }
@@ -407,7 +407,7 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
 
         if (uuids != null && !uuids.isEmpty()) {
             DetachedCriteria criteria = DetachedCriteria.forClass(Content.class)
-                .add(cpRestrictions.in("uuid", uuids))
+                .add(CPRestrictions.in("uuid", uuids))
                 .addOrder(Order.asc("uuid"));
 
             return this.cpQueryFactory.<Content>buildQuery(this.currentSession(), criteria);

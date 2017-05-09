@@ -40,7 +40,6 @@ import javax.inject.Inject;
  */
 public class CPRestrictionsTest {
     @Inject private Configuration config;
-    @Inject private CPRestrictions cpRestrictions;
 
     @Before
     public void init() {
@@ -69,7 +68,7 @@ public class CPRestrictionsTest {
         }
         expected.setLength(expected.length() - 15);
 
-        Criterion crit = cpRestrictions.in("taylor", items);
+        Criterion crit = CPRestrictions.in("taylor", items);
         LogicalExpression le = (LogicalExpression) crit;
         assertEquals("or", le.getOp());
         assertEquals(expected.toString(), le.toString());
@@ -89,7 +88,7 @@ public class CPRestrictionsTest {
 
         expected += i + ")";
         items.add("" + i);
-        Criterion crit = cpRestrictions.in("swift", items);
+        Criterion crit = CPRestrictions.in("swift", items);
         InExpression ie = (InExpression) crit;
         assertEquals(expected, ie.toString());
     }
@@ -112,7 +111,7 @@ public class CPRestrictionsTest {
         }
         expected.setLength(expected.length() - 15);
 
-        Criterion crit = cpRestrictions.in("taylor", items.toArray());
+        Criterion crit = CPRestrictions.in("taylor", items.toArray());
         LogicalExpression le = (LogicalExpression) crit;
         assertEquals("or", le.getOp());
         assertEquals(expected.toString(), le.toString());
@@ -132,7 +131,7 @@ public class CPRestrictionsTest {
 
         expected += i + ")";
         items.add("" + i);
-        Criterion crit = cpRestrictions.in("swift", items.toArray());
+        Criterion crit = CPRestrictions.in("swift", items.toArray());
         InExpression ie = (InExpression) crit;
         assertEquals(expected, ie.toString());
     }

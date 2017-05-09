@@ -301,7 +301,7 @@ public class TestingModules {
             bind(Principal.class).toProvider(TestPrincipalProvider.class);
             bind(EventSink.class).to(NoopEventSinkImpl.class);
 
-            bind(CPRestrictions.class);
+            requestStaticInjection(CPRestrictions.class);
 
             bind(ExportExtensionAdapter.class).to(DefaultExportExtensionAdapter.class);
 

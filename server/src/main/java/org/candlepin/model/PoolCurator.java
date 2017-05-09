@@ -159,7 +159,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         }
 
         List<Pool> results = createSecureCriteria()
-            .add(cpRestrictions.in("sourceEntitlement", ents))
+            .add(CPRestrictions.in("sourceEntitlement", ents))
             .setFetchMode("entitlements", FetchMode.JOIN)
             .list();
 
@@ -436,8 +436,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             }
 
             criteria.add(Restrictions.or(
-                cpRestrictions.in("Product.id", values),
-                cpRestrictions.in("Provided.id", values)
+                CPRestrictions.in("Product.id", values),
+                CPRestrictions.in("Provided.id", values)
             ));
         }
 
@@ -446,7 +446,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             values = filters.getIdFilters();
 
             if (values != null && !values.isEmpty()) {
-                criteria.add(cpRestrictions.in("Pool.id", values));
+                criteria.add(CPRestrictions.in("Pool.id", values));
             }
 
             // Matches stuff
@@ -466,14 +466,14 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
                     Disjunction matchesDisjunction = Restrictions.disjunction();
 
-                    matchesDisjunction.add(cpRestrictions.ilike("Pool.contractNumber", sanitized, '!'))
-                        .add(cpRestrictions.ilike("Pool.orderNumber", sanitized, '!'))
-                        .add(cpRestrictions.ilike("Product.id", sanitized, '!'))
-                        .add(cpRestrictions.ilike("Product.name", sanitized, '!'))
-                        .add(cpRestrictions.ilike("Provided.id", sanitized, '!'))
-                        .add(cpRestrictions.ilike("Provided.name", sanitized, '!'))
-                        .add(cpRestrictions.ilike("Content.name", sanitized, '!'))
-                        .add(cpRestrictions.ilike("Content.label", sanitized, '!'))
+                    matchesDisjunction.add(CPRestrictions.ilike("Pool.contractNumber", sanitized, '!'))
+                        .add(CPRestrictions.ilike("Pool.orderNumber", sanitized, '!'))
+                        .add(CPRestrictions.ilike("Product.id", sanitized, '!'))
+                        .add(CPRestrictions.ilike("Product.name", sanitized, '!'))
+                        .add(CPRestrictions.ilike("Provided.id", sanitized, '!'))
+                        .add(CPRestrictions.ilike("Provided.name", sanitized, '!'))
+                        .add(CPRestrictions.ilike("Content.name", sanitized, '!'))
+                        .add(CPRestrictions.ilike("Content.label", sanitized, '!'))
                         .add(this.addProductAttributeFilterSubquery(Product.Attributes.SUPPORT_LEVEL,
                             Arrays.asList(matches)));
 
@@ -535,7 +535,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         if (poolIds != null && !poolIds.isEmpty()) {
             criteria = this.currentSession()
                 .createCriteria(Pool.class)
-                .add(cpRestrictions.in("id", poolIds));
+                .add(CPRestrictions.in("id", poolIds));
 
             return this.listByCriteria(criteria, pageRequest, postFilter);
         }
@@ -591,8 +591,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 }
                 else {
                     attrValue = this.sanitizeMatchesFilter(attrValue);
-                    poolAttrValueDisjunction.add(cpRestrictions.ilike("attrib.elements", attrValue, '!'));
-                    prodAttrValueDisjunction.add(cpRestrictions.ilike("attrib.elements", attrValue, '!'));
+                    poolAttrValueDisjunction.add(CPRestrictions.ilike("attrib.elements", attrValue, '!'));
+                    prodAttrValueDisjunction.add(CPRestrictions.ilike("attrib.elements", attrValue, '!'));
                 }
             }
 
@@ -640,7 +640,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 else {
                     attrValue = this.sanitizeMatchesFilter(attrValue);
                     prodAttrValueDisjunction.add(
-                        cpRestrictions.ilike("attrib.elements", attrValue, '!'));
+                        CPRestrictions.ilike("attrib.elements", attrValue, '!'));
                 }
             }
 
@@ -755,7 +755,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     private Criteria criteriaToSelectEntitlementForPools(List<Pool> entitlementPools) {
         return this.currentSession().createCriteria(Entitlement.class)
-                .add(cpRestrictions.in("pool", entitlementPools));
+                .add(CPRestrictions.in("pool", entitlementPools));
     }
 
     /**
@@ -797,7 +797,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return createSecureCriteria()
             .createAlias("sourceSubscription", "sourceSub")
             .add(Restrictions.eq("owner", owner))
-            .add(cpRestrictions.in("sourceSub.subscriptionId", subIds))
+            .add(CPRestrictions.in("sourceSub.subscriptionId", subIds))
             .addOrder(Order.asc("id"))
             .list();
     }
@@ -1086,7 +1086,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             .add(Restrictions.eq("ss.sourceConsumer", consumer))
             .add(Restrictions.and(
                 Restrictions.isNotNull("ss.sourceStackId"),
-                cpRestrictions.in("ss.sourceStackId", stackIds))
+                CPRestrictions.in("ss.sourceStackId", stackIds))
             );
 
         return (List<Pool>) getPools.list();

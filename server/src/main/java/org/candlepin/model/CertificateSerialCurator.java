@@ -114,7 +114,7 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
         }
 
         DetachedCriteria criteria = DetachedCriteria.forClass(CertificateSerial.class)
-            .add(cpRestrictions.in("id", lids));
+            .add(CPRestrictions.in("id", lids));
 
         return this.cpQueryFactory.<CertificateSerial>buildQuery(this.currentSession(), criteria);
     }

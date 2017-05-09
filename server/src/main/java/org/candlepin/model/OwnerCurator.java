@@ -74,7 +74,7 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
     @Transactional
     public CandlepinQuery<Owner> lookupByKeys(Collection<String> keys) {
         DetachedCriteria criteria = this.createSecureDetachedCriteria()
-            .add(cpRestrictions.in("key", keys));
+            .add(CPRestrictions.in("key", keys));
 
         return this.cpQueryFactory.<Owner>buildQuery(this.currentSession(), criteria);
     }
@@ -95,7 +95,7 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
         // NOTE: only used by superadmin API calls, no permissions filtering needed here.
         DetachedCriteria poolIdQuery = DetachedCriteria.forClass(Pool.class, "pool")
             .createAlias("pool.providedProducts", "providedProducts")
-            .add(cpRestrictions.in("providedProducts.id", productIds))
+            .add(CPRestrictions.in("providedProducts.id", productIds))
             .setProjection(Property.forName("pool.id"));
 
         DetachedCriteria ownerIdQuery = DetachedCriteria.forClass(Entitlement.class, "e")
@@ -146,17 +146,17 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
                 .createAlias("Pool.providedProducts", "PProd", JoinType.LEFT_OUTER_JOIN)
                 .createAlias("Pool.derivedProvidedProducts", "DPProd", JoinType.LEFT_OUTER_JOIN)
                 .add(Restrictions.or(
-                    cpRestrictions.in("Prod.id", productIds),
-                    cpRestrictions.in("DProd.id", productIds),
-                    cpRestrictions.in("PProd.id", productIds),
-                    cpRestrictions.in("DPProd.id", productIds)
+                    CPRestrictions.in("Prod.id", productIds),
+                    CPRestrictions.in("DProd.id", productIds),
+                    CPRestrictions.in("PProd.id", productIds),
+                    CPRestrictions.in("DPProd.id", productIds)
                 ));
 
             List<String> ownerIds = idCriteria.list();
 
             if (ownerIds != null && !ownerIds.isEmpty()) {
                 DetachedCriteria criteria = DetachedCriteria.forClass(Owner.class)
-                    .add(cpRestrictions.in("id", ownerIds));
+                    .add(CPRestrictions.in("id", ownerIds));
 
                 return this.cpQueryFactory.<Owner>buildQuery(session, criteria);
             }

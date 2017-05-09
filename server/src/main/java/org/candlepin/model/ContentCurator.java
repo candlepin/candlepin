@@ -152,7 +152,7 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
 
             if (uuids != null && !uuids.isEmpty()) {
                 DetachedCriteria criteria = this.createSecureDetachedCriteria()
-                    .add(cpRestrictions.in("uuid", uuids));
+                    .add(CPRestrictions.in("uuid", uuids));
 
                 return this.cpQueryFactory.<Content>buildQuery(session, criteria);
             }

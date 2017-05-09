@@ -113,7 +113,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             Collection<String> values = filterBuilder.getIdFilters();
 
             if (values != null && !values.isEmpty()) {
-                criteria.add(cpRestrictions.in("Pool.id", values));
+                criteria.add(CPRestrictions.in("Pool.id", values));
             }
 
             // Product ID filters
@@ -126,8 +126,8 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
                 }
 
                 criteria.add(Restrictions.or(
-                    cpRestrictions.in("Product.id", values),
-                    cpRestrictions.in("Provided.id", values)
+                    CPRestrictions.in("Product.id", values),
+                    CPRestrictions.in("Provided.id", values)
                 ));
             }
 
@@ -156,14 +156,14 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
 
                     Disjunction matchesDisjunction = Restrictions.disjunction();
 
-                    matchesDisjunction.add(cpRestrictions.ilike("Pool.contractNumber", sanitized, '!'))
-                        .add(cpRestrictions.ilike("Pool.orderNumber", sanitized, '!'))
-                        .add(cpRestrictions.ilike("Product.id", sanitized, '!'))
-                        .add(cpRestrictions.ilike("Product.name", sanitized, '!'))
-                        .add(cpRestrictions.ilike("Provided.id", sanitized, '!'))
-                        .add(cpRestrictions.ilike("Provided.name", sanitized, '!'))
-                        .add(cpRestrictions.ilike("Content.name", sanitized, '!'))
-                        .add(cpRestrictions.ilike("Content.label", sanitized, '!'))
+                    matchesDisjunction.add(CPRestrictions.ilike("Pool.contractNumber", sanitized, '!'))
+                        .add(CPRestrictions.ilike("Pool.orderNumber", sanitized, '!'))
+                        .add(CPRestrictions.ilike("Product.id", sanitized, '!'))
+                        .add(CPRestrictions.ilike("Product.name", sanitized, '!'))
+                        .add(CPRestrictions.ilike("Provided.id", sanitized, '!'))
+                        .add(CPRestrictions.ilike("Provided.name", sanitized, '!'))
+                        .add(CPRestrictions.ilike("Content.name", sanitized, '!'))
+                        .add(CPRestrictions.ilike("Content.label", sanitized, '!'))
                         .add(this.addProductAttributeFilterSubquery(Product.Attributes.SUPPORT_LEVEL,
                             Arrays.asList(matches)));
 
@@ -258,8 +258,8 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
                 }
                 else {
                     attrValue = this.sanitizeMatchesFilter(attrValue);
-                    poolAttrValueDisjunction.add(cpRestrictions.ilike("attrib.elements", attrValue, '!'));
-                    prodAttrValueDisjunction.add(cpRestrictions.ilike("attrib.elements", attrValue, '!'));
+                    poolAttrValueDisjunction.add(CPRestrictions.ilike("attrib.elements", attrValue, '!'));
+                    prodAttrValueDisjunction.add(CPRestrictions.ilike("attrib.elements", attrValue, '!'));
                 }
             }
 
@@ -306,7 +306,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
                 }
                 else {
                     attrValue = this.sanitizeMatchesFilter(attrValue);
-                    prodAttrValueDisjunction.add(cpRestrictions.ilike("attrib.elements", attrValue, '!'));
+                    prodAttrValueDisjunction.add(CPRestrictions.ilike("attrib.elements", attrValue, '!'));
                 }
             }
 
@@ -375,7 +375,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         if (entitlementIds != null && !entitlementIds.isEmpty()) {
             criteria = this.currentSession()
                 .createCriteria(Entitlement.class)
-                .add(cpRestrictions.in("id", entitlementIds));
+                .add(CPRestrictions.in("id", entitlementIds));
 
             return criteria.list();
         }
@@ -435,7 +435,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             if (entitlementIds != null && !entitlementIds.isEmpty()) {
                 criteria = this.currentSession()
                     .createCriteria(Entitlement.class)
-                    .add(cpRestrictions.in("id", entitlementIds));
+                    .add(CPRestrictions.in("id", entitlementIds));
 
                 entitlementsPage = listByCriteria(criteria, pageRequest);
             }
@@ -773,7 +773,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             .createAlias("ent_pool.product", "product")
             .createAlias("product.attributes", "attrs")
             .add(Restrictions.eq("attrs.indices", Product.Attributes.STACKING_ID))
-            .add(cpRestrictions.in("attrs.elements", stackIds))
+            .add(CPRestrictions.in("attrs.elements", stackIds))
             .add(Restrictions.isNull("ent_pool.sourceEntitlement"))
             .createAlias("ent_pool.sourceStack", "ss", JoinType.LEFT_OUTER_JOIN)
             .add(Restrictions.isNull("ss.id"));

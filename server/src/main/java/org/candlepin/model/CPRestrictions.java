@@ -28,14 +28,14 @@ import java.util.Iterator;
 import java.util.List;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 
 /**
  * The CPRestrictions class provides utility Criterion building methods to be used with Hibernate's
  * fluent-style query building.
  */
 public class CPRestrictions {
-
-    private Configuration config;
+    @Inject private static Provider<Configuration> configProvider;
 
     private static class CPLikeExpression extends LikeExpression {
         public CPLikeExpression(String property, String value, Character escape, boolean ignoreCase) {
@@ -43,9 +43,8 @@ public class CPRestrictions {
         }
     }
 
-    @Inject
-    public CPRestrictions(Configuration config) {
-        this.config = config;
+    private CPRestrictions() {
+        // Static methods only
     }
 
     /**
@@ -65,13 +64,13 @@ public class CPRestrictions {
      * @return
      *  a Criterion representing the "in" constraint on the given property or expression
      */
-    public <T extends Object> Criterion in(String expression, Iterable<T> values) {
+    public static <T extends Object> Criterion in(String expression, Iterable<T> values) {
         if (values == null || !values.iterator().hasNext()) {
             throw new IllegalArgumentException("values is null or empty");
         }
 
         Iterator<List<T>> blocks = Iterables.partition(
-            values, config.getInt(DatabaseConfigFactory.IN_OPERATOR_BLOCK_SIZE)
+            values, configProvider.get().getInt(DatabaseConfigFactory.IN_OPERATOR_BLOCK_SIZE)
         ).iterator();
 
         Criterion criterion = Restrictions.in(expression, blocks.next());
@@ -100,7 +99,7 @@ public class CPRestrictions {
      * @return
      *  a Criterion representing the "in" constraint on the given property or expression
      */
-    public Criterion in(String expression, Object[] values) {
+    public static Criterion in(String expression, Object[] values) {
         return in(expression, Arrays.asList(values));
     }
 
@@ -117,7 +116,7 @@ public class CPRestrictions {
      *  a Criterion representing a case-sensitive "like" constraint on the given property or
      *  expression
      */
-    public Criterion like(String expression, String value) {
+    public static Criterion like(String expression, String value) {
         return new CPLikeExpression(expression, value, null, false);
     }
 
@@ -138,7 +137,7 @@ public class CPRestrictions {
      *  a Criterion representing a case-sensitive "like" constraint on the given property or
      *  expression
      */
-    public Criterion like(String expression, String value, char escapeChar) {
+    public static Criterion like(String expression, String value, char escapeChar) {
         return new CPLikeExpression(expression, value, escapeChar, false);
     }
 
@@ -155,7 +154,7 @@ public class CPRestrictions {
      *  a Criterion representing a case-sensitive "like" constraint on the given property or
      *  expression
      */
-    public Criterion ilike(String expression, String value) {
+    public static Criterion ilike(String expression, String value) {
         return new CPLikeExpression(expression, value, null, true);
     }
 
@@ -176,7 +175,7 @@ public class CPRestrictions {
      *  a Criterion representing a case-sensitive "like" constraint on the given property or
      *  expression
      */
-    public Criterion ilike(String expression, String value, char escapeChar) {
+    public static Criterion ilike(String expression, String value, char escapeChar) {
         return new CPLikeExpression(expression, value, escapeChar, true);
     }
 
