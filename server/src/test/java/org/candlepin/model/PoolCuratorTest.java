@@ -17,7 +17,14 @@ package org.candlepin.model;
 import static org.candlepin.model.AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE;
 import static org.junit.Assert.*;
 import static org.hamcrest.Matchers.*;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import org.apache.commons.lang3.StringUtils;
 import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
@@ -36,6 +43,7 @@ import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,7 +59,8 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.inject.Inject;
-
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
 
 
 /**
@@ -2080,39 +2089,16 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertEquals(expectedPoolProductMap, actualPoolProductMap);
     }
 
-    protected Object[][] getPoolSetSizes() {
-        int inBlockSize = AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE;
-        int halfBlockSize = inBlockSize / 2;
-
+    protected Object[][] getPoolSetSizesSmall() {
         return new Object[][] {
             new Object[] { 0 },
             new Object[] { 1 },
             new Object[] { 10 },
-            new Object[] { halfBlockSize },
-
-            new Object[] { inBlockSize },
-            new Object[] { inBlockSize + 1 },
-            new Object[] { inBlockSize + 10 },
-
-            // These tests would be nice to run, but they start adding 5 minutes to the test runtime
-            // each. Only enable if we're having block size issues or we don't care how long the
-            // tests will take to run.
-            // new Object[] { inBlockSize + halfBlockSize },
-
-            // new Object[] { 2 * inBlockSize },
-            // new Object[] { 2 * inBlockSize + 1 },
-            // new Object[] { 2 * inBlockSize + 10 },
-            // new Object[] { 2 * inBlockSize + halfBlockSize },
-
-            // new Object[] { 3 * inBlockSize },
-            // new Object[] { 3 * inBlockSize + 1 },
-            // new Object[] { 3 * inBlockSize + 10 },
-            // new Object[] { 3 * inBlockSize + halfBlockSize },
         };
     }
 
     @Test
-    @Parameters(method = "getPoolSetSizes")
+    @Parameters(method = "getPoolSetSizesSmall")
     public void testFetchingPoolProvidedProductIdsWithVaryingPoolSetSizes(int poolsToCreate) {
         Owner owner = this.createOwner();
 
@@ -2138,6 +2124,69 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         assertNotNull(actualPoolProductMap);
         assertEquals(expectedPoolProductMap, actualPoolProductMap);
+
+    }
+
+    protected Object[][] getPoolSetSizesLarge() {
+        int inBlockSize = AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE;
+        int halfBlockSize = inBlockSize / 2;
+
+        return new Object[][] {
+            new Object[] { 0 },
+            new Object[] { 1 },
+            new Object[] { 10 },
+            new Object[] { halfBlockSize },
+
+            new Object[] { inBlockSize },
+            new Object[] { inBlockSize + 1 },
+            new Object[] { inBlockSize + 10 },
+
+            new Object[] { inBlockSize + halfBlockSize },
+
+            new Object[] { 2 * inBlockSize },
+            new Object[] { 2 * inBlockSize + 1 },
+            new Object[] { 2 * inBlockSize + 10 },
+            new Object[] { 2 * inBlockSize + halfBlockSize },
+
+            new Object[] { 3 * inBlockSize },
+            new Object[] { 3 * inBlockSize + 1 },
+            new Object[] { 3 * inBlockSize + 10 },
+            new Object[] { 3 * inBlockSize + halfBlockSize },
+        };
+    }
+
+    @Test
+    @Parameters(method = "getPoolSetSizesLarge")
+    public void testFetchingPoolProvidedProductIdsBatch(int poolsToCreate) {
+
+        List<String> ids = new ArrayList<String>();
+        for (int i = 0; i < poolsToCreate; i++) {
+            ids.add("id_" + i);
+        }
+
+        EntityManager mockEM = mock(EntityManager.class);
+        Query mockQuery = mock(Query.class);
+        ArgumentCaptor<String> queryCaptor = ArgumentCaptor.forClass(String.class);
+        when(mockEM.createQuery(queryCaptor.capture())).thenReturn(mockQuery);
+        List<String[]> result = new LinkedList<String[]>();
+        when(mockQuery.getResultList()).thenReturn(result);
+        when(mockQuery.setParameter(anyString(), anyObject())).thenReturn(mockQuery);
+
+        this.poolCurator.getProvidedProductIdsByPoolIdsForTesting(mockEM, ids);
+
+        int blockSize = AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE;
+        int blockCount = (int) Math.ceil(poolsToCreate / (float) blockSize);
+        if (poolsToCreate == 0) {
+            assertEquals(0, queryCaptor.getAllValues().size());
+        }
+        else {
+            String query = queryCaptor.getValue();
+            int inCount = StringUtils.countMatches(query, "IN");
+            assertEquals(blockCount + 1, inCount);
+            // verify query compiles
+            poolCurator.getEntityManager().createQuery(query);
+        }
+        verify(mockQuery, times(blockCount)).setParameter(anyString(), anyObject());
     }
 
     @Test
