@@ -609,9 +609,7 @@ public class PoolManagerTest {
             any(PoolFilterBuilder.class), any(PageRequest.class),
             anyBoolean(), anyBoolean(), anyBoolean())).thenReturn(page);
 
-        List<Pool> lockList = new ArrayList<Pool>();
-        lockList.add(pool1);
-        when(mockPoolCurator.lockAndLoadBatchById(any(List.class))).thenReturn(lockList);
+        when(mockPoolCurator.lockAndLoad(eq(pool1))).thenReturn(pool1);
         when(enforcerMock.preEntitlement(any(Consumer.class), any(Pool.class), anyInt(),
             any(CallerType.class))).thenReturn(result);
 
@@ -811,9 +809,7 @@ public class PoolManagerTest {
             any(PageRequest.class), anyBoolean(), anyBoolean(), anyBoolean()))
                 .thenReturn(page);
 
-        List<Pool> lockList = new ArrayList<Pool>();
-        lockList.add(pool1);
-        when(mockPoolCurator.lockAndLoadBatchById(any(List.class))).thenReturn(lockList);
+        when(mockPoolCurator.lockAndLoad(eq(pool1))).thenReturn(pool1);
         when(enforcerMock.preEntitlement(any(Consumer.class), any(Pool.class), anyInt(),
             any(CallerType.class))).thenReturn(result);
 

@@ -72,17 +72,6 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
     }
 
     /**
-     * Refreshes the target Owner and locks it.
-     *
-     * @param owner the target owner.
-     * @return the refreshed and locked Owner.
-     */
-    public Owner lockAndLoad(Owner owner) {
-        getEntityManager().refresh(owner, LockModeType.PESSIMISTIC_WRITE);
-        return owner;
-    }
-
-    /**
      * @param key owner's unique key to lookup.
      * @return the owner whose key matches the one given.
      */

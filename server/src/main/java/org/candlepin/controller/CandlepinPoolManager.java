@@ -926,10 +926,7 @@ public class CandlepinPoolManager implements PoolManager {
         // when it was read. As such we're going to reload it with a lock
         // before starting this process.
         log.info("Locking pool {}", pool.getId());
-        List<String> poolIds = new ArrayList<String>();
-        poolIds.add(pool.getId());
-        List<Pool> pools = poolCurator.lockAndLoadBatchById(poolIds);
-        pool = pools.get(0);
+        pool = poolCurator.lockAndLoad(pool);
 
         if (quantity > 0) {
             log.info("Running pre-entitlement rules.");
@@ -938,8 +935,7 @@ public class CandlepinPoolManager implements PoolManager {
                 consumer, pool, quantity, caller);
 
             if (!result.isSuccessful()) {
-                log.warn("Entitlement not granted: " +
-                    result.getErrors().toString());
+                log.warn("Entitlement not granted: {}", result.getErrors().toString());
                 throw new EntitlementRefusedException(result);
             }
         }
@@ -1306,9 +1302,9 @@ public class CandlepinPoolManager implements PoolManager {
             poolIdsToLock.add(ent.getPool().getId());
         }
 
-        poolCurator.lockAndLoadBatchById(poolIdsToLock);
+        poolCurator.lockAndLoadByIds(poolIdsToLock);
 
-        log.info("Batch revoking entitlements: " + entsToRevoke.size());
+        log.info("Batch revoking entitlements: {}", entsToRevoke.size());
 
         entsToRevoke =  new ArrayList<Entitlement>(entsToRevoke);
 
@@ -1316,9 +1312,8 @@ public class CandlepinPoolManager implements PoolManager {
 
         for (Pool pool : poolsToDelete) {
             entsToRevoke.addAll(pool.getEntitlements());
+            poolCurator.lock(pool);
         }
-
-        poolCurator.lock(poolsToDelete);
 
         for (Entitlement ent : entsToRevoke) {
             //We need to trigger lazy load of provided products

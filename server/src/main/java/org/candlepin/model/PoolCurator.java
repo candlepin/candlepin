@@ -29,7 +29,6 @@ import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.Filter;
 import org.hibernate.Hibernate;
-import org.hibernate.LockOptions;
 import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.CriteriaSpecification;
@@ -52,7 +51,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import javax.persistence.LockModeType;
+
 
 /**
  * EntitlementPoolCurator
@@ -522,12 +521,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return consumerFilter;
     }
 
-    public Pool lockAndLoad(Pool pool) {
-        currentSession().refresh(pool, LockOptions.UPGRADE);
-        getEntityManager().refresh(pool);
-        return pool;
-    }
-
     public List<ActivationKey> getActivationKeysForPool(Pool p) {
         List<ActivationKey> activationKeys = new ArrayList<ActivationKey>();
         List<ActivationKeyPool> activationKeyPools = currentSession().createCriteria(
@@ -787,18 +780,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return (Pool) criteria.uniqueResult();
     }
 
-    public void lock(List<Pool> poolsToLock) {
-        if (poolsToLock.isEmpty()) {
-            log.debug("Nothing to lock");
-            return;
-        }
-
-        log.debug("Locking pools");
-        getEntityManager().createQuery("SELECT p FROM Pool p WHERE p in :pools")
-        .setParameter("pools", poolsToLock)
-                .setLockMode(LockModeType.PESSIMISTIC_WRITE).getResultList();
-        log.debug("Done locking pools");
-    }
     /**
      * Uses a database query to check if the pool is still
      * in the database.
