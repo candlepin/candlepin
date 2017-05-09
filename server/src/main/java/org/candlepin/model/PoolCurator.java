@@ -29,7 +29,6 @@ import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.Filter;
 import org.hibernate.Hibernate;
-import org.hibernate.LockOptions;
 import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.Criterion;
@@ -910,29 +909,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         Filter consumerFilter = currentSession().getEnabledFilter(CONSUMER_FILTER);
         currentSession().disableFilter(CONSUMER_FILTER);
         return consumerFilter;
-    }
-
-    public Pool lockAndLoad(Pool pool) {
-        currentSession().refresh(pool, LockOptions.UPGRADE);
-        getEntityManager().refresh(pool);
-        return pool;
-    }
-
-    public List<Pool> lockAndLoadBatch(Collection<String> ids) {
-        return lockAndLoadBatch(ids, "Pool", "id");
-    }
-
-    public void lock(List<Pool> poolsToLock) {
-        if (poolsToLock.isEmpty()) {
-            log.debug("Nothing to lock");
-            return;
-        }
-        List<String> ids = new ArrayList<String>();
-        for (Pool p : poolsToLock) {
-            ids.add(p.getId());
-        }
-        lockAndLoadBatchById(ids);
-        log.debug("Done locking pools");
     }
 
     public List<ActivationKey> getActivationKeysForPool(Pool p) {

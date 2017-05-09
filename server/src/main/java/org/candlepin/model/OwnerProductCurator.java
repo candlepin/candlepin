@@ -22,6 +22,7 @@ import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Disjunction;
+import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
@@ -378,7 +379,8 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
 
         if (uuids != null && !uuids.isEmpty()) {
             DetachedCriteria criteria = DetachedCriteria.forClass(Product.class)
-                .add(CPRestrictions.in("uuid", uuids));
+                .add(CPRestrictions.in("uuid", uuids))
+                .addOrder(Order.asc("uuid"));
 
             return this.cpQueryFactory.<Product>buildQuery(this.currentSession(), criteria);
         }

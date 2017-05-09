@@ -20,6 +20,7 @@ import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Disjunction;
+import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 
@@ -406,7 +407,8 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
 
         if (uuids != null && !uuids.isEmpty()) {
             DetachedCriteria criteria = DetachedCriteria.forClass(Content.class)
-                .add(CPRestrictions.in("uuid", uuids));
+                .add(CPRestrictions.in("uuid", uuids))
+                .addOrder(Order.asc("uuid"));
 
             return this.cpQueryFactory.<Content>buildQuery(this.currentSession(), criteria);
         }

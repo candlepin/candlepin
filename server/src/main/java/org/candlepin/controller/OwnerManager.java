@@ -41,7 +41,7 @@ import com.google.inject.persist.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
+import java.util.Collection;
 
 
 
@@ -73,13 +73,12 @@ public class OwnerManager {
     public void cleanupAndDelete(Owner owner, boolean revokeCerts) {
         log.info("Cleaning up owner: {}", owner);
 
-        List<String> ids = ownerCurator.getConsumerUuids(owner.getKey()).list();
-        List<Consumer> consumers = consumerCurator.lockAndLoadBatch(ids);
+        Collection<String> consumerIds = this.ownerCurator.getConsumerIds(owner).list();
+        Collection<Consumer> consumers = this.consumerCurator.lockAndLoadByIds(consumerIds);
 
-        for (Consumer c : consumers) {
-            log.info("Removing all entitlements for consumer: {}", c);
-
-            poolManager.revokeAllEntitlements(c, revokeCerts);
+        for (Consumer consumer : consumers) {
+            log.info("Removing all entitlements for consumer: {}", consumer);
+            poolManager.revokeAllEntitlements(consumer, revokeCerts);
         }
 
         // Actual consumer deletion is done out of the loop above since all
@@ -141,6 +140,8 @@ public class OwnerManager {
 
         log.info("Deleting owner: {}", owner);
         ownerCurator.delete(owner);
+
+        ownerCurator.flush();
     }
 
     public void determineContentAccessCertState(Owner owner) {
@@ -158,8 +159,10 @@ public class OwnerManager {
     @Transactional
     public void refreshOwnerForContentAccess(Owner owner) {
         // we need to update the owner's consumers if the content access mode has changed
-        owner = ownerCurator.findAndLock(owner.getKey());
+        owner = ownerCurator.lockAndLoad(owner);
+
         this.determineContentAccessCertState(owner);
+
         // removed cached versions of content access cert data
         ownerEnvContentAccessCurator.removeAllForOwner(owner.getId());
         ownerCurator.flush();

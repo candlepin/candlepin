@@ -412,8 +412,7 @@ public class ConsumerResource {
                 int days = config.getInt(ConfigProperties.IDENTITY_CERT_EXPIRY_THRESHOLD, 90);
                 Date futureExpire = Util.addDaysToDt(days);
                 // if expiration is within 90 days, regenerate it
-                log.debug("Threshold [{}] expires on [{}] futureExpire [{}]",
-                    days, expire, futureExpire);
+                log.debug("Threshold [{}] expires on [{}] futureExpire [{}]", days, expire, futureExpire);
 
                 if (expire.before(futureExpire)) {
                     log.info("Regenerating identity certificate for consumer: {}, expiry: {}", uuid, expire);
@@ -1428,7 +1427,10 @@ public class ConsumerResource {
         @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid,
         @Context Principal principal) {
         log.debug("Deleting consumer_uuid {}", uuid);
-        Consumer toDelete = consumerCurator.lockAndLoadByUuid(uuid);
+
+        Consumer toDelete = consumerCurator.findByUuid(uuid);
+        this.consumerCurator.lock(toDelete);
+
         try {
             this.poolManager.revokeAllEntitlements(toDelete);
         }
@@ -1486,6 +1488,7 @@ public class ConsumerResource {
         // we want to insert the content access cert to this list
         if (!consumer.getOwner().contentAccessMode()
             .equals(ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE)) {
+
             try {
                 Certificate cert = contentAccessCertService.getCertificate(consumer);
                 if (cert != null) {
