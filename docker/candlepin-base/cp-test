@@ -232,7 +232,8 @@ if [ "$LINTER" == "1" ]; then
 fi
 
 # TODO: keep track of return code?
-cd "$CP_HOME/$PROJECT"
+PROJECT_DIR="$CP_HOME/$PROJECT"
+cd $PROJECT_DIR
 
 if [ "$UNITTEST" -gt 0 ]; then
     echo "Running unit tests $UNITTEST time(s)"
@@ -256,16 +257,22 @@ if [ "$UNITTEST" -gt 0 ]; then
 fi
 
 if [ "$QPID" == "1" ]; then
-    echo "Setting up Qpid"
-    pushd . 
-    cd ../server/bin/qpid
-    # Do a cleanup 
-    ./configure-qpid.sh -c
-    # Reconfigure
-    ./configure-qpid.sh
-    popd 
-fi
+    if [ -d "$PROJECT_DIR/bin/qpid" ]; then
+        echo "Setting up Qpid"
 
+        pushd "$PROJECT_DIR/bin/qpid"
+
+        # Do a cleanup
+        ./configure-qpid.sh -c
+        # Reconfigure
+        ./configure-qpid.sh
+
+        popd
+    else
+        echo "Qpid not configured for project: $PROJECT"
+        unset QPID
+    fi
+fi
 
 if [ "$DEPLOY" == "1" ]; then
     echo "Deploying candlepin..."
@@ -284,11 +291,11 @@ if [ "$DEPLOY" == "1" ]; then
     if [ "$VERBOSE" == "1" ]; then
         DEPLOY_FLAGS="$DEPLOY_FLAGS -v"
     fi
-    
+
     if [ "$QPID" == "1" ]; then
         DEPLOY_FLAGS="$DEPLOY_FLAGS -q"
     fi
-    
+
     bin/deploy $DEPLOY_FLAGS
     sleep 7
 fi
