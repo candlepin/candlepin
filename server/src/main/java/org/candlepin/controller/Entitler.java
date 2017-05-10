@@ -34,6 +34,8 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductPoolAttribute;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.policy.EntitlementRefusedException;
+import org.candlepin.policy.js.compliance.ComplianceRules;
+import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
 import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.service.ProductServiceAdapter;
@@ -67,6 +69,7 @@ public class Entitler {
     private EventFactory evtFactory;
     private EventSink sink;
     private ConsumerCurator consumerCurator;
+    private ComplianceRules complianceRules;
     private EntitlementRulesTranslator messageTranslator;
     private EntitlementCurator entitlementCurator;
     private Configuration config;
@@ -79,7 +82,7 @@ public class Entitler {
     public Entitler(PoolManager pm, ConsumerCurator cc, I18n i18n, EventFactory evtFactory,
         EventSink sink, EntitlementRulesTranslator messageTranslator,
         EntitlementCurator entitlementCurator, Configuration config,
-        PoolCurator poolCurator, ProductServiceAdapter productAdapter) {
+        PoolCurator poolCurator, ProductServiceAdapter productAdapter, ComplianceRules complianceRules) {
 
         this.poolManager = pm;
         this.i18n = i18n;
@@ -91,6 +94,7 @@ public class Entitler {
         this.config = config;
         this.poolCurator = poolCurator;
         this.productAdapter = productAdapter;
+        this.complianceRules = complianceRules;
     }
 
     public List<Entitlement> bindByPool(String poolId, String consumeruuid,
@@ -250,11 +254,16 @@ public class Entitler {
             devPool = poolManager.createPool(assembleDevPool(consumer, sku));
             data.setPossiblePools(Arrays.asList(devPool.getId()));
         }
-
         // Attempt to create entitlements:
         try {
             // the pools are only used to bind the guest
-            List<Entitlement> entitlements = poolManager.entitleByProducts(data);
+            // Here is where to get the pools that are provided by the host and attempt to entitleByProducts on those
+            // only, then we should check the compliance of the guest, if no good, entitleByProducts again, this time
+            // without the host pools.
+            List<Entitlement> entitlements = new ArrayList<Entitlement>();
+            if (entitleGuest(data, entitlements)) {
+                entitlements.addAll(poolManager.entitleByProducts(data));
+            }
             log.debug("Created entitlements: " + entitlements);
             return entitlements;
         }
@@ -267,6 +276,57 @@ public class Entitler {
             throw new ForbiddenException(messageTranslator.productErrorToMessage(productId,
                     e.getResult().getErrors().get(0)));
         }
+    }
+
+    /**
+     *
+     * This is a helper method to attempt to entitle a guest using host provided pools, if available
+     *
+     * @param data AutobindData encapsulating data required for an autobind request
+     * @param entitlements List<Entitlements> The list of entitlements to populate with entitlements,
+     *                     should this method succeed
+     * @return boolean True when a regular entitleByProducts is required.
+     *         False when this method was able to satisfy the guest and no regular entitleByProducts is necessary
+     * @throws AutobindDisabledForOwnerException when an autobind attempt is made and the owner
+     *         has it disabled.
+     */
+    private boolean entitleGuest(AutobindData data, List<Entitlement> entitlements) throws EntitlementRefusedException {
+        Consumer host;
+        List<String> hostProvidedPools;
+        Consumer consumer = data.getConsumer();
+        Owner owner = consumer.getOwner();
+
+        // We should only attempt to use the host pools if there have not already been added any pools.
+        if (!consumer.hasFact("virt.uuid") || !"true".equalsIgnoreCase(consumer.getFact("virt.is_guest"))
+            || (data.getPossiblePools() != null && !data.getPossiblePools().isEmpty())) {
+            return true;
+        }
+        host = consumerCurator.getHost(consumer.getFact("virt.uuid"), owner);
+        if (host == null) {
+            return true;
+        }
+        hostProvidedPools = poolCurator.getPoolsProvidedByHost(host);
+        if (hostProvidedPools.isEmpty()) {
+            return true;
+        }
+        data.setPossiblePools(hostProvidedPools);
+        entitlements.addAll(poolManager.entitleByProducts(data));
+        ComplianceStatus status;
+        if (data.getOnDate() != null) {
+            status = complianceRules.getStatus(consumer, data.getOnDate());
+        } else {
+            status = complianceRules.getStatus(consumer);
+        }
+        if (!status.isCompliant()) {
+            // We must not be compliant so we'll try to bind by products
+            data.setPossiblePools(new ArrayList<String>());
+            // Only auto attach for the non-compliant and partially compliant products
+            Set<String> remainingProductsToCheck = status.getNonCompliantProducts();
+            remainingProductsToCheck.addAll(status.getPartiallyCompliantProducts().keySet());
+            data.setProductIds(remainingProductsToCheck.toArray(new String[remainingProductsToCheck.size()]));
+            return true;
+        }
+        return false;
     }
 
     private long getPoolInterval(Product prod) {
