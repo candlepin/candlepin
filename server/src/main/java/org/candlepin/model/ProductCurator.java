@@ -380,6 +380,4 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
 
         return this.cpQueryFactory.<Product>buildQuery();
     }
-
-
 }

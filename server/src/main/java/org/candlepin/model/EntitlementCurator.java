@@ -606,9 +606,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
 
             Query query = this.getEntityManager().createQuery(hql);
 
-            Iterable<List<Entitlement>> blocks = Iterables.partition(
-                entitlements, AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE
-            );
+            Iterable<List<Entitlement>> blocks = Iterables.partition(entitlements, getInBlockSize());
 
             for (List<Entitlement> block : blocks) {
                 Owner sampleOwner = block.get(0).getOwner();
@@ -849,9 +847,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         int count = 0;
 
         if (entitlementIds != null && entitlementIds.iterator().hasNext()) {
-            Iterable<List<String>> blocks = Iterables.partition(
-                entitlementIds, AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE
-            );
+            Iterable<List<String>> blocks = Iterables.partition(entitlementIds, getInBlockSize());
 
             String hql = "UPDATE Entitlement SET dirty = true WHERE id IN (:entIds)";
             Query query = this.getEntityManager().createQuery(hql);

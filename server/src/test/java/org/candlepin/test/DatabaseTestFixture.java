@@ -592,4 +592,14 @@ public class DatabaseTestFixture {
         return p;
     }
 
+    /**
+     * For parameterized tests, the method called to provide the parameter values is called before the @Before
+     * methods are called.  Our Guice injection occurs in the @Before methods and therefore injection isn't
+     * a possibility in parameter providers.  Thus we need a special method to return a Configuration object
+     * when required by parameter providers.
+     * @return a Configuration object
+     */
+    protected Configuration getConfigForParameters() {
+        return new CandlepinCommonTestConfig();
+    }
 }

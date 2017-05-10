@@ -15,13 +15,11 @@
 package org.candlepin.model;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
-import static org.mockito.AdditionalAnswers.*;
 
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 
+import org.candlepin.config.DatabaseConfigFactory;
 import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.Before;
@@ -38,13 +36,11 @@ import java.util.List;
 import java.util.Map;
 
 
-
 /**
  * AbstractHibernateCuratorTest
  */
 @RunWith(JUnitParamsRunner.class)
 public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
-
     /**
      * Test implementation that provides access to some protected methods
      */
@@ -70,7 +66,6 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
             return super.lockAndLoadByIds(entityClass, ids);
         }
     }
-
 
     AbstractHibernateCurator<Content> testContentCurator;
 
@@ -107,7 +102,6 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
         assertEquals("update 2", c2.getName());
         assertEquals("content 3", c3.getName());
     }
-
 
     @Test
     public void testBulkSQLUpdateSingleUpdate() throws Exception {
@@ -234,32 +228,34 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
     }
 
     protected Object[][] largeValueSetSizes() {
-        return new Object[][] {
-            new Object[] { (int) (AbstractHibernateCurator.CASE_OPERATOR_BLOCK_SIZE), 0 },
-            new Object[] { (int) (AbstractHibernateCurator.CASE_OPERATOR_BLOCK_SIZE + 1), 0 },
-            new Object[] { (int) (AbstractHibernateCurator.CASE_OPERATOR_BLOCK_SIZE * 1.5), 0 },
-            new Object[] { (int) (AbstractHibernateCurator.CASE_OPERATOR_BLOCK_SIZE * 1.5 + 1), 0 },
-            new Object[] { (int) (AbstractHibernateCurator.CASE_OPERATOR_BLOCK_SIZE * 2), 0 },
-            new Object[] { (int) (AbstractHibernateCurator.CASE_OPERATOR_BLOCK_SIZE * 2 + 1), 0 },
-            new Object[] { (int) (AbstractHibernateCurator.CASE_OPERATOR_BLOCK_SIZE * 2.5), 0 },
-            new Object[] { (int) (AbstractHibernateCurator.CASE_OPERATOR_BLOCK_SIZE * 2.5 + 1), 0 },
-            new Object[] { (int) (AbstractHibernateCurator.CASE_OPERATOR_BLOCK_SIZE * 3), 0 },
-            new Object[] { (int) (AbstractHibernateCurator.CASE_OPERATOR_BLOCK_SIZE * 3 + 1), 0 },
-            new Object[] { (int) (AbstractHibernateCurator.CASE_OPERATOR_BLOCK_SIZE * 3.5), 0 },
-            new Object[] { (int) (AbstractHibernateCurator.CASE_OPERATOR_BLOCK_SIZE * 3.5 + 1), 0 },
+        int caseBlockSize = getConfigForParameters().getInt(DatabaseConfigFactory.CASE_OPERATOR_BLOCK_SIZE);
 
-            new Object[] { (int) (AbstractHibernateCurator.CASE_OPERATOR_BLOCK_SIZE), 1 },
-            new Object[] { (int) (AbstractHibernateCurator.CASE_OPERATOR_BLOCK_SIZE + 1), 1 },
-            new Object[] { (int) (AbstractHibernateCurator.CASE_OPERATOR_BLOCK_SIZE * 1.5), 1 },
-            new Object[] { (int) (AbstractHibernateCurator.CASE_OPERATOR_BLOCK_SIZE * 1.5 + 1), 1 },
-            new Object[] { (int) (AbstractHibernateCurator.CASE_OPERATOR_BLOCK_SIZE * 2), 1 },
-            new Object[] { (int) (AbstractHibernateCurator.CASE_OPERATOR_BLOCK_SIZE * 2 + 1), 1 },
-            new Object[] { (int) (AbstractHibernateCurator.CASE_OPERATOR_BLOCK_SIZE * 2.5), 1 },
-            new Object[] { (int) (AbstractHibernateCurator.CASE_OPERATOR_BLOCK_SIZE * 2.5 + 1), 1 },
-            new Object[] { (int) (AbstractHibernateCurator.CASE_OPERATOR_BLOCK_SIZE * 3), 1 },
-            new Object[] { (int) (AbstractHibernateCurator.CASE_OPERATOR_BLOCK_SIZE * 3 + 1), 1 },
-            new Object[] { (int) (AbstractHibernateCurator.CASE_OPERATOR_BLOCK_SIZE * 3.5), 1 },
-            new Object[] { (int) (AbstractHibernateCurator.CASE_OPERATOR_BLOCK_SIZE * 3.5 + 1), 1 },
+        return new Object[][] {
+            new Object[] { (int) (caseBlockSize), 0 },
+            new Object[] { (int) (caseBlockSize + 1), 0 },
+            new Object[] { (int) (caseBlockSize * 1.5), 0 },
+            new Object[] { (int) (caseBlockSize * 1.5 + 1), 0 },
+            new Object[] { (int) (caseBlockSize * 2), 0 },
+            new Object[] { (int) (caseBlockSize * 2 + 1), 0 },
+            new Object[] { (int) (caseBlockSize * 2.5), 0 },
+            new Object[] { (int) (caseBlockSize * 2.5 + 1), 0 },
+            new Object[] { (int) (caseBlockSize * 3), 0 },
+            new Object[] { (int) (caseBlockSize * 3 + 1), 0 },
+            new Object[] { (int) (caseBlockSize * 3.5), 0 },
+            new Object[] { (int) (caseBlockSize * 3.5 + 1), 0 },
+
+            new Object[] { (int) (caseBlockSize), 1 },
+            new Object[] { (int) (caseBlockSize + 1), 1 },
+            new Object[] { (int) (caseBlockSize * 1.5), 1 },
+            new Object[] { (int) (caseBlockSize * 1.5 + 1), 1 },
+            new Object[] { (int) (caseBlockSize * 2), 1 },
+            new Object[] { (int) (caseBlockSize * 2 + 1), 1 },
+            new Object[] { (int) (caseBlockSize * 2.5), 1 },
+            new Object[] { (int) (caseBlockSize * 2.5 + 1), 1 },
+            new Object[] { (int) (caseBlockSize * 3), 1 },
+            new Object[] { (int) (caseBlockSize * 3 + 1), 1 },
+            new Object[] { (int) (caseBlockSize * 3.5), 1 },
+            new Object[] { (int) (caseBlockSize * 3.5 + 1), 1 },
         };
     }
 
@@ -301,8 +297,8 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
         List<Object[]> entries = new LinkedList<Object[]>();
 
         // Declaring these as variables because the constant names are loooooooong
-        int caseBlockSize = AbstractHibernateCurator.CASE_OPERATOR_BLOCK_SIZE;
-        int inBlockSize = AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE;
+        int caseBlockSize = getConfigForParameters().getInt(DatabaseConfigFactory.CASE_OPERATOR_BLOCK_SIZE);
+        int inBlockSize = getConfigForParameters().getInt(DatabaseConfigFactory.IN_OPERATOR_BLOCK_SIZE);
 
         for (float multi = 1; multi < 4.0f; multi += 0.5) {
             entries.add(new Object[] { (int) (caseBlockSize * multi), (int) (inBlockSize * multi) });

@@ -16,9 +16,11 @@ package org.candlepin.model;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.permissions.Permission;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.ConcurrentModificationException;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
+import org.candlepin.config.DatabaseConfigFactory;
 import org.candlepin.guice.PrincipalProvider;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -87,19 +89,10 @@ import javax.persistence.criteria.Path;
  * @param <E> Entity specific curator.
  */
 public abstract class AbstractHibernateCurator<E extends Persisted> {
-    // Oracle has a limit of 1000
-    public static final int IN_OPERATOR_BLOCK_SIZE = 999;
-
-    // Oracle has a limit of 255 arguments per CASE, which caps us around 100 entries.
-    public static final int CASE_OPERATOR_BLOCK_SIZE = 100;
-    public static final int BATCH_BLOCK_SIZE = 500;
-
-    /** The maximum number of parameters a given query can have without breaking our DB. */
-    public static final int QUERY_PARAMETER_LIMIT = 32000;
-
     @Inject protected CandlepinQueryFactory cpQueryFactory;
     @Inject protected Provider<EntityManager> entityManager;
     @Inject protected I18n i18n;
+    @Inject protected Configuration config;
     private final Class<E> entityType;
 
     @Inject private PrincipalProvider principalProvider;
@@ -113,6 +106,22 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
     public Class<E> entityType() {
         return entityType;
+    }
+
+    public int getInBlockSize() {
+        return config.getInt(DatabaseConfigFactory.IN_OPERATOR_BLOCK_SIZE);
+    }
+
+    public int getCaseBlockSize() {
+        return config.getInt(DatabaseConfigFactory.CASE_OPERATOR_BLOCK_SIZE);
+    }
+
+    public int getBatchBlockSize() {
+        return config.getInt(DatabaseConfigFactory.BATCH_BLOCK_SIZE);
+    }
+
+    public int getQueryParameterLimit() {
+        return config.getInt(DatabaseConfigFactory.QUERY_PARAMETER_LIMIT);
     }
 
     /**
@@ -577,7 +586,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
             try {
                 Session session = this.currentSession();
                 EntityManager em = this.getEntityManager();
-                Iterable<List<E>> blocks = Iterables.partition(entities, BATCH_BLOCK_SIZE);
+                Iterable<List<E>> blocks = Iterables.partition(entities, getBatchBlockSize());
 
                 for (List<E> block : blocks) {
                     for (E entity : block) {
@@ -608,7 +617,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
             try {
                 Session session = this.currentSession();
                 EntityManager em = this.getEntityManager();
-                Iterable<List<E>> blocks = Iterables.partition(entities, BATCH_BLOCK_SIZE);
+                Iterable<List<E>> blocks = Iterables.partition(entities, getBatchBlockSize());
 
                 for (List<E> block : blocks) {
                     for (E entity : block) {
@@ -639,7 +648,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
             try {
                 Session session = this.currentSession();
                 EntityManager em = this.getEntityManager();
-                Iterable<List<E>> blocks = Iterables.partition(entities, BATCH_BLOCK_SIZE);
+                Iterable<List<E>> blocks = Iterables.partition(entities, getBatchBlockSize());
 
                 for (List<E> block : blocks) {
                     for (E entity : block) {
@@ -676,13 +685,13 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
                     for (E entity : entities) {
                         session.merge(entity);
 
-                        if (++i % BATCH_BLOCK_SIZE == 0) {
+                        if (++i % getBatchBlockSize() == 0) {
                             em.flush();
                             session.clear();
                         }
                     }
 
-                    if (i % BATCH_BLOCK_SIZE != 0) {
+                    if (i % getBatchBlockSize() != 0) {
                         em.flush();
                         session.clear();
                     }
@@ -771,7 +780,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         Session session = this.currentSession();
         SQLQuery query = session.createSQLQuery(sql);
 
-        for (List<?> block : Iterables.partition(collection, IN_OPERATOR_BLOCK_SIZE)) {
+        for (List<?> block : Iterables.partition(collection, getInBlockSize())) {
             int index = 1;
 
             if (params != null) {
@@ -1159,7 +1168,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
                     .setLockMode(LockModeType.PESSIMISTIC_WRITE);
 
                 // Step through the query in blocks
-                for (List<Serializable> block : Iterables.partition(idSet, IN_OPERATOR_BLOCK_SIZE)) {
+                for (List<Serializable> block : Iterables.partition(idSet, getBatchBlockSize())) {
                     executable.setParameter(param, block);
                     result.addAll(executable.getResultList());
                 }
@@ -1203,7 +1212,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         }
 
         Iterable<List<Map.Entry<Object, Object>>> blocks = Iterables.partition(values.entrySet(),
-            AbstractHibernateCurator.CASE_OPERATOR_BLOCK_SIZE);
+            getCaseBlockSize());
 
         int count = 0;
         int lastBlock = -1;
@@ -1244,7 +1253,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
                         if (criterion.getValue() instanceof Collection) {
                             if (((Collection) criterion.getValue()).size() > 0) {
                                 int inBlocks = (int) Math.ceil((((Collection) criterion.getValue()).size() /
-                                    (float) AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE));
+                                    (float) getInBlockSize()));
 
                                 builder.append(whereStarted ? " AND " : " WHERE ");
                                 whereStarted = true;
@@ -1302,7 +1311,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
                 for (Object criterion : criteria.values()) {
                     if (criterion instanceof Collection) {
                         Iterable<List> inBlocks = Iterables.partition((Collection) criterion,
-                            AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE);
+                            getInBlockSize());
 
                         for (List inBlock : inBlocks) {
                             query.setParameterList(String.valueOf(++param), inBlock);
@@ -1357,7 +1366,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
                 if (criterion.getValue() instanceof Collection) {
                     if (((Collection) criterion.getValue()).size() > 0) {
                         int inBlocks = (int) Math.ceil((((Collection) criterion.getValue()).size() /
-                            (float) AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE));
+                            (float) getInBlockSize()));
 
                         builder.append(whereStarted ? " AND " : " WHERE ");
                         whereStarted = true;
@@ -1397,8 +1406,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
             for (Object criterion : criteria.values()) {
                 if (criterion instanceof Collection) {
-                    Iterable<List> inBlocks = Iterables.partition((Collection) criterion,
-                        AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE);
+                    Iterable<List> inBlocks = Iterables.partition((Collection) criterion, getInBlockSize());
 
                     for (List inBlock : inBlocks) {
                         query.setParameterList(String.valueOf(++param), inBlock);

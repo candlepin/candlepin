@@ -117,16 +117,14 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
             Collection<String> uuids = new HashSet<String>();
 
             // Make sure we don't hit the parameter limit when building queries...
-            Iterable<List<String>> uuidBlocks = Iterables.partition(productUuids,
-                AbstractHibernateCurator.QUERY_PARAMETER_LIMIT);
+            Iterable<List<String>> uuidBlocks = Iterables.partition(productUuids, getQueryParameterLimit());
 
             for (List<String> uuidBlock : uuidBlocks) {
                 StringBuilder builder = new StringBuilder("SELECT DISTINCT content_uuid FROM ")
                     .append(ProductContent.DB_TABLE)
                     .append(" WHERE (");
 
-                int blockCount = (int) Math.ceil(uuidBlock.size() /
-                    (float) AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE);
+                int blockCount = (int) Math.ceil(uuidBlock.size() / (float) getInBlockSize());
 
                 for (int i = 0; i < blockCount;) {
                     if (i != 0) {
@@ -142,8 +140,7 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
                 SQLQuery query = session.createSQLQuery(builder.toString());
 
                 int param = 0;
-                Iterable<List<String>> blocks = Iterables.partition(uuidBlock,
-                    AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE);
+                Iterable<List<String>> blocks = Iterables.partition(uuidBlock, getInBlockSize());
 
                 for (List<String> block : blocks) {
                     query.setParameterList(String.valueOf(++param), block);

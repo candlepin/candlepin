@@ -1348,7 +1348,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
 
     public void markCertificatesDirtyForPoolsWithProducts(Owner owner, Collection<String> productIds) {
-        for (List<String> batch : Iterables.partition(productIds, IN_OPERATOR_BLOCK_SIZE)) {
+        for (List<String> batch : Iterables.partition(productIds, getInBlockSize())) {
             markCertificatesDirtyForPoolsWithNormalProducts(owner, batch);
             markCertificatesDirtyForPoolsWithProvidedProducts(owner, batch);
         }
@@ -1469,7 +1469,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 new StringBuilder("SELECT p.id, pp.id FROM Pool p JOIN p.providedProducts pp WHERE");
             javax.persistence.Query query = null;
 
-            int blockSize = AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE;
+            int blockSize = getInBlockSize();
             int blockCount = (int) Math.ceil(poolIds.size() / (float) blockSize);
 
             if (blockCount > 1) {
@@ -1558,7 +1558,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
             javax.persistence.Query query = null;
 
-            int blockSize = AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE;
+            int blockSize = getInBlockSize();
             int blockCount = (int) Math.ceil(poolIds.size() / (float) blockSize);
 
             if (blockCount > 1) {

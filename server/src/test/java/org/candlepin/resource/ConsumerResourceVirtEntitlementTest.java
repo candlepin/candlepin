@@ -15,11 +15,9 @@
 package org.candlepin.resource;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.*;
 
 import org.candlepin.common.config.Configuration;
-import org.candlepin.common.config.MapConfiguration;
+import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Consumer;
@@ -236,16 +234,13 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
     private static class ConsumerResourceVirtEntitlementModule extends AbstractModule {
         @Override
         protected void configure() {
-            Configuration config = mock(Configuration.class);
-            when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
-            when(config.getString(eq(ConfigProperties.CONSUMER_FACTS_MATCHER)))
-                .thenReturn("^virt.*");
-            when(config.getString(eq(ConfigProperties.CONSUMER_SYSTEM_NAME_PATTERN)))
-                .thenReturn("[\\#\\?\\'\\`\\!@{}()\\[\\]\\?&\\w-\\.]+");
-            when(config.getString(eq(ConfigProperties.CONSUMER_PERSON_NAME_PATTERN)))
-                .thenReturn("[\\#\\?\\'\\`\\!@{}()\\[\\]\\?&\\w-\\.]+");
-            when(config.subset(eq("org.quartz"))).thenReturn(
-                new MapConfiguration(ConfigProperties.DEFAULT_PROPERTIES));
+            Configuration config = new CandlepinCommonTestConfig();
+            config.setProperty(ConfigProperties.STANDALONE, "false");
+            config.setProperty(ConfigProperties.CONSUMER_FACTS_MATCHER, "^virt.*");
+            config.setProperty(ConfigProperties.CONSUMER_SYSTEM_NAME_PATTERN,
+                "[\\#\\?\\'\\`\\!@{}()\\[\\]\\?&\\w-\\.]+");
+            config.setProperty(ConfigProperties.CONSUMER_PERSON_NAME_PATTERN,
+                "[\\#\\?\\'\\`\\!@{}()\\[\\]\\?&\\w-\\.]+");
             bind(Configuration.class).toInstance(config);
             bind(Enforcer.class).to(EntitlementRules.class);
         }

@@ -14,6 +14,9 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.common.config.Configuration;
+import org.candlepin.config.DatabaseConfigFactory;
+
 import com.google.common.collect.Iterables;
 
 import org.hibernate.criterion.Criterion;
@@ -24,21 +27,24 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-
+import javax.inject.Inject;
+import javax.inject.Provider;
 
 /**
  * The CPRestrictions class provides utility Criterion building methods to be used with Hibernate's
  * fluent-style query building.
  */
 public class CPRestrictions {
+    @Inject private static Provider<Configuration> configProvider;
+
     private static class CPLikeExpression extends LikeExpression {
         public CPLikeExpression(String property, String value, Character escape, boolean ignoreCase) {
             super(property, value, escape, ignoreCase);
         }
     }
 
-    protected CPRestrictions() {
-        throw new UnsupportedOperationException("CPRestriction should not be instantiated");
+    private CPRestrictions() {
+        // Static methods only
     }
 
     /**
@@ -64,7 +70,7 @@ public class CPRestrictions {
         }
 
         Iterator<List<T>> blocks = Iterables.partition(
-            values, AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE
+            values, configProvider.get().getInt(DatabaseConfigFactory.IN_OPERATOR_BLOCK_SIZE)
         ).iterator();
 
         Criterion criterion = Restrictions.in(expression, blocks.next());
