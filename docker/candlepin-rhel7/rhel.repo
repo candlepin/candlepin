@@ -1,4 +1,4 @@
 [rhel]
 name=rhel
-baseurl=http://download.eng.bos.redhat.com/released/RHEL-7/7.0/Server/x86_64/os/
+baseurl=http://download.devel.redhat.com/rel-eng/latest-RHEL-7/compose/Server/x86_64/os/
 gpgcheck=0

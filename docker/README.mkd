@@ -29,6 +29,11 @@ in order to stop and clean up existing running containers, as well as invoking t
 options.  This script will mount your current development checkout of candlepin (this repo) into `/candlepin-dev/`
 and bring up a database at hostname `db` on the running container
 
+NOTE: the oracle image has SELINUX issues. In order to overcome these, please install the included policy via
+```bash
+sudo semodule -i oraclecontainer.pp
+```
+
 By default the `test` script will run candlepin against a postgres database.  You can change this behavior with the
 `-o`, `-m`, or `-p` flags which will use oracle, mysql, or postgres respectively. To change the default permanently,
 run the `switch-defaults` script.

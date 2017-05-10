@@ -1,5 +1,5 @@
 # Latest brew candlepin RPMs on RHEL 6
-FROM docker-registry.usersys.redhat.com/brew/rhel6:6-6
+FROM registry.access.redhat.com/rhel6:latest
 MAINTAINER Chris Rog <crog@redhat.com>
 
 # Remove the probably broken rhel repos already in image:

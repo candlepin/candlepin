@@ -1,5 +1,5 @@
 # Latest brew candlepin RPMs on RHEL 7
-FROM docker-registry.usersys.redhat.com/brew/rhel7:7.0-19-GA
+FROM registry.access.redhat.com/rhel7:latest
 MAINTAINER Chris Rog <crog@redhat.com>
 
 # Remove the probably broken rhel repos already in image:
@@ -14,8 +14,6 @@ RUN rpm -ivh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.
 RUN yum install -y findutils vim-enhanced python-pip postgresql postgresql-jdbc openssl&& \
     yum clean all && \
     /usr/bin/find /var/log/ -type f -exec /usr/bin/cp /dev/null {} \;
-
-RUN rpm -e --nodeps fakesystemd
 
 ADD setup-supervisor.sh /root/
 RUN /bin/bash /root/setup-supervisor.sh
