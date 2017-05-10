@@ -126,7 +126,6 @@ public class ConfigProperties {
     public static final String AUDIT_LOG_VERBOSE = "candlepin.audit.log_verbose";
 
     public static final String PRETTY_PRINT = "candlepin.pretty_print";
-    public static final String REVOKE_ENTITLEMENT_IN_FIFO_ORDER = "candlepin.entitlement.revoke.order.fifo";
     public static final String ACTIVATION_DEBUG_PREFIX = "candlepin.subscription.activation.debug_prefix";
 
     // Space separated list of resources to hide in the GET / list:
@@ -337,7 +336,6 @@ public class ConfigProperties {
             this.put(AUDIT_FILTER_DEFAULT_POLICY, "DO_FILTER");
 
             this.put(PRETTY_PRINT, "false");
-            this.put(REVOKE_ENTITLEMENT_IN_FIFO_ORDER, "true");
             this.put(CRL_FILE_PATH, "/var/lib/candlepin/candlepin-crl.crl");
             this.put(CRL_NEXT_UPDATE_DELTA, "1");
 

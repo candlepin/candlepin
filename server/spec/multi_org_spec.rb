@@ -546,4 +546,137 @@ describe "Multi Org Shares" do
     )
     delete_owner(@owner1, true, true)
   end
+
+  it 'reduces share pool quantity before revoking share entitlements' do
+    name = random_string('name')
+    id = random_string('id')
+    create_product(id, name, :owner => @owner1['key'])
+
+    pool = create_pool_and_subscription(@owner1['key'], id, 10)
+    ent = @user_client.consume_pool(pool['id'], {:uuid => share_consumer['uuid'], :quantity => 5})[0]
+    expect(ent.certificates).to be_empty
+    expect(@user_client.list_pool_entitlements(pool['id'])).not_to be_empty
+    pool = @cp.get_pool(pool['id'])
+    expect(pool.consumed).to eq(5)
+    expect(pool.shared).to eq(5)
+
+    owner1_prod = @user_client.get_product(@owner1['key'], id)
+
+    recipient_pools = @cp.list_owner_pools(@owner2['key'])
+    expect(recipient_pools.length).to eq(1)
+    shared_pool = recipient_pools[0]
+    expect(shared_pool.quantity).to eq(5)
+    expect(shared_pool.type).to eq('SHARE_DERIVED')
+
+    consumer1 = @user_client.register(
+       random_string('consumer'), :system, nil, {}, nil, @owner2['key'])
+    @user_client.consume_pool(shared_pool['id'], {:uuid => consumer1['uuid'], :quantity => 1})
+
+    pool.quantity = 5
+    @cp.update_pool(@owner1['key'], pool)
+    pool = @cp.get_pool(pool['id'])
+    expect(pool.quantity).to eq(5)
+    expect(pool.shared).to eq(5)
+    expect(pool.consumed).to eq(5)
+    shared_pool = @cp.get_pool(shared_pool['id'])
+    expect(shared_pool.quantity).to eq(5)
+
+    pool.quantity = 3
+    @cp.update_pool(@owner1['key'], pool)
+    pool = @cp.get_pool(pool['id'])
+    expect(pool.shared).to eq(3)
+    expect(pool.consumed).to eq(3)
+    shared_pool = @cp.get_pool(shared_pool['id'])
+    expect(shared_pool.quantity).to eq(3)
+    expect(@user_client.list_pool_entitlements(shared_pool['id'])).not_to be_empty
+  end
+
+  it 'reduces share pool quantity and revokes share entitlements' do
+    name = random_string('name')
+    id = random_string('id')
+    create_product(id, name, :owner => @owner1['key'])
+
+    pool = create_pool_and_subscription(@owner1['key'], id, 10)
+    ent = @user_client.consume_pool(pool['id'], {:uuid => share_consumer['uuid'], :quantity => 5})[0]
+    expect(ent.certificates).to be_empty
+    expect(@user_client.list_pool_entitlements(pool['id'])).not_to be_empty
+    pool = @cp.get_pool(pool['id'])
+    expect(pool.consumed).to eq(5)
+    expect(pool.shared).to eq(5)
+
+    owner1_prod = @user_client.get_product(@owner1['key'], id)
+
+    recipient_pools = @cp.list_owner_pools(@owner2['key'])
+    expect(recipient_pools.length).to eq(1)
+    shared_pool = recipient_pools[0]
+    expect(shared_pool.quantity).to eq(5)
+    expect(shared_pool.type).to eq('SHARE_DERIVED')
+
+    consumer1 = @user_client.register(
+       random_string('consumer'), :system, nil, {}, nil, @owner2['key'])
+    @user_client.consume_pool(shared_pool['id'], {:uuid => consumer1['uuid'], :quantity => 1})
+    sleep 1
+    consumer2 = @user_client.register(
+       random_string('consumer'), :system, nil, {}, nil, @owner2['key'])
+    @user_client.consume_pool(shared_pool['id'], {:uuid => consumer2['uuid'], :quantity => 1})
+
+    pool.quantity = 1
+    @cp.update_pool(@owner1['key'], pool)
+    pool = @cp.get_pool(pool['id'])
+    expect(pool.shared).to eq(1)
+    expect(pool.consumed).to eq(1)
+    shared_pool = @cp.get_pool(shared_pool['id'])
+    expect(shared_pool.quantity).to eq(1)
+    expect(@user_client.list_pool_entitlements(shared_pool['id'])).not_to be_empty
+    expect(@user_client.list_pool_entitlements(shared_pool['id']).size).to eq(1)
+    expect(@user_client.list_pool_entitlements(shared_pool['id'])[0].consumer['uuid']).to eq(consumer1['uuid'])
+    expect(@cp.get_pool(pool['id']).quantity).to eq(1)
+  end
+
+  it 'revokes share entitlements by creation across master and shared pools' do
+    name = random_string('name')
+    id = random_string('id')
+    create_product(id, name, :owner => @owner1['key'])
+
+    pool = create_pool_and_subscription(@owner1['key'], id, 10)
+    ent = @user_client.consume_pool(pool['id'], {:uuid => share_consumer['uuid'], :quantity => 5})[0]
+    expect(ent.certificates).to be_empty
+    expect(@user_client.list_pool_entitlements(pool['id'])).not_to be_empty
+    pool = @cp.get_pool(pool['id'])
+    expect(pool.consumed).to eq(5)
+    expect(pool.shared).to eq(5)
+
+    owner1_prod = @user_client.get_product(@owner1['key'], id)
+
+    recipient_pools = @cp.list_owner_pools(@owner2['key'])
+    expect(recipient_pools.length).to eq(1)
+    shared_pool = recipient_pools[0]
+    expect(shared_pool.quantity).to eq(5)
+    expect(shared_pool.type).to eq('SHARE_DERIVED')
+
+    consumer1 = @user_client.register(
+       random_string('consumer'), :system, nil, {}, nil, @owner2['key'])
+    @user_client.consume_pool(shared_pool['id'], {:uuid => consumer1['uuid'], :quantity => 1})
+    sleep 1
+    consumer2 = @user_client.register(
+       random_string('consumer'), :system, nil, {}, nil, @owner1['key'])
+    @user_client.consume_pool(pool['id'], {:uuid => consumer2['uuid'], :quantity => 1})
+    sleep 1
+    consumer3 = @user_client.register(
+       random_string('consumer'), :system, nil, {}, nil, @owner2['key'])
+    @user_client.consume_pool(shared_pool['id'], {:uuid => consumer3['uuid'], :quantity => 1})
+
+    pool.quantity = 1
+    @cp.update_pool(@owner1['key'], pool)
+    pool = @cp.get_pool(pool['id'])
+    expect(pool.shared).to eq(1)
+    expect(pool.consumed).to eq(1)
+    shared_pool = @cp.get_pool(shared_pool['id'])
+    expect(shared_pool.quantity).to eq(1)
+    expect(@user_client.list_pool_entitlements(shared_pool['id'])).not_to be_empty
+    expect(@user_client.list_pool_entitlements(shared_pool['id']).size).to eq(1)
+    expect(@user_client.list_pool_entitlements(shared_pool['id'])[0].consumer['uuid']).to eq(consumer1['uuid'])
+    expect(@cp.get_pool(pool['id']).quantity).to eq(1)
+    expect(@user_client.list_pool_entitlements(pool['id']).size).to eq(1)
+  end
 end

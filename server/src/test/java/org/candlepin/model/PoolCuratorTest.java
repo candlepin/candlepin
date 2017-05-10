@@ -735,8 +735,8 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Entitlement ent31 = new Entitlement(pool3, consumer, 1);
         entitlementCurator.create(ent31);
 
-        List<Entitlement> ents = poolCurator.retrieveFreeEntitlementsOfPools(
-            Arrays.asList(pool1, pool2), true);
+        List<Entitlement> ents = poolCurator.retrieveOrderedEntitlementsOf(
+            Arrays.asList(pool1, pool2));
         assertEquals(4, ents.size());
         assertThat(ents, hasItems(ent11, ent12, ent13, ent21));
         assertThat(ents, not(hasItems(ent31)));

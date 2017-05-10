@@ -861,20 +861,14 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testEntitlementsRevocationWithFifoOrder() throws Exception {
-        Pool pool = doTestEntitlementsRevocationCommon(7, 4, 5, true);
-        assertEquals(4L, this.poolCurator.find(pool.getId()).getConsumed().longValue());
-    }
-
-    @Test
     public void testEntitlementsRevocationWithLifoOrder() throws Exception {
-        Pool pool = doTestEntitlementsRevocationCommon(7, 4, 5, false);
+        Pool pool = doTestEntitlementsRevocationCommon(7, 4, 5);
         assertEquals(5L, this.poolCurator.find(pool.getId()).getConsumed().longValue());
     }
 
     @Test
     public void testEntitlementsRevocationWithNoOverflow() throws Exception {
-        Pool pool = doTestEntitlementsRevocationCommon(10, 4, 5, false);
+        Pool pool = doTestEntitlementsRevocationCommon(10, 4, 5);
         assertEquals(9L, this.poolCurator.find(pool.getId()).getConsumed().longValue());
     }
 
@@ -933,7 +927,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         key = ownerResource.createActivationKey(owner.getKey(), key);
     }
 
-    private Pool doTestEntitlementsRevocationCommon(long subQ, int e1, int e2, boolean fifo)
+    private Pool doTestEntitlementsRevocationCommon(long subQ, int e1, int e2)
         throws ParseException {
 
         Product prod = this.createProduct(owner);
@@ -964,7 +958,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         createEntitlementWithQ(pool, retrieved, consumer, e1, "01/02/2010");
         createEntitlementWithQ(pool, retrieved, consumer1, e2, "01/01/2010");
         assertEquals(pool.getConsumed(), Long.valueOf(e1 + e2));
-        this.config.setProperty(ConfigProperties.REVOKE_ENTITLEMENT_IN_FIFO_ORDER, fifo ? "true" : "false");
 
         poolManager.getRefresher(subAdapter, ownerAdapter).add(retrieved).run();
         pool = poolCurator.find(pool.getId());

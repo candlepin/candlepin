@@ -78,7 +78,6 @@ import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -127,7 +126,6 @@ public class CandlepinPoolManager implements PoolManager {
 
     /**
      * @param poolCurator
-     * @param subAdapter
      * @param sink
      * @param eventFactory
      * @param config
@@ -499,56 +497,9 @@ public class CandlepinPoolManager implements PoolManager {
         return pools.size();
     }
 
-    @Transactional
-    private void deleteExcessEntitlements(List<Pool> existingPools) {
-        if (CollectionUtils.isEmpty(existingPools)) {
-            return;
-        }
-
-        List<Pool> overFlowingPools = new ArrayList<Pool>();
-        for (Pool pool : existingPools) {
-            if (pool.isOverflowing()) {
-                overFlowingPools.add(pool);
-            }
-        }
-
-        if (overFlowingPools.isEmpty()) {
-            return;
-        }
-
-        boolean lifo = !config.getBoolean(ConfigProperties.REVOKE_ENTITLEMENT_IN_FIFO_ORDER);
-        List<Entitlement> freeEntitlements = this.poolCurator.retrieveFreeEntitlementsOfPools(
-            overFlowingPools, lifo);
-        List<Entitlement> entitlementsToDelete = new ArrayList<Entitlement>();
-        Map<String, List<Entitlement>> poolSortedEntitlements = new HashMap<String, List<Entitlement>>();
-
-        for (Entitlement entitlement : freeEntitlements) {
-            Pool pool = entitlement.getPool();
-            List<Entitlement> ents = poolSortedEntitlements.get(pool.getId());
-            if (ents == null) {
-                ents = new ArrayList<Entitlement>();
-                poolSortedEntitlements.put(pool.getId(), ents);
-            }
-
-            ents.add(entitlement);
-        }
-
-        for (Pool pool : overFlowingPools) {
-            List<Entitlement> freeEntitlementsForPool = poolSortedEntitlements.get(pool.getId());
-            if (CollectionUtils.isEmpty(freeEntitlementsForPool)) {
-                continue;
-            }
-            long consumed = pool.getConsumed();
-            long existing = pool.getQuantity();
-            Iterator<Entitlement> iter = freeEntitlementsForPool.iterator();
-            while (consumed > existing && iter.hasNext()) {
-                Entitlement e = iter.next();
-                entitlementsToDelete.add(e);
-                consumed -= e.getQuantity();
-            }
-        }
-
-        revokeEntitlements(entitlementsToDelete);
+    private boolean isExpired(Subscription subscription) {
+        Date now = new Date();
+        return now.after(subscription.getEndDate());
     }
 
     void removeAndDeletePoolsOnOtherOwners(List<Pool> existingPools, Pool pool) {
@@ -658,16 +609,17 @@ public class CandlepinPoolManager implements PoolManager {
             this.poolCurator.flush();
 
             // quantity has changed. delete any excess entitlements from pool
+            // the quantity has not yet been expressed on the pool itself
             if (updatedPool.getQuantityChanged()) {
-                List<Pool> existingPools = Arrays.asList(existingPool);
-                this.deleteExcessEntitlements(existingPools);
+                RevocationOp revPlan = new RevocationOp(poolCurator, Collections.singletonList(existingPool));
+                revPlan.execute(this);
             }
 
             // dates changed. regenerate all entitlement certificates
             if (updatedPool.getDatesChanged() ||
                 updatedPool.getProductsChanged() ||
                 updatedPool.getBrandingChanged()) {
-                List<String> entitlements = poolCurator.retrieveFreeEntitlementIdsOfPool(existingPool, true);
+                List<String> entitlements = poolCurator.retrieveOrderedEntitlementIdsOf(existingPool);
                 entitlementsToRegen.addAll(entitlements);
             }
 
@@ -1747,7 +1699,6 @@ public class CandlepinPoolManager implements PoolManager {
      *  the bonus pools are not over-consumed.
      *
      * @param owner
-     * @param poolQuantities
      * @param entitlements
      */
     private void checkBonusPoolQuantities(Owner owner,
@@ -1770,8 +1721,8 @@ public class CandlepinPoolManager implements PoolManager {
                 derivedPools.add(pool);
             }
         }
-
-        deleteExcessEntitlements(derivedPools);
+        RevocationOp rp = new RevocationOp(poolCurator, derivedPools);
+        rp.execute(this);
     }
 
     @Override
