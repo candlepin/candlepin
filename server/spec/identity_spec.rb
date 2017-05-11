@@ -45,4 +45,14 @@ describe 'Identity Certificate' do
     cert_time = @identity_cert.not_before
     cert_time.should < before
   end
+
+  it 'contains the consumer name and uuid in subject alternative names' do
+    e = @identity_cert.extensions.select { |e| e.oid == 'subjectAltName' }.first
+    expect(e).to_not be_nil
+    name = @consumer['name']
+    uuid = @consumer['uuid']
+
+    expect(e.value).to match(/CN=#{name}/)
+    expect(e.value).to match(/CN=#{uuid}/)
+  end
 end
