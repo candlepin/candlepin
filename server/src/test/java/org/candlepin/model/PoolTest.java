@@ -337,13 +337,13 @@ public class PoolTest extends DatabaseTestFixture {
         List<Entitlement> entitlements = poolManager.entitleByPools(consumer, pQs);
 
         Entitlement ent = entitlements.get(0);
-        assertTrue(ent.getQuantity() == 3);
+        assertEquals(3, ent.getQuantity().intValue());
         poolManager.adjustEntitlementQuantity(consumer, ent, 5);
         Entitlement ent2 = entitlementCurator.find(ent.getId());
-        assertTrue(ent2.getQuantity() == 5);
+        assertEquals(5, ent2.getQuantity().intValue());
         Pool pool2 = poolCurator.find(pool.getId());
-        assertTrue(pool2.getConsumed() == 5);
-        assertTrue(pool2.getEntitlements().size() == 1);
+        assertEquals(5, pool2.getConsumed().intValue());
+        assertEquals(1, pool2.getEntitlements().size());
     }
 
     @Test
