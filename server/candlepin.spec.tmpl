@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 0.9.54.21
+Version: 0.9.54.22
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -220,6 +220,14 @@ fi
 
 #raw
 %changelog
+* Fri May 12 2017 Chris Rog <crog@redhat.com> 0.9.54.22-1
+- Consolidated and refactored the database locking methods (crog@redhat.com)
+- Added additional checks and logging to the populate hosted DB task
+  (crog@redhat.com)
+- Added the skip_existing option to the populate hosted DB task
+  (crog@redhat.com)
+- Add MEAD releaser for 0.9.54 (khowell@redhat.com)
+
 * Wed Mar 29 2017 Kevin Howell <khowell@redhat.com> 0.9.54.21-1
 - 1435807: Optimize cert regen from content update (khowell@redhat.com)
 - 1428146: Do not deadlock on multiple synchronous hypervisor checkins
