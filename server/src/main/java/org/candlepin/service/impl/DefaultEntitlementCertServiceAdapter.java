@@ -213,10 +213,10 @@ public class DefaultEntitlementCertServiceAdapter extends
                 pool.getAttributeValue("unmapped_guests_only"));
 
         if (isUnmappedGuestPool) {
-            Date oneDayFromRegistration = new Date(startDate.getTime() + 24L * 60L * 60L * 1000L);
-            log.info("Setting 24h expiration for unmapped guest pool entilement: " +
-                    oneDayFromRegistration);
-            ent.setEndDateOverride(oneDayFromRegistration);
+            Date sevenDaysFromRegistration = new Date(startDate.getTime() + 7L * 24L * 60L * 60L * 1000L);
+            log.info("Setting 7 day expiration for unmapped guest pool entilement: {}",
+                sevenDaysFromRegistration);
+            ent.setEndDateOverride(sevenDaysFromRegistration);
             entCurator.merge(ent);
         }
     }
