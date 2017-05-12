@@ -277,20 +277,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         return getConsumer(uuid);
     }
 
-    /**
-     * Apply a SELECT FOR UPDATE on a consumer.
-     *
-     * Note this method is not transactional.  It is meant to be used within
-     * a larger transaction.  Starting a transaction, running a select for update,
-     * and then ending the transaction is pointless.
-     *
-     * @return A consumer locked in the database
-     */
-    public Consumer lockAndLoad(Consumer c) {
-        getEntityManager().lock(c, LockModeType.PESSIMISTIC_WRITE);
-        return c;
-    }
-
     @Transactional
     public List<Consumer> findByUuids(Collection<String> uuids) {
         return listByCriteria(
