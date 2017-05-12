@@ -1696,7 +1696,7 @@ public class CandlepinPoolManager implements PoolManager {
         List<Pool> poolsToSave = new ArrayList<Pool>();
         for (PoolQuantity poolQuantity : poolQuantities.values()) {
             Pool pool = poolQuantity.getPool();
-            Integer quantity = poolQuantity.getQuantity();
+            Integer quantity = entitlements.get(pool.getId()).getQuantity();
             pool.setConsumed(pool.getConsumed() + quantity);
             if (consumer.isManifestDistributor()) {
                 pool.setExported(pool.getExported() + quantity);
