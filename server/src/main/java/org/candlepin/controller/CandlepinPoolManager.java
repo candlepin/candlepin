@@ -1563,7 +1563,15 @@ public class CandlepinPoolManager implements PoolManager {
         List<Pool> poolsToSave = new ArrayList<Pool>();
         for (PoolQuantity poolQuantity : poolQuantities.values()) {
             Pool pool = poolQuantity.getPool();
-            Integer quantity = poolQuantity.getQuantity();
+            boolean isUpdate = handler instanceof UpdateHandler;
+
+            /* if update, poolQuantity map has the change requested and should be added as is.
+               if add, poolQuantity map may have requested quantity as 0, so we pick the ent's quantity.
+             */
+            Integer quantity = isUpdate ?
+                poolQuantity.getQuantity() :
+                entitlements.get(pool.getId()).getQuantity();
+
             pool.setConsumed(pool.getConsumed() + quantity);
             if (consumer.getType().isManifest()) {
                 pool.setExported(pool.getExported() + quantity);

@@ -83,6 +83,14 @@ describe 'Entitlements' do
     @system.list_entitlements.first.quantity.should == 10
   end
 
+  it 'should allow consumption of quantity zero' do
+    pool = find_pool_for_product @virt
+    pool['consumed'].should eq(0)
+    ent = @system.consume_pool(pool.id, {:quantity => 0})
+    @cp.get_pool(pool['id'])['consumed'].should eq(1)
+    ent[0]['quantity'].should eq(1)
+  end
+
   it 'should allow multiple products to be consumed' do
     @system.consume_product(@virt.id)
     @system.consume_product(@monitoring.id)
