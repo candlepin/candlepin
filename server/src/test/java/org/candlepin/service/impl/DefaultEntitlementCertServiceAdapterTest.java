@@ -357,13 +357,14 @@ public class DefaultEntitlementCertServiceAdapterTest {
             getProductModels(product, new HashSet<Product>(), "prefix", entitlement),
             new BigInteger("1234"), keyPair, true);
 
-        Date twentyFiveHoursOut = new Date(now.getTime() + 25 * 60 * 60 * 1000);
-        Date twentyThreeHoursOut = new Date(now.getTime() + 23 * 60 * 60 * 1000);
+        // unmapped guest pools expire in 7 days, 7 * 24 = 168
+        Date oneHourAfterSevenDays = new Date(now.getTime() + 169 * 60 * 60 * 1000);
+        Date oneHourBeforeSevenDays = new Date(now.getTime() + 167 * 60 * 60 * 1000);
 
-        result.checkValidity(twentyThreeHoursOut);
+        result.checkValidity(oneHourBeforeSevenDays);
 
         thrown.expect(CertificateExpiredException.class);
-        result.checkValidity(twentyFiveHoursOut);
+        result.checkValidity(oneHourAfterSevenDays);
     }
 
     @Test
