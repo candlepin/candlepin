@@ -553,8 +553,8 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @Test
     public void testRegenerateEntitlementCertificateWithValidConsumerByEntitlement() {
         ConsumerResource cr = new ConsumerResource(
-            this.consumerCurator, null, null, null, this.entitlementCurator, null, null, null, null, null,
-            null, null, null, this.poolManager, null, null, null, null, null, null, null, null,
+            this.consumerCurator, null, null, null, null, this.entitlementCurator, null, null, null, null,
+            null, null, null, null, this.poolManager, null, null, null, null, null, null, null, null,
             new CandlepinCommonTestConfig(), null, null, null, mock(ConsumerBindUtil.class),
             null, null, null, null, consumerEnricher);
 

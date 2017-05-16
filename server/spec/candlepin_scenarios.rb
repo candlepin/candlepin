@@ -14,8 +14,11 @@ module CandlepinMethods
   # most other objects can be created using the ruby API.
   def create_owner(owner_name, parent=nil, params={})
     params[:parent] = parent
-    # this will only affect the ability to set the mode on the owner
+
+    # Set the content access mode list for new owners. We do this here instead of doing it explicitly
+    # in each test due to some test objects creating owners internally which need this list.
     params['contentAccessModeList'] = 'org_environment,test_access_mode,entitlement'
+
     owner = @cp.create_owner(owner_name, params)
     @owners << owner
 

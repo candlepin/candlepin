@@ -332,20 +332,18 @@ public class OwnerResource {
         Owner parent = owner.getParentOwner();
         if (parent != null && ownerCurator.find(parent.getId()) == null) {
             throw new BadRequestException(i18n.tr(
-                "Could not create the Owner: {0}. Parent {1} does not exist.",
-                owner, parent));
+                "Could not create the Owner: {0}. Parent {1} does not exist.", owner, parent));
         }
 
-        Owner toReturn = ownerCurator.create(owner);
-        sink.emitOwnerCreated(owner);
-
-        log.info("Created owner: " + owner);
-        if (toReturn != null) {
-            return toReturn;
+        Owner created = ownerCurator.create(owner);
+        if (created == null) {
+            throw new BadRequestException(i18n.tr("Could not create the Owner: {0}", owner));
         }
 
-        throw new BadRequestException(i18n.tr(
-            "Could not create the Owner: {0}", owner));
+        log.info("Created owner: {}", created);
+        sink.emitOwnerCreated(created);
+
+        return created;
     }
 
     /**
@@ -920,6 +918,7 @@ public class OwnerResource {
         if (owner.getDisplayName() != null) {
             toUpdate.setDisplayName(owner.getDisplayName());
         }
+
         if (owner.getParentOwner() != null) {
             toUpdate.setParentOwner(owner.getParentOwner());
         }
@@ -942,20 +941,23 @@ public class OwnerResource {
             toUpdate.setAutobindDisabled(owner.getAutobindDisabled());
         }
 
-        if (!ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE
-            .equals(owner.contentAccessMode()) &&
+        if (!ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE.equals(owner.contentAccessMode()) &&
             config.getBoolean(ConfigProperties.STANDALONE)) {
+
             throw new BadRequestException(
                 i18n.tr("The owner content access mode cannot be set directly in standalone mode."));
         }
+
         // Update the contentAccess field if the incoming value is not null.
+        boolean refreshContentAccess = false;
         if (owner.getContentAccessMode() != null) {
             if (toUpdate.isAllowedContentAccessMode(owner.contentAccessMode())) {
                 String before = toUpdate.getContentAccessMode();
                 String after = owner.getContentAccessMode();
-                toUpdate.setContentAccessMode(owner.getContentAccessMode());
+
                 if (!after.equals(before)) {
-                    toUpdate.setContentAccessModeDirty(true);
+                    toUpdate.setContentAccessMode(owner.getContentAccessMode());
+                    refreshContentAccess = true;
                 }
             }
             else {
@@ -967,9 +969,10 @@ public class OwnerResource {
         ownerCurator.merge(toUpdate);
         ownerCurator.flush();
 
-        if (toUpdate.isContentAccessModeDirty()) {
+        if (refreshContentAccess) {
             ownerManager.refreshOwnerForContentAccess(toUpdate);
         }
+
         Event e = eventBuilder.setNewEntity(toUpdate).buildEvent();
         sink.queueEvent(e);
         return toUpdate;

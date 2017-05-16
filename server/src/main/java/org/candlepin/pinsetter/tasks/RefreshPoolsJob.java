@@ -22,6 +22,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.pinsetter.core.RetryJobException;
 import org.candlepin.pinsetter.core.model.JobStatus;
+import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.Util;
 
@@ -46,20 +47,23 @@ import javax.persistence.PersistenceException;
 public class RefreshPoolsJob extends UniqueByEntityJob {
 
     private static Logger log = LoggerFactory.getLogger(RefreshPoolsJob.class);
-    protected OwnerCurator ownerCurator;
-    protected PoolManager poolManager;
-    protected SubscriptionServiceAdapter subAdapter;
 
     public static final String LAZY_REGEN = "lazy_regen";
     public static final String JOB_NAME_PREFIX = "refresh_pools_";
 
+    protected OwnerCurator ownerCurator;
+    protected PoolManager poolManager;
+    protected SubscriptionServiceAdapter subAdapter;
+    protected OwnerServiceAdapter ownerAdapter;
+
     @Inject
     public RefreshPoolsJob(OwnerCurator ownerCurator, PoolManager poolManager,
-        SubscriptionServiceAdapter subAdapter) {
+        SubscriptionServiceAdapter subAdapter, OwnerServiceAdapter ownerAdapter) {
 
         this.ownerCurator = ownerCurator;
         this.poolManager = poolManager;
         this.subAdapter = subAdapter;
+        this.ownerAdapter = ownerAdapter;
     }
 
     /**
@@ -76,13 +80,18 @@ public class RefreshPoolsJob extends UniqueByEntityJob {
             String ownerKey = map.getString(JobStatus.TARGET_ID);
             Boolean lazy = map.getBoolean(LAZY_REGEN);
             Owner owner = ownerCurator.lookupByKey(ownerKey);
+
             if (owner == null) {
                 context.setResult("Nothing to do. Owner no longer exists");
                 return;
             }
 
             // Assume that we verified the request in the resource layer:
-            poolManager.getRefresher(subAdapter, lazy).setUnitOfWork(unitOfWork).add(owner).run();
+            poolManager.getRefresher(this.subAdapter, this.ownerAdapter, lazy)
+                .setUnitOfWork(unitOfWork)
+                .add(owner)
+                .run();
+
             context.setResult("Pools refreshed for owner " + owner.getDisplayName());
         }
         catch (PersistenceException e) {
@@ -90,6 +99,7 @@ public class RefreshPoolsJob extends UniqueByEntityJob {
         }
         catch (RuntimeException e) {
             Throwable cause = e.getCause();
+
             while (cause != null) {
                 if (SQLException.class.isAssignableFrom(cause.getClass())) {
                     log.warn("Caught a runtime exception wrapping an SQLException.");

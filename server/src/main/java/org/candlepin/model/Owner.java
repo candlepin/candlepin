@@ -48,6 +48,7 @@ import javax.xml.bind.annotation.XmlTransient;
 import io.swagger.annotations.ApiModelProperty;
 
 
+
 /**
  * Represents the owner of entitlements. This is akin to an organization,
  * whereas a User is an individual account within that organization.
@@ -127,24 +128,15 @@ public class Owner extends AbstractHibernateObject implements Serializable,
 
     /**
      * Determines the behavior of the content access.
-     *
      */
     @Column(name = "content_access_mode")
     private String contentAccessMode;
 
     /**
      * Determines the allowable modes of the content access.
-     *
      */
     @Column(name = "content_access_mode_list")
     private String contentAccessModeList;
-
-    /**
-     * Has the content access mode changed on owner update.
-     *
-     */
-    @Column(name = "content_access_mode_dirty")
-    private boolean contentAccessModeDirty;
 
     /**
      * Default constructor
@@ -505,7 +497,9 @@ public class Owner extends AbstractHibernateObject implements Serializable,
     }
 
     public void setContentAccessModeList(String contentAccessModeList) {
-        this.contentAccessModeList = contentAccessModeList;
+        this.contentAccessModeList = !StringUtils.isEmpty(contentAccessModeList) ?
+            contentAccessModeList :
+            null;
     }
 
     @XmlTransient
@@ -513,28 +507,17 @@ public class Owner extends AbstractHibernateObject implements Serializable,
         if (StringUtils.isEmpty(mode)) {
             return true;
         }
+
         if (mode.equals(ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE)) {
             return true;
         }
+
         if (StringUtils.isEmpty(contentAccessModeList)) {
             return false;
         }
+
         String[] list = contentAccessModeList.split(",");
         return ArrayUtils.contains(list, mode);
-    }
-
-    /**
-     * Returns the value of the contentAccessMode setting.
-     *
-     * @return String the value
-     */
-    @XmlTransient
-    public boolean isContentAccessModeDirty() {
-        return contentAccessModeDirty;
-    }
-
-    public void setContentAccessModeDirty(boolean contentAccessModeDirty) {
-        this.contentAccessModeDirty = contentAccessModeDirty;
     }
 
 }

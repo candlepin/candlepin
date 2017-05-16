@@ -11,7 +11,11 @@ describe 'Content Access' do
   include Unpack
 
   before(:each) do
-      @owner = create_owner(random_string("test_owner"), nil,{'contentAccessMode' => "org_environment"})
+      @owner = create_owner(random_string("test_owner"), nil, {
+        'contentAccessModeList' => 'org_environment,test_access_mode,entitlement',
+        'contentAccessMode' => "org_environment"
+      })
+
       @username = random_string("user")
       @consumername = random_string("consumer")
       @consumername2 = random_string("consumer")
@@ -237,6 +241,7 @@ describe 'Content Access' do
       @cp = Candlepin.new('admin', 'admin')
       @cp_export = StandardExporter.new
       owner = @cp_export.owner
+
       @cp.update_owner(owner['key'],{'contentAccessMode' => "test_access_mode"})
       candlepin_client = @cp_export.candlepin_client
       candlepin_client.update_consumer({'contentAccessMode' => "test_access_mode"})

@@ -23,6 +23,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
+import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.Util;
 import org.candlepin.test.TestUtil;
@@ -44,6 +45,7 @@ import java.util.Map;
 public class RefresherTest {
 
     private CandlepinPoolManager poolManager;
+    private OwnerServiceAdapter ownerAdapter;
     private SubscriptionServiceAdapter subAdapter;
     private OwnerManager ownerManager;
 
@@ -55,7 +57,7 @@ public class RefresherTest {
         subAdapter = mock(SubscriptionServiceAdapter.class);
         ownerManager = mock(OwnerManager.class);
 
-        refresher = new Refresher(poolManager, subAdapter, ownerManager, false);
+        refresher = new Refresher(poolManager, subAdapter, ownerAdapter, ownerManager, false);
     }
 
     @Test

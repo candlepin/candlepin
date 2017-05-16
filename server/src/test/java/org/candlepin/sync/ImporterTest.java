@@ -60,6 +60,7 @@ import org.candlepin.model.dto.Subscription;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.impl.BouncyCastlePKIUtility;
 import org.candlepin.pki.impl.DefaultSubjectKeyIdentifierWriter;
+import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.sync.Importer.ImportFile;
 
@@ -567,15 +568,15 @@ public class ImporterTest {
 
         PoolManager pm = mock(PoolManager.class);
         Refresher refresher = mock(Refresher.class);
-        when(pm.getRefresher(any(SubscriptionServiceAdapter.class))).thenReturn(refresher);
+        when(pm.getRefresher(any(SubscriptionServiceAdapter.class), any(OwnerServiceAdapter.class)))
+            .thenReturn(refresher);
 
         Map<String, File> importFiles = new HashMap<String, File>();
         File ruleDir = mock(File.class);
         File[] rulesFiles = createMockJsFile(mockJsPath);
         when(ruleDir.listFiles()).thenReturn(rulesFiles);
 
-        File actualmeta = createFile("meta.json", "0.0.3", new Date(),
-            "test_user", "prefix");
+        File actualmeta = createFile("meta.json", "0.0.3", new Date(), "test_user", "prefix");
         importFiles.put(ImportFile.META.fileName(), actualmeta);
 
         ConsumerDto consumer = new ConsumerDto("eb5e04bf-be27-44cf-abe3-0c0b1edd523e", "mymachine",

@@ -52,6 +52,7 @@ import org.candlepin.resource.dto.HypervisorCheckInResult;
 import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.service.IdentityCertServiceAdapter;
+import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.util.FactValidator;
@@ -80,6 +81,7 @@ public class HypervisorResourceTest {
     @Mock private UserServiceAdapter userService;
     @Mock private IdentityCertServiceAdapter idCertService;
     @Mock private SubscriptionServiceAdapter subscriptionService;
+    @Mock private OwnerServiceAdapter ownerService;
     @Mock private ConsumerCurator consumerCurator;
     @Mock private ConsumerTypeCurator consumerTypeCurator;
     @Mock private OwnerCurator ownerCurator;
@@ -106,7 +108,7 @@ public class HypervisorResourceTest {
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         this.hypervisorType = new ConsumerType(ConsumerTypeEnum.HYPERVISOR);
         this.consumerResource = new ConsumerResource(this.consumerCurator,
-            this.consumerTypeCurator, null, this.subscriptionService, null,
+            this.consumerTypeCurator, null, this.subscriptionService, this.ownerService, null,
             this.idCertService, null, this.i18n, this.sink, this.eventFactory, null, null,
             this.userService, null, null, this.ownerCurator,
             this.activationKeyCurator, null, this.complianceRules,

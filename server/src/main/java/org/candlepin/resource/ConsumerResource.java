@@ -101,6 +101,7 @@ import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.service.ContentAccessCertServiceAdapter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
+import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.sync.ExportCreationException;
@@ -177,6 +178,7 @@ public class ConsumerResource {
     private ConsumerTypeCurator consumerTypeCurator;
     private OwnerProductCurator ownerProductCurator;
     private SubscriptionServiceAdapter subAdapter;
+    private OwnerServiceAdapter ownerAdapter;
     private EntitlementCurator entitlementCurator;
     private IdentityCertServiceAdapter identityCertService;
     private EntitlementCertServiceAdapter entCertService;
@@ -211,6 +213,7 @@ public class ConsumerResource {
         ConsumerTypeCurator consumerTypeCurator,
         OwnerProductCurator ownerProductCurator,
         SubscriptionServiceAdapter subAdapter,
+        OwnerServiceAdapter ownerAdapter,
         EntitlementCurator entitlementCurator,
         IdentityCertServiceAdapter identityCertService,
         EntitlementCertServiceAdapter entCertServiceAdapter, I18n i18n,
@@ -234,6 +237,7 @@ public class ConsumerResource {
         this.consumerTypeCurator = consumerTypeCurator;
         this.ownerProductCurator = ownerProductCurator;
         this.subAdapter = subAdapter;
+        this.ownerAdapter = ownerAdapter;
         this.entitlementCurator = entitlementCurator;
         this.identityCertService = identityCertService;
         this.entCertService = entCertServiceAdapter;
@@ -510,9 +514,9 @@ public class ConsumerResource {
         this.sanitizeConsumerFacts(consumer);
 
         // If no service level was specified, and the owner has a default set, use it:
-        if (consumer.getServiceLevel().equals("") &&
-            owner.getDefaultServiceLevel() != null &&
+        if (consumer.getServiceLevel().equals("") && owner.getDefaultServiceLevel() != null &&
             !consumer.isShare()) {
+
             consumer.setServiceLevel(owner.getDefaultServiceLevel());
         }
 
@@ -577,14 +581,12 @@ public class ConsumerResource {
             throw ce;
         }
         catch (AutobindDisabledForOwnerException e) {
-            throw new BadRequestException(i18n.tr(
-                "Could not register unit with key enabling auto-attach. " +
+            throw new BadRequestException(i18n.tr("Could not register unit with key enabling auto-attach. " +
                 "Auto-attach is disabled for org ''{0}''.", consumer.getOwner().getKey()));
         }
         catch (Exception e) {
             log.error("Problem creating unit:", e);
-            throw new BadRequestException(i18n.tr(
-                "Problem creating unit {0}", consumer));
+            throw new BadRequestException(i18n.tr("Problem creating unit {0}", consumer));
         }
     }
 
@@ -601,21 +603,18 @@ public class ConsumerResource {
         String newRecipient = newShare.getRecipientOwnerKey();
 
         if (oldRecipient == null) {
-            throw new BadRequestException(i18n.tr(
-                    "A consumer cannot be converted to a share type once it has been created"
-            ));
+            throw new BadRequestException(
+                i18n.tr("A consumer cannot be converted to a share type once it has been created"));
         }
 
         if (newRecipient == null) {
-            throw new BadRequestException(i18n.tr(
-                    "A share consumer cannot be converted to a non share type once it has been created"
-            ));
+            throw new BadRequestException(
+                i18n.tr("A share consumer cannot be converted to a non share type once it has been created"));
         }
 
         if (!oldRecipient.equals(newRecipient)) {
-            throw new BadRequestException(i18n.tr(
-                "The share recipient cannot be modified once the share has been created"
-            ));
+            throw new BadRequestException(
+                i18n.tr("The share recipient cannot be modified once the share has been created"));
         }
         validateShareConsumer(newShare, principal, Collections.<ActivationKey>emptyList());
     }
@@ -629,49 +628,34 @@ public class ConsumerResource {
     private void validateShareConsumer(Consumer consumer, Principal principal, List<ActivationKey> keys)
         throws BadRequestException {
         if (keys.size() > 0) {
-            throw new BadRequestException(i18n.tr(
-                "A unit type of \"share\" cannot be used with activation keys"
-            ));
+            throw new BadRequestException(
+                i18n.tr("A unit type of \"share\" cannot be used with activation keys"));
         }
         if (StringUtils.isNotBlank(consumer.getServiceLevel())) {
-            throw new BadRequestException(i18n.tr(
-                "A unit type of \"share\" cannot have a service level"
-            ));
+            throw new BadRequestException(i18n.tr("A unit type of \"share\" cannot have a service level"));
         }
         if (!consumer.getReleaseVer().equals(new Release(null))) {
-            throw new BadRequestException(i18n.tr(
-                "A unit type of \"share\" cannot have a release version"
-            ));
+            throw new BadRequestException(i18n.tr("A unit type of \"share\" cannot have a release version"));
         }
         if (!consumer.getInstalledProducts().isEmpty()) {
-            throw new BadRequestException(i18n.tr(
-                "A unit type of \"share\" cannot have installed products"
-            ));
+            throw new BadRequestException(i18n.tr("A unit type of \"share\" cannot have installed products"));
         }
         if (StringUtils.isNotBlank(consumer.getContentAccessMode())) {
-            throw new BadRequestException(i18n.tr(
-                "A unit type of \"share\" cannot have a content access mode"
-            ));
+            throw new BadRequestException(
+                i18n.tr("A unit type of \"share\" cannot have a content access mode"));
         }
         if (consumer.getGuestIds() != null && !consumer.getGuestIds().isEmpty()) {
-            throw new BadRequestException(i18n.tr(
-                "A unit type of \"share\" cannot have guest IDs"
-            ));
+            throw new BadRequestException(i18n.tr("A unit type of \"share\" cannot have guest IDs"));
         }
         if (consumer.getHypervisorId() != null) {
-            throw new BadRequestException(i18n.tr(
-                "A unit type of \"share\" cannot have a hypervisor ID"
-            ));
+            throw new BadRequestException(i18n.tr("A unit type of \"share\" cannot have a hypervisor ID"));
         }
         if (consumer.getRecipientOwnerKey() == null) {
-            throw new BadRequestException(i18n.tr(
-                "A unit type of \"share\" must specify a recipient org key"
-            ));
+            throw new BadRequestException(
+                i18n.tr("A unit type of \"share\" must specify a recipient org key"));
         }
         if (consumer.isGuest()) {
-            throw new BadRequestException(i18n.tr(
-                "A unit type of \"share\" cannot be a virtual guest"
-            ));
+            throw new BadRequestException(i18n.tr("A unit type of \"share\" cannot be a virtual guest"));
         }
 
         String recipient = consumer.getRecipientOwnerKey();
@@ -723,8 +707,8 @@ public class ConsumerResource {
             }
         }
         if ((principal instanceof NoAuthPrincipal) && keys.isEmpty()) {
-            throw new BadRequestException(i18n.tr(
-                    "None of the activation keys specified exist for this org."));
+            throw new BadRequestException(
+                i18n.tr("None of the activation keys specified exist for this org."));
         }
         return keys;
     }
@@ -764,8 +748,7 @@ public class ConsumerResource {
                 if (capabilities != null) {
                     Set<ConsumerCapability> ccaps = new HashSet<ConsumerCapability>();
                     for (DistributorVersionCapability dvc : capabilities) {
-                        ConsumerCapability cc =
-                            new ConsumerCapability(existing, dvc.getName());
+                        ConsumerCapability cc = new ConsumerCapability(existing, dvc.getName());
                         ccaps.add(cc);
                     }
                     existing.setCapabilities(ccaps);
@@ -784,15 +767,17 @@ public class ConsumerResource {
             else if (update.getFact("distributor_version") !=  null) {
                 DistributorVersion dv = distributorVersionCurator.findByName(
                     update.getFact("distributor_version"));
+
                 if (dv != null) {
                     Set<ConsumerCapability> ccaps = new HashSet<ConsumerCapability>();
                     for (DistributorVersionCapability dvc : dv.getCapabilities()) {
-                        ConsumerCapability cc =
-                            new ConsumerCapability(existing, dvc.getName());
+                        ConsumerCapability cc = new ConsumerCapability(existing, dvc.getName());
                         ccaps.add(cc);
                     }
+
                     existing.setCapabilities(ccaps);
                 }
+
                 change = true;
             }
         }
@@ -814,8 +799,7 @@ public class ConsumerResource {
         if (consumer.getName() != null) {
             if (consumer.getName().indexOf('#') == 0) {
                 // this is a bouncycastle restriction
-                throw new BadRequestException(
-                    i18n.tr("System name cannot begin with # character"));
+                throw new BadRequestException(i18n.tr("System name cannot begin with # character"));
             }
 
             int max = Consumer.MAX_LENGTH_OF_CONSUMER_NAME;
@@ -848,10 +832,10 @@ public class ConsumerResource {
         ActivationKey key = activationKeyCurator.lookupForOwner(keyName, owner);
 
         if (key == null) {
-            throw new NotFoundException(i18n.tr(
-                "Activation key ''{0}'' not found for organization ''{1}''.",
+            throw new NotFoundException(i18n.tr("Activation key ''{0}'' not found for organization ''{1}''.",
                 keyName, owner.getKey()));
         }
+
         return key;
     }
 
@@ -863,21 +847,17 @@ public class ConsumerResource {
             user = userService.findByLogin(username);
         }
         catch (UnsupportedOperationException e) {
-            log.warn("User service does not allow user lookups, " +
-                "cannot verify person consumer.");
+            log.warn("User service does not allow user lookups, cannot verify person consumer.");
         }
 
         if (user == null) {
-            throw new NotFoundException(
-                i18n.tr("User with ID ''{0}'' could not be found."));
+            throw new NotFoundException(i18n.tr("User with ID ''{0}'' could not be found."));
         }
 
         // When registering person consumers we need to be sure the username
         // has some association with the owner the consumer is destined for:
-        if (!principal.canAccess(owner, SubResource.NONE, Access.ALL) &&
-            !principal.hasFullAccess()) {
-            throw new ForbiddenException(i18n.tr(
-                "User ''{0}'' has no roles for organization ''{1}''",
+        if (!principal.canAccess(owner, SubResource.NONE, Access.ALL) && !principal.hasFullAccess()) {
+            throw new ForbiddenException(i18n.tr("User ''{0}'' has no roles for organization ''{1}''",
                 user.getUsername(), owner.getKey()));
         }
 
@@ -885,13 +865,12 @@ public class ConsumerResource {
         if (type.isType(ConsumerTypeEnum.PERSON)) {
             Consumer existing = consumerCurator.findByUser(user);
 
-            if (existing != null &&
-                existing.getType().isType(ConsumerTypeEnum.PERSON)) {
+            if (existing != null && existing.getType().isType(ConsumerTypeEnum.PERSON)) {
                 // TODO: This is not the correct error code for this situation!
-                throw new BadRequestException(i18n.tr(
-                    "User ''{0}'' has already registered a personal consumer",
-                    user.getUsername()));
+                throw new BadRequestException(
+                    i18n.tr("User ''{0}'' has already registered a personal consumer", user.getUsername()));
             }
+
             consumer.setName(user.getUsername());
         }
     }
@@ -905,8 +884,7 @@ public class ConsumerResource {
             List<String> ownerKeys = ((UserPrincipal) principal).getOwnerKeys();
 
             if (ownerKeys.size() != 1) {
-                throw new BadRequestException(
-                    i18n.tr("You must specify an organization for new units."));
+                throw new BadRequestException(i18n.tr("You must specify an organization for new units."));
             }
 
             ownerKey = ownerKeys.get(0);
@@ -916,17 +894,17 @@ public class ConsumerResource {
 
         Owner owner = ownerCurator.lookupByKey(ownerKey);
         if (owner == null) {
-            throw new BadRequestException(i18n.tr(
-                "Organization {0} does not exist.", ownerKey));
+            throw new BadRequestException(i18n.tr("Organization {0} does not exist.", ownerKey));
         }
 
         // Check permissions for current principal on the owner:
         if ((principal instanceof UserPrincipal) &&
             !principal.canAccess(owner, SubResource.CONSUMERS, Access.CREATE)) {
+
             log.warn("User {} does not have access to create consumers in org {}",
                 principal.getPrincipalName(), owner.getKey());
-            throw new NotFoundException(i18n.tr(
-                "owner with key: {0} was not found.", owner.getKey()));
+
+            throw new NotFoundException(i18n.tr("owner with key: {0} was not found.", owner.getKey()));
         }
 
         return owner;
@@ -966,18 +944,22 @@ public class ConsumerResource {
     // scheme!
     private void createOwnerIfNeeded(Principal principal) {
         if (!(principal instanceof UserPrincipal)) {
-            // If this isn't a user principal we can't check for owners that may
-            // need to
-            // be created.
+            // If this isn't a user principal we can't check for owners that may need to be created.
             return;
         }
+
         for (Owner owner : ((UserPrincipal) principal).getOwners()) {
             Owner existingOwner = ownerCurator.lookupByKey(owner.getKey());
+
             if (existingOwner == null) {
                 log.info("Principal carries permission for owner that does not exist.");
                 log.info("Creating new owner: {}", owner.getKey());
+
                 existingOwner = ownerCurator.create(owner);
-                poolManager.getRefresher(subAdapter).add(existingOwner).run();
+
+                poolManager.getRefresher(this.subAdapter, this.ownerAdapter)
+                    .add(existingOwner)
+                    .run();
             }
         }
     }
@@ -986,9 +968,9 @@ public class ConsumerResource {
         ConsumerType type = consumerTypeCurator.lookupByLabel(label);
 
         if (type == null) {
-            throw new BadRequestException(i18n.tr(
-                "Unit type ''{0}'' could not be found.", label));
+            throw new BadRequestException(i18n.tr("Unit type ''{0}'' could not be found.", label));
         }
+
         return type;
     }
 

@@ -35,7 +35,6 @@ import java.util.Map;
 
 /**
  * @author mstead
- *
  */
 public class ImportSubscriptionServiceAdapter implements SubscriptionServiceAdapter {
 

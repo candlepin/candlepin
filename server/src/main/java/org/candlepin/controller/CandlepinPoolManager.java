@@ -63,6 +63,7 @@ import org.candlepin.policy.js.entitlement.Enforcer.CallerType;
 import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.policy.js.pool.PoolUpdate;
 import org.candlepin.resource.dto.AutobindData;
+import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.Util;
 
@@ -189,7 +190,7 @@ public class CandlepinPoolManager implements PoolManager {
     @SuppressWarnings("checkstyle:methodlength")
     void refreshPoolsWithRegeneration(SubscriptionServiceAdapter subAdapter, Owner owner, boolean lazy) {
         long start = System.currentTimeMillis();
-        owner = this.refreshOwner(owner);
+        owner = this.resolveOwner(owner);
         log.info("Refreshing pools for owner: {}", owner);
 
         Map<String, Subscription> subscriptionMap = new HashMap<String, Subscription>();
@@ -356,11 +357,10 @@ public class CandlepinPoolManager implements PoolManager {
             System.currentTimeMillis() - start);
     }
 
-    private Owner refreshOwner(Owner owner) {
+    private Owner resolveOwner(Owner owner) {
         if (owner == null || (owner.getKey() == null && owner.getId() == null)) {
             throw new IllegalArgumentException(
-                i18n.tr("No owner specified, or owner lacks identifying information")
-            );
+                i18n.tr("No owner specified, or owner lacks identifying information"));
         }
 
         if (owner.getKey() != null) {
@@ -369,8 +369,7 @@ public class CandlepinPoolManager implements PoolManager {
 
             if (owner == null) {
                 throw new IllegalStateException(
-                    i18n.tr("Unable to find an owner with the key \"{0}\"", ownerKey)
-                );
+                    i18n.tr("Unable to find an owner with the key \"{0}\"", ownerKey));
             }
         }
         else {
@@ -2168,13 +2167,15 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     @Override
-    public Refresher getRefresher(SubscriptionServiceAdapter subAdapter) {
-        return this.getRefresher(subAdapter, true);
+    public Refresher getRefresher(SubscriptionServiceAdapter subAdapter, OwnerServiceAdapter ownerAdapter) {
+        return this.getRefresher(subAdapter, ownerAdapter, true);
     }
 
     @Override
-    public Refresher getRefresher(SubscriptionServiceAdapter subAdapter, boolean lazy) {
-        return new Refresher(this, subAdapter, ownerManager, lazy);
+    public Refresher getRefresher(SubscriptionServiceAdapter subAdapter, OwnerServiceAdapter ownerAdapter,
+        boolean lazy) {
+
+        return new Refresher(this, subAdapter, ownerAdapter, ownerManager, lazy);
     }
 
     public Map<String, Entitlement> handleEntitlement(Consumer consumer,
@@ -2185,8 +2186,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         for (Entry<String, PoolQuantity> entry : poolQuantities.entrySet()) {
             Entitlement newEntitlement = new Entitlement(
-                entry.getValue().getPool(), consumer, entry.getValue().getQuantity()
-            );
+                entry.getValue().getPool(), consumer, entry.getValue().getQuantity());
 
             entsToPersist.add(newEntitlement);
             result.put(entry.getKey(), newEntitlement);

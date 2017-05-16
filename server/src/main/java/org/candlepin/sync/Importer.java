@@ -41,6 +41,7 @@ import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.service.SubscriptionServiceAdapter;
+import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
 import org.candlepin.sync.file.ManifestFile;
 import org.candlepin.sync.file.ManifestFileServiceException;
@@ -453,6 +454,7 @@ public class Importer {
         }
     }
 
+    @SuppressWarnings("checkstyle:methodlength")
     @Transactional(rollbackOn = {IOException.class, ImporterException.class,
         RuntimeException.class, ImportConflictException.class})
     // WARNING: Keep this method public, otherwise @Transactional is ignored:
@@ -482,7 +484,6 @@ public class Importer {
             throw new ImporterException(
                 i18n.tr("The archive does not contain the required entitlements directory"));
         }
-
 
         // system level elements
         /*
@@ -567,8 +568,26 @@ public class Importer {
         }
 
         // Setup our import subscription adapter with the subscriptions imported:
-        SubscriptionServiceAdapter adapter = new ImportSubscriptionServiceAdapter(importSubs);
-        Refresher refresher = poolManager.getRefresher(adapter);
+        final String contentAccessMode = consumer.getContentAccessMode();
+        SubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(importSubs);
+        OwnerServiceAdapter ownerAdapter = new OwnerServiceAdapter() {
+            @Override
+            public boolean isOwnerKeyValidForCreation(String ownerKey) {
+                return true;
+            }
+
+            @Override
+            public String getContentAccessMode(String ownerKey) {
+                return contentAccessMode;
+            }
+
+            @Override
+            public String getContentAccessModeList(String ownerKey) {
+                return contentAccessMode;
+            }
+        };
+
+        Refresher refresher = poolManager.getRefresher(subAdapter, ownerAdapter);
         refresher.add(owner);
         refresher.run();
 
@@ -598,6 +617,7 @@ public class Importer {
     protected void importConsumerTypes(File[] consumerTypes) throws IOException {
         ConsumerTypeImporter importer = new ConsumerTypeImporter(consumerTypeCurator);
         Set<ConsumerType> consumerTypeObjs = new HashSet<ConsumerType>();
+
         for (File consumerType : consumerTypes) {
             Reader reader = null;
             try {
@@ -610,6 +630,7 @@ public class Importer {
                 }
             }
         }
+
         importer.store(consumerTypeObjs);
     }
 
@@ -671,6 +692,7 @@ public class Importer {
 
     protected Set<Product> importProducts(File[] products, ProductImporter importer, Owner owner)
         throws IOException {
+
         Set<Product> productsToImport = new HashSet<Product>();
         for (File product : products) {
             // Skip product.pem's, we just need the json to import:
@@ -755,8 +777,8 @@ public class Importer {
             ZipEntry zipentry = zipinputstream.getNextEntry();
 
             if (zipentry == null) {
-                throw new ImportExtractionException(i18n.tr("The archive {0} is not " +
-                    "a properly compressed file or is empty", exportFileName));
+                throw new ImportExtractionException(i18n.tr(
+                    "The archive {0} is not a properly compressed file or is empty", exportFileName));
             }
 
             while (zipentry != null) {
@@ -876,6 +898,7 @@ public class Importer {
         if (uc != null) {
             iup = new ImportUpstreamConsumer(uc);
         }
+
         return iup;
     }
 
@@ -888,8 +911,7 @@ public class Importer {
         }
         catch (IOException e) {
             log.error("Unable to extract export archive", e);
-            throw new ImportExtractionException(
-                i18n.tr("Unable to extract export archive"), e);
+            throw new ImportExtractionException(i18n.tr("Unable to extract export archive"), e);
         }
     }
 
