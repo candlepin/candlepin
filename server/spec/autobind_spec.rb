@@ -2,13 +2,17 @@ require 'spec_helper'
 require 'candlepin_scenarios'
 
 describe 'Autobind On Owner' do
-
   include CandlepinMethods
 
-  it 'succeeds when requesting bind of multiple pools with same stack id' do
-    owner_key = random_string('test_owner')
-    owner = create_owner owner_key
+  let!(:owner_key) do
+    random_string('test_owner')
+  end
 
+  let!(:owner) do
+    create_owner( owner_key)
+  end
+
+  it 'succeeds when requesting bind of multiple pools with same stack id' do
     # create 4 products with the same stack id and sockets.
     prod = create_product('taylorid', 'taylor swift', {
       :owner => owner_key,
@@ -118,7 +122,54 @@ describe 'Autobind On Owner' do
     @cp.list_entitlements({:uuid => hypervisor_uuid}).length.should == 3
     @cp.list_entitlements({:uuid => guest_uuid}).length.should == 1
     @cp.list_owner_pools(owner_key).length.should == 8
-
   end
 
+  it 'favors non-shared pools' do
+    prod = create_product(random_string('prod'), random_string('prod'), {
+      :owner => owner_key,
+      :attributes => {}
+    })
+
+    orgB = random_string('orgB')
+    create_owner(orgB)
+
+    shared_pool = create_pool_and_subscription(owner_key, prod['id'])
+    share_consumer = @cp.register(
+      random_string('orgBShare'),
+      :share,
+      nil,
+      {},
+      nil,
+      owner_key,
+      [],
+      [],
+      nil,
+      [],
+      nil,
+      [],
+      nil,
+      nil,
+      nil,
+      orgB
+    )
+
+    # Create the shared pool in Org B first since all else being equal Candlepin
+    # will pick an earlier expiring pool in autobind.
+    @cp.consume_pool(shared_pool['id'], :uuid => share_consumer['uuid'])
+
+    orgBconsumer = @cp.register(
+      random_string('orgBConsumer'),
+      :system,
+      nil,
+      {},
+      'admin',
+      orgB
+    )
+
+    # OrgB now has a shared pool and an unshared pool for prod
+    pool = create_pool_and_subscription(orgB, prod['id'])
+    ent = @cp.consume_product(prod['id'], :uuid => orgBconsumer['uuid'])
+
+    expect(ent.first['pool']['id']).to eq(pool['id'])
+  end
 end
