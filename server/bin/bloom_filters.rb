@@ -21,7 +21,7 @@ class BloomFilter
 
     @slices.each_with_index do |slice, i|
       # Simulate a new hash by combining our two hashes with some magic. See the following for the
-      # messy details: http://www.eecs.harvard.edu/~kirsch/pubs/bbbf/esa06.pdf
+      # messy details: https://www.eecs.harvard.edu/~michaelm/postscripts/tr-02-05.pdf
       g = (digest[0] + (i + 1) * digest[1]) % @bits_per_slice
       slice[(g / 8).floor] |= (1 << (g % 8))
     end
