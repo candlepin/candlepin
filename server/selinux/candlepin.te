@@ -17,9 +17,17 @@ files_type(candlepin_etc_rw_t)
 type candlepin_etc_certs_rw_t;
 files_type(candlepin_etc_certs_rw_t)
 
-
 type candlepin_etc_certs_ca_cert_r_t;
 files_type(candlepin_etc_certs_ca_cert_r_t)
+
+type candlepin_var_cache_t;
+files_type(candlepin_var_cache_t)
+
+type candlepin_var_lib_t;
+files_type(candlepin_var_lib_t)
+
+type candlepin_var_log_t;
+files_type(candlepin_var_log_t)
 
 
 ########################################
@@ -38,6 +46,15 @@ manage_files_pattern(candlepin_t, candlepin_etc_certs_rw_t, candlepin_etc_certs_
 
 manage_dirs_pattern(candlepin_t, candlepin_etc_certs_ca_cert_r_t, candlepin_etc_certs_ca_cert_r_t)
 manage_files_pattern(candlepin_t, candlepin_etc_certs_ca_cert_r_t, candlepin_etc_certs_ca_cert_r_t)
+
+manage_dirs_pattern(candlepin_t, candlepin_var_cache_t, candlepin_var_cache_t)
+manage_files_pattern(candlepin_t, candlepin_var_cache_t, candlepin_var_cache_t)
+
+manage_dirs_pattern(candlepin_t, candlepin_var_lib_t, candlepin_var_lib_t)
+manage_files_pattern(candlepin_t, candlepin_var_lib_t, candlepin_var_lib_t)
+
+manage_dirs_pattern(candlepin_t, candlepin_var_log_t, candlepin_var_log_t)
+manage_files_pattern(candlepin_t, candlepin_var_log_t, candlepin_var_log_t)
 
 
 sysnet_dns_name_resolve(candlepin_t)
@@ -59,6 +76,7 @@ miscfiles_read_localization(candlepin_t)
 require {
     type candlepin_etc_certs_ca_cert_r_t;
     type httpd_t;
+    type tomcat_t;
     class file { read getattr open };
 }
 
@@ -67,3 +85,14 @@ allow httpd_t candlepin_etc_rw_t:dir { search };
 allow httpd_t candlepin_etc_certs_ca_cert_r_t: file { read getattr open };
 allow httpd_t candlepin_etc_certs_rw_t:dir search;
 
+# allow tomcat to access candlepin ca certs, etc.
+allow tomcat_t candlepin_etc_certs_rw_t:dir { list_dir_perms };
+allow tomcat_t candlepin_etc_certs_rw_t:file { read_file_perms };
+allow tomcat_t candlepin_etc_rw_t:dir { list_dir_perms };
+allow tomcat_t candlepin_etc_rw_t:file { read_file_perms };
+allow tomcat_t candlepin_var_cache_t:dir { manage_dir_perms };
+allow tomcat_t candlepin_var_cache_t:file { manage_file_perms };
+allow tomcat_t candlepin_var_lib_t:dir { manage_dir_perms };
+allow tomcat_t candlepin_var_lib_t:file { manage_file_perms };
+allow tomcat_t candlepin_var_log_t:dir { manage_dir_perms };
+allow tomcat_t candlepin_var_log_t:file { manage_file_perms };
