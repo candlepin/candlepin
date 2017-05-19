@@ -111,10 +111,8 @@ public class ResolverUtil {
 
     public Pool resolvePool(Pool pool) {
         // Impl note:
-        // We don't check that the subscription exists here, because it's
-        // entirely possible that it
-        // doesn't (i.e. during creation). We just need to make sure it's not
-        // null.
+        // We don't check that the subscription exists here, because it's entirely possible that it
+        // doesn't (i.e. during creation). We just need to make sure it's not null.
         if (pool == null) {
             throw new BadRequestException(i18n.tr("No subscription specified"));
         }

@@ -29,6 +29,9 @@ import org.candlepin.model.SourceSubscription;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -44,8 +47,10 @@ import java.util.Set;
  * Post Entitlement Helper, and some attribute utility methods.
  */
 public class PoolHelper {
+    private static Logger log = LoggerFactory.getLogger(PoolHelper.class);
 
     private PoolHelper() {
+        // Intentionally left empty
     }
 
     /**
@@ -220,7 +225,10 @@ public class PoolHelper {
             sourcePool.getContractNumber(), sourcePool.getAccountNumber(),
             sourcePool.getOrderNumber(), new HashSet<Product>(), sourceEntitlement);
 
-        pool.setSourceSubscription(new SourceSubscription(sourcePool.getSubscriptionId(), subKey));
+        SourceSubscription srcSub = sourcePool.getSourceSubscription();
+        if (srcSub != null && srcSub.getSubscriptionId() != null) {
+            pool.setSourceSubscription(new SourceSubscription(srcSub.getSubscriptionId(), subKey));
+        }
 
         copyProvidedProducts(sourcePool, pool, curator, productCurator);
 
@@ -229,9 +237,10 @@ public class PoolHelper {
             pool.setAttribute(entry.getKey(), entry.getValue());
         }
 
-        for (Branding b : sourcePool.getBranding()) {
-            pool.getBranding().add(new Branding(b.getProductId(), b.getType(), b.getName()));
+        for (Branding brand : sourcePool.getBranding()) {
+            pool.getBranding().add(new Branding(brand.getProductId(), brand.getType(), brand.getName()));
         }
+
         return pool;
     }
 
