@@ -79,7 +79,7 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
             :sockets=>4
         }
     })
-    # We'd like there two be three subs, two that require a specific host and one that provides both required products
+    # We'd like there to be three subs, two that require a specific host and one that provides both required products
     # in one. These first two are similar to VDC subscriptions, hence the name datacenter.
     @cp.create_subscription(@owner['key'], datacenter_product_1.id, 10, [], '', '', '', nil, nil,
                             {
@@ -112,9 +112,16 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
 
     @guest2_client.list_entitlements.each { |ent|
       [derived_product_1.id, derived_product_2.id].should include(ent['pool']['productId'])
+      found_requires_host = false
       ent['pool']['attributes'].each { |attribute|
+        if attribute['name'] == 'requires_host'
+          attribute['value'].should == @host1['uuid']
+          found_requires_host = true
+        end
         attribute['value'].should == @host1['uuid'] if attribute['name'] == 'requires_host'
       }
+      # A failure on the line below means one of the entitlements the guest has does not have the requires_host attr
+      found_requires_host.should == true
     }
     # A similar set of pools should be chosen during guest migration
     # So remove the guest from the first host and add the guest to the second host
