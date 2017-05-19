@@ -168,6 +168,9 @@ public class ConfigProperties {
         "management_enabled," +
         "virt_only";
 
+    public static final String POPULATE_HOSTED_DB_JOB_PROD_LOOKUP_BATCH_SIZE =
+        "candlepin.pophosted.prod_id_batch_size";
+
     public static final Map<String, String> DEFAULT_PROPERTIES =
         new HashMap<String, String>() {
 
@@ -273,6 +276,9 @@ public class ConfigProperties {
                 // Default 20 minutes
                 this.put(PINSETTER_ASYNC_JOB_TIMEOUT, Integer.toString(1200));
                 this.put(PINSETTER_MAX_RETRIES, Integer.toString(PINSETTER_MAX_RETRIES_DEFAULT));
+
+                // Populate hosted DB product adapter lookup batch size.
+                this.put(POPULATE_HOSTED_DB_JOB_PROD_LOOKUP_BATCH_SIZE, Integer.toString(250));
             }
         };
     public static final String CRL_FILE_PATH = "candlepin.crl.file";

@@ -14,6 +14,7 @@
  */
 package org.candlepin.pinsetter.tasks;
 
+import com.google.common.collect.Iterables;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.ContentCurator;
@@ -36,6 +37,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 
@@ -77,6 +80,15 @@ public class PopulateHostedDBTask extends KingpinJob {
             return;
         }
 
+        int confBatchSize = config.getInt(ConfigProperties.POPULATE_HOSTED_DB_JOB_PROD_LOOKUP_BATCH_SIZE);
+        if (confBatchSize < 1) {
+            String error = String.format("Aborting populate DB task. Invalid configuration setting for {0}.",
+                ConfigProperties.POPULATE_HOSTED_DB_JOB_PROD_LOOKUP_BATCH_SIZE);
+            log.warn(error);
+            context.setResult(error);
+            return;
+        }
+
         JobDataMap map = context.getMergedJobDataMap();
         Boolean skipExisting = map.getBoolean(SKIP_EXISTING);
 
@@ -103,21 +115,33 @@ public class PopulateHostedDBTask extends KingpinJob {
         }
 
         while (productIds.size() > 0) {
-            for (Product product : this.productService.getProductsByIds(productIds)) {
-                if (product != null) {
-                    log.info("Storing product: {}", product);
+            log.info("Fetching and processing {} products from the adapter.", productIds.size());
+            // Batch fetch and process the product ids to avoid long request
+            // times from the adapter causing c3p0 to drop idle connections.
+            int adapterLookupCount = 0;
+            for (List<String> productIdBatch : Iterables.partition(productIds, confBatchSize)) {
+                // Nested loop to allow DB activity.
+                ++adapterLookupCount;
+                log.info("Batch fetching products from adapter: {} of {} batches of {}.", adapterLookupCount,
+                    (int) Math.ceil((double) productIds.size() / (double) confBatchSize), confBatchSize);
+                for (Product product : this.productService.getProductsByIds(productIdBatch)) {
 
-                    dependentProducts.addAll(product.getDependentProductIds());
+                    if (product != null) {
+                        log.info("Processing product with ID: {}", product.getId());
+                        log.info("Storing product: {}", product);
 
-                    for (ProductContent pcontent : product.getProductContent()) {
-                        log.info("  Storing product content: {}", pcontent.getContent());
-                        this.contentCurator.createOrUpdate(pcontent.getContent());
-                        ++ccount;
+                        dependentProducts.addAll(product.getDependentProductIds());
+
+                        for (ProductContent pcontent : product.getProductContent()) {
+                            log.info("  Storing product content: {}", pcontent.getContent());
+                            this.contentCurator.createOrUpdate(pcontent.getContent());
+                            ++ccount;
+                        }
+
+                        this.productCurator.createOrUpdate(product);
+                        productCache.add(product.getId());
+                        ++pcount;
                     }
-
-                    this.productCurator.createOrUpdate(product);
-                    productCache.add(product.getId());
-                    ++pcount;
                 }
             }
 

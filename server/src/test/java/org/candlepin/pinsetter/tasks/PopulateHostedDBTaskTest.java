@@ -299,4 +299,19 @@ public class PopulateHostedDBTaskTest extends DatabaseTestFixture {
         assertEquals(5, this.productCurator.listAll().size());
         assertEquals(6, this.contentCurator.listAll().size());
     }
+
+    @Test
+    public void ensureFailureOnInvalidProductAdapterBatchConfig() throws Exception {
+        JobExecutionContext jec = mock(JobExecutionContext.class);
+        CandlepinCommonTestConfig config = new CandlepinCommonTestConfig();
+        config.setProperty(ConfigProperties.STANDALONE, "false");
+        config.setProperty(ConfigProperties.POPULATE_HOSTED_DB_JOB_PROD_LOOKUP_BATCH_SIZE, "-1");
+
+        // Test
+        PopulateHostedDBTask task = new PopulateHostedDBTask(null, null, null, null, config);
+        task.toExecute(jec);
+
+        verify(jec).setResult(eq(String.format("Aborting populate DB task. Invalid configuration setting for {0}.",
+            ConfigProperties.POPULATE_HOSTED_DB_JOB_PROD_LOOKUP_BATCH_SIZE)));
+    }
 }
