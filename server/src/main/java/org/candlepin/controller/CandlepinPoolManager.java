@@ -1762,6 +1762,7 @@ public class CandlepinPoolManager implements PoolManager {
                 derivedPools.add(pool);
             }
         }
+
         deleteExcessEntitlements(derivedPools);
     }
 
