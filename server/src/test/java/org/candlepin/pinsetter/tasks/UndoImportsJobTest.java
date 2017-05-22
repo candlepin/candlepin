@@ -39,6 +39,7 @@ import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
 import org.candlepin.pinsetter.core.model.JobStatus;
+import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.sync.ImporterException;
 import org.candlepin.test.DatabaseTestFixture;
@@ -105,7 +106,8 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
 
         // Setup common behavior
         when(this.jobContext.getMergedJobDataMap()).thenReturn(this.jobDataMap);
-        when(this.poolManager.getRefresher(eq(this.subAdapter), anyBoolean())).thenReturn(this.refresher);
+        when(this.poolManager.getRefresher(eq(this.subAdapter), any(OwnerServiceAdapter.class), anyBoolean()))
+            .thenReturn(this.refresher);
         when(this.refresher.setUnitOfWork(any(UnitOfWork.class))).thenReturn(this.refresher);
         when(this.refresher.add(any(Owner.class))).thenReturn(this.refresher);
 

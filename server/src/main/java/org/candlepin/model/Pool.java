@@ -343,8 +343,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     @JoinTable(name = "cp_pool_branding",
         joinColumns = @JoinColumn(name = "pool_id"),
         inverseJoinColumns = @JoinColumn(name = "branding_id"))
-    @Cascade({org.hibernate.annotations.CascadeType.ALL,
-        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    @Cascade({org.hibernate.annotations.CascadeType.ALL, org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     @BatchSize(size = 1000)
     private Set<Branding> branding;
 

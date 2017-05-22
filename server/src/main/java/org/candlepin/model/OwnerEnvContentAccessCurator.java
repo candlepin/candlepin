@@ -19,9 +19,7 @@ import com.google.inject.persist.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import javax.persistence.Query;
 
@@ -44,11 +42,10 @@ public class OwnerEnvContentAccessCurator extends AbstractHibernateCurator<Owner
     @SuppressWarnings("unchecked")
     @Transactional
     public OwnerEnvContentAccess getContentAccess(String ownerId, String environmentId) {
-        OwnerEnvContentAccess result = null;
-        String hql = "";
-        List<OwnerEnvContentAccess> resultList = null;
+        List<OwnerEnvContentAccess> resultList;
+
         if (environmentId != null) {
-            hql = "SELECT oeca" +
+            String hql = "SELECT oeca" +
                 "    FROM OwnerEnvContentAccess oeca" +
                 "     JOIN oeca.owner o" +
                 "     JOIN oeca.environment e" +
@@ -62,10 +59,9 @@ public class OwnerEnvContentAccessCurator extends AbstractHibernateCurator<Owner
                 .setParameter("ownerId", ownerId)
                 .setParameter("enviromentId",  environmentId)
                 .getResultList();
-
         }
         else {
-            hql = "SELECT oeca" +
+            String hql = "SELECT oeca" +
                 "    FROM OwnerEnvContentAccess oeca" +
                 "     JOIN oeca.owner o" +
                 "    WHERE" +
@@ -77,32 +73,18 @@ public class OwnerEnvContentAccessCurator extends AbstractHibernateCurator<Owner
             resultList = (List<OwnerEnvContentAccess>) query
                 .setParameter("ownerId", ownerId)
                 .getResultList();
-            if (resultList.isEmpty()) {
-                result = null;
-            }
-            else {
-                result = resultList.get(0);
-            }
         }
-        if (resultList.isEmpty()) {
-            result = null;
-        }
-        else {
-            result = resultList.get(0);
-        }
-        return result;
+
+        return (resultList == null || resultList.isEmpty()) ? null : resultList.get(0);
     }
 
     public void removeAllForOwner(String ownerId) {
-        this.currentSession().createQuery(
-            "delete from OwnerEnvContentAccess where owner_id = :ownerId")
-                .setParameter("ownerId", ownerId)
-                .executeUpdate();
+        this.currentSession().createQuery("delete from OwnerEnvContentAccess where owner_id = :ownerId")
+            .setParameter("ownerId", ownerId)
+            .executeUpdate();
     }
 
     public void saveOrUpdate(OwnerEnvContentAccess ownerEnvContentAccess) {
-        Set<OwnerEnvContentAccess> entities = new HashSet<OwnerEnvContentAccess>();
-        entities.add(ownerEnvContentAccess);
-        saveOrUpdateAll(entities, false, false);
+        this.currentSession().saveOrUpdate(ownerEnvContentAccess);
     }
 }

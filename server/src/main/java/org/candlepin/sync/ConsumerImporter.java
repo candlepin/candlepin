@@ -42,8 +42,9 @@ public class ConsumerImporter {
     private I18n i18n;
     private CertificateSerialCurator serialCurator;
 
-    public ConsumerImporter(OwnerCurator curator, IdentityCertificateCurator idCertCurator,
-        I18n i18n, CertificateSerialCurator serialCurator) {
+    public ConsumerImporter(OwnerCurator curator, IdentityCertificateCurator idCertCurator, I18n i18n,
+        CertificateSerialCurator serialCurator) {
+
         this.curator = curator;
         this.idCertCurator = idCertCurator;
         this.i18n = i18n;
@@ -54,50 +55,46 @@ public class ConsumerImporter {
         return mapper.readValue(reader, ConsumerDto.class);
     }
 
-    public void store(Owner owner, ConsumerDto consumer,
-        ConflictOverrides forcedConflicts, IdentityCertificate idcert)
-        throws SyncDataFormatException {
+    public void store(Owner owner, ConsumerDto consumer, ConflictOverrides forcedConflicts,
+        IdentityCertificate idcert) throws SyncDataFormatException {
 
         if (consumer.getUuid() == null) {
-            throw new SyncDataFormatException(i18n.tr("No ID for " +
-                    "upstream subscription management application."));
+            throw new SyncDataFormatException(
+                i18n.tr("No ID for upstream subscription management application."));
         }
 
         // Make sure no other owner is already using this upstream UUID:
         Owner alreadyUsing = curator.lookupWithUpstreamUuid(consumer.getUuid());
         if (alreadyUsing != null && !alreadyUsing.getKey().equals(owner.getKey())) {
-            log.error("Cannot import manifest for org: " + owner.getKey());
-            log.error("Upstream distributor " + consumer.getUuid() +
-                " already in use by org: " + alreadyUsing.getKey());
+            log.error("Cannot import manifest for org: {}", owner.getKey());
+            log.error("Upstream distributor {} already in used by org: {}",
+                consumer.getUuid(), alreadyUsing.getKey());
 
             // NOTE: this is not a conflict that can be overridden because we simply don't
             // allow two orgs to use the same manifest at once. The other org would have to
             // delete their manifest after which it could be used elsewhere.
-            throw new SyncDataFormatException(
-                i18n.tr("This subscription management application has " +
-                    "already been imported by another owner."));
+            throw new SyncDataFormatException(i18n.tr(
+                "This subscription management application has already been imported by another owner."));
         }
 
         if (owner.getUpstreamUuid() != null &&
             !owner.getUpstreamUuid().equals(consumer.getUuid())) {
             if (!forcedConflicts.isForced(Importer.Conflict.DISTRIBUTOR_CONFLICT)) {
                 throw new ImportConflictException(
-                    i18n.tr("Owner has already imported from another " +
-                        "subscription management application."),
+                    i18n.tr("Owner has already imported from another subscription management application."),
                     Importer.Conflict.DISTRIBUTOR_CONFLICT);
             }
             else {
                 log.warn("Forcing import from a new distributor for org: {}", owner.getKey());
-                log.warn("Old distributor UUID: " + owner.getUpstreamUuid());
-                log.warn("New distributor UUID: " + consumer.getUuid());
+                log.warn("Old distributor UUID: {}", owner.getUpstreamUuid());
+                log.warn("New distributor UUID: {}", consumer.getUuid());
             }
         }
 
         /*
-         * WARNING: Strange quirk here, we create a certificate serial object
-         * here which does not match the actual serial of the identity
-         * certificate. Presumably this is to prevent potential conflicts with
-         * a serial that came from somewhere else. This is consistent with
+         * WARNING: Strange quirk here, we create a certificate serial object here which does not
+         * match the actual serial of the identity certificate. Presumably this is to prevent
+         * potential conflicts with a serial that came from somewhere else. This is consistent with
          * importing entitlement certs (as subscription certs).
          */
         if (idcert != null) {
@@ -114,15 +111,14 @@ public class ConsumerImporter {
         }
 
         // create an UpstreamConsumer from the imported ConsumerDto
-        UpstreamConsumer uc = new UpstreamConsumer(consumer.getName(),
-            consumer.getOwner(), consumer.getType(), consumer.getUuid());
+        UpstreamConsumer uc = new UpstreamConsumer(consumer.getName(), consumer.getOwner(),
+            consumer.getType(), consumer.getUuid());
+
         uc.setWebUrl(consumer.getUrlWeb());
         uc.setApiUrl(consumer.getUrlApi());
         uc.setIdCert(idcert);
         uc.setContentAccessMode(consumer.getContentAccessMode());
         owner.setUpstreamConsumer(uc);
-        owner.setContentAccessMode(uc.getContentAccessMode());
-        owner.setContentAccessModeList(uc.getContentAccessMode());
 
         curator.merge(owner);
     }

@@ -23,6 +23,7 @@ import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
+import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.Util;
 
@@ -45,17 +46,19 @@ public class RefreshPoolsForProductJob extends KingpinJob {
     private PoolManager poolManager;
     private ProductCurator productCurator;
     private SubscriptionServiceAdapter subAdapter;
+    private OwnerServiceAdapter ownerAdapter;
 
     public static final String LAZY_REGEN = "lazy_regen";
 
     @Inject
     public RefreshPoolsForProductJob(OwnerProductCurator ownerProductCurator, ProductCurator productCurator,
-        PoolManager poolManager, SubscriptionServiceAdapter subAdapter) {
+        PoolManager poolManager, SubscriptionServiceAdapter subAdapter, OwnerServiceAdapter ownerAdapter) {
 
         this.ownerProductCurator = ownerProductCurator;
         this.poolManager = poolManager;
         this.productCurator = productCurator;
         this.subAdapter = subAdapter;
+        this.ownerAdapter = ownerAdapter;
     }
 
     @Override
@@ -67,7 +70,7 @@ public class RefreshPoolsForProductJob extends KingpinJob {
         Product product = this.productCurator.find(productUuid);
 
         if (product != null) {
-            Refresher refresher = poolManager.getRefresher(subAdapter, lazy);
+            Refresher refresher = poolManager.getRefresher(this.subAdapter, this.ownerAdapter, lazy);
 
             refresher.add(product);
             refresher.run();

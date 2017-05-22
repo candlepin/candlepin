@@ -73,6 +73,7 @@ import org.candlepin.policy.js.entitlement.PreUnbindHelper;
 import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.policy.js.pool.PoolUpdate;
 import org.candlepin.resource.dto.AutobindData;
+import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.test.MockResultIterator;
 import org.candlepin.test.TestUtil;
@@ -118,6 +119,7 @@ public class PoolManagerTest {
     private I18n i18n;
 
     @Mock private PoolCurator mockPoolCurator;
+    @Mock private OwnerServiceAdapter mockOwnerAdapter;
     @Mock private SubscriptionServiceAdapter mockSubAdapter;
     @Mock private ProductCurator mockProductCurator;
     @Mock private ProductManager mockProductManager;
@@ -266,7 +268,7 @@ public class PoolManagerTest {
         when(cqmock.iterator()).thenReturn(pools.iterator());
         when(mockPoolCurator.listByOwnerAndType(eq(owner), any(PoolType.class))).thenReturn(cqmock);
 
-        this.manager.getRefresher(mockSubAdapter).add(owner).run();
+        this.manager.getRefresher(mockSubAdapter, mockOwnerAdapter).add(owner).run();
         List<Pool> expectedFloating = new LinkedList();
 
         // Make sure that only the floating pool was regenerated
@@ -308,7 +310,7 @@ public class PoolManagerTest {
         when(cqmock.iterator()).thenReturn(pools.iterator());
         when(mockPoolCurator.listByOwnerAndType(eq(owner), any(PoolType.class))).thenReturn(cqmock);
 
-        this.manager.getRefresher(mockSubAdapter).add(owner).run();
+        this.manager.getRefresher(mockSubAdapter, mockOwnerAdapter).add(owner).run();
         List<Pool> expectedModified = new LinkedList();
 
         // Make sure that only the floating pool was regenerated
@@ -580,7 +582,7 @@ public class PoolManagerTest {
 
         Owner owner = getOwner();
         when(mockOwnerCurator.lookupByKey(owner.getKey())).thenReturn(owner);
-        this.manager.getRefresher(mockSubAdapter).add(owner).run();
+        this.manager.getRefresher(mockSubAdapter, mockOwnerAdapter).add(owner).run();
         List<Pool> poolsToDelete = Arrays.asList(p);
         verify(this.manager).deletePools(eq(poolsToDelete));
     }
@@ -613,7 +615,7 @@ public class PoolManagerTest {
         when(cqmock.iterator()).thenReturn(pools.iterator());
         when(mockPoolCurator.listByOwnerAndType(eq(owner), any(PoolType.class))).thenReturn(cqmock);
 
-        this.manager.getRefresher(mockSubAdapter).add(owner).run();
+        this.manager.getRefresher(mockSubAdapter, mockOwnerAdapter).add(owner).run();
         List<Pool> delPools = Arrays.asList(p);
         verify(this.manager).deletePools(eq(delPools));
     }
@@ -646,7 +648,7 @@ public class PoolManagerTest {
         when(cqmock.iterator()).thenReturn(pools.iterator());
         when(mockPoolCurator.listByOwnerAndType(eq(owner), any(PoolType.class))).thenReturn(cqmock);
 
-        this.manager.getRefresher(mockSubAdapter).add(owner).run();
+        this.manager.getRefresher(mockSubAdapter, mockOwnerAdapter).add(owner).run();
         verify(this.manager, never()).deletePool(same(p));
     }
 
@@ -677,7 +679,7 @@ public class PoolManagerTest {
 
         Owner owner = getOwner();
         when(mockOwnerCurator.lookupByKey(owner.getKey())).thenReturn(owner);
-        this.manager.getRefresher(mockSubAdapter).add(owner).run();
+        this.manager.getRefresher(mockSubAdapter, mockOwnerAdapter).add(owner).run();
         verify(this.manager, never()).deletePool(same(p));
     }
 
@@ -707,7 +709,7 @@ public class PoolManagerTest {
         Owner owner = getOwner();
         when(mockOwnerCurator.lookupByKey(owner.getKey())).thenReturn(owner);
 
-        this.manager.getRefresher(mockSubAdapter).add(owner).run();
+        this.manager.getRefresher(mockSubAdapter, mockOwnerAdapter).add(owner).run();
         verify(this.manager, never()).deletePool(same(p));
     }
 
@@ -737,7 +739,7 @@ public class PoolManagerTest {
         when(cqmock.iterator()).thenReturn(pools.iterator());
         when(mockPoolCurator.listByOwnerAndType(eq(owner), any(PoolType.class))).thenReturn(cqmock);
 
-        this.manager.getRefresher(mockSubAdapter).add(owner).run();
+        this.manager.getRefresher(mockSubAdapter, mockOwnerAdapter).add(owner).run();
         ArgumentCaptor<List> poolCaptor = ArgumentCaptor.forClass(List.class);
         verify(this.poolRulesMock).updatePools(poolCaptor.capture(), any(Map.class));
         assertEquals(1, poolCaptor.getValue().size());
@@ -777,7 +779,7 @@ public class PoolManagerTest {
         when(cqmock.iterator()).thenReturn(pools.iterator());
         when(mockPoolCurator.listByOwnerAndType(eq(owner), any(PoolType.class))).thenReturn(cqmock);
 
-        this.manager.getRefresher(mockSubAdapter).add(owner).run();
+        this.manager.getRefresher(mockSubAdapter, mockOwnerAdapter).add(owner).run();
 
         TestUtil.assertPoolsAreEqual(TestUtil.copyFromSub(s), argPool.getValue());
         verify(this.mockPoolCurator, times(1)).create(any(Pool.class));
@@ -825,7 +827,7 @@ public class PoolManagerTest {
         when(cqmock.iterator()).thenReturn(pools.iterator());
         when(mockPoolCurator.listByOwnerAndType(eq(owner), any(PoolType.class))).thenReturn(cqmock);
 
-        this.manager.getRefresher(mockSubAdapter).add(owner).run();
+        this.manager.getRefresher(mockSubAdapter, mockOwnerAdapter).add(owner).run();
         verify(poolRulesMock).createAndEnrichPools(argPool.capture(), any(List.class));
         TestUtil.assertPoolsAreEqual(TestUtil.copyFromSub(s), argPool.getValue());
     }
@@ -1091,7 +1093,7 @@ public class PoolManagerTest {
         when(cqmock.iterator()).thenReturn(pools.iterator());
         when(mockPoolCurator.listByOwnerAndType(eq(owner), any(PoolType.class))).thenReturn(cqmock);
 
-        this.manager.getRefresher(mockSubAdapter).add(owner).run();
+        this.manager.getRefresher(mockSubAdapter, mockOwnerAdapter).add(owner).run();
 
         List<Entitlement> entsToDelete = Arrays.asList(ent);
         List<Pool> poolsToDelete = Arrays.asList(p);
@@ -1289,7 +1291,7 @@ public class PoolManagerTest {
         when(cqmock.iterator()).thenReturn(pools.iterator());
         when(mockPoolCurator.listByOwnerAndType(eq(owner), any(PoolType.class))).thenReturn(cqmock);
 
-        this.manager.getRefresher(mockSubAdapter).add(owner).run();
+        this.manager.getRefresher(mockSubAdapter, mockOwnerAdapter).add(owner).run();
 
         // The pool left over from the pre-migrated subscription should be deleted
         // and granted entitlements should be revoked

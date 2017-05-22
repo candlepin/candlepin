@@ -153,8 +153,7 @@ public class Entitlement extends AbstractHibernateObject
         pool = poolIn;
         owner = consumerIn.getOwner();
         consumer = consumerIn;
-        quantity = quantityIn == null || quantityIn.intValue() < 1 ?
-            1 : quantityIn;
+        quantity = quantityIn == null || quantityIn.intValue() < 1 ? 1 : quantityIn;
         updatedOnStart = poolIn.getStartDate().after(new Date());
         deletedFromPool = false;
     }

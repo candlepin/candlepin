@@ -56,6 +56,7 @@ import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.service.IdentityCertServiceAdapter;
+import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.test.TestUtil;
@@ -84,6 +85,7 @@ public class ConsumerResourceUpdateTest {
 
     @Mock private UserServiceAdapter userService;
     @Mock private IdentityCertServiceAdapter idCertService;
+    @Mock private OwnerServiceAdapter ownerService;
     @Mock private SubscriptionServiceAdapter subscriptionService;
     @Mock private ConsumerCurator consumerCurator;
     @Mock private ConsumerTypeCurator consumerTypeCurator;
@@ -112,7 +114,7 @@ public class ConsumerResourceUpdateTest {
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
 
         this.resource = new ConsumerResource(this.consumerCurator,
-            this.consumerTypeCurator, null, this.subscriptionService, null,
+            this.consumerTypeCurator, null, this.subscriptionService, this.ownerService, null,
             this.idCertService, null, this.i18n, this.sink, this.eventFactory, null, null,
             this.userService, poolManager, null, null,
             this.activationKeyCurator, this.entitler, this.complianceRules,

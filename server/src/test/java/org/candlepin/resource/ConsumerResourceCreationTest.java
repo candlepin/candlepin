@@ -55,6 +55,7 @@ import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.service.IdentityCertServiceAdapter;
+import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.util.FactValidator;
@@ -98,6 +99,7 @@ public class ConsumerResourceCreationTest {
     @Mock protected UserServiceAdapter userService;
     @Mock private IdentityCertServiceAdapter idCertService;
     @Mock private SubscriptionServiceAdapter subscriptionService;
+    @Mock private OwnerServiceAdapter ownerService;
     @Mock private ConsumerCurator consumerCurator;
     @Mock private ConsumerTypeCurator consumerTypeCurator;
     @Mock private OwnerCurator ownerCurator;
@@ -126,9 +128,9 @@ public class ConsumerResourceCreationTest {
 
         this.config = initConfig();
         this.resource = new ConsumerResource(
-            this.consumerCurator, this.consumerTypeCurator, null, this.subscriptionService, null,
-            this.idCertService, null, this.i18n, this.sink, null, null, null, this.userService, null, null,
-            this.ownerCurator, this.activationKeyCurator, null, this.complianceRules,
+            this.consumerCurator, this.consumerTypeCurator, null, this.subscriptionService, this.ownerService,
+            null, this.idCertService, null, this.i18n, this.sink, null, null, null, this.userService, null,
+            null, this.ownerCurator, this.activationKeyCurator, null, this.complianceRules,
             this.deletedConsumerCurator, null, null, this.config, null, null, null, this.consumerBindUtil,
             null, null, new FactValidator(this.config, this.i18n), null, consumerEnricher);
 

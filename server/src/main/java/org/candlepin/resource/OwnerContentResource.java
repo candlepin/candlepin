@@ -214,6 +214,7 @@ public class OwnerContentResource {
                 entity = this.contentManager.createContent(content, owner);
             }
         }
+
         return entity;
     }
 
@@ -248,6 +249,7 @@ public class OwnerContentResource {
 
             result.add(entity.toDTO());
         }
+
         ownerManager.refreshOwnerForContentAccess(owner);
         return result;
     }
@@ -269,8 +271,8 @@ public class OwnerContentResource {
         }
 
         existing = this.contentManager.updateContent(content, owner, true);
-
         ownerManager.refreshOwnerForContentAccess(owner);
+
         return existing.toDTO();
     }
 

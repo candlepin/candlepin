@@ -14,6 +14,7 @@
  */
 package org.candlepin.service.impl;
 
+import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.service.OwnerServiceAdapter;
 
@@ -21,15 +22,17 @@ import com.google.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.xnap.commons.i18n.I18n;
+
+
 
 /**
  * default SubscriptionAdapter implementation
  */
 public class DefaultOwnerServiceAdapter implements OwnerServiceAdapter {
+    private static Logger log = LoggerFactory.getLogger(DefaultOwnerServiceAdapter.class);
 
-    private static Logger log =
-        LoggerFactory.getLogger(DefaultOwnerServiceAdapter.class);
     private OwnerCurator ownerCurator;
     private I18n i18n;
 
@@ -40,12 +43,38 @@ public class DefaultOwnerServiceAdapter implements OwnerServiceAdapter {
     }
 
     /**
-     * Confirms that the key can be created in the system.
-     * @param ownerKey key for owner to be created.
-     * @return boolean true if the owner key is allowed.
+     * @{inheritDocs}
      */
     @Override
     public boolean isOwnerKeyValidForCreation(String ownerKey) {
         return true;
+    }
+
+    /**
+     * @{inheritDocs}
+     */
+    @Override
+    public String getContentAccessMode(String ownerKey) {
+        // Since we're acting as the upstream source, we'll just pass-through any existing value.
+        Owner owner = ownerKey != null ? this.ownerCurator.lookupByKey(ownerKey) : null;
+        if (owner == null) {
+            throw new IllegalArgumentException("ownerKey does not represent a valid owner: " + ownerKey);
+        }
+
+        return owner.getContentAccessMode();
+    }
+
+    /**
+     * @{inheritDocs}
+     */
+    @Override
+    public String getContentAccessModeList(String ownerKey) {
+        // Since we're acting as the upstream source, we'll just pass-through any existing value.
+        Owner owner = ownerKey != null ? this.ownerCurator.lookupByKey(ownerKey) : null;
+        if (owner == null) {
+            throw new IllegalArgumentException("ownerKey does not represent a valid owner: " + ownerKey);
+        }
+
+        return owner.getContentAccessModeList();
     }
 }

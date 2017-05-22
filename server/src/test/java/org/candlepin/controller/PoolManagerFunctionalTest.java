@@ -43,6 +43,8 @@ import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.resource.dto.AutobindData;
+import org.candlepin.service.OwnerServiceAdapter;
+import org.candlepin.service.impl.DefaultOwnerServiceAdapter;
 import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -82,6 +84,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
     @Inject private CandlepinPoolManager poolManager;
 
+    private OwnerServiceAdapter ownerAdapter;
+
     private Product virtHost;
     private Product virtHostPlatform;
     private Product virtGuest;
@@ -105,6 +109,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         o = createOwner();
         ownerCurator.create(o);
+
+        this.ownerAdapter = new DefaultOwnerServiceAdapter(this.ownerCurator, this.i18n);
 
         virtHost = TestUtil.createProduct(PRODUCT_VIRT_HOST, PRODUCT_VIRT_HOST);
         virtHostPlatform = TestUtil.createProduct(PRODUCT_VIRT_HOST_PLATFORM, PRODUCT_VIRT_HOST_PLATFORM);
@@ -172,7 +178,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         subscriptions.add(sub3);
         subscriptions.add(sub4);
 
-        poolManager.getRefresher(subAdapter).add(o).run();
+        poolManager.getRefresher(subAdapter, ownerAdapter).add(o).run();
 
         this.systemType = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         consumerTypeCurator.create(systemType);
@@ -337,7 +343,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         subscriptions.add(sub);
 
-        poolManager.getRefresher(subAdapter).add(o).run();
+        poolManager.getRefresher(subAdapter, ownerAdapter).add(o).run();
 
         // This test simulates https://bugzilla.redhat.com/show_bug.cgi?id=676870
         // where entitling first to the modifier then to the modifiee causes the modifier's
@@ -386,7 +392,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         subscriptions.add(subscription);
 
         // set up initial pool
-        poolManager.getRefresher(subAdapter).add(o).run();
+        poolManager.getRefresher(subAdapter, ownerAdapter).add(o).run();
 
         List<Pool> pools = poolCurator.listByOwnerAndProduct(o, product1.getId());
         assertEquals(1, pools.size());
@@ -395,7 +401,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         subscription.setProduct(product2.toDTO());
 
         // set up initial pool
-        poolManager.getRefresher(subAdapter).add(o).run();
+        poolManager.getRefresher(subAdapter, ownerAdapter).add(o).run();
 
         pools = poolCurator.listByOwnerAndProduct(o, product2.getId());
         assertEquals(1, pools.size());

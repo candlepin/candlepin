@@ -18,6 +18,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.dto.Subscription;
+import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.Util;
 
@@ -40,6 +41,7 @@ public class Refresher {
 
     private CandlepinPoolManager poolManager;
     private SubscriptionServiceAdapter subAdapter;
+    private OwnerServiceAdapter ownerAdapter;
     private OwnerManager ownerManager;
     private boolean lazy;
     private UnitOfWork uow;
@@ -49,9 +51,11 @@ public class Refresher {
     private Set<Product> products = Util.newSet();
 
     Refresher(CandlepinPoolManager poolManager, SubscriptionServiceAdapter subAdapter,
-        OwnerManager ownerManager, boolean lazy) {
+        OwnerServiceAdapter ownerAdapter, OwnerManager ownerManager, boolean lazy) {
+
         this.poolManager = poolManager;
         this.subAdapter = subAdapter;
+        this.ownerAdapter = ownerAdapter;
         this.ownerManager = ownerManager;
         this.lazy = lazy;
     }
@@ -152,9 +156,10 @@ public class Refresher {
         }
 
         for (Owner owner : this.owners.values()) {
-            poolManager.refreshPoolsWithRegeneration(subAdapter, owner, lazy);
+            poolManager.refreshPoolsWithRegeneration(this.subAdapter, owner, this.lazy);
             poolManager.recalculatePoolQuantitiesForOwner(owner);
-            ownerManager.refreshOwnerForContentAccess(owner);
+
+            ownerManager.refreshContentAccessMode(this.ownerAdapter, owner);
         }
     }
 
