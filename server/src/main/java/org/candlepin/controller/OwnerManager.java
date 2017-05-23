@@ -81,6 +81,7 @@ public class OwnerManager {
 
         Collection<String> consumerIds = this.ownerCurator.getConsumerIds(owner).list();
         Collection<Consumer> consumers = this.consumerCurator.lockAndLoadByIds(consumerIds);
+        consumers.addAll(consumerCurator.listByRecipientOwner(owner).list());
 
         for (Consumer consumer : consumers) {
             log.info("Removing all entitlements for consumer: {}", consumer);

@@ -358,9 +358,16 @@ public class OwnerResource {
     @ApiOperation(notes = "Removes an Owner", value = "Delete Owner")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
     public void deleteOwner(@PathParam("owner_key") String ownerKey,
-        @QueryParam("revoke") @DefaultValue("true") boolean revoke) {
+        @QueryParam("revoke") @DefaultValue("true") boolean revoke,
+        @QueryParam("force") @DefaultValue("false") boolean force) {
         Owner owner = findOwner(ownerKey);
         Event event = eventFactory.ownerDeleted(owner);
+
+        if (!force && consumerCurator.doesShareConsumerExist(owner)) {
+            throw new BadRequestException(
+                i18n.tr("owner ''{0}'' cannot be deleted while there is a share consumer. " +
+                    "You may use 'force' to bypass.", owner.getKey()));
+        }
 
         try {
             ownerManager.cleanupAndDelete(owner, revoke);
@@ -1064,7 +1071,7 @@ public class OwnerResource {
         Pool existingPool = this.poolManager.getMasterPoolBySubscriptionId(subscription.getId());
         if (existingPool == null) {
             throw new NotFoundException(i18n.tr(
-                "Unable to find a subscription with the ID \"{0}\".", subscription.getId()
+                "Unable to find a subscription with the ID ''{0}''.", subscription.getId()
             ));
         }
         Pool updatedPool = this.poolManager.convertToMasterPool(subscription);

@@ -323,11 +323,12 @@ class Candlepin
     result_json
   end
 
-  def delete_owner(owner_key, revoke=true)
+  def delete_owner(owner_key, revoke=true, force=false)
     uri = "/owners/#{owner_key}"
 
     params = {}
     params[:revoke] = false if !revoke
+    params[:force] = force if force
 
     delete(uri, params)
   end

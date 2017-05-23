@@ -177,7 +177,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Test
     public void testSimpleDeleteOwner() {
         String id = owner.getId();
-        ownerResource.deleteOwner(owner.getKey(), true);
+        ownerResource.deleteOwner(owner.getKey(), true, false);
         owner = ownerCurator.find(id);
         assertNull(owner);
     }
@@ -442,7 +442,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         UeberCertificate uCert = ueberCertGenerator.generate(owner.getKey(), setupAdminPrincipal("test"));
         assertNotNull(uCert);
 
-        ownerResource.deleteOwner(owner.getKey(), true);
+        ownerResource.deleteOwner(owner.getKey(), true, false);
 
         assertEquals(0, consumerCurator.listByOwner(owner).list().size());
         assertNull(consumerCurator.findByUuid(c1.getUuid()));
@@ -627,7 +627,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     public void testOwnerAdminCannotDelete() {
         setupPrincipal(owner, Access.ALL);
         securityInterceptor.enable();
-        ownerResource.deleteOwner(owner.getKey(), true);
+        ownerResource.deleteOwner(owner.getKey(), true, false);
     }
 
     private Event createConsumerCreatedEvent(Owner o) {
@@ -1026,7 +1026,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Role r = new Role("rolename");
         r.addPermission(p);
         roleCurator.create(r);
-        ownerResource.deleteOwner(owner.getKey(), false);
+        ownerResource.deleteOwner(owner.getKey(), false, false);
     }
 
     @Test(expected = NotFoundException.class)
@@ -1053,7 +1053,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ConstraintViolationException ce = new ConstraintViolationException(null, null, null);
         PersistenceException pe = new PersistenceException(ce);
         Mockito.doThrow(pe).when(ownerManager).cleanupAndDelete(eq(o), eq(true));
-        or.deleteOwner("testOwner", true);
+        or.deleteOwner("testOwner", true, true);
     }
 
     @Test(expected = BadRequestException.class)
