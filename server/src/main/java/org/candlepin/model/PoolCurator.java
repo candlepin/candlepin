@@ -1072,7 +1072,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @param pools pools to delete
      * @param alreadyDeletedPools pools to skip, they have already been deleted.
      */
-    public void batchDelete(List<Pool> pools, Set<String> alreadyDeletedPools) {
+    public void batchDelete(Collection<Pool> pools, Set<String> alreadyDeletedPools) {
         if (alreadyDeletedPools == null) {
             alreadyDeletedPools = new HashSet<String>();
         }
@@ -1156,7 +1156,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     public List<Pool> getPoolsBySubscriptionIds(Collection<String> subIds) {
         return currentSession().createCriteria(Pool.class)
             .createAlias("sourceSubscription", "sourceSub", JoinType.LEFT_OUTER_JOIN)
-            .add(Restrictions.in("sourceSub.subscriptionId", subIds))
+            .add(CPRestrictions.in("sourceSub.subscriptionId", subIds))
             .addOrder(Order.asc("id"))
             .list();
     }
@@ -1171,14 +1171,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
 
     @SuppressWarnings("unchecked")
-    public List<Pool> listMasterPools() {
-        return this.currentSession().createCriteria(Pool.class)
-            .createAlias("sourceSubscription", "srcsub", JoinType.LEFT_OUTER_JOIN)
-            .add(Restrictions.eq("srcsub.subscriptionSubKey", "master"))
-            .list();
-    }
-
-    @SuppressWarnings("unchecked")
     public List<Pool> getOwnersFloatingPools(Owner owner) {
         return currentSession().createCriteria(Pool.class)
             .add(Restrictions.eq("owner", owner))
@@ -1186,6 +1178,68 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             .add(Restrictions.isNull("sourceSub.subscriptionId"))
             .addOrder(Order.asc("id"))
             .list();
+    }
+
+    /**
+     * Retrieves all known master pools (subscriptions) for all owners.
+     *
+     * @return
+     *  A query to fetch all known master pools
+     */
+    public CandlepinQuery<Pool> getMasterPools() {
+        DetachedCriteria criteria = DetachedCriteria.forClass(Pool.class)
+            .createAlias("sourceSubscription", "srcsub")
+            .add(Restrictions.eq("srcsub.subscriptionSubKey", "master"));
+
+        return this.cpQueryFactory.<Pool>buildQuery(this.currentSession(), criteria);
+    }
+
+    /**
+     * Retrieves all known master pools (subscriptions) for the given owner.
+     *
+     * @param owner
+     *  The owner for which to fetch master pools
+     *
+     * @return
+     *  A query to fetch all known master pools for the given owner
+     */
+    public CandlepinQuery<Pool> getMasterPoolsForOwner(Owner owner) {
+        DetachedCriteria criteria = DetachedCriteria.forClass(Pool.class)
+            .createAlias("sourceSubscription", "srcsub")
+            .add(Restrictions.eq("owner", owner))
+            .add(Restrictions.eq("srcsub.subscriptionSubKey", "master"));
+
+        return this.cpQueryFactory.<Pool>buildQuery(this.currentSession(), criteria);
+    }
+
+    /**
+     * Retrieves all known master pools (subscriptions) for the given owner that have subscription
+     * IDs not present in the provided collection.
+     *
+     * @param owner
+     *  The owner for which to fetch master pools
+     *
+     * @param excludedSubIds
+     *  A collection of
+     *
+     * @return
+     *  A query to fetch all known master pools for the given owner
+     */
+    public CandlepinQuery<Pool> getMasterPoolsForOwnerExcludingSubs(Owner owner,
+        Collection<String> excludedSubIds) {
+
+        if (excludedSubIds != null && !excludedSubIds.isEmpty()) {
+            DetachedCriteria criteria = DetachedCriteria.forClass(Pool.class)
+                .createAlias("sourceSubscription", "srcsub")
+                .add(Restrictions.eq("owner", owner))
+                .add(Restrictions.eq("srcsub.subscriptionSubKey", "master"))
+                .add(Restrictions.not(CPRestrictions.in("srcsub.subscriptionId", excludedSubIds)));
+
+            return this.cpQueryFactory.<Pool>buildQuery(this.currentSession(), criteria);
+        }
+        else {
+            return this.getMasterPoolsForOwner(owner);
+        }
     }
 
     /**

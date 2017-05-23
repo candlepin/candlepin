@@ -550,7 +550,7 @@ public class Importer {
         // If the consumer has no entitlements, this products directory will end up empty.
         // This also implies there will be no entitlements to import.
         Meta meta = mapper.readValue(metadata, Meta.class);
-        List<Subscription> importSubs = new ArrayList<Subscription>();
+        List<Subscription> importSubs;
         if (importFiles.get(ImportFile.PRODUCTS.fileName()) != null) {
             ProductImporter importer = new ProductImporter();
 
@@ -564,7 +564,7 @@ public class Importer {
         else {
             log.warn("No products found to import, skipping product import.");
             log.warn("No entitlements in manifest, removing all subscriptions for owner.");
-            importEntitlements(owner, new HashSet<Product>(), new File[]{}, consumer, meta);
+            importSubs = importEntitlements(owner, new HashSet<Product>(), new File[]{}, consumer, meta);
         }
 
         // Setup our import subscription adapter with the subscriptions imported:

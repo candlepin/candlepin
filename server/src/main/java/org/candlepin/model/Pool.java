@@ -809,6 +809,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         }
         return false;
     }
+
     /**
      * @return True if entitlement pool is unlimited.
      */
@@ -839,6 +840,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         if (this.getSourceSubscription() != null) {
             return this.getSourceSubscription().getSubscriptionId();
         }
+
         return null;
     }
 

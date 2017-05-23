@@ -195,8 +195,7 @@ public class AutobindRules {
                 // skip the pool:
 
                 for (Product product : productCurator.getPoolProvidedProductsCached(p.getId())) {
-                    if (product.getProductContent().size() >
-                        X509ExtensionUtil.V1_CONTENT_LIMIT) {
+                    if (product.getProductContent().size() > X509ExtensionUtil.V1_CONTENT_LIMIT) {
                         contentOk = false;
                         break;
                     }

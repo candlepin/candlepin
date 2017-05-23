@@ -6,7 +6,7 @@ module HostedTest
   def is_hostedtest_alive?
     if @@hostedtest_alive.nil?
       begin
-        @@hostedtest_alive = @cp.get('/hostedtest/subscriptions/is_alive', {}, 'json', true)
+        @@hostedtest_alive = @cp.get('/hostedtest/subscriptions/is_alive','json', true)
       rescue RestClient::ResourceNotFound
         @@hostedttest_alive = false
       end
@@ -15,9 +15,8 @@ module HostedTest
   end
 
   def create_hostedtest_subscription(owner_key, product_id, quantity=1, params={})
-
     provided_products = params[:provided_products] || []
-    start_date = params[:start_date] || DateTime.now
+    start_date = params[:start_date] || Date.today
     end_date = params[:end_date] || start_date + 365
 
     subscription = {
@@ -59,11 +58,11 @@ module HostedTest
     if params[:derived_provided_products]
       subscription['derivedProvidedProducts'] = params[:derived_provided_products].collect { |pid| {'id' => pid} }
     end
-    return @cp.post("/hostedtest/subscriptions", {}, subscription)
+    return @cp.post("/hostedtest/subscriptions", subscription)
   end
 
   def update_hostedtest_subscription(subscription)
-    return @cp.put("/hostedtest/subscriptions", {}, subscription)
+    return @cp.put("/hostedtest/subscriptions", subscription)
   end
 
   def get_all_hostedtest_subscriptions()
@@ -75,11 +74,11 @@ module HostedTest
   end
 
   def delete_hostedtest_subscription(id)
-    return @cp.delete("/hostedtest/subscriptions/#{id}", {}, nil, true)
+    return @cp.delete("/hostedtest/subscriptions/#{id}", nil, true)
   end
 
   def delete_all_hostedtest_subscriptions()
-    @cp.delete('/hostedtest/subscriptions/', {}, nil, true)
+    @cp.delete('/hostedtest/subscriptions/', nil, true)
   end
 
   def is_hosted?
@@ -109,7 +108,7 @@ module HostedTest
       content_ids.each do |id|
         data[id] = enabled
       end
-      @cp.post("/hostedtest/subscriptions/owners/#{owner_key}/products/#{product_id}/batch_content", {}, data)
+      @cp.post("/hostedtest/subscriptions/owners/#{owner_key}/products/#{product_id}/batch_content", data)
     else
       @cp.add_batch_content_to_product(owner_key, product_id, content_ids, true)
     end
@@ -117,7 +116,7 @@ module HostedTest
 
   def add_content_to_product(owner_key, product_id, content_id, enabled=true)
     if is_hosted?
-      @cp.post("/hostedtest/subscriptions/owners/#{owner_key}/products/#{product_id}/content/#{content_id}", {:enabled => enabled})
+      @cp.post("/hostedtest/subscriptions/owners/#{owner_key}/products/#{product_id}/content/#{content_id}?enabled=#{enabled}")
     else
       @cp.add_content_to_product(owner_key, product_id, content_id, true)
     end
@@ -134,7 +133,7 @@ module HostedTest
       product[:dependentProductIds] = params[:dependentProductIds] if params[:dependentProductIds]
       product[:relies_on] = params[:relies_on] if params[:relies_on]
 
-      @cp.put("/hostedtest/subscriptions/owners/#{owner_key}/products/#{product_id}", {}, product)
+      @cp.put("/hostedtest/subscriptions/owners/#{owner_key}/products/#{product_id}", product)
     else
       @cp.update_product(owner_key, product_id, params)
     end
