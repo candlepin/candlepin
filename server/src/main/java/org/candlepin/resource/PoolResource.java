@@ -41,6 +41,8 @@ import com.google.inject.Inject;
 
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
@@ -71,6 +73,7 @@ import io.swagger.annotations.Authorization;
 @Path("/pools")
 @Api(value = "pools", authorizations = { @Authorization("basic") })
 public class PoolResource {
+    private static Logger log = LoggerFactory.getLogger(PoolResource.class);
 
     private ConsumerCurator consumerCurator;
     private OwnerCurator ownerCurator;

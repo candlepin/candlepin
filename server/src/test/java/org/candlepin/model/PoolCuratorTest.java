@@ -1548,6 +1548,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Product prod3 = this.createProduct(owner1);
         Product prod4 = this.createProduct(owner2);
         Product prod5 = this.createProduct(owner1);
+        Product prod6 = this.createProduct(owner2);
 
         Pool p1 = TestUtil.createPool(owner1, prod1);
         p1.setSourceSubscription(new SourceSubscription("sub1", "master"));
@@ -1566,14 +1567,19 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         list.add(p4);
 
         Pool p5 = TestUtil.createPool(owner1, prod5);
-        p5.setSourceSubscription(new SourceSubscription("sub3", "asd"));
+        p5.setSourceSubscription(new SourceSubscription("sub3", "master"));
         list.add(p5);
+
+        Pool p6 = TestUtil.createPool(owner2, prod6);
+        p6.setSourceSubscription(new SourceSubscription("sub3", "asd"));
+        list.add(p6);
 
         this.poolCurator.create(p1);
         this.poolCurator.create(p2);
         this.poolCurator.create(p3);
         this.poolCurator.create(p4);
         this.poolCurator.create(p5);
+        this.poolCurator.create(p6);
 
         return list;
     }
@@ -1587,20 +1593,50 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         actual = this.poolCurator.getMasterPoolBySubscriptionId("sub2");
         assertEquals(pools.get(1), actual);
-
-        actual = this.poolCurator.getMasterPoolBySubscriptionId("sub3");
+        actual = this.poolCurator.getMasterPoolBySubscriptionId("sub5");
         assertEquals(null, actual);
     }
 
     @Test
-    public void testListMasterPools() {
+    public void testGetMasterPools() {
         List<Pool> pools = this.setupMasterPoolsTests();
         List<Pool> expected = new LinkedList<Pool>();
 
         expected.add(pools.get(0));
         expected.add(pools.get(1));
+        expected.add(pools.get(4));
 
-        List<Pool> actual = this.poolCurator.listMasterPools();
+        List<Pool> actual = this.poolCurator.getMasterPools().list();
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testGetMasterPoolsForOwner() {
+        List<Pool> pools = this.setupMasterPoolsTests();
+        List<Pool> expected = new LinkedList<Pool>();
+
+        Owner owner = pools.get(0).getOwner();
+
+        expected.add(pools.get(0));
+        expected.add(pools.get(4));
+
+        List<Pool> actual = this.poolCurator.getMasterPoolsForOwner(owner).list();
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testGetMasterPoolsForOwnerExcludingSubs() {
+        List<Pool> pools = this.setupMasterPoolsTests();
+        List<Pool> expected = new LinkedList<Pool>();
+
+        Owner owner = pools.get(0).getOwner();
+        expected.add(pools.get(0));
+
+        Collection<String> excludedSubIds = Arrays.asList(pools.get(4).getSubscriptionId());
+
+        List<Pool> actual = this.poolCurator.getMasterPoolsForOwnerExcludingSubs(owner, excludedSubIds)
+            .list();
+
         assertEquals(expected, actual);
     }
 
