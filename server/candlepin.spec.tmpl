@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.1.0
+Version: 2.1.1
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,71 @@ fi
 
 #raw
 %changelog
+* Thu May 25 2017 Kevin Howell <khowell@redhat.com> 2.1.1-1
+- 1451032: Allow tomcat to read /etc/candlepin (khowell@redhat.com)
+- Added content access list refreshing to the refresh process (crog@redhat.com)
+- Fix broken url to "Building a Better Bloom Filter"
+  (andre.laszlo@meltwater.com)
+- Updates for owner delete (wpoteat@redhat.com)
+- 1450386: entitlement of quantity 0 gives unlimited entitlements
+  (adarshvritant@gmail.com)
+- 1450079: virt-who temporary subscription should be 7 days
+  (adarshvritant@gmail.com)
+- Lower share pool priority during autobind. (awood@redhat.com)
+- 1395747: Fix incorrect semantics in identity certificate SANs.
+  (awood@redhat.com)
+- Revert CPRestrictions back to a utility class using static injection.
+  (awood@redhat.com)
+- Configure in clauses based on the DB we're using. (awood@redhat.com)
+- Consolidated and refactored the database locking methods (crog@redhat.com)
+- separate add entitlement from update entitlement (adarshvritant@gmail.com)
+- Filter unsharable pools when listing pools for share consumers.
+  (awood@redhat.com)
+- 1444719: Update bonus pool quantity when master entitlement is updated
+  (adarshvritant@gmail.com)
+- 1445012: Fix permission issue on getting pools for an AK (mstead@redhat.com)
+- move recipient org from fact to a consumer field (adarshvritant@gmail.com)
+- Added indexes to various tables (crog@redhat.com)
+- Correcting checkstyle issues. (awood@redhat.com)
+- batching product resolutions (adarshvritant@gmail.com)
+- Fixes post mstead's review (adarshvritant@gmail.com)
+- Add JsonIgnore to several fields. (awood@redhat.com)
+- Add isManifest convenience method on consumer. (awood@redhat.com)
+- misc post review changes for new consumer share type
+  (adarshvritant@gmail.com)
+- Do not create source stacks on shares. (awood@redhat.com)
+- Handle bonus pool quantity adjustment with share consumers.
+  (awood@redhat.com)
+- Revert "Fix leaky abstraction with Command pattern." (awood@redhat.com)
+- Track share quantities directly on the Pool. (awood@redhat.com)
+- Correct issues discovered during code review. (awood@redhat.com)
+- Unused imports. Better attribute name. Remove useless else.
+  (awood@redhat.com)
+- Move pool sharing validations out of JavaScript. (awood@redhat.com)
+- Provide a method to see if a consumer is a share. (awood@redhat.com)
+- Updates to sharing: bonus pools and unmapped guest pools. (awood@redhat.com)
+- Prohibit sharing unmapped guest or development pools. (awood@redhat.com)
+- Add a new PoolType to represent pools created as a result of a share.
+  (awood@redhat.com)
+- Send an event when resolving a product conflict during sharing.
+  (awood@redhat.com)
+- Allow share consumers to bind to pools. (awood@redhat.com)
+- Correct various warnings and style issues. (awood@redhat.com)
+- Correctly message that sharing a share is prohibited. (awood@redhat.com)
+- Fix leaky abstraction with Command pattern. (awood@redhat.com)
+- Simplistic implementation of share consumer creation and binds.
+  (awood@redhat.com)
+- Add a 'share' consumer type to Candlepin to represent shares to another org.
+  (awood@redhat.com)
+- Fix deployment issue where Qpid was not actually starting. (awood@redhat.com)
+- Optimized how pool provided products are checked (crog@redhat.com)
+- 1441700: Fix issues with Status caching invalidation (mstead@redhat.com)
+- Update Pool.cdn reference on Cdn deletion (mstead@redhat.com)
+- 1440945: Support manifest ext params in deprecated API (mstead@redhat.com)
+- 1436258: Optimize cert regen from content update (khowell@redhat.com)
+- Remove null inclusion on getProductbyUUID and getContentByUUID
+  (bcourt@redhat.com)
+
 * Fri Mar 31 2017 Kevin Howell <khowell@redhat.com> 2.1.0-1
 - 1428150: Do not deadlock when processing hypervisor check ins
   (csnyder@redhat.com)
