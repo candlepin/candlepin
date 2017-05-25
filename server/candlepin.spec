@@ -341,6 +341,9 @@ do
 done
 /sbin/restorecon %{_localstatedir}/cache/thumbslug &> /dev/null || :
 /sbin/restorecon -R %{_sysconfdir}/%{name}/ &> /dev/null || :
+/sbin/restorecon -R %{_localstatedir}/cache/%{name}/ &> /dev/null || :
+/sbin/restorecon -R %{_localstatedir}/lib/%{name}/ &> /dev/null || :
+/sbin/restorecon -R %{_localstatedir}/log/%{name}/ &> /dev/null || :
 
 %postun selinux
 if [ $1 -eq 0 ] ; then
@@ -350,6 +353,9 @@ if [ $1 -eq 0 ] ; then
   done
   /sbin/restorecon %{_localstatedir}/cache/thumbslug &> /dev/null || :
   /sbin/restorecon -R %{_sysconfdir}/%{name}/ &> /dev/null || :
+  /sbin/restorecon -R %{_localstatedir}/cache/%{name}/ &> /dev/null || :
+  /sbin/restorecon -R %{_localstatedir}/lib/%{name}/ &> /dev/null || :
+  /sbin/restorecon -R %{_localstatedir}/log/%{name}/ &> /dev/null || :
 fi
 
 

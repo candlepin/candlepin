@@ -46,3 +46,7 @@ make -f /usr/share/selinux/devel/Makefile || exit
 /sbin/restorecon -F -R -v /usr/sbin/candlepin
 # Fixing the file context on /etc/candlepin
 /sbin/restorecon -F -R -v /etc/candlepin
+
+/sbin/restorecon -F -R -v /var/cache/candlepin
+/sbin/restorecon -F -R -v /var/lib/candlepin
+/sbin/restorecon -F -R -v /var/log/candlepin
