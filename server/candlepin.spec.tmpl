@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 0.9.54.22
+Version: 0.9.54.23
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,11 @@ fi
 
 #raw
 %changelog
+* Thu May 25 2017 Kevin Howell <khowell@redhat.com> 0.9.54.23-1
+- 1451024: Allow tomcat to read /etc/candlepin (khowell@redhat.com)
+- 1450081: virt-who temporary subscription should be 7 days
+  (adarshvritant@gmail.com)
+
 * Fri May 12 2017 Chris Rog <crog@redhat.com> 0.9.54.22-1
 - Consolidated and refactored the database locking methods (crog@redhat.com)
 - Added additional checks and logging to the populate hosted DB task
