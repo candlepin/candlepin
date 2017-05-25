@@ -7,3 +7,7 @@
 
 /etc/candlepin/certs/candlepin-ca\.crt  gen_context(system_u:object_r:candlepin_etc_certs_ca_cert_r_t,s0)
 /etc/candlepin/certs/candlepin-ca\.key  gen_context(system_u:object_r:candlepin_etc_certs_ca_cert_r_t,s0)
+
+/var/cache/candlepin(/.*)?  gen_context(system_u:object_r:candlepin_var_cache_t,s0)
+/var/lib/candlepin(/.*)?  gen_context(system_u:object_r:candlepin_var_lib_t,s0)
+/var/log/candlepin(/.*)?  gen_context(system_u:object_r:candlepin_var_log_t,s0)
