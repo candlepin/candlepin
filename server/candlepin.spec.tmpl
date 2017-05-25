@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.0.33
+Version: 2.0.34
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,13 @@ fi
 
 #raw
 %changelog
+* Thu May 25 2017 Kevin Howell <khowell@redhat.com> 2.0.34-1
+- 1451031: Allow tomcat to read /etc/candlepin (khowell@redhat.com)
+- 1450385: entitlement of quantity 0 gives unlimited entitlements
+  (adarshvritant@gmail.com)
+- 1450078: virt-who temporary subscription should be 7 days
+  (adarshvritant@gmail.com)
+
 * Tue Apr 25 2017 Kevin Howell <khowell@redhat.com> 2.0.33-1
 - 1445010: Fix permission issue on getting pools for an AK (mstead@redhat.com)
 - 1444719: Update bonus pool quantity when master entitlement is updated
