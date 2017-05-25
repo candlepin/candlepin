@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.49.22
+Version: 0.9.49.23
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -407,6 +407,9 @@ fi
 
 
 %changelog
+* Thu May 25 2017 Kevin Howell <khowell@redhat.com> 0.9.49.23-1
+- 1451037: Allow tomcat to read /etc/candlepin (khowell@redhat.com)
+
 * Thu Apr 27 2017 Kevin Howell <khowell@redhat.com> 0.9.49.22-1
 - 1428145: Do not deadlock on simultaneous hypervisor checkin
   (csnyder@redhat.com)
