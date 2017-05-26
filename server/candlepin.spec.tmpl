@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 0.9.54.23
+Version: 0.9.54.24
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,9 @@ fi
 
 #raw
 %changelog
+* Fri May 26 2017 Kevin Howell <khowell@redhat.com> 0.9.54.24-1
+- 1440909: Choose host_specific/virt_only pools first (csnyder@redhat.com)
+
 * Thu May 25 2017 Kevin Howell <khowell@redhat.com> 0.9.54.23-1
 - 1451024: Allow tomcat to read /etc/candlepin (khowell@redhat.com)
 - 1450081: virt-who temporary subscription should be 7 days
