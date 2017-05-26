@@ -25,6 +25,7 @@ import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.dto.Subscription;
 
 import com.google.inject.Inject;
@@ -151,13 +152,18 @@ public class PoolRules {
         Map<String, String> attributes = masterPool.getProductAttributes();
 
         String virtQuantity = getVirtQuantity(
-            attributes.get(Product.Attributes.VIRT_LIMIT), masterPool.getQuantity()
-        );
+            attributes.get(Product.Attributes.VIRT_LIMIT), masterPool.getQuantity());
 
         log.info("Checking if bonus pools need to be created for pool: {}", masterPool);
 
-        if (attributes.containsKey(Product.Attributes.VIRT_LIMIT) && !hasBonusPool(existingPools) &&
-            virtQuantity != null) {
+        // Impl note:
+        // We check if the pool has a source subscription to determine whether or not it's a custom
+        // pool that doesn't originate from an subscription. If there isn't a source subscription,
+        // we have no way of linking the bonus/derived pools to the master pool (at the time of
+        // writing), and we'd end up with orphaned pools. If/when this issue is resolved, the check
+        // for a source subscription should be removed.
+        if (masterPool.getSourceSubscription() != null && virtQuantity != null &&
+            !hasBonusPool(existingPools)) {
 
             boolean hostLimited = "true".equals(attributes.get(Product.Attributes.HOST_LIMITED));
             HashMap<String, String> virtAttributes = new HashMap<String, String>();
@@ -167,6 +173,7 @@ public class PoolRules {
             if (hostLimited || config.getBoolean(ConfigProperties.STANDALONE)) {
                 virtAttributes.put(Pool.Attributes.UNMAPPED_GUESTS_ONLY, "true");
             }
+
             // Make sure the virt pool does not have a virt_limit,
             // otherwise this will recurse infinitely
             virtAttributes.put(Product.Attributes.VIRT_LIMIT, "0");
@@ -189,23 +196,27 @@ public class PoolRules {
 
     private boolean hasMasterPool(List<Pool> pools) {
         if (pools != null) {
-            for (Pool p : pools) {
-                if (p.getSourceSubscription().getSubscriptionSubKey().equals("master")) {
+            for (Pool pool : pools) {
+                SourceSubscription srcSub = pool.getSourceSubscription();
+                if (srcSub != null && "master".equals(srcSub.getSubscriptionSubKey())) {
                     return true;
                 }
             }
         }
+
         return false;
     }
 
     private boolean hasBonusPool(List<Pool> pools) {
         if (pools != null) {
-            for (Pool p : pools) {
-                if (p.getSourceSubscription().getSubscriptionSubKey().equals("derived")) {
+            for (Pool pool : pools) {
+                SourceSubscription srcSub = pool.getSourceSubscription();
+                if (srcSub != null && "derived".equals(srcSub.getSubscriptionSubKey())) {
                     return true;
                 }
             }
         }
+
         return false;
     }
 
@@ -216,6 +227,7 @@ public class PoolRules {
         if ("unlimited".equals(virtLimit)) {
             return virtLimit;
         }
+
         try {
             int virtLimitInt = Integer.parseInt(virtLimit);
             if (virtLimitInt > 0) {
@@ -226,6 +238,7 @@ public class PoolRules {
             // Nothing to update if we get here.
             log.warn("Invalid virt_limit attribute specified.");
         }
+
         return null;
     }
 
@@ -243,6 +256,7 @@ public class PoolRules {
                 // Should be filtered out before calling, but just in case we skip it:
                 continue;
             }
+
             if (p.isDevelopmentPool()) {
                 continue;
             }
@@ -260,6 +274,7 @@ public class PoolRules {
                 }
             }
         }
+
         return updates;
     }
 

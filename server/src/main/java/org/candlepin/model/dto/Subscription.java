@@ -32,6 +32,9 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
@@ -53,6 +56,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonFilter("DefaultFilter")
 public class Subscription extends CandlepinDTO implements Owned, Named, Eventful {
+    private static Logger log = LoggerFactory.getLogger(Subscription.class);
 
     private String id;
     private Owner owner;
@@ -531,15 +535,21 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
         this.setId(source.getId());
         this.setOwner(source.getOwner());
         this.setProduct(source.getProduct());
-        this.setProvidedProducts(source.getProvidedProducts());
-        this.setDerivedProduct(source.getDerivedProduct());
-        this.setDerivedProvidedProducts(source.getDerivedProvidedProducts());
         this.setQuantity(source.getQuantity());
         this.setStartDate(source.getStartDate());
         this.setEndDate(source.getEndDate());
+        this.setModified(source.getModified());
+        this.setContractNumber(source.getContractNumber());
+        this.setAccountNumber(source.getAccountNumber());
+        this.setOrderNumber(source.getOrderNumber());
+        this.setProvidedProducts(source.getProvidedProducts());
+        this.setUpstreamPoolId(source.getUpstreamPoolId());
         this.setUpstreamEntitlementId(source.getUpstreamEntitlementId());
-        this.setCdn(source.getCdn());
+        this.setUpstreamConsumerId(source.getUpstreamConsumerId());
         this.setCertificate(source.getCertificate());
+        this.setDerivedProduct(source.getDerivedProduct());
+        this.setDerivedProvidedProducts(source.getDerivedProvidedProducts());
+        this.setCdn(source.getCdn());
         this.setBranding(source.getBranding());
 
         return this;
@@ -570,18 +580,25 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
         this.setId(source.getSubscriptionId());
 
         this.setOwner(source.getOwner());
-        this.setOwner(source.getOwner());
-        this.setQuantity(source.getQuantity());
         this.setStartDate(source.getStartDate());
         this.setEndDate(source.getEndDate());
         this.setModified(source.getUpdated());
         this.setUpstreamEntitlementId(source.getUpstreamEntitlementId());
         this.setCdn(source.getCdn());
         this.setCertificate(source.getCertificate());
+        this.setContractNumber(source.getContractNumber());
+        this.setAccountNumber(source.getAccountNumber());
+        this.setOrderNumber(source.getOrderNumber());
+        this.setUpstreamPoolId(source.getUpstreamPoolId());
+        this.setUpstreamEntitlementId(source.getUpstreamEntitlementId());
+        this.setUpstreamConsumerId(source.getUpstreamConsumerId());
 
         //Pool.getBranding should return entity Branding. The Branding
         //entity has no futher relationships so everything should be ok.
         this.setBranding(source.getBranding());
+
+        // Attempt to calculate the quantity from the pool and its product:
+        this.setQuantityFromPool(source);
 
         // Map actual products into product data
         this.setProduct(source.getProduct() != null ? new ProductData(source.getProduct()) : null);
@@ -619,6 +636,75 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
         }
 
         return this;
+    }
+
+    private void setQuantityFromPool(Pool pool) {
+        Product product = pool.getProduct();
+        Long poolQuantity = pool.getQuantity();
+
+        /**
+         * The following code reconstructs Subscription quantity from the Pool quantity.
+         * To understand it, it is important to understand how pool (the parameter)
+         * is created in candlepin from a source subscription.
+         * The pool has quantity was computed from
+         * source subscription quantity and was multiplied by product.multiplier.
+         * To reconstruct subscription, we must therefore divide the quantity of the pool
+         * by the product.multiplier.
+         * It's not easy to find COMPLETE code related to the conversion of
+         * subscription to the pool. There is a method convertToMasterPool in this class,
+         * that should do part of that (multiplication is not there).
+         * But looking at its javadoc, it directly instructs callers of the
+         * convertToMasterPool method to override quantity with method
+         * PoolRules.calculateQuantity (when browsing the code that calls convertToMasterPool,
+         * the calculateQuantity is usually called after convertToMasterPool).
+         * The method PoolRules.calculateQuantity does the actual
+         * multiplication of pool.quantity by pool.product.multiplier.
+         * It seems that we also need to account account for
+         * instance_multiplier (again logic is in calculateQuantity). If the attribute
+         * is present, we must further divide the poolQuantity by
+         * product.getAttributeValue(Product.Attributes.INSTANCE_MULTIPLIER).
+         */
+        if (product != null && poolQuantity != null) {
+            Long multiplier = pool.getProduct().getMultiplier();
+
+            if (multiplier != null && multiplier != 0) {
+                if (poolQuantity % multiplier != 0) {
+                    log.error("Unable to calculate subscription quantity from pool; " +
+                        "Pool quantity is not divisible by its product's multiplier: {}, {}, {}",
+                        pool, poolQuantity, multiplier);
+                }
+                else {
+                    poolQuantity /= multiplier;
+                }
+
+                //This is reverse of what part of PoolRules.calculateQuantity does. See that method
+                //to understand why we check that upstreamPoolId must be null.
+                if (product.hasAttribute(Product.Attributes.INSTANCE_MULTIPLIER) &&
+                    pool.getUpstreamPoolId() == null) {
+
+                    String instMultiplier = product.getAttributeValue(Product.Attributes.INSTANCE_MULTIPLIER);
+                    if (instMultiplier != null) {
+                        try {
+                            Integer parsed = Integer.parseInt(instMultiplier);
+
+                            if (parsed != 0 && poolQuantity % parsed == 0) {
+                                poolQuantity /= parsed;
+                            }
+                        }
+                        catch (NumberFormatException nfe) {
+                            log.error("Malformed instance multiplier value on product: {}", instMultiplier);
+                        }
+                    }
+                }
+            }
+        }
+        else {
+            log.warn("Unable to calculate subscription quantity from pool; " +
+                "Pool quantity or product is null (quantity: {}, product: {})",
+                poolQuantity, product);
+        }
+
+        this.setQuantity(poolQuantity);
     }
 
 }

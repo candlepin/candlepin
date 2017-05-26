@@ -259,6 +259,11 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         sub.setStartDate(TestUtil.createDate(2010, 2, 9));
         sub.setEndDate(TestUtil.createDate(3000, 2, 9));
         sub.setModified(TestUtil.createDate(2010, 2, 12));
+
+        // This line is only present as a result of a (temporary?) fix for BZ 1452694. Once a
+        // better fix has been implemented, the upstream pool ID can be removed.
+        sub.setUpstreamPoolId("upstream_pool_id");
+
         subscriptions.add(sub);
 
         // Trigger the refresh:

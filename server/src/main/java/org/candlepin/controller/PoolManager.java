@@ -302,9 +302,35 @@ public interface PoolManager {
      * @return
      *  a list of known master pools
      */
-    List<Pool> listMasterPools();
+    CandlepinQuery<Pool> getMasterPools();
 
-    void deletePools(List<Pool> pools);
+    /**
+     * Retrieves a list consisting of all known master pools for the given owner
+     *
+     * @param owner
+     *  The owner for which to retrieve master pools
+     *
+     * @return
+     *  a list of known master pools for the given owner
+     */
+    CandlepinQuery<Pool> getMasterPoolsForOwner(Owner owner);
 
-    void deletePools(List<Pool> pools, Set<String> alreadyDeletedPools);
+    /**
+     * Retrieves a list consisting of all known master pools for the given owner, excluding those
+     * for the specified subscriptions.
+     *
+     * @param owner
+     *  The owner for which to retrieve master pools
+     *
+     * @param excludedSubs
+     *  A collection of subscription IDs to exclude from the retrieved master pools
+     *
+     * @return
+     *  a list of known master pools for the given owner
+     */
+    CandlepinQuery<Pool> getMasterPoolsForOwnerExcludingSubs(Owner owner, Collection<String> excludedSubs);
+
+    void deletePools(Collection<Pool> pools);
+
+    void deletePools(Collection<Pool> pools, Set<String> alreadyDeletedPools);
 }

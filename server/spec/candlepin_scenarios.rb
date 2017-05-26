@@ -585,7 +585,7 @@ class StandardExporter < Exporter
   end
 
   def create_candlepin_export_update_no_ent
-    ## We need to test the behavoir of the manifest update when no entitlements
+    ## We need to test the behavior of the manifest update when no entitlements
     ## are included
     ents = @candlepin_client.list_entitlements()
     # remove all entitlements
