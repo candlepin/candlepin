@@ -223,7 +223,7 @@ public class PoolManagerTest {
 
     @Test
     public void deletePoolsTest() {
-        List<Pool> pools = new ArrayList<Pool>();
+        Set<Pool> pools = new HashSet<Pool>();
         pools.add(TestUtil.createPool(TestUtil.createProduct()));
         doNothing().when(mockPoolCurator).batchDelete(eq(pools), anySetOf(String.class));
         manager.deletePools(pools);
@@ -1094,7 +1094,7 @@ public class PoolManagerTest {
         this.manager.getRefresher(mockSubAdapter).add(owner).run();
 
         List<Entitlement> entsToDelete = Arrays.asList(ent);
-        List<Pool> poolsToDelete = Arrays.asList(p);
+        Set<Pool> poolsToDelete = new HashSet<Pool>(Arrays.asList(p));
         verify(mockPoolCurator).batchDelete(eq(poolsToDelete), anySetOf(String.class));
         verify(entitlementCurator).batchDelete(eq(entsToDelete));
     }
@@ -1149,7 +1149,8 @@ public class PoolManagerTest {
         manager.cleanupExpiredPools();
 
         // And the pool should be deleted:
-        verify(mockPoolCurator).batchDelete(eq(pools), anySetOf(String.class));
+        Set<Pool> expectedPools = new HashSet<Pool>(pools);
+        verify(mockPoolCurator).batchDelete(eq(expectedPools), anySetOf(String.class));
     }
 
     @Test
@@ -1173,7 +1174,8 @@ public class PoolManagerTest {
         manager.cleanupExpiredPools();
 
         // And the pool should be deleted:
-        verify(mockPoolCurator).batchDelete(eq(pools), anySetOf(String.class));
+        Set<Pool> expectedPools = new HashSet<Pool>(pools);
+        verify(mockPoolCurator).batchDelete(eq(expectedPools), anySetOf(String.class));
         verify(mockSubAdapter, never()).getSubscription(any(String.class));
         verify(mockSubAdapter, never()).deleteSubscription(any(Subscription.class));
     }

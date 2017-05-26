@@ -188,7 +188,7 @@ public class CandlepinPoolManager implements PoolManager {
     @Transactional
     @SuppressWarnings("checkstyle:methodlength")
     void refreshPoolsWithRegeneration(SubscriptionServiceAdapter subAdapter, Owner owner, boolean lazy) {
-        long start = System.currentTimeMillis();
+        Date now = new Date();
         owner = this.refreshOwner(owner);
         log.info("Refreshing pools for owner: {}", owner);
 
@@ -280,7 +280,6 @@ public class CandlepinPoolManager implements PoolManager {
 
                             // We need to lock the incoming content here, but doing so will affect
                             // the equality comparison for products. We'll correct them later.
-
                             ContentData existingContent = contentMap.get(content.getId());
                             if (existingContent != null && !existingContent.equals(content)) {
                                 log.warn("Multiple versions of the same content received during refresh; " +
@@ -323,7 +322,7 @@ public class CandlepinPoolManager implements PoolManager {
             Map.Entry<String, Subscription> entry = subsIterator.next();
             Subscription sub = entry.getValue();
 
-            if (this.isExpired(sub)) {
+            if (now.after(sub.getEndDate())) {
                 log.info("Skipping expired subscription: {}", sub);
 
                 subsIterator.remove();
@@ -331,7 +330,6 @@ public class CandlepinPoolManager implements PoolManager {
             }
 
             log.debug("Processing subscription: {}", sub);
-
             Pool pool = this.convertToMasterPoolImpl(sub, owner, importedProducts);
             this.refreshPoolsForMasterPool(pool, false, lazy, updatedProducts);
         }
@@ -339,8 +337,24 @@ public class CandlepinPoolManager implements PoolManager {
         // delete pools whose subscription disappeared:
         log.debug("Deleting pools for absent subscriptions...");
         List<Pool> poolsToDelete = new ArrayList<Pool>();
+
+        // BZ 1452694: Don't delete pools for custom subscriptions
+        // We need to verify that we aren't deleting pools that are created via the API.
+        // Unfortunately, we don't have a 100% reliable way of detecting such pools at this point,
+        // so we'll do the next best thing: In standalone, pools with an upstream pool ID are those
+        // we've received from an import (and, thus, are eligible for deletion). In hosted,
+        // however, we *are* the upstream source, so everything is eligible for removal.
+        // This is pretty hacky, so the way we go about doing this check should eventually be
+        // replaced with something more generic and reliable, and not dependent on the config.
+
+        // TODO:
+        // Remove the standalone config check and replace it with a check for whether or not the
+        // pool is "managed"  -- however we decide to implement that in the future.
+        boolean standalone = config.getBoolean(ConfigProperties.STANDALONE, true);
         for (Pool pool : poolCurator.getPoolsFromBadSubs(owner, subscriptionMap.keySet())) {
-            if (pool.getSourceSubscription() != null && !pool.getType().isDerivedType()) {
+            if ((!standalone || pool.getUpstreamPoolId() != null) && pool.getSourceSubscription() != null &&
+                !pool.getType().isDerivedType()) {
+
                 poolsToDelete.add(pool);
             }
         }
@@ -353,7 +367,7 @@ public class CandlepinPoolManager implements PoolManager {
         updateFloatingPools(floatingPools, lazy, updatedProducts);
 
         log.info("Refresh pools for owner: {} completed in: {}ms", owner.getKey(),
-            System.currentTimeMillis() - start);
+            System.currentTimeMillis() - now.getTime());
     }
 
     private Owner refreshOwner(Owner owner) {
@@ -484,11 +498,6 @@ public class CandlepinPoolManager implements PoolManager {
         this.poolCurator.flush();
 
         return pools.size();
-    }
-
-    private boolean isExpired(Subscription subscription) {
-        Date now = new Date();
-        return now.after(subscription.getEndDate());
     }
 
     @Transactional
@@ -841,7 +850,6 @@ public class CandlepinPoolManager implements PoolManager {
         pool.setOrderNumber(sub.getOrderNumber());
 
         // Copy over subscription details
-        pool.setSubscriptionId(sub.getId());
         pool.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
 
         // Copy over upstream details
@@ -1636,6 +1644,7 @@ public class CandlepinPoolManager implements PoolManager {
                 derivedPools.add(pool);
             }
         }
+
         deleteExcessEntitlements(derivedPools);
     }
 
@@ -1945,13 +1954,13 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     @Override
-    public void deletePools(List<Pool> pools) {
+    public void deletePools(Collection<Pool> pools) {
         deletePools(pools, null);
     }
 
     @Override
     @Transactional
-    public void deletePools(List<Pool> pools, Set<String> alreadyDeletedPools) {
+    public void deletePools(Collection<Pool> pools, Set<String> alreadyDeletedPools) {
         if (pools == null || pools.isEmpty()) {
             return;
         }
@@ -1965,22 +1974,40 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         List<Entitlement> entitlementsToRevoke = new LinkedList<Entitlement>();
-
-        for (Pool p : pools) {
-            if (log.isDebugEnabled()) {
-                log.debug("Deletion of pool {} will revoke the following entitlements: {}",
-                    p.getId(), getEntIds(p.getEntitlements()));
-            }
-            entitlementsToRevoke.addAll(p.getEntitlements());
-        }
-
-        if (!pools.isEmpty()) {
-            revokeEntitlements(entitlementsToRevoke, alreadyDeletedPools);
-            log.debug("Batch deleting pools after successful revocation");
-            poolCurator.batchDelete(pools, alreadyDeletedPools);
-        }
+        Set<String> subscriptionIds = new HashSet<String>();
+        Set<Pool> poolsToDelete = new HashSet<Pool>();
 
         for (Pool pool : pools) {
+            if (log.isDebugEnabled()) {
+                log.debug("Deletion of pool {} will revoke the following entitlements: {}",
+                    pool.getId(), getEntIds(pool.getEntitlements()));
+            }
+
+            // If this is a master pool, we should also be deleting any derived/bonus pools
+            // as well...
+            SourceSubscription srcSub = pool.getSourceSubscription();
+            if (srcSub != null && srcSub.getSubscriptionId() != null &&
+                "master".equals(srcSub.getSubscriptionSubKey())) {
+
+                subscriptionIds.add(srcSub.getSubscriptionId());
+            }
+
+            poolsToDelete.add(pool);
+            entitlementsToRevoke.addAll(pool.getEntitlements());
+        }
+
+        // Look up the related pools for these subscription IDs.
+        if (!subscriptionIds.isEmpty()) {
+            poolsToDelete.addAll(this.poolCurator.getPoolsBySubscriptionIds(subscriptionIds));
+        }
+
+        if (!poolsToDelete.isEmpty()) {
+            revokeEntitlements(entitlementsToRevoke, alreadyDeletedPools);
+            log.debug("Batch deleting pools after successful revocation");
+            poolCurator.batchDelete(poolsToDelete, alreadyDeletedPools);
+        }
+
+        for (Pool pool : poolsToDelete) {
             Event event = eventFactory.poolDeleted(pool);
             sink.queueEvent(event);
         }
@@ -2184,6 +2211,7 @@ public class CandlepinPoolManager implements PoolManager {
                 regenerateCertificatesOf(entry.getValue(), true);
             }
         }
+
         @Override
         public void handleBonusPools(Owner owner, Map<String, PoolQuantity> pools,
             Map<String, Entitlement> entitlements) {
@@ -2258,83 +2286,7 @@ public class CandlepinPoolManager implements PoolManager {
             throw new IllegalArgumentException("pool is null");
         }
 
-        Long poolQuantity = pool.getQuantity();
-        Long multiplier = 1L;
-
-        if (pool.getProduct() != null) {
-            multiplier = pool.getProduct().getMultiplier();
-        }
-        else {
-            log.error("Master product for the pool {} is null", pool.getId());
-        }
-
-
-        /**
-         * The following code reconstructs Subscription quantity from the Pool quantity.
-         * To understand it, it is important to understand how pool (the parameter)
-         * is created in candlepin from a source subscription.
-         * The pool has quantity was computed from
-         * source subscription quantity and was multiplied by product.multiplier.
-         * To reconstruct subscription, we must therefore divide the quantity of the pool
-         * by the product.multiplier.
-         * It's not easy to find COMPLETE code related to the conversion of
-         * subscription to the pool. There is a method convertToMasterPool in this class,
-         * that should do part of that (multiplication is not there).
-         * But looking at its javadoc, it directly instructs callers of the
-         * convertToMasterPool method to override quantity with method
-         * PoolRules.calculateQuantity (when browsing the code that calls convertToMasterPool,
-         * the calculateQuantity is usually called after convertToMasterPool).
-         * The method PoolRules.calculateQuantity does the actual
-         * multiplication of pool.quantity by pool.product.multiplier.
-         * It seems that we also need to account account for
-         * instance_multiplier (again logic is in calculateQuantity). If the attribute
-         * is present, we must further divide the poolQuantity by
-         * product.getAttributeValue(Product.Attributes.INSTANCE_MULTIPLIER).
-         */
-        Product sku = pool.getProduct();
-
-        if (poolQuantity != null && multiplier != null && multiplier != 0 && sku != null) {
-            if (poolQuantity % multiplier != 0) {
-                log.error("Pool {} from which we fabricate subscription has quantity {} that " +
-                    "is not divisable by its product's multiplier {}! Division wont be made.",
-                    pool.getId(), poolQuantity, multiplier);
-            }
-            else {
-                poolQuantity /= multiplier;
-            }
-
-            //This is reverse of what part of PooRules.calculateQuantity does. See that method
-            //to understand why we check that upstreamPoolId must be null.
-            if (sku.hasAttribute(Product.Attributes.INSTANCE_MULTIPLIER) &&
-                pool.getUpstreamPoolId() == null) {
-
-                Integer instMult = null;
-                String stringInstmult = sku.getAttributeValue(Product.Attributes.INSTANCE_MULTIPLIER);
-                try {
-                    instMult = Integer.parseInt(stringInstmult);
-                }
-                catch (NumberFormatException nfe) {
-                    log.error("Instance multilier couldn't be parsed: {} ", stringInstmult);
-                }
-                if (instMult != null && instMult != 0 && poolQuantity % instMult == 0) {
-                    poolQuantity /=  instMult;
-                }
-                else {
-                    log.error("Cannot divide pool quantity by instance multiplier. Won't touch the " +
-                        "current value {} instance multiplier: {}, pool quantity: {}",
-                        poolQuantity, instMult, poolQuantity);
-                }
-            }
-        }
-        else {
-            log.warn("Either quantity or multiplier or product is null: {}, {}, productInstance={}",
-                poolQuantity, multiplier, sku);
-        }
-
-        Subscription subscription = new Subscription(pool, productCurator);
-        subscription.setQuantity(poolQuantity);
-
-        return subscription;
+        return new Subscription(pool, productCurator);
     }
 
     @Override
@@ -2347,9 +2299,30 @@ public class CandlepinPoolManager implements PoolManager {
         return this.poolCurator.getMasterPoolBySubscriptionId(subscriptionId);
     }
 
+    /**
+     * @{inheritDoc}
+     */
     @Override
-    public List<Pool> listMasterPools() {
-        return this.poolCurator.listMasterPools();
+    public CandlepinQuery<Pool> getMasterPools() {
+        return this.poolCurator.getMasterPools();
+    }
+
+    /**
+     * @{inheritDoc}
+     */
+    @Override
+    public CandlepinQuery<Pool> getMasterPoolsForOwner(Owner owner) {
+        return this.poolCurator.getMasterPoolsForOwner(owner);
+    }
+
+    /**
+     * @{inheritDoc}
+     */
+    @Override
+    public CandlepinQuery<Pool> getMasterPoolsForOwnerExcludingSubs(Owner owner,
+        Collection<String> excludedSubs) {
+
+        return this.poolCurator.getMasterPoolsForOwnerExcludingSubs(owner, excludedSubs);
     }
 
     @Override

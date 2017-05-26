@@ -65,8 +65,7 @@ describe 'Import cleanup', :serial => true do
     @cp.import(@import_owner['key'], updated_export.export_filename)
 
     # All the pools for that owner should be removed
-    normal = @import_owner_client.list_pools({
-           :owner => @import_owner['id']} )
+    normal = @import_owner_client.list_pools({:owner => @import_owner['id']} )
     normal.length.should == 0
   end
 

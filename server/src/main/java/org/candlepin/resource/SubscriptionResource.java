@@ -137,7 +137,7 @@ public class SubscriptionResource {
     public List<Subscription> getSubscriptions() {
         List<Subscription> subscriptions = new LinkedList<Subscription>();
 
-        for (Pool pool : this.poolManager.listMasterPools()) {
+        for (Pool pool : this.poolManager.getMasterPools()) {
             subscriptions.add(this.poolManager.fabricateSubscriptionFromPool(pool));
         }
 

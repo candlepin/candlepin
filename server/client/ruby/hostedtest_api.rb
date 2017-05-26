@@ -14,9 +14,7 @@ module HostedTest
     return @@hostedtest_alive
   end
 
-  def create_hostedtest_subscription(owner_key, product_id, quantity=1,
-                          params={})
-
+  def create_hostedtest_subscription(owner_key, product_id, quantity=1, params={})
     provided_products = params[:provided_products] || []
     start_date = params[:start_date] || Date.today
     end_date = params[:end_date] || start_date + 365
@@ -106,17 +104,17 @@ module HostedTest
 
   def add_batch_content_to_product(owner_key, product_id, content_ids, enabled=true)
     if is_hosted?
-      data = {} 
-      content_ids.each do |id| 
+      data = {}
+      content_ids.each do |id|
         data[id] = enabled
-      end      
+      end
       @cp.post("/hostedtest/subscriptions/owners/#{owner_key}/products/#{product_id}/batch_content", data)
     else
       @cp.add_batch_content_to_product(owner_key, product_id, content_ids, true)
     end
   end
 
-  def add_content_to_product(owner_key, product_id, content_id, enabled=true) 
+  def add_content_to_product(owner_key, product_id, content_id, enabled=true)
     if is_hosted?
       @cp.post("/hostedtest/subscriptions/owners/#{owner_key}/products/#{product_id}/content/#{content_id}?enabled=#{enabled}")
     else
@@ -128,7 +126,7 @@ module HostedTest
     if is_hosted?
       product = {
         :id => product_id
-      } 
+      }
       product[:name] = params[:name] if params[:name]
       product[:multiplier] = params[:multiplier] if params[:multiplier]
       product[:attributes] = params[:attributes] if params[:attributes]
@@ -224,7 +222,7 @@ module HostedTest
   end
 
   # Lets users be agnostic of what mode we are in, standalone or hosted.
-  # This method is used when we need to update the dependent entities of a 
+  # This method is used when we need to update the dependent entities of a
   # upstream subscription or pool. simply fetching and updating the subscription forces
   # a re-resolve of products, owners, etc.
   #
