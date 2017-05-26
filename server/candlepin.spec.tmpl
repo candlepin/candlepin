@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.0.34
+Version: 2.0.35
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,10 @@ fi
 
 #raw
 %changelog
+* Fri May 26 2017 Kevin Howell <khowell@redhat.com> 2.0.35-1
+- 1452330: Refresh no longer removes locally-managed pools (crog@redhat.com)
+- Fixed a few issues involving source subscriptions (crog@redhat.com)
+
 * Thu May 25 2017 Kevin Howell <khowell@redhat.com> 2.0.34-1
 - 1451031: Allow tomcat to read /etc/candlepin (khowell@redhat.com)
 - 1450385: entitlement of quantity 0 gives unlimited entitlements
