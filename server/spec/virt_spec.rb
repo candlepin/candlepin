@@ -43,7 +43,101 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     @guest_pool = pools.find_all { |i| !i['sourceEntitlement'].nil? }[0]
 
   end
-  
+
+  it 'should attach host provided pools before other available pools' do
+    @both_products = create_product(nil, nil, {
+        :attributes => {
+            :type => 'MKT'
+        }})
+    datacenter_product_1 = create_product(nil, nil, {
+        :attributes => {
+            :virt_limit => "unlimited",
+            :stacking_id => "stackme1",
+            :sockets => "2",
+            'multi-entitlement' => "yes"
+        }
+    })
+    derived_product_1 = create_product(nil, nil, {
+        :attributes => {
+            :cores => 2,
+            :stacking_id => "stackme1-derived",
+            :sockets=>4
+        }
+    })
+    datacenter_product_2 = create_product(nil, nil, {
+        :attributes => {
+            :virt_limit => "unlimited",
+            :stacking_id => "stackme2",
+            :sockets => "2",
+            'multi-entitlement' => "yes"
+        }
+    })
+    derived_product_2 = create_product(nil, nil, {
+        :attributes => {
+            :cores => 2,
+            :stacking_id => "stackme2-derived",
+            :sockets=>4
+        }
+    })
+    # We'd like there to be three subs, two that require a specific host and one that provides both required products
+    # in one. These first two are similar to VDC subscriptions, hence the name datacenter.
+    @cp.create_subscription(@owner['key'], datacenter_product_1.id, 10, [], '', '', '', nil, nil,
+                            {
+                                'derived_product_id' => derived_product_1['id']
+                            })
+    @cp.create_subscription(@owner['key'], datacenter_product_2.id, 10, [], '', '', '', nil, nil,
+                            {
+                                'derived_product_id' => derived_product_2['id']
+                            })
+    @cp.create_subscription(@owner['key'], @both_products.id, 1, provided_products=[derived_product_1.id, derived_product_2.id])
+
+    @cp.refresh_pools(@owner['key'])
+
+    @installed_product_list = [
+        {'productId' => derived_product_1.id, 'productName' => derived_product_1.name},
+        {'productId' => derived_product_2.id, 'productName' => derived_product_2.name}]
+    @guest2_client.update_consumer({:installedProducts => @installed_product_list})
+    @host1_client.consume_product(product=datacenter_product_1.id)
+    @host1_client.consume_product(product=datacenter_product_2.id)
+
+    @host2_client.consume_product(product=datacenter_product_1.id)
+    @host2_client.consume_product(product=datacenter_product_2.id)
+
+    @host1_client.update_consumer({:guestIds => [{'guestId' => @uuid2}]})
+
+    @guest2_client.list_entitlements.length.should == 0
+
+    @guest2_client.consume_product()
+    @guest2_client.list_entitlements.length.should == 2
+
+    @guest2_client.list_entitlements.each { |ent|
+      [derived_product_1.id, derived_product_2.id].should include(ent['pool']['productId'])
+      found_requires_host = false
+      ent['pool']['attributes'].each { |attribute|
+        if attribute['name'] == 'requires_host'
+          attribute['value'].should == @host1['uuid']
+          found_requires_host = true
+        end
+        attribute['value'].should == @host1['uuid'] if attribute['name'] == 'requires_host'
+      }
+      # A failure on the line below means one of the entitlements the guest has does not have the requires_host attr
+      found_requires_host.should == true
+    }
+    # A similar set of pools should be chosen during guest migration
+    # So remove the guest from the first host and add the guest to the second host
+    @host1_client.update_consumer({:guestIds => []})
+    @host2_client.update_consumer({:guestIds => [{'guestId' => @uuid2}]})
+
+    @guest2_client.list_entitlements.length.should == 2
+
+    @guest2_client.list_entitlements.each { |ent|
+      [derived_product_1.id, derived_product_2.id].should include(ent['pool']['productId'])
+      ent['pool']['attributes'].each { |attribute|
+        attribute['value'].should == @host2['uuid'] if attribute['name'] == 'requires_host'
+      }
+    }
+  end
+
   it 'should remove excess entitlements' do
    prod = create_product(nil, nil,{:attributes => {"multi-entitlement" => "yes", "virt_limit" => 1}})
    sub = @cp.create_subscription(@owner['key'], prod.id, 2)
@@ -56,12 +150,12 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
    pools = @cp.list_pools({:owner => @owner['id'], :product => prod['id']})
    #New entitlement pool has been created
    pools.size.should == 3
- 
+
    #Change subscription quantity and the name of the product
    sub.quantity = 1
    @cp.update_subscription(sub)
    @cp.update_product(sub['product'].id, :name=>'newrandomname')
-   
+
    #Refresh pools and make sure it succeeds
    status = @cp.refresh_pools(@owner['key'], true)
    # The job is being retried several times anyway. We need to sleep it out
@@ -71,8 +165,8 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
 
    #The entitlement derived pool has been removed by refresh pools
    pools = @cp.list_pools({:owner => @owner['id'], :product => prod['id']})
-   pools.size.should == 2   
-  end 
+   pools.size.should == 2
+  end
 
   it 'should create a virt_only pool for hosts guests' do
     # Get the attribute that indicates which host:
@@ -144,8 +238,8 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     host3 = @user.register(random_string('host'), :system, nil,
       {}, nil, nil, [], [])
     host3_client = Candlepin.new(nil, nil, host3['idCert']['cert'], host3['idCert']['key'])
-     # Adding a product to consumer that cannot be covered 
-    @guest1_client.update_consumer({:installedProducts => 
+     # Adding a product to consumer that cannot be covered
+    @guest1_client.update_consumer({:installedProducts =>
        [{'productId' => 'someNonExistentProduct', 'productName' => 'nonExistentProduct'}]
     })
 
@@ -154,7 +248,7 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     @guest1_client.list_entitlements.length.should == 1
 
     #Guest changes the hypervisor. This will trigger revocation of
-    #the entitlement to guest_pool (because it requires_host) and 
+    #the entitlement to guest_pool (because it requires_host) and
     #it will also trigger unsuccessfull autobind (because the
     #someNonExistentProduct cannot be covered)
     host3_client.update_consumer({:guestIds => [{'guestId' => @uuid1}]})
