@@ -16,15 +16,12 @@ package org.candlepin.policy.js;
 
 import java.util.Date;
 
-import org.candlepin.guice.CandlepinRequestScoped;
-
 /**
  * A request scoped cache that is used to mitigate repeated
  * DB requests for cp_rules.updated column.
  * @author fnguyen
  *
  */
-@CandlepinRequestScoped
 public class JsRunnerRequestCache {
 
     private Date updated = null;

@@ -15,16 +15,23 @@
 package org.candlepin.policy.js;
 
 import com.google.inject.Provider;
+import org.candlepin.guice.CandlepinRequestScoped;
 
 /**
  * Cache provider to do Google Guice Scope Mixing
  * @author fnguyen
  *
  */
+@CandlepinRequestScoped
 public class JsRunnerRequestCacheProvider implements Provider<JsRunnerRequestCache> {
+
+    private JsRunnerRequestCache requestCache;
 
     @Override
     public JsRunnerRequestCache get() {
-        return new JsRunnerRequestCache();
+        if (requestCache == null) {
+            requestCache = new JsRunnerRequestCache();
+        }
+        return requestCache;
     }
 }
