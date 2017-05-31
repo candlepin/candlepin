@@ -493,7 +493,13 @@ public class Owner extends AbstractHibernateObject implements Serializable,
      * @return String the value
      */
     public String getContentAccessModeList() {
-        return this.contentAccessModeList;
+        String[] modeList = contentAccessModeList == null ? new String[0] : contentAccessModeList.split(",");
+        String ammend = "";
+        if (!ArrayUtils.contains(modeList, ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE)) {
+            ammend = modeList.length > 0 ? "," : "";
+            ammend += ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE;
+        }
+        return modeList.length > 0 ? this.contentAccessModeList + ammend : ammend;
     }
 
     public void setContentAccessModeList(String contentAccessModeList) {

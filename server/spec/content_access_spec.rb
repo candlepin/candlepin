@@ -12,7 +12,7 @@ describe 'Content Access' do
 
   before(:each) do
       @owner = create_owner(random_string("test_owner"), nil, {
-        'contentAccessModeList' => 'org_environment,test_access_mode,entitlement',
+        'contentAccessModeList' => 'org_environment,test_access_mode',
         'contentAccessMode' => "org_environment"
       })
 
@@ -35,6 +35,7 @@ describe 'Content Access' do
       skip("candlepin running in standalone mode") unless is_hosted?
       @cp.update_owner(@owner['key'], {'contentAccessMode' => "test_access_mode"})
       @owner = @cp.get_owner(@owner['key'])
+      @owner['contentAccessModeList'].should == "org_environment,test_access_mode,entitlement"
       @owner['contentAccessMode'].should == "test_access_mode"
   end
 
@@ -260,7 +261,7 @@ describe 'Content Access' do
 
       owner = @cp.get_owner(@import_owner['key'])
       owner['contentAccessMode'].should == 'test_access_mode'
-      owner['contentAccessModeList'].should == 'test_access_mode'
+      owner['contentAccessModeList'].should == 'test_access_mode,entitlement'
 
       uc = owner.upstreamConsumer['contentAccessMode'].should == 'test_access_mode'
 
