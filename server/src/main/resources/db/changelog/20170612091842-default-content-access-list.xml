@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <changeSet id="20170612091842-1" author="wpoteat">
+        <sql>
+            update cp_owner set content_access_mode_list = 'entitlement' where content_access_mode_list is null;
+            update cp_owner set content_access_mode_list = concat(content_access_mode_list,',entitlement') where content_access_mode_list not like '%entitlement%';
+            update cp_owner set content_access_mode = 'entitlement' where content_access_mode is null;
+        </sql>
+        <addNotNullConstraint tableName="cp_owner"
+                              columnName="content_access_mode_list"
+                              columnDataType="varchar(255)"
+        />
+        <addNotNullConstraint tableName="cp_owner"
+                              columnName="content_access_mode"
+                              columnDataType="varchar(255)"
+        />
+    </changeSet>
+
+</databaseChangeLog>
+<!-- vim: set expandtab sts=4 sw=4 ai: -->

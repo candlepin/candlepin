@@ -388,7 +388,8 @@
         {
             "name": "snowwhite",
             "displayName": "Snow White",
-            "contentAccessModeList": "org_environment",
+            "contentAccessModeList": "entitlement,org_environment",
+            "contentAccessMode": "entitlement",
             "content": [
                 {
                     "name": "snowy-content",

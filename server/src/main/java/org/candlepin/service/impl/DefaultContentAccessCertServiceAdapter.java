@@ -105,7 +105,7 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         Owner owner = consumer.getOwner();
         // we only know about one mode right now. If add any, we will need to add the
         // appropriate cert generation
-        if (!ORG_ENV_ACCESS_MODE.equals(owner.contentAccessMode()) || !consumer.isCertV3Capable()) {
+        if (!ORG_ENV_ACCESS_MODE.equals(owner.getContentAccessMode()) || !consumer.isCertV3Capable()) {
             return null;
         }
 

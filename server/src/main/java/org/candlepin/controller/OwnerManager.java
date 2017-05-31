@@ -57,24 +57,57 @@ public class OwnerManager {
 
     private static Logger log = LoggerFactory.getLogger(OwnerManager.class);
 
-    @Inject private ConsumerCurator consumerCurator;
-    @Inject private PoolManager poolManager;
-    @Inject private ActivationKeyCurator activationKeyCurator;
-    @Inject private EnvironmentCurator envCurator;
-    @Inject private ExporterMetadataCurator exportCurator;
-    @Inject private ImportRecordCurator importRecordCurator;
-    @Inject private PermissionBlueprintCurator permissionCurator;
-    @Inject private OwnerProductCurator ownerProductCurator;
-    @Inject private ProductManager productManager;
-    @Inject private OwnerContentCurator ownerContentCurator;
-    @Inject private ContentManager contentManager;
-    @Inject private OwnerCurator ownerCurator;
-    @Inject private ContentAccessCertServiceAdapter contentAccessCertService;
-    @Inject private ContentAccessCertificateCurator contentAccessCertCurator;
-    @Inject private OwnerEnvContentAccessCurator ownerEnvContentAccessCurator;
-    @Inject private UeberCertificateCurator uberCertificateCurator;
-    @Inject private OwnerServiceAdapter ownerServiceAdapter;
+    /* PoolManager is injected separately so that we do not create a circular reference with the
+       PoolManager implementation which has an injection of this class. This method causes
+       the injection to occur after the constructor.
+     */
+    @Inject PoolManager poolManager;
+    private ConsumerCurator consumerCurator;
+    private ActivationKeyCurator activationKeyCurator;
+    private EnvironmentCurator envCurator;
+    private ExporterMetadataCurator exportCurator;
+    private ImportRecordCurator importRecordCurator;
+    private PermissionBlueprintCurator permissionCurator;
+    private OwnerProductCurator ownerProductCurator;
+    private ProductManager productManager;
+    private OwnerContentCurator ownerContentCurator;
+    private ContentManager contentManager;
+    private OwnerCurator ownerCurator;
+    private ContentAccessCertServiceAdapter contentAccessCertService;
+    private ContentAccessCertificateCurator contentAccessCertCurator;
+    private OwnerEnvContentAccessCurator ownerEnvContentAccessCurator;
+    private UeberCertificateCurator uberCertificateCurator;
+    private OwnerServiceAdapter ownerServiceAdapter;
 
+    @Inject
+    public OwnerManager(ConsumerCurator consumerCurator,
+        ActivationKeyCurator activationKeyCurator, EnvironmentCurator envCurator,
+        ExporterMetadataCurator exportCurator, ImportRecordCurator importRecordCurator,
+        PermissionBlueprintCurator permissionCurator, OwnerProductCurator ownerProductCurator,
+        ProductManager productManager, OwnerContentCurator ownerContentCurator,
+        ContentManager contentManager, OwnerCurator ownerCurator,
+        ContentAccessCertServiceAdapter contentAccessCertService,
+        ContentAccessCertificateCurator contentAccessCertCurator,
+        OwnerEnvContentAccessCurator ownerEnvContentAccessCurator,
+        UeberCertificateCurator uberCertificateCurator, OwnerServiceAdapter ownerServiceAdapter) {
+
+        this.consumerCurator = consumerCurator;
+        this.activationKeyCurator = activationKeyCurator;
+        this.envCurator = envCurator;
+        this.exportCurator = exportCurator;
+        this.importRecordCurator = importRecordCurator;
+        this.permissionCurator = permissionCurator;
+        this.ownerProductCurator = ownerProductCurator;
+        this.productManager = productManager;
+        this.ownerContentCurator = ownerContentCurator;
+        this.contentManager = contentManager;
+        this.ownerCurator = ownerCurator;
+        this.contentAccessCertService = contentAccessCertService;
+        this.contentAccessCertCurator = contentAccessCertCurator;
+        this.ownerEnvContentAccessCurator = ownerEnvContentAccessCurator;
+        this.uberCertificateCurator = uberCertificateCurator;
+        this.ownerServiceAdapter = ownerServiceAdapter;
+    }
     @Transactional
     public void cleanupAndDelete(Owner owner, boolean revokeCerts) {
         log.info("Cleaning up owner: {}", owner);
@@ -198,19 +231,18 @@ public class OwnerManager {
 
         // This shouldn't happen, but in the event our upstream source is having issues, let's
         // not put ourselves in a bad state as well.
-        if (upstreamList != null && !upstreamList.isEmpty()) {
+        if (!StringUtils.isBlank(upstreamList)) {
             // Not empty list. Verify that the upstream mode is present.
             String[] list = upstreamList.split(",");
-
-            if (!StringUtils.isEmpty(upstreamMode) && !ArrayUtils.contains(list, upstreamMode)) {
-                throw new IllegalStateException("Upstream access mode is not present in access mode list");
+            if (upstreamMode == null || !ArrayUtils.contains(list, upstreamMode)) {
+                throw new IllegalStateException("Upstream access mode is not present in access mode list. " +
+                    "The mode must be set to one in the list.");
             }
         }
         else {
-            // Empty list. Verify the upstream mode is also empty.
-            if (!StringUtils.isEmpty(upstreamMode)) {
-                throw new IllegalStateException("Upstream access mode is not present in access mode list");
-            }
+            // Empty list. Will be forced to default along with mode.
+            upstreamList = ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE;
+            upstreamMode = ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE;
         }
 
         // Set new values
@@ -238,7 +270,7 @@ public class OwnerManager {
         // we need to update the owner's consumers if the content access mode has changed
         owner = ownerCurator.lockAndLoad(owner);
 
-        if (owner.contentAccessMode().equals(ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE)) {
+        if (!ContentAccessCertServiceAdapter.ORG_ENV_ACCESS_MODE.equals(owner.getContentAccessMode())) {
             contentAccessCertCurator.deleteForOwner(owner);
         }
 

@@ -78,6 +78,7 @@ import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
+import org.candlepin.service.impl.DefaultContentAccessCertServiceAdapter;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.FactValidator;
 import org.candlepin.util.ServiceLevelValidator;
@@ -141,6 +142,7 @@ public class ConsumerResourceTest {
     @Mock private OwnerManager mockOwnerManager;
     @Mock private ConsumerEnricher consumerEnricher;
     @Mock private ConsumerTypeCurator mockConsumerTypeCurator;
+    @Mock private DefaultContentAccessCertServiceAdapter mockContentAccessCertService;
 
     @Before
     public void setUp() {
@@ -231,7 +233,7 @@ public class ConsumerResourceTest {
             mockedConsumerCurator, null, null, null, null, mockedEntitlementCurator, null,
             mockedEntitlementCertServiceAdapter, null, null, null, null, null, null, mockedPoolManager, null,
             null, null, null, null, null, null, null, this.config, null, null, null, consumerBindUtil,
-            null, null, this.factValidator, null, consumerEnricher);
+            null, mockContentAccessCertService, this.factValidator, null, consumerEnricher);
 
         List<CertificateSerialDto> serials = consumerResource
             .getEntitlementCertificateSerials(consumer.getUuid());
@@ -922,7 +924,7 @@ public class ConsumerResourceTest {
             mockedConsumerCurator, null, null, null, null, mockedEntitlementCurator, null,
             mockedEntitlementCertServiceAdapter, null, null, null, null, null, null, mockedPoolManager, null,
             null, null, null, null, null, null, null, this.config, null, null, null, consumerBindUtil,
-            null, null, this.factValidator, null, consumerEnricher));
+            null, mockContentAccessCertService, this.factValidator, null, consumerEnricher));
 
         List<CertificateSerialDto> serials = consumerResource
             .getEntitlementCertificateSerials(consumer.getUuid());
@@ -942,7 +944,7 @@ public class ConsumerResourceTest {
             mockedConsumerCurator, null, null, null, null, mockedEntitlementCurator, null,
             mockedEntitlementCertServiceAdapter, null, null, null, null, null, null, mockedPoolManager, null,
             null, null, null, null, null, null, null, this.config, null, null, null, consumerBindUtil,
-            null, null, this.factValidator, null, consumerEnricher));
+            null, mockContentAccessCertService, this.factValidator, null, consumerEnricher));
 
         Set<Long> serials = new HashSet<Long>();
         List<Certificate> certs = consumerResource

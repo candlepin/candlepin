@@ -1214,4 +1214,5 @@
     <include file="db/changelog/20170421055601-add-recipient-owner-to-consumer.xml"/>
     <include file="db/changelog/20170518143217-remove-obsoleted-dirty-column.xml"/>
     <include file="db/changelog/20170510130908-remove-pool-version.xml"/>
+    <include file="db/changelog/20170612091842-default-content-access-list.xml"/>
 </databaseChangeLog>

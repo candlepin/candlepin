@@ -40,6 +40,7 @@ import org.candlepin.model.ProductCurator;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.pki.PKIUtility;
+import org.candlepin.service.ContentAccessCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
@@ -568,7 +569,9 @@ public class Importer {
         }
 
         // Setup our import subscription adapter with the subscriptions imported:
-        final String contentAccessMode = consumer.getContentAccessMode();
+        final String contentAccessMode = StringUtils.isEmpty(consumer.getContentAccessMode()) ?
+            ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE :
+            consumer.getContentAccessMode();
         SubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(importSubs);
         OwnerServiceAdapter ownerAdapter = new OwnerServiceAdapter() {
             @Override
