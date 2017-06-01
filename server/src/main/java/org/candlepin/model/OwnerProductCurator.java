@@ -180,19 +180,21 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
         }
 
         // Impl note: See getOwnersByProduct for details on why we're doing this in two queries.
-        String jpql = "SELECT op.product.uuid FROM OwnerProduct op WHERE op.owner.id = :owner_id";
+        Session session = this.currentSession();
 
-        List<String> uuids = this.getEntityManager()
-            .createQuery(jpql, String.class)
-            .setParameter("owner_id", ownerId)
-            .getResultList();
+        List<String> uuids = session.createCriteria(OwnerProduct.class)
+            .createAlias("owner", "owner")
+            .createAlias("product", "product")
+            .add(Restrictions.eq("owner.id", ownerId))
+            .add(CPRestrictions.in("product.id", productIds))
+            .setProjection(Projections.property("product.uuid"))
+            .list();
 
         if (uuids != null && !uuids.isEmpty()) {
             DetachedCriteria criteria = this.createSecureDetachedCriteria(Product.class, null)
-                .add(CPRestrictions.in("uuid", uuids))
-                .add(CPRestrictions.in("id", productIds));
+                .add(CPRestrictions.in("uuid", uuids));
 
-            return this.cpQueryFactory.<Product>buildQuery(this.currentSession(), criteria);
+            return this.cpQueryFactory.<Product>buildQuery(session, criteria);
         }
 
         return this.cpQueryFactory.<Product>buildQuery();

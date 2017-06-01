@@ -296,6 +296,7 @@ public class ProductManager {
         List<OwnerProduct> ownerProductBuffer = new LinkedList<OwnerProduct>();
 
         // - Divide imported products into sets of updates and creates
+        log.debug("Fetching existing products for update...");
         for (Product product : this.ownerProductCurator.getProductsByIds(owner, productData.keySet())) {
             ProductData update = productData.get(product.getId());
 
@@ -312,6 +313,7 @@ public class ProductManager {
             productVersions.put(product.getId(), product.getEntityVersion());
         }
 
+        log.debug("Validating new products...");
         for (ProductData update : productData.values()) {
             if (!skippedProducts.containsKey(update.getId()) &&
                 !updatedProducts.containsKey(update.getId())) {
@@ -329,6 +331,7 @@ public class ProductManager {
             }
         }
 
+        log.debug("Checking for existing product versions...");
         for (Product alt : this.ownerProductCurator.getProductsByVersions(owner, productVersions)) {
             List<Product> alternates = existingVersions.get(alt.getId());
             if (alternates == null) {
@@ -402,6 +405,7 @@ public class ProductManager {
         // We probably don't want to evict the products yet, as they'll appear as unmanaged if
         // they're used later. However, the join objects can be evicted safely since they're only
         // really used here.
+        log.debug("Persisting product changes...");
         this.productCurator.saveAll(stagedEntities.values(), true, false);
         this.ownerProductCurator.saveAll(ownerProductBuffer, true, true);
 
