@@ -679,4 +679,74 @@ describe "Multi Org Shares" do
     expect(@cp.get_pool(pool['id']).quantity).to eq(1)
     expect(@user_client.list_pool_entitlements(pool['id']).size).to eq(1)
   end
+
+  it 'uses a host-restricted pool from the sharing org' do
+    skip("candlepin running in hosted mode") if is_hosted?
+    owner_key = random_string('orgA')
+    create_owner( owner_key)
+
+    virt_product = create_product(nil, nil, {
+      :owner => owner_key,
+      :attributes => {:virt_limit => 3}
+    })
+    pool = create_pool_and_subscription(owner_key, virt_product['id'], 10)
+
+    # create host consumer and consume the virt product
+    host = random_string('host')
+    orgAHost = @cp.register(
+      host,
+      :system,
+      nil,
+      {},
+      nil,
+      owner_key,
+      [],
+      [])
+
+    @cp.consume_pool(pool['id'], :quantity => 1, :uuid => orgAHost['uuid'])
+    guest_pool = @cp.list_owner_pools(owner_key).select do |p|
+      p['type'] == "ENTITLEMENT_DERIVED"
+    end.first
+
+    # share guest pool with Org B
+    orgB = random_string('orgB')
+    create_owner(orgB)
+    share_consumer = @cp.register(
+      random_string('orgBShare'),
+      :share,
+      nil,
+      {},
+      nil,
+      owner_key,
+      [],
+      [],
+      nil,
+      [],
+      nil,
+      [],
+      nil,
+      nil,
+      nil,
+      orgB
+    )
+    @cp.consume_pool(guest_pool['id'], :uuid => share_consumer['uuid'])
+
+    virt_uuid = random_string('system.uuid')
+    orgBconsumer = @cp.register(
+      random_string('orgBConsumer'),
+      :system,
+      nil,
+      {'virt.uuid' => virt_uuid, 'virt.is_guest' => 'true'},
+      'admin',
+      orgB,
+      [],
+      [{"productId" => virt_product['id'], "productName" => virt_product['name']}]
+    )
+
+    # Link the host and the guest
+    @cp.update_consumer(:uuid => orgAHost['uuid'], :guestIds => [{'guestId' => virt_uuid}])
+
+    ent = @cp.consume_product(virt_product['id'], :uuid => orgBconsumer['uuid'])
+    expect(ent).to_not be_empty
+  end
 end

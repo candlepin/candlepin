@@ -215,7 +215,7 @@ public class Entitler {
             // Remove any expired unmapped guest entitlements
             revokeUnmappedGuestEntitlements(consumer);
 
-            Consumer host = consumerCurator.getHost(guestUuid, consumer.getOwner());
+            Consumer host = consumerCurator.getHost(consumer, consumer.getOwner());
             if (host != null && (force || host.isAutoheal())) {
                 log.info("Attempting to heal host machine with UUID \"{}\" for guest with UUID \"{}\"",
                     host.getUuid(), consumer.getUuid());

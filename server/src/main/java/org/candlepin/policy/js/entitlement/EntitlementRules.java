@@ -21,6 +21,7 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.ProductManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Entitlement;
@@ -45,6 +46,7 @@ import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -91,7 +93,12 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
     @Override
     public ValidationResult preEntitlement(Consumer consumer, Pool entitlementPool,
         Integer quantity, CallerType caller) {
-        return preEntitlement(consumer, getHost(consumer), entitlementPool, quantity, caller);
+        return preEntitlement(
+            consumer,
+            getHost(consumer, new ArrayList<Pool>(Arrays.asList(entitlementPool))),
+            entitlementPool,
+            quantity,
+            caller);
     }
 
     public ValidationResult preEntitlement(Consumer consumer, Consumer host,
@@ -105,7 +112,11 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
     public Map<String, ValidationResult> preEntitlement(Consumer consumer,
         Collection<PoolQuantity> entitlementPoolQuantities,
         CallerType caller) {
-        return preEntitlement(consumer, getHost(consumer), entitlementPoolQuantities, caller);
+        return preEntitlement(
+            consumer,
+            getHost(consumer, entitlementPoolQuantities),
+            entitlementPoolQuantities,
+            caller);
     }
 
     @Override
@@ -168,7 +179,7 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
 
         if (!consumer.isShare()) {
             args.put("consumer", consumer);
-            args.put("hostConsumer", getHost(consumer));
+            args.put("hostConsumer", getHost(consumer, pools));
             args.put("consumerEntitlements", consumer.getEntitlements());
             args.put("standalone", config.getBoolean(ConfigProperties.STANDALONE));
             args.put("pools", pools);
@@ -215,9 +226,36 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
         return filteredPools;
     }
 
-    private Consumer getHost(Consumer consumer) {
-        Consumer host = consumer.hasFact("virt.uuid") ? consumerCurator.getHost(
-            consumer.getFact("virt.uuid"), consumer.getOwner()) : null;
+    private Consumer getHost(Consumer consumer, Collection<PoolQuantity> poolQuantities) {
+        List<Pool> pools = new ArrayList<Pool>();
+        for (PoolQuantity pq : poolQuantities) {
+            pools.add(pq.getPool());
+        }
+        return getHost(consumer, pools);
+    }
+
+    /**
+     * Similar to consumerCurator's getHost but here we are examining a given list of pools to potentially
+     * bind to instead of pools already existing on the owner.
+     *
+     * @param consumer
+     * @param pools
+     * @return
+     */
+    private Consumer getHost(Consumer consumer, List<Pool> pools) {
+        if (!consumer.hasFact("virt.uuid")) {
+            return null;
+        }
+        List<Owner> potentialOwners = new ArrayList<Owner>(Arrays.asList(consumer.getOwner()));
+        for (Pool p : pools) {
+            if (p.getType() == Pool.PoolType.SHARE_DERIVED) {
+                potentialOwners.add(p.getSourceEntitlement().getOwner());
+            }
+        }
+
+        Consumer host = consumerCurator.getHost(
+            consumer.getFact("virt.uuid"),
+            potentialOwners.toArray(new Owner[] {}));
         return host;
     }
 

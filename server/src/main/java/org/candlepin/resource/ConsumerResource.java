@@ -1329,9 +1329,7 @@ public class ConsumerResource {
             return;
         }
 
-        String guestVirtUuid = guest.getFact("virt.uuid");
-
-        Consumer host = consumerCurator.getHost(guestVirtUuid, guest.getOwner());
+        Consumer host = consumerCurator.getHost(guest, guest.getOwner());
 
         // we need to create a list of entitlements to delete before actually
         // deleting, otherwise we are tampering with the loop iterator (BZ #786730)
@@ -2390,7 +2388,7 @@ public class ConsumerResource {
             throw new BadRequestException(i18n.tr("The system with UUID {0} is not a virtual guest.",
                 consumer.getUuid()));
         }
-        return consumerCurator.getHost(consumer.getFact("virt.uuid"), consumer.getOwner());
+        return consumerCurator.getHost(consumer, consumer.getOwner());
     }
 
     @ApiOperation(notes = "Retrieves the Release of a Consumer", value = "getRelease")

@@ -217,7 +217,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumerCurator.update(consumer);
 
         List<Consumer> guests = consumerCurator.getGuests(consumer);
-        assertTrue(guests.size() == 2);
+        assertEquals(2, guests.size());
     }
 
     @Test
@@ -486,7 +486,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumerCurator.create(gConsumer1);
 
         Consumer gConsumer2 = new Consumer("guestConsumer2", "testUser", owner, ct);
-        gConsumer1.getFacts().put("virt.uuid", "daf0fe10-956b-7b4e-b7dc-b383ce681ba9");
+        gConsumer2.getFacts().put("virt.uuid", "daf0fe10-956b-7b4e-b7dc-b383ce681ba9");
         consumerCurator.create(gConsumer2);
 
         hostA.addGuestId(new GuestId("DAF0FE10-956B-7B4E-B7DC-B383CE681BA8"));
