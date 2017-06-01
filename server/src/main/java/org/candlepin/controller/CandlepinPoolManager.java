@@ -197,7 +197,11 @@ public class CandlepinPoolManager implements PoolManager {
 
         // Resolve all our subscriptions, products and content to ensure we don't have bad or
         // duplicate inbound data
-        for (Subscription subscription : subAdapter.getSubscriptions(owner)) {
+        log.debug("Fetching subscriptions from adapter...");
+        List<Subscription> subscriptions = subAdapter.getSubscriptions(owner);
+
+        log.debug("Done. Processing subscriptions...");
+        for (Subscription subscription : subscriptions) {
             if (subscription == null) {
                 continue;
             }
