@@ -38,9 +38,9 @@ import org.hibernate.criterion.Junction;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Property;
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.SimpleExpression;
 import org.hibernate.criterion.Subqueries;
+import org.hibernate.criterion.Restrictions;
 import org.hibernate.internal.FilterImpl;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.StringType;
@@ -726,16 +726,16 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
 
     @SuppressWarnings("unchecked")
-    public List<Entitlement> retrieveFreeEntitlementsOfPools(List<Pool> existingPools, boolean lifo) {
+    public List<Entitlement> retrieveOrderedEntitlementsOf(List<Pool> existingPools) {
         return criteriaToSelectEntitlementForPools(existingPools)
-            .addOrder(lifo ? Order.desc("created") : Order.asc("created"))
+            .addOrder(Order.desc("created"))
             .list();
     }
 
     @SuppressWarnings("unchecked")
-    public List<String> retrieveFreeEntitlementIdsOfPool(Pool existingPool, boolean lifo) {
+    public List<String> retrieveOrderedEntitlementIdsOf(Pool existingPool) {
         return criteriaToSelectEntitlementForPool(existingPool)
-            .addOrder(lifo ? Order.desc("created") : Order.asc("created"))
+            .addOrder(Order.desc("created"))
             .setProjection(Projections.id())
             .list();
     }
@@ -1681,5 +1681,16 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         Query q = currentSession().createQuery(stmt);
         q.setParameter("owner", owner);
         q.executeUpdate();
+    }
+
+    @Transactional
+    public List<Pool> listSharedPoolsOf(Pool pool) {
+        return listByCriteria(
+                currentSession().createCriteria(Pool.class)
+                    .createAlias("sourceEntitlement", "se")
+                    .createAlias("se.pool", "sep")
+                    .add(Restrictions.and(Restrictions.eq("type", PoolType.SHARE_DERIVED)))
+                    .add(Restrictions.and(Restrictions.eq("se.pool", pool)))
+                    .addOrder(Order.desc("created")));
     }
 }

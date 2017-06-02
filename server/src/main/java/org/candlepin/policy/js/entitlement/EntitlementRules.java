@@ -234,7 +234,7 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
     public ValidationResult update(Consumer consumer, Entitlement entitlement, Integer change) {
 
         ValidationResult result = new ValidationResult();
-        if (!consumer.getType().isManifest()) {
+        if (!consumer.isManifestDistributor() && !consumer.isShare()) {
             Pool pool = entitlement.getPool();
             // multi ent check
             if (!"yes".equalsIgnoreCase(pool.getProductAttributeValue(Pool.Attributes.MULTI_ENTITLEMENT)) &&
