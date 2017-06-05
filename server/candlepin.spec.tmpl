@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.0.35
+Version: 2.0.36
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,10 @@ fi
 
 #raw
 %changelog
+* Mon Jun 05 2017 Kevin Howell <khowell@redhat.com> 2.0.36-1
+- Optimized bulk product and content lookups (crog@redhat.com)
+- 1457891: Account for NPE in refresh job - v. 2.0 (wpoteat@redhat.com)
+
 * Fri May 26 2017 Kevin Howell <khowell@redhat.com> 2.0.35-1
 - 1452330: Refresh no longer removes locally-managed pools (crog@redhat.com)
 - Fixed a few issues involving source subscriptions (crog@redhat.com)
