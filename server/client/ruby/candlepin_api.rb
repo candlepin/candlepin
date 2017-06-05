@@ -78,7 +78,7 @@ class Candlepin
               owner_key=nil, activation_keys=[], installedProducts=[],
               environment=nil, capabilities=[], hypervisor_id=nil,
               content_tags=[], created_date=nil, last_checkin_date=nil,
-              annotations=nil, recipient_owner_key=nil)
+              annotations=nil, recipient_owner_key=nil, user_agent=nil)
 
     consumer = {
       :type => {:label => type},
@@ -108,6 +108,7 @@ class Candlepin
     params[:username] = username if username
     params[:activation_keys] = activation_keys.join(",") if activation_keys.length > 1
     params[:activation_keys] = activation_keys[0] if activation_keys.length == 1
+    params[:user_agent] = user_agent if user_agent
 
     @consumer = post(path, params, consumer)
     return @consumer
@@ -1440,7 +1441,11 @@ class Candlepin
 
     # execute
     puts ("POST #{euri} #{data}") if @verbose
-    response = get_client(uri, Net::HTTP::Post, :post)[euri].post(data, :content_type => :json, :accept => :json)
+    if params[:user_agent].nil?
+      response = get_client(uri, Net::HTTP::Post, :post)[euri].post data, :content_type => :json, :accept => :json
+    else
+      response = get_client(uri, Net::HTTP::Post, :post)[euri].post data, :content_type => :json, :accept => :json, "user-agent" => params[:user_agent]
+    end
 
     return JSON.parse(response.body) unless response.body.empty?
   end

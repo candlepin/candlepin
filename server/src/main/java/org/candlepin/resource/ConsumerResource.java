@@ -117,6 +117,7 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
+import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.quartz.JobDetail;
 import org.slf4j.Logger;
@@ -474,22 +475,7 @@ public class ConsumerResource {
         checkConsumerName(consumer);
 
         ConsumerType type = lookupConsumerType(consumer.getType().getLabel());
-        if (type.isType(ConsumerTypeEnum.PERSON)) {
-            if (keys.size() > 0) {
-                throw new BadRequestException(
-                    i18n.tr("A unit type of ''person'' cannot be used with activation keys"));
-            }
-
-            if (!isConsumerPersonNameValid(consumer.getName())) {
-                throw new BadRequestException(i18n.tr("System name cannot contain most special characters."));
-            }
-
-            verifyPersonConsumer(consumer, type, owner, userName, principal);
-        }
-
-        if (type.isType(ConsumerTypeEnum.SYSTEM) && !isConsumerSystemNameValid(consumer.getName())) {
-            throw new BadRequestException(i18n.tr("System name cannot contain most special characters."));
-        }
+        validateViaConsumerType(consumer, type, keys, owner, userName, principal);
 
         if (consumer.isShare()) {
             // Share consumers do not need identity certificates so refuse to create them.
@@ -689,6 +675,36 @@ public class ConsumerResource {
             }
             if (userName != null) {
                 throw new BadRequestException(i18n.tr("Cannot specify username with activation keys."));
+            }
+        }
+    }
+
+    private void validateViaConsumerType(Consumer consumer, ConsumerType type, List<ActivationKey> keys,
+        Owner owner, String userName, Principal principal) {
+        if (type.isType(ConsumerTypeEnum.PERSON)) {
+            if (keys.size() > 0) {
+                throw new BadRequestException(
+                        i18n.tr("A unit type of ''person'' cannot be used with activation keys"));
+            }
+
+            if (!isConsumerPersonNameValid(consumer.getName())) {
+                throw new BadRequestException(i18n.tr("System name cannot contain most special characters."));
+            }
+
+            verifyPersonConsumer(consumer, type, owner, userName, principal);
+        }
+
+        if (type.isType(ConsumerTypeEnum.SYSTEM) && !isConsumerSystemNameValid(consumer.getName())) {
+            throw new BadRequestException(i18n.tr("System name cannot contain most special characters."));
+        }
+
+        HttpRequest httpRequest = ResteasyProviderFactory.getContextData(HttpRequest.class);
+        if (httpRequest != null) {
+            List<String> userAgent = httpRequest.getHttpHeaders().getRequestHeader("user-agent");
+            if (type.isManifest() && userAgent != null &&
+                userAgent.size() > 0 && userAgent.get(0).startsWith("RHSM")) {
+                throw new BadRequestException(
+                        i18n.tr("You may not create a manifest consumer via Subscription Manager."));
             }
         }
     }
