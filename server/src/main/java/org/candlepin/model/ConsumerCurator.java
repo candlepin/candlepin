@@ -494,23 +494,13 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * @return host consumer who most recently reported the given guestId (if any)
      */
     @Transactional
-    public Consumer getHost(Consumer consumer, Owner owner) {
+    public Consumer getHost(Consumer consumer, Owner... owners) {
         String guestId = consumer.getFact("virt.uuid");
         if (guestId == null) {
             return null;
         }
 
-        Owner consumerOwner = consumer.getOwner();
-        List<Owner> visibleOwners = new ArrayList<Owner>();
-        visibleOwners.add(owner);
-
-        for (Pool p : consumerOwner.getPools()) {
-            if (p.getType() == Pool.PoolType.SHARE_DERIVED) {
-                visibleOwners.add(p.getSourceEntitlement().getOwner());
-            }
-        }
-
-        return getHost(guestId, visibleOwners.toArray(new Owner[] {}));
+        return getHost(guestId, owners);
     }
 
     /**
@@ -534,22 +524,17 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             guestIdCrit.add(Restrictions.eq("guestIdLower", possibleId.toLowerCase()));
         }
 
-        /* I am not wild about searching multiple orgs for a host and then returning the first one that
-         * shows up.  I don't believe the same guest should be popping up on multiple hosts across multiple
-         * orgs so searching multiple orgs for a host and returning the first should be all right.  I chose
-         * this implementation because getHost() caches the guest list of a host the first time its called,
-         * so subsequent searches for that host *in any org* return the cached result.  We could change that
-         * cache to account for the org, but that still leaves the prospect of running the below query N
-         * times where N is the number of orgs that could potentially be holding the host consumer.  N will
-         * generally be small, but it's still extra DB work. */
         Criteria crit = currentSession()
             .createCriteria(GuestId.class)
             .createAlias("consumer", "gconsumer")
-            .add(CPRestrictions.in("gconsumer.owner", owners))
             .add(guestIdCrit)
             .addOrder(Order.desc("updated"))
             .setMaxResults(1)
             .setProjection(Projections.property("consumer"));
+
+        if (owners.length > 0) {
+            crit.add(CPRestrictions.in("gconsumer.owner", owners));
+        }
 
         Consumer host = (Consumer) crit.uniqueResult();
         cachedHosts.put(guestLower, host);

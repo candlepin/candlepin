@@ -112,9 +112,13 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
     public Map<String, ValidationResult> preEntitlement(Consumer consumer,
         Collection<PoolQuantity> entitlementPoolQuantities,
         CallerType caller) {
+        List<Pool> pools = new ArrayList<Pool>();
+        for (PoolQuantity pq : entitlementPoolQuantities) {
+            pools.add(pq.getPool());
+        }
         return preEntitlement(
             consumer,
-            getHost(consumer, entitlementPoolQuantities),
+            getHost(consumer, pools),
             entitlementPoolQuantities,
             caller);
     }
@@ -226,17 +230,9 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
         return filteredPools;
     }
 
-    private Consumer getHost(Consumer consumer, Collection<PoolQuantity> poolQuantities) {
-        List<Pool> pools = new ArrayList<Pool>();
-        for (PoolQuantity pq : poolQuantities) {
-            pools.add(pq.getPool());
-        }
-        return getHost(consumer, pools);
-    }
-
     /**
-     * Similar to consumerCurator's getHost but here we are examining a given list of pools to potentially
-     * bind to instead of pools already existing on the owner.
+     * Similar to consumerCurator's getHost but here we are ensuring that the owners we search are actually
+     * sharing with this consumer.
      *
      * @param consumer
      * @param pools
@@ -253,9 +249,7 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
             }
         }
 
-        Consumer host = consumerCurator.getHost(
-            consumer.getFact("virt.uuid"),
-            potentialOwners.toArray(new Owner[] {}));
+        Consumer host = consumerCurator.getHost(consumer, potentialOwners.toArray(new Owner[] {}));
         return host;
     }
 

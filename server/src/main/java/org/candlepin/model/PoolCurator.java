@@ -364,11 +364,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 ));
             }
             else if (consumer.hasFact("virt.uuid")) {
-                Consumer host = null;
-
-                if (consumer.getFact("virt.uuid") != null) {
-                    host = this.consumerCurator.getHost(consumer, owner);
-                }
+                Consumer host = this.consumerCurator.getHost(consumer);
 
                 // Impl note:
                 // This query matches pools with the "requires_host" attribute explicitly set to a
