@@ -368,8 +368,8 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     @SuppressWarnings("unchecked")
     public List<Entitlement> listByConsumer(Consumer consumer, EntitlementFilterBuilder filters) {
         Criteria criteria = this.createCriteriaFromFilters(filters)
-            .add(Restrictions.eq("consumer", consumer));
-            // .addOrder(Order.asc("Pool.id")); // Why do we care about the order?
+            .add(Restrictions.eq("consumer", consumer))
+            .addOrder(Order.asc("Pool.id"));
 
         List<String> entitlementIds = criteria.list();
 
