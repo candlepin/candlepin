@@ -78,6 +78,8 @@ import org.candlepin.pki.impl.BouncyCastlePKIUtility;
 import org.candlepin.policy.criteria.CriteriaRules;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
+import org.candlepin.policy.js.JsRunnerRequestCache;
+import org.candlepin.policy.js.JsRunnerRequestCacheProvider;
 import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
@@ -185,6 +187,7 @@ public class CandlepinModule extends AbstractModule {
     }
 
     @Override
+    @SuppressWarnings("checkstyle:methodlength")
     public void configure() {
         // Bindings for our custom scope
         CandlepinRequestScope requestScope = new CandlepinRequestScope();
@@ -257,6 +260,7 @@ public class CandlepinModule extends AbstractModule {
         bind(JAXBMarshalExceptionMapper.class);
         bind(JAXBUnmarshalExceptionMapper.class);
         bind(Principal.class).toProvider(PrincipalProvider.class);
+        bind(JsRunnerRequestCache.class).toProvider(JsRunnerRequestCacheProvider.class);
         bind(JsRunnerProvider.class).asEagerSingleton();
         bind(JsRunner.class).toProvider(JsRunnerProvider.class);
         bind(RulesObjectMapper.class).asEagerSingleton();
