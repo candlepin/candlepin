@@ -498,6 +498,16 @@ describe 'Consumer Resource' do
     consumer['facts'].length.should == 1
   end
 
+  it 'should not allow a RHSM client to register a manifest consumer' do
+    user = user_client(@owner1, random_string('billy'))
+    lambda do
+      consumer = user.register(random_string('machine1'), :candlepin, nil,
+                               {}, nil, nil, [], [], nil, [], nil, [], nil, nil,
+                               nil, nil, "RHSM/1.0 (cmd=subscription-manager)")
+    end.should raise_exception(RestClient::BadRequest)
+
+  end
+
   it 'should allow the installed products to be enriched with product information' do
     owner = create_owner random_string('owner')
     user = user_client(owner, random_string("user"))
