@@ -992,6 +992,10 @@ describe 'Consumer Resource' do
 
     ent = @consumer1.consume_pool(future_pool.id)[0]
     ent["quantity"].should == 2
+    start_date = Date.strptime(ent.startDate)
+    start_date.year.should == start.year
+    start_date.month.should == start.month
+    start_date.day.should == start.day
   end
 
   it 'should be able to add unused attributes' do
