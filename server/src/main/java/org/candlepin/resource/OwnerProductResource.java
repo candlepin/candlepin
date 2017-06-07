@@ -177,6 +177,7 @@ public class OwnerProductResource {
      * @return
      *  the Content instance for the content with the specified id
      */
+
     protected Content fetchContent(Owner owner, String contentId) {
         Content content = this.ownerContentCurator.getContentById(owner, contentId);
 
