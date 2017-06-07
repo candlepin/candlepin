@@ -173,9 +173,15 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
                 promotedContent);
         }
         setupEntitlementEndDate(ent);
-        Calendar cal = Calendar.getInstance();
-        cal.add(Calendar.HOUR, -1);
-        Date startDate = ent.getStartDate().before(cal.getTime()) ? ent.getStartDate() : cal.getTime();
+        Calendar calNow = Calendar.getInstance();
+        Calendar calMinusHour = Calendar.getInstance();
+        calMinusHour.add(Calendar.HOUR, -1);
+        Date startDate = ent.getStartDate();
+        if (ent.getStartDate().getTime() > calMinusHour.getTime().getTime() &&
+            ent.getStartDate().getTime() < calNow.getTime().getTime()) {
+            startDate = calMinusHour.getTime();
+        }
+
         X509Certificate x509Cert =  this.pki.createX509Certificate(
             createDN(ent), extensions, byteExtensions, startDate,
             ent.getEndDate(), keyPair, serialNumber, null);
