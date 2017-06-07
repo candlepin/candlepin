@@ -342,6 +342,7 @@ public class ContentManager {
         List<OwnerContent> ownerContentBuffer = new LinkedList<OwnerContent>();
 
         // - Divide imported products into sets of updates and creates
+        log.debug("Fetching existing content for update...");
         for (Content content : this.ownerContentCurator.getContentByIds(owner, contentData.keySet())) {
             ContentData update = contentData.get(content.getId());
 
@@ -361,6 +362,7 @@ public class ContentManager {
             contentVersions.put(content.getId(), content.getEntityVersion());
         }
 
+        log.debug("Validating new content...");
         for (ContentData update : contentData.values()) {
             if (!skippedContent.containsKey(update.getId()) && !updatedContent.containsKey(update.getId())) {
                 // Ensure content is minimally populated
@@ -369,9 +371,6 @@ public class ContentManager {
                     throw new IllegalStateException("Content data is incomplete: " + update);
                 }
 
-                // Content is coming from an upstream source; lock it so only upstream can make
-                // further changes to it. If we ever use this method for anything other than
-                // imports, we'll need to stop doing this.
                 Content content = this.applyContentChanges(new Content(update.getId()), update);
 
                 createdContent.put(content.getId(), content);
@@ -379,6 +378,7 @@ public class ContentManager {
             }
         }
 
+        log.debug("Checking for existing content versions...");
         for (Content alt : this.ownerContentCurator.getContentByVersions(owner, contentVersions)) {
             List<Content> alternates = existingVersions.get(alt.getId());
             if (alternates == null) {
@@ -419,8 +419,6 @@ public class ContentManager {
                 }
             }
 
-            // TODO: If the saveAll below doesn't update these instances with a UUID, we'll have to
-            // do some work after the flush to ensure we use the instances with UUIDs.
             ownerContentBuffer.add(new OwnerContent(owner, created));
         }
 
@@ -453,10 +451,12 @@ public class ContentManager {
         // We probably don't want to evict the content yet, as they'll appear as unmanaged if
         // they're used later. However, the join objects can be evicted safely since they're only
         // really used here.
+        log.debug("Persisting content changes...");
         this.contentCurator.saveAll(stagedEntities.values(), true, false);
         this.ownerContentCurator.saveAll(ownerContentBuffer, true, true);
 
         // Fetch collection of products affected by this import that aren't being imported themselves
+        log.debug("Updating non-imported, affected products...");
         List<Product> affectedProducts = this.productCurator
             .getProductsByContent(owner, sourceContent.keySet(), importedProductIds)
             .list();
