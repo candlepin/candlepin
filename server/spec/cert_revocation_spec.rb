@@ -140,7 +140,8 @@ describe 'Certificate Revocation List', :serial => true do
   end
 
   it 'should put revoked content access cert on CRL' do
-    cam_owner = create_owner(random_string("test_owner"), nil,{'contentAccessMode' => "org_environment"})
+    skip("candlepin running in standalone mode") unless is_hosted?
+    cam_owner = create_owner(random_string("test_owner"), nil,{'contentAccessMode' => "org_environment", 'contentAccessModeList' => "org_environment, entitlement"})
 
     username = random_string('bob')
     user = create_user(cam_owner, username, 'password')

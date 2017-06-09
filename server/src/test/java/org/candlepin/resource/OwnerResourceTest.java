@@ -1042,15 +1042,15 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerManager ownerManager = mock(OwnerManager.class);
         EventFactory eventFactory = mock(EventFactory.class);
         OwnerResource or = new OwnerResource(
-            oc, null, null, i18n, null, eventFactory, null, null, null, null, ownerManager,  null, null,
-            null, null, null, null, null, null, null, null, contentOverrideValidator, serviceLevelValidator,
-            null, null, null, productManager, contentManager, null
+            oc, null, null, i18n, null, eventFactory, null, null, null, poolManager, ownerManager,  null,
+            null, null, null, null, null, null, null, null, null, contentOverrideValidator,
+            serviceLevelValidator, null, null, null, productManager, contentManager, null
         );
 
         when(oc.lookupByKey(eq("testOwner"))).thenReturn(o);
         ConstraintViolationException ce = new ConstraintViolationException(null, null, null);
         PersistenceException pe = new PersistenceException(ce);
-        Mockito.doThrow(pe).when(ownerManager).cleanupAndDelete(eq(o), eq(true));
+        Mockito.doThrow(pe).when(ownerManager).cleanupAndDelete(eq(o), eq(poolManager), eq(true));
         or.deleteOwner("testOwner", true, true);
     }
 

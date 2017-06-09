@@ -39,10 +39,27 @@ describe 'Content Access' do
       @owner['contentAccessMode'].should == "test_access_mode"
   end
 
-  it "does not allow assignment of incorrect content access mode" do
+  it "will assign the default mode and list when none is specified" do
+      owner = @cp.create_owner random_string("test_owner")
+      owner['contentAccessModeList'].should == "entitlement"
+      owner['contentAccessMode'].should == "entitlement"
+  end
+
+  it "must assign a mode from the list" do
+    lambda do
+      owner = create_owner(random_string("test_owner"), nil, {
+        'contentAccessModeList' => 'org_environment,test_access_mode'
+      })
+    end.should raise_exception(RestClient::BadRequest)
+  end
+
+  it "does not allow assignment of incorrect content access mode or blank" do
       skip("candlepin running in standalone mode") unless is_hosted?
       lambda do
-          @cp.update_owner(@owner['key'], {'contentAccessMode' => "super_mode"})
+        @cp.update_owner(@owner['key'], {'contentAccessMode' => "super_mode"})
+      end.should raise_exception(RestClient::BadRequest)
+      lambda do
+        @cp.update_owner(@owner['key'], {'contentAccessMode' => ""})
       end.should raise_exception(RestClient::BadRequest)
   end
 
@@ -112,14 +129,14 @@ describe 'Content Access' do
       certs = @consumer.list_certificates
       certs.length.should == 1
 
-      @cp.update_owner(@owner['key'], {'contentAccessMode' => ""})
+      @cp.update_owner(@owner['key'], {'contentAccessMode' => "entitlement"})
       certs = @consumer.list_certificates
       certs.length.should == 0
   end
 
   it "can create the content access certificate for the consumer when org content access mode added" do
       skip("candlepin running in standalone mode") unless is_hosted?
-      @cp.update_owner(@owner['key'], {'contentAccessMode' => ""})
+      @cp.update_owner(@owner['key'], {'contentAccessMode' => "entitlement"})
       @consumer = consumer_client(@user, @consumername, type=:system, username=nil, facts= {'system.certificate_version' => '3.3'})
 
       certs = @consumer.list_certificates
@@ -261,7 +278,7 @@ describe 'Content Access' do
 
       owner = @cp.get_owner(@import_owner['key'])
       owner['contentAccessMode'].should == 'test_access_mode'
-      owner['contentAccessModeList'].should == 'test_access_mode,entitlement'
+      owner['contentAccessModeList'].should == 'test_access_mode'
 
       uc = owner.upstreamConsumer['contentAccessMode'].should == 'test_access_mode'
 

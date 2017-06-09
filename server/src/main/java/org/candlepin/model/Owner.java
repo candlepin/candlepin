@@ -17,12 +17,10 @@ package org.candlepin.model;
 import org.candlepin.common.jackson.HateoasInclude;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.resteasy.InfoProperty;
-import org.candlepin.service.ContentAccessCertServiceAdapter;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
 
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.hibernate.annotations.GenericGenerator;
 
 import java.io.Serializable;
@@ -463,18 +461,6 @@ public class Owner extends AbstractHibernateObject implements Serializable,
     }
 
     /**
-     * Utility method that defaults to 'entitlement'.
-     *  This covers legacy owners
-     *
-     * @return access mode.
-     */
-    @XmlTransient
-    public String contentAccessMode() {
-        return StringUtils.isEmpty(getContentAccessMode()) ?
-            ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE : getContentAccessMode();
-    }
-
-    /**
      * Returns the value of the contentAccessMode setting.
      *
      * @return String the value
@@ -493,35 +479,15 @@ public class Owner extends AbstractHibernateObject implements Serializable,
      * @return String the value
      */
     public String getContentAccessModeList() {
-        String[] modeList = contentAccessModeList == null ? new String[0] : contentAccessModeList.split(",");
-        String ammend = "";
-        if (!ArrayUtils.contains(modeList, ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE)) {
-            ammend = modeList.length > 0 ? "," : "";
-            ammend += ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE;
-        }
-        return modeList.length > 0 ? this.contentAccessModeList + ammend : ammend;
+        return this.contentAccessModeList;
     }
 
     public void setContentAccessModeList(String contentAccessModeList) {
-        this.contentAccessModeList = !StringUtils.isEmpty(contentAccessModeList) ?
-            contentAccessModeList :
-            null;
+        this.contentAccessModeList = contentAccessModeList;
     }
 
     @XmlTransient
     public boolean isAllowedContentAccessMode(String mode) {
-        if (StringUtils.isEmpty(mode)) {
-            return true;
-        }
-
-        if (mode.equals(ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE)) {
-            return true;
-        }
-
-        if (StringUtils.isEmpty(contentAccessModeList)) {
-            return false;
-        }
-
         String[] list = contentAccessModeList.split(",");
         return ArrayUtils.contains(list, mode);
     }
