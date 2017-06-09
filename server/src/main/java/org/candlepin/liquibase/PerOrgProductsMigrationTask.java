@@ -142,20 +142,44 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
         try {
             this.connection.setAutoCommit(false);
 
-            // Migrate orgs
-            ResultSet result = this.executeQuery("SELECT count(id) FROM cp_owner");
-            result.next();
-            int count = result.getInt(1);
-            result.close();
+            // Fetch our org count for prettier log messages
+            ResultSet countQuery = this.executeQuery("SELECT count(id) FROM cp_owner");
+            countQuery.next();
+            int count = countQuery.getInt(1);
+            countQuery.close();
 
+            // Do our initial validation check to avoid doing a multi-hour migration and fail out
+            // while validating the last org...
+            boolean validated = true;
             ResultSet orgids = this.executeQuery("SELECT id, account FROM cp_owner");
             for (int index = 1; orgids.next(); ++index) {
                 String orgid = orgids.getString(1);
                 String account = orgids.getString(2);
 
-                this.logger.info(
-                    "Migrating data for org %s (%s) (%d of %d)", account, orgid, index, count
-                );
+                this.logger.info("Validating data for org %s (%s) (%d of %d)", account, orgid, index, count);
+
+                // Check for malformed pools/subscriptions which may end up in a pseudo-dead state.
+                boolean result = true;
+                result &= this.checkForMalformedPoolsAndSubscriptions(orgid);
+
+                if (!result) {
+                    validated = false;
+                    this.logger.error("Org %s (%s) failed data validation", account, orgid);
+                }
+            }
+            orgids.close();
+
+            if (!validated) {
+                throw new DatabaseException("One or more orgs failed data validation");
+            }
+
+            // Perform the actual per-org migration
+            orgids = this.executeQuery("SELECT id, account FROM cp_owner");
+            for (int index = 1; orgids.next(); ++index) {
+                String orgid = orgids.getString(1);
+                String account = orgids.getString(2);
+
+                this.logger.info("Migrating data for org %s (%s) (%d of %d)", account, orgid, index, count);
 
                 this.migrateProductData(orgid);
                 this.migrateContentData(orgid);
@@ -179,72 +203,88 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
      *
      * @param orgid
      *  The id of the owner/organization for which to migrate product data
+     *
+     * @return
+     *  true if the check completed successfully; false otherwise
      */
-    protected void checkForMalformedPoolsAndSubscriptions(String orgid) throws DatabaseException,
+    protected boolean checkForMalformedPoolsAndSubscriptions(String orgid) throws DatabaseException,
         SQLException {
 
         ResultSet badProductRefs = this.executeQuery(
             "SELECT DISTINCT u.product_id, u.pool_id, u.subscription_id " +
-            "FROM (SELECT p.product_id_old AS product_id, p.id AS pool_id, NULL as subscription_id " +
+            "FROM (SELECT NULLIF(p.product_id_old, '') AS product_id, p.id AS pool_id, " +
+            "  NULL AS subscription_id " +
             "    FROM cp_pool p " +
             "    WHERE p.owner_id = ? " +
-            "      AND NOT NULLIF(p.product_id_old, '') IS NULL " +
             "  UNION " +
             "  SELECT p.derived_product_id_old, p.id, NULL " +
             "    FROM cp_pool p " +
             "    WHERE p.owner_id = ? " +
             "      AND NOT NULLIF(p.derived_product_id_old, '') IS NULL " +
             "  UNION " +
-            "  SELECT pp.product_id, p.id, NULL " +
+            "  SELECT NULLIF(pp.product_id, ''), p.id, NULL " +
             "    FROM cp_pool p " +
             "    JOIN cp_pool_products pp " +
             "      ON p.id = pp.pool_id " +
             "    WHERE p.owner_id = ? " +
-            "      AND NOT NULLIF(pp.product_id, '') IS NULL " +
             "  UNION " +
-            "  SELECT s.product_id, NULL, s.id " +
+            "  SELECT NULLIF(s.product_id, ''), NULL, s.id " +
             "    FROM cp_subscription s " +
             "    WHERE s.owner_id = ? " +
-            "      AND NOT NULLIF(s.product_id, '') IS NULL " +
             "  UNION " +
             "  SELECT s.derivedproduct_id, NULL, s.id " +
             "    FROM cp_subscription s " +
             "    WHERE s.owner_id = ? " +
             "      AND NOT NULLIF(s.derivedproduct_id, '') IS NULL " +
             "  UNION " +
-            "  SELECT sp.product_id, NULL, s.id " +
+            "  SELECT NULLIF(sp.product_id, ''), NULL, s.id " +
             "    FROM cp_subscription_products sp " +
             "    JOIN cp_subscription s " +
             "      ON s.id = sp.subscription_id " +
             "    WHERE s.owner_id = ? " +
-            "      AND NOT NULLIF(sp.product_id, '') IS NULL " +
             "  UNION " +
-            "  SELECT sdp.product_id, NULL, s.id " +
+            "  SELECT NULLIF(sdp.product_id, ''), NULL, s.id " +
             "    FROM cp_sub_derivedprods sdp " +
             "    JOIN cp_subscription s " +
             "      ON s.id = sdp.subscription_id " +
-            "    WHERE s.owner_id = ? " +
-            "      AND NOT NULLIF(sdp.product_id, '') IS NULL) u " +
+            "    WHERE s.owner_id = ?) u " +
             "LEFT JOIN cp_product p " +
             "  ON u.product_id = p.id " +
             "WHERE p.id IS NULL",
             orgid, orgid, orgid, orgid, orgid, orgid, orgid
         );
 
+        boolean passed = true;
+
         while (badProductRefs.next()) {
+            passed = false;
+
             String productId = badProductRefs.getString(1);
             String poolId = badProductRefs.getString(2);
             String subscriptionId = badProductRefs.getString(3);
 
-            if (poolId != null) {
-                this.logger.warn("  Pool \"%s\" references a non-existent product: %s",
-                    poolId, productId);
+            if (productId != null) {
+                if (poolId != null) {
+                    this.logger.error("  Pool \"%s\" references an unresolvable product: %s",
+                        poolId, productId);
+                }
+                else if (subscriptionId != null) {
+                    this.logger.error("  Subscription \"%s\" references an unresolvable product: %s",
+                        subscriptionId, productId);
+                }
             }
-            else if (subscriptionId != null) {
-                this.logger.warn("  Subscription \"%s\" references a non-existent product: %s",
-                    subscriptionId, productId);
+            else {
+                if (poolId != null) {
+                    this.logger.error("  Pool \"%s\" contains a null or empty product reference", poolId);
+                }
+                else if (subscriptionId != null) {
+                    this.logger.error("  Subscription \"%s\" contains a null or empty product reference",
+                        subscriptionId);
+                }
             }
         }
+
+        return passed;
     }
 
     /**
@@ -297,9 +337,6 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
     @SuppressWarnings("checkstyle:methodlength")
     protected void migrateProductData(String orgid) throws DatabaseException, SQLException {
         this.logger.info("  Migrating product data...");
-
-        // Check for malformed pools/subscriptions which may end up in a pseudo-dead state.
-        this.checkForMalformedPoolsAndSubscriptions(orgid);
 
         List<Object[]> productRows = new LinkedList<Object[]>();
         Set<String> uuidCache = new HashSet<String>();
