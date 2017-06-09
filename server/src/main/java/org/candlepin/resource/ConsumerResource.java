@@ -658,7 +658,8 @@ public class ConsumerResource {
     }
 
     private void validateContentAccessMode(Consumer consumer) throws BadRequestException {
-        if (!consumer.getOwner().isAllowedContentAccessMode(consumer.getContentAccessMode())) {
+        if (consumer.getContentAccessMode() != null &&
+            !consumer.getOwner().isAllowedContentAccessMode(consumer.getContentAccessMode())) {
             throw new BadRequestException(i18n.tr(
                 "The consumer cannot use the supplied content access mode."));
         }
@@ -1483,22 +1484,18 @@ public class ConsumerResource {
                 returnCerts.add(cert);
             }
         }
-        // we want to insert the content access cert to this list
-        if (!consumer.getOwner().contentAccessMode()
-            .equals(ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE)) {
-
-            try {
-                Certificate cert = contentAccessCertService.getCertificate(consumer);
-                if (cert != null) {
-                    returnCerts.add(cert);
-                }
+        // we want to insert the content access cert to this list if appropriate
+        try {
+            Certificate cert = contentAccessCertService.getCertificate(consumer);
+            if (cert != null) {
+                returnCerts.add(cert);
             }
-            catch (IOException ioe) {
-                throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate"), ioe);
-            }
-            catch (GeneralSecurityException gse) {
-                throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate"), gse);
-            }
+        }
+        catch (IOException ioe) {
+            throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate"), ioe);
+        }
+        catch (GeneralSecurityException gse) {
+            throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate"), gse);
         }
         return returnCerts;
     }
@@ -1520,9 +1517,9 @@ public class ConsumerResource {
             throw new BadRequestException(i18n.tr("Content access body " +
                "can not be requested for a share consumer"));
         }
-        if (consumer.getOwner().contentAccessMode()
-            .equals(ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE)) {
-            throw new BadRequestException(i18n.tr("No content access mode assigned"));
+        if (!consumer.getOwner().getContentAccessMode()
+            .equals(ContentAccessCertServiceAdapter.ORG_ENV_ACCESS_MODE)) {
+            throw new BadRequestException(i18n.tr("Content access mode does not allow this request."));
         }
         if (!contentAccessCertService.hasCertChangedSince(consumer, since)) {
             return Response.status(Response.Status.NOT_MODIFIED)
@@ -1647,20 +1644,17 @@ public class ConsumerResource {
             allCerts.add(new CertificateSerialDto(id));
         }
         // add content access cert if needed
-        if (!consumer.getOwner().contentAccessMode()
-            .equals(ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE)) {
-            try {
-                ContentAccessCertificate cac = contentAccessCertService.getCertificate(consumer);
-                if (cac != null) {
-                    allCerts.add(new CertificateSerialDto(cac.getSerial().getId()));
-                }
+        try {
+            ContentAccessCertificate cac = contentAccessCertService.getCertificate(consumer);
+            if (cac != null) {
+                allCerts.add(new CertificateSerialDto(cac.getSerial().getId()));
             }
-            catch (IOException ioe) {
-                throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate"), ioe);
-            }
-            catch (GeneralSecurityException gse) {
-                throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate", gse));
-            }
+        }
+        catch (IOException ioe) {
+            throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate"), ioe);
+        }
+        catch (GeneralSecurityException gse) {
+            throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate", gse));
         }
         return allCerts;
     }

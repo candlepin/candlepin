@@ -83,8 +83,8 @@ import org.candlepin.resource.util.ResolverUtil;
 import org.candlepin.resteasy.DateFormat;
 import org.candlepin.resteasy.parameter.CandlepinParam;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
-import org.candlepin.service.ContentAccessCertServiceAdapter;
 import org.candlepin.service.OwnerServiceAdapter;
+import org.candlepin.service.impl.DefaultContentAccessCertServiceAdapter;
 import org.candlepin.sync.ConflictOverrides;
 import org.candlepin.sync.ImporterException;
 import org.candlepin.sync.SyncDataFormatException;
@@ -334,6 +334,16 @@ public class OwnerResource {
             throw new BadRequestException(i18n.tr(
                 "Could not create the Owner: {0}. Parent {1} does not exist.", owner, parent));
         }
+        if (StringUtils.isBlank(owner.getContentAccessModeList())) {
+            owner.setContentAccessModeList(
+                DefaultContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE);
+            owner.setContentAccessMode(
+                DefaultContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE);
+        }
+        if (StringUtils.isBlank(owner.getContentAccessMode())) {
+            throw new BadRequestException(
+                i18n.tr("You must assign a Content Access Mode from the mode list."));
+        }
 
         Owner created = ownerCurator.create(owner);
         if (created == null) {
@@ -370,7 +380,7 @@ public class OwnerResource {
         }
 
         try {
-            ownerManager.cleanupAndDelete(owner, revoke);
+            ownerManager.cleanupAndDelete(owner, poolManager, revoke);
         }
         catch (PersistenceException e) {
             if (e.getCause() instanceof ConstraintViolationException) {
@@ -948,9 +958,7 @@ public class OwnerResource {
             toUpdate.setAutobindDisabled(owner.getAutobindDisabled());
         }
 
-        if (!ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE.equals(owner.contentAccessMode()) &&
-            config.getBoolean(ConfigProperties.STANDALONE)) {
-
+        if (config.getBoolean(ConfigProperties.STANDALONE) && owner.getContentAccessMode() != null) {
             throw new BadRequestException(
                 i18n.tr("The owner content access mode cannot be set directly in standalone mode."));
         }
@@ -958,7 +966,7 @@ public class OwnerResource {
         // Update the contentAccess field if the incoming value is not null.
         boolean refreshContentAccess = false;
         if (owner.getContentAccessMode() != null) {
-            if (toUpdate.isAllowedContentAccessMode(owner.contentAccessMode())) {
+            if (toUpdate.isAllowedContentAccessMode(owner.getContentAccessMode())) {
                 String before = toUpdate.getContentAccessMode();
                 String after = owner.getContentAccessMode();
 
