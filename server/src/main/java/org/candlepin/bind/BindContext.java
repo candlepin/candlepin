@@ -31,7 +31,6 @@ import org.xnap.commons.i18n.I18n;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -81,12 +80,8 @@ public class BindContext {
     public Map<String, PoolQuantity> getPoolQuantities() {
         if (poolQuantities == null) {
             poolQuantities = new HashMap<String, PoolQuantity>();
-            /* TODO: move to the cursor imlpementation.
-             * today clients don't bind with many pools in a single call,
-             * but we would like them to.
-             */
-            List<Pool> pools = poolCurator.listAllByIds(quantities.keySet()).list();
-            for (Pool pool : pools) {
+
+            for (Pool pool : poolCurator.listAllByIds(quantities.keySet())) {
                 Integer quantity = quantities.get(pool.getId());
                 if (quantity > 0) {
                     quantityRequested = true;
