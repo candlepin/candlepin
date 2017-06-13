@@ -1345,9 +1345,7 @@ public class ConsumerResource {
             return;
         }
 
-        String guestVirtUuid = guest.getFact("virt.uuid");
-
-        Consumer host = consumerCurator.getHost(guestVirtUuid, guest.getOwner());
+        Consumer host = consumerCurator.getHost(guest);
 
         // we need to create a list of entitlements to delete before actually
         // deleting, otherwise we are tampering with the loop iterator (BZ #786730)
@@ -2399,14 +2397,26 @@ public class ConsumerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{consumer_uuid}/host")
     public Consumer getHost(
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
+        @Context Principal principal) {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         if (consumer.getFact("virt.uuid") == null ||
             consumer.getFact("virt.uuid").trim().equals("")) {
             throw new BadRequestException(i18n.tr("The system with UUID {0} is not a virtual guest.",
                 consumer.getUuid()));
         }
-        return consumerCurator.getHost(consumer.getFact("virt.uuid"), consumer.getOwner());
+
+        Consumer host = consumerCurator.getHost(consumer);
+
+        // The host would be in a different organization if a host-restricted pool has been shared into the
+        // current organization.
+        if (host == null || principal.canAccess(host.getOwner(), SubResource.CONSUMERS, Access.READ_ONLY)) {
+            return host;
+        }
+
+        throw new ForbiddenException(
+            i18n.tr("This host is under a different organization that you do not have access to")
+        );
     }
 
     @ApiOperation(notes = "Retrieves the Release of a Consumer", value = "getRelease")

@@ -477,7 +477,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     /**
-     * Get host consumer for a guest system id.
+     * Get host consumer for a guest consumer.
      *
      * As multiple hosts could have reported the same guest ID, we find the newest
      * and assume this is the authoritative host for the guest.
@@ -490,12 +490,30 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * during the session. An auto-bind can call this method up to 50 times and this
      * will cut the database calls significantly.
      *
-     * @param guestId a virtual guest ID (not a consumer UUID)
+     * @param consumer the consumer to get the host for
      * @return host consumer who most recently reported the given guestId (if any)
      */
     @Transactional
-    public Consumer getHost(String guestId, Owner owner) {
-        if (guestId == null) { return null; }
+    public Consumer getHost(Consumer consumer, Owner... owners) {
+        String guestId = consumer.getFact("virt.uuid");
+        if (guestId == null) {
+            return null;
+        }
+
+        return getHost(guestId, owners);
+    }
+
+    /**
+     * Get the host consumer for a guest system id.  We need this method for use in getGuests.
+     * @param guestId
+     * @param owners
+     * @return the host's consumer
+     */
+    @Transactional
+    public Consumer getHost(String guestId, Owner... owners) {
+        if (guestId == null) {
+            return null;
+        }
         String guestLower = guestId.toLowerCase();
         if (cachedHosts.containsKey(guestLower)) {
             return cachedHosts.get(guestLower);
@@ -509,11 +527,14 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         Criteria crit = currentSession()
             .createCriteria(GuestId.class)
             .createAlias("consumer", "gconsumer")
-            .add(Restrictions.eq("gconsumer.owner", owner))
             .add(guestIdCrit)
             .addOrder(Order.desc("updated"))
             .setMaxResults(1)
             .setProjection(Projections.property("consumer"));
+
+        if (owners.length > 0) {
+            crit.add(CPRestrictions.in("gconsumer.owner", owners));
+        }
 
         Consumer host = (Consumer) crit.uniqueResult();
         cachedHosts.put(guestLower, host);
