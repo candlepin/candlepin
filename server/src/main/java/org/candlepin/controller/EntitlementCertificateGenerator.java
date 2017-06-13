@@ -25,6 +25,7 @@ import org.candlepin.model.Environment;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
+import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.service.EntitlementCertServiceAdapter;
@@ -104,10 +105,12 @@ public class EntitlementCertificateGenerator {
      */
     @Transactional
     public Map<String, EntitlementCertificate> generateEntitlementCertificates(Consumer consumer,
-        Map<String, Product> products, Map<String, Entitlement> entitlements) {
+        Map<String, Product> products, Map<String, PoolQuantity> poolQuantities,
+        Map<String, Entitlement> entitlements, boolean save) {
 
         try {
-            return this.entCertServiceAdapter.generateEntitlementCerts(consumer, entitlements, products);
+            return this.entCertServiceAdapter.generateEntitlementCerts(consumer, poolQuantities,
+                entitlements, products, save);
         }
         catch (CertVersionConflictException cvce) {
             throw cvce;
@@ -137,12 +140,14 @@ public class EntitlementCertificateGenerator {
 
         Map<String, Product> products = new HashMap<String, Product>();
         Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
+        Map<String, PoolQuantity> poolQuantities = new HashMap<String, PoolQuantity>();
 
         products.put(pool.getId(), pool.getProduct());
         entitlements.put(pool.getId(), entitlement);
+        poolQuantities.put(pool.getId(), new PoolQuantity(pool, entitlement.getQuantity()));
 
-        return this.generateEntitlementCertificates(entitlement.getConsumer(), products,
-            entitlements).get(pool.getId());
+        return this.generateEntitlementCertificates(entitlement.getConsumer(),
+            products, poolQuantities, entitlements, true).get(pool.getId());
     }
 
     /**

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2012 Red Hat, Inc.
+ * Copyright (c) 2009 - 2017 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -12,26 +12,19 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.policy.js;
+package org.candlepin.bind;
 
-import java.util.Date;
+import org.candlepin.model.Consumer;
+import org.candlepin.policy.js.entitlement.Enforcer;
 
+import java.util.Map;
 
 /**
- * A request scoped cache that is used to mitigate repeated
- * DB requests for cp_rules.updated column.
- * @author fnguyen
- *
+ * This is the factory interface to create a BindChain2 via assisted injection.
+ * Guice 3 automatically implements this interface for us, this is so we can specify
+ * constructor arguments that we will be assisting with.
  */
-public class JsRunnerRequestCache {
+public interface BindChainFactory {
 
-    private Date updated = null;
-
-    public void setUpdated(Date updated) {
-        this.updated = updated;
-    }
-
-    public Date getUpdated() {
-        return updated;
-    }
+    BindChain create(Consumer consumer, Map<String, Integer> quantities, Enforcer.CallerType caller);
 }

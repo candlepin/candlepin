@@ -21,6 +21,9 @@ import static org.mockito.Mockito.when;
 import org.candlepin.audit.EventSink;
 import org.candlepin.audit.NoopEventSinkImpl;
 import org.candlepin.auth.Principal;
+import org.candlepin.bind.BindChainFactory;
+import org.candlepin.bind.BindContextFactory;
+import org.candlepin.bind.PreEntitlementRulesCheckOpFactory;
 import org.candlepin.cache.CandlepinCache;
 import org.candlepin.cache.StatusCache;
 import org.candlepin.common.config.Configuration;
@@ -100,6 +103,7 @@ import com.google.common.base.Function;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
@@ -327,6 +331,9 @@ public class TestingModules {
                 .to(ExpiryDateFunction.class).in(Singleton.class);
             bind(ModeManager.class).to(ModeManagerImpl.class).asEagerSingleton();
             bind(TriggerListener.class).to(PinsetterTriggerListener.class);
+            install(new FactoryModuleBuilder().build(BindChainFactory.class));
+            install(new FactoryModuleBuilder().build(BindContextFactory.class));
+            install(new FactoryModuleBuilder().build(PreEntitlementRulesCheckOpFactory.class));
         }
     }
 }

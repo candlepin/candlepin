@@ -53,9 +53,9 @@ describe 'Entitlement Resource' do
   it 'can filter consumer entitlements by product attribute' do
     @system.consume_product(@monitoring_prod.id)
     @system.consume_product(@virt_prod.id)
-    @cp.list_ents_via_entitlements_resource(:consumer_uuid => @system.uuid).length.should eq(2)
+    @cp.list_entitlements(:uuid => @system.uuid).length.should eq(2)
 
-    ents = @cp.list_ents_via_entitlements_resource(:consumer_uuid => @system.uuid,
+    ents = @cp.list_entitlements(:uuid => @system.uuid,
       :attr_filters => { "variant" => "Satellite Starter Pack" })
     ents.length.should eq(1)
 
@@ -66,9 +66,9 @@ describe 'Entitlement Resource' do
   it 'can filter consumer entitlements by using matches param' do
     @system.consume_product(@monitoring_prod.id)
     @system.consume_product(@virt_prod.id)
-    @cp.list_ents_via_entitlements_resource(:consumer_uuid => @system.uuid).length.should eq(2)
+    @cp.list_entitlements(:uuid => @system.uuid).length.should eq(2)
 
-    ents = @cp.list_ents_via_entitlements_resource(:consumer_uuid => @system.uuid,
+    ents = @cp.list_entitlements(:uuid => @system.uuid,
       :matches => "virtualization")
     ents.length.should eq(1)
   end

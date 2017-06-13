@@ -20,7 +20,6 @@ import com.fasterxml.jackson.annotation.JsonFilter;
 
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.ForeignKey;
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
 
 import java.util.Date;
@@ -30,7 +29,6 @@ import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -73,8 +71,6 @@ public class Entitlement extends AbstractHibernateObject
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
     @NotNull
     private String id;
@@ -148,13 +144,23 @@ public class Entitlement extends AbstractHibernateObject
      * ctor
      * @param poolIn pool associated with the entitlement
      * @param consumerIn consumer associated with the entitlement
+     * @param quantityIn entitlement quantity
      */
     public Entitlement(Pool poolIn, Consumer consumerIn, Integer quantityIn) {
+        this(consumerIn, quantityIn);
         pool = poolIn;
+        updatedOnStart = poolIn.getStartDate().after(new Date());
+    }
+
+    /**
+     * @param consumerIn consumer associated with the entitlement
+     * @param quantityIn entitlement quantity
+     */
+    public Entitlement(Consumer consumerIn, Integer quantityIn) {
         owner = consumerIn.getOwner();
         consumer = consumerIn;
-        quantity = quantityIn == null || quantityIn.intValue() < 1 ? 1 : quantityIn;
-        updatedOnStart = poolIn.getStartDate().after(new Date());
+        quantity = quantityIn == null || quantityIn.intValue() < 1 ?
+            1 : quantityIn;
         deletedFromPool = false;
     }
 

@@ -135,8 +135,8 @@ public class UeberCertificateGenerator {
         extensions.addAll(extensionUtil.productExtensions(data.getProduct()));
         extensions.addAll(extensionUtil.contentExtensions(data.getProduct().getProductContent(), null,
             new HashMap<String, EnvironmentContent>(), new Consumer(), data.getProduct()));
-        extensions.addAll(extensionUtil.subscriptionExtensions(data.getEntitlement()));
-        extensions.addAll(extensionUtil.entitlementExtensions(data.getEntitlement()));
+        extensions.addAll(extensionUtil.subscriptionExtensions(data.getEntitlement().getPool()));
+        extensions.addAll(extensionUtil.entitlementExtensions(data.getEntitlement().getQuantity()));
         extensions.addAll(extensionUtil.consumerExtensions(data.getConsumer()));
 
         if (log.isDebugEnabled()) {

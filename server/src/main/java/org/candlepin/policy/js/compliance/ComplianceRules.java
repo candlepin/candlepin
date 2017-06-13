@@ -30,7 +30,9 @@ import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 
 
@@ -95,7 +97,11 @@ public class ComplianceRules {
      * @return Compliance status.
      */
     public ComplianceStatus getStatus(Consumer c, Date date, boolean calculateCompliantUntil) {
-        return getStatus(c, date, calculateCompliantUntil, true, false);
+        boolean currentCompliance = false;
+        if (date == null) {
+            currentCompliance = true;
+        }
+        return getStatus(c, null, date, calculateCompliantUntil, true, false, currentCompliance);
     }
 
     /**
@@ -110,7 +116,7 @@ public class ComplianceRules {
     public ComplianceStatus getStatus(Consumer c, Date date, boolean calculateCompliantUntil,
         boolean updateConsumer) {
 
-        return this.getStatus(c, date, calculateCompliantUntil, updateConsumer, false);
+        return this.getStatus(c, null, date, calculateCompliantUntil, updateConsumer, false, true);
     }
 
     /**
@@ -124,24 +130,21 @@ public class ComplianceRules {
      *        (also expensive)
      * @return Compliance status.
      */
-    public ComplianceStatus getStatus(Consumer c, Date date, boolean calculateCompliantUntil,
-        boolean updateConsumer, boolean calculateProductComplianceDateRanges) {
-
-        // If this is true, we send an updated compliance event
-        boolean currentCompliance = false;
+    public ComplianceStatus getStatus(Consumer c, Collection<Entitlement> newEntitlements, Date date, boolean
+        calculateCompliantUntil, boolean updateConsumer, boolean calculateProductComplianceDateRanges,
+        boolean currentCompliance) {
 
         if (date == null) {
             date = new Date();
-            currentCompliance = true;
         }
 
         if (currentCompliance) {
-            for (Entitlement ent : c.getEntitlements()) {
-                if (!ent.isUpdatedOnStart() && ent.isValid()) {
-                    ent.setUpdatedOnStart(true);
-                    entCurator.merge(ent);
-                }
-            }
+            updateEntsOnStart(c);
+        }
+
+        List<Entitlement> allEnts = new LinkedList<Entitlement>(c.getEntitlements());
+        if (newEntitlements != null) {
+            allEnts.addAll(newEntitlements);
         }
 
         /*
@@ -154,7 +157,7 @@ public class ComplianceRules {
 
         JsonJsContext args = new JsonJsContext(mapper);
         args.put("consumer", c);
-        args.put("entitlements", c.getEntitlements());
+        args.put("entitlements", allEnts);
         args.put("ondate", date);
         args.put("calculateCompliantUntil", calculateCompliantUntil);
         args.put("calculateProductComplianceDateRanges", calculateProductComplianceDateRanges);
@@ -164,33 +167,46 @@ public class ComplianceRules {
         // Convert the JSON returned into a ComplianceStatus object:
         String json = jsRules.runJsFunction(String.class, "get_status", args);
         try {
-            ComplianceStatus result = mapper.toObject(json, ComplianceStatus.class);
-            for (ComplianceReason reason : result.getReasons()) {
-                generator.setMessage(c, reason, result.getDate());
+            ComplianceStatus status = mapper.toObject(json, ComplianceStatus.class);
+            for (ComplianceReason reason : status.getReasons()) {
+                generator.setMessage(c, reason, status.getDate());
             }
             if (currentCompliance) {
-                String newHash = getComplianceStatusHash(result, c);
-                boolean complianceChanged = !newHash.equals(c.getComplianceStatusHash());
-                if (complianceChanged) {
-                    log.debug("Compliance has changed, sending Compliance event.");
-                    c.setComplianceStatusHash(newHash);
-                    eventSink.emitCompliance(c, c.getEntitlements(), result);
-                }
-
-                boolean entStatusChanged = !result.getStatus().equals(c.getEntitlementStatus());
-                if (entStatusChanged) {
-                    c.setEntitlementStatus(result.getStatus());
-                }
-
-                if (updateConsumer && (complianceChanged || entStatusChanged)) {
-                    // Merge might work better here, but we use update in other places for this
-                    consumerCurator.update(c, false);
-                }
+                applyStatus(c, status, updateConsumer);
             }
-            return result;
+            return status;
         }
         catch (Exception e) {
             throw new RuleExecutionException(e);
+        }
+    }
+
+    public void updateEntsOnStart(Consumer c) {
+        for (Entitlement ent : c.getEntitlements()) {
+            if (!ent.isUpdatedOnStart() && ent.isValid()) {
+                ent.setUpdatedOnStart(true);
+                entCurator.merge(ent);
+            }
+        }
+    }
+
+    public void applyStatus(Consumer c, ComplianceStatus status, boolean updateConsumer) {
+        String newHash = getComplianceStatusHash(status, c);
+        boolean complianceChanged = !newHash.equals(c.getComplianceStatusHash());
+        if (complianceChanged) {
+            log.debug("Compliance has changed, sending Compliance event.");
+            c.setComplianceStatusHash(newHash);
+            eventSink.emitCompliance(c, c.getEntitlements(), status);
+        }
+
+        boolean entStatusChanged = !status.getStatus().equals(c.getEntitlementStatus());
+        if (entStatusChanged) {
+            c.setEntitlementStatus(status.getStatus());
+        }
+
+        if (updateConsumer && (complianceChanged || entStatusChanged)) {
+            // Merge might work better here, but we use update in other places for this
+            consumerCurator.update(c, false);
         }
     }
 

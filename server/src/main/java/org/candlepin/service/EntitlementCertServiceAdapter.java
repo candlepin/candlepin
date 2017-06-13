@@ -17,6 +17,7 @@ package org.candlepin.service;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
+import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 
 import java.io.IOException;
@@ -52,6 +53,7 @@ public interface EntitlementCertServiceAdapter {
      * String, we use pool ids for consistency
      *
      * @param consumer
+     * @param poolQuantityMap the pools associated with the certs.
      * @param entitlements entitlements which granted the certs.
      * @param products The Products being consumed.
      * @return Client entitlement certificates.
@@ -59,7 +61,8 @@ public interface EntitlementCertServiceAdapter {
      * @throws GeneralSecurityException thrown security problem
      */
     Map<String, EntitlementCertificate> generateEntitlementCerts(Consumer consumer,
-        Map<String, Entitlement> entitlements, Map<String, Product> products)
+        Map<String, PoolQuantity> poolQuantityMap, Map<String, Entitlement> entitlements,
+        Map<String, Product> products, boolean save)
         throws GeneralSecurityException, IOException;
 
     /**
