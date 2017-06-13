@@ -575,17 +575,55 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     }
 
     /**
-     * A version of list Modifying that finds Entitlements that modify
-     * input entitlements.
-     * When dealing with large amount of entitlements for which it is necessary
-     * to determine their modifier products. Today this is used in the revoke case
-     * or when we update ent quantity. In an uncoming PR, we will change this implementation
-     * to directly mark these ents as dirty, instead of returning the ids.
-     * @param entitlement
-     * @return Entitlements that are being modified by the input entitlements
+     * - A version of list Modifying that finds Entitlements that modify
+     * input entitlements, and updates the dirty flag to true.
+     * - useful when dealing with large amount of entitlements for which it is necessary
+     * to determine their modifier products.
+     * - Today this is used in the revoke case or when we update ent quantity.
+     *
+     * pseudo code:
+     * UPDATE entitlements
+     * SET dirty = true
+     * WHERE id IN (
+     *              -- a pass through query to work around
+     *              -- mysql restriction of not updating the same
+     *              -- table that is selected from.
+     *              SELECT * FROM (
+     *                             SELECT entitlement.id
+     *                             FROM relevant tables
+     *                             -- exclude if already dirty
+     *                             WHERE dirty = false
+     *                             -- exclude ents passed in as args
+     *                             AND (ent.id NOT IN (:ein))
+     *                             AND (
+     *                                  EXISTS (
+     *                                          SELECT entIn.id
+     *                                          -- ensure only modifying ents
+     *                                          FROM relevant tables
+     *                                          WHERE (entIn.id IN (:ein))
+     *                                         )
+     *                                  )
+     *                             -- ensure we do not cross in clause limit
+     *                             LIMIT  999
+     *                            ) as e
+     *               )
+     *
+     * @param entitlements
+     * @return number of entitlements that were marked as dirty
      */
-    public Collection<String> batchListModifying(Iterable<Entitlement> entitlements) {
-        List<String> eids = new LinkedList<String>();
+    public int markModifyingEntsDirty(Iterable<Entitlement> entitlements) {
+        return markModifyingEntsDirtyForTesting(getEntityManager(), entitlements);
+    }
+
+    /**
+     * a convenience method for helping with tests, which can pass a mock for entityManager
+     * @param entityManager
+     * @param entitlements
+     * @return number of entitlements that were marked as dirty
+     */
+    public int markModifyingEntsDirtyForTesting(EntityManager entityManager, Iterable<Entitlement>
+        entitlements) {
+        int result = 0;
 
         if (entitlements != null && entitlements.iterator().hasNext()) {
 
@@ -594,51 +632,80 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             Iterable<List<Entitlement>> blocks = Iterables.partition(entitlements, getInBlockSize());
             int i = 0;
             for (List<Entitlement> block : blocks) {
-                eidClause += " eOut NOT IN (:not_in_" + i + ") AND ";
+                eidClause += " AND (ent.id NOT IN (:not_in_" + i + ")) ";
                 splitEnts.add(block);
                 i++;
             }
 
-            String hql =
-                "SELECT DISTINCT eOut.id" +
-                "    FROM Entitlement eOut" +
-                "        JOIN eOut.pool outPool" +
-                "        JOIN outPool.providedProducts outProvided" +
-                "        JOIN outProvided.productContent outProvContent" +
-                "        JOIN outProvContent.content outContent" +
-                "        JOIN outContent.modifiedProductIds outModProdId" +
-                "    WHERE" +
-                "        outPool.endDate >= current_date AND" +
-                "        eOut.owner = :owner AND " + eidClause +
-                "        EXISTS (" +
-                "            SELECT eIn" +
-                "                FROM Entitlement eIn" +
-                "                    JOIN eIn.consumer inConsumer" +
-                "                    JOIN eIn.pool inPool" +
-                "                    JOIN inPool.product inMktProd" +
-                "                    LEFT JOIN inPool.providedProducts inProvidedProd" +
-                "                WHERE eIn in (:ein) AND inConsumer = eOut.consumer AND" +
-                "                    inPool.endDate >= outPool.startDate AND" +
-                "                    inPool.startDate <= outPool.endDate AND" +
-                "                    (inProvidedProd.id = outModProdId OR inMktProd.id = outModProdId)" +
-                "        )";
+            String sql = "UPDATE cp_entitlement" +
+                "     SET dirty = true" +
+                "     WHERE id IN (" +
+                "         SELECT * FROM (" +
+                "             SELECT distinct ent.id" +
+                "             FROM cp_entitlement ent" +
+                "             INNER JOIN cp_pool pool" +
+                "                 ON ent.pool_id = pool.id" +
+                "             INNER JOIN cp2_pool_provided_products providedPr" +
+                "                 ON pool.id = providedPr.pool_id" +
+                "             INNER JOIN cp2_products product" +
+                "                 ON providedPr.product_uuid = product.uuid" +
+                "             INNER JOIN cp2_product_content productCon" +
+                "                 ON product.uuid = productCon.product_uuid" +
+                "             INNER JOIN cp2_content content" +
+                "                 ON productCon.content_uuid = content.uuid" +
+                "             INNER JOIN cp2_content_modified_products modifiedPr" +
+                "                 ON content.uuid=modifiedPr.content_uuid" +
+                "             WHERE pool.endDate >= current_date" +
+                "               AND ent.owner_id = :owner" +
+                "               AND ent.dirty = false" + eidClause +
+                "               AND (EXISTS (SELECT entIn.id" +
+                "                            FROM cp_entitlement entIn" +
+                "                            INNER JOIN cp_consumer consumerIn" +
+                "                                ON entIn.consumer_id = consumerIn.id" +
+                "                            INNER JOIN cp_pool poolIn" +
+                "                                ON entIn.pool_id = poolIn.id" +
+                "                            INNER JOIN cp2_products productIn" +
+                "                                ON poolIn.product_uuid = productIn.uuid" +
+                "                            LEFT OUTER JOIN cp2_pool_provided_products providedPrIn" +
+                "                                ON poolIn.id = providedPrIn.pool_id" +
+                "                            LEFT OUTER JOIN cp2_products productIn2" +
+                "                                ON providedPrIn.product_uuid = productIn2.uuid" +
+                "                            WHERE (entIn.id IN (:ein))" +
+                "                               AND consumerIn.id = ent.consumer_id" +
+                "                               AND poolIn.endDate >= pool.startDate" +
+                "                               AND poolIn.startDate <= pool.endDate" +
+                "                               AND (productIn2.product_id = modifiedPr.element" +
+                "                                 OR productIn.product_id = modifiedPr.element)))" +
+                "             LIMIT " + getInBlockSize() + " ) as e)";
+            /* NOTE: it is okay to limit the number of records in the in clause above, since we run
+             * the query more than once per block if needed.
+             */
 
-            Query query = this.getEntityManager().createQuery(hql);
+            Query query = entityManager.createNativeQuery(sql);
+            query.setParameter("owner", entitlements.iterator().next().getOwner());
 
+            /* all the entitlements from all the blocks should be in the "not_in" clause
+             * every time the query is run, irrespective of which block is in the current query.
+             */
+            int j = 0;
             for (List<Entitlement> block : splitEnts) {
-                Owner sampleOwner = block.get(0).getOwner();
-                query.setParameter("ein", block)
-                    .setParameter("owner", sampleOwner);
-                int j = 0;
-                for (List<Entitlement> splitEntBlock: splitEnts) {
-                    query.setParameter("not_in_" + j, splitEntBlock);
-                }
+                query.setParameter("not_in_" + j, block);
+                j++;
+            }
 
-                eids.addAll(query.getResultList());
+            /* for each block, keep running the query until the number of records updated in the last run is
+             * less than the maximum records we allow in an "in clause".
+             */
+            for (List<Entitlement> block : splitEnts) {
+                int blockResult = getInBlockSize();
+                query.setParameter("ein", block);
+                while (blockResult >= getInBlockSize()) {
+                    blockResult = query.executeUpdate();
+                    result += blockResult;
+                }
             }
         }
-
-        return eids;
+        return result;
     }
 
     /**
@@ -694,14 +761,6 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         }
 
         return eids;
-    }
-
-    public Collection<String> listModifying(Entitlement entitlement) {
-        return batchListModifying(java.util.Arrays.asList(entitlement));
-    }
-
-    public Collection<String> listModifying(Collection entitlements) {
-        return batchListModifying(entitlements);
     }
 
     public Map<Consumer, List<Entitlement>> getDistinctConsumers(List<Entitlement> entsToRevoke) {

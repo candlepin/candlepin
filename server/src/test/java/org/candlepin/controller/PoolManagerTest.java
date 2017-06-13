@@ -958,7 +958,7 @@ public class PoolManagerTest {
         int total = manager.revokeAllEntitlements(c);
 
         assertEquals(2, total);
-        verify(entitlementCurator, never()).listModifying(any(Entitlement.class));
+        verify(entitlementCurator, times(1)).markModifyingEntsDirty(any(List.class));
         //TODO assert batch revokes have been called
     }
 

@@ -1553,10 +1553,7 @@ public class CandlepinPoolManager implements PoolManager {
         }
         else {
             regenerateCertificatesOf(consumer, true);
-            this.ecGenerator.regenerateCertificatesByEntitlementIds(
-                this.entitlementCurator.batchListModifying(Collections.singleton(entitlement)),
-                true
-            );
+            this.entitlementCurator.markModifyingEntsDirty(Collections.singleton(entitlement));
         }
 
         /*
@@ -1767,11 +1764,8 @@ public class CandlepinPoolManager implements PoolManager {
          * modifier entitlements that need to have their certificates regenerated
          */
         if (regenCertsAndStatuses) {
-            Collection<String> modifiedEntIds = this.entitlementCurator.batchListModifying(entsToRevoke);
-            log.debug("Regenerating certificates for modifying entitlements: {}", modifiedEntIds);
-
-            this.ecGenerator.regenerateCertificatesByEntitlementIds(modifiedEntIds,  true);
-            log.debug("Modifier entitlements done.");
+            int update = this.entitlementCurator.markModifyingEntsDirty(entsToRevoke);
+            log.debug("Marked {} modifying entitlements as dirty.", update);
         }
 
         log.info("Starting batch delete of pools");
