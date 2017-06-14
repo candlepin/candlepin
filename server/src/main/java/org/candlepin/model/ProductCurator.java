@@ -225,8 +225,15 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             this.attributeValidator.validate(entry.getKey(), entry.getValue());
         }
 
-        for (ProductContent pc : entity.getProductContent()) {
-            pc.setProduct(entity);
+        if (entity.getProductContent() != null) {
+            for (ProductContent pc : entity.getProductContent()) {
+                if (pc.getContent() == null) {
+                    throw new IllegalStateException(
+                        "Product contains a ProductContent with a null content reference");
+                }
+
+                pc.setProduct(entity);
+            }
         }
 
         // TODO: Add more reference checks here.

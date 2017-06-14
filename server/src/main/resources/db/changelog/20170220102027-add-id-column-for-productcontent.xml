@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <changeSet id="20170220102027-1" author="crog">
+        <!-- On MySQL/MariaDB, we need to drop *all* foreign keys before we can drop our primary key -->
+        <dropAllForeignKeyConstraints baseTableName="cp2_product_content"/>
+
+        <dropPrimaryKey tableName="cp2_product_content" constraintName="cp2_product_content_pk"/>
+
+        <!-- Liquibase won't let us specify the positional offset, despite the docs saying we can. -->
+        <addColumn tableName="cp2_product_content">
+            <column name="id" type="varchar(32)"/>
+        </addColumn>
+
+        <addPrimaryKey tableName="cp2_product_content"
+            columnNames="id"
+            constraintName="cp2_product_content_pk"
+        />
+
+        <!-- Now that we've added the primary key back, we can re-add the foreign keys -->
+        <addForeignKeyConstraint baseTableName="cp2_product_content" baseColumnNames="product_uuid"
+            constraintName="cp2_product_content_fk1"
+            onDelete="CASCADE"
+            referencedTableName="cp2_products"
+            referencedColumnNames="uuid"
+        />
+
+        <addForeignKeyConstraint baseTableName="cp2_product_content" baseColumnNames="content_uuid"
+            constraintName="cp2_product_content_fk2"
+            onDelete="CASCADE"
+            referencedTableName="cp2_content"
+            referencedColumnNames="uuid"
+        />
+    </changeSet>
+
+</databaseChangeLog>
+<!-- vim: set expandtab sts=4 sw=4 ai: -->
