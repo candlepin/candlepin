@@ -17,7 +17,6 @@ package org.candlepin.pinsetter.tasks;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 import static org.quartz.JobBuilder.newJob;
-import static org.quartz.JobKey.jobKey;
 
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
@@ -35,12 +34,15 @@ import org.quartz.JobKey;
 import org.quartz.ListenerManager;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
+import org.quartz.Trigger;
 
 public class UniqueByEntityJobTest {
 
     @Mock private JobCurator jobCurator;
     @Mock private Scheduler scheduler;
     @Mock private ListenerManager lm;
+    @Mock private Trigger t;
+    @Mock private JobStatus status;
 
     @Before
     public void init() {
@@ -68,5 +70,34 @@ public class UniqueByEntityJobTest {
 
         JobStatus resultStatus = job.scheduleJob(jobCurator, null, detail, null);
         assertEquals(preExistingJobStatus, resultStatus);
+    }
+
+    /*
+     * if a job creation fails, ensure we update status and re-throw the runtime exception
+     */
+    @Test
+    public void failsCreationGracefullyTest() throws JobExecutionException, SchedulerException {
+        JobDataMap map = new JobDataMap();
+        map.put(JobStatus.TARGET_ID, "TaylorSwift");
+        JobKey jobKey = new JobKey("name", "group");
+        JobDetail detail = newJob(TestUniqueByEntityJob.class).withIdentity(jobKey).requestRecovery(true)
+            .usingJobData(map).storeDurably(true).build();
+        JobStatus preExistingJobStatus = new JobStatus();
+        preExistingJobStatus.setState(JobState.WAITING);
+        TestUniqueByEntityJob job = new TestUniqueByEntityJob();
+
+        when(jobCurator.create(any(JobStatus.class))).thenReturn(status);
+        when(scheduler.getListenerManager()).thenReturn(lm);
+        when(scheduler.scheduleJob(any(JobDetail.class), any(Trigger.class))).thenThrow(new
+            RuntimeException("covfefe"));
+        try {
+            job.scheduleJob(jobCurator, scheduler, detail, t);
+            fail();
+        }
+        catch (RuntimeException e) {
+            assertEquals(e.getMessage(), "covfefe");
+        }
+
+        verify(status, times(1)).setState(JobState.FAILED);
     }
 }
