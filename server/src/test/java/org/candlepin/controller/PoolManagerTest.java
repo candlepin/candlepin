@@ -1037,8 +1037,7 @@ public class PoolManagerTest {
 
         CandlepinQuery mockQuery = mock(CandlepinQuery.class);
         when(mockPoolCurator.listAllByIds(any(List.class))).thenReturn(mockQuery);
-        when(mockQuery.list()).thenReturn(Arrays.asList(pool1));
-        when(mockPoolCurator.lockAndLoadByIds(any(List.class))).thenReturn(Arrays.asList(pool1));
+        when(mockQuery.iterator()).thenReturn(Arrays.asList(pool1).listIterator());
         when(enforcerMock.preEntitlement(any(Consumer.class), any(Pool.class), anyInt(),
             any(CallerType.class))).thenReturn(result);
 
@@ -1056,9 +1055,6 @@ public class PoolManagerTest {
 
         doNothing().when(mockPoolCurator).flush();
         doNothing().when(mockPoolCurator).clear();
-
-
-
 
         List<Entitlement> e = manager.entitleByProducts(data);
 
@@ -1092,9 +1088,12 @@ public class PoolManagerTest {
 
         CandlepinQuery mockQuery = mock(CandlepinQuery.class);
         when(mockPoolCurator.listAllByIds(any(List.class))).thenReturn(mockQuery);
-        when(mockQuery.list()).thenReturn(Arrays.asList(pool1));
-
-        when(mockPoolCurator.lockAndLoadByIds(any(List.class))).thenReturn(Arrays.asList(pool1));
+        List<Pool> poolList = Arrays.asList(pool1);
+        when(mockQuery.iterator())
+                .thenReturn(poolList.listIterator())
+                .thenReturn(poolList.listIterator())
+                .thenReturn(poolList.listIterator())
+                .thenReturn(poolList.listIterator());
         when(enforcerMock.preEntitlement(any(Consumer.class), anyCollectionOf(PoolQuantity.class),
             any(CallerType.class))).thenReturn(resultMap);
 
@@ -1305,10 +1304,9 @@ public class PoolManagerTest {
             any(PageRequest.class), anyBoolean(), anyBoolean(), anyBoolean()))
                 .thenReturn(page);
         CandlepinQuery mockQuery = mock(CandlepinQuery.class);
-        when(mockPoolCurator.listAllByIds(any(Set.class))).thenReturn(mockQuery);
-        when(mockQuery.list()).thenReturn(Arrays.asList(pool1));
+        when(mockPoolCurator.listAllByIds(any(List.class))).thenReturn(mockQuery);
+        when(mockQuery.iterator()).thenReturn(Arrays.asList(pool1).listIterator());
 
-        when(mockPoolCurator.lockAndLoadByIds(anyListOf(String.class))).thenReturn(pools);
         when(enforcerMock.preEntitlement(any(Consumer.class), any(Pool.class), anyInt(),
             any(CallerType.class))).thenReturn(result);
 
