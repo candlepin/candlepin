@@ -6,7 +6,7 @@ MAX_STARTUP_WAIT_TIME=30
 gendb() {
     if [ "$USE_ORACLE" == "1" ]; then
         init_oracle_jdbc $APP_DB_NAME
-        [ -z "$DBPASSWORD" ] && DBPASSWORD="candlepin"
+        [ -z "$DBPASSWORD" ] && DBPASSWORD="$APP_DB_NAME"
     elif [ "$USE_MYSQL" == "1" ]; then
         init_mysql_jdbc $APP_DB_NAME
     else
@@ -111,7 +111,7 @@ create_var_cache_candlepin() {
 }
 
 autoconf() {
-  buildr -s -e $1 app_db_name=$APP_DB_NAME erb $2 $3
+  buildr -s -e $1 app_db_name=$APP_DB_NAME app_db_host=${DBHOSTNAME:-'localhost'} erb $2 $3
 
   if [ "$?" -ne "0" ]; then
     err_msg "ERROR: candlepin.conf generation failed!"
@@ -165,13 +165,13 @@ initialize_cp() {
 }
 
 init() {
+    # Source useful bash functions
+    source "$(buildr -s checkout_root)/bin/bash_functions"
+
     # Read in user defined variables
     if [ -f $HOME/.candlepinrc ] ; then
         source $HOME/.candlepinrc
     fi
-
-    # Source useful bash functions
-    source "$(buildr -s checkout_root)/bin/bash_functions"
 
     PROJECT_DIR="$(project_directory server)"
 
