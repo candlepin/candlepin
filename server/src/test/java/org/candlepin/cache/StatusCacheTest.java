@@ -46,7 +46,7 @@ public class StatusCacheTest {
         StatusCache cache = new StatusCache();
         Status status = new Status(true, "2.0", "2.0", false, "4.2",
             Rules.RulesSourceEnum.DATABASE, CandlepinModeChange.Mode.NORMAL,
-            CandlepinModeChange.Reason.STARTUP, new Date());
+            CandlepinModeChange.BrokerState.UP, CandlepinModeChange.DbState.UP, new Date());
         cache.setStatus(status);
         assertEquals(status, cache.getStatus());
     }
@@ -56,7 +56,7 @@ public class StatusCacheTest {
         StatusCache cache = new StatusCache();
         Status status = new Status(true, "2.0", "2.0", false, "4.2",
             Rules.RulesSourceEnum.DATABASE, CandlepinModeChange.Mode.NORMAL,
-            CandlepinModeChange.Reason.STARTUP, new Date());
+            CandlepinModeChange.BrokerState.UP, CandlepinModeChange.DbState.UP, new Date());
         cache.setStatus(status);
         assertEquals(status, cache.getStatus());
         Thread.sleep(6000L);
@@ -68,7 +68,7 @@ public class StatusCacheTest {
         StatusCache cache1 = new StatusCache();
         Status status = new Status(true, "2.0", "2.0", false, "4.2",
             Rules.RulesSourceEnum.DATABASE, CandlepinModeChange.Mode.NORMAL,
-            CandlepinModeChange.Reason.STARTUP, new Date());
+            CandlepinModeChange.BrokerState.UP, CandlepinModeChange.DbState.UP, new Date());
         cache1.setStatus(status);
 
         StatusCache cache2 = new StatusCache();

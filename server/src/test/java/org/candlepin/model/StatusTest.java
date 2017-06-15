@@ -20,7 +20,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import org.candlepin.model.CandlepinModeChange.Mode;
-import org.candlepin.model.CandlepinModeChange.Reason;
+import org.candlepin.model.CandlepinModeChange.BrokerState;
+import org.candlepin.model.CandlepinModeChange.DbState;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -40,13 +41,13 @@ public class StatusTest {
     public void init() {
         status = new Status(Boolean.TRUE, "1.0", "2",
             Boolean.TRUE, "2.0", Rules.RulesSourceEnum.DEFAULT,
-            Mode.NORMAL, Reason.QPID_UP, new Date());
+            Mode.NORMAL, BrokerState.UP, DbState.UP, new Date());
         statusUndef = new Status(Boolean.TRUE, "1.0", "2",
             Boolean.TRUE, "2.0", Rules.RulesSourceEnum.UNDEFINED,
-            Mode.NORMAL, Reason.QPID_UP, new Date());
+            Mode.NORMAL, BrokerState.UP, DbState.UP, new Date());
         statusDb = new Status(Boolean.TRUE, "1.0", "2",
             Boolean.TRUE, "2.0", Rules.RulesSourceEnum.DATABASE,
-            Mode.NORMAL, Reason.QPID_UP, new Date());
+            Mode.NORMAL, BrokerState.UP, DbState.UP, new Date());
     }
 
     @Test

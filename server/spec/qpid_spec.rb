@@ -21,6 +21,7 @@ describe 'Qpid Broker' do
      skip("Qpid keys not found, skipping Qpid spec tests") if @cq.no_keys 
      # Clean the qpid queue
      @cq.receive
+     @cq.delete_queue("flowStopQueue")
   end
 
   it 'flow stop is detected' do
@@ -40,25 +41,12 @@ describe 'Qpid Broker' do
        create_owner random_string("test")
      end
      sleep 10
-     assert_mode_reason("SUSPEND", "QPID_FLOW_STOPPED")
+     assert_broker_state('SUSPEND', 'FLOW_STOPPED')
 
      puts "Removing queue #{test_q}, this should unblock again"
      @cq.delete_queue(test_q) 
      sleep 20
-     assert_mode_reason("NORMAL", "QPID_UP")
-  end 
-  
-  def assert_mode_reason(mode_name, reason)
-     mode = @cp.get('/status')
-     expect(mode).to have_key("mode")
-     expect(mode["mode"]).to eq(mode_name)
-     expect(mode["modeReason"]).to eq(reason)
-  end
-
-  def assert_mode(mode_name)
-     mode = @cp.get('/status')
-     expect(mode).to have_key("mode")
-     expect(mode["mode"]).to eq(mode_name)
+     assert_broker_state('NORMAL', 'UP')
   end
 
   def stop_tomcat()
@@ -75,8 +63,8 @@ describe 'Qpid Broker' do
      puts "Candlepin is in Normal mode. Stopping Qpid"
      @cq.stop
      sleep 40
-     
-     assert_mode_reason("SUSPEND", "QPID_DOWN")
+
+     assert_broker_state('SUSPEND', 'DOWN')
 
      puts "Candlepin is in Suspend mode. Creating owner"
 
@@ -91,7 +79,7 @@ describe 'Qpid Broker' do
      @cq.start
      sleep 40
 
-     assert_mode_reason("NORMAL", "QPID_UP")
+     assert_broker_state('NORMAL', 'UP')
      
      puts "Candlepin in Normal mode. Creating owner"
      expect(create_owner random_string('test_owner')).to have_key("created")

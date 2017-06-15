@@ -24,7 +24,8 @@ import java.util.Date;
 public class CandlepinModeChange implements Serializable {
     private static final long serialVersionUID = -7059065874812188168L;
     private final Mode mode;
-    private final Reason reason;
+    private final BrokerState brokerState;
+    private final DbState dbState;
     private final Date changeTime;
 
     /**
@@ -36,38 +37,56 @@ public class CandlepinModeChange implements Serializable {
     }
 
     /**
-     * Change reason
+     * Qpid broker state
      */
-    public enum Reason {
-        /**
-         * When Candlepin is starting up, it by default starts
-         * in NORMAL mode
-         */
-        STARTUP,
+    public enum BrokerState {
         /**
          * When Qpid broker isn't available, Candlepin must enter
          * Suspend mode
          */
-        QPID_DOWN,
+        DOWN,
         /**
          * Qpid comes back up
          */
-        QPID_UP,
+        UP,
         /**
          * Qpid is overloaded to a point where its not possible to
          * send messages to it
          */
-        QPID_FLOW_STOPPED
+        FLOW_STOPPED,
+        /**
+         * AMQP integration is turned off
+         */
+        OFF
     }
 
-    public CandlepinModeChange(Date changeTime, Mode mode, Reason reason) {
+    /**
+     * Database state
+     */
+    public enum DbState {
+        /**
+         * Database is not available, Candlepin must enter Suspend mode
+         */
+        DOWN,
+        /**
+         * Database connection is back up
+         */
+        UP
+    }
+
+    public CandlepinModeChange(Date changeTime, Mode mode, BrokerState brokerState, DbState dbState) {
         this.mode = mode;
         this.changeTime = changeTime;
-        this.reason = reason;
+        this.brokerState = brokerState;
+        this.dbState = dbState;
     }
 
-    public Reason getReason() {
-        return reason;
+    public BrokerState getBrokerState() {
+        return brokerState;
+    }
+
+    public DbState getDbState() {
+        return dbState;
     }
 
     public Mode getMode() {
@@ -80,8 +99,8 @@ public class CandlepinModeChange implements Serializable {
 
     @Override
     public String toString() {
-        return "CandlepinModeChange [mode=" + mode + ", reason=" + reason + ", changeTime=" +
-            changeTime + "]";
+        return "CandlepinModeChange [mode=" + mode + ", brokerState=" + brokerState + ", dbState=" + dbState +
+                ", changeTime=" + changeTime + "]";
     }
 
 

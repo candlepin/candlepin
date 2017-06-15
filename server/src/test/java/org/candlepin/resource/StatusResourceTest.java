@@ -33,7 +33,8 @@ import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.Status;
 import org.candlepin.model.CandlepinModeChange.Mode;
-import org.candlepin.model.CandlepinModeChange.Reason;
+import org.candlepin.model.CandlepinModeChange.BrokerState;
+import org.candlepin.model.CandlepinModeChange.DbState;
 import org.candlepin.policy.js.JsRunnerProvider;
 
 import org.junit.Before;
@@ -72,7 +73,7 @@ public class StatusResourceTest {
         MockitoAnnotations.initMocks(this);
 
         CandlepinModeChange mockModeChange =
-            new CandlepinModeChange(new Date(), Mode.NORMAL, Reason.STARTUP);
+            new CandlepinModeChange(new Date(), Mode.NORMAL, BrokerState.UP, DbState.UP);
         CandlepinQuery mockCPQuery = mock(CandlepinQuery.class);
         when(mockCPQuery.list()).thenReturn(new ArrayList<Rules>());
 

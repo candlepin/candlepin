@@ -16,7 +16,8 @@
 package org.candlepin.model;
 
 import org.candlepin.model.CandlepinModeChange.Mode;
-import org.candlepin.model.CandlepinModeChange.Reason;
+import org.candlepin.model.CandlepinModeChange.BrokerState;
+import org.candlepin.model.CandlepinModeChange.DbState;
 import org.candlepin.model.Rules.RulesSourceEnum;
 
 import java.util.Date;
@@ -39,10 +40,16 @@ public class Status {
      * The current Suspend Mode of Candlepin
      */
     private Mode mode;
+
     /**
-     * The reason for the last Suspend Mode change
+     * The current state of Qpid broker
      */
-    private Reason modeReason;
+    private BrokerState brokerState;
+
+    /**
+     * The current state of database
+     */
+    private DbState dbState;
 
     /**
      * Last time the mode was changed
@@ -81,8 +88,8 @@ public class Status {
     }
 
     public Status(Boolean result, String version, String release, Boolean standalone,
-        String rulesVersion, Rules.RulesSourceEnum rulesSource, Mode mode, Reason reason
-        , Date modeChangeTime) {
+        String rulesVersion, Rules.RulesSourceEnum rulesSource, Mode mode, BrokerState brokerState,
+        DbState dbState, Date modeChangeTime) {
         this.result = result;
         this.version = version;
         this.release = release;
@@ -90,7 +97,8 @@ public class Status {
         this.timeUTC = new Date();
         this.rulesVersion = rulesVersion;
         this.mode = mode;
-        this.modeReason = reason;
+        this.brokerState = brokerState;
+        this.dbState = dbState;
         this.modeChangeTime = modeChangeTime;
         this.setRulesSource(rulesSource);
     }
@@ -164,8 +172,12 @@ public class Status {
         return mode;
     }
 
-    public Reason getModeReason() {
-        return modeReason;
+    public BrokerState getBrokerState() {
+        return brokerState;
+    }
+
+    public DbState getDbState() {
+        return dbState;
     }
 
     public Date getModeChangeTime() {
