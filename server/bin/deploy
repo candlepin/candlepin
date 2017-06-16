@@ -111,7 +111,7 @@ create_var_cache_candlepin() {
 }
 
 autoconf() {
-  buildr -s -e $1 app_db_name=$APP_DB_NAME app_db_host=${DBHOSTNAME:-'localhost'} erb $2 $3
+  buildr -s -e $1 app_db_name=$APP_DB_NAME app_db_host=${DBHOSTNAME:-localhost} erb $2 $3
 
   if [ "$?" -ne "0" ]; then
     err_msg "ERROR: candlepin.conf generation failed!"

@@ -128,7 +128,7 @@ cert_from_pkcs12() {
 recreate_postgresql() {
     local db_name="$1"
     local db_user="${2:-$db_name}"
-    local db_host="${DBHOSTNAME:-'localhost'}"
+    local db_host="${DBHOSTNAME:-localhost}"
     # psql must use this env var for password passing
     if [ -n "${DBPASSWORD}" ]; then
      export PGPASSWORD="$DBPASSWORD"
@@ -144,7 +144,7 @@ recreate_postgresql() {
 
 init_postgresql_jdbc() {
     local db_name="$1"
-    local db_host="${DBHOSTNAME:-'localhost'}"
+    local db_host="${DBHOSTNAME:-localhost}"
     JDBC_DRIVER="org.postgresql.Driver"
     JDBC_JAR="/usr/share/java/postgresql-jdbc.jar"
     JDBC_URL="jdbc:postgresql://$db_host/$db_name"
@@ -153,7 +153,7 @@ init_postgresql_jdbc() {
 recreate_mysql() {
     local db_name="$1"
     local db_user="${2:-$db_name}"
-    local db_host="${DBHOSTNAME:-'localhost'}"
+    local db_host="${DBHOSTNAME:-localhost}"
     local password="$DBPASSWORD"
     [ -z "$password" ] && password=''
     mysqladmin -h $db_host --user="$db_user" --password="$password" --force drop "$db_name"
@@ -163,7 +163,7 @@ recreate_mysql() {
 
 init_mysql_jdbc() {
     local db_name="$1"
-    local db_host="${DBHOSTNAME:-'localhost'}"
+    local db_host="${DBHOSTNAME:-localhost}"
     JDBC_DRIVER="com.mysql.jdbc.Driver"
     JDBC_JAR="/usr/share/java/mysql-connector-java.jar"
     JDBC_URL="jdbc:mysql://$db_host/$db_name"
@@ -172,7 +172,7 @@ init_mysql_jdbc() {
 recreate_oracle () {
     local db_name="$1"
     local db_user="${2:-$db_name}"
-    local db_host="${DBHOSTNAME:-'localhost'}"
+    local db_host="${DBHOSTNAME:-localhost}"
     local password="${DBPASSWORD:-$db_name}"
 
     # this may fail if the user isn't there, IF EXISTS isn't in oracle
@@ -190,7 +190,7 @@ EOF
 
 init_oracle_jdbc() {
     local db_name="$1"
-    local db_host="${DBHOSTNAME:-'localhost'}"
+    local db_host="${DBHOSTNAME:-localhost}"
     JDBC_DRIVER="oracle.jdbc.OracleDriver"
     JDBC_JAR="/usr/lib/oracle/11.2/client64/lib/ojdbc6.jar"
     JDBC_URL="jdbc:oracle:thin:@//$db_host:1521/XE "

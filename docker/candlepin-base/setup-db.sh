@@ -47,7 +47,7 @@ EOF
 }
 
 setup_oracle() {
-  local db_host="${DBHOSTNAME:-'localhost'}"
+  local db_host="${DBHOSTNAME:-localhost}"
   retry 60 "oracle" test_oracle_connection
   echo "USE_ORACLE=\"1\"" >> /root/.candlepinrc
 }
