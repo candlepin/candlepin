@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.0.36
+Version: 2.0.37
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,13 @@ fi
 
 #raw
 %changelog
+* Fri Jun 16 2017 Kevin Howell <khowell@redhat.com> 2.0.37-1
+- 1459985: Handle job creation failure graciously (adarshvritant@gmail.com)
+- 1459643: Ensure start date is future when subscription is future
+  (wpoteat@redhat.com)
+- The per-org products migration now fails on unresolvable products
+  (crog@redhat.com)
+
 * Mon Jun 05 2017 Kevin Howell <khowell@redhat.com> 2.0.36-1
 - Optimized bulk product and content lookups (crog@redhat.com)
 - 1457891: Account for NPE in refresh job - v. 2.0 (wpoteat@redhat.com)
