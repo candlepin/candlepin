@@ -17,7 +17,6 @@ package org.candlepin.pinsetter.core.model;
 import org.candlepin.auth.Principal;
 import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
-import org.candlepin.pinsetter.tasks.KingpinJob;
 
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -116,7 +115,7 @@ public class JobStatus extends AbstractHibernateObject {
     private String correlationId;
 
     @Column(length = 255)
-    private Class<? extends KingpinJob> jobClass;
+    private String jobClass;
 
     private byte[] resultData;
 
@@ -164,8 +163,8 @@ public class JobStatus extends AbstractHibernateObject {
     }
 
     @SuppressWarnings("unchecked")
-    private Class<? extends KingpinJob> getJobClass(JobDetail jobDetail) {
-        return (Class<? extends KingpinJob>) jobDetail.getJobClass();
+    private String getJobClass(JobDetail jobDetail) {
+        return  jobDetail.getJobClass() != null ? jobDetail.getJobClass().getCanonicalName() : null;
     }
 
     public void update(JobExecutionContext context) {
@@ -263,7 +262,7 @@ public class JobStatus extends AbstractHibernateObject {
     }
 
     @XmlTransient
-    public Class<? extends KingpinJob> getJobClass() {
+    public String getJobClass() {
         return jobClass;
     }
 
@@ -352,7 +351,7 @@ public class JobStatus extends AbstractHibernateObject {
     public String toString() {
         return String.format("JobStatus [id: %s, type: %s, owner: %s, target: %s (%s), state: %s]",
             this.id,
-            this.jobClass != null ? this.jobClass.getSimpleName() : null,
+            this.jobClass != null ? this.jobClass : null,
             this.ownerId,
             this.targetId,
             this.targetType,

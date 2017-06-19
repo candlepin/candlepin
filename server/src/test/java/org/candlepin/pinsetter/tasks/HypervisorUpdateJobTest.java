@@ -288,4 +288,5 @@ public class HypervisorUpdateJobTest {
                 "Could not update host/guest mapping. Auto-attach is disabled for owner joe.");
         }
     }
+
 }

@@ -29,12 +29,15 @@ import org.candlepin.pinsetter.core.model.JobStatus;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.SchedulerException;
+import org.quartz.JobKey;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,7 +46,7 @@ import java.util.List;
  */
 public class UnpauseJobTest {
     private UnpauseJob unpauseJob;
-    @Mock private JobCurator j;
+    @Mock private JobCurator jobCurator;
     @Mock private PinsetterKernel pk;
     @Mock private JobExecutionContext ctx;
 
@@ -51,12 +54,12 @@ public class UnpauseJobTest {
     @Before
     public void init() {
         MockitoAnnotations.initMocks(this);
-        unpauseJob = new UnpauseJob(j, pk);
+        unpauseJob = new UnpauseJob(jobCurator, pk);
     }
 
     @Test
     public void noUnPausesTest() throws JobExecutionException {
-        when(j.findWaitingJobs()).thenReturn(new EmptyCandlepinQuery<JobStatus>());
+        when(jobCurator.findWaitingJobs()).thenReturn(new EmptyCandlepinQuery<JobStatus>());
         unpauseJob.execute(ctx);
         try {
             verify(pk, never()).addTrigger(any(JobStatus.class));
@@ -78,7 +81,7 @@ public class UnpauseJobTest {
 
         CandlepinQuery query = mock(CandlepinQuery.class);
         when(query.list()).thenReturn(jl);
-        when(j.findWaitingJobs()).thenReturn(query);
+        when(jobCurator.findWaitingJobs()).thenReturn(query);
 
         unpauseJob.execute(ctx);
         try {
@@ -88,4 +91,36 @@ public class UnpauseJobTest {
             fail("Should not throw an exception");
         }
     }
+
+    @Test
+    public void ensureJobCancelledWhenJobClassNoLongerExists() throws Exception {
+        JobDetail detail = Mockito.mock(JobDetail.class);
+        JobKey key = new JobKey("fake-job");
+        when(detail.getKey()).thenReturn(key);
+
+        // Allowing setting the value of JobStatus.jobClass since it is private.
+        // Do not want to expose the setter.
+        Class<? extends JobStatus> statusClass = JobStatus.class;
+        Field jobClassField = statusClass.getDeclaredField("jobClass");
+        jobClassField.setAccessible(true);
+
+        JobStatus status = new JobStatus();
+        jobClassField.set(status, "unknown.class");
+        status.setState(JobStatus.JobState.CREATED);
+        assertEquals("unknown.class", status.getJobClass());
+
+        List<JobStatus> jl = new ArrayList<JobStatus>();
+        jl.add(status);
+
+        CandlepinQuery query = mock(CandlepinQuery.class);
+        when(query.list()).thenReturn(jl);
+        when(jobCurator.findWaitingJobs()).thenReturn(query);
+
+        unpauseJob.execute(ctx);
+
+        assertEquals(JobStatus.JobState.CANCELED, status.getState());
+        assertEquals("Job canceled because job class no longer exists.", status.getResult());
+        verify(jobCurator).merge(eq(status));
+    }
+
 }

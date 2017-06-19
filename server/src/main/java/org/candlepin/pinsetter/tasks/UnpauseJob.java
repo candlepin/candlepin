@@ -63,15 +63,23 @@ public class UnpauseJob extends KingpinJob {
         }
         for (JobStatus j : waitingJobs) {
             try {
-                boolean schedule = (Boolean) j.getJobClass()
-                    .getMethod("isSchedulable", JobCurator.class, JobStatus.class)
-                    .invoke(null, jobCurator, j);
+                Class jobClass = Class.forName(j.getJobClass());
+                boolean schedule = (Boolean) jobClass.getMethod("isSchedulable", JobCurator.class,
+                    JobStatus.class).invoke(null, jobCurator, j);
                 if (schedule) {
                     log.debug("Triggering waiting job: " + j.getId());
                     pinsetterKernel.addTrigger(j);
                     j.setState(JobState.CREATED);
                     jobCurator.merge(j);
                 }
+            }
+            catch (ClassNotFoundException cnfe) {
+                log.warn("Job class {} not found. It was likely removed from candlepin and is no " +
+                    "longer valid.", j.getJobClass());
+                // Maintain job history. Mark it as CANCELED and update the status.
+                j.setState(JobState.CANCELED);
+                j.setResult("Job canceled because job class no longer exists.");
+                jobCurator.merge(j);
             }
             catch (Exception e) {
                 log.error("Failed to schedule waiting job: " + j.getId(), e);
