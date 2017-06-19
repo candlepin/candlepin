@@ -145,8 +145,17 @@ public class EntitlerJob extends KingpinJob {
     }
 
     public static boolean isSchedulable(JobCurator jobCurator, JobStatus status) {
-        long running = jobCurator.findNumRunningByClassAndTarget(
-            status.getTargetId(), status.getJobClass());
+
+        Class<? extends KingpinJob> jobClass;
+        try {
+            jobClass = (Class<? extends KingpinJob>) Class.forName(status.getJobClass());
+        }
+        catch (ClassNotFoundException cnfe) {
+            log.warn("Could not schedule job of class {}. The class was not found.", status.getJobClass());
+            return false;
+        }
+
+        long running = jobCurator.findNumRunningByClassAndTarget(status.getTargetId(), jobClass);
         // We can start the job if there are less than N others running
         int throttle = conf.getInt(ConfigProperties.ENTITLER_JOB_THROTTLE);
         return running < throttle;

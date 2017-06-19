@@ -409,6 +409,16 @@ public class JobCuratorTest extends DatabaseTestFixture {
         assertEquals(job, jobs.get(0));
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void findNumRunningByClassAndTargetThrowsIllegalArguementExceptionWithNullJobClass() {
+        curator.findNumRunningByClassAndTarget("TEST", null);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void getByClassAndTargetThrowsIllegalArguementExceptionWithNullJobClass() {
+        curator.getByClassAndTarget("TEST", null);
+    }
+
     private JobStatusBuilder newJobStatus() {
         return new JobStatusBuilder();
     }
