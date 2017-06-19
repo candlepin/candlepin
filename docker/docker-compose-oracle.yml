@@ -1,0 +1,20 @@
+version: '2'
+services:
+  db:
+    image: ${REGISTRY}/oracle_db
+    environment:
+      ORACLE_SID: XE
+      ORACLE_PDB: ORCLPDB1
+    restart: always
+    shm_size: 1G
+  candlepin:
+    image: ${REGISTRY}/candlepin-base
+    environment:
+      USING_ORACLE: "true"
+      DBHOSTNAME: db
+      DBPASSWORD: candlepin
+    privileged: true
+    volumes:
+      - ../:/candlepin-dev
+    depends_on:
+      - db
