@@ -1,0 +1,4 @@
+[mysqld]
+symbolic-links=0
+transaction-isolation=READ-COMMITTED
+

@@ -22,7 +22,7 @@ postgresql: &default
   server:
     <<: *common_server
     <<: *postgresql_static
-    jdbc_url: "jdbc:postgresql:candlepin"
+    jdbc_url: "jdbc:postgresql://$DB_HOST/$DB_NAME"
   gutterball:
     <<: *common_gutterball
     <<: *postgresql_static
@@ -36,17 +36,17 @@ development:
 oracle:
   static: &oracle_static
     driver_class: "oracle.jdbc.OracleDriver"
-    dialect: "org.hibernate.dialect.Oracle10gDialect"
+    dialect: "org.candlepin.hibernate.Oracle10gDialectFollowOnLockingOff"
     quartz_driver: "org.quartz.impl.jdbcjobstore.oracle.OracleDelegate"
   server:
     <<: *common_server
     <<: *oracle_static
-    jdbc_url: "jdbc:oracle:thin:@//localhost:1521/XE"
+    jdbc_url: "jdbc:oracle:thin:@//$DB_HOST:1521/XE"
     password: "candlepin"
   gutterball:
     <<: *common_gutterball
     <<: *oracle_static
-    jdbc_url: "jdbc:oracle:thin:@//localhost:1521/XE"
+    jdbc_url: "jdbc:oracle:thin:@//$DB_HOST:1521/XE"
     password: "gutterball"
 
 mysql:
@@ -57,8 +57,8 @@ mysql:
   server:
     <<: *common_server
     <<: *mysql_static
-    jdbc_url: "jdbc:mysql:///candlepin"
+    jdbc_url: "jdbc:mysql://$DB_HOST/$DB_NAME"
   gutterball:
     <<: *common_server
     <<: *mysql_static
-    jdbc_url: "jdbc:mysql:///gutterball"
+    jdbc_url: "jdbc:mysql://$DB_HOST/gutterball"
