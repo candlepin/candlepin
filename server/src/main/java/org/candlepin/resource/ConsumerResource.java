@@ -649,6 +649,7 @@ public class ConsumerResource {
         if (recipientOwner == null) {
             throw new NotFoundException(i18n.tr("owner with key: {0} was not found.", recipient));
         }
+
         // Check permissions for current principal on the recipient owner
         if (!principal.canAccess(recipientOwner, SubResource.ENTITLEMENTS, Access.CREATE)) {
             log.warn("User {} does not have access to create shares to org {}", principal
@@ -658,14 +659,16 @@ public class ConsumerResource {
     }
 
     private void validateContentAccessMode(Consumer consumer) throws BadRequestException {
-        if (consumer.getContentAccessMode() != null &&
-            !consumer.getOwner().isAllowedContentAccessMode(consumer.getContentAccessMode())) {
-            throw new BadRequestException(i18n.tr(
-                "The consumer cannot use the supplied content access mode."));
-        }
-        if (consumer.getContentAccessMode() != null && !consumer.isManifestDistributor()) {
-            throw new BadRequestException(i18n.tr(
-                "The consumer cannot be assigned a content access mode."));
+        if (consumer.getContentAccessMode() != null) {
+            if (!consumer.isManifestDistributor()) {
+                throw new BadRequestException(
+                    i18n.tr("The consumer cannot be assigned a content access mode."));
+            }
+
+            if (!consumer.getOwner().isAllowedContentAccessMode(consumer.getContentAccessMode())) {
+                throw new BadRequestException(
+                    i18n.tr("The consumer cannot use the supplied content access mode."));
+            }
         }
     }
 
@@ -674,6 +677,7 @@ public class ConsumerResource {
             if (ownerKey == null) {
                 throw new BadRequestException(i18n.tr("Org required to register with activation keys."));
             }
+
             if (userName != null) {
                 throw new BadRequestException(i18n.tr("Cannot specify username with activation keys."));
             }
@@ -1474,14 +1478,14 @@ public class ConsumerResource {
         Set<Long> serialSet = this.extractSerials(serials);
 
         List<Certificate> returnCerts = new LinkedList<Certificate>();
-        List<EntitlementCertificate> allCerts = entCertService
-            .listForConsumer(consumer);
+        List<EntitlementCertificate> allCerts = entCertService.listForConsumer(consumer);
+
         for (EntitlementCertificate cert : allCerts) {
-            if (serialSet.isEmpty() ||
-                serialSet.contains(cert.getSerial().getId())) {
+            if (serialSet.isEmpty() || serialSet.contains(cert.getSerial().getId())) {
                 returnCerts.add(cert);
             }
         }
+
         // we want to insert the content access cert to this list if appropriate
         try {
             Certificate cert = contentAccessCertService.getCertificate(consumer);
@@ -1495,6 +1499,7 @@ public class ConsumerResource {
         catch (GeneralSecurityException gse) {
             throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate"), gse);
         }
+
         return returnCerts;
     }
 
@@ -1512,18 +1517,21 @@ public class ConsumerResource {
         log.debug("Getting content access certificate for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         if (consumer.isShare()) {
-            throw new BadRequestException(i18n.tr("Content access body " +
-               "can not be requested for a share consumer"));
+            throw new BadRequestException(
+                i18n.tr("Content access body can not be requested for a share consumer"));
         }
-        if (consumer.getOwner().getContentAccessMode() != null &&
-            !consumer.getOwner().getContentAccessMode()
-            .equals(ContentAccessCertServiceAdapter.ORG_ENV_ACCESS_MODE)) {
+
+        String cam = consumer.getOwner().getContentAccessMode();
+        if (!ContentAccessCertServiceAdapter.ORG_ENV_ACCESS_MODE.equals(cam)) {
             throw new BadRequestException(i18n.tr("Content access mode does not allow this request."));
         }
+
         if (!contentAccessCertService.hasCertChangedSince(consumer, since)) {
             return Response.status(Response.Status.NOT_MODIFIED)
-                .entity("Not modified since date supplied.").build();
+                .entity("Not modified since date supplied.")
+                .build();
         }
+
         ContentAccessListing result = new ContentAccessListing();
 
         try {
@@ -1547,6 +1555,7 @@ public class ConsumerResource {
         catch (GeneralSecurityException gse) {
             throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate", gse));
         }
+
         return Response.ok(result, MediaType.APPLICATION_JSON).build();
     }
 
@@ -1642,6 +1651,7 @@ public class ConsumerResource {
         for (Long id : entCertService.listEntitlementSerialIds(consumer)) {
             allCerts.add(new CertificateSerialDto(id));
         }
+
         // add content access cert if needed
         try {
             ContentAccessCertificate cac = contentAccessCertService.getCertificate(consumer);
@@ -1655,6 +1665,7 @@ public class ConsumerResource {
         catch (GeneralSecurityException gse) {
             throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate", gse));
         }
+
         return allCerts;
     }
 
@@ -1867,7 +1878,7 @@ public class ConsumerResource {
         // Verify consumer exists:
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
 
-        if (consumer.getOwner().autobindDisabled()) {
+        if (consumer.getOwner().isAutobindDisabled()) {
             throw new BadRequestException(i18n.tr("Owner has autobind disabled."));
         }
 

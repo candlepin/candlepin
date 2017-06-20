@@ -39,7 +39,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @Entity
 @Table(name = "cp_cont_access_cert")
 @JsonFilter("ContentAccessCertificateFilter")
-public class ContentAccessCertificate extends RevocableCertificate implements Certificate {
+public class ContentAccessCertificate extends RevocableCertificate<ContentAccessCertificate> {
 
     @Id
     @GeneratedValue(generator = "system-uuid")

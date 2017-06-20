@@ -200,7 +200,7 @@ public class Entitler {
         Consumer consumer = data.getConsumer();
         Owner owner = consumer.getOwner();
 
-        if (!consumer.isDev() && owner.autobindDisabled()) {
+        if (!consumer.isDev() && owner.isAutobindDisabled()) {
             log.info("Skipping auto-attach for consumer '{}'. Auto-attach is disabled for owner {}.",
                 consumer, owner.getKey());
             throw new AutobindDisabledForOwnerException(i18n.tr("Auto-attach is disabled for owner '{0}'.",

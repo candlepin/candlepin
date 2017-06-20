@@ -36,7 +36,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_ueber_cert")
-public class UeberCertificate extends RevocableCertificate implements Certificate {
+public class UeberCertificate extends RevocableCertificate<UeberCertificate> {
 
     private static final long serialVersionUID = 1L;
 
