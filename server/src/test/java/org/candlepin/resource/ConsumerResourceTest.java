@@ -112,6 +112,8 @@ import java.util.Set;
 
 import javax.ws.rs.core.Response;
 
+
+
 /**
  * ConsumerResourceTest
  */
@@ -159,8 +161,7 @@ public class ConsumerResourceTest {
     @Test
     public void testValidateShareConsumerRequiresRecipientFact() {
         ConsumerType share = new ConsumerType(ConsumerTypeEnum.SHARE);
-        Consumer c = new Consumer("test-consumer", "test-user", new Owner(
-            "Test Owner"), share);
+        Consumer c = new Consumer("test-consumer", "test-user", new Owner("Test Owner"), share);
 
         ConsumerResource consumerResource = new ConsumerResource(
             mockedConsumerCurator, mockConsumerTypeCurator, null, null, null, mockedEntitlementCurator, null,

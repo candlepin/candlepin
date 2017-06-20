@@ -41,8 +41,7 @@ public class DateSerializer extends JsonSerializer<Date> {
     }
 
     @Override
-    public void serialize(Date date, JsonGenerator jgen,
-        SerializerProvider serializerProvider)
+    public void serialize(Date date, JsonGenerator jgen, SerializerProvider serializerProvider)
         throws IOException, JsonProcessingException {
 
         jgen.writeString(ISO_8601_WITHOUT_MILLISECONDS.format(date));

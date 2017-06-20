@@ -118,7 +118,7 @@ public class OwnerManagerTest {
 
     @Test(expected = IllegalStateException.class)
     public void testContentAccessModeNotOnList() {
-        Owner owner = new Owner();
+        Owner owner = new Owner("test_owner", "test_owner");
         when(ownerCurator.lockAndLoad(eq(owner))).thenReturn(owner);
         when(ownerServiceAdapter.getContentAccessModeList(eq(owner.getKey()))).thenReturn("one,two");
         when(ownerServiceAdapter.getContentAccessMode(eq(owner.getKey()))).thenReturn("three");
@@ -127,7 +127,7 @@ public class OwnerManagerTest {
 
     @Test(expected = IllegalStateException.class)
     public void testContentAccessModeBlankSelection() {
-        Owner owner = new Owner();
+        Owner owner = new Owner("test_owner", "test_owner");
         when(ownerCurator.lockAndLoad(eq(owner))).thenReturn(owner);
         when(ownerServiceAdapter.getContentAccessModeList(eq(owner.getKey()))).thenReturn("one,two");
         when(ownerServiceAdapter.getContentAccessMode(eq(owner.getKey()))).thenReturn("");
@@ -136,23 +136,19 @@ public class OwnerManagerTest {
 
     @Test(expected = IllegalStateException.class)
     public void testContentAccessModeNullSelection() {
-        Owner owner = new Owner();
+        Owner owner = new Owner("test_owner", "test_owner");
         when(ownerCurator.lockAndLoad(eq(owner))).thenReturn(owner);
         when(ownerServiceAdapter.getContentAccessModeList(eq(owner.getKey()))).thenReturn("one,two");
         when(ownerServiceAdapter.getContentAccessMode(eq(owner.getKey()))).thenReturn(null);
         ownerManager.refreshContentAccessMode(ownerServiceAdapter, owner);
     }
 
-    @Test
+    @Test(expected = IllegalStateException.class)
     public void testContentAccessModeNoList() {
         Owner owner = new Owner();
         when(ownerCurator.lockAndLoad(eq(owner))).thenReturn(owner);
         when(ownerServiceAdapter.getContentAccessModeList(eq(owner.getKey()))).thenReturn("");
         when(ownerServiceAdapter.getContentAccessMode(eq(owner.getKey()))).thenReturn("three");
         ownerManager.refreshContentAccessMode(ownerServiceAdapter, owner);
-        Assert.assertEquals(owner.getContentAccessModeList(),
-            ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE);
-        Assert.assertEquals(owner.getContentAccessMode(),
-            ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE);
     }
 }
