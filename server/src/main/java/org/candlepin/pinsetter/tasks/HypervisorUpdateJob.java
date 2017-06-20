@@ -207,7 +207,7 @@ public class HypervisorUpdateJob extends KingpinJob {
                 return;
             }
 
-            if (owner.autobindDisabled()) {
+            if (owner.isAutobindDisabled()) {
                 log.debug("Could not update host/guest mapping. Auto-Attach is disabled for owner {}",
                     owner.getKey());
                 throw new BadRequestException(

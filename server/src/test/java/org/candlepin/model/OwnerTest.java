@@ -139,21 +139,16 @@ public class OwnerTest extends DatabaseTestFixture {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-
-
     }
 
     @Test
     public void testAutobindDisabledUtilityMethod() {
         Owner o = createOwner();
         o.setAutobindDisabled(true);
-        assertTrue(o.autobindDisabled());
+        assertTrue(o.isAutobindDisabled());
 
         o.setAutobindDisabled(false);
-        assertFalse(o.autobindDisabled());
-
-        o.setAutobindDisabled(null);
-        assertFalse(o.autobindDisabled());
+        assertFalse(o.isAutobindDisabled());
     }
 
     interface MixIn {

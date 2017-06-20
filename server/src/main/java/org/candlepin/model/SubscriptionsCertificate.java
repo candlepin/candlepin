@@ -34,6 +34,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 
+
 /**
  * Represents the "upstream" entitlement certificate that sources a downstream on-site
  * subscription. Can be used to fetch content from the upstream CDN.

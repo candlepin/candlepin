@@ -87,12 +87,10 @@ public class RulesObjectMapper {
         // Very important for deployments so new rules files can return additional
         // properties that this current server doesn't know how to serialize, but still
         // shouldn't fail on.
-        this.mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
-            false);
+        this.mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
         AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
-        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector(
-            mapper.getTypeFactory());
+        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector(mapper.getTypeFactory());
         AnnotationIntrospector pair = new AnnotationIntrospectorPair(primary, secondary);
         this.mapper.setAnnotationIntrospector(pair);
     }
