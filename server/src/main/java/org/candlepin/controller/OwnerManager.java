@@ -234,16 +234,33 @@ public class OwnerManager {
 
         // This shouldn't happen, but in the event our upstream source is having issues, let's
         // not put ourselves in a bad state as well.
-        if (!StringUtils.isBlank(upstreamList)) {
+        if (!StringUtils.isEmpty(upstreamList)) {
             // Not empty list. Verify that the upstream mode is present.
-            String[] list = upstreamList.split(",");
-            if (upstreamMode == null || !ArrayUtils.contains(list, upstreamMode)) {
-                throw new IllegalStateException("Upstream access mode is not present in access mode list. " +
-                    "The mode must be set to one in the list.");
+            String[] modes = upstreamList.split(",");
+
+            if (!StringUtils.isEmpty(upstreamMode)) {
+                if (!ArrayUtils.contains(modes, upstreamMode)) {
+                    throw new IllegalStateException(
+                        "Upstream content access mode is not present in the upstream access mode list");
+                }
+            }
+            else {
+                upstreamMode = ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE;
+
+                if (!ArrayUtils.contains(modes, upstreamMode)) {
+                    throw new IllegalStateException(
+                        "Upstream content access mode list does not allow the default content access mode");
+                }
             }
         }
         else {
-            // Empty list. Will be forced to default along with mode.
+            // Empty list. Verify the upstream mode is also empty.
+            if (!StringUtils.isEmpty(upstreamMode)) {
+                throw new IllegalStateException(
+                    "Upstream content access mode is not present in the upstream access mode list");
+            }
+
+            // In this case, we're using the defaults
             upstreamList = ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE;
             upstreamMode = ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE;
         }
@@ -252,7 +269,9 @@ public class OwnerManager {
         owner.setContentAccessModeList(upstreamList);
 
         // If the content access mode changed, we'll need to update it and refresh the access certs
-        if (currentMode != null ? !currentMode.equals(upstreamMode) : upstreamMode != null) {
+        if (!StringUtils.isEmpty(currentMode) ? !currentMode.equals(upstreamMode) :
+            !StringUtils.isEmpty(upstreamMode)) {
+
             owner.setContentAccessMode(upstreamMode);
 
             ownerCurator.merge(owner);
@@ -273,7 +292,8 @@ public class OwnerManager {
         // we need to update the owner's consumers if the content access mode has changed
         owner = ownerCurator.lockAndLoad(owner);
 
-        if (!ContentAccessCertServiceAdapter.ORG_ENV_ACCESS_MODE.equals(owner.getContentAccessMode())) {
+        String cam = owner.getContentAccessMode();
+        if (ContentAccessCertServiceAdapter.ENTITLEMENT_ACCESS_MODE.equals(cam)) {
             contentAccessCertCurator.deleteForOwner(owner);
         }
 

@@ -61,6 +61,8 @@ import org.candlepin.controller.OwnerManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.ScheduledExecutorServiceProvider;
 import org.candlepin.controller.SuspendModeTransitioner;
+import org.candlepin.dto.api.APIDTOFactory;
+import org.candlepin.dto.api.v1.APIv1DTOFactory;
 import org.candlepin.model.CPRestrictions;
 import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.pinsetter.core.GuiceJobFactory;
@@ -299,6 +301,8 @@ public class CandlepinModule extends AbstractModule {
 
         bind(CacheManager.class).toProvider(JCacheManagerProvider.class).in(Singleton.class);
 
+        // DTO factories
+        this.configureDTOFactories();
     }
 
     private void miscConfigurations() {
@@ -419,5 +423,11 @@ public class CandlepinModule extends AbstractModule {
         else {
             bind(EventSink.class).to(NoopEventSinkImpl.class);
         }
+    }
+
+    protected void configureDTOFactories() {
+        bind(APIDTOFactory.class).to(APIv1DTOFactory.class);
+
+        // TODO: Add more factory configurations here as necessary
     }
 }

@@ -141,7 +141,11 @@ describe 'Certificate Revocation List', :serial => true do
 
   it 'should put revoked content access cert on CRL' do
     skip("candlepin running in standalone mode") unless is_hosted?
-    cam_owner = create_owner(random_string("test_owner"), nil,{'contentAccessMode' => "org_environment", 'contentAccessModeList' => "org_environment,entitlement"})
+
+    cam_owner = create_owner(random_string("test_owner"), nil, {
+      'contentAccessModeList' => "org_environment,entitlement",
+      'contentAccessMode' => "org_environment"
+    })
 
     username = random_string('bob')
     user = create_user(cam_owner, username, 'password')
@@ -157,7 +161,7 @@ describe 'Certificate Revocation List', :serial => true do
     @cp.update_owner(cam_owner['key'], {'contentAccessMode' => "entitlement"})
     new_system.list_certificates.length.should == 0
     revoked_serials.should include(cert_serial)
-  end
+end
 
   def filter_serial(product, consumer=@system)
     entitlement = consumer.list_entitlements.find do |ent|
