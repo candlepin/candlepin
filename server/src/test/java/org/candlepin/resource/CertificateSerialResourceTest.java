@@ -19,11 +19,15 @@ import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.TestingModules;
+import org.candlepin.dto.api.APIDTOFactory;
+import org.candlepin.dto.api.v1.CertificateSerialDTO;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
+import org.candlepin.model.EmptyCandlepinQuery;
 
 import com.google.inject.Guice;
+import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import org.junit.Before;
@@ -35,6 +39,9 @@ import org.junit.Test;
  * CertificateSerialTest
  */
 public class CertificateSerialResourceTest {
+
+    @Inject
+    APIDTOFactory dtoFactory;
 
     @Before
     public void init() {
@@ -49,14 +56,15 @@ public class CertificateSerialResourceTest {
 
     @Test
     public void listall() {
-        CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        CertificateSerialCurator csc = mock(CertificateSerialCurator.class);
-        CertificateSerialResource csr = new CertificateSerialResource(csc);
+        CandlepinQuery cqmock = new EmptyCandlepinQuery();
 
+        CertificateSerialCurator csc = mock(CertificateSerialCurator.class);
         when(csc.listAll()).thenReturn(cqmock);
 
-        CandlepinQuery<CertificateSerial> result = csr.getCertificateSerials();
-        assertSame(cqmock, result);
+        CertificateSerialResource csr = new CertificateSerialResource(csc, this.dtoFactory);
+
+        CandlepinQuery<CertificateSerialDTO> result = csr.getCertificateSerials();
+        assertNotNull(result);
 
         verify(csc, times(1)).listAll();
     }
@@ -64,9 +72,14 @@ public class CertificateSerialResourceTest {
     @Test
     public void getSerial() {
         CertificateSerialCurator csc = mock(CertificateSerialCurator.class);
-        CertificateSerialResource csr = new CertificateSerialResource(csc);
-        CertificateSerial cs = mock(CertificateSerial.class);
-        when(csc.find(10L)).thenReturn(cs);
-        assertEquals(cs, csr.getCertificateSerial(10L));
+        CertificateSerialResource csr = new CertificateSerialResource(csc, this.dtoFactory);
+        CertificateSerial cs = new CertificateSerial(10L);
+        when(csc.find(cs.getId())).thenReturn(cs);
+
+        CertificateSerialDTO output = csr.getCertificateSerial(10L);
+        assertNotNull(output);
+
+        CertificateSerialDTO dto = this.dtoFactory.<CertificateSerial, CertificateSerialDTO>buildDTO(cs);
+        assertEquals(dto, output);
     }
 }

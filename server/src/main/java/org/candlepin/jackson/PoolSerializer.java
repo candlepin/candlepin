@@ -44,12 +44,14 @@ public class PoolSerializer extends BeanSerializerBase {
     @Override
     public final void serialize(Object bean, JsonGenerator jgen, SerializerProvider provider)
         throws IOException {
+
         ((Pool) bean).populateAllTransientProvidedProducts(productCurator);
         base.serialize(bean, jgen, provider);
     }
 
     protected PoolSerializer(BeanSerializerBase src, ProductCurator productCurator) {
         super(src);
+
         this.productCurator = productCurator;
         this.base = src;
     }
@@ -79,12 +81,10 @@ public class PoolSerializer extends BeanSerializerBase {
     }
 
     protected BeanSerializerBase asArraySerializer() {
-        if ((_objectIdWriter == null) &&
-            (_anyGetterWriter == null) &&
-            (_propertyFilterId == null)
-            ) {
+        if ((_objectIdWriter == null) && (_anyGetterWriter == null) && (_propertyFilterId == null)) {
             return new BeanAsArraySerializer(this);
         }
+
         // already is one, so:
         return this;
     }
