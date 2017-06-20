@@ -47,7 +47,7 @@ docker-compose $PROJ_NAME stop
 docker-compose $PROJ_NAME rm -f
 docker-compose $PROJ_NAME $COMPOSE_ARGS run --rm candlepin $TEST_CMD
 RETVAL=$?
-docker-compose $PROJ_NAME stop
+docker-compose $PROJ_NAME down
 echo "return value: $RETVAL"
 cd -
 exit $RETVAL
