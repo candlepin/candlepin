@@ -51,6 +51,9 @@ import org.candlepin.controller.ContentManager;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.OwnerManager;
 import org.candlepin.controller.ProductManager;
+import org.candlepin.dto.api.APIDTOFactory;
+import org.candlepin.dto.api.v1.OwnerDTO;
+import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -142,6 +145,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Inject private ContentManager contentManager;
     @Inject private UeberCertificateGenerator ueberCertGenerator;
     @Inject private UeberCertificateCurator ueberCertCurator;
+    @Inject private APIDTOFactory dtoFactory;
 
     private Owner owner;
     private List<Owner> owners;
@@ -989,33 +993,79 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void ownerWithParentOwnerCanBeCreated() {
-        Owner child = new Owner("name", "name1");
-        child.setParentOwner(this.owner);
-        this.ownerResource.createOwner(child);
-        assertNotNull(ownerCurator.find(child.getId()));
-        assertNotNull(child.getParentOwner());
-        assertEquals(this.owner.getId(), child.getParentOwner().getId());
+        OwnerDTO parent = new OwnerDTO();
+        parent.setKey("parent");
+        parent.setDisplayName("parent");
+
+        OwnerDTO child = new OwnerDTO();
+        child.setKey("child");
+        child.setDisplayName("child");
+        child.setParentOwner(parent);
+
+        OwnerDTO pout = this.ownerResource.createOwner(parent);
+
+        assertNotNull(pout);
+        assertNotNull(pout.getId());
+        assertNotNull(this.ownerCurator.find(pout.getId()));
+
+        OwnerDTO cout = this.ownerResource.createOwner(child);
+
+        assertNotNull(cout);
+        assertNotNull(cout.getId());
+
+        Owner owner = this.ownerCurator.find(cout.getId());
+
+        assertNotNull(owner);
+        assertNotNull(owner.getParentOwner());
+
+        assertEquals(pout.getId(), owner.getParentOwner().getId());
     }
 
-    @Test(expected = BadRequestException.class)
-    public void ownerWithInvalidParentCannotBeCreated() {
-        Owner child = new Owner("name", "name1");
-        Owner owner1 = new Owner("name2", "name3");
-        owner1.setId("xyz");
-        child.setParentOwner(owner1);
+    @Test(expected = NotFoundException.class)
+    public void ownerWithInvalidParentIdCannotBeCreated() {
+        OwnerDTO child = new OwnerDTO();
+        child.setKey("child");
+        child.setDisplayName("child");
+
+        OwnerDTO parent = new OwnerDTO();
+        parent.setId("parent");
+        parent.setDisplayName("parent");
+
+        child.setParentOwner(parent);
+
         this.ownerResource.createOwner(child);
-        throw new RuntimeException(
-            "OwnerResource should have thrown BadRequestException");
+        throw new RuntimeException("OwnerResource should have thrown NotFoundException");
     }
 
-    @Test(expected = BadRequestException.class)
-    public void ownerWithInvalidParentWhoseIdIsNullCannotBeCreated() {
-        Owner child = new Owner("name", "name1");
-        Owner owner1 = new Owner("name2", "name3");
-        child.setParentOwner(owner1);
+    @Test(expected = NotFoundException.class)
+    public void ownerWithInvalidParentKeyCannotBeCreated() {
+        OwnerDTO child = new OwnerDTO();
+        child.setKey("child");
+        child.setDisplayName("child");
+
+        OwnerDTO parent = new OwnerDTO();
+        parent.setKey("parent");
+        parent.setDisplayName("parent");
+
+        child.setParentOwner(parent);
+
         this.ownerResource.createOwner(child);
-        throw new RuntimeException(
-            "OwnerResource should have thrown BadRequestException");
+        throw new RuntimeException("OwnerResource should have thrown NotFoundException");
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void ownerWithInvalidParentWhoseIdAndKeyIsNullCannotBeCreated() {
+        OwnerDTO child = new OwnerDTO();
+        child.setKey("child");
+        child.setDisplayName("child");
+
+        OwnerDTO parent = new OwnerDTO();
+        parent.setDisplayName("parent");
+
+        child.setParentOwner(parent);
+
+        this.ownerResource.createOwner(child);
+        throw new RuntimeException("OwnerResource should have thrown NotFoundException");
     }
 
     @Test
@@ -1029,9 +1079,12 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test(expected = NotFoundException.class)
     public void undoImportforOwnerWithNoImports() {
-        Owner owner1 = new Owner("owner-with-no-imports", "foo");
-        ownerResource.createOwner(owner1);
-        ownerResource.undoImports(owner1.getKey(), new UserPrincipal("JarjarBinks", null, true));
+        OwnerDTO dto = new OwnerDTO();
+        dto.setKey("owner-with-no-imports");
+        dto.setDisplayName("foo");
+
+        dto = ownerResource.createOwner(dto);
+        ownerResource.undoImports(dto.getKey(), new UserPrincipal("JarjarBinks", null, true));
     }
 
     @Test(expected = ConflictException.class)
@@ -1044,7 +1097,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource or = new OwnerResource(
             oc, null, null, i18n, null, eventFactory, null, null, null, poolManager, ownerManager,  null,
             null, null, null, null, null, null, null, null, null, contentOverrideValidator,
-            serviceLevelValidator, null, null, null, productManager, contentManager, null
+            serviceLevelValidator, null, null, null, productManager, contentManager, null, this.dtoFactory
         );
 
         when(oc.lookupByKey(eq("testOwner"))).thenReturn(o);
@@ -1068,7 +1121,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         OwnerResource ownerres = new OwnerResource(
             oc, akc, null, i18n, null, null, null, null, null, null, null, null, null, null, null, null, null,
-            null, null, null, null, null, null, null, null, null, productManager, contentManager, null
+            null, null, null, null, null, null, null, null, null, productManager, contentManager, null,
+            this.dtoFactory
         );
 
         ownerres.createActivationKey("testOwner", ak);
@@ -1111,78 +1165,85 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         poolManager.getRefresher(subAdapter, ownerAdapter).add(owner).run();
 
         owner.setDefaultServiceLevel("premium");
-        Owner parentOwner1 = new Owner("Paren Owner 1", "parentTest1");
-        ownerResource.createOwner(parentOwner1);
-        Owner parentOwner2 = new Owner("Paren Owner 2", "parentTest2");
-        ownerResource.createOwner(parentOwner2);
+        Owner parentOwner1 = ownerCurator.create(new Owner("Paren Owner 1", "parentTest1"));
+        Owner parentOwner2 = ownerCurator.create(new Owner("Paren Owner 2", "parentTest2"));
         owner.setParentOwner(parentOwner1);
-        ownerResource.createOwner(owner);
+
+        ownerCurator.merge(owner);
+        ownerCurator.flush();
 
         // Update with Display Name Only
-        Owner upOwner1 = mock(Owner.class);
-        when(upOwner1.getDisplayName()).thenReturn("New Name");
-        ownerResource.updateOwner(owner.getKey(), upOwner1);
+        OwnerDTO dto = new OwnerDTO();
+        dto.setDisplayName("New Name");
+
+        ownerResource.updateOwner(owner.getKey(), dto);
         assertEquals("New Name", owner.getDisplayName());
         assertEquals(parentOwner1, owner.getParentOwner());
         assertEquals("premium", owner.getDefaultServiceLevel());
-        assertFalse(owner.getAutobindDisabled());
+        assertFalse(owner.isAutobindDisabled());
 
         // Update with Default Service Level only
-        Owner upOwner2 = mock(Owner.class);
-        when(upOwner2.getDefaultServiceLevel()).thenReturn("standard");
-        ownerResource.updateOwner(owner.getKey(), upOwner2);
+        dto = new OwnerDTO();
+        dto.setDefaultServiceLevel("standard");
+
+        ownerResource.updateOwner(owner.getKey(), dto);
         assertEquals("standard", owner.getDefaultServiceLevel());
         assertEquals("New Name", owner.getDisplayName());
         assertEquals(parentOwner1, owner.getParentOwner());
-        assertFalse(owner.getAutobindDisabled());
+        assertFalse(owner.isAutobindDisabled());
 
         // Update with Parent Owner only
-        Owner upOwner3 = mock(Owner.class);
-        when(upOwner3.getParentOwner()).thenReturn(parentOwner2);
-        ownerResource.updateOwner(owner.getKey(), upOwner3);
+        OwnerDTO parentDto = new OwnerDTO();
+        parentDto.setId(parentOwner2.getId());
+
+        dto = new OwnerDTO();
+        dto.setParentOwner(parentDto);
+
+        ownerResource.updateOwner(owner.getKey(), dto);
         assertEquals(parentOwner2, owner.getParentOwner());
         assertEquals("standard", owner.getDefaultServiceLevel());
         assertEquals("New Name", owner.getDisplayName());
-        assertFalse(owner.getAutobindDisabled());
+        assertFalse(owner.isAutobindDisabled());
 
         // Update with empty Service Level only
-        Owner upOwner4 = mock(Owner.class);
-        when(upOwner4.getDefaultServiceLevel()).thenReturn("");
-        ownerResource.updateOwner(owner.getKey(), upOwner4);
+        dto = new OwnerDTO();
+        dto.setDefaultServiceLevel("");
+
+        ownerResource.updateOwner(owner.getKey(), dto);
         assertNull(owner.getDefaultServiceLevel());
         assertEquals("New Name", owner.getDisplayName());
         assertEquals(parentOwner2, owner.getParentOwner());
-        assertFalse(owner.getAutobindDisabled());
+        assertFalse(owner.isAutobindDisabled());
 
         // Update autobind with disabled value.
-        Owner upOwner5 = mock(Owner.class);
-        when(upOwner5.getAutobindDisabled()).thenReturn(Boolean.TRUE);
-        ownerResource.updateOwner(owner.getKey(), upOwner5);
+        dto = new OwnerDTO();
+        dto.setAutobindDisabled(true);
+
+        ownerResource.updateOwner(owner.getKey(), dto);
         assertNull(owner.getDefaultServiceLevel());
         assertEquals("New Name", owner.getDisplayName());
         assertEquals(parentOwner2, owner.getParentOwner());
-        assertTrue(owner.getAutobindDisabled());
-        assertTrue(owner.autobindDisabled());
+        assertTrue(owner.isAutobindDisabled());
 
         // Update autobind with enabled value.
-        Owner upOwner6 = mock(Owner.class);
-        when(upOwner6.getAutobindDisabled()).thenReturn(Boolean.FALSE);
-        ownerResource.updateOwner(owner.getKey(), upOwner6);
+        dto = new OwnerDTO();
+        dto.setAutobindDisabled(false);
+
+        ownerResource.updateOwner(owner.getKey(), dto);
         assertNull(owner.getDefaultServiceLevel());
         assertEquals("New Name", owner.getDisplayName());
         assertEquals(parentOwner2, owner.getParentOwner());
-        assertFalse(owner.getAutobindDisabled());
-        assertFalse(owner.autobindDisabled());
+        assertFalse(owner.isAutobindDisabled());
 
         // Unset autobindDisabled results in no update.
-        Owner upOwner7 = mock(Owner.class);
-        when(upOwner7.getAutobindDisabled()).thenReturn(null);
-        ownerResource.updateOwner(owner.getKey(), upOwner7);
+        dto = new OwnerDTO();
+        dto.setAutobindDisabled(null);
+
+        ownerResource.updateOwner(owner.getKey(), dto);
         assertNull(owner.getDefaultServiceLevel());
         assertEquals("New Name", owner.getDisplayName());
         assertEquals(parentOwner2, owner.getParentOwner());
-        assertFalse(owner.getAutobindDisabled());
-        assertFalse(owner.autobindDisabled());
+        assertFalse(owner.isAutobindDisabled());
     }
 
     public void testImportManifestSynchronousSuccess() throws IOException, ImporterException {
@@ -1191,7 +1252,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource thisOwnerResource = new OwnerResource(
             ownerCurator, null, null, i18n, es, eventFactory, null, null, manifestManager, null, null, null,
             null, importRecordCurator, null, null, null, null, null, null, null, contentOverrideValidator,
-            serviceLevelValidator, null, null, null, productManager, contentManager, null
+            serviceLevelValidator, null, null, null, productManager, contentManager, null, this.dtoFactory
         );
 
         MultipartInput input = mock(MultipartInput.class);
@@ -1224,7 +1285,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource thisOwnerResource = new OwnerResource(
             ownerCurator, null, null, i18n, es, eventFactory, null, null, manifestManager, null, null, null,
             null, importRecordCurator, null, null, null, null, null, null, null, contentOverrideValidator,
-            serviceLevelValidator, null, null, null, productManager, contentManager, null
+            serviceLevelValidator, null, null, null, productManager, contentManager, null, this.dtoFactory
         );
 
         MultipartInput input = mock(MultipartInput.class);
@@ -1260,7 +1321,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource thisOwnerResource = new OwnerResource(
             ownerCurator, null, null, i18n, es, eventFactory, null, null, manifestManager, null, null, null,
             null, importRecordCurator, null, null, null, null, null, null, null, contentOverrideValidator,
-            serviceLevelValidator, null, null, null, productManager, contentManager, null
+            serviceLevelValidator, null, null, null, productManager, contentManager, null, this.dtoFactory
         );
 
         MultipartInput input = mock(MultipartInput.class);
@@ -1301,13 +1362,14 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource ownerres = new OwnerResource(
             oc, null, null, i18n, null, null, null, null, null, null, null, null, null, null, null, null,
             null, null, null, null, null, contentOverrideValidator, serviceLevelValidator, null,
-            null, null, productManager, contentManager, null
+            null, null, productManager, contentManager, null, this.dtoFactory
         );
 
         when(oc.lookupByKey(eq("admin"))).thenReturn(owner);
         when(owner.getUpstreamConsumer()).thenReturn(upstream);
 
-        List<UpstreamConsumer> results = ownerres.getUpstreamConsumers(p, "admin");
+        List<UpstreamConsumerDTO> results = ownerres.getUpstreamConsumers(p, "admin");
+
         assertNotNull(results);
         assertEquals(1, results.size());
     }
@@ -1498,7 +1560,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         EntitlementCurator ec = mock(EntitlementCurator.class);
         OwnerResource ownerres = new OwnerResource(
             oc, null, null, i18n, null, null, null, null, null, null, null, null, null, null, null, null, ec,
-            null, null, null, null, null, null, null, null, null, productManager, contentManager, null
+            null, null, null, null, null, null, null, null, null, productManager, contentManager, null,
+            this.dtoFactory
         );
 
         when(oc.lookupByKey(owner.getKey())).thenReturn(owner);
@@ -1520,7 +1583,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerCurator oc = mock(OwnerCurator.class);
         OwnerResource ownerres = new OwnerResource(
             oc, null, null, i18n, null, null, null, null, null, null, null, null, null, null, null, null,
-            null, null, null, null, null, null, null, null, null, null, productManager, contentManager, null
+            null, null, null, null, null, null, null, null, null, null, productManager, contentManager, null,
+            this.dtoFactory
         );
         ownerres.ownerEntitlements("Taylor Swift", null, null, null, req);
     }
@@ -1541,7 +1605,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         OwnerResource resource = new OwnerResource(
             oc, null, cc, i18n, null, null, null, null, null, cpm, null, null, null, null, null, ecc, ec,
-            uc, ucg, null, null, null, null, null, null, null, productManager, contentManager, null
+            uc, ucg, null, null, null, null, null, null, null, productManager, contentManager, null,
+            this.dtoFactory
         );
 
         when(oc.lookupByKey(eq("admin"))).thenReturn(owner);
@@ -1567,7 +1632,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         OwnerResource resource = new OwnerResource(
             oc, null, cc, i18n, null, null, null, null, null, cpm, null, null, null, null, null, ecc, ec,
-            uc, ucg, null, null, null, null, null, null, null, productManager, contentManager, null
+            uc, ucg, null, null, null, null, null, null, null, productManager, contentManager, null,
+            this.dtoFactory
         );
 
         when(ucg.generate(eq(owner.getKey()), eq(principal))).thenReturn(entCert);
