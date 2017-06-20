@@ -41,8 +41,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @Entity
 @Table(name = EntitlementCertificate.DB_TABLE)
 @JsonFilter("EntitlementCertificateFilter")
-
-public class EntitlementCertificate extends RevocableCertificate implements Certificate {
+public class EntitlementCertificate extends RevocableCertificate<EntitlementCertificate> {
 
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp_ent_certificate";

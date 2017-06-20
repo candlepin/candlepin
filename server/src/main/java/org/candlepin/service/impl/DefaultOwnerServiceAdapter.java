@@ -43,7 +43,7 @@ public class DefaultOwnerServiceAdapter implements OwnerServiceAdapter {
     }
 
     /**
-     * @{inheritDocs}
+     * {@inheritDoc}
      */
     @Override
     public boolean isOwnerKeyValidForCreation(String ownerKey) {
@@ -51,7 +51,7 @@ public class DefaultOwnerServiceAdapter implements OwnerServiceAdapter {
     }
 
     /**
-     * @{inheritDocs}
+     * {@inheritDoc}
      */
     @Override
     public String getContentAccessMode(String ownerKey) {
@@ -65,7 +65,7 @@ public class DefaultOwnerServiceAdapter implements OwnerServiceAdapter {
     }
 
     /**
-     * @{inheritDocs}
+     * {@inheritDoc}
      */
     @Override
     public String getContentAccessModeList(String ownerKey) {
