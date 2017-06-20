@@ -72,7 +72,7 @@ describe 'Owner Resource' do
 
     lambda do
       @cp.create_owner(random_string('child owner'), {:parent => fake_parent_owner})
-    end.should raise_exception(RestClient::BadRequest)
+    end.should raise_exception(RestClient::ResourceNotFound)
   end
 
   it "lets owners list pools" do
@@ -519,34 +519,34 @@ describe 'Owner Resource' do
   it 'allows updating autobindDisabled on an owner' do
     owner = create_owner random_string("test_owner2")
     owner_key = owner['key']
-    owner['autobindDisabled'].should be_nil
+    expect(owner['autobindDisabled']).to be false
 
     # disable autobind
     owner['autobindDisabled'] = true
     @cp.update_owner(owner_key, owner)
 
     owner = @cp.get_owner(owner_key)
-    owner['autobindDisabled'].should == true
+    expect(owner['autobindDisabled']).to be true
 
     # re-enable autobind
     owner['autobindDisabled'] = false
     @cp.update_owner(owner_key, owner)
 
     owner = @cp.get_owner(owner_key)
-    owner['autobindDisabled'].should == false
+    expect(owner['autobindDisabled']).to be false
   end
 
   it 'ignores autobindDisabled when not set on incoming owner' do
     owner = create_owner random_string("test_owner2")
     owner_key = owner['key']
-    owner['autobindDisabled'].should be_nil
+    expect(owner['autobindDisabled']).to be false
 
     # disable autobind
     owner['autobindDisabled'] = true
     @cp.update_owner(owner_key, owner)
 
     owner = @cp.get_owner(owner_key)
-    owner['autobindDisabled'].should == true
+    expect(owner['autobindDisabled']).to be true
 
     # Attempt to update owner display name
     # and expect no update to the autobindDiabled
@@ -555,7 +555,7 @@ describe 'Owner Resource' do
     @cp.update_owner(owner_key, owner)
 
     owner = @cp.get_owner(owner_key)
-    owner['autobindDisabled'].should == true
+    expect(owner['autobindDisabled']).to be true
   end
 
   it 'lists owners with populated entity collections' do

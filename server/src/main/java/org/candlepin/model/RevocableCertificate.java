@@ -24,13 +24,19 @@ import javax.persistence.PreRemove;
 import javax.persistence.Transient;
 
 
+
 /**
  * A class that represents a revocable certificate. A revocable certificate should
  * have an associated {@link CertificateSerial} that can be placed on the Certificate
  * Revocation List.
+ *
+ * @param <T>
+ *  Entity type extending this class; should be the name of the subclass
  */
 @MappedSuperclass
-public abstract class RevocableCertificate extends AbstractCertificate {
+public abstract class RevocableCertificate<T extends RevocableCertificate> extends AbstractCertificate<T>
+    implements Certificate<T> {
+
     @Transient
     private static Logger log = LoggerFactory.getLogger(RevocableCertificate.class);
 

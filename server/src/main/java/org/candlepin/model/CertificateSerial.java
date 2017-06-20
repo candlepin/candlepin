@@ -31,7 +31,7 @@ import javax.validation.constraints.NotNull;
  */
 @Entity
 @Table(name = CertificateSerial.DB_TABLE)
-public class CertificateSerial extends AbstractHibernateObject {
+public class CertificateSerial extends AbstractHibernateObject<CertificateSerial> {
 
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp_cert_serial";
@@ -124,8 +124,12 @@ public class CertificateSerial extends AbstractHibernateObject {
     }
 
     public String toString() {
-        return "CertificateSerial[id=" + id + ", revoked=" + revoked +
-            " ,collected=" + collected + ", expDt=" + expiration + "] ";
+        Date expiration = this.getExpiration();
+        String date = expiration != null ? String.format("%1$tF %1$tT%1$tz", expiration) : null;
+
+        return String.format(
+            "CertificateSerial [id: %s, serial: %s, expiration: %s, collected: %b, revoked: %b]",
+            this.getId(), this.getSerial(), date, this.isCollected(), this.isRevoked());
     }
 
     public BigInteger getSerial() {

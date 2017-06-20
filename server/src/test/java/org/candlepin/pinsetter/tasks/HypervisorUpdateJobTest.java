@@ -286,14 +286,15 @@ public class HypervisorUpdateJobTest extends BaseJobTest{
         JobStatus newJob = new JobStatus(detail);
         JobCurator jobCurator = mock(JobCurator.class);
         when(jobCurator.findNumRunningByClassAndTarget(owner.getKey(), HypervisorUpdateJob.class))
-                .thenReturn(1L);
+            .thenReturn(1L);
+
         assertFalse(HypervisorUpdateJob.isSchedulable(jobCurator, newJob));
     }
 
     @Test
     public void ensureJobFailsWhenAutobindDisabledForTargetOwner() throws Exception {
         // Disabled autobind
-        when(owner.autobindDisabled()).thenReturn(true);
+        when(owner.isAutobindDisabled()).thenReturn(true);
         when(ownerCurator.lookupByKey(eq("joe"))).thenReturn(owner);
 
         JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal, null);

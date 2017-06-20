@@ -35,12 +35,17 @@ import javax.xml.bind.annotation.XmlType;
 
 /**
  * Abstract class for hibernate entities
+ *
+ * @param <T>
+ *  Entity type extending this class; should be the name of the subclass
  */
 @MappedSuperclass
 @XmlType(name = "CandlepinObject")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonFilter("DefaultFilter")
-public abstract class AbstractHibernateObject implements Persisted, Serializable {
+public abstract class AbstractHibernateObject<T extends AbstractHibernateObject>
+    implements Persisted, Serializable, TimestampedEntity<T> {
+
     private static final long serialVersionUID = 6677558844288404862L;
 
     public static final String DEFAULT_SORT_FIELD = "created";

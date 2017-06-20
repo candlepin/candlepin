@@ -73,7 +73,7 @@ public class HealEntireOrgJob extends UniqueByEntityJob {
             JobDataMap map = ctx.getMergedJobDataMap();
             String ownerId = (String) map.get("ownerId");
             Owner owner = ownerCurator.lookupByKey(ownerId);
-            if (owner.autobindDisabled()) {
+            if (owner.isAutobindDisabled()) {
                 throw new BadRequestException(i18n.tr("Auto-attach is disabled for owner {0}.",
                     owner.getKey()));
             }

@@ -23,10 +23,13 @@ import javax.xml.bind.annotation.XmlType;
 /**
  * AbstractCertificate is a base class for all certificates within Candlepin.
  * It contains a number of common methods used by all certificates.
+ *
+ * @param <T>
+ *  Entity type extending this class; should be the name of the subclass
  */
 @MappedSuperclass
 @XmlType(name = "Certificate")
-public abstract class AbstractCertificate extends AbstractHibernateObject {
+public abstract class AbstractCertificate<T extends AbstractCertificate> extends AbstractHibernateObject<T> {
 
     @Column(nullable = false, name = "privatekey")
     @NotNull

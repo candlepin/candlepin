@@ -16,10 +16,15 @@ package org.candlepin.model;
 
 import java.util.Date;
 
+
+
 /**
  * allows different certificate types to be collected together
+ *
+ * @param <T>
+ *  Entity type extending this class; should be the name of the subclass
  */
-public interface Certificate {
+public interface Certificate<T extends Certificate> extends TimestampedEntity<T> {
 
     CertificateSerial getSerial();
     String getCert();
@@ -27,4 +32,5 @@ public interface Certificate {
     Date getCreated();
     Date getUpdated();
     String getId();
+
 }
