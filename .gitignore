@@ -13,6 +13,15 @@
 *.swp
 
 **/.classpath
+**/*.iml
+**/*.iws
+**/*.ipr
+.ideaDataSources
+.idea
+!.idea/codeStyleSettings.xml
+!.idea/copyright
+dataSources/
+
 # The master checkstyle configuration is in project_conf
 **/.checkstyle
 **/.DS_Store
@@ -22,10 +31,12 @@
 **/.syntastic_javac_config
 **/.zanata-cache
 **/tags
+**/.tags*
 **/.settings
 
 **/build/
 **/custom.yaml
+**/renderer.chain
 **/generated_certs/
 **/gen_products/
 **/lib/
@@ -47,3 +58,9 @@ buildconf/scripts/import_products.json
 .rvmrc
 .ruby-version
 .ruby-gemset
+
+# Vagrant
+.vagrant/
+
+# don't want to push up the oracle binary by accident
+*oracle-xe*.zip

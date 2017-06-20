@@ -1,48 +1,76 @@
-# Overview
+# Candlepin docker containers
+This folder contains docker configurations that are primarily used for running the various unit/spec/smoke tests.
+Much of the old scripting has been replaced with invocations of `docker-compose`, and is required to use this. Note that
+the following is useful for running tests directly (for example, you want to test something before you commit it);
+ideally this would be triggered automatically via jenkins [[1]](https://github.com/candlepin/candlepin-jobs).
 
-Containers for running Candlepin tests in a development environment.
+## Building Images
+To build the images run the `build-images` script.  Its build configuration is located in `docker-compose-build.yml`.
+`docker-compose-build.yml`  Is only used for building the images and will not work to bring up containers using docker-compose.
+If you choose to push the images to a different docker registry, change the REGISTRY value found in `./.env`.
+Basic invocations of `build-images` are as follows:
 
-These containers can be used to quickly fire up a container with candlepin and
-a fresh database. They can run unit or spec tests against supported databases,
-or just provide a server to register to and test with.
+```sh
+# build all images
+./build-images
+# build all images and push to a registry
+./build-images -p
+# build all images but speed it up using caching
+./build-images -c
+# build only one image
+# see the top level of docker-compose-build.yml under 'services:' for a list of image names
+./build-image <image_name>
+```
+These options can be combined.  See `build-images -h` for more information.
 
-The containers contain a git checkout of candlepin, and the required ruby and
-java dependencies at the time the container was created to help cut down on
-download bandwidth and runtime. When run, we will attempt to update the code
-and all dependencies if anything has changed.
+## Running containers
+The main interface for this is the `test` script.  This script is designed as a basic wrapper around `docker-compose`
+in order to stop and clean up existing running containers, as well as invoking the candlepin test script with default
+options.  This script will mount your current development checkout of candlepin (this repo) into `/candlepin-dev/`
+and bring up a database at hostname `db` on the running container
 
-Based on Fedora, this uses supervisord instead of systemd (as this is not yet
-ready for running services in containers) to keep postgresql and tomcat
-up and running.
+NOTE: the oracle image has SELINUX issues. In order to overcome these, please install the included policy via
+```bash
+sudo semodule -i oraclecontainer.pp
+```
 
-rebuild.sh is used to rebuild the containers and push to our internal docker
-registry.
+By default the `test` script will run candlepin against a postgres database.  You can change this behavior with the
+`-o`, `-m`, or `-p` flags which will use oracle, mysql, or postgres respectively. To change the default permanently,
+run the `switch-defaults` script.
 
-The included scripts actually make a fairly good guide for setting up a
-development environment.
+To run multiple candlepin containers simultaneously, give each invocation of `test` a unique name with the `-n` flag.
 
-The containers are hosted on an internal server (sorry world!), but you can
-build them yourself if you wish.
+Some useful invocations of the `test` command:
 
-# Example Usage
+```sh
+# run only unit tests
+./test -c '/usr/bin/cp-test -u'
 
-  * Create a fresh candlepin server and postgresql database, leave a shell open:
+# screw tests, give me a shell and an oracle db
+./test -o -c '/bin/bash'
 
-    docker run -i -P -t --rm docker.usersys.redhat.com/candlepin/candlepin-postgresql cp-test -s -d
+# run mysql and postgres tests at the same time
+./test -m -n "my_mysql_tests"
+./test -p -n "my_postgres_tests"
+```
 
-    Use docker ps to see the port mappings if you wanted to actually hit the candlepin API.
+See `test -h` for more options.
 
-  * Run the unit tests:
+## Design notes
+Each candlepin / database combination is a different compose.  Each compose will bring up an isolated docker network where
+the candlepin server is at hostname `candlepin` and the database is at hostname `db`.  The goal of this separation was to
+be able to use an off the shelf solution for the databases. The advantages of this are:
 
-    docker run -i -P -t --rm docker.usersys.redhat.com/candlepin/candlepin-base cp-test -u
+1. No longer have to maintain extra supervisord configs
+1. No longer have to maintain the database install, and db versions can be trivially upgraded
+1. The actual candlepin image is now roughly 1/3rd the size of the bundled version
+1. We now have more composibility with our docker environment
+  * custom databases with preloaded data could be made now and run against any candlepin
+1. Since the container will mount in the candlepin checkout, we no longer have to rebuild the image for every candlepin change
+  * Jenkins environments will already have checked candlepin out
+  * Dev environments will already have checked canelpin out
+  * Only changes to the `docker/candlepin-base` or candlepin updates in brew (for the `docker/candlepin-rhel*` folders) would require a rebuild
+  * This saves tons of space on our build machines.
 
-  * Run the spec test suite against postgresql (or oracle):
-
-    docker run -i -P -t --rm docker.usersys.redhat.com/candlepin/candlepin-postgresql cp-test -r
-
-  * Specify -v /home/dgoodwin/src/candlepin/:/candlepin-dev/ to use your
-    current source checkout *instead* of the remote git repo. This could be
-    used to run unit or functional tests against code you're working on live,
-    without having to actually configure oracle or postgresql.
-
-  * Specify -c REF to checkout an git reference and run tests against this.
+We will somewhat have to maintain the oracle DB as oracle does not allow any versions of oracle to be published publicly in a container.
+We are, however, using their public scripts to build the container.
