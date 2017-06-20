@@ -19,6 +19,7 @@ import static org.junit.Assert.assertNotNull;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.common.exceptions.ForbiddenException;
+import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.resource.OwnerResource;
 import org.candlepin.test.DatabaseTestFixture;
 
@@ -48,8 +49,14 @@ public class OwnerAccessControlTest extends DatabaseTestFixture {
         setupAdminPrincipal("dude");
         securityInterceptor.enable();
 
-        resource.createOwner(new Owner("Test Owner"));
-        assertNotNull(ownerCurator.find(owner.getId()));
+        OwnerDTO dto = new OwnerDTO();
+        dto.setKey("Test Owner");
+        dto.setDisplayName("Test Owner");
+
+        dto = resource.createOwner(dto);
+
+        assertNotNull(dto.getId());
+        assertNotNull(ownerCurator.find(dto.getId()));
     }
 
     @Test(expected = ForbiddenException.class)
@@ -57,7 +64,11 @@ public class OwnerAccessControlTest extends DatabaseTestFixture {
         setupPrincipal(owner, Access.ALL);
         securityInterceptor.enable();
 
-        resource.createOwner(new Owner("Test Owner"));
+        OwnerDTO dto = new OwnerDTO();
+        dto.setKey("Test Owner");
+        dto.setDisplayName("Test Owner");
+
+        resource.createOwner(dto);
     }
 
     @Test(expected = ForbiddenException.class)
@@ -66,6 +77,10 @@ public class OwnerAccessControlTest extends DatabaseTestFixture {
         setupPrincipal(new ConsumerPrincipal(consumer));
         securityInterceptor.enable();
 
-        resource.createOwner(new Owner("Test Owner"));
+        OwnerDTO dto = new OwnerDTO();
+        dto.setKey("Test Owner");
+        dto.setDisplayName("Test Owner");
+
+        resource.createOwner(dto);
     }
 }
