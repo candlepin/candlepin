@@ -26,8 +26,11 @@ import java.util.Date;
  */
 public interface ContentAccessCertServiceAdapter {
 
-    String DEFAULT_CONTENT_ACCESS_MODE = "entitlement";
+    // If we ever have a need for more modes, these should move to a proper enum
+    String ENTITLEMENT_ACCESS_MODE = "entitlement";
     String ORG_ENV_ACCESS_MODE = "org_environment";
+
+    String DEFAULT_CONTENT_ACCESS_MODE = ENTITLEMENT_ACCESS_MODE;
 
     /**
      * Generate an entitlement certificate, used to grant access to some

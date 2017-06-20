@@ -41,6 +41,10 @@ import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.OwnerManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.ProductManager;
+import org.candlepin.dto.DTOFactory;
+import org.candlepin.dto.api.APIDTOFactory;
+import org.candlepin.dto.api.v1.OwnerDTO;
+import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -96,6 +100,13 @@ import org.candlepin.util.Util;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Authorization;
+
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.exception.ConstraintViolationException;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
@@ -137,12 +148,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.annotations.Authorization;
+
 
 /**
  * Owner Resource
@@ -184,6 +190,7 @@ public class OwnerResource {
     private ProductManager productManager;
     private ContentManager contentManager;
     private ConsumerTypeValidator consumerTypeValidator;
+    private DTOFactory dtoFactory;
 
     @Inject
     public OwnerResource(OwnerCurator ownerCurator,
@@ -214,7 +221,8 @@ public class OwnerResource {
         ResolverUtil resolverUtil,
         ProductManager productManager,
         ContentManager contentManager,
-        ConsumerTypeValidator consumerTypeValidator) {
+        ConsumerTypeValidator consumerTypeValidator,
+        APIDTOFactory dtoFactory) {
 
         this.ownerCurator = ownerCurator;
         this.ownerInfoCurator = ownerInfoCurator;
@@ -245,6 +253,100 @@ public class OwnerResource {
         this.productManager = productManager;
         this.contentManager = contentManager;
         this.consumerTypeValidator = consumerTypeValidator;
+        this.dtoFactory = dtoFactory;
+    }
+
+    private Owner findOwner(String key) {
+        Owner owner = ownerCurator.lookupByKey(key);
+
+        if (owner == null) {
+            throw new NotFoundException(i18n.tr("owner with key: {0} was not found.", key));
+        }
+
+        return owner;
+    }
+
+    private Consumer findConsumer(String consumerUuid) {
+        Consumer consumer = consumerCurator.findByUuid(consumerUuid);
+
+        if (consumer == null) {
+            throw new NotFoundException(i18n.tr("No such unit: {0}", consumerUuid));
+        }
+
+        return consumer;
+    }
+
+    /**
+     * Populates the specified entity with data from the provided DTO. This method will not set the
+     * ID, key, upstream consumer, content access mode list or content access mode fields.
+     *
+     * @param entity
+     *  The entity instance to populate
+     *
+     * @param dto
+     *  The DTO containing the data with which to populate the entity
+     *
+     * @throws IllegalArgumentException
+     *  if either entity or dto are null
+     */
+    protected void populateEntity(Owner entity, OwnerDTO dto) {
+        if (entity == null) {
+            throw new IllegalArgumentException("entity is null");
+        }
+
+        if (dto == null) {
+            throw new IllegalArgumentException("dto is null");
+        }
+
+        if (dto.getDisplayName() != null) {
+            entity.setDisplayName(dto.getDisplayName());
+        }
+
+        if (dto.getParentOwner() != null) {
+            // Impl note:
+            // We do not allow modifying a parent owner through its children, so all we'll do here
+            // is set the parent owner and ignore everything else; including further nested owners.
+
+            OwnerDTO pdto = dto.getParentOwner();
+            Owner parent = null;
+
+            if (pdto.getId() != null) {
+                // look up by ID
+                parent = this.ownerCurator.find(pdto.getId());
+            }
+            else if (pdto.getKey() != null) {
+                // look up by key
+                parent = this.ownerCurator.lookupByKey(pdto.getKey());
+            }
+
+            if (parent == null) {
+                throw new NotFoundException(i18n.tr("Unable to find parent owner: {0}", pdto));
+            }
+
+            entity.setParentOwner(parent);
+        }
+
+        if (dto.getContentPrefix() != null) {
+            entity.setContentPrefix(dto.getContentPrefix());
+        }
+
+        if (dto.getDefaultServiceLevel() != null) {
+            if (dto.getDefaultServiceLevel().isEmpty()) {
+                entity.setDefaultServiceLevel(null);
+            }
+            else {
+                this.serviceLevelValidator.validate(entity, dto.getDefaultServiceLevel());
+                entity.setDefaultServiceLevel(dto.getDefaultServiceLevel());
+            }
+        }
+
+        if (dto.getLogLevel() != null) {
+            entity.setLogLevel(dto.getLogLevel());
+        }
+
+        if (dto.isAutobindDisabled() != null) {
+            entity.setAutobindDisabled(dto.isAutobindDisabled());
+        }
     }
 
     /**
@@ -256,12 +358,14 @@ public class OwnerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "owners")
-    @ApiOperation(notes = "Retrieves a list of Owners", value = "List Owners", response = Owner.class,
+    @ApiOperation(notes = "Retrieves a list of Owners", value = "List Owners", response = OwnerDTO.class,
         responseContainer = "list")
-    public CandlepinQuery<Owner> list(@QueryParam("key") String keyFilter) {
-        return keyFilter != null ?
+    public CandlepinQuery<OwnerDTO> list(@QueryParam("key") String keyFilter) {
+        CandlepinQuery<Owner> query = keyFilter != null ?
             this.ownerCurator.lookupByKeys(Arrays.asList(keyFilter)) :
             this.ownerCurator.listAll();
+
+        return this.dtoFactory.<Owner, OwnerDTO>transformQuery(query);
     }
 
     /**
@@ -293,8 +397,9 @@ public class OwnerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(notes = "Retrieves a single Owner", value = "Get Owner")
     @ApiResponses({ @ApiResponse(code = 404, message = "An owner not found") })
-    public Owner getOwner(@PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
-        return findOwner(ownerKey);
+    public OwnerDTO getOwner(@PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
+        Owner owner = findOwner(ownerKey);
+        return this.dtoFactory.<Owner, OwnerDTO>buildDTO(owner);
     }
 
     /**
@@ -328,11 +433,19 @@ public class OwnerResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @ApiOperation(notes = "Creates an Owner", value = "Create Owner")
     @ApiResponses({ @ApiResponse(code = 400, message = "Invalid owner specified in body") })
-    public Owner createOwner(@ApiParam(name = "owner", required = true) Owner owner) {
-        Owner parent = owner.getParentOwner();
-        if (parent != null && ownerCurator.find(parent.getId()) == null) {
-            throw new BadRequestException(i18n.tr(
-                "Could not create the Owner: {0}. Parent {1} does not exist.", owner, parent));
+    public OwnerDTO createOwner(@ApiParam(name = "owner", required = true) OwnerDTO dto) {
+        Owner owner = new Owner();
+        this.populateEntity(owner, dto);
+
+        // Set the key :(
+        owner.setKey(dto.getKey());
+
+        // Set content access mode list
+        if (StringUtils.isBlank(dto.getContentAccessModeList())) {
+            owner.setContentAccessModeList(ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE);
+        }
+        else {
+            owner.setContentAccessModeList(dto.getContentAccessModeList());
         }
         if (StringUtils.isBlank(owner.getContentAccessModeList())) {
             owner.setContentAccessModeList(
@@ -350,15 +463,107 @@ public class OwnerResource {
                 i18n.tr("The content access mode is not allowed for this owner."));
         }
 
-        Owner created = ownerCurator.create(owner);
-        if (created == null) {
+        // Set content access mode
+        String cam = StringUtils.isBlank(dto.getContentAccessMode()) ?
+            ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE :
+            dto.getContentAccessMode();
+
+        if (owner.isAllowedContentAccessMode(cam)) {
+            owner.setContentAccessMode(cam);
+        }
+        else {
+            throw new BadRequestException(
+                i18n.tr("The content access mode \"{1}\" is not allowed for this owner.", cam));
+        }
+
+        // Try to persist the owner
+        try {
+            owner = this.ownerCurator.create(owner);
+
+            if (owner == null) {
+                throw new BadRequestException(i18n.tr("Could not create the Owner: {0}", owner));
+            }
+        }
+        catch (Exception e) {
+            log.debug("Unable to create owner: ", e);
             throw new BadRequestException(i18n.tr("Could not create the Owner: {0}", owner));
         }
 
-        log.info("Created owner: {}", created);
-        sink.emitOwnerCreated(created);
+        log.info("Created owner: {}", owner);
+        sink.emitOwnerCreated(owner);
 
-        return created;
+        return this.dtoFactory.<Owner, OwnerDTO>buildDTO(owner);
+    }
+
+    /**
+     * Updates an Owner
+     * <p>
+     * To un-set the defaultServiceLevel for an owner, submit an empty string.
+     *
+     * @param key
+     * @param owner
+     * @return an Owner object
+     * @httpcode 404
+     * @httpcode 200
+     */
+    @PUT
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Path("{owner_key}")
+    @Transactional
+    @ApiOperation(notes = "To un-set the defaultServiceLevel for an owner, submit an empty string.",
+        value = "Update Owner")
+    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
+    public OwnerDTO updateOwner(@PathParam("owner_key") @Verify(Owner.class) String key,
+        @ApiParam(name = "owner", required = true) OwnerDTO dto) {
+
+        Owner owner = findOwner(key);
+
+        // TODO: FIXME: This is busted. As soon as changes are made to the instance, it will
+        // be reflected in the event. We need the event builder to immediately turn these things
+        // into DTOs so the state is detached from the model.
+        EventBuilder eventBuilder = eventFactory.getEventBuilder(Target.OWNER, Type.MODIFIED)
+            .setOldEntity(owner);
+
+        log.debug("Updating owner: {}", key);
+
+        // Do the bulk of our entity population
+        this.populateEntity(owner, dto);
+
+        // Note: We don't allow updating the content access mode list externally
+
+        // Reject changes to the content access mode in standalone mode
+        boolean refreshContentAccess = false;
+
+        String cam = dto.getContentAccessMode();
+        if (cam != null && !cam.equals(owner.getContentAccessMode())) {
+            if (config.getBoolean(ConfigProperties.STANDALONE)) {
+                throw new BadRequestException(
+                    i18n.tr("The owner content access mode cannot be set directly in standalone mode."));
+            }
+
+            if (!owner.isAllowedContentAccessMode(cam)) {
+                throw new BadRequestException(
+                    i18n.tr("The content access mode is not allowed for this owner."));
+            }
+
+            owner.setContentAccessMode(cam);
+            refreshContentAccess = true;
+        }
+
+        owner = ownerCurator.merge(owner);
+        ownerCurator.flush();
+
+        // Refresh content access mode if necessary
+        if (refreshContentAccess) {
+            this.ownerManager.refreshOwnerForContentAccess(owner);
+        }
+
+        // TODO: FIXME: This is busted for the same reason described above
+        Event e = eventBuilder.setNewEntity(owner).buildEvent();
+        sink.queueEvent(e);
+
+        return this.dtoFactory.<Owner, OwnerDTO>buildDTO(owner);
     }
 
     /**
@@ -375,6 +580,7 @@ public class OwnerResource {
     public void deleteOwner(@PathParam("owner_key") String ownerKey,
         @QueryParam("revoke") @DefaultValue("true") boolean revoke,
         @QueryParam("force") @DefaultValue("false") boolean force) {
+
         Owner owner = findOwner(ownerKey);
         Event event = eventFactory.ownerDeleted(owner);
 
@@ -635,28 +841,21 @@ public class OwnerResource {
     @Path("{owner_key}/log")
     @ApiOperation(notes = "Sets the Log Level for an Owner", value = "Set Log Level")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found")})
-    public Owner setLogLevel(@PathParam("owner_key") String ownerKey,
+    public OwnerDTO setLogLevel(@PathParam("owner_key") String ownerKey,
         @QueryParam("level") @DefaultValue("DEBUG")
         @ApiParam(allowableValues = "ALL, TRACE, DEBUG, INFO, WARN, ERROR, OFF") String level) {
+
         Owner owner = findOwner(ownerKey);
-        level = level.toUpperCase();
 
-        List<String> acceptedLevels = new ArrayList<String>();
-        acceptedLevels.add(Level.ALL.toString());
-        acceptedLevels.add(Level.TRACE.toString());
-        acceptedLevels.add(Level.DEBUG.toString());
-        acceptedLevels.add(Level.INFO.toString());
-        acceptedLevels.add(Level.WARN.toString());
-        acceptedLevels.add(Level.ERROR.toString());
-        acceptedLevels.add(Level.OFF.toString());
-
-        if (!acceptedLevels.contains(level)) {
+        Level logLevel = Level.toLevel(level, null);
+        if (logLevel == null) {
             throw new BadRequestException(i18n.tr("{0} is not a valid log level", level));
         }
 
-        owner.setLogLevel(level);
-        ownerCurator.merge(owner);
-        return owner;
+        owner.setLogLevel(logLevel.toString());
+        owner = ownerCurator.merge(owner);
+
+        return this.dtoFactory.<Owner, OwnerDTO>buildDTO(owner);
     }
 
     /**
@@ -898,117 +1097,6 @@ public class OwnerResource {
         return events;
     }
 
-    private Owner findOwner(String key) {
-        Owner owner = ownerCurator.lookupByKey(key);
-
-        if (owner == null) {
-            throw new NotFoundException(i18n.tr("owner with key: {0} was not found.", key));
-        }
-
-        return owner;
-    }
-
-    private Consumer findConsumer(String consumerUuid) {
-        Consumer consumer = consumerCurator.findByUuid(consumerUuid);
-
-        if (consumer == null) {
-            throw new NotFoundException(i18n.tr("No such unit: {0}",
-                consumerUuid));
-        }
-        return consumer;
-    }
-
-    /**
-     * Updates an Owner
-     * <p>
-     * To un-set the defaultServiceLevel for an owner, submit an empty string.
-     *
-     * @param key
-     * @param owner
-     * @return an Owner object
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @PUT
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Path("{owner_key}")
-    @Transactional
-    @ApiOperation(notes = "To un-set the defaultServiceLevel for an owner, submit an empty string.",
-        value = "Update Owner")
-    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
-    public Owner updateOwner(@PathParam("owner_key") @Verify(Owner.class) String key,
-        @ApiParam(name = "owner", required = true) Owner owner) {
-        Owner toUpdate = findOwner(key);
-        EventBuilder eventBuilder = eventFactory.getEventBuilder(Target.OWNER, Type.MODIFIED)
-            .setEventData(toUpdate);
-
-        log.debug("Updating owner: {}", key);
-
-        if (owner.getDisplayName() != null) {
-            toUpdate.setDisplayName(owner.getDisplayName());
-        }
-
-        if (owner.getParentOwner() != null) {
-            toUpdate.setParentOwner(owner.getParentOwner());
-        }
-
-        // Make sure we don't wipe out the service level if none was included in the
-        // request. Interpret empty string as a signal to clear the default service
-        // level.
-        if (owner.getDefaultServiceLevel() != null) {
-            if (owner.getDefaultServiceLevel().equals("")) {
-                toUpdate.setDefaultServiceLevel(null);
-            }
-            else {
-                serviceLevelValidator.validate(toUpdate, owner.getDefaultServiceLevel());
-                toUpdate.setDefaultServiceLevel(owner.getDefaultServiceLevel());
-            }
-        }
-
-        // Update the autobindDisabled field if the incoming value is not null.
-        if (owner.getAutobindDisabled() != null) {
-            toUpdate.setAutobindDisabled(owner.getAutobindDisabled());
-        }
-
-        if (config.getBoolean(ConfigProperties.STANDALONE) &&
-            toUpdate.getContentAccessMode() != null &&
-            !toUpdate.getContentAccessMode().equals(owner.getContentAccessMode()) &&
-            owner.getContentAccessMode() != null) {
-            throw new BadRequestException(
-                i18n.tr("The owner content access mode cannot be set directly in standalone mode."));
-        }
-
-        // Update the contentAccess field if the incoming value is not null.
-        boolean refreshContentAccess = false;
-        if (owner.getContentAccessMode() != null) {
-            if (toUpdate.isAllowedContentAccessMode(owner.getContentAccessMode())) {
-                String before = toUpdate.getContentAccessMode();
-                String after = owner.getContentAccessMode();
-
-                if (!after.equals(before)) {
-                    toUpdate.setContentAccessMode(owner.getContentAccessMode());
-                    refreshContentAccess = true;
-                }
-            }
-            else {
-                throw new BadRequestException(
-                    i18n.tr("The content access mode is not allowed for this owner."));
-            }
-        }
-
-        ownerCurator.merge(toUpdate);
-        ownerCurator.flush();
-
-        if (refreshContentAccess) {
-            ownerManager.refreshOwnerForContentAccess(toUpdate);
-        }
-
-        Event e = eventBuilder.setEventData(toUpdate).buildEvent();
-        sink.queueEvent(e);
-        return toUpdate;
-    }
-
     /**
      * Retrieves a list of Subscriptions for an Owner
      *
@@ -1133,7 +1221,7 @@ public class OwnerResource {
         Owner owner = ownerCurator.lookupByKey(ownerKey);
         if (owner == null) {
             if (autoCreateOwner && ownerService.isOwnerKeyValidForCreation(ownerKey)) {
-                owner = this.createOwner(new Owner(ownerKey, ownerKey));
+                owner = this.ownerCurator.create(new Owner(ownerKey, ownerKey));
             }
             else {
                 throw new NotFoundException(i18n.tr("owner with key: {0} was not found.", ownerKey));
@@ -1370,6 +1458,7 @@ public class OwnerResource {
         ConflictOverrides overrides = processConflictOverrideParams(overrideConflicts);
         UploadMetadata fileData = new UploadMetadata();
         Owner owner = findOwner(ownerKey);
+
         try {
             fileData = getArchiveFromResponse(input);
             return manifestManager.importManifest(owner, fileData.getData(), fileData.getUploadedFilename(),
@@ -1437,9 +1526,9 @@ public class OwnerResource {
         MultipartInput input) {
 
         ConflictOverrides overrides = processConflictOverrideParams(overrideConflicts);
-
         UploadMetadata fileData = new UploadMetadata();
         Owner owner = findOwner(ownerKey);
+
         try {
             fileData = getArchiveFromResponse(input);
             String archivePath = fileData.getData().getAbsolutePath();
@@ -1499,9 +1588,7 @@ public class OwnerResource {
         value = "Create Ueber Entitlement Certificate")
     @ApiResponses({
         @ApiResponse(code = 404, message = "Owner not found"),
-        @ApiResponse(code = 400, message = "")
-        }
-    )
+        @ApiResponse(code = 400, message = "") })
     public UeberCertificate createUeberCertificate(@Context Principal principal,
         @Verify(Owner.class) @PathParam("owner_key") String ownerKey) {
         return ueberCertGenerator.generate(ownerKey, principal);
@@ -1531,9 +1618,9 @@ public class OwnerResource {
         UeberCertificate ueberCert = ueberCertCurator.findForOwner(o);
         if (ueberCert == null) {
             throw new NotFoundException(
-                i18n.tr("uber certificate for owner {0} was not found. Please generate one.",
-                    o.getKey()));
+                i18n.tr("uber certificate for owner {0} was not found. Please generate one.", o.getKey()));
         }
+
         return ueberCert;
     }
 
@@ -1550,21 +1637,17 @@ public class OwnerResource {
     @ApiOperation(notes = " Retrieves a list of Upstream Consumers for an Owner",
         value = "Get Upstream Consumers")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
-    public List<UpstreamConsumer> getUpstreamConsumers(@Context Principal principal,
+    public List<UpstreamConsumerDTO> getUpstreamConsumers(@Context Principal principal,
         @Verify(Owner.class) @PathParam("owner_key") String ownerKey) {
-        Owner o = findOwner(ownerKey);
-        if (o == null) {
-            throw new NotFoundException(i18n.tr("owner with key: {0} was not found.", ownerKey));
-        }
+
+        Owner owner = findOwner(ownerKey);
+        UpstreamConsumer consumer = owner.getUpstreamConsumer();
+        UpstreamConsumerDTO dto = this.dtoFactory.<UpstreamConsumer, UpstreamConsumerDTO>buildDTO(consumer);
 
         // returning as a list for future proofing. today we support one, but
         // users of this api want to protect against having to change their code
         // when multiples are supported.
-        UpstreamConsumer upstream = o.getUpstreamConsumer();
-
-        List<UpstreamConsumer> results = new ArrayList<UpstreamConsumer>(1);
-        results.add(upstream);
-        return results;
+        return Arrays.asList(dto);
     }
 
     /**

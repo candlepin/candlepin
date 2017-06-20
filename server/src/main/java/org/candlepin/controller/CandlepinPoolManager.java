@@ -2452,7 +2452,7 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     /**
-     * @{inheritDoc}
+     * {@inheritDoc}
      */
     @Override
     public CandlepinQuery<Pool> getMasterPools() {
@@ -2460,7 +2460,7 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     /**
-     * @{inheritDoc}
+     * {@inheritDoc}
      */
     @Override
     public CandlepinQuery<Pool> getMasterPoolsForOwner(Owner owner) {
@@ -2468,7 +2468,7 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     /**
-     * @{inheritDoc}
+     * {@inheritDoc}
      */
     @Override
     public CandlepinQuery<Pool> getMasterPoolsForOwnerExcludingSubs(Owner owner,
