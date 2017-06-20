@@ -35,7 +35,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = ConsumerType.DB_TABLE)
-public class ConsumerType extends AbstractHibernateObject {
+public class ConsumerType extends AbstractHibernateObject<ConsumerType> {
 
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp_consumer_type";
@@ -150,7 +150,8 @@ public class ConsumerType extends AbstractHibernateObject {
      */
     @Override
     public String toString() {
-        return "ConsumerType [id=" + id + ", label=" + label + "]";
+        return String.format("ConsumerType [id: %s, label: %s, manifest: %b]",
+            this.getId(), this.getLabel(), this.isManifest());
     }
 
     @Override

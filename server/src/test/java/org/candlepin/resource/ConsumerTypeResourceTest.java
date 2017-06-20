@@ -14,16 +14,16 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
+import org.candlepin.dto.api.v1.ConsumerTypeDTO;
+import org.candlepin.common.exceptions.BadRequestException;
+import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.test.DatabaseTestFixture;
 
+import org.junit.Before;
 import org.junit.Test;
-
-import java.util.List;
 
 import javax.inject.Inject;
 
@@ -35,48 +35,189 @@ import javax.inject.Inject;
 public class ConsumerTypeResourceTest extends DatabaseTestFixture {
     @Inject private ConsumerTypeResource consumerTypeResource;
 
-    @Test
-    public void testCRUD() {
-        String type = "JarJar-" + System.currentTimeMillis();
-        ConsumerType consumerType = new ConsumerType();
-        consumerType.setLabel(type);
-        assertEquals("the label getter works", type, consumerType.getLabel());
-        // Ensure it is not there
-        assertTrue("The type already exists", !this.typeExists(type));
-        // Create it
-        consumerType = consumerTypeResource.create(consumerType);
+    private ConsumerType testType;
 
-        // Make sure it is there
-        assertTrue("The type was not found", this.typeExists(type));
+    @Before
+    public void setup() {
+        this.testType = new ConsumerType();
+        this.testType.setLabel("test_type-" + System.currentTimeMillis());
+        this.testType.setManifest(true);
 
-        // Find it by ID
-        ConsumerType consumerType2 = consumerTypeResource.getConsumerType(consumerType.getId());
-        assertNotNull("The type was not found by ID", consumerType2);
+        this.testType = this.consumerTypeCurator.create(this.testType);
 
-        // Update it
-        String type2 = "JarJar2-" + System.currentTimeMillis();
-        consumerType.setLabel(type2);
-        consumerTypeResource.update(consumerType);
-        assertTrue("The update was not found", this.typeExists(type2));
-
-        // Delete It
-        consumerTypeResource.deleteConsumerType(consumerType.getId());
-
-        // Make sure it is not there
-        assertTrue("The type was found after a delete", !this.typeExists(type));
+        this.consumerTypeCurator.flush();
+        this.consumerTypeCurator.clear();
     }
 
-    public boolean typeExists(String type) {
-        List<ConsumerType> types = consumerTypeResource.list().list();
+    @Test
+    public void testRetrieveType() {
+        ConsumerTypeDTO output = this.consumerTypeResource.getConsumerType(this.testType.getId());
 
-        boolean found = false;
-        for (ConsumerType aType : types) {
-            found = type.equals(aType.getLabel());
-            if (found) {
-                break;
-            }
-        }
-        return found;
+        assertNotNull(output);
+        assertEquals(this.testType.getLabel(), output.getLabel());
+        assertEquals(this.testType.isManifest(), output.isManifest());
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void testRetrieveTypeWithBadId() {
+        ConsumerTypeDTO output = this.consumerTypeResource.getConsumerType("some bad id");
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void testRetrieveTypeWithNullId() {
+        ConsumerTypeDTO output = this.consumerTypeResource.getConsumerType(null);
+    }
+
+    @Test
+    public void testCreateType() {
+        String label = "test_label";
+        ConsumerType existing = this.consumerTypeCurator.lookupByLabel(label);
+
+        // Verify it doesn't exist already
+        assertNull(existing);
+
+        ConsumerTypeDTO dto = new ConsumerTypeDTO();
+        dto.setLabel(label);
+        dto.setManifest(true);
+
+        // Create the type with our DTO
+        ConsumerTypeDTO output = this.consumerTypeResource.create(dto);
+        assertNotNull(output);
+        assertEquals(dto.getLabel(), output.getLabel());
+        assertEquals(dto.isManifest(), output.isManifest());
+
+        // Flush & clear DB state
+        this.consumerTypeCurator.flush();
+        this.consumerTypeCurator.clear();
+
+        // Ensure the type actually hit the DB
+        existing = this.consumerTypeCurator.lookupByLabel(label);
+        assertNotNull(existing);
+        assertEquals(dto.getLabel(), existing.getLabel());
+        assertEquals(dto.isManifest(), existing.isManifest());
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testCreateTypeWithBadData() {
+        ConsumerTypeDTO output = this.consumerTypeResource.create(new ConsumerTypeDTO());
+    }
+
+    @Test
+    public void testUpdateTypeUpdatesLabelButNotManifest() {
+        String label = "updated_label";
+        boolean manifest = this.testType.isManifest();
+
+        ConsumerTypeDTO dto = new ConsumerTypeDTO();
+        dto.setId(this.testType.getId());
+        dto.setLabel(label);
+
+        // Update the type with our DTO
+        ConsumerTypeDTO output = this.consumerTypeResource.update(dto);
+        assertNotNull(output);
+        assertEquals(dto.getLabel(), output.getLabel());
+        assertEquals(manifest, output.isManifest());
+
+        // Flush & clear DB state
+        this.consumerTypeCurator.flush();
+        this.consumerTypeCurator.clear();
+
+        // Ensure the update actually hit the DB
+        ConsumerType existing = this.consumerTypeCurator.lookupByLabel(label);
+        assertNotNull(existing);
+        assertEquals(dto.getLabel(), existing.getLabel());
+        assertEquals(manifest, existing.isManifest());
+    }
+
+    @Test
+    public void testUpdateTypeUpdatesManifestButNotLabel() {
+        String label = this.testType.getLabel();
+        boolean manifest = !this.testType.isManifest();
+
+        ConsumerTypeDTO dto = new ConsumerTypeDTO();
+        dto.setId(this.testType.getId());
+        dto.setManifest(manifest);
+
+        // Update the type with our DTO
+        ConsumerTypeDTO output = this.consumerTypeResource.update(dto);
+        assertNotNull(output);
+        assertEquals(label, output.getLabel());
+        assertEquals(dto.isManifest(), output.isManifest());
+
+        // Flush & clear DB state
+        this.consumerTypeCurator.flush();
+        this.consumerTypeCurator.clear();
+
+        // Ensure the update actually hit the DB
+        ConsumerType existing = this.consumerTypeCurator.find(this.testType.getId());
+        assertNotNull(existing);
+        assertEquals(label, existing.getLabel());
+        assertEquals(dto.isManifest(), existing.isManifest());
+    }
+
+    @Test
+    public void testUpdateTypeUpdatesNothing() {
+        String label = this.testType.getLabel();
+        boolean manifest = this.testType.isManifest();
+
+        ConsumerTypeDTO dto = new ConsumerTypeDTO();
+        dto.setId(this.testType.getId());
+
+        // Update the type with our DTO
+        ConsumerTypeDTO output = this.consumerTypeResource.update(dto);
+        assertNotNull(output);
+        assertEquals(label, output.getLabel());
+        assertEquals(manifest, output.isManifest());
+
+        // Flush & clear DB state
+        this.consumerTypeCurator.flush();
+        this.consumerTypeCurator.clear();
+
+        // Ensure the update changed nothing in the DB
+        ConsumerType existing = this.consumerTypeCurator.find(this.testType.getId());
+        assertNotNull(existing);
+        assertEquals(label, existing.getLabel());
+        assertEquals(manifest, existing.isManifest());
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void testUpdateTypeWithBadId() {
+        ConsumerTypeDTO dto = new ConsumerTypeDTO();
+        dto.setId("some bad id");
+
+        ConsumerTypeDTO output = this.consumerTypeResource.update(dto);
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void testUpdateTypeWithNullId() {
+        ConsumerTypeDTO dto = new ConsumerTypeDTO();
+        dto.setId(null);
+
+        ConsumerTypeDTO output = this.consumerTypeResource.update(dto);
+    }
+
+    @Test
+    public void testDeleteType() {
+        String id = this.testType.getId();
+        assertNotNull(this.consumerTypeCurator.find(id));
+
+        this.consumerTypeResource.deleteConsumerType(id);
+
+        // Flush & clear DB state
+        this.consumerTypeCurator.flush();
+        this.consumerTypeCurator.clear();
+
+        // Verify the type no longer exists
+        assertNull(this.consumerTypeCurator.find(id));
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void testDeleteTypeWithBadId() {
+        this.consumerTypeResource.deleteConsumerType("some bad id");
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void testDeleteTypeWithNullId() {
+        this.consumerTypeResource.deleteConsumerType(null);
     }
 
 }
