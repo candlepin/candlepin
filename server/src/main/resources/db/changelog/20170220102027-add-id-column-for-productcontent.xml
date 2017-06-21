@@ -4,19 +4,38 @@
         xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
-        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+
 
     <changeSet id="20170220102027-1" author="crog">
+        <!-- Original checksum of this changeset prior to adding the populating SQL -->
+        <validCheckSum>7:bb7e778ce1c3821e649eaa7699c51f8e</validCheckSum>
+
         <!-- On MySQL/MariaDB, we need to drop *all* foreign keys before we can drop our primary key -->
         <dropAllForeignKeyConstraints baseTableName="cp2_product_content"/>
 
         <dropPrimaryKey tableName="cp2_product_content" constraintName="cp2_product_content_pk"/>
 
-        <!-- Liquibase won't let us specify the positional offset, despite the docs saying we can. -->
         <addColumn tableName="cp2_product_content">
-            <column name="id" type="varchar(32)"/>
+            <column name="id" type="varchar(32)" position="1"/>
         </addColumn>
 
+        <!-- We need to populate the ID column before we designate it as a primary key -->
+        <sql dbms="mysql">
+            UPDATE cp2_product_content SET id=REPLACE(UUID(), '-', '')
+        </sql>
+
+        <sql dbms="postgresql">
+            <!-- Unfortunately, postgres doesn't provide a standard UUID-like function, so we hack it here -->
+            UPDATE cp2_product_content SET id=md5(product_uuid || content_uuid || random()::text || clock_timestamp()::text)
+        </sql>
+
+        <sql dbms="oracle">
+            UPDATE cp2_product_content SET id=SYS_GUID()
+        </sql>
+
+        <!-- Add the primary key -->
         <addPrimaryKey tableName="cp2_product_content"
             columnNames="id"
             constraintName="cp2_product_content_pk"
