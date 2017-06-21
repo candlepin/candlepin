@@ -152,6 +152,12 @@ public abstract class KingpinJob implements Job {
         JobStatus status = null;
         try {
             status = jobCurator.create(new JobStatus(detail, trigger == null));
+            if (trigger != null) {
+                scheduler.scheduleJob(detail, trigger);
+            }
+            else {
+                scheduler.addJob(detail, false);
+            }
         }
         catch (EntityExistsException e) {
             // status exists, let's update it
@@ -159,14 +165,22 @@ public abstract class KingpinJob implements Job {
             status = jobCurator.find(detail.getKey().getName());
             jobCurator.merge(status);
         }
+        catch (RuntimeException e) {
+            failStatus(jobCurator, status);
+            throw e;
+        }
+        catch (SchedulerException e) {
+            failStatus(jobCurator, status);
+            throw e;
+        }
 
-        if (trigger != null) {
-            scheduler.scheduleJob(detail, trigger);
-        }
-        else {
-            scheduler.addJob(detail, false);
-        }
         return status;
+    }
+
+    private static void failStatus(JobCurator curator, JobStatus status) {
+        // if there was any error in scheduling, ensure that the status is updated
+        status.setState(JobStatus.JobState.FAILED);
+        curator.merge(status);
     }
 
     public static boolean isSchedulable(JobCurator jobCurator, JobStatus status) {
