@@ -27,7 +27,7 @@ describe 'Consumer Resource Host/Guest' do
     consumer = user_cp.register(random_string('host'), :system, nil,
       {}, nil, nil, [], [])
     consumer.should_not be_nil
-    consumer['guestIds'].should be_nil
+    consumer['guestIds'].should == []
 
     consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
     consumer_client.update_consumer({:guestIds => guests})
