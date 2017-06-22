@@ -51,4 +51,18 @@ public class PinsetterTriggerListener extends TriggerListenerSupport {
         }
         return false;
     }
+
+    @Override
+    public void triggerMisfired(Trigger trigger) {
+        log.warn("Trigger misfired for for Job: \nKey: {}\nJob Key: {}\nStart: {}\nEnd: {}\n" +
+            "Final Fire Time: {}\nNext Fire Time: {}\nMisfire Instruction: {}\nPriority: {}",
+            trigger.getKey(),
+            trigger.getJobKey(),
+            trigger.getStartTime(),
+            trigger.getEndTime(),
+            trigger.getFinalFireTime(),
+            trigger.getNextFireTime(),
+            trigger.getMisfireInstruction(),
+            trigger.getPriority());
+    }
 }
