@@ -63,6 +63,8 @@ public class AuthorizationFeatureTest {
     public void setUp() throws Exception {
         this.authorizationFeature = new AuthorizationFeature(
             verifyFilter, superAdminFilter, securityHoleFilter);
+
+        doReturn(FakeResource.class).when(resourceInfo).getResourceClass();
     }
 
     @Test

@@ -39,6 +39,8 @@ import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.swagger.jaxrs.listing.ApiListingResource;
+
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -122,6 +124,10 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         Principal principal = null;
 
         if (hole != null && hole.anon()) {
+            principal = new NoAuthPrincipal();
+        }
+        else if (resourceInfo.getResourceClass().equals(ApiListingResource.class)) {
+            log.debug("Swagger API request made; no principal required.");
             principal = new NoAuthPrincipal();
         }
         else {
