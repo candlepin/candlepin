@@ -115,6 +115,13 @@ until the list is empty.
 This plugin is discussed in detail at
 <http://www.candlepinproject.org/docs/candlepin/auto_conf.html>
 
+## Swagger
+
+* `buildr swagger` connects to a Candlepin deployment defined in `buildfile`
+  and downloads the `swagger.json` file.  It then sends this JSON file to
+  swagger-codegen to automatically generate client bindings.  The task can
+  be subdivided with `buildr swagger:json` and `buildr swagger:client`.
+
 ## Miscellaneous
 * `buildr syntastic` creates `.syntastic_class_path` for the Vim Syntastic plugin
 * `buildr pom` creates a `pom.xml` file with the project dependencies in it

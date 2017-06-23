@@ -90,8 +90,8 @@ JAVAX = ['org.hibernate.javax.persistence:hibernate-jpa-2.1-api:jar:1.0.0.Final'
          'javax.transaction:jta:jar:1.1']
 ANTLR = ['antlr:antlr:jar:2.7.7']
 
-EHCACHE = ['org.hibernate:hibernate-ehcache:jar:5.1.1.Final', 
-           'net.sf.ehcache:ehcache:jar:2.10.1', 
+EHCACHE = ['org.hibernate:hibernate-ehcache:jar:5.1.1.Final',
+           'net.sf.ehcache:ehcache:jar:2.10.1',
            'org.ehcache:jcache:jar:1.0.0', 'javax.cache:cache-api:jar:1.0.0',
            'net.sf.ehcache:management-ehcache-v2:jar:2.10.1']
 
@@ -323,6 +323,9 @@ define "candlepin" do
     checkstyle.config_directory = checkstyle_config_directory
     checkstyle.eclipse_xml = checkstyle_eclipse_xml
     checkstyle.extra_dependencies << checkstyle_extra_dependencies
+    swagger.enabled = true
+    swagger.json_source = "https://localhost:8443/candlepin/swagger.json"
+
     enhance_checkstyle_task
     rpmlint.rpmlint_conf = rpmlint_conf
     liquibase.changelogs = ['changelog-update.xml', 'changelog-create.xml', 'changelog-testing.xml']
@@ -331,7 +334,7 @@ define "candlepin" do
     gettext.keys_destination = project("common").gettext.keys_destination
 
     rubocop.patterns = ['server/client/ruby/candlepin.rb',
-			#'server/spec/*.rb',
+                        #'server/spec/*.rb',
                         'server/client/ruby/test/*.rb']
 
     # eclipse settings
