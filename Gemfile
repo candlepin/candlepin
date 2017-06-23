@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 
-gem 'buildr', '1.4.24'
+gem 'buildr', '1.5.3'
 # Not a typo - we use both buildr and builder
 gem 'builder'
 gem 'rspec', '~> 3.0'
