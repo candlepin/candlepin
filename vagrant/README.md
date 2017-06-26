@@ -20,6 +20,20 @@ The NFS service requires +x attribute on all parent directories in order to moun
 the source directory. If you are running into problems with the NFS mount this would
 be the first thing to check.  
 
+Make sure NFS is enabled on firewall using:
+
+    $ firewall-cmd --list-all
+
+To enable NFS on firewall for vagrant network (192.168.121.0/24 in this case) you will
+have to type following commands (Fedora/RHEL7) on host:
+
+    $ firewall-cmd --permanent --add-rich-rule='rule family="ipv4" \
+      source address="192.168.121.0/24" service name="rpc-bind" accept'
+    $ firewall-cmd --permanent --add-rich-rule='rule family="ipv4" \
+      source address="192.168.121.0/24" service name="nfs" accept'
+    $ firewall-cmd --permanent --add-rich-rule='rule family="ipv4" \
+      source address="192.168.121.0/24" service name="mountd" accept'
+
 If you have other services running on ports 8000, 8080, or 8443 they will either have
 to be stopped or you will have to edit the Vagrantfile and choose different ports.
 
