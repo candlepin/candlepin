@@ -157,11 +157,15 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
     }
 
     public long findNumRunningByClassAndTarget(String target, Class<? extends KingpinJob> jobClass) {
+        if (jobClass == null) {
+            throw new IllegalArgumentException("jobClass can not be null");
+        }
+
         return (Long) this.currentSession().createCriteria(JobStatus.class)
             .add(Restrictions.ge("updated", getBlockingCutoff()))
             .add(Restrictions.eq("state", JobState.RUNNING))
             .add(Restrictions.eq("targetId", target))
-            .add(Restrictions.eq("jobClass", jobClass))
+            .add(Restrictions.eq("jobClass", jobClass.getCanonicalName()))
             .setProjection(Projections.count("id"))
             .uniqueResult();
     }
@@ -171,6 +175,10 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
         // This is not guaranteed to find the intended target if more than one job in the DB
         // matches the input criteria
 
+        if (jobClass == null) {
+            throw new IllegalArgumentException("jobClass can not be null");
+        }
+
         return (JobStatus) this.currentSession().createCriteria(JobStatus.class)
             .addOrder(Order.desc("created"))
             .add(Restrictions.ge("updated", getBlockingCutoff()))
@@ -178,7 +186,7 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
             .add(Restrictions.ne("state", JobState.FAILED))
             .add(Restrictions.ne("state", JobState.CANCELED))
             .add(Restrictions.eq("targetId", target))
-            .add(Restrictions.eq("jobClass", jobClass))
+            .add(Restrictions.eq("jobClass", jobClass.getCanonicalName()))
             .setMaxResults(1)
             .uniqueResult();
     }

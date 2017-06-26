@@ -57,8 +57,17 @@ public abstract class UniqueByEntityJob extends KingpinJob {
     }
 
     public static boolean isSchedulable(JobCurator jobCurator, JobStatus status) {
+        Class<? extends KingpinJob> jobClass;
+        try {
+            jobClass = (Class<? extends KingpinJob>) Class.forName(status.getJobClass());
+        }
+        catch (ClassNotFoundException cnfe) {
+            log.warn("Could not schedule job of class {}. The class was not found.", status.getJobClass());
+            return false;
+        }
+
         long running = jobCurator.findNumRunningByClassAndTarget(
-            status.getTargetId(), status.getJobClass());
+            status.getTargetId(), jobClass);
         return running == 0;  // We can start the job if there are 0 like it running
     }
 }
