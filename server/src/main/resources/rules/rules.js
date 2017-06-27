@@ -1,4 +1,4 @@
-// Version: 5.23
+// Version: 5.24
 
 /*
  * Default Candlepin rule set.
@@ -562,7 +562,7 @@ var FactValueCalculator = {
 
         guest_limit: function (prodAttr, consumer) {
             var context = JSON.parse(json_context);
-            if (context.guestIds === null) {
+            if (!context.hasOwnProperty('guestIds') || context.guestIds === null) {
                 return 0;
             }
             var activeGuestCount = 0;
