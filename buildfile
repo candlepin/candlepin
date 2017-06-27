@@ -323,8 +323,10 @@ define "candlepin" do
     checkstyle.config_directory = checkstyle_config_directory
     checkstyle.eclipse_xml = checkstyle_eclipse_xml
     checkstyle.extra_dependencies << checkstyle_extra_dependencies
+
     swagger.enabled = true
     swagger.json_source = "https://localhost:8443/candlepin/swagger.json"
+    swagger.config_options = { 'gemName' => 'candlepin_client', 'moduleName' => 'Candlepin' }
 
     enhance_checkstyle_task
     rpmlint.rpmlint_conf = rpmlint_conf

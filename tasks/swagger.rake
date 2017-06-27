@@ -16,6 +16,7 @@ module Swagger
     attr_reader :project
     attr_writer :language
     attr_writer :destination
+    attr_writer :config_options
 
     def enabled?
       !!@enabled
@@ -26,7 +27,11 @@ module Swagger
     end
 
     def destination
-      @language || project.path_to(:target, :swagger_client)
+      @destination || project.path_to(:target, :swagger_client)
+    end
+
+    def config_options
+      @config_options || {}
     end
 
     protected
@@ -99,13 +104,21 @@ module Swagger
           end.map(&:to_s).join(File::PATH_SEPARATOR)
 
           if File.exist?(project.path_to('swagger.json'))
-            Java::Commands.java(
+            args = [
               "io.swagger.codegen.SwaggerCodegen",
               "generate",
               "-i", project.path_to('swagger.json'),
               "-l", swagger.language,
-              "-o", swagger.destination,
-              :classpath => cp)
+              "-o", swagger.destination
+            ]
+
+            unless swagger.config_options.empty?
+              args << "-D"
+              # Join the key with the value using a "=" and join all those elements with a ","
+              args << swagger.config_options.each_with_object([]) { |(k, v), a| a << "#{k}=#{v}" }.join(',')
+            end
+
+            Java::Commands.java(*args, :classpath => cp)
           else
             fail('No swagger.json file was found.  Run `swagger:json` to fetch it.')
           end
