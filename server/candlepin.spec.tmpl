@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.0.37
+Version: 2.0.38
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,13 @@ fi
 
 #raw
 %changelog
+* Tue Jun 27 2017 Kevin Howell <khowell@redhat.com> 2.0.38-1
+- Add additional logging to JobCleaner (mstead@redhat.com)
+- Re-enable JobCleaner logging (mstead@redhat.com)
+- Added logging for quartz job misfires (mstead@redhat.com)
+- 1457905: Fix failure listing Jobs when class not found (mstead@redhat.com)
+- Fixed an issue with certain migration tasks (crog@redhat.com)
+
 * Fri Jun 16 2017 Kevin Howell <khowell@redhat.com> 2.0.37-1
 - 1459985: Handle job creation failure graciously (adarshvritant@gmail.com)
 - 1459643: Ensure start date is future when subscription is future
