@@ -63,6 +63,7 @@ public class QuantityRules {
 
         args.put("pool", p);
         args.put("consumer", c);
+        args.put("guestIds", c.getGuestIds());
         args.put("validEntitlements", validEntitlements);
         args.put("log", log, false);
 
@@ -99,6 +100,7 @@ public class QuantityRules {
 
         args.put("pools", pools);
         args.put("consumer", c);
+        args.put("guestIds", c.getGuestIds());
         args.put("validEntitlements", validEntitlements);
         args.put("log", log, false);
 
