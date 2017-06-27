@@ -3,7 +3,7 @@ require 'hostedtest_api'
 require 'qpid_proton'
 
 require 'pp'
-require 'zip/zip'
+require 'zip'
 
 module CandlepinMethods
 
@@ -277,7 +277,7 @@ class Export
 
   class << self
     def unzip_export_file(filename, dest_dir)
-      Zip::ZipFile::open(filename) do |zf|
+      Zip::File::open(filename) do |zf|
          zf.each do |e|
            fpath = File.join(dest_dir, e.name)
            FileUtils.mkdir_p(File.dirname(fpath))
@@ -395,7 +395,7 @@ class ImportUpdateBrandingExporter < Exporter
     #generate 2nd (updated) export
     update_pools_or_subs_on_brandings(pools)
     @export2_filename = create_candlepin_export.export_filename
-	end
+  end
 
   def create_pools_and_subs_with_brandings(product, owner, candlepin_client)
     pools = Array.new

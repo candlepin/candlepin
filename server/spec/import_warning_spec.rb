@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'candlepin_scenarios'
 require 'json'
-require 'zip/zip'
+require 'zip'
 
 describe 'Import Warning', :serial => true do
 
@@ -34,7 +34,7 @@ describe 'Import Warning', :serial => true do
 
   it 'warns about inactive subscriptions' do
     # it is not feasible to export an expired manifest.
-    # there is also a bug in the ZipFile::replace api which
+    # there is also a bug in the Zip::File::replace api which
     # corrupts the archive checksum.
     # So we use a valid export, unzip it, tweak an entitlement
     # and create an archive again.
@@ -42,7 +42,7 @@ describe 'Import Warning', :serial => true do
 
     # pick any entitlement and expire it
     first_file = Dir.entries(entitlements_dir).reject{
-	    |entry| entry == "." || entry == ".."}[0]
+      |entry| entry == "." || entry == ".."}[0]
     entitlement_file = File.join(entitlements_dir, first_file)
     fileText = File.read(entitlement_file)
     entitlement = JSON.parse(fileText)
@@ -52,7 +52,7 @@ describe 'Import Warning', :serial => true do
     # create a consumer_export.zip from scratch with the updated file
     recursive_path = File.join(@cp_export.export_dir, "**", "**")
     updated_inner_zip = File.join(@cp_export.tmp_dir, "updatedinner.zip")
-    Zip::ZipFile::open(updated_inner_zip, Zip::ZipFile::CREATE) {
+    Zip::File::open(updated_inner_zip, Zip::File::CREATE) {
       |zipfile|
       Dir[recursive_path].each do |file|
         if File.file?(file)
@@ -63,7 +63,7 @@ describe 'Import Warning', :serial => true do
 
     #add the inner zip to a new manifest
     updated_export = File.join(@cp_export.tmp_dir, "updatedexport.zip")
-    Zip::ZipFile::open(updated_export, Zip::ZipFile::CREATE) {
+    Zip::File::open(updated_export, Zip::File::CREATE) {
       |zipfile|
        zipfile.add("consumer_export.zip", updated_inner_zip)
        zipfile.add("signature", File.join(@cp_export.tmp_dir, "signature"))
@@ -84,7 +84,5 @@ describe 'Import Warning', :serial => true do
     import_record = @cp.import(@import_owner['key'], empty_export.export_filename)
     import_record.status.should == 'SUCCESS_WITH_WARNING'
     import_record.statusMessage.should == "#{@import_owner['key']} file imported successfully.No active subscriptions found in the file."
-
   end
-
 end

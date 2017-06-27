@@ -1,5 +1,5 @@
 require 'base64'
-require 'zip/zip'
+require 'zip'
 
 
 module CleanupHooks

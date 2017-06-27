@@ -5,7 +5,7 @@ require 'rubygems'
 require 'rest_client'
 
 require "base64"
-require "zip/zip"
+require "zip"
 require 'openssl'
 
 
