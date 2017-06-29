@@ -762,4 +762,14 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         this.contentAccessMode = contentAccessMode;
     }
 
+    /**
+     * This will put in the property so that the virtWho instances won't error
+     *
+     * @return List always empty
+     */
+    @JsonProperty("guestIds")
+    public List getEmptyGuestIdArray() {
+        return new ArrayList<String>();
+    }
+
 }
