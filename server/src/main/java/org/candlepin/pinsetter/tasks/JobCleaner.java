@@ -21,6 +21,8 @@ import com.google.inject.Inject;
 
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 
@@ -29,6 +31,10 @@ import java.util.Date;
  * jobs from 4 days ago.
  */
 public class JobCleaner extends KingpinJob {
+
+    private static Logger log = LoggerFactory.getLogger(JobCleaner.class);
+
+    private final int MAX_JOB_AGE_IN_DAYS = 4;
 
     private JobCurator jobCurator;
     public static final String DEFAULT_SCHEDULE = "0 0 12 * * ?";
@@ -44,9 +50,13 @@ public class JobCleaner extends KingpinJob {
         // CAUTION: jobCurator uses setDate on the delete query,
         // so all time info is stripped off
         Date deadLineDt = Util.yesterday();
-        this.jobCurator.cleanUpOldCompletedJobs(deadLineDt);
-        Date failedJobDeadLineDt = Util.addDaysToDt(-4);
-        this.jobCurator.cleanupAllOldJobs(failedJobDeadLineDt);
+        int oldCompletedJobs = this.jobCurator.cleanUpOldCompletedJobs(deadLineDt);
+
+        Date failedJobDeadLineDt = Util.addDaysToDt(-1 * MAX_JOB_AGE_IN_DAYS);
+        int asOf4DaysAgo = this.jobCurator.cleanupAllOldJobs(failedJobDeadLineDt);
+
+        log.debug("Cleaned up {} completed jobs and {} jobs older than {} days old.",
+            oldCompletedJobs, asOf4DaysAgo, MAX_JOB_AGE_IN_DAYS);
     }
 
 }
