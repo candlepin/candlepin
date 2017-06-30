@@ -17,11 +17,15 @@ package org.candlepin.pinsetter.core;
 import com.google.inject.Inject;
 import org.candlepin.controller.ModeManager;
 import org.candlepin.model.CandlepinModeChange.Mode;
+import org.candlepin.model.JobCurator;
+import org.candlepin.pinsetter.core.model.JobStatus;
 import org.quartz.JobExecutionContext;
 import org.quartz.Trigger;
 import org.quartz.listeners.TriggerListenerSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.text.SimpleDateFormat;
 
 /**
  * This component receives events around job status and performs actions to
@@ -31,10 +35,12 @@ import org.slf4j.LoggerFactory;
 public class PinsetterTriggerListener extends TriggerListenerSupport {
     private static Logger log = LoggerFactory.getLogger(PinsetterTriggerListener.class);
     private ModeManager modeManager;
+    private JobCurator jobCurator;
 
     @Inject
-    public PinsetterTriggerListener(ModeManager modeManager) {
+    public PinsetterTriggerListener(ModeManager modeManager, JobCurator jobCurator) {
         this.modeManager = modeManager;
+        this.jobCurator =  jobCurator;
     }
 
     @Override
@@ -64,5 +70,28 @@ public class PinsetterTriggerListener extends TriggerListenerSupport {
             trigger.getNextFireTime(),
             trigger.getMisfireInstruction(),
             trigger.getPriority());
+
+        try {
+            String id = trigger.getJobKey().getName();
+            JobStatus js = jobCurator.find(id);
+            if (js == null) {
+                throw new RuntimeException("No JobStatus for job with id of " + id);
+            }
+            // if may not refire again, change to fail
+            if (!trigger.mayFireAgain()) {
+                log.warn("Job {} not allowed to fire again. Setting state to FAILED.", id);
+                js.setState(JobStatus.JobState.FAILED);
+                js.setResult("Failed run. Will not attempt again.");
+            }
+            else {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
+                js.setResult("Will reattempt job at or after " + sdf.format(trigger.getNextFireTime()));
+                js.setState(JobStatus.JobState.PENDING);
+            }
+            jobCurator.merge(js);
+        }
+        catch (Exception e) {
+            log.error("Unable to capture misfire into job status: {}", e.getMessage());
+        }
     }
 }
