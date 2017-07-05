@@ -1,4 +1,4 @@
-// Version: 5.24
+// Version: 5.25
 
 /*
  * Default Candlepin rule set.
@@ -41,6 +41,7 @@ function pool_type_name_space() {
 // consumer types
 var SYSTEM_TYPE = "system";
 var HYPERVISOR_TYPE = "hypervisor";
+var UEBERCERT_TYPE = "uebercert";
 
 // Consumer fact names
 var SOCKET_FACT="cpu.cpu_socket(s)";
@@ -1522,7 +1523,8 @@ var Entitlement = {
 
         var requiresConsumerType = context.getAttribute(context.pool, REQUIRES_CONSUMER_TYPE_ATTRIBUTE);
         // skip if the attribtue is not defined.
-        if (requiresConsumerType != null) {
+        log.debug("Checking consumerType:" + context.consumer.type.label);
+        if (requiresConsumerType != null && context.consumer.type.label != UEBERCERT_TYPE) {
             // Consumer types need to match (except below)
             if (requiresConsumerType != context.consumer.type.label) {
                 // Allow hypervisors to be like systems
@@ -1771,7 +1773,8 @@ var Entitlement = {
             // If the product has no required consumer type, assume it is restricted to "system".
             // "hypervisor" type are essentially the same as "system".
             if (!pool.getProductAttribute(REQUIRES_CONSUMER_TYPE_ATTRIBUTE)) {
-                if (consumer.type.label != SYSTEM_TYPE && consumer.type.label != HYPERVISOR_TYPE) {
+                if (consumer.type.label != SYSTEM_TYPE && consumer.type.label != HYPERVISOR_TYPE &&
+                    consumer.type.label != UEBERCERT_TYPE ) {
                     result.addError("rulefailed.consumer.type.mismatch");
                 }
             }
