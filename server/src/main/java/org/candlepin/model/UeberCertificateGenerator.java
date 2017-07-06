@@ -86,18 +86,20 @@ public class UeberCertificateGenerator {
 
     @Transactional
     public UeberCertificate generate(String ownerKey, Principal principal) {
-        Owner o = ownerCurator.findAndLock(ownerKey);
-        if (o == null) {
-            throw new NotFoundException(i18n.tr("owner with key: {0} was not found.", ownerKey));
+        Owner owner = this.ownerCurator.lookupByKey(ownerKey);
+        if (owner == null) {
+            throw new NotFoundException(i18n.tr("Unable to find an owner with key: {0}", ownerKey));
         }
+
+        this.ownerCurator.lock(owner);
 
         try {
             // There can only be one ueber certificate per owner, so delete the existing and regenerate it.
-            this.ueberCertCurator.deleteForOwner(o);
-            return  this.generateUeberCert(o, principal.getUsername());
+            this.ueberCertCurator.deleteForOwner(owner);
+            return  this.generateUeberCert(owner, principal.getUsername());
         }
         catch (Exception e) {
-            log.error("Problem generating ueber cert for owner: " + ownerKey, e);
+            log.error("Problem generating ueber cert for owner: {}", ownerKey, e);
             throw new BadRequestException(i18n.tr("Problem generating ueber cert for owner {0}", ownerKey),
                 e);
         }

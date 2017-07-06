@@ -41,7 +41,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -51,8 +50,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-
-import javax.persistence.LockModeType;
 
 
 
@@ -270,36 +267,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @Transactional
     public Consumer findByUuid(String uuid) {
         return getConsumer(uuid);
-    }
-
-    /**
-     * Apply a SELECT FOR UPDATE on a consumer.
-     *
-     * Note this method is not transactional.  It is meant to be used within
-     * a larger transaction.  Starting a transaction, running a select for update,
-     * and then ending the transaction is pointless.
-     *
-     * @return A consumer locked in the database
-     */
-    public Consumer lockAndLoad(Consumer c) {
-        getEntityManager().lock(c, LockModeType.PESSIMISTIC_WRITE);
-        return c;
-    }
-
-    /**
-     * Find a consumer by uuid and immediately lock it.
-     *
-     * @param consumerUuid the uuid of the target consumer.
-     *
-     * @return the Consumer matching the given uuid, null if the consumer was not found.
-     */
-    public Consumer lockAndLoadByUuid(String consumerUuid) {
-        List<Consumer> consumerList = lockAndLoadBatch(Arrays.asList(consumerUuid));
-        return (CollectionUtils.isEmpty(consumerList)) ? null : consumerList.get(0);
-    }
-
-    public List<Consumer> lockAndLoadBatch(Collection<String> uuids) {
-        return lockAndLoadBatch(uuids, "Consumer", "uuid");
     }
 
     @Transactional

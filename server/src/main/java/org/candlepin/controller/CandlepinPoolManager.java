@@ -1292,13 +1292,18 @@ public class CandlepinPoolManager implements PoolManager {
         if (log.isDebugEnabled()) {
             log.debug("Host selectBestPools returned {} pools: ", enforced.size());
             for (PoolQuantity poolQuantity : enforced) {
-                log.debug("   " + poolQuantity.getPool());
+                log.debug("  " + poolQuantity.getPool());
             }
         }
 
         if (tempLevel) {
             host.setServiceLevel("");
+
+            // complianceRules.getStatus may have persisted the host with the temp service level,
+            // so we need to be certain we undo that.
+            consumerCurator.update(host);
         }
+
         return enforced;
     }
 
@@ -1442,13 +1447,14 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     @Override
-    public Entitlement adjustEntitlementQuantity(Consumer consumer,
-        Entitlement entitlement, Integer quantity)
+    public Entitlement adjustEntitlementQuantity(Consumer consumer, Entitlement entitlement, Integer quantity)
         throws EntitlementRefusedException {
+
         int change = quantity - entitlement.getQuantity();
         if (change == 0) {
             return entitlement;
         }
+
         Map<String, Integer> poolQuantities = new HashMap<String, Integer>();
         String poolId = entitlement.getPool().getId();
         poolQuantities.put(poolId, change);
@@ -1501,14 +1507,15 @@ public class CandlepinPoolManager implements PoolManager {
         // before starting this process.
 
         log.debug("Locking pools: {}", poolQuantityMap.keySet());
-
-        List<Pool> pools = poolCurator.lockAndLoadBatchById(poolQuantityMap.keySet());
+        Collection<Pool> pools = poolCurator.lockAndLoadByIds(poolQuantityMap.keySet());
 
         if (log.isDebugEnabled()) {
             for (Pool pool : pools) {
                 log.debug("Locked pool: {} consumed: {}", pool, pool.getConsumed());
             }
         }
+
+        log.debug("Done locking pools");
 
         Map<String, PoolQuantity> poolQuantities = new HashMap<String, PoolQuantity>();
         boolean quantityFound = false;
@@ -1744,7 +1751,7 @@ public class CandlepinPoolManager implements PoolManager {
             }
         }
 
-        poolCurator.lock(poolsToLock);
+        poolCurator.lockAndLoad(poolsToLock);
         log.info("Batch revoking {} entitlements ", entsToRevoke.size());
         entsToRevoke = new ArrayList<Entitlement>(entsToRevoke);
 

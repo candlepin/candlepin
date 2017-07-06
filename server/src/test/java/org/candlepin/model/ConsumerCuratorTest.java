@@ -16,7 +16,6 @@ package org.candlepin.model;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.times;
@@ -945,35 +944,6 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumerCurator.delete(c);
         i = (BigInteger) em.createNativeQuery(countQuery).getSingleResult();
         assertEquals(new BigInteger("0"), i);
-    }
-
-    @Test
-    public void lockAndLoadByUuidReturnsFindsConsumer() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        consumerCurator.create(consumer);
-        assertTrue(consumer.getUuid() != null && !consumer.getUuid().isEmpty());
-
-        beginTransaction();
-        try {
-            Consumer found = consumerCurator.lockAndLoadByUuid(consumer.getUuid());
-            assertNotNull(found);
-            assertEquals(consumer.getUuid(), found.getUuid());
-        }
-        finally {
-            rollbackTransaction();
-        }
-    }
-
-    @Test
-    public void lockAndLoadByUuidReturnsNullWhenConsumerIsNotFound() {
-        beginTransaction();
-        try {
-            Consumer found = consumerCurator.lockAndLoadByUuid("an_unknown_uuid");
-            assertNull(found);
-        }
-        finally {
-            rollbackTransaction();
-        }
     }
 
     // select by owner
