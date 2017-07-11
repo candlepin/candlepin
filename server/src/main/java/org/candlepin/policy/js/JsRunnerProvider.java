@@ -112,7 +112,7 @@ public class JsRunnerProvider implements Provider<JsRunner> {
                 return;
             }
 
-            log.info("Recompiling rules with timestamp: " + newUpdated);
+            log.info("Recompiling rules with timestamp: {}", newUpdated);
 
             Context context = Context.enter();
             context.setOptimizationLevel(9);

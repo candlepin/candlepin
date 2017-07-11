@@ -11,7 +11,7 @@ describe 'Rules Import', :serial => true do
     # ones that may have been left in the database:
     @cp.delete_rules
 
-    sleep 6 #The status resource response is being cached for 5 seconds
+    sleep 7 # The status resource response is being cached for 5 seconds
     @orig_ver = @cp.get_status()['rulesVersion']
 
     rules_version_parts = @orig_ver.split(".")
@@ -44,7 +44,7 @@ describe 'Rules Import', :serial => true do
     fetched_rules = @cp.list_rules
     decoded_fetched_rules = Base64.decode64(fetched_rules)
     (decoded_fetched_rules == @rules).should be true
-    sleep 6 #The status resource response is being cached for 5 seconds
+    sleep 7 # The status resource response is being cached for 5 seconds
 
     @cp.get_status()['rulesVersion'].should == @new_ver
   end
@@ -60,7 +60,7 @@ describe 'Rules Import', :serial => true do
     rules = @cp.list_rules
 
     # Version should be back to original:
-    sleep 6 #The status resource response is being cached for 5 seconds
+    sleep 7 # The status resource response is being cached for 5 seconds
 
     @cp.get_status()['rulesVersion'].should == @orig_ver
 
