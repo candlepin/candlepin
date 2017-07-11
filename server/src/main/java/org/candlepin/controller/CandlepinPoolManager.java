@@ -346,23 +346,8 @@ public class CandlepinPoolManager implements PoolManager {
         log.debug("Deleting pools for absent subscriptions...");
         List<Pool> poolsToDelete = new ArrayList<Pool>();
 
-        // BZ 1452694: Don't delete pools for custom subscriptions
-        // We need to verify that we aren't deleting pools that are created via the API.
-        // Unfortunately, we don't have a 100% reliable way of detecting such pools at this point,
-        // so we'll do the next best thing: In standalone, pools with an upstream pool ID are those
-        // we've received from an import (and, thus, are eligible for deletion). In hosted,
-        // however, we *are* the upstream source, so everything is eligible for removal.
-        // This is pretty hacky, so the way we go about doing this check should eventually be
-        // replaced with something more generic and reliable, and not dependent on the config.
-
-        // TODO:
-        // Remove the standalone config check and replace it with a check for whether or not the
-        // pool is "managed"  -- however we decide to implement that in the future.
-        boolean standalone = config.getBoolean(ConfigProperties.STANDALONE, true);
         for (Pool pool : poolCurator.getPoolsFromBadSubs(owner, subscriptionMap.keySet())) {
-            if ((!standalone || pool.getUpstreamPoolId() != null) && pool.getSourceSubscription() != null &&
-                !pool.getType().isDerivedType()) {
-
+            if (this.isManaged(pool)) {
                 poolsToDelete.add(pool);
             }
         }
@@ -2283,5 +2268,27 @@ public class CandlepinPoolManager implements PoolManager {
         poolCurator.calculateConsumedForOwnersPools(owner);
         poolCurator.calculateExportedForOwnersPools(owner);
         poolCurator.calculateSharedForOwnerPools(owner);
+    }
+
+    /**
+     * @{inheritDocs}
+     */
+    @Override
+    public boolean isManaged(Pool pool) {
+        // BZ 1452694: Don't delete pools for custom subscriptions
+        // We need to verify that we aren't deleting pools that are created via the API.
+        // Unfortunately, we don't have a 100% reliable way of detecting such pools at this point,
+        // so we'll do the next best thing: In standalone, pools with an upstream pool ID are those
+        // we've received from an import (and, thus, are eligible for deletion). In hosted,
+        // however, we *are* the upstream source, so everything is eligible for removal.
+        // This is pretty hacky, so the way we go about doing this check should eventually be
+        // replaced with something more generic and reliable, and not dependent on the config.
+
+        // TODO:
+        // Remove the standalone config check and replace it with a check for whether or not the
+        // pool is non-custom  -- however we decide to implement that in the future.
+
+        return pool != null && pool.getSourceSubscription() != null && !pool.getType().isDerivedType() &&
+            (pool.getUpstreamPoolId() != null || !this.config.getBoolean(ConfigProperties.STANDALONE, true));
     }
 }

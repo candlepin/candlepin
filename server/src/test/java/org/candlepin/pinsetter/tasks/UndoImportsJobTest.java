@@ -211,6 +211,9 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
         if (!keepSourceSub) {
             pool.setSourceSubscription(null);
         }
+        else {
+            pool.setUpstreamPoolId("upstream_pool_id");
+        }
 
         this.poolCurator.create(pool);
 
