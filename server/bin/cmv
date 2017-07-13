@@ -95,7 +95,7 @@ class CMVCommand
             yield "orgs[#{org}]", "orgs/#{org}/org_info.json", org_data
 
             # list consumers and store in orgs/<org>/consumers/<consumer>.json
-            print "  Retrieving consumers...      "
+            print "  Retrieving consumers...          "
             consumers = candlepin.list_consumers({:owner => org})
             consumers.each do |consumer|
                 yield "orgs[#{org}].consumers[#{consumer['uuid']}]", "orgs/#{org}/consumers/#{consumer['uuid']}.json", consumer
@@ -103,7 +103,7 @@ class CMVCommand
             puts "done."
 
             # list pools and store in orgs/<org>/pools/<pool>.json
-            print "  Retrieving pools...          "
+            print "  Retrieving pools...              "
             pools = candlepin.list_pools({:owner => org_data['id']})
             pools.each do |pool|
                 yield "orgs[#{org}].pools[#{pool['id']}]", "orgs/#{org}/pools/#{pool['id']}.json", pool
@@ -126,11 +126,20 @@ class CMVCommand
             puts "done."
 
             # list products and store in orgs/<org>/products/<product>.json
-            print "  Retrieving products...       "
+            print "  Retrieving products...           "
             product_ids.each do |pid|
                 product = candlepin.get_product(org, pid)
 
                 yield "orgs[#{org}].products[#{product['id']}]", "orgs/#{org}/products/#{product['id']}.json", product
+            end
+            puts "done."
+
+
+            # list activation keys and store in orgs/<org>/activation_keys/<key>.json
+            print "  Retrieving activation_keys...    "
+            act_keys = candlepin.list_activation_keys(org)
+            act_keys.each do |act_key|
+                yield "orgs[#{org}].activation_keys[#{act_key['id']}]", "orgs/#{org}/activation_keys/#{act_key['id']}.json", act_key
             end
             puts "done."
         end
@@ -183,6 +192,20 @@ class VerifyCommand < CMVCommand
             'orgs.products.attributes' => 'name',
             'orgs.products.productContent' => 'content.id',
             'orgs.products.productContent.content' => 'id',
+
+            'orgs.activation_keys' => 'id',
+            'orgs.activation_keys.owner' => 'id',
+            'orgs.activation_keys.pools' => 'id',
+            'orgs.activation_keys.pools.pool' => 'id',
+            'orgs.activation_keys.pools.pool.attributes' => 'name',
+            'orgs.activation_keys.pools.pool.branding' => 'productId',
+            'orgs.activation_keys.pools.pool.derivedProvidedProducts' => 'productId',
+            'orgs.activation_keys.pools.pool.derivedProductAttributes' => 'name',
+            'orgs.activation_keys.pools.pool.productAttributes' => 'name',
+            'orgs.activation_keys.products' => 'id',
+            'orgs.activation_keys.products.attributes' => 'name',
+            'orgs.activation_keys.products.productContent' => 'content.id',
+            'orgs.activation_keys.products.productContent.content' => 'id',
         }
 
         # Common paths we should expect to exclude
@@ -329,12 +352,19 @@ class VerifyCommand < CMVCommand
                         exp_id = self.get_obj_id(path, exp_obj)
                         act_id = self.get_obj_id(path, act_obj)
 
-                        if key and exp_id == act_id then
-                            expected -= [exp_obj]
-                            actual -= [act_obj]
+                        if key then
+                            if exp_id == act_id then
+                                expected -= [exp_obj]
+                                actual -= [act_obj]
 
-                            result = self.compare_objects("#{path}[#{exp_id}]", exp_obj, act_obj)
-                            messages.insert(messages.length, *result)
+                                result = self.compare_objects("#{path}[#{exp_id}]", exp_obj, act_obj)
+                                messages.insert(messages.length, *result)
+                            end
+                        else
+                            if exp_obj.eql?(act_obj) then
+                                expected -= [exp_obj]
+                                actual -= [act_obj]
+                            end
                         end
                     elsif exp_obj == act_obj then
                         expected -= [exp_obj]
