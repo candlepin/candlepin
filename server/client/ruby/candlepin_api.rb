@@ -899,7 +899,7 @@ class Candlepin
     if owner_key.nil?
       return get("/activation_keys")
     end
-    return get("/owner/#{owner_key}/activation_keys")
+    return get("/owners/#{owner_key}/activation_keys")
   end
 
   def create_activation_key(owner_key, name, service_level=nil, autobind=false)
