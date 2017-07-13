@@ -102,7 +102,7 @@ module VirtHelper
     return pools.find_all { |i| !i['sourceEntitlement'].nil? }[0]
   end
 
-  def filter_unmapped_guest_pools(pools)  
+  def filter_unmapped_guest_pools(pools)
     # need to ignore the unmapped guest pools
     pools.select! do |p|
       unmapped = p['attributes'].select {|i| i['name'] == 'unmapped_guests_only' }[0]
