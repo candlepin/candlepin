@@ -1085,7 +1085,7 @@ class Candlepin
   def list_activation_keys(owner_key=nil, key_name=nil)
     return get("/activation_keys") if owner_key.nil?
 
-    path = "/owner/#{owner_key}/activation_keys"
+    path = "/owners/#{owner_key}/activation_keys"
     path << "?name=#{key_name}" if key_name
     return get(path)
   end
