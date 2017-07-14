@@ -241,6 +241,15 @@ public class PoolHelper {
             pool.getBranding().add(new Branding(brand.getProductId(), brand.getType(), brand.getName()));
         }
 
+        // Copy upstream fields
+        // Impl note/TODO:
+        // We are only doing this to facilitate marking pools derived from an upstream source/manifest
+        // as also from that same upstream source. A proper pool hierarchy would be a better solution
+        // here, but this will work for the interim.
+        pool.setUpstreamPoolId(sourcePool.getUpstreamPoolId());
+        pool.setUpstreamEntitlementId(sourcePool.getUpstreamEntitlementId());
+        pool.setUpstreamConsumerId(sourcePool.getUpstreamConsumerId());
+
         return pool;
     }
 

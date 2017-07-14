@@ -78,6 +78,9 @@ import org.candlepin.test.MockResultIterator;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -85,8 +88,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.mockito.invocation.InvocationOnMock;
-import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -111,7 +114,7 @@ import java.util.Set;
 /**
  * PoolManagerTest
  */
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(JUnitParamsRunner.class)
 public class PoolManagerTest {
     private static Logger log = LoggerFactory.getLogger(PoolManagerTest.class);
 
@@ -157,6 +160,8 @@ public class PoolManagerTest {
 
     @Before
     public void init() throws Exception {
+        MockitoAnnotations.initMocks(this);
+
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
 
         owner = TestUtil.createOwner("key", "displayname");
@@ -1865,6 +1870,122 @@ public class PoolManagerTest {
         if (owner.getKey() != null) {
             when(this.mockOwnerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
         }
+    }
+
+    // TODO:
+    // Refactor these tests when isManaged is refactored to not be reliant upon the config
+    public Object[][] getParametersForIsManagedTests() {
+        SourceSubscription srcSub = new SourceSubscription("test_sub_id", "test_sub_key");
+
+        return new Object[][] {
+            // Standalone tests
+            new Object[] { PoolType.NORMAL, null, null, false, false },
+            new Object[] { PoolType.ENTITLEMENT_DERIVED, null, null, false, false },
+            new Object[] { PoolType.STACK_DERIVED, null, null, false, false },
+            new Object[] { PoolType.BONUS, null, null, false, false },
+            new Object[] { PoolType.UNMAPPED_GUEST, null, null, false, false },
+            new Object[] { PoolType.DEVELOPMENT, null, null, false, false },
+
+            new Object[] { PoolType.NORMAL, srcSub, null, false, false },
+            new Object[] { PoolType.ENTITLEMENT_DERIVED, srcSub, null, false, false },
+            new Object[] { PoolType.STACK_DERIVED, srcSub, null, false, false },
+            new Object[] { PoolType.BONUS, srcSub, null, false, false },
+            new Object[] { PoolType.UNMAPPED_GUEST, srcSub, null, false, false },
+            new Object[] { PoolType.DEVELOPMENT, srcSub, null, false, false },
+
+            new Object[] { PoolType.NORMAL, null, "upstream_pool_id", false, false },
+            new Object[] { PoolType.ENTITLEMENT_DERIVED, null, "upstream_pool_id", false, false },
+            new Object[] { PoolType.STACK_DERIVED, null, "upstream_pool_id", false, false },
+            new Object[] { PoolType.BONUS, null, "upstream_pool_id", false, false },
+            new Object[] { PoolType.UNMAPPED_GUEST, null, "upstream_pool_id", false, false },
+            new Object[] { PoolType.DEVELOPMENT, null, "upstream_pool_id", false, false },
+
+            new Object[] { PoolType.NORMAL, srcSub, "upstream_pool_id", false, true },
+            new Object[] { PoolType.ENTITLEMENT_DERIVED, srcSub, "upstream_pool_id", false, false },
+            new Object[] { PoolType.STACK_DERIVED, srcSub, "upstream_pool_id", false, false },
+            new Object[] { PoolType.BONUS, srcSub, "upstream_pool_id", false, true },
+            new Object[] { PoolType.UNMAPPED_GUEST, srcSub, "upstream_pool_id", false, true },
+            new Object[] { PoolType.DEVELOPMENT, srcSub, "upstream_pool_id", false, true },
+
+            // Hosted tests
+            new Object[] { PoolType.NORMAL, null, null, true, false },
+            new Object[] { PoolType.ENTITLEMENT_DERIVED, null, null, true, false },
+            new Object[] { PoolType.STACK_DERIVED, null, null, true, false },
+            new Object[] { PoolType.BONUS, null, null, true, false },
+            new Object[] { PoolType.UNMAPPED_GUEST, null, null, true, false },
+            new Object[] { PoolType.DEVELOPMENT, null, null, true, false },
+
+            new Object[] { PoolType.NORMAL, srcSub, null, true, true },
+            new Object[] { PoolType.ENTITLEMENT_DERIVED, srcSub, null, true, false },
+            new Object[] { PoolType.STACK_DERIVED, srcSub, null, true, false },
+            new Object[] { PoolType.BONUS, srcSub, null, true, true },
+            new Object[] { PoolType.UNMAPPED_GUEST, srcSub, null, true, true },
+            new Object[] { PoolType.DEVELOPMENT, srcSub, null, true, true },
+
+            new Object[] { PoolType.NORMAL, null, "upstream_pool_id", true, false },
+            new Object[] { PoolType.ENTITLEMENT_DERIVED, null, "upstream_pool_id", true, false },
+            new Object[] { PoolType.STACK_DERIVED, null, "upstream_pool_id", true, false },
+            new Object[] { PoolType.BONUS, null, "upstream_pool_id", true, false },
+            new Object[] { PoolType.UNMAPPED_GUEST, null, "upstream_pool_id", true, false },
+            new Object[] { PoolType.DEVELOPMENT, null, "upstream_pool_id", true, false },
+
+            new Object[] { PoolType.NORMAL, srcSub, "upstream_pool_id", true, true },
+            new Object[] { PoolType.ENTITLEMENT_DERIVED, srcSub, "upstream_pool_id", true, false },
+            new Object[] { PoolType.STACK_DERIVED, srcSub, "upstream_pool_id", true, false },
+            new Object[] { PoolType.BONUS, srcSub, "upstream_pool_id", true, true },
+            new Object[] { PoolType.UNMAPPED_GUEST, srcSub, "upstream_pool_id", true, true },
+            new Object[] { PoolType.DEVELOPMENT, srcSub, "upstream_pool_id", true, true },
+        };
+    }
+
+    @Test
+    public void testIsManagedWithNullPool() {
+        assertFalse(manager.isManaged(null));
+    }
+
+    @Test
+    @Parameters(method = "getParametersForIsManagedTests")
+    public void testIsManaged(PoolType type, SourceSubscription srcSub, String upstreamPoolId, boolean hosted,
+        boolean expected) {
+
+        Pool pool = TestUtil.createPool(owner, product);
+        when(mockConfig.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(!hosted);
+        when(mockConfig.getBoolean(eq(ConfigProperties.STANDALONE), anyBoolean())).thenReturn(!hosted);
+
+        pool.setSourceSubscription(srcSub);
+        pool.setUpstreamPoolId(upstreamPoolId);
+
+        switch (type) {
+            case UNMAPPED_GUEST:
+                pool.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
+                pool.setAttribute(Pool.Attributes.UNMAPPED_GUESTS_ONLY, "true");
+                break;
+
+            case ENTITLEMENT_DERIVED:
+                pool.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
+                pool.setSourceEntitlement(new Entitlement());
+                break;
+
+            case STACK_DERIVED:
+                pool.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
+                pool.setSourceStack(new SourceStack());
+                break;
+
+            case BONUS:
+                pool.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
+                break;
+
+            case DEVELOPMENT:
+                pool.setAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true");
+                break;
+
+            case NORMAL:
+            default:
+                // Nothing to do here
+        }
+
+        boolean output = manager.isManaged(pool);
+        assertEquals(expected, output);
     }
 
 }
