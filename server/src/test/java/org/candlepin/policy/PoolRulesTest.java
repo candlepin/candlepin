@@ -14,19 +14,16 @@
  */
 package org.candlepin.policy;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Branding;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
@@ -40,6 +37,7 @@ import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.policy.js.pool.PoolUpdate;
+import org.candlepin.test.MockResultIterator;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
@@ -47,16 +45,21 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.stubbing.Answer;
 
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 
@@ -331,6 +334,7 @@ public class PoolRulesTest {
     public void virtLimitWithHostLimitedCreatesTaggedBonusPool() {
         Pool p1 = createVirtLimitPool("virtLimitProduct", 10, 10);
         p1.getProduct().setAttribute(Product.Attributes.HOST_LIMITED, "true");
+        this.mockProducts(owner, p1.getProduct());
         List<Pool> pools = poolRules.createAndEnrichPools(p1, new LinkedList<Pool>());
         assertEquals(2, pools.size());
         for (Pool p : pools) {
@@ -347,6 +351,7 @@ public class PoolRulesTest {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Pool p = createVirtLimitPool("virtLimitProduct", 10, 10);
         p.getProduct().setAttribute(Product.Attributes.HOST_LIMITED, "false");
+        this.mockProducts(owner, p.getProduct());
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<Pool>());
         assertEquals(2, pools.size());
     }
@@ -355,6 +360,7 @@ public class PoolRulesTest {
     public void hostedVirtLimitSubCreatesBonusVirtOnlyPool() {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Pool p = createVirtLimitPool("virtLimitProduct", 10, 10);
+        this.mockProducts(owner, p.getProduct());
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<Pool>());
         assertEquals(2, pools.size());
 
@@ -375,6 +381,7 @@ public class PoolRulesTest {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Pool p = createVirtLimitPool("virtLimitProduct", 10, 10);
         p.getProduct().setAttribute(Product.Attributes.VIRT_LIMIT, "unlimited");
+        this.mockProducts(owner, p.getProduct());
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<Pool>());
         assertEquals(2, pools.size());
 
@@ -389,6 +396,7 @@ public class PoolRulesTest {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Pool p = createVirtLimitPool("virtLimitProduct", 10, 10);
         p.getProduct().setAttribute(Product.Attributes.VIRT_LIMIT, "unlimited");
+        this.mockProducts(owner, p.getProduct());
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<Pool>());
         assertEquals(2, pools.size());
 
@@ -399,6 +407,8 @@ public class PoolRulesTest {
 
         // Now we update the sub and see if that unlimited pool gets adjusted:
         p.getProduct().setAttribute(Product.Attributes.VIRT_LIMIT, "10");
+
+        this.mockProducts(owner, p.getProduct());
         List<PoolUpdate> updates = poolRules.updatePools(p, pools, p.getQuantity(),
             TestUtil.stubChangedProducts(p.getProduct()));
         assertEquals(2, updates.size());
@@ -412,12 +422,15 @@ public class PoolRulesTest {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Pool p = createVirtLimitPool("virtLimitProduct", 10, 10);
         p.getProduct().setAttribute(Product.Attributes.VIRT_LIMIT, "4");
+        this.mockProducts(owner, p.getProduct());
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<Pool>());
         assertEquals(2, pools.size());
 
         // Now we remove virt_limit on the incoming subscription product and see if
         // the unlimited pool gets adjusted and flagged for cleanup:
         p.setProduct(TestUtil.createProduct(p.getProduct().getId(), p.getProduct().getName()));
+        this.mockProducts(owner, p.getProduct());
+
         List<PoolUpdate> updates = poolRules.updatePools(p, pools, p.getQuantity(),
             TestUtil.stubChangedProducts(p.getProduct()));
         assertEquals(2, updates.size());
@@ -439,6 +452,8 @@ public class PoolRulesTest {
         Pool p = createVirtLimitPool("virtLimitProduct", 10, 10);
         p.getProduct().setAttribute(Product.Attributes.VIRT_LIMIT, "unlimited");
         p.getProduct().setMultiplier(5L);
+        this.mockProducts(owner, p.getProduct());
+
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<Pool>());
         assertEquals(2, pools.size());
 
@@ -453,6 +468,8 @@ public class PoolRulesTest {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Pool p = createVirtLimitPool("virtLimitProduct", 10, 10);
         p.getProduct().setAttribute(Pool.Attributes.PHYSICAL_ONLY, "true");
+        this.mockProducts(owner, p.getProduct());
+
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<Pool>());
 
         // Should be no virt_only bonus pool:
@@ -482,13 +499,8 @@ public class PoolRulesTest {
         Product derivedProvidedProd1 = TestUtil.createProduct();
         Product derivedProvidedProd2 = TestUtil.createProduct();
 
-        when(ownerProdCuratorMock.getProductById(owner, provided1.getId())).thenReturn(provided1);
-        when(ownerProdCuratorMock.getProductById(owner, provided2.getId())).thenReturn(provided2);
-        when(ownerProdCuratorMock.getProductById(owner, derivedProd.getId())).thenReturn(derivedProd);
-        when(ownerProdCuratorMock.getProductById(owner, derivedProvidedProd1.getId()))
-            .thenReturn(derivedProvidedProd1);
-        when(ownerProdCuratorMock.getProductById(owner, derivedProvidedProd2.getId()))
-            .thenReturn(derivedProvidedProd2);
+        this.mockProducts(owner, p.getProduct(), provided1, provided2, derivedProd, derivedProvidedProd1,
+            derivedProvidedProd2);
 
         p.setId("mockPoolRuleTestID");
         p.getProvidedProducts().add(provided1);
@@ -501,6 +513,7 @@ public class PoolRulesTest {
             .thenReturn(p.getProvidedProducts());
         when(productCurator.getPoolDerivedProvidedProductsCached(p))
             .thenReturn(p.getDerivedProvidedProducts());
+
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<Pool>());
 
         // Should be virt_only pool for unmapped guests:
@@ -536,6 +549,12 @@ public class PoolRulesTest {
         p.setId("mockVirtLimitSubCreateDerived");
         when(productCurator.getPoolDerivedProvidedProductsCached(p))
             .thenReturn(p.getDerivedProvidedProducts());
+
+        List<Product> products = new LinkedList<Product>();
+        products.add(p.getProduct());
+        products.addAll(p.getDerivedProvidedProducts());
+
+        this.mockProducts(owner, products);
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<Pool>());
 
         // Should be virt_only pool for unmapped guests:
@@ -632,6 +651,7 @@ public class PoolRulesTest {
     public void standaloneVirtLimitSubUpdate() {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
         Pool p = createVirtLimitPool("virtLimitProduct", 10, 10);
+        this.mockProducts(owner, p.getProduct());
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<Pool>());
 
         // Should be unmapped virt_only pool:
@@ -698,6 +718,7 @@ public class PoolRulesTest {
     public void standaloneVirtSubPoolUpdateNoChanges() {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
         Pool p = createVirtLimitPool("virtLimitProduct", 10, 10);
+        this.mockProducts(owner, p.getProduct());
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<Pool>());
         assertEquals(2, pools.size());
         Entitlement ent = mock(Entitlement.class);
@@ -713,6 +734,8 @@ public class PoolRulesTest {
         consumerSpecificPool.setSourceEntitlement(ent);
         pools.add(consumerSpecificPool);
 
+        this.mockProducts(owner, p.getProduct());
+        this.mockProducts(owner, consumerSpecificPool.getProduct());
         List<PoolUpdate> updates = poolRules.updatePools(p, pools, p.getQuantity(),
             Collections.<String, Product>emptyMap());
         assertEquals(0, updates.size());
@@ -722,6 +745,7 @@ public class PoolRulesTest {
     public void standaloneVirtSubPoolUpdateVirtLimitChanged() {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
         Pool p = createVirtLimitPool("virtLimitProduct", 10, 10);
+        this.mockProducts(owner, p.getProduct());
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<Pool>());
         assertEquals(2, pools.size());
         p.setQuantity(new Long(20));
@@ -878,12 +902,14 @@ public class PoolRulesTest {
     public void noPoolsCreatedTest() {
         Product product = TestUtil.createProduct();
         List<Pool> existingPools = new ArrayList<Pool>();
-        Pool masterPool = TestUtil.createPool(product);
+        Pool masterPool = TestUtil.createPool(owner, product);
         masterPool.setSubscriptionSubKey("master");
         existingPools.add(masterPool);
-        Pool derivedPool = TestUtil.createPool(product);
+        Pool derivedPool = TestUtil.createPool(owner, product);
         derivedPool.setSubscriptionSubKey("derived");
         existingPools.add(derivedPool);
+        this.mockProducts(owner, product);
+
         List<Pool> pools = this.poolRules.createAndEnrichPools(masterPool, existingPools);
         assertEquals(0, pools.size());
     }
@@ -893,9 +919,11 @@ public class PoolRulesTest {
         Product product = TestUtil.createProduct();
         product.setAttribute(Product.Attributes.VIRT_LIMIT, "4");
         List<Pool> existingPools = new ArrayList<Pool>();
-        Pool masterPool = TestUtil.createPool(product);
+        Pool masterPool = TestUtil.createPool(owner, product);
         masterPool.setSubscriptionSubKey("master");
         existingPools.add(masterPool);
+        this.mockProducts(owner, product);
+
         List<Pool> pools = this.poolRules.createAndEnrichPools(masterPool, existingPools);
         assertEquals(1, pools.size());
         assertEquals("derived", pools.get(0).getSubscriptionSubKey());
@@ -905,10 +933,70 @@ public class PoolRulesTest {
     public void cantCreateMasterPoolFromDerivedPoolTest() {
         Product product = TestUtil.createProduct();
         List<Pool> existingPools = new ArrayList<Pool>();
-        Pool masterPool = TestUtil.createPool(product);
+        Pool masterPool = TestUtil.createPool(owner, product);
         masterPool.setSubscriptionSubKey("derived");
         existingPools.add(masterPool);
+
+        this.mockProducts(owner, product);
+
         List<Pool> pools = this.poolRules.createAndEnrichPools(masterPool, existingPools);
     }
 
+    private void mockProducts(Owner owner, final Map<String, Product> products) {
+        when(ownerProdCuratorMock.getProductById(eq(owner), any(String.class)))
+            .thenAnswer(new Answer<Product>() {
+                @Override
+                public Product answer(InvocationOnMock invocation) throws Throwable {
+                    Object[] args = invocation.getArguments();
+                    String pid = (String) args[1];
+
+                    return products.get(pid);
+                }
+            });
+
+        when(ownerProdCuratorMock.getProductsByIds(eq(owner), any(Collection.class)))
+            .thenAnswer(new Answer<CandlepinQuery<Product>>() {
+                @Override
+                public CandlepinQuery<Product> answer(InvocationOnMock invocation) throws Throwable {
+                    Object[] args = invocation.getArguments();
+                    Collection<String> pids = (Collection<String>) args[1];
+                    List<Product> output = new LinkedList<Product>();
+
+                    for (String pid : pids) {
+                        Product product = products.get(pid);
+
+                        if (product != null) {
+                            output.add(product);
+                        }
+                    }
+
+                    CandlepinQuery cqmock = mock(CandlepinQuery.class);
+                    when(cqmock.list()).thenReturn(output);
+                    when(cqmock.iterator()).thenReturn(output.iterator());
+                    when(cqmock.iterate()).thenReturn(new MockResultIterator(output.iterator()));
+
+                    return cqmock;
+                }
+            });
+    }
+
+    private void mockProducts(Owner owner, Product... products) {
+        Map<String, Product> productMap = new HashMap<String, Product>();
+
+        for (Product product : products) {
+            productMap.put(product.getId(), product);
+        }
+
+        this.mockProducts(owner, productMap);
+    }
+
+    private void mockProducts(Owner owner, Collection<Product> products) {
+        Map<String, Product> productMap = new HashMap<String, Product>();
+
+        for (Product product : products) {
+            productMap.put(product.getId(), product);
+        }
+
+        this.mockProducts(owner, productMap);
+    }
 }

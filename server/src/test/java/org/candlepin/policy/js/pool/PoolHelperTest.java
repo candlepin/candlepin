@@ -14,13 +14,9 @@
  */
 package org.candlepin.policy.js.pool;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
-import static org.mockito.Matchers.anyListOf;
-import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -28,13 +24,16 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Branding;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.service.ProductServiceAdapter;
+import org.candlepin.test.MockResultIterator;
 import org.candlepin.test.TestUtil;
 
 import org.junit.Before;
@@ -42,9 +41,11 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
@@ -58,6 +59,7 @@ public class PoolHelperTest {
     private Entitlement ent;
     private Owner owner;
     private ProductCurator productCurator;
+    private OwnerProductCurator ownerProductCurator;
 
     @Before
     public void init() {
@@ -65,10 +67,22 @@ public class PoolHelperTest {
         psa = mock(ProductServiceAdapter.class);
         ent = mock(Entitlement.class);
         productCurator = Mockito.mock(ProductCurator.class);
+        ownerProductCurator = Mockito.mock(OwnerProductCurator.class);
+
         Configuration config = mock(Configuration.class);
         when(config.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
 
         owner = TestUtil.createOwner();
+
+        List<Product> output = new LinkedList<Product>();
+
+        CandlepinQuery cqmock = mock(CandlepinQuery.class);
+        when(cqmock.list()).thenReturn(output);
+        when(cqmock.iterator()).thenReturn(output.iterator());
+        when(cqmock.iterate()).thenReturn(new MockResultIterator(output.iterator()));
+
+        when(ownerProductCurator.getProductsByIds(any(Owner.class), any(Collection.class)))
+            .thenReturn(cqmock);
     }
 
     @Test
@@ -268,8 +282,8 @@ public class PoolHelperTest {
         Pool pool = TestUtil.createPool(owner, product);
         pool.getBranding().add(branding);
         String quant = "unlimited";
-        Pool clone = PoolHelper.clonePool(pool, product2, quant, attributes, "TaylorSwift", null,
-            ent, productCurator);
+        Pool clone = PoolHelper.clonePool(pool, product2, quant, attributes, "TaylorSwift",
+            ownerProductCurator, ent, productCurator);
         assertEquals(owner, clone.getOwner());
         assertEquals(new Long(-1L), clone.getQuantity());
         assertEquals(product2, clone.getProduct());
@@ -281,8 +295,7 @@ public class PoolHelperTest {
         assertEquals(pool.getSourceSubscription().getSubscriptionId(), clone.getSubscriptionId());
         assertEquals(pool.getSourceSubscription().getSubscriptionId(),
             clone.getSourceSubscription().getSubscriptionId());
-        assertEquals("TaylorSwift",
-            clone.getSourceSubscription().getSubscriptionSubKey());
+        assertEquals("TaylorSwift", clone.getSourceSubscription().getSubscriptionSubKey());
 
         assertEquals(1, clone.getBranding().size());
         Branding brandingClone = clone.getBranding().iterator().next();
