@@ -35,6 +35,30 @@ module PomTask
       @provided_dependencies ||= []
     end
 
+    def runtime_dependencies=(val)
+      if val.respond_to?(:each)
+        @runtime_dependencies = val
+      else
+        @runtime_dependencies = [val]
+      end
+    end
+
+    def runtime_dependencies
+      @runtime_dependencies ||= []
+    end
+
+    def optional_dependencies=(val)
+      if val.respond_to?(:each)
+        @optional_dependencies = val
+      else
+        @optional_dependencies = [val]
+      end
+    end
+
+    def optional_dependencies
+      @optional_dependencies ||= []
+    end
+
     attr_writer :pom_parent_suffix
     def pom_parent_suffix
       @pom_parent_suffix ||= "-parent"
@@ -48,6 +72,16 @@ module PomTask
     attr_writer :additional_properties
     def additional_properties
       @additional_properties ||= {}
+    end
+
+    attr_writer :name
+    def name
+      @name ||= @project.name
+    end
+
+    attr_writer :description
+    def description
+      @description ||= name
     end
 
     # A list of procs that will be executed in the plugin configuration
@@ -101,6 +135,27 @@ module PomTask
     def dependency_procs
       @dependency_procs ||= []
     end
+
+    # The below are primarily for compatibility for Buildr's built-in POM plugin which the IDEA plugin uses
+    attr_accessor :url
+    attr_accessor :scm_url
+    attr_accessor :scm_connection
+    attr_accessor :scm_developer_connection
+    attr_accessor :issues_url
+    attr_accessor :issues_system
+
+    attr_writer :licenses
+    def licenses
+      @licenses ||= {}
+    end
+
+    # Completely for compatibility.  The Maven developer section is a pain to build.  Every developer needs
+    # an id, name, email, and list of roles.  Forget it.  I'll go into movies if I want to get famous.
+    attr_writer :developers
+    def developers
+      @developers ||= []
+    end
+
   end
 
   class PomBuilder
@@ -159,6 +214,35 @@ module PomTask
         xml.version(artifact_spec[:version])
         xml.packaging(artifact_spec[:type].to_s)
 
+        xml.name @config.name if @config.name
+        xml.description @config.description if @config.description
+        xml.url @config.url if @config.url
+
+        xml.licenses do
+          @config.licenses.each_pair do |name, url|
+            xml.license do
+              xml.name name
+              xml.url url
+              xml.distribution 'repo'
+            end
+          end
+        end unless @config.licenses.empty?
+
+        if @config.scm_url || @config.scm_connection || @config.scm_developer_connection
+          xml.scm do
+            xml.connection @config.scm_connection if @config.scm_connection
+            xml.developerConnection @config.scm_developer_connection if @config.scm_developer_connection
+            xml.url @config.scm_url if @config.scm_url
+          end
+        end
+
+        if @config.issues_url
+          xml.issueManagement do
+            xml.url @config.issues_url
+            xml.system @config.issues_system if @config.issues_system
+          end
+        end
+
         version_properties = {}
 
         # Manage version numbers in a properties section
@@ -184,6 +268,12 @@ module PomTask
 
               if @config.provided_dependencies.include?(dep.to_spec)
                 xml.scope("provided")
+              elsif @config.runtime_dependencies.include?(dep.to_spec)
+                xml.scope("runtime")
+              end
+
+              if @config.optional_dependencies.include?(dep.to_spec)
+                xml.optional("true")
               end
 
               # We manage all dependencies explicitly and we don't want to drag
