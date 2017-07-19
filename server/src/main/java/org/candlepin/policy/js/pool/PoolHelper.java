@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -179,9 +180,10 @@ public class PoolHelper {
      * @param source subscription
      * @param destination bonus pool
      */
-    private static void copyProvidedProducts(Pool source, Pool destination,
-        OwnerProductCurator curator, ProductCurator productCurator) {
-        Set<Product> products;
+    private static void copyProvidedProducts(Pool source, Pool destination, OwnerProductCurator curator,
+        ProductCurator productCurator) {
+
+        Collection<Product> products;
 
         // If the source pool has id filled, we assume that it is stored in the
         // database and also assume that the provided Products or
@@ -204,16 +206,36 @@ public class PoolHelper {
             }
         }
 
+        // TODO:
+        // Once we have PoolDTOs in place and we can guarantee we have proper Product model
+        // instances, we can optimize this such that we only need to do the product lookup
+        // if the owner changes between the source and destination pools.
+        // However, since Pool is both a model object and a DTO at present, we cannot safely
+        // make that assumption here.
+
+        Set<String> productIds = new HashSet<String>();
+
         for (Product product : products) {
-            // If no result is returned here, the product has not been correctly imported
-            // into the organization, indicating a problem somewhere in the sync or refresh code:
-            Product destprod = curator.getProductById(destination.getOwner(), product.getId());
-            if (destprod == null) {
-                throw new RuntimeException("Product " + product.getId() +
-                    " has not been imported into org " + destination.getOwner().getKey());
-            }
-            destination.addProvidedProduct(destprod);
+            productIds.add(product.getId());
         }
+
+        products = curator.getProductsByIds(destination.getOwner(), productIds).list();
+
+        // Verify we received the same number of product IDs we put in.
+        if (products.size() != productIds.size()) {
+            // Uh oh... we couldn't find one or more products. Figure out which products were missing
+            // and raise the appropriate exception
+            for (Product product : products) {
+                productIds.remove(product.getId());
+            }
+
+            throw new RuntimeException(String.format("Unable to copy provided products for pool; " +
+                "one or more products have not imported into org \"%s\": %s",
+                destination.getOwner().getKey(), productIds
+            ));
+        }
+
+        destination.setProvidedProducts(products);
     }
 
     public static Pool clonePool(Pool sourcePool, Product product, String quantity,
@@ -223,7 +245,7 @@ public class PoolHelper {
         Pool pool = createPool(product, sourcePool.getOwner(), quantity,
             sourcePool.getStartDate(), sourcePool.getEndDate(),
             sourcePool.getContractNumber(), sourcePool.getAccountNumber(),
-            sourcePool.getOrderNumber(), new HashSet<Product>(), sourceEntitlement);
+            sourcePool.getOrderNumber(), null, sourceEntitlement);
 
         SourceSubscription srcSub = sourcePool.getSourceSubscription();
         if (srcSub != null && srcSub.getSubscriptionId() != null) {

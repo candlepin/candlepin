@@ -1398,6 +1398,9 @@ public class PoolManagerTest {
         Product prod = TestUtil.createProduct();
         prod.setAttribute(Product.Attributes.VIRT_LIMIT, "4");
         Pool p = TestUtil.createPool(owner, prod);
+
+        this.mockProducts(owner, prod);
+
         List<Pool> existingPools = new LinkedList<Pool>();
         List<Pool> newPools = pRules.createAndEnrichPools(p, existingPools);
 
@@ -1441,12 +1444,18 @@ public class PoolManagerTest {
         Owner owner = this.getOwner();
         Product prod = TestUtil.createProduct();
         prod.setAttribute(Product.Attributes.VIRT_LIMIT, "4");
-        PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator,
-            mockOwnerProductCurator, mockProductCurator);
+
+        PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator, mockOwnerProductCurator,
+            mockProductCurator);
+
         List<Pool> existingPools = new LinkedList<Pool>();
         Pool p = TestUtil.createPool(prod);
+        p.setOwner(owner);
         p.setSourceSubscription(new SourceSubscription(TestUtil.randomString(), "master"));
         existingPools.add(p);
+
+        this.mockProducts(owner, prod);
+
         List<Pool> newPools = pRules.createAndEnrichPools(p, existingPools);
         assertEquals(1, newPools.size());
         assertEquals("derived", newPools.get(0).getSourceSubscription().getSubscriptionSubKey());

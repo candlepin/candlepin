@@ -14,13 +14,16 @@
  */
 package org.candlepin.policy.js.entitlement;
 
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.mock;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.jackson.ProductCachedSerializationModule;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
@@ -42,6 +45,7 @@ import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.service.ProductServiceAdapter;
+import org.candlepin.test.MockResultIterator;
 import org.candlepin.test.TestDateUtil;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.DateSourceImpl;
@@ -52,10 +56,17 @@ import com.google.inject.Provider;
 import org.junit.Before;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.xnap.commons.i18n.I18nFactory;
 
 import java.io.InputStream;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 public class EntitlementRulesTestFixture {
     protected Enforcer enforcer;
@@ -90,6 +101,8 @@ public class EntitlementRulesTestFixture {
     protected String productId = "a-product";
     protected PoolRules poolRules;
 
+    protected Map<String, Product> mockedProductMap;
+
     @Before
     public void createEnforcer() throws Exception {
         MockitoAnnotations.initMocks(this);
@@ -123,13 +136,15 @@ public class EntitlementRulesTestFixture {
 
         poolRules = new PoolRules(poolManagerMock, config, entCurMock, ownerProductCuratorMock,
                 productCurator);
+
+        this.mockedProductMap = new HashMap<String, Product>();
     }
 
     protected Subscription createVirtLimitSub(String productId, int quantity,
         String virtLimit) {
         Product product = TestUtil.createProduct(productId, productId);
         product.setAttribute(Product.Attributes.VIRT_LIMIT, virtLimit);
-        when(ownerProductCuratorMock.getProductById(owner, productId)).thenReturn(product);
+        this.mockProducts(owner, product);
         Subscription s = TestUtil.createSubscription(owner, product);
         s.setQuantity(new Long(quantity));
         s.setId("subId");
@@ -148,5 +163,66 @@ public class EntitlementRulesTestFixture {
         pool.setAttribute(Product.Attributes.VIRT_LIMIT, "10");
         pool.setId("fakeid" + TestUtil.randomInt());
         return pool;
+    }
+
+    protected void mockProducts(Owner owner, Map<String, Product> products) {
+        final Map<String, Product> productMap = this.mockedProductMap;
+        productMap.putAll(products);
+
+        when(ownerProductCuratorMock.getProductById(eq(owner), any(String.class)))
+            .thenAnswer(new Answer<Product>() {
+                @Override
+                public Product answer(InvocationOnMock invocation) throws Throwable {
+                    Object[] args = invocation.getArguments();
+                    String pid = (String) args[1];
+
+                    return productMap.get(pid);
+                }
+            });
+
+        when(ownerProductCuratorMock.getProductsByIds(eq(owner), any(Collection.class)))
+            .thenAnswer(new Answer<CandlepinQuery<Product>>() {
+                @Override
+                public CandlepinQuery<Product> answer(InvocationOnMock invocation) throws Throwable {
+                    Object[] args = invocation.getArguments();
+                    Collection<String> pids = (Collection<String>) args[1];
+                    List<Product> output = new LinkedList<Product>();
+
+                    for (String pid : pids) {
+                        Product product = productMap.get(pid);
+
+                        if (product != null) {
+                            output.add(product);
+                        }
+                    }
+
+                    CandlepinQuery cqmock = mock(CandlepinQuery.class);
+                    when(cqmock.list()).thenReturn(output);
+                    when(cqmock.iterator()).thenReturn(output.iterator());
+                    when(cqmock.iterate()).thenReturn(new MockResultIterator(output.iterator()));
+
+                    return cqmock;
+                }
+            });
+    }
+
+    protected void mockProducts(Owner owner, Product... products) {
+        Map<String, Product> productMap = new HashMap<String, Product>();
+
+        for (Product product : products) {
+            productMap.put(product.getId(), product);
+        }
+
+        this.mockProducts(owner, productMap);
+    }
+
+    protected void mockProducts(Owner owner, Collection<Product> products) {
+        Map<String, Product> productMap = new HashMap<String, Product>();
+
+        for (Product product : products) {
+            productMap.put(product.getId(), product);
+        }
+
+        this.mockProducts(owner, productMap);
     }
 }
