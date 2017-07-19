@@ -14,12 +14,13 @@
  */
 package org.candlepin.jackson;
 
+import com.fasterxml.jackson.databind.ser.impl.BeanAsArraySerializer;
+import com.fasterxml.jackson.databind.ser.impl.ObjectIdWriter;
+import com.fasterxml.jackson.databind.ser.std.BeanSerializerBase;
 import org.candlepin.model.Pool;
 import org.candlepin.model.ProductCurator;
 
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 
 import java.io.IOException;
@@ -36,20 +37,55 @@ import java.io.IOException;
  * before default serialization of a Pool. Without disturbing other extensions
  * that we already have in serialization (filtering, Hateoas)
  */
-public class PoolSerializer extends JsonSerializer<Pool> {
+public class PoolSerializer extends BeanSerializerBase {
     private ProductCurator productCurator;
-    private JsonSerializer<Object> defaultSerializer;
+    private BeanSerializerBase base;
 
-    public PoolSerializer(JsonSerializer<Object> defaultSerializer, ProductCurator productCurator) {
+    @Override
+    public final void serialize(Object bean, JsonGenerator jgen, SerializerProvider provider)
+        throws IOException {
+        ((Pool) bean).populateAllTransientProvidedProducts(productCurator);
+        base.serialize(bean, jgen, provider);
+    }
+
+    protected PoolSerializer(BeanSerializerBase src, ProductCurator productCurator) {
+        super(src);
         this.productCurator = productCurator;
-        this.defaultSerializer = defaultSerializer;
+        this.base = src;
+    }
+
+    protected PoolSerializer(BeanSerializerBase src,
+        ObjectIdWriter objectIdWriter, Object filterId) {
+        super(src, objectIdWriter, filterId);
+    }
+
+    protected PoolSerializer(BeanSerializerBase src, String[] toIgnore) {
+        super(src, toIgnore);
     }
 
     @Override
-    public void serialize(Pool pool, JsonGenerator jsonGenerator,
-        SerializerProvider serializerProvider)
-        throws IOException, JsonProcessingException {
-        pool.populateAllTransientProvidedProducts(productCurator);
-        defaultSerializer.serialize(pool, jsonGenerator, serializerProvider);
+    public BeanSerializerBase withObjectIdWriter(ObjectIdWriter objectIdWriter) {
+        return new PoolSerializer(this, objectIdWriter, _propertyFilterId);
+    }
+
+    @Override
+    protected BeanSerializerBase withFilterId(Object filterId) {
+        return new PoolSerializer(this, _objectIdWriter, filterId);
+    }
+
+    @Override
+    protected BeanSerializerBase withIgnorals(String[] toIgnore) {
+        return new PoolSerializer(this, toIgnore);
+    }
+
+    protected BeanSerializerBase asArraySerializer() {
+        if ((_objectIdWriter == null) &&
+            (_anyGetterWriter == null) &&
+            (_propertyFilterId == null)
+            ) {
+            return new BeanAsArraySerializer(this);
+        }
+        // already is one, so:
+        return this;
     }
 }
