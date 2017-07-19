@@ -14,6 +14,7 @@
  */
 package org.candlepin.jackson;
 
+import com.fasterxml.jackson.databind.ser.std.BeanSerializerBase;
 import org.candlepin.model.Pool;
 import org.candlepin.model.ProductCurator;
 
@@ -40,10 +41,12 @@ public class ProductCachedSerializationModule extends SimpleModule {
             public JsonSerializer<?> modifySerializer(SerializationConfig config,
                 BeanDescription beanDesc, JsonSerializer<?> serializer) {
                 if (beanDesc.getBeanClass() == Pool.class) {
-                    return new PoolSerializer((JsonSerializer<Object>) serializer, productCurator);
+                    return new PoolSerializer((BeanSerializerBase) serializer, productCurator);
                 }
                 return serializer;
             }
         });
     }
+
+
 }
