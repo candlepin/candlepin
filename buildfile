@@ -233,6 +233,8 @@ define "candlepin" do
 
   desc "Custom Checkstyle checks for candlepin"
   define "checks" do
+    pom.name = "Candlepin Style Checks"
+    pom.description = "Custom Checkstyle checks for Candlepin"
     project.version = '0.1'
     eclipse.natures :java
     package(:jar)
@@ -264,6 +266,9 @@ define "candlepin" do
 
   desc "Common Candlepin Code"
   define "common" do
+    pom.name = "Candlepin Common"
+    pom.description = "Common code for Candlepin"
+
     project.version = spec_version('candlepin-common.spec.tmpl')
 
     eclipse.natures :java
@@ -316,6 +321,9 @@ define "candlepin" do
 
   desc "The Candlepin Server"
   define "server" do
+    pom.name = "Candlepin"
+    pom.description = "The Candlepin Entitlement Engine"
+
     spec_file = "candlepin.spec.tmpl"
     project.version = spec_version(spec_file)
     release_number = spec_release(spec_file)

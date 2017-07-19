@@ -13,6 +13,8 @@
   <artifactId>candlepin-common</artifactId>
   <version>2.0.3</version>
   <packaging>jar</packaging>
+  <name>Candlepin Common</name>
+  <description>Common code for Candlepin</description>
   <properties>
     <commons-codec-commons-codec.version>1.4</commons-codec-commons-codec.version>
     <commons-collections-commons-collections.version>3.2</commons-collections-commons-collections.version>

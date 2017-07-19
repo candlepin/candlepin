@@ -13,6 +13,8 @@
   <artifactId>candlepin-checks</artifactId>
   <version>0.1</version>
   <packaging>jar</packaging>
+  <name>Candlepin Style Checks</name>
+  <description>Custom Checkstyle checks for Candlepin</description>
   <properties>
     <com.puppycrawl.tools-checkstyle.version>7.0</com.puppycrawl.tools-checkstyle.version>
     <org.antlr-antlr4-runtime.version>4.5.3</org.antlr-antlr4-runtime.version>

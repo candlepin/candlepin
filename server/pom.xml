@@ -13,6 +13,8 @@
   <artifactId>candlepin</artifactId>
   <version>2.1.1</version>
   <packaging>war</packaging>
+  <name>Candlepin</name>
+  <description>The Candlepin Entitlement Engine</description>
   <properties>
     <release>1</release>
     <org.apache.qpid-qpid-common.version>0.32</org.apache.qpid-qpid-common.version>
