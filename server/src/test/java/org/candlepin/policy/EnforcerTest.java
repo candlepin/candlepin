@@ -43,9 +43,9 @@ import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.JsRunnerRequestCache;
 import org.candlepin.policy.js.RuleExecutionException;
 import org.candlepin.policy.js.RulesObjectMapper;
-import org.candlepin.policy.js.entitlement.AbstractEntitlementRules.Rule;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
+import org.candlepin.policy.js.entitlement.EntitlementRules.Rule;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.DateSourceForTesting;
@@ -126,7 +126,7 @@ public class EnforcerTest extends DatabaseTestFixture {
         JsRunner jsRules = new JsRunnerProvider(rulesCurator, cacheProvider).get();
 
         enforcer = new EntitlementRules(
-            new DateSourceForTesting(2010, 1, 1), jsRules, i18n, config, consumerCurator, poolCurator,
+            new DateSourceForTesting(2010, 1, 1), jsRules, i18n, config, consumerCurator,
             mockProductCurator,
             new RulesObjectMapper(new ProductCachedSerializationModule(mockProductCurator)),
             mockOwnerCurator, mockOwnerProductCurator, mockProductShareCurator, mockProductManager,
