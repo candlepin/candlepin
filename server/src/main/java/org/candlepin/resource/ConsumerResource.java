@@ -1356,9 +1356,8 @@ public class ConsumerResource {
             Pool pool = entitlement.getPool();
 
             // If there is no host required or the pool isn't for unmapped guests, skip it
-            if (!(pool.hasAttribute(Pool.Attributes.REQUIRES_HOST) || isUnmappedGuestPool(pool) ||
+            if (!(pool.hasAttribute(Pool.Attributes.REQUIRES_HOST) || pool.isUnmappedGuestPool() ||
                 isVirtOnly(pool))) {
-
                 continue;
             }
 
@@ -1370,7 +1369,7 @@ public class ConsumerResource {
                     deletableGuestEntitlements.add(entitlement);
                 }
             }
-            else if (isUnmappedGuestPool(pool) && host != null) {
+            else if (pool.isUnmappedGuestPool() && host != null) {
                 log.debug("Removing unmapped guest pool from {} now that it is mapped", guest.getUuid());
                 deletableGuestEntitlements.add(entitlement);
             }
@@ -1408,10 +1407,6 @@ public class ConsumerResource {
     private boolean isVirtOnly(Pool pool) {
         String value = pool.getAttributeValue(Pool.Attributes.VIRT_ONLY);
         return "true".equalsIgnoreCase(value) || "1".equals(value);
-    }
-
-    private boolean isUnmappedGuestPool(Pool pool) {
-        return "true".equalsIgnoreCase(pool.getAttributeValue(Pool.Attributes.UNMAPPED_GUESTS_ONLY));
     }
 
     @ApiOperation(notes = "Removes a Consumer", value = "deleteConsumer")
