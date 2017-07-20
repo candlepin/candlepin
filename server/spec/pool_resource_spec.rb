@@ -21,6 +21,22 @@ describe 'Pool Resource' do
     p['type'].should == 'NORMAL'
   end
 
+  it 'includes null values in json' do
+    owner1 = create_owner random_string('test_owner')
+    owner1_client = user_client(owner1, random_string('testuser'))
+
+    product = create_product(nil, nil, :owner => owner1['key'])
+    create_pool_and_subscription(owner1['key'], product.id, 10)
+    @cp.refresh_pools(owner1['key'])
+    pool = owner1_client.list_pools(:owner => owner1.id).first
+    pool.member?("upstreamPoolId").should == true
+    pool["upstreamPoollId"].should be_nil
+    pool.member?("upstreamEntitlementId").should == true
+    pool["upstreamEntitlementId"].should be_nil
+    pool.member?("upstreamConsumerId").should == true
+    pool["upstreamConsumerId"].should be_nil
+  end
+
   it 'does not let consumers view pool entitlements' do
     owner1 = create_owner random_string('test_owner')
     owner1_client = user_client(owner1, random_string('testuser'))
