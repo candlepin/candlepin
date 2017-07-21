@@ -2274,4 +2274,5 @@
     <include file="db/changelog/20161025103454-cleanup-ueber-certs-round2.xml"/>
     <include file="db/changelog/20170119162948-cleanup-uebercerts-round3.xml"/>
     <include file="db/changelog/20170206114359-convert-quanity-consumed-exported-to-columns.xml"/>
+    <include file="db/changelog/20170721050024-purge-orphaned-pools.xml"/>
 </databaseChangeLog>
