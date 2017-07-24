@@ -33,7 +33,6 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
-import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.ProductShareCurator;
@@ -90,8 +89,6 @@ public class EntitlementRulesTestFixture {
     @Mock
     private OwnerCurator ownerCurator;
     @Mock
-    protected PoolCurator poolCurator;
-    @Mock
     protected ProductShareCurator productShareCurator;
     @Mock
     protected ProductManager productManager;
@@ -127,7 +124,6 @@ public class EntitlementRulesTestFixture {
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
             config,
             consumerCurator,
-            poolCurator,
             productCurator,
             new RulesObjectMapper(new ProductCachedSerializationModule(productCurator)),
             ownerCurator,
