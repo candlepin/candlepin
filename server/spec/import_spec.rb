@@ -123,7 +123,8 @@ describe 'Import Test Group:', :serial => true do
     it 'can be undone' do
       # Make a custom pool so we can be sure it does not get wiped
       # out during either the undo or a subsequent re-import:
-      prod = create_product(random_string(), random_string(), {:owner => @import_owner['key']})
+      prod_name = random_string("custom_pool_prod-")
+      prod = create_product(prod_name, prod_name, {:owner => @import_owner['key']})
       custom_pool = @cp.create_pool(@import_owner['key'], prod['id'])
 
       job = @import_owner_client.undo_import(@import_owner['key'])

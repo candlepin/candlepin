@@ -213,8 +213,7 @@ public class Exporter {
         log.info("Creating archive of " + exportDir.getAbsolutePath() + " in: " +
             exportFileName);
 
-        File archive = createZipArchiveWithDir(
-            tempDir, exportDir, "consumer_export.zip",
+        File archive = createZipArchiveWithDir(tempDir, exportDir, "consumer_export.zip",
             "Candlepin export for " + consumer.getUuid());
 
         InputStream archiveInputStream = null;

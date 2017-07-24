@@ -737,5 +737,32 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
             "SELECT id, subscriptionid, subscriptionsubkey, pool_id, created, updated " +
             "FROM cp_pool_source_sub "
         );
+
+        // Migrate upstream tracking columns from subscription to pool
+        ResultSet subscriptionInfo = this.executeQuery(
+            "SELECT ss.pool_id, s.cdn_id, s.certificate_id, s.upstream_entitlement_id, " +
+            "  s.upstream_consumer_id, s.upstream_pool_id " +
+            "FROM cp_subscription s " +
+            "JOIN cp2_pool_source_sub ss ON s.id = ss.subscription_id"
+        );
+
+        // Update any pool referencing this subscription...
+        while (subscriptionInfo.next()) {
+            String poolId = subscriptionInfo.getString(1);
+            String cdnId = subscriptionInfo.getString(2);
+            String certId = subscriptionInfo.getString(3);
+            String upstreamEntitlementId = subscriptionInfo.getString(4);
+            String upstreamConsumerId = subscriptionInfo.getString(5);
+            String upstreamPoolId = subscriptionInfo.getString(6);
+
+            int updated = this.executeUpdate(
+                "UPDATE cp_pool SET cdn_id=?, certificate_id=?, upstream_entitlement_id=?, " +
+                "  upstream_consumer_id=?, upstream_pool_id=? " +
+                "WHERE id=?",
+                cdnId, certId, upstreamEntitlementId, upstreamConsumerId, upstreamPoolId, poolId
+            );
+        }
+
+        subscriptionInfo.close();
     }
 }
