@@ -177,6 +177,9 @@ public class JobStatus extends AbstractHibernateObject {
             if (runTime > -1) {
                 setState(JobState.FINISHED);
                 this.finishTime = new Date(startTime.getTime() + runTime);
+                // Note that the result string is set off the jobResult later.
+                // The result will only be blank if the jobResult has no value.
+                setResult("");
             }
         }
         else {
