@@ -23,11 +23,12 @@ import com.google.inject.Inject;
 import org.apache.commons.lang.StringUtils;
 import org.xnap.commons.i18n.I18n;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Set;
+
+
 
 /**
  * ContentOverrideValidator utility class used to validate
@@ -49,32 +50,32 @@ public class ServiceLevelValidator {
 
     public void validate(Owner owner, Collection<String> serviceLevels) {
         Set<String> invalidServiceLevels = new HashSet<String>();
+
         for (String serviceLevel : serviceLevels) {
             if (!StringUtils.isBlank(serviceLevel)) {
                 boolean found = false;
-                for (String level : poolManager.retrieveServiceLevelsForOwner(
-                    owner, false)) {
+                for (String level : poolManager.retrieveServiceLevelsForOwner(owner, false)) {
                     if (serviceLevel.equalsIgnoreCase(level)) {
                         found = true;
                         break;
                     }
                 }
+
                 if (!found) {
                     invalidServiceLevels.add(serviceLevel);
                 }
             }
         }
+
         if (!invalidServiceLevels.isEmpty()) {
-            String error = i18n.tr("Service level ''{0}'' is not available " +
-                "to units of organization {1}.",
+            String error = i18n.tr("Service level ''{0}'' is not available to units of organization {1}.",
                 StringUtils.join(invalidServiceLevels, ", "), owner.getKey());
+
             throw new BadRequestException(error);
         }
     }
 
-    public void validate(Owner owner, String serviceLevel) {
-        List<String> tmpList = new LinkedList<String>();
-        tmpList.add(serviceLevel);
-        validate(owner, tmpList);
+    public void validate(Owner owner, String... serviceLevels) {
+        this.validate(owner, Arrays.asList(serviceLevels));
     }
 }

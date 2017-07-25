@@ -12,7 +12,6 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-
 package org.candlepin.model;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
@@ -32,6 +31,8 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+
+
 /**
  * Represents certificate used to identify a consumer
  */
@@ -40,7 +41,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @Entity
 @Table(name = IdentityCertificate.DB_TABLE)
 @JsonFilter("IdentityCertificateFilter")
-public class IdentityCertificate extends RevocableCertificate implements Certificate {
+public class IdentityCertificate extends RevocableCertificate<IdentityCertificate> {
 
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp_id_cert";

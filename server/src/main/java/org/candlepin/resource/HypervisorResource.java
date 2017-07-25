@@ -126,7 +126,7 @@ public class HypervisorResource {
         }
 
         Owner owner = this.getOwner(ownerKey);
-        if (owner.autobindDisabled()) {
+        if (owner.isAutobindDisabled()) {
             log.debug("Could not update host/guest mapping. Auto-attach is disabled for owner {}",
                 owner.getKey());
             throw new BadRequestException(
