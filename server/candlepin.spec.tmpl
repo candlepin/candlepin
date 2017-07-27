@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.0.39
+Version: 2.0.40
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,9 @@ fi
 
 #raw
 %changelog
+* Thu Jul 27 2017 Kevin Howell <khowell@redhat.com> 2.0.40-1
+- Fix incorrect interface name in SELinux policy. (awood@redhat.com)
+
 * Wed Jul 26 2017 Kevin Howell <khowell@redhat.com> 2.0.39-1
 - 1473346: Fix SELinux error when logrotate runs on candlepin logs
   (awood@redhat.com)
