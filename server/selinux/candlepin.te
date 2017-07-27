@@ -27,7 +27,7 @@ type candlepin_var_lib_t;
 files_type(candlepin_var_lib_t)
 
 type candlepin_var_log_t;
-logging_log_type(candlepin_var_log_t)
+logging_log_file(candlepin_var_log_t)
 
 
 ########################################
