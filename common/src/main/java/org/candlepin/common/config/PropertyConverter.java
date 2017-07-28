@@ -104,7 +104,7 @@ public class PropertyConverter {
             return (Number) value;
         }
         else {
-            String str = value.toString();
+            String str = value.toString().trim();
             if (str.startsWith(HEX_PREFIX)) {
                 try {
                     return new BigInteger(str.substring(HEX_PREFIX.length()), HEX_RADIX);
