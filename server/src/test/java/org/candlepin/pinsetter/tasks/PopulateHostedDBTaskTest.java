@@ -311,7 +311,9 @@ public class PopulateHostedDBTaskTest extends DatabaseTestFixture {
         PopulateHostedDBTask task = new PopulateHostedDBTask(null, null, null, null, config);
         task.toExecute(jec);
 
-        verify(jec).setResult(eq(String.format("Aborting populate DB task. Invalid configuration setting for {0}.",
-            ConfigProperties.POPULATE_HOSTED_DB_JOB_PROD_LOOKUP_BATCH_SIZE)));
+        String resultMsg = String.format("Aborting populate DB task. Invalid configuration setting for {0}.",
+            ConfigProperties.POPULATE_HOSTED_DB_JOB_PROD_LOOKUP_BATCH_SIZE);
+
+        verify(jec).setResult(eq(resultMsg));
     }
 }

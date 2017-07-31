@@ -32,6 +32,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.LockOptions;
 import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
+import org.hibernate.Session;
 import org.hibernate.criterion.CriteriaSpecification;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Order;
@@ -711,29 +712,31 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         // Impl note:
         // HQL does not (properly) support unions, so we have to do this query multiple times.
         Set<String> result = new HashSet<String>();
+        Session session = this.currentSession();
 
-        Query query = this.currentSession().createQuery(
+
+        Query query = session.createQuery(
             "SELECT DISTINCT P.productId " +
             "FROM Pool P " +
             "WHERE NULLIF(P.productId, '') IS NOT NULL"
         );
         result.addAll(query.list());
 
-        query = this.currentSession().createQuery(
+        query = session.createQuery(
             "SELECT DISTINCT P.derivedProductId " +
             "FROM Pool P " +
             "WHERE NULLIF(P.derivedProductId, '') IS NOT NULL"
         );
         result.addAll(query.list());
 
-        query = this.currentSession().createQuery(
+        query = session.createQuery(
             "SELECT DISTINCT PP.productId " +
             "FROM Pool P INNER JOIN P.providedProducts AS PP " +
             "WHERE NULLIF(PP.productId, '') IS NOT NULL"
         );
         result.addAll(query.list());
 
-        query = this.currentSession().createQuery(
+        query = session.createQuery(
             "SELECT DISTINCT PP.productId " +
             "FROM Pool P INNER JOIN P.derivedProvidedProducts AS PP " +
             "WHERE NULLIF(PP.productId, '') IS NOT NULL"
@@ -743,34 +746,40 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
         // TODO: These may not be necessary if the subscriptions table is empty in Hosted. Though,
         // if they're empty, then these queries will take virtually no time to run anyway.
-        query = this.currentSession().createQuery(
+        query = session.createQuery(
             "SELECT DISTINCT S.product.id " +
             "FROM Subscription S " +
             "WHERE NULLIF(S.product.id, '') IS NOT NULL"
         );
         result.addAll(query.list());
 
-        query = this.currentSession().createQuery(
+        query = session.createQuery(
             "SELECT DISTINCT S.derivedProduct.id " +
             "FROM Subscription S " +
             "WHERE NULLIF(S.derivedProduct.id, '') IS NOT NULL"
         );
         result.addAll(query.list());
 
-        query = this.currentSession().createQuery(
+        query = session.createQuery(
             "SELECT DISTINCT PP.id " +
             "FROM Subscription S INNER JOIN S.providedProducts AS PP " +
             "WHERE NULLIF(PP.id, '') IS NOT NULL"
         );
         result.addAll(query.list());
 
-        query = this.currentSession().createQuery(
+        query = session.createQuery(
             "SELECT DISTINCT PP.id " +
             "FROM Subscription S INNER JOIN S.derivedProvidedProducts AS PP " +
             "WHERE NULLIF(PP.id, '') IS NOT NULL"
         );
         result.addAll(query.list());
 
+        query = session.createQuery(
+            "SELECT DISTINCT AKP.productId " +
+            "FROM ActivationKeyProduct AKP " +
+            "WHERE NULLIF(AKP.productId, '') IS NOT NULL"
+        );
+        result.addAll(query.list());
 
         // Return!
         return result;
