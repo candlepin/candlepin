@@ -74,8 +74,8 @@ public class ConsumerBindUtil {
         this.serviceLevelValidator = serviceLevelValidator;
     }
 
-    public void handleActivationKeys(Consumer consumer, List<ActivationKey> keys)
-        throws AutobindDisabledForOwnerException {
+    public void handleActivationKeys(Consumer consumer, List<ActivationKey> keys,
+        boolean autoattachDisabledForOwner) throws AutobindDisabledForOwnerException {
         // Process activation keys.
 
         boolean listSuccess = false;
@@ -85,7 +85,14 @@ public class ConsumerBindUtil {
             handleActivationKeyRelease(consumer, key.getReleaseVer());
             keySuccess &= handleActivationKeyServiceLevel(consumer, key.getServiceLevel(), key.getOwner());
             if (key.isAutoAttach() != null && key.isAutoAttach()) {
-                handleActivationKeyAutoBind(consumer, key);
+                if (autoattachDisabledForOwner) {
+                    log.warn(
+                        "Auto-attach is disabled for owner. Skipping auto-attach for consumer/key: {}/{}",
+                        consumer.getUuid(), key.getName());
+                }
+                else {
+                    handleActivationKeyAutoBind(consumer, key);
+                }
             }
             else {
                 keySuccess &= handleActivationKeyPools(consumer, key);
