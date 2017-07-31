@@ -167,7 +167,7 @@ public class RevocationOp {
         for (Entitlement ent : entitlements) {
             if (newConsumed > existing) {
                 if (!ent.getConsumer().isShare()) {
-                    if (ent.getPool().getType().equals(Pool.PoolType.SHARE_DERIVED)) {
+                    if (ent.getPool().getType().equals(Pool.PoolType.SHARED_POOL)) {
                         Entitlement source = ent.getPool().getSourceEntitlement();
                         // the source entitlement may have already been adjusted in the shared pool reduction
                         if (shareEntitlementsToAdjust.get(source) == null) {

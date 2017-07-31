@@ -1684,7 +1684,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 currentSession().createCriteria(Pool.class)
                     .createAlias("sourceEntitlement", "se")
                     .createAlias("se.pool", "sep")
-                    .add(Restrictions.and(Restrictions.eq("type", PoolType.SHARE_DERIVED)))
+                    .add(Restrictions.and(Restrictions.eq("type", PoolType.SHARED_POOL)))
                     .add(Restrictions.and(Restrictions.eq("se.pool", pool)))
                     .addOrder(Order.desc("created")));
     }

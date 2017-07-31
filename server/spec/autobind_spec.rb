@@ -168,6 +168,7 @@ describe 'Autobind On Owner' do
 
     # OrgB now has a shared pool and an unshared pool for prod
     pool = create_pool_and_subscription(orgB, prod['id'])
+
     ent = @cp.consume_product(prod['id'], :uuid => orgBconsumer['uuid'])
 
     expect(ent.first['pool']['id']).to eq(pool['id'])
