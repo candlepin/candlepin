@@ -1938,26 +1938,34 @@ var Autobind = {
                 return true;
             },
 
-            get_num_host_specific: function() {
+            is_host_specific: function (pool) {
+                // returns true if the given pool is host specific
+                return pool.getAttribute(REQUIRES_HOST_ATTRIBUTE) != null;
+            },
+
+            is_virt_only: function (pool) {
+                // returns true if pool is virt-only
+                return Utils.equalsIgnoreCase('true', pool.getProductAttribute(VIRT_ONLY));
+            },
+
+            count_matching_pools: function (test_func) {
+                // Returns the number of pools for which test_func(pool) evaluates to true
                 var count = 0;
-                for (var i = 0; i < this.pools.length; i++) {
+                for (var i =0; i < this.pools.length; i++) {
                     var pool = this.pools[i];
-                    if (pool.getAttribute(REQUIRES_HOST_ATTRIBUTE) != null) {
+                    if (test_func(pool)){
                         count++;
                     }
                 }
                 return count;
             },
 
-            get_num_virt_only: function() {
-                var count = 0;
-                for (var i = 0; i < this.pools.length; i++) {
-                    var pool = this.pools[i];
-                    if (Utils.equalsIgnoreCase('true',  pool.getProductAttribute(VIRT_ONLY))) {
-                        count++;
-                    }
-                }
-                return count;
+            num_host_specific: function () {
+                return this.count_matching_pools(this.is_host_specific);
+            },
+
+            num_virt_only: function () {
+                return this.count_matching_pools(this.is_virt_only);
             },
 
             /*
@@ -2447,44 +2455,73 @@ var Autobind = {
         var best = null;
         var total_poolquantity = Number.MAX_VALUE;
         var best_avg_prio = 0;
+        var best_num_host_specific = 0;
+        var best_num_virt_only = 0;
+        var virt_only_found = false;
+        var host_specific_found = false;
+        var new_best_found = false;
 
         for (var i = 0; i < all_groups.length; i++) {
             var group = all_groups[i];
             var group_avg_prio = group.get_average_priority();
             var intersection = this.get_common_products(installed, group).length;
             var group_poolquantity = group.get_total_quantity();
-            // Choose group that provides the most installed products
-            if (intersection > max_provide) {
+            var group_num_host_specific = group.num_host_specific();
+            var group_num_virt_only = group.num_virt_only();
+            if (intersection <= 0 ||
+                (host_specific_found && group_num_host_specific < best_num_host_specific) ||
+                (virt_only_found && group_num_virt_only < best_num_virt_only)) {
+                // Skip this group if we've found virt or host_specific and this group is not.
+                continue;
+            }
+
+            new_best_found = false;
+            if (group_num_host_specific > best_num_host_specific) {
+                host_specific_found = true;
+                new_best_found = true;
+            }
+            else if (group_num_host_specific < best_num_host_specific) {
+                new_best_found = false;
+            }
+            else if (group_num_virt_only > best_num_virt_only) {
+                virt_only_found = true;
+                new_best_found = true;
+            }
+            else if (group_num_virt_only < best_num_virt_only) {
+                new_best_found = false;
+            }
+            else if (intersection > max_provide) {
+                new_best_found = true;
+            }
+            else if (intersection < max_provide) {
+                new_best_found = false;
+            }
+            else if (group_avg_prio > best_avg_prio) {
+                new_best_found = true;
+            }
+            else if (group_avg_prio < best_avg_prio) {
+                new_best_found = false;
+            }
+            else if (group_poolquantity < total_poolquantity) {
+                new_best_found = true;
+            }
+            else if (group_poolquantity > total_poolquantity) {
+                new_best_found = false;
+            }
+            else if (stacked && !group.stackable) {
+                new_best_found = true;
+            }
+
+            if (new_best_found) {
                 stacked = group.stackable;
                 max_provide = intersection;
                 total_poolquantity = group_poolquantity;
                 best_avg_prio = group_avg_prio;
                 best = group;
+                best_num_host_specific = group_num_host_specific;
+                best_num_virt_only = group_num_virt_only;
             }
-            if (intersection > 0 && intersection == max_provide) {
-                // Break ties with average pool priority
-                // TODO: use average priority
-                if (best_avg_prio < group_avg_prio) {
-                   best = group;
-                   stacked = group.stackable;
-                   total_poolquantity = group_poolquantity;
-                   best_avg_prio = group_avg_prio;
-                }
-                if (best_avg_prio == group_avg_prio) {
-                    // Break ties with pool quantity
-                    if (total_poolquantity < group_poolquantity) {
-                        best = group;
-                        stacked = group.stackable;
-                        total_poolquantity = group_poolquantity;
-                    }
-                    if (total_poolquantity == group_poolquantity) {
-                        if (stacked && !group.stackable) {
-                            best = group;
-                            stacked = group.stackable;
-                        }
-                    }
-                }
-            }
+
         }
         return best;
     },
