@@ -59,17 +59,8 @@ describe 'Autobind Disabled On Owner' do
     new_pool.providedProducts.length.should == 2
   end
 
-  it 'fails registration when activation key has autobind enabled' do
-    exception_thrown = false
-    begin
-      ak_consumer = @user_cp.register("foofy", :system, nil, {'cpu.cpu_socket(s)' => '8'}, nil, @owner['key'], [@activation_key['name']], [])
-    rescue RestClient::BadRequest => e
-      exception_thrown = true
-      ex_message = "Could not register unit with key enabling auto-attach. Auto-attach is disabled for org '#{@owner['key']}'."
-      data = JSON.parse(e.response)
-      data['displayMessage'].should == ex_message
-    end
-    exception_thrown.should be true
+  it 'will still register when activation key has autobind enabled' do
+      @user_cp.register("foofy", :system, nil, {'cpu.cpu_socket(s)' => '8'}, nil, @owner['key'], [@activation_key['name']], [])
   end
 
   it 'fails to heal entire org' do
