@@ -95,7 +95,8 @@ public class ConsumerBindUtil {
             listSuccess |= keySuccess;
         }
         if (!listSuccess) {
-            throw new BadRequestException(i18n.tr("No activation key was applied successfully."));
+            throw new BadRequestException(
+                i18n.tr("None of the subscriptions on the activation key were available for attaching."));
         }
     }
 

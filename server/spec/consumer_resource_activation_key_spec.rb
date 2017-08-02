@@ -137,4 +137,18 @@ describe 'Consumer Resource Activation Key' do
     consumer.uuid.should_not be_nil
     @cp.get_pool(pool1.id).consumed.should == 4
   end
+
+   it 'should not allow a consumer to register with no-availability pool' do
+     prod1 = create_product(random_string('product1'), random_string('product1'),
+                            :attributes => { :'multi-entitlement' => 'yes'})
+     subs1 = @cp.create_subscription(@owner['key'], prod1.id, 0)
+     @cp.refresh_pools(@owner['key'])
+     pool1 = @cp.list_pools({:owner => @owner['id']}).first
+
+     key1 = @cp.create_activation_key(@owner['key'], 'key1')
+     @cp.add_pool_to_key(key1['id'], pool1['id'], 1)
+     lambda {
+       consumer = @client.register(random_string('machine1'), :system, nil, {}, nil, @owner['key'], ["key1"])
+     }.should raise_exception(RestClient::BadRequest)
+ end
 end
