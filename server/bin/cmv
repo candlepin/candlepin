@@ -159,7 +159,7 @@ class CMVCommand
             puts "done."
 
             # list entitlements for fetched consumers and store in orgs/<org>/entitlements/<entitlement>.json
-            print "  Retrieving entitlements...   "
+            print "  Retrieving entitlements...       "
             consumer_uuids.each do |consumer_uuid|
                 entitlements = candlepin.list_entitlements({:uuid => consumer_uuid})
                 entitlements.each do |entitlement|
@@ -222,6 +222,20 @@ class VerifyCommand < CMVCommand
 
             'orgs' => 'id',
 
+            'orgs.activation_keys' => 'id',
+            'orgs.activation_keys.owner' => 'id',
+            'orgs.activation_keys.pools' => 'id',
+            'orgs.activation_keys.pools.pool' => 'id',
+            'orgs.activation_keys.pools.pool.attributes' => 'name',
+            'orgs.activation_keys.pools.pool.branding' => 'productId',
+            'orgs.activation_keys.pools.pool.derivedProvidedProducts' => 'productId',
+            'orgs.activation_keys.pools.pool.derivedProductAttributes' => 'name',
+            'orgs.activation_keys.pools.pool.productAttributes' => 'name',
+            'orgs.activation_keys.products' => 'id',
+            'orgs.activation_keys.products.attributes' => 'name',
+            'orgs.activation_keys.products.productContent' => 'content.id',
+            'orgs.activation_keys.products.productContent.content' => 'id',
+
             'orgs.consumers' => 'uuid',
             'orgs.consumers.capabilities' => 'id',
 
@@ -261,20 +275,6 @@ class VerifyCommand < CMVCommand
             'orgs.subscriptions.providedProducts.attributes' => 'name',
             'orgs.subscriptions.providedProducts.productContent' => 'content.id',
             'orgs.subscriptions.providedProducts.productContent.content' => 'id',
-
-            'orgs.activation_keys' => 'id',
-            'orgs.activation_keys.owner' => 'id',
-            'orgs.activation_keys.pools' => 'id',
-            'orgs.activation_keys.pools.pool' => 'id',
-            'orgs.activation_keys.pools.pool.attributes' => 'name',
-            'orgs.activation_keys.pools.pool.branding' => 'productId',
-            'orgs.activation_keys.pools.pool.derivedProvidedProducts' => 'productId',
-            'orgs.activation_keys.pools.pool.derivedProductAttributes' => 'name',
-            'orgs.activation_keys.pools.pool.productAttributes' => 'name',
-            'orgs.activation_keys.products' => 'id',
-            'orgs.activation_keys.products.attributes' => 'name',
-            'orgs.activation_keys.products.productContent' => 'content.id',
-            'orgs.activation_keys.products.productContent.content' => 'id',
         }
 
         # Common paths we should expect to exclude
