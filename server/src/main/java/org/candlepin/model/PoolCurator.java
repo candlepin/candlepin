@@ -21,6 +21,7 @@ import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.candlepin.policy.criteria.CriteriaRules;
 import org.candlepin.policy.js.ProductCache;
 
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.persist.Transactional;
@@ -136,13 +137,15 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             return new ArrayList<Pool>();
         }
 
-        List<Pool> results = createSecureCriteria()
-            .add(Restrictions.in("sourceEntitlement", ents))
-            .setFetchMode("entitlements", FetchMode.JOIN)
-            .list();
+        Iterable<List<Entitlement>> blocks = Iterables.partition(ents, QUERY_PARAMETER_LIMIT);
 
-        if (results == null) {
-            results = new LinkedList<Pool>();
+        List<Pool> results = new LinkedList<Pool>();
+        for (List<Entitlement> block : blocks) {
+            results.addAll(
+                createSecureCriteria()
+                    .add(CPRestrictions.in("sourceEntitlement", block))
+                    .setFetchMode("entitlements", FetchMode.JOIN)
+                    .list());
         }
 
         if (results.size() > 0) {

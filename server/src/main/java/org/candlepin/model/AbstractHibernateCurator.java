@@ -82,6 +82,7 @@ import javax.persistence.criteria.Path;
 public abstract class AbstractHibernateCurator<E extends Persisted> {
     // Oracle has a limit of 1000
     public static final int IN_OPERATOR_BLOCK_SIZE = 1000;
+    public static final int QUERY_PARAMETER_LIMIT = 32000;
 
     @Inject protected Provider<EntityManager> entityManager;
     @Inject protected I18n i18n;
