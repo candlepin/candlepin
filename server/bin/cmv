@@ -32,6 +32,12 @@ class FieldFilter
     end
 
     def self.include_field?(path)
+        # Never include updated fields
+        if path.end_with?('.updated')
+            return false;
+        end
+
+        # Do normal traversal here.
         pchunks = path.split('.')
         levels = {}
 
@@ -89,6 +95,7 @@ class CMVCommand
         orgs.each do |org|
             puts "Fetching data for org \"#{org}\"..."
             product_ids = Set.new
+            consumer_uuids = Set.new
 
             # Get base org info
             org_data = candlepin.get_owner(org)
@@ -98,6 +105,9 @@ class CMVCommand
             print "  Retrieving consumers...          "
             consumers = candlepin.list_consumers({:owner => org})
             consumers.each do |consumer|
+                # Grab consumer UUIDs so we can fetch entitlements later
+                consumer_uuids << consumer['uuid']
+
                 yield "orgs[#{org}].consumers[#{consumer['uuid']}]", "orgs/#{org}/consumers/#{consumer['uuid']}.json", consumer
             end
             puts "done."
@@ -125,6 +135,16 @@ class CMVCommand
             end
             puts "done."
 
+            # list entitlements for fetched consumers and store in orgs/<org>/entitlements/<entitlement>.json
+            print "  Retrieving entitlements...       "
+            consumer_uuids.each do |consumer_uuid|
+                entitlements = candlepin.list_entitlements({:uuid => consumer_uuid})
+                entitlements.each do |entitlement|
+                    yield "orgs[#{org}].entitlements[#{entitlement['id']}]", "orgs/#{org}/entitlements/#{entitlement['id']}.json", entitlement
+                end
+            end
+            puts "done."
+
             # list products and store in orgs/<org>/products/<product>.json
             print "  Retrieving products...           "
             product_ids.each do |pid|
@@ -133,7 +153,6 @@ class CMVCommand
                 yield "orgs[#{org}].products[#{product['id']}]", "orgs/#{org}/products/#{product['id']}.json", product
             end
             puts "done."
-
 
             # list activation keys and store in orgs/<org>/activation_keys/<key>.json
             print "  Retrieving activation_keys...    "
@@ -176,22 +195,9 @@ class VerifyCommand < CMVCommand
         super('Verifies the current data for the specified org(s) matches the last/given snapshot')
 
         @id_cols = {
+            # TODO: Derive a way to have common types inherit ID defs from other object definitions
+
             'orgs' => 'id',
-
-            'orgs.consumers' => 'uuid',
-
-            'orgs.pools' => 'id',
-            'orgs.pools.attributes' => 'name',
-            'orgs.pools.branding' => 'productId',
-            'orgs.pools.providedProducts' => 'productId',
-            'orgs.pools.productAttributes' => 'name',
-            'orgs.pools.derivedProvidedProducts' => 'productId',
-            'orgs.pools.derivedProductAttributes' => 'name',
-
-            'orgs.products' => 'id',
-            'orgs.products.attributes' => 'name',
-            'orgs.products.productContent' => 'content.id',
-            'orgs.products.productContent.content' => 'id',
 
             'orgs.activation_keys' => 'id',
             'orgs.activation_keys.owner' => 'id',
@@ -206,15 +212,39 @@ class VerifyCommand < CMVCommand
             'orgs.activation_keys.products.attributes' => 'name',
             'orgs.activation_keys.products.productContent' => 'content.id',
             'orgs.activation_keys.products.productContent.content' => 'id',
+
+            'orgs.consumers' => 'uuid',
+            'orgs.consumers.capabilities' => 'id',
+
+            'orgs.entitlements' => 'id',
+            'orgs.entitlements.certificates' => 'id',
+            'orgs.entitlements.certificates.serial' => 'id',
+            'orgs.entitlements.consumer' => 'uuid',
+            'orgs.entitlements.pool' => 'id',
+            'orgs.entitlements.pool.branding' => 'productId',
+            'orgs.entitlements.pool.derivedProductAttributes' => 'name',
+            'orgs.entitlements.pool.derivedProvidedProducts' => 'productId',
+            'orgs.entitlements.pool.productAttributes' => 'name',
+            'orgs.entitlements.pool.providedProducts' => 'productId',
+
+            'orgs.pools' => 'id',
+            'orgs.pools.attributes' => 'name',
+            'orgs.pools.branding' => 'productId',
+            'orgs.pools.providedProducts' => 'productId',
+            'orgs.pools.productAttributes' => 'name',
+            'orgs.pools.derivedProvidedProducts' => 'productId',
+            'orgs.pools.derivedProductAttributes' => 'name',
+
+            'orgs.products' => 'id',
+            'orgs.products.attributes' => 'name',
+            'orgs.products.productContent' => 'content.id',
+            'orgs.products.productContent.content' => 'id',
         }
 
         # Common paths we should expect to exclude
         exclude = [
-            'orgs.pools.productAttributes.updated',
-            'orgs.products.attributes.updated',
-            'orgs.products.updated',
-            'orgs.products.productContent.content.updated',
-            'orgs.subscriptions'
+            # Add any specific fields to exclude by default here.
+            # Note: Any field named "updated" is automatically excluded
         ]
 
         exclude.each do |path|
@@ -455,7 +485,7 @@ optparse = OptionParser.new do |opts|
     end
 
     options[:ssl] = true
-    opts.on('--nossl', 'Do not use SSL; defaults to false') do |opt|
+    opts.on('--nossl', 'Do not use SSL; defaults to false') do
         options[:ssl] = false
     end
 
