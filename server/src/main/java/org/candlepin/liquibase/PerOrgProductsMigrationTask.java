@@ -158,9 +158,9 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
 
                 this.logger.info("Validating data for org %s (%s) (%d of %d)", account, orgid, index, count);
 
-                // Check for malformed pools/subscriptions which may end up in a pseudo-dead state.
+                // Check for malformed objects which may end up in a bad state if we migrate
                 boolean result = true;
-                result &= this.checkForMalformedPoolsAndSubscriptions(orgid);
+                result &= this.checkForMalformedObjectRefs(orgid);
 
                 if (!result) {
                     validated = false;
@@ -207,10 +207,11 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
      * @return
      *  true if the check completed successfully; false otherwise
      */
-    protected boolean checkForMalformedPoolsAndSubscriptions(String orgid) throws DatabaseException,
+    @SuppressWarnings("checkstyle:methodlength")
+    protected boolean checkForMalformedObjectRefs(String orgid) throws DatabaseException,
         SQLException {
 
-        ResultSet badProductRefs = this.executeQuery(
+        ResultSet badObjectRefs = this.executeQuery(
             "SELECT DISTINCT u.product_id, u.pool_id, u.subscription_id " +
             "FROM (SELECT NULLIF(p.product_id_old, '') AS product_id, p.id AS pool_id, " +
             "  NULL AS subscription_id " +
@@ -256,12 +257,12 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
 
         boolean passed = true;
 
-        while (badProductRefs.next()) {
+        while (badObjectRefs.next()) {
             passed = false;
 
-            String productId = badProductRefs.getString(1);
-            String poolId = badProductRefs.getString(2);
-            String subscriptionId = badProductRefs.getString(3);
+            String productId = badObjectRefs.getString(1);
+            String poolId = badObjectRefs.getString(2);
+            String subscriptionId = badObjectRefs.getString(3);
 
             if (productId != null) {
                 if (poolId != null) {
@@ -283,6 +284,53 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
                 }
             }
         }
+
+        badObjectRefs.close();
+
+        // Check for bad content refs on our environments
+        badObjectRefs = this.executeQuery(
+            "  SELECT e.id, ec.contentid " +
+            "    FROM cp_environment e " +
+            "    JOIN cp_env_content ec ON e.id = ec.environment_id " +
+            "    LEFT JOIN cp_content c ON c.id = ec.contentid " +
+            "    WHERE e.owner_id = ? " +
+            "      AND c.id IS NULL",
+            orgid
+        );
+
+        while (badObjectRefs.next()) {
+            passed = false;
+
+            String envId = badObjectRefs.getString(1);
+            String contentId = badObjectRefs.getString(2);
+
+            this.logger.error("  Environment \"%s\" references unresolvable content: %s", envId, contentId);
+        }
+
+        badObjectRefs.close();
+
+        // Check for bad product references on the activation keys
+        badObjectRefs = this.executeQuery(
+            "  SELECT ak.id, akp.product_id " +
+            "    FROM cp_activation_key ak " +
+            "    JOIN cp_activationkey_product akp ON akp.key_id = ak.id " +
+            "    LEFT JOIN cp_product p ON p.id = akp.product_id " +
+            "    WHERE ak.owner_id = ? " +
+            "      AND p.id IS NULL",
+            orgid
+        );
+
+        while (badObjectRefs.next()) {
+            passed = false;
+
+            String keyId = badObjectRefs.getString(1);
+            String productId = badObjectRefs.getString(2);
+
+            this.logger.error("  Activation Key \"%s\" references an unresolvable product: %s", keyId,
+                productId);
+        }
+
+        badObjectRefs.close();
 
         return passed;
     }
@@ -344,8 +392,8 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
         ResultSet productInfo = this.executeQuery(
             "SELECT DISTINCT p.id, p.created, p.updated, p.multiplier, p.name " +
             "FROM cp_product p " +
-            "JOIN " +
-            "  (SELECT p.product_id_old AS product_id " +
+            "JOIN (" +
+            "  SELECT p.product_id_old AS product_id " +
             "    FROM cp_pool p " +
             "    WHERE p.owner_id = ? " +
             "      AND NOT NULLIF(p.product_id_old, '') IS NULL " +
@@ -357,8 +405,7 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
             "  UNION " +
             "  SELECT pp.product_id " +
             "    FROM cp_pool p " +
-            "    JOIN cp_pool_products pp " +
-            "      ON p.id = pp.pool_id " +
+            "    JOIN cp_pool_products pp ON p.id = pp.pool_id " +
             "    WHERE p.owner_id = ? " +
             "      AND NOT NULLIF(pp.product_id, '') IS NULL " +
             "  UNION " +
@@ -374,19 +421,30 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
             "  UNION " +
             "  SELECT sp.product_id " +
             "    FROM cp_subscription_products sp " +
-            "    JOIN cp_subscription s " +
-            "      ON s.id = sp.subscription_id " +
+            "    JOIN cp_subscription s ON s.id = sp.subscription_id " +
             "    WHERE s.owner_id = ? " +
             "      AND NOT NULLIF(sp.product_id, '') IS NULL " +
             "  UNION " +
             "  SELECT sdp.product_id " +
             "    FROM cp_sub_derivedprods sdp " +
-            "    JOIN cp_subscription s " +
-            "      ON s.id = sdp.subscription_id " +
+            "    JOIN cp_subscription s ON s.id = sdp.subscription_id " +
             "    WHERE s.owner_id = ? " +
-            "      AND NOT NULLIF(sdp.product_id, '') IS NULL) u" +
-            "  ON u.product_id = p.id",
-            orgid, orgid, orgid, orgid, orgid, orgid, orgid
+            "      AND NOT NULLIF(sdp.product_id, '') IS NULL " +
+            "  UNION " +
+            "  SELECT pc.product_id " +
+            "    FROM cp_product_content pc " +
+            "    JOIN cp_env_content ec ON pc.content_id = ec.contentid " +
+            "    JOIN cp_environment e ON e.id = ec.environment_id" +
+            "    WHERE e.owner_id = ? " +
+            "      AND NOT NULLIF(pc.product_id, '') IS NULL " +
+            "  UNION " +
+            "  SELECT akp.product_id " +
+            "    FROM cp_activationkey_product akp " +
+            "    JOIN cp_activation_key ak ON ak.id = akp.key_id " +
+            "    WHERE ak.owner_id = ? " +
+            "      AND NOT NULLIF(akp.product_id, '') IS NULL " +
+            ") u ON u.product_id = p.id",
+            orgid, orgid, orgid, orgid, orgid, orgid, orgid, orgid, orgid
         );
 
         int maxrows = MAX_PARAMETERS_PER_STATEMENT / 7;
@@ -532,14 +590,24 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
         Set<String> uuidCache = new HashSet<String>();
 
         ResultSet contentInfo = this.executeQuery(
-            "SELECT c.id, c.created, c.updated, c.contenturl, c.gpgurl, c.label, " +
+            "SELECT DISTINCT c.id, c.created, c.updated, c.contenturl, c.gpgurl, c.label, " +
             "  c.metadataexpire, c.name, c.releasever, c.requiredtags, c.type, c.vendor, c.arches " +
             "FROM cp_content c " +
-            "JOIN cp_product_content pc ON pc.content_id = c.id " +
-            "JOIN cp2_products p ON pc.product_id = p.product_id " +
-            "JOIN cp2_owner_products op ON p.uuid = op.product_uuid " +
-            "WHERE op.owner_id = ?",
-            orgid
+            "JOIN (" +
+            "  SELECT pc.content_id AS content_id " +
+            "    FROM cp_product_content pc" +
+            "    JOIN cp2_products p ON pc.product_id = p.product_id " +
+            "    JOIN cp2_owner_products op ON p.uuid = op.product_uuid " +
+            "    WHERE op.owner_id = ?" +
+            "      AND NOT NULLIF(pc.content_id, '') IS NULL " +
+            "  UNION " +
+            "  SELECT ec.contentid AS content_id " +
+            "    FROM cp_env_content ec " +
+            "    JOIN cp_environment e ON e.id = ec.environment_id " +
+            "    WHERE e.owner_id = ?" +
+            "      AND NOT NULLIF(ec.contentid, '') IS NULL " +
+            ") u ON u.content_id = c.id",
+            orgid, orgid
         );
 
         int maxrows = MAX_PARAMETERS_PER_STATEMENT / 15;
