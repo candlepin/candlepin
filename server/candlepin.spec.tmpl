@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 0.9.54.24
+Version: 0.9.54.25
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,15 @@ fi
 
 #raw
 %changelog
+* Mon Aug 07 2017 Alex Wood <awood@redhat.com> 0.9.54.25-1
+- Break up massive in clauses in listBySourceEntitlements. (awood@redhat.com)
+- 1440924: Adjust message when activation key registration fails
+  (wpoteat@redhat.com)
+- Added entitlement validation to CMV (crog@redhat.com)
+- 1473349: Fix SELinux error when logrotate runs on candlepin logs
+  (awood@redhat.com)
+- Updated CMV to store and verify activation keys (crog@redhat.com)
+
 * Fri May 26 2017 Kevin Howell <khowell@redhat.com> 0.9.54.24-1
 - 1440909: Choose host_specific/virt_only pools first (csnyder@redhat.com)
 
