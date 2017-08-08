@@ -134,36 +134,6 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     }
   end
 
-  it 'should remove excess entitlements' do
-   prod = create_product(nil, nil,{:attributes => {"multi-entitlement" => "yes", "virt_limit" => 1}})
-   sub = @cp.create_pool(@owner['key'], prod.id, {:quantity => 2})
-   @cp.refresh_pools(@owner['key'])
-   pools = @cp.list_pools({:owner => @owner['id'], :product => prod['id']})
-   #Find the normal pool to entitle
-   pool = pools.select{|i| i['type']=='NORMAL'}[0]
-   pools.size.should == 2
-   @host1_client.consume_pool(pool['id'], {:quantity => 2})
-   pools = @cp.list_pools({:owner => @owner['id'], :product => prod['id']})
-   #New entitlement pool has been created
-   pools.size.should == 3
-
-   #Change subscription quantity and the name of the product
-   sub.quantity = 1
-   @cp.update_subscription(sub)
-   @cp.update_product(sub['product'].id, :name=>'newrandomname')
-
-   #Refresh pools and make sure it succeeds
-   status = @cp.refresh_pools(@owner['key'], true)
-   # The job is being retried several times anyway. We need to sleep it out
-   sleep 15
-   jobstatus = @cp.post(status.statusPath)
-   jobstatus.state.should == 'FINISHED'
-
-   #The entitlement derived pool has been removed by refresh pools
-   pools = @cp.list_pools({:owner => @owner['id'], :product => prod['id']})
-   pools.size.should == 2
-  end
-
   it 'should create a virt_only pool for hosts guests' do
     # Get the attribute that indicates which host:
     host = get_attribute_value(@guest_pool['attributes'], "requires_host")
@@ -536,7 +506,7 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
         :virt_limit => 8
       }
     })
-    @virt_limit_sub = @cp.create_pool(@owner['key'], @not_so_virt_limit_product.id, {:quantity => 10})
+    @virt_limit_sub = create_pool_and_subscription(@owner['key'], @not_so_virt_limit_product.id, 10)
     @cp.refresh_pools(@owner['key'])
     @host1_client.update_consumer({:installedProducts => [{'productId' => @not_so_virt_limit_product.id,
       'productName' => @not_so_virt_limit_product.name}]})
@@ -553,7 +523,7 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     # Create a sub for a virt limited product:
     product = create_product(random_string('product'), random_string('product'),
                       :attributes => { :virt_limit => 3, :'multi-entitlement' => 'yes'})
-    @cp.create_pool(@owner['key'], product.id, {:quantity => 10})
+    create_pool_and_subscription(@owner['key'], product.id, 10)
     @cp.refresh_pools(@owner['key'])
 
     pools = @user.list_pools :owner => @owner.id, \
