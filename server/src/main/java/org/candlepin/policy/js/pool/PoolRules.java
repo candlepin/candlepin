@@ -162,7 +162,7 @@ public class PoolRules {
         // we have no way of linking the bonus/derived pools to the master pool (at the time of
         // writing), and we'd end up with orphaned pools. If/when this issue is resolved, the check
         // for a source subscription should be removed.
-        if (masterPool.getSourceSubscription() != null && virtQuantity != null &&
+        if (poolManager.isManaged(masterPool) && virtQuantity != null &&
             !hasBonusPool(existingPools)) {
 
             boolean hostLimited = "true".equals(attributes.get(Product.Attributes.HOST_LIMITED));
