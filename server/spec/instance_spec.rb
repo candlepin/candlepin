@@ -47,8 +47,15 @@ describe 'Instance Based Subscriptions' do
       has_attribute(p['attributes'], 'unmapped_guests_only')
     end
     instance_pools.size.should == 1
+    # In hosted, we increase the quantity on the subscription. However in standalone,
+    # we assume this already has happened in hosted and the accurate quantity was
+    # exported
     @instance_pool = instance_pools.first
-    @instance_pool.quantity.should == 20
+    if is_hosted?
+      @instance_pool.quantity.should == 20
+    else
+      @instance_pool.quantity.should == 10
+    end
   end
 
   it 'should auto-subscribe physical systems with quantity 2 per socket pair' do

@@ -142,6 +142,7 @@ module HostedTest
 
   # Lets users be agnostic of what mode we are in, standalone or hosted.
   # Always returns the main pool that was created ( unless running in hosted mode and refresh is skipped )
+  # not to be used to create custom pool
   def create_pool_and_subscription(owner_key, product_id, quantity=1,
                           provided_products=[], contract_number='',
                           account_number='', order_number='',
@@ -165,6 +166,7 @@ module HostedTest
       end
     else
       params[:source_subscription] = { 'id' => random_str('source_sub_') }
+      params[:upstream_pool_id] = random_str('upstream_')
       pool = @cp.create_pool(owner_key, product_id, params)
     end
     return pool

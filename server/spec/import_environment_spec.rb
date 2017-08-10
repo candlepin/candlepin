@@ -70,8 +70,8 @@ describe 'Import Into Environment', :serial => true do
 
     product1 = create_product('custom_prod-1', 'custom_prod-1', :owner => import_owner['key'])
     product2 = create_product('custom_prod-2', 'custom_prod-2', :owner => import_owner['key'])
-    custom_sub_pool_1 = create_pool_and_subscription(import_owner['key'], product1.id, 10)
-    custom_sub_pool_2 = create_pool_and_subscription(import_owner['key'], product2.id, 10)
+    custom_sub_pool_1 = @cp.create_pool(import_owner['key'], product1.id, {:quantity => 10})
+    custom_sub_pool_2 = @cp.create_pool(import_owner['key'], product2.id, {:quantity => 10})
 
     expect(custom_sub_pool_1).to_not be_nil
     expect(custom_sub_pool_2).to_not be_nil
