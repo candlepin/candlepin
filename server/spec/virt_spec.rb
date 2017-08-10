@@ -46,6 +46,94 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
 
   end
 
+  it 'should attach host provided pools before other available pools' do
+    @both_products = create_product(nil, nil, {
+        :attributes => {
+            :type => 'MKT'
+        }})
+    datacenter_product_1 = create_product(nil, nil, {
+        :attributes => {
+            :virt_limit => "unlimited",
+            :stacking_id => "stackme1",
+            :sockets => "2",
+            'multi-entitlement' => "yes"
+        }
+    })
+    derived_product_1 = create_product(nil, nil, {
+        :attributes => {
+            :cores => 2,
+            :stacking_id => "stackme1-derived",
+            :sockets=>4
+        }
+    })
+    datacenter_product_2 = create_product(nil, nil, {
+        :attributes => {
+            :virt_limit => "unlimited",
+            :stacking_id => "stackme2",
+            :sockets => "2",
+            'multi-entitlement' => "yes"
+        }
+    })
+    derived_product_2 = create_product(nil, nil, {
+        :attributes => {
+            :cores => 2,
+            :stacking_id => "stackme2-derived",
+            :sockets=>4
+        }
+    })
+    # We'd like there to be three subs, two that require a specific host and one that provides both required products
+    # in one. These first two are similar to VDC subscriptions, hence the name datacenter.
+    @cp.create_pool(@owner['key'], datacenter_product_1.id, {:quantity => 10, :derived_product_id => derived_product_1['id']})
+    @cp.create_pool(@owner['key'], datacenter_product_2.id, {:quantity => 10, :derived_product_id => derived_product_2['id']})
+    @cp.create_pool(@owner['key'], @both_products.id, {:quantity => 1, :provided_products => [derived_product_1.id, derived_product_2.id]})
+
+    @cp.refresh_pools(@owner['key'])
+
+    @installed_product_list = [
+        {'productId' => derived_product_1.id, 'productName' => derived_product_1.name},
+        {'productId' => derived_product_2.id, 'productName' => derived_product_2.name}]
+    @guest2_client.update_consumer({:installedProducts => @installed_product_list})
+    @host1_client.consume_product(product=datacenter_product_1.id)
+    @host1_client.consume_product(product=datacenter_product_2.id)
+
+    @host2_client.consume_product(product=datacenter_product_1.id)
+    @host2_client.consume_product(product=datacenter_product_2.id)
+
+    @host1_client.update_consumer({:guestIds => [{'guestId' => @uuid2}]})
+
+    @guest2_client.list_entitlements.length.should == 0
+
+    @guest2_client.consume_product()
+    @guest2_client.list_entitlements.length.should == 2
+
+    @guest2_client.list_entitlements.each { |ent|
+      [derived_product_1.id, derived_product_2.id].should include(ent['pool']['productId'])
+      found_requires_host = false
+      ent['pool']['attributes'].each { |attribute|
+        if attribute['name'] == 'requires_host'
+          attribute['value'].should == @host1['uuid']
+          found_requires_host = true
+        end
+        attribute['value'].should == @host1['uuid'] if attribute['name'] == 'requires_host'
+      }
+      # A failure on the line below means one of the entitlements the guest has does not have the requires_host attr
+      found_requires_host.should == true
+    }
+    # A similar set of pools should be chosen during guest migration
+    # So remove the guest from the first host and add the guest to the second host
+    @host1_client.update_consumer({:guestIds => []})
+    @host2_client.update_consumer({:guestIds => [{'guestId' => @uuid2}]})
+
+    @guest2_client.list_entitlements.length.should == 2
+
+    @guest2_client.list_entitlements.each { |ent|
+      [derived_product_1.id, derived_product_2.id].should include(ent['pool']['productId'])
+      ent['pool']['attributes'].each { |attribute|
+        attribute['value'].should == @host2['uuid'] if attribute['name'] == 'requires_host'
+      }
+    }
+  end
+
   it 'should create a virt_only pool for hosts guests' do
     # Get the attribute that indicates which host:
     host = get_attribute_value(@guest_pool['attributes'], "requires_host")
@@ -106,6 +194,30 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     reasonKeys = compliance.reasons.map {|r| r['key']}
     (reasonKeys.include? 'GUEST_LIMIT').should == true
     (reasonKeys.include? 'ARCH').should == true
+  end
+
+  # Covers BZ 1379849
+  it 'should revoke guest entitlements when migration happens' do
+    #New hypervisor
+    host3 = @user.register(random_string('host'), :system, nil,
+      {}, nil, nil, [], [])
+    host3_client = Candlepin.new(nil, nil, host3['idCert']['cert'], host3['idCert']['key'])
+     # Adding a product to consumer that cannot be covered
+    @guest1_client.update_consumer({:installedProducts =>
+       [{'productId' => 'someNonExistentProduct', 'productName' => 'nonExistentProduct'}]
+    })
+
+    # Guest 1 should be able to use the pool:
+    @guest1_client.consume_pool(@guest_pool['id'], {:quantity => 1})
+    @guest1_client.list_entitlements.length.should == 1
+
+    #Guest changes the hypervisor. This will trigger revocation of
+    #the entitlement to guest_pool (because it requires_host) and
+    #it will also trigger unsuccessfull autobind (because the
+    #someNonExistentProduct cannot be covered)
+    host3_client.update_consumer({:guestIds => [{'guestId' => @uuid1}]})
+
+    @guest1_client.list_entitlements.length.should == 0
   end
 
   it 'should revoke guest entitlements when host unbinds' do
@@ -252,7 +364,9 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
 
   it 'should not bind products on host if virt_only are already available for guest' do
     @second_product = create_product(nil, nil, {:attributes => { :virt_only => true }})
-    create_pool_and_subscription(@owner['key'], @second_product.id, 10, [@virt_limit_product.id])
+    @cp.create_pool(@owner['key'],
+      @second_product.id, {:quantity => 10, :provided_products => [@virt_limit_product.id]})
+    @cp.refresh_pools(@owner['key'])
 
     @installed_product_list = [
         {'productId' => @virt_limit_product.id, 'productName' => @virt_limit_product.name}]
@@ -303,7 +417,9 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
 
   it 'should not heal the host if the product is already compliant' do
     @second_product = create_product
-    create_pool_and_subscription(@owner['key'], @second_product.id, 10, [@virt_limit_product.id])
+    @cp.create_pool(@owner['key'],
+      @second_product.id, {:quantity => 10, :provided_products => [@virt_limit_product.id]})
+    @cp.refresh_pools(@owner['key'])
 
     @installed_product_list = [
         {'productId' => @virt_limit_product.id, 'productName' => @virt_limit_product.name}]
@@ -336,7 +452,8 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
 
   it 'should not heal other host products' do
     @second_product = create_product()
-    create_pool_and_subscription(@owner['key'], @second_product.id, 1)
+    @cp.create_pool(@owner['key'], @second_product.id, {:quantity => 1})
+    @cp.refresh_pools(@owner['key'])
 
     @guest_installed_product_list = [
         {'productId' => @virt_limit_product.id, 'productName' => @virt_limit_product.name}]
@@ -369,7 +486,8 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
         :guest_limit => 1
       }
     })
-    create_pool_and_subscription(@owner['key'], @very_virt_limit_product.id, 10)
+    @virt_limit_sub = @cp.create_pool(@owner['key'], @very_virt_limit_product.id, {:quantity => 10})
+    @cp.refresh_pools(@owner['key'])
     @host1_client.update_consumer({:installedProducts => [{'productId' => @very_virt_limit_product.id,
       'productName' => @very_virt_limit_product.name}]})
     @host1_client.update_consumer({:guestIds => [
@@ -388,7 +506,8 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
         :virt_limit => 8
       }
     })
-    create_pool_and_subscription(@owner['key'], @not_so_virt_limit_product.id, 10)
+    @virt_limit_sub = create_pool_and_subscription(@owner['key'], @not_so_virt_limit_product.id, 10)
+    @cp.refresh_pools(@owner['key'])
     @host1_client.update_consumer({:installedProducts => [{'productId' => @not_so_virt_limit_product.id,
       'productName' => @not_so_virt_limit_product.name}]})
     @host1_client.update_consumer({:guestIds => [
@@ -405,6 +524,7 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     product = create_product(random_string('product'), random_string('product'),
                       :attributes => { :virt_limit => 3, :'multi-entitlement' => 'yes'})
     create_pool_and_subscription(@owner['key'], product.id, 10)
+    @cp.refresh_pools(@owner['key'])
 
     pools = @user.list_pools :owner => @owner.id, \
            :product => product.id
@@ -439,10 +559,12 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     @instance_based = create_product(nil, random_string('instance_based'),
                                     :attributes => { 'instance_multiplier' => 2,
                                         'multi-entitlement' => 'yes' })
-    create_pool_and_subscription(@owner['key'], @instance_based.id, 10)
+    @cp.create_pool(@owner['key'], @instance_based.id, {:quantity => 10})
+    @cp.refresh_pools(@owner['key'])
 
     pool = @guest1_client.list_pools(:product => @instance_based.id,
         :consumer => @guest1_client.uuid).first
     @guest1_client.consume_pool(pool.id, {:quantity => 3})
   end
+
 end
