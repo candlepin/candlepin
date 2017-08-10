@@ -478,10 +478,13 @@ public class ConsumerResource {
         validateViaConsumerType(consumer, type, keys, owner, userName, principal);
 
         if (consumer.isShare()) {
+            throw new ForbiddenException(i18n.tr("Multi-org sharing is currently not supported"));
+            /*
             // Share consumers do not need identity certificates so refuse to create them.
             identityCertCreation = false;
             validateShareConsumer(consumer, principal, keys);
             consumer.setAutoheal(false);
+             */
 
         }
         else {

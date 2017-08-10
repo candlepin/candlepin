@@ -86,6 +86,7 @@ import org.candlepin.util.ServiceLevelValidator;
 import org.apache.commons.lang.RandomStringUtils;
 import org.hibernate.mapping.Collection;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -156,6 +157,7 @@ public class ConsumerResourceTest {
         this.factValidator = new FactValidator(this.config, this.i18n);
     }
 
+    @Ignore
     @Test
     public void testValidateShareConsumerRequiresRecipientFact() {
         ConsumerType share = new ConsumerType(ConsumerTypeEnum.SHARE);
@@ -184,6 +186,7 @@ public class ConsumerResourceTest {
         consumerResource.create(c, uap, "test-user", "test-owner", null, false);
     }
 
+    @Ignore
     @Test
     public void testValidateShareConsumerRequiresRecipientPermissions() {
         ConsumerType share = new ConsumerType(ConsumerTypeEnum.SHARE);

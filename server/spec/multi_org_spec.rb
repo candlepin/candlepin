@@ -6,6 +6,7 @@ describe "Multi Org Shares" do
   include CandlepinMethods
 
   before(:each) do
+    skip("multi org sharing currently not supported in version < 2.2")
     @owner1 = create_owner(random_string('orgA'))
     @username = random_string('orgA_user')
     @user_client = user_client(@owner1, @username)
