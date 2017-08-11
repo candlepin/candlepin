@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.1.1
+Version: 2.2.0
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,66 @@ fi
 
 #raw
 %changelog
+* Fri Aug 11 2017 Vritant Jain <adarshvritant@gmail.com> 2.2.0-1
+- Spec test fixes (csnyder@redhat.com)
+- 1476897: Choose host_specific/virt_only pools first (csnyder@redhat.com)
+- Added entitlement validation to CMV (crog@redhat.com)
+- 1440924: Adjust message when activation key registration fails
+  (wpoteat@redhat.com)
+- Per-org products migration now examines activation keys and environments
+  (crog@redhat.com)
+- Fix incorrect interface name in SELinux policy. (awood@redhat.com)
+- 1473255: Fix SELinux error when logrotate runs on candlepin logs
+  (awood@redhat.com)
+- Account for misfires in job status (wpoteat@redhat.com)
+- Unify EntitlementRules class. (awood@redhat.com)
+- Remove redundant code (awood@redhat.com)
+- Ensure that serializer shows null values (wpoteat@redhat.com)
+- Fix custom pom plugin to be compatible with new Buildr version.
+  (awood@redhat.com)
+- 1452694: Candlepin no longer deletes pools for custom subscriptions
+  (crog@redhat.com)
+- Updated CMV to store and verify activation keys (crog@redhat.com)
+- 1467888: Fixed broken rules when importing into old candlepin
+  (mstead@redhat.com)
+- Change requires due to new version of rubyzip. (awood@redhat.com)
+- Do not require auth to fetch swagger.json (awood@redhat.com)
+- Added logging for quartz job misfires (mstead@redhat.com)
+- 1461472: Update rules to run against 0.9 versions (wpoteat@redhat.com)
+- Add additional logging to JobCleaner (mstead@redhat.com)
+- Re-enable JobCleaner logging (mstead@redhat.com)
+- 1448897: Enforce default content access mode list (wpoteat@redhat.com)
+- 1457902: Fix failure listing Jobs when class not found (mstead@redhat.com)
+- 1464129: Put guestId param in consumer json for virtWho instances
+  (wpoteat@redhat.com)
+- Fixed an issue with migrating a database with product content
+  (crog@redhat.com)
+- Removes the extra quotes added mistakenly in the docker refactor
+  (csnyder@redhat.com)
+- 1460731: Handle job creation failure graciously (adarshvritant@gmail.com)
+- This is a complete refactor of how docker works in this repo.  This will
+  break all existing jenkins automation and should be merged in at the same
+  time as changes to candlepin-jobs.  For     details on this change, see
+  docker/README.mkd (jmolet@redhat.com)
+- Undo excessive regen added by mistake in 731188f (adarshvritant@gmail.com)
+- Changed ProductContent to a full entity (crog@redhat.com)
+- update modifying ents directly (adarshvritant@gmail.com)
+- use cursor to fetch pools (adarshvritant@gmail.com)
+- Awood/multi org hypervisors (#1594) (awood@redhat.com)
+- Implement minimal set of bind commands (adarshvritant@gmail.com)
+- POC for chain of responsibility binding (awood@redhat.com)
+- 1455361: Disallow candlepin consumers to be registered via Subscription
+  Manager (wpoteat@redhat.com)
+- Optimized bulk product and content lookups (crog@redhat.com)
+- 1448587: Account for NPE in refresh job (wpoteat@redhat.com)
+- 1440180: Future entitlements use current date as start date
+  (wpoteat@redhat.com)
+- Establish revocation order for entitlments (wpoteat@redhat.com)
+- 1452330: Refresh no longer removes locally-managed pools (crog@redhat.com)
+- Fixed a few issues involving source subscriptions (crog@redhat.com)
+- The per-org products migration now fails on unresolvable products
+  (crog@redhat.com)
+
 * Thu May 25 2017 Kevin Howell <khowell@redhat.com> 2.1.1-1
 - 1451032: Allow tomcat to read /etc/candlepin (khowell@redhat.com)
 - Added content access list refreshing to the refresh process (crog@redhat.com)
