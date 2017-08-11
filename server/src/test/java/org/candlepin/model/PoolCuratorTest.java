@@ -2242,4 +2242,37 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertEquals(pool.getShared().longValue(), 5);
         assertEquals(pool.getExported().longValue(), 0);
     }
+
+    @Test
+    public void testFetchSharedPoolsOf() {
+        consumer = TestUtil.createConsumer(owner);
+        ConsumerType share = new ConsumerType("share");
+        consumer.setType(share);
+        consumerTypeCurator.create(share);
+        consumerCurator.create(consumer);
+
+        Pool pool = createPool(owner, product, 1L,
+            TestUtil.createDate(2011, 3, 2), TestUtil.createDate(2055, 3, 2));
+        poolCurator.create(pool);
+        Pool pool2 = createPool(owner, product, 1L,
+            TestUtil.createDate(2011, 3, 2), TestUtil.createDate(2055, 3, 2));
+        poolCurator.create(pool2);
+
+        Entitlement sourceEnt = new Entitlement(pool, consumer, 1);
+        sourceEnt.setId(Util.generateDbUUID());
+        entitlementCurator.create(sourceEnt);
+
+        pool.getEntitlements().add(sourceEnt);
+        poolCurator.merge(pool);
+
+        Pool sharedPool = createPool(owner, product, 1L,
+            TestUtil.createDate(2011, 3, 2), TestUtil.createDate(2055, 3, 2));
+        sharedPool.setAttribute(Pool.Attributes.SHARE, "true");
+        sharedPool.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
+        sharedPool.setSourceEntitlement(sourceEnt);
+        poolCurator.create(sharedPool);
+
+        Pool result = poolCurator.listSharedPoolsOf(pool).get(0);
+        assertEquals(sharedPool, result);
+    }
 }
