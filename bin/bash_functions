@@ -163,10 +163,19 @@ recreate_mysql() {
 
 init_mysql_jdbc() {
     local db_name="$1"
+    local db_user="${2:-$db_name}"
     local db_host="${DBHOSTNAME:-localhost}"
+    local password="$DBPASSWORD"
+    [ -z "$password" ] && password=''
     JDBC_DRIVER="com.mysql.jdbc.Driver"
     JDBC_JAR="/usr/share/java/mysql-connector-java.jar"
     JDBC_URL="jdbc:mysql://$db_host/$db_name"
+
+    local isolation_level=$(mysql -h $db_host $db_name  --user=$db_user --password="$password"  -e 'select @@global.tx_isolation')
+    local READ_COMMITTED="READ-COMMITTED"
+    if [[ $isolation_level != *$READ_COMMITTED* ]]; then
+        err_msg "WARNING: candlepin requires READ-COMMITTED isolation level"
+    fi
 }
 
 recreate_oracle () {
