@@ -442,7 +442,9 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
      */
     @Test
     public void testModifyMarketingProduct() {
-        Collection<String> result = entitlementCurator.batchListModifying(modifierData.getEntitlements(2));
+        Collection<String> result = entitlementCurator
+            .getModifiedEntitlementIds(modifierData.getEntitlements(2));
+
         assertEquals("Entitlement 2 should be modified  by exactly one entitlement", 1, result.size());
         String e6Id = modifierData.getEntitlementId(6);
         assertEquals("Entitlement 6 should modify entitlement 2", e6Id, result.iterator().next());
@@ -454,7 +456,9 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
      */
     @Test
     public void testModifyShouldntIncludeInput() {
-        Collection<String> result = entitlementCurator.batchListModifying(modifierData.getEntitlements(2, 6));
+        Collection<String> result = entitlementCurator
+            .getModifiedEntitlementIds(modifierData.getEntitlements(2, 6));
+
         assertEquals(0, result.size());
     }
 
@@ -469,8 +473,9 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
      */
     @Test
     public void testOutNonExpired() {
-        Collection<String> result = entitlementCurator.
-            batchListModifying(modifierData.getEntitlements(3, 13));
+        Collection<String> result = entitlementCurator
+            .getModifiedEntitlementIds(modifierData.getEntitlements(3, 13));
+
         assertEquals("Entitlements 3 and 13 are modified by entitlements 1,6, 11, 16. 1 and 11 is expired!",
             2, result.size());
         String e6Id = modifierData.getEntitlementId(6);
@@ -488,9 +493,11 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
      */
     @Test
     public void testEntitlementThatDoesntOverlap() {
-        Collection<String> result = entitlementCurator.batchListModifying(modifierData.getEntitlements(17));
+        Collection<String> result = entitlementCurator
+            .getModifiedEntitlementIds(modifierData.getEntitlements(17));
+
         assertEquals("Entitlement 17 shouldn't overlap with any entitlements.", 0, result.size());
-        result = entitlementCurator.batchListModifying(modifierData.getEntitlements(19));
+        result = entitlementCurator.getModifiedEntitlementIds(modifierData.getEntitlements(19));
         assertEquals("Entitlement 19 should overlap with 15", 1, result.size());
     }
 
@@ -500,7 +507,9 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
      */
     @Test
     public void testModifyOnlyConsumers() {
-        Collection<String> result = entitlementCurator.batchListModifying(modifierData.getEntitlements(3, 8));
+        Collection<String> result = entitlementCurator
+            .getModifiedEntitlementIds(modifierData.getEntitlements(3, 8));
+
         assertEquals("Entitlements 3, 8 are modified by entitlements 6, 4 and 5", 3, result.size());
         String e6Id = modifierData.getEntitlementId(6);
         String e4Id = modifierData.getEntitlementId(4);
@@ -520,7 +529,8 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     @Test
     public void testModifyConsumerDoesntHaveEntitlement() {
         Collection<String> result = entitlementCurator
-            .batchListModifying(modifierData.getEntitlements(18, 19));
+            .getModifiedEntitlementIds(modifierData.getEntitlements(18, 19));
+
         assertEquals(1, result.size());
         String e15id = modifierData.getEntitlementId(15);
         assertEquals("Expected entitlement is E15", e15id, result.iterator().next());
@@ -530,9 +540,8 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     public void batchListModifying() {
         prepareEntitlementsForModifying();
 
-        Collection<String> entIds = entitlementCurator.batchListModifying(
-            Arrays.asList(ent1modif, ent2modif)
-        );
+        Collection<String> entIds = entitlementCurator.getModifiedEntitlementIds(
+            Arrays.asList(ent1modif, ent2modif));
 
         assertEquals(2, entIds.size());
 

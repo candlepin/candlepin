@@ -30,6 +30,7 @@ import org.hibernate.Filter;
 import org.hibernate.Hibernate;
 import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
+import org.hibernate.Session;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Disjunction;
@@ -1048,7 +1049,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @param pools pools to delete
      * @param alreadyDeletedPools pools to skip, they have already been deleted.
      */
-    public void batchDelete(Collection<Pool> pools, Set<String> alreadyDeletedPools) {
+    public void batchDelete(Collection<Pool> pools, Collection<String> alreadyDeletedPools) {
         if (alreadyDeletedPools == null) {
             alreadyDeletedPools = new HashSet<String>();
         }
@@ -1117,6 +1118,113 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
         crit.addOrder(Order.asc("id"));
         return crit.list();
+    }
+
+    /**
+     * Fetches the IDs of the derived pools for the given pool IDs. If the provided pool IDs do not
+     * have any derived pools, this method returns an empty collection.
+     *
+     * @param poolIds
+     *  A collection of pool IDs for which to retrieve derived pool IDs
+     *
+     * @return
+     *  A collection of pool IDs for pools derived from the given pool IDs
+     */
+    @SuppressWarnings("unchecked")
+    public Set<String> getDerivedPoolIdsForPools(Collection<String> poolIds) {
+        Set<String> output = new HashSet<String>();
+
+        if (poolIds != null && !poolIds.isEmpty()) {
+            // TODO: Update this method to use the pool hierarchy columns when they're available
+            Session session = this.currentSession();
+
+            Collection<String> pids = session.createCriteria(SourceSubscription.class, "s")
+                .createAlias("s.pool", "p")
+                .add(Restrictions.eq("s.subscriptionSubKey", "master"))
+                .add(CPRestrictions.in("p.id", poolIds))
+                .setProjection(Projections.distinct(Projections.property("p.id")))
+                .list();
+
+            if (pids != null && !pids.isEmpty()) {
+                output.addAll(session.createCriteria(SourceSubscription.class, "s")
+                    .createAlias("s.pool", "p")
+                    .add(Restrictions.ne("s.subscriptionSubKey", "master"))
+                    .add(CPRestrictions.in("p.id", poolIds))
+                    .setProjection(Projections.distinct(Projections.property("p.id")))
+                    .list());
+            }
+        }
+
+        return output;
+    }
+
+    /**
+     * Fetches the entitlement IDs for the pools specified by the given pool IDs. If there are no
+     * entitlements linked to the given pool IDs, this method returns an empty collection.
+     *
+     * @param poolIds
+     *  A collection of pool IDs for which to retrieve entitlement IDs
+     *
+     * @return
+     *  A collection of entitlement IDs for the pools specified for the given pool IDs
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<String> getEntitlementIdsForPools(Collection<String> poolIds) {
+        if (poolIds != null && !poolIds.isEmpty()) {
+            return this.currentSession().createCriteria(Pool.class, "p")
+                .createAlias("p.entitlements", "e")
+                .add(CPRestrictions.in("p.id", poolIds))
+                .setProjection(Projections.distinct(Projections.property("e.id")))
+                .list();
+        }
+
+        return new LinkedList<String>();
+    }
+
+    /**
+     * Fetches the pool IDs for the pools derived from any of the entitlements specified by the
+     * provided entitlement IDs. If there are no pools derived from the given entitlements, this
+     * method returns an empty collection.
+     *
+     * @param entIds
+     *  A collection of entitlement IDs for which to fetch derived pools
+     *
+     * @return
+     *  A collection of pool IDs for pools derived from the given entitlement IDs
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<String> getPoolIdsForSourceEntitlements(Collection<String> entIds) {
+        if (entIds != null && !entIds.isEmpty()) {
+            return this.currentSession().createCriteria(Pool.class, "p")
+                .createAlias("p.sourceEntitlement", "e")
+                .add(CPRestrictions.in("e.id", entIds))
+                .setProjection(Projections.distinct(Projections.property("e.id")))
+                .list();
+        }
+
+        return new LinkedList<String>();
+    }
+
+    /**
+     * Fetches the IDs of the pools to which these entitlements provide access.
+     *
+     * @param entIds
+     *  A collection of entitlement IDs for which to fetch pool IDs
+     *
+     * @return
+     *  A collection of IDs of the pools for the given entitlement IDs
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<String> getPoolIdsForEntitlements(Collection<String> entIds) {
+        if (entIds != null && !entIds.isEmpty()) {
+            return this.currentSession().createCriteria(Entitlement.class, "e")
+                .createAlias("e.pool", "p")
+                .add(CPRestrictions.in("e.id", entIds))
+                .setProjection(Projections.distinct(Projections.property("p.id")))
+                .list();
+        }
+
+        return new LinkedList<String>();
     }
 
     @SuppressWarnings("unchecked")
