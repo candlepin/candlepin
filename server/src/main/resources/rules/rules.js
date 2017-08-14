@@ -1,4 +1,4 @@
-// Version: 5.24.1
+// Version: 5.26
 
 /*
  * Default Candlepin rule set.
@@ -64,6 +64,7 @@ var REQUIRES_CONSUMER_TYPE_ATTRIBUTE = "requires_consumer_type";
 var VIRT_ONLY = "virt_only";
 var PHYSICAL_ONLY = "physical_only";
 var POOL_DERIVED = "pool_derived";
+var SHARE_DERIVED = "share_derived";
 var UNMAPPED_GUESTS_ONLY = "unmapped_guests_only";
 var GUEST_LIMIT_ATTRIBUTE = "guest_limit";
 var VCPU_ATTRIBUTE = "vcpu";
@@ -325,7 +326,7 @@ function get_mock_ent_for_pool(pool, consumer) {
 }
 
 function get_pool_priority(pool, consumer) {
-    var priority = 0;
+    var priority = 100;
     // use virt only if possible
     // if the consumer is not virt, the pool will have been filtered out
     if (Utils.equalsIgnoreCase(pool.getProductAttribute(VIRT_ONLY), "true")) {
@@ -334,6 +335,11 @@ function get_pool_priority(pool, consumer) {
     // better still if host_specific
     if (pool.getAttribute(REQUIRES_HOST_ATTRIBUTE) !== null) {
         priority += 150;
+    }
+
+    // Decrease the priority of shared pools slightly so that non-shared pools will get consumed first.
+    if (Utils.equalsIgnoreCase('true', pool.getAttribute(SHARE_DERIVED))) {
+        priority -= 10;
     }
     /*
      * Special case to match socket counts exactly if possible.  We don't want to waste a pair
