@@ -21,16 +21,13 @@ import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 
 /**
  * Represents certificate used to identify a consumer
@@ -52,9 +49,6 @@ public class IdentityCertificate extends RevocableCertificate implements Certifi
     @NotNull
     private String id;
 
-    @OneToOne(mappedBy = "idCert", fetch = FetchType.LAZY)
-    private Consumer consumer;
-
     public String getId() {
         return id;
     }
@@ -67,15 +61,6 @@ public class IdentityCertificate extends RevocableCertificate implements Certifi
         this.setKey(other.getKey());
         this.setCert(other.getCert());
         this.setSerial(other.getSerial());
-    }
-
-    @XmlTransient
-    public Consumer getConsumer() {
-        return consumer;
-    }
-
-    public void setConsumer(Consumer consumer) {
-        this.consumer = consumer;
     }
 
 }
