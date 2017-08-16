@@ -29,15 +29,23 @@ describe 'Subscription Resource' do
       @cp.list_subscriptions(@owner['key']).size.should == 0
   end
 
-  it 'should fabricate subscriptions originating from multiplier products correctly and with branding' do
-      b1 = {:productId => 'prodid1',
-        :type => 'type1', :name => 'branding1'}
-      b2 = {:productId => 'prodid2',
-        :type => 'type2', :name => 'branding2'}
-      created = create_pool_and_subscription(@owner['key'], @some_product.id, 11,
-        [], '', '', '', nil, nil, false, :branding => [b1,b2])
-      sub = @cp.get_subscription(created['subscriptionId'])
-      sub.quantity.should == 11
-      sub.branding.size.should == 2
+  it 'should not allow clients to fetch subscriptions using id' do
+      pool = create_pool_and_subscription(@owner['key'], @one_more_product.id, 2)
+      begin
+          @cp.get_subscription(pool['subscriptionId'])
+          fail("Should not allow to fetch subscription")
+      rescue URI::InvalidURIError => e
+          e.to_s.eql? "bad URI(is not URI?): pools/{pool_id}"
+      end
+  end
+
+  it 'should not allow clients to fetch subscription cert using subscription id' do
+      pool = create_pool_and_subscription(@owner['key'], @one_more_product.id, 2)
+      begin
+          @cp.get_subscription_cert(pool['subscriptionId'])
+          fail("Should not allow to fetch subscription")
+      rescue URI::InvalidURIError => e
+          e.to_s.eql? "bad URI(is not URI?): pools/{pool_id}/cert"
+      end
   end
 end

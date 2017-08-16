@@ -32,6 +32,7 @@ import org.candlepin.common.exceptions.ConflictException;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.IseException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.common.exceptions.ResourceMovedException;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.common.paging.Paginate;
@@ -1084,16 +1085,7 @@ public class OwnerResource {
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
     public void updateSubscription(
         @ApiParam(name = "subscription", required = true) Subscription subscription) {
-        Pool existingPool = this.poolManager.getMasterPoolBySubscriptionId(subscription.getId());
-        if (existingPool == null) {
-            throw new NotFoundException(i18n.tr(
-                "Unable to find a subscription with the ID ''{0}''.", subscription.getId()
-            ));
-        }
-        Pool updatedPool = this.poolManager.convertToMasterPool(subscription);
-        updatedPool.setId(existingPool.getId());
-        updatePool(subscription.getOwner().getKey(), updatedPool);
-
+        throw new ResourceMovedException("owners/{owner_key}/pools");
     }
 
     /**
@@ -1214,6 +1206,13 @@ public class OwnerResource {
         if (currentPool.getType() != PoolType.NORMAL ||
             newPool.getType() != PoolType.NORMAL) {
             throw new BadRequestException(i18n.tr("Cannot update bonus pools, as they are auto generated"));
+        }
+
+
+        if (currentPool.isCreatedByShare() ||
+            newPool.isCreatedByShare()) {
+            throw new BadRequestException(i18n.tr("Cannot update shared pools, This should be triggered " +
+                "by updating the share entitlement instead"));
         }
 
         /*

@@ -1967,7 +1967,10 @@ public class CandlepinPoolManager implements PoolManager {
             }
 
             poolsToDelete.add(pool);
-            entitlementsToRevoke.addAll(pool.getEntitlements());
+            for (Entitlement e: pool.getEntitlements()) {
+                e.setDeletedFromPool(true);
+                entitlementsToRevoke.add(e);
+            }
         }
 
         // Look up the related pools for these subscription IDs.
@@ -2184,11 +2187,6 @@ public class CandlepinPoolManager implements PoolManager {
         return this.poolCurator.getPoolsBySubscriptionId(subscriptionId);
     }
 
-    @Override
-    public Pool getMasterPoolBySubscriptionId(String subscriptionId) {
-        return this.poolCurator.getMasterPoolBySubscriptionId(subscriptionId);
-    }
-
     /**
      * @{inheritDoc}
      */
@@ -2288,7 +2286,10 @@ public class CandlepinPoolManager implements PoolManager {
         // Remove the standalone config check and replace it with a check for whether or not the
         // pool is non-custom  -- however we decide to implement that in the future.
 
-        return pool != null && pool.getSourceSubscription() != null && !pool.getType().isDerivedType() &&
+        return pool != null &&
+            pool.getSourceSubscription() != null &&
+            !pool.getType().isDerivedType() &&
+            !pool.isCreatedByShare() &&
             (pool.getUpstreamPoolId() != null || !this.config.getBoolean(ConfigProperties.STANDALONE, true));
     }
 }

@@ -161,6 +161,27 @@ describe 'Pool Resource' do
 
   end
 
+  it 'deletes child pools upon parent deletion' do
+    owner1 = create_owner random_string('test_owner')
+    product = create_product(nil, nil,
+      {
+        :attributes => {:virt_limit => '10'},
+	:owner => owner1['key']
+      }
+    )
+
+    master_pool = create_pool_and_subscription(owner1['key'], product.id, 10)
+    pools = @cp.list_owner_pools(owner1['key'])
+    bonus_pools  = pools.select do |p|
+      p['type'] != 'NORMAL'
+    end
+    @cp.delete_pool(master_pool['id'])
+
+    lambda {
+      @cp.get_pool(bonus_pools[0]['id'])
+    }.should raise_exception(RestClient::ResourceNotFound)
+  end
+
   it 'should return calculated attributes' do
     owner = create_owner random_string('test_owner')
     product = create_product(nil, random_string('some_product'), :owner => owner['key'])
@@ -233,4 +254,18 @@ describe 'Pool Resource' do
     ent_deleted_events.size.should eq(0)
   end
 
+  it 'should create pools originating from multiplier products correctly and with branding' do
+      b1 = {:productId => 'prodid1',
+        :type => 'type1', :name => 'branding1'}
+      b2 = {:productId => 'prodid2',
+        :type => 'type2', :name => 'branding2'}
+      owner = create_owner random_string('some-owner')
+      name = random_string("product-")
+      product = create_product(name, name, :owner => owner['key'])
+      created = create_pool_and_subscription(owner['key'], product.id, 11,
+        [], '', '', '', nil, nil, false, :branding => [b1,b2])
+      pool = @cp.get_pool(created['id'])
+      pool.quantity.should == 11
+      pool.branding.size.should == 2
+  end
 end

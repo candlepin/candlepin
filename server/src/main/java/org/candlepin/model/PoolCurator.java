@@ -1126,6 +1126,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return currentSession().createCriteria(Pool.class)
             .createAlias("sourceSubscription", "sourceSub", JoinType.LEFT_OUTER_JOIN)
             .add(Restrictions.eq("sourceSub.subscriptionId", subId))
+            .add(Restrictions.eq("hasSharedAncestor", Boolean.FALSE))
             .addOrder(Order.asc("id"))
             .list();
     }
@@ -1135,17 +1136,9 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return currentSession().createCriteria(Pool.class)
             .createAlias("sourceSubscription", "sourceSub", JoinType.LEFT_OUTER_JOIN)
             .add(CPRestrictions.in("sourceSub.subscriptionId", subIds))
+            .add(Restrictions.eq("hasSharedAncestor", Boolean.FALSE))
             .addOrder(Order.asc("id"))
             .list();
-    }
-
-    @SuppressWarnings("unchecked")
-    public Pool getMasterPoolBySubscriptionId(String subscriptionId) {
-        return (Pool) currentSession().createCriteria(Pool.class)
-            .createAlias("sourceSubscription", "srcsub", JoinType.LEFT_OUTER_JOIN)
-            .add(Restrictions.eq("srcsub.subscriptionId", subscriptionId))
-            .add(Restrictions.eq("srcsub.subscriptionSubKey", "master"))
-            .uniqueResult();
     }
 
     @SuppressWarnings("unchecked")
@@ -1684,7 +1677,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 currentSession().createCriteria(Pool.class)
                     .createAlias("sourceEntitlement", "se")
                     .createAlias("se.pool", "sep")
-                    .add(Restrictions.and(Restrictions.eq("type", PoolType.SHARE_DERIVED)))
+                    .add(Restrictions.and(Restrictions.eq("createdByShare", Boolean.TRUE)))
                     .add(Restrictions.and(Restrictions.eq("se.pool", pool)))
                     .addOrder(Order.desc("created")));
     }

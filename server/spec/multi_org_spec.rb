@@ -193,6 +193,25 @@ describe "Multi Org Shares" do
     end.to raise_error(RestClient::ResourceNotFound)
   end
 
+  it 'survives refresh on both orgs' do
+    name = random_string('name')
+    id = random_string('id')
+    create_product(id, name, :owner => @owner1['key'])
+    pp = create_product(nil, nil, :owner => @owner1['key'])
+    dp = create_product(nil, nil, :owner => @owner1['key'])
+    dpp = create_product(nil, nil, :owner => @owner1['key'])
+    pool = create_pool_and_subscription(@owner1['key'], id, 10, [pp.id],
+        'blah', 'blah', 'blah', nil, nil, false, {:derived_product_id => dp.id, :derived_provided_products => [dpp.id]})
+    ent = @user_client.consume_pool(pool['id'], :uuid => share_consumer['uuid'])[0]
+    pool = @cp.get_pool(pool['id'])
+    owner1_prod = @user_client.get_product(@owner1['key'], id)
+    recipient_pools = @cp.list_owner_pools(@owner2['key'])
+    shared_pool = recipient_pools[0]
+    @cp.refresh_pools(@owner1['key'])
+    @cp.refresh_pools(@owner2['key'])
+    @cp.get_pool(shared_pool['id'])
+  end
+
   it 'binds a pool to a share consumer' do
     name = random_string('name')
     id = random_string('id')
@@ -220,7 +239,9 @@ describe "Multi Org Shares" do
     recipient_pools = @cp.list_owner_pools(@owner2['key'])
     expect(recipient_pools.length).to eq(1)
     shared_pool = recipient_pools[0]
-    expect(shared_pool.type).to eq('SHARE_DERIVED')
+    expect(shared_pool.createdByShare).to_s.eql? "true"
+    #verify type is maintained
+    expect(shared_pool.type).to eq('NORMAL')
     #verify all products are copied
     expect(shared_pool.productId).to eq(pool.productId)
     expect(shared_pool.derivedProductId).to eq(pool.derivedProductId)
@@ -231,7 +252,6 @@ describe "Multi Org Shares" do
 
 
     attributes = recipient_pools.first['attributes']
-    expect(attributes.select { |a| a['name'] == 'share_derived' && a['value'] == 'true'}).not_to be_empty
     expect(attributes.select { |a| a['name'] == 'pool_derived' && a['value'] == 'true'}).not_to be_empty
 
     expect(shared_pool.subscriptionId).to eq(pool.subscriptionId)
@@ -255,7 +275,8 @@ describe "Multi Org Shares" do
     recipient_pools = @cp.list_owner_pools(@owner2['key'])
     expect(recipient_pools.length).to eq(1)
     shared_pool = recipient_pools[0]
-    expect(shared_pool.type).to eq('SHARE_DERIVED')
+    expect(shared_pool.createdByShare).to_s.eql? "true"
+    expect(shared_pool.type).to eq('NORMAL')
     consumer = consumer_client(@user_client, random_string("consumer"), :system, 'user',
         facts = {}, @owner2['key'])
     expect do
@@ -272,7 +293,8 @@ describe "Multi Org Shares" do
     recipient_pools = @cp.list_owner_pools(@owner2['key'])
     expect(recipient_pools.length).to eq(1)
     shared_pool = recipient_pools[0]
-    expect(shared_pool.type).to eq('SHARE_DERIVED')
+    expect(shared_pool.createdByShare).to_s.eql? "true"
+    expect(shared_pool.type).to eq('NORMAL')
     expect(shared_pool.quantity).to eq(2)
     @cp.update_entitlement({:id => ent.id, :quantity => 1})
     expect(@cp.get_pool(shared_pool['id']).quantity).to eq(1)
@@ -287,7 +309,8 @@ describe "Multi Org Shares" do
     recipient_pools = @cp.list_owner_pools(@owner2['key'])
     expect(recipient_pools.length).to eq(1)
     shared_pool = recipient_pools[0]
-    expect(shared_pool.type).to eq('SHARE_DERIVED')
+    expect(shared_pool.createdByShare).to_s.eql? "true"
+    expect(shared_pool.type).to eq('NORMAL')
     @cp.revoke_all_entitlements(share_consumer['uuid'])
     expect do
       puts @cp.get_pool(shared_pool['id'])
@@ -318,8 +341,7 @@ describe "Multi Org Shares" do
     expect(@user_client.list_pool_entitlements(pool['id'])).not_to be_empty
     recipient_pools = @cp.list_owner_pools(@owner2['key'])
     expect(recipient_pools).not_to be_empty
-    attributes = recipient_pools.first['attributes']
-    expect(attributes.select { |a| a['name'] == 'share_derived' && a['value'] == 'true'}).not_to be_empty
+    expect(recipient_pools.first.createdByShare).to_s.eql? "true"
     # Owner 2 should continue to use its own version of the product
     owner2_prod = @user_client.get_product(@owner2['key'], id)
     expect(owner2_prod['id']).to eq(owner1_prod['id'])
@@ -566,7 +588,7 @@ describe "Multi Org Shares" do
     expect(recipient_pools.length).to eq(1)
     shared_pool = recipient_pools[0]
     expect(shared_pool.quantity).to eq(5)
-    expect(shared_pool.type).to eq('SHARE_DERIVED')
+    expect(shared_pool.createdByShare).to_s.eql? "true"
 
     consumer1 = @user_client.register(
        random_string('consumer'), :system, nil, {}, nil, @owner2['key'])
@@ -580,7 +602,6 @@ describe "Multi Org Shares" do
     expect(pool.consumed).to eq(5)
     shared_pool = @cp.get_pool(shared_pool['id'])
     expect(shared_pool.quantity).to eq(5)
-
     pool.quantity = 3
     @cp.update_pool(@owner1['key'], pool)
     pool = @cp.get_pool(pool['id'])
@@ -610,7 +631,7 @@ describe "Multi Org Shares" do
     expect(recipient_pools.length).to eq(1)
     shared_pool = recipient_pools[0]
     expect(shared_pool.quantity).to eq(5)
-    expect(shared_pool.type).to eq('SHARE_DERIVED')
+    expect(shared_pool.createdByShare).to_s.eql? "true"
 
     consumer1 = @user_client.register(
        random_string('consumer'), :system, nil, {}, nil, @owner2['key'])
@@ -652,7 +673,7 @@ describe "Multi Org Shares" do
     expect(recipient_pools.length).to eq(1)
     shared_pool = recipient_pools[0]
     expect(shared_pool.quantity).to eq(5)
-    expect(shared_pool.type).to eq('SHARE_DERIVED')
+    expect(shared_pool.createdByShare).to_s.eql? "true"
 
     consumer1 = @user_client.register(
        random_string('consumer'), :system, nil, {}, nil, @owner2['key'])

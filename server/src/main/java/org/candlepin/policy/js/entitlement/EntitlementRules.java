@@ -275,7 +275,7 @@ public class EntitlementRules implements Enforcer {
         }
         List<Owner> potentialOwners = new ArrayList<Owner>(Arrays.asList(consumer.getOwner()));
         for (Pool p : pools) {
-            if (p.getType() == Pool.PoolType.SHARE_DERIVED) {
+            if (p.isCreatedByShare()) {
                 potentialOwners.add(p.getSourceEntitlement().getOwner());
             }
         }
@@ -421,7 +421,7 @@ public class EntitlementRules implements Enforcer {
         else if (pool.getType() == Pool.PoolType.DEVELOPMENT) {
             result.addError(EntitlementRulesTranslator.PoolErrorKeys.SHARING_DEVELOPMENT_POOL);
         }
-        else if (pool.getType() == Pool.PoolType.SHARE_DERIVED) {
+        else if (pool.isCreatedByShare()) {
             result.addError(EntitlementRulesTranslator.PoolErrorKeys.SHARING_A_SHARE);
         }
     }
@@ -680,7 +680,8 @@ public class EntitlementRules implements Enforcer {
                 sharedPool.setAttribute(entry.getKey(), entry.getValue());
             }
             sharedPool.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
-            sharedPool.setAttribute(Pool.Attributes.SHARE, "true");
+            sharedPool.setCreatedByShare(Boolean.TRUE);
+            sharedPool.setHasSharedAncestor(Boolean.TRUE);
 
             for (Branding b : sourcePool.getBranding()) {
                 sharedPool.getBranding().add(new Branding(b.getProductId(), b.getType(),

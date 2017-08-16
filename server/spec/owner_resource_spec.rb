@@ -101,10 +101,10 @@ describe 'Owner Resource' do
     tomorrow = (DateTime.now + 1)
     poolOrSub.startDate = tomorrow
     update_pool_or_subscription(poolOrSub)
-    updatedSub = @cp.get_subscription(pool.subscriptionId)
+    updatedPool = @cp.get_pool(pool.id)
 
     # parse the received start date and convert it back to our local time zone
-    startDate = DateTime.strptime(updatedSub.startDate).new_offset(tomorrow.offset)
+    startDate = DateTime.strptime(updatedPool.startDate).new_offset(tomorrow.offset)
 
     expect(startDate.to_s).to eq(tomorrow.to_s)
   end
