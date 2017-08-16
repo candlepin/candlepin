@@ -45,6 +45,7 @@ done
 cd $DIR
 docker-compose $PROJ_NAME stop
 docker-compose $PROJ_NAME rm -f
+docker-compose $COMPOSE_ARGS pull
 docker-compose $PROJ_NAME $COMPOSE_ARGS run --rm candlepin $TEST_CMD
 RETVAL=$?
 docker-compose $PROJ_NAME down
