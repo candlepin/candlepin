@@ -117,8 +117,13 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         /** Attribute used to determine which specific host the pool was created for */
         public static final String REQUIRES_HOST = "requires_host";
 
-        /** Attribute used to determine if a pool was created by sharing */
-        public static final String SHARE = "share_derived";
+        /** Attribute used to determine if a pool was created by a direct share. It is different from
+         * CREATED_BY_SHARE as the latter includes descendants of SHARED_POOLs as well */
+        public static final String SHARED_POOL = "shared_pool";
+
+        /** Attribute used to determine if a pool was created because of sharing, includes pools directly
+         * shared (SHARED_POOLs) and their children in the recipient org */
+        public static final String CREATED_BY_SHARE = "created_by_share";
 
         /** Attribute for specifying the source pool from which a derived pool originates */
         public static final String SOURCE_POOL_ID = "source_pool_id";
@@ -156,7 +161,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         NORMAL,
         ENTITLEMENT_DERIVED,
         STACK_DERIVED,
-        SHARE_DERIVED,
+        SHARED_POOL,
         BONUS,
         UNMAPPED_GUEST,
         DEVELOPMENT;
@@ -171,7 +176,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
             switch (this) {
                 case ENTITLEMENT_DERIVED:
                 case STACK_DERIVED:
-                case SHARE_DERIVED:
+                case SHARED_POOL:
                     return true;
 
                 default:
@@ -557,6 +562,12 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      */
     public void setShared(Long shared) {
         this.shared = shared;
+    }
+
+    @JsonIgnore
+    public boolean createdByShare() {
+        return hasAttribute(Attributes.CREATED_BY_SHARE) &&
+            getAttributeValue(Attributes.CREATED_BY_SHARE).contentEquals("true");
     }
 
     /**
@@ -1262,8 +1273,8 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
             if (hasAttribute(Attributes.UNMAPPED_GUESTS_ONLY)) {
                 return PoolType.UNMAPPED_GUEST;
             }
-            else if (hasAttribute(Attributes.SHARE)) {
-                return PoolType.SHARE_DERIVED;
+            else if (hasAttribute(Attributes.SHARED_POOL)) {
+                return PoolType.SHARED_POOL;
             }
             else if (getSourceEntitlement() != null) {
                 return PoolType.ENTITLEMENT_DERIVED;

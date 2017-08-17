@@ -102,7 +102,8 @@ public class PoolHelper {
                     pool.getAccountNumber(),
                     pool.getOrderNumber(),
                     productCurator.getPoolProvidedProductsCached(pool),
-                    sourceEntitlements.get(pool.getId()));
+                    sourceEntitlements.get(pool.getId()),
+                    pool.createdByShare());
             }
             else {
                 // If a derived product is on the pool, we want to define the
@@ -121,7 +122,8 @@ public class PoolHelper {
                     pool.getAccountNumber(),
                     pool.getOrderNumber(),
                     productCurator.getPoolDerivedProvidedProductsCached(pool),
-                    sourceEntitlements.get(pool.getId()));
+                    sourceEntitlements.get(pool.getId()),
+                    pool.createdByShare());
             }
 
             consumerSpecificPool.setAttribute(Pool.Attributes.REQUIRES_HOST, consumer.getUuid());
@@ -223,7 +225,8 @@ public class PoolHelper {
         Pool pool = createPool(product, sourcePool.getOwner(), quantity,
             sourcePool.getStartDate(), sourcePool.getEndDate(),
             sourcePool.getContractNumber(), sourcePool.getAccountNumber(),
-            sourcePool.getOrderNumber(), new HashSet<Product>(), sourceEntitlement);
+            sourcePool.getOrderNumber(), new HashSet<Product>(), sourceEntitlement,
+            sourcePool.createdByShare());
 
         SourceSubscription srcSub = sourcePool.getSourceSubscription();
         if (srcSub != null && srcSub.getSubscriptionId() != null) {
@@ -255,7 +258,7 @@ public class PoolHelper {
 
     private static Pool createPool(Product product, Owner owner, String quantity, Date startDate,
         Date endDate, String contractNumber, String accountNumber, String orderNumber,
-        Set<Product> providedProducts, Entitlement sourceEntitlement) {
+        Set<Product> providedProducts, Entitlement sourceEntitlement, boolean createdByShare) {
 
         Long q = Pool.parseQuantity(quantity);
 
@@ -286,6 +289,10 @@ public class PoolHelper {
 
         // temp - we need a way to specify this on the product
         pool.setAttribute(Pool.Attributes.REQUIRES_CONSUMER_TYPE, "system");
+
+        if (createdByShare) {
+            pool.setAttribute(Pool.Attributes.CREATED_BY_SHARE, "true");
+        }
 
         return pool;
     }
