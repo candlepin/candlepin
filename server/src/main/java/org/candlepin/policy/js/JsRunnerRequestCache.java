@@ -14,6 +14,8 @@
  */
 package org.candlepin.policy.js;
 
+import org.candlepin.guice.CandlepinRequestScoped;
+
 import java.util.Date;
 
 
@@ -23,6 +25,7 @@ import java.util.Date;
  * @author fnguyen
  *
  */
+@CandlepinRequestScoped
 public class JsRunnerRequestCache {
 
     private Date updated = null;
