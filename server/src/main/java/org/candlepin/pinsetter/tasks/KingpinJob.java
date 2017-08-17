@@ -19,6 +19,7 @@ import static org.quartz.impl.matchers.NameMatcher.jobNameEquals;
 import org.candlepin.audit.EventSink;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.guice.CandlepinRequestScope;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
 import org.candlepin.pinsetter.core.RetryJobException;
@@ -53,6 +54,7 @@ public abstract class KingpinJob implements Job {
     @Inject protected UnitOfWork unitOfWork;
     @Inject protected Configuration config;
     @Inject private EventSink eventSink;
+    @Inject private CandlepinRequestScope candlepinRequestScope;
 
     protected static String prefix = "job";
 
@@ -60,6 +62,7 @@ public abstract class KingpinJob implements Job {
     public void execute(JobExecutionContext context) throws JobExecutionException {
 
         long startTime = System.currentTimeMillis();
+        candlepinRequestScope.enter();
 
         // Store the job's unique ID in log4j's thread local MDC, which will automatically
         // add it to all log entries executed for this job.
@@ -113,6 +116,7 @@ public abstract class KingpinJob implements Job {
             }
         }
         finally {
+            candlepinRequestScope.exit();
             if (startedUow) {
                 endUnitOfWork();
             }

@@ -36,15 +36,19 @@ import org.quartz.JobExecutionContext;
 
 
 @RunWith(MockitoJUnitRunner.class)
-public class ExportJobTest {
+public class ExportJobTest extends BaseJobTest {
 
     @Mock private ManifestManager manifestManager;
     @Mock private JobExecutionContext ctx;
     private ExportJob job;
 
+
+
     @Before
     public void setupTest() {
+        super.init();
         job = new ExportJob(manifestManager);
+        injector.injectMembers(job);
     }
 
     @Test

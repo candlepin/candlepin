@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2012 Red Hat, Inc.
+ * Copyright (c) 2009 - 2017 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -12,29 +12,24 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.policy.js;
+package org.candlepin.pinsetter.tasks;
 
-import org.candlepin.guice.CandlepinRequestScoped;
-
-import java.util.Date;
-
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import org.candlepin.TestingModules;
 
 /**
- * A request scoped cache that is used to mitigate repeated
- * DB requests for cp_rules.updated column.
- * @author fnguyen
- *
+ * Base class for tests of jobs that need Guice injection
  */
-@CandlepinRequestScoped
-public class JsRunnerRequestCache {
+public class BaseJobTest {
 
-    private Date updated = null;
+    protected Injector injector;
 
-    public void setUpdated(Date updated) {
-        this.updated = updated;
-    }
-
-    public Date getUpdated() {
-        return updated;
+    public void init() {
+        injector = Guice.createInjector(
+                new TestingModules.MockJpaModule(),
+                new TestingModules.ServletEnvironmentModule(),
+                new TestingModules.StandardTest()
+        );
     }
 }
