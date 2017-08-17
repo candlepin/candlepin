@@ -58,7 +58,7 @@ import java.util.Locale;
 /**
  * EntitlerJobTest
  */
-public class EntitlerJobTest {
+public class EntitlerJobTest extends BaseJobTest{
 
     private String consumerUuid;
     private Consumer consumer;
@@ -68,6 +68,7 @@ public class EntitlerJobTest {
 
     @Before
     public void init() {
+        super.init();
         consumerUuid = "49bd6a8f-e9f8-40cc-b8d7-86cafd687a0e";
         consumer = new Consumer("Test Consumer", "test-consumer", new Owner("test-owner"),
             new ConsumerType("system"));
@@ -114,6 +115,7 @@ public class EntitlerJobTest {
             .thenReturn(ents);
 
         EntitlerJob job = new EntitlerJob(e, null, pC, null);
+        injector.injectMembers(job);
         job.execute(ctx);
         verify(e).bindByPoolQuantities(eq(consumerUuid), anyMapOf(String.class, Integer.class));
         verify(e).sendEvents(eq(ents));
@@ -169,6 +171,7 @@ public class EntitlerJobTest {
             .thenThrow(new ForbiddenException("job should fail"));
 
         EntitlerJob job = new EntitlerJob(e, null, null, null);
+        injector.injectMembers(job);
         job.execute(ctx);
     }
 
@@ -188,6 +191,7 @@ public class EntitlerJobTest {
             .thenThrow(new EntitlementRefusedException(mapResult));
 
         EntitlerJob job = new EntitlerJob(e, null, pC, i18n);
+        injector.injectMembers(job);
         Pool p = new Pool();
         p.setId("hello");
 

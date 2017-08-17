@@ -18,6 +18,7 @@ import static org.mockito.Mockito.*;
 
 import org.candlepin.model.JobCurator;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Date;
@@ -26,12 +27,18 @@ import java.util.Date;
 /**
  * JobCleanerTest
  */
-public class JobCleanerTest {
+public class JobCleanerTest extends BaseJobTest{
+
+    @Before
+    public void init() {
+        super.init();
+    }
 
     @Test
     public void execute() throws Exception {
         JobCurator curator = mock(JobCurator.class);
         JobCleaner cleaner = new JobCleaner(curator);
+        injector.injectMembers(cleaner);
         cleaner.execute(null);
         verify(curator).cleanUpOldCompletedJobs(any(Date.class));
         verify(curator).cleanupAllOldJobs(any(Date.class));

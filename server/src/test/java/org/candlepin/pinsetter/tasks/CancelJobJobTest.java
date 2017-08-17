@@ -43,7 +43,7 @@ import java.util.Set;
 /**
  * CancelJobJobTest
  */
-public class CancelJobJobTest {
+public class CancelJobJobTest extends BaseJobTest{
     private CancelJobJob cancelJobJob;
     @Mock private JobCurator j;
     @Mock private PinsetterKernel pk;
@@ -52,8 +52,10 @@ public class CancelJobJobTest {
 
     @Before
     public void init() {
+        super.init();
         MockitoAnnotations.initMocks(this);
         cancelJobJob = new CancelJobJob(j, pk);
+        injector.injectMembers(cancelJobJob);
     }
 
     @Test

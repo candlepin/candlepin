@@ -44,7 +44,7 @@ import java.util.List;
 /**
  * UnpauseJobTest
  */
-public class UnpauseJobTest {
+public class UnpauseJobTest extends BaseJobTest{
     private UnpauseJob unpauseJob;
     @Mock private JobCurator jobCurator;
     @Mock private PinsetterKernel pk;
@@ -53,8 +53,10 @@ public class UnpauseJobTest {
 
     @Before
     public void init() {
+        super.init();
         MockitoAnnotations.initMocks(this);
         unpauseJob = new UnpauseJob(jobCurator, pk);
+        injector.injectMembers(unpauseJob);
     }
 
     @Test
