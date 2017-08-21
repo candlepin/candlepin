@@ -29,7 +29,8 @@ package org.candlepin.dto;
 public interface ObjectTranslator<I, O> {
 
     /**
-     * Translates the given source object, omitting any nested objects and object collections.
+     * Translates the given source object, omitting any nested objects and object collections from
+     * the resultant output.
      *
      * @param source
      *  The source object to translate
@@ -56,8 +57,8 @@ public interface ObjectTranslator<I, O> {
     O translate(ModelTranslator modelTranslator, I source);
 
     /**
-     * Populates the given destination object with data from the source object, omitting any
-     * nested objects and object collections.
+     * Populates the given destination object with data from the source object, setting any nested
+     * objects or object collections to null or empty values as appropriate.
      *
      * @param source
      *  The source object from which to fetch data
@@ -66,7 +67,10 @@ public interface ObjectTranslator<I, O> {
      *  The destination object to populate
      *
      * @throws IllegalArgumentException
-     *  if either source or destination objects are null
+     *  if source is null
+     *
+     * @throws IllegalArgumentException
+     *  if destination is null
      *
      * @return
      *  The populated destination object
@@ -86,11 +90,64 @@ public interface ObjectTranslator<I, O> {
      *  The destination object to populate
      *
      * @throws IllegalArgumentException
-     *  if either source or destination objects are null
+     *  if source is null
+     *
+     * @throws IllegalArgumentException
+     *  if destination is null
      *
      * @return
      *  The populated destination object
      */
     O populate(ModelTranslator modelTranslator, I source, O destination);
+
+    // We probably don't need these quite yet. At present, only two callers would make use of them
+    // (ProductManager and ContentManager). However, if these would be useful in the future, we
+    // should uncomment these definitions and implement them on the translators.
+
+    // /**
+    //  * Checks if the destination would be changed if populated by the source object, assuming any
+    //  * nested objects or object collections would be set to null.
+    //  *
+    //  * @param source
+    //  *  The source object from which to fetch data
+    //  *
+    //  * @param destination
+    //  *  The destination object to check for changes
+    //  *
+    //  * @throws IllegalArgumentException
+    //  *  if source is null
+    //  *
+    //  * @throws IllegalArgumentException
+    //  *  if destination is null
+    //  *
+    //  * @return
+    //  *  true if the destination object would be changed if populated by the source object; false
+    //  *  otherwise
+    //  */
+    // boolean wouldChange(I source, O destination);
+
+    // /**
+    //  * Checks if the destination would be changed if populated by the source object, using the
+    //  * provided model translator to check nested objects and object collections. If the given
+    //  * translator is null, any nested objects and object collections will be checked as if they
+    //  * are null.
+    //  *
+    //  * @param source
+    //  *  The source object from which to fetch data
+    //  *
+    //  * @param destination
+    //  *  The destination object to check for changes
+    //  *
+    //  * @throws IllegalArgumentException
+    //  *  if source is null
+    //  *
+    //  * @throws IllegalArgumentException
+    //  *  if destination is null
+    //  *
+    //  * @return
+    //  *  true if the destination object would be changed if populated by the source object; false
+    //  *  otherwise
+    //  */
+    // boolean wouldChange(ModelTranslator modelTranslator, I source, O destination);
 
 }

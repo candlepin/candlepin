@@ -79,13 +79,13 @@ public class SimpleModelTranslatorTest {
         ObjectTranslator translator = new TestTranslator();
         ObjectTranslator output;
 
-        output = modelTranslator.getTranslator(ModelEntity.class);
+        output = modelTranslator.getTranslator(ModelEntity.class, TestDTO.class);
         assertNull(output);
 
-        output = modelTranslator.registerTranslator(ModelEntity.class, translator);
+        output = modelTranslator.registerTranslator(translator, ModelEntity.class, TestDTO.class);
         assertNull(output);
 
-        output = modelTranslator.getTranslator(ModelEntity.class);
+        output = modelTranslator.getTranslator(ModelEntity.class, TestDTO.class);
         assertSame(output, translator);
     }
 
@@ -96,16 +96,16 @@ public class SimpleModelTranslatorTest {
         ObjectTranslator translator2 = new TestTranslator();
         ObjectTranslator output;
 
-        output = modelTranslator.registerTranslator(ModelEntity.class, translator1);
+        output = modelTranslator.registerTranslator(translator1, ModelEntity.class, TestDTO.class);
         assertNull(output);
 
-        output = modelTranslator.getTranslator(ModelEntity.class);
+        output = modelTranslator.getTranslator(ModelEntity.class, TestDTO.class);
         assertSame(output, translator1);
 
-        output = modelTranslator.registerTranslator(ModelEntity.class, translator2);
+        output = modelTranslator.registerTranslator(translator2, ModelEntity.class, TestDTO.class);
         assertSame(output, translator1);
 
-        output = modelTranslator.getTranslator(ModelEntity.class);
+        output = modelTranslator.getTranslator(ModelEntity.class, TestDTO.class);
         assertSame(output, translator2);
     }
 
@@ -116,65 +116,148 @@ public class SimpleModelTranslatorTest {
         ObjectTranslator translator2 = new TestTranslator();
         ObjectTranslator output;
 
-        output = modelTranslator.getTranslator(ModelEntity.class);
+        output = modelTranslator.getTranslator(ModelEntity.class, TestDTO.class);
         assertNull(output);
 
-        output = modelTranslator.getTranslator(TestModelEntity.class);
+        output = modelTranslator.getTranslator(TestModelEntity.class, TestDTO.class);
         assertNull(output);
 
         // Register first translator & check state
-        output = modelTranslator.registerTranslator(ModelEntity.class, translator1);
+        output = modelTranslator.registerTranslator(translator1, ModelEntity.class, TestDTO.class);
         assertNull(output);
 
-        output = modelTranslator.getTranslator(ModelEntity.class);
+        output = modelTranslator.getTranslator(ModelEntity.class, TestDTO.class);
         assertSame(output, translator1);
 
-        output = modelTranslator.getTranslator(TestModelEntity.class);
+        output = modelTranslator.getTranslator(TestModelEntity.class, TestDTO.class);
         assertNull(output);
 
         // Register second translator & check state
-        output = modelTranslator.registerTranslator(TestModelEntity.class, translator2);
+        output = modelTranslator.registerTranslator(translator2, TestModelEntity.class, TestDTO.class);
         assertNull(output);
 
-        output = modelTranslator.getTranslator(ModelEntity.class);
+        output = modelTranslator.getTranslator(ModelEntity.class, TestDTO.class);
         assertSame(output, translator1);
 
-        output = modelTranslator.getTranslator(TestModelEntity.class);
+        output = modelTranslator.getTranslator(TestModelEntity.class, TestDTO.class);
         assertSame(output, translator2);
     }
 
     @Test
-    public void testUnregisterTranslator() {
+    public void testUnregisterTranslatorByClass() {
         ModelTranslator modelTranslator = new SimpleModelTranslator();
         ObjectTranslator translator = new TestTranslator();
         ObjectTranslator output;
 
-        output = modelTranslator.registerTranslator(ModelEntity.class, translator);
+        output = modelTranslator.registerTranslator(translator, ModelEntity.class, TestDTO.class);
         assertNull(output);
 
-        output = modelTranslator.getTranslator(ModelEntity.class);
+        output = modelTranslator.getTranslator(ModelEntity.class, TestDTO.class);
         assertSame(output, translator);
 
-        output = modelTranslator.unregisterTranslator(ModelEntity.class);
+        output = modelTranslator.unregisterTranslator(ModelEntity.class, TestDTO.class);
         assertSame(output, translator);
 
-        output = modelTranslator.getTranslator(ModelEntity.class);
+        output = modelTranslator.getTranslator(ModelEntity.class, TestDTO.class);
         assertNull(output);
     }
 
     @Test
-    public void testUnregisterNonexistentTranslator() {
+    public void testUnregisterByClassNonexistentTranslator() {
         ModelTranslator modelTranslator = new SimpleModelTranslator();
         ObjectTranslator output;
 
-        output = modelTranslator.getTranslator(ModelEntity.class);
+        output = modelTranslator.getTranslator(ModelEntity.class, TestDTO.class);
         assertNull(output);
 
         // Note that this is not an error case!
-        output = modelTranslator.unregisterTranslator(ModelEntity.class);
+        output = modelTranslator.unregisterTranslator(ModelEntity.class, TestDTO.class);
         assertNull(output);
 
-        output = modelTranslator.getTranslator(ModelEntity.class);
+        output = modelTranslator.getTranslator(ModelEntity.class, TestDTO.class);
+        assertNull(output);
+    }
+
+    @Test
+    public void testUnregisterTranslatorByClassWrongMapping() {
+        ModelTranslator modelTranslator = new SimpleModelTranslator();
+        ObjectTranslator translator = new TestTranslator();
+        ObjectTranslator output;
+
+        output = modelTranslator.registerTranslator(translator, ModelEntity.class, TestDTO.class);
+        assertNull(output);
+
+        output = modelTranslator.getTranslator(ModelEntity.class, TestDTO.class);
+        assertSame(output, translator);
+
+        output = modelTranslator.unregisterTranslator(ModelEntity.class, TestDTOSubclass.class);
+        assertNull(output);
+
+        output = modelTranslator.getTranslator(ModelEntity.class, TestDTO.class);
+        assertSame(output, translator);
+    }
+
+    @Test
+    public void testUnregisterTranslatorByInstance() {
+        ModelTranslator modelTranslator = new SimpleModelTranslator();
+        ObjectTranslator translator = new TestTranslator();
+        ObjectTranslator output;
+
+        output = modelTranslator.registerTranslator(translator, ModelEntity.class, TestDTO.class);
+        assertNull(output);
+
+        output = modelTranslator.getTranslator(ModelEntity.class, TestDTO.class);
+        assertSame(output, translator);
+
+        int count = modelTranslator.unregisterTranslator(translator);
+        assertEquals(1, count);
+
+        output = modelTranslator.getTranslator(ModelEntity.class, TestDTO.class);
+        assertNull(output);
+    }
+
+    @Test
+    public void testUnregisterTranslatorFromMultipleMappingsByInstance() {
+        ModelTranslator modelTranslator = new SimpleModelTranslator();
+        ObjectTranslator translator = new TestTranslator();
+        ObjectTranslator output;
+
+        output = modelTranslator.registerTranslator(translator, ModelEntity.class, TestDTO.class);
+        assertNull(output);
+
+        output = modelTranslator.registerTranslator(translator, ModelEntity.class, TestDTOSubclass.class);
+        assertNull(output);
+
+        output = modelTranslator.getTranslator(ModelEntity.class, TestDTO.class);
+        assertSame(output, translator);
+
+        output = modelTranslator.getTranslator(ModelEntity.class, TestDTOSubclass.class);
+        assertSame(output, translator);
+
+        int count = modelTranslator.unregisterTranslator(translator);
+        assertEquals(2, count);
+
+        output = modelTranslator.getTranslator(ModelEntity.class, TestDTO.class);
+        assertNull(output);
+
+        output = modelTranslator.getTranslator(ModelEntity.class, TestDTOSubclass.class);
+        assertNull(output);
+    }
+
+    @Test
+    public void testUnregisterByInstanceNonexistentTranslator() {
+        ModelTranslator modelTranslator = new SimpleModelTranslator();
+        ObjectTranslator translator = new TestTranslator();
+        ObjectTranslator output;
+
+        output = modelTranslator.getTranslator(ModelEntity.class, TestDTO.class);
+        assertNull(output);
+
+        // Note that this is not an error case!
+        int count = modelTranslator.unregisterTranslator(translator);
+        assertEquals(0, count);
+
+        output = modelTranslator.getTranslator(ModelEntity.class, TestDTO.class);
         assertNull(output);
     }
 
@@ -184,11 +267,11 @@ public class SimpleModelTranslatorTest {
         ObjectTranslator translator = new TestTranslator();
         ObjectTranslator output;
 
-        output = modelTranslator.registerTranslator(ModelEntity.class, translator);
+        output = modelTranslator.registerTranslator(translator, ModelEntity.class, TestDTO.class);
         assertNull(output);
 
         ModelEntity entity = new TestModelEntity() {};
-        TestDTO dto = modelTranslator.<ModelEntity, TestDTO>translate(entity);
+        TestDTO dto = modelTranslator.translate(entity, TestDTO.class);
 
         assertNotNull(dto);
         assertSame(modelTranslator, dto.getModelTranslator());
@@ -202,7 +285,7 @@ public class SimpleModelTranslatorTest {
         ObjectTranslator translator = new TestTranslator();
 
         ModelEntity entity = new TestModelEntity() {};
-        TestDTO dto = modelTranslator.<ModelEntity, TestDTO>translate(entity);
+        TestDTO dto = modelTranslator.translate(entity, TestDTO.class);
     }
 
     @Test(expected = TranslationException.class)
@@ -212,11 +295,11 @@ public class SimpleModelTranslatorTest {
 
         ObjectTranslator output;
 
-        output = modelTranslator.registerTranslator(TestModelEntityB.class, translator);
+        output = modelTranslator.registerTranslator(translator, TestModelEntityB.class, TestDTO.class);
         assertNull(output);
 
         ModelEntity entity = new TestModelEntity() {};
-        TestDTO dto = modelTranslator.<ModelEntity, TestDTO>translate(entity);
+        TestDTO dto = modelTranslator.translate(entity, TestDTO.class);
     }
 
     @Test
@@ -226,12 +309,12 @@ public class SimpleModelTranslatorTest {
         ObjectTranslator translator2 = new TestTranslator();
         ObjectTranslator translator3 = new TestTranslator();
 
-        modelTranslator.registerTranslator(TestModelEntity.class, translator1);
-        modelTranslator.registerTranslator(ModelEntity.class, translator2);
-        modelTranslator.registerTranslator(TestModelEntityB.class, translator3);
+        modelTranslator.registerTranslator(translator1, TestModelEntity.class, TestDTO.class);
+        modelTranslator.registerTranslator(translator2, ModelEntity.class, TestDTO.class);
+        modelTranslator.registerTranslator(translator3, TestModelEntityB.class, TestDTO.class);
 
         ModelEntity entity = new TestModelEntity() {};
-        TestDTO dto = modelTranslator.<ModelEntity, TestDTO>translate(entity);
+        TestDTO dto = modelTranslator.translate(entity, TestDTO.class);
 
         assertNotNull(dto);
         assertSame(modelTranslator, dto.getModelTranslator());

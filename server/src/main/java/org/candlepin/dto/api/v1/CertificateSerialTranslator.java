@@ -45,10 +45,8 @@ public class CertificateSerialTranslator extends
      * {@inheritDoc}
      */
     @Override
-    public CertificateSerialDTO populate(CertificateSerial source,
-        CertificateSerialDTO destination) {
-
-        return this.populate(null, source, destination);
+    public CertificateSerialDTO populate(CertificateSerial source, CertificateSerialDTO dest) {
+        return this.populate(null, source, dest);
     }
 
     /**
@@ -56,16 +54,17 @@ public class CertificateSerialTranslator extends
      */
     @Override
     public CertificateSerialDTO populate(ModelTranslator translator, CertificateSerial source,
-        CertificateSerialDTO destination) {
+        CertificateSerialDTO dest) {
 
-        destination = super.populate(translator, source, destination);
+        dest = super.populate(translator, source, dest);
 
-        destination.setId(source.getId());
-        destination.setSerial(source.getSerial());
-        destination.setExpiration(source.getExpiration());
-        destination.setCollected(source.isCollected());
-        destination.setRevoked(source.isRevoked());
+        dest.setId(source.getId());
+        dest.setSerial(source.getSerial());
+        dest.setExpiration(source.getExpiration());
+        dest.setCollected(source.isCollected());
+        dest.setRevoked(source.isRevoked());
 
-        return destination;
+        return dest;
     }
+
 }

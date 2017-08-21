@@ -35,7 +35,7 @@ public interface ResultIterator<T> extends Closeable, Iterator<T> {
     void remove();
 
     /**
-     * Closes this ResultIterator and frees it's backing database resources.
+     * Closes this ResultIterator and frees its backing database resources.
      */
     void close();
 

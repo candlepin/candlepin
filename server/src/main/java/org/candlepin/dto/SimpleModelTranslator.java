@@ -22,6 +22,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Set;
 
 
 
@@ -33,32 +35,44 @@ import java.util.HashMap;
 public class SimpleModelTranslator implements ModelTranslator {
     private static Logger log = LoggerFactory.getLogger(ModelTranslator.class);
 
-    protected Map<Class, ObjectTranslator> translators;
+    // output => input => translator
+    protected Map<Class, Map<Class, ObjectTranslator>> translators;
 
 
     /**
      * Initializes a new ModelTranslator instance.
      */
     public SimpleModelTranslator() {
-        this.translators = new HashMap<Class, ObjectTranslator>();
+        this.translators = new HashMap<Class, Map<Class, ObjectTranslator>>();
     }
 
     /**
      * {@inheritDoc}
      */
-    public <I, O> ObjectTranslator registerTranslator(Class<I> srcClass,
-        ObjectTranslator<I, O> translator) {
-
-        if (srcClass == null) {
-            throw new IllegalArgumentException("srcClass is null");
-        }
+    @Override
+    public <I, O> ObjectTranslator<I, O> registerTranslator(ObjectTranslator<I, O> translator,
+        Class<I> inputClass, Class<O> outputClass) {
 
         if (translator == null) {
             throw new IllegalArgumentException("translator is null");
         }
 
-        ObjectTranslator existing = this.translators.get(srcClass);
-        this.translators.put(srcClass, translator);
+        if (inputClass == null) {
+            throw new IllegalArgumentException("inputClass is null");
+        }
+
+        if (outputClass == null) {
+            throw new IllegalArgumentException("outputClass is null");
+        }
+
+        Map<Class, ObjectTranslator> inputMappings = this.translators.get(outputClass);
+        if (inputMappings == null) {
+            inputMappings = new HashMap<Class, ObjectTranslator>();
+            this.translators.put(outputClass, inputMappings);
+        }
+
+        ObjectTranslator<I, O> existing = (ObjectTranslator<I, O>) inputMappings.get(inputClass);
+        inputMappings.put(inputClass, translator);
 
         return existing;
     }
@@ -66,30 +80,126 @@ public class SimpleModelTranslator implements ModelTranslator {
     /**
      * {@inheritDoc}
      */
-    public ObjectTranslator unregisterTranslator(Class srcClass) {
-        if (srcClass == null) {
-            throw new IllegalArgumentException("srcClass is null");
+    @Override
+    public <I, O> ObjectTranslator<I, O> unregisterTranslator(Class<I> inputClass, Class<O> outputClass) {
+        if (inputClass == null) {
+            throw new IllegalArgumentException("inputClass is null");
         }
 
-        return this.translators.remove(srcClass);
+        if (outputClass == null) {
+            throw new IllegalArgumentException("outputClass is null");
+        }
+
+        Map<Class, ObjectTranslator> inputMappings = this.translators.get(outputClass);
+        return inputMappings != null ? (ObjectTranslator<I, O>) inputMappings.remove(inputClass) : null;
     }
 
     /**
      * {@inheritDoc}
      */
-    public ObjectTranslator getTranslator(Class srcClass) {
-        if (srcClass == null) {
-            throw new IllegalArgumentException("srcClass is null");
+    @Override
+    public int unregisterTranslator(ObjectTranslator translator) {
+        if (translator == null) {
+            throw new IllegalArgumentException("translator is null");
         }
 
-        return this.translators.get(srcClass);
+        int mappings = 0;
+
+        for (Map<Class, ObjectTranslator> inputMappings : this.translators.values()) {
+            Iterator<ObjectTranslator> translators = inputMappings.values().iterator();
+            while (translators.hasNext()) {
+                ObjectTranslator existing = translators.next();
+
+                if (translator.equals(existing)) {
+                    translators.remove();
+                    ++mappings;
+                }
+            }
+        }
+
+        return mappings;
     }
 
     /**
-     * Fetches a translator for the given class. If a translator cannot be found, this method
-     * returns null.
+     * {@inheritDoc}
+     */
+    public <I, O> ObjectTranslator<I, O> getTranslator(Class<I> inputClass, Class<O> outputClass) {
+        if (inputClass == null) {
+            throw new IllegalArgumentException("inputClass is null");
+        }
+
+        if (outputClass == null) {
+            throw new IllegalArgumentException("outputClass is null");
+        }
+
+        Map<Class, ObjectTranslator> inputMappings = this.translators.get(outputClass);
+        return inputMappings != null ? (ObjectTranslator<I, O>) inputMappings.get(inputClass) : null;
+    }
+
+    /**
+     * Attempts to find the nearest class to the given source class within the set of provided
+     * mapped classes
+     *
+     * @param source
+     *  The source class for which to find the nearest mapped class
+     *
+     * @param mappedClasses
+     *  The set of mapped classes to search
+     *
+     * @return
+     *  The nearest mapped class to the given source class, or null if a class could not be found
+     */
+    private Class findNearestMappedClass(Class source, Set<Class> mappedClasses) {
+        while (source != null) {
+            if (mappedClasses.contains(source)) {
+                return source;
+            }
+
+            Class iface = this.findNearestMappedInterface(source, mappedClasses);
+            if (iface != null) {
+                return iface;
+            }
+
+            source = source.getSuperclass();
+        }
+
+        return null;
+    }
+
+    /**
+     * Attempts to find the nearest interface to the given source class within the set of provided
+     * mapped classes
+     *
+     * @param source
+     *  The source class for which to find the nearest mapped interface
+     *
+     * @param mappedClasses
+     *  The set of mapped classes to search
+     *
+     * @return
+     *  The nearest mapped interface to the given source class, or null if a class could not be
+     *  found
+     */
+    private Class findNearestMappedInterface(Class source, Set<Class> mappedClasses) {
+        for (Class iface : source.getInterfaces()) {
+            if (mappedClasses.contains(iface)) {
+                return iface;
+            }
+
+            iface = this.findNearestMappedInterface(iface, mappedClasses);
+            if (iface != null) {
+                return iface;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Fetches a translator for the given class map. If a translator cannot be found, this method
+     * throws a translation exception
      * <p></p>
-     * This method uses the following algorithm to determine which translator to use:
+     * This method uses the following algorithm to match a given class to a mapped class:
      * <pre>
      * 1. Fetch the source object's class, C
      * 2. Fetch any translator T registered for class C
@@ -103,49 +213,47 @@ public class SimpleModelTranslator implements ModelTranslator {
      * 8. Return T
      * </pre>
      *
-     * @param srcClass
-     *  The source class for which to find a translator
+     * @param inputClass
+     *  The input class for which to find a translator
+     *
+     * @param outputClass
+     *  The output class for which to find a translator
      *
      * @throws IllegalArgumentException
-     *  if srcClass is null
+     *  if inputClass is null or outputClass is null
+     *
+     * #throws TranslationException
+     *  if a translator cannot be found for the given class map
      *
      * @return
-     *  a translator for the given source object, or null if a translator could not be found
+     *  a translator for the given source object
      */
-    public ObjectTranslator findTranslatorByClass(Class srcClass) {
-        if (srcClass == null) {
-            throw new IllegalArgumentException("srcClass is null");
+    public <I, O> ObjectTranslator<I, O> findTranslatorByClass(Class<I> inputClass, Class<O> outputClass) {
+        if (inputClass == null) {
+            throw new IllegalArgumentException("inputClass is null");
         }
 
-        ObjectTranslator translator = null;
-        for (Class cls = srcClass; cls != null && translator == null; cls = cls.getSuperclass()) {
-            translator = this.translators.get(cls);
+        if (outputClass == null) {
+            throw new IllegalArgumentException("outputClass is null");
+        }
 
-            // Check interfaces, if necessary
-            if (translator == null) {
-                translator = this.findTranslatorByInterfaces(cls);
+        ObjectTranslator<I, O> translator = null;
+
+        Class outputKey = this.findNearestMappedClass(outputClass, this.translators.keySet());
+        if (outputKey != null) {
+            Map<Class, ObjectTranslator> inputMappings = this.translators.get(outputKey);
+
+            Class inputKey = this.findNearestMappedClass(inputClass, inputMappings.keySet());
+            if (inputKey != null) {
+                translator = (ObjectTranslator<I, O>) inputMappings.get(inputKey);
             }
         }
 
-        return translator;
-    }
+        if (translator == null) {
+            String msg = String.format("Unable to find translator for translation: %s => %s",
+                inputClass.getSimpleName(), outputClass.getSimpleName());
 
-    /**
-     * Recursive implementation for fetching translators by interface for a given class.
-     */
-    private ObjectTranslator findTranslatorByInterfaces(Class srcClass) {
-        ObjectTranslator translator = null;
-
-        for (Class iface : srcClass.getInterfaces()) {
-            translator = this.translators.get(iface);
-
-            if (translator == null) {
-                translator = this.findTranslatorByInterfaces(iface);
-
-                if (translator != null) {
-                    break;
-                }
-            }
+            throw new TranslationException(msg);
         }
 
         return translator;
@@ -170,29 +278,33 @@ public class SimpleModelTranslator implements ModelTranslator {
      * @return
      *  a translator for the given object instance, or null if a translator could not be found
      */
-    public ObjectTranslator findTranslatorByInstance(Object instance) {
+    public <I, O> ObjectTranslator<I, O> findTranslatorByInstance(I instance, Class<O> outputClass) {
         if (instance == null) {
             throw new IllegalArgumentException("instance is null");
         }
 
-        return this.findTranslatorByClass(instance.getClass());
+        if (outputClass == null) {
+            throw new IllegalArgumentException("outputClass is null");
+        }
+
+        return this.findTranslatorByClass((Class<I>) instance.getClass(), outputClass);
     }
 
     /**
      * {@inheritDoc}
      */
-    public <I, O> O translate(I source) {
+    public <I, O> O translate(I input, Class<O> outputClass) {
+        if (outputClass == null) {
+            throw new IllegalArgumentException("outputClass is null");
+        }
+
         O output = null;
 
-        if (source != null) {
-            ObjectTranslator translator = this.findTranslatorByClass(source.getClass());
+        if (input != null) {
+            ObjectTranslator<I, O> translator = this.findTranslatorByClass(
+                (Class<I>) input.getClass(), outputClass);
 
-            if (translator == null) {
-                throw new TranslationException(
-                    "Unable to find translator for source object class: " + source.getClass());
-            }
-
-            output = (O) translator.translate(this, source);
+            output = translator.translate(this, input);
         }
 
         return output;
@@ -201,7 +313,8 @@ public class SimpleModelTranslator implements ModelTranslator {
     /**
      * {@inheritDoc}
      */
-    public <I, O> CandlepinQuery<O> translateQuery(CandlepinQuery<I> query) {
+    @Override
+    public <I, O> CandlepinQuery<O> translateQuery(CandlepinQuery<I> query, Class<O> outputClass) {
         // TODO: It would be great if we could make this method, and the CandlepinQuery more
         // generic, but type erasure makes this pretty cumbersome to do properly.
 
@@ -209,11 +322,24 @@ public class SimpleModelTranslator implements ModelTranslator {
             throw new IllegalArgumentException("query is null");
         }
 
-        final ModelTranslator modelTranslator = this;
+        if (outputClass == null) {
+            throw new IllegalArgumentException("outputClass is null");
+        }
+
         return query.transform(new ElementTransformer<I, O>() {
-            private ObjectTranslator translator;
+            private ModelTranslator modelTranslator;
+            private Class<O> outputClass;
+
             // This should be fine for now, but if we ever have queries that return multiple
             // entity types, this will need to be changed.
+            private ObjectTranslator<I, O> translator;
+
+            public ElementTransformer<I, O> init(ModelTranslator modelTranslator, Class<O> outputClass) {
+                this.modelTranslator = modelTranslator;
+                this.outputClass = outputClass;
+
+                return this;
+            }
 
             public O transform(I source) {
                 O output = null;
@@ -221,21 +347,17 @@ public class SimpleModelTranslator implements ModelTranslator {
                 if (source != null) {
                     // Look up our translator if we haven't already
                     if (this.translator == null) {
-                        this.translator = modelTranslator.findTranslatorByClass(source.getClass());
-
-                        if (this.translator == null) {
-                            throw new TranslationException(
-                                "Unable to find translator for source object class: " + source.getClass());
-                        }
+                        this.translator = this.modelTranslator
+                            .findTranslatorByClass((Class<I>) source.getClass(), this.outputClass);
                     }
 
                     // Translate our output
-                    output = (O) this.translator.translate(modelTranslator, source);
+                    output = this.translator.translate(this.modelTranslator, source);
                 }
 
                 return output;
             }
-        });
+        }.init(this, outputClass));
     }
 
 }

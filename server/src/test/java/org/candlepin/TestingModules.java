@@ -34,8 +34,24 @@ import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.ModeManager;
 import org.candlepin.controller.ModeManagerImpl;
 import org.candlepin.controller.PoolManager;
-import org.candlepin.dto.api.APIModelTranslator;
-import org.candlepin.dto.api.v1.APIv1ModelTranslator;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.SimpleModelTranslator;
+import org.candlepin.dto.api.v1.CertificateSerialDTO;
+import org.candlepin.dto.api.v1.CertificateSerialTranslator;
+import org.candlepin.dto.api.v1.CertificateDTO;
+import org.candlepin.dto.api.v1.CertificateTranslator;
+import org.candlepin.dto.api.v1.ConsumerTypeDTO;
+import org.candlepin.dto.api.v1.ConsumerTypeTranslator;
+import org.candlepin.dto.api.v1.ContentDTO;
+import org.candlepin.dto.api.v1.ContentTranslator;
+import org.candlepin.dto.api.v1.OwnerDTO;
+import org.candlepin.dto.api.v1.OwnerTranslator;
+import org.candlepin.dto.api.v1.ProductDTO;
+import org.candlepin.dto.api.v1.ProductTranslator;
+import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
+import org.candlepin.dto.api.v1.UpstreamConsumerTranslator;
+import org.candlepin.dto.shim.ContentDataTranslator;
+import org.candlepin.dto.shim.ProductDataTranslator;
 import org.candlepin.guice.CandlepinRequestScope;
 import org.candlepin.guice.CandlepinRequestScoped;
 import org.candlepin.guice.I18nProvider;
@@ -44,9 +60,18 @@ import org.candlepin.guice.ScriptEngineProvider;
 import org.candlepin.guice.TestPrincipalProvider;
 import org.candlepin.guice.TestingRequestScope;
 import org.candlepin.guice.ValidationListenerProvider;
+import org.candlepin.model.CertificateSerial;
+import org.candlepin.model.Certificate;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.Content;
 import org.candlepin.model.CPRestrictions;
+import org.candlepin.model.Owner;
+import org.candlepin.model.Product;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
+import org.candlepin.model.UpstreamConsumer;
+import org.candlepin.model.dto.ContentData;
+import org.candlepin.model.dto.ProductData;
 import org.candlepin.pinsetter.core.GuiceJobFactory;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
 import org.candlepin.pinsetter.core.PinsetterTriggerListener;
@@ -143,6 +168,39 @@ public class TestingModules {
     private TestingModules() {
         // This class is just a container for various Guice Modules used during testing
     }
+
+    public static ModelTranslator buildTranslator() {
+        ModelTranslator modelTranslator = new SimpleModelTranslator();
+
+        // API translators
+        /////////////////////////////////////////////
+        modelTranslator.registerTranslator(
+            new CertificateSerialTranslator(), CertificateSerial.class, CertificateSerialDTO.class);
+        modelTranslator.registerTranslator(
+            new CertificateTranslator(), Certificate.class, CertificateDTO.class);
+        modelTranslator.registerTranslator(
+            new ConsumerTypeTranslator(), ConsumerType.class, ConsumerTypeDTO.class);
+        modelTranslator.registerTranslator(
+            new ContentTranslator(), Content.class, ContentDTO.class);
+        modelTranslator.registerTranslator(
+            new OwnerTranslator(), Owner.class, OwnerDTO.class);
+        modelTranslator.registerTranslator(
+            new ProductTranslator(), Product.class, ProductDTO.class);
+        modelTranslator.registerTranslator(
+            new UpstreamConsumerTranslator(), UpstreamConsumer.class, UpstreamConsumerDTO.class);
+
+        // Shims
+        /////////////////////////////////////////////
+        modelTranslator.registerTranslator(
+            new ContentDataTranslator(), ContentData.class, ContentDTO.class);
+        modelTranslator.registerTranslator(
+            new ProductDataTranslator(), ProductData.class, ProductDTO.class);
+
+
+        return modelTranslator;
+    }
+
+
 
     public static class ServletEnvironmentModule extends AbstractModule {
         @Override
@@ -330,8 +388,8 @@ public class TestingModules {
             install(new FactoryModuleBuilder().build(BindContextFactory.class));
             install(new FactoryModuleBuilder().build(PreEntitlementRulesCheckOpFactory.class));
 
-            bind(APIModelTranslator.class).to(APIv1ModelTranslator.class);
-            bind(APIv1ModelTranslator.class).to(APIv1ModelTranslator.class);
+            // Bind model translator
+            bind(ModelTranslator.class).toInstance(TestingModules.buildTranslator());
         }
     }
 }
