@@ -16,7 +16,7 @@ package org.candlepin.service;
 
 import org.candlepin.model.Owner;
 import org.candlepin.model.ProductCertificate;
-import org.candlepin.model.dto.ProductData;
+import org.candlepin.dto.api.v1.ProductDTO;
 
 import java.util.Collection;
 
@@ -49,7 +49,7 @@ public interface ProductServiceAdapter {
      * @return list of products matching the given string IDs,
      *         empty list if none were found.
      */
-    Collection<ProductData> getProductsByIds(Owner owner, Collection<String> ids);
+    Collection<ProductDTO> getProductsByIds(Owner owner, Collection<String> ids);
 
     /**
      * Gets the certificate that defines the given product, creating one

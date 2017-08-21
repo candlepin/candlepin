@@ -557,13 +557,17 @@ public class ProductDTO extends TimestampedCandlepinDTO<ProductDTO> {
         // adding product content, then changing its ID. It's too bad this isn't all immutable...
 
         boolean changed = false;
+        boolean matched = false;
+        String contentId = dto.getContent().getId();
+
 
         if (this.content == null) {
             this.content = new HashMap<String, ProductContentDTO>();
             changed = true;
         }
         else {
-            changed = !this.content.containsKey(dto.getContent().getId());
+            ProductContentDTO existing = this.content.get(dto.getContent().getId());
+            changed = !dto.equals(existing);
         }
 
         if (changed) {

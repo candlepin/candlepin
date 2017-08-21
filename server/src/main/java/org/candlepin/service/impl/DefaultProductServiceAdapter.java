@@ -14,6 +14,9 @@
  */
 package org.candlepin.service.impl;
 
+import org.candlepin.dto.api.v1.ProductDTO;
+import org.candlepin.dto.api.APIDTOFactory;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerProductCurator;
@@ -21,7 +24,6 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ResultIterator;
-import org.candlepin.model.dto.ProductData;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.UniqueIdGenerator;
 
@@ -40,14 +42,16 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
 
     private OwnerProductCurator ownerProductCurator;
     private ProductCertificateCurator prodCertCurator;
+    private APIDTOFactory dtoFactory;
 
     @Inject
     public DefaultProductServiceAdapter(OwnerProductCurator ownerProductCurator,
         ProductCertificateCurator prodCertCurator, ContentCurator contentCurator,
-        UniqueIdGenerator idGenerator) {
+        UniqueIdGenerator idGenerator, APIDTOFactory dtoFactory) {
 
         this.ownerProductCurator = ownerProductCurator;
         this.prodCertCurator = prodCertCurator;
+        this.dtoFactory = dtoFactory;
     }
 
     @Override
@@ -60,18 +64,15 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
 
     @Override
     @Transactional
-    public Collection<ProductData> getProductsByIds(Owner owner, Collection<String> ids) {
-        Collection<ProductData> productData = new LinkedList<ProductData>();
+    public Collection<ProductDTO> getProductsByIds(Owner owner, Collection<String> ids) {
+        Collection<ProductDTO> productData = new LinkedList<ProductDTO>();
 
-        ResultIterator<Product> iterator = this.ownerProductCurator
-            .getProductsByIds(owner, ids)
-            .iterate(0, true);
+        CandlepinQuery<Product> query = this.ownerProductCurator.getProductsByIds(owner, ids);
+        CandlepinQuery<ProductDTO> transformed = this.dtoFactory.<Product, ProductDTO>transformQuery(query);
 
-        while (iterator.hasNext()) {
-            productData.add(iterator.next().toDTO());
+        for (ProductDTO dto : transformed) {
+            productData.add(dto);
         }
-
-        iterator.close();
 
         return productData;
     }

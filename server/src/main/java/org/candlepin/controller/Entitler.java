@@ -21,6 +21,9 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.dto.api.v1.ContentDTO;
+import org.candlepin.dto.api.v1.ProductDTO;
+import org.candlepin.dto.api.v1.ProductDTO.ProductContentDTO;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -35,9 +38,6 @@ import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.model.dto.ContentData;
-import org.candlepin.model.dto.ProductContentData;
-import org.candlepin.model.dto.ProductData;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
@@ -355,11 +355,11 @@ public class Entitler {
         }
 
         Owner owner = consumer.getOwner();
-        Map<String, ProductData> productMap = new HashMap<String, ProductData>();
-        Map<String, ContentData> contentMap = new HashMap<String, ContentData>();
+        Map<String, ProductDTO> productMap = new HashMap<String, ProductDTO>();
+        Map<String, ContentDTO> contentMap = new HashMap<String, ContentDTO>();
 
         log.debug("Importing products for dev pool resolution...");
-        for (ProductData product : this.productAdapter.getProductsByIds(owner, devProductIds)) {
+        for (ProductDTO product : this.productAdapter.getProductsByIds(owner, devProductIds)) {
             if (product == null) {
                 continue;
             }
@@ -375,7 +375,7 @@ public class Entitler {
             // further changes to it.
             product.setLocked(true);
 
-            ProductData existingProduct = productMap.get(product.getId());
+            ProductDTO existingProduct = productMap.get(product.getId());
             if (existingProduct != null && !existingProduct.equals(product)) {
                 log.warn("Multiple versions of the same product received during dev pool resolution; " +
                     "discarding duplicate: {} => {}, {}",
@@ -385,13 +385,13 @@ public class Entitler {
             else {
                 productMap.put(product.getId(), product);
 
-                Collection<ProductContentData> pcdCollection = product.getProductContent();
+                Collection<ProductContentDTO> pcdCollection = product.getProductContent();
                 if (pcdCollection != null) {
-                    for (ProductContentData pcd : pcdCollection) {
+                    for (ProductContentDTO pcd : pcdCollection) {
                         // Impl note:
                         // We aren't checking for duplicate mappings to the same content, since our
-                        // current implementation of ProductData prevents such a thing. However, if it
-                        // is reasonably possible that we could end up with ProductData instances which
+                        // current implementation of ProductDTO prevents such a thing. However, if it
+                        // is reasonably possible that we could end up with ProductDTO instances which
                         // do not prevent duplicate content mappings, we should add checks here to
                         // check for, and throw out, such mappings
 
@@ -401,7 +401,7 @@ public class Entitler {
                                 "product contains a null product-content mapping: " + product);
                         }
 
-                        ContentData content = pcd.getContent();
+                        ContentDTO content = pcd.getContent();
 
                         // Do some simple mapping validation. Our import method will handle minimal
                         // population validation for us.
@@ -415,7 +415,7 @@ public class Entitler {
                         // We need to lock the incoming content here, but doing so will affect
                         // the equality comparison for products. We'll correct them later.
 
-                        ContentData existingContent = contentMap.get(content.getId());
+                        ContentDTO existingContent = contentMap.get(content.getId());
                         if (existingContent != null && !existingContent.equals(content)) {
                             log.warn("Multiple versions of the same content received during dev pool " +
                                 "resolution; discarding duplicate: {} => {}, {}",
@@ -432,7 +432,7 @@ public class Entitler {
 
         log.debug("Importing {} content...", contentMap.size());
 
-        for (ContentData cdata : contentMap.values()) {
+        for (ContentDTO cdata : contentMap.values()) {
             cdata.setLocked(true);
         }
 
