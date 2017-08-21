@@ -73,7 +73,7 @@ public class OwnerTranslator extends TimestampedEntityTranslator<Owner, OwnerDTO
         // Process nested objects if we have a model translator to use to the translation...
         if (translator != null) {
             UpstreamConsumer consumer = source.getUpstreamConsumer();
-            dest.setUpstreamConsumer(translator.<UpstreamConsumer, UpstreamConsumerDTO>translate(consumer));
+            dest.setUpstreamConsumer(translator.translate(consumer, UpstreamConsumerDTO.class));
         }
         else {
             dest.setUpstreamConsumer(null);
@@ -81,4 +81,5 @@ public class OwnerTranslator extends TimestampedEntityTranslator<Owner, OwnerDTO
 
         return dest;
     }
+
 }

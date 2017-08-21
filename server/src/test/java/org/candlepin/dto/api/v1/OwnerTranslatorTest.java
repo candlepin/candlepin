@@ -41,7 +41,7 @@ public class OwnerTranslatorTest extends
     @Override
     protected void initModelTranslator(ModelTranslator modelTranslator) {
         this.upstreamConsumerTranslatorTest.initModelTranslator(modelTranslator);
-        modelTranslator.registerTranslator(Owner.class, this.translator);
+        modelTranslator.registerTranslator(this.translator, Owner.class, OwnerDTO.class);
     }
 
     @Override

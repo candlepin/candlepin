@@ -34,6 +34,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.test.TestUtil;
 import org.junit.Before;
@@ -312,8 +313,12 @@ public class SubscriptionReconcilerTest {
     private Subscription createSubscription(Owner daOwner, String productId,
         String poolId, String entId, String conId, long quantity) {
 
+        ProductData pdata = new ProductData();
+        pdata.setId(productId);
+        pdata.setName(productId);
+
         Subscription sub = new Subscription();
-        sub.setProduct(TestUtil.createProductDTO(productId, productId));
+        sub.setProduct(pdata);
         sub.setUpstreamPoolId(poolId);
         sub.setUpstreamEntitlementId(entId);
         sub.setUpstreamConsumerId(conId);

@@ -14,6 +14,10 @@
  */
 package org.candlepin.controller;
 
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.ContentDTO;
+import org.candlepin.dto.api.v1.ProductDTO;
+import org.candlepin.dto.api.v1.ProductDTO.ProductContentDTO;
 import org.candlepin.model.Content;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerContentCurator;
@@ -23,10 +27,11 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.dto.ContentData;
-import org.candlepin.model.dto.ProductContentData;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.util.Traceable;
 import org.candlepin.util.TraceableParam;
+import org.candlepin.model.dto.ProductContentData;
+import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -37,6 +42,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -60,55 +66,57 @@ public class ProductManager {
     private OwnerContentCurator ownerContentCurator;
     private OwnerProductCurator ownerProductCurator;
     private ProductCurator productCurator;
+    private ModelTranslator modelTranslator;
 
     @Inject
     public ProductManager(EntitlementCertificateGenerator entitlementCertGenerator,
         OwnerContentCurator ownerContentCurator, OwnerProductCurator ownerProductCurator,
-        ProductCurator productCurator) {
+        ProductCurator productCurator, ModelTranslator modelTranslator) {
 
         this.entitlementCertGenerator = entitlementCertGenerator;
         this.ownerContentCurator = ownerContentCurator;
         this.ownerProductCurator = ownerProductCurator;
         this.productCurator = productCurator;
+        this.modelTranslator = modelTranslator;
     }
 
     /**
      * Creates a new Product for the given owner, potentially using a different version than the
      * entity provided if a matching entity has already been registered for another owner.
      *
-     * @param productData
+     * @param dto
      *  A product DTO instance representing the product to create
      *
      * @param owner
      *  The owner for which to create the product
      *
      * @throws IllegalArgumentException
-     *  if productData is null or incomplete, or owner is null
+     *  if dto is null or incomplete, or owner is null
      *
      * @return
      *  a new Product instance representing the specified product for the given owner
      */
-    public Product createProduct(ProductData productData, Owner owner) {
-        if (productData == null) {
-            throw new IllegalArgumentException("productData is null");
+    public Product createProduct(ProductDTO dto, Owner owner) {
+        if (dto == null) {
+            throw new IllegalArgumentException("dto is null");
         }
 
         if (owner == null) {
             throw new IllegalArgumentException("owner is null");
         }
 
-        if (productData.getId() == null || productData.getName() == null) {
-            throw new IllegalArgumentException("productData is incomplete");
+        if (dto.getId() == null || dto.getName() == null) {
+            throw new IllegalArgumentException("dto is incomplete");
         }
 
-        if (this.ownerProductCurator.productExists(owner, productData.getId())) {
-            throw new IllegalStateException("product has already been created: " + productData.getId());
+        if (this.ownerProductCurator.productExists(owner, dto.getId())) {
+            throw new IllegalStateException("product has already been created: " + dto.getId());
         }
 
         // TODO: More DTO validation here...?
 
-        Product entity = new Product(productData.getId(), productData.getName());
-        this.applyProductChanges(entity, productData, owner);
+        Product entity = new Product(dto.getId(), dto.getName());
+        this.applyProductChanges(entity, dto, owner);
 
         log.debug("Creating new product for org: {}, {}", entity, owner);
 
@@ -133,12 +141,39 @@ public class ProductManager {
     }
 
     /**
+     * Shim for updateProduct; converts the provided ProductData to a ProductDTO instance.
+     *
+     * @param update
+     *  A product DTO representing the product to update and the updates to apply
+     *
+     * @param owner
+     *  The owner for which to update the product
+     *
+     * @param regenerateEntitlementCerts
+     *  Whether or not changes made to the product should trigger the regeneration of entitlement
+     *  certificates for affected consumers
+     *
+     * @throws IllegalStateException
+     *  if this method is called with an entity does not exist in the backing database for the given
+     *  owner
+     *
+     * @throws IllegalArgumentException
+     *  if update or owner is null
+     *
+     * @return
+     *  the updated product entity
+     */
+    public Product updateProduct(ProductData update, Owner owner, boolean regenerateEntitlementCerts) {
+        ProductDTO dto = this.modelTranslator.translate(update, ProductDTO.class);
+        return this.updateProduct(dto, owner, regenerateEntitlementCerts);
+    }
+
+    /**
      * Updates the product entity represented by the given DTO with the changes provided by the
      * DTO.
      *
      * @param update
      *  A product DTO representing the product to update and the updates to apply
-     *
      *
      * @param owner
      *  The owner for which to update the product
@@ -158,7 +193,7 @@ public class ProductManager {
      *  the updated product entity
      */
     @Transactional
-    public Product updateProduct(ProductData update, Owner owner, boolean regenerateEntitlementCerts) {
+    public Product updateProduct(ProductDTO update, Owner owner, boolean regenerateEntitlementCerts) {
         if (update == null) {
             throw new IllegalArgumentException("update is null");
         }
@@ -181,7 +216,7 @@ public class ProductManager {
         }
 
         // Make sure we actually have a change to apply
-        if (!entity.isChangedBy(update)) {
+        if (!this.isChangedBy(entity, update)) {
             return entity;
         }
 
@@ -207,8 +242,7 @@ public class ProductManager {
 
                 if (regenerateEntitlementCerts) {
                     this.entitlementCertGenerator.regenerateCertificatesOf(
-                        Arrays.asList(owner), Arrays.asList(alt), true
-                    );
+                        Arrays.asList(owner), Arrays.asList(alt), true);
                 }
 
                 return alt;
@@ -246,8 +280,7 @@ public class ProductManager {
 
         if (regenerateEntitlementCerts) {
             this.entitlementCertGenerator.regenerateCertificatesOf(
-                Arrays.asList(owner), Arrays.asList(updated), true
-            );
+                Arrays.asList(owner), Arrays.asList(updated), true);
         }
 
         return updated;
@@ -303,7 +336,7 @@ public class ProductManager {
         for (Product product : this.ownerProductCurator.getProductsByIds(owner, productData.keySet())) {
             ProductData update = productData.get(product.getId());
 
-            if (!product.isChangedBy(update)) {
+            if (!this.isChangedBy(product, update)) {
                 // This product won't be changing, so we'll just pretend it's not being imported at all
                 skippedProducts.put(product.getId(), product);
                 continue;
@@ -327,6 +360,8 @@ public class ProductManager {
                 }
 
                 Product product = new Product(update.getId(), update.getName());
+
+                // TODO: Remove this shim and stop using DTOs in this class
                 product = this.applyProductChanges(product, update, importedContent);
 
                 createdProducts.put(product.getId(), product);
@@ -551,7 +586,7 @@ public class ProductManager {
      * @return
      *  The updated product entity
      */
-    private Product applyProductChanges(Product entity, ProductData update, Owner owner) {
+    private Product applyProductChanges(Product entity, ProductDTO update, Owner owner) {
         if (owner == null) {
             throw new IllegalArgumentException("owner is null");
         }
@@ -561,7 +596,7 @@ public class ProductManager {
         if (update.getProductContent() != null) {
             // Grab all of the content objects at once so we don't hit the DB a few thousand times
             // per update
-            for (ProductContentData pcd : update.getProductContent()) {
+            for (ProductContentDTO pcd : update.getProductContent()) {
                 if (pcd == null || pcd.getContent() == null || pcd.getContent().getId() == null) {
                     throw new IllegalStateException("product content is null or incomplete");
                 }
@@ -576,6 +611,294 @@ public class ProductManager {
         }
 
         return this.applyProductChanges(entity, update, contentMap);
+    }
+
+    /**
+     * Applies the changes from the given DTO to the specified entity
+     *
+     * @param entity
+     *  The entity to modify
+     *
+     * @param update
+     *  The DTO containing the modifications to apply
+     *
+     * @param content
+     *  A mapping of Red Hat content ID to content entities to use for content resolution
+     *
+     * @throws IllegalArgumentException
+     *  if entity, update or owner is null
+     *
+     * @return
+     *  The updated product entity
+     */
+    private Product applyProductChanges(Product entity, ProductDTO update, Map<String, Content> contentMap) {
+        // TODO:
+        // Eventually content should be considered a property of products (ala attributes), so we
+        // don't have to do this annoying, nested projection and owner passing. Also, it would
+        // solve the issue of forcing content to have only one instance per owner and this logic
+        // could live in Product, where it belongs.
+
+        if (entity == null) {
+            throw new IllegalArgumentException("entity is null");
+        }
+
+        if (update == null) {
+            throw new IllegalArgumentException("update is null");
+        }
+
+        if (contentMap == null) {
+            throw new IllegalArgumentException("contentMap is null");
+        }
+
+        if (update.getName() != null) {
+            entity.setName(update.getName());
+        }
+
+        if (update.getMultiplier() != null) {
+            entity.setMultiplier(update.getMultiplier());
+        }
+
+        if (update.getAttributes() != null) {
+            entity.setAttributes(update.getAttributes());
+        }
+
+        if (update.getProductContent() != null) {
+            Collection<ProductContent> productContent = new LinkedList<ProductContent>();
+
+            // Sort the existing ProductContent so we aren't iterating on it several times.
+            // TODO: Remove this if/when product content is stored as a map on products.
+            Map<String, ProductContent> existingLinks = new HashMap<String, ProductContent>();
+            for (ProductContent pc : entity.getProductContent()) {
+                existingLinks.put(pc.getContent().getId(), pc);
+            }
+
+            // Actually process our list of content...
+            for (ProductContentDTO pcd : update.getProductContent()) {
+                if (pcd == null) {
+                    throw new IllegalStateException("Product data contains a null product-content mapping: " +
+                        update);
+                }
+
+                ContentDTO cdto = pcd.getContent();
+
+                if (cdto == null || cdto.getId() == null) {
+                    // This should only happen if something alters a content dto object after
+                    // adding it to our link object. This is very bad.
+                    throw new IllegalStateException("Product data contains an incomplete product-content " +
+                        "mapping: " + update);
+                }
+
+                ProductContent existingLink = existingLinks.get(cdto.getId());
+                Content content = contentMap.get(cdto.getId());
+
+                if (content == null) {
+                    // Content doesn't exist yet -- it should have been created already
+                    throw new IllegalStateException("product references content which does not exist: " +
+                        cdto);
+                }
+
+                if (existingLink == null) {
+                    existingLink = new ProductContent(
+                        entity, content, pcd.isEnabled() != null ? pcd.isEnabled() : false);
+                }
+                else {
+                    existingLink.setContent(content);
+
+                    if (pcd.isEnabled() != null) {
+                        existingLink.setEnabled(pcd.isEnabled());
+                    }
+                }
+
+                productContent.add(existingLink);
+            }
+
+            entity.setProductContent(productContent);
+        }
+
+        if (update.getDependentProductIds() != null) {
+            entity.setDependentProductIds(update.getDependentProductIds());
+        }
+
+        if (update.isLocked() != null) {
+            entity.setLocked(update.isLocked());
+        }
+
+        return entity;
+    }
+
+
+    /**
+     * Determines whether or not this entity would be changed if the given DTO were applied to this
+     * object.
+     *
+     * @param dto
+     *  The product DTO to check for changes
+     *
+     * @throws IllegalArgumentException
+     *  if dto is null
+     *
+     * @return
+     *  true if this product would be changed by the given DTO; false otherwise
+     */
+    private boolean isChangedBy(Product entity, ProductDTO dto) {
+        // Check simple properties first
+        if (dto.getId() != null && !dto.getId().equals(entity.getId())) {
+            return true;
+        }
+
+        if (dto.getName() != null && !dto.getName().equals(entity.getName())) {
+            return true;
+        }
+
+        if (dto.getMultiplier() != null && !dto.getMultiplier().equals(entity.getMultiplier())) {
+            return true;
+        }
+
+        if (dto.isLocked() != null && !dto.isLocked().equals(entity.isLocked())) {
+            return true;
+        }
+
+        Collection<String> dependentProductIds = dto.getDependentProductIds();
+        if (dependentProductIds != null &&
+            !Util.collectionsAreEqual(entity.getDependentProductIds(), dependentProductIds)) {
+
+            return true;
+        }
+
+        // Impl note:
+        // Depending on how strict we are regarding case-sensitivity and value-representation,
+        // this may get us in to trouble. We may need to iterate through the attributes, performing
+        // case-insensitive key/value comparison and similiarities (i.e. management_enabled: 1 is
+        // functionally identical to Management_Enabled: true, but it will be detected as a change
+        // in attributes.
+        Map<String, String> attributes = dto.getAttributes();
+        if (attributes != null && !attributes.equals(entity.getAttributes())) {
+            return true;
+        }
+
+        Collection<ProductContentDTO> productContent = dto.getProductContent();
+        if (productContent != null) {
+            Comparator comparator = new Comparator() {
+                public int compare(Object lhs, Object rhs) {
+                    ProductContent existing = (ProductContent) lhs;
+                    ProductContentDTO update = (ProductContentDTO) rhs;
+
+                    if (existing != null && update != null) {
+                        Content content = existing.getContent();
+                        ContentDTO cdto = update.getContent();
+
+                        if (content != null && cdto != null) {
+                            if (cdto.getUuid() != null ?
+                                cdto.getUuid().equals(content.getUuid()) :
+                                (cdto.getId() != null && cdto.getId().equals(content.getId()))) {
+                                // At this point, we've either matched the UUIDs (which means we're
+                                // referencing identical products) or the UUID isn't present on the DTO, but
+                                // the IDs match (which means we're pointing toward the same product).
+                                return update.isEnabled() != null &&
+                                    update.isEnabled().equals(existing.isEnabled()) ? 0 : 1;
+                            }
+                        }
+                    }
+
+                    return 1;
+                }
+            };
+
+            if (!Util.collectionsAreEqual((Collection) entity.getProductContent(),
+                (Collection) productContent)) {
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Determines whether or not this entity would be changed if the given DTO were applied to this
+     * object.
+     *
+     * @param dto
+     *  The product DTO to check for changes
+     *
+     * @throws IllegalArgumentException
+     *  if dto is null
+     *
+     * @return
+     *  true if this product would be changed by the given DTO; false otherwise
+     */
+    private boolean isChangedBy(Product entity, ProductData dto) {
+        // Check simple properties first
+        if (dto.getId() != null && !dto.getId().equals(entity.getId())) {
+            return true;
+        }
+
+        if (dto.getName() != null && !dto.getName().equals(entity.getName())) {
+            return true;
+        }
+
+        if (dto.getMultiplier() != null && !dto.getMultiplier().equals(entity.getMultiplier())) {
+            return true;
+        }
+
+        if (dto.isLocked() != null && !dto.isLocked().equals(entity.isLocked())) {
+            return true;
+        }
+
+        Collection<String> dependentProductIds = dto.getDependentProductIds();
+        if (dependentProductIds != null &&
+            !Util.collectionsAreEqual(entity.getDependentProductIds(), dependentProductIds)) {
+
+            return true;
+        }
+
+        // Impl note:
+        // Depending on how strict we are regarding case-sensitivity and value-representation,
+        // this may get us in to trouble. We may need to iterate through the attributes, performing
+        // case-insensitive key/value comparison and similiarities (i.e. management_enabled: 1 is
+        // functionally identical to Management_Enabled: true, but it will be detected as a change
+        // in attributes.
+        Map<String, String> attributes = dto.getAttributes();
+        if (attributes != null && !attributes.equals(entity.getAttributes())) {
+            return true;
+        }
+
+        Collection<ProductContentData> productContent = dto.getProductContent();
+        if (productContent != null) {
+            Comparator comparator = new Comparator() {
+                public int compare(Object lhs, Object rhs) {
+                    ProductContent existing = (ProductContent) lhs;
+                    ProductContentData update = (ProductContentData) rhs;
+
+                    if (existing != null && update != null) {
+                        Content content = existing.getContent();
+                        ContentData cdto = update.getContent();
+
+                        if (content != null && cdto != null) {
+                            if (cdto.getUuid() != null ?
+                                cdto.getUuid().equals(content.getUuid()) :
+                                (cdto.getId() != null && cdto.getId().equals(content.getId()))) {
+                                // At this point, we've either matched the UUIDs (which means we're
+                                // referencing identical products) or the UUID isn't present on the DTO, but
+                                // the IDs match (which means we're pointing toward the same product).
+                                return update.isEnabled() != null &&
+                                    update.isEnabled().equals(existing.isEnabled()) ? 0 : 1;
+                            }
+                        }
+                    }
+
+                    return 1;
+                }
+            };
+
+            if (!Util.collectionsAreEqual((Collection) entity.getProductContent(),
+                (Collection) productContent)) {
+
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -644,28 +967,26 @@ public class ProductManager {
                         update);
                 }
 
-                ContentData contentData = pcd.getContent();
-
-                if (contentData == null || contentData.getId() == null) {
-                    // This should only happen if something alters a ProductContentData object
-                    // after adding it to the ProductData. This is very bad.
+                ContentData cdto = pcd.getContent();
+                if (cdto == null || cdto.getId() == null) {
+                    // This should only happen if something alters a content dto object after
+                    // adding it to our link object. This is very bad.
                     throw new IllegalStateException("Product data contains an incomplete product-content " +
                         "mapping: " + update);
                 }
 
-                ProductContent existingLink = existingLinks.get(contentData.getId());
-                Content content = contentMap.get(contentData.getId());
+                ProductContent existingLink = existingLinks.get(cdto.getId());
+                Content content = contentMap.get(cdto.getId());
 
                 if (content == null) {
                     // Content doesn't exist yet -- it should have been created already
                     throw new IllegalStateException("product references content which does not exist: " +
-                        contentData);
+                        cdto);
                 }
 
                 if (existingLink == null) {
                     existingLink = new ProductContent(
-                        entity, content, pcd.isEnabled() != null ? pcd.isEnabled() : false
-                    );
+                        entity, content, pcd.isEnabled() != null ? pcd.isEnabled() : false);
                 }
                 else {
                     existingLink.setContent(content);
@@ -692,82 +1013,4 @@ public class ProductManager {
         return entity;
     }
 
-    /**
-     * Adds the specified content to the product, effective for the given owner. If the product is
-     * already mapped to one of the content instances provided, the mapping will be updated to
-     * reflect the configuration of the mapping provided.
-     *
-     * @param product
-     *  The product to which content should be added
-     *
-     * @param content
-     *  A collection of ProductContent instances referencing the content to add to the product
-     *
-     * @param owner
-     *  The owner of the product to update
-     *
-     * @param regenerateEntitlementCerts
-     *  Whether or not changes made to the product should trigger the regeneration of entitlement
-     *  certificates for affected consumers
-     *
-     * @return
-     *  the updated product entity, or a new product entity
-     */
-    public Product addContentToProduct(Product product, Collection<ProductContent> content, Owner owner,
-        boolean regenerateEntitlementCerts) {
-
-        if (this.ownerProductCurator.isProductMappedToOwner(product, owner)) {
-            ProductData update = product.toDTO();
-            boolean changed = false;
-
-            for (ProductContent add : content) {
-                changed |= update.addProductContent(add);
-            }
-
-            if (changed) {
-                product = this.updateProduct(update, owner, regenerateEntitlementCerts);
-            }
-        }
-
-        return product;
-    }
-
-    /**
-     * Removes the specified content from the given product for a single owner. The changes made to
-     * the product may result in the convergence or divergence of product versions.
-     *
-     * @param product
-     *  the product from which to remove content
-     *
-     * @param content
-     *  the content to remove
-     *
-     * @param owner
-     *  the owner for which the change should take effect
-     *
-     * @param regenerateEntitlementCerts
-     *  Whether or not changes made to the product should trigger the regeneration of entitlement
-     *  certificates for affected consumers
-     *
-     * @return
-     *  the updated product instance
-     */
-    public Product removeProductContent(Product product, Collection<Content> content, Owner owner,
-        boolean regenerateEntitlementCerts) {
-
-        if (this.ownerProductCurator.isProductMappedToOwner(product, owner)) {
-            ProductData update = product.toDTO();
-            boolean changed = false;
-
-            for (Content remove : content) {
-                changed |= update.removeContent(remove);
-            }
-
-            if (changed) {
-                product = this.updateProduct(update, owner, regenerateEntitlementCerts);
-            }
-        }
-
-        return product;
-    }
 }

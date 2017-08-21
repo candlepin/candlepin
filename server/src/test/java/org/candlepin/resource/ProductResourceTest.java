@@ -23,6 +23,8 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.dto.api.v1.ContentDTO;
+import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
@@ -31,8 +33,6 @@ import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.dto.ContentData;
-import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
@@ -68,8 +68,8 @@ public class ProductResourceTest extends DatabaseTestFixture {
     @Inject private Configuration config;
     @Inject private I18n i18n;
 
-    private ProductData buildTestProductDTO() {
-        ProductData dto = TestUtil.createProductDTO("test_product");
+    private ProductDTO buildTestProductDTO() {
+        ProductDTO dto = TestUtil.createProductDTO("test_product");
 
         dto.setAttribute(Product.Attributes.VERSION, "1.0");
         dto.setAttribute(Product.Attributes.VARIANT, "server");
@@ -93,42 +93,39 @@ public class ProductResourceTest extends DatabaseTestFixture {
     @Test(expected = BadRequestException.class)
     public void testCreateProductResource() {
         Owner owner = this.createOwner("Example-Corporation");
-        ProductData productData = this.buildTestProductDTO();
+        ProductDTO dto = this.buildTestProductDTO();
 
-        assertNull(this.ownerProductCurator.getProductById(owner.getKey(), productData.getId()));
+        assertNull(this.ownerProductCurator.getProductById(owner.getKey(), dto.getId()));
 
-        ProductData result = productResource.createProduct(productData);
-        Product entity = this.ownerProductCurator.getProductById(owner.getKey(), productData.getId());
-
-        assertNotNull(entity);
-        assertFalse(entity.isChangedBy(result));
+        productResource.createProduct(dto);
     }
 
     @Test(expected = BadRequestException.class)
     public void testCreateProductWithContent() {
         Owner owner = this.createOwner("Example-Corporation");
-        ProductData productData = this.buildTestProductDTO();
-        ContentData contentData = TestUtil.createContentDTO();
-        productData.addContent(contentData, true);
+        ProductDTO pdto = this.buildTestProductDTO();
+        ContentDTO cdto = TestUtil.createContentDTO();
+        pdto.addContent(cdto, true);
 
-        assertNull(this.ownerProductCurator.getProductById(owner.getKey(), productData.getId()));
+        assertNull(this.ownerProductCurator.getProductById(owner.getKey(), pdto.getId()));
 
-        ProductData result = productResource.createProduct(productData);
-        Product entity = this.ownerProductCurator.getProductById(owner.getKey(), productData.getId());
+        ProductDTO result = productResource.createProduct(pdto);
+        Product entity = this.ownerProductCurator.getProductById(owner.getKey(), pdto.getId());
+        ProductDTO expected = this.modelTranslator.translate(entity, ProductDTO.class);
 
         assertNotNull(entity);
-        assertFalse(entity.isChangedBy(result));
+        assertEquals(expected, result);
 
         assertNotNull(result.getProductContent());
         assertEquals(1, result.getProductContent().size());
-        assertEquals(contentData, result.getProductContent().iterator().next().getContent());
+        assertEquals(cdto, result.getProductContent().iterator().next().getContent());
     }
 
     @Test(expected = BadRequestException.class)
     public void testDeleteProductWithSubscriptions() {
         ProductCurator pc = mock(ProductCurator.class);
         I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        ProductResource pr = new ProductResource(pc, null, null, config, i18n);
+        ProductResource pr = new ProductResource(pc, null, null, config, i18n, this.modelTranslator);
         Owner o = mock(Owner.class);
         Product p = mock(Product.class);
         // when(pc.lookupById(eq(o), eq("10"))).thenReturn(p);
@@ -144,16 +141,17 @@ public class ProductResourceTest extends DatabaseTestFixture {
     public void getProduct() {
         Owner owner = this.createOwner("Example-Corporation");
         Product entity = this.createProduct("test_product", "test_product", owner);
+        ProductDTO expected = this.modelTranslator.translate(entity, ProductDTO.class);
 
         if (entity.isLocked()) {
             throw new RuntimeException("entity is locked...?");
         }
 
         securityInterceptor.enable();
-        ProductData result = productResource.getProduct(entity.getUuid());
+        ProductDTO result = productResource.getProduct(entity.getUuid());
 
         assertNotNull(result);
-        assertFalse(entity.isChangedBy(result));
+        assertEquals(result, expected);
     }
 
     @Test
@@ -263,9 +261,8 @@ public class ProductResourceTest extends DatabaseTestFixture {
         Configuration config = new MapConfiguration(this.config);
         config.setProperty(ConfigProperties.STANDALONE, "false");
 
-        ProductResource productResource = new ProductResource(
-            this.productCurator, this.ownerCurator, this.productCertificateCurator, config, this.i18n
-        );
+        ProductResource productResource = new ProductResource(this.productCurator, this.ownerCurator,
+            this.productCertificateCurator, config, this.i18n, this.modelTranslator);
 
         List<Owner> owners = this.setupDBForOwnerProdTests();
         Owner owner1 = owners.get(0);
