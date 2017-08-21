@@ -37,7 +37,7 @@ public class ConsumerTypeTranslatorTest extends
 
     @Override
     protected void initModelTranslator(ModelTranslator modelTranslator) {
-        modelTranslator.registerTranslator(ConsumerType.class, this.translator);
+        modelTranslator.registerTranslator(this.translator, ConsumerType.class, ConsumerTypeDTO.class);
     }
 
     @Override

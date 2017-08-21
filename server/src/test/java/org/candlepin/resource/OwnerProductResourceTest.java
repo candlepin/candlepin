@@ -23,6 +23,8 @@ import static org.mockito.Mockito.when;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.controller.ProductManager;
+import org.candlepin.dto.api.v1.ContentDTO;
+import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.model.Content;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
@@ -30,8 +32,6 @@ import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.ProductCertificate;
-import org.candlepin.model.dto.ContentData;
-import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -63,12 +63,12 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
     public void setup() {
         this.ownerProductResource = new OwnerProductResource(this.config, this.i18n, this.ownerCurator,
             this.ownerContentCurator, this.ownerProductCurator, this.productCertificateCurator,
-            this.productCurator, this.productManager
+            this.productCurator, this.productManager, this.modelTranslator
         );
     }
 
-    private ProductData buildTestProductDTO() {
-        ProductData dto = TestUtil.createProductDTO("test_product");
+    private ProductDTO buildTestProductDTO() {
+        ProductDTO dto = TestUtil.createProductDTO("test_product");
 
         dto.setAttribute(Product.Attributes.VERSION, "1.0");
         dto.setAttribute(Product.Attributes.VARIANT, "server");
@@ -92,62 +92,64 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
     @Test
     public void testCreateProductResource() {
         Owner owner = this.createOwner("Example-Corporation");
-        ProductData productData = this.buildTestProductDTO();
+        ProductDTO pdto = this.buildTestProductDTO();
 
-        assertNull(this.ownerProductCurator.getProductById(owner.getKey(), productData.getId()));
+        assertNull(this.ownerProductCurator.getProductById(owner.getKey(), pdto.getId()));
 
-        ProductData result = this.ownerProductResource.createProduct(owner.getKey(), productData);
-        Product entity = this.ownerProductCurator.getProductById(owner, productData.getId());
+        ProductDTO result = this.ownerProductResource.createProduct(owner.getKey(), pdto);
+        Product entity = this.ownerProductCurator.getProductById(owner, pdto.getId());
+        ProductDTO expected = this.modelTranslator.translate(entity, ProductDTO.class);
 
         assertNotNull(result);
         assertNotNull(entity);
-        assertFalse(entity.isChangedBy(result));
+        assertEquals(expected, result);
     }
 
     @Test
     public void testCreateProductWithContent() {
         Owner owner = this.createOwner("Example-Corporation");
         Content content = this.createContent("content-1", "content-1", owner);
-        ProductData productData = this.buildTestProductDTO();
-        ContentData contentData = content.toDTO();
-        productData.addContent(contentData, true);
+        ProductDTO pdto = this.buildTestProductDTO();
+        ContentDTO cdto = this.modelTranslator.translate(content, ContentDTO.class);
+        pdto.addContent(cdto, true);
 
-        assertNull(this.ownerProductCurator.getProductById(owner.getKey(), productData.getId()));
+        assertNull(this.ownerProductCurator.getProductById(owner.getKey(), pdto.getId()));
 
-        ProductData result = this.ownerProductResource.createProduct(owner.getKey(), productData);
-        Product entity = this.ownerProductCurator.getProductById(owner, productData.getId());
+        ProductDTO result = this.ownerProductResource.createProduct(owner.getKey(), pdto);
+        Product entity = this.ownerProductCurator.getProductById(owner, pdto.getId());
+        ProductDTO expected = this.modelTranslator.translate(entity, ProductDTO.class);
 
         assertNotNull(result);
         assertNotNull(entity);
-        assertFalse(entity.isChangedBy(result));
+        assertEquals(expected, result);
 
         assertNotNull(result.getProductContent());
         assertEquals(1, result.getProductContent().size());
-        assertEquals(contentData, result.getProductContent().iterator().next().getContent());
+        assertEquals(cdto, result.getProductContent().iterator().next().getContent());
     }
 
     @Test
     public void testUpdateProductWithoutId() {
         Owner owner = this.createOwner("Update-Product-Owner");
-        ProductData productData = this.buildTestProductDTO();
+        ProductDTO pdto = this.buildTestProductDTO();
 
-        ProductData product = this.ownerProductResource.createProduct(owner.getKey(), productData);
-        ProductData update = new ProductData();
+        ProductDTO product = this.ownerProductResource.createProduct(owner.getKey(), pdto);
+        ProductDTO update = new ProductDTO();
         update.setName(product.getName());
         update.setAttribute("attri", "bute");
-        ProductData result = this.ownerProductResource.updateProduct(owner.getKey(), product.getId(), update);
+        ProductDTO result = this.ownerProductResource.updateProduct(owner.getKey(), product.getId(), update);
         assertEquals("bute", result.getAttributeValue("attri"));
     }
 
     @Test(expected = BadRequestException.class)
     public void testUpdateProductIdMismatch() {
         Owner owner = this.createOwner("Update-Product-Owner");
-        ProductData productData = this.buildTestProductDTO();
+        ProductDTO pdto = this.buildTestProductDTO();
 
-        ProductData product = this.ownerProductResource.createProduct(owner.getKey(), productData);
-        ProductData update = this.buildTestProductDTO();
+        ProductDTO product = this.ownerProductResource.createProduct(owner.getKey(), pdto);
+        ProductDTO update = this.buildTestProductDTO();
         update.setId("TaylorSwift");
-        ProductData result = this.ownerProductResource.updateProduct(owner.getKey(), product.getId(), update);
+        ProductDTO result = this.ownerProductResource.updateProduct(owner.getKey(), product.getId(), update);
     }
 
     @Test(expected = BadRequestException.class)
@@ -157,7 +159,8 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
         ProductCurator pc = mock(ProductCurator.class);
         I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
 
-        OwnerProductResource pr = new OwnerProductResource(config, i18n, oc, null, opc, null, pc, null);
+        OwnerProductResource pr = new OwnerProductResource(
+            config, i18n, oc, null, opc, null, pc, null, this.modelTranslator);
 
         Owner o = mock(Owner.class);
         Product p = mock(Product.class);
@@ -177,19 +180,21 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
     public void testUpdateLockedProductFails() {
         Owner owner = this.createOwner("test_owner");
         Product product = this.createProduct("test_product", "test_product", owner);
-        ProductData productData = TestUtil.createProductDTO("test_product", "updated_name");
+        ProductDTO pdto = TestUtil.createProductDTO("test_product", "updated_name");
         product.setLocked(true);
         this.productCurator.merge(product);
 
-        assertNotNull(this.ownerProductCurator.getProductById(owner, productData.getId()));
+        assertNotNull(this.ownerProductCurator.getProductById(owner, pdto.getId()));
 
         try {
-            this.ownerProductResource.updateProduct(owner.getKey(), productData.getId(), productData);
+            this.ownerProductResource.updateProduct(owner.getKey(), pdto.getId(), pdto);
         }
         catch (ForbiddenException e) {
-            Product entity = this.ownerProductCurator.getProductById(owner, productData.getId());
+            Product entity = this.ownerProductCurator.getProductById(owner, pdto.getId());
+            ProductDTO expected = this.modelTranslator.translate(entity, ProductDTO.class);
+
             assertNotNull(entity);
-            assertTrue(entity.isChangedBy(productData));
+            assertNotEquals(expected, pdto);
 
             throw e;
         }
@@ -220,10 +225,11 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
         Product entity = this.createProduct("test_product", "test_product", owner);
 
         securityInterceptor.enable();
-        ProductData result = this.ownerProductResource.getProduct(owner.getKey(), entity.getId());
+        ProductDTO result = this.ownerProductResource.getProduct(owner.getKey(), entity.getId());
+        ProductDTO expected = this.modelTranslator.translate(entity, ProductDTO.class);
 
         assertNotNull(result);
-        assertFalse(entity.isChangedBy(result));
+        assertEquals(expected, result);
     }
 
     @Test

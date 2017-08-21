@@ -16,7 +16,6 @@ package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.Certificate;
-import org.candlepin.model.CertificateSerial;
 
 
 
@@ -62,7 +61,7 @@ public class CertificateTranslator extends TimestampedEntityTranslator<Certifica
         dest.setCert(source.getCert());
 
         if (translator != null) {
-            dest.setSerial(translator.<CertificateSerial, CertificateSerialDTO>translate(source.getSerial()));
+            dest.setSerial(translator.translate(source.getSerial(), CertificateSerialDTO.class));
         }
         else {
             dest.setSerial(null);
@@ -70,4 +69,5 @@ public class CertificateTranslator extends TimestampedEntityTranslator<Certifica
 
         return dest;
     }
+
 }
