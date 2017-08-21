@@ -14,8 +14,9 @@
  */
 package org.candlepin.dto.api.v1;
 
-import org.candlepin.dto.DTOFactory;
+import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.Content;
+
 
 
 /**
@@ -36,8 +37,8 @@ public class ContentTranslator extends TimestampedEntityTranslator<Content, Cont
      * {@inheritDoc}
      */
     @Override
-    public ContentDTO translate(DTOFactory factory, Content source) {
-        return this.populate(factory, source, new ContentDTO());
+    public ContentDTO translate(ModelTranslator translator, Content source) {
+        return source != null ? this.populate(translator, source, new ContentDTO()) : null;
     }
 
     /**
@@ -52,9 +53,8 @@ public class ContentTranslator extends TimestampedEntityTranslator<Content, Cont
      * {@inheritDoc}
      */
     @Override
-    public ContentDTO populate(DTOFactory factory, Content source, ContentDTO destination) {
-
-        destination = super.populate(factory, source, destination);
+    public ContentDTO populate(ModelTranslator translator, Content source, ContentDTO destination) {
+        destination = super.populate(translator, source, destination);
 
         destination.setUuid(source.getUuid());
         destination.setId(source.getId());
@@ -73,4 +73,5 @@ public class ContentTranslator extends TimestampedEntityTranslator<Content, Cont
 
         return destination;
     }
+
 }

@@ -75,6 +75,10 @@ public class ProductTest extends DatabaseTestFixture {
             new Content("c6", "content-6", "test_type", "test_label-6", "test_vendor-6")
         };
 
+        for (Content cobj : content) {
+            cobj.setUuid(cobj.getId() + "_uuid");
+        }
+
         Collection<ProductContent> productContent1 = Arrays.asList(
             new ProductContent(null, content[0], true),
             new ProductContent(null, content[1], false),

@@ -20,12 +20,12 @@ import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.ContentManager;
 import org.candlepin.controller.OwnerManager;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Content;
 import org.candlepin.model.Environment;
 import org.candlepin.model.Owner;
-import org.candlepin.model.dto.ContentData;
 import org.candlepin.service.impl.DefaultUniqueIdGenerator;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -56,33 +56,34 @@ public class OwnerContentResourceTest extends DatabaseTestFixture {
         this.ownerContentResource = new OwnerContentResource(this.contentCurator, this.contentManager,
         this.environmentContentCurator, this.i18n, this.ownerCurator, this.ownerContentCurator,
         this.poolManager, this.productCurator, new DefaultUniqueIdGenerator(),
-        new ProductCachedSerializationModule(productCurator), ownerManager);
+        new ProductCachedSerializationModule(productCurator), ownerManager, this.modelTranslator);
     }
 
     @Test
     public void listContent() throws Exception {
         Owner owner = this.createOwner("test_owner");
         Content content = this.createContent("test_content", "test_content", owner);
+        ContentDTO cdto = this.modelTranslator.translate(content, ContentDTO.class);
 
-        CandlepinQuery<Content> response = this.ownerContentResource.listContent(owner.getKey());
+        CandlepinQuery<ContentDTO> response = this.ownerContentResource.listContent(owner.getKey());
 
         assertNotNull(response);
 
-        Collection<Content> received = response.list();
+        Collection<ContentDTO> received = response.list();
 
         assertEquals(1, received.size());
-        assertTrue(received.contains(content));
+        assertTrue(received.contains(cdto));
     }
 
     @Test
     public void listContentNoContent() throws Exception {
         Owner owner = this.createOwner("test_owner");
 
-        CandlepinQuery<Content> response = this.ownerContentResource.listContent(owner.getKey());
+        CandlepinQuery<ContentDTO> response = this.ownerContentResource.listContent(owner.getKey());
 
         assertNotNull(response);
 
-        Collection<Content> received = response.list();
+        Collection<ContentDTO> received = response.list();
 
         assertEquals(0, received.size());
     }
@@ -92,38 +93,40 @@ public class OwnerContentResourceTest extends DatabaseTestFixture {
         Owner owner = this.createOwner("test_owner");
         Content content = this.createContent("test_content", "test_content", owner);
 
-        ContentData output = this.ownerContentResource.getContent(owner.getKey(), content.getId());
+        ContentDTO output = this.ownerContentResource.getContent(owner.getKey(), content.getId());
 
         assertNotNull(output);
         assertEquals(content.getId(), output.getId());
-        assertFalse(content.isChangedBy(output));
     }
 
     @Test(expected = NotFoundException.class)
     public void getContentNotFound() {
         Owner owner = this.createOwner("test_owner");
 
-        ContentData output = this.ownerContentResource.getContent(owner.getKey(), "test_content");
+        ContentDTO output = this.ownerContentResource.getContent(owner.getKey(), "test_content");
     }
 
     @Test
     public void createContent() {
         Owner owner = this.createOwner("test_owner");
-        ContentData contentData = TestUtil.createContentDTO("test_content");
-        contentData.setLabel("test-label");
-        contentData.setType("test-test");
-        contentData.setVendor("test-vendor");
+        ContentDTO cdto = TestUtil.createContentDTO("test_content");
+        cdto.setLabel("test-label");
+        cdto.setType("test-test");
+        cdto.setVendor("test-vendor");
 
-        assertNull(this.ownerContentCurator.getContentById(owner, contentData.getId()));
+        assertNull(this.ownerContentCurator.getContentById(owner, cdto.getId()));
 
-        ContentData output = this.ownerContentResource.createContent(owner.getKey(), contentData);
+        ContentDTO output = this.ownerContentResource.createContent(owner.getKey(), cdto);
 
         assertNotNull(output);
-        assertEquals(contentData.getId(), output.getId());
+        assertEquals(cdto.getId(), output.getId());
 
-        Content entity = this.ownerContentCurator.getContentById(owner, contentData.getId());
+        Content entity = this.ownerContentCurator.getContentById(owner, cdto.getId());
         assertNotNull(entity);
-        assertFalse(entity.isChangedBy(contentData));
+        assertEquals(cdto.getName(), entity.getName());
+        assertEquals(cdto.getLabel(), entity.getLabel());
+        assertEquals(cdto.getType(), entity.getType());
+        assertEquals(cdto.getVendor(), entity.getVendor());
     }
 
     @Test
@@ -134,22 +137,22 @@ public class OwnerContentResourceTest extends DatabaseTestFixture {
 
         Owner owner = this.createOwner("test_owner");
         Content content = this.createContent("test_content", "test_content", owner);
-        ContentData contentData = TestUtil.createContentDTO("test_content", "updated_name");
-        contentData.setLabel("test-label");
-        contentData.setType("test-test");
-        contentData.setVendor("test-vendor");
+        ContentDTO cdto = TestUtil.createContentDTO("test_content", "updated_name");
+        cdto.setLabel("test-label");
+        cdto.setType("test-test");
+        cdto.setVendor("test-vendor");
 
-        assertNotNull(this.ownerContentCurator.getContentById(owner, contentData.getId()));
+        assertNotNull(this.ownerContentCurator.getContentById(owner, cdto.getId()));
 
-        ContentData output = this.ownerContentResource.createContent(owner.getKey(), contentData);
+        ContentDTO output = this.ownerContentResource.createContent(owner.getKey(), cdto);
 
         assertNotNull(output);
-        assertEquals(contentData.getId(), output.getId());
-        assertEquals(contentData.getName(), output.getName());
+        assertEquals(cdto.getId(), output.getId());
+        assertEquals(cdto.getName(), output.getName());
 
-        Content entity = this.ownerContentCurator.getContentById(owner, contentData.getId());
+        Content entity = this.ownerContentCurator.getContentById(owner, cdto.getId());
         assertNotNull(entity);
-        assertFalse(entity.isChangedBy(contentData));
+        assertEquals(cdto.getName(), entity.getName());
     }
 
     @Test(expected = ForbiddenException.class)
@@ -160,24 +163,24 @@ public class OwnerContentResourceTest extends DatabaseTestFixture {
 
         Owner owner = this.createOwner("test_owner");
         Content content = this.createContent("test_content", "test_content", owner);
-        ContentData contentData = TestUtil.createContentDTO("test_content", "updated_name");
-        contentData.setLabel("test-label");
-        contentData.setType("test-test");
-        contentData.setVendor("test-vendor");
+        ContentDTO cdto = TestUtil.createContentDTO("test_content", "updated_name");
+        cdto.setLabel("test-label");
+        cdto.setType("test-test");
+        cdto.setVendor("test-vendor");
 
         content.setLocked(true);
         this.contentCurator.merge(content);
 
-        assertNotNull(this.ownerContentCurator.getContentById(owner, contentData.getId()));
+        assertNotNull(this.ownerContentCurator.getContentById(owner, cdto.getId()));
 
         try {
-            ContentData output = this.ownerContentResource.createContent(owner.getKey(), contentData);
+            ContentDTO output = this.ownerContentResource.createContent(owner.getKey(), cdto);
         }
         catch (ForbiddenException e) {
-            Content entity = this.ownerContentCurator.getContentById(owner, contentData.getId());
+            Content entity = this.ownerContentCurator.getContentById(owner, cdto.getId());
             assertNotNull(entity);
             assertEquals(content, entity);
-            assertTrue(entity.isChangedBy(contentData));
+            assertNotEquals(cdto.getName(), entity.getName());
 
             throw e;
         }
@@ -187,34 +190,34 @@ public class OwnerContentResourceTest extends DatabaseTestFixture {
     public void updateContent()  {
         Owner owner = this.createOwner("test_owner");
         Content content = this.createContent("test_content", "test_content", owner);
-        ContentData contentData = TestUtil.createContentDTO("test_content", "updated_name");
+        ContentDTO cdto = TestUtil.createContentDTO("test_content", "updated_name");
 
-        assertNotNull(this.ownerContentCurator.getContentById(owner, contentData.getId()));
+        assertNotNull(this.ownerContentCurator.getContentById(owner, cdto.getId()));
 
-        ContentData output = this.ownerContentResource.updateContent(owner.getKey(), contentData.getId(),
-            contentData);
+        ContentDTO output = this.ownerContentResource.updateContent(owner.getKey(), cdto.getId(), cdto);
 
         assertNotNull(output);
-        assertEquals(contentData.getId(), output.getId());
-        assertEquals(contentData.getName(), output.getName());
+        assertEquals(cdto.getId(), output.getId());
+        assertEquals(cdto.getName(), output.getName());
 
-        Content entity = this.ownerContentCurator.getContentById(owner, contentData.getId());
+        Content entity = this.ownerContentCurator.getContentById(owner, cdto.getId());
+
         assertNotNull(entity);
-        assertFalse(entity.isChangedBy(contentData));
+        assertEquals(cdto.getName(), entity.getName());
     }
 
     @Test(expected = NotFoundException.class)
     public void updateContentThatDoesntExist()  {
         Owner owner = this.createOwner("test_owner");
-        ContentData contentData = TestUtil.createContentDTO("test_content", "updated_name");
+        ContentDTO cdto = TestUtil.createContentDTO("test_content", "updated_name");
 
-        assertNull(this.ownerContentCurator.getContentById(owner, contentData.getId()));
+        assertNull(this.ownerContentCurator.getContentById(owner, cdto.getId()));
 
         try {
-            this.ownerContentResource.updateContent(owner.getKey(), contentData.getId(), contentData);
+            this.ownerContentResource.updateContent(owner.getKey(), cdto.getId(), cdto);
         }
         catch (NotFoundException e) {
-            assertNull(this.ownerContentCurator.getContentById(owner, contentData.getId()));
+            assertNull(this.ownerContentCurator.getContentById(owner, cdto.getId()));
 
             throw e;
         }
@@ -224,19 +227,20 @@ public class OwnerContentResourceTest extends DatabaseTestFixture {
     public void updateLockedContent()  {
         Owner owner = this.createOwner("test_owner");
         Content content = this.createContent("test_content", "test_content", owner);
-        ContentData contentData = TestUtil.createContentDTO("test_content", "updated_name");
+        ContentDTO cdto = TestUtil.createContentDTO("test_content", "updated_name");
         content.setLocked(true);
         this.contentCurator.merge(content);
 
-        assertNotNull(this.ownerContentCurator.getContentById(owner, contentData.getId()));
+        assertNotNull(this.ownerContentCurator.getContentById(owner, cdto.getId()));
 
         try {
-            this.ownerContentResource.updateContent(owner.getKey(), contentData.getId(), contentData);
+            this.ownerContentResource.updateContent(owner.getKey(), cdto.getId(), cdto);
         }
         catch (ForbiddenException e) {
-            Content entity = this.ownerContentCurator.getContentById(owner, contentData.getId());
+            Content entity = this.ownerContentCurator.getContentById(owner, cdto.getId());
             assertNotNull(entity);
-            assertTrue(entity.isChangedBy(contentData));
+            assertEquals(content, entity);
+            assertNotEquals(cdto.getName(), entity.getName());
 
             throw e;
         }
@@ -297,9 +301,9 @@ public class OwnerContentResourceTest extends DatabaseTestFixture {
 
     @Test(expected = NotFoundException.class)
     public void testUpdateContentThrowsExceptionWhenOwnerDoesNotExist() {
-        ContentData contentData = TestUtil.createContentDTO("test_content");
+        ContentDTO cdto = TestUtil.createContentDTO("test_content");
 
-        this.ownerContentResource.updateContent("fake_owner_key", contentData.getId(), contentData);
+        this.ownerContentResource.updateContent("fake_owner_key", cdto.getId(), cdto);
     }
 
 }

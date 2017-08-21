@@ -14,8 +14,6 @@
  */
 package org.candlepin.dto;
 
-import org.candlepin.model.ModelEntity;
-
 import static org.junit.Assert.*;
 
 import junitparams.JUnitParamsRunner;
@@ -30,8 +28,7 @@ import org.junit.runner.RunWith;
  * Base test suite for the EntityTranslator subclasses
  */
 @RunWith(JUnitParamsRunner.class)
-public abstract class AbstractTranslatorTest
-    <S extends ModelEntity, D extends CandlepinDTO, T extends ObjectTranslator<S, D>> {
+public abstract class AbstractTranslatorTest<S, D, T extends ObjectTranslator<S, D>> {
 
     protected ModelTranslator modelTranslator;
     protected T translator;
