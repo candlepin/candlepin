@@ -12,11 +12,12 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.dto.api.v1;
+package org.candlepin.dto.shim;
 
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.model.Content;
+import org.candlepin.dto.api.v1.ContentDTO;
+import org.candlepin.model.dto.ContentData;
 
 import static org.junit.Assert.*;
 
@@ -32,24 +33,24 @@ import java.util.Arrays;
  * Test suite for the UpstreamConsumerTranslator class
  */
 @RunWith(JUnitParamsRunner.class)
-public class ContentTranslatorTest extends
-    AbstractTranslatorTest<Content, ContentDTO, ContentTranslator> {
+public class ContentDataTranslatorTest extends
+    AbstractTranslatorTest<ContentData, ContentDTO, ContentDataTranslator> {
 
-    protected ContentTranslator translator = new ContentTranslator();
+    protected ContentDataTranslator translator = new ContentDataTranslator();
 
     @Override
     protected void initModelTranslator(ModelTranslator modelTranslator) {
-        modelTranslator.registerTranslator(this.translator, Content.class, ContentDTO.class);
+        modelTranslator.registerTranslator(this.translator, ContentData.class, ContentDTO.class);
     }
 
     @Override
-    protected ContentTranslator initObjectTranslator() {
+    protected ContentDataTranslator initObjectTranslator() {
         return this.translator;
     }
 
     @Override
-    protected Content initSourceObject() {
-        Content source = new Content();
+    protected ContentData initSourceObject() {
+        ContentData source = new ContentData();
 
         source.setUuid("test_value");
         source.setId("test_value");
@@ -76,7 +77,7 @@ public class ContentTranslatorTest extends
     }
 
     @Override
-    protected void verifyOutput(Content source, ContentDTO dto, boolean childrenGenerated) {
+    protected void verifyOutput(ContentData source, ContentDTO dto, boolean childrenGenerated) {
         if (source != null) {
             // This DTO does not have any nested objects, so we don't need to worry about the
             // childrenGenerated flag

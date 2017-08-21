@@ -48,8 +48,8 @@ import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.dto.ContentData;
-import org.candlepin.model.dto.ProductContentData;
 import org.candlepin.model.dto.ProductData;
+import org.candlepin.model.dto.ProductContentData;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.pinsetter.core.PinsetterKernel;
 import org.candlepin.policy.EntitlementRefusedException;
@@ -269,8 +269,8 @@ public class CandlepinPoolManager implements PoolManager {
                         for (ProductContentData pcd : pcdCollection) {
                             // Impl note:
                             // We aren't checking for duplicate mappings to the same content, since our
-                            // current implementation of ProductData prevents such a thing. However, if it
-                            // is reasonably possible that we could end up with ProductData instances which
+                            // current implementation of ProductDTO prevents such a thing. However, if it
+                            // is reasonably possible that we could end up with ProductDTO instances which
                             // do not prevent duplicate content mappings, we should add checks here to
                             // check for, and throw out, such mappings
 
@@ -913,22 +913,22 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         // Gather the product IDs referenced by this subscription...
-        Set<ProductData> productDTOs = new HashSet<ProductData>();
+        Set<ProductData> productData = new HashSet<ProductData>();
         Set<String> productIds = new HashSet<String>();
         Map<String, Product> productMap = new HashMap<String, Product>();
 
-        productDTOs.add(sub.getProduct());
-        productDTOs.add(sub.getDerivedProduct());
+        productData.add(sub.getProduct());
+        productData.add(sub.getDerivedProduct());
 
         if (sub.getProvidedProducts() != null) {
-            productDTOs.addAll(sub.getProvidedProducts());
+            productData.addAll(sub.getProvidedProducts());
         }
 
         if (sub.getDerivedProvidedProducts() != null) {
-            productDTOs.addAll(sub.getDerivedProvidedProducts());
+            productData.addAll(sub.getDerivedProvidedProducts());
         }
 
-        for (ProductData pdata : productDTOs) {
+        for (ProductData pdata : productData) {
             if (pdata != null) {
                 if (pdata.getId() == null) {
                     throw new IllegalStateException("Subscription references an incomplete product: " +

@@ -55,7 +55,7 @@ public class ResolverUtil {
     public Owner resolveOwner(Owner owner) {
         if (owner == null || (owner.getKey() == null && owner.getId() == null)) {
             throw new BadRequestException(
-                    i18n.tr("No owner specified, or owner lacks identifying information"));
+                i18n.tr("No owner specified, or owner lacks identifying information"));
         }
 
         if (owner.getKey() != null) {
@@ -89,7 +89,7 @@ public class ResolverUtil {
     public Product resolveProduct(Owner owner, String productId) {
         if (productId == null) {
             throw new BadRequestException(
-                    i18n.tr("No product specified, or product lacks identifying information"));
+                i18n.tr("No product specified, or product lacks identifying information"));
         }
 
         // TODO: Maybe add UUID resolution as well?
@@ -100,10 +100,9 @@ public class ResolverUtil {
         Product product = this.ownerProductCurator.getProductById(owner, productId);
 
         if (product == null) {
-            throw new NotFoundException(i18n.tr(
-                "Unable to find a product with the ID \"{0}\" for owner \"{1}\"",
-                productId, owner.getKey()
-            ));
+            throw new NotFoundException(
+                i18n.tr("Unable to find a product with the ID \"{0}\" for owner \"{1}\"",
+                    productId, owner.getKey()));
         }
 
         return product;
@@ -150,40 +149,36 @@ public class ResolverUtil {
         return pool;
     }
 
-    public void validateProductData(ProductData pdata, Owner owner, boolean allowNull) {
-        if (pdata != null) {
-            if (pdata.getUuid() != null) {
+    public void validateProductData(ProductData dto, Owner owner, boolean allowNull) {
+        if (dto != null) {
+            if (dto.getUuid() != null) {
                 // UUID is set. Verify that product exists and matches the ID provided, if any
-                Product product = this.productCurator.find(pdata.getUuid());
+                Product product = this.productCurator.find(dto.getUuid());
 
                 if (product == null) {
-                    throw new NotFoundException(i18n.tr(
-                        "Unable to find a product with the UUID \"{0}\"", pdata.getUuid()
-                    ));
+                    throw new NotFoundException(
+                        i18n.tr("Unable to find a product with the UUID \"{0}\"", dto.getUuid()));
                 }
 
-                pdata.setId(product.getId());
+                dto.setId(product.getId());
             }
-            else if (pdata.getId() != null) {
-                Product product = this.ownerProductCurator.getProductById(owner, pdata.getId());
+            else if (dto.getId() != null) {
+                Product product = this.ownerProductCurator.getProductById(owner, dto.getId());
 
                 if (product == null) {
-                    throw new NotFoundException(i18n.tr(
-                        "Unable to find a product with the ID \"{0}\" for owner \"{1}\"",
-                        pdata.getId(), owner.getKey()
-                    ));
+                    throw new NotFoundException(
+                        i18n.tr("Unable to find a product with the ID \"{0}\" for owner \"{1}\"",
+                            dto.getId(), owner.getKey()));
                 }
             }
             else {
                 throw new BadRequestException(
-                    i18n.tr("No product specified, or product lacks identifying information")
-                );
+                    i18n.tr("No product specified, or product lacks identifying information"));
             }
         }
         else if (!allowNull) {
             throw new BadRequestException(
-                i18n.tr("No product specified, or product lacks identifying information")
-            );
+                i18n.tr("No product specified, or product lacks identifying information"));
         }
     }
 

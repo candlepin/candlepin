@@ -23,6 +23,9 @@ import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.ProductManager;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.ContentDTO;
+import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.model.Content;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Owner;
@@ -34,9 +37,7 @@ import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.model.dto.ProductData;
 import org.candlepin.pinsetter.tasks.RefreshPoolsForProductJob;
-import org.candlepin.util.ElementTransformer;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -46,8 +47,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -90,12 +91,13 @@ public class OwnerProductResource {
     private ProductCertificateCurator productCertCurator;
     private ProductCurator productCurator;
     private ProductManager productManager;
+    private ModelTranslator translator;
 
     @Inject
     public OwnerProductResource(Configuration config, I18n i18n, OwnerCurator ownerCurator,
         OwnerContentCurator ownerContentCurator, OwnerProductCurator ownerProductCurator,
         ProductCertificateCurator productCertCurator, ProductCurator productCurator,
-        ProductManager productManager) {
+        ProductManager productManager, ModelTranslator translator) {
 
         this.config = config;
         this.i18n = i18n;
@@ -105,6 +107,7 @@ public class OwnerProductResource {
         this.productCertCurator = productCertCurator;
         this.productCurator = productCurator;
         this.productManager = productManager;
+        this.translator = translator;
     }
 
     /**
@@ -125,7 +128,6 @@ public class OwnerProductResource {
      */
     protected Owner getOwnerByKey(String key) {
         Owner owner = this.ownerCurator.lookupByKey(key);
-
         if (owner == null) {
             throw new NotFoundException(i18n.tr("Owner with key \"{0}\" was not found.", key));
         }
@@ -151,11 +153,8 @@ public class OwnerProductResource {
      */
     protected Product fetchProduct(Owner owner, String productId) {
         Product product = this.ownerProductCurator.getProductById(owner, productId);
-
         if (product == null) {
-            throw new NotFoundException(
-                i18n.tr("Product with ID ''{0}'' could not be found.", productId)
-            );
+            throw new NotFoundException(i18n.tr("Product with ID ''{0}'' could not be found.", productId));
         }
 
         return product;
@@ -177,14 +176,10 @@ public class OwnerProductResource {
      * @return
      *  the Content instance for the content with the specified id
      */
-
     protected Content fetchContent(Owner owner, String contentId) {
         Content content = this.ownerContentCurator.getContentById(owner, contentId);
-
         if (content == null) {
-            throw new NotFoundException(
-                i18n.tr("Content with ID \"{0}\" could not be found.", contentId)
-            );
+            throw new NotFoundException(i18n.tr("Content with ID \"{0}\" could not be found.", contentId));
         }
 
         return content;
@@ -194,7 +189,7 @@ public class OwnerProductResource {
         response = Product.class, responseContainer = "list")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public CandlepinQuery<ProductData> listProducts(
+    public CandlepinQuery<ProductDTO> listProducts(
         @Verify(Owner.class) @PathParam("owner_key") String ownerKey,
         @QueryParam("product") List<String> productIds) {
 
@@ -204,12 +199,7 @@ public class OwnerProductResource {
             this.ownerProductCurator.getProductsByIds(owner, productIds) :
             this.ownerProductCurator.getProductsByOwner(owner);
 
-        return query.transform(new ElementTransformer<Product, ProductData>() {
-            @Override
-            public ProductData transform(Product element) {
-                return element.toDTO();
-            }
-        });
+        return this.translator.translateQuery(query, ProductDTO.class);
     }
 
     @ApiOperation(notes = "Retrieves a single Product", value = "getProduct")
@@ -218,14 +208,14 @@ public class OwnerProductResource {
     @Path("/{product_id}")
     @Produces(MediaType.APPLICATION_JSON)
     @SecurityHole
-    public ProductData getProduct(
+    public ProductDTO getProduct(
         @Verify(Owner.class) @PathParam("owner_key") String ownerKey,
         @PathParam("product_id") String productId) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
         Product product = this.fetchProduct(owner, productId);
 
-        return product.toDTO();
+        return this.translator.translate(product, ProductDTO.class);
     }
 
     @ApiOperation(notes = "Retreives a Certificate for a Product", value = "getProductCertificate")
@@ -251,14 +241,14 @@ public class OwnerProductResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     @Transactional
-    public ProductData createProduct(
+    public ProductDTO createProduct(
         @PathParam("owner_key") String ownerKey,
-        ProductData product) {
+        ProductDTO dto) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
-        Product entity = productManager.createProduct(product, owner);
+        Product entity = productManager.createProduct(dto, owner);
 
-        return entity.toDTO();
+        return this.translator.translate(entity, ProductDTO.class);
     }
 
     @ApiOperation(notes = "Updates a Product", value = "updateProduct")
@@ -268,10 +258,10 @@ public class OwnerProductResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     @Transactional
-    public ProductData updateProduct(
+    public ProductDTO updateProduct(
         @PathParam("owner_key") String ownerKey,
         @PathParam("product_id") String productId,
-        @ApiParam(name = "update", required = true) ProductData update) {
+        @ApiParam(name = "update", required = true) ProductDTO update) {
 
         if (StringUtils.isEmpty(update.getId())) {
             update.setId(productId);
@@ -289,9 +279,10 @@ public class OwnerProductResource {
             throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", existing.getId()));
         }
 
+        this.productCurator.lock(existing);
         Product updated = this.productManager.updateProduct(update, owner, true);
 
-        return updated.toDTO();
+        return this.translator.translate(updated, ProductDTO.class);
     }
 
     @ApiOperation(notes = "Adds one or more Content entities to a Product", value = "addBatchContent")
@@ -300,7 +291,7 @@ public class OwnerProductResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_id}/batch_content")
     @Transactional
-    public ProductData addBatchContent(
+    public ProductDTO addBatchContent(
         @PathParam("owner_key") String ownerKey,
         @PathParam("product_id") String productId,
         @ApiParam(name = "contentMap", required = true) Map<String, Boolean> contentMap) {
@@ -314,15 +305,32 @@ public class OwnerProductResource {
         }
 
         this.productCurator.lock(product);
+        ProductDTO pdto = this.translator.translate(product, ProductDTO.class);
 
+        // Impl note:
+        // This is a wholely inefficient way of doing this. When we return to using ID-based linking
+        // and we're not linking the universe with our model, we can just attach the IDs directly
+        // without needing all this DTO conversion back and forth.
+        // Alternatively, we can shut off Hibernate's auto-commit junk and get in the habit of
+        // calling commit methods as necessary so we don't have to work with DTOs internally.
+
+        boolean changed = false;
         for (Entry<String, Boolean> entry : contentMap.entrySet()) {
             Content content = this.fetchContent(owner, entry.getKey());
-            productContent.add(new ProductContent(product, content, entry.getValue()));
+            boolean enabled = entry.getValue() != null ?
+                entry.getValue() :
+                ProductContent.DEFAULT_ENABLED_STATE;
+
+            ContentDTO cdto = this.translator.translate(content, ContentDTO.class);
+
+            changed |= pdto.addContent(cdto, enabled);
         }
 
-        product = this.productManager.addContentToProduct(product, productContent, owner, true);
+        if (changed) {
+            product = this.productManager.updateProduct(pdto, owner, true);
+        }
 
-        return product.toDTO();
+        return this.translator.translate(product, ProductDTO.class);
     }
 
     @ApiOperation(notes = "Adds a single Content to a Product", value = "addContent")
@@ -331,27 +339,56 @@ public class OwnerProductResource {
     @Consumes(MediaType.WILDCARD)
     @Path("/{product_id}/content/{content_id}")
     @Transactional
-    public ProductData addContent(
+    public ProductDTO addContent(
         @PathParam("owner_key") String ownerKey,
         @PathParam("product_id") String productId,
         @PathParam("content_id") String contentId,
         @QueryParam("enabled") Boolean enabled) {
 
+        // Package the params up and pass it off to our batch method
+        Map<String, Boolean> contentMap = Collections.singletonMap(contentId, enabled);
+        return this.addBatchContent(ownerKey, productId, contentMap);
+    }
+
+
+    @ApiOperation(notes = "Adds one or more Content entities to a Product", value = "addBatchContent")
+    @DELETE
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/{product_id}/batch_content")
+    @Transactional
+    public ProductDTO removeBatchContent(
+        @PathParam("owner_key") String ownerKey,
+        @PathParam("product_id") String productId,
+        @ApiParam(name = "content", required = true) List<String> contentIds) {
+
         Owner owner = this.getOwnerByKey(ownerKey);
         Product product = this.fetchProduct(owner, productId);
-        Content content = this.fetchContent(owner, contentId);
 
         if (product.isLocked()) {
             throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", product.getId()));
         }
 
         this.productCurator.lock(product);
+        ProductDTO pdto = this.translator.translate(product, ProductDTO.class);
 
-        product = this.productManager.addContentToProduct(
-            product, Arrays.asList(new ProductContent(product, content, enabled)), owner, true
-        );
+        // Impl note:
+        // This is a wholely inefficient way of doing this. When we return to using ID-based linking
+        // and we're not linking the universe with our model, we can just attach the IDs directly
+        // without needing all this DTO conversion back and forth.
+        // Alternatively, we can shut off Hibernate's auto-commit junk and get in the habit of
+        // calling commit methods as necessary so we don't have to work with DTOs internally.
 
-        return product.toDTO();
+        boolean changed = false;
+        for (String contentId : contentIds) {
+            changed |= pdto.removeContent(contentId);
+        }
+
+        if (changed) {
+            product = this.productManager.updateProduct(pdto, owner, true);
+        }
+
+        return this.translator.translate(product, ProductDTO.class);
     }
 
     @ApiOperation(notes = "Removes a single Content from a Product", value = "removeContent")
@@ -359,21 +396,13 @@ public class OwnerProductResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_id}/content/{content_id}")
     @Transactional
-    public void removeContent(
+    public ProductDTO removeContent(
         @PathParam("owner_key") String ownerKey,
         @PathParam("product_id") String productId,
         @PathParam("content_id") String contentId) {
 
-        Owner owner = this.getOwnerByKey(ownerKey);
-        Product product = this.fetchProduct(owner, productId);
-        Content content = this.fetchContent(owner, contentId);
-
-        if (product.isLocked()) {
-            throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", product.getId()));
-        }
-
-        // Remove content
-        this.productManager.removeProductContent(product, Arrays.asList(content), owner, true);
+        // Package up the params and pass it to our bulk operation
+        return this.removeBatchContent(ownerKey, productId, Collections.<String>singletonList(contentId));
     }
 
     @ApiOperation(notes = "Removes a Product", value = "deleteProduct")
@@ -395,11 +424,7 @@ public class OwnerProductResource {
 
         if (this.productCurator.productHasSubscriptions(owner, product)) {
             throw new BadRequestException(
-                i18n.tr(
-                    "Product with ID ''{0}'' cannot be deleted while subscriptions exist.",
-                    productId
-                )
-            );
+                i18n.tr("Product with ID ''{0}'' cannot be deleted while subscriptions exist.", productId));
         }
 
         this.productManager.removeProduct(owner, product);

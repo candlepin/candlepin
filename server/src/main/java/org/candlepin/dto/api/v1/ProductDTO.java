@@ -80,7 +80,7 @@ public class ProductDTO extends TimestampedCandlepinDTO<ProductDTO> {
             @JsonProperty("content") ContentDTO content,
             @JsonProperty("enabled") Boolean enabled) {
 
-            if (content == null || content.getUuid() == null || content.getId() == null) {
+            if (content == null || (content.getUuid() == null && content.getId() == null)) {
                 throw new IllegalArgumentException("content is null or is missing an identifier");
             }
 
@@ -535,7 +535,7 @@ public class ProductDTO extends TimestampedCandlepinDTO<ProductDTO> {
      * Adds the given content to this product DTO. If a matching content has already been added to
      * this product, it will be overwritten by the specified content.
      *
-     * @param pcdto
+     * @param dto
      *  The product content DTO to add to this product
      *
      * @throws IllegalArgumentException
@@ -557,13 +557,17 @@ public class ProductDTO extends TimestampedCandlepinDTO<ProductDTO> {
         // adding product content, then changing its ID. It's too bad this isn't all immutable...
 
         boolean changed = false;
+        boolean matched = false;
+        String contentId = dto.getContent().getId();
+
 
         if (this.content == null) {
             this.content = new HashMap<String, ProductContentDTO>();
             changed = true;
         }
         else {
-            changed = !this.content.containsKey(dto.getContent().getId());
+            ProductContentDTO existing = this.content.get(dto.getContent().getId());
+            changed = !dto.equals(existing);
         }
 
         if (changed) {

@@ -42,7 +42,7 @@ import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.OwnerManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.ProductManager;
-import org.candlepin.dto.api.APIModelTranslator;
+import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
 import org.candlepin.model.CandlepinQuery;
@@ -190,7 +190,7 @@ public class OwnerResource {
     private ProductManager productManager;
     private ContentManager contentManager;
     private ConsumerTypeValidator consumerTypeValidator;
-    private APIModelTranslator translator;
+    private ModelTranslator translator;
 
     @Inject
     public OwnerResource(OwnerCurator ownerCurator,
@@ -222,7 +222,7 @@ public class OwnerResource {
         ProductManager productManager,
         ContentManager contentManager,
         ConsumerTypeValidator consumerTypeValidator,
-        APIModelTranslator translator) {
+        ModelTranslator translator) {
 
         this.ownerCurator = ownerCurator;
         this.ownerInfoCurator = ownerInfoCurator;
@@ -365,7 +365,7 @@ public class OwnerResource {
             this.ownerCurator.lookupByKeys(Arrays.asList(keyFilter)) :
             this.ownerCurator.listAll();
 
-        return this.translator.<Owner, OwnerDTO>translateQuery(query);
+        return this.translator.translateQuery(query, OwnerDTO.class);
     }
 
     /**
@@ -399,7 +399,7 @@ public class OwnerResource {
     @ApiResponses({ @ApiResponse(code = 404, message = "An owner not found") })
     public OwnerDTO getOwner(@PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
         Owner owner = findOwner(ownerKey);
-        return this.translator.<Owner, OwnerDTO>translate(owner);
+        return this.translator.translate(owner, OwnerDTO.class);
     }
 
     /**
@@ -492,7 +492,7 @@ public class OwnerResource {
         log.info("Created owner: {}", owner);
         sink.emitOwnerCreated(owner);
 
-        return this.translator.<Owner, OwnerDTO>translate(owner);
+        return this.translator.translate(owner, OwnerDTO.class);
     }
 
     /**
@@ -563,7 +563,7 @@ public class OwnerResource {
         Event e = eventBuilder.setNewEntity(owner).buildEvent();
         sink.queueEvent(e);
 
-        return this.translator.<Owner, OwnerDTO>translate(owner);
+        return this.translator.translate(owner, OwnerDTO.class);
     }
 
     /**
@@ -856,7 +856,7 @@ public class OwnerResource {
         owner.setLogLevel(logLevel.toString());
         owner = ownerCurator.merge(owner);
 
-        return this.translator.<Owner, OwnerDTO>translate(owner);
+        return this.translator.translate(owner, OwnerDTO.class);
     }
 
     /**
@@ -1579,7 +1579,7 @@ public class OwnerResource {
 
         Owner owner = findOwner(ownerKey);
         UpstreamConsumer consumer = owner.getUpstreamConsumer();
-        UpstreamConsumerDTO dto = this.translator.<UpstreamConsumer, UpstreamConsumerDTO>translate(consumer);
+        UpstreamConsumerDTO dto = this.translator.translate(consumer, UpstreamConsumerDTO.class);
 
         // returning as a list for future proofing. today we support one, but
         // users of this api want to protect against having to change their code
