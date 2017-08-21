@@ -12,11 +12,17 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.dto.api.shim;
+package org.candlepin.dto.shim;
 
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.ObjectTranslator;
+import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
+import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductData;
+import org.candlepin.model.dto.ProductContentData;
+
+import java.util.Collection;
 
 
 
@@ -24,7 +30,7 @@ import org.candlepin.model.dto.ProductData;
  * The ProductDataTranslator provides translation from ProductData DTO objects to the new
  * ProductDTOs
  */
-public class ProductDataTranslator extends ObjectTranslator<ProductData, ProductDTO> {
+public class ProductDataTranslator implements ObjectTranslator<ProductData, ProductDTO> {
 
     /**
      * {@inheritDoc}
@@ -54,13 +60,40 @@ public class ProductDataTranslator extends ObjectTranslator<ProductData, Product
      * {@inheritDoc}
      */
     @Override
-    public ProductDTO populate(ModelTranslator translator, ProductData source, ProductDTO dest) {
+    public ProductDTO populate(ModelTranslator modelTranslator, ProductData source, ProductDTO dest) {
         if (source == null) {
             throw new IllegalArgumentException("source is null");
         }
 
         if (dest == null) {
             throw new IllegalArgumentException("dest is null");
+        }
+
+        dest.setCreated(source.getCreated());
+        dest.setUpdated(source.getUpdated());
+
+        dest.setUuid(source.getUuid());
+        dest.setId(source.getId());
+        dest.setName(source.getName());
+        dest.setMultiplier(source.getMultiplier());
+        dest.setAttributes(source.getAttributes());
+        dest.setDependentProductIds(source.getDependentProductIds());
+        dest.setHref(source.getHref());
+        dest.setLocked(source.isLocked());
+
+        Collection<ProductContentData> productContentData = source.getProductContent();
+        dest.setProductContent(null);
+
+        if (modelTranslator != null && productContentData != null) {
+            ObjectTranslator<ContentData, ContentDTO> contentTranslator = modelTranslator
+                .findTranslatorByClass(ContentData.class, ContentDTO.class);
+
+            for (ProductContentData pcd : productContentData) {
+                if (pcd != null && pcd.getContent() != null) {
+                    ContentDTO dto = contentTranslator.translate(modelTranslator, pcd.getContent());
+                    dest.addContent(dto, pcd.isEnabled());
+                }
+            }
         }
 
         return dest;

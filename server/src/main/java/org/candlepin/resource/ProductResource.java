@@ -19,6 +19,8 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
@@ -27,7 +29,6 @@ import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.ResultIterator;
-import org.candlepin.model.dto.ProductData;
 import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
 
 import com.google.inject.Inject;
@@ -73,16 +74,19 @@ public class ProductResource {
     private ProductCertificateCurator productCertCurator;
     private Configuration config;
     private I18n i18n;
+    private ModelTranslator translator;
 
     @Inject
     public ProductResource(ProductCurator productCurator, OwnerCurator ownerCurator,
-        ProductCertificateCurator productCertCurator, Configuration config, I18n i18n) {
+        ProductCertificateCurator productCertCurator, Configuration config, I18n i18n,
+        ModelTranslator translator) {
 
         this.productCurator = productCurator;
         this.productCertCurator = productCertCurator;
         this.ownerCurator = ownerCurator;
         this.config = config;
         this.i18n = i18n;
+        this.translator = translator;
     }
 
     /**
@@ -116,9 +120,9 @@ public class ProductResource {
     @Path("/{product_uuid}")
     @Produces(MediaType.APPLICATION_JSON)
     @SecurityHole
-    public ProductData getProduct(@PathParam("product_uuid") String productUuid) {
+    public ProductDTO getProduct(@PathParam("product_uuid") String productUuid) {
         Product product = this.fetchProduct(productUuid);
-        return product.toDTO();
+        return this.translator.translate(product, ProductDTO.class);
     }
 
     @ApiOperation(notes = "Retreives a Certificate for a Product", value = "getProductCertificate")
@@ -148,10 +152,9 @@ public class ProductResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     @Deprecated
-    public ProductData createProduct(ProductData product) {
+    public ProductDTO createProduct(ProductDTO product) {
         throw new BadRequestException(this.i18n.tr(
-            "Organization-agnostic product write operations are no longer supported."
-        ));
+            "Organization-agnostic product write operations are no longer supported."));
     }
 
     /**
@@ -165,12 +168,11 @@ public class ProductResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.WILDCARD)
     @Deprecated
-    public ProductData updateProduct(
+    public ProductDTO updateProduct(
         @PathParam("product_uuid") String productUuid,
-        @ApiParam(name = "product", required = true) ProductData product) {
+        @ApiParam(name = "product", required = true) ProductDTO product) {
         throw new BadRequestException(this.i18n.tr(
-            "Organization-agnostic product write operations are no longer supported."
-        ));
+            "Organization-agnostic product write operations are no longer supported."));
     }
 
 
@@ -185,13 +187,12 @@ public class ProductResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_uuid}/batch_content")
     @Deprecated
-    public ProductData addBatchContent(
+    public ProductDTO addBatchContent(
         @PathParam("product_uuid") String productUuid,
         Map<String, Boolean> contentMap) {
 
         throw new BadRequestException(this.i18n.tr(
-            "Organization-agnostic product write operations are no longer supported."
-        ));
+            "Organization-agnostic product write operations are no longer supported."));
     }
 
     /**
@@ -206,14 +207,13 @@ public class ProductResource {
     @Consumes(MediaType.WILDCARD)
     @Path("/{product_uuid}/content/{content_id}")
     @Deprecated
-    public ProductData addContent(
+    public ProductDTO addContent(
         @PathParam("product_uuid") String productUuid,
         @PathParam("content_id") String contentId,
         @QueryParam("enabled") Boolean enabled) {
 
         throw new BadRequestException(this.i18n.tr(
-            "Organization-agnostic product write operations are no longer supported."
-        ));
+            "Organization-agnostic product write operations are no longer supported."));
     }
 
     /**
@@ -230,8 +230,7 @@ public class ProductResource {
         @PathParam("content_id") String contentId) {
 
         throw new BadRequestException(this.i18n.tr(
-            "Organization-agnostic product write operations are no longer supported."
-        ));
+            "Organization-agnostic product write operations are no longer supported."));
     }
 
     /**
@@ -247,8 +246,7 @@ public class ProductResource {
         @PathParam("product_uuid") String productUuid) {
 
         throw new BadRequestException(this.i18n.tr(
-            "Organization-agnostic product write operations are no longer supported."
-        ));
+            "Organization-agnostic product write operations are no longer supported."));
     }
 
     @ApiOperation(notes = "Retrieves a list of Owners by Product", value = "getProductOwners",

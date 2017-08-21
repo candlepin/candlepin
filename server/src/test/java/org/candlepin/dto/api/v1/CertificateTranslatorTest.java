@@ -42,8 +42,10 @@ public class CertificateTranslatorTest extends
 
     @Override
     protected void initModelTranslator(ModelTranslator modelTranslator) {
-        modelTranslator.registerTranslator(CertificateSerial.class, new CertificateSerialTranslator());
-        modelTranslator.registerTranslator(Certificate.class, this.translator);
+        modelTranslator.registerTranslator(new CertificateSerialTranslator(),
+            CertificateSerial.class, CertificateSerialDTO.class);
+
+        modelTranslator.registerTranslator(this.translator, Certificate.class, CertificateDTO.class);
     }
 
     @Override

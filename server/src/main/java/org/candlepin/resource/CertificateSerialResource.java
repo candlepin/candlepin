@@ -14,7 +14,7 @@
  */
 package org.candlepin.resource;
 
-import org.candlepin.dto.api.APIModelTranslator;
+import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.CertificateSerialDTO;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CertificateSerial;
@@ -41,11 +41,11 @@ import io.swagger.annotations.Authorization;
 @Api(value = "serials", authorizations = { @Authorization("basic") })
 public class CertificateSerialResource {
     private CertificateSerialCurator certificateSerialCurator;
-    private APIModelTranslator translator;
+    private ModelTranslator translator;
 
     @Inject
     public CertificateSerialResource(CertificateSerialCurator certificateSerialCurator,
-        APIModelTranslator translator) {
+        ModelTranslator translator) {
 
         this.certificateSerialCurator = certificateSerialCurator;
         this.translator = translator;
@@ -57,7 +57,7 @@ public class CertificateSerialResource {
     @Produces(MediaType.APPLICATION_JSON)
     public CandlepinQuery<CertificateSerialDTO> getCertificateSerials() {
         CandlepinQuery<CertificateSerial> query = this.certificateSerialCurator.listAll();
-        return this.translator.<CertificateSerial, CertificateSerialDTO>translateQuery(query);
+        return this.translator.translateQuery(query, CertificateSerialDTO.class);
     }
 
     @ApiOperation(notes = "Retrieves single Certificate Serial", value = "getCertificateSerial")
@@ -66,6 +66,6 @@ public class CertificateSerialResource {
     @Produces(MediaType.APPLICATION_JSON)
     public CertificateSerialDTO getCertificateSerial(@PathParam("serial_id") Long serialId) {
         CertificateSerial serial = this.certificateSerialCurator.find(serialId);
-        return this.translator.<CertificateSerial, CertificateSerialDTO>translate(serial);
+        return this.translator.translate(serial, CertificateSerialDTO.class);
     }
 }

@@ -45,7 +45,8 @@ public class UpstreamConsumerTranslatorTest extends
     protected void initModelTranslator(ModelTranslator modelTranslator) {
         this.certificateTranslatorTest.initModelTranslator(modelTranslator);
         this.consumerTypeTranslatorTest.initModelTranslator(modelTranslator);
-        modelTranslator.registerTranslator(UpstreamConsumer.class, this.translator);
+        modelTranslator.registerTranslator(
+            this.translator, UpstreamConsumer.class, UpstreamConsumerDTO.class);
     }
 
     @Override
