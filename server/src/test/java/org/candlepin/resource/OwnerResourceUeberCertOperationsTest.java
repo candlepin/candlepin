@@ -26,7 +26,6 @@ import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.ContentManager;
 import org.candlepin.controller.ProductManager;
-import org.candlepin.dto.api.APIModelTranslator;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.EntitlementCertificateCurator;
@@ -72,7 +71,6 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
     @Inject private ContentOverrideValidator contentOverrideValidator;
     @Inject private ProductManager productManager;
     @Inject private ContentManager contentManager;
-    @Inject private APIModelTranslator translator;
 
     private Owner owner;
     private OwnerResource or;
@@ -96,7 +94,7 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
             ownerCurator, null, consumerCurator, i18n, null, null, null, null, null, poolManager, null, null,
             null, null, consumerTypeCurator, entCertCurator, entitlementCurator, ueberCertCurator,
             ueberCertGenerator, null,  null, contentOverrideValidator, serviceLevelValidator, null, null,
-            null, productManager, contentManager, null, this.translator);
+            null, productManager, contentManager, null, this.modelTranslator);
     }
 
     @Test

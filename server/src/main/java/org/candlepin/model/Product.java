@@ -16,7 +16,6 @@ package org.candlepin.model;
 
 import org.candlepin.jackson.CandlepinAttributeDeserializer;
 import org.candlepin.jackson.CandlepinLegacyAttributeSerializer;
-import org.candlepin.model.dto.ProductContentData;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.util.ListView;
 import org.candlepin.util.MapView;
@@ -405,6 +404,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         return new ProductData(this);
     }
 
+
     /**
      * Retrieves this product's object/database UUID. While the product ID may exist multiple times
      * in the database (if in use by multiple owners), this UUID uniquely identifies a
@@ -742,6 +742,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
 
         boolean changed = false;
         boolean matched = false;
+        String contentId = productContent.getContent().getId();
         Collection<ProductContent> remove = new LinkedList<ProductContent>();
 
         // We're operating under the assumption that we won't be doing janky things like
@@ -749,12 +750,10 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         for (ProductContent pcd : this.productContent) {
             Content cd = pcd.getContent();
 
-            if (cd != null && cd.getId() != null && cd.getId().equals(productContent.getContent().getId())) {
+            if (cd != null && contentId.equals(cd.getId())) {
                 matched = true;
 
-                if (pcd.isEnabled() != productContent.isEnabled() ||
-                    !cd.equals(productContent.getContent())) {
-
+                if (!pcd.equals(productContent)) {
                     remove.add(pcd);
                 }
             }
@@ -1060,9 +1059,17 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             // Impl note: We can't use .equals here on the collections, as Hibernate's special
             // collections explicitly state that they break the contract on .equals. As such, we
             // have to step through each collection and do a manual comparison. Ugh.
-            equals = equals &&
-                Util.collectionsAreEqual(this.dependentProductIds, that.dependentProductIds) &&
-                Util.collectionsAreEqual(this.productContent, that.productContent);
+            equals = equals && Util.collectionsAreEqual(this.dependentProductIds, that.dependentProductIds);
+
+            // Compare content UUIDs
+            equals = equals && Util.collectionsAreEqual(this.productContent, that.productContent,
+                new Comparator<ProductContent>() {
+                    public int compare(ProductContent pc1, ProductContent pc2) {
+                        // We're assuming the collections are well-formed and won't contain null
+                        // objects, but we'll verify that just in case they do.
+                        return pc1 == pc2 || (pc1 != null && pc1.equals(pc2)) ? 0 : 1;
+                    }
+                });
         }
 
         return equals;
@@ -1120,76 +1127,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         return builder.toHashCode();
     }
 
-    /**
-     * Determines whether or not this entity would be changed if the given DTO were applied to this
-     * object.
-     *
-     * @param dto
-     *  The product DTO to check for changes
-     *
-     * @throws IllegalArgumentException
-     *  if dto is null
-     *
-     * @return
-     *  true if this product would be changed by the given DTO; false otherwise
-     */
-    public boolean isChangedBy(ProductData dto) {
-        if (dto == null) {
-            throw new IllegalArgumentException("dto is null");
-        }
-
-        // Check simple properties first
-        if (dto.getId() != null && !dto.getId().equals(this.id)) {
-            return true;
-        }
-
-        if (dto.getName() != null && !dto.getName().equals(this.name)) {
-            return true;
-        }
-
-        if (dto.getMultiplier() != null && !dto.getMultiplier().equals(this.multiplier)) {
-            return true;
-        }
-
-        if (dto.isLocked() != null && !dto.isLocked().equals(this.locked)) {
-            return true;
-        }
-
-        Collection<String> dependentProductIds = dto.getDependentProductIds();
-        if (dependentProductIds != null &&
-            !Util.collectionsAreEqual(this.dependentProductIds, dependentProductIds)) {
-
-            return true;
-        }
-
-        // Impl note:
-        // Depending on how strict we are regarding case-sensitivity and value-representation,
-        // this may get us in to trouble. We may need to iterate through the attributes, performing
-        // case-insensitive key/value comparison and similiarities (i.e. management_enabled: 1 is
-        // functionally identical to Management_Enabled: true, but it will be detected as a change
-        // in attributes.
-        Map<String, String> attributes = dto.getAttributes();
-        if (attributes != null && !this.attributes.equals(attributes)) {
-            return true;
-        }
-
-        Collection<ProductContentData> productContent = dto.getProductContent();
-        if (productContent != null) {
-            Comparator comparator = new Comparator<Object>() {
-                public int compare(Object lhs, Object rhs) {
-                    return ((ProductContent) lhs).isChangedBy((ProductContentData) rhs) ? 1 : 0;
-                }
-            };
-
-            if (!Util.collectionsAreEqual(
-                (Collection) this.productContent, (Collection) productContent, comparator)) {
-
-                return true;
-            }
-        }
-
-        return false;
-    }
+    // TODO: Maybe remove these isChangedBy methods and move them to the translation bits?
 
     @PrePersist
     @PreUpdate

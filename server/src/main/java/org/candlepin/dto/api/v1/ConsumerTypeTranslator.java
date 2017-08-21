@@ -46,31 +46,29 @@ public class ConsumerTypeTranslator implements ObjectTranslator<ConsumerType, Co
      * {@inheritDoc}
      */
     @Override
-    public ConsumerTypeDTO populate(ConsumerType source,
-        ConsumerTypeDTO destination) {
+    public ConsumerTypeDTO populate(ConsumerType source, ConsumerTypeDTO dest) {
 
-        return this.populate(null, source, destination);
+        return this.populate(null, source, dest);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public ConsumerTypeDTO populate(ModelTranslator translator, ConsumerType source,
-        ConsumerTypeDTO destination) {
-
+    public ConsumerTypeDTO populate(ModelTranslator translator, ConsumerType source, ConsumerTypeDTO dest) {
         if (source == null) {
             throw new IllegalArgumentException("source is null");
         }
 
-        if (destination == null) {
-            throw new IllegalArgumentException("destination is null");
+        if (dest == null) {
+            throw new IllegalArgumentException("dest is null");
         }
 
-        destination.setId(source.getId());
-        destination.setLabel(source.getLabel());
-        destination.setManifest(source.isManifest());
+        dest.setId(source.getId());
+        dest.setLabel(source.getLabel());
+        dest.setManifest(source.isManifest());
 
-        return destination;
+        return dest;
     }
+
 }

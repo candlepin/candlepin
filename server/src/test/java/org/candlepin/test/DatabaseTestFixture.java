@@ -30,6 +30,7 @@ import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.guice.CandlepinRequestScope;
 import org.candlepin.guice.TestPrincipalProviderSetter;
 import org.candlepin.junit.CandlepinLiquibaseResource;
+import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerial;
@@ -158,6 +159,7 @@ public class DatabaseTestFixture {
     @Inject protected ProductShareCurator productShareCurator;
 
     @Inject protected ResourceLocatorMap locatorMap;
+    @Inject protected ModelTranslator modelTranslator;
 
     private static Injector parentInjector;
     protected Injector injector;
