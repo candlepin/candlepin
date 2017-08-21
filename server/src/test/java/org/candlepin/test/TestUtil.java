@@ -20,6 +20,9 @@ import org.candlepin.auth.Access;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.OwnerPermission;
 import org.candlepin.auth.permissions.Permission;
+import org.candlepin.dto.api.v1.ContentDTO;
+import org.candlepin.dto.api.v1.ProductDTO;
+import org.candlepin.dto.api.v1.ProductDTO.ProductContentDTO;
 import org.candlepin.model.Branding;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
@@ -37,8 +40,8 @@ import org.candlepin.model.User;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.candlepin.model.dto.ContentData;
-import org.candlepin.model.dto.ProductContentData;
 import org.candlepin.model.dto.ProductData;
+import org.candlepin.model.dto.ProductContentData;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.util.Util;
 
@@ -158,31 +161,54 @@ public class TestUtil {
         return createContent("test-content-" + randomInt());
     }
 
-    public static Content createContent(ContentData contentData) {
+    public static Content createContent(ContentDTO dto) {
         Content content = null;
 
-        if (contentData != null) {
-            content = createContent(contentData.getId(), contentData.getName());
+        if (dto != null) {
+            content = createContent(dto.getId(), dto.getName());
 
-            content.setUuid(contentData.getUuid());
-            content.setType(contentData.getType());
-            content.setLabel(contentData.getLabel());
-            content.setVendor(contentData.getVendor());
-            content.setContentUrl(contentData.getContentUrl());
-            content.setRequiredTags(contentData.getRequiredTags());
-            content.setReleaseVersion(contentData.getReleaseVersion());
-            content.setGpgUrl(contentData.getGpgUrl());
-            content.setMetadataExpire(contentData.getMetadataExpire());
-            content.setModifiedProductIds(contentData.getModifiedProductIds());
-            content.setArches(contentData.getArches());
-            content.setLocked(contentData.isLocked());
+            content.setUuid(dto.getUuid());
+            content.setType(dto.getType());
+            content.setLabel(dto.getLabel());
+            content.setVendor(dto.getVendor());
+            content.setContentUrl(dto.getContentUrl());
+            content.setRequiredTags(dto.getRequiredTags());
+            content.setReleaseVersion(dto.getReleaseVersion());
+            content.setGpgUrl(dto.getGpgUrl());
+            content.setMetadataExpire(dto.getMetadataExpiration());
+            content.setModifiedProductIds(dto.getModifiedProductIds());
+            content.setArches(dto.getArches());
+            content.setLocked(dto.isLocked());
         }
 
         return content;
     }
 
-    public static ContentData createContentDTO(String id, String name) {
-        ContentData dto = new ContentData();
+    public static Content createContent(ContentData cdata) {
+        Content content = null;
+
+        if (cdata != null) {
+            content = createContent(cdata.getId(), cdata.getName());
+
+            content.setUuid(cdata.getUuid());
+            content.setType(cdata.getType());
+            content.setLabel(cdata.getLabel());
+            content.setVendor(cdata.getVendor());
+            content.setContentUrl(cdata.getContentUrl());
+            content.setRequiredTags(cdata.getRequiredTags());
+            content.setReleaseVersion(cdata.getReleaseVersion());
+            content.setGpgUrl(cdata.getGpgUrl());
+            content.setMetadataExpire(cdata.getMetadataExpire());
+            content.setModifiedProductIds(cdata.getModifiedProductIds());
+            content.setArches(cdata.getArches());
+            content.setLocked(cdata.isLocked());
+        }
+
+        return content;
+    }
+
+    public static ContentDTO createContentDTO(String id, String name) {
+        ContentDTO dto = new ContentDTO();
 
         dto.setId(id);
         dto.setName(name);
@@ -190,11 +216,11 @@ public class TestUtil {
         return dto;
     }
 
-    public static ContentData createContentDTO(String id) {
+    public static ContentDTO createContentDTO(String id) {
         return createContentDTO(id, id);
     }
 
-    public static ContentData createContentDTO() {
+    public static ContentDTO createContentDTO() {
         return createContentDTO("test-content-" + randomInt());
     }
 
@@ -224,19 +250,49 @@ public class TestUtil {
         );
     }
 
-    public static Product createProduct(ProductData productData) {
+    public static Product createProduct(ProductDTO dto) {
         Product product = null;
 
-        if (productData != null) {
-            product = new Product(productData.getId(), productData.getName());
+        if (dto != null) {
+            product = new Product(dto.getId(), dto.getName());
 
-            product.setUuid(productData.getUuid());
-            product.setMultiplier(productData.getMultiplier());
+            product.setUuid(dto.getUuid());
+            product.setMultiplier(dto.getMultiplier());
 
-            product.setAttributes(productData.getAttributes());
+            product.setAttributes(dto.getAttributes());
 
-            if (productData.getProductContent() != null) {
-                for (ProductContentData pcd : productData.getProductContent()) {
+            if (dto.getProductContent() != null) {
+                for (ProductContentDTO pcd : dto.getProductContent()) {
+                    if (pcd != null) {
+                        Content content = createContent((ContentDTO) pcd.getContent());
+
+                        if (content != null) {
+                            product.addContent(content, pcd.isEnabled() != null ? pcd.isEnabled() : true);
+                        }
+                    }
+                }
+            }
+
+            product.setDependentProductIds(dto.getDependentProductIds());
+            product.setLocked(dto.isLocked() != null ? dto.isLocked() : false);
+        }
+
+        return product;
+    }
+
+    public static Product createProduct(ProductData pdata) {
+        Product product = null;
+
+        if (pdata != null) {
+            product = new Product(pdata.getId(), pdata.getName());
+
+            product.setUuid(pdata.getUuid());
+            product.setMultiplier(pdata.getMultiplier());
+
+            product.setAttributes(pdata.getAttributes());
+
+            if (pdata.getProductContent() != null) {
+                for (ProductContentData pcd : pdata.getProductContent()) {
                     if (pcd != null) {
                         Content content = createContent((ContentData) pcd.getContent());
 
@@ -247,15 +303,15 @@ public class TestUtil {
                 }
             }
 
-            product.setDependentProductIds(productData.getDependentProductIds());
-            product.setLocked(productData.isLocked() != null ? productData.isLocked() : false);
+            product.setDependentProductIds(pdata.getDependentProductIds());
+            product.setLocked(pdata.isLocked() != null ? pdata.isLocked() : false);
         }
 
         return product;
     }
 
-    public static ProductData createProductDTO(String id, String name) {
-        ProductData dto = new ProductData();
+    public static ProductDTO createProductDTO(String id, String name) {
+        ProductDTO dto = new ProductDTO();
 
         dto.setId(id);
         dto.setName(name);
@@ -263,11 +319,11 @@ public class TestUtil {
         return dto;
     }
 
-    public static ProductData createProductDTO(String id) {
+    public static ProductDTO createProductDTO(String id) {
         return createProductDTO(id, id);
     }
 
-    public static ProductData createProductDTO() {
+    public static ProductDTO createProductDTO() {
         return createProductDTO("test-product-" + randomInt());
     }
 
@@ -300,7 +356,7 @@ public class TestUtil {
         return createSubscription(owner, product, null);
     }
 
-    public static Subscription createSubscription(Owner owner, ProductData productData,
+    public static Subscription createSubscription(Owner owner, ProductData dto,
         Collection<ProductData> providedProductsData) {
 
         Set<ProductData> providedProductsSet = new HashSet<ProductData>();
@@ -308,7 +364,7 @@ public class TestUtil {
 
         Subscription sub = new Subscription(
             owner,
-            productData,
+            dto,
             providedProductsSet,
             1000L,
             createDate(2000, 1, 1),
@@ -504,18 +560,18 @@ public class TestUtil {
 
         List<Product> providedProducts = new LinkedList<Product>();
         if (sub.getProvidedProducts() != null) {
-            for (ProductData productData : sub.getProvidedProducts()) {
-                if (productData != null) {
-                    providedProducts.add(TestUtil.createProduct(productData));
+            for (ProductData pdata : sub.getProvidedProducts()) {
+                if (pdata != null) {
+                    providedProducts.add(TestUtil.createProduct(pdata));
                 }
             }
         }
 
         List<Product> derivedProvidedProducts = new LinkedList<Product>();
         if (sub.getDerivedProvidedProducts() != null) {
-            for (ProductData productData : sub.getDerivedProvidedProducts()) {
-                if (productData != null) {
-                    derivedProvidedProducts.add(TestUtil.createProduct(productData));
+            for (ProductData pdata : sub.getDerivedProvidedProducts()) {
+                if (pdata != null) {
+                    derivedProvidedProducts.add(TestUtil.createProduct(pdata));
                 }
             }
         }

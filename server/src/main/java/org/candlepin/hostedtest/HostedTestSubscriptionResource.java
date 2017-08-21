@@ -17,6 +17,9 @@ package org.candlepin.hostedtest;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.util.SuppressSwaggerCheck;
 import org.candlepin.controller.ProductManager;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.ContentDTO;
+import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.model.Content;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerContentCurator;
@@ -25,7 +28,6 @@ import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.resource.util.ResolverUtil;
 import org.candlepin.service.UniqueIdGenerator;
@@ -34,15 +36,14 @@ import com.google.inject.persist.Transactional;
 
 import org.xnap.commons.i18n.I18n;
 
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.inject.Inject;
-import javax.persistence.LockModeType;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -53,6 +54,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+
+
 
 /**
  * The SubscriptionResource class is used to provide an
@@ -90,6 +93,9 @@ public class HostedTestSubscriptionResource {
 
     @Inject
     private I18n i18n;
+
+    @Inject
+    private ModelTranslator translator;
 
     /**
      * API to check if resource is alive
@@ -193,13 +199,12 @@ public class HostedTestSubscriptionResource {
         adapter.deleteAllSubscriptions();
     }
 
-
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/owners/{owner_key}/products/{product_id}/batch_content")
     @Transactional
-    public Product addBatchContent(
+    public ProductDTO addBatchContent(
         @PathParam("owner_key") String ownerKey,
         @PathParam("product_id") String productId,
         Map<String, Boolean> contentMap) {
@@ -208,15 +213,32 @@ public class HostedTestSubscriptionResource {
         Product product = this.fetchProduct(owner, productId);
         Collection<ProductContent> productContent = new LinkedList<ProductContent>();
 
-        this.productCurator.lock(product, LockModeType.PESSIMISTIC_WRITE);
+        ProductDTO pdto = this.translator.translate(product, ProductDTO.class);
 
+        // Impl note:
+        // This is a wholely inefficient way of doing this. When we return to using ID-based linking
+        // and we're not linking the universe with our model, we can just attach the IDs directly
+        // without needing all this DTO conversion back and forth.
+        // Alternatively, we can shut off Hibernate's auto-commit junk and get in the habit of
+        // calling commit methods as necessary so we don't have to work with DTOs internally.
+
+        boolean changed = false;
         for (Entry<String, Boolean> entry : contentMap.entrySet()) {
             Content content = this.fetchContent(owner, entry.getKey());
-            productContent.add(new ProductContent(product, content, entry.getValue()));
+            boolean enabled = entry.getValue() != null ?
+                entry.getValue() :
+                ProductContent.DEFAULT_ENABLED_STATE;
+
+            ContentDTO cdto = this.translator.translate(content, ContentDTO.class);
+
+            changed |= pdto.addContent(cdto, enabled);
         }
 
-        return this.productManager.addContentToProduct(product, productContent, owner, true);
+        if (changed) {
+            product = this.productManager.updateProduct(pdto, owner, true);
+        }
 
+        return this.translator.translate(product, ProductDTO.class);
     }
 
     @POST
@@ -224,25 +246,15 @@ public class HostedTestSubscriptionResource {
     @Consumes(MediaType.WILDCARD)
     @Path("/owners/{owner_key}/products/{product_id}/content/{content_id}")
     @Transactional
-    public ProductData addContent(
+    public ProductDTO addContent(
         @PathParam("owner_key") String ownerKey,
         @PathParam("product_id") String productId,
         @PathParam("content_id") String contentId,
         @QueryParam("enabled") Boolean enabled) {
 
-
-        Owner owner = this.getOwnerByKey(ownerKey);
-        Product product = this.fetchProduct(owner, productId);
-        Content content = this.fetchContent(owner, contentId);
-
-        this.productCurator.lock(product, LockModeType.PESSIMISTIC_WRITE);
-
-        product = this.productManager.addContentToProduct(
-            product, Arrays.asList(new ProductContent(product, content, enabled)), owner, true
-        );
-
-        return product.toDTO();
-
+        // Package the params up and pass it off to our batch method
+        Map<String, Boolean> contentMap = Collections.singletonMap(contentId, enabled);
+        return this.addBatchContent(ownerKey, productId, contentMap);
     }
 
     @PUT
@@ -250,27 +262,23 @@ public class HostedTestSubscriptionResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     @Transactional
-    public ProductData updateProduct(
+    public ProductDTO updateProduct(
         @PathParam("owner_key") String ownerKey,
         @PathParam("product_id") String productId,
-        ProductData update) {
+        ProductDTO update) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
         Product existing = this.fetchProduct(owner, productId);
-
         Product updated = this.productManager.updateProduct(update, owner, true);
 
-        return updated.toDTO();
-
+        return this.translator.translate(updated, ProductDTO.class);
     }
 
     protected Product fetchProduct(Owner owner, String productId) {
         Product product = this.ownerProductCurator.getProductById(owner, productId);
 
         if (product == null) {
-            throw new NotFoundException(
-                i18n.tr("Product with ID ''{0}'' could not be found.", productId)
-            );
+            throw new NotFoundException(i18n.tr("Product with ID ''{0}'' could not be found.", productId));
         }
 
         return product;
@@ -290,9 +298,7 @@ public class HostedTestSubscriptionResource {
         Content content = this.ownerContentCurator.getContentById(owner, contentId);
 
         if (content == null) {
-            throw new NotFoundException(
-                i18n.tr("Content with ID \"{0}\" could not be found.", contentId)
-            );
+            throw new NotFoundException(i18n.tr("Content with ID \"{0}\" could not be found.", contentId));
         }
 
         return content;

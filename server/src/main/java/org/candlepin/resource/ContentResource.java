@@ -17,15 +17,15 @@ package org.candlepin.resource;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.model.dto.ContentData;
 import org.candlepin.service.UniqueIdGenerator;
-import org.candlepin.util.ElementTransformer;
 
 import com.google.inject.Inject;
 
@@ -63,11 +63,12 @@ public class ContentResource {
     private PoolManager poolManager;
     private ProductCurator productCurator;
     private OwnerCurator ownerCurator;
+    private ModelTranslator modelTranslator;
 
     @Inject
     public ContentResource(ContentCurator contentCurator, I18n i18n, UniqueIdGenerator idGenerator,
         EnvironmentContentCurator envContentCurator, PoolManager poolManager,
-        ProductCurator productCurator, OwnerCurator ownerCurator) {
+        ProductCurator productCurator, OwnerCurator ownerCurator, ModelTranslator modelTranslator) {
 
         this.i18n = i18n;
         this.contentCurator = contentCurator;
@@ -76,19 +77,15 @@ public class ContentResource {
         this.poolManager = poolManager;
         this.productCurator = productCurator;
         this.ownerCurator = ownerCurator;
+        this.modelTranslator = modelTranslator;
     }
 
-    @ApiOperation(notes = "Retrieves list of Content", value = "list", response = ContentData.class,
+    @ApiOperation(notes = "Retrieves list of Content", value = "list", response = ContentDTO.class,
         responseContainer = "list")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public CandlepinQuery<ContentData> list() {
-        return this.contentCurator.listAll().transform(new ElementTransformer<Content, ContentData>() {
-            @Override
-            public ContentData transform(Content content) {
-                return content.toDTO();
-            }
-        });
+    public CandlepinQuery<ContentDTO> list() {
+        return this.modelTranslator.translateQuery(this.contentCurator.listAll(), ContentDTO.class);
     }
 
     @ApiOperation(notes = "Retrieves a single Content", value = "getContent")
@@ -96,26 +93,24 @@ public class ContentResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{content_uuid}")
-    public ContentData getContent(@PathParam("content_uuid") String contentUuid) {
+    public ContentDTO getContent(@PathParam("content_uuid") String contentUuid) {
         Content content = this.contentCurator.lookupByUuid(contentUuid);
 
         if (content == null) {
             throw new NotFoundException(
-                i18n.tr("Content with UUID \"{0}\" could not be found.", contentUuid)
-            );
+                i18n.tr("Content with UUID \"{0}\" could not be found.", contentUuid));
         }
 
-        return content.toDTO();
+        return this.modelTranslator.translate(content, ContentDTO.class);
     }
 
     @ApiOperation(notes = "Creates a Content", value = "createContent")
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public ContentData createContent(Content content) {
+    public ContentDTO createContent(Content content) {
         throw new BadRequestException(this.i18n.tr(
-            "Organization-agnostic content write operations are not supported."
-        ));
+            "Organization-agnostic content write operations are not supported."));
     }
 
     @ApiOperation(notes = "Creates Contents in bulk", value = "createBatchContent")
@@ -123,10 +118,9 @@ public class ContentResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("/batch")
-    public Iterable<ContentData> createBatchContent(List<Content> contents) {
+    public Iterable<ContentDTO> createBatchContent(List<Content> contents) {
         throw new BadRequestException(this.i18n.tr(
-            "Organization-agnostic content write operations are not supported."
-        ));
+            "Organization-agnostic content write operations are not supported."));
     }
 
     @ApiOperation(notes = "Updates a Content", value = "updateContent")
@@ -134,10 +128,9 @@ public class ContentResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("/{content_uuid}")
-    public ContentData updateContent(@PathParam("content_uuid") String contentUuid, Content changes) {
+    public ContentDTO updateContent(@PathParam("content_uuid") String contentUuid, Content changes) {
         throw new BadRequestException(this.i18n.tr(
-            "Organization-agnostic content write operations are not supported."
-        ));
+            "Organization-agnostic content write operations are not supported."));
     }
 
     @ApiOperation(notes = "Deletes a Content", value = "remove")
@@ -146,7 +139,6 @@ public class ContentResource {
     @Path("/{content_uuid}")
     public void remove(@PathParam("content_uuid") String contentUuid) {
         throw new BadRequestException(this.i18n.tr(
-            "Organization-agnostic content write operations are not supported."
-        ));
+            "Organization-agnostic content write operations are not supported."));
     }
 }

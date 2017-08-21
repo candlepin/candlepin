@@ -551,7 +551,7 @@ public class ConsumerResource {
             sink.emitConsumerCreated(consumer);
 
             if (keys.size() > 0) {
-                consumerBindUtil.handleActivationKeys(consumer, keys, owner.autobindDisabled());
+                consumerBindUtil.handleActivationKeys(consumer, keys, owner.isAutobindDisabled());
             }
 
             // Don't allow complianceRules to update entitlementStatus, because we're about to perform
