@@ -39,7 +39,7 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
 @RunWith(MockitoJUnitRunner.class)
-public class ImportJobTest {
+public class ImportJobTest extends BaseJobTest{
 
     @Mock private OwnerCurator ownerCurator;
     @Mock private JobExecutionContext ctx;
@@ -50,8 +50,10 @@ public class ImportJobTest {
 
     @Before
     public void setup() {
+        super.init();
         owner = new Owner("my-test-owner");
         job = new ImportJob(ownerCurator, manifestManager);
+        injector.injectMembers(job);
     }
 
     @Test

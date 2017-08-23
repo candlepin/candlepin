@@ -22,6 +22,7 @@ import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -34,7 +35,12 @@ import java.util.Arrays;
 /**
  * RegenEntitlementCertsJobTest
  */
-public class RegenEntitlementCertsJobTest {
+public class RegenEntitlementCertsJobTest extends BaseJobTest{
+
+    @Before
+    public void init() {
+        super.init();
+    }
 
     @Test
     public void execute() throws Exception {
@@ -62,6 +68,7 @@ public class RegenEntitlementCertsJobTest {
 
         // test
         RegenProductEntitlementCertsJob recj = new RegenProductEntitlementCertsJob(pm, oc);
+        injector.injectMembers(recj);
         recj.execute(jec);
 
         // verification

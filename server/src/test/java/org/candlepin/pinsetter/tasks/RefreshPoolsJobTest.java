@@ -39,7 +39,7 @@ import java.sql.SQLException;
 /**
  * RefreshPoolsJobTest
  */
-public class RefreshPoolsJobTest {
+public class RefreshPoolsJobTest extends BaseJobTest{
 
     private CandlepinPoolManager pm;
     private OwnerCurator oc;
@@ -52,6 +52,7 @@ public class RefreshPoolsJobTest {
 
     @Before
     public void setUp() {
+        super.init();
         pm = mock(CandlepinPoolManager.class);
         oc = mock(OwnerCurator.class);
         owner = mock(Owner.class);
@@ -75,6 +76,7 @@ public class RefreshPoolsJobTest {
     public void execute() throws Exception {
         // test
         RefreshPoolsJob rpj = new RefreshPoolsJob(oc, pm, subAdapter, ownerAdapter);
+        injector.injectMembers(rpj);
         rpj.execute(ctx);
 
         // verification
@@ -102,6 +104,7 @@ public class RefreshPoolsJobTest {
         doThrow(new NullPointerException()).when(refresher).run();
 
         RefreshPoolsJob rpj = new RefreshPoolsJob(oc, pm, subAdapter, ownerAdapter);
+        injector.injectMembers(rpj);
         try {
             rpj.execute(ctx);
             fail("Expected exception not thrown");
@@ -119,6 +122,7 @@ public class RefreshPoolsJobTest {
         doThrow(e).when(refresher).run();
 
         RefreshPoolsJob rpj = new RefreshPoolsJob(oc, pm, subAdapter, ownerAdapter);
+        injector.injectMembers(rpj);
         try {
             rpj.execute(ctx);
             fail("Expected exception not thrown");
@@ -137,6 +141,7 @@ public class RefreshPoolsJobTest {
         doThrow(e2).when(refresher).run();
 
         RefreshPoolsJob rpj = new RefreshPoolsJob(oc, pm, subAdapter, ownerAdapter);
+        injector.injectMembers(rpj);
         try {
             rpj.execute(ctx);
             fail("Expected exception not thrown");
@@ -152,6 +157,7 @@ public class RefreshPoolsJobTest {
         doThrow(e).when(refresher).run();
 
         RefreshPoolsJob rpj = new RefreshPoolsJob(oc, pm, subAdapter, ownerAdapter);
+        injector.injectMembers(rpj);
         try {
             rpj.execute(ctx);
             fail("Expected exception not thrown");
