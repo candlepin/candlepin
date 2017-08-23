@@ -33,16 +33,18 @@ import java.util.HashSet;
 /**
  * SweepBarJobTest
  */
-public class SweepBarJobTest {
+public class SweepBarJobTest extends BaseJobTest {
     private SweepBarJob sweepBarJob;
     @Mock private JobCurator j;
     @Mock private PinsetterKernel pk;
     @Mock private JobExecutionContext ctx;
 
     @Before
-    public void init() throws SchedulerException {
+    public void startup() throws SchedulerException {
+        super.init();
         MockitoAnnotations.initMocks(this);
         sweepBarJob = new SweepBarJob(j, pk);
+        injector.injectMembers(sweepBarJob);
         when(pk.getSingleJobKeys()).thenReturn((new HashSet<JobKey>()));
     }
 

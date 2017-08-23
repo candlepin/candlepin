@@ -37,7 +37,7 @@ import java.io.File;
  * CertificateRevocationListTaskTest
  */
 @RunWith(MockitoJUnitRunner.class)
-public class CertificateRevocationListTaskTest {
+public class CertificateRevocationListTaskTest extends BaseJobTest {
     private CertificateRevocationListTask task;
 
     @Mock private Configuration config;
@@ -45,7 +45,9 @@ public class CertificateRevocationListTaskTest {
 
     @Before
     public void init() {
+        super.init();
         this.task = new CertificateRevocationListTask(config, crlFileUtil);
+        injector.injectMembers(task);
     }
 
     @Test(expected = JobExecutionException.class)

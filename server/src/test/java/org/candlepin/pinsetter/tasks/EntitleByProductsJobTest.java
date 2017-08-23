@@ -42,7 +42,7 @@ import java.util.List;
 /**
  * EntitleByProductsJobTest
  */
-public class EntitleByProductsJobTest {
+public class EntitleByProductsJobTest extends BaseJobTest {
 
     private Consumer consumer;
     private String consumerUuid;
@@ -50,9 +50,10 @@ public class EntitleByProductsJobTest {
 
     @Before
     public void init() {
+        super.init();
         consumerUuid = "49bd6a8f-e9f8-40cc-b8d7-86cafd687a0e";
         consumer = new Consumer("Test Consumer", "test-consumer", new Owner("test-owner"),
-            new ConsumerType("system"));
+                new ConsumerType("system"));
         consumer.setUuid(consumerUuid);
         e = mock(Entitler.class);
     }
@@ -82,6 +83,7 @@ public class EntitleByProductsJobTest {
             eq((Date) null), eq((Collection<String>) null))).thenReturn(ents);
 
         EntitleByProductsJob job = new EntitleByProductsJob(e, null);
+        injector.injectMembers(job);
         job.execute(ctx);
         verify(e).bindByProducts(eq(pids), eq(consumerUuid), eq((Date) null),
             eq((Collection<String>) null));

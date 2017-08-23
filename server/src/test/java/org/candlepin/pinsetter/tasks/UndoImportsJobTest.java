@@ -115,6 +115,7 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
             this.i18n, this.ownerCurator, this.poolManager, this.subAdapter,
             this.exportCurator, this.importRecordCurator
         );
+        injector.injectMembers(undoImportsJob);
     }
 
     @Test

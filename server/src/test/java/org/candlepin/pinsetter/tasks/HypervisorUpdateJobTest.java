@@ -49,7 +49,7 @@ import java.util.Set;
 /**
  * HypervisorUpdateJobTest
  */
-public class HypervisorUpdateJobTest {
+public class HypervisorUpdateJobTest extends BaseJobTest{
 
     private Owner owner;
     private Principal principal;
@@ -63,6 +63,7 @@ public class HypervisorUpdateJobTest {
 
     @Before
     public void init() {
+        super.init();
         i18n = I18nFactory.getI18n(
             getClass(),
             Locale.US,
@@ -106,6 +107,7 @@ public class HypervisorUpdateJobTest {
 
         HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerResource,
             i18n);
+        injector.injectMembers(job);
         job.execute(ctx);
         verify(consumerResource).create(any(Consumer.class), eq(principal), anyString(), eq("joe"),
             anyString(), eq(false));
@@ -124,6 +126,7 @@ public class HypervisorUpdateJobTest {
 
         HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerResource,
             i18n);
+        injector.injectMembers(job);
         job.execute(ctx);
         ArgumentCaptor<Consumer> argument = ArgumentCaptor.forClass(Consumer.class);
         verify(consumerResource).create(argument.capture(), eq(principal), anyString(), eq("joe"),
@@ -147,6 +150,7 @@ public class HypervisorUpdateJobTest {
 
         HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerResource,
             i18n);
+        injector.injectMembers(job);
         job.execute(ctx);
         verify(consumerResource).performConsumerUpdates(any(Consumer.class), eq(hypervisor),
             any(VirtConsumerMap.class), eq(false));
@@ -169,6 +173,7 @@ public class HypervisorUpdateJobTest {
 
         HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerResource,
             i18n);
+        injector.injectMembers(job);
         job.execute(ctx);
         assertEquals("updateReporterId", hypervisor.getHypervisorId().getReporterId());
     }
@@ -190,6 +195,7 @@ public class HypervisorUpdateJobTest {
 
         HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerResource,
             i18n);
+        injector.injectMembers(job);
         job.execute(ctx);
         verify(consumerResource, never()).create(any(Consumer.class), any(Principal.class),
             anyString(), anyString(), anyString(), eq(false));
@@ -218,6 +224,7 @@ public class HypervisorUpdateJobTest {
 
         HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerResource,
             i18n);
+        injector.injectMembers(job);
         job.execute(ctx);
 
         Set<String> expectedSet = new HashSet<String>();
@@ -278,6 +285,7 @@ public class HypervisorUpdateJobTest {
 
         HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerResource,
             i18n);
+        injector.injectMembers(job);
 
         try {
             job.execute(ctx);
