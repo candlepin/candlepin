@@ -125,6 +125,7 @@ describe 'Autobind On Owner' do
   end
 
   it 'favors non-shared pools' do
+    skip("sharing is disabled in this branch")
     prod = create_product(random_string('prod'), random_string('prod'), {
       :owner => owner_key,
       :attributes => {}
