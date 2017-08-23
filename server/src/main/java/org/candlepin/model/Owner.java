@@ -32,6 +32,7 @@ import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -107,7 +108,7 @@ public class Owner extends AbstractHibernateObject implements Serializable,
     @OneToMany(mappedBy = "owner", targetEntity = Pool.class)
     private Set<Pool> pools;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "upstream_id")
     private UpstreamConsumer upstreamConsumer;
 
