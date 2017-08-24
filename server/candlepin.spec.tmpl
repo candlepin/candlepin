@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.1.2
+Version: 2.1.3
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,14 @@ fi
 
 #raw
 %changelog
+* Thu Aug 24 2017 Kevin Howell <khowell@redhat.com> 2.1.3-1
+- 1484438: Fix regression in scoping of JsRunnerRequestCache
+  (bcourt@redhat.com)
+- Make UpstreamConsumer lazy load (bcourt@redhat.com)
+- Disable creation of share consumers in 2.1 (adarshvritant@gmail.com)
+- Remove an unused backreference from IdentityCertificate. (bcourt@redhat.com)
+- Update rules to 5.26 (related: 1476897) (csnyder@redhat.com)
+
 * Fri Aug 11 2017 Vritant Jain <adarshvritant@gmail.com> 2.1.2-1
 - Spec test fixes (csnyder@redhat.com)
 - 1476897: Choose host_specific/virt_only pools first (csnyder@redhat.com)
