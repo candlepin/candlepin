@@ -43,6 +43,9 @@ public class ProductContent extends AbstractHibernateObject {
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp2_product_content";
 
+    /** The default state of the enabled flag */
+    public static final Boolean DEFAULT_ENABLED_STATE = Boolean.FALSE;
+
     @Id
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
@@ -129,14 +132,13 @@ public class ProductContent extends AbstractHibernateObject {
         if (obj instanceof ProductContent) {
             ProductContent that = (ProductContent) obj;
 
-            // Impl note:
-            // Product is not included in this calculation because it only exists in this object to
-            // properly map products to content -- it should not be used for comparing two
-            // instances.
+            // We're only interested in ensuring the mapping between the two objects is the same.
+            String thisContentUuid = this.getContent() != null ? this.getContent().getUuid() : null;
+            String thatContentUuid = that.getContent() != null ? that.getContent().getUuid() : null;
 
             return new EqualsBuilder()
-                .append(this.content, that.content)
-                .append(this.enabled, that.enabled)
+                .append(thisContentUuid, thatContentUuid)
+                .append(this.isEnabled(), that.isEnabled())
                 .isEquals();
         }
 
@@ -151,8 +153,8 @@ public class ProductContent extends AbstractHibernateObject {
         // instances.
 
         return new HashCodeBuilder(3, 23)
-            .append(this.content)
-            .append(this.enabled)
+            .append(this.getContent() != null ? this.getContent().getUuid() : null)
+            .append(this.isEnabled())
             .toHashCode();
     }
 

@@ -715,11 +715,13 @@ public class EntitlementRules implements Enforcer {
         List<ProductShare> sharesToDelete = new LinkedList<ProductShare>();
         List<ProductShare> sharesToCreate = new LinkedList<ProductShare>();
         Map<String, ProductShare> existingSharesMap = new HashMap<String, ProductShare>();
+        Map<String, String> productRefsToUpdate = new HashMap<String, String>();
 
         for (Product product: products) {
             sharedProductsIdMap.put(product.getId(), product);
             sharedProductsUuidMap.put(product.getUuid(), product);
         }
+
         List<Product> recipientProducts = ownerProductCurator.getProductsByIds(
             recipient, sharedProductsIdMap.keySet()).list();
 

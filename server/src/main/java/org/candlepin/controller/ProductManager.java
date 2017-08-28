@@ -14,6 +14,10 @@
  */
 package org.candlepin.controller;
 
+import org.candlepin.dto.DTOFactory;
+import org.candlepin.dto.api.v1.ContentDTO;
+import org.candlepin.dto.api.v1.ProductDTO;
+import org.candlepin.dto.api.v1.ProductDTO.ProductContentDTO;
 import org.candlepin.model.Content;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerContentCurator;
@@ -22,9 +26,6 @@ import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.model.dto.ContentData;
-import org.candlepin.model.dto.ProductContentData;
-import org.candlepin.model.dto.ProductData;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -58,16 +59,18 @@ public class ProductManager {
     private OwnerContentCurator ownerContentCurator;
     private OwnerProductCurator ownerProductCurator;
     private ProductCurator productCurator;
+    private DTOFactory dtoFactory;
 
     @Inject
     public ProductManager(EntitlementCertificateGenerator entitlementCertGenerator,
         OwnerContentCurator ownerContentCurator, OwnerProductCurator ownerProductCurator,
-        ProductCurator productCurator) {
+        ProductCurator productCurator, DTOFactory dtoFactory) {
 
         this.entitlementCertGenerator = entitlementCertGenerator;
         this.ownerContentCurator = ownerContentCurator;
         this.ownerProductCurator = ownerProductCurator;
         this.productCurator = productCurator;
+        this.dtoFactory = dtoFactory;
     }
 
     /**
@@ -86,27 +89,27 @@ public class ProductManager {
      * @return
      *  a new Product instance representing the specified product for the given owner
      */
-    public Product createProduct(ProductData productData, Owner owner) {
-        if (productData == null) {
-            throw new IllegalArgumentException("productData is null");
+    public Product createProduct(ProductDTO dto, Owner owner) {
+        if (dto == null) {
+            throw new IllegalArgumentException("dto is null");
         }
 
         if (owner == null) {
             throw new IllegalArgumentException("owner is null");
         }
 
-        if (productData.getId() == null || productData.getName() == null) {
-            throw new IllegalArgumentException("productData is incomplete");
+        if (dto.getId() == null || dto.getName() == null) {
+            throw new IllegalArgumentException("dto is incomplete");
         }
 
-        if (this.ownerProductCurator.productExists(owner, productData.getId())) {
-            throw new IllegalStateException("product has already been created: " + productData.getId());
+        if (this.ownerProductCurator.productExists(owner, dto.getId())) {
+            throw new IllegalStateException("product has already been created: " + dto.getId());
         }
 
         // TODO: More DTO validation here...?
 
-        Product entity = new Product(productData.getId(), productData.getName());
-        this.applyProductChanges(entity, productData, owner);
+        Product entity = new Product(dto.getId(), dto.getName());
+        this.applyProductChanges(entity, dto, owner);
 
         log.debug("Creating new product for org: {}, {}", entity, owner);
 
@@ -156,7 +159,7 @@ public class ProductManager {
      *  the updated product entity
      */
     @Transactional
-    public Product updateProduct(ProductData update, Owner owner, boolean regenerateEntitlementCerts) {
+    public Product updateProduct(ProductDTO update, Owner owner, boolean regenerateEntitlementCerts) {
         if (update == null) {
             throw new IllegalArgumentException("update is null");
         }
@@ -205,8 +208,7 @@ public class ProductManager {
 
                 if (regenerateEntitlementCerts) {
                     this.entitlementCertGenerator.regenerateCertificatesOf(
-                        Arrays.asList(owner), Arrays.asList(alt), true
-                    );
+                        Arrays.asList(owner), Arrays.asList(alt), true);
                 }
 
                 return alt;
@@ -244,8 +246,7 @@ public class ProductManager {
 
         if (regenerateEntitlementCerts) {
             this.entitlementCertGenerator.regenerateCertificatesOf(
-                Arrays.asList(owner), Arrays.asList(updated), true
-            );
+                Arrays.asList(owner), Arrays.asList(updated), true);
         }
 
         return updated;
@@ -272,7 +273,7 @@ public class ProductManager {
      *  A mapping of Red Hat content ID to content entities representing the imported content
      */
     @Transactional
-    public ImportResult<Product> importProducts(Owner owner, Map<String, ProductData> productData,
+    public ImportResult<Product> importProducts(Owner owner, Map<String, ProductDTO> productData,
         Map<String, Content> importedContent) {
 
         if (owner == null) {
@@ -298,7 +299,7 @@ public class ProductManager {
         // - Divide imported products into sets of updates and creates
         log.debug("Fetching existing products for update...");
         for (Product product : this.ownerProductCurator.getProductsByIds(owner, productData.keySet())) {
-            ProductData update = productData.get(product.getId());
+            ProductDTO update = productData.get(product.getId());
 
             if (!product.isChangedBy(update)) {
                 // This product won't be changing, so we'll just pretend it's not being imported at all
@@ -314,7 +315,7 @@ public class ProductManager {
         }
 
         log.debug("Validating new products...");
-        for (ProductData update : productData.values()) {
+        for (ProductDTO update : productData.values()) {
             if (!skippedProducts.containsKey(update.getId()) &&
                 !updatedProducts.containsKey(update.getId())) {
 
@@ -548,7 +549,7 @@ public class ProductManager {
      * @return
      *  The updated product entity
      */
-    private Product applyProductChanges(Product entity, ProductData update, Owner owner) {
+    private Product applyProductChanges(Product entity, ProductDTO update, Owner owner) {
         if (owner == null) {
             throw new IllegalArgumentException("owner is null");
         }
@@ -558,7 +559,7 @@ public class ProductManager {
         if (update.getProductContent() != null) {
             // Grab all of the content objects at once so we don't hit the DB a few thousand times
             // per update
-            for (ProductContentData pcd : update.getProductContent()) {
+            for (ProductContentDTO pcd : update.getProductContent()) {
                 if (pcd == null || pcd.getContent() == null || pcd.getContent().getId() == null) {
                     throw new IllegalStateException("product content is null or incomplete");
                 }
@@ -593,7 +594,7 @@ public class ProductManager {
      * @return
      *  The updated product entity
      */
-    private Product applyProductChanges(Product entity, ProductData update, Map<String, Content> contentMap) {
+    private Product applyProductChanges(Product entity, ProductDTO update, Map<String, Content> contentMap) {
         // TODO:
         // Eventually content should be considered a property of products (ala attributes), so we
         // don't have to do this annoying, nested projection and owner passing. Also, it would
@@ -635,34 +636,33 @@ public class ProductManager {
             }
 
             // Actually process our list of content...
-            for (ProductContentData pcd : update.getProductContent()) {
+            for (ProductContentDTO pcd : update.getProductContent()) {
                 if (pcd == null) {
                     throw new IllegalStateException("Product data contains a null product-content mapping: " +
                         update);
                 }
 
-                ContentData contentData = pcd.getContent();
+                ContentDTO cdto = pcd.getContent();
 
-                if (contentData == null || contentData.getId() == null) {
-                    // This should only happen if something alters a ProductContentData object
-                    // after adding it to the ProductData. This is very bad.
+                if (cdto == null || cdto.getId() == null) {
+                    // This should only happen if something alters a content dto object after
+                    // adding it to our link object. This is very bad.
                     throw new IllegalStateException("Product data contains an incomplete product-content " +
                         "mapping: " + update);
                 }
 
-                ProductContent existingLink = existingLinks.get(contentData.getId());
-                Content content = contentMap.get(contentData.getId());
+                ProductContent existingLink = existingLinks.get(cdto.getId());
+                Content content = contentMap.get(cdto.getId());
 
                 if (content == null) {
                     // Content doesn't exist yet -- it should have been created already
                     throw new IllegalStateException("product references content which does not exist: " +
-                        contentData);
+                        cdto);
                 }
 
                 if (existingLink == null) {
                     existingLink = new ProductContent(
-                        entity, content, pcd.isEnabled() != null ? pcd.isEnabled() : false
-                    );
+                        entity, content, pcd.isEnabled() != null ? pcd.isEnabled() : false);
                 }
                 else {
                     existingLink.setContent(content);
@@ -689,82 +689,4 @@ public class ProductManager {
         return entity;
     }
 
-    /**
-     * Adds the specified content to the product, effective for the given owner. If the product is
-     * already mapped to one of the content instances provided, the mapping will be updated to
-     * reflect the configuration of the mapping provided.
-     *
-     * @param product
-     *  The product to which content should be added
-     *
-     * @param content
-     *  A collection of ProductContent instances referencing the content to add to the product
-     *
-     * @param owner
-     *  The owner of the product to update
-     *
-     * @param regenerateEntitlementCerts
-     *  Whether or not changes made to the product should trigger the regeneration of entitlement
-     *  certificates for affected consumers
-     *
-     * @return
-     *  the updated product entity, or a new product entity
-     */
-    public Product addContentToProduct(Product product, Collection<ProductContent> content, Owner owner,
-        boolean regenerateEntitlementCerts) {
-
-        if (this.ownerProductCurator.isProductMappedToOwner(product, owner)) {
-            ProductData update = product.toDTO();
-            boolean changed = false;
-
-            for (ProductContent add : content) {
-                changed |= update.addProductContent(add);
-            }
-
-            if (changed) {
-                product = this.updateProduct(update, owner, regenerateEntitlementCerts);
-            }
-        }
-
-        return product;
-    }
-
-    /**
-     * Removes the specified content from the given product for a single owner. The changes made to
-     * the product may result in the convergence or divergence of product versions.
-     *
-     * @param product
-     *  the product from which to remove content
-     *
-     * @param content
-     *  the content to remove
-     *
-     * @param owner
-     *  the owner for which the change should take effect
-     *
-     * @param regenerateEntitlementCerts
-     *  Whether or not changes made to the product should trigger the regeneration of entitlement
-     *  certificates for affected consumers
-     *
-     * @return
-     *  the updated product instance
-     */
-    public Product removeProductContent(Product product, Collection<Content> content, Owner owner,
-        boolean regenerateEntitlementCerts) {
-
-        if (this.ownerProductCurator.isProductMappedToOwner(product, owner)) {
-            ProductData update = product.toDTO();
-            boolean changed = false;
-
-            for (Content remove : content) {
-                changed |= update.removeContent(remove);
-            }
-
-            if (changed) {
-                product = this.updateProduct(update, owner, regenerateEntitlementCerts);
-            }
-        }
-
-        return product;
-    }
 }

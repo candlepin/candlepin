@@ -25,6 +25,9 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.dto.api.v1.ContentDTO;
+import org.candlepin.dto.api.v1.ProductDTO;
+import org.candlepin.dto.api.v1.ProductDTO.ProductContentDTO;
 import org.candlepin.model.Branding;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
@@ -47,8 +50,6 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.activationkeys.ActivationKey;
-import org.candlepin.model.dto.ContentData;
-import org.candlepin.model.dto.ProductContentData;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.pinsetter.core.PinsetterKernel;
@@ -197,8 +198,8 @@ public class CandlepinPoolManager implements PoolManager {
         log.info("Refreshing pools for owner: {}", owner);
 
         Map<String, Subscription> subscriptionMap = new HashMap<String, Subscription>();
-        Map<String, ProductData> productMap = new HashMap<String, ProductData>();
-        Map<String, ContentData> contentMap = new HashMap<String, ContentData>();
+        Map<String, ProductDTO> productMap = new HashMap<String, ProductDTO>();
+        Map<String, ContentDTO> contentMap = new HashMap<String, ContentDTO>();
 
         // Resolve all our subscriptions, products and content to ensure we don't have bad or
         // duplicate inbound data
@@ -227,13 +228,13 @@ public class CandlepinPoolManager implements PoolManager {
 
             subscriptionMap.put(subscription.getId(), subscription);
 
-            List<ProductData> products = new LinkedList<ProductData>();
+            List<ProductDTO> products = new LinkedList<ProductDTO>();
             products.add(subscription.getProduct());
             products.add(subscription.getDerivedProduct());
             products.addAll(subscription.getProvidedProducts());
             products.addAll(subscription.getDerivedProvidedProducts());
 
-            for (ProductData product : products) {
+            for (ProductDTO product : products) {
                 if (product == null) {
                     // Impl note: This is a (mostly) safe condition, since it's valid for a
                     // subscription to have a null derived product. We'll just ignore it and plow
@@ -251,7 +252,7 @@ public class CandlepinPoolManager implements PoolManager {
                 // further changes to it.
                 product.setLocked(true);
 
-                ProductData existingProduct = productMap.get(product.getId());
+                ProductDTO existingProduct = productMap.get(product.getId());
                 if (existingProduct != null && !existingProduct.equals(product)) {
                     log.warn("Multiple versions of the same product received during refresh; " +
                         "discarding duplicate: {} => {}, {}", product.getId(), existingProduct, product);
@@ -259,13 +260,13 @@ public class CandlepinPoolManager implements PoolManager {
                 else {
                     productMap.put(product.getId(), product);
 
-                    Collection<ProductContentData> pcdCollection = product.getProductContent();
+                    Collection<ProductContentDTO> pcdCollection = product.getProductContent();
                     if (pcdCollection != null) {
-                        for (ProductContentData pcd : pcdCollection) {
+                        for (ProductContentDTO pcd : pcdCollection) {
                             // Impl note:
                             // We aren't checking for duplicate mappings to the same content, since our
-                            // current implementation of ProductData prevents such a thing. However, if it
-                            // is reasonably possible that we could end up with ProductData instances which
+                            // current implementation of ProductDTO prevents such a thing. However, if it
+                            // is reasonably possible that we could end up with ProductDTO instances which
                             // do not prevent duplicate content mappings, we should add checks here to
                             // check for, and throw out, such mappings
 
@@ -275,7 +276,7 @@ public class CandlepinPoolManager implements PoolManager {
                                     "product contains a null product-content mapping: " + product);
                             }
 
-                            ContentData content = pcd.getContent();
+                            ContentDTO content = pcd.getContent();
 
                             // Do some simple mapping validation. Our import method will handle minimal
                             // population validation for us.
@@ -288,7 +289,7 @@ public class CandlepinPoolManager implements PoolManager {
 
                             // We need to lock the incoming content here, but doing so will affect
                             // the equality comparison for products. We'll correct them later.
-                            ContentData existingContent = contentMap.get(content.getId());
+                            ContentDTO existingContent = contentMap.get(content.getId());
                             if (existingContent != null && !existingContent.equals(content)) {
                                 log.warn("Multiple versions of the same content received during refresh; " +
                                     "discarding duplicate: {} => {}, {}",
@@ -309,7 +310,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         // Lock our content
         // TODO: Find a more efficient way of doing this, preferably within this method
-        for (ContentData cdata : contentMap.values()) {
+        for (ContentDTO cdata : contentMap.values()) {
             cdata.setLocked(true);
         }
 
@@ -908,22 +909,22 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         // Gather the product IDs referenced by this subscription...
-        Set<ProductData> productDTOs = new HashSet<ProductData>();
+        Set<ProductData> productData = new HashSet<ProductData>();
         Set<String> productIds = new HashSet<String>();
         Map<String, Product> productMap = new HashMap<String, Product>();
 
-        productDTOs.add(sub.getProduct());
-        productDTOs.add(sub.getDerivedProduct());
+        productData.add(sub.getProduct());
+        productData.add(sub.getDerivedProduct());
 
         if (sub.getProvidedProducts() != null) {
-            productDTOs.addAll(sub.getProvidedProducts());
+            productData.addAll(sub.getProvidedProducts());
         }
 
         if (sub.getDerivedProvidedProducts() != null) {
-            productDTOs.addAll(sub.getDerivedProvidedProducts());
+            productData.addAll(sub.getDerivedProvidedProducts());
         }
 
-        for (ProductData pdata : productDTOs) {
+        for (ProductData pdata : productData) {
             if (pdata != null) {
                 if (pdata.getId() == null) {
                     throw new IllegalStateException("Subscription references an incomplete product: " +

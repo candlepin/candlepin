@@ -69,17 +69,14 @@ public class CertificateSerialTranslatorTest extends
     @Override
     protected void verifyDTO(CertificateSerial source, CertificateSerialDTO dto, boolean childrenGenerated) {
         if (source != null) {
-            CertificateSerial src = (CertificateSerial) source;
-            CertificateSerialDTO dest = (CertificateSerialDTO) dto;
-
             // This DTO does not have any nested objects, so we don't need to worry about the
             // childrenGenerated flag
 
-            assertEquals(src.getId(), dest.getId());
-            assertEquals(src.getSerial(), dest.getSerial());
-            assertEquals(src.getExpiration(), dest.getExpiration());
-            assertEquals(src.isCollected(), dest.isCollected());
-            assertEquals(src.isRevoked(), dest.isRevoked());
+            assertEquals(source.getId(), dto.getId());
+            assertEquals(source.getSerial(), dto.getSerial());
+            assertEquals(source.getExpiration(), dto.getExpiration());
+            assertEquals(source.isCollected(), dto.isCollected());
+            assertEquals(source.isRevoked(), dto.isRevoked());
         }
         else {
             assertNull(dto);
