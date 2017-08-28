@@ -62,8 +62,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-
-
 /**
  * JsPoolRulesTest: Tests for the default rules.
  */
@@ -320,6 +318,7 @@ public class PoolRulesTest {
         Product product = TestUtil.createProduct(productId, productId);
         product.setAttribute(Product.Attributes.VIRT_LIMIT, Integer.toString(virtLimit));
         Pool p = TestUtil.createPool(owner, product);
+        p.setUpstreamPoolId("upstreamId-" + p.getId());
         p.setQuantity(new Long(quantity));
         return p;
     }
@@ -333,6 +332,7 @@ public class PoolRulesTest {
     @Test
     public void virtLimitWithHostLimitedCreatesTaggedBonusPool() {
         Pool p1 = createVirtLimitPool("virtLimitProduct", 10, 10);
+        when(poolManagerMock.isManaged(eq(p1))).thenReturn(true);
         p1.getProduct().setAttribute(Product.Attributes.HOST_LIMITED, "true");
         this.mockProducts(owner, p1.getProduct());
         List<Pool> pools = poolRules.createAndEnrichPools(p1, new LinkedList<Pool>());
@@ -350,6 +350,7 @@ public class PoolRulesTest {
     public void hostedVirtLimitWithHostLimitedFalseCreatesBonusPools() {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Pool p = createVirtLimitPool("virtLimitProduct", 10, 10);
+        when(poolManagerMock.isManaged(eq(p))).thenReturn(true);
         p.getProduct().setAttribute(Product.Attributes.HOST_LIMITED, "false");
         this.mockProducts(owner, p.getProduct());
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<Pool>());
@@ -361,6 +362,7 @@ public class PoolRulesTest {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Pool p = createVirtLimitPool("virtLimitProduct", 10, 10);
         this.mockProducts(owner, p.getProduct());
+        when(poolManagerMock.isManaged(eq(p))).thenReturn(true);
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<Pool>());
         assertEquals(2, pools.size());
 
@@ -380,6 +382,7 @@ public class PoolRulesTest {
     public void hostedVirtLimitSubCreatesUnlimitedBonusVirtOnlyPool() {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Pool p = createVirtLimitPool("virtLimitProduct", 10, 10);
+        when(poolManagerMock.isManaged(eq(p))).thenReturn(true);
         p.getProduct().setAttribute(Product.Attributes.VIRT_LIMIT, "unlimited");
         this.mockProducts(owner, p.getProduct());
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<Pool>());
@@ -395,6 +398,7 @@ public class PoolRulesTest {
     public void hostedVirtLimitSubUpdatesUnlimitedBonusVirtOnlyPool() {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Pool p = createVirtLimitPool("virtLimitProduct", 10, 10);
+        when(poolManagerMock.isManaged(eq(p))).thenReturn(true);
         p.getProduct().setAttribute(Product.Attributes.VIRT_LIMIT, "unlimited");
         this.mockProducts(owner, p.getProduct());
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<Pool>());
@@ -421,6 +425,7 @@ public class PoolRulesTest {
     public void hostedVirtLimitRemoved() {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Pool p = createVirtLimitPool("virtLimitProduct", 10, 10);
+        when(poolManagerMock.isManaged(eq(p))).thenReturn(true);
         p.getProduct().setAttribute(Product.Attributes.VIRT_LIMIT, "4");
         this.mockProducts(owner, p.getProduct());
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<Pool>());
@@ -450,6 +455,7 @@ public class PoolRulesTest {
     public void hostedVirtLimitSubWithMultiplierCreatesUnlimitedBonusVirtOnlyPool() {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Pool p = createVirtLimitPool("virtLimitProduct", 10, 10);
+        when(poolManagerMock.isManaged(eq(p))).thenReturn(true);
         p.getProduct().setAttribute(Product.Attributes.VIRT_LIMIT, "unlimited");
         p.getProduct().setMultiplier(5L);
         this.mockProducts(owner, p.getProduct());
@@ -467,6 +473,7 @@ public class PoolRulesTest {
     public void hostedVirtLimitSubCreateAttributesTest() {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Pool p = createVirtLimitPool("virtLimitProduct", 10, 10);
+        when(poolManagerMock.isManaged(eq(p))).thenReturn(true);
         p.getProduct().setAttribute(Pool.Attributes.PHYSICAL_ONLY, "true");
         this.mockProducts(owner, p.getProduct());
 
@@ -493,6 +500,7 @@ public class PoolRulesTest {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
         Pool p = createVirtLimitPool("virtLimitProduct", 10, 10);
 
+        when(poolManagerMock.isManaged(eq(p))).thenReturn(true);
         Product provided1 = TestUtil.createProduct();
         Product provided2 = TestUtil.createProduct();
         Product derivedProd = TestUtil.createProduct();
@@ -546,6 +554,7 @@ public class PoolRulesTest {
         Subscription s = createVirtLimitSubWithDerivedProducts("virtLimitProduct",
             "derivedProd", 10, 10);
         Pool p = TestUtil.copyFromSub(s);
+        when(poolManagerMock.isManaged(eq(p))).thenReturn(true);
         p.setId("mockVirtLimitSubCreateDerived");
         when(productCurator.getPoolDerivedProvidedProductsCached(p))
             .thenReturn(p.getDerivedProvidedProducts());
@@ -652,6 +661,7 @@ public class PoolRulesTest {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
         Pool p = createVirtLimitPool("virtLimitProduct", 10, 10);
         this.mockProducts(owner, p.getProduct());
+        when(poolManagerMock.isManaged(eq(p))).thenReturn(true);
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<Pool>());
 
         // Should be unmapped virt_only pool:
@@ -719,6 +729,7 @@ public class PoolRulesTest {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
         Pool p = createVirtLimitPool("virtLimitProduct", 10, 10);
         this.mockProducts(owner, p.getProduct());
+        when(poolManagerMock.isManaged(eq(p))).thenReturn(true);
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<Pool>());
         assertEquals(2, pools.size());
         Entitlement ent = mock(Entitlement.class);
@@ -746,6 +757,7 @@ public class PoolRulesTest {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
         Pool p = createVirtLimitPool("virtLimitProduct", 10, 10);
         this.mockProducts(owner, p.getProduct());
+        when(poolManagerMock.isManaged(eq(p))).thenReturn(true);
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<Pool>());
         assertEquals(2, pools.size());
         p.setQuantity(new Long(20));
@@ -920,6 +932,7 @@ public class PoolRulesTest {
         product.setAttribute(Product.Attributes.VIRT_LIMIT, "4");
         List<Pool> existingPools = new ArrayList<Pool>();
         Pool masterPool = TestUtil.createPool(owner, product);
+        when(poolManagerMock.isManaged(eq(masterPool))).thenReturn(true);
         masterPool.setSubscriptionSubKey("master");
         existingPools.add(masterPool);
         this.mockProducts(owner, product);

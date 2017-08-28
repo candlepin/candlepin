@@ -1388,6 +1388,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         prod.setAttribute(Product.Attributes.VIRT_LIMIT, "2");
         productCurator.merge(prod);
         Pool pool = TestUtil.createPool(owner, prod);
+        pool.setUpstreamPoolId("upstream-" + pool.getId());
         assertEquals(0, poolCurator.listByOwner(owner).list().size());
         ownerResource.createPool(owner.getKey(), pool);
         List<Pool> pools = poolCurator.listByOwner(owner).list();
@@ -1404,6 +1405,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         prod.setAttribute(Product.Attributes.VIRT_LIMIT, "3");
         productCurator.merge(prod);
         Pool pool = TestUtil.createPool(owner, prod);
+        pool.setUpstreamPoolId("upstream-" + pool.getId());
         pool.setSubscriptionSubKey("master");
         ownerResource.createPool(owner.getKey(), pool);
         pool.setQuantity(100L);
@@ -1424,6 +1426,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         prod.setAttribute(Product.Attributes.VIRT_LIMIT, "3");
         productCurator.merge(prod);
         Pool pool = TestUtil.createPool(owner, prod);
+        pool.setUpstreamPoolId("upstream-" + pool.getId());
         pool.setSubscriptionSubKey("master");
         ownerResource.createPool(owner.getKey(), pool);
         List<Pool> pools = poolCurator.listByOwner(owner).list();
@@ -1441,6 +1444,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         prod.setAttribute(Product.Attributes.VIRT_LIMIT, "3");
         productCurator.merge(prod);
         Pool pool = TestUtil.createPool(owner, prod);
+        pool.setUpstreamPoolId("upstream-" + pool.getId());
         pool.setSubscriptionSubKey("master");
         ownerResource.createPool(owner.getKey(), pool);
         List<Pool> pools = poolCurator.listByOwner(owner).list();
