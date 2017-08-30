@@ -35,8 +35,8 @@ import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.ModeManager;
 import org.candlepin.controller.ModeManagerImpl;
 import org.candlepin.controller.PoolManager;
-import org.candlepin.dto.api.APIDTOFactory;
-import org.candlepin.dto.api.v1.APIv1DTOFactory;
+import org.candlepin.dto.api.APIModelTranslator;
+import org.candlepin.dto.api.v1.APIv1ModelTranslator;
 import org.candlepin.guice.CandlepinRequestScope;
 import org.candlepin.guice.CandlepinRequestScoped;
 import org.candlepin.guice.I18nProvider;
@@ -337,7 +337,7 @@ public class TestingModules {
             install(new FactoryModuleBuilder().build(BindContextFactory.class));
             install(new FactoryModuleBuilder().build(PreEntitlementRulesCheckOpFactory.class));
 
-            bind(APIDTOFactory.class).to(APIv1DTOFactory.class);
+            bind(APIModelTranslator.class).to(APIv1ModelTranslator.class);
         }
     }
 }
