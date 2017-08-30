@@ -14,8 +14,8 @@
  */
 package org.candlepin.dto.api.v1;
 
-import org.candlepin.dto.DTOFactory;
-import org.candlepin.dto.EntityTranslator;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.TimestampedEntity;
 
 
@@ -31,7 +31,7 @@ import org.candlepin.model.TimestampedEntity;
  *  The output DTO type generated/managed by this translator
  */
 public abstract class TimestampedEntityTranslator
-    <I extends TimestampedEntity, O extends TimestampedCandlepinDTO> implements EntityTranslator<I, O> {
+    <I extends TimestampedEntity, O extends TimestampedCandlepinDTO> implements ObjectTranslator<I, O> {
 
     /**
      * {@inheritDoc}
@@ -43,7 +43,7 @@ public abstract class TimestampedEntityTranslator
      * {@inheritDoc}
      */
     @Override
-    public abstract O translate(DTOFactory factory, I source);
+    public abstract O translate(ModelTranslator translator, I source);
 
     /**
      * {@inheritDoc}
@@ -57,7 +57,7 @@ public abstract class TimestampedEntityTranslator
      * {@inheritDoc}
      */
     @Override
-    public O populate(DTOFactory factory, I source, O destination) {
+    public O populate(ModelTranslator translator, I source, O destination) {
         if (source == null) {
             throw new IllegalArgumentException("source is null");
         }
