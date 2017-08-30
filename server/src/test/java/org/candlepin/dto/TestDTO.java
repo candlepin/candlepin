@@ -14,52 +14,50 @@
  */
 package org.candlepin.dto;
 
-import org.candlepin.model.ModelEntity;
-
 
 
 /**
  * A simple test DTO class to use during testing
  */
 public class TestDTO extends CandlepinDTO {
-    protected DTOFactory factory;
-    protected EntityTranslator translator;
-    protected ModelEntity entity;
+    protected ModelTranslator modelTranslator;
+    protected ObjectTranslator objectTranslator;
+    protected Object source;
 
     public TestDTO() {
         // Intentionally left empty
     }
 
-    public TestDTO(DTOFactory factory, EntityTranslator translator, ModelEntity entity) {
-        this.setFactory(factory);
-        this.setTranslator(translator);
-        this.setEntity(entity);
+    public TestDTO(ModelTranslator modelTranslator, ObjectTranslator objectTranslator, Object source) {
+        this.setModelTranslator(modelTranslator);
+        this.setObjectTranslator(objectTranslator);
+        this.setSourceObject(source);
     }
 
-    public DTOFactory getFactory() {
-        return this.factory;
+    public ModelTranslator getModelTranslator() {
+        return this.modelTranslator;
     }
 
-    public TestDTO setFactory(DTOFactory factory) {
-        this.factory = factory;
+    public TestDTO setModelTranslator(ModelTranslator modelTranslator) {
+        this.modelTranslator = modelTranslator;
         return this;
     }
 
-    public EntityTranslator getTranslator() {
-        return this.translator;
+    public ObjectTranslator getObjectTranslator() {
+        return this.objectTranslator;
     }
 
-    public TestDTO setTranslator(EntityTranslator translator) {
-        this.translator = translator;
+    public TestDTO setObjectTranslator(ObjectTranslator objectTranslator) {
+        this.objectTranslator = objectTranslator;
         return this;
     }
 
-    public ModelEntity getEntity() {
-        return this.entity;
+    public Object getSourceObject() {
+        return this.source;
     }
 
-    public TestDTO setEntity(ModelEntity entity) {
-        this.entity = entity;
+    public TestDTO setSourceObject(Object source) {
+        this.source = source;
         return this;
     }
 

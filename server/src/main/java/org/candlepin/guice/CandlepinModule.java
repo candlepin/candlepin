@@ -61,8 +61,8 @@ import org.candlepin.controller.OwnerManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.ScheduledExecutorServiceProvider;
 import org.candlepin.controller.SuspendModeTransitioner;
-import org.candlepin.dto.api.APIDTOFactory;
-import org.candlepin.dto.api.v1.APIv1DTOFactory;
+import org.candlepin.dto.api.APIModelTranslator;
+import org.candlepin.dto.api.v1.APIv1ModelTranslator;
 import org.candlepin.model.CPRestrictions;
 import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.pinsetter.core.GuiceJobFactory;
@@ -302,8 +302,8 @@ public class CandlepinModule extends AbstractModule {
 
         bind(CacheManager.class).toProvider(JCacheManagerProvider.class).in(Singleton.class);
 
-        // DTO factories
-        this.configureDTOFactories();
+        // Configure model translators
+        this.configureModelTranslator();
     }
 
     private void miscConfigurations() {
@@ -425,8 +425,9 @@ public class CandlepinModule extends AbstractModule {
         }
     }
 
-    protected void configureDTOFactories() {
-        bind(APIDTOFactory.class).to(APIv1DTOFactory.class);
+    protected void configureModelTranslator() {
+        bind(APIModelTranslator.class).to(APIv1ModelTranslator.class);
+        // bind(APIv1ModelTranslator.class).to(APIv1ModelTranslator.class);
 
         // TODO: Add more factory configurations here as necessary
     }

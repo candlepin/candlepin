@@ -12,32 +12,18 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.dto;
+package org.candlepin.dto.api;
+
+import org.candlepin.dto.ModelTranslator;
 
 
 
 /**
- * The DTOException is used to represent exceptions that occur during DTO translation or
- * population.
+ * The APIModelTranslator is an interface which denotes factories which are pre-configured with
+ * translators for creating DTOs compatible one or more API specifications.
  */
-public class DTOException extends RuntimeException {
+public interface APIModelTranslator extends ModelTranslator {
 
-    private static final long serialVersionUID = 1L;
-
-    public DTOException() {
-        super();
-    }
-
-    public DTOException(String message) {
-        super(message);
-    }
-
-    public DTOException(Throwable cause) {
-        super(cause);
-    }
-
-    public DTOException(String message, Throwable cause) {
-        super(message, cause);
-    }
+    // Nothing to do here.
 
 }

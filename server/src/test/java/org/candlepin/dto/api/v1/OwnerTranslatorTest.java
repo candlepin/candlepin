@@ -15,7 +15,7 @@
 package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.AbstractTranslatorTest;
-import org.candlepin.dto.DTOFactory;
+import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.Owner;
 
 import static org.junit.Assert.*;
@@ -39,22 +39,18 @@ public class OwnerTranslatorTest extends
         new UpstreamConsumerTranslatorTest();
 
     @Override
-    protected void initFactory(DTOFactory factory) {
-        // Note that the OwnerTranslator instance here won't be the same as the one
-        // returned by initTranslator. At the time of writing, this isn't important (as it's
-        // stateless), but if that detail becomes significant in the future, this will need to
-        // change.
-        this.upstreamConsumerTranslatorTest.initFactory(factory);
-        factory.registerTranslator(Owner.class, this.translator);
+    protected void initModelTranslator(ModelTranslator modelTranslator) {
+        this.upstreamConsumerTranslatorTest.initModelTranslator(modelTranslator);
+        modelTranslator.registerTranslator(Owner.class, this.translator);
     }
 
     @Override
-    protected OwnerTranslator initTranslator() {
+    protected OwnerTranslator initObjectTranslator() {
         return this.translator;
     }
 
     @Override
-    protected Owner initSourceEntity() {
+    protected Owner initSourceObject() {
         Owner parent = null;
 
         for (int i = 0; i < 3; ++i) {
@@ -66,7 +62,7 @@ public class OwnerTranslatorTest extends
             owner.setParentOwner(parent);
             owner.setContentPrefix("content_prefix-" + i);
             owner.setDefaultServiceLevel("service_level-" + i);
-            owner.setUpstreamConsumer(this.upstreamConsumerTranslatorTest.initSourceEntity());
+            owner.setUpstreamConsumer(this.upstreamConsumerTranslatorTest.initSourceObject());
             owner.setLogLevel("log_level-" + i);
             owner.setAutobindDisabled(true);
             owner.setContentAccessModeList(String.format("cam%1$d-a,cam%1$d-b,cam%1$d-c", i));
@@ -79,41 +75,38 @@ public class OwnerTranslatorTest extends
     }
 
     @Override
-    protected OwnerDTO initDestDTO() {
+    protected OwnerDTO initDestinationObject() {
         // Nothing fancy to do here.
         return new OwnerDTO();
     }
 
     @Override
-    protected void verifyDTO(Owner source, OwnerDTO dto, boolean childrenGenerated) {
+    protected void verifyOutput(Owner source, OwnerDTO dest, boolean childrenGenerated) {
         if (source != null) {
-            Owner src = (Owner) source;
-            OwnerDTO dest = (OwnerDTO) dto;
-
-            assertEquals(src.getId(), dest.getId());
-            assertEquals(src.getKey(), dest.getKey());
-            assertEquals(src.getDisplayName(), dest.getDisplayName());
-            assertEquals(src.getContentPrefix(), dest.getContentPrefix());
-            assertEquals(src.getDefaultServiceLevel(), dest.getDefaultServiceLevel());
-            assertEquals(src.getLogLevel(), dest.getLogLevel());
-            assertEquals(src.isAutobindDisabled(), dest.isAutobindDisabled());
-            assertEquals(src.getContentAccessMode(), dest.getContentAccessMode());
-            assertEquals(src.getContentAccessModeList(), dest.getContentAccessModeList());
+            assertEquals(source.getId(), dest.getId());
+            assertEquals(source.getKey(), dest.getKey());
+            assertEquals(source.getDisplayName(), dest.getDisplayName());
+            assertEquals(source.getContentPrefix(), dest.getContentPrefix());
+            assertEquals(source.getDefaultServiceLevel(), dest.getDefaultServiceLevel());
+            assertEquals(source.getLogLevel(), dest.getLogLevel());
+            assertEquals(source.isAutobindDisabled(), dest.isAutobindDisabled());
+            assertEquals(source.getContentAccessMode(), dest.getContentAccessMode());
+            assertEquals(source.getContentAccessModeList(), dest.getContentAccessModeList());
 
             // Parent owner is a special case, since it's recursion-based rather than relying on a
             // factory to handle it. As such, it should always be present.
-            this.verifyDTO(src.getParentOwner(), dest.getParentOwner(), childrenGenerated);
+            this.verifyOutput(source.getParentOwner(), dest.getParentOwner(), childrenGenerated);
 
             if (childrenGenerated) {
                 this.upstreamConsumerTranslatorTest
-                    .verifyDTO(src.getUpstreamConsumer(), dest.getUpstreamConsumer(), true);
+                    .verifyOutput(source.getUpstreamConsumer(), dest.getUpstreamConsumer(), true);
             }
             else {
                 assertNull(dest.getUpstreamConsumer());
             }
         }
         else {
-            assertNull(dto);
+            assertNull(dest);
         }
     }
 }

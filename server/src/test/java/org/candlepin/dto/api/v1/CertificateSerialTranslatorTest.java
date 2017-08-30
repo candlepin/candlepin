@@ -15,7 +15,7 @@
 package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.AbstractTranslatorTest;
-import org.candlepin.dto.DTOFactory;
+import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.CertificateSerial;
 
 import static org.junit.Assert.*;
@@ -38,17 +38,17 @@ public class CertificateSerialTranslatorTest extends
     protected CertificateSerialTranslator translator = new CertificateSerialTranslator();
 
     @Override
-    protected void initFactory(DTOFactory factory) {
-        factory.registerTranslator(CertificateSerial.class, this.translator);
+    protected void initModelTranslator(ModelTranslator modelTranslator) {
+        modelTranslator.registerTranslator(CertificateSerial.class, this.translator);
     }
 
     @Override
-    protected CertificateSerialTranslator initTranslator() {
+    protected CertificateSerialTranslator initObjectTranslator() {
         return this.translator;
     }
 
     @Override
-    protected CertificateSerial initSourceEntity() {
+    protected CertificateSerial initSourceObject() {
         CertificateSerial source = new CertificateSerial();
 
         // ID is automatically generated for this object
@@ -61,28 +61,27 @@ public class CertificateSerialTranslatorTest extends
     }
 
     @Override
-    protected CertificateSerialDTO initDestDTO() {
+    protected CertificateSerialDTO initDestinationObject() {
         // Nothing fancy to do here.
         return new CertificateSerialDTO();
     }
 
     @Override
-    protected void verifyDTO(CertificateSerial source, CertificateSerialDTO dto, boolean childrenGenerated) {
-        if (source != null) {
-            CertificateSerial src = (CertificateSerial) source;
-            CertificateSerialDTO dest = (CertificateSerialDTO) dto;
+    protected void verifyOutput(CertificateSerial source, CertificateSerialDTO dest,
+        boolean childrenGenerated) {
 
+        if (source != null) {
             // This DTO does not have any nested objects, so we don't need to worry about the
             // childrenGenerated flag
 
-            assertEquals(src.getId(), dest.getId());
-            assertEquals(src.getSerial(), dest.getSerial());
-            assertEquals(src.getExpiration(), dest.getExpiration());
-            assertEquals(src.isCollected(), dest.isCollected());
-            assertEquals(src.isRevoked(), dest.isRevoked());
+            assertEquals(source.getId(), dest.getId());
+            assertEquals(source.getSerial(), dest.getSerial());
+            assertEquals(source.getExpiration(), dest.getExpiration());
+            assertEquals(source.isCollected(), dest.isCollected());
+            assertEquals(source.isRevoked(), dest.isRevoked());
         }
         else {
-            assertNull(dto);
+            assertNull(dest);
         }
     }
 }
