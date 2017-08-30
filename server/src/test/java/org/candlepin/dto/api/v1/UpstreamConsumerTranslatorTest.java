@@ -15,7 +15,7 @@
 package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.AbstractTranslatorTest;
-import org.candlepin.dto.DTOFactory;
+import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.Certificate;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.UpstreamConsumer;
@@ -35,27 +35,26 @@ import org.junit.runner.RunWith;
 public class UpstreamConsumerTranslatorTest extends
     AbstractTranslatorTest<UpstreamConsumer, UpstreamConsumerDTO, UpstreamConsumerTranslator> {
 
+    protected UpstreamConsumerTranslator translator = new UpstreamConsumerTranslator();
+
     protected CertificateTranslatorTest certificateTranslatorTest = new CertificateTranslatorTest();
     protected ConsumerTypeTranslatorTest consumerTypeTranslatorTest = new ConsumerTypeTranslatorTest();
 
+
     @Override
-    protected void initFactory(DTOFactory factory) {
-        // Note that the UpstreamConsumerTranslator instance here won't be the same as the one
-        // returned by initTranslator. At the time of writing, this isn't important (as it's
-        // stateless), but if that detail becomes significant in the future, this will need to
-        // change.
-        this.certificateTranslatorTest.initFactory(factory);
-        this.consumerTypeTranslatorTest.initFactory(factory);
-        factory.registerTranslator(UpstreamConsumer.class, new UpstreamConsumerTranslator());
+    protected void initModelTranslator(ModelTranslator modelTranslator) {
+        this.certificateTranslatorTest.initModelTranslator(modelTranslator);
+        this.consumerTypeTranslatorTest.initModelTranslator(modelTranslator);
+        modelTranslator.registerTranslator(UpstreamConsumer.class, this.translator);
     }
 
     @Override
-    protected UpstreamConsumerTranslator initTranslator() {
-        return new UpstreamConsumerTranslator();
+    protected UpstreamConsumerTranslator initObjectTranslator() {
+        return this.translator;
     }
 
     @Override
-    protected UpstreamConsumer initSourceEntity() {
+    protected UpstreamConsumer initSourceObject() {
         UpstreamConsumer consumer = new UpstreamConsumer();
 
         consumer.setId("consumer_id");
@@ -64,37 +63,36 @@ public class UpstreamConsumerTranslatorTest extends
         consumer.setApiUrl("http://www.url.com");
         consumer.setWebUrl("http://www.url.com");
         consumer.setOwnerId("owner_id");
-        consumer.setType(this.consumerTypeTranslatorTest.initSourceEntity());
-        consumer.setIdCert((IdentityCertificate) this.certificateTranslatorTest.initSourceEntity());
+        consumer.setType(this.consumerTypeTranslatorTest.initSourceObject());
+        consumer.setIdCert((IdentityCertificate) this.certificateTranslatorTest.initSourceObject());
 
         return consumer;
     }
 
     @Override
-    protected UpstreamConsumerDTO initDestDTO() {
+    protected UpstreamConsumerDTO initDestinationObject() {
         // Nothing fancy to do here.
         return new UpstreamConsumerDTO();
     }
 
     @Override
-    protected void verifyDTO(UpstreamConsumer source, UpstreamConsumerDTO dto, boolean childrenGenerated) {
-        if (source != null) {
-            UpstreamConsumer src = (UpstreamConsumer) source;
-            UpstreamConsumerDTO dest = (UpstreamConsumerDTO) dto;
+    protected void verifyOutput(UpstreamConsumer source, UpstreamConsumerDTO dest,
+        boolean childrenGenerated) {
 
-            assertEquals(src.getId(), dest.getId());
-            assertEquals(src.getUuid(), dest.getUuid());
-            assertEquals(src.getName(), dest.getName());
-            assertEquals(src.getApiUrl(), dest.getApiUrl());
-            assertEquals(src.getWebUrl(), dest.getWebUrl());
-            assertEquals(src.getOwnerId(), dest.getOwnerId());
+        if (source != null) {
+            assertEquals(source.getId(), dest.getId());
+            assertEquals(source.getUuid(), dest.getUuid());
+            assertEquals(source.getName(), dest.getName());
+            assertEquals(source.getApiUrl(), dest.getApiUrl());
+            assertEquals(source.getWebUrl(), dest.getWebUrl());
+            assertEquals(source.getOwnerId(), dest.getOwnerId());
 
             if (childrenGenerated) {
                 this.certificateTranslatorTest
-                    .verifyDTO((Certificate) src.getIdCert(), dest.getIdentityCertificate(), true);
+                    .verifyOutput((Certificate) source.getIdCert(), dest.getIdentityCertificate(), true);
 
                 this.consumerTypeTranslatorTest
-                    .verifyDTO(src.getType(), dest.getConsumerType(), true);
+                    .verifyOutput(source.getType(), dest.getConsumerType(), true);
             }
             else {
                 assertNull(dest.getConsumerType());
@@ -102,7 +100,7 @@ public class UpstreamConsumerTranslatorTest extends
             }
         }
         else {
-            assertNull(dto);
+            assertNull(dest);
         }
     }
 }

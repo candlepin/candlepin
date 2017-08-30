@@ -14,8 +14,8 @@
  */
 package org.candlepin.dto.api.v1;
 
-import org.candlepin.dto.DTOFactory;
-import org.candlepin.dto.EntityTranslator;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.ConsumerType;
 
 
@@ -24,7 +24,7 @@ import org.candlepin.model.ConsumerType;
  * The ConsumerTypeTranslator provides translation from ConsumerType model objects to
  * ConsumerTypeDTOs
  */
-public class ConsumerTypeTranslator implements EntityTranslator<ConsumerType, ConsumerTypeDTO> {
+public class ConsumerTypeTranslator implements ObjectTranslator<ConsumerType, ConsumerTypeDTO> {
 
     /**
      * {@inheritDoc}
@@ -38,8 +38,8 @@ public class ConsumerTypeTranslator implements EntityTranslator<ConsumerType, Co
      * {@inheritDoc}
      */
     @Override
-    public ConsumerTypeDTO translate(DTOFactory factory, ConsumerType source) {
-        return this.populate(factory, source, new ConsumerTypeDTO());
+    public ConsumerTypeDTO translate(ModelTranslator translator, ConsumerType source) {
+        return source != null ? this.populate(translator, source, new ConsumerTypeDTO()) : null;
     }
 
     /**
@@ -56,7 +56,9 @@ public class ConsumerTypeTranslator implements EntityTranslator<ConsumerType, Co
      * {@inheritDoc}
      */
     @Override
-    public ConsumerTypeDTO populate(DTOFactory factory, ConsumerType source, ConsumerTypeDTO destination) {
+    public ConsumerTypeDTO populate(ModelTranslator translator, ConsumerType source,
+        ConsumerTypeDTO destination) {
+
         if (source == null) {
             throw new IllegalArgumentException("source is null");
         }
