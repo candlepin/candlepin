@@ -130,7 +130,7 @@ public class ConsumerTypeDTO extends CandlepinDTO<ConsumerTypeDTO> {
      */
     @Override
     public ConsumerTypeDTO clone() {
-        ConsumerTypeDTO copy = (ConsumerTypeDTO) super.clone();
+        ConsumerTypeDTO copy = super.clone();
 
         // Nothing to do here; all the fields are immutable types.
 
@@ -144,13 +144,9 @@ public class ConsumerTypeDTO extends CandlepinDTO<ConsumerTypeDTO> {
     public ConsumerTypeDTO populate(ConsumerTypeDTO source) {
         super.populate(source);
 
-        // We're safeguarded here by both the generic definition above, and the runtime-level check
-        // in CandlepinDTO's populate method.
-        ConsumerTypeDTO src = (ConsumerTypeDTO) source;
-
-        this.setId(src.getId());
-        this.setLabel(src.getLabel());
-        this.setManifest(src.isManifest());
+        this.setId(source.getId());
+        this.setLabel(source.getLabel());
+        this.setManifest(source.isManifest());
 
         return this;
     }

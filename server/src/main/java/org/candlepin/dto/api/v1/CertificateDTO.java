@@ -143,7 +143,7 @@ public class CertificateDTO extends TimestampedCandlepinDTO<CertificateDTO> {
      */
     @Override
     public CertificateDTO clone() {
-        CertificateDTO copy = (CertificateDTO) super.clone();
+        CertificateDTO copy = super.clone();
 
         CertificateSerialDTO serial = this.getSerial();
         copy.serial = serial != null ? (CertificateSerialDTO) serial.clone() : null;
@@ -158,14 +158,10 @@ public class CertificateDTO extends TimestampedCandlepinDTO<CertificateDTO> {
     public CertificateDTO populate(CertificateDTO source) {
         super.populate(source);
 
-        // We're safeguarded here by both the generic definition above, and the runtime-level check
-        // in CandlepinDTO's populate method.
-        CertificateDTO src = (CertificateDTO) source;
-
-        this.setId(src.getId());
-        this.setKey(src.getKey());
-        this.setCert(src.getCert());
-        this.setSerial(src.getSerial());
+        this.setId(source.getId());
+        this.setKey(source.getKey());
+        this.setCert(source.getCert());
+        this.setSerial(source.getSerial());
 
         return this;
     }
