@@ -15,15 +15,14 @@
 package org.candlepin.dto;
 
 import org.candlepin.model.CandlepinQuery;
-import org.candlepin.model.ModelEntity;
 
 
 
 /**
- * The DTOFactory interface defines common functionality required by every DTO factory
+ * The ModelTranslator interface defines common functionality required by every ModelTranslator
  * implementation.
  */
-public interface DTOFactory {
+public interface ModelTranslator {
 
     /**
      * Registers the given translator to the specified model class. If a translator has already
@@ -44,8 +43,7 @@ public interface DTOFactory {
      *  The translator previously registered for the given class, or null if the model class had not
      *  yet been registered.
      */
-    <I extends ModelEntity<I>, O extends CandlepinDTO<O>> EntityTranslator registerTranslator(
-        Class<I> srcClass, EntityTranslator<I, O> translator);
+    <I, O> ObjectTranslator registerTranslator(Class<I> srcClass, ObjectTranslator<I, O> translator);
 
     /**
      * Unregisters and returns any translator associated with the given class. If the class has not
@@ -61,8 +59,7 @@ public interface DTOFactory {
      *  The previously registered translator for the given class, or null a translator had not been
      *  registered
      */
-    <I extends ModelEntity<I>, O extends CandlepinDTO<O>> EntityTranslator<I, O> unregisterTranslator(
-        Class<I> srcClass);
+    ObjectTranslator unregisterTranslator(Class srcClass);
 
     /**
      * Retrieves the translator registered for the specified class. If a translator has not been
@@ -82,8 +79,7 @@ public interface DTOFactory {
      *  The translator registered for the given class, or null if a translator has not yet been
      *  registered
      */
-    <I extends ModelEntity<I>, O extends CandlepinDTO<O>> EntityTranslator<I, O> getTranslator(
-        Class<I> srcClass);
+    ObjectTranslator getTranslator(Class srcClass);
 
     /**
      * Finds a translator for the given class. If a translator cannot be found, this method
@@ -98,7 +94,7 @@ public interface DTOFactory {
      * @return
      *  a translator for the given source object, or null if a translator could not be found
      */
-    EntityTranslator findTranslatorByClass(Class<? extends ModelEntity> srcClass);
+    ObjectTranslator findTranslatorByClass(Class srcClass);
 
     /**
      * Finds a translator for a specific object instance. If an appropriate translator cannot be
@@ -113,46 +109,69 @@ public interface DTOFactory {
      * @return
      *  a translator for the given object instance, or null if a translator could not be found
      */
-    EntityTranslator findTranslatorByInstance(ModelEntity instance);
+    ObjectTranslator findTranslatorByInstance(Object instance);
 
     /**
-     * Builds a DTO from the given source object using the translators registered to this factory
-     * to process the object and any nested objects it contains. If this factory does not have a
-     * registered translator which can process the source object and its nested objects, this
-     * method throws a DTOException. If the source object is null, this method returns null.
+     * Builds a new instance from the given source object using the translators registered to
+     * translator to process the object and any nested objects it contains. If this factory does
+     * not have a registered translator which can process the source object and its nested objects,
+     * this method throws a TransformationException. If the source object is null, this method
+     * returns null.
      *
      * @param source
      *  The source object for which to build a DTO
      *
-     * #throws DTOException
+     * #throws TranslationException
      *  if a translator cannot be found for the source object or any of its nested objects
      *
      * @return
-     *  a new DTO representing the source object, or null if the source object is null
+     *  a newly translated instance of the source object, or null if the source object is null
      */
-    <I extends ModelEntity<I>, O extends CandlepinDTO<O>> O buildDTO(ModelEntity<I> source);
+    <I, O> O translate(I source);
 
-    // TODO: Add a buildDTOs method for doing bulk entity translation.
+    // TODO: Add a translate method for doing bulk entity translation.
 
     /**
-     * Applies a transform to the specified query that uses this DTOFactory to transform the
+     * Applies a translate to the specified query that uses this ModelTranslator to translate the
      * entities fetched by the query to DTOs. If this factory does not have a registered translator
      * which can process the query's entities and their nested objects, this method will complete
      * as normal, but the CandlepinQuery will throw a DTOException when it fetches any results.
      *
      * @param query
-     *  The CandlepinQuery to transform
+     *  The CandlepinQuery to translate
      *
      * @throws IllegalArgumentException
      *  if query is null
      *
-     * #throws DTOException
+     * #throws TranslationException
      *  if a translator cannot be found for the source object or any of its nested objects
      *
      * @return
-     *  A transformed CandlepinQuery using this DTOFactory for its transformation
+     *  A translated CandlepinQuery using this ModelTranslator for its element transformation
      */
-    <I extends ModelEntity<I>, O extends CandlepinDTO<O>> CandlepinQuery<O> transformQuery(
-        CandlepinQuery<I> query);
+    <I, O> CandlepinQuery<O> translateQuery(CandlepinQuery<I> query);
+
+    // /**
+    //  * Populates the given destination object with data from the source object, using the specified
+    //  * ModelTranslator to populate nested objects and object collections. If a ModelTranslator is
+    //  * not provided, any nested objects or object collections will be set to null or empty values as
+    //  * appropriate.
+    //  *
+    //  * @param source
+    //  *  The source object from which to fetch data
+    //  *
+    //  * @param destination
+    //  *  The destination object to populate
+    //  *
+    //  * @throws IllegalArgumentException
+    //  *  if either source or destination objects are null
+    //  *
+    //  * @throws TranslationException
+    //  *  if a translator cannot be found for the source object or any of its nested objects
+    //  *
+    //  * @return
+    //  *  The populated destination object
+    //  */
+    // <I, O> O populate(I source, O destination);
 
 }

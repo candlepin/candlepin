@@ -31,71 +31,74 @@ import org.junit.runner.RunWith;
  */
 @RunWith(JUnitParamsRunner.class)
 public abstract class AbstractTranslatorTest
-    <S extends ModelEntity, D extends CandlepinDTO, T extends EntityTranslator<S, D>> {
+    <S extends ModelEntity, D extends CandlepinDTO, T extends ObjectTranslator<S, D>> {
 
-    protected DTOFactory factory;
+    protected ModelTranslator modelTranslator;
     protected T translator;
     protected S source;
     protected D dest;
 
     @Before
     public void init() {
-        this.factory = new SimpleDTOFactory();
+        this.modelTranslator = new SimpleModelTranslator();
 
-        this.initFactory(this.factory);
-        this.translator = this.initTranslator();
-        this.source = this.initSourceEntity();
-        this.dest = this.initDestDTO();
+        this.initModelTranslator(this.modelTranslator);
+        this.translator = this.initObjectTranslator();
+        this.source = this.initSourceObject();
+        this.dest = this.initDestinationObject();
     }
 
-    protected abstract void initFactory(DTOFactory factory);
-    protected abstract T initTranslator();
-    protected abstract S initSourceEntity();
-    protected abstract D initDestDTO();
+    protected abstract void initModelTranslator(ModelTranslator modelTranslator);
+    protected abstract T initObjectTranslator();
+    protected abstract S initSourceObject();
+    protected abstract D initDestinationObject();
 
     /**
-     * Called to verify the DTO contains the information from the given source object. If the
-     * childrenGenerated parameter is true, any nested/children objects in the DTO should be
-     * verified as well; otherwise, if childrenGenerated is false, nested objects should be null.
+     * Called to verify the output object contains the information from the given source object.
+     * If the childrenGenerated parameter is true, any nested/children objects in the destination
+     * object should be verified as well; otherwise, if childrenGenerated is false, nested objects
+     * should be null.
      *
      * @param src
      *  The source object used in the translate or populate step
      *
-     * @param dto
-     *  The generated or populated DTO to verify
+     * @param dest
+     *  The generated or populated destination object to verify
      *
      * @param childrenGenerated
-     *  Whether or not children were generated/populated for the given DTO
+     *  Whether or not children were generated/populated for the given output object
      */
-    protected abstract void verifyDTO(S source, D dto, boolean childrenGenerated);
+    protected abstract void verifyOutput(S source, D dest, boolean childrenGenerated);
 
     @Test
     public void testTranslate() {
         D dto = (D) this.translator.translate(this.source);
-        this.verifyDTO(this.source, dto, false);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testTranslateWithNullSource() {
-        D dto = (D) this.translator.translate(null);
+        this.verifyOutput(this.source, dto, false);
     }
 
     @Test
-    public void testTranslateWithFactory() {
-        D dto = (D) this.translator.translate(this.factory, this.source);
-        this.verifyDTO(this.source, dto, true);
+    public void testTranslateWithNullSource() {
+        D dto = (D) this.translator.translate(null);
+        assertNull(dto);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testTranslateWithFactoryAndNullSource() {
-        D dto = (D) this.translator.translate(this.factory, null);
+    @Test
+    public void testTranslateWithModelTranslator() {
+        D dto = (D) this.translator.translate(this.modelTranslator, this.source);
+        this.verifyOutput(this.source, dto, true);
+    }
+
+    @Test
+    public void testTranslateWithModelTranslatorAndNullSource() {
+        D dto = (D) this.translator.translate(this.modelTranslator, null);
+        assertNull(dto);
     }
 
     @Test
     public void testPopulate() {
         D dto = (D) this.translator.populate(this.source, this.dest);
         assertSame(dto, this.dest);
-        this.verifyDTO(this.source, this.dest, false);
+        this.verifyOutput(this.source, this.dest, false);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -109,19 +112,19 @@ public abstract class AbstractTranslatorTest
     }
 
     @Test
-    public void testPopulateWithFactory() {
-        D dto = (D) this.translator.populate(this.factory, this.source, this.dest);
+    public void testPopulateWithModelTranslator() {
+        D dto = (D) this.translator.populate(this.modelTranslator, this.source, this.dest);
         assertSame(dto, this.dest);
-        this.verifyDTO(this.source, this.dest, true);
+        this.verifyOutput(this.source, this.dest, true);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testPopulateWithFactoryAndNullSource() {
-        D dto = (D) this.translator.populate(this.factory, null, this.dest);
+    public void testPopulateWithModelTranslatorAndNullSource() {
+        D dto = (D) this.translator.populate(this.modelTranslator, null, this.dest);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testPopulateWithFactoryAndNullDestination() {
-        D dto = (D) this.translator.populate(this.factory, this.source, null);
+    public void testPopulateWithModelTranslatorAndNullDestination() {
+        D dto = (D) this.translator.populate(this.modelTranslator, this.source, null);
     }
 }

@@ -19,7 +19,7 @@ import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.TestingModules;
-import org.candlepin.dto.api.APIDTOFactory;
+import org.candlepin.dto.api.APIModelTranslator;
 import org.candlepin.dto.api.v1.CertificateSerialDTO;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CertificateSerial;
@@ -40,8 +40,7 @@ import org.junit.Test;
  */
 public class CertificateSerialResourceTest {
 
-    @Inject
-    APIDTOFactory dtoFactory;
+    @Inject APIModelTranslator translator;
 
     @Before
     public void init() {
@@ -61,7 +60,7 @@ public class CertificateSerialResourceTest {
         CertificateSerialCurator csc = mock(CertificateSerialCurator.class);
         when(csc.listAll()).thenReturn(cqmock);
 
-        CertificateSerialResource csr = new CertificateSerialResource(csc, this.dtoFactory);
+        CertificateSerialResource csr = new CertificateSerialResource(csc, this.translator);
 
         CandlepinQuery<CertificateSerialDTO> result = csr.getCertificateSerials();
         assertNotNull(result);
@@ -72,14 +71,14 @@ public class CertificateSerialResourceTest {
     @Test
     public void getSerial() {
         CertificateSerialCurator csc = mock(CertificateSerialCurator.class);
-        CertificateSerialResource csr = new CertificateSerialResource(csc, this.dtoFactory);
+        CertificateSerialResource csr = new CertificateSerialResource(csc, this.translator);
         CertificateSerial cs = new CertificateSerial(10L);
         when(csc.find(cs.getId())).thenReturn(cs);
 
         CertificateSerialDTO output = csr.getCertificateSerial(10L);
         assertNotNull(output);
 
-        CertificateSerialDTO dto = this.dtoFactory.<CertificateSerial, CertificateSerialDTO>buildDTO(cs);
+        CertificateSerialDTO dto = this.translator.<CertificateSerial, CertificateSerialDTO>translate(cs);
         assertEquals(dto, output);
     }
 }

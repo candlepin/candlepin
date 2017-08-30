@@ -15,7 +15,7 @@
 package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.AbstractTranslatorTest;
-import org.candlepin.dto.DTOFactory;
+import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.ConsumerType;
 
 import static org.junit.Assert.*;
@@ -36,17 +36,17 @@ public class ConsumerTypeTranslatorTest extends
     protected ConsumerTypeTranslator translator = new ConsumerTypeTranslator();
 
     @Override
-    protected void initFactory(DTOFactory factory) {
-        factory.registerTranslator(ConsumerType.class, this.translator);
+    protected void initModelTranslator(ModelTranslator modelTranslator) {
+        modelTranslator.registerTranslator(ConsumerType.class, this.translator);
     }
 
     @Override
-    protected ConsumerTypeTranslator initTranslator() {
+    protected ConsumerTypeTranslator initObjectTranslator() {
         return this.translator;
     }
 
     @Override
-    protected ConsumerType initSourceEntity() {
+    protected ConsumerType initSourceObject() {
         ConsumerType type = new ConsumerType();
 
         type.setId("type_id");
@@ -57,27 +57,24 @@ public class ConsumerTypeTranslatorTest extends
     }
 
     @Override
-    protected ConsumerTypeDTO initDestDTO() {
+    protected ConsumerTypeDTO initDestinationObject() {
         // Nothing fancy to do here.
         return new ConsumerTypeDTO();
     }
 
     @Override
-    protected void verifyDTO(ConsumerType source, ConsumerTypeDTO dto, boolean childrenGenerated) {
+    protected void verifyOutput(ConsumerType source, ConsumerTypeDTO dest, boolean childrenGenerated) {
 
         if (source != null) {
-            ConsumerType src = (ConsumerType) source;
-            ConsumerTypeDTO dest = (ConsumerTypeDTO) dto;
-
             // This DTO does not have any nested objects, so we don't need to worry about the
             // childrenGenerated flag
 
-            assertEquals(src.getId(), dest.getId());
-            assertEquals(src.getLabel(), dest.getLabel());
-            assertEquals(src.isManifest(), dest.isManifest());
+            assertEquals(source.getId(), dest.getId());
+            assertEquals(source.getLabel(), dest.getLabel());
+            assertEquals(source.isManifest(), dest.isManifest());
         }
         else {
-            assertNull(dto);
+            assertNull(dest);
         }
     }
 }

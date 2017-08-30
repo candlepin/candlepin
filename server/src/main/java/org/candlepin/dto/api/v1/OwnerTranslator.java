@@ -14,7 +14,7 @@
  */
 package org.candlepin.dto.api.v1;
 
-import org.candlepin.dto.DTOFactory;
+import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.UpstreamConsumer;
 
@@ -37,8 +37,8 @@ public class OwnerTranslator extends TimestampedEntityTranslator<Owner, OwnerDTO
      * {@inheritDoc}
      */
     @Override
-    public OwnerDTO translate(DTOFactory factory, Owner source) {
-        return this.populate(factory, source, new OwnerDTO());
+    public OwnerDTO translate(ModelTranslator translator, Owner source) {
+        return source != null ? this.populate(translator, source, new OwnerDTO()) : null;
     }
 
     /**
@@ -53,8 +53,8 @@ public class OwnerTranslator extends TimestampedEntityTranslator<Owner, OwnerDTO
      * {@inheritDoc}
      */
     @Override
-    public OwnerDTO populate(DTOFactory factory, Owner source, OwnerDTO dest) {
-        dest = super.populate(factory, source, dest);
+    public OwnerDTO populate(ModelTranslator translator, Owner source, OwnerDTO dest) {
+        dest = super.populate(translator, source, dest);
 
         dest.setId(source.getId());
         dest.setKey(source.getKey());
@@ -68,12 +68,12 @@ public class OwnerTranslator extends TimestampedEntityTranslator<Owner, OwnerDTO
 
         // TODO: Should this actually follow the nested child rules of all the other objects?
         Owner parent = source.getParentOwner();
-        dest.setParentOwner(parent != null ? this.translate(factory, parent) : null);
+        dest.setParentOwner(parent != null ? this.translate(translator, parent) : null);
 
-        // Process nested objects if we have a DTO factory to use to the translation...
-        if (factory != null) {
+        // Process nested objects if we have a model translator to use to the translation...
+        if (translator != null) {
             UpstreamConsumer consumer = source.getUpstreamConsumer();
-            dest.setUpstreamConsumer(factory.<UpstreamConsumer, UpstreamConsumerDTO>buildDTO(consumer));
+            dest.setUpstreamConsumer(translator.<UpstreamConsumer, UpstreamConsumerDTO>translate(consumer));
         }
         else {
             dest.setUpstreamConsumer(null);
