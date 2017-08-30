@@ -338,6 +338,7 @@ public class TestingModules {
             install(new FactoryModuleBuilder().build(PreEntitlementRulesCheckOpFactory.class));
 
             bind(APIModelTranslator.class).to(APIv1ModelTranslator.class);
+            bind(APIv1ModelTranslator.class).to(APIv1ModelTranslator.class);
         }
     }
 }

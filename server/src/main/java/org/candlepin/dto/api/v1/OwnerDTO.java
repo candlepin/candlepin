@@ -250,7 +250,7 @@ public class OwnerDTO extends TimestampedCandlepinDTO<OwnerDTO> implements Linka
      */
     @Override
     public OwnerDTO clone() {
-        OwnerDTO copy = (OwnerDTO) super.clone();
+        OwnerDTO copy = super.clone();
 
         OwnerDTO parent = this.getParentOwner();
         copy.parentOwner = parent != null ? (OwnerDTO) parent.clone() : null;
@@ -268,21 +268,17 @@ public class OwnerDTO extends TimestampedCandlepinDTO<OwnerDTO> implements Linka
     public OwnerDTO populate(OwnerDTO source) {
         super.populate(source);
 
-        // We're safeguarded here by both the generic definition above, and the runtime-level check
-        // in CandlepinDTO's populate method.
-        OwnerDTO src = (OwnerDTO) source;
-
-        this.setId(src.getId());
-        this.setKey(src.getKey());
-        this.setDisplayName(src.getDisplayName());
-        this.setParentOwner(src.getParentOwner());
-        this.setContentPrefix(src.getContentPrefix());
-        this.setDefaultServiceLevel(src.getDefaultServiceLevel());
-        this.setUpstreamConsumer(src.getUpstreamConsumer());
-        this.setLogLevel(src.getLogLevel());
-        this.setAutobindDisabled(src.isAutobindDisabled());
-        this.setContentAccessMode(src.getContentAccessMode());
-        this.setContentAccessModeList(src.getContentAccessModeList());
+        this.setId(source.getId());
+        this.setKey(source.getKey());
+        this.setDisplayName(source.getDisplayName());
+        this.setParentOwner(source.getParentOwner());
+        this.setContentPrefix(source.getContentPrefix());
+        this.setDefaultServiceLevel(source.getDefaultServiceLevel());
+        this.setUpstreamConsumer(source.getUpstreamConsumer());
+        this.setLogLevel(source.getLogLevel());
+        this.setAutobindDisabled(source.isAutobindDisabled());
+        this.setContentAccessMode(source.getContentAccessMode());
+        this.setContentAccessModeList(source.getContentAccessModeList());
 
         return this;
     }
