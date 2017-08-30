@@ -429,7 +429,6 @@ public class CandlepinModule extends AbstractModule {
 
     protected void configureModelTranslator() {
         bind(APIModelTranslator.class).to(APIv1ModelTranslator.class);
-        // bind(APIv1ModelTranslator.class).to(APIv1ModelTranslator.class);
 
         // TODO: Add more factory configurations here as necessary
     }
