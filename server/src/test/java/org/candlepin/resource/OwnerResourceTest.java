@@ -1252,8 +1252,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource thisOwnerResource = new OwnerResource(
             ownerCurator, null, null, i18n, es, eventFactory, null, null, manifestManager, null, null, null,
             null, importRecordCurator, null, null, null, null, null, null, null, contentOverrideValidator,
-            serviceLevelValidator, null, null, null, productManager, contentManager, null, this.translator
-        );
+            serviceLevelValidator, null, null, null, productManager, contentManager, null, this.translator);
 
         MultipartInput input = mock(MultipartInput.class);
         InputPart part = mock(InputPart.class);
@@ -1285,8 +1284,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource thisOwnerResource = new OwnerResource(
             ownerCurator, null, null, i18n, es, eventFactory, null, null, manifestManager, null, null, null,
             null, importRecordCurator, null, null, null, null, null, null, null, contentOverrideValidator,
-            serviceLevelValidator, null, null, null, productManager, contentManager, null, this.translator
-        );
+            serviceLevelValidator, null, null, null, productManager, contentManager, null, this.translator);
 
         MultipartInput input = mock(MultipartInput.class);
         InputPart part = mock(InputPart.class);
@@ -1321,8 +1319,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource thisOwnerResource = new OwnerResource(
             ownerCurator, null, null, i18n, es, eventFactory, null, null, manifestManager, null, null, null,
             null, importRecordCurator, null, null, null, null, null, null, null, contentOverrideValidator,
-            serviceLevelValidator, null, null, null, productManager, contentManager, null, this.translator
-        );
+            serviceLevelValidator, null, null, null, productManager, contentManager, null, this.translator);
 
         MultipartInput input = mock(MultipartInput.class);
         InputPart part = mock(InputPart.class);
@@ -1362,8 +1359,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource ownerres = new OwnerResource(
             oc, null, null, i18n, null, null, null, null, null, null, null, null, null, null, null, null,
             null, null, null, null, null, contentOverrideValidator, serviceLevelValidator, null,
-            null, null, productManager, contentManager, null, this.translator
-        );
+            null, null, productManager, contentManager, null, this.translator);
 
         when(oc.lookupByKey(eq("admin"))).thenReturn(owner);
         when(owner.getUpstreamConsumer()).thenReturn(upstream);
@@ -1561,8 +1557,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource ownerres = new OwnerResource(
             oc, null, null, i18n, null, null, null, null, null, null, null, null, null, null, null, null, ec,
             null, null, null, null, null, null, null, null, null, productManager, contentManager, null,
-            this.translator
-        );
+            this.translator);
 
         when(oc.lookupByKey(owner.getKey())).thenReturn(owner);
         when(ec.listByOwner(isA(Owner.class), anyString(), isA(EntitlementFilterBuilder.class),
@@ -1584,8 +1579,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource ownerres = new OwnerResource(
             oc, null, null, i18n, null, null, null, null, null, null, null, null, null, null, null, null,
             null, null, null, null, null, null, null, null, null, null, productManager, contentManager, null,
-            this.translator
-        );
+            this.translator);
+
         ownerres.ownerEntitlements("Taylor Swift", null, null, null, req);
     }
 
@@ -1606,8 +1601,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource resource = new OwnerResource(
             oc, null, cc, i18n, null, null, null, null, null, cpm, null, null, null, null, null, ecc, ec,
             uc, ucg, null, null, null, null, null, null, null, productManager, contentManager, null,
-            this.translator
-        );
+            this.translator);
 
         when(oc.lookupByKey(eq("admin"))).thenReturn(owner);
         when(ucg.generate(eq(owner.getKey()), eq(principal))).thenReturn(entCert);
@@ -1633,8 +1627,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource resource = new OwnerResource(
             oc, null, cc, i18n, null, null, null, null, null, cpm, null, null, null, null, null, ecc, ec,
             uc, ucg, null, null, null, null, null, null, null, productManager, contentManager, null,
-            this.translator
-        );
+            this.translator);
 
         when(ucg.generate(eq(owner.getKey()), eq(principal))).thenReturn(entCert);
         UeberCertificate result = resource.createUeberCertificate(principal, owner.getKey());
