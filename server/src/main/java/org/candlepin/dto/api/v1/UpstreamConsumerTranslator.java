@@ -14,7 +14,7 @@
  */
 package org.candlepin.dto.api.v1;
 
-import org.candlepin.dto.DTOFactory;
+import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.Certificate;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.UpstreamConsumer;
@@ -40,8 +40,8 @@ public class UpstreamConsumerTranslator extends
      * {@inheritDoc}
      */
     @Override
-    public UpstreamConsumerDTO translate(DTOFactory factory, UpstreamConsumer source) {
-        return this.populate(factory, source, new UpstreamConsumerDTO());
+    public UpstreamConsumerDTO translate(ModelTranslator translator, UpstreamConsumer source) {
+        return source != null ? this.populate(translator, source, new UpstreamConsumerDTO()) : null;
     }
 
     /**
@@ -56,10 +56,10 @@ public class UpstreamConsumerTranslator extends
      * {@inheritDoc}
      */
     @Override
-    public UpstreamConsumerDTO populate(DTOFactory factory, UpstreamConsumer source,
+    public UpstreamConsumerDTO populate(ModelTranslator translator, UpstreamConsumer source,
         UpstreamConsumerDTO dest) {
 
-        dest = super.populate(factory, source, dest);
+        dest = super.populate(translator, source, dest);
 
         dest.setId(source.getId());
         dest.setUuid(source.getUuid());
@@ -68,11 +68,11 @@ public class UpstreamConsumerTranslator extends
         dest.setApiUrl(source.getApiUrl());
         dest.setWebUrl(source.getWebUrl());
 
-        // Process nested objects if we have a DTO factory to use to the translation...
-        if (factory != null) {
-            dest.setConsumerType(factory.<ConsumerType, ConsumerTypeDTO>buildDTO(source.getType()));
+        // Process nested objects if we have a ModelTranslator to use to the translation...
+        if (translator != null) {
+            dest.setConsumerType(translator.<ConsumerType, ConsumerTypeDTO>translate(source.getType()));
             dest.setIdentityCertificate(
-                factory.<Certificate, CertificateDTO>buildDTO((Certificate) source.getIdCert()));
+                translator.<Certificate, CertificateDTO>translate((Certificate) source.getIdCert()));
         }
         else {
             dest.setConsumerType(null);

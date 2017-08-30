@@ -14,8 +14,7 @@
  */
 package org.candlepin.resource;
 
-import org.candlepin.dto.DTOFactory;
-import org.candlepin.dto.api.APIDTOFactory;
+import org.candlepin.dto.api.APIModelTranslator;
 import org.candlepin.dto.api.v1.ConsumerTypeDTO;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
@@ -59,15 +58,15 @@ public class ConsumerTypeResource {
 
     private ConsumerTypeCurator consumerTypeCurator;
     private I18n i18n;
-    private DTOFactory dtoFactory;
+    private APIModelTranslator translator;
 
     @Inject
     public ConsumerTypeResource(ConsumerTypeCurator consumerTypeCurator, I18n i18n,
-        APIDTOFactory dtoFactory) {
+        APIModelTranslator translator) {
 
         this.consumerTypeCurator = consumerTypeCurator;
         this.i18n = i18n;
-        this.dtoFactory = dtoFactory;
+        this.translator = translator;
     }
 
     /**
@@ -107,7 +106,7 @@ public class ConsumerTypeResource {
     @Wrapped(element = "consumertypes")
     public CandlepinQuery<ConsumerTypeDTO> list() {
         CandlepinQuery<ConsumerType> query = this.consumerTypeCurator.listAll();
-        return this.dtoFactory.<ConsumerType, ConsumerTypeDTO>transformQuery(query);
+        return this.translator.<ConsumerType, ConsumerTypeDTO>translateQuery(query);
     }
 
     @ApiOperation(notes = "Retrieves a single Consumer Type", value = "getConsumerType")
@@ -122,7 +121,7 @@ public class ConsumerTypeResource {
             throw new NotFoundException(i18n.tr("Unit type with id ''{0}'' could not be found.", id));
         }
 
-        return this.dtoFactory.<ConsumerType, ConsumerTypeDTO>buildDTO(type);
+        return this.translator.<ConsumerType, ConsumerTypeDTO>translate(type);
     }
 
     @ApiOperation(notes = "Creates a Consumer Type", value = "create")
@@ -137,7 +136,7 @@ public class ConsumerTypeResource {
 
             this.populateEntity(type, dto);
             type = consumerTypeCurator.create(type);
-            return this.dtoFactory.<ConsumerType, ConsumerTypeDTO>buildDTO(type);
+            return this.translator.<ConsumerType, ConsumerTypeDTO>translate(type);
         }
         catch (Exception e) {
             log.error("Problem creating unit type: ", e);
@@ -161,7 +160,7 @@ public class ConsumerTypeResource {
 
         this.populateEntity(type, dto);
         type = consumerTypeCurator.merge(type);
-        return this.dtoFactory.<ConsumerType, ConsumerTypeDTO>buildDTO(type);
+        return this.translator.<ConsumerType, ConsumerTypeDTO>translate(type);
     }
 
     @ApiOperation(notes = "Removes a Consumer Type", value = "deleteConsumerType")

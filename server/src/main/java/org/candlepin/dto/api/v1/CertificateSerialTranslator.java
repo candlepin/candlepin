@@ -14,7 +14,7 @@
  */
 package org.candlepin.dto.api.v1;
 
-import org.candlepin.dto.DTOFactory;
+import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.CertificateSerial;
 
 
@@ -37,8 +37,8 @@ public class CertificateSerialTranslator extends
      * {@inheritDoc}
      */
     @Override
-    public CertificateSerialDTO translate(DTOFactory factory, CertificateSerial source) {
-        return this.populate(factory, source, new CertificateSerialDTO());
+    public CertificateSerialDTO translate(ModelTranslator translator, CertificateSerial source) {
+        return source != null ? this.populate(translator, source, new CertificateSerialDTO()) : null;
     }
 
     /**
@@ -55,10 +55,10 @@ public class CertificateSerialTranslator extends
      * {@inheritDoc}
      */
     @Override
-    public CertificateSerialDTO populate(DTOFactory factory, CertificateSerial source,
+    public CertificateSerialDTO populate(ModelTranslator translator, CertificateSerial source,
         CertificateSerialDTO destination) {
 
-        destination = super.populate(factory, source, destination);
+        destination = super.populate(translator, source, destination);
 
         destination.setId(source.getId());
         destination.setSerial(source.getSerial());
