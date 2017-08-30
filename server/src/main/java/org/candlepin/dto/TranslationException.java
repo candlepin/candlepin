@@ -12,18 +12,30 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.dto.api;
-
-import org.candlepin.dto.DTOFactory;
+package org.candlepin.dto;
 
 
 
 /**
- * The APIDTOFactory is an interface which denotes factories which are pre-configured with
- * translators for creating DTOs compatible one or more API specifications.
+ * The TranslationException is used to represent exceptions that occur during object translation
  */
-public interface APIDTOFactory extends DTOFactory {
+public class TranslationException extends RuntimeException {
+    private static final long serialVersionUID = 1L;
 
-    // Nothing to do here.
+    public TranslationException() {
+        super();
+    }
+
+    public TranslationException(String message) {
+        super(message);
+    }
+
+    public TranslationException(Throwable cause) {
+        super(cause);
+    }
+
+    public TranslationException(String message, Throwable cause) {
+        super(message, cause);
+    }
 
 }

@@ -14,8 +14,7 @@
  */
 package org.candlepin.resource;
 
-import org.candlepin.dto.DTOFactory;
-import org.candlepin.dto.api.APIDTOFactory;
+import org.candlepin.dto.api.APIModelTranslator;
 import org.candlepin.dto.api.v1.CertificateSerialDTO;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CertificateSerial;
@@ -42,14 +41,14 @@ import io.swagger.annotations.Authorization;
 @Api(value = "serials", authorizations = { @Authorization("basic") })
 public class CertificateSerialResource {
     private CertificateSerialCurator certificateSerialCurator;
-    private DTOFactory dtoFactory;
+    private APIModelTranslator translator;
 
     @Inject
     public CertificateSerialResource(CertificateSerialCurator certificateSerialCurator,
-        APIDTOFactory dtoFactory) {
+        APIModelTranslator translator) {
 
         this.certificateSerialCurator = certificateSerialCurator;
-        this.dtoFactory = dtoFactory;
+        this.translator = translator;
     }
 
     @ApiOperation(notes = "Retrieves a list of Certificate Serials", value = "getCertificateSerials",
@@ -58,7 +57,7 @@ public class CertificateSerialResource {
     @Produces(MediaType.APPLICATION_JSON)
     public CandlepinQuery<CertificateSerialDTO> getCertificateSerials() {
         CandlepinQuery<CertificateSerial> query = this.certificateSerialCurator.listAll();
-        return this.dtoFactory.<CertificateSerial, CertificateSerialDTO>transformQuery(query);
+        return this.translator.<CertificateSerial, CertificateSerialDTO>translateQuery(query);
     }
 
     @ApiOperation(notes = "Retrieves single Certificate Serial", value = "getCertificateSerial")
@@ -67,6 +66,6 @@ public class CertificateSerialResource {
     @Produces(MediaType.APPLICATION_JSON)
     public CertificateSerialDTO getCertificateSerial(@PathParam("serial_id") Long serialId) {
         CertificateSerial serial = this.certificateSerialCurator.find(serialId);
-        return this.dtoFactory.<CertificateSerial, CertificateSerialDTO>buildDTO(serial);
+        return this.translator.<CertificateSerial, CertificateSerialDTO>translate(serial);
     }
 }
