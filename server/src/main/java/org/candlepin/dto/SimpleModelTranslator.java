@@ -15,7 +15,6 @@
 package org.candlepin.dto;
 
 import org.candlepin.model.CandlepinQuery;
-import org.candlepin.model.ModelEntity;
 import org.candlepin.util.ElementTransformer;
 
 import org.slf4j.Logger;
@@ -27,28 +26,28 @@ import java.util.HashMap;
 
 
 /**
- * The SimpleDTOFactory class provides the basic functionality required for building DTOs from
+ * The SimpleModelTranslator class provides the basic functionality required for building DTOs from
  * model entities. The factory works by delegating the translation work to one or more
- * EntityTranslator instances, which are registered to a given DTOFactory instance.
+ * ObjectTranslator instances, which are registered to a given ModelTranslator instance.
  */
-public class SimpleDTOFactory implements DTOFactory {
-    private static Logger log = LoggerFactory.getLogger(DTOFactory.class);
+public class SimpleModelTranslator implements ModelTranslator {
+    private static Logger log = LoggerFactory.getLogger(ModelTranslator.class);
 
-    protected Map<Class, EntityTranslator> translators;
+    protected Map<Class, ObjectTranslator> translators;
 
 
     /**
-     * Initializes a new DTOFactory instance.
+     * Initializes a new ModelTranslator instance.
      */
-    public SimpleDTOFactory() {
-        this.translators = new HashMap<Class, EntityTranslator>();
+    public SimpleModelTranslator() {
+        this.translators = new HashMap<Class, ObjectTranslator>();
     }
 
     /**
      * {@inheritDoc}
      */
-    public <I extends ModelEntity<I>, O extends CandlepinDTO<O>> EntityTranslator registerTranslator(
-        Class<I> srcClass, EntityTranslator<I, O> translator) {
+    public <I, O> ObjectTranslator registerTranslator(Class<I> srcClass,
+        ObjectTranslator<I, O> translator) {
 
         if (srcClass == null) {
             throw new IllegalArgumentException("srcClass is null");
@@ -58,7 +57,7 @@ public class SimpleDTOFactory implements DTOFactory {
             throw new IllegalArgumentException("translator is null");
         }
 
-        EntityTranslator existing = this.translators.get(srcClass);
+        ObjectTranslator existing = this.translators.get(srcClass);
         this.translators.put(srcClass, translator);
 
         return existing;
@@ -67,9 +66,7 @@ public class SimpleDTOFactory implements DTOFactory {
     /**
      * {@inheritDoc}
      */
-    public <I extends ModelEntity<I>, O extends CandlepinDTO<O>> EntityTranslator<I, O> unregisterTranslator(
-        Class<I> srcClass) {
-
+    public ObjectTranslator unregisterTranslator(Class srcClass) {
         if (srcClass == null) {
             throw new IllegalArgumentException("srcClass is null");
         }
@@ -80,9 +77,7 @@ public class SimpleDTOFactory implements DTOFactory {
     /**
      * {@inheritDoc}
      */
-    public <I extends ModelEntity<I>, O extends CandlepinDTO<O>> EntityTranslator<I, O> getTranslator(
-        Class<I> srcClass) {
-
+    public ObjectTranslator getTranslator(Class srcClass) {
         if (srcClass == null) {
             throw new IllegalArgumentException("srcClass is null");
         }
@@ -117,12 +112,12 @@ public class SimpleDTOFactory implements DTOFactory {
      * @return
      *  a translator for the given source object, or null if a translator could not be found
      */
-    public EntityTranslator findTranslatorByClass(Class<? extends ModelEntity> srcClass) {
+    public ObjectTranslator findTranslatorByClass(Class srcClass) {
         if (srcClass == null) {
             throw new IllegalArgumentException("srcClass is null");
         }
 
-        EntityTranslator translator = null;
+        ObjectTranslator translator = null;
         for (Class cls = srcClass; cls != null && translator == null; cls = cls.getSuperclass()) {
             translator = this.translators.get(cls);
 
@@ -138,8 +133,8 @@ public class SimpleDTOFactory implements DTOFactory {
     /**
      * Recursive implementation for fetching translators by interface for a given class.
      */
-    private EntityTranslator findTranslatorByInterfaces(Class<? extends ModelEntity> srcClass) {
-        EntityTranslator translator = null;
+    private ObjectTranslator findTranslatorByInterfaces(Class srcClass) {
+        ObjectTranslator translator = null;
 
         for (Class iface : srcClass.getInterfaces()) {
             translator = this.translators.get(iface);
@@ -163,7 +158,7 @@ public class SimpleDTOFactory implements DTOFactory {
      * Functionally, the output of this method is identical to the output of the
      * <tt>findTranslatorByClass</tt> method with the class of the object instance:
      * <pre>
-     *  EntityTranslator translator = factory.findTranslatorByClass(instance.getClass());
+     *  ObjectTranslator translator = factory.findTranslatorByClass(instance.getClass());
      * </pre>
      *
      * @param instance
@@ -175,7 +170,7 @@ public class SimpleDTOFactory implements DTOFactory {
      * @return
      *  a translator for the given object instance, or null if a translator could not be found
      */
-    public EntityTranslator findTranslatorByInstance(ModelEntity instance) {
+    public ObjectTranslator findTranslatorByInstance(Object instance) {
         if (instance == null) {
             throw new IllegalArgumentException("instance is null");
         }
@@ -186,15 +181,15 @@ public class SimpleDTOFactory implements DTOFactory {
     /**
      * {@inheritDoc}
      */
-    public <I extends ModelEntity<I>, O extends CandlepinDTO<O>> O buildDTO(ModelEntity<I> source) {
+    public <I, O> O translate(I source) {
         O output = null;
 
         if (source != null) {
-            EntityTranslator translator = this.findTranslatorByClass(source.getClass());
+            ObjectTranslator translator = this.findTranslatorByClass(source.getClass());
 
             if (translator == null) {
-                Class srcClass = source.getClass();
-                throw new DTOException("Unable to find translator for source object class: " + srcClass);
+                throw new TranslationException(
+                    "Unable to find translator for source object class: " + source.getClass());
             }
 
             output = (O) translator.translate(this, source);
@@ -203,13 +198,10 @@ public class SimpleDTOFactory implements DTOFactory {
         return output;
     }
 
-    // TODO: Add a buildDTOs method for doing bulk entity translation.
-
     /**
      * {@inheritDoc}
      */
-    public <I extends ModelEntity<I>, O extends CandlepinDTO<O>> CandlepinQuery<O> transformQuery(
-        CandlepinQuery<I> query) {
+    public <I, O> CandlepinQuery<O> translateQuery(CandlepinQuery<I> query) {
         // TODO: It would be great if we could make this method, and the CandlepinQuery more
         // generic, but type erasure makes this pretty cumbersome to do properly.
 
@@ -217,9 +209,9 @@ public class SimpleDTOFactory implements DTOFactory {
             throw new IllegalArgumentException("query is null");
         }
 
-        final DTOFactory factory = this;
+        final ModelTranslator modelTranslator = this;
         return query.transform(new ElementTransformer<I, O>() {
-            private EntityTranslator translator;
+            private ObjectTranslator translator;
             // This should be fine for now, but if we ever have queries that return multiple
             // entity types, this will need to be changed.
 
@@ -229,16 +221,16 @@ public class SimpleDTOFactory implements DTOFactory {
                 if (source != null) {
                     // Look up our translator if we haven't already
                     if (this.translator == null) {
-                        this.translator = factory.findTranslatorByClass(source.getClass());
+                        this.translator = modelTranslator.findTranslatorByClass(source.getClass());
 
                         if (this.translator == null) {
-                            throw new DTOException("Unable to find translator for source object class: " +
-                                source.getClass());
+                            throw new TranslationException(
+                                "Unable to find translator for source object class: " + source.getClass());
                         }
                     }
 
                     // Translate our output
-                    output = (O) this.translator.translate(factory, source);
+                    output = (O) this.translator.translate(modelTranslator, source);
                 }
 
                 return output;

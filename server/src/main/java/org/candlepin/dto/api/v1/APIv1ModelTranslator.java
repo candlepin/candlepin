@@ -14,8 +14,8 @@
  */
 package org.candlepin.dto.api.v1;
 
-import org.candlepin.dto.SimpleDTOFactory;
-import org.candlepin.dto.api.APIDTOFactory;
+import org.candlepin.dto.SimpleModelTranslator;
+import org.candlepin.dto.api.APIModelTranslator;
 import org.candlepin.model.Certificate;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.ConsumerType;
@@ -25,12 +25,12 @@ import org.candlepin.model.UpstreamConsumer;
 
 
 /**
- * The APIv1DTOFactory is a DTOFactory pre-configured with the translators for creating DTOs
- * compatible with the API v1 specification.
+ * The APIv1ModelTranslator is a ModelTranslator pre-configured with the translators for creating
+ * DTOs compatible with the API v1 specification.
  */
-public class APIv1DTOFactory extends SimpleDTOFactory implements APIDTOFactory {
+public class APIv1ModelTranslator extends SimpleModelTranslator implements APIModelTranslator {
 
-    public APIv1DTOFactory() {
+    public APIv1ModelTranslator() {
         this.registerTranslator(Certificate.class, new CertificateTranslator());
         this.registerTranslator(CertificateSerial.class, new CertificateSerialTranslator());
         this.registerTranslator(ConsumerType.class, new ConsumerTypeTranslator());
