@@ -22,6 +22,22 @@ import java.io.Serializable;
 
 /**
  * The CandlepinDTO is the base class for all DTOs, which provides common data and functionality.
+ * <p></p>
+ * DTO implementations should adhere to the following design rules, in no particular order:
+ * <ul>
+ *  <li>
+ *    <strong>Collections must be fully encapsulated</strong><br/>
+ *  </li><li>
+ *    <strong>Collections returned by accessors must be views</strong><br/>
+ *  </li><li>
+ *    <strong>Join objects must have immutable references to their joined objects</strong><br/>
+ *  </li><li>
+ *    <strong>Equality checks and hashcode calculation must only use the primary identifier of any
+ *    nested objects</strong><br/>
+ *  </li><li>
+ *    <strong>Setters should return a self-reference to allow method chaining</strong><br/>
+ *  </li>
+ * </ul>
  *
  * @param <T>
  *  DTO type extending this class; should be the name of the subclass
