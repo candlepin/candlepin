@@ -194,7 +194,7 @@ public class UpstreamConsumerDTO extends TimestampedCandlepinDTO<UpstreamConsume
      */
     @Override
     public UpstreamConsumerDTO clone() {
-        UpstreamConsumerDTO copy = (UpstreamConsumerDTO) super.clone();
+        UpstreamConsumerDTO copy = super.clone();
 
         ConsumerTypeDTO type = this.getConsumerType();
         copy.consumerType = type != null ? (ConsumerTypeDTO) type.clone() : null;
@@ -212,18 +212,14 @@ public class UpstreamConsumerDTO extends TimestampedCandlepinDTO<UpstreamConsume
     public UpstreamConsumerDTO populate(UpstreamConsumerDTO source) {
         super.populate(source);
 
-        // We're safeguarded here by both the generic definition above, and the runtime-level check
-        // in CandlepinDTO's populate method.
-        UpstreamConsumerDTO src = (UpstreamConsumerDTO) source;
-
-        this.setId(src.getId());
-        this.setUuid(src.getUuid());
-        this.setName(src.getName());
-        this.setApiUrl(src.getApiUrl());
-        this.setWebUrl(src.getWebUrl());
-        this.setOwnerId(src.getOwnerId());
-        this.setConsumerType(src.getConsumerType());
-        this.setIdentityCertificate(src.getIdentityCertificate());
+        this.setId(source.getId());
+        this.setUuid(source.getUuid());
+        this.setName(source.getName());
+        this.setApiUrl(source.getApiUrl());
+        this.setWebUrl(source.getWebUrl());
+        this.setOwnerId(source.getOwnerId());
+        this.setConsumerType(source.getConsumerType());
+        this.setIdentityCertificate(source.getIdentityCertificate());
 
         return this;
     }
