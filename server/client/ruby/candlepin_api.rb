@@ -1046,6 +1046,10 @@ class Candlepin
       pool['derivedProvidedProducts'] = params[:derived_provided_products].collect { |pid| {'productId' => pid} }
     end
 
+    if params[:upstream_pool_id]
+      pool['upstreamPoolId'] = params[:upstream_pool_id]
+    end
+
     return post("/owners/#{owner_key}/pools", {}, pool)
   end
 

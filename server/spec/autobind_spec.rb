@@ -32,7 +32,7 @@ describe 'Autobind On Owner' do
         :stacking_id => "ouch",
         "virt_limit" => 1,
         "sockets" => 1,
-        "instance_multiplier" => 2,
+        "instance_multiplier" => 1,
         "multi-entitlement" => "yes",
         "host_limited" => "true"
       }
@@ -44,7 +44,7 @@ describe 'Autobind On Owner' do
         :stacking_id => "ouch",
         "virt_limit" => 1,
         "sockets" => 1,
-        "instance_multiplier" => 2,
+        "instance_multiplier" => 1,
         "multi-entitlement" => "yes",
         "host_limited" => "true"
       }
@@ -56,7 +56,7 @@ describe 'Autobind On Owner' do
         :stacking_id => "ouch",
         "virt_limit" => 1,
         "sockets" => 1,
-        "instance_multiplier" => 2,
+        "instance_multiplier" => 1,
         "multi-entitlement" => "yes",
         "host_limited" => "true"
       }
@@ -64,10 +64,10 @@ describe 'Autobind On Owner' do
 
     # create 4 pools, all must provide product "prod" . none of them
     # should provide enough sockets to heal the host on it's own
-    create_pool_and_subscription(owner['key'], prod['id'], 10)
-    create_pool_and_subscription(owner['key'], prod1['id'], 20, [prod['id']])
-    create_pool_and_subscription(owner['key'], prod2['id'], 20, [prod['id']])
-    create_pool_and_subscription(owner['key'], prod3['id'], 20, [prod['id']])
+    create_pool_and_subscription(owner['key'], prod['id'], 10)['id']
+    create_pool_and_subscription(owner['key'], prod1['id'], 30, [prod['id']])['id']
+    create_pool_and_subscription(owner['key'], prod2['id'], 30, [prod['id']])['id']
+    create_pool_and_subscription(owner['key'], prod3['id'], 30, [prod['id']])['id']
 
     # create a guest with "prod" as an installed product
     guest_uuid =  random_string('guest')
@@ -101,24 +101,25 @@ describe 'Autobind On Owner' do
 
     @cp.list_owner_pools(owner_key).length.should == 8
 
-    # heal should succeed, and hypervisor should consume 2 pools of 20 sockets each
+    # heal should succeed, and hypervisor should consume 2 pools of 30 sockets each
     @cp.list_entitlements({:uuid => hypervisor_uuid}).length.should == 2
     @cp.list_entitlements({:uuid => guest_uuid}).length.should == 1
 
     @cp.revoke_all_entitlements(hypervisor_uuid)
     @cp.revoke_all_entitlements(guest_uuid)
 
-    # change the hypervisor to 50 sockets
+    # change the hypervisor to 70 sockets
     hypervisor_facts = {
       "virt.is_guest"=>"false",
       "cpu.cpu(s)"=>"4",
-      "cpu.cpu_socket(s)"=>"50"
+      "cpu.cpu_socket(s)"=>"70"
     }
 
-    # heal should succeed, and hypervisor should consume 3 pools of 20 sockets each
+    # heal should succeed, and hypervisor should consume 3 pools of 30 sockets each
     @cp.update_consumer({:uuid => hypervisor_uuid, :facts => hypervisor_facts})
 
     @cp.consume_product(nil, {:uuid => guest_uuid})
+
     @cp.list_entitlements({:uuid => hypervisor_uuid}).length.should == 3
     @cp.list_entitlements({:uuid => guest_uuid}).length.should == 1
     @cp.list_owner_pools(owner_key).length.should == 8
