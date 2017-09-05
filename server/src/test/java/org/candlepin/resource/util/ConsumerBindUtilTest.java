@@ -119,7 +119,7 @@ public class ConsumerBindUtilTest {
         consumer.setInstalledProducts(cips);
 
         AutobindData ad = new AutobindData(consumer).withPools(poolIds).forProducts(prodIds);
-        consumerBindUtil.handleActivationKeys(consumer, keys);
+        consumerBindUtil.handleActivationKeys(consumer, keys, false);
         verify(entitler).bindByProducts(eq(ad));
     }
 
@@ -140,7 +140,7 @@ public class ConsumerBindUtilTest {
         consumer.setInstalledProducts(cips);
 
         AutobindData ad = new AutobindData(consumer).forProducts(prodIds);
-        consumerBindUtil.handleActivationKeys(consumer, keys);
+        consumerBindUtil.handleActivationKeys(consumer, keys, false);
         verify(entitler).bindByProducts(eq(ad));
     }
 
@@ -165,7 +165,7 @@ public class ConsumerBindUtilTest {
         consumer.setInstalledProducts(cips);
 
         AutobindData ad = new AutobindData(consumer).forProducts(prodIds);
-        consumerBindUtil.handleActivationKeys(consumer, keys);
+        consumerBindUtil.handleActivationKeys(consumer, keys, false);
         verify(entitler).bindByProducts(eq(ad));
     }
 
@@ -179,7 +179,7 @@ public class ConsumerBindUtilTest {
         Consumer consumer = new Consumer("sys.example.com", null, null, system);
         doThrow(new BadRequestException("exception")).when(serviceLevelValidator)
             .validate(eq(owner), eq(key1.getServiceLevel()));
-        consumerBindUtil.handleActivationKeys(consumer, keys);
+        consumerBindUtil.handleActivationKeys(consumer, keys, false);
     }
 
     @Test
@@ -192,7 +192,7 @@ public class ConsumerBindUtilTest {
         Consumer consumer = new Consumer("sys.example.com", null, null, system);
         doThrow(new BadRequestException("exception")).when(serviceLevelValidator)
             .validate(eq(owner), eq(key1.getServiceLevel()));
-        consumerBindUtil.handleActivationKeys(consumer, keys);
+        consumerBindUtil.handleActivationKeys(consumer, keys, false);
     }
 
     @Test(expected = BadRequestException.class)
@@ -209,7 +209,7 @@ public class ConsumerBindUtilTest {
         Consumer consumer = new Consumer("sys.example.com", null, null, system);
         when(entitler.bindByPoolQuantity(eq(consumer), eq(ghost.getId()), eq(10)))
             .thenThrow(new ForbiddenException("fail"));
-        consumerBindUtil.handleActivationKeys(consumer, keys);
+        consumerBindUtil.handleActivationKeys(consumer, keys, false);
     }
 
     @Test
@@ -236,7 +236,7 @@ public class ConsumerBindUtilTest {
             .thenThrow(new ForbiddenException("fail"));
         when(entitler.bindByPoolQuantity(eq(consumer), eq(pool2.getId()), eq(10)))
             .thenThrow(new ForbiddenException("fail"));
-        consumerBindUtil.handleActivationKeys(consumer, keys);
+        consumerBindUtil.handleActivationKeys(consumer, keys, false);
     }
 
     @Test
@@ -265,7 +265,25 @@ public class ConsumerBindUtilTest {
             .thenThrow(new ForbiddenException("fail"));
         when(entitler.bindByPoolQuantity(eq(consumer), eq(pool2.getId()), eq(10)))
             .thenThrow(new ForbiddenException("fail"));
-        consumerBindUtil.handleActivationKeys(consumer, keys);
+        consumerBindUtil.handleActivationKeys(consumer, keys, false);
+    }
+
+    @Test
+    public void registerPassWhenAutobindDisabledForOwnerAndKeyHasAutobindEnabled() throws Exception {
+        List<ActivationKey> keys = new ArrayList<ActivationKey>();
+        ActivationKey key1 = new ActivationKey("key1", owner);
+        key1.setAutoAttach(true);
+        keys.add(key1);
+
+        Product prod1 = TestUtil.createProduct();
+        Pool pool1 = TestUtil.createPool(owner, prod1, 5);
+        pool1.setId("pool1");
+        key1.addPool(pool1, 10L);
+
+        Consumer consumer = new Consumer("sys.example.com", null, null, system);
+        when(entitler.bindByPoolQuantity(eq(consumer), eq(pool1.getId()), eq(10)))
+                .thenThrow(new ForbiddenException("fail"));
+        consumerBindUtil.handleActivationKeys(consumer, keys, true);
     }
 
 }

@@ -553,7 +553,7 @@ public class ConsumerResource {
             sink.emitConsumerCreated(consumer);
 
             if (keys.size() > 0) {
-                consumerBindUtil.handleActivationKeys(consumer, keys);
+                consumerBindUtil.handleActivationKeys(consumer, keys, owner.autobindDisabled());
             }
 
             // Don't allow complianceRules to update entitlementStatus, because we're about to perform
@@ -568,10 +568,6 @@ public class ConsumerResource {
         catch (CandlepinException ce) {
             // If it is one of ours, rethrow it.
             throw ce;
-        }
-        catch (AutobindDisabledForOwnerException e) {
-            throw new BadRequestException(i18n.tr("Could not register unit with key enabling auto-attach. " +
-                "Auto-attach is disabled for org ''{0}''.", consumer.getOwner().getKey()));
         }
         catch (Exception e) {
             log.error("Problem creating unit:", e);
