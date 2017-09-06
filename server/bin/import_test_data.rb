@@ -372,13 +372,11 @@ thread_pool.shutdown
 
 print "\nCreating activation keys...\n"
 def create_activation_key_for_pool(cp, pool, owner_key)
-    key_name = owner_key + '-' + pool['productId'] + '-' + pool['contractNumber'] + '-key'
+    key_name = owner_key + '-' + pool['productId'] + '-key-' + pool['id']
     print "creating activation_key " + key_name + "\n"
     key = cp.create_activation_key(owner_key, key_name)
     cp.add_pool_to_key(key['id'], pool['id'])
 end
-
-exit
 
 thread_pool = ThreadPool.new(6)
 owner_keys.each do |owner_key|
