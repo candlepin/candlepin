@@ -1,4 +1,4 @@
-// Version: 5.24.1
+// Version: 5.26
 
 /*
  * Default Candlepin rule set.
@@ -64,6 +64,7 @@ var REQUIRES_CONSUMER_TYPE_ATTRIBUTE = "requires_consumer_type";
 var VIRT_ONLY = "virt_only";
 var PHYSICAL_ONLY = "physical_only";
 var POOL_DERIVED = "pool_derived";
+var SHARE_DERIVED = "share_derived";
 var UNMAPPED_GUESTS_ONLY = "unmapped_guests_only";
 var GUEST_LIMIT_ATTRIBUTE = "guest_limit";
 var VCPU_ATTRIBUTE = "vcpu";
@@ -325,7 +326,7 @@ function get_mock_ent_for_pool(pool, consumer) {
 }
 
 function get_pool_priority(pool, consumer) {
-    var priority = 0;
+    var priority = 100;
     // use virt only if possible
     // if the consumer is not virt, the pool will have been filtered out
     if (Utils.equalsIgnoreCase(pool.getProductAttribute(VIRT_ONLY), "true")) {
@@ -334,6 +335,11 @@ function get_pool_priority(pool, consumer) {
     // better still if host_specific
     if (pool.getAttribute(REQUIRES_HOST_ATTRIBUTE) !== null) {
         priority += 150;
+    }
+
+    // Decrease the priority of shared pools slightly so that non-shared pools will get consumed first.
+    if (Utils.equalsIgnoreCase('true', pool.getAttribute(SHARE_DERIVED))) {
+        priority -= 10;
     }
     /*
      * Special case to match socket counts exactly if possible.  We don't want to waste a pair
@@ -1938,26 +1944,34 @@ var Autobind = {
                 return true;
             },
 
-            get_num_host_specific: function() {
+            is_host_specific: function (pool) {
+                // returns true if the given pool is host specific
+                return pool.getAttribute(REQUIRES_HOST_ATTRIBUTE) != null;
+            },
+
+            is_virt_only: function (pool) {
+                // returns true if pool is virt-only
+                return Utils.equalsIgnoreCase('true', pool.getProductAttribute(VIRT_ONLY));
+            },
+
+            count_matching_pools: function (test_func) {
+                // Returns the number of pools for which test_func(pool) evaluates to true
                 var count = 0;
-                for (var i = 0; i < this.pools.length; i++) {
+                for (var i =0; i < this.pools.length; i++) {
                     var pool = this.pools[i];
-                    if (pool.getAttribute(REQUIRES_HOST_ATTRIBUTE) != null) {
+                    if (test_func(pool)){
                         count++;
                     }
                 }
                 return count;
             },
 
-            get_num_virt_only: function() {
-                var count = 0;
-                for (var i = 0; i < this.pools.length; i++) {
-                    var pool = this.pools[i];
-                    if (Utils.equalsIgnoreCase('true',  pool.getProductAttribute(VIRT_ONLY))) {
-                        count++;
-                    }
-                }
-                return count;
+            num_host_specific: function () {
+                return this.count_matching_pools(this.is_host_specific);
+            },
+
+            num_virt_only: function () {
+                return this.count_matching_pools(this.is_virt_only);
             },
 
             /*
@@ -2447,44 +2461,73 @@ var Autobind = {
         var best = null;
         var total_poolquantity = Number.MAX_VALUE;
         var best_avg_prio = 0;
+        var best_num_host_specific = 0;
+        var best_num_virt_only = 0;
+        var virt_only_found = false;
+        var host_specific_found = false;
+        var new_best_found = false;
 
         for (var i = 0; i < all_groups.length; i++) {
             var group = all_groups[i];
             var group_avg_prio = group.get_average_priority();
             var intersection = this.get_common_products(installed, group).length;
             var group_poolquantity = group.get_total_quantity();
-            // Choose group that provides the most installed products
-            if (intersection > max_provide) {
+            var group_num_host_specific = group.num_host_specific();
+            var group_num_virt_only = group.num_virt_only();
+            if (intersection <= 0 ||
+                (host_specific_found && group_num_host_specific < best_num_host_specific) ||
+                (virt_only_found && group_num_virt_only < best_num_virt_only)) {
+                // Skip this group if we've found virt or host_specific and this group is not.
+                continue;
+            }
+
+            new_best_found = false;
+            if (group_num_host_specific > best_num_host_specific) {
+                host_specific_found = true;
+                new_best_found = true;
+            }
+            else if (group_num_host_specific < best_num_host_specific) {
+                new_best_found = false;
+            }
+            else if (group_num_virt_only > best_num_virt_only) {
+                virt_only_found = true;
+                new_best_found = true;
+            }
+            else if (group_num_virt_only < best_num_virt_only) {
+                new_best_found = false;
+            }
+            else if (intersection > max_provide) {
+                new_best_found = true;
+            }
+            else if (intersection < max_provide) {
+                new_best_found = false;
+            }
+            else if (group_avg_prio > best_avg_prio) {
+                new_best_found = true;
+            }
+            else if (group_avg_prio < best_avg_prio) {
+                new_best_found = false;
+            }
+            else if (group_poolquantity < total_poolquantity) {
+                new_best_found = true;
+            }
+            else if (group_poolquantity > total_poolquantity) {
+                new_best_found = false;
+            }
+            else if (stacked && !group.stackable) {
+                new_best_found = true;
+            }
+
+            if (new_best_found) {
                 stacked = group.stackable;
                 max_provide = intersection;
                 total_poolquantity = group_poolquantity;
                 best_avg_prio = group_avg_prio;
                 best = group;
+                best_num_host_specific = group_num_host_specific;
+                best_num_virt_only = group_num_virt_only;
             }
-            if (intersection > 0 && intersection == max_provide) {
-                // Break ties with average pool priority
-                // TODO: use average priority
-                if (best_avg_prio < group_avg_prio) {
-                   best = group;
-                   stacked = group.stackable;
-                   total_poolquantity = group_poolquantity;
-                   best_avg_prio = group_avg_prio;
-                }
-                if (best_avg_prio == group_avg_prio) {
-                    // Break ties with pool quantity
-                    if (total_poolquantity < group_poolquantity) {
-                        best = group;
-                        stacked = group.stackable;
-                        total_poolquantity = group_poolquantity;
-                    }
-                    if (total_poolquantity == group_poolquantity) {
-                        if (stacked && !group.stackable) {
-                            best = group;
-                            stacked = group.stackable;
-                        }
-                    }
-                }
-            }
+
         }
         return best;
     },
