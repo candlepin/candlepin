@@ -806,12 +806,13 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
             "FROM cp_pool_source_sub "
         );
 
-        // Migrate upstream tracking columns from subscription to pool
+        // Migrate upstream tracking columns from subscription to master pool
         ResultSet subscriptionInfo = this.executeQuery(
             "SELECT ss.pool_id, s.cdn_id, s.certificate_id, s.upstream_entitlement_id, " +
             "  s.upstream_consumer_id, s.upstream_pool_id " +
             "FROM cp_subscription s " +
-            "JOIN cp2_pool_source_sub ss ON s.id = ss.subscription_id"
+            "JOIN cp2_pool_source_sub ss ON s.id = ss.subscription_id " +
+            "WHERE ss.subscription_sub_key = 'master'"
         );
 
         // Update any pool referencing this subscription...
