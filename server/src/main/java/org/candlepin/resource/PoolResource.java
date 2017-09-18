@@ -33,12 +33,15 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
+import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolFilterBuilder;
+import org.candlepin.model.SubscriptionsCertificate;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ResourceDateParser;
 
 import com.google.inject.Inject;
 
+import org.jboss.resteasy.annotations.providers.jaxb.DoNotUseJAXBProvider;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.slf4j.Logger;
@@ -46,9 +49,11 @@ import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -239,8 +244,14 @@ public class PoolResource {
             throw new NotFoundException(i18n.tr(
                 "Entitlement Pool with ID ''{0}'' could not be found.", id));
         }
-
-        poolManager.deletePool(pool);
+        if (pool.getType() != PoolType.NORMAL) {
+            throw new BadRequestException(i18n.tr("Cannot delete bonus pools, as they are auto generated"));
+        }
+        if (pool.isCreatedByShare()) {
+            throw new BadRequestException(i18n.tr("Cannot delete shared pools, This should be triggered by" +
+                " deleting the share entitlement instead"));
+        }
+        poolManager.deletePools(Collections.singleton(pool));
     }
 
     @ApiOperation(notes = "Retrieve a CDN for a Pool", value = "getPoolCdn")
@@ -282,4 +293,58 @@ public class PoolResource {
         return entitlements;
     }
 
+    /**
+     * Retrieves the pool certificate for the given ID. If the pool
+     * cannot be found or does not have a certificate, this method throws a NotFoundException.
+     *
+     * @param poolId
+     *  The pool ID for which to retrieve a subscription certificate
+     *
+     * @throws NotFoundException
+     *  if the pool cannot be found or the pool does not have a certificate
+     *
+     * @return
+     *  the certificate associated with the specified pool
+     */
+    protected SubscriptionsCertificate getPoolCertificate(String poolId) {
+        Pool pool = poolManager.find(poolId);
+
+        if (pool == null) {
+            throw new NotFoundException(i18n.tr(
+                "Pool with ID ''{0}'' could not be found.", poolId));
+        }
+
+        if (pool.getCertificate() == null) {
+            throw new NotFoundException(
+                i18n.tr("A certificate was not found for pool \"{0}\"", poolId)
+            );
+        }
+
+        return pool.getCertificate();
+    }
+
+    @ApiOperation(notes = "Retrieves a Subscription Certificate As a PEM", value = "getSubCertAsPem")
+    @DoNotUseJAXBProvider
+    @GET
+    @Path("{pool_id}/cert")
+    // cpc passes up content-type on all calls, make sure we don't 415 it
+    @Consumes({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
+    @Produces({ MediaType.TEXT_PLAIN })
+    public String getSubCertAsPem(
+        @PathParam("pool_id") String poolId) {
+
+        SubscriptionsCertificate cert = this.getPoolCertificate(poolId);
+        return cert.getCert() + cert.getKey();
+    }
+
+    @ApiOperation(notes = "Retrieves a Subscription Certificate", value = "getSubCert")
+    @GET
+    @Path("{pool_id}/cert")
+    @Consumes({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
+    @Produces({ MediaType.APPLICATION_JSON})
+    public SubscriptionsCertificate getSubCert(
+        @PathParam("pool_id") String poolId) {
+
+        return this.getPoolCertificate(poolId);
+    }
 }

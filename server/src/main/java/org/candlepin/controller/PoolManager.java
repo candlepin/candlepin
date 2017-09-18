@@ -285,18 +285,6 @@ public interface PoolManager {
     List<Pool> getPoolsBySubscriptionId(String subscriptionId);
 
     /**
-     * Retrieves the master pool associated with the specified subscription ID. If there is not a
-     * master pool asscoated with the given subscription, this method should return null.
-     *
-     * @param subscriptionId
-     *  The subscription ID to use to lookup a master pool
-     *
-     * @return
-     *  the master pool associated with the specified subscription.
-     */
-    Pool getMasterPoolBySubscriptionId(String subscriptionId);
-
-    /**
      * Retrieves a list consisting of all known master pools.
      *
      * @return

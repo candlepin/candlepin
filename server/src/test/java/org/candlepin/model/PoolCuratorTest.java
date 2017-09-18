@@ -1606,16 +1606,24 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         return list;
     }
 
+    private Pool getMasterPoolBySubscriptionId(String subscriptionId) {
+        for (Pool pool: this.poolCurator.getPoolsBySubscriptionId(subscriptionId)) {
+            if (pool.getType() == Pool.PoolType.NORMAL) {
+                return pool;
+            }
+        }
+        return null;
+    }
     @Test
     public void testGetMasterPoolBySubscriptionId() {
         List<Pool> pools = this.setupMasterPoolsTests();
 
-        Pool actual = this.poolCurator.getMasterPoolBySubscriptionId("sub1");
+        Pool actual = getMasterPoolBySubscriptionId("sub1");
         assertEquals(pools.get(0), actual);
 
-        actual = this.poolCurator.getMasterPoolBySubscriptionId("sub2");
+        actual = getMasterPoolBySubscriptionId("sub2");
         assertEquals(pools.get(1), actual);
-        actual = this.poolCurator.getMasterPoolBySubscriptionId("sub5");
+        actual = getMasterPoolBySubscriptionId("sub5");
         assertEquals(null, actual);
     }
 

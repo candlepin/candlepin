@@ -64,7 +64,6 @@ var REQUIRES_CONSUMER_TYPE_ATTRIBUTE = "requires_consumer_type";
 var VIRT_ONLY = "virt_only";
 var PHYSICAL_ONLY = "physical_only";
 var POOL_DERIVED = "pool_derived";
-var SHARE_DERIVED = "share_derived";
 var UNMAPPED_GUESTS_ONLY = "unmapped_guests_only";
 var GUEST_LIMIT_ATTRIBUTE = "guest_limit";
 var VCPU_ATTRIBUTE = "vcpu";
@@ -338,7 +337,7 @@ function get_pool_priority(pool, consumer) {
     }
 
     // Decrease the priority of shared pools slightly so that non-shared pools will get consumed first.
-    if (Utils.equalsIgnoreCase('true', pool.getAttribute(SHARE_DERIVED))) {
+    if (pool.hasSharedAncestor) {
         priority -= 10;
     }
     /*

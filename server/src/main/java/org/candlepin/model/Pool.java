@@ -117,9 +117,6 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         /** Attribute used to determine which specific host the pool was created for */
         public static final String REQUIRES_HOST = "requires_host";
 
-        /** Attribute used to determine if a pool was created by sharing */
-        public static final String SHARE = "share_derived";
-
         /** Attribute for specifying the source pool from which a derived pool originates */
         public static final String SOURCE_POOL_ID = "source_pool_id";
 
@@ -156,7 +153,6 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         NORMAL,
         ENTITLEMENT_DERIVED,
         STACK_DERIVED,
-        SHARE_DERIVED,
         BONUS,
         UNMAPPED_GUEST,
         DEVELOPMENT;
@@ -171,7 +167,6 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
             switch (this) {
                 case ENTITLEMENT_DERIVED:
                 case STACK_DERIVED:
-                case SHARE_DERIVED:
                     return true;
 
                 default:
@@ -225,6 +220,12 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     private Owner owner;
 
     private Boolean activeSubscription;
+
+    @Column(name = "created_by_share")
+    private Boolean createdByShare;
+
+    @Column(name = "has_shared_ancestor")
+    private Boolean hasSharedAncestor;
 
     /** Indicates this pool was created as a result of granting an entitlement.
      * Allows us to know that we need to clean this pool up if that entitlement
@@ -413,6 +414,8 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
 
     public Pool() {
         this.activeSubscription = Boolean.TRUE;
+        this.createdByShare = Boolean.FALSE;
+        this.hasSharedAncestor = Boolean.FALSE;
         this.providedProducts = new HashSet<Product>();
         this.derivedProvidedProducts = new HashSet<Product>();
         this.attributes = new HashMap<String, String>();
@@ -893,6 +896,34 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         this.activeSubscription = activeSubscription;
     }
 
+    /**
+     * @return true if this pool was created because of a share.
+     */
+    public Boolean isCreatedByShare() {
+        return createdByShare;
+    }
+
+    /**
+     * @param createdByShare
+     */
+    public void setCreatedByShare(Boolean createdByShare) {
+        this.createdByShare = createdByShare;
+    }
+
+    /**
+     * @return true if this pool or it's parent was created because of a share.
+     */
+    public Boolean getHasSharedAncestor() {
+        return hasSharedAncestor;
+    }
+
+    /**
+     * @param hasSharedAncestor
+     */
+    public void setHasSharedAncestor(Boolean hasSharedAncestor) {
+        this.hasSharedAncestor = hasSharedAncestor;
+    }
+
     public String toString() {
         return String.format(
             "Pool [id=%s, type=%s, product=%s, productName=%s, quantity=%s]",
@@ -1258,12 +1289,15 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      * @return pool type
      */
     public PoolType getType() {
+
+        // shared pools must behave exactly like the pools they would in the sharing org.
+        if (isCreatedByShare()) {
+            return getSourceEntitlement().getPool().getType();
+        }
+
         if (hasAttribute(Attributes.DERIVED_POOL)) {
             if (hasAttribute(Attributes.UNMAPPED_GUESTS_ONLY)) {
                 return PoolType.UNMAPPED_GUEST;
-            }
-            else if (hasAttribute(Attributes.SHARE)) {
-                return PoolType.SHARE_DERIVED;
             }
             else if (getSourceEntitlement() != null) {
                 return PoolType.ENTITLEMENT_DERIVED;

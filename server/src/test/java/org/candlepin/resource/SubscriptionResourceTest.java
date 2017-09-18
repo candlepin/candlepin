@@ -73,11 +73,6 @@ public class SubscriptionResourceTest  {
         subResource.activateSubscription("random", null, "en_us");
     }
 
-    @Test(expected = NotFoundException.class)
-    public void noSubForCert() {
-        subResource.getSubCert("philadelphia-experiment");
-    }
-
     @Test(expected = BadRequestException.class)
     public void activateNoEmailLocale() {
         subResource.activateSubscription("random", "random@somthing.com", null);
