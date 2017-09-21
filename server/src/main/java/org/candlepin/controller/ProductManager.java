@@ -25,6 +25,8 @@ import org.candlepin.model.ProductCurator;
 import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductContentData;
 import org.candlepin.model.dto.ProductData;
+import org.candlepin.util.Traceable;
+import org.candlepin.util.TraceableParam;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -272,8 +274,9 @@ public class ProductManager {
      *  A mapping of Red Hat content ID to content entities representing the imported content
      */
     @Transactional
-    public ImportResult<Product> importProducts(Owner owner, Map<String, ProductData> productData,
-        Map<String, Content> importedContent) {
+    @Traceable
+    public ImportResult<Product> importProducts(@TraceableParam("owner") Owner owner,
+        Map<String, ProductData> productData, Map<String, Content> importedContent) {
 
         if (owner == null) {
             throw new IllegalArgumentException("owner is null");

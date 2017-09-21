@@ -24,6 +24,8 @@ import org.candlepin.model.ProductCurator;
 import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.ProductContentData;
+import org.candlepin.util.Traceable;
+import org.candlepin.util.TraceableParam;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -318,8 +320,9 @@ public class ContentManager {
      */
     @SuppressWarnings("checkstyle:methodlength")
     @Transactional
-    public ImportResult<Content> importContent(Owner owner, Map<String, ContentData> contentData,
-        Set<String> importedProductIds) {
+    @Traceable
+    public ImportResult<Content> importContent(@TraceableParam("owner") Owner owner,
+        Map<String, ContentData> contentData, Set<String> importedProductIds) {
 
         if (owner == null) {
             throw new IllegalArgumentException("owner is null");
