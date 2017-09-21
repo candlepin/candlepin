@@ -67,6 +67,8 @@ import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.Util;
+import org.candlepin.util.Traceable;
+import org.candlepin.util.TraceableParam;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -191,7 +193,10 @@ public class CandlepinPoolManager implements PoolManager {
      */
     @Transactional
     @SuppressWarnings("checkstyle:methodlength")
-    void refreshPoolsWithRegeneration(SubscriptionServiceAdapter subAdapter, Owner owner, boolean lazy) {
+    @Traceable
+    void refreshPoolsWithRegeneration(SubscriptionServiceAdapter subAdapter,
+        @TraceableParam("owner") Owner owner, boolean lazy) {
+
         Date now = new Date();
         owner = this.resolveOwner(owner);
         log.info("Refreshing pools for owner: {}", owner);
@@ -1685,6 +1690,7 @@ public class CandlepinPoolManager implements PoolManager {
      * choose to set this to false.
      */
     @Transactional
+    @Traceable
     public void revokeEntitlements(List<Entitlement> entsToRevoke, Set<String> alreadyDeletedPools,
         boolean regenCertsAndStatuses) {
         if (log.isDebugEnabled()) {
@@ -1934,6 +1940,7 @@ public class CandlepinPoolManager implements PoolManager {
 
     @Override
     @Transactional
+    @Traceable
     public void deletePools(Collection<Pool> pools, Set<String> alreadyDeletedPools) {
         if (pools == null || pools.isEmpty()) {
             return;
