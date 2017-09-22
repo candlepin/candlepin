@@ -2270,17 +2270,25 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         sourceEnt.setId(Util.generateDbUUID());
         entitlementCurator.create(sourceEnt);
 
-        pool.getEntitlements().add(sourceEnt);
+        Set<Entitlement> entitlements = new HashSet<Entitlement>();
+        entitlements.add(sourceEnt);
+
+        pool.setEntitlements(entitlements);
         poolCurator.merge(pool);
 
         Pool sharedPool = createPool(owner, product, 1L,
             TestUtil.createDate(2011, 3, 2), TestUtil.createDate(2055, 3, 2));
-        sharedPool.setAttribute(Pool.Attributes.SHARE, "true");
+        sharedPool.setCreatedByShare(true);
         sharedPool.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
         sharedPool.setSourceEntitlement(sourceEnt);
         poolCurator.create(sharedPool);
 
-        Pool result = poolCurator.listSharedPoolsOf(pool).get(0);
+        List<Pool> sharedPools = poolCurator.listSharedPoolsOf(pool);
+
+        assertNotNull(sharedPools);
+        assertTrue(sharedPools.size() > 0);
+
+        Pool result = sharedPools.get(0);
         assertEquals(sharedPool, result);
     }
 }

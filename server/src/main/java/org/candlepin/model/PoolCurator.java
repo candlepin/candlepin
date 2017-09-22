@@ -1673,12 +1673,11 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     @Transactional
     public List<Pool> listSharedPoolsOf(Pool pool) {
-        return listByCriteria(
-                currentSession().createCriteria(Pool.class)
-                    .createAlias("sourceEntitlement", "se")
-                    .createAlias("se.pool", "sep")
-                    .add(Restrictions.and(Restrictions.eq("createdByShare", Boolean.TRUE)))
-                    .add(Restrictions.and(Restrictions.eq("se.pool", pool)))
-                    .addOrder(Order.desc("created")));
+        return listByCriteria(currentSession().createCriteria(Pool.class)
+            .createAlias("sourceEntitlement", "se")
+            .createAlias("se.pool", "sep")
+            .add(Restrictions.eq("createdByShare", Boolean.TRUE))
+            .add(Restrictions.eq("se.pool", pool))
+            .addOrder(Order.desc("created")));
     }
 }
