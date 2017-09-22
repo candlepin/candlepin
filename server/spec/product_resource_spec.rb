@@ -167,7 +167,7 @@ describe 'Product Resource' do
   end
 
   it "refreshes pools for orgs owning products" do
-    pending("candlepin running in standalone mode") if not is_hosted?
+    skip("candlepin running in standalone mode") if not is_hosted?
 
     owners = setupOrgProductsAndPools()
     owner1 = owners[0]
