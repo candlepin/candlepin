@@ -32,7 +32,8 @@ describe 'Autobind Disabled On Owner' do
   end
 
   it 'still allows dev consumer to autobind when disabled on owner' do
-    pending("candlepin running in standalone mode") if not is_hosted?
+    skip("candlepin running in standalone mode") if not is_hosted?
+
     # active subscription to allow this all to work
     active_prod = create_product()
     active_sub = create_pool_and_subscription(@owner['key'], active_prod.id, 10)
