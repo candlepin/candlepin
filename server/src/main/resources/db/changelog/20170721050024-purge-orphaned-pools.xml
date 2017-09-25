@@ -1,0 +1,346 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <changeSet id="20170721050024-1" author="vrjain">
+        <comment> purge orphaned stack derived pools.
+            
+            the innermost query is the most important one, and represents the use case,
+            which are the following in order:
+            1. delete stack derived pools with no source stacks
+            2. delete bonus pools with no source subscription
+            3. delete stack derived pools with no source ents
+                
+            we are trying to purge orphaned pools, but we need to ensure the dependency chain
+            of the pools is purged too. Thus, for each use case we delete the following:
+            1.delete source subs of the pools whose source entitlements are going
+                to be deleted below
+            2.delete pools whose source entitlements are going to be deleted below
+            3.delete entitlement certificates of the entitlements of the pools in the use case.
+            4.delete entitlements of the pools in the use case
+            5.delete source subs of the pools in the use case
+            6.delete pools in the use case
+            
+            </comment>
+        <sql>
+DELETE
+FROM cp_pool_source_sub
+WHERE pool_id IN
+    ( SELECT id
+     FROM cp_pool
+     WHERE sourceentitlement_id IN
+         ( SELECT id
+          FROM cp_entitlement
+          WHERE pool_id IN
+              ( SELECT id
+               FROM
+                 ( SELECT p.id
+                  FROM cp_pool p
+                  LEFT OUTER JOIN cp_pool_source_stack ss ON p.id = ss.derivedpool_id
+                  WHERE p.type='STACK_DERIVED'
+                    AND ss.derivedpool_id IS NULL ) AS x ) ) );
+
+
+DELETE
+FROM cp_pool
+WHERE sourceentitlement_id IN
+    ( SELECT id
+     FROM cp_entitlement
+     WHERE pool_id IN
+         ( SELECT id
+          FROM
+            ( SELECT p.id
+             FROM cp_pool p
+             LEFT OUTER JOIN cp_pool_source_stack ss ON p.id = ss.derivedpool_id
+             WHERE p.type='STACK_DERIVED'
+               AND ss.derivedpool_id IS NULL ) AS x ) );
+
+
+DELETE
+FROM cp_ent_certificate
+WHERE entitlement_id IN
+    ( SELECT id
+     FROM cp_entitlement
+     WHERE pool_id IN
+         ( SELECT id
+          FROM
+            ( SELECT p.id
+             FROM cp_pool p
+             LEFT OUTER JOIN cp_pool_source_stack ss ON p.id = ss.derivedpool_id
+             WHERE p.type='STACK_DERIVED'
+               AND ss.derivedpool_id IS NULL ) AS x ) );
+
+
+DELETE
+FROM cp_entitlement
+WHERE pool_id IN
+    ( SELECT id
+     FROM
+       ( SELECT p.id
+        FROM cp_pool p
+        LEFT OUTER JOIN cp_pool_source_stack ss ON p.id = ss.derivedpool_id
+        WHERE p.type='STACK_DERIVED'
+          AND ss.derivedpool_id IS NULL ) AS x );
+
+
+DELETE
+FROM cp_pool_source_sub
+WHERE pool_id IN
+    ( SELECT id
+     FROM
+       ( SELECT p.id
+        FROM cp_pool p
+        LEFT OUTER JOIN cp_pool_source_stack ss ON p.id = ss.derivedpool_id
+        WHERE p.type='STACK_DERIVED'
+          AND ss.derivedpool_id IS NULL ) AS x );
+
+
+DELETE
+FROM cp_pool
+WHERE id IN
+    ( SELECT id
+     FROM
+       ( SELECT p.id
+        FROM cp_pool p
+        LEFT OUTER JOIN cp_pool_source_stack ss ON p.id = ss.derivedpool_id
+        WHERE p.type='STACK_DERIVED'
+          AND ss.derivedpool_id IS NULL ) AS x );
+        </sql>
+
+        <comment> purge orphaned bonus pools </comment>
+        <sql>
+DELETE
+FROM cp_pool_source_sub
+WHERE pool_id IN
+    ( SELECT id
+     FROM cp_pool
+     WHERE sourceentitlement_id IN
+         ( SELECT id
+          FROM cp_entitlement
+          WHERE pool_id IN
+                 ( SELECT p.id
+                  FROM cp_pool p
+                  WHERE id NOT IN
+                      ( SELECT id from
+                      ( SELECT pool_id
+                       FROM cp_pool_source_sub )
+                      as X )
+                    AND TYPE = 'BONUS' ) ) );
+
+
+DELETE
+FROM cp_pool
+WHERE sourceentitlement_id IN
+    ( SELECT id
+     FROM cp_entitlement
+     WHERE pool_id IN
+         ( SELECT id
+          FROM
+            ( SELECT p.id
+             FROM cp_pool p
+             WHERE id NOT IN
+                 ( SELECT pool_id
+                  FROM cp_pool_source_sub )
+               AND TYPE = 'BONUS' ) AS x ) );
+
+
+DELETE
+FROM cp_ent_certificate
+WHERE entitlement_id IN
+    ( SELECT id
+     FROM cp_entitlement
+     WHERE pool_id IN
+         ( SELECT id
+          FROM
+            ( SELECT p.id
+             FROM cp_pool p
+             WHERE id NOT IN
+                 ( SELECT pool_id
+                  FROM cp_pool_source_sub )
+               AND TYPE = 'BONUS' ) AS x ) );
+
+
+DELETE
+FROM cp_entitlement
+WHERE pool_id IN
+    ( SELECT id
+     FROM
+       ( SELECT p.id
+        FROM cp_pool p
+        WHERE id NOT IN
+            ( SELECT pool_id
+             FROM cp_pool_source_sub )
+          AND TYPE = 'BONUS' ) AS x );
+
+
+DELETE
+FROM cp_pool_source_sub
+WHERE pool_id IN
+       ( SELECT p.id
+        FROM cp_pool p
+        WHERE id NOT IN
+            ( SELECT id from
+            ( SELECT pool_id
+             FROM cp_pool_source_sub )
+            AS x )
+          AND TYPE = 'BONUS' );
+
+
+DELETE
+FROM cp_pool
+WHERE id IN
+    ( SELECT id
+     FROM
+       ( SELECT p.id
+        FROM cp_pool p
+        WHERE id NOT IN
+            ( SELECT pool_id
+             FROM cp_pool_source_sub )
+          AND TYPE = 'BONUS' ) AS x );
+        </sql>
+        <comment> stack derived pools with no source ents: </comment>
+        <sql>
+DELETE
+FROM cp_pool_source_sub
+WHERE pool_id IN
+    ( SELECT id
+     FROM cp_pool
+     WHERE sourceentitlement_id IN
+         ( SELECT id
+          FROM cp_entitlement
+          WHERE pool_id IN
+              ( SELECT id
+               FROM
+                 ( SELECT ss.derivedpool_id AS id
+                  FROM cp_pool_source_stack ss
+                  LEFT OUTER JOIN
+                    ( SELECT e.id,
+                             e.consumer_id,
+                             a.value
+                     FROM cp_entitlement e,
+                          cp_pool p,
+                          cp_product_attribute a
+                     WHERE e.pool_id = p.id
+                       AND p.productid = a.product_id
+                       AND a.name = 'stacking_id' ) AS x ON x.consumer_id = ss.sourceconsumer_id
+                  AND x.value = ss.sourcestackid
+                  WHERE x.id IS NULL ) AS x ) ) );
+
+DELETE
+FROM cp_pool
+WHERE sourceentitlement_id IN
+    ( SELECT id
+     FROM cp_entitlement
+     WHERE pool_id IN
+         ( SELECT id
+          FROM
+            ( SELECT ss.derivedpool_id AS id
+             FROM cp_pool_source_stack ss
+             LEFT OUTER JOIN
+               ( SELECT e.id,
+                        e.consumer_id,
+                        a.value
+                FROM cp_entitlement e,
+                     cp_pool p,
+                     cp_product_attribute a
+                WHERE e.pool_id = p.id
+                  AND p.productid = a.product_id
+                  AND a.name = 'stacking_id' ) AS x ON x.consumer_id = ss.sourceconsumer_id
+             AND x.value = ss.sourcestackid
+             WHERE x.id IS NULL ) AS x ) );
+
+
+DELETE
+FROM cp_ent_certificate
+WHERE entitlement_id IN
+    ( SELECT id
+     FROM cp_entitlement
+     WHERE pool_id IN
+         ( SELECT id
+          FROM
+            ( SELECT ss.derivedpool_id AS id
+             FROM cp_pool_source_stack ss
+             LEFT OUTER JOIN
+               ( SELECT e.id,
+                        e.consumer_id,
+                        a.value
+                FROM cp_entitlement e,
+                     cp_pool p,
+                     cp_product_attribute a
+                WHERE e.pool_id = p.id
+                  AND p.productid = a.product_id
+                  AND a.name = 'stacking_id' ) AS x ON x.consumer_id = ss.sourceconsumer_id
+             AND x.value = ss.sourcestackid
+             WHERE x.id IS NULL ) AS x ) );
+
+
+DELETE
+FROM cp_entitlement
+WHERE pool_id IN
+    ( SELECT id
+     FROM
+       ( SELECT ss.derivedpool_id AS id
+        FROM cp_pool_source_stack ss
+        LEFT OUTER JOIN
+          ( SELECT e.id,
+                   e.consumer_id,
+                   a.value
+           FROM cp_entitlement e,
+                cp_pool p,
+                cp_product_attribute a
+           WHERE e.pool_id = p.id
+             AND p.productid = a.product_id
+             AND a.name = 'stacking_id' ) AS x ON x.consumer_id = ss.sourceconsumer_id
+        AND x.value = ss.sourcestackid
+        WHERE x.id IS NULL ) AS x );
+
+
+DELETE
+FROM cp_pool_source_sub
+WHERE pool_id IN
+    ( SELECT id
+     FROM
+       ( SELECT ss.derivedpool_id AS id
+        FROM cp_pool_source_stack ss
+        LEFT OUTER JOIN
+          ( SELECT e.id,
+                   e.consumer_id,
+                   a.value
+           FROM cp_entitlement e,
+                cp_pool p,
+                cp_product_attribute a
+           WHERE e.pool_id = p.id
+             AND p.productid = a.product_id
+             AND a.name = 'stacking_id' ) AS x ON x.consumer_id = ss.sourceconsumer_id
+        AND x.value = ss.sourcestackid
+        WHERE x.id IS NULL ) AS x );
+
+
+DELETE
+FROM cp_pool
+WHERE id IN
+    ( SELECT id
+     FROM
+       ( SELECT ss.derivedpool_id AS id
+        FROM cp_pool_source_stack ss
+        LEFT OUTER JOIN
+          ( SELECT e.id,
+                   e.consumer_id,
+                   a.value
+           FROM cp_entitlement e,
+                cp_pool p,
+                cp_product_attribute a
+           WHERE e.pool_id = p.id
+             AND p.productid = a.product_id
+             AND a.name = 'stacking_id' ) AS x ON x.consumer_id = ss.sourceconsumer_id
+        AND x.value = ss.sourcestackid
+        WHERE x.id IS NULL ) AS x );
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>
+<!-- vim: set expandtab sts=4 sw=4 ai: -->
