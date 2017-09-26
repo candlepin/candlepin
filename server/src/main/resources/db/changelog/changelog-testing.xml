@@ -2308,4 +2308,5 @@
     <include file="db/changelog/20170612091842-default-content-access-list.xml"/>
     <include file="db/changelog/20170816084513-add-createdByShare-and-hasSharedAncestor.xml"/>
     <include file="db/changelog/20170919110500-fixupstreampoolmigration.xml"/>
+    <include file="db/changelog/20170718095058-purge-orphaned-pools.xml"/>
 </databaseChangeLog>
