@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <changeSet id="20170919110500-1" author="crog">
+        <!--
+        Unfortunately we don't have a reliable, efficient way of avoiding this task if it doesn't need
+        to be run. At the time of writing, changesets themselves can't set properties, and doing a limited
+        lookup would still require performing the joins and much of the work of the update query such
+        that it's overall quicker to just do the update rather than looking for data to fix first.
+        -->
+
+        <comment>Removes extraneous upstream pool info from non-master pools</comment>
+
+        <sql>
+            <!--
+            Impl note:
+            We can't safely use an IN statement here, since it's reasonable/expected for there to be
+            more pools than the IN-clause size limit would allow
+            -->
+
+            UPDATE cp_pool p
+            SET cdn_id=NULL, certificate_id=NULL, upstream_entitlement_id=NULL, upstream_consumer_id=NULL,
+                upstream_pool_id=NULL
+            WHERE (SELECT ss.subscription_sub_key FROM cp2_pool_source_sub ss WHERE ss.pool_id = p.id) != 'master'
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>
+<!-- vim: set expandtab sts=4 sw=4 ai: -->
