@@ -24,6 +24,7 @@ import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
 import org.candlepin.pinsetter.core.RetryJobException;
 import org.candlepin.pinsetter.core.model.JobStatus;
+import org.candlepin.util.Traceable;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.UnitOfWork;
@@ -59,6 +60,7 @@ public abstract class KingpinJob implements Job {
     protected static String prefix = "job";
 
     @Override
+    @Traceable(startable = true)
     public void execute(JobExecutionContext context) throws JobExecutionException {
 
         long startTime = System.currentTimeMillis();
