@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.1.3
+Version: 2.1.4
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,12 @@ fi
 
 #raw
 %changelog
+* Tue Sep 26 2017 Kevin Howell <khowell@redhat.com> 2.1.4-1
+- Added the new Traceable and TraceableParam annotations (crog@redhat.com)
+- 1487374: Fix registration issue when owner's autobind is disabled.
+  (mstead@redhat.com)
+- Fix custom pool lookup for bonus pool (adarshvritant@gmail.com)
+
 * Thu Aug 24 2017 Kevin Howell <khowell@redhat.com> 2.1.3-1
 - 1484438: Fix regression in scoping of JsRunnerRequestCache
   (bcourt@redhat.com)
