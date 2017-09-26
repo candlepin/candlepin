@@ -330,7 +330,7 @@ public interface PoolManager {
 
     void deletePools(Collection<Pool> pools);
 
-    void deletePools(Collection<Pool> pools, Set<String> alreadyDeletedPools);
+    void deletePools(Collection<Pool> pools, Collection<String> alreadyDeletedPools);
 
     /**
      * Checks whether or not the given pool is a managed (that is, non-custom) pool.

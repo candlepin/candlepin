@@ -568,17 +568,44 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     }
 
     /**
-     * A version of list Modifying that finds Entitlements that modify
-     * input entitlements.
-     * When dealing with large amount of entitlements for which it is necessary
-     * to determine their modifier products.
-     * @param entitlement
-     * @return Entitlements that are being modified by the input entitlements
+     * Fetches a collection of entitlement IDs for entitlements which are modified by the
+     * entitlements specified by the provided entitlement IDs.
+     *
+     * @param entitlements
+     *  A collection of entitlement for which to fetch modified entitlements
+     *
+     * @return
+     *  A collection of entitlement IDs for entitlements modified by the provided entitlements
      */
-    public Collection<String> batchListModifying(Iterable<Entitlement> entitlements) {
-        List<String> eids = new LinkedList<String>();
+    public Set<String> getModifiedEntitlementIds(Iterable<Entitlement> entitlements) {
+        Set<String> eids = new HashSet<String>();
+        Owner owner = null;
 
-        if (entitlements != null && entitlements.iterator().hasNext()) {
+        for (Entitlement entitlement : entitlements) {
+            if (owner == null) {
+                owner = entitlement.getOwner();
+            }
+
+            eids.add(entitlement.getId());
+        }
+
+        return this.getModifiedEntitlementIds(owner, eids);
+    }
+
+    /**
+     * Fetches a collection of entitlement IDs for entitlements which are modified by the
+     * entitlements specified by the provided entitlement IDs.
+     *
+     * @param entitlementIds
+     *  A collection of entitlement IDs for which to fetch modified entitlements
+     *
+     * @return
+     *  A collection of entitlement IDs for entitlements modified by the provided entitlements
+     */
+    public Set<String> getModifiedEntitlementIds(Owner owner, Iterable<String> entitlementIds) {
+        Set<String> eids = new HashSet<String>();
+
+        if (entitlementIds != null && entitlementIds.iterator().hasNext()) {
             String hql =
                 "SELECT DISTINCT eOut.id" +
                 "    FROM Entitlement eOut" +
@@ -590,7 +617,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
                 "    WHERE" +
                 "        outPool.endDate >= current_date AND" +
                 "        eOut.owner = :owner AND" +
-                "        eOut NOT IN (:ein) AND" +
+                "        eOut.id NOT IN (:ein) AND" +
                 "        EXISTS (" +
                 "            SELECT eIn" +
                 "                FROM Entitlement eIn" +
@@ -598,36 +625,39 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
                 "                    JOIN eIn.pool inPool" +
                 "                    JOIN inPool.product inMktProd" +
                 "                    LEFT JOIN inPool.providedProducts inProvidedProd" +
-                "                WHERE eIn in (:ein) AND inConsumer = eOut.consumer AND" +
+                "                WHERE eIn.id IN (:ein) AND inConsumer = eOut.consumer AND" +
                 "                    inPool.endDate >= outPool.startDate AND" +
                 "                    inPool.startDate <= outPool.endDate AND" +
                 "                    (inProvidedProd.id = outModProdId OR inMktProd.id = outModProdId)" +
                 "        )";
 
-            Query query = this.getEntityManager().createQuery(hql);
+            Query query = this.getEntityManager().createQuery(hql)
+                .setParameter("owner", owner);
 
-            Iterable<List<Entitlement>> blocks = Iterables.partition(
-                entitlements, AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE
-            );
-
-            for (List<Entitlement> block : blocks) {
-                Owner sampleOwner = block.get(0).getOwner();
-                eids.addAll(query.setParameter("ein", block)
-                    .setParameter("owner", sampleOwner).getResultList());
+            for (List<String> block : this.partition(entitlementIds)) {
+                eids.addAll(query.setParameter("ein", block).getResultList());
             }
         }
 
         return eids;
     }
 
-    public Collection<String> listModifying(Entitlement entitlement) {
-        return batchListModifying(java.util.Arrays.asList(entitlement));
+    public Set<String> listModifying(Entitlement entitlement) {
+        return this.getModifiedEntitlementIds(java.util.Arrays.asList(entitlement));
     }
 
-    public Collection<String> listModifying(Collection entitlements) {
-        return batchListModifying(entitlements);
+    public Set<String> listModifying(Collection<Entitlement> entitlements) {
+        return this.getModifiedEntitlementIds(entitlements);
     }
 
+    /**
+     * @deprecated
+     *  This method is a utility method for revokeEntitlements and, as it has no communication with
+     *  the database, does not belong in this curator
+     *
+     * @return a map of consumers to their entitlements
+     */
+    @Deprecated
     public Map<Consumer, List<Entitlement>> getDistinctConsumers(List<Entitlement> entsToRevoke) {
         Map<Consumer, List<Entitlement>> result = new HashMap<Consumer, List<Entitlement>>();
         for (Entitlement ent : entsToRevoke) {

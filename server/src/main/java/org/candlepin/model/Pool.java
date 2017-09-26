@@ -657,6 +657,44 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     }
 
     /**
+     * Checks if the given attribute has been defined on this pool's product. If this pool does not
+     * have a product, any present imported product attributes will be checked instead. If the pool
+     * has neither a product nor any imported product attributes, this method returns false.
+     * <p></p>
+     * The imported product attributes is a legacy feature from when product attributes were copied
+     * from products to any pools using it. The product attributes would then be present on the
+     * pool's JSON, leading to two places for such attributes to exist. As this secondary attribute
+     * store will eventually be dropped, clients/callers should refrain from making use of the
+     * imported product attributes where possible.
+     *
+     * @param key
+     *  The key (name) of the attribute to lookup
+     *
+     * @throws IllegalArgumentException
+     *  if key is null
+     *
+     * @return
+     *  true if the attribute is defined for this pool's product; false otherwise
+     */
+    @XmlTransient
+    public boolean hasProductAttribute(String key) {
+        if (key == null) {
+            throw new IllegalArgumentException("key is null");
+        }
+
+        Product product = this.getProduct();
+        if (product != null) {
+            return product.hasAttribute(key);
+        }
+
+        if (this.importedProductAttributes != null) {
+            return this.importedProductAttributes.containsKey(key);
+        }
+
+        return false;
+    }
+
+    /**
      * Sets the specified attribute for this pool. If the attribute has already been set for
      * this pool, the existing value will be overwritten. If the given attribute value is null
      * or empty, the attribute will be removed.

@@ -753,7 +753,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         Session session = this.currentSession();
         SQLQuery query = session.createSQLQuery(sql);
 
-        for (List<?> block : Iterables.partition(collection, IN_OPERATOR_BLOCK_SIZE)) {
+        for (List<?> block : this.partition(collection)) {
             int index = 1;
 
             if (params != null) {
@@ -1141,7 +1141,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
                     .setLockMode(LockModeType.PESSIMISTIC_WRITE);
 
                 // Step through the query in blocks
-                for (List<Serializable> block : Iterables.partition(idSet, IN_OPERATOR_BLOCK_SIZE)) {
+                for (List<Serializable> block : this.partition(idSet)) {
                     executable.setParameter(param, block);
                     result.addAll(executable.getResultList());
                 }
@@ -1226,7 +1226,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
                         if (criterion.getValue() instanceof Collection) {
                             if (((Collection) criterion.getValue()).size() > 0) {
                                 int inBlocks = (int) Math.ceil((((Collection) criterion.getValue()).size() /
-                                    (float) AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE));
+                                    (float) IN_OPERATOR_BLOCK_SIZE));
 
                                 builder.append(whereStarted ? " AND " : " WHERE ");
                                 whereStarted = true;
@@ -1283,8 +1283,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
             if (block.size() != lastBlock && criteria != null && !criteria.isEmpty()) {
                 for (Object criterion : criteria.values()) {
                     if (criterion instanceof Collection) {
-                        Iterable<List> inBlocks = Iterables.partition((Collection) criterion,
-                            AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE);
+                        Iterable<List> inBlocks = this.partition((Collection) criterion);
 
                         for (List inBlock : inBlocks) {
                             query.setParameterList(String.valueOf(++param), inBlock);
@@ -1339,7 +1338,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
                 if (criterion.getValue() instanceof Collection) {
                     if (((Collection) criterion.getValue()).size() > 0) {
                         int inBlocks = (int) Math.ceil((((Collection) criterion.getValue()).size() /
-                            (float) AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE));
+                            (float) IN_OPERATOR_BLOCK_SIZE));
 
                         builder.append(whereStarted ? " AND " : " WHERE ");
                         whereStarted = true;
@@ -1379,8 +1378,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
             for (Object criterion : criteria.values()) {
                 if (criterion instanceof Collection) {
-                    Iterable<List> inBlocks = Iterables.partition((Collection) criterion,
-                        AbstractHibernateCurator.IN_OPERATOR_BLOCK_SIZE);
+                    Iterable<List> inBlocks = this.partition((Collection) criterion);
 
                     for (List inBlock : inBlocks) {
                         query.setParameterList(String.valueOf(++param), inBlock);
@@ -1393,5 +1391,24 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         }
 
         return query.executeUpdate();
+    }
+
+    /**
+     * Partitions the given collection using the IN_OPERATOR_BLOCK_SIZE value as the partition size.
+     * This method is provided as a utility method to avoid referencing a very long constant name
+     * used in many curators. Callers which need this behavior with a custom size can simulate the
+     * behavior by using the <tt>Iterables.partition</tt> method directly:
+     * <pre>
+     *  Iterable<List<String>> blocks = Iterables.partition(entityIds, blockSize);
+     * </pre>
+     *
+     * @param collection
+     *  The collection to partition
+     *
+     * @return
+     *  An iterable collection of lists containing the partitioned data in the provided collection
+     */
+    protected <T> Iterable<List<T>> partition(Iterable<T> collection) {
+        return Iterables.partition(collection, IN_OPERATOR_BLOCK_SIZE);
     }
 }
