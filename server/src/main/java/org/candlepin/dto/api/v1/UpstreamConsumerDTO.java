@@ -36,6 +36,7 @@ public class UpstreamConsumerDTO extends TimestampedCandlepinDTO<UpstreamConsume
     protected String apiUrl;
     protected String webUrl;
     protected String ownerId;
+    protected String contentAccessMode;
     protected ConsumerTypeDTO consumerType;
     protected CertificateDTO identityCert;
 
@@ -130,6 +131,15 @@ public class UpstreamConsumerDTO extends TimestampedCandlepinDTO<UpstreamConsume
     @JsonProperty("idCert")
     public UpstreamConsumerDTO setIdentityCertificate(CertificateDTO identityCert) {
         this.identityCert = identityCert;
+        return this;
+    }
+
+    public String getContentAccessMode() {
+        return this.contentAccessMode;
+    }
+
+    public UpstreamConsumerDTO setContentAccessMode(String contentAccessMode) {
+        this.contentAccessMode = contentAccessMode;
         return this;
     }
 
