@@ -296,30 +296,33 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         Consumer hConsumer2 = new Consumer("hostConsumer2", "testUser", owner, ct);
         consumerCurator.create(hConsumer2);
         Consumer gConsumer1 = new Consumer("guestConsumer1", "testUser", owner, ct);
-        gConsumer1.getFacts().put("virt.uuid", "test-guest-1");
+        gConsumer1.getFacts().put("virt.uuid", "shared-guest-id");
         consumerCurator.create(gConsumer1);
 
-        // This can happen so fast the consumers end up with the same update time,
-        // it's 5 milliseconds, deal with it.
-        Thread.sleep(5);
+        // This can happen so fast the consumers end up with the same created/updated time
+        Thread.sleep(500);
 
         Consumer gConsumer2 = new Consumer("guestConsumer2", "testUser", owner, ct);
-        gConsumer2.getFacts().put("virt.uuid", "test-guest-1");
+        gConsumer2.getFacts().put("virt.uuid", "shared-guest-id");
         consumerCurator.create(gConsumer2);
 
-        GuestId hGuest1 = new GuestId("test-guest-1");
+        GuestId hGuest1 = new GuestId("shared-guest-id");
         hConsumer1.addGuestId(hGuest1);
         consumerCurator.update(hConsumer1);
 
+        // This can happen so fast the consumers end up with the same created/updated time
+        Thread.sleep(500);
+
         // Uppercase the guest ID reported by host 2 just to make sure the casing is
         // working properly here too:
-        GuestId hGuest2 = new GuestId("TEST-GUEST-1");
+        GuestId hGuest2 = new GuestId("SHARED-GUEST-ID");
         hConsumer2.addGuestId(hGuest2);
         consumerCurator.update(hConsumer2);
 
         List<Consumer> guests1 = consumerCurator.getGuests(hConsumer1);
         List<Consumer> guests2 = consumerCurator.getGuests(hConsumer2);
-        assertTrue(hGuest1.getUpdated().before(hGuest2.getUpdated()));
+        assertTrue("Expected " + hGuest1.getUpdated() + " to be before " + hGuest2.getUpdated(),
+            hGuest1.getUpdated().before(hGuest2.getUpdated()));
         assertEquals(0, guests1.size());
         assertEquals(1, guests2.size());
         assertEquals("guestConsumer2", guests2.get(0).getName());
@@ -343,8 +346,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         host.addGuestId(new GuestId("DAF0FE10-956B-7B4E-B7DC-B383CE681BA8"));
         consumerCurator.update(host);
 
-        Consumer guestHost = consumerCurator.getHost(
-            "daf0fe10-956b-7b4e-b7dc-b383ce681ba8", owner);
+        Consumer guestHost = consumerCurator.getHost("daf0fe10-956b-7b4e-b7dc-b383ce681ba8", owner);
         assertEquals(host, guestHost);
     }
 

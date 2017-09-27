@@ -30,8 +30,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 
 
-
-
 /**
  * Represents certificate used to identify a consumer
  */
