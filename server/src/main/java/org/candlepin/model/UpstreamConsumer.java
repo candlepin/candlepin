@@ -229,17 +229,17 @@ public class UpstreamConsumer extends AbstractHibernateObject<UpstreamConsumer> 
     }
 
     /**
-    *
-    * @return the Content Access Mode
-    */
+     *
+     * @return the Content Access Mode
+     */
     public String getContentAccessMode() {
         return this.contentAccessMode;
     }
 
     /**
-    *
-    * @param contentAccessMode
-    */
+     *
+     * @param contentAccessMode
+     */
     public void setContentAccessMode(String contentAccessMode) {
         this.contentAccessMode = contentAccessMode;
     }
