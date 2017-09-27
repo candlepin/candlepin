@@ -18,7 +18,6 @@ import org.candlepin.audit.Event;
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
 import org.candlepin.audit.EventAdapter;
-import org.candlepin.audit.EventBuilder;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
@@ -518,12 +517,6 @@ public class OwnerResource {
 
         Owner owner = findOwner(key);
 
-        // TODO: FIXME: This is busted. As soon as changes are made to the instance, it will
-        // be reflected in the event. We need the event builder to immediately turn these things
-        // into DTOs so the state is detached from the model.
-        EventBuilder eventBuilder = eventFactory.getEventBuilder(Target.OWNER, Type.MODIFIED)
-            .setOldEntity(owner);
-
         log.debug("Updating owner: {}", key);
 
         // Do the bulk of our entity population
@@ -558,10 +551,14 @@ public class OwnerResource {
             this.ownerManager.refreshOwnerForContentAccess(owner);
         }
 
-        // TODO: FIXME: This is busted for the same reason described above
-        Event e = eventBuilder.setNewEntity(owner).buildEvent();
-        sink.queueEvent(e);
+        // Build and queue the owner modified event
+        Event event = this.eventFactory.getEventBuilder(Target.OWNER, Type.MODIFIED)
+            .setEventData(owner)
+            .buildEvent();
 
+        this.sink.queueEvent(event);
+
+        // Output the updated owner
         return this.translator.translate(owner, OwnerDTO.class);
     }
 
