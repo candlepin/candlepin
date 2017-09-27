@@ -22,3 +22,6 @@ Here's how:
 3. `rm /etc/qpid/brokerdb/*`
 4. `rm keys/*` if the `keys` directory is already present from a previous run
    of the script.
+
+
+When starting Candlepin, remember to use the -q flag with the deploy script.
