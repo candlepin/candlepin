@@ -25,6 +25,7 @@ import org.candlepin.auth.Access;
 import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SubResource;
+import org.candlepin.auth.UpdateConsumerCheckIn;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.Verify;
 import org.candlepin.common.auth.SecurityHole;
@@ -998,6 +999,7 @@ public class ConsumerResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}")
     @Transactional
+    @UpdateConsumerCheckIn
     public void updateConsumer(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid,
         @ApiParam(name = "consumer", required = true) Consumer consumer,
@@ -1447,6 +1449,7 @@ public class ConsumerResource {
     @GET
     @Path("{consumer_uuid}/certificates")
     @Produces(MediaType.APPLICATION_JSON)
+    @UpdateConsumerCheckIn
     public List<Certificate> getEntitlementCertificates(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @QueryParam("serials") String serials) {
@@ -1615,6 +1618,7 @@ public class ConsumerResource {
     @Path("{consumer_uuid}/certificates/serials")
     @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "serials")
+    @UpdateConsumerCheckIn
     public List<CertificateSerialDto> getEntitlementCertificateSerials(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
 
@@ -2082,6 +2086,7 @@ public class ConsumerResource {
     @Produces(MediaType.WILDCARD)
     @Consumes(MediaType.WILDCARD)
     @Path("/{consumer_uuid}/certificates")
+    @UpdateConsumerCheckIn
     public void regenerateEntitlementCertificates(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @QueryParam("entitlement") String entitlementId,

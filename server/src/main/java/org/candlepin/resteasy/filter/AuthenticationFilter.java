@@ -16,7 +16,6 @@ package org.candlepin.resteasy.filter;
 
 import org.candlepin.auth.AuthProvider;
 import org.candlepin.auth.BasicAuth;
-import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.auth.OAuth;
 import org.candlepin.auth.Principal;
@@ -154,14 +153,6 @@ public class AuthenticationFilter implements ContainerRequestFilter {
             else {
                 throw new NotAuthorizedException("Invalid credentials.");
             }
-        }
-
-        if (principal instanceof ConsumerPrincipal) {
-            // HACK: We need to do this after the principal has been pushed,
-            // lest our security settings start getting upset when we try to
-            // update a consumer without any roles:
-            ConsumerPrincipal p = (ConsumerPrincipal) principal;
-            consumerCurator.updateLastCheckin(p.getConsumer());
         }
 
         SecurityContext securityContext = new CandlepinSecurityContext(principal);
