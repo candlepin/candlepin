@@ -200,8 +200,6 @@ public class ContentManagerTest extends DatabaseTestFixture {
     @Test
     @Parameters({"false", "true"})
     public void testUpdateContentDivergeFromExisting(boolean regenCerts) {
-        log.debug("STARTING PROBLEMATIC TEST");
-
         Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
         Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");
         Product product = this.createProduct("p1", "product-1", owner1);
@@ -222,14 +220,12 @@ public class ContentManagerTest extends DatabaseTestFixture {
         assertTrue(this.ownerContentCurator.isContentMappedToOwner(content, owner2));
 
         if (regenCerts) {
-            log.debug("ABOUT TO FAIL");
             verify(this.mockEntCertGenerator, times(1)).regenerateCertificatesOf(
                 eq(Arrays.asList(owner1)), anyCollectionOf(Product.class), anyBoolean());
         }
         else {
             verifyZeroInteractions(this.mockEntCertGenerator);
         }
-        log.debug("DONE");
     }
 
     @Test(expected = IllegalStateException.class)
