@@ -65,6 +65,7 @@ public class UpstreamConsumerTranslator extends
         dest.setOwnerId(source.getOwnerId());
         dest.setApiUrl(source.getApiUrl());
         dest.setWebUrl(source.getWebUrl());
+        dest.setContentAccessMode(source.getContentAccessMode());
 
         // Process nested objects if we have a ModelTranslator to use to the translation...
         if (translator != null) {

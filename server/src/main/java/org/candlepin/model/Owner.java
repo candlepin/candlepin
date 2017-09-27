@@ -23,7 +23,6 @@ import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
@@ -474,60 +473,35 @@ public class Owner extends AbstractHibernateObject<Owner>
     }
 
     /**
+     * Returns the value of the contentAccessMode setting.
+     *
+     * @return String the value
+     */
+    public String getContentAccessMode() {
+        return contentAccessMode;
+    }
+
+    public void setContentAccessMode(String contentAccessMode) {
+        this.contentAccessMode = contentAccessMode;
+    }
+
+    /**
      * Returns the value of the contentAccessModeList setting.
      *
      * @return String the value
      */
     public String getContentAccessModeList() {
-        return StringUtils.isEmpty(this.contentAccessModeList) ?
-            ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE :
-            this.contentAccessModeList;
+        return contentAccessModeList;
     }
 
     public void setContentAccessModeList(String contentAccessModeList) {
         this.contentAccessModeList = contentAccessModeList;
     }
 
-    /**
-     * Returns the value of the contentAccessMode setting. If the value has not yet been set, this
-     * method returns the default content access mode.
-     *
-     * @return String the value
-     */
-    public String getContentAccessMode() {
-        return StringUtils.isEmpty(this.contentAccessMode) ?
-            ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE :
-            this.contentAccessMode;
-    }
-
-    /**
-     * Sets the content access mode for this owner. If the specified mode is not valid for this
-     * owner, this method throws an exception.
-     *
-     * @param mode
-     *  The content access mode to set for this owner
-     *
-     * @throws IllegalArgumentException
-     *  if the specified mode is not a valid content access mode for this owner
-     */
-    public void setContentAccessMode(String mode) {
-        if (!this.isAllowedContentAccessMode(mode)) {
-            throw new IllegalArgumentException("\"" + mode + "\" is not an allowed content access mode");
-        }
-
-        this.contentAccessMode = mode;
-    }
-
     @XmlTransient
     public boolean isAllowedContentAccessMode(String mode) {
-        String cal = this.getContentAccessModeList();
-
-        if (!StringUtils.isEmpty(cal) && !StringUtils.isEmpty(mode)) {
-            String[] modes = cal.split(",");
-            return ArrayUtils.contains(modes, mode);
-        }
-
-        return false;
+        String[] list = contentAccessModeList.split(",");
+        return ArrayUtils.contains(list, mode);
     }
 
 }
