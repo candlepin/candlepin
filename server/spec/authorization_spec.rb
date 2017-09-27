@@ -22,23 +22,6 @@ describe 'Authorization' do
       raise_error
   end
 
-  it 'updates consumer\'s last checkin time' do
-    consumer_cp = consumer_client(@user, random_string('test'))
-    consumer_cp.list_entitlements()
-    consumer = @cp.get_consumer(consumer_cp.uuid)
-    last_checkin1 = consumer['lastCheckin']
-
-    # MySQL before 5.6.4 doesn't store fractional seconds on timestamps.
-    sleep 1
-
-    # Do something as the consumer, should cause last checkin time to be updated:
-    consumer_cp.list_entitlements()
-    consumer = @cp.get_consumer(consumer_cp.uuid)
-    last_checkin2 = consumer['lastCheckin']
-
-    (last_checkin2 > last_checkin1).should be true
-  end
-
   it 'allows trusted consumer clients' do
     consumer_cp = consumer_client(@user, random_string('test'))
     trusted_cp = trusted_consumer_client(consumer_cp.uuid)

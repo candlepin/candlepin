@@ -18,6 +18,7 @@ import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SubResource;
 import org.candlepin.auth.Verify;
+import org.candlepin.auth.UpdateConsumerCheckIn;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.model.Consumer;
@@ -107,6 +108,7 @@ public class HypervisorResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Deprecated
     @Transactional
+    @UpdateConsumerCheckIn
     @SuppressWarnings("checkstyle:indentation")
     public HypervisorCheckInResult hypervisorUpdate(
         Map<String, List<GuestId>> hostGuestMap, @Context Principal principal,
@@ -243,6 +245,7 @@ public class HypervisorResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Transactional
     @Path("/{owner}")
+    @UpdateConsumerCheckIn
     @SuppressWarnings("checkstyle:indentation")
     public JobDetail hypervisorUpdateAsync(
         String hypervisorJson, @Context Principal principal,

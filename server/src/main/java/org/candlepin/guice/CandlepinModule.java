@@ -124,6 +124,7 @@ import org.candlepin.resteasy.filter.AuthenticationFilter;
 import org.candlepin.resteasy.filter.AuthorizationFeature;
 import org.candlepin.resteasy.filter.CandlepinQueryInterceptor;
 import org.candlepin.resteasy.filter.CandlepinSuspendModeFilter;
+import org.candlepin.resteasy.filter.ConsumerCheckInFilter;
 import org.candlepin.resteasy.filter.PinsetterAsyncFilter;
 import org.candlepin.resteasy.filter.SecurityHoleAuthorizationFilter;
 import org.candlepin.resteasy.filter.StoreFactory;
@@ -347,6 +348,7 @@ public class CandlepinModule extends AbstractModule {
     }
 
     private void configureInterceptors() {
+        bind(ConsumerCheckInFilter.class);
         bind(CandlepinSuspendModeFilter.class);
         bind(PageRequestFilter.class);
         bind(PinsetterAsyncFilter.class);

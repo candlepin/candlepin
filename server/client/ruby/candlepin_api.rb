@@ -919,6 +919,11 @@ class Candlepin
     get("/consumers/#{consumer_id}")
   end
 
+  def get_consumer_release(consumer_id=nil)
+    consumer_id ||= @uuid
+    get("/consumers/#{consumer_id}/release")
+  end
+
   def get_compliance(consumer_id=nil, on_date=nil)
     consumer_id ||= @uuid
     query = "/consumers/#{consumer_id}/compliance"
@@ -1199,8 +1204,9 @@ class Candlepin
     end
   end
 
-  def regenerate_entitlement_certificates(lazy_regen=true)
-    url = "/consumers/#{@uuid}/certificates"
+  def regenerate_entitlement_certificates(lazy_regen=true, consumer_uuid=nil)
+    consumer_uuid ||= @uuid
+    url = "/consumers/#{consumer_uuid}/certificates"
     params = {}
     params[:lazy_regen] = false if !lazy_regen
 
@@ -1233,8 +1239,9 @@ class Candlepin
     return get("/status/")
   end
 
-  def list_certificate_serials
-    return get("/consumers/#{@uuid}/certificates/serials")
+  def list_certificate_serials(consumer_uuid=nil)
+    consumer_uuid ||= @uuid
+    return get("/consumers/#{consumer_uuid}/certificates/serials")
   end
 
   def get_serial(serial_id)
