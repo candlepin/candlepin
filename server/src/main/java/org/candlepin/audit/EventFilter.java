@@ -139,8 +139,7 @@ public class EventFilter {
             return false;
         }
         else {
-            throw new IllegalArgumentException("Unknown default filtering policy: " +
-        defaultFilterPolicy);
+            throw new IllegalArgumentException("Unknown default filtering policy: " + defaultFilterPolicy);
         }
     }
 
