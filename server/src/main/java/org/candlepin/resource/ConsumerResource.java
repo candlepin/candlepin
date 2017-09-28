@@ -1468,11 +1468,9 @@ public class ConsumerResource {
         Set<Long> serialSet = this.extractSerials(serials);
 
         List<Certificate> returnCerts = new LinkedList<Certificate>();
-        List<EntitlementCertificate> allCerts = entCertService
-            .listForConsumer(consumer);
+        List<EntitlementCertificate> allCerts = entCertService.listForConsumer(consumer);
         for (EntitlementCertificate cert : allCerts) {
-            if (serialSet.isEmpty() ||
-                serialSet.contains(cert.getSerial().getId())) {
+            if (serialSet.isEmpty() || serialSet.contains(cert.getSerial().getId())) {
                 returnCerts.add(cert);
             }
         }
@@ -1586,7 +1584,7 @@ public class ConsumerResource {
 
     private Set<Long> extractSerials(String serials) {
         Set<Long> serialSet = new HashSet<Long>();
-        if (serials != null) {
+        if (serials != null && !serials.isEmpty()) {
             log.debug("Requested serials: {}", serials);
             for (String s : serials.split(",")) {
                 log.debug("   {}", s);

@@ -193,13 +193,11 @@ describe 'Consumer Resource' do
   end
 
   it 'lets a super admin see a peson consumer with a given username' do
-
     username = random_string("user1")
     user1 = user_client(@owner1, username)
     consumer_client(user1, random_string("consumer1"), 'person')
 
-    @cp.list_consumers({:type => 'person',
-                       :username => username}).length.should == 1
+    @cp.list_consumers({:type => 'person', :username => username}).length.should == 1
   end
 
   it 'lets a super admin create person consumer for another user' do
@@ -436,8 +434,7 @@ describe 'Consumer Resource' do
   it 'should allow consumer to bind to products based on product socket quantity across pools' do
     owner = create_owner random_string('owner')
     owner_client = user_client(owner, random_string('testowner'))
-    cp_client = consumer_client(owner_client, random_string('consumer123'), :system,
-                                nil, 'cpu.cpu_socket(s)' => '4')
+    cp_client = consumer_client(owner_client, random_string('consumer123'), :system, nil, 'cpu.cpu_socket(s)' => '4')
     prod1 = create_product(random_string('product'), random_string('product-stackable'),
       {:attributes => { :sockets => '2', :'multi-entitlement' => 'yes', :stacking_id => '8888'}, :owner => owner['key']})
     prod2 = create_product(random_string('product'), random_string('product-stackable'),
@@ -551,8 +548,7 @@ describe 'Consumer Resource' do
 
   it 'should allow a consumer to update their autoheal flag' do
     user_cp = user_client(@owner1, random_string('billy'))
-    consumer = user_cp.register(random_string('system'), :system, nil,
-      {}, nil, nil, [], [])
+    consumer = user_cp.register(random_string('system'), :system, nil, {}, nil, nil, [], [])
     consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
     consumer = @cp.get_consumer(consumer['uuid'])
     consumer['autoheal'].should == true
@@ -569,8 +565,7 @@ describe 'Consumer Resource' do
 
   it 'should allow a consumer to update their hypervisorId' do
     user_cp = user_client(@owner1, random_string('billy'))
-    consumer = user_cp.register(random_string('system'), :system, nil,
-      {}, nil, nil, [], [])
+    consumer = user_cp.register(random_string('system'), :system, nil, {}, nil, nil, [], [])
     consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
 
     consumer = @cp.get_consumer(consumer['uuid'])
@@ -588,10 +583,8 @@ describe 'Consumer Resource' do
 
   it 'should not allow a consumer to update their hypervisorId to one in use by owner' do
     user_cp = user_client(@owner1, random_string('billy'))
-    consumer = user_cp.register(random_string('system'), :system, nil,
-      {}, nil, nil, [], [])
-    consumer1 = user_cp.register(random_string('system'), :system, nil,
-      {}, nil, nil, [], [], nil, [], "hYpervisor")
+    consumer = user_cp.register(random_string('system'), :system, nil, {}, nil, nil, [], [])
+    consumer1 = user_cp.register(random_string('system'), :system, nil, {}, nil, nil, [], [], nil, [], "hYpervisor")
     consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
     consumer1 =  @cp.get_consumer(consumer1['uuid'])
     consumer1['hypervisorId']['hypervisorId'].should == "hypervisor"
@@ -606,8 +599,7 @@ describe 'Consumer Resource' do
 
   it 'should allow a consumer to unset their hypervisorId' do
     user_cp = user_client(@owner1, random_string('billy'))
-    consumer = user_cp.register(random_string('system'), :system, nil,
-      {}, nil, nil, [], [])
+    consumer = user_cp.register(random_string('system'), :system, nil, {}, nil, nil, [], [])
     consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
 
     consumer = @cp.get_consumer(consumer['uuid'])
