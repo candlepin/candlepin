@@ -57,6 +57,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -138,6 +139,7 @@ public class PinsetterKernel implements ModeChangeListener {
     public void startup() throws PinsetterException {
         try {
             scheduler.start();
+            jobCurator.cancelOrphanedJobs(Collections.EMPTY_LIST);
             if (modeManager.getLastCandlepinModeChange().getMode() != Mode.NORMAL) {
                 scheduler.pauseAll();
             }
@@ -496,6 +498,7 @@ public class PinsetterKernel implements ModeChangeListener {
             Set<JobKey> jobs = this.scheduler.getJobKeys(jobGroupEquals(groupName));
 
             for (JobKey jobKey : jobs) {
+                this.jobCurator.cancel(jobKey.getName());
                 this.scheduler.deleteJob(jobKey);
             }
         }
