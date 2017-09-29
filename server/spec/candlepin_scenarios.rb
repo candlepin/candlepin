@@ -665,11 +665,11 @@ class CandlepinQpid
   end
 
   def stop
-    `sudo systemctl stop qpidd || sudo supervisorctl stop qpidd`
+    `if which supervisorctl > /dev/null 2>&1; then sudo supervisorctl stop qpidd; else sudo systemctl stop qpidd; fi`
   end
 
   def start
-    `sudo systemctl start qpidd || sudo supervisorctl start qpidd`
+    `if which supervisorctl > /dev/null 2>&1; then sudo supervisorctl start qpidd; else sudo systemctl start qpidd; fi`
   end
 
   #Create non-durable queue and bind it to an exchange
