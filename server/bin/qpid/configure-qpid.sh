@@ -258,7 +258,7 @@ done
 
 if ! is_rpm_installed qpid-cpp-server qpid-tools qpid-cpp-server; then
     echo "installing Qpid"
-    sudo yum -y install qpid-cpp-server qpid-tools qpid-cpp-server 
+    sudo yum -y install qpid-cpp-server qpid-tools qpid-cpp-server
 fi
 
 # QPid needs a package to provide persistent storage or else everything
@@ -301,9 +301,9 @@ if [ $IS_KATELLO -ne 0 ]; then
 fi
 
 # In Docker image we use supervisord instead of systemd.
-# So the assumption of the following is that 'service' command 
+# So the assumption of the following is that 'service' command
 # fails, we try supervisord.
-sudo service qpidd restart || supervisorctl restart qpidd
+if which supervisorctl > /dev/null 2>&1; then sudo supervisorctl restart qpidd; else sudo systemctl restart qpidd; fi
 
 sleep 7
 create_exchange "event"
