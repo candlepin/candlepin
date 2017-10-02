@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.1.4
+Version: 2.1.5
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,15 @@ fi
 
 #raw
 %changelog
+* Mon Oct 02 2017 Kevin Howell <khowell@redhat.com> 2.1.5-1
+- Updated qpid rspec tests (crog@redhat.com)
+- Pool deleted events no longer contain old pool entities (crog@redhat.com)
+- 1469575: purge orphan pools via liquibase (adarshvritant@gmail.com)
+- Added a valid checksum to a problematic Liquibase changeset (crog@redhat.com)
+- 1488508: Added a cleanup task to remove extraneous upstream pool data
+  (crog@redhat.com)
+- 1488508: Restricted upstream info migration to master pools (crog@redhat.com)
+
 * Tue Sep 26 2017 Kevin Howell <khowell@redhat.com> 2.1.4-1
 - Added the new Traceable and TraceableParam annotations (crog@redhat.com)
 - 1487374: Fix registration issue when owner's autobind is disabled.
