@@ -185,9 +185,19 @@ public class EventFactory {
     }
 
     public Event poolDeleted(Pool pool) {
-        return getEventBuilder(Target.POOL, Type.DELETED)
-            .setOldEntity(pool)
+        // Impl note:
+        // As of 2017-09-28, no one consumes the old/deleted entity on this event, and
+        // it's incredibly expensive to serialize. As such, we're not going to set/output
+        // the old entity until we have an explicit need to do so. This means we need to
+        // manually set the entity and owner IDs.
+
+        Event event = getEventBuilder(Target.POOL, Type.DELETED)
             .buildEvent();
+
+        event.setEntityId(pool.getId());
+        event.setOwnerId(pool.getOwner().getId());
+
+        return event;
     }
 
     public Event exportCreated(Consumer consumer) {
