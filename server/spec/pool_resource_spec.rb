@@ -244,13 +244,13 @@ describe 'Pool Resource' do
     pools = @cp.list_pools
 
     events = @cp.list_owner_events(owner['key'])
-    pool_created_events = events.find_all { |event| event['target'] == 'POOL' && event['type'] == 'CREATED'}
+    pool_created_events = events.find_all { |event| event['target'] == 'POOL' && event['type'] == 'CREATED' }
     pool_created_events.size.should eq(6)
-    pool_deleted_events = events.find_all { |event| event['target'] == 'POOL' && event['type'] == 'DELETED'}
+    pool_deleted_events = events.find_all { |event| event['target'] == 'POOL' && event['type'] == 'DELETED' }
     pool_deleted_events.size.should eq(6)
-    ent_created_events = events.find_all { |event| event['target'] == 'ENTITLEMENT' && event['type'] == 'CREATED'}
+    ent_created_events = events.find_all { |event| event['target'] == 'ENTITLEMENT' && event['type'] == 'CREATED' }
     ent_created_events.size.should eq(6)
-    ent_deleted_events = events.find_all { |event| event['target'] == 'ENTITLEMENT' && event['type'] == 'DELETED'}
+    ent_deleted_events = events.find_all { |event| event['target'] == 'ENTITLEMENT' && event['type'] == 'DELETED' }
     ent_deleted_events.size.should eq(0)
   end
 
