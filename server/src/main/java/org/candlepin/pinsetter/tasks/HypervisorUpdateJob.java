@@ -63,6 +63,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
@@ -109,9 +110,9 @@ public class HypervisorUpdateJob extends KingpinJob {
     }
 
     public static boolean isSchedulable(JobCurator jobCurator, JobStatus status) {
-        long running = jobCurator.findNumRunningByClassAndTarget(
-            status.getTargetId(), HypervisorUpdateJob.class);
-        return running == 0;  // We can start the job if there are 0 like it running
+        JobStatus nextJob = jobCurator.getNextByClassAndTarget(status.getTargetId(),
+            HypervisorUpdateJob.class);
+        return nextJob != null && nextJob.getId().equals(status.getId());
     }
 
     private void parseHypervisorList(HypervisorList hypervisorList, Set<String> hosts,
