@@ -170,6 +170,25 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
             .uniqueResult();
     }
 
+    public JobStatus getNextByClassAndTarget(String target, Class<? extends KingpinJob> jobClass) {
+        // Returns the oldest job for the given class and target that still needs to be executed
+        // Used primarily to run hypervisor check in jobs in the order they are received
+        if (jobClass == null) {
+            throw new IllegalArgumentException("jobClass can not be null");
+        }
+
+        return (JobStatus) this.currentSession().createCriteria(JobStatus.class)
+            .addOrder(Order.asc("created"))
+            .add(Restrictions.ge("updated", getBlockingCutoff()))
+            .add(Restrictions.ne("state", JobState.FINISHED))
+            .add(Restrictions.ne("state", JobState.FAILED))
+            .add(Restrictions.ne("state", JobState.CANCELED))
+            .add(Restrictions.eq("targetId", target))
+            .add(Restrictions.eq("jobClass", jobClass.getCanonicalName()))
+            .setMaxResults(1)
+            .uniqueResult();
+    }
+
     public JobStatus getByClassAndTarget(String target, Class<? extends KingpinJob> jobClass) {
         // FIXME:
         // This is not guaranteed to find the intended target if more than one job in the DB
