@@ -246,7 +246,7 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         contentPrefix.append(owner.getKey());
         if (environment != null) {
             contentPrefix.append("/");
-            contentPrefix.append(environment.getId());
+            contentPrefix.append(environment.getName());
         }
         return contentPrefix.toString();
     }
@@ -258,7 +258,7 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         sb.append(consumer.getOwner().getKey());
         if (consumer.getEnvironment() != null) {
             sb.append(", OU=");
-            sb.append(consumer.getEnvironment().getId());
+            sb.append(consumer.getEnvironment().getName());
         }
         return sb.toString();
     }
