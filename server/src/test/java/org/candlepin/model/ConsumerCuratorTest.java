@@ -299,10 +299,6 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         gConsumer1.getFacts().put("virt.uuid", "test-guest-1");
         consumerCurator.create(gConsumer1);
 
-        // This can happen so fast the consumers end up with the same update time,
-        // it's 5 milliseconds, deal with it.
-        Thread.sleep(5);
-
         Consumer gConsumer2 = new Consumer("guestConsumer2", "testUser", owner, ct);
         gConsumer2.getFacts().put("virt.uuid", "test-guest-1");
         consumerCurator.create(gConsumer2);
@@ -310,6 +306,10 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         GuestId hGuest1 = new GuestId("test-guest-1");
         hConsumer1.addGuestId(hGuest1);
         consumerCurator.update(hConsumer1);
+
+        // This can happen so fast the consumers end up with the same update time,
+        // it's 100 milliseconds, deal with it.
+        Thread.sleep(100);
 
         // Uppercase the guest ID reported by host 2 just to make sure the casing is
         // working properly here too:
@@ -319,7 +319,8 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
         List<Consumer> guests1 = consumerCurator.getGuests(hConsumer1);
         List<Consumer> guests2 = consumerCurator.getGuests(hConsumer2);
-        assertTrue(hGuest1.getUpdated().before(hGuest2.getUpdated()));
+        assertTrue("Expected " + hGuest1.getUpdated() + " to be before " + hGuest2.getUpdated(),
+            hGuest1.getUpdated().before(hGuest2.getUpdated()));
         assertEquals(0, guests1.size());
         assertEquals(1, guests2.size());
         assertEquals("guestConsumer2", guests2.get(0).getName());
