@@ -1544,7 +1544,6 @@ public class CandlepinPoolManager implements PoolManager {
         }
         else {
             this.entitlementCurator.markEntitlementsDirty(Arrays.asList(entitlement.getId()));
-            this.entitlementCurator.markModifyingEntsDirty(Collections.singleton(entitlement));
         }
 
         /*
@@ -1756,8 +1755,9 @@ public class CandlepinPoolManager implements PoolManager {
          * modifier entitlements that need to have their certificates regenerated
          */
         if (regenCertsAndStatuses) {
-            int update = this.entitlementCurator.markModifyingEntsDirty(entsToRevoke);
-            log.debug("Marked {} modifying entitlements as dirty.", update);
+            log.debug("Marking dependent entitlements as dirty...");
+            int update = this.entitlementCurator.markDependentEntitlementsDirty(entsToRevoke);
+            log.debug("{} dependent entitlements marked dirty.", update);
         }
 
         log.info("Starting batch delete of pools");

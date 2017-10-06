@@ -137,6 +137,10 @@ public class TestUtil {
         return Math.abs(RANDOM.nextInt());
     }
 
+    public static int randomInt(int max) {
+        return Math.abs(RANDOM.nextInt(max));
+    }
+
     public static String randomString() {
         return String.valueOf(randomInt());
     }
