@@ -252,6 +252,23 @@ module CandlepinMethods
     asn1_body
   end
 
+  def get_extensions_hash(cert)
+    x509 = OpenSSL::X509::Certificate.new(cert)
+    extensions_hash = Hash[x509.extensions.collect { |ext| [ext.oid, ext.to_der()] }]
+
+    extensions_hash.each do |key, val|
+
+      asn1 = OpenSSL::ASN1.decode(val)
+      OpenSSL::ASN1.traverse(asn1.value[1]) do| depth, offset, header_len, length, constructed, tag_class, tag|
+        extensions_hash[key] = asn1.value[1].value[header_len, length]
+      end
+
+    end
+
+    return extensions_hash
+
+  end
+
 end
 
 class Export

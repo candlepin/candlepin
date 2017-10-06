@@ -575,137 +575,143 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     }
 
     /**
-     * - A version of list Modifying that finds Entitlements that modify
-     * input entitlements, and updates the dirty flag to true.
-     * - useful when dealing with large amount of entitlements for which it is necessary
-     * to determine their modifier products.
-     * - Today this is used in the revoke case or when we update ent quantity.
-     *
-     * pseudo code:
-     * UPDATE entitlements
-     * SET dirty = true
-     * WHERE id IN (
-     *              -- a pass through query to work around
-     *              -- mysql restriction of not updating the same
-     *              -- table that is selected from.
-     *              SELECT * FROM (
-     *                             SELECT entitlement.id
-     *                             FROM relevant tables
-     *                             -- exclude if already dirty
-     *                             WHERE dirty = false
-     *                             -- exclude ents passed in as args
-     *                             AND (ent.id NOT IN (:ein))
-     *                             AND (
-     *                                  EXISTS (
-     *                                          SELECT entIn.id
-     *                                          -- ensure only modifying ents
-     *                                          FROM relevant tables
-     *                                          WHERE (entIn.id IN (:ein))
-     *                                         )
-     *                                  )
-     *                             -- ensure we do not cross in clause limit
-     *                             LIMIT  999
-     *                            ) as e
-     *               )
+     * Marks all dependent entitlements of the given entitlements dirty, excluding those specified
+     * as input. The result is the number of entitlements marked dirty by this operation.
      *
      * @param entitlements
-     * @return number of entitlements that were marked as dirty
+     *  The collection of entitlements for which to mark dependent entitlements dirty
+     *
+     * @return
+     *  the number of entitlements marked dirty as a result of this operation
      */
-    public int markModifyingEntsDirty(Iterable<Entitlement> entitlements) {
-        return markModifyingEntsDirtyForTesting(getEntityManager(), entitlements);
+    public int markDependentEntitlementsDirty(Iterable<Entitlement> entitlements) {
+        return this.markDependentEntitlementsDirty(entitlements, true);
     }
 
     /**
-     * a convenience method for helping with tests, which can pass a mock for entityManager
-     * @param entityManager
+     * Marks all dependent entitlements of the given entitlements dirty, returning the number of
+     * entitlements marked dirty as a result of this operation.
+     *
      * @param entitlements
-     * @return number of entitlements that were marked as dirty
+     *  The collection of entitlements for which to mark dependent entitlements dirty
+     *
+     * @param excludeInput
+     *  Whether or not the input entitlements should be excluded from the set of dependent
+     *  entitlements
+     *
+     * @return
+     *  the number of entitlements marked dirty as a result of this operation
      */
-    public int markModifyingEntsDirtyForTesting(EntityManager entityManager, Iterable<Entitlement>
-        entitlements) {
-        int result = 0;
-
+    public int markDependentEntitlementsDirty(Iterable<Entitlement> entitlements, boolean excludeInput) {
         if (entitlements != null && entitlements.iterator().hasNext()) {
+            Map<String, Set<String>> cemap = new HashMap<String, Set<String>>();
 
-            String eidClause = "";
-            List<List<Entitlement>> splitEnts = new ArrayList<List<Entitlement>>();
-            Iterable<List<Entitlement>> blocks = Iterables.partition(entitlements, getInBlockSize());
-            int i = 0;
-            for (List<Entitlement> block : blocks) {
-                eidClause += " AND (ent.id NOT IN (:not_in_" + i + ")) ";
-                splitEnts.add(block);
-                i++;
-            }
+            // Deduplicate our entitlement IDs and group by consumer, discarding null/incomplete
+            // entitlements
+            for (Entitlement entitlement : entitlements) {
+                // TODO: Should we throw an exception if we find a malformed/incomplete entitlement
+                // or just continue silently ignoring them?
 
-            String sql = "UPDATE cp_entitlement" +
-                "     SET dirty = true" +
-                "     WHERE id IN (" +
-                "         SELECT * FROM (" +
-                "             SELECT distinct ent.id" +
-                "             FROM cp_entitlement ent" +
-                "             INNER JOIN cp_pool pool" +
-                "                 ON ent.pool_id = pool.id" +
-                "             INNER JOIN cp2_pool_provided_products providedPr" +
-                "                 ON pool.id = providedPr.pool_id" +
-                "             INNER JOIN cp2_products product" +
-                "                 ON providedPr.product_uuid = product.uuid" +
-                "             INNER JOIN cp2_product_content productCon" +
-                "                 ON product.uuid = productCon.product_uuid" +
-                "             INNER JOIN cp2_content content" +
-                "                 ON productCon.content_uuid = content.uuid" +
-                "             INNER JOIN cp2_content_modified_products modifiedPr" +
-                "                 ON content.uuid=modifiedPr.content_uuid" +
-                "             WHERE pool.endDate >= current_date" +
-                "               AND ent.owner_id = :owner" +
-                "               AND ent.dirty = false" + eidClause +
-                "               AND (EXISTS (SELECT entIn.id" +
-                "                            FROM cp_entitlement entIn" +
-                "                            INNER JOIN cp_consumer consumerIn" +
-                "                                ON entIn.consumer_id = consumerIn.id" +
-                "                            INNER JOIN cp_pool poolIn" +
-                "                                ON entIn.pool_id = poolIn.id" +
-                "                            INNER JOIN cp2_products productIn" +
-                "                                ON poolIn.product_uuid = productIn.uuid" +
-                "                            LEFT OUTER JOIN cp2_pool_provided_products providedPrIn" +
-                "                                ON poolIn.id = providedPrIn.pool_id" +
-                "                            LEFT OUTER JOIN cp2_products productIn2" +
-                "                                ON providedPrIn.product_uuid = productIn2.uuid" +
-                "                            WHERE (entIn.id IN (:ein))" +
-                "                               AND consumerIn.id = ent.consumer_id" +
-                "                               AND poolIn.endDate >= pool.startDate" +
-                "                               AND poolIn.startDate <= pool.endDate" +
-                "                               AND (productIn2.product_id = modifiedPr.element" +
-                "                                 OR productIn.product_id = modifiedPr.element)))" +
-                "             LIMIT " + getInBlockSize() + " ) as e)";
-            /* NOTE: it is okay to limit the number of records in the in clause above, since we run
-             * the query more than once per block if needed.
-             */
+                if (entitlement != null && entitlement.getId() != null && entitlement.getConsumer() != null) {
+                    String cid = entitlement.getConsumer().getId();
 
-            Query query = entityManager.createNativeQuery(sql);
-            query.setParameter("owner", entitlements.iterator().next().getOwner());
+                    if (cid != null) {
+                        Set<String> consumerEntitlements = cemap.get(cid);
 
-            /* all the entitlements from all the blocks should be in the "not_in" clause
-             * every time the query is run, irrespective of which block is in the current query.
-             */
-            int j = 0;
-            for (List<Entitlement> block : splitEnts) {
-                query.setParameter("not_in_" + j, block);
-                j++;
-            }
+                        if (consumerEntitlements == null) {
+                            consumerEntitlements = new HashSet<String>();
+                            cemap.put(cid, consumerEntitlements);
+                        }
 
-            /* for each block, keep running the query until the number of records updated in the last run is
-             * less than the maximum records we allow in an "in clause".
-             */
-            for (List<Entitlement> block : splitEnts) {
-                int blockResult = getInBlockSize();
-                query.setParameter("ein", block);
-                while (blockResult >= getInBlockSize()) {
-                    blockResult = query.executeUpdate();
-                    result += blockResult;
+                        consumerEntitlements.add(entitlement.getId());
+                    }
                 }
             }
+
+            // Impl note:
+            // We do this in direct SQL, as it lets us take a sane path from base to dependent
+            // entitlements, rather than the lunacy that would be required with HQL, JPQL or
+            // CriteriaBuilder.
+            String querySql = "SELECT DISTINCT e2.id " +
+                // Required entitlement
+                "FROM cp_entitlement e1                                                       " +
+                // Required entitlement => required pool
+                "JOIN cp2_pool_provided_products ppp1 ON ppp1.pool_id = e1.pool_id            " +
+                // Required pool => required product
+                "JOIN cp2_products p ON p.uuid = ppp1.product_uuid                            " +
+                // Required product => conditional content
+                "JOIN cp2_content_modified_products cmp ON cmp.element = p.product_id         " +
+                // Conditional content => dependent product
+                "JOIN cp2_product_content pc ON pc.content_uuid = cmp.content_uuid            " +
+                // Dependent product => dependent pool
+                "JOIN cp2_pool_provided_products ppp2 ON ppp2.product_uuid = pc.product_uuid  " +
+                // Dependent pool => dependent entitlement
+                "JOIN cp_entitlement e2 ON e2.pool_id = ppp2.pool_id                          " +
+                "WHERE e1.consumer_id = e2.consumer_id " +
+                "  AND e1.consumer_id = :consumer_id " +
+                "  AND e1.id != e2.id " +
+                "  AND e2.dirty = false " +
+                "  AND e1.id IN (:entitlement_ids)";
+
+            if (excludeInput) {
+                querySql += " AND e2.id NOT IN (:entitlement_ids)";
+            }
+
+            Query query = this.getEntityManager().createNativeQuery(querySql);
+
+            int blockSize = Math.min(this.getInBlockSize(),
+                (this.getQueryParameterLimit() - 1) / (excludeInput ? 2 : 1));
+
+            Set<String> dirtyIds = new HashSet<String>();
+
+            // Execute our query for each of the affected consumers
+            for (Map.Entry<String, Set<String>> entry : cemap.entrySet()) {
+                // This isn't strictly necessary, but it allows the DB to filter the indexes on a
+                // constant, reducing the query's runtime by about half.
+                query.setParameter("consumer_id", entry.getKey());
+
+                // We repeat the query for each block, as it's ~30% faster than adding more in blocks
+                // to the query. Also, considerably less complex.
+                for (List<String> block : Iterables.partition(entry.getValue(), blockSize)) {
+                    query.setParameter("entitlement_ids", block);
+                    dirtyIds.addAll(query.getResultList());
+                }
+            }
+
+            // Update the affected entitlements, if necessary...
+            if (dirtyIds.size() > 0) {
+                return this.markEntitlementsDirty(dirtyIds);
+            }
         }
-        return result;
+
+        return 0;
+    }
+
+    /**
+     * Marks the given entitlements as dirty; forcing a regeneration the next time it is requested.
+     *
+     * @param entitlementIds
+     *  A collection of IDs of the entitlements to mark dirty
+     *
+     * @return
+     *  The number of certificates updated
+     */
+    @Transactional
+    public int markEntitlementsDirty(Iterable<String> entitlementIds) {
+        int count = 0;
+
+        if (entitlementIds != null && entitlementIds.iterator().hasNext()) {
+            Iterable<List<String>> blocks = Iterables.partition(entitlementIds, getInBlockSize());
+
+            String hql = "UPDATE Entitlement SET dirty = true WHERE id IN (:entIds)";
+            Query query = this.getEntityManager().createQuery(hql);
+
+            for (List<String> block : blocks) {
+                count += query.setParameter("entIds", block).executeUpdate();
+            }
+        }
+
+        return count;
     }
 
     /**
@@ -719,7 +725,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
      *
      * @return Entitlements that are being modified by the input entitlements
      */
-    public Collection<String> batchListModifying(Consumer consumer, Collection<Pool> pools) {
+    public Collection<String> getDependentEntitlementIds(Consumer consumer, Collection<Pool> pools) {
         List<String> eids = new LinkedList<String>();
 
         if (CollectionUtils.isNotEmpty(pools)) {
@@ -968,32 +974,5 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             .setMaxResults(1);
 
         return (Entitlement) activeNowQuery.uniqueResult();
-    }
-
-    /**
-     * Marks the given entitlements as dirty; forcing a regeneration the next time it is requested.
-     *
-     * @param entitlementIds
-     *  A collection of IDs of the entitlements to mark dirty
-     *
-     * @return
-     *  The number of certificates updated
-     */
-    @Transactional
-    public int markEntitlementsDirty(Iterable<String> entitlementIds) {
-        int count = 0;
-
-        if (entitlementIds != null && entitlementIds.iterator().hasNext()) {
-            Iterable<List<String>> blocks = Iterables.partition(entitlementIds, getInBlockSize());
-
-            String hql = "UPDATE Entitlement SET dirty = true WHERE id IN (:entIds)";
-            Query query = this.getEntityManager().createQuery(hql);
-
-            for (List<String> block : blocks) {
-                count += query.setParameter("entIds", block).executeUpdate();
-            }
-        }
-
-        return count;
     }
 }

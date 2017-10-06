@@ -2482,9 +2482,9 @@ public class ConsumerResource {
     public void removeDeletionRecord(@PathParam("consumer_uuid") String uuid) {
         DeletedConsumer dc = deletedConsumerCurator.findByConsumerUuid(uuid);
         if (dc == null) {
-            throw new NotFoundException(i18n.tr(
-                "Deletion record for hypervisor ''{0}'' not found.", uuid));
+            throw new NotFoundException(i18n.tr("Deletion record for hypervisor ''{0}'' not found.", uuid));
         }
+
         deletedConsumerCurator.delete(dc);
     }
 
