@@ -232,9 +232,13 @@ public class EventFactory {
 
     public Event complianceCreated(Consumer consumer,
         Set<Entitlement> entitlements, ComplianceStatus compliance) {
+        // Instead of an internal db id, compliance.created events now use
+        // UUID for the 'consumerId' and 'entityId' fields, since Katello
+        // is concerned only with the consumer UUID field. This is the first
+        // part of a larger piece of work to simplify Event consumption.
         return new Event(Event.Type.CREATED, Event.Target.COMPLIANCE,
-            consumer.getName(), principalProvider.get(), consumer.getOwner().getId(), consumer.getId(),
-            consumer.getId(), null, buildComplianceDataJson(consumer, entitlements, compliance), null,
+            consumer.getName(), principalProvider.get(), consumer.getOwner().getId(), consumer.getUuid(),
+            consumer.getUuid(), null, buildComplianceDataJson(consumer, entitlements, compliance), null,
             null);
     }
 
