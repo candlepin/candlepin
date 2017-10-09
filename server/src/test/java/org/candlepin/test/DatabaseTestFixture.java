@@ -538,6 +538,24 @@ public class DatabaseTestFixture {
         return poolCurator.create(pool);
     }
 
+    protected Pool createPool(Owner owner, Product product, Collection<Product> provided, Long quantity,
+        Date startDate, Date endDate) {
+
+        Pool pool = new Pool(
+            owner,
+            product,
+            provided,
+            quantity,
+            startDate,
+            endDate,
+            DEFAULT_CONTRACT,
+            DEFAULT_ACCOUNT,
+            DEFAULT_ORDER
+        );
+
+        return poolCurator.create(pool);
+    }
+
     protected Pool createPool(Owner owner, Product product, Long quantity, Date startDate, Date endDate,
         String contractNr) {
         Pool pool = createPool(owner, product, quantity, startDate, endDate);
