@@ -55,10 +55,11 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Authorization;
 
+
+
 /**
  * SubscriptionResource
  */
-
 @Path("/subscriptions")
 @Api(value = "subscriptions", authorizations = { @Authorization("basic") })
 @Consumes(MediaType.APPLICATION_JSON)
@@ -169,16 +170,16 @@ public class SubscriptionResource {
     public void deleteSubscription(@PathParam("subscription_id") String subscriptionId) {
 
         // Lookup pools from subscription ID
-        List<Pool> pools = this.poolManager.getPoolsBySubscriptionId(subscriptionId);
+        int count = 0;
 
-        if (pools.isEmpty()) {
-            throw new NotFoundException(
-                i18n.tr("A subscription with the ID \"{0}\" could not be found.", subscriptionId)
-            );
+        for (Pool pool : this.poolManager.getPoolsBySubscriptionId(subscriptionId)) {
+            this.poolManager.deletePool(pool);
+            ++count;
         }
 
-        for (Pool pool : pools) {
-            this.poolManager.deletePool(pool);
+        if (count == 0) {
+            throw new NotFoundException(
+                i18n.tr("A subscription with the ID \"{0}\" could not be found.", subscriptionId));
         }
     }
 

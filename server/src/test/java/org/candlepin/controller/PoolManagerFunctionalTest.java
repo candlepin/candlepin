@@ -275,7 +275,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     @Test
     public void testFabricateWithBranding()
         throws Exception {
-        List<Pool> masterPools = poolManager.getPoolsBySubscriptionId(sub4.getId());
+        List<Pool> masterPools = poolManager.getPoolsBySubscriptionId(sub4.getId()).list();
         Pool masterPool = null;
         for (Pool pool: masterPools) {
             if (pool.getType() == Pool.PoolType.NORMAL) {

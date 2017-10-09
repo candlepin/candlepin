@@ -400,7 +400,7 @@ public class CandlepinPoolManager implements PoolManager {
         Map<String, Product> changedProducts) {
 
         // These don't all necessarily belong to this owner
-        List<Pool> subscriptionPools = poolCurator.getPoolsBySubscriptionId(pool.getSubscriptionId());
+        List<Pool> subscriptionPools = poolCurator.getPoolsBySubscriptionId(pool.getSubscriptionId()).list();
         log.debug("Found {} pools for subscription {}", subscriptionPools.size(), pool.getSubscriptionId());
         if (log.isDebugEnabled()) {
             for (Pool p : subscriptionPools) {
@@ -445,6 +445,22 @@ public class CandlepinPoolManager implements PoolManager {
             subscriptionPools, pool, originalQuantity, updateStackDerived, changedProducts);
 
         regenerateCertificatesByEntIds(updatedMasterPools, lazy);
+    }
+
+    private void removeAndDeletePoolsOnOtherOwners(List<Pool> existingPools, Pool pool) {
+        List<Pool> toRemove = new LinkedList<Pool>();
+
+        for (Pool existing : existingPools) {
+            if (!existing.getOwner().equals(pool.getOwner())) {
+                toRemove.add(existing);
+                log.warn("Removing {} because it exists in the wrong org", existing);
+                if (existing.getType() == PoolType.NORMAL || existing.getType() == PoolType.BONUS) {
+                    deletePool(existing);
+                }
+            }
+        }
+
+        existingPools.removeAll(toRemove);
     }
 
     /**
@@ -494,26 +510,6 @@ public class CandlepinPoolManager implements PoolManager {
         this.poolCurator.flush();
 
         return pools.size();
-    }
-
-    private boolean isExpired(Subscription subscription) {
-        Date now = new Date();
-        return now.after(subscription.getEndDate());
-    }
-
-    void removeAndDeletePoolsOnOtherOwners(List<Pool> existingPools, Pool pool) {
-        List<Pool> toRemove = new LinkedList<Pool>();
-        for (Pool existing : existingPools) {
-            if (!existing.getOwner().equals(pool.getOwner())) {
-                toRemove.add(existing);
-                log.warn("Removing {} because it exists in the wrong org", existing);
-                if (existing.getType() == PoolType.NORMAL ||
-                    existing.getType() == PoolType.BONUS) {
-                    deletePool(existing);
-                }
-            }
-        }
-        existingPools.removeAll(toRemove);
     }
 
     /**
@@ -1982,7 +1978,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         // Look up the related pools for these subscription IDs.
         if (!subscriptionIds.isEmpty()) {
-            poolsToDelete.addAll(this.poolCurator.getPoolsBySubscriptionIds(subscriptionIds));
+            poolsToDelete.addAll(this.poolCurator.getPoolsBySubscriptionIds(subscriptionIds).list());
         }
 
         if (!poolsToDelete.isEmpty()) {
@@ -2190,7 +2186,7 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     @Override
-    public List<Pool> getPoolsBySubscriptionId(String subscriptionId) {
+    public CandlepinQuery<Pool> getPoolsBySubscriptionId(String subscriptionId) {
         return this.poolCurator.getPoolsBySubscriptionId(subscriptionId);
     }
 

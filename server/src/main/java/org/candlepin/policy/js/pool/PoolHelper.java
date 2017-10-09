@@ -103,7 +103,7 @@ public class PoolHelper {
                     pool.getOrderNumber(),
                     productCurator.getPoolProvidedProductsCached(pool),
                     sourceEntitlements.get(pool.getId()),
-                    pool.getHasSharedAncestor());
+                    pool.hasSharedAncestor());
             }
             else {
                 // If a derived product is on the pool, we want to define the
@@ -123,7 +123,7 @@ public class PoolHelper {
                     pool.getOrderNumber(),
                     productCurator.getPoolDerivedProvidedProductsCached(pool),
                     sourceEntitlements.get(pool.getId()),
-                    pool.getHasSharedAncestor());
+                    pool.hasSharedAncestor());
             }
 
             consumerSpecificPool.setAttribute(Pool.Attributes.REQUIRES_HOST, consumer.getUuid());
@@ -226,7 +226,7 @@ public class PoolHelper {
             sourcePool.getStartDate(), sourcePool.getEndDate(),
             sourcePool.getContractNumber(), sourcePool.getAccountNumber(),
             sourcePool.getOrderNumber(), new HashSet<Product>(), sourceEntitlement,
-            sourcePool.getHasSharedAncestor());
+            sourcePool.hasSharedAncestor());
 
         SourceSubscription srcSub = sourcePool.getSourceSubscription();
         if (srcSub != null && srcSub.getSubscriptionId() != null) {

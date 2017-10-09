@@ -1085,6 +1085,7 @@ public class OwnerResource {
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
     public void updateSubscription(
         @ApiParam(name = "subscription", required = true) Subscription subscription) {
+
         throw new ResourceMovedException("owners/{owner_key}/pools");
     }
 
@@ -1190,7 +1191,8 @@ public class OwnerResource {
         notes = "Updates a pool for an Owner. assumes this is a normal pool, and " +
         "errors out otherwise cause we cannot create master pools from bonus pools " +
         "TODO: while this method replaces the now deprecated updateSubsciption, it " +
-        "still uses it underneath. We need to re-implement the wheel like we did in " + "createPool ",
+        "still uses it underneath. We need to re-implement the wheel like we did in " +
+        "createPool ",
         value = "Update Pool")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
     public void updatePool(@PathParam("owner_key") @Verify(Owner.class) String ownerKey,
@@ -1199,8 +1201,7 @@ public class OwnerResource {
         Pool currentPool = this.poolManager.find(newPool.getId());
         if (currentPool == null) {
             throw new NotFoundException(i18n.tr(
-                "Unable to find a pool with the ID \"{0}\".", newPool.getId()
-            ));
+                "Unable to find a pool with the ID \"{0}\".", newPool.getId()));
         }
 
         if (currentPool.getType() != PoolType.NORMAL ||
@@ -1208,9 +1209,7 @@ public class OwnerResource {
             throw new BadRequestException(i18n.tr("Cannot update bonus pools, as they are auto generated"));
         }
 
-
-        if (currentPool.isCreatedByShare() ||
-            newPool.isCreatedByShare()) {
+        if (currentPool.isCreatedByShare() || newPool.isCreatedByShare()) {
             throw new BadRequestException(i18n.tr("Cannot update shared pools, This should be triggered " +
                 "by updating the share entitlement instead"));
         }
