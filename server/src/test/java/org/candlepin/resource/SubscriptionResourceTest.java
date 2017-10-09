@@ -14,10 +14,11 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
+import java.util.Collections;
 import java.util.Locale;
 
 import javax.servlet.http.HttpServletResponse;
@@ -26,8 +27,10 @@ import javax.ws.rs.core.Response;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.Pool;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,6 +39,8 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
+
+
 
 /**
  * SubscriptionResourceTest
@@ -65,6 +70,11 @@ public class SubscriptionResourceTest  {
 
     @Test(expected = NotFoundException.class)
     public void testInvalidIdOnDelete() throws Exception {
+        CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
+        when(cqmock.list()).thenReturn(Collections.<Pool>emptyList());
+        when(cqmock.iterator()).thenReturn(Collections.<Pool>emptyList().iterator());
+        when(poolManager.getPoolsBySubscriptionId(anyString())).thenReturn(cqmock);
+
         subResource.deleteSubscription("JarJarBinks");
     }
 

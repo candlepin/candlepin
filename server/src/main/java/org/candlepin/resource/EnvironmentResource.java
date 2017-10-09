@@ -140,7 +140,9 @@ public class EnvironmentResource {
         for (Consumer c : e.getConsumers()) {
             log.info("Deleting consumer: {}", c);
 
-            poolManager.revokeAllEntitlements(c);
+            // We're about to delete these consumers; no need to regen/dirty their dependent
+            // entitlements or recalculate status.
+            poolManager.revokeAllEntitlements(c, false);
             consumerCurator.delete(c);
         }
 
