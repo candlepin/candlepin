@@ -114,12 +114,12 @@ describe 'Content Access' do
       # puts ("json_body:%s" % json_body)
 
       content = json_body['products'][0]['content'][0]
-      content['path'].should == '/' + @owner['key'] + '/' + @env['id'] + '/this/is/the/path'
+      content['path'].should == '/' + @owner['key'] + '/' + @env['name'] + '/this/is/the/path'
       content['enabled'].should == false
 
       value = extension_from_cert(certs[0]['cert'], "1.3.6.1.4.1.2312.9.7")
       urls = []
-      urls[0] = '/' + @owner['key'] + '/' + @env['id']
+      urls[0] = '/' + @owner['key'] + '/' + @env['name']
       are_content_urls_present(value, urls).should == true
   end
 
