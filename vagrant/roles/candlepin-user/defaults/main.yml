@@ -7,4 +7,4 @@ candlepin_user_home:  /home/vagrant
 candlepin_git_repo: https://github.com/candlepin/candlepin.git
 candlepin_checkout: /vagrant
 
-candlepin_deploy_args: "-g -a -t"
+candlepin_deploy_args: "-g -a"

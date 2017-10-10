@@ -54,6 +54,19 @@ to be stopped or you will have to edit the Vagrantfile and choose different port
 1. `buildr clean test=no package`
 1. `./server/bin/deploy`
 
+## Deploy with test data
+Candlepin Vagrant deployer deploy candlepin without any test data in database.
+If you want to use candlepin e.g. for testing subscription-manager, then you
+will need to deploy server with different options:
+
+1. Start VM with `vagrant up`
+1. Run `vagrant ssh`  to connect to the system
+1. `cd vagrant`
+1. `./server/bin/deploy -gta` or `./server/bin/deploy -gTa`
+
+> Default options used by Vagrant deployer are only: `-ga`. For more
+  information about deploy option run: `./server/bin/deploy -h`.
+
 ## Use of environment variables
 Any environment variables set starting with 'CANDLEPIN_' will be  passed to
 the ansible playbook as their name less the prefix of 'CANDLEPIN_'.
