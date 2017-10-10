@@ -34,7 +34,7 @@ import org.junit.Test;
 
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -42,8 +42,6 @@ import java.util.List;
 import java.util.Set;
 
 import javax.inject.Inject;
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
 
 
 
@@ -165,8 +163,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
             consumerCurator.flush();
         }
         catch (Exception ex) {
-            assertEquals(ex.getCause().getCause().getClass(),
-                SQLIntegrityConstraintViolationException.class);
+            assertEquals(ex.getCause().getCause().getClass(), SQLIntegrityConstraintViolationException.class);
         }
         finally {
             rollbackTransaction();
@@ -185,373 +182,6 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
 
     private Date createDate(int year, int month, int day) {
         return TestUtil.createDate(year, month, day);
-    }
-
-    @Test
-    public void markModifyingDirtyInClause() {
-        EntityManager mockEntityManager = mock(EntityManager.class);
-        Query mockQuery = mock(Query.class);
-        List<Entitlement> ents = new LinkedList<Entitlement>();
-        ents.add(new Entitlement());
-
-        when(mockEntityManager.createNativeQuery(anyString())).thenReturn(mockQuery);
-        when(mockQuery.executeUpdate()).thenReturn(entitlementCurator.getInBlockSize() - 1);
-        when(mockQuery.setParameter(anyString(), org.mockito.Matchers.anyObject())).thenReturn(mockQuery);
-        entitlementCurator.markModifyingEntsDirtyForTesting(mockEntityManager, ents);
-        verify(mockQuery, times(1)).executeUpdate();
-
-        mockQuery = mock(Query.class);
-        when(mockEntityManager.createNativeQuery(anyString())).thenReturn(mockQuery);
-        when(mockQuery.setParameter(anyString(), org.mockito.Matchers.anyObject())).thenReturn(mockQuery);
-        when(mockQuery.executeUpdate()).thenReturn(entitlementCurator.getInBlockSize()).thenReturn(0);
-        entitlementCurator.markModifyingEntsDirtyForTesting(mockEntityManager, ents);
-        verify(mockQuery, times(2)).executeUpdate();
-
-        mockQuery = mock(Query.class);
-        when(mockEntityManager.createNativeQuery(anyString())).thenReturn(mockQuery);
-        when(mockQuery.setParameter(anyString(), org.mockito.Matchers.anyObject())).thenReturn(mockQuery);
-        when(mockQuery.executeUpdate()).thenReturn(entitlementCurator.getInBlockSize())
-            .thenReturn(entitlementCurator.getInBlockSize())
-            .thenReturn(1);
-        entitlementCurator.markModifyingEntsDirtyForTesting(mockEntityManager, ents);
-        verify(mockQuery, times(3)).executeUpdate();
-
-        // now test with two entitlement blocks
-        for (int i = 0; i < entitlementCurator.getInBlockSize() * 2; i++) {
-            ents.add(new Entitlement());
-        }
-        mockQuery = mock(Query.class);
-        when(mockEntityManager.createNativeQuery(anyString())).thenReturn(mockQuery);
-        when(mockQuery.setParameter(anyString(), org.mockito.Matchers.anyObject())).thenReturn(mockQuery);
-        when(mockQuery.executeUpdate()).thenReturn(1)
-            .thenReturn(2);
-        entitlementCurator.markModifyingEntsDirtyForTesting(mockEntityManager, ents);
-        verify(mockQuery, times(3)).executeUpdate();
-    }
-
-    @Test
-    public void listModifyingExcludesEntitlementThatModifiesItself() {
-        Date startDate = createDate(2010, 1, 1);
-        Date endDate = createDate(2050, 1, 1);
-        Pool testPool = createPool(owner, parentProduct, 100L,
-            startDate, endDate);
-
-        // Provided product 2 will modify 1, both will be on the pool:
-        Content c = TestUtil.createContent("fakecontent");
-        Set<String> modifiedIds = new HashSet<String>();
-        modifiedIds.add(providedProduct1.getId());
-        c.setModifiedProductIds(modifiedIds);
-        contentCurator.create(c);
-        providedProduct2.addContent(c, true);
-
-        // Add some provided products to this pool:
-        testPool.addProvidedProduct(providedProduct1);
-        testPool.addProvidedProduct(providedProduct2);
-        poolCurator.create(testPool);
-
-        EntitlementCertificate cert = createEntitlementCertificate("key", "certificate");
-
-        Entitlement ent = createEntitlement(owner, consumer, testPool, cert);
-        ent = entitlementCurator.create(ent);
-        assertFalse(ent.isDirty());
-
-        EntitlementCertificate cert1 = createEntitlementCertificate("key", "certificate");
-
-        Entitlement ent1 = createEntitlement(owner, consumer, testPool, cert);
-        ent1 = entitlementCurator.create(ent1);
-
-        // The ent we just created should *not* be returned as modifying itself:
-        int numOfEnts = entitlementCurator.markModifyingEntsDirty(Collections.singleton(ent));
-        assertEquals(1, numOfEnts);
-        entitlementCurator.refresh(ent1);
-        ent1 = entitlementCurator.find(ent1.getId());
-        assertTrue(ent1.isDirty());
-    }
-
-    @Test
-    public void listModifying() {
-        Date startDate = createDate(2010, 1, 1);
-        Date endDate = createDate(2050, 1, 1);
-        Entitlement ent = setUpModifyingEntitlements(startDate, endDate, 4, "1");
-
-        // The ent we just created should *not* be returned as modifying itself:
-        int numOfEnts = entitlementCurator.markModifyingEntsDirty(Collections.singletonList(ent));
-        assertEquals(4, numOfEnts);
-    }
-
-    @Test
-    public void listModifyingBatch() {
-        Date startDate = createDate(2010, 1, 1);
-        Date endDate = createDate(2020, 1, 1);
-        Entitlement ent = setUpModifyingEntitlements(startDate, endDate, 4, "1");
-
-        Date startDate1 = createDate(2030, 1, 1);
-        Date endDate1 = createDate(2040, 1, 1);
-        Entitlement ent1 = setUpModifyingEntitlements(startDate1, endDate1, 2, "2");
-
-        // The ent we just created should *not* be returned as modifying itself:
-        int numOfEnts = entitlementCurator.markModifyingEntsDirty(Arrays.asList(ent, ent1));
-        assertEquals(6, numOfEnts);
-    }
-
-    @Test
-    public void listOverlapModifyingBatch() {
-        Date startDate = createDate(2010, 1, 1);
-        Date endDate = createDate(2050, 1, 1);
-        Entitlement ent = setUpModifyingEntitlements(startDate, endDate, 3, "1");
-
-        Date startDate1 = createDate(2030, 1, 1);
-        Date endDate1 = createDate(2040, 1, 1);
-        Entitlement ent1 = setUpModifyingEntitlements(startDate1, endDate1, 2, "2");
-
-        // The ent we just created should *not* be returned as modifying itself:
-        int numOfEnts = entitlementCurator.markModifyingEntsDirty(Arrays.asList(ent, ent1));
-        assertEquals(5, numOfEnts);
-    }
-
-    @Test
-    public void listModifyingBatchEnsureOnlyModifying() {
-        Date startDate = createDate(2010, 1, 1);
-        Date endDate = createDate(2050, 1, 1);
-        Entitlement ent = setUpModifyingEntitlements(startDate, endDate, 3, "1");
-
-        Date startDate1 = createDate(2010, 1, 1);
-        Date endDate1 = createDate(2050, 1, 1);
-        Entitlement ent1 = setUpModifyingEntitlements(startDate1, endDate1, 2, "2");
-
-        Date startDate2 = createDate(2030, 1, 1);
-        Date endDate2 = createDate(2040, 1, 1);
-        Entitlement ent2 = setUpModifyingEntitlements(startDate2, endDate2, 2, "3");
-
-        // The ent we just created should *not* be returned as modifying itself:
-        int numOfEnts = entitlementCurator.markModifyingEntsDirty(Arrays.asList(ent, ent1));
-        assertEquals(5, numOfEnts);
-    }
-
-    @Test
-    public void listModifyingBatchEnsureOnlyOverLapping() {
-        Date startDate = createDate(2010, 1, 1);
-        Date endDate = createDate(2050, 1, 1);
-        Entitlement ent = setUpModifyingEntitlements(startDate, endDate, 3, "1");
-
-        Pool pool = createPool(owner, ent.getPool().getProduct(), 100L, startDate, endDate);
-        pool.setProvidedProducts(ent.getPool().getProvidedProducts());
-        pool.setStartDate(createDate(2020, 1, 1));
-        pool.setEndDate(createDate(2021, 1, 1));
-        poolCurator.create(pool);
-        EntitlementCertificate cert = createEntitlementCertificate("key", "certificate");
-        Entitlement ent1 = createEntitlement(owner, consumer, pool, cert);
-        entitlementCurator.create(ent1);
-
-        Pool pool2 = createPool(owner, ent.getPool().getProduct(), 100L, startDate, endDate);
-        pool2.setProvidedProducts(ent.getPool().getProvidedProducts());
-        pool2.setStartDate(createDate(2090, 1, 1));
-        pool2.setEndDate(createDate(2091, 1, 1));
-        poolCurator.create(pool2);
-        EntitlementCertificate cert2 = createEntitlementCertificate("key", "certificate");
-        Entitlement ent2 = createEntitlement(owner, consumer, pool2, cert);
-        entitlementCurator.create(ent2);
-
-        // The ent we just created should *not* be returned as modifying itself:
-        int numOfEnts = entitlementCurator.markModifyingEntsDirty(Arrays.asList(ent));
-        assertEquals(4, numOfEnts);
-    }
-
-    private Entitlement setUpModifyingEntitlements(Date startDate, Date endDate, Integer howMany,
-        String contentId) {
-        Product parentProductForTest = TestUtil.createProduct();
-        Product providedProduct1ForTest = TestUtil.createProduct();
-        Product providedProduct2ForTest = TestUtil.createProduct();
-        productCurator.create(parentProductForTest);
-        productCurator.create(providedProduct1ForTest);
-        productCurator.create(providedProduct2ForTest);
-
-        Pool testPool = createPool(owner, parentProductForTest, 100L, startDate, endDate);
-
-        // Provided product 2 will modify 1, both will be on the pool:
-        Content c = TestUtil.createContent(contentId, "fakecontent");
-        Set<String> modifiedIds = new HashSet<String>();
-        modifiedIds.add(providedProduct1ForTest.getId());
-        c.setModifiedProductIds(modifiedIds);
-        contentCurator.create(c);
-        providedProduct2ForTest.addContent(c, true);
-
-        assertTrue(providedProduct2ForTest.modifies(providedProduct1ForTest.getId()));
-
-        // Add some provided products to this pool:
-        testPool.addProvidedProduct(providedProduct1ForTest);
-        testPool.addProvidedProduct(providedProduct2ForTest);
-        poolCurator.create(testPool);
-
-        EntitlementCertificate cert = createEntitlementCertificate("key", "certificate");
-
-        Entitlement ent = createEntitlement(owner, consumer, testPool, cert);
-        entitlementCurator.create(ent);
-
-        for (Integer i = 0; i < howMany; i++) {
-            EntitlementCertificate cert1 = createEntitlementCertificate("key", "certificate");
-            Entitlement ent1 = createEntitlement(owner, consumer, testPool, cert);
-            entitlementCurator.create(ent1);
-        }
-
-        return ent;
-    }
-
-    public void prepareEntitlementsForModifying() {
-        Content contentPool1 = TestUtil.createContent("fake_content-1");
-        Content contentPool2 = TestUtil.createContent("fake_content-2");
-
-        /**
-         * Each of these products are provided by respective Entitlements
-         */
-        Product providedProductEnt1 = TestUtil.createProduct("ppent1", "ppent1");
-        Product providedProductEnt2 = TestUtil.createProduct("ppent2", "ppent2");
-        Product providedProductEnt3 = TestUtil.createProduct("ppent3", "ppent3");
-        Product providedProductEnt4 = TestUtil.createProduct("ppent4", "ppent4");
-
-        productCurator.create(providedProductEnt1);
-        productCurator.create(providedProductEnt2);
-        productCurator.create(providedProductEnt3);
-        productCurator.create(providedProductEnt4);
-
-        ent1modif = createPool("p1", createDate(1999, 1, 1), createDate(1999 + 50, 2, 1)
-            , providedProductEnt1);
-        ent2modif = createPool("p2", createDate(2000, 4, 4), createDate(2001 + 50, 3, 3)
-            , providedProductEnt2);
-
-        /**
-         * Ent1 and Ent2 entitlements are being modified by contentPool1 and
-         * contentPool2
-         */
-        Set<String> modifiedIds1 = new HashSet<String>();
-        Set<String> modifiedIds2 = new HashSet<String>();
-        modifiedIds1.add(providedProductEnt1.getId());
-        modifiedIds2.add(ent2modif.getPool().getProductId());
-
-        /**
-         * ContentPool1 modifies Ent1 ContentPool2 modifies Ent2
-         */
-        contentPool1.setModifiedProductIds(modifiedIds1);
-        contentPool2.setModifiedProductIds(modifiedIds2);
-
-        contentCurator.create(contentPool1);
-        contentCurator.create(contentPool2);
-
-        /**
-         * Ent3 has content 1 and Ent4 has content 2
-         */
-        providedProductEnt3.addContent(contentPool1, true);
-        providedProductEnt4.addContent(contentPool2, true);
-
-        createPool("p3", createDate(1998, 1, 1), createDate(2003 + 50, 2, 1), providedProductEnt3);
-        createPool("p4", createDate(2001, 2, 30), createDate(2002 + 50, 1, 10), providedProductEnt4);
-        createPool("p5", createDate(2000 + 50, 5, 5), createDate(2000 + 50, 5, 10), null);
-        createPool("p6", createDate(1998, 1, 1), createDate(1998, 12, 31), null);
-        createPool("p7", createDate(2003, 2, 2), createDate(2003 + 50, 3, 3), null);
-    }
-
-    private Entitlement createPool(String id, Date startDate, Date endDate, Product provided) {
-        EntitlementCertificate cert = createEntitlementCertificate("key", "certificate");
-        Product poolProd = this.createProduct("prod-" + id, "prod-" + id, owner);
-        Pool pool = TestUtil.createPool(owner, poolProd);
-
-        if (provided != null) {
-            pool.addProvidedProduct(provided);
-        }
-
-        pool.setStartDate(startDate);
-        pool.setEndDate(endDate);
-        poolCurator.create(pool);
-
-        Entitlement e1 = createEntitlement(owner, consumer, pool, cert);
-
-        return e1;
-    }
-
-
-    /**
-     * Entitlement 2 doesn't have any provided products, but marketing product of Entitlement 2
-     * is being modified by entitlement 6
-     */
-    @Test
-    public void testModifyMarketingProduct() {
-        int numOfEnts = entitlementCurator.markModifyingEntsDirty(modifierData.getEntitlements(2));
-        assertEquals("Entitlement 2 should be modified  by exactly one entitlement", 1, numOfEnts);
-    }
-
-    /**
-     * Output of markModifyingEntsDirty shouldn't return any entitlement present in the input
-     * even if it modifies some input entitlements
-     */
-    @Test
-    public void testModifyShouldntIncludeInput() {
-        int numOfEnts = entitlementCurator.markModifyingEntsDirty(modifierData.getEntitlements(2, 6));
-        assertEquals(0, numOfEnts);
-    }
-
-    /**
-     * Expired pools shouldn't be outputed, because it makes no sense to regenerate certificates
-     * for them.
-     *
-     * Entitlement 3 is modified only by entitlement 1. Entitlement 1 entitles a pool that has
-     * already expired. So we shouldn't output it.
-     *
-     * Entitlement 13 is modified by entitlement 16
-     */
-    @Test
-    public void testOutNonExpired() {
-        int numOfEnts = entitlementCurator.
-            markModifyingEntsDirty(modifierData.getEntitlements(3, 13));
-        assertEquals("Entitlements 3 and 13 are modified by entitlements 1,6, 11, 16. 1 and 11 is expired!",
-            2, numOfEnts);
-    }
-
-    /**
-     * Entitlement 17 is modified by 14 and 15, but it doesn't overlap with them.
-     * Entitlement 19 is modified by 14 and 15 as well, but it does overlap with them.
-     * Entitlement 14 is owned by a different consumer so it shouldn't be outputed
-     */
-    @Test
-    public void testEntitlementThatDoesntOverlap() {
-        int numOfEnts = entitlementCurator.markModifyingEntsDirty(modifierData.getEntitlements(17));
-        assertEquals("Entitlement 17 shouldn't overlap with any entitlements.", 0, numOfEnts);
-        numOfEnts = entitlementCurator.markModifyingEntsDirty(modifierData.getEntitlements(19));
-        assertEquals("Entitlement 19 should overlap with 15", 1, numOfEnts);
-    }
-
-
-    /**
-     * Entitlement 8 is modified by E4 and E5, additionally, E3 is modified by E6
-     */
-    @Test
-    public void testModifyOnlyConsumers() {
-        int numOfEnts = entitlementCurator.markModifyingEntsDirty(modifierData.getEntitlements(3, 8));
-        assertEquals("Entitlements 3, 8 are modified by entitlements 6, 4 and 5", 3, numOfEnts);
-    }
-
-    /**
-     * Entitlement 18 is owned by consumer 1 but that consumer doesn't have any other entitlements!
-     *
-     * Entitlement 19 is owned by consumer 2 and he does have only  Content 5 so E19 will be modified by
-     * only E15
-     */
-    @Test
-    public void testModifyConsumerDoesntHaveEntitlement() {
-        int numOfEnts = entitlementCurator
-            .markModifyingEntsDirty(modifierData.getEntitlements(18, 19));
-        assertEquals(1, numOfEnts);
-    }
-
-    @Test
-    public void batchListModifying() {
-        prepareEntitlementsForModifying();
-
-        int numOfEnts = entitlementCurator.markModifyingEntsDirty(
-            Arrays.asList(ent1modif, ent2modif)
-        );
-
-        assertEquals(2, numOfEnts);
-
     }
 
     private Entitlement setupListProvidingEntitlement() {
@@ -612,12 +242,9 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     @Test
     public void listEntitledProductIdsEndDateOverlap() {
         Pool existingEntPool = setupListProvidingEntitlement().getPool();
-        Pool anotherPool = newPoolUsingProducts(existingEntPool,
-            pastDate,
-            createDate(2002, 1, 1));
+        Pool anotherPool = newPoolUsingProducts(existingEntPool, pastDate, createDate(2002, 1, 1));
 
-        Set<String> results = entitlementCurator.listEntitledProductIds(consumer,
-            anotherPool);
+        Set<String> results = entitlementCurator.listEntitledProductIds(consumer, anotherPool);
         assertEquals(3, results.size());
         assertTrue(results.contains(existingEntPool.getProductId()));
     }
@@ -626,8 +253,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     public void listEntitledProductIdsTotalOverlap() {
         Pool existingEntPool = setupListProvidingEntitlement().getPool();
         Pool anotherPool = newPoolUsingProducts(existingEntPool, pastDate, futureDate);
-        Set<String> results = entitlementCurator.listEntitledProductIds(consumer,
-            anotherPool);
+        Set<String> results = entitlementCurator.listEntitledProductIds(consumer, anotherPool);
         // Picks up suite pools as well:
         assertEquals(5, results.size());
         assertTrue(results.contains(existingEntPool.getProductId()));
@@ -637,8 +263,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     public void listEntitledProductIdsNoOverlap() {
         Pool existingEntPool = setupListProvidingEntitlement().getPool();
         Pool anotherPool = setupListProvidingEntitlement(parentProduct2, pastDate, pastDate).getPool();
-        Set<String> results = entitlementCurator.listEntitledProductIds(consumer,
-            anotherPool);
+        Set<String> results = entitlementCurator.listEntitledProductIds(consumer, anotherPool);
         assertEquals(3, results.size());
         assertFalse(results.contains(existingEntPool.getProductId()));
     }
@@ -652,8 +277,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void shouldReturnInCorrectCertificate() {
-        Entitlement e = entitlementCurator
-            .findByCertificateSerial(firstCertificate.getSerial().getId());
+        Entitlement e = entitlementCurator.findByCertificateSerial(firstCertificate.getSerial().getId());
         assertNotSame(secondEntitlement, e);
     }
 
@@ -687,13 +311,11 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Product product = TestUtil.createProduct();
         productCurator.create(product);
 
-        Pool pool = createPool(owner, product, 1L,
-            dateSource.currentDate(), createDate(2020, 1, 1));
+        Pool pool = createPool(owner, product, 1L, dateSource.currentDate(), createDate(2020, 1, 1));
         poolCurator.create(pool);
 
         for (int i = 0; i < 10; i++) {
-            EntitlementCertificate cert =
-                createEntitlementCertificate("key", "certificate");
+            EntitlementCertificate cert = createEntitlementCertificate("key", "certificate");
             Entitlement ent = createEntitlement(owner, consumer, pool, cert);
             entitlementCurator.create(ent);
         }
@@ -722,13 +344,11 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Product product = TestUtil.createProduct();
         productCurator.create(product);
 
-        Pool pool = createPool(owner, product, 1L,
-            dateSource.currentDate(), createDate(2020, 1, 1));
+        Pool pool = createPool(owner, product, 1L, dateSource.currentDate(), createDate(2020, 1, 1));
         poolCurator.create(pool);
 
         for (int i = 0; i < 10; i++) {
-            EntitlementCertificate cert =
-                createEntitlementCertificate("key", "certificate");
+            EntitlementCertificate cert = createEntitlementCertificate("key", "certificate");
             Entitlement ent = createEntitlement(owner, consumer, pool, cert);
             entitlementCurator.create(ent);
         }
@@ -736,13 +356,11 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Product product2 = TestUtil.createProduct();
         productCurator.create(product2);
 
-        Pool pool2 = createPool(owner, product2, 1L,
-            dateSource.currentDate(), createDate(2020, 1, 1));
+        Pool pool2 = createPool(owner, product2, 1L, dateSource.currentDate(), createDate(2020, 1, 1));
         poolCurator.create(pool2);
 
         for (int i = 0; i < 10; i++) {
-            EntitlementCertificate cert =
-                createEntitlementCertificate("key", "certificate");
+            EntitlementCertificate cert = createEntitlementCertificate("key", "certificate");
             Entitlement ent2 = createEntitlement(owner, consumer, pool2, cert);
             entitlementCurator.create(ent2);
         }
@@ -764,13 +382,11 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Product product = TestUtil.createProduct();
         productCurator.create(product);
 
-        Pool pool = createPool(owner, product, 1L,
-            dateSource.currentDate(), createDate(2020, 1, 1));
+        Pool pool = createPool(owner, product, 1L, dateSource.currentDate(), createDate(2020, 1, 1));
         poolCurator.create(pool);
 
         for (int i = 0; i < 5; i++) {
-            EntitlementCertificate cert =
-                createEntitlementCertificate("key", "certificate");
+            EntitlementCertificate cert = createEntitlementCertificate("key", "certificate");
             Entitlement ent = createEntitlement(owner, consumer, pool, cert);
             entitlementCurator.create(ent);
         }
@@ -778,13 +394,11 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Product product2 = TestUtil.createProduct();
         productCurator.create(product2);
 
-        Pool pool2 = createPool(owner, product2, 1L,
-            dateSource.currentDate(), createDate(2020, 1, 1));
+        Pool pool2 = createPool(owner, product2, 1L, dateSource.currentDate(), createDate(2020, 1, 1));
         poolCurator.create(pool2);
 
         for (int i = 0; i < 5; i++) {
-            EntitlementCertificate cert =
-                createEntitlementCertificate("key", "certificate");
+            EntitlementCertificate cert = createEntitlementCertificate("key", "certificate");
             Entitlement ent = createEntitlement(owner, consumer, pool2, cert);
             entitlementCurator.create(ent);
         }
@@ -803,12 +417,11 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Product product = TestUtil.createProduct();
         productCurator.create(product);
         // expired pool
-        Pool pool = createPool(owner, product, 1L,
-            createDate(2000, 1, 1), createDate(2000, 2, 2));
+        Pool pool = createPool(owner, product, 1L, createDate(2000, 1, 1), createDate(2000, 2, 2));
         poolCurator.create(pool);
+
         for (int i = 0; i < 2; i++) {
-            EntitlementCertificate cert =
-                createEntitlementCertificate("key", "certificate");
+            EntitlementCertificate cert = createEntitlementCertificate("key", "certificate");
             Entitlement ent = createEntitlement(owner, consumer, pool, cert);
             entitlementCurator.create(ent);
         }
@@ -900,8 +513,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         product.setAttribute(Product.Attributes.STACKING_ID, stackingId);
         productCurator.create(product);
 
-        Pool pool = createPool(owner, product, 1L,
-            dateSource.currentDate(), createDate(2020, 1, 1));
+        Pool pool = createPool(owner, product, 1L, dateSource.currentDate(), createDate(2020, 1, 1));
         poolCurator.create(pool);
         Entitlement created = bind(consumer, pool);
 
@@ -918,6 +530,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
             if (i > 0) {
                 stackingIds.add(stackingId);
             }
+
             Product product = TestUtil.createProduct();
             product.setAttribute(Product.Attributes.STACKING_ID, stackingId);
             productCurator.create(product);
@@ -941,16 +554,14 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         int ents = 5;
         List<Entitlement> createdEntitlements = new LinkedList<Entitlement>();
         for (int i = 0; i < ents; i++) {
-            Pool pool = createPool(owner, product, 1L,
-                dateSource.currentDate(), createDate(2020, 1, 1));
+            Pool pool = createPool(owner, product, 1L, dateSource.currentDate(), createDate(2020, 1, 1));
             poolCurator.create(pool);
             createdEntitlements.add(bind(consumer, pool));
         }
 
         List<Entitlement> results = entitlementCurator.findByStackId(consumer, stackingId).list();
         assertEquals(ents, results.size());
-        assertTrue(results.containsAll(createdEntitlements) &&
-            createdEntitlements.containsAll(results));
+        assertTrue(results.containsAll(createdEntitlements) && createdEntitlements.containsAll(results));
     }
 
     @Test
@@ -966,14 +577,15 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
 
         List<Entitlement> createdEntitlements = new LinkedList<Entitlement>();
         for (int i = 0; i < 5; i++) {
-            Pool pool = createPool(owner, product, 1L,
-                dateSource.currentDate(), createDate(2020, 1, 1));
+            Pool pool = createPool(owner, product, 1L, dateSource.currentDate(), createDate(2020, 1, 1));
+
             if (i < 2) {
                 pool.setSourceStack(new SourceStack(otherConsumer, "otherstackid" + i));
             }
             else if (i < 4) {
                 pool.setSourceEntitlement(createdEntitlements.get(0));
             }
+
             poolCurator.create(pool);
             createdEntitlements.add(bind(consumer, pool));
         }
@@ -990,13 +602,11 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         product.setAttribute(Product.Attributes.STACKING_ID, stackingId);
         productCurator.create(product);
 
-        Pool futurePool = createPool(owner, product, 1L,
-            createDate(2020, 1, 1), createDate(2021, 1, 1));
+        Pool futurePool = createPool(owner, product, 1L, createDate(2020, 1, 1), createDate(2021, 1, 1));
         poolCurator.create(futurePool);
         bind(consumer, futurePool);
 
-        Pool currentPool = createPool(owner, product, 1L,
-            dateSource.currentDate(), createDate(2020, 1, 1));
+        Pool currentPool = createPool(owner, product, 1L, dateSource.currentDate(), createDate(2020, 1, 1));
         poolCurator.create(currentPool);
         bind(consumer, currentPool);
 
@@ -1007,8 +617,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
 
         // The future entitlement should have been omitted, and the eldest active
         // entitlement should have been selected:
-        Entitlement result = entitlementCurator.findUpstreamEntitlementForStack(
-            consumer, stackingId);
+        Entitlement result = entitlementCurator.findUpstreamEntitlementForStack(consumer, stackingId);
         assertNotNull(result);
         assertEquals(currentPool, result.getPool());
     }
@@ -1026,8 +635,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         bind(consumer, futurePool);
 
         // The future entitlement should have been omitted:
-        Entitlement result = entitlementCurator.findUpstreamEntitlementForStack(
-            consumer, stackingId);
+        Entitlement result = entitlementCurator.findUpstreamEntitlementForStack(consumer, stackingId);
         assertNull(result);
     }
 
@@ -1038,8 +646,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         product.setAttribute(Product.Attributes.STACKING_ID, stackingId);
         productCurator.create(product);
 
-        Entitlement result = entitlementCurator.findUpstreamEntitlementForStack(
-            consumer, stackingId);
+        Entitlement result = entitlementCurator.findUpstreamEntitlementForStack(consumer, stackingId);
         assertNull(result);
     }
 
@@ -1094,8 +701,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     }
 
     private Entitlement bind(Consumer consumer, Pool pool) {
-        EntitlementCertificate cert =
-            createEntitlementCertificate("key", "certificate");
+        EntitlementCertificate cert = createEntitlementCertificate("key", "certificate");
         Entitlement ent = createEntitlement(owner, consumer, pool, cert);
         return entitlementCurator.create(ent);
     }
@@ -1131,4 +737,428 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         assertEquals(1, ents.size());
         assertEquals(ent.getId(), ents.get(0).getId());
     }
+
+    protected List<Product> createProducts(Owner owner, int count, String prefix) {
+        List<Product> products = new LinkedList<Product>();
+
+        for (int i = 0; i < count; ++i) {
+            String id = String.format("%s-%d-%d", prefix, (i + 1), TestUtil.randomInt());
+            products.add(this.createProduct(id, id, owner));
+        }
+
+        return products;
+    }
+
+    protected List<Product> createDependentProducts(Owner owner, int count, String prefix,
+        Collection<Product> required) {
+
+        List<Product> products = new LinkedList<Product>();
+
+        for (int i = 0; i < count; ++i) {
+            int rand = TestUtil.randomInt(10000);
+            String id = String.format("%s-%d-%d", prefix, (i + 1), rand);
+            Product product = TestUtil.createProduct(id, id);
+
+            String cid = String.format("%s_content-%d-%d", prefix, (i + 1), rand);
+            Content content = this.createContent(cid, cid, owner);
+
+            for (Product rprod : required) {
+                content.addModifiedProductId(rprod.getId());
+            }
+
+            product.addContent(content, true);
+            products.add(this.createProduct(product, owner));
+        }
+
+        return products;
+    }
+
+    protected Pool createPoolWithProducts(Owner owner, String sku, Collection<Product> provided) {
+        Product skuProd = this.createProduct(sku, sku, owner);
+
+        Pool pool = this.createPool(owner, skuProd, provided, 1000L, TestUtil.createDate(2000, 1, 1),
+            TestUtil.createDate(2100, 1, 1));
+
+        return pool;
+    }
+
+    protected void resetDirtyEntitlements(Entitlement... entitlements) {
+        for (Entitlement entitlement : entitlements) {
+            entitlement.setDirty(false);
+            this.entitlementCurator.merge(entitlement);
+        }
+
+        this.entitlementCurator.flush();
+    }
+
+    @Test
+    public void testMarkDependentEntitlementsDirty() {
+        Owner owner = this.createOwner("test_owner");
+        Consumer consumer = this.createConsumer(owner);
+
+        List<Product> requiredProducts = this.createProducts(owner, 3, "test_req_prod");
+        List<Product> dependentProduct1 = this.createDependentProducts(owner, 1, "test_dep_prod_a",
+            requiredProducts.subList(0, 1));
+        List<Product> dependentProduct2 = this.createDependentProducts(owner, 1, "test_dep_prod_b",
+            requiredProducts.subList(1, 2));
+        List<Product> dependentProduct3 = this.createDependentProducts(owner, 1, "test_dep_prod_c",
+            requiredProducts.subList(2, 3));
+
+        // reqPool1 includes requiredProducts 1 and 2
+        // reqPool2 includes requiredProducts 2 and 3
+        // reqPool3 includes requiredProducts 1, 2 and 3
+        Pool requiredPool1 = this.createPoolWithProducts(owner, "reqPool1", requiredProducts.subList(0, 2));
+        Pool requiredPool2 = this.createPoolWithProducts(owner, "reqPool2", requiredProducts.subList(1, 3));
+        Pool requiredPool3 = this.createPoolWithProducts(owner, "reqPool3", requiredProducts.subList(0, 3));
+        Pool dependentPool1 = this.createPoolWithProducts(owner, "depPool1", dependentProduct1);
+        Pool dependentPool2 = this.createPoolWithProducts(owner, "depPool2", dependentProduct2);
+        Pool dependentPool3 = this.createPoolWithProducts(owner, "depPool3", dependentProduct3);
+
+        // Bind to requiredPool1
+        Entitlement reqPool1Ent = this.bind(consumer, requiredPool1);
+
+        // Consumer has no dependent entitlements (yet), so we should get an output of zero here
+        int count = this.entitlementCurator.markDependentEntitlementsDirty(Arrays.asList(reqPool1Ent));
+        assertEquals(0, count);
+
+        // Bind to dependentPool3 (which requires reqProd3, that is not yet bound)
+        Entitlement depPool3Ent = this.bind(consumer, dependentPool3);
+
+        // We have a dependent entitlement now, but the entitlements are not related, so we should
+        // still have zero entitlements affected
+        count = this.entitlementCurator.markDependentEntitlementsDirty(Arrays.asList(reqPool1Ent));
+        assertEquals(0, count);
+
+        // Bind to depPool2, which requires reqProd2, which we have through reqPool1
+        Entitlement depPool2Ent = this.bind(consumer, dependentPool2);
+
+        // We should be marking our depPool2Ent dirty now...
+        count = this.entitlementCurator.markDependentEntitlementsDirty(Arrays.asList(reqPool1Ent));
+        assertEquals(1, count);
+
+        this.entitlementCurator.refresh(reqPool1Ent, depPool2Ent, depPool3Ent);
+        assertFalse(reqPool1Ent.isDirty());
+        assertFalse(depPool3Ent.isDirty());
+        assertTrue(depPool2Ent.isDirty());
+
+        // Reset entitlements so we don't have any dirty flags already set
+        this.resetDirtyEntitlements(reqPool1Ent, depPool3Ent, depPool2Ent);
+
+        // Bind to requiredPool1
+        Entitlement reqPool2Ent = this.bind(consumer, requiredPool2);
+
+        // We should now hit both depPool2 and depPool3 since we have reqProd 1, 2 and 3 entitled
+        count = this.entitlementCurator
+            .markDependentEntitlementsDirty(Arrays.asList(reqPool1Ent, reqPool2Ent));
+        assertEquals(2, count);
+
+        this.entitlementCurator.refresh(reqPool1Ent, reqPool2Ent, depPool2Ent, depPool3Ent);
+        assertFalse(reqPool1Ent.isDirty());
+        assertFalse(reqPool2Ent.isDirty());
+        assertTrue(depPool2Ent.isDirty());
+        assertTrue(depPool3Ent.isDirty());
+
+        this.resetDirtyEntitlements(reqPool1Ent, reqPool2Ent, depPool2Ent, depPool3Ent);
+
+        // Unbind from reqPool1, which leaves us with reqProd 2 and 3.
+        this.entitlementCurator.delete(reqPool1Ent);
+        this.entitlementCurator.flush();
+
+        // We should still hit both depPool2 and depPool3 since we still have reqProd 2 and 3 through
+        // reqPool2
+        count = this.entitlementCurator
+            .markDependentEntitlementsDirty(Arrays.asList(reqPool1Ent, reqPool2Ent));
+        assertEquals(2, count);
+
+        this.entitlementCurator.refresh(reqPool2Ent, depPool2Ent, depPool3Ent);
+        assertFalse(reqPool2Ent.isDirty());
+        assertTrue(depPool2Ent.isDirty());
+        assertTrue(depPool3Ent.isDirty());
+    }
+
+    @Test
+    public void testMarkDependentEntitlementsDirtyDoesNotUpdateUnrelatedEntitlements() {
+        Owner owner = this.createOwner("test_owner");
+        Consumer consumer = this.createConsumer(owner);
+
+        List<Product> requiredProducts = this.createProducts(owner, 3, "test_req_prod");
+        List<Product> dependentProduct1 = this.createDependentProducts(owner, 1, "test_dep_prod_a",
+            requiredProducts.subList(0, 1));
+        List<Product> dependentProduct2 = this.createDependentProducts(owner, 1, "test_dep_prod_b",
+            requiredProducts.subList(1, 2));
+        List<Product> dependentProduct3 = this.createDependentProducts(owner, 1, "test_dep_prod_c",
+            requiredProducts.subList(2, 3));
+
+        Pool requiredPool1 = this.createPoolWithProducts(owner, "reqPool1", requiredProducts.subList(0, 1));
+        Pool requiredPool2 = this.createPoolWithProducts(owner, "reqPool2", requiredProducts.subList(1, 2));
+        Pool requiredPool3 = this.createPoolWithProducts(owner, "reqPool3", requiredProducts.subList(2, 3));
+        Pool dependentPool1 = this.createPoolWithProducts(owner, "depPool1", dependentProduct1);
+        Pool dependentPool2 = this.createPoolWithProducts(owner, "depPool2", dependentProduct2);
+        Pool dependentPool3 = this.createPoolWithProducts(owner, "depPool3", dependentProduct3);
+
+        Entitlement reqPool1Ent = this.bind(consumer, requiredPool1);
+        Entitlement depPool1Ent = this.bind(consumer, dependentPool1);
+        Entitlement depPool2Ent = this.bind(consumer, dependentPool2);
+        Entitlement depPool3Ent = this.bind(consumer, dependentPool3);
+
+        int count = this.entitlementCurator.markDependentEntitlementsDirty(Arrays.asList(reqPool1Ent));
+        assertEquals(1, count);
+
+        this.entitlementCurator.refresh(reqPool1Ent, depPool1Ent, depPool2Ent, depPool3Ent);
+        assertFalse(reqPool1Ent.isDirty());
+        assertTrue(depPool1Ent.isDirty());
+        assertFalse(depPool2Ent.isDirty());
+        assertFalse(depPool3Ent.isDirty());
+    }
+
+    @Test
+    public void testMarkDependentEntitlementsDirtyDoesNotUpdateOtherConsumerEntitlements() {
+        Owner owner = this.createOwner("test_owner");
+        Consumer consumer1 = this.createConsumer(owner);
+        Consumer consumer2 = this.createConsumer(owner);
+
+        List<Product> requiredProducts = this.createProducts(owner, 3, "test_req_prod");
+        List<Product> dependentProduct1 = this.createDependentProducts(owner, 1, "test_dep_prod_a",
+            requiredProducts.subList(0, 1));
+        List<Product> dependentProduct2 = this.createDependentProducts(owner, 1, "test_dep_prod_b",
+            requiredProducts.subList(1, 2));
+        List<Product> dependentProduct3 = this.createDependentProducts(owner, 1, "test_dep_prod_c",
+            requiredProducts.subList(2, 3));
+
+        Pool requiredPool1 = this.createPoolWithProducts(owner, "reqPool1", requiredProducts.subList(0, 1));
+        Pool requiredPool2 = this.createPoolWithProducts(owner, "reqPool2", requiredProducts.subList(1, 2));
+        Pool requiredPool3 = this.createPoolWithProducts(owner, "reqPool3", requiredProducts.subList(2, 3));
+        Pool dependentPool1 = this.createPoolWithProducts(owner, "depPool1", dependentProduct1);
+        Pool dependentPool2 = this.createPoolWithProducts(owner, "depPool2", dependentProduct2);
+        Pool dependentPool3 = this.createPoolWithProducts(owner, "depPool3", dependentProduct3);
+
+        Entitlement reqPool1Ent = this.bind(consumer1, requiredPool1);
+        Entitlement depPool1EntA = this.bind(consumer1, dependentPool1);
+        Entitlement depPool2EntA = this.bind(consumer1, dependentPool2);
+        Entitlement depPool3EntA = this.bind(consumer1, dependentPool3);
+        Entitlement depPool1EntB = this.bind(consumer2, dependentPool1);
+        Entitlement depPool2EntB = this.bind(consumer2, dependentPool2);
+        Entitlement depPool3EntB = this.bind(consumer2, dependentPool3);
+
+        int count = this.entitlementCurator.markDependentEntitlementsDirty(Arrays.asList(reqPool1Ent));
+        assertEquals(1, count);
+
+        this.entitlementCurator.refresh(reqPool1Ent, depPool1EntA, depPool2EntA, depPool3EntA, depPool1EntB,
+            depPool2EntB, depPool3EntB);
+
+        assertFalse(reqPool1Ent.isDirty());
+        assertTrue(depPool1EntA.isDirty());
+        assertFalse(depPool2EntA.isDirty());
+        assertFalse(depPool3EntA.isDirty());
+        assertFalse(depPool1EntB.isDirty());
+        assertFalse(depPool2EntB.isDirty());
+        assertFalse(depPool3EntB.isDirty());
+    }
+
+    @Test
+    public void testMarkDependentEntitlementsDirtyDoesNotUpdateOtherOwnerEntitlements() {
+        Owner owner1 = this.createOwner("test_owner-1");
+        Owner owner2 = this.createOwner("test_owner-2");
+        Consumer consumer1 = this.createConsumer(owner1);
+        Consumer consumer2 = this.createConsumer(owner2);
+
+        List<Product> reqProducts1 = Arrays.asList(
+            this.createProduct("req_prod_1", "req_prod_1", owner1),
+            this.createProduct("req_prod_2", "req_prod_2", owner1));
+
+        List<Product> reqProducts2 = Arrays.asList(
+            this.createProduct("req_prod_1", "req_prod_1", owner2),
+            this.createProduct("req_prod_2", "req_prod_2", owner2));
+
+        List<Product> dependentProductA = this.createDependentProducts(owner1, 1, "test_dep_prod_a",
+            reqProducts1.subList(0, 1));
+        List<Product> dependentProductB = this.createDependentProducts(owner2, 1, "test_dep_prod_b",
+            reqProducts2.subList(0, 1));
+
+        Pool requiredPool1A = this.createPoolWithProducts(owner1, "reqPool1", reqProducts1.subList(0, 1));
+        Pool requiredPool2A = this.createPoolWithProducts(owner1, "reqPool2", reqProducts1.subList(1, 2));
+        Pool requiredPool1B = this.createPoolWithProducts(owner2, "reqPool1", reqProducts2.subList(0, 1));
+        Pool requiredPool2B = this.createPoolWithProducts(owner2, "reqPool2", reqProducts2.subList(1, 2));
+        Pool dependentPoolA = this.createPoolWithProducts(owner1, "depPool1", dependentProductA);
+        Pool dependentPoolB = this.createPoolWithProducts(owner2, "depPool2", dependentProductB);
+
+        Entitlement reqPool1AEnt = this.bind(consumer1, requiredPool1A);
+        Entitlement reqPool2AEnt = this.bind(consumer1, requiredPool2A);
+        Entitlement depPoolAEnt = this.bind(consumer1, dependentPoolA);
+        Entitlement reqPool1BEnt = this.bind(consumer2, requiredPool1B);
+        Entitlement reqPool2BEnt = this.bind(consumer2, requiredPool2B);
+        Entitlement depPoolBEnt = this.bind(consumer2, dependentPoolB);
+
+        int count = this.entitlementCurator.markDependentEntitlementsDirty(
+            Arrays.asList(reqPool1AEnt, reqPool2AEnt));
+        assertEquals(1, count);
+
+        this.entitlementCurator.refresh(reqPool1AEnt, reqPool2AEnt, depPoolAEnt, reqPool1BEnt, reqPool2BEnt,
+            depPoolBEnt);
+
+        assertFalse(reqPool1AEnt.isDirty());
+        assertFalse(reqPool2AEnt.isDirty());
+        assertTrue(depPoolAEnt.isDirty());
+        assertFalse(reqPool1BEnt.isDirty());
+        assertFalse(reqPool2BEnt.isDirty());
+        assertFalse(depPoolBEnt.isDirty());
+    }
+
+    @Test
+    public void testMarkDependentEntitlementsDirtyUpdatesMultipleConsumers() {
+        Owner owner1 = this.createOwner("test_owner-1");
+        Owner owner2 = this.createOwner("test_owner-2");
+        Consumer consumer1 = this.createConsumer(owner1);
+        Consumer consumer2 = this.createConsumer(owner2);
+
+        List<Product> reqProds1 = Arrays.asList(
+            this.createProduct("req_prod_1", "req_prod_1", owner1),
+            this.createProduct("req_prod_2", "req_prod_2", owner1));
+
+        List<Product> reqProds2 = Arrays.asList(
+            this.createProduct("req_prod_1", "req_prod_1", owner2),
+            this.createProduct("req_prod_2", "req_prod_2", owner2));
+
+        List<Product> dependentProductA = this.createDependentProducts(owner1, 1, "test_dep_prod_a",
+            reqProds1.subList(0, 1));
+        List<Product> dependentProductB = this.createDependentProducts(owner2, 1, "test_dep_prod_b",
+            reqProds2.subList(0, 1));
+
+        Pool requiredPool1A = this.createPoolWithProducts(owner1, "reqPool1", reqProds1.subList(0, 1));
+        Pool requiredPool2A = this.createPoolWithProducts(owner1, "reqPool2", reqProds1.subList(1, 2));
+        Pool requiredPool1B = this.createPoolWithProducts(owner2, "reqPool1", reqProds2.subList(0, 1));
+        Pool requiredPool2B = this.createPoolWithProducts(owner2, "reqPool2", reqProds2.subList(1, 2));
+        Pool dependentPoolA = this.createPoolWithProducts(owner1, "depPool1", dependentProductA);
+        Pool dependentPoolB = this.createPoolWithProducts(owner2, "depPool2", dependentProductB);
+
+        Entitlement reqPool1AEnt = this.bind(consumer1, requiredPool1A);
+        Entitlement reqPool2AEnt = this.bind(consumer1, requiredPool2A);
+        Entitlement depPoolAEnt = this.bind(consumer1, dependentPoolA);
+        Entitlement reqPool1BEnt = this.bind(consumer2, requiredPool1B);
+        Entitlement reqPool2BEnt = this.bind(consumer2, requiredPool2B);
+        Entitlement depPoolBEnt = this.bind(consumer2, dependentPoolB);
+
+        int count = this.entitlementCurator.markDependentEntitlementsDirty(
+            Arrays.asList(reqPool1AEnt, reqPool2AEnt, reqPool1BEnt, reqPool2BEnt));
+        assertEquals(2, count);
+
+        this.entitlementCurator.refresh(reqPool1AEnt, reqPool2AEnt, depPoolAEnt, reqPool1BEnt, reqPool2BEnt,
+            depPoolBEnt);
+
+        assertFalse(reqPool1AEnt.isDirty());
+        assertFalse(reqPool2AEnt.isDirty());
+        assertTrue(depPoolAEnt.isDirty());
+        assertFalse(reqPool1BEnt.isDirty());
+        assertFalse(reqPool2BEnt.isDirty());
+        assertTrue(depPoolBEnt.isDirty());
+    }
+
+    @Test
+    public void testMarkDependentEntitlementsDirtyDoesNotRequireAllRequiredProducts() {
+        // The "modified products" or "required products" collection on a content is a disjunction,
+        // not a conjunction. The presence of any of those products should link two entitlements.
+
+        Owner owner = this.createOwner("test_owner");
+        Consumer consumer = this.createConsumer(owner);
+
+        List<Product> requiredProducts = this.createProducts(owner, 3, "test_req_prod");
+        List<Product> dependentProduct = this.createDependentProducts(owner, 1, "test_dep_prod_a",
+            requiredProducts);
+
+        Pool requiredPool1 = this.createPoolWithProducts(owner, "reqPool1", requiredProducts.subList(0, 1));
+        Pool requiredPool2 = this.createPoolWithProducts(owner, "reqPool2", requiredProducts.subList(1, 2));
+        Pool requiredPool3 = this.createPoolWithProducts(owner, "reqPool3", requiredProducts.subList(2, 3));
+        Pool dependentPool = this.createPoolWithProducts(owner, "depPool1", dependentProduct);
+
+        Entitlement reqPool1Ent = this.bind(consumer, requiredPool2);
+        Entitlement depPool1Ent = this.bind(consumer, dependentPool);
+
+        int count = this.entitlementCurator.markDependentEntitlementsDirty(Arrays.asList(reqPool1Ent));
+        assertEquals(1, count);
+
+        this.entitlementCurator.refresh(reqPool1Ent, depPool1Ent);
+        assertFalse(reqPool1Ent.isDirty());
+        assertTrue(depPool1Ent.isDirty());
+    }
+
+    @Test
+    public void testMarkDependentEntitlementsDirtyDoesNotExamineSkuProducts() {
+        Owner owner = this.createOwner("test_owner");
+        Consumer consumer = this.createConsumer(owner);
+
+        List<Product> requiredProducts = this.createProducts(owner, 3, "test_req_prod");
+        List<Product> providedProducts = this.createProducts(owner, 3, "test_prov_prod");
+        List<Product> dependentProduct = this.createDependentProducts(owner, 1, "test_dep_prod_a",
+            requiredProducts);
+
+        Pool requiredPool = this.createPool(owner, requiredProducts.get(0), providedProducts, 1000L,
+            TestUtil.createDate(2000, 1, 1), TestUtil.createDate(2100, 1, 1));
+
+        Pool dependentPool = this.createPoolWithProducts(owner, "depPool1", dependentProduct);
+
+        Entitlement reqPool1Ent = this.bind(consumer, requiredPool);
+        Entitlement depPool1Ent = this.bind(consumer, dependentPool);
+
+        int count = this.entitlementCurator.markDependentEntitlementsDirty(Arrays.asList(reqPool1Ent));
+        assertEquals(0, count);
+
+        this.entitlementCurator.refresh(reqPool1Ent, depPool1Ent);
+        assertFalse(reqPool1Ent.isDirty());
+        assertFalse(depPool1Ent.isDirty());
+    }
+
+    @Test
+    public void testMarkDependentEntitlementsDirtyDoesNotExamineDerivedProducts() {
+        Owner owner = this.createOwner("test_owner");
+        Consumer consumer = this.createConsumer(owner);
+
+        List<Product> requiredProducts = this.createProducts(owner, 3, "test_req_prod");
+        List<Product> providedProducts = this.createProducts(owner, 3, "test_prov_prod");
+        List<Product> dependentProduct = this.createDependentProducts(owner, 1, "test_dep_prod_a",
+            requiredProducts);
+
+        Pool requiredPool = this.createPoolWithProducts(owner, "reqPool1", providedProducts);
+        requiredPool.setDerivedProduct(requiredProducts.get(0));
+        this.poolCurator.merge(requiredPool);
+
+        Pool dependentPool = this.createPoolWithProducts(owner, "depPool1", dependentProduct);
+
+        Entitlement reqPool1Ent = this.bind(consumer, requiredPool);
+        Entitlement depPool1Ent = this.bind(consumer, dependentPool);
+
+        int count = this.entitlementCurator.markDependentEntitlementsDirty(Arrays.asList(reqPool1Ent));
+        assertEquals(0, count);
+
+        this.entitlementCurator.refresh(reqPool1Ent, depPool1Ent);
+        assertFalse(reqPool1Ent.isDirty());
+        assertFalse(depPool1Ent.isDirty());
+    }
+
+    @Test
+    public void testMarkDependentEntitlementsDirtyDoesNotExamineDerivedProvidedProducts() {
+        Owner owner = this.createOwner("test_owner");
+        Consumer consumer = this.createConsumer(owner);
+
+        List<Product> requiredProducts = this.createProducts(owner, 3, "test_req_prod");
+        List<Product> providedProducts = this.createProducts(owner, 3, "test_prov_prod");
+        List<Product> dependentProduct = this.createDependentProducts(owner, 1, "test_dep_prod_a",
+            requiredProducts);
+
+        Pool requiredPool = this.createPoolWithProducts(owner, "reqPool1", providedProducts);
+        requiredPool.setDerivedProvidedProducts(requiredProducts);
+        this.poolCurator.merge(requiredPool);
+
+        Pool dependentPool = this.createPoolWithProducts(owner, "depPool1", dependentProduct);
+
+        Entitlement reqPool1Ent = this.bind(consumer, requiredPool);
+        Entitlement depPool1Ent = this.bind(consumer, dependentPool);
+
+        int count = this.entitlementCurator.markDependentEntitlementsDirty(Arrays.asList(reqPool1Ent));
+        assertEquals(0, count);
+
+        this.entitlementCurator.refresh(reqPool1Ent, depPool1Ent);
+        assertFalse(reqPool1Ent.isDirty());
+        assertFalse(depPool1Ent.isDirty());
+    }
+
 }

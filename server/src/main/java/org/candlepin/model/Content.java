@@ -390,8 +390,8 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
     }
 
     /**
-     * Adds the specified product ID as a product ID to be modified by this content. If the product
-     * ID is already modified in by this content, it will not be added again.
+     * Adds the specified product ID as a required product ID for this content. If the product ID
+     * is already required by this content, it will not be added again.
      *
      * @param productId
      *  The product ID to add as a modified product ID to this content
@@ -411,12 +411,11 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
     }
 
     /**
-     * Removes the specified product ID from the collection of product IDs to be modified by the
-     * content represented by this content. If the product ID is not modified by this content, this
-     * method does nothing.
+     * Removes the specified product ID from the collection of required product IDs. If the product ID
+     * is not required by this content, this method does nothing.
      *
      * @param productId
-     *  The product ID to remove from the modified product IDs on this content
+     *  The product ID to remove from the required product IDs of this content
      *
      * @throws IllegalArgumentException
      *  if productId is null
@@ -433,21 +432,22 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
     }
 
     /**
-     * Sets the modified product IDs for this content. Any previously existing modified product IDs
-     * will be cleared before assigning the given product IDs.
+     * Sets the required product IDs for this content to be present to an entitlement. Any
+     * previously existing required product IDs will be cleared before assigning the given product
+     * IDs.
      *
-     * @param modifiedProductIds
-     *  A collection of product IDs to be modified by the content content, or null to clear the
-     *  existing modified product IDs
+     * @param requiredProductIds
+     *  A collection of product IDs to be required by this content, or null to clear the existing
+     *  required product IDs
      *
      * @return
-     *  a reference to this DTO
+     *  a reference to this entity
      */
-    public Content setModifiedProductIds(Collection<String> modifiedProductIds) {
+    public Content setModifiedProductIds(Collection<String> requiredProductIds) {
         this.modifiedProductIds.clear();
 
-        if (modifiedProductIds != null) {
-            this.modifiedProductIds.addAll(modifiedProductIds);
+        if (requiredProductIds != null) {
+            this.modifiedProductIds.addAll(requiredProductIds);
         }
 
         return this;

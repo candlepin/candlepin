@@ -78,7 +78,7 @@ public class HandleCertificatesOp implements BindOperation {
                 context.getEntitlementMap(),
                 false);
 
-            modifyingEnts = this.eCurator.batchListModifying(context.getConsumer(), pools);
+            modifyingEnts = this.eCurator.getDependentEntitlementIds(context.getConsumer(), pools);
         }
         return true;
     }
