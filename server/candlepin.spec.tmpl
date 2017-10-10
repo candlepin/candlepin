@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.1.5
+Version: 2.1.6
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,14 @@ fi
 
 #raw
 %changelog
+* Tue Oct 10 2017 Kevin Howell <khowell@redhat.com> 2.1.6-1
+- 1499373: Updated how conditional content/modifier entitlements are marked
+  dirty (crog@redhat.com)
+- 1498215: Use the environment name in the certificate (wpoteat@redhat.com)
+- 1498905: Mark jobs canceled when shutting down (awood@redhat.com)
+- 1497248: Execute HypervisorUpdateJobs in the order they were received
+  (csnyder@redhat.com)
+
 * Mon Oct 02 2017 Kevin Howell <khowell@redhat.com> 2.1.5-1
 - Updated qpid rspec tests (crog@redhat.com)
 - Pool deleted events no longer contain old pool entities (crog@redhat.com)
