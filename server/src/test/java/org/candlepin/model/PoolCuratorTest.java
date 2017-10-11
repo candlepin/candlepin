@@ -1297,7 +1297,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         Pool pool = createPool(owner2, "id123");
 
-        List<Pool> result = poolCurator.getPoolsBySubscriptionId(pool.getSubscriptionId());
+        List<Pool> result = poolCurator.getPoolsBySubscriptionId(pool.getSubscriptionId()).list();
         assertEquals(1, result.size());
         assertEquals(pool, result.get(0));
     }
@@ -1309,7 +1309,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         createPool(owner2, "id123");
 
-        List<Pool> result = poolCurator.getPoolsBySubscriptionId(null);
+        List<Pool> result = poolCurator.getPoolsBySubscriptionId(null).list();
         assertTrue(result.isEmpty());
     }
 

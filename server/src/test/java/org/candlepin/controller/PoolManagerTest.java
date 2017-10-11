@@ -99,6 +99,7 @@ import org.xnap.commons.i18n.I18nFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -587,6 +588,10 @@ public class PoolManagerTest {
         when(cqmock.iterator()).thenReturn(pools.iterator());
         when(mockPoolCurator.listByOwnerAndType(eq(owner), any(PoolType.class))).thenReturn(cqmock);
 
+        cqmock = mock(CandlepinQuery.class);
+        when(cqmock.list()).thenReturn(Collections.<Pool>emptyList());
+        when(mockPoolCurator.getPoolsBySubscriptionIds(anyList())).thenReturn(cqmock);
+
         this.mockProductImport(owner, product);
         this.mockContentImport(owner, new Content[] {});
 
@@ -625,7 +630,12 @@ public class PoolManagerTest {
         when(cqmock.iterator()).thenReturn(pools.iterator());
         when(mockPoolCurator.listByOwnerAndType(eq(owner), any(PoolType.class))).thenReturn(cqmock);
 
+        cqmock = mock(CandlepinQuery.class);
+        when(cqmock.list()).thenReturn(Collections.<Pool>emptyList());
+        when(mockPoolCurator.getPoolsBySubscriptionIds(anyList())).thenReturn(cqmock);
+
         this.manager.getRefresher(mockSubAdapter).add(owner).run();
+
         List<Pool> delPools = Arrays.asList(p);
         verify(this.manager).deletePools(eq(delPools));
     }
@@ -788,6 +798,14 @@ public class PoolManagerTest {
         when(cqmock.list()).thenReturn(pools);
         when(cqmock.iterator()).thenReturn(pools.iterator());
         when(mockPoolCurator.listByOwnerAndType(eq(owner), any(PoolType.class))).thenReturn(cqmock);
+
+        cqmock = mock(CandlepinQuery.class);
+        when(cqmock.list()).thenReturn(Collections.<Pool>emptyList());
+        when(mockPoolCurator.getPoolsBySubscriptionIds(anyList())).thenReturn(cqmock);
+
+        cqmock = mock(CandlepinQuery.class);
+        when(cqmock.list()).thenReturn(Collections.<Pool>emptyList());
+        when(mockPoolCurator.getPoolsBySubscriptionId(anyString())).thenReturn(cqmock);
 
         this.manager.getRefresher(mockSubAdapter).add(owner).run();
 
@@ -1112,6 +1130,10 @@ public class PoolManagerTest {
         when(cqmockPool.iterator()).thenReturn(pools.iterator());
         when(mockPoolCurator.listByOwnerAndType(eq(owner), any(PoolType.class))).thenReturn(cqmockPool);
 
+        CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
+        when(cqmock.list()).thenReturn(Collections.<Pool>emptyList());
+        when(mockPoolCurator.getPoolsBySubscriptionIds(anyList())).thenReturn(cqmock);
+
         this.manager.getRefresher(mockSubAdapter).add(owner).run();
 
         verify(mockPoolCurator).batchDelete(eq(pools), anyCollectionOf(String.class));
@@ -1335,6 +1357,7 @@ public class PoolManagerTest {
     private void mockPoolsList(List<Pool> pools) {
         List<Pool> floating = new LinkedList<Pool>();
         subToPools = new HashMap<String, List<Pool>>();
+
         for (Pool pool : pools) {
             String subid = pool.getSubscriptionId();
             if (subid != null) {
@@ -1347,9 +1370,13 @@ public class PoolManagerTest {
                 floating.add(pool);
             }
         }
+
         for (String subid : subToPools.keySet()) {
-            when(mockPoolCurator.getPoolsBySubscriptionId(eq(subid))).thenReturn(subToPools.get(subid));
+            CandlepinQuery cqmock = mock(CandlepinQuery.class);
+            when(cqmock.list()).thenReturn(subToPools.get(subid));
+            when(mockPoolCurator.getPoolsBySubscriptionId(eq(subid))).thenReturn(cqmock);
         }
+
         when(mockPoolCurator.getOwnersFloatingPools(any(Owner.class))).thenReturn(floating);
         when(mockPoolCurator.getPoolsFromBadSubs(any(Owner.class), any(Collection.class)))
             .thenAnswer(new Answer<List<Pool>>() {

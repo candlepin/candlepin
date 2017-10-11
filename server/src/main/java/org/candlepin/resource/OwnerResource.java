@@ -1063,16 +1063,17 @@ public class OwnerResource {
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
     public void updateSubscription(
         @ApiParam(name = "subscription", required = true) Subscription subscription) {
+
         Pool existingPool = this.poolManager.getMasterPoolBySubscriptionId(subscription.getId());
+
         if (existingPool == null) {
-            throw new NotFoundException(i18n.tr(
-                "Unable to find a subscription with the ID \"{0}\".", subscription.getId()
-            ));
+            throw new NotFoundException(
+                i18n.tr("Unable to find a subscription with the ID ''{0}''.", subscription.getId()));
         }
+
         Pool updatedPool = this.poolManager.convertToMasterPool(subscription);
         updatedPool.setId(existingPool.getId());
         updatePool(subscription.getOwner().getKey(), updatedPool);
-
     }
 
     /**
@@ -1177,7 +1178,8 @@ public class OwnerResource {
         notes = "Updates a pool for an Owner. assumes this is a normal pool, and " +
         "errors out otherwise cause we cannot create master pools from bonus pools " +
         "TODO: while this method replaces the now deprecated updateSubsciption, it " +
-        "still uses it underneath. We need to re-implement the wheel like we did in " + "createPool ",
+        "still uses it underneath. We need to re-implement the wheel like we did in " +
+        "createPool ",
         value = "Update Pool")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
     public void updatePool(@PathParam("owner_key") @Verify(Owner.class) String ownerKey,
@@ -1185,13 +1187,11 @@ public class OwnerResource {
 
         Pool currentPool = this.poolManager.find(newPool.getId());
         if (currentPool == null) {
-            throw new NotFoundException(i18n.tr(
-                "Unable to find a pool with the ID \"{0}\".", newPool.getId()
-            ));
+            throw new NotFoundException(
+                i18n.tr("Unable to find a pool with the ID \"{0}\".", newPool.getId()));
         }
 
-        if (currentPool.getType() != PoolType.NORMAL ||
-            newPool.getType() != PoolType.NORMAL) {
+        if (currentPool.getType() != PoolType.NORMAL || newPool.getType() != PoolType.NORMAL) {
             throw new BadRequestException(i18n.tr("Cannot update bonus pools, as they are auto generated"));
         }
 
