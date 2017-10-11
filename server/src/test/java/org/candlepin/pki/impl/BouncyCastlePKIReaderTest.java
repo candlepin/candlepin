@@ -33,7 +33,6 @@ public class BouncyCastlePKIReaderTest {
     public void readkey() throws CertificateException {
         Configuration config = new MapConfiguration(
             new HashMap<String, String>() {
-
                 {
                     put(ConfigProperties.CA_CERT,
                         "target/test/resources/certs/test.crt");

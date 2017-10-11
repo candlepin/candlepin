@@ -14,28 +14,35 @@
  */
 package org.candlepin.util;
 
-import static org.candlepin.test.MatchesPattern.matchesPattern;
-import static org.hamcrest.Matchers.*;
+import static org.candlepin.pki.impl.BouncyCastleProviderLoader.*;
+import static org.candlepin.test.MatchesPattern.*;
 import static org.junit.Assert.*;
 
+import org.candlepin.pki.impl.BouncyCastleProviderLoader;
+
 import org.apache.commons.io.FileUtils;
+import org.bouncycastle.asn1.ASN1Integer;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
-import org.bouncycastle.asn1.DERInteger;
+import org.bouncycastle.asn1.ASN1OctetString;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERTaggedObject;
 import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x509.AuthorityKeyIdentifier;
 import org.bouncycastle.asn1.x509.CRLNumber;
 import org.bouncycastle.asn1.x509.CRLReason;
-import org.bouncycastle.asn1.x509.X509Extension;
+import org.bouncycastle.asn1.x509.Extension;
+import org.bouncycastle.asn1.x509.TBSCertList.CRLEntry;
 import org.bouncycastle.cert.X509CRLHolder;
 import org.bouncycastle.cert.X509v2CRLBuilder;
 import org.bouncycastle.cert.jcajce.JcaX509CRLConverter;
+import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.jce.provider.X509CRLEntryObject;
-import org.bouncycastle.openssl.PEMReader;
+import org.bouncycastle.openssl.PEMKeyPair;
+import org.bouncycastle.openssl.PEMParser;
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
-import org.bouncycastle.x509.extension.AuthorityKeyIdentifierStructure;
+import org.hamcrest.number.OrderingComparison;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -68,7 +75,7 @@ import java.util.Set;
 
 
 public class X509CRLStreamWriterTest {
-    private static final BouncyCastleProvider BC = new BouncyCastleProvider();
+    private static final BouncyCastleProvider BC_PROVIDER = new BouncyCastleProvider();
 
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
@@ -83,6 +90,10 @@ public class X509CRLStreamWriterTest {
 
     private KeyPairGenerator generator;
 
+    static {
+        BouncyCastleProviderLoader.addProvider();
+    }
+
     @Before
     public void setUp() throws Exception {
         issuer = new X500Name("CN=Test Issuer");
@@ -92,28 +103,29 @@ public class X509CRLStreamWriterTest {
         keyPair = generator.generateKeyPair();
 
         signer = new JcaContentSignerBuilder("SHA256WithRSAEncryption")
-            .setProvider(BC)
+            .setProvider(BC_PROVIDER)
             .build(keyPair.getPrivate());
 
         outfile = new File(folder.getRoot(), "new.crl");
-        Security.addProvider(BC);
+        Security.addProvider(BC_PROVIDER);
     }
 
     private X509v2CRLBuilder createCRLBuilder() throws Exception {
         X509v2CRLBuilder crlBuilder = new X509v2CRLBuilder(issuer, new Date());
-        crlBuilder.addExtension(X509Extension.authorityKeyIdentifier, false,
-            new AuthorityKeyIdentifierStructure(keyPair.getPublic()));
+        AuthorityKeyIdentifier identifier = new JcaX509ExtensionUtils().createAuthorityKeyIdentifier
+            (keyPair.getPublic());
+        crlBuilder.addExtension(Extension.authorityKeyIdentifier, false, identifier);
+
         /* With a CRL number of 127, incrementing it should cause the number of bytes in the length
          * portion of the TLV to increase by one.*/
-        crlBuilder.addExtension(X509Extension.cRLNumber, false, new CRLNumber(new BigInteger("127")));
+        crlBuilder.addExtension(Extension.cRLNumber, false, new CRLNumber(new BigInteger("127")));
         crlBuilder.addCRLEntry(new BigInteger("100"), new Date(), CRLReason.unspecified);
         return crlBuilder;
     }
 
     private X509CRLHolder createCRL() throws Exception {
         X509v2CRLBuilder crlBuilder = createCRLBuilder();
-        X509CRLHolder holder = crlBuilder.build(signer);
-        return holder;
+        return crlBuilder.build(signer);
     }
 
     private File writeCRL(X509CRLHolder crl) throws Exception {
@@ -133,7 +145,7 @@ public class X509CRLStreamWriterTest {
         InputStream changedStream = new BufferedInputStream(new FileInputStream(outfile));
         CertificateFactory cf = CertificateFactory.getInstance("X.509");
         X509CRL changedCrl = (X509CRL) cf.generateCRL(changedStream);
-        changedCrl.verify(signatureKey, BC.PROVIDER_NAME);
+        changedCrl.verify(signatureKey, BouncyCastleProvider.PROVIDER_NAME);
 
         return changedCrl;
     }
@@ -169,10 +181,10 @@ public class X509CRLStreamWriterTest {
         InputStream keyStream = classLoader.getResourceAsStream("real.key");
 
         InputStreamReader keyReader = new InputStreamReader(keyStream);
-        PEMReader reader = null;
+        PEMParser reader = null;
 
         try {
-            reader = new PEMReader(keyReader);
+            reader = new PEMParser(keyReader);
 
             Object pemObj = reader.readObject();
             if (pemObj == null) {
@@ -180,16 +192,18 @@ public class X509CRLStreamWriterTest {
                 throw new RuntimeException("Reading CA private key failed");
             }
 
-            if (pemObj instanceof KeyPair) {
-                keyPair = (KeyPair) pemObj;
+            if (pemObj instanceof PEMKeyPair) {
+                keyPair = new JcaPEMKeyConverter().setProvider(BC_PROVIDER).getKeyPair((PEMKeyPair) pemObj);
             }
             else {
                 crl.close();
-                throw new RuntimeException("Unexepected CA key object: " + pemObj.getClass().getName());
+                throw new RuntimeException("Unexpected CA key object: " + pemObj.getClass().getName());
             }
         }
         finally {
-            reader.close();
+            if (reader != null) {
+                reader.close();
+            }
         }
 
         File outfile = new File(folder.getRoot(), "new.crl");
@@ -230,11 +244,13 @@ public class X509CRLStreamWriterTest {
     @Test
     public void testAddEntryToBigCRL() throws Exception {
         X509v2CRLBuilder crlBuilder = new X509v2CRLBuilder(issuer, new Date());
-        crlBuilder.addExtension(X509Extension.authorityKeyIdentifier, false,
-            new AuthorityKeyIdentifierStructure(keyPair.getPublic()));
+        AuthorityKeyIdentifier identifier = new JcaX509ExtensionUtils().createAuthorityKeyIdentifier
+            (keyPair.getPublic());
+        crlBuilder.addExtension(Extension.authorityKeyIdentifier, false, identifier);
+
         /* With a CRL number of 127, incrementing it should cause the number of bytes in the length
          * portion of the TLV to increase by one.*/
-        crlBuilder.addExtension(X509Extension.cRLNumber, false, new CRLNumber(new BigInteger("127")));
+        crlBuilder.addExtension(Extension.cRLNumber, false, new CRLNumber(new BigInteger("127")));
 
         BigInteger serial = new BigInteger("741696FE9E30AD27", 16);
         Set<BigInteger> expected = new HashSet<BigInteger>();
@@ -377,11 +393,13 @@ public class X509CRLStreamWriterTest {
         Date oneHourHence = new Date(new Date().getTime() + 60L * 60L * 1000L);
 
         X509v2CRLBuilder crlBuilder = new X509v2CRLBuilder(issuer, oneHourAgo);
-        crlBuilder.addExtension(X509Extension.authorityKeyIdentifier, false,
-            new AuthorityKeyIdentifierStructure(keyPair.getPublic()));
+        AuthorityKeyIdentifier identifier = new JcaX509ExtensionUtils().createAuthorityKeyIdentifier
+            (keyPair.getPublic());
+        crlBuilder.addExtension(Extension.authorityKeyIdentifier, false, identifier);
+
         /* With a CRL number of 127, incrementing it should cause the number of bytes in the length
          * portion of the TLV to increase by one.*/
-        crlBuilder.addExtension(X509Extension.cRLNumber, false, new CRLNumber(new BigInteger("127")));
+        crlBuilder.addExtension(Extension.cRLNumber, false, new CRLNumber(new BigInteger("127")));
         crlBuilder.setNextUpdate(oneHourHence);
         X509CRLHolder holder = crlBuilder.build(signer);
 
@@ -418,34 +436,30 @@ public class X509CRLStreamWriterTest {
             discoveredSerials.add(entry.getSerialNumber());
         }
 
-        X509CRL originalCrl = new JcaX509CRLConverter().setProvider(BC).getCRL(holder);
+        X509CRL originalCrl = new JcaX509CRLConverter().setProvider(BC_PROVIDER).getCRL(holder);
 
         assertNotNull(changedCrl.getNextUpdate());
 
         long changedCrlUpdateDelta =
             changedCrl.getNextUpdate().getTime() - changedCrl.getThisUpdate().getTime();
 
-        // We're allowing a tolerance of a few milliseconds to deal with minor timing issues
-        long deltaTolerance = 3;
-        long deltaDiff = changedCrlUpdateDelta - (oneHourHence.getTime() - oneHourAgo.getTime());
-
-        assertTrue(Math.abs(deltaDiff) <= deltaTolerance);
-        assertThat(changedCrl.getThisUpdate(), greaterThan(originalCrl.getThisUpdate()));
+        assertEquals(changedCrlUpdateDelta, oneHourHence.getTime() - oneHourAgo.getTime());
+        assertThat(changedCrl.getThisUpdate(), OrderingComparison.greaterThan(originalCrl.getThisUpdate()));
 
         assertEquals(newSerials, discoveredSerials);
         assertEquals(originalCrl.getIssuerX500Principal(), changedCrl.getIssuerX500Principal());
 
-        ASN1ObjectIdentifier crlNumberOID = X509Extension.cRLNumber;
+        ASN1ObjectIdentifier crlNumberOID = Extension.cRLNumber;
         byte[] oldCrlNumberBytes = originalCrl.getExtensionValue(crlNumberOID.getId());
         byte[] newCrlNumberBytes = changedCrl.getExtensionValue(crlNumberOID.getId());
 
         DEROctetString oldOctet = (DEROctetString) DERTaggedObject.fromByteArray(oldCrlNumberBytes);
         DEROctetString newOctet = (DEROctetString) DERTaggedObject.fromByteArray(newCrlNumberBytes);
-        DERInteger oldNumber = (DERInteger) DERTaggedObject.fromByteArray(oldOctet.getOctets());
-        DERInteger newNumber = (DERInteger) DERTaggedObject.fromByteArray(newOctet.getOctets());
+        ASN1Integer oldNumber = (ASN1Integer) DERTaggedObject.fromByteArray(oldOctet.getOctets());
+        ASN1Integer newNumber = (ASN1Integer) DERTaggedObject.fromByteArray(newOctet.getOctets());
         assertEquals(oldNumber.getValue().add(BigInteger.ONE), newNumber.getValue());
 
-        ASN1ObjectIdentifier authorityKeyOID = X509Extension.authorityKeyIdentifier;
+        ASN1ObjectIdentifier authorityKeyOID = Extension.authorityKeyIdentifier;
         byte[] oldAuthorityKeyId = originalCrl.getExtensionValue(authorityKeyOID.getId());
         byte[] newAuthorityKeyId = changedCrl.getExtensionValue(authorityKeyOID.getId());
         assertArrayEquals(oldAuthorityKeyId, newAuthorityKeyId);
@@ -503,7 +517,7 @@ public class X509CRLStreamWriterTest {
             stream.write(o);
             o.close();
 
-            X509CRL originalCrl = new JcaX509CRLConverter().setProvider(BC).getCRL(holder);
+            X509CRL originalCrl = new JcaX509CRLConverter().setProvider(BC_PROVIDER).getCRL(holder);
             X509CRL changedCrl = readCRL(differentKeyPair.getPublic());
 
             Set<BigInteger> discoveredSerials = new HashSet<BigInteger>();
@@ -517,17 +531,23 @@ public class X509CRLStreamWriterTest {
             assertEquals(expected, discoveredSerials);
 
             // Since the key changed, the authorityKeyIdentifier must change
-            byte[] oldAkiBytes = originalCrl.getExtensionValue(X509Extension.authorityKeyIdentifier.getId());
-            byte[] newAkiBytes = changedCrl.getExtensionValue(X509Extension.authorityKeyIdentifier.getId());
+            byte[] oldAkiBytes = originalCrl.getExtensionValue(Extension.authorityKeyIdentifier.getId());
+            byte[] newAkiBytes = changedCrl.getExtensionValue(Extension.authorityKeyIdentifier.getId());
+            oldAkiBytes = ASN1OctetString.getInstance(oldAkiBytes).getOctets();
+            newAkiBytes = ASN1OctetString.getInstance(newAkiBytes).getOctets();
 
-            AuthorityKeyIdentifierStructure oldAki = new AuthorityKeyIdentifierStructure(oldAkiBytes);
-            AuthorityKeyIdentifierStructure newAki = new AuthorityKeyIdentifierStructure(newAkiBytes);
+            AuthorityKeyIdentifier oldAki = AuthorityKeyIdentifier.getInstance(oldAkiBytes);
+            AuthorityKeyIdentifier newAki = AuthorityKeyIdentifier.getInstance(newAkiBytes);
 
-            assertArrayEquals(oldAki.getKeyIdentifier(),
-                new AuthorityKeyIdentifierStructure(keyPair.getPublic()).getKeyIdentifier());
+            AuthorityKeyIdentifier identifier = new JcaX509ExtensionUtils()
+                .createAuthorityKeyIdentifier(keyPair.getPublic());
 
-            assertArrayEquals(newAki.getKeyIdentifier(),
-                new AuthorityKeyIdentifierStructure(differentKeyPair.getPublic()).getKeyIdentifier());
+            assertEquals(oldAki, identifier);
+
+            AuthorityKeyIdentifier differentIdentifier = new JcaX509ExtensionUtils()
+                .createAuthorityKeyIdentifier(differentKeyPair.getPublic());
+
+            assertEquals(newAki, differentIdentifier);
         }
     }
 
@@ -544,9 +564,9 @@ public class X509CRLStreamWriterTest {
 
         X509CRL changedCrl = readCRL();
 
-        byte[] val = changedCrl.getExtensionValue(X509Extension.cRLNumber.getId());
+        byte[] val = changedCrl.getExtensionValue(Extension.cRLNumber.getId());
         DEROctetString s = (DEROctetString) DERTaggedObject.fromByteArray(val);
-        DERInteger i = (DERInteger) DERTaggedObject.fromByteArray(s.getOctets());
+        ASN1Integer i = (ASN1Integer) DERTaggedObject.fromByteArray(s.getOctets());
 
         assertTrue("CRL Number not incremented", i.getValue().compareTo(BigInteger.ONE) > 0);
     }
@@ -561,8 +581,8 @@ public class X509CRLStreamWriterTest {
 
         CRLEntryValidator validator = new CRLEntryValidator() {
             @Override
-            public boolean shouldDelete(X509CRLEntryObject entry) {
-                return entry.getSerialNumber().equals(new BigInteger("101"));
+            public boolean shouldDelete(CRLEntry entry) {
+                return entry.getUserCertificate().getValue().equals(new BigInteger("101"));
             }
         };
 
@@ -604,7 +624,7 @@ public class X509CRLStreamWriterTest {
         o.close();
 
         X509CRL changedCrl = readCRL();
-        X509CRL originalCrl = new JcaX509CRLConverter().setProvider(BC).getCRL(holder);
+        X509CRL originalCrl = new JcaX509CRLConverter().setProvider(BC_PROVIDER).getCRL(holder);
 
         assertTrue("Error: CRL thisUpdate field unmodified", originalCrl.getThisUpdate()
             .before(changedCrl.getThisUpdate()));
@@ -632,7 +652,7 @@ public class X509CRLStreamWriterTest {
         o.close();
 
         X509CRL changedCrl = readCRL();
-        X509CRL originalCrl = new JcaX509CRLConverter().setProvider(BC).getCRL(holder);
+        X509CRL originalCrl = new JcaX509CRLConverter().setProvider(BC_PROVIDER).getCRL(holder);
 
         assertTrue("Error: CRL nextUpdate field unmodified",
             originalCrl.getNextUpdate().before(changedCrl.getNextUpdate()));
@@ -643,7 +663,7 @@ public class X509CRLStreamWriterTest {
         KeyPair differentKeyPair = generator.generateKeyPair();
 
         ContentSigner otherSigner = new JcaContentSignerBuilder("SHA256WithRSAEncryption")
-            .setProvider(BC)
+            .setProvider(BC_PROVIDER)
             .build(differentKeyPair.getPrivate());
 
         X509v2CRLBuilder crlBuilder = createCRLBuilder();
@@ -704,7 +724,7 @@ public class X509CRLStreamWriterTest {
 
         String signingAlg = "SHA1WithRSAEncryption";
         ContentSigner sha1Signer = new JcaContentSignerBuilder(signingAlg)
-            .setProvider(BC)
+            .setProvider(BC_PROVIDER)
             .build(keyPair.getPrivate());
 
         X509CRLHolder holder = crlBuilder.build(sha1Signer);

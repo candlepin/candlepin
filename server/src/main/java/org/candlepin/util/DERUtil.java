@@ -14,7 +14,7 @@
  */
 package org.candlepin.util;
 
-import org.bouncycastle.crypto.Signer;
+import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.util.io.Streams;
 
 import java.io.ByteArrayOutputStream;
@@ -251,7 +251,13 @@ public class DERUtil {
      * @param length
      * @throws IOException if something goes wrong
      */
-    public static void writeLength(OutputStream out, int length, Signer signer) throws IOException {
+    public static void writeLength(OutputStream out, int length, ContentSigner signer) throws IOException {
+        OutputStream signerStream = null;
+
+        if (signer != null) {
+            signerStream = signer.getOutputStream();
+        }
+
         if (length > 127) {
             int size = 1;
             int val = length;
@@ -262,23 +268,23 @@ public class DERUtil {
 
             byte b = (byte) (size | 0x80);
             out.write(b);
-            if (signer != null) {
-                signer.update(b);
+            if (signerStream != null) {
+                signerStream.write(b);
             }
 
             for (int i = (size - 1) * 8; i >= 0; i -= 8) {
                 b = (byte) (length >> i);
                 out.write(b);
-                if (signer != null) {
-                    signer.update(b);
+                if (signerStream != null) {
+                    signerStream.write(b);
                 }
             }
         }
         else {
             byte b = (byte) length;
             out.write(b);
-            if (signer != null) {
-                signer.update(b);
+            if (signerStream != null) {
+                signerStream.write(b);
             }
         }
     }
@@ -287,11 +293,17 @@ public class DERUtil {
         writeTag(out, tag, tagNo, null);
     }
 
-    public static void writeTag(OutputStream out, int tag, int tagNo, Signer signer) throws IOException {
+    public static void writeTag(OutputStream out, int tag, int tagNo, ContentSigner signer) throws
+        IOException {
+        OutputStream signerStream = null;
+        if (signer != null) {
+            signerStream = signer.getOutputStream();
+        }
+
         int rebuiltTag = rebuildTag(tag, tagNo);
         out.write(rebuiltTag);
-        if (signer != null) {
-            signer.update((byte) rebuiltTag);
+        if (signerStream != null) {
+            signerStream.write((byte) rebuiltTag);
         }
     }
 
@@ -304,7 +316,7 @@ public class DERUtil {
         writeBytes(out, value, null);
     }
 
-    public static void writeValue(OutputStream out, byte[] value, Signer signer) throws IOException {
+    public static void writeValue(OutputStream out, byte[] value, ContentSigner signer) throws IOException {
         writeBytes(out, value, signer);
     }
 
@@ -321,10 +333,15 @@ public class DERUtil {
         writeBytes(out, value, null);
     }
 
-    public static void writeBytes(OutputStream out, byte[] value, Signer signer) throws IOException {
-        out.write(value);
+    public static void writeBytes(OutputStream out, byte[] value, ContentSigner signer) throws IOException {
+        OutputStream signerStream = null;
         if (signer != null) {
-            signer.update(value, 0, value.length);
+            signerStream = signer.getOutputStream();
+        }
+
+        out.write(value);
+        if (signerStream != null) {
+            signerStream.write(value, 0, value.length);
         }
     }
 }

@@ -14,22 +14,24 @@
  */
 package org.candlepin.util;
 
-import static org.candlepin.test.MatchesPattern.matchesPattern;
+import static org.candlepin.test.MatchesPattern.*;
 import static org.junit.Assert.*;
 
 import org.apache.commons.codec.binary.Base64InputStream;
 import org.apache.commons.io.FileUtils;
 import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x509.AuthorityKeyIdentifier;
 import org.bouncycastle.asn1.x509.CRLNumber;
 import org.bouncycastle.asn1.x509.CRLReason;
-import org.bouncycastle.asn1.x509.X509Extension;
+import org.bouncycastle.asn1.x509.Extension;
+import org.bouncycastle.asn1.x509.TBSCertList;
 import org.bouncycastle.cert.X509CRLHolder;
 import org.bouncycastle.cert.X509v2CRLBuilder;
+import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.util.io.Streams;
-import org.bouncycastle.x509.extension.AuthorityKeyIdentifierStructure;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -53,7 +55,7 @@ import java.util.Set;
 
 
 public class X509CRLEntryStreamTest {
-    private static final BouncyCastleProvider BC = new BouncyCastleProvider();
+    private static final BouncyCastleProvider BC_PROVIDER = new BouncyCastleProvider();
 
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
@@ -84,8 +86,12 @@ public class X509CRLEntryStreamTest {
         keyPair = generator.generateKeyPair();
 
         signer = new JcaContentSignerBuilder("SHA256WithRSAEncryption")
-            .setProvider(BC)
+            .setProvider(BC_PROVIDER)
             .build(keyPair.getPrivate());
+    }
+
+    private BigInteger getSerial(TBSCertList.CRLEntry c) {
+        return c.getUserCertificate().getValue();
     }
 
     @Test
@@ -104,7 +110,7 @@ public class X509CRLEntryStreamTest {
         try {
             Set<BigInteger> streamedSerials = new HashSet<BigInteger>();
             while (stream.hasNext()) {
-                streamedSerials.add(stream.next().getSerialNumber());
+                streamedSerials.add(getSerial(stream.next()));
             }
 
             assertEquals(referenceSerials, streamedSerials);
@@ -118,10 +124,11 @@ public class X509CRLEntryStreamTest {
     @Test
     public void testIterateOverEmptyCrl() throws Exception {
         X509v2CRLBuilder crlBuilder = new X509v2CRLBuilder(issuer, new Date());
+        AuthorityKeyIdentifier identifier = new JcaX509ExtensionUtils().createAuthorityKeyIdentifier
+            (keyPair.getPublic());
 
-        crlBuilder.addExtension(X509Extension.authorityKeyIdentifier, false,
-            new AuthorityKeyIdentifierStructure(keyPair.getPublic()));
-        crlBuilder.addExtension(X509Extension.cRLNumber, false, new CRLNumber(new BigInteger("127")));
+        crlBuilder.addExtension(Extension.authorityKeyIdentifier, false, identifier);
+        crlBuilder.addExtension(Extension.cRLNumber, false, new CRLNumber(new BigInteger("127")));
 
         X509CRLHolder holder = crlBuilder.build(signer);
 
@@ -132,7 +139,7 @@ public class X509CRLEntryStreamTest {
         try {
             Set<BigInteger> streamedSerials = new HashSet<BigInteger>();
             while (stream.hasNext()) {
-                streamedSerials.add(stream.next().getSerialNumber());
+                streamedSerials.add(getSerial(stream.next()));
             }
 
             assertEquals(0, streamedSerials.size());
@@ -169,9 +176,11 @@ public class X509CRLEntryStreamTest {
     @Test
     public void testCRLwithoutUpdateTime() throws Exception {
         X509v2CRLBuilder crlBuilder = new X509v2CRLBuilder(issuer, new Date());
-        crlBuilder.addExtension(X509Extension.authorityKeyIdentifier, false,
-            new AuthorityKeyIdentifierStructure(keyPair.getPublic()));
-        crlBuilder.addExtension(X509Extension.cRLNumber, false, new CRLNumber(new BigInteger("127")));
+        AuthorityKeyIdentifier identifier = new JcaX509ExtensionUtils().createAuthorityKeyIdentifier
+            (keyPair.getPublic());
+
+        crlBuilder.addExtension(Extension.authorityKeyIdentifier, false, identifier);
+        crlBuilder.addExtension(Extension.cRLNumber, false, new CRLNumber(new BigInteger("127")));
         crlBuilder.addCRLEntry(new BigInteger("100"), new Date(), CRLReason.unspecified);
 
         X509CRLHolder holder = crlBuilder.build(signer);
@@ -183,7 +192,7 @@ public class X509CRLEntryStreamTest {
         try {
             Set<BigInteger> streamedSerials = new HashSet<BigInteger>();
             while (stream.hasNext()) {
-                streamedSerials.add(stream.next().getSerialNumber());
+                streamedSerials.add(getSerial(stream.next()));
             }
 
             assertEquals(1, streamedSerials.size());
@@ -221,7 +230,7 @@ public class X509CRLEntryStreamTest {
         try {
             Set<BigInteger> streamedSerials = new HashSet<BigInteger>();
             while (stream.hasNext()) {
-                streamedSerials.add(stream.next().getSerialNumber());
+                streamedSerials.add(getSerial(stream.next()));
             }
 
             assertEquals(referenceSerials, streamedSerials);

@@ -33,6 +33,7 @@ import org.candlepin.controller.SuspendModeTransitioner;
 import org.candlepin.logging.LoggerContextListener;
 import org.candlepin.model.Status;
 import org.candlepin.pinsetter.core.PinsetterContextListener;
+import org.candlepin.pki.impl.BouncyCastleProviderLoader;
 import org.candlepin.resteasy.ResourceLocatorMap;
 import org.candlepin.swagger.CandlepinSwaggerModelConverter;
 import org.candlepin.util.Util;
@@ -58,6 +59,8 @@ import org.xnap.commons.i18n.I18nManager;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.management.ManagementService;
 
+import io.swagger.converter.ModelConverters;
+
 import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.nio.charset.Charset;
@@ -73,8 +76,6 @@ import javax.management.MBeanServer;
 import javax.persistence.EntityManagerFactory;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
-
-import io.swagger.converter.ModelConverters;
 
 /**
  * Customized Candlepin version of
@@ -116,6 +117,9 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
     @Override
     public void contextInitialized(ServletContextEvent sce) {
         log.info("Candlepin initializing context.");
+
+        BouncyCastleProviderLoader.addProvider();
+
         I18nManager.getInstance().setDefaultLocale(Locale.US);
         servletContext = sce.getServletContext();
 
