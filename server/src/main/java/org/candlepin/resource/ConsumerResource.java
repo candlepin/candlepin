@@ -1422,7 +1422,9 @@ public class ConsumerResource {
         this.consumerCurator.lock(toDelete);
 
         try {
-            this.poolManager.revokeAllEntitlements(toDelete);
+            // We're about to delete this consumer; no need to regen/dirty its dependent
+            // entitlements or recalculate status.
+            this.poolManager.revokeAllEntitlements(toDelete, false);
         }
         catch (ForbiddenException e) {
             String msg = e.message().getDisplayMessage();
@@ -1968,7 +1970,7 @@ public class ConsumerResource {
         // CertificateCurator) to lookup by serialNumber
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
 
-        int total = poolManager.revokeAllEntitlements(consumer);
+        int total = poolManager.revokeAllEntitlements(consumer, true);
         log.debug("Revoked {} entitlements from {}", total, consumerUuid);
         return new DeleteResult(total);
 

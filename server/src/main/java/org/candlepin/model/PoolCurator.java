@@ -31,6 +31,7 @@ import org.hibernate.Filter;
 import org.hibernate.Hibernate;
 import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
+import org.hibernate.Session;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Disjunction;
@@ -1122,23 +1123,47 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
 
     @SuppressWarnings("unchecked")
-    public List<Pool> getPoolsBySubscriptionId(String subId) {
-        return currentSession().createCriteria(Pool.class)
-            .createAlias("sourceSubscription", "sourceSub", JoinType.LEFT_OUTER_JOIN)
-            .add(Restrictions.eq("sourceSub.subscriptionId", subId))
-            .add(Restrictions.eq("hasSharedAncestor", Boolean.FALSE))
-            .addOrder(Order.asc("id"))
-            .list();
+    public CandlepinQuery<Pool> getPoolsBySubscriptionId(String subId) {
+        String jpql = "SELECT DISTINCT ss.pool.id FROM SourceSubscription ss WHERE ss.subscriptionId = :sid";
+
+        List<String> ids = this.getEntityManager()
+            .createQuery(jpql, String.class)
+            .setParameter("sid", subId)
+            .getResultList();
+
+        if (ids != null && !ids.isEmpty()) {
+            DetachedCriteria criteria = this.createSecureDetachedCriteria(Pool.class, null)
+                .add(Restrictions.eq("hasSharedAncestor", Boolean.FALSE))
+                .add(CPRestrictions.in("id", ids))
+                .addOrder(Order.asc("id"));
+
+            return this.cpQueryFactory.<Pool>buildQuery(this.currentSession(), criteria);
+        }
+
+        return this.cpQueryFactory.<Pool>buildQuery();
     }
 
     @SuppressWarnings("unchecked")
-    public List<Pool> getPoolsBySubscriptionIds(Collection<String> subIds) {
-        return currentSession().createCriteria(Pool.class)
-            .createAlias("sourceSubscription", "sourceSub", JoinType.LEFT_OUTER_JOIN)
-            .add(CPRestrictions.in("sourceSub.subscriptionId", subIds))
-            .add(Restrictions.eq("hasSharedAncestor", Boolean.FALSE))
-            .addOrder(Order.asc("id"))
-            .list();
+    public CandlepinQuery<Pool> getPoolsBySubscriptionIds(Collection<String> subIds) {
+        if (subIds != null && !subIds.isEmpty()) {
+            Session session = this.currentSession();
+
+            List<String> ids = session.createCriteria(SourceSubscription.class)
+                .add(CPRestrictions.in("subscriptionId", subIds))
+                .setProjection(Projections.distinct(Projections.property("pool.id")))
+                .list();
+
+            if (ids != null && !ids.isEmpty()) {
+                DetachedCriteria criteria = this.createSecureDetachedCriteria(Pool.class, null)
+                    .add(Restrictions.eq("hasSharedAncestor", Boolean.FALSE))
+                    .add(CPRestrictions.in("id", ids))
+                    .addOrder(Order.asc("id"));
+
+                return this.cpQueryFactory.<Pool>buildQuery(session, criteria);
+            }
+        }
+
+        return this.cpQueryFactory.<Pool>buildQuery();
     }
 
     @SuppressWarnings("unchecked")

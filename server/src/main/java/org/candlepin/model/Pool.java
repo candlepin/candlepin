@@ -913,7 +913,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     /**
      * @return true if this pool or it's parent was created because of a share.
      */
-    public Boolean getHasSharedAncestor() {
+    public Boolean hasSharedAncestor() {
         return hasSharedAncestor;
     }
 
@@ -925,14 +925,8 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     }
 
     public String toString() {
-        return String.format(
-            "Pool [id=%s, type=%s, product=%s, productName=%s, quantity=%s]",
-            this.getId(),
-            this.getType(),
-            this.getProductId(),
-            this.getProductName(),
-            this.getQuantity()
-        );
+        return String.format("Pool [id=%s, type=%s, product=%s, productName=%s, quantity=%s]",
+            this.getId(), this.getType(), this.getProductId(), this.getProductName(), this.getQuantity());
     }
 
     @JsonIgnore
