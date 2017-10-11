@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.0.40
+Version: 2.0.41
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,26 @@ fi
 
 #raw
 %changelog
+* Wed Oct 11 2017 Kevin Howell <khowell@redhat.com> 2.0.41-1
+- 1500846: Optimized fetching/deleting pools by subscription IDs
+  (crog@redhat.com)
+- 1488508: Added a cleanup task to remove extraneous upstream pool data
+  (crog@redhat.com)
+- 1488508: Restricted upstream info migration to master pools (crog@redhat.com)
+- Added a valid checksum to a problematic Liquibase changeset (crog@redhat.com)
+- 1419016: Fix registration issue when owner's autobind is disabled.
+  (mstead@redhat.com)
+- Made several optimizations to PoolManager.deletePools (crog@redhat.com)
+- Make UpstreamConsumer lazy load (bcourt@redhat.com)
+- Remove an unused backreference from IdentityCertificate. (bcourt@redhat.com)
+- Update rules to be the same as they are in 2.1 (csnyder@redhat.com)
+- 1440910: Choose host_specific/virt_only pools first (csnyder@redhat.com)
+- 1440924: Adjust message when activation key registration fails
+  (wpoteat@redhat.com)
+- Added entitlement validation to CMV (crog@redhat.com)
+- Per-org products migration now examines activation keys and environments
+  (crog@redhat.com)
+
 * Thu Jul 27 2017 Kevin Howell <khowell@redhat.com> 2.0.40-1
 - Fix incorrect interface name in SELinux policy. (awood@redhat.com)
 
