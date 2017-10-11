@@ -14,17 +14,14 @@
  */
 package org.candlepin.service.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
-import static org.mockito.Mockito.when;
+import static org.candlepin.pki.impl.BouncyCastleProviderLoader.BC_PROVIDER;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyMap;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.argThat;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.TestingModules;
 import org.candlepin.common.config.Configuration;
@@ -53,6 +50,7 @@ import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
 import org.candlepin.pki.impl.BouncyCastlePKIUtility;
+import org.candlepin.pki.impl.BouncyCastleProviderLoader;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.CertificateSizeException;
 import org.candlepin.util.Util;
@@ -65,8 +63,9 @@ import org.candlepin.util.X509V3ExtensionUtil.PathNode;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.openssl.PEMReader;
+import org.bouncycastle.openssl.PEMKeyPair;
+import org.bouncycastle.openssl.PEMParser;
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -89,7 +88,6 @@ import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.security.Key;
 import java.security.KeyPair;
-import java.security.Security;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
@@ -181,7 +179,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     };
 
     static {
-        Security.addProvider(new BouncyCastleProvider());
+        BouncyCastleProviderLoader.addProvider();
     }
 
     @BeforeClass
@@ -189,11 +187,13 @@ public class DefaultEntitlementCertServiceAdapterTest {
         ClassLoader cl = DefaultEntitlementCertServiceAdapterTest.class.getClassLoader();
         InputStream keyStream = cl.getResourceAsStream("test.key");
 
-        PEMReader reader = null;
+        PEMParser reader = null;
         keyPair = null;
         try {
-            reader = new PEMReader(new InputStreamReader(keyStream));
-            keyPair = (KeyPair) reader.readObject();
+            reader = new PEMParser(new InputStreamReader(keyStream));
+            keyPair = new JcaPEMKeyConverter()
+                .setProvider(BC_PROVIDER)
+                .getKeyPair((PEMKeyPair) reader.readObject());
         }
         finally {
             if (reader != null) {
@@ -1667,7 +1667,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     @Test
     public void testDetachedEntitlementDataNotAddedToCertV1() throws Exception {
-        KeyPair keyPair = new BouncyCastlePKIUtility(null, null, null).generateNewKeyPair();
+        KeyPair keyPair = new BouncyCastlePKIUtility(null, null).generateNewKeyPair();
         when(keyPairCurator.getConsumerKeyPair(any(Consumer.class))).thenReturn(keyPair);
 
         when(mockedPKI.getPemEncoded(any(X509Certificate.class))).thenReturn("".getBytes());

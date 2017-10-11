@@ -14,6 +14,8 @@
  */
 package org.candlepin.pki.impl;
 
+import static org.candlepin.pki.impl.BouncyCastleProviderLoader.*;
+
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.pki.PKIReader;
@@ -21,9 +23,12 @@ import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.openssl.PEMReader;
-import org.bouncycastle.openssl.PasswordFinder;
+import org.bouncycastle.openssl.PEMDecryptorProvider;
+import org.bouncycastle.openssl.PEMEncryptedKeyPair;
+import org.bouncycastle.openssl.PEMKeyPair;
+import org.bouncycastle.openssl.PEMParser;
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
+import org.bouncycastle.openssl.jcajce.JcePEMDecryptorProviderBuilder;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -33,7 +38,6 @@ import java.io.InputStreamReader;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PrivateKey;
-import java.security.Security;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -65,7 +69,7 @@ import java.util.Set;
  *
  * See also {@link BouncyCastlePKIUtility} for more notes.
  */
-public class BouncyCastlePKIReader implements PKIReader, PasswordFinder {
+public class BouncyCastlePKIReader implements PKIReader {
 
     private CertificateFactory certFactory;
     private String caCertPath;
@@ -76,9 +80,6 @@ public class BouncyCastlePKIReader implements PKIReader, PasswordFinder {
     private final Set<X509Certificate> upstreamX509Certificates;
     private final PrivateKey privateKey;
 
-    static {
-        Security.addProvider(new BouncyCastleProvider());
-    }
 
     @Inject
     public BouncyCastlePKIReader(Configuration config) throws CertificateException {
@@ -162,33 +163,33 @@ public class BouncyCastlePKIReader implements PKIReader, PasswordFinder {
         try {
             InputStreamReader inStream = new InputStreamReader(
                 new FileInputStream(this.caKeyPath));
-            PEMReader reader = null;
+            PEMParser reader = null;
 
             try {
-                if (this.caKeyPassword != null) {
-                    reader = new PEMReader(inStream, this);
-                }
-                else {
-                    reader = new PEMReader(inStream);
+                reader = new PEMParser(inStream);
+
+                Object pemObj = reader.readObject();
+                if (pemObj == null) {
+                    throw new GeneralSecurityException("Reading CA private key failed");
                 }
 
-                Object caKeyObj = reader.readObject();
-                if (caKeyObj == null) {
-                    throw new GeneralSecurityException(
-                        "Reading CA private key failed");
+                if (pemObj instanceof PEMKeyPair) {
+                    return new JcaPEMKeyConverter().setProvider(BC_PROVIDER).getKeyPair((PEMKeyPair) pemObj)
+                        .getPrivate();
                 }
 
-                if (caKeyObj instanceof KeyPair) {
-                    KeyPair caKeyPair = (KeyPair) caKeyObj;
-                    return caKeyPair.getPrivate();
+                if (pemObj instanceof PEMEncryptedKeyPair) {
+                    PEMEncryptedKeyPair encryptedInfo = (PEMEncryptedKeyPair) pemObj;
+                    PEMDecryptorProvider provider = new JcePEMDecryptorProviderBuilder().setProvider(
+                        BC_PROVIDER)
+                        .build(getPassword());
+                    PEMKeyPair decryptedInfo =  encryptedInfo.decryptKeyPair(provider);
+                    return new JcaPEMKeyConverter().setProvider(BC_PROVIDER).getPrivateKey(decryptedInfo
+                        .getPrivateKeyInfo());
                 }
-                else if (caKeyObj instanceof PrivateKey) {
-                    return (PrivateKey) caKeyObj;
-                }
-                else {
-                    throw new GeneralSecurityException("Unexepected CA key object: " +
-                        caKeyObj.getClass().getName());
-                }
+
+                throw new GeneralSecurityException("Unexepected CA key object: " +
+                        pemObj.getClass().getName());
             }
             finally {
                 reader.close();
@@ -223,7 +224,6 @@ public class BouncyCastlePKIReader implements PKIReader, PasswordFinder {
         return this.privateKey;
     }
 
-    @Override
     public char[] getPassword() {
         // just grab the key password that was pulled from the config
         return (caKeyPassword != null) ? caKeyPassword.toCharArray() : null;

@@ -14,10 +14,13 @@
  */
 package org.candlepin.pki;
 
+import org.bouncycastle.asn1.ASN1Encodable;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+
 /**
  * X509ExtensionWrapper
  */
-public class X509ExtensionWrapper {
+public class X509ExtensionWrapper implements ASN1Encodable {
     private String oid = null;
     private boolean critical;
     private String value;
@@ -35,6 +38,10 @@ public class X509ExtensionWrapper {
 
     public String getOid() {
         return oid;
+    }
+
+    public ASN1ObjectIdentifier toASN1Primitive() {
+        return new ASN1ObjectIdentifier(oid);
     }
 
     public boolean isCritical() {

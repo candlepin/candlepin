@@ -56,16 +56,13 @@ public abstract class PKIUtility {
 
     // TODO : configurable?
     public static final int RSA_KEY_SIZE = 2048;
-    public static final String SIGNATURE_ALGO = "SHA1WITHRSA";
+    public static final String SIGNATURE_ALGO = "SHA1WithRSA";
 
     protected PKIReader reader;
-    protected SubjectKeyIdentifierWriter subjectKeyWriter;
     protected Configuration config;
 
-    public PKIUtility(PKIReader reader, SubjectKeyIdentifierWriter subjectKeyWriter,
-        Configuration config) {
+    public PKIUtility(PKIReader reader, Configuration config) {
         this.reader = reader;
-        this.subjectKeyWriter = subjectKeyWriter;
         this.config = config;
     }
 
