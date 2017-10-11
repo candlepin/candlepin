@@ -55,7 +55,7 @@ to be stopped or you will have to edit the Vagrantfile and choose different port
 1. `./server/bin/deploy`
 
 ## Deploy with test data
-Candlepin Vagrant deployer deploy candlepin without any test data in database.
+The Candlepin Vagrant deployer will deploy candlepin without any test data in database.
 If you want to use candlepin e.g. for testing subscription-manager, then you
 will need to deploy server with different options:
 
