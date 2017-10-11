@@ -118,7 +118,10 @@ public class OwnerManager {
 
         for (Consumer consumer : consumers) {
             log.info("Removing all entitlements for consumer: {}", consumer);
-            poolManager.revokeAllEntitlements(consumer, revokeCerts);
+
+            // We're about to delete these consumers; no need to regen/dirty their dependent
+            // entitlements or recalculate status.
+            poolManager.revokeAllEntitlements(consumer, false);
         }
 
         // Actual consumer deletion is done out of the loop above since all

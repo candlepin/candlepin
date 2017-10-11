@@ -282,7 +282,7 @@ public interface PoolManager {
      * @return
      *  a list of pools associated with the specified subscription.
      */
-    List<Pool> getPoolsBySubscriptionId(String subscriptionId);
+    CandlepinQuery<Pool> getPoolsBySubscriptionId(String subscriptionId);
 
     /**
      * Retrieves the master pool associated with the specified subscription ID. If there is not a
