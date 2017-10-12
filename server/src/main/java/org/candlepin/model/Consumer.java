@@ -28,9 +28,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
 import org.hibernate.annotations.Type;
 
 import java.util.ArrayList;
@@ -150,19 +148,14 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     @ManyToOne
     @JoinColumn(nullable = false)
-    @ForeignKey(name = "fk_consumer_consumer_type")
     private ConsumerType type;
 
     @ManyToOne
-    @ForeignKey(name = "fk_consumer_owner")
     @JoinColumn(nullable = false)
-    @Index(name = "cp_consumer_owner_fk_idx")
     private Owner owner;
 
     @ManyToOne
-    @ForeignKey(name = "fk_consumer_env")
     @JoinColumn(nullable = true)
-    @Index(name = "cp_consumer_env_fk_idx")
     private Environment environment;
 
     @Column(name = "entitlement_count")
