@@ -103,15 +103,14 @@ public class X509V3ExtensionUtil extends X509Util {
             contentPrefix, promotedContent);
 
         X509ByteExtensionWrapper bodyExtension = new X509ByteExtensionWrapper(OIDUtil.REDHAT_OID + "." +
-            OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ENTITLEMENT_DATA_KEY), false, retreiveContentValue(eb));
+            OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ENTITLEMENT_DATA_KEY), false, retrieveContentValue(eb));
         toReturn.add(bodyExtension);
 
         return toReturn;
     }
 
     public byte[] createEntitlementDataPayload(List<org.candlepin.model.dto.Product> productModels,
-        Consumer consumer, Pool pool, Integer quantity)
-        throws UnsupportedEncodingException, IOException {
+        Consumer consumer, Pool pool, Integer quantity) throws IOException {
 
         EntitlementBody map = createEntitlementBody(productModels,
             consumer, pool, quantity);
@@ -120,7 +119,7 @@ public class X509V3ExtensionUtil extends X509Util {
         return processPayload(json);
     }
 
-    private byte[] retreiveContentValue(EntitlementBody eb) throws IOException {
+    private byte[] retrieveContentValue(EntitlementBody eb) throws IOException {
         List<Content> contentList = getContentList(eb);
         PathNode treeRoot = makePathTree(contentList, new PathNode());
         List<String> nodeStrings = orderStrings(treeRoot);
@@ -482,9 +481,7 @@ public class X509V3ExtensionUtil extends X509Util {
         // collect content URL's
         List<Content> contentList = new ArrayList<Content>();
         for (org.candlepin.model.dto.Product p : eb.getProducts()) {
-            for (org.candlepin.model.dto.Content c : p.getContent()) {
-                contentList.add(c);
-            }
+            contentList.addAll(p.getContent());
         }
         return contentList;
     }
@@ -572,7 +569,7 @@ public class X509V3ExtensionUtil extends X509Util {
                 }
             }
             if (isNew) {
-                PathNode next = null;
+                PathNode next;
                 if (st.hasMoreTokens()) {
                     next = new PathNode();
                     parent.addChild(new NodePair(childVal, next));
@@ -738,8 +735,7 @@ public class X509V3ExtensionUtil extends X509Util {
     }
 
     private byte[] makeNodeDictionary(HuffNode stringParent,
-        HuffNode pathNodeParent, List<PathNode> pathNodes)
-        throws UnsupportedEncodingException, IOException {
+        HuffNode pathNodeParent, List<PathNode> pathNodes) throws IOException {
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         int nodeSize = pathNodes.size();
@@ -762,7 +758,7 @@ public class X509V3ExtensionUtil extends X509Util {
         else {
             baos.write(nodeSize);
         }
-        StringBuffer bits = new StringBuffer();
+        StringBuilder bits = new StringBuilder();
         String endNodeLocation = findHuffPath(stringParent, END_NODE);
         for (PathNode pn : pathNodes) {
             for (NodePair np : pn.getChildren()) {
@@ -856,8 +852,7 @@ public class X509V3ExtensionUtil extends X509Util {
         return output;
     }
 
-    private byte[] byteProcess(List<String> entries)
-        throws IOException, UnsupportedEncodingException {
+    private byte[] byteProcess(List<String> entries) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DeflaterOutputStream dos = new DeflaterOutputStream(baos,
             new Deflater(Deflater.BEST_COMPRESSION));
@@ -922,15 +917,11 @@ public class X509V3ExtensionUtil extends X509Util {
         return smallest;
     }
 
-    private HuffNode mergeNodes(HuffNode node1, HuffNode node2) {
-        HuffNode left = node1;
-        HuffNode right = node2;
-        HuffNode parent = new HuffNode(null, left.weight + right.weight, left, right);
-        return parent;
+    private HuffNode mergeNodes(HuffNode left, HuffNode right) {
+        return new HuffNode(null, left.weight + right.weight, left, right);
     }
 
-    public List<String> hydrateContentPackage(byte[] payload)
-        throws IOException, UnsupportedEncodingException {
+    public List<String> hydrateContentPackage(byte[] payload) throws IOException {
 
         List<HuffNode> pathDictionary = new ArrayList<HuffNode>();
         List<HuffNode> nodeDictionary = new ArrayList<HuffNode>();
@@ -1038,7 +1029,7 @@ public class X509V3ExtensionUtil extends X509Util {
                 // get first child name
                 // if its END_NODE we are done
                 String nameValue = null;
-                StringBuffer nameBits = new StringBuffer();
+                StringBuilder nameBits = new StringBuilder();
                 while (nameValue == null && stillNode) {
                     nameBits.append(nodeBits.charAt(0));
                     nodeBits.deleteCharAt(0);
@@ -1057,7 +1048,7 @@ public class X509V3ExtensionUtil extends X509Util {
                 }
 
                 PathNode nodeValue = null;
-                StringBuffer pathBits = new StringBuffer();
+                StringBuilder pathBits = new StringBuilder();
                 while (nodeValue == null && stillNode) {
                     pathBits.append(nodeBits.charAt(0));
                     nodeBits.deleteCharAt(0);
@@ -1096,8 +1087,7 @@ public class X509V3ExtensionUtil extends X509Util {
         }
     }
 
-    private byte[] processPayload(String payload)
-        throws IOException, UnsupportedEncodingException {
+    private byte[] processPayload(String payload) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DeflaterOutputStream dos = new DeflaterOutputStream(baos);
         dos.write(payload.getBytes("UTF-8"));
@@ -1235,7 +1225,7 @@ public class X509V3ExtensionUtil extends X509Util {
         }
 
         public String toString() {
-            StringBuffer parentList = new StringBuffer("ID: ");
+            StringBuilder parentList = new StringBuilder("ID: ");
             parentList.append(id).append(", Parents");
             for (PathNode parent : parents) {
                 parentList.append(": ").append(parent.getId());
