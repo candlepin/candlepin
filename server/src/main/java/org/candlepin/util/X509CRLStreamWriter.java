@@ -54,6 +54,7 @@ import org.bouncycastle.crypto.DataLengthException;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.DefaultAlgorithmNameFinder;
+import org.bouncycastle.operator.DefaultSignatureAlgorithmIdentifierFinder;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.slf4j.Logger;
@@ -186,21 +187,6 @@ public class X509CRLStreamWriter {
 
         this.count = new AtomicInteger();
 
-        /* The length of an RSA signature is padded out to the length of the modulus
-         * in bytes.  See http://stackoverflow.com/questions/6658728/rsa-signature-size
-         *
-         * If the original CRL was signed with a 2048 bit key and someone sends in a
-         * 4096 bit key, we need to account for the discrepancy.
-         */
-        int newSigBytes = key.getModulus().bitLength() / 8;
-
-        /* Now we need a byte array to figure out how long the new signature will
-         * be when encoded.
-         */
-        byte[] dummySig = new byte[newSigBytes];
-        Arrays.fill(dummySig, (byte) 0x00);
-        this.newSigLength = new DERBitString(dummySig).getEncoded().length;
-
         this.key = key;
         this.aki = aki;
     }
@@ -261,7 +247,10 @@ public class X509CRLStreamWriter {
                     // Now we are at the signatureAlgorithm
                     ASN1Sequence seq = (ASN1Sequence) o;
                     if (seq.getObjectAt(0) instanceof ASN1ObjectIdentifier) {
-                        signingAlg = AlgorithmIdentifier.getInstance(seq);
+                        // It's possible an algorithm has already been set using setSigningAlgorithm()
+                        if (signingAlg == null) {
+                            signingAlg = AlgorithmIdentifier.getInstance(seq);
+                        }
 
                         try {
                             // Build the signer
@@ -342,6 +331,21 @@ public class X509CRLStreamWriter {
     }
 
     /**
+     * Allow the user to change the signing algorithm used.  Only RSA based algorithms are supported.
+     */
+    public void setSigningAlgorithm(String algorithm) {
+        if (locked) {
+            throw new IllegalStateException("This stream is already locked.");
+        }
+
+        if (!algorithm.toLowerCase().contains("rsa")) {
+            throw new IllegalArgumentException("Only RSA is supported");
+        }
+
+        signingAlg = new DefaultSignatureAlgorithmIdentifierFinder().find(algorithm);
+    }
+
+    /**
      * Locks the stream to prepare it for writing.
      *
      * @return itself
@@ -411,7 +415,10 @@ public class X509CRLStreamWriter {
                 crlBuilder.addCRLEntry(serial, revokeDate, reason);
             }
 
-            signingAlg = oldCrl.toASN1Structure().getSignatureAlgorithm();
+            if (signingAlg == null) {
+                signingAlg = oldCrl.toASN1Structure().getSignatureAlgorithm();
+            }
+
             ContentSigner s;
             try {
                 s = createContentSigner(signingAlg, key);
@@ -548,6 +555,21 @@ public class X509CRLStreamWriter {
     }
 
     protected int handleHeader(OutputStream out) throws IOException {
+        /* The length of an RSA signature is padded out to the length of the modulus
+         * in bytes.  See http://stackoverflow.com/questions/6658728/rsa-signature-size
+         *
+         * If the original CRL was signed with a 2048 bit key and someone sends in a
+         * 4096 bit key, we need to account for the discrepancy.
+         */
+        int newSigBytes = key.getModulus().bitLength() / 8;
+
+        /* Now we need a byte array to figure out how long the new signature will
+         * be when encoded.
+         */
+        byte[] dummySig = new byte[newSigBytes];
+        Arrays.fill(dummySig, (byte) 0x00);
+        this.newSigLength = new DERBitString(dummySig).getEncoded().length;
+
         int addedEntriesLength = 0;
         for (ASN1Sequence s : newEntries) {
             addedEntriesLength += s.getEncoded().length;
@@ -570,11 +592,18 @@ public class X509CRLStreamWriter {
 
         int tagNo;
         Date oldThisUpdate;
+        boolean signatureReplaced = false;
         while (true) {
             int tag = readTag(crlIn, null);
             tagNo = readTagNumber(crlIn, tag, null);
 
-            if (tagNo == GENERALIZED_TIME || tagNo == UTC_TIME) {
+            // The signatureAlgorithm in TBSCertList is the first sequence.  We'll hit it, replace it, and
+            // then not worry with other sequences.
+            if (tagNo == SEQUENCE && !signatureReplaced) {
+                readAndReplaceSignatureAlgorithm(temp);
+                signatureReplaced = true;
+            }
+            else if (tagNo == GENERALIZED_TIME || tagNo == UTC_TIME) {
                 oldThisUpdate = readAndReplaceTime(temp, tagNo);
                 break;
             }
@@ -599,7 +628,6 @@ public class X509CRLStreamWriter {
         else {
             writeTag(temp, tag, tagNo);
         }
-
 
         /* Much like throwing a stone into a pond, as one sequence increases in
          * length the change can ripple out to parent sequences as more bytes are
@@ -645,6 +673,39 @@ public class X509CRLStreamWriter {
 
         writeLength(out, newRevokedCertsLength, signer);
         return oldRevokedCertsLength;
+    }
+
+    protected void readAndReplaceSignatureAlgorithm(OutputStream out) throws IOException {
+        int originalLength = readLength(crlIn, null);
+        byte[] oldBytes = new byte[originalLength];
+        readFullyAndTrack(crlIn, oldBytes, null);
+
+        InputStream algIn = null;
+        try {
+            algIn = new ByteArrayInputStream(signingAlg.getEncoded());
+            // We're already at the V portion of the AlgorithmIdentifier TLV, so we need to get to the V
+            // portion of our new AlgorithmIdentifier and compare it with the old V.
+            int newTag = readTag(algIn, null);
+            readTagNumber(algIn, newTag, null);
+            int newLength = readLength(algIn, null);
+            byte[] newBytes = new byte[newLength];
+            readFullyAndTrack(algIn, newBytes, null);
+
+            /* If the signing algorithm has changed dramatically, give up.  For our use case we will always
+            have <something>WithRSA, which will yield AlgorithmIdentifiers of equal length.  If we had to
+            worry about going from SHA1WithRSA to SHA256WithECDSA or something like that, we would need to do
+            a lot more work to get everything lined up right since the ECDSA identifiers carry the name of the
+            elliptic curve used and other parameters while RSA has no parameters. */
+            if (originalLength != newLength) {
+                throw new IllegalStateException(
+                    "AlgorithmIdentifier has changed lengths. DER corruption would result.");
+            }
+        }
+        finally {
+            IOUtils.closeQuietly(algIn);
+        }
+
+        writeBytes(out, signingAlg.getEncoded());
     }
 
     /**
@@ -742,7 +803,7 @@ public class X509CRLStreamWriter {
              * or removal of time zone information for example. */
             if (newLength != originalLength) {
                 throw new IllegalStateException("Length of generated time does not match " +
-                    "the original length. Corruption would result.");
+                    "the original length. DER corruption would result.");
             }
         }
         finally {
@@ -771,6 +832,10 @@ public class X509CRLStreamWriter {
      * @return tag value
      * @throws IOException
      */
+    protected int echoTag(OutputStream out, AtomicInteger i) throws IOException {
+        return echoTag(out, i, signer);
+    }
+
     protected int echoTag(OutputStream out, AtomicInteger i, ContentSigner s) throws IOException {
         int tag = readTag(crlIn, i);
         int tagNo = readTagNumber(crlIn, tag, i);
@@ -797,6 +862,10 @@ public class X509CRLStreamWriter {
      * @return length value
      * @throws IOException
      */
+    protected int echoLength(OutputStream out, AtomicInteger i) throws IOException {
+        return echoLength(out, i, signer);
+    }
+
     protected int echoLength(OutputStream out, AtomicInteger i, ContentSigner s) throws IOException {
         int length = readLength(crlIn, i);
         writeLength(out, length, s);
@@ -822,6 +891,10 @@ public class X509CRLStreamWriter {
      * @param i optional value to increment by the number of bytes read
      * @throws IOException
      */
+    protected void echoValue(OutputStream out, int length, AtomicInteger i) throws IOException {
+        echoValue(out, length, i, signer);
+    }
+
     protected void echoValue(OutputStream out, int length, AtomicInteger i, ContentSigner s)
         throws IOException {
         byte[] item = new byte[length];
@@ -829,9 +902,9 @@ public class X509CRLStreamWriter {
         writeValue(out, item, s);
     }
 
-    protected ContentSigner createContentSigner(AlgorithmIdentifier digAlg, PrivateKey key) throws
+    protected ContentSigner createContentSigner(AlgorithmIdentifier signingAlg, PrivateKey key) throws
         OperatorCreationException {
-        String algorithm = new DefaultAlgorithmNameFinder().getAlgorithmName(digAlg);
+        String algorithm = new DefaultAlgorithmNameFinder().getAlgorithmName(signingAlg);
         JcaContentSignerBuilder builder = new JcaContentSignerBuilder(algorithm).setProvider(BC_PROVIDER);
         return builder.build(key);
     }
