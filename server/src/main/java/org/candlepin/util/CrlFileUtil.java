@@ -231,6 +231,8 @@ public class CrlFileUtil {
                 writer.preScan(reaper);
             }
 
+            writer.setSigningAlgorithm(PKIUtility.SIGNATURE_ALGO);
+
             // Verify we actually have work to do now
             if (writer.hasChangesQueued()) {
                 output = new BufferedOutputStream(new FileOutputStream(file));

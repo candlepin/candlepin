@@ -56,7 +56,7 @@ public abstract class PKIUtility {
 
     // TODO : configurable?
     public static final int RSA_KEY_SIZE = 2048;
-    public static final String SIGNATURE_ALGO = "SHA1WithRSA";
+    public static final String SIGNATURE_ALGO = "SHA256WithRSA";
 
     protected PKIReader reader;
     protected Configuration config;
