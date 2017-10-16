@@ -26,7 +26,7 @@ module AntTaskCheckstyle
     attr_reader :project
 
     def dependencies
-      Buildr.transitive('com.puppycrawl.tools:checkstyle:jar:7.0')
+      Buildr.transitive('com.puppycrawl.tools:checkstyle:jar:8.2')
     end
 
     def execute(*args)

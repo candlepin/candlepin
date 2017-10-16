@@ -325,7 +325,6 @@
        Resource swagger annotations
        #######################################################################
     -->
-    <module name="org.candlepin.checks.ResourceSwaggerCheck">
-    </module>
+    <module name="org.candlepin.checks.ResourceSwaggerCheck"/>
   </module>
 </module>
