@@ -20,6 +20,7 @@ import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
 
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.persist.Transactional;
@@ -1524,6 +1525,33 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         Query q = currentSession().createQuery(stmt);
         q.setParameter("owner", owner);
         q.executeUpdate();
+    }
+
+    /**
+     * Removes source entitlements for the pools represented by the given collection of pool IDs.
+     * Note that this operation does not update any fetched or cached Pool objects, and will be
+     * reverted should a pool's state be persisted after this method has returned.
+     *
+     * @param poolIds
+     *  A collection of pool IDs for which to clear source entitlement references
+     *
+     * @return
+     *  the number of pools updated by this operation
+     */
+    public int clearPoolEntitlementRefs(Iterable<String> poolIds) {
+        int count = 0;
+
+        if (poolIds != null && poolIds.iterator().hasNext()) {
+            String hql = "UPDATE Pool SET sourceEntitlement = null WHERE id IN (:pids)";
+            Query query = this.currentSession().createQuery(hql);
+
+            for (List<String> block : Iterables.partition(poolIds, IN_OPERATOR_BLOCK_SIZE)) {
+                query.setParameterList("pids", block);
+                count += query.executeUpdate();
+            }
+        }
+
+        return count;
     }
 
 
