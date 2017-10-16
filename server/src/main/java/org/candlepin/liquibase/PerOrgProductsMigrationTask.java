@@ -158,11 +158,16 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
 
                 this.logger.info("Validating data for org %s (%s) (%d of %d)", account, orgid, index, count);
 
-                // Check for malformed objects which may end up in a bad state if we migrate
-                boolean result = true;
-                result &= this.checkForMalformedObjectRefs(orgid);
+                int brokenKeys = fixBrokenActivationKeys(orgid);
 
-                if (!result) {
+                if (brokenKeys > 0) {
+                    logger.info("Fixed %s activation keys referencing missing products", brokenKeys);
+                }
+
+                // Check for malformed objects which may end up in a bad state if we migrate
+                boolean validationResult = this.checkForMalformedObjectRefs(orgid);
+
+                if (!validationResult) {
                     validated = false;
                     this.logger.error("Org %s (%s) failed data validation", account, orgid);
                 }
@@ -309,14 +314,13 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
 
         badObjectRefs.close();
 
-        // Check for bad product references on the activation keys
         badObjectRefs = this.executeQuery(
             "  SELECT ak.id, akp.product_id " +
-            "    FROM cp_activation_key ak " +
-            "    JOIN cp_activationkey_product akp ON akp.key_id = ak.id " +
-            "    LEFT JOIN cp_product p ON p.id = akp.product_id " +
-            "    WHERE ak.owner_id = ? " +
-            "      AND p.id IS NULL",
+                "    FROM cp_activation_key ak " +
+                "    JOIN cp_activationkey_product akp ON akp.key_id = ak.id " +
+                "    LEFT JOIN cp_product p ON p.id = akp.product_id " +
+                "    WHERE ak.owner_id = ? " +
+                "      AND p.id IS NULL",
             orgid
         );
 
@@ -333,6 +337,43 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
         badObjectRefs.close();
 
         return passed;
+    }
+
+    private int fixBrokenActivationKeys(String orgid) throws DatabaseException, SQLException {
+        ResultSet badObjectRefs = null;
+        int brokenKeys = 0;
+
+        try {
+            // Check for bad product references on the activation keys
+            badObjectRefs = this.executeQuery(
+                "  SELECT ak.id, akp.product_id " +
+                    "    FROM cp_activation_key ak " +
+                    "    JOIN cp_activationkey_product akp ON akp.key_id = ak.id " +
+                    "    LEFT JOIN cp_product p ON p.id = akp.product_id " +
+                    "    WHERE ak.owner_id = ? " +
+                    "      AND p.id IS NULL",
+                orgid
+            );
+
+            while (badObjectRefs.next()) {
+                brokenKeys++;
+
+                String keyId = badObjectRefs.getString(1);
+                String productId = badObjectRefs.getString(2);
+
+                executeUpdate(
+                    "DELETE FROM cp_activationkey_product WHERE product_id = ? and key_id = ?",
+                    productId,
+                    keyId
+                );
+            }
+        }
+        finally {
+            if (badObjectRefs != null) {
+                badObjectRefs.close();
+            }
+        }
+        return brokenKeys;
     }
 
     /**
