@@ -20,6 +20,7 @@ import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
 
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.persist.Transactional;
@@ -1131,27 +1132,23 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      *  A collection of pool IDs for pools derived from the given pool IDs
      */
     @SuppressWarnings("unchecked")
-    public Set<String> getDerivedPoolIdsForPools(Collection<String> poolIds) {
+    public Set<String> getDerivedPoolIdsForPools(Iterable<String> poolIds) {
         Set<String> output = new HashSet<String>();
 
-        if (poolIds != null && !poolIds.isEmpty()) {
+        if (poolIds != null && poolIds.iterator().hasNext()) {
             // TODO: Update this method to use the pool hierarchy columns when they're available
-            Session session = this.currentSession();
+            String sql = "SELECT DISTINCT ss2.pool_id " +
+                "FROM cp2_pool_source_sub ss1 " +
+                "JOIN cp2_pool_source_sub ss2 ON ss2.subscription_id = ss1.subscription_id " +
+                "WHERE ss1.subscription_sub_key = 'master' " +
+                "  AND ss2.subscription_sub_key != 'master' " +
+                "  AND ss1.pool_id IN (:pool_ids)";
 
-            Collection<String> pids = session.createCriteria(SourceSubscription.class, "s")
-                .createAlias("s.pool", "p")
-                .add(Restrictions.eq("s.subscriptionSubKey", "master"))
-                .add(CPRestrictions.in("p.id", poolIds))
-                .setProjection(Projections.distinct(Projections.property("p.id")))
-                .list();
+            javax.persistence.Query query = this.getEntityManager().createNativeQuery(sql);
 
-            if (pids != null && !pids.isEmpty()) {
-                output.addAll(session.createCriteria(SourceSubscription.class, "s")
-                    .createAlias("s.pool", "p")
-                    .add(Restrictions.ne("s.subscriptionSubKey", "master"))
-                    .add(CPRestrictions.in("p.id", poolIds))
-                    .setProjection(Projections.distinct(Projections.property("p.id")))
-                    .list());
+            for (List<String> block : this.partition(poolIds)) {
+                query.setParameter("pool_ids", block);
+                output.addAll(query.getResultList());
             }
         }
 
@@ -1198,7 +1195,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             return this.currentSession().createCriteria(Pool.class, "p")
                 .createAlias("p.sourceEntitlement", "e")
                 .add(CPRestrictions.in("e.id", entIds))
-                .setProjection(Projections.distinct(Projections.property("e.id")))
+                .setProjection(Projections.distinct(Projections.property("p.id")))
                 .list();
         }
 
@@ -1524,6 +1521,26 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         Query q = currentSession().createQuery(stmt);
         q.setParameter("owner", owner);
         q.executeUpdate();
+    }
+
+    /**
+     * Removes source entitlements for the pools represented by the given collection of pool IDs.
+     * Note that this operation does not update any fetched or cached Pool objects, and will be
+     * reverted should a pool's state be persisted after this method has returned.
+     *
+     * @param poolIds
+     *  A collection of pool IDs for which to clear source entitlement references
+     */
+    public void clearPoolSourceEntitlementRefs(Iterable<String> poolIds) {
+        if (poolIds != null && poolIds.iterator().hasNext()) {
+            String hql = "UPDATE Pool SET sourceEntitlement = null WHERE id IN (:pids)";
+            Query query = this.currentSession().createQuery(hql);
+
+            for (List<String> block : Iterables.partition(poolIds, IN_OPERATOR_BLOCK_SIZE)) {
+                query.setParameterList("pids", block);
+                query.executeUpdate();
+            }
+        }
     }
 
 

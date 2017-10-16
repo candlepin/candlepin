@@ -2002,7 +2002,7 @@ public class CandlepinPoolManager implements PoolManager {
             pids = this.poolCurator.getPoolIdsForSourceEntitlements(eids);
 
             // Fetch pools which are derived from the pools we're going to delete...
-            pids.addAll(this.poolCurator.getDerivedPoolIdsForPools(poolIds));
+            pids.addAll(this.poolCurator.getDerivedPoolIdsForPools(pids));
 
             // Add the new entitlement and pool IDs to our list of things to delete
             cachedSize = poolIds.size();
@@ -2038,14 +2038,13 @@ public class CandlepinPoolManager implements PoolManager {
             // adding to our code when writing standlone/generic utility methods and linking them
             // together, and perhaps take steps to avoid getting into situations like these two methods.
 
-
-            // Fetch our collection of entitlements which are modified by the entitlements we're going
-            // to be revoking...
-            Set<String> modifiedEntitlementIds = this.entitlementCurator
+            // Fetch the collection of entitlements dependent on the entitlements we're going to be
+            // revoking...
+            Set<String> dependentEntitlementIds = this.entitlementCurator
                 .getModifiedEntitlementIds(owner, entitlementIds);
 
             // Regen certs for modified entitlements (lazily)
-            this.ecGenerator.regenerateCertificatesByEntitlementIds(modifiedEntitlementIds,  true);
+            this.ecGenerator.regenerateCertificatesByEntitlementIds(dependentEntitlementIds,  true);
 
             // Fetch the list of pools which are related to the entitlements but are *not* being
             // deleted. We'll need to update the quantities on these.
@@ -2058,6 +2057,10 @@ public class CandlepinPoolManager implements PoolManager {
             Collection<Entitlement> entitlements = !entitlementIds.isEmpty() ?
                 this.entitlementCurator.listAllByIds(entitlementIds).list() :
                 Collections.<Entitlement>emptySet();
+
+            // Unlink the pools and entitlements we're about to delete so we don't error out while
+            // trying to delete entitlements.
+            this.poolCurator.clearPoolSourceEntitlementRefs(poolIds);
 
             // Revoke/delete entitlements
             if (!entitlements.isEmpty()) {
