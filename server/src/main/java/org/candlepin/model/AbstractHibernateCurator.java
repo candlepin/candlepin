@@ -780,7 +780,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         Session session = this.currentSession();
         SQLQuery query = session.createSQLQuery(sql);
 
-        for (List<?> block : Iterables.partition(collection, getInBlockSize())) {
+        for (List<?> block : this.partition(collection)) {
             int index = 1;
 
             if (params != null) {
@@ -1310,8 +1310,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
             if (block.size() != lastBlock && criteria != null && !criteria.isEmpty()) {
                 for (Object criterion : criteria.values()) {
                     if (criterion instanceof Collection) {
-                        Iterable<List> inBlocks = Iterables.partition((Collection) criterion,
-                            getInBlockSize());
+                        Iterable<List> inBlocks = this.partition((Collection) criterion);
 
                         for (List inBlock : inBlocks) {
                             query.setParameterList(String.valueOf(++param), inBlock);
@@ -1406,7 +1405,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
             for (Object criterion : criteria.values()) {
                 if (criterion instanceof Collection) {
-                    Iterable<List> inBlocks = Iterables.partition((Collection) criterion, getInBlockSize());
+                    Iterable<List> inBlocks = this.partition((Collection) criterion);
 
                     for (List inBlock : inBlocks) {
                         query.setParameterList(String.valueOf(++param), inBlock);
@@ -1419,5 +1418,24 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         }
 
         return query.executeUpdate();
+    }
+
+    /**
+     * Partitions the given collection using the value returned by the getInBlockSize() method as
+     * the partition size. This method is provided as a utility method to avoid referencing a very
+     * long constant name used in many curators. Callers which need this behavior with a custom
+     * size can simulate the behavior by using the <tt>Iterables.partition</tt> method directly:
+     * <pre>
+     *  Iterable<List<String>> blocks = ', 'entityIds, blockSize);
+     * </pre>
+     *
+     * @param collection
+     *  The collection to partition
+     *
+     * @return
+     *  An iterable collection of lists containing the partitioned data in the provided collection
+     */
+    protected <T> Iterable<List<T>> partition(Iterable<T> collection) {
+        return Iterables.partition(collection, this.getInBlockSize());
     }
 }
