@@ -117,4 +117,5 @@
     <include file="db/changelog/20170301083925-update-revoked-cert-serial-data.xml"/>
     <include file="db/changelog/20170919110500-fixupstreampoolmigration.xml"/>
     <include file="db/changelog/20171011093538-add-sourcesub-id-index.xml"/>
+    <include file="db/changelog/20171017062314-add-target-index-on-job-table.xml"/>
 </databaseChangeLog>
