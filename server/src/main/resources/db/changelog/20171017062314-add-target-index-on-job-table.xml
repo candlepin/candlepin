@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <changeSet id="20171017062314-1" author="vrjain">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_job_targetIDType"/>
+            </not>
+        </preConditions>
+        <comment> add-target-index-on-job-table</comment>
+        <createIndex indexName="idx_job_targetIDType" tableName="cp_job" unique="false">
+            <column name="targetid"/>
+            <column name="targettype"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>
+<!-- vim: set expandtab sts=4 sw=4 ai: -->
