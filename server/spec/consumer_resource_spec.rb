@@ -70,16 +70,6 @@ describe 'Consumer Resource' do
     lambda {
       @consumer2.consume_pool(pool.id, {:quantity => 1}).size.should == 1
     }.should raise_exception(RestClient::ResourceNotFound)
-
-    another_pool = create_pool_and_subscription(@owner1['key'], product.id)
-    poolAndQuantities = []
-    poolAndQuantity = { 'poolId' => pool.id, 'quantity' => 1}
-    poolAndQuantities.push(poolAndQuantity)
-    poolAndQuantity = { 'poolId' => another_pool.id, 'quantity' => 1}
-    poolAndQuantities.push(poolAndQuantity)
-    lambda {
-      status = @consumer2.consume_pools(poolAndQuantities)
-    }.should raise_exception(RestClient::ResourceNotFound)
   end
 
   it "should expose a consumer's event atom feed" do
@@ -400,20 +390,6 @@ describe 'Consumer Resource' do
     consumer_client.consume_pool(pool['id'], {:quantity => 1})
     new_updated = @cp.get_consumer(consumer['uuid'])['updated']
     new_updated.should_not == old_updated
-
-    sleep 1
-
-    pool1 = create_pool_and_subscription(@owner1['key'], prod.id)
-    pool2 = create_pool_and_subscription(@owner1['key'], prod.id)
-    poolAndQuantities = []
-    poolAndQuantity = { 'poolId' => pool1.id, 'quantity' => 1}
-    poolAndQuantities.push(poolAndQuantity)
-    poolAndQuantity = { 'poolId' => pool2.id, 'quantity' => 1}
-    poolAndQuantities.push(poolAndQuantity)
-    status = consumer_client.consume_pools(poolAndQuantities)
-    # wait for job to complete, or test clean up will conflict with the asynchronous job.
-    wait_for_job(status['id'], 15)
-    @cp.get_consumer(consumer['uuid'])['updated'].should_not == new_updated
   end
 
   it 'consumer can async bind by product id' do
@@ -858,6 +834,19 @@ describe 'Consumer Resource' do
     @cp.get_pool(pool.id).consumed.should == 0
   end
 
+  it 'should allow a consumer to bind when the POST body is empty string' do
+    owner = create_owner(random_string('zowner'))
+    user = user_client(owner, random_string('cukebuster'))
+    # performs the register for us
+    consumer = consumer_client(user, random_string('machine1'))
+    product = create_product(nil, nil, {:owner => owner['key']})
+    create_pool_and_subscription(owner['key'], product.id, 2)
+    pool = consumer.list_pools(:consumer => consumer.uuid)[0]
+    pool.consumed.should == 0
+    consumer.consume_pool_empty_body(pool.id)
+    @cp.get_pool(pool.id).consumed.should == 1
+  end
+
   it 'should allow a consumer to unregister and free up the pools consumed in a batch' do
     owner = create_owner(random_string('zowner'))
     user = user_client(owner, random_string('cukebuster'))
@@ -871,18 +860,7 @@ describe 'Consumer Resource' do
     pools.length.should == 3
     poolAndQuantities = []
     pools.each do |pool|
-      pool.consumed.should == 0
-      poolAndQuantity = {}
-      poolAndQuantity.poolId = pool.id
-      poolAndQuantity.quantity = 1
-      poolAndQuantities.push(poolAndQuantity)
-    end
-    status = consumer.consume_pools(poolAndQuantities)
-    wait_for_job(status.id, 10)
-    status = @cp.get_job(status.id, true)
-    status.resultData.length.should == 3
-    status.resultData.each do |consumed|
-      consumed.quantity.should == 1
+      consumer.consume_pool(pool['id'])
     end
 
     pools.each do |pool|
