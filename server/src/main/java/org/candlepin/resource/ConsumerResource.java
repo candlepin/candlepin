@@ -82,7 +82,6 @@ import org.candlepin.model.User;
 import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
-import org.candlepin.model.dto.PoolIdAndQuantity;
 import org.candlepin.pinsetter.tasks.EntitleByProductsJob;
 import org.candlepin.pinsetter.tasks.EntitlerJob;
 import org.candlepin.policy.js.compliance.ComplianceRules;
@@ -1653,16 +1652,12 @@ public class ConsumerResource {
         return allCerts;
     }
 
-    private void validateBindArguments(boolean hasPoolQuantities, String poolIdString, Integer quantity,
+    private void validateBindArguments(String poolIdString, Integer quantity,
         String[] productIds, List<String> fromPools, Date entitleDate, Consumer consumer, boolean async) {
         short parameters = 0;
 
-        if (consumer.isShare() && StringUtils.isBlank(poolIdString) && !hasPoolQuantities) {
+        if (consumer.isShare() && StringUtils.isBlank(poolIdString)) {
             throw new BadRequestException(i18n.tr("Share consumers must be bound to a specific pool"));
-        }
-
-        if (hasPoolQuantities) {
-            parameters++;
         }
         if (poolIdString != null) {
             parameters++;
@@ -1673,17 +1668,6 @@ public class ConsumerResource {
         }
         if (parameters > 1) {
             throw new BadRequestException(i18n.tr("Cannot bind by multiple parameters."));
-        }
-
-        if (hasPoolQuantities) {
-            if (quantity != null) {
-                throw new BadRequestException(
-                        i18n.tr("Cannot specify a single quantity when binding a batch of " +
-                                " exact pools. Please specify a quantity for each pool"));
-            }
-            else if (!async) {
-                throw new BadRequestException(i18n.tr("Batch bind can only be performed asynchronously"));
-            }
         }
 
         if (poolIdString == null && quantity != null) {
@@ -1721,10 +1705,14 @@ public class ConsumerResource {
         @QueryParam("email_locale") String emailLocale,
         @QueryParam("async") @DefaultValue("false") boolean async,
         @QueryParam("entitle_date") String entitleDateStr,
-        @QueryParam("from_pool") List<String> fromPools,
-        PoolIdAndQuantity[] poolQuantities,
-        @Context Principal principal) {
-        boolean hasPoolQuantities = (poolQuantities != null && poolQuantities.length > 0);
+        @QueryParam("from_pool") List<String> fromPools) {
+        /* NOTE: This method should NEVER be provided with a POST body.
+           While technically that change would be backwards compatible,
+           there are older clients which erroneously provide an empty string
+           as a post body and hence result in a serialization error.
+           ref: BZ: 1502807
+         */
+
         // TODO: really should do this in a before we get to this call
         // so the method takes in a real Date object and not just a String.
         Date entitleDate = ResourceDateParser.parseDateString(entitleDateStr);
@@ -1734,33 +1722,8 @@ public class ConsumerResource {
         log.debug("Consumer (post verify): {}", consumer);
 
         // Check that only one query param was set, and some other validations
-        validateBindArguments(hasPoolQuantities, poolIdString, quantity, productIds, fromPools,
+        validateBindArguments(poolIdString, quantity, productIds, fromPools,
             entitleDate, consumer, async);
-
-        if (hasPoolQuantities) {
-            Map<String, PoolIdAndQuantity> pqMap = new HashMap<String, PoolIdAndQuantity>();
-            for (PoolIdAndQuantity poolQuantity : poolQuantities) {
-                if (pqMap.containsKey(poolQuantity.getPoolId())) {
-                    pqMap.get(poolQuantity.getPoolId()).addQuantity(poolQuantity.getQuantity());
-                }
-                else {
-                    pqMap.put(poolQuantity.getPoolId(), poolQuantity);
-                }
-            }
-            int batchBindLimit = config.getInt(ConfigProperties.BATCH_BIND_NUMBER_OF_POOLS_LIMIT);
-            if (pqMap.keySet().size() > batchBindLimit) {
-                throw new BadRequestException(i18n.tr(
-                    "Cannot bind more than {0} pools per request, found: {1}",
-                    batchBindLimit, pqMap.keySet().size()
-                ));
-            }
-
-            List<Pool> pools = poolManager.secureFind(pqMap.keySet());
-            if (!principal.canAccessAll(pools, SubResource.ENTITLEMENTS, Access.CREATE)) {
-                throw new NotFoundException(i18n.tr("Pools with ids {0} could not be found.",
-                    pqMap.keySet()));
-            }
-        }
 
         try {
             // I hate double negatives, but if they have accepted all
@@ -1795,9 +1758,6 @@ public class ConsumerResource {
 
             if (poolIdString != null) {
                 detail = EntitlerJob.bindByPool(poolIdString, consumer, quantity);
-            }
-            else if (hasPoolQuantities) {
-                detail = EntitlerJob.bindByPoolAndQuantities(consumer, poolQuantities);
             }
             else {
                 detail = EntitleByProductsJob.bindByProducts(productIds, consumer, entitleDate, fromPools);
