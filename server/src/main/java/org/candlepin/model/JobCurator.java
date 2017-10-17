@@ -227,27 +227,30 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
             "j.state != :finished and " +
             "j.state != :failed and " +
             "j.updated <= :date";
+
         // Must trim out activeIds if the list is empty, otherwise the
         // statement will fail.
         if (!activeIds.isEmpty()) {
             hql += " and j.id not in (:activeIds)";
         }
+
         Query query = this.currentSession().createQuery(hql)
             .setTimestamp("date", before)
             .setParameter("async", PinsetterKernel.SINGLE_JOB_GROUP)
             .setInteger("finished", JobState.FINISHED.ordinal())
             .setInteger("failed", JobState.FAILED.ordinal())
             .setInteger("canceled", JobState.CANCELED.ordinal());
+
         if (!activeIds.isEmpty()) {
             query.setParameterList("activeIds", activeIds);
         }
+
         return query.executeUpdate();
     }
 
     private Date getBlockingCutoff() {
         Calendar calendar = Calendar.getInstance();
-        calendar.add(Calendar.SECOND, -1 * config.getInt(
-            ConfigProperties.PINSETTER_ASYNC_JOB_TIMEOUT));
+        calendar.add(Calendar.SECOND, -1 * config.getInt(ConfigProperties.PINSETTER_ASYNC_JOB_TIMEOUT));
         return calendar.getTime();
     }
 }
