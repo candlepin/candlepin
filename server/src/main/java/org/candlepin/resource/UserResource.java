@@ -124,7 +124,7 @@ public class UserResource {
     @ApiImplicitParams({
         @ApiImplicitParam(name = "user", paramType = "body", required = true,
         dataType = "org.candlepin.model.User$UserCreationRequest")
-        })
+    })
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)

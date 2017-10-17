@@ -159,6 +159,20 @@ public class Environment extends AbstractHibernateObject implements Serializable
     }
 
     @Override
+    public boolean equals(Object anObject) {
+        if (this == anObject) {
+            return true;
+        }
+        if (!(anObject instanceof Environment)) {
+            return false;
+        }
+
+        Environment another = (Environment) anObject;
+
+        return id.equals(another.getId());
+    }
+
+    @Override
     public String toString() {
         return String.format("Environment [id: %s, name: %s, owner: %s]", this.id, this.name, this.owner);
     }

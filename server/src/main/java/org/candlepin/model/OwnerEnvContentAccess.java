@@ -92,7 +92,9 @@ public class OwnerEnvContentAccess extends AbstractHibernateObject {
     }
 
     public void setEnvironment(Environment environment) {
-        if (environment == null) { return; }
+        if (environment == null) {
+            return;
+        }
         if (environment.getId() == null) {
             throw new IllegalStateException(
                 "Environment must be persisted before it can be linked to an owner"
