@@ -318,6 +318,18 @@ public interface PoolManager {
      */
     CandlepinQuery<Pool> getMasterPoolsForOwnerExcludingSubs(Owner owner, Collection<String> excludedSubs);
 
+    /**
+     * Retrieves the master pool associated with the specified subscription ID. If there is not a
+     * master pool asscoated with the given subscription, this method should return null.
+     *
+     * @param subscriptionId
+     *  The subscription ID to use to lookup a master pool
+     *
+     * @return
+     *  the master pool associated with the specified subscription.
+     */
+    Pool getMasterPoolBySubscriptionId(String subscriptionId);
+
     void deletePools(Collection<Pool> pools);
 
     void deletePools(Collection<Pool> pools, Set<String> alreadyDeletedPools);
@@ -325,8 +337,7 @@ public interface PoolManager {
     void handlePostEntitlement(PoolManager manager, Consumer consumer,
         Map<String, Entitlement> entitlements, Map<String, PoolQuantity> poolQuantityMap);
 
-    void checkBonusPoolQuantities(Owner owner,
-        Map<String, Entitlement> entitlements);
+    void checkBonusPoolQuantities(Owner owner, Map<String, Entitlement> entitlements);
 
     /**
      * Checks whether or not the given pool is a managed (that is, non-custom) pool.

@@ -2217,6 +2217,11 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     @Override
+    public Pool getMasterPoolBySubscriptionId(String subscriptionId) {
+        return this.poolCurator.getMasterPoolBySubscriptionId(subscriptionId);
+    }
+
+    @Override
     public Set<String> retrieveServiceLevelsForOwner(Owner owner, boolean exempt) {
         return poolCurator.retrieveServiceLevelsForOwner(owner, exempt);
     }
