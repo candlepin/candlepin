@@ -17,3 +17,8 @@ services:
       - ../:/candlepin-dev
     depends_on:
       - db
+networks:
+  default:
+    driver: bridge
+    driver_opts:
+      com.docker.network.driver.mtu: 1400
