@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -219,19 +220,15 @@ public class SubscriptionResource {
     @Path("/{subscription_id}")
     @Produces(MediaType.APPLICATION_JSON)
     public void deleteSubscription(@PathParam("subscription_id") String subscriptionId) {
+        // Look up master pool by subscription Id
+        Pool master = this.poolManager.getMasterPoolBySubscriptionId(subscriptionId);
 
-        // Lookup pools from subscription ID
-        int count = 0;
-
-        for (Pool pool : this.poolManager.getPoolsBySubscriptionId(subscriptionId)) {
-            this.poolManager.deletePool(pool);
-            ++count;
-        }
-
-        if (count == 0) {
+        if (master == null) {
             throw new NotFoundException(
                 i18n.tr("A subscription with the ID \"{0}\" could not be found.", subscriptionId));
         }
+
+        this.poolManager.deletePools(Collections.singletonList(master), null);
     }
 
 }
