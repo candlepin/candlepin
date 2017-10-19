@@ -27,6 +27,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import org.apache.commons.lang.StringUtils;
+
+import org.hibernate.Hibernate;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.Fetch;
@@ -363,13 +365,6 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     @Transient
     private Set<ProvidedProduct> derivedProvidedProductDtos;
 
-    /**
-     * Transient property that holds derived provided products from database. It is
-     * populated before serialization happens.
-     */
-    @Transient
-    private Set<ProvidedProduct> derivedProvidedProductDtosCached;
-
     @Transient
     @JsonSerialize(using = CandlepinLegacyAttributeSerializer.class)
     @JsonDeserialize(using = CandlepinAttributeDeserializer.class)
@@ -434,7 +429,6 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         this.importedDerivedProductAttributes = null;
         this.providedProductDtos = null;
         this.derivedProvidedProductDtos = null;
-        this.derivedProvidedProductDtosCached = null;
 
         this.markedForDelete = false;
 
@@ -973,11 +967,15 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     }
 
     public void addProvidedProduct(Product provided) {
-        this.providedProducts.add(provided);
+        if (provided != null) {
+            this.providedProducts.add(provided);
+            this.providedProductDtos = null;
+        }
     }
 
     public void setProvidedProducts(Collection<Product> providedProducts) {
         this.providedProducts.clear();
+        this.providedProductDtos = null;
 
         if (providedProducts != null) {
             this.providedProducts.addAll(providedProducts);
@@ -992,9 +990,52 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         return providedProductDtos;
     }
 
+    /*
+     * Used temporarily while importing a manifest.
+     */
+    public void setProvidedProductDtos(Set<ProvidedProduct> dtos) {
+        providedProductDtos = dtos;
+    }
+
+    @JsonIgnore
+    public Set<Product> getDerivedProvidedProducts() {
+        return derivedProvidedProducts;
+    }
+
+    public void addDerivedProvidedProduct(Product provided) {
+        if (provided != null) {
+            this.derivedProvidedProducts.add(provided);
+            this.derivedProvidedProductDtos = null;
+        }
+    }
+
+    public void setDerivedProvidedProducts(Collection<Product> derivedProvidedProducts) {
+        this.derivedProvidedProducts.clear();
+        this.derivedProvidedProductDtos = null;
+
+        if (derivedProvidedProducts != null) {
+            this.derivedProvidedProducts.addAll(derivedProvidedProducts);
+        }
+    }
+
+    /*
+     * Always exported as a DTO for API/import backward compatibility.
+     */
+    @JsonProperty("derivedProvidedProducts")
+    public Set<ProvidedProduct> getDerivedProvidedProductDtos() {
+        return this.derivedProvidedProductDtos;
+    }
+
+    /*
+     * Used temporarily while importing a manifest.
+     */
+    public void setDerivedProvidedProductDtos(Set<ProvidedProduct> dtos) {
+        derivedProvidedProductDtos = dtos;
+    }
+
     /**
      * This is a helper method to fill in transient fields in this class.
-     * The transient fields are providedProductDtos, derivedProvidedProductDtosCached
+     * The transient fields are providedProductDtos, derivedProvidedProductDtos
      *
      * The reason we need to fill transient properties is, that various parts of code
      * that rely on serialization expect Pool object.
@@ -1006,31 +1047,31 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      * @param productCurator
      */
     public void populateAllTransientProvidedProducts(ProductCurator productCurator) {
-        Set<ProvidedProduct> prods = new HashSet<ProvidedProduct>();
+        // If we've already populated this field, assume it's correctly populated
+        if (this.providedProductDtos == null) {
+            Collection<Product> products = Hibernate.isInitialized(this.providedProducts) ?
+                this.providedProducts :
+                productCurator.getPoolProvidedProductsCached(this.getId());
 
-        if (this.providedProductDtos != null) {
-            prods.addAll(this.providedProductDtos);
+            this.providedProductDtos = new HashSet<ProvidedProduct>();
+
+            for (Product product : products) {
+                this.providedProductDtos.add(new ProvidedProduct(product));
+            }
         }
 
-        for (Product p : productCurator.getPoolProvidedProductsCached(id)) {
-            prods.add(new ProvidedProduct(p));
+        // If we've already populated this field, assume it's correctly populated
+        if (this.derivedProvidedProductDtos == null) {
+            Collection<Product> products = Hibernate.isInitialized(this.derivedProvidedProducts) ?
+                this.derivedProvidedProducts :
+                productCurator.getPoolDerivedProvidedProductsCached(this.getId());
+
+            this.derivedProvidedProductDtos = new HashSet<ProvidedProduct>();
+
+            for (Product product : products) {
+                this.derivedProvidedProductDtos.add(new ProvidedProduct(product));
+            }
         }
-
-        providedProductDtos = prods;
-
-        derivedProvidedProductDtosCached = new HashSet<ProvidedProduct>();
-
-        for (Product p : productCurator.getPoolDerivedProvidedProductsCached(id)) {
-            ProvidedProduct product = new ProvidedProduct(p);
-            derivedProvidedProductDtosCached.add(product);
-        }
-    }
-
-    /*
-     * Used temporarily while importing a manifest.
-     */
-    public void setProvidedProductDtos(Set<ProvidedProduct> dtos) {
-        providedProductDtos = dtos;
     }
 
     /**
@@ -1249,57 +1290,6 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
             this.importedDerivedProductId = null;
             this.importedDerivedProductAttributes = null;
         }
-    }
-
-    @JsonIgnore
-    public Set<Product> getDerivedProvidedProducts() {
-        return derivedProvidedProducts;
-    }
-
-    public void addDerivedProvidedProduct(Product provided) {
-        this.derivedProvidedProducts.add(provided);
-    }
-
-    public void setDerivedProvidedProducts(Collection<Product> derivedProvidedProducts) {
-        this.derivedProvidedProducts.clear();
-
-        if (derivedProvidedProducts != null) {
-            this.derivedProvidedProducts.addAll(derivedProvidedProducts);
-        }
-    }
-
-    /*
-     * Always exported as a DTO for API/import backward compatibility.
-     */
-    @JsonProperty("derivedProvidedProducts")
-    public Set<ProvidedProduct> getDerivedProvidedProductDtos() {
-        Set<ProvidedProduct> pp = new HashSet<ProvidedProduct>();
-        Set<String> added = new HashSet<String>();
-
-        if (this.derivedProvidedProductDtosCached != null) {
-            for (ProvidedProduct p : this.derivedProvidedProductDtosCached) {
-                pp.add(p);
-                added.add(p.getProductId());
-            }
-        }
-
-        if (this.derivedProvidedProductDtos != null) {
-            for (ProvidedProduct p : this.derivedProvidedProductDtos) {
-                if (!added.contains(p.getProductId())) {
-                    pp.add(p);
-                }
-            }
-        }
-
-        return pp;
-    }
-
-
-    /*
-     * Used temporarily while importing a manifest.
-     */
-    public void setDerivedProvidedProductDtos(Set<ProvidedProduct> dtos) {
-        derivedProvidedProductDtos = dtos;
     }
 
     /*

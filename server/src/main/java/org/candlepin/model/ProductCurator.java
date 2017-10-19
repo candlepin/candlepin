@@ -18,6 +18,7 @@ import org.candlepin.cache.CandlepinCache;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.util.AttributeValidator;
 
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
@@ -39,7 +40,14 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.cache.Cache;
+import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
+import javax.persistence.Query;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
+import javax.persistence.criteria.ParameterExpression;
+import javax.persistence.criteria.Path;
 
 
 
@@ -175,7 +183,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
 
         //Now find, hydrate and cache all the products that has been
         //missing in the cache
-        Map<String, Product> freshProducts =  getHydratedProductsByUuid(notInCache);
+        Map<String, Product> freshProducts = this.getHydratedProductsByUuid(notInCache);
 
         productCache.putAll(freshProducts);
         products.addAll(freshProducts.values());
@@ -189,26 +197,170 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      * @return Map of UUID to Product instance
      */
     public Map<String, Product> getHydratedProductsByUuid(Set<String> uuids) {
-        if (uuids == null || uuids.isEmpty()) {
-            return new HashMap<String, Product>();
-        }
-
         Map<String, Product> productsByUuid = new HashMap<String, Product>();
 
-        for (Product p : this.listAllByUuids(uuids)) {
-            if (p == null) {
-                continue;
-            }
+        if (uuids != null && !uuids.isEmpty()) {
+            for (Product product : this.listAllByUuids(uuids)) {
+                // Fetching the size on these collections triggers a lazy load of the collections
+                product.getAttributes().size();
+                product.getDependentProductIds().size();
+                for (ProductContent pc : product.getProductContent()) {
+                    pc.getContent().getModifiedProductIds().size();
+                }
 
-            p.getAttributes().size();
-            for (ProductContent cont : p.getProductContent()) {
-                cont.getContent().getModifiedProductIds().size();
+                productsByUuid.put(product.getUuid(), product);
             }
-            p.getDependentProductIds().size();
-            productsByUuid.put(p.getUuid(), p);
         }
 
         return productsByUuid;
+    }
+
+    /**
+     * Fetches the provided and derived provided products for the specified pools, populating the
+     * respective collections in each pool object. The products will be pulled from the product
+     * cache where possible, and the cache will be hydrated with products that must be pulled from
+     * the database.
+     *
+     * @param pools
+     *  A collection of pools for which to fetch provided and derived provided products
+     *
+     * @return
+     *  the number of products cached as a result of this operation
+     */
+    public int hydratePoolProvidedProducts(Iterable<Pool> pools) {
+        int count = 0;
+
+        if (pools != null && pools.iterator().hasNext()) {
+            EntityManager entityManager = this.getEntityManager();
+            Cache<String, Product> productCache = this.candlepinCache.getProductCache();
+
+            // We use these set for both product UUIDs and product instances, once populated
+            Map<String, Set> poolProvidedProducts = new HashMap<String, Set>();
+            Map<String, Set> poolDerivedProvidedProducts = new HashMap<String, Set>();
+
+            Set<String> poolIds = new HashSet<String>();
+            Set<String> productUuids = new HashSet<String>();
+
+            for (Pool pool : pools) {
+                poolIds.add(pool.getId());
+            }
+
+            String ppSql =
+                "SELECT pool_id, product_uuid FROM cp2_pool_provided_products WHERE pool_id IN (:pids)";
+            String dpSql =
+                "SELECT pool_id, product_uuid FROM cp2_pool_derprov_products WHERE pool_id IN (:pids)";
+
+            Query ppUuidQuery = entityManager.createNativeQuery(ppSql);
+            Query dpUuidQuery = entityManager.createNativeQuery(dpSql);
+
+            int blockSize = this.getInBlockSize();
+            for (List<String> block : Iterables.partition(poolIds, blockSize)) {
+                // Fetch pool provided products...
+                ppUuidQuery.setParameter("pids", block);
+
+                for (Object[] row : (List<Object[]>) ppUuidQuery.getResultList()) {
+                    String poolId = (String) row[0];
+                    String productUuid = (String) row[1];
+
+                    Set<Object> ppSet = poolProvidedProducts.get(poolId);
+                    if (ppSet == null) {
+                        ppSet = new HashSet<Object>();
+                        poolProvidedProducts.put(poolId, ppSet);
+                    }
+
+                    Product product = productCache.get(productUuid);
+                    if (product != null) {
+                        ppSet.add(product);
+                    }
+                    else {
+                        ppSet.add(productUuid);
+                        productUuids.add(productUuid);
+                    }
+                }
+
+                dpUuidQuery.setParameter("pids", block);
+
+                for (Object[] row : (List<Object[]>) dpUuidQuery.getResultList()) {
+                    String poolId = (String) row[0];
+                    String productUuid = (String) row[1];
+
+                    Set<Object> dpSet = poolDerivedProvidedProducts.get(poolId);
+                    if (dpSet == null) {
+                        dpSet = new HashSet<Object>();
+                        poolDerivedProvidedProducts.put(poolId, dpSet);
+                    }
+
+                    Product product = productCache.get(productUuid);
+                    if (product != null) {
+                        dpSet.add(product);
+                    }
+                    else {
+                        dpSet.add(productUuid);
+                        productUuids.add(productUuid);
+                    }
+                }
+            }
+
+            // Fetch remaining products that we don't already have in the cache
+            if (productUuids.size() > 0) {
+                CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+                CriteriaQuery<Product> prodQuery = builder.createQuery(Product.class);
+                Root<Product> root = prodQuery.from(Product.class);
+                Path<String> target = root.<String>get("uuid");
+                ParameterExpression<List> param = builder.parameter(List.class);
+
+                root.fetch("attributes", javax.persistence.criteria.JoinType.LEFT);
+                root.fetch("dependentProductIds", javax.persistence.criteria.JoinType.LEFT);
+                root.fetch("productContent", javax.persistence.criteria.JoinType.LEFT);
+
+                prodQuery.select(root).where(target.in(param));
+
+                for (List<String> block : Iterables.partition(productUuids, blockSize)) {
+                    List<Product> products = entityManager.createQuery(prodQuery)
+                        .setParameter(param, block)
+                        .getResultList();
+
+                    for (Product product : products) {
+                        // Make sure we fetch all the dependent/modified products for each product's
+                        // content before we go about caching it...
+                        for (ProductContent pc : product.getProductContent()) {
+                            pc.getContent().getModifiedProductIds().size();
+                        }
+
+                        // Populate the cache for future products
+                        productCache.put(product.getUuid(), product);
+                        ++count;
+
+                        // Continue filling in our product maps (ugh...)
+                        // If this proves to be a bottleneck, we can always add *another* map to
+                        // track product=>pool mappings so we can skip pools that don't reference
+                        // a given product
+                        for (String poolId : poolIds) {
+                            Set<Object> ppSet = poolProvidedProducts.get(poolId);
+                            Set<Object> dpSet = poolDerivedProvidedProducts.get(poolId);
+
+                            if (ppSet != null && ppSet.remove(product.getUuid())) {
+                                ppSet.add(product);
+                            }
+
+                            if (dpSet != null && dpSet.remove(product.getUuid())) {
+                                dpSet.add(product);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Set our provided and derived provided products on the pools
+            for (Pool pool : pools) {
+                pool.setProvidedProducts((Set<Product>) poolProvidedProducts.get(pool.getId()));
+                pool.setDerivedProvidedProducts((Set<Product>) poolDerivedProvidedProducts.get(pool.getId()));
+            }
+
+            // Done!
+        }
+
+        return count;
     }
 
     /**

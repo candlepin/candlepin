@@ -603,27 +603,14 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
      */
     public int markDependentEntitlementsDirty(Iterable<Entitlement> entitlements, boolean excludeInput) {
         if (entitlements != null && entitlements.iterator().hasNext()) {
-            Map<String, Set<String>> cemap = new HashMap<String, Set<String>>();
+            Set<String> entitlementIds = new HashSet<String>();
 
-            // Deduplicate our entitlement IDs and group by consumer, discarding null/incomplete
-            // entitlements
+            // Deduplicate our entitlement IDs, discarding null/incomplete entitlements
             for (Entitlement entitlement : entitlements) {
                 // TODO: Should we throw an exception if we find a malformed/incomplete entitlement
                 // or just continue silently ignoring them?
-
-                if (entitlement != null && entitlement.getId() != null && entitlement.getConsumer() != null) {
-                    String cid = entitlement.getConsumer().getId();
-
-                    if (cid != null) {
-                        Set<String> consumerEntitlements = cemap.get(cid);
-
-                        if (consumerEntitlements == null) {
-                            consumerEntitlements = new HashSet<String>();
-                            cemap.put(cid, consumerEntitlements);
-                        }
-
-                        consumerEntitlements.add(entitlement.getId());
-                    }
+                if (entitlement != null && entitlement.getId() != null) {
+                    entitlementIds.add(entitlement.getId());
                 }
             }
 
@@ -647,7 +634,6 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
                 // Dependent pool => dependent entitlement
                 "JOIN cp_entitlement e2 ON e2.pool_id = ppp2.pool_id " +
                 "WHERE e1.consumer_id = e2.consumer_id " +
-                "  AND e1.consumer_id = :consumer_id " +
                 "  AND e1.id != e2.id " +
                 "  AND e2.dirty = false " +
                 "  AND e1.id IN (:entitlement_ids)";
@@ -659,22 +645,15 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             Query query = this.getEntityManager().createNativeQuery(querySql);
 
             int blockSize = Math.min(this.getInBlockSize(),
-                (this.getQueryParameterLimit() - 1) / (excludeInput ? 2 : 1));
+                this.getQueryParameterLimit() / (excludeInput ? 2 : 1));
 
             Set<String> dirtyIds = new HashSet<String>();
 
-            // Execute our query for each of the affected consumers
-            for (Map.Entry<String, Set<String>> entry : cemap.entrySet()) {
-                // This isn't strictly necessary, but it allows the DB to filter the indexes on a
-                // constant, reducing the query's runtime by about half.
-                query.setParameter("consumer_id", entry.getKey());
-
-                // We repeat the query for each block, as it's ~30% faster than adding more in blocks
-                // to the query. Also, considerably less complex.
-                for (List<String> block : Iterables.partition(entry.getValue(), blockSize)) {
-                    query.setParameter("entitlement_ids", block);
-                    dirtyIds.addAll(query.getResultList());
-                }
+            // We repeat the query for each block, as it's ~30% faster than adding more in blocks
+            // to the query. Also, considerably less complex.
+            for (List<String> block : Iterables.partition(entitlementIds, blockSize)) {
+                query.setParameter("entitlement_ids", block);
+                dirtyIds.addAll(query.getResultList());
             }
 
             // Update the affected entitlements, if necessary...

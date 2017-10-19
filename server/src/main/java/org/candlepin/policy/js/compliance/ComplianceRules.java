@@ -43,26 +43,27 @@ import java.util.List;
  * A class used to check consumer compliance status.
  */
 public class ComplianceRules {
-
-    private EntitlementCurator entCurator;
-    private JsRunner jsRules;
-    private RulesObjectMapper mapper;
     private static Logger log = LoggerFactory.getLogger(ComplianceRules.class);
+
+    private JsRunner jsRules;
+    private EntitlementCurator entCurator;
     private StatusReasonMessageGenerator generator;
     private EventSink eventSink;
-    // Use the curator to update consumer entitlement status every time we run compliance (with null date)
     private ConsumerCurator consumerCurator;
+    private RulesObjectMapper mapper;
 
     @Inject
     public ComplianceRules(JsRunner jsRules, EntitlementCurator entCurator,
-        StatusReasonMessageGenerator generator, EventSink eventSink,
-        ConsumerCurator consumerCurator, RulesObjectMapper mapper) {
-        this.entCurator = entCurator;
+        StatusReasonMessageGenerator generator, EventSink eventSink, ConsumerCurator consumerCurator,
+        RulesObjectMapper mapper) {
+
         this.jsRules = jsRules;
+        this.entCurator = entCurator;
         this.generator = generator;
         this.eventSink = eventSink;
         this.consumerCurator = consumerCurator;
         this.mapper = mapper;
+
         jsRules.init("compliance_name_space");
     }
 
@@ -147,10 +148,8 @@ public class ComplianceRules {
             allEnts.addAll(newEntitlements);
         }
 
-        /*
-         * Do not calculate compliance status for distributors and shares. It is prohibitively
-         * expensive and meaningless
-         */
+        // Do not calculate compliance status for distributors and shares. It is prohibitively
+        // expensive and meaningless
         if (c.isManifestDistributor() || c.isShare()) {
             return new ComplianceStatus(new Date());
         }
@@ -168,12 +167,15 @@ public class ComplianceRules {
         String json = jsRules.runJsFunction(String.class, "get_status", args);
         try {
             ComplianceStatus status = mapper.toObject(json, ComplianceStatus.class);
+
             for (ComplianceReason reason : status.getReasons()) {
                 generator.setMessage(c, reason, status.getDate());
             }
+
             if (currentCompliance) {
                 applyStatus(c, status, updateConsumer);
             }
+
             return status;
         }
         catch (Exception e) {
