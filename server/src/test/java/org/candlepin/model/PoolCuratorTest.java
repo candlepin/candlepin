@@ -2242,4 +2242,85 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertEquals(pool.getShared().longValue(), 5);
         assertEquals(pool.getExported().longValue(), 0);
     }
+
+    @Test
+    public void testClearPoolSourceEntitlementRefs() {
+        Date startDate = TestUtil.createDate(2010, 3, 2);
+        Date endDate = TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 2);
+
+        Pool pool1 = createPool(owner, product, 20L, startDate, endDate);
+        poolCurator.create(pool1);
+
+        Entitlement e = new Entitlement(pool1, consumer, 5);
+        e.setId("test-entitlement-id-1");
+        entitlementCurator.create(e);
+
+        Pool pool2 = createPool(owner, product, 20L, startDate, endDate);
+        pool2.setSourceEntitlement(e);
+        poolCurator.create(pool2);
+
+        this.poolCurator.clearPoolSourceEntitlementRefs(Arrays.asList(pool2.getId()));
+
+        this.poolCurator.refresh(pool2);
+        assertNull(pool2.getSourceEntitlement());
+    }
+
+    @Test
+    public void testClearPoolSourceEntitlementRefsDoesntAffectUnspecifiedPools() {
+        Date startDate = TestUtil.createDate(2010, 3, 2);
+        Date endDate = TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 2);
+
+        Pool pool1 = createPool(owner, product, 20L, startDate, endDate);
+        poolCurator.create(pool1);
+
+        Entitlement e = new Entitlement(pool1, consumer, 5);
+        e.setId("test-entitlement-id-1");
+        entitlementCurator.create(e);
+
+        Pool pool2 = createPool(owner, product, 20L, startDate, endDate);
+        pool2.setSourceEntitlement(e);
+        poolCurator.create(pool2);
+
+        this.poolCurator.clearPoolSourceEntitlementRefs(Arrays.asList(pool1.getId()));
+
+        this.poolCurator.refresh(pool2);
+        assertSame(e, pool2.getSourceEntitlement());
+    }
+
+
+    @Test
+    public void testClearPoolSourceEntitlementRefsWorksOnMultiplePools() {
+        Date startDate = TestUtil.createDate(2010, 3, 2);
+        Date endDate = TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 2);
+
+        Pool pool1 = createPool(owner, product, 20L, startDate, endDate);
+        poolCurator.create(pool1);
+
+        Entitlement e = new Entitlement(pool1, consumer, 5);
+        e.setId("test-entitlement-id-1");
+        entitlementCurator.create(e);
+
+        Pool pool2 = createPool(owner, product, 20L, startDate, endDate);
+        pool2.setSourceEntitlement(e);
+        poolCurator.create(pool2);
+
+        Pool pool3 = createPool(owner, product, 20L, startDate, endDate);
+        pool3.setSourceEntitlement(e);
+        poolCurator.create(pool3);
+
+        Pool pool4 = createPool(owner, product, 20L, startDate, endDate);
+        pool4.setSourceEntitlement(e);
+        poolCurator.create(pool4);
+
+
+        this.poolCurator.clearPoolSourceEntitlementRefs(Arrays.asList(pool2.getId(), pool3.getId()));
+
+        this.poolCurator.refresh(pool2);
+        this.poolCurator.refresh(pool3);
+        this.poolCurator.refresh(pool4);
+
+        assertNull(pool2.getSourceEntitlement());
+        assertNull(pool3.getSourceEntitlement());
+        assertSame(e, pool4.getSourceEntitlement());
+    }
 }

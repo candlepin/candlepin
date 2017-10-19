@@ -37,6 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -365,7 +366,7 @@ public class PoolRules {
      * @param consumer
      * @return updates
      */
-    public List<PoolUpdate> updatePoolsFromStack(Consumer consumer, List<Pool> pools,
+    public List<PoolUpdate> updatePoolsFromStack(Consumer consumer, Collection<Pool> pools,
         boolean deleteIfNoStackedEnts) {
         return updatePoolsFromStack(consumer, pools, null, deleteIfNoStackedEnts);
     }
@@ -377,8 +378,9 @@ public class PoolRules {
      * @param consumer
      * @return updates
      */
-    public List<PoolUpdate> updatePoolsFromStack(Consumer consumer, List<Pool> pools,
-        Set<String> alreadyDeletedPools, boolean deleteIfNoStackedEnts) {
+    public List<PoolUpdate> updatePoolsFromStack(Consumer consumer, Collection<Pool> pools,
+        Collection<String> alreadyDeletedPools, boolean deleteIfNoStackedEnts) {
+
         Map<String, List<Entitlement>> entitlementMap = new HashMap<String, List<Entitlement>>();
         Set<String> sourceStackIds = new HashSet<String>();
         List<PoolUpdate> result = new ArrayList<PoolUpdate>();
@@ -416,7 +418,7 @@ public class PoolRules {
         return result;
     }
 
-    public PoolUpdate updatePoolFromStackedEntitlements(Pool pool, List<Entitlement> stackedEnts,
+    public PoolUpdate updatePoolFromStackedEntitlements(Pool pool, Collection<Entitlement> stackedEnts,
         Map<String, Product> changedProducts) {
         PoolUpdate update = new PoolUpdate(pool);
 
