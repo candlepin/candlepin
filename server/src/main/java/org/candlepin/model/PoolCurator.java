@@ -722,15 +722,15 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
 
     @SuppressWarnings("unchecked")
-    public List<Entitlement> retrieveOrderedEntitlementsOf(List<Pool> existingPools) {
+    public List<Entitlement> retrieveOrderedEntitlementsOf(Collection<Pool> existingPools) {
         return criteriaToSelectEntitlementForPools(existingPools)
             .addOrder(Order.desc("created"))
             .list();
     }
 
     @SuppressWarnings("unchecked")
-    public List<String> retrieveOrderedEntitlementIdsOf(Pool existingPool) {
-        return criteriaToSelectEntitlementForPool(existingPool)
+    public List<String> retrieveOrderedEntitlementIdsOf(Collection<Pool> pools) {
+        return this.criteriaToSelectEntitlementForPools(pools)
             .addOrder(Order.desc("created"))
             .setProjection(Projections.id())
             .list();
@@ -749,7 +749,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             .add(Restrictions.eq("pool", entitlementPool));
     }
 
-    private Criteria criteriaToSelectEntitlementForPools(List<Pool> entitlementPools) {
+    private Criteria criteriaToSelectEntitlementForPools(Collection<Pool> entitlementPools) {
         return this.currentSession().createCriteria(Entitlement.class)
                 .add(CPRestrictions.in("pool", entitlementPools));
     }
@@ -1834,5 +1834,138 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 query.executeUpdate();
             }
         }
+    }
+
+    /**
+     * Fetches a set of pool IDs which represent the set of provided pool IDs that currently exist
+     * in the database
+     *
+     * @param poolIds
+     *  A collection of pool IDs to use to fetch existing pool IDs
+     *
+     * @return
+     *  a set of pool IDs representing existing pools in the given collection of pool IDs
+     */
+    public Set<String> getExistingPoolIdsByIds(Iterable<String> poolIds) {
+        Set<String> existing = new HashSet<String>();
+
+        if (poolIds != null && poolIds.iterator().hasNext()) {
+            String jpql = "SELECT DISTINCT p.id FROM Pool p WHERE p.id IN (:pids)";
+            TypedQuery<String> query = this.getEntityManager()
+                .createQuery(jpql, String.class);
+
+            for (List<String> block : this.partition(poolIds)) {
+                query.setParameter("pids", block);
+                existing.addAll(query.getResultList());
+            }
+        }
+
+        return existing;
+    }
+
+    /**
+     * Fetches a map of consumer IDs to pool IDs of stack derived pools for the given stack IDs. If
+     * no such pools can be found, an empty map is returned.
+     *
+     * @param stackIds
+     *  A collection of stack IDs to use to fetch consumer pool IDs
+     *
+     * @return
+     *  a map of consumer IDs to pool IDs of stack derived pools fro the given stack IDs
+     */
+    public Map<String, Set<String>> getConsumerStackDerivedPoolIdMap(Iterable<String> stackIds) {
+        Map<String, Set<String>> consumerPoolMap = new HashMap<String, Set<String>>();
+
+        if (stackIds != null && stackIds.iterator().hasNext()) {
+            // We do this in native SQL to avoid some unnecessary joins
+            String jpql = "SELECT DISTINCT ss.sourceConsumer.id, ss.derivedPool.id FROM SourceStack ss " +
+                "WHERE ss.sourceStackId IN (:stackids)";
+
+            TypedQuery<Object[]> query = this.getEntityManager().createQuery(jpql, Object[].class);
+
+            for (List<String> block : this.partition(stackIds)) {
+                query.setParameter("stackids", block);
+
+                for (Object[] row : query.getResultList()) {
+                    String consumerId = (String) row[0];
+                    String poolId = (String) row[1];
+
+                    Set<String> poolIds = consumerPoolMap.get(consumerId);
+                    if (poolIds == null) {
+                        poolIds = new HashSet<String>();
+                        consumerPoolMap.put(consumerId, poolIds);
+                    }
+
+                    poolIds.add(poolId);
+                }
+            }
+        }
+
+        return consumerPoolMap;
+    }
+
+    /**
+     * Fetches a list of pool IDs for stack derived pools that will be unentitled with the deletion
+     * of the specified entitlement IDs.
+     * <p></p>
+     * <strong>WARNING</strong>: This method can miss stack derived pools in cases where the number
+     * of provided entitlement IDs exceeds the size limitations for the SQL IN operator and
+     * entitlements for a given stack end up in multiple blocks.
+     * <p></p>
+     * To work around this issue, the entitlement list needs to be manually partitioned into blocks
+     * either by consumer or stack ID, such that the partitions are smaller than the IN operator
+     * limit returned by getInBlockSize().
+     *
+     * @param entitlementIds
+     *  A collection of entitlement IDs for entitlements that are being deleted
+     *
+     * @return
+     *  a collection of pool IDs representing unentitled stack derived pools with the deletion of
+     *  the specified entitlements
+     */
+    public Set<String> getUnentitledStackDerivedPoolIds(Iterable<String> entitlementIds) {
+        Set<String> output = new HashSet<String>();
+
+        String sql = "SELECT ss.derivedpool_id " +
+            "FROM cp_pool_source_stack ss " +
+            "LEFT JOIN (SELECT e.consumer_id, ppa.value AS stack_id, e.id AS entitlement_id " +
+            "    FROM cp_entitlement e " +
+            "    JOIN cp_pool p ON p.id = e.pool_id " +
+            "    JOIN cp2_product_attributes ppa ON ppa.product_uuid = p.product_uuid " +
+            "    LEFT JOIN cp_pool_source_stack ss ON ss.derivedpool_id = p.id " +
+            "    WHERE ss.id IS NULL " +
+            "        AND p.sourceentitlement_id IS NULL " +
+            "        AND ppa.name = :stackid_attrib_name ";
+
+        if (entitlementIds != null && entitlementIds.iterator().hasNext()) {
+            // Impl note:
+            // We do this in raw SQL as HQL/JPQL does not allow joining on a query/temp table, and
+            // it allows us to skip a few joins to get directly to the data we need.
+            sql += " AND e.id NOT IN (:eids) " +
+                ") ec ON ec.consumer_id = ss.sourceconsumer_id AND ec.stack_id = ss.sourcestackid " +
+                "WHERE ec.entitlement_id IS NULL";
+
+            javax.persistence.Query query = this.getEntityManager()
+                .createNativeQuery(sql)
+                .setParameter("stackid_attrib_name", Product.Attributes.STACKING_ID);
+
+            int blockSize = Math.min(this.getQueryParameterLimit() - 1, this.getInBlockSize());
+            for (List<String> block : Iterables.partition(entitlementIds, blockSize)) {
+                query.setParameter("eids", block);
+                output.addAll(query.getResultList());
+            }
+        }
+        else {
+            sql += ") ec ON ec.consumer_id = ss.sourceconsumer_id AND ec.stack_id = ss.sourcestackid " +
+                "WHERE ec.entitlement_id IS NULL";
+
+            javax.persistence.Query query = this.getEntityManager()
+                .createNativeQuery(sql)
+                .setParameter("stackid_attrib_name", Product.Attributes.STACKING_ID);
+
+            output.addAll(query.getResultList());
+        }
+
+        return output;
     }
 }

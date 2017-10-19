@@ -93,13 +93,11 @@ public class AutobindRulesTest {
 
         when(config.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
 
-        InputStream is = this.getClass().getResourceAsStream(
-            RulesCurator.DEFAULT_RULES_FILE);
+        InputStream is = this.getClass().getResourceAsStream(RulesCurator.DEFAULT_RULES_FILE);
         Rules rules = new Rules(Util.readFile(is));
 
         when(rulesCurator.getRules()).thenReturn(rules);
-        when(rulesCurator.getUpdated()).thenReturn(
-            TestDateUtil.date(2010, 1, 1));
+        when(rulesCurator.getUpdated()).thenReturn(TestDateUtil.date(2010, 1, 1));
         when(cacheProvider.get()).thenReturn(cache);
         JsRunner jsRules = new JsRunnerProvider(rulesCurator, cacheProvider).get();
         autobindRules = new AutobindRules(jsRules, mockProductCurator,
@@ -338,6 +336,7 @@ public class AutobindRulesTest {
     private Pool createPool(String poolId, Owner owner, Product sku, Product provided) {
         Pool pool = TestUtil.createPool(owner, sku);
         pool.setId(poolId);
+        pool.addProvidedProduct(provided);
         when(mockProductCurator.getPoolProvidedProductsCached(poolId))
             .thenReturn(Collections.singleton(provided));
         return pool;

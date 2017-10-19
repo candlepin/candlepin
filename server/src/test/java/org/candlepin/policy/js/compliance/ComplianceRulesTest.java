@@ -113,9 +113,10 @@ public class ComplianceRulesTest {
         when(rulesCuratorMock.getRules()).thenReturn(rules);
         when(cacheProvider.get()).thenReturn(cache);
         provider = new JsRunnerProvider(rulesCuratorMock, cacheProvider);
-        compliance = new ComplianceRules(provider.get(),
-            entCurator, new StatusReasonMessageGenerator(i18n), eventSink,
-            consumerCurator, new RulesObjectMapper(new ProductCachedSerializationModule(productCurator)));
+        compliance = new ComplianceRules(provider.get(), entCurator, new StatusReasonMessageGenerator(i18n),
+            eventSink, consumerCurator,
+            new RulesObjectMapper(new ProductCachedSerializationModule(productCurator)));
+
         owner = new Owner("test");
         activeGuestAttrs = new HashMap<String, String>();
         activeGuestAttrs.put("virtWhoType", "libvirt");
@@ -129,9 +130,10 @@ public class ComplianceRulesTest {
     @Test
     public void additivePropertiesCanStillDeserialize() {
         JsRunner mockRunner = mock(JsRunner.class);
-        compliance = new ComplianceRules(mockRunner,
-            entCurator, new StatusReasonMessageGenerator(i18n), eventSink,
-            consumerCurator, new RulesObjectMapper(new ProductCachedSerializationModule(productCurator)));
+        compliance = new ComplianceRules(mockRunner, entCurator, new StatusReasonMessageGenerator(i18n),
+            eventSink, consumerCurator,
+            new RulesObjectMapper(new ProductCachedSerializationModule(productCurator)));
+
         when(mockRunner.runJsFunction(any(Class.class), eq("get_status"),
             any(JsContext.class))).thenReturn("{\"unknown\": \"thing\"}");
         Consumer c = mockConsumerWithTwoProductsAndNoEntitlements();

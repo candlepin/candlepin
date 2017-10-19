@@ -575,15 +575,30 @@ public class CandlepinPoolManager implements PoolManager {
         return processPoolUpdates(poolEvents, updatedPools);
     }
 
-    protected Set<String> processPoolUpdates(
-        Map<String, EventBuilder> poolEvents, List<PoolUpdate> updatedPools) {
-        Set<String> entitlementsToRegen = Util.newSet();
-        for (PoolUpdate updatedPool : updatedPools) {
+    protected Set<String> processPoolUpdates(Map<String, EventBuilder> poolEvents,
+        List<PoolUpdate> updatedPools) {
 
+        boolean flush = false;
+        Set<String> existingPoolIds = new HashSet<String>();
+        Set<Pool> poolsToDelete = new HashSet<Pool>();
+        Set<Pool> poolsToRegenEnts = new HashSet<Pool>();
+        Set<String> entitlementsToRegen = new HashSet<String>();
+
+        // Get our list of pool IDs so we can check which of them still exist in the DB...
+        for (PoolUpdate update : updatedPools) {
+            if (update != null && update.getPool() != null && update.getPool().getId() != null) {
+                existingPoolIds.add(update.getPool().getId());
+            }
+        }
+
+        existingPoolIds = this.poolCurator.getExistingPoolIdsByIds(existingPoolIds);
+
+        // Process pool updates...
+        for (PoolUpdate updatedPool : updatedPools) {
             Pool existingPool = updatedPool.getPool();
             log.info("Pool changed: {}", updatedPool.toString());
 
-            if (!poolCurator.exists(existingPool)) {
+            if (existingPool == null || !existingPoolIds.contains(existingPool.getId())) {
                 log.info("Pool has already been deleted from the database.");
                 continue;
             }
@@ -591,17 +606,13 @@ public class CandlepinPoolManager implements PoolManager {
             // Delete pools the rules signal needed to be cleaned up:
             if (existingPool.isMarkedForDelete()) {
                 log.warn("Deleting pool as requested by rules: {}", existingPool.getId());
-                deletePool(existingPool);
+                poolsToDelete.add(existingPool);
                 continue;
             }
 
-            // save changes for the pool
+            // save changes for the pool. We'll flush these changes later.
             this.poolCurator.merge(existingPool);
-
-            // Explicitly call flush to avoid issues with how we sync up the attributes.
-            // This prevents "instance does not yet exist as a row in the database" errors
-            // when we later try to lock the pool if we need to revoke entitlements:
-            this.poolCurator.flush();
+            flush = true;
 
             // quantity has changed. delete any excess entitlements from pool
             // the quantity has not yet been expressed on the pool itself
@@ -611,13 +622,13 @@ public class CandlepinPoolManager implements PoolManager {
             }
 
             // dates changed. regenerate all entitlement certificates
-            if (updatedPool.getDatesChanged() ||
-                updatedPool.getProductsChanged() ||
+            if (updatedPool.getDatesChanged() || updatedPool.getProductsChanged() ||
                 updatedPool.getBrandingChanged()) {
-                List<String> entitlements = poolCurator.retrieveOrderedEntitlementIdsOf(existingPool);
-                entitlementsToRegen.addAll(entitlements);
+
+                poolsToRegenEnts.add(existingPool);
             }
 
+            // Build event for this update...
             EventBuilder builder = poolEvents.get(existingPool.getId());
             if (builder != null) {
                 Event event = builder.setNewEntity(existingPool).buildEvent();
@@ -628,6 +639,22 @@ public class CandlepinPoolManager implements PoolManager {
             }
         }
 
+        // Flush our merged changes
+        if (flush) {
+            this.poolCurator.flush();
+        }
+
+        // Fetch entitlement IDs for updated pools...
+        if (poolsToRegenEnts.size() > 0) {
+            entitlementsToRegen.addAll(this.poolCurator.retrieveOrderedEntitlementIdsOf(poolsToRegenEnts));
+        }
+
+        // Delete pools marked for deletion
+        if (poolsToDelete.size() > 0) {
+            this.deletePools(poolsToDelete);
+        }
+
+        // Return entitlement IDs in need regeneration
         return entitlementsToRegen;
     }
 
@@ -648,10 +675,11 @@ public class CandlepinPoolManager implements PoolManager {
         for (Pool existing : floatingPools) {
             EventBuilder eventBuilder = eventFactory.getEventBuilder(Target.POOL, Type.MODIFIED)
                 .setOldEntity(existing);
+
             poolEvents.put(existing.getId(), eventBuilder);
         }
 
-        // Hand off to rules to determine which pools need updating:
+        // Hand off to rules to determine which pools need updating
         List<PoolUpdate> updatedPools = poolRules.updatePools(floatingPools, changedProducts);
         regenerateCertificatesByEntIds(processPoolUpdates(poolEvents, updatedPools), lazy);
     }
@@ -1996,6 +2024,12 @@ public class CandlepinPoolManager implements PoolManager {
             // Fetch pools which are derived from these entitlements...
             pids = this.poolCurator.getPoolIdsForSourceEntitlements(eids);
 
+            // Fetch stack derived pools which will be unentitled when we revoke entitlements
+            // Impl note: This may occassionally miss stack derived pools in cases where our
+            // entitlement count exceeds the IN block limitations. In those cases, we'll end
+            // up doing a recursive call into this method, which sucks, but will still work.
+            pids.addAll(this.poolCurator.getUnentitledStackDerivedPoolIds(eids));
+
             // Fetch pools which are derived from the pools we're going to delete...
             pids.addAll(this.poolCurator.getDerivedPoolIdsForPools(pids));
 
@@ -2007,7 +2041,8 @@ public class CandlepinPoolManager implements PoolManager {
         while (poolIds.size() != cachedSize);
 
         // If we've been provided a collection of already-deleted pool IDs, remove those from
-        // the list so we don't pull entitlements for them.
+        // the list so we don't try to delete them again.
+        // TODO: Remove this and stop recursively calling into this method.
         if (alreadyDeletedPoolIds != null) {
             poolIds.removeAll(alreadyDeletedPoolIds);
         }
@@ -2072,9 +2107,10 @@ public class CandlepinPoolManager implements PoolManager {
             if (!entitlements.isEmpty()) {
                 // Update entitlement counts on affected, non-deleted pools
                 log.info("Updating entitlement counts on remaining, affected pools...");
-                Map<Consumer, List<Entitlement>> consumerEntitlements =
+                Map<Consumer, List<Entitlement>> consumerStackedEnts =
                     new HashMap<Consumer, List<Entitlement>>();
                 List<Pool> poolsToSave = new LinkedList<Pool>();
+                Set<String> stackIds = new HashSet<String>();
 
                 for (Entitlement entitlement : entitlements) {
                     // Since we're sifting through these already, let's also sort them into consumer lists
@@ -2082,16 +2118,17 @@ public class CandlepinPoolManager implements PoolManager {
                     Consumer consumer = entitlement.getConsumer();
                     Pool pool = entitlement.getPool();
 
-                    List<Entitlement> stackedEntitlements = consumerEntitlements.get(consumer);
+                    List<Entitlement> stackedEntitlements = consumerStackedEnts.get(consumer);
                     if (stackedEntitlements == null) {
                         stackedEntitlements = new LinkedList<Entitlement>();
-                        consumerEntitlements.put(consumer, stackedEntitlements);
+                        consumerStackedEnts.put(consumer, stackedEntitlements);
                     }
 
                     if (!"true".equals(pool.getAttributeValue(Pool.Attributes.DERIVED_POOL)) &&
                         pool.hasProductAttribute(Product.Attributes.STACKING_ID)) {
 
                         stackedEntitlements.add(entitlement);
+                        stackIds.add(entitlement.getPool().getStackId());
                     }
 
                     // Update quantities if the entitlement quantity is non-zero
@@ -2112,37 +2149,54 @@ public class CandlepinPoolManager implements PoolManager {
                 }
 
                 this.poolCurator.updateAll(poolsToSave, false, false);
-                this.consumerCurator.updateAll(consumerEntitlements.keySet(), false, false);
+                this.consumerCurator.updateAll(consumerStackedEnts.keySet(), false, false);
                 this.consumerCurator.flush();
                 log.info("Entitlement counts successfully updated for {} pools and {} consumers",
-                    poolsToSave.size(), consumerEntitlements.size());
+                    poolsToSave.size(), consumerStackedEnts.size());
 
                 // Update stacked entitlements for affected consumers(???)
-                log.info("Updating stacked entitlements for {} consumers...", consumerEntitlements.size());
-                for (Entry<Consumer, List<Entitlement>> entry : consumerEntitlements.entrySet()) {
-                    Consumer consumer = entry.getKey();
-                    List<Entitlement> stackedEntitlements = entry.getValue();
+                if (!stackIds.isEmpty()) {
+                    // Get consumer + pool tuples for stack ids
+                    Map<String, Set<String>> consumerStackDerivedPoolIds = this.poolCurator
+                        .getConsumerStackDerivedPoolIdMap(stackIds);
 
-                    log.debug("Updating {} stacking entitlements for consumer: {}",
-                        stackedEntitlements.size(), consumer);
+                    if (!consumerStackDerivedPoolIds.isEmpty()) {
+                        log.info("Updating stacked entitlements for {} consumers...",
+                            consumerStackDerivedPoolIds.size());
 
-                    Set<String> stackIds = new HashSet<String>();
-                    for (Entitlement entitlement : stackedEntitlements) {
-                        stackIds.add(entitlement.getPool().getStackId());
-                    }
+                        for (Consumer consumer : consumerStackedEnts.keySet()) {
+                            Set<String> subPoolIds = consumerStackDerivedPoolIds.get(consumer.getId());
 
-                    if (!stackIds.isEmpty()) {
-                        Collection<Pool> subPools = this.poolCurator
-                            .getSubPoolForStackIds(consumer, stackIds);
+                            if (subPoolIds != null && !subPoolIds.isEmpty()) {
+                                // Resolve pool IDs...
+                                Collection<Pool> subPools = this.poolCurator.listAllByIds(subPoolIds).list();
 
-                        if (subPools != null && !subPools.isEmpty()) {
-                            this.poolRules.updatePoolsFromStack(
-                                consumer, subPools, alreadyDeletedPoolIds, true);
+                                // Invoke the rules engine to update the affected pools
+                                if (subPools != null && !subPools.isEmpty()) {
+                                    log.debug("Updating {} stacking pools for consumer: {}",
+                                        subPools.size(), consumer);
+
+                                    this.poolRules.updatePoolsFromStack(
+                                        consumer, subPools, alreadyDeletedPoolIds, true);
+                                }
+                            }
                         }
                     }
                 }
 
                 this.consumerCurator.flush();
+
+                // Hydrate remaining consumer pools so we can skip some extra work during serialization
+                Set<Pool> poolsToHydrate = new HashSet<Pool>();
+
+                for (Consumer consumer : consumerStackedEnts.keySet()) {
+                    for (Entitlement entitlement : consumer.getEntitlements()) {
+                        poolsToHydrate.add(entitlement.getPool());
+                    }
+                }
+
+                this.productCurator.hydratePoolProvidedProducts(poolsToHydrate);
+
 
                 // Fire post-unbind events for revoked entitlements
                 log.info("Firing post-unbind events for {} entitlements...", entitlements.size());
@@ -2151,9 +2205,9 @@ public class CandlepinPoolManager implements PoolManager {
                 }
 
                 // Recalculate status for affected consumers
-                log.info("Recomputing status for {} consumers", consumerEntitlements.size());
+                log.info("Recomputing status for {} consumers", consumerStackedEnts.size());
                 int i = 0;
-                for (Consumer consumer : consumerEntitlements.keySet()) {
+                for (Consumer consumer : consumerStackedEnts.keySet()) {
                     this.complianceRules.getStatus(consumer);
 
                     if (++i % 1000 == 0) {
