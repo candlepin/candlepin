@@ -4,7 +4,7 @@
         xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
-        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
     <changeSet id="20170718095058-1" author="vrjain">
         <comment> purge orphaned stack derived pools.
@@ -13,7 +13,7 @@
             1. delete stack derived pools with no source stacks
             2. delete bonus pools with no source subscription
             3. delete stack derived pools with no source ents
-                
+
             we are trying to purge orphaned pools, but we need to ensure the dependency chain
             of the pools is purged too. Thus, for each use case we delete the following:
             1.delete provided products of the pools whose source entitlements are going
@@ -28,8 +28,8 @@
             7.delete provided products of the pools in the use case
             8.delete source subs of the pools in the use case
             9.delete derived provided products of the pools in the use case
-            10.delete pools in the use case  
-                
+            10.delete pools in the use case
+
             </comment>
         <sql>
 DELETE

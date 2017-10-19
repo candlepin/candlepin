@@ -55,6 +55,9 @@ module Liquibase
 
     attr_writer :template
     def template
+      # Do not change the schemaLocation unless you know what you are doing.  As of October 2017, RHEL 7 only
+      # supports Liquibase 3.1 and moving the schemaLocation to 3.5 will cause the JVM to attempt to fetch the
+      # schema over http which breaks in disconnected installations.  See BZ #1503164.
       @template || <<-LIQUIBASE
         <?xml version="1.0" encoding="UTF-8"?>
 
@@ -62,7 +65,7 @@ module Liquibase
                 xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                 xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
-                http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+                http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
             <changeSet id="<%= id%>" author="<%= author%>">
                 <comment><%= description %></comment>
