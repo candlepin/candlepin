@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.1.6
+Version: 2.1.7
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,16 @@ fi
 
 #raw
 %changelog
+* Thu Oct 19 2017 Christopher Snyder <csnyder@redhat.com> 2.1.7-1
+- 1503694: Fixed an error that could occur while deleting subscriptions
+  (crog@redhat.com)
+- 1503298: bind with an empty string as POST body (adarshvritant@gmail.com)
+- Made several optimizations to PoolManager.deletePools (crog@redhat.com)
+- 1503179: Delete missing products from activation keys while upgrading.
+  (awood@redhat.com)
+- 1500848: Optimized fetching/deleting pools by subscription IDs
+  (crog@redhat.com)
+
 * Tue Oct 10 2017 Kevin Howell <khowell@redhat.com> 2.1.6-1
 - 1499373: Updated how conditional content/modifier entitlements are marked
   dirty (crog@redhat.com)
