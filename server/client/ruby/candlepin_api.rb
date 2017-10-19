@@ -802,14 +802,10 @@ class Candlepin
     return post(path, qparams)
   end
 
-  def consume_pools(poolAndQuantities, params={})
+  def consume_pool_empty_body(pool_id, params={})
     uuid = params[:uuid] || @uuid
-    path = "/consumers/#{uuid}/entitlements"
-    params = {
-      :async => true
-    }
-
-    return post(path, params, poolAndQuantities)
+    path = "/consumers/#{uuid}/entitlements?pool=#{pool_id}&quantity=1"
+    return post(path, {}," ")
   end
 
   def consume_product(product=nil, params={})
