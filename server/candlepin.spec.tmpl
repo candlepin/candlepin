@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.0.41
+Version: 2.0.42
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,10 @@ fi
 
 #raw
 %changelog
+* Thu Oct 19 2017 Christopher Snyder <csnyder@redhat.com> 2.0.42-1
+- 1502807: bind with an empty string as POST body (adarshvritant@gmail.com)
+- 1502817: Fixed an issue with CPM.deletePools (crog@redhat.com)
+
 * Wed Oct 11 2017 Kevin Howell <khowell@redhat.com> 2.0.41-1
 - 1500846: Optimized fetching/deleting pools by subscription IDs
   (crog@redhat.com)
