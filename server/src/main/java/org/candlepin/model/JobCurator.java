@@ -227,8 +227,7 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
 
     private Date getBlockingCutoff() {
         Calendar calendar = Calendar.getInstance();
-        calendar.add(Calendar.SECOND, -1 * config.getInt(
-            ConfigProperties.PINSETTER_ASYNC_JOB_TIMEOUT));
+        calendar.add(Calendar.SECOND, -1 * config.getInt(ConfigProperties.PINSETTER_ASYNC_JOB_TIMEOUT));
         return calendar.getTime();
     }
 }
