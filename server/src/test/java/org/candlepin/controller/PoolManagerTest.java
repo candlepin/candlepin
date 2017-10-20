@@ -302,7 +302,14 @@ public class PoolManagerTest {
     @Test
     public void deletePoolsTest() {
         Set<Pool> pools = new HashSet<Pool>();
-        pools.add(TestUtil.createPool(TestUtil.createProduct()));
+
+        Product prod = TestUtil.createProduct();
+        Pool pool = TestUtil.createPool(prod);
+        pool.setId("test-id");
+        pools.add(pool);
+
+        when(mockPoolCurator.lockAndLoadByIds(any(Iterable.class))).thenReturn(pools);
+
         doNothing().when(mockPoolCurator).batchDelete(eq(pools), anySetOf(String.class));
         manager.deletePools(pools);
         verify(mockPoolCurator).batchDelete(eq(pools), anySetOf(String.class));
@@ -1165,22 +1172,32 @@ public class PoolManagerTest {
 
         List<Pool> pools = Util.newList();
         Pool p = TestUtil.createPool(owner, product);
+        p.setId("test-pool");
         p.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
         p.setStartDate(expiredStart);
         p.setEndDate(expiredDate);
         p.setConsumed(1L);
         pools.add(p);
 
-        when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(p);
+        when(mockPoolCurator.lockAndLoadByIds(anyCollection())).thenReturn(pools);
 
         mockPoolsList(pools);
 
         List<Entitlement> poolEntitlements = Util.newList();
         Entitlement ent = TestUtil.createEntitlement();
+        ent.setId("test-ent");
         ent.setPool(p);
         ent.setQuantity(1);
         poolEntitlements.add(ent);
         p.getEntitlements().addAll(poolEntitlements);
+
+        when(mockPoolCurator.getEntitlementIdsForPools(anyCollection()))
+            .thenReturn(Arrays.asList(ent.getId()));
+
+        CandlepinQuery<Entitlement> cqmockEnt = mock(CandlepinQuery.class);
+        when(cqmockEnt.list()).thenReturn(poolEntitlements);
+        when(cqmockEnt.iterator()).thenReturn(poolEntitlements.iterator());
+        when(entitlementCurator.listAllByIds(anyCollection())).thenReturn(cqmockEnt);
 
         ValidationResult result = new ValidationResult();
         when(preHelper.getResult()).thenReturn(result);
@@ -1200,10 +1217,8 @@ public class PoolManagerTest {
 
         this.manager.getRefresher(mockSubAdapter, mockOwnerAdapter).add(owner).run();
 
-        List<Entitlement> entsToDelete = Arrays.asList(ent);
-        Set<Pool> poolsToDelete = new HashSet<Pool>(Arrays.asList(p));
-        verify(mockPoolCurator).batchDelete(eq(poolsToDelete), anySetOf(String.class));
-        verify(entitlementCurator).batchDelete(eq(entsToDelete));
+        verify(mockPoolCurator).batchDelete(eq(pools), anyCollectionOf(String.class));
+        verify(entitlementCurator).batchDelete(eq(poolEntitlements));
     }
 
     private List<Pool> createPoolsWithSourceEntitlement(Entitlement e, Product p) {
@@ -1256,18 +1271,16 @@ public class PoolManagerTest {
         manager.cleanupExpiredPools();
 
         // And the pool should be deleted:
-        Set<Pool> expectedPools = new HashSet<Pool>(pools);
-        verify(mockPoolCurator).batchDelete(eq(expectedPools), anySetOf(String.class));
+        when(mockPoolCurator.lockAndLoadByIds(anyCollection())).thenReturn(pools);
     }
 
     @Test
     public void testCleanupExpiredPoolsReadOnlySubscriptions() {
         Pool p = createPoolWithEntitlements();
         p.setSubscriptionId("subid");
-        List<Pool> pools = new LinkedList<Pool>();
-        pools.add(p);
+        List<Pool> pools = Arrays.asList(p);
 
-        when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(p);
+        when(mockPoolCurator.lockAndLoadByIds(anyCollection())).thenReturn(pools);
         when(mockPoolCurator.listExpiredPools(anyInt())).thenReturn(pools);
         when(mockPoolCurator.entitlementsIn(p)).thenReturn(new ArrayList<Entitlement>(p.getEntitlements()));
         Subscription sub = new Subscription();
@@ -1281,8 +1294,7 @@ public class PoolManagerTest {
         manager.cleanupExpiredPools();
 
         // And the pool should be deleted:
-        Set<Pool> expectedPools = new HashSet<Pool>(pools);
-        verify(mockPoolCurator).batchDelete(eq(expectedPools), anySetOf(String.class));
+        verify(mockPoolCurator).batchDelete(eq(pools), anySetOf(String.class));
         verify(mockSubAdapter, never()).getSubscription(any(String.class));
         verify(mockSubAdapter, never()).deleteSubscription(any(Subscription.class));
     }
