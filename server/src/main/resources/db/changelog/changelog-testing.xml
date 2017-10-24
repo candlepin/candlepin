@@ -2311,4 +2311,5 @@
     <include file="db/changelog/20170718095058-purge-orphaned-pools.xml"/>
     <include file="db/changelog/20171010164730-add-cp-consumer-username-index.xml"/>
     <include file="db/changelog/20171011093538-add-sourcesub-id-index.xml"/>
+    <include file="db/changelog/20171020150559-add-index-to-cp-consumer-content-tags.xml"/>
 </databaseChangeLog>
