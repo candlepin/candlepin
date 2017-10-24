@@ -117,7 +117,6 @@
     </module>
 
     <module name="MissingDeprecated" />
-    <!-- <module name="MissingOverride" /> -->
 
     <!--
        #######################################################################
@@ -149,11 +148,8 @@
       <property name="protectedAllowed" value="true" />
       <property name="packageAllowed" value="true" />
     </module>
-    <!-- <module name="FinalClass"/> -->
     <module name="InterfaceIsType"/>
     <module name="HideUtilityClassConstructor"/>
-    <!-- <module name="DesignForExtension"/>-->
-    <!-- <module name="MutableException"/>-->
     <module name="ThrowsCount">
       <property name="max" value="4" />
     </module>
@@ -164,52 +160,14 @@
        See http://checkstyle.sourceforge.net/config_coding.html
        #######################################################################
      -->
-    <!-- <module name="ArrayTrailingComma" /> -->
-    <!-- <module name="AvoidInlineConditionals"/> -->
-    <!-- <module name="CovariantEquals"/> -->
     <module name="EmptyStatement"/>
     <module name="EqualsHashCode"/>
-    <!-- module name="FinalLocalVariable"/> -->
-    <!-- module name="HiddenField"/> -->
     <module name="IllegalInstantiation"/>
-    <!-- module name="IllegalToken"/> -->
-    <!-- module name="IllegalTokenText"/> -->
     <module name="InnerAssignment"/>
-    <!-- <module name="MagicNumber" /> -->
     <module name="MissingSwitchDefault"/>
-    <!-- <module name="ModifiedControlVariable" /> -->
-    <!-- <module name="RedundantThrows"/> -->
     <module name="SimplifyBooleanExpression"/>
     <module name="SimplifyBooleanReturn"/>
-    <!-- <module name="NestedIfDepth"/> -->
-    <!-- <module name="NestedTryDepth"/> -->
-    <!-- <module name="NoClone"/> -->
-    <!-- <module name="NoFinalizer"/> -->
-    <!-- <module name="SuperClone"/> -->
     <module name="SuperFinalize"/>
-    <!-- <module name="IllegalCatch"/> -->
-    <!-- <module name="IllegalThrows"/> -->
-    <!-- <module name="PackageDeclaration"/> -->
-    <!-- <module name="ReturnCount"/> -->
-    <!-- <module name="IllegalType"/> -->
-    <!-- <module name="DeclarationOrder"/> -->
-    <!-- <module name="ParameterAssignment"/> -->
-    <!-- <module name="ExplicitInitialization"/> -->
-    <!-- <module name="DefaultComesLast"/> -->
-    <!-- <module name="MissingCtor"/> -->
-    <!-- <module name="FallThrough"/> -->
-    <!-- <module name="MultipleStringLiterals"/> -->
-    <!-- <module name="MultipleVariableDeclarations"/> -->
-    <!-- <module name="RequireThis"/> -->
-    <!-- <module name="UnnecessaryParentheses"/> -->
-
-    <!--
-       #######################################################################
-       DUPLICATE CODE
-       See http://checkstyle.sourceforge.net/config_duplicates.html
-       #######################################################################
-     -->
-    <!-- <module name="StrictDuplicateCode"/> -->
 
     <!--
        #######################################################################
@@ -220,7 +178,6 @@
     <module name="AvoidStarImport">
         <property name="allowStaticMemberImports" value="true"/>
     </module>
-    <!-- <module name="AvoidStaticImport"/> -->
     <module name="IllegalImport">
       <!-- Ban Junit 3 namespace -->
       <property name="illegalPkgs" value="junit"/>
@@ -238,7 +195,6 @@
         <!-- <property name="groups" value="org.candlepin,com.redhat.rhn,com,org,net,ch,java,javax"/> -->
         <!-- <property name="separated" value="true"/> -->
     </module>
-    <!-- <module name="ImportControl"/> -->
 
     <!--
        #######################################################################
@@ -246,7 +202,6 @@
        See http://checkstyle.sourceforge.net/config_javadoc.html
        #######################################################################
      -->
-    <!-- <module name="JavadocPackage"/> -->
     <module name="JavadocType">
       <property name="scope" value="${javadoc.type.scope}" />
     </module>
@@ -264,8 +219,6 @@
       <property name="scope" value="${javadoc.var.scope}" />
       <property name="severity" value="ignore"/>
     </module>
-    <!-- <module name="JavadocStyle"/>            -->
-    <!-- <module name="WriteTag"/>            -->
 
     <!--
        #######################################################################
@@ -273,18 +226,12 @@
        See http://checkstyle.sourceforge.net/config_misc.html
        #######################################################################
      -->
-    <!-- <module name="TodoComment"/> -->
-    <!-- <module name="UncommentedMain"/> -->
     <module name="UpperEll"/>
     <module name="ArrayTypeStyle"/>
     <module name="UpperEll"/>
-    <!-- <module name="FinalParameters"/> -->
-    <!-- <module name="DescendantToken"/> -->
     <module name="Indentation">
       <property name="forceStrictCondition" value="true" />
     </module>
-    <!-- <module name="TrailingComment"/> -->
-    <!-- <module name="Regexp"/> -->
 
     <!--
        #######################################################################
@@ -303,16 +250,12 @@
        See http://checkstyle.sourceforge.net/config_naming.html
        #######################################################################
      -->
-    <!-- <module name="AbstractClassName"/> -->
-    <!-- <module name="ClassTypeParameterName"/> -->
     <module name="ConstantName">
       <property name="format" value="^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$|^log$"/>
     </module>
     <module name="LocalFinalVariableName"/>
     <module name="LocalVariableName"/>
-    <!-- <module name="MemberName"/> -->
     <module name="MethodName"/>
-    <!-- <module name="MethodTypeParameterName"/> -->
     <module name="PackageName">
       <property name="format" value="^[a-z]+(\.[A-Za-z][A-Za-z0-9]*)*$"/>
     </module>
@@ -322,23 +265,10 @@
 
     <!--
        #######################################################################
-       REGEXP
-       See http://checkstyle.sourceforge.net/config_regexp.html
-       #######################################################################
-     -->
-    <!-- <module name="RegexpSingleline"/> -->
-
-    <!-- <module name="RegexpMultiline"/> -->
-    <!-- <module name="RegexpSinglelineJava"/> -->
-
-    <!--
-       #######################################################################
        SIZES
        See http://checkstyle.sourceforge.net/config_sizes.html
        #######################################################################
      -->
-    <!-- <module name="ExecutableStatementCount"/> -->
-    <!-- <module name="FileLength"/> -->
     <module name="LineLength">
       <property name="ignorePattern" value="import"/>
       <property name="max" value="110"/>
@@ -348,11 +278,9 @@
        <property name="max" value="100"/>
        <property name="countEmpty" value="false"/>
     </module>
-    <!-- <module name="AnonInnerLength"/> -->
     <module name="ParameterNumber">
       <property name="max" value="30"/>
     </module>
-    <!-- <module name="OuterTypeNumber"/> -->
 
     <!--
        #######################################################################
@@ -377,7 +305,6 @@
       <property name="option" value="eol" />
     </module>
     <module name="ParenPad"/>
-    <!-- <module name="TypecastParenPad"/>  -->
     <module name="WhitespaceAfter">
       <property name="tokens" value="COMMA, SEMI, TYPECAST"/>
     </module>
@@ -398,7 +325,6 @@
        Resource swagger annotations
        #######################################################################
     -->
-    <module name="org.candlepin.checks.ResourceSwaggerCheck">
-    </module>
+    <module name="org.candlepin.checks.ResourceSwaggerCheck"/>
   </module>
 </module>

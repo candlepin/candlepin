@@ -208,7 +208,7 @@ JAVA_TOOLS = file(Java.tools_jar)
 
 SCANNOTATION = 'org.scannotation:scannotation:jar:1.0.3'
 
-CHECKSTYLE = ['com.puppycrawl.tools:checkstyle:jar:7.0',
+CHECKSTYLE = ['com.puppycrawl.tools:checkstyle:jar:8.2',
               'org.antlr:antlr4-runtime:jar:4.5.3'] + ANTLR
 
 # Make Util available in all projects.  See http://buildr.apache.org/extending.html#extensions
@@ -235,7 +235,7 @@ define "candlepin" do
   define "checks" do
     pom.name = "Candlepin Style Checks"
     pom.description = "Custom Checkstyle checks for Candlepin"
-    project.version = '0.1'
+    project.version = '0.2'
     eclipse.natures :java
     package(:jar)
 

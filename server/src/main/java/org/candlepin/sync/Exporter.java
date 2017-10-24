@@ -609,7 +609,9 @@ public class Exporter {
 
     private void exportDistributorVersions(File baseDir) throws IOException {
         List<DistributorVersion> versions = distVerCurator.findAll();
-        if (versions == null || versions.isEmpty()) { return; }
+        if (versions == null || versions.isEmpty()) {
+            return;
+        }
 
         File distVerDir = new File(baseDir.getCanonicalPath(), "distributor_version");
         distVerDir.mkdir();

@@ -281,7 +281,9 @@ public class JobStatus extends AbstractHibernateObject {
     }
 
     public void setResultData(Object resultData)  {
-        if (resultData == null) { return; }
+        if (resultData == null) {
+            return;
+        }
 
         byte[] data = new byte[0];
         ByteArrayOutputStream baos = null;
@@ -313,8 +315,13 @@ public class JobStatus extends AbstractHibernateObject {
     }
 
     public Object getResultData() {
-        if (this.resultData == null) { return null; }
-        if (this.cloakData) { return "[cloaked]"; }
+        if (this.resultData == null) {
+            return null;
+        }
+
+        if (this.cloakData) {
+            return "[cloaked]";
+        }
 
         Object result = null;
         ByteArrayInputStream bais = null;
