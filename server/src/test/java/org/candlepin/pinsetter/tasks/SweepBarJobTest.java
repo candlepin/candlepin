@@ -29,6 +29,7 @@ import org.quartz.JobKey;
 import org.quartz.SchedulerException;
 
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * SweepBarJobTest
@@ -43,7 +44,10 @@ public class SweepBarJobTest {
     public void init() throws SchedulerException {
         MockitoAnnotations.initMocks(this);
         sweepBarJob = new SweepBarJob(j, pk);
-        when(pk.getSingleJobKeys()).thenReturn((new HashSet<JobKey>()));
+        Set<JobKey> mockJK = new HashSet<JobKey>();
+        JobKey jk = new JobKey("test key");
+        mockJK.add(jk);
+        when(pk.getSingleJobKeys()).thenReturn(mockJK);
     }
 
     @Test
