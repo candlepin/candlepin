@@ -31,6 +31,7 @@ import org.candlepin.common.logging.LoggingConfigurator;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.SuspendModeTransitioner;
 import org.candlepin.logging.LoggerContextListener;
+import org.candlepin.model.Status;
 import org.candlepin.pinsetter.core.PinsetterContextListener;
 import org.candlepin.resteasy.ResourceLocatorMap;
 import org.candlepin.swagger.CandlepinSwaggerModelConverter;
@@ -58,9 +59,13 @@ import net.sf.ehcache.management.ManagementService;
 import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.nio.charset.Charset;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 import javax.management.MBeanServer;
 import javax.persistence.EntityManagerFactory;
@@ -125,6 +130,7 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         LoggingConfigurator.init(config);
 
         servletContext.setAttribute(CONFIGURATION_NAME, config);
+        setCapabilities(config);
         log.debug("Candlepin stored config on context.");
 
         // set things up BEFORE calling the super class' initialize method.
@@ -205,6 +211,16 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
             Util.closeSafely(injector.getInstance(AMQPBusPublisher.class),
                 "AMQPBusPublisher");
         }
+    }
+
+    protected void setCapabilities(Configuration config) {
+        Set<String> blacklistedSet = config.getSet(ConfigProperties.HIDDEN_CAPABILITIES,
+            Collections.<String>emptySet());
+        Set<String> exposedSet = new HashSet<String>(Arrays.asList(Status.DEFAULT_CAPABILITIES));
+        exposedSet.removeAll(blacklistedSet);
+
+        Status.setAvailableCapabilities(exposedSet.toArray(new String[exposedSet.size()]));
+        log.info("Candlepin will show support for {}", Status.getAvailableCapabilities());
     }
 
     protected Configuration readConfiguration(ServletContext context)
