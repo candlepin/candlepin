@@ -119,8 +119,7 @@ public class StackedSubPoolValueAccumulator {
             }
         }
         else {
-            for (Product provided : productCurator
-                .getPoolDerivedProvidedProductsCached(nextStackedPool)) {
+            for (Product provided : productCurator.getPoolDerivedProvidedProductsCached(nextStackedPool)) {
                 this.expectedProvidedProds.add(provided);
             }
         }

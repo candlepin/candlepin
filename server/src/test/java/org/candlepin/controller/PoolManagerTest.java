@@ -282,6 +282,13 @@ public class PoolManagerTest {
         List<PoolUpdate> updatedPools = new ArrayList<PoolUpdate>();
         Pool deletedPool = Mockito.mock(Pool.class);
         Pool normalPool = Mockito.mock(Pool.class);
+
+        when(normalPool.getId()).thenReturn("normal-pool-id");
+
+        Set<String> existingPoolIds = new HashSet<String>();
+        existingPoolIds.add("normal-pool-id");
+
+        when(mockPoolCurator.getExistingPoolIdsByIds(any(Iterable.class))).thenReturn(existingPoolIds);
         when(mockPoolCurator.exists(deletedPool)).thenReturn(false);
         when(mockPoolCurator.exists(normalPool)).thenReturn(true);
 
