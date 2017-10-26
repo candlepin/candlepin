@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.1.7
+Version: 2.1.8
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,14 @@ fi
 
 #raw
 %changelog
+* Thu Oct 26 2017 Kevin Howell <khowell@redhat.com> 2.1.8-1
+- Database fixes for async jobs (wpoteat@redhat.com)
+- Add a setting to allow users to mask capabilities. (awood@redhat.com)
+- 1506012: Optimized pool serialization and dependent entitlement lookup
+  (crog@redhat.com)
+- 1503164: Do not use schema version past what is available in RHEL 7.
+  (awood@redhat.com)
+
 * Thu Oct 19 2017 Christopher Snyder <csnyder@redhat.com> 2.1.7-1
 - 1503694: Fixed an error that could occur while deleting subscriptions
   (crog@redhat.com)
