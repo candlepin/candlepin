@@ -131,6 +131,9 @@ public class ConfigProperties {
     // Space separated list of resources to hide in the GET / list:
     public static final String HIDDEN_RESOURCES = "candlepin.hidden_resources";
 
+    // Space separated list of resources to hide in GET /status
+    public static final String HIDDEN_CAPABILITIES = "candlepin.hidden_capabilities";
+
     // Authentication
     public static final String TRUSTED_AUTHENTICATION = "candlepin.auth.trusted.enable";
     public static final String SSL_AUTHENTICATION = "candlepin.auth.ssl.enable";
@@ -349,6 +352,7 @@ public class ConfigProperties {
             // By default, environments should be hidden so clients do not need to
             // submit one when registering.
             this.put(HIDDEN_RESOURCES, "environments");
+            this.put(HIDDEN_CAPABILITIES, "");
 
             this.put(FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
 
