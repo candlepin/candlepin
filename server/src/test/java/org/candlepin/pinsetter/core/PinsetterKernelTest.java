@@ -454,6 +454,11 @@ public class PinsetterKernelTest {
         pk = new PinsetterKernel(config, jfactory, jlistener, jcurator,
             sfactory, triggerListener, modeManager);
 
+        Set<JobKey> mockJK = new HashSet<JobKey>();
+        JobKey jk = new JobKey("test key");
+        mockJK.add(jk);
+        when(pk.getSingleJobKeys()).thenReturn(mockJK);
+
         pk.unpauseScheduler();
         verify(jcurator).findCanceledJobs(any(Set.class));
         verify(sched).start();

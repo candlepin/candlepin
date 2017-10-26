@@ -72,9 +72,12 @@ public class SweepBarJob extends KingpinJob {
             for (JobKey key : keys) {
                 statusIds.add(key.getName());
             }
-            int canceled = jobCurator.cancelOrphanedJobs(statusIds);
-            if (canceled > 0) {
-                log.info("Canceled " + canceled + " orphaned jobs");
+            int cancelled = 0;
+            for (List<String> block : this.partition(statusIds)) {
+                cancelled += jobCurator.cancelOrphanedJobs(block);
+            }
+            if (cancelled > 0) {
+                log.info("Cancelled " + cancelled + " orphaned jobs");
             }
         }
         catch (Exception e) {

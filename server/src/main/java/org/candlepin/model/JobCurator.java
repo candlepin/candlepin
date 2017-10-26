@@ -76,6 +76,7 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
         }
     }
 
+    @Transactional
     public int deleteJobNoStatusReturn(String jobId) {
         return this.currentSession().createQuery(
             "delete from JobStatus where id = :jobid")
@@ -83,6 +84,7 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
                 .executeUpdate();
     }
 
+    @Transactional
     public int cleanupAllOldJobs(Date deadline) {
         return this.currentSession().createQuery(
             "delete from JobStatus where updated <= :date")
@@ -90,6 +92,7 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
                .executeUpdate();
     }
 
+    @Transactional
     public int cleanUpOldCompletedJobs(Date deadLineDt) {
         return this.currentSession().createQuery(
             "delete from JobStatus where updated <= :date and " +
@@ -199,6 +202,7 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
         return cancelOrphanedJobs(activeIds, 1000L * 60L * 2L); //2 minutes
     }
 
+    @Transactional
     public int cancelOrphanedJobs(List<String> activeIds, Long millis) {
         Date before = new Date(new Date().getTime() - millis);
         String hql = "update JobStatus j " +
