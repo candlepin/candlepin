@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.0.42
+Version: 2.0.43
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,10 @@ fi
 
 #raw
 %changelog
+* Thu Oct 26 2017 Kevin Howell <khowell@redhat.com> 2.0.43-1
+- Database fixes for async jobs (mstead@redhat.com)
+- Add a setting to allow users to mask capabilities. (awood@redhat.com)
+
 * Thu Oct 19 2017 Christopher Snyder <csnyder@redhat.com> 2.0.42-1
 - 1502807: bind with an empty string as POST body (adarshvritant@gmail.com)
 - 1502817: Fixed an issue with CPM.deletePools (crog@redhat.com)
