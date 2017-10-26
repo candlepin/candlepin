@@ -15,7 +15,8 @@
 package org.candlepin.guice;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.TestingModules;
@@ -28,6 +29,7 @@ import org.candlepin.common.config.ConfigurationPrefixes;
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.junit.CandlepinLiquibaseResource;
+import org.candlepin.model.Status;
 import org.candlepin.pinsetter.core.PinsetterContextListener;
 
 import com.google.inject.AbstractModule;
@@ -42,8 +44,11 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 
 import javax.servlet.ServletContext;
@@ -122,6 +127,30 @@ public class CandlepinContextListenerTest {
         verify(ctx).setAttribute(
             eq(CandlepinContextListener.CONFIGURATION_NAME), eq(config));
         verify(configRead).verify(eq(ctx));
+
+        Set<String> displayedCapabilities = new HashSet<String>(
+            Arrays.asList(Status.getAvailableCapabilities()));
+        Set<String> expectedCapabilities = new HashSet<String>(Arrays.asList(Status.DEFAULT_CAPABILITIES));
+        assertEquals(expectedCapabilities, displayedCapabilities);
+    }
+
+    @Test
+    public void blackListsCapabilities() {
+        Set<String> testSet = new HashSet<String>();
+        testSet.add("cores");
+        testSet.add("ram");
+
+        when(config.getSet(eq(ConfigProperties.HIDDEN_CAPABILITIES), any(Set.class))).thenReturn(testSet);
+        prepareForInitialization();
+        listener.contextInitialized(evt);
+
+        Set<String> expectedCapabilities = new HashSet<String>(Arrays.asList(Status.DEFAULT_CAPABILITIES));
+        expectedCapabilities.remove("cores");
+        expectedCapabilities.remove("ram");
+
+        Set<String> displayedCapabilities = new HashSet<String>(
+            Arrays.asList(Status.getAvailableCapabilities()));
+        assertEquals(expectedCapabilities, displayedCapabilities);
     }
 
     @Test
