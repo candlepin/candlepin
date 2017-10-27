@@ -290,6 +290,13 @@ public class MapConfigurationTest {
     }
 
     @Test
+    public void testGetSet() {
+        config.setProperty("x", "  a  , b  ,  c  ");
+        Set<String> expected = new HashSet<String>(Arrays.asList("a", "b", "c"));
+        assertEquals(expected, config.getSet("x"));
+    }
+
+    @Test
     public void testGetPropertyWithDefault() {
         assertEquals("z", config.getProperty("x", "z"));
     }

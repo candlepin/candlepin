@@ -19,14 +19,14 @@ import org.candlepin.model.CandlepinModeChange.Mode;
 import org.candlepin.model.CandlepinModeChange.Reason;
 import org.candlepin.model.Rules.RulesSourceEnum;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 import java.util.Date;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
-
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 
 /**
  * Status
@@ -35,6 +35,12 @@ import io.swagger.annotations.ApiModelProperty;
 @XmlRootElement(name = "status")
 @XmlAccessorType(XmlAccessType.PROPERTY)
 public class Status {
+    public static final String[] DEFAULT_CAPABILITIES = { "cores", "ram", "instance_multiplier",
+        "derived_product", "cert_v3", "guest_limit", "vcpu", "hypervisors_async", "storage_band",
+        "remove_by_pool_id", "batch_bind", "org_level_content_access" };
+
+    private static String[] availableCapabilities = DEFAULT_CAPABILITIES;
+
     /**
      * The current Suspend Mode of Candlepin
      */
@@ -65,11 +71,6 @@ public class Status {
 
     private Date timeUTC;
 
-    @ApiModelProperty(example = "[ \"cores\", \"ram\", \"instance_multiplier\" ]")
-    private String[] managerCapabilities = {"cores", "ram", "instance_multiplier",
-        "derived_product", "cert_v3", "guest_limit", "vcpu", "hypervisors_async",
-        "storage_band", "remove_by_pool_id", "batch_bind", "org_level_content_access"};
-
     private RulesSourceEnum rulesSource;
 
 
@@ -93,6 +94,14 @@ public class Status {
         this.modeReason = reason;
         this.modeChangeTime = modeChangeTime;
         this.setRulesSource(rulesSource);
+    }
+
+    public static void setAvailableCapabilities(String[] availableCapabilities) {
+        Status.availableCapabilities = availableCapabilities;
+    }
+
+    public static String[] getAvailableCapabilities() {
+        return Status.availableCapabilities;
     }
 
     public boolean getResult() {
@@ -156,8 +165,9 @@ public class Status {
         this.rulesSource = rulesSource;
     }
 
+    @ApiModelProperty(example = "[ \"cores\", \"ram\", \"instance_multiplier\" ]")
     public String[] getManagerCapabilities() {
-        return managerCapabilities;
+        return Status.availableCapabilities;
     }
 
     public Mode getMode() {
