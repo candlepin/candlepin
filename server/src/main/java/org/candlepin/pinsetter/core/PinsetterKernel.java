@@ -406,7 +406,7 @@ public class PinsetterKernel implements ModeChangeListener {
             // this deletes from the scheduler, it's already marked as
             // canceled in the JobStatus table
             if (scheduler.deleteJob(jobKey((String) id, group))) {
-                log.info("canceled job " + group + ":" + id + " in scheduler");
+                log.info("Canceled job in scheduler: {}:{} ", group, id);
             }
         }
         catch (SchedulerException e) {

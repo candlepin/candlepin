@@ -26,8 +26,7 @@ import org.quartz.JobKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -68,16 +67,15 @@ public class SweepBarJob extends KingpinJob {
     public void toExecute(JobExecutionContext ctx) throws JobExecutionException {
         try {
             Set<JobKey> keys = pinsetterKernel.getSingleJobKeys();
-            List<String> statusIds = new LinkedList<String>();
+            Set<String> statusIds = new HashSet<String>();
+
             for (JobKey key : keys) {
                 statusIds.add(key.getName());
             }
-            int cancelled = 0;
-            for (List<String> block : this.partition(statusIds)) {
-                cancelled += jobCurator.cancelOrphanedJobs(block);
-            }
+
+            int cancelled = jobCurator.cancelOrphanedJobs(statusIds);
             if (cancelled > 0) {
-                log.info("Cancelled " + cancelled + " orphaned jobs");
+                log.info("Cancelled {} orphaned jobs", cancelled);
             }
         }
         catch (Exception e) {
