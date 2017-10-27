@@ -34,9 +34,12 @@ import org.quartz.Job;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.quartz.JobKey;
+import org.quartz.SchedulerException;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -71,7 +74,7 @@ public class CancelJobJobTest extends BaseJobTest{
     }
 
     @Test
-    public void cancelTest() throws JobExecutionException, PinsetterException {
+    public void cancelTest() throws JobExecutionException, PinsetterException, SchedulerException {
         JobDetail jd = newJob(Job.class)
             .withIdentity("Kayfabe", "Deluxe")
             .build();
@@ -80,6 +83,9 @@ public class CancelJobJobTest extends BaseJobTest{
         List<JobStatus> jl = new ArrayList<JobStatus>();
         jl.add(js);
 
+        Set<JobKey> jobKeys = new HashSet<JobKey>();
+        jobKeys.add(new JobKey("Kayfabe"));
+        when(pk.getSingleJobKeys()).thenReturn(jobKeys);
         CandlepinQuery query = mock(CandlepinQuery.class);
         when(query.list()).thenReturn(jl);
         when(j.findCanceledJobs(any(Set.class))).thenReturn(query);

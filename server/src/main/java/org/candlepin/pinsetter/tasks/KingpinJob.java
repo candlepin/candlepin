@@ -16,6 +16,7 @@ package org.candlepin.pinsetter.tasks;
 
 import static org.quartz.impl.matchers.NameMatcher.jobNameEquals;
 
+import com.google.common.collect.Iterables;
 import org.candlepin.audit.EventSink;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
@@ -42,6 +43,7 @@ import org.slf4j.MDC;
 
 import javax.persistence.EntityExistsException;
 import javax.persistence.PersistenceException;
+import java.util.List;
 
 /**
  * KingpinJob replaces TransactionalPinsetterJob, which encapsulated
@@ -57,6 +59,7 @@ public abstract class KingpinJob implements Job {
     @Inject private EventSink eventSink;
     @Inject private CandlepinRequestScope candlepinRequestScope;
 
+    public static final int IN_OPERATOR_BLOCK_SIZE = 2048;
     protected static String prefix = "job";
 
     @Override
@@ -237,5 +240,9 @@ public abstract class KingpinJob implements Job {
     // Override in jobs to disable execution time logging.
     protected boolean logExecutionTime() {
         return true;
+    }
+
+    protected <T> Iterable<List<T>> partition(Iterable<T> collection) {
+        return Iterables.partition(collection, IN_OPERATOR_BLOCK_SIZE);
     }
 }
