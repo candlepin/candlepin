@@ -30,6 +30,7 @@ import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -55,7 +56,7 @@ public class CancelJobJob extends KingpinJob {
     @Override
     public void toExecute(JobExecutionContext ctx) throws JobExecutionException {
         Set<String> statusIds = new HashSet<String>();
-        List<JobStatus> jobsToCancel = null;
+        List<JobStatus> jobsToCancel = new ArrayList<JobStatus>();
         try {
             Set<JobKey> keys = pinsetterKernel.getSingleJobKeys();
             for (JobKey key : keys) {
@@ -63,7 +64,9 @@ public class CancelJobJob extends KingpinJob {
             }
 
             try {
-                jobsToCancel = jobCurator.findCanceledJobs(statusIds).list();
+                for (List<String> block : this.partition(statusIds)) {
+                    jobsToCancel.addAll(jobCurator.findCanceledJobs(new HashSet<String>(block)).list());
+                }
             }
             catch (HibernateException e) {
                 log.error("Cannot execute query: ", e);
