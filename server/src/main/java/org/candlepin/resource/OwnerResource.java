@@ -35,7 +35,6 @@ import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.exceptions.ResourceMovedException;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
-import org.candlepin.common.paging.Paginate;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.ContentManager;
 import org.candlepin.controller.ManifestManager;
@@ -411,7 +410,6 @@ public class OwnerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/entitlements")
-    @Paginate
     @ApiOperation(notes = "Retrieves the list of Entitlements for an Owner",
         value = "List Owner Entitlements")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
@@ -689,7 +687,6 @@ public class OwnerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/consumers")
-    @Paginate
     @SuppressWarnings("checkstyle:indentation")
     @ApiOperation(notes = "Retrieve a list of Consumers for the Owner", value = "List Consumers",
         response = Consumer.class, responseContainer = "list")
@@ -756,7 +753,6 @@ public class OwnerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/pools")
-    @Paginate
     @SuppressWarnings("checkstyle:indentation")
     @ApiOperation(notes = "Retrieves a list of Pools for an Owner", value = "List Pools")
     @ApiResponses({

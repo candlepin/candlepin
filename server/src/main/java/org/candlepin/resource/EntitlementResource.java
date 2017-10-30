@@ -21,7 +21,6 @@ import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
-import org.candlepin.common.paging.Paginate;
 import org.candlepin.common.util.SuppressSwaggerCheck;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.PoolManager;
@@ -142,7 +141,6 @@ public class EntitlementResource {
     @ApiResponses({ @ApiResponse(code = 400, message = "") })
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Paginate
     public List<Entitlement> listAllForConsumer(
         @QueryParam("consumer") String consumerUuid,
         @QueryParam("matches") String matches,

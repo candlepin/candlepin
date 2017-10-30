@@ -33,7 +33,7 @@ import javax.ws.rs.ext.Provider;
 
 
 /**
- * DataPresentationInterceptor
+ * PageRequestFilter parses a common set of query parameters used to page through results from Candlepin.
  */
 @Provider
 @Priority(Priorities.USER)
