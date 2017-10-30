@@ -539,7 +539,7 @@ public class CandlepinPoolManager implements PoolManager {
         for (Pool existing : existingPools) {
             EventBuilder eventBuilder = eventFactory
                 .getEventBuilder(Target.POOL, Type.MODIFIED)
-                .setOldEntity(existing);
+                .setEventData(existing);
             poolEvents.put(existing.getId(), eventBuilder);
         }
 
@@ -565,7 +565,7 @@ public class CandlepinPoolManager implements PoolManager {
 
                     EventBuilder eventBuilder = eventFactory
                         .getEventBuilder(Target.POOL, Type.MODIFIED)
-                        .setOldEntity(subPool);
+                        .setEventData(subPool);
 
                     poolEvents.put(subPool.getId(), eventBuilder);
                 }
@@ -647,7 +647,7 @@ public class CandlepinPoolManager implements PoolManager {
         Map<String, EventBuilder> poolEvents = new HashMap<String, EventBuilder>();
         for (Pool existing : floatingPools) {
             EventBuilder eventBuilder = eventFactory.getEventBuilder(Target.POOL, Type.MODIFIED)
-                .setOldEntity(existing);
+                .setEventData(existing);
             poolEvents.put(existing.getId(), eventBuilder);
         }
 

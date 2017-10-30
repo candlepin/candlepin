@@ -40,47 +40,42 @@ public class EventBuilder {
         this.factory = factory;
 
         event = new Event(type, target, null, factory.principalProvider.get(),
-                null, null, null, null, null, null, null);
+                null, null, null, null, null, null);
     }
 
-    private void setEventData(Eventful entity) {
-        // Be careful to check for null before setting so we don't overwrite anything useful
-        if (entity instanceof Named && ((Named) entity).getName() != null) {
-            event.setTargetName(((Named) entity).getName());
-        }
-        if (entity instanceof Owned) {
-            Owner entityOwner = ((Owned) entity).getOwner();
-            if (entityOwner != null && entityOwner.getId() != null) {
-                event.setOwnerId(entityOwner.getId());
+    /*  Implementation note (2017/10/16):
+        This method is currently used instead of setOldEntity, since oldEntity was removed,
+        and it will also be used in the future instead of setNewEntity once newEntity is removed.
+        This is part of simplifying the data Events hold.
+     */
+    public EventBuilder setEventData(Eventful entity) {
+        if (entity != null) {
+            // Be careful to check for null before setting so we don't overwrite anything useful
+            if (entity instanceof Named && ((Named) entity).getName() != null) {
+                event.setTargetName(((Named) entity).getName());
             }
-        }
-        if (entity instanceof Entitlement) {
-            event.setReferenceType(Event.ReferenceType.POOL);
-            Pool referencedPool = ((Entitlement) entity).getPool();
-            if (referencedPool != null && referencedPool.getId() != null) {
-                event.setReferenceId(referencedPool.getId());
-            }
-        }
-        if ((String) entity.getId() != null) {
-            event.setEntityId((String) entity.getId());
-            if (entity instanceof ConsumerProperty) {
-                Consumer owningConsumer = ((ConsumerProperty) entity).getConsumer();
-                if (owningConsumer != null && owningConsumer.getId() != null) {
-                    event.setConsumerId(owningConsumer.getId());
+            if (entity instanceof Owned) {
+                Owner entityOwner = ((Owned) entity).getOwner();
+                if (entityOwner != null && entityOwner.getId() != null) {
+                    event.setOwnerId(entityOwner.getId());
                 }
             }
-        }
-    }
-
-    public EventBuilder setOldEntity(Eventful old) {
-        // Allow null, but don't do anything
-        if (old != null) {
-            // If the value is non-null and a value is set, we shouldn't allow it to continue
-            if (event.getType() == Type.CREATED) {
-                throw new IllegalArgumentException("You cannot set the old entity for a creation event");
+            if (entity instanceof Entitlement) {
+                event.setReferenceType(Event.ReferenceType.POOL);
+                Pool referencedPool = ((Entitlement) entity).getPool();
+                if (referencedPool != null && referencedPool.getId() != null) {
+                    event.setReferenceId(referencedPool.getId());
+                }
             }
-            setEventData(old);
-            event.setOldEntity(factory.entityToJson(old));
+            if ((String) entity.getId() != null) {
+                event.setEntityId((String) entity.getId());
+                if (entity instanceof ConsumerProperty) {
+                    Consumer owningConsumer = ((ConsumerProperty) entity).getConsumer();
+                    if (owningConsumer != null && owningConsumer.getId() != null) {
+                        event.setConsumerId(owningConsumer.getId());
+                    }
+                }
+            }
         }
         return this;
     }

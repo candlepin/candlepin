@@ -149,7 +149,7 @@ public class ConsumerResourceTest {
         this.config = new CandlepinCommonTestConfig();
 
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        when(eventBuilder.setOldEntity(any(Consumer.class))).thenReturn(eventBuilder);
+        when(eventBuilder.setEventData(any(Consumer.class))).thenReturn(eventBuilder);
         when(eventBuilder.setNewEntity(any(Consumer.class))).thenReturn(eventBuilder);
         when(eventFactory.getEventBuilder(any(Target.class), any(Type.class))).thenReturn(eventBuilder);
 

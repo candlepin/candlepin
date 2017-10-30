@@ -130,7 +130,7 @@ public class ConsumerResourceUpdateTest {
 
         when(consumerEventBuilder.setNewEntity(any(Consumer.class)))
             .thenReturn(consumerEventBuilder);
-        when(consumerEventBuilder.setOldEntity(any(Consumer.class)))
+        when(consumerEventBuilder.setEventData(any(Consumer.class)))
             .thenReturn(consumerEventBuilder);
         when(eventFactory.getEventBuilder(any(Target.class), any(Type.class)))
             .thenReturn(consumerEventBuilder);
@@ -424,10 +424,6 @@ public class ConsumerResourceUpdateTest {
         Consumer updated = createConsumerWithGuests("Guest 1", "Guest 2");
         updated.setUuid(uuid);
 
-        // Has to be mocked even though we don't intend to send:
-        Event event = new Event();
-        when(this.eventFactory.consumerModified(existing, updated)).thenReturn(event);
-
         when(this.consumerCurator.getGuestConsumersMap(any(Owner.class), any(Set.class))).
             thenReturn(new VirtConsumerMap());
 
@@ -446,10 +442,6 @@ public class ConsumerResourceUpdateTest {
         // flip case on one ID, should be treated as no change
         Consumer updated = createConsumerWithGuests("aaa123", "BBB123");
         updated.setUuid(uuid);
-
-        // Has to be mocked even though we don't intend to send:
-        Event event = new Event();
-        when(this.eventFactory.consumerModified(existing, updated)).thenReturn(event);
 
         when(this.consumerCurator.getGuestConsumersMap(any(Owner.class), any(Set.class))).
             thenReturn(new VirtConsumerMap());

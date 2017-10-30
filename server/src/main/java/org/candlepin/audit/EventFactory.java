@@ -101,14 +101,14 @@ public class EventFactory {
 
     public Event rulesUpdated(Rules oldRules, Rules newRules) {
         return getEventBuilder(Target.RULES, Type.MODIFIED)
-            .setOldEntity(oldRules)
+            .setEventData(oldRules)
             .setNewEntity(newRules)
             .buildEvent();
     }
 
     public Event rulesDeleted(Rules deletedRules) {
         return getEventBuilder(Target.RULES, Type.DELETED)
-            .setOldEntity(deletedRules)
+            .setEventData(deletedRules)
             .buildEvent();
     }
 
@@ -118,16 +118,9 @@ public class EventFactory {
             .buildEvent();
     }
 
-    public Event consumerModified(Consumer oldConsumer, Consumer newConsumer) {
-        return getEventBuilder(Target.CONSUMER, Type.MODIFIED)
-            .setOldEntity(oldConsumer)
-            .setNewEntity(newConsumer)
-            .buildEvent();
-    }
-
     public Event consumerDeleted(Consumer oldConsumer) {
         return getEventBuilder(Target.CONSUMER, Type.DELETED)
-            .setOldEntity(oldConsumer)
+            .setEventData(oldConsumer)
             .buildEvent();
     }
 
@@ -139,13 +132,13 @@ public class EventFactory {
 
     public Event entitlementDeleted(Entitlement e) {
         return getEventBuilder(Target.ENTITLEMENT, Type.DELETED)
-            .setOldEntity(e)
+            .setEventData(e)
             .buildEvent();
     }
 
     public Event entitlementExpired(Entitlement e) {
         return getEventBuilder(Target.ENTITLEMENT, Type.EXPIRED)
-            .setOldEntity(e)
+            .setEventData(e)
             .buildEvent();
     }
 
@@ -169,13 +162,8 @@ public class EventFactory {
 
     public Event ownerDeleted(Owner owner) {
         return getEventBuilder(Target.OWNER, Type.DELETED)
-            .setOldEntity(owner)
+            .setEventData(owner)
             .buildEvent();
-    }
-
-    // FIXME: Why do we need this?
-    public Event ownerMigrated(Owner owner) {
-        return ownerModified(owner);
     }
 
     public Event poolCreated(Pool newPool) {
@@ -185,19 +173,9 @@ public class EventFactory {
     }
 
     public Event poolDeleted(Pool pool) {
-        // Impl note:
-        // As of 2017-09-28, no one consumes the old/deleted entity on this event, and
-        // it's incredibly expensive to serialize. As such, we're not going to set/output
-        // the old entity until we have an explicit need to do so. This means we need to
-        // manually set the entity and owner IDs.
-
-        Event event = getEventBuilder(Target.POOL, Type.DELETED)
+        return getEventBuilder(Target.POOL, Type.DELETED)
+            .setEventData(pool)
             .buildEvent();
-
-        event.setEntityId(pool.getId());
-        event.setOwnerId(pool.getOwner().getId());
-
-        return event;
     }
 
     public Event exportCreated(Consumer consumer) {
@@ -220,13 +198,13 @@ public class EventFactory {
 
     public Event guestIdDeleted(GuestId guestId) {
         return getEventBuilder(Target.GUESTID, Type.DELETED)
-            .setOldEntity(guestId)
+            .setEventData(guestId)
             .buildEvent();
     }
 
     public Event subscriptionExpired(Subscription subscription) {
         return getEventBuilder(Target.SUBSCRIPTION, Type.EXPIRED)
-             .setOldEntity(subscription)
+             .setEventData(subscription)
              .buildEvent();
     }
 
@@ -238,7 +216,7 @@ public class EventFactory {
         // part of a larger piece of work to simplify Event consumption.
         return new Event(Event.Type.CREATED, Event.Target.COMPLIANCE,
             consumer.getName(), principalProvider.get(), consumer.getOwner().getId(), consumer.getUuid(),
-            consumer.getUuid(), null, buildComplianceDataJson(consumer, entitlements, compliance), null,
+            consumer.getUuid(), buildComplianceDataJson(consumer, entitlements, compliance), null,
             null);
     }
 

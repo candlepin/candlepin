@@ -767,7 +767,7 @@ public class EntitlementRules implements Enforcer {
 
                     EventBuilder builder = eventFactory.getEventBuilder(
                         Event.Target.PRODUCT, Event.Type.MODIFIED);
-                    builder.setOldEntity(existingProduct);
+                    builder.setEventData(existingProduct);
                     sharesToDelete.add(existingShare);
                     sharesToCreate.add(new ProductShare(sharingOwner, sharingOwnerProduct, recipient));
                     // Now we need to reconcile all of recipient's pools that were using the old product.

@@ -16,7 +16,6 @@ package org.candlepin.model;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
 import org.candlepin.audit.Event;
 import org.candlepin.audit.Event.Type;
@@ -61,7 +60,6 @@ public class EventCuratorTest extends DatabaseTestFixture {
         eventCurator.create(event);
 
         Event lookedUp = eventCurator.find(event.getId());
-        assertNull(lookedUp.getOldEntity());
         assertEquals(Type.CREATED, lookedUp.getType());
         assertNotNull(lookedUp.getId());
     }
@@ -81,7 +79,7 @@ public class EventCuratorTest extends DatabaseTestFixture {
 
         EventBuilder builder = eventFactory.getEventBuilder(Event.Target.RULES,
             Event.Type.DELETED);
-        Event rulesDeletedEvent = builder.setOldEntity(new Rules()).buildEvent();
+        Event rulesDeletedEvent = builder.setEventData(new Rules()).buildEvent();
         rulesDeletedEvent.setTimestamp(forcedDate);
 
         builder = eventFactory.getEventBuilder(Event.Target.CONSUMER,
@@ -92,7 +90,7 @@ public class EventCuratorTest extends DatabaseTestFixture {
         builder = eventFactory.getEventBuilder(Event.Target.CONSUMER,
                 Event.Type.MODIFIED);
         Event consumerModifiedEvent = builder.setNewEntity(newConsumer).
-            setOldEntity(newConsumer).buildEvent();
+            setEventData(newConsumer).buildEvent();
         consumerModifiedEvent.setTimestamp(forcedDate);
 
         eventCurator.create(rulesDeletedEvent);

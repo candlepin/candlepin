@@ -137,14 +137,6 @@ public class Event implements Persisted {
     @Enumerated(EnumType.STRING)
     private ReferenceType referenceType;
 
-    // Both old/new may be null for creation/deletion events. These are marked
-    // Transient as we decided we do not necessarily want to store the object
-    // state
-    // in our Events table. The Event passing through the message queue will
-    // still
-    // carry them.
-    @Transient
-    private String oldEntity;
     @Transient
     private String newEntity;
 
@@ -156,7 +148,7 @@ public class Event implements Persisted {
 
     public Event(Type type, Target target, String targetName,
         Principal principal, String ownerId, String consumerId,
-        String entityId, String oldEntity, String newEntity,
+        String entityId, String newEntity,
         String referenceId, ReferenceType referenceType) {
         this.type = type;
         this.target = target;
@@ -167,7 +159,6 @@ public class Event implements Persisted {
         this.ownerId = ownerId;
 
         this.entityId = entityId;
-        this.oldEntity = oldEntity;
         this.newEntity = newEntity;
         this.consumerId = consumerId;
         this.referenceId = referenceId;
@@ -258,15 +249,6 @@ public class Event implements Persisted {
 
     public void setEntityId(String entityId) {
         this.entityId = entityId;
-    }
-
-    @XmlTransient
-    public String getOldEntity() {
-        return oldEntity;
-    }
-
-    public void setOldEntity(String oldEntity) {
-        this.oldEntity = oldEntity;
     }
 
     @XmlTransient

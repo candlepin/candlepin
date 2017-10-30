@@ -233,7 +233,7 @@ public class EventSinkImpl implements EventSink {
     }
 
     public void emitOwnerMigrated(Owner owner) {
-        Event e = eventFactory.ownerMigrated(owner);
+        Event e = eventFactory.ownerModified(owner);
         queueEvent(e);
     }
 
