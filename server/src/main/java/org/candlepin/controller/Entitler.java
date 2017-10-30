@@ -59,6 +59,7 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -536,24 +537,21 @@ public class Entitler {
     public int revokeUnmappedGuestEntitlements(Consumer consumer) {
         int total = 0;
 
-        CandlepinQuery<Entitlement> unmappedGuestEntitlements;
+        CandlepinQuery<Entitlement> unmappedGuestEntitlements = consumer != null ?
+            entitlementCurator.findByPoolAttribute(consumer, "unmapped_guests_only", "true") :
+            entitlementCurator.findByPoolAttribute("unmapped_guests_only", "true");
 
-        if (consumer == null) {
-            unmappedGuestEntitlements = entitlementCurator.findByPoolAttribute(
-                "unmapped_guests_only", "true");
-        }
-        else {
-            unmappedGuestEntitlements = entitlementCurator.findByPoolAttribute(
-                consumer, "unmapped_guests_only", "true");
-        }
+        List<Entitlement> entsToDelete = new LinkedList<Entitlement>();
 
-        // TODO:
-        // Make sure this doesn't choke on MySQL, since we're doing queries with the cursor open.
-        for (Entitlement e : unmappedGuestEntitlements) {
-            if (!e.isValid()) {
-                poolManager.revokeEntitlement(e);
-                total++;
+        for (Entitlement entitlement : unmappedGuestEntitlements) {
+            if (!entitlement.isValid()) {
+                entsToDelete.add(entitlement);
+                ++total;
             }
+        }
+
+        if (!entsToDelete.isEmpty()) {
+            poolManager.revokeEntitlements(entsToDelete);
         }
 
         return total;
@@ -565,8 +563,8 @@ public class Entitler {
 
     public void sendEvents(List<Entitlement> entitlements) {
         if (entitlements != null) {
-            for (Entitlement e : entitlements) {
-                Event event = evtFactory.entitlementCreated(e);
+            for (Entitlement entitlement : entitlements) {
+                Event event = evtFactory.entitlementCreated(entitlement);
                 sink.queueEvent(event);
             }
         }
