@@ -183,7 +183,7 @@ public class PoolManagerTest {
         when(eventFactory.getEventBuilder(any(Target.class), any(Type.class))).thenReturn(eventBuilder);
 
         when(eventBuilder.setNewEntity(any(Eventful.class))).thenReturn(eventBuilder);
-        when(eventBuilder.setOldEntity(any(Eventful.class))).thenReturn(eventBuilder);
+        when(eventBuilder.setEventData(any(Eventful.class))).thenReturn(eventBuilder);
 
         this.principal = TestUtil.createOwnerPrincipal(owner);
 
@@ -1795,7 +1795,6 @@ public class PoolManagerTest {
 
         Event event = new Event();
         event.setConsumerId(guest.getUuid());
-        event.setOldEntity(ent.getId());
         event.setOwnerId(owner.getId());
         event.setTarget(Target.ENTITLEMENT);
         event.setType(Type.EXPIRED);

@@ -934,7 +934,7 @@ public class OwnerResource {
         @ApiParam(name = "owner", required = true) Owner owner) {
         Owner toUpdate = findOwner(key);
         EventBuilder eventBuilder = eventFactory.getEventBuilder(Target.OWNER, Type.MODIFIED)
-            .setOldEntity(toUpdate);
+            .setEventData(toUpdate);
 
         log.debug("Updating owner: {}", key);
 

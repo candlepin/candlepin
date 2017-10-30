@@ -1054,7 +1054,7 @@ public class ConsumerResource {
         // If nothing changes we won't send.  The new entity needs to be correct though,
         // so we should get a Jsonstring now, and finish it off if we're going to send
         EventBuilder eventBuilder = eventFactory.getEventBuilder(Target.CONSUMER, Type.MODIFIED)
-            .setOldEntity(toUpdate);
+            .setEventData(toUpdate);
 
         // version changed on non-checked in consumer, or list of capabilities
         // changed on checked in consumer
@@ -2272,7 +2272,7 @@ public class ConsumerResource {
     private Consumer regenerateIdentityCertificate(Consumer consumer) {
         EventBuilder eventBuilder = eventFactory
             .getEventBuilder(Target.CONSUMER, Type.MODIFIED)
-            .setOldEntity(consumer);
+            .setEventData(consumer);
 
         IdentityCertificate ic = generateIdCert(consumer, true);
         consumer.setIdCert(ic);

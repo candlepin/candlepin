@@ -134,7 +134,7 @@ public class HypervisorResourceTest {
             .thenReturn(consumerEventBuilder);
         when(consumerEventBuilder.setNewEntity(any(Consumer.class)))
             .thenReturn(consumerEventBuilder);
-        when(consumerEventBuilder.setOldEntity(any(Consumer.class)))
+        when(consumerEventBuilder.setEventData(any(Consumer.class)))
             .thenReturn(consumerEventBuilder);
     }
 

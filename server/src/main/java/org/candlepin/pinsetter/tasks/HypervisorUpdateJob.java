@@ -39,6 +39,7 @@ import com.google.inject.persist.Transactional;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.MDC;
+import org.hibernate.Hibernate;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -255,6 +256,15 @@ public class HypervisorUpdateJob extends KingpinJob {
                             hypervisorId, ownerKey, knownHost.getHypervisorId().getReporterId(),
                             jobReporterId);
                     }
+                    /* Impl. Note (2017-10-27):
+                    Now that events no longer serialize whole Objects for the purpose of storing
+                    the oldEntity field, forcing initialization of lazy-loaded collections as a side-effect,
+                    we need to force their initialization before we get to save the result,
+                    to avoid LazyInitializationExceptions when we get to fetch it from the db later.
+                     */
+                    Hibernate.initialize(knownHost.getCapabilities());
+                    Hibernate.initialize(knownHost.getInstalledProducts());
+                    Hibernate.initialize(knownHost.getEntitlements());
                     if (consumerResource.performConsumerUpdates(incoming, knownHost, guestConsumersMap,
                         false)) {
                         consumerCurator.update(knownHost);

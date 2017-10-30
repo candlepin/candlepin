@@ -89,8 +89,7 @@ public class LoggingListener implements EventListener {
                 e.getOwnerId()}
         );
         if (verbose) {
-            auditLog.info(String.format("==OLD==\n%s\n==NEW==\n%s\n\n", e.getOldEntity(),
-                e.getNewEntity()));
+            auditLog.info(String.format("==NEW==\n%s\n\n", e.getNewEntity()));
         }
     }
 
