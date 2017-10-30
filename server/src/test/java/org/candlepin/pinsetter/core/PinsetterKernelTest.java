@@ -28,7 +28,6 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.CandlepinModeChange;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.controller.ModeManager;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
@@ -56,11 +55,10 @@ import org.quartz.impl.JobDetailImpl;
 import org.quartz.impl.StdSchedulerFactory;
 import org.quartz.spi.JobFactory;
 
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -436,23 +434,24 @@ public class PinsetterKernelTest {
 
     @Test
     public void unpauseScheduler() throws Exception {
-        CandlepinQuery cqmock = mock(CandlepinQuery.class);
-
         JobStatus mockStatus1 = mock(JobStatus.class);
         JobStatus mockStatus2 = mock(JobStatus.class);
 
-        List<JobStatus> statuses = Arrays.asList(mockStatus1, mockStatus2);
+        Set<JobStatus> statuses = Util.asSet(mockStatus1, mockStatus2);
 
         when(mockStatus1.getId()).thenReturn("group1");
         when(mockStatus1.getGroup()).thenReturn("group1");
         when(mockStatus2.getId()).thenReturn("group2");
         when(mockStatus2.getGroup()).thenReturn("group2");
-        when(cqmock.list()).thenReturn(statuses);
-        when(cqmock.iterator()).thenReturn(statuses.iterator());
-        when(jcurator.findCanceledJobs(any(Set.class))).thenReturn(cqmock);
+        when(jcurator.findCanceledJobs(any(Collection.class))).thenReturn(statuses);
 
         pk = new PinsetterKernel(config, jfactory, jlistener, jcurator,
             sfactory, triggerListener, modeManager);
+
+        Set<JobKey> mockJK = new HashSet<JobKey>();
+        JobKey jk = new JobKey("test key");
+        mockJK.add(jk);
+        when(pk.getSingleJobKeys()).thenReturn(mockJK);
 
         pk.unpauseScheduler();
         verify(jcurator).findCanceledJobs(any(Set.class));

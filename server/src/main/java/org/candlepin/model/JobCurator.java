@@ -23,6 +23,7 @@ import org.candlepin.pinsetter.core.model.JobStatus.JobState;
 import org.candlepin.pinsetter.core.model.JobStatus.TargetType;
 import org.candlepin.pinsetter.tasks.KingpinJob;
 
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
@@ -33,9 +34,13 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import javax.persistence.TypedQuery;
 
 
 
@@ -76,6 +81,7 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
         }
     }
 
+    @Transactional
     public int deleteJobNoStatusReturn(String jobId) {
         return this.currentSession().createQuery(
             "delete from JobStatus where id = :jobid")
@@ -83,6 +89,7 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
                 .executeUpdate();
     }
 
+    @Transactional
     public int cleanupAllOldJobs(Date deadline) {
         return this.currentSession().createQuery(
             "delete from JobStatus where updated <= :date")
@@ -90,6 +97,7 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
                .executeUpdate();
     }
 
+    @Transactional
     public int cleanUpOldCompletedJobs(Date deadLineDt) {
         return this.currentSession().createQuery(
             "delete from JobStatus where updated <= :date and " +
@@ -130,20 +138,32 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
      * Finds all jobs marked as CANCELED which have an ID in the input list
      * so we can remove the scheduled job.
      *
-     * @param activeJobs Names of jobs that are currently active
-     * @return JobStatus list to have quartz job canceled
+     * @param jobIds
+     *  A collection of IDs representing the jobs to check
+     *
+     * @return
+     *  A set of JobStatus objects representing canceled jobs from the provided job ID collection
      */
     @SuppressWarnings("unchecked")
-    public CandlepinQuery<JobStatus> findCanceledJobs(Set<String> activeJobs) {
-        if (activeJobs == null || activeJobs.isEmpty()) {
-            return this.cpQueryFactory.<JobStatus>buildQuery();
+    public Set<JobStatus> findCanceledJobs(Iterable<String> jobIds) {
+        Set<JobStatus> statuses = new HashSet<JobStatus>();
+
+        if (jobIds != null && jobIds.iterator().hasNext()) {
+            String jpql = "SELECT js FROM JobStatus js WHERE js.state = :state AND js.id IN (:job_ids)";
+
+            TypedQuery<JobStatus> query = this.getEntityManager()
+                .createQuery(jpql, JobStatus.class)
+                .setParameter("state", JobState.CANCELED);
+
+            int blockSize = Math.min(this.getQueryParameterLimit() - 1, this.getInBlockSize());
+
+            for (List<String> block : Iterables.partition(jobIds, blockSize)) {
+                query.setParameter("job_ids", block);
+                statuses.addAll(query.getResultList());
+            }
         }
 
-        DetachedCriteria criteria = DetachedCriteria.forClass(JobStatus.class)
-            .add(Restrictions.eq("state", JobState.CANCELED))
-            .add(Restrictions.in("id", activeJobs));
-
-        return this.cpQueryFactory.<JobStatus>buildQuery(this.currentSession(), criteria);
+        return statuses;
     }
 
     @SuppressWarnings("unchecked")
@@ -214,11 +234,14 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
      * Cancel jobs that should have a quartz job (but don't),
      * and have not been updated within the last 2 minutes.
      */
-    public int cancelOrphanedJobs(List<String> activeIds) {
+    public int cancelOrphanedJobs(Collection<String> activeIds) {
         return cancelOrphanedJobs(activeIds, 1000L * 60L * 2L); //2 minutes
     }
 
-    public int cancelOrphanedJobs(List<String> activeIds, Long millis) {
+    @Transactional
+    public int cancelOrphanedJobs(Collection<String> activeIds, Long millis) {
+        int count = 0;
+
         Date before = new Date(new Date().getTime() - millis);
         String hql = "update JobStatus j " +
             "set j.state = :canceled " +
@@ -227,27 +250,36 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
             "j.state != :finished and " +
             "j.state != :failed and " +
             "j.updated <= :date";
+
         // Must trim out activeIds if the list is empty, otherwise the
         // statement will fail.
         if (!activeIds.isEmpty()) {
             hql += " and j.id not in (:activeIds)";
         }
+
         Query query = this.currentSession().createQuery(hql)
             .setTimestamp("date", before)
             .setParameter("async", PinsetterKernel.SINGLE_JOB_GROUP)
             .setInteger("finished", JobState.FINISHED.ordinal())
             .setInteger("failed", JobState.FAILED.ordinal())
             .setInteger("canceled", JobState.CANCELED.ordinal());
+
         if (!activeIds.isEmpty()) {
-            query.setParameterList("activeIds", activeIds);
+            for (List<String> block : this.partition(activeIds)) {
+                count += query.setParameterList("activeIds", block)
+                    .executeUpdate();
+            }
         }
-        return query.executeUpdate();
+        else {
+            count = query.executeUpdate();
+        }
+
+        return count;
     }
 
     private Date getBlockingCutoff() {
         Calendar calendar = Calendar.getInstance();
-        calendar.add(Calendar.SECOND, -1 * config.getInt(
-            ConfigProperties.PINSETTER_ASYNC_JOB_TIMEOUT));
+        calendar.add(Calendar.SECOND, -1 * config.getInt(ConfigProperties.PINSETTER_ASYNC_JOB_TIMEOUT));
         return calendar.getTime();
     }
 }

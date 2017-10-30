@@ -43,6 +43,8 @@ import org.slf4j.MDC;
 import javax.persistence.EntityExistsException;
 import javax.persistence.PersistenceException;
 
+
+
 /**
  * KingpinJob replaces TransactionalPinsetterJob, which encapsulated
  * other jobs.  Using a supertype between actual jobs and the
@@ -135,8 +137,9 @@ public abstract class KingpinJob implements Job {
         int maxRefires = getMaxRetries();
         // If the maximum is sub-zero, do not enforce any limit
         boolean refire = maxRefires < 0 || context.getRefireCount() < maxRefires;
-        log.error("Persistence exception caught running pinsetter task. Attempt: " +
-            context.getRefireCount() + ", Refire: " + refire, e);
+        log.error("Persistence exception caught running pinsetter task. Attempt: {}, Refire: {}",
+            context.getRefireCount(), refire, e);
+
         throw new JobExecutionException(e, refire);
     }
 

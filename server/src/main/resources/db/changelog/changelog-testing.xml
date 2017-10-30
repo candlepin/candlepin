@@ -2028,7 +2028,7 @@
     </changeSet>
     <changeSet author="awood" id="1413225753032-290">
         <comment>
-             Add the default quartz lock columns. 
+             Add the default quartz lock columns.
         </comment>
         <insert tableName="QRTZ_LOCKS">
             <column name="LOCK_NAME" value="TRIGGER_ACCESS"/>
@@ -2311,4 +2311,6 @@
     <include file="db/changelog/20170718095058-purge-orphaned-pools.xml"/>
     <include file="db/changelog/20171010164730-add-cp-consumer-username-index.xml"/>
     <include file="db/changelog/20171011093538-add-sourcesub-id-index.xml"/>
+    <include file="db/changelog/20171020150559-add-index-to-cp-consumer-content-tags.xml"/>
+    <include file="db/changelog/20171023140857-add-modified-prods-index.xml"/>
 </databaseChangeLog>

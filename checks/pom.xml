@@ -11,12 +11,12 @@
   </parent>
   <groupId>org.candlepin</groupId>
   <artifactId>candlepin-checks</artifactId>
-  <version>0.1</version>
+  <version>0.2</version>
   <packaging>jar</packaging>
   <name>Candlepin Style Checks</name>
   <description>Custom Checkstyle checks for Candlepin</description>
   <properties>
-    <com.puppycrawl.tools-checkstyle.version>7.0</com.puppycrawl.tools-checkstyle.version>
+    <com.puppycrawl.tools-checkstyle.version>8.2</com.puppycrawl.tools-checkstyle.version>
     <org.antlr-antlr4-runtime.version>4.5.3</org.antlr-antlr4-runtime.version>
     <antlr-antlr.version>2.7.7</antlr-antlr.version>
   </properties>

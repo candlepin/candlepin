@@ -500,9 +500,13 @@ public class X509V3ExtensionUtil extends X509Util {
             StringTokenizer st = new StringTokenizer(path, "/");
             makePathForURL(st, parent, endMarker);
         }
-        if (treeDebug) { printTree(parent, 0); }
+        if (treeDebug) {
+            printTree(parent, 0);
+        }
         condenseSubTreeNodes(endMarker);
-        if (treeDebug) { printTree(parent, 0); }
+        if (treeDebug) {
+            printTree(parent, 0);
+        }
         return parent;
     }
 
@@ -562,7 +566,9 @@ public class X509V3ExtensionUtil extends X509Util {
     private void makePathForURL(StringTokenizer st, PathNode parent, PathNode endMarker) {
         if (st.hasMoreTokens()) {
             String childVal = st.nextToken();
-            if (childVal.equals("")) { return; }
+            if (childVal.equals("")) {
+                return;
+            }
             boolean isNew = true;
             for (NodePair child : parent.getChildren()) {
                 if (child.getName().equals(childVal) &&
@@ -913,7 +919,9 @@ public class X509V3ExtensionUtil extends X509Util {
     private int findSmallest(int exclude, List<HuffNode> nodes) {
         int smallest = -1;
         for (int index = 0; index < nodes.size(); index++) {
-            if (index == exclude) { continue; }
+            if (index == exclude) {
+                continue;
+            }
             if (smallest == -1 || nodes.get(index).getWeight() <
                 nodes.get(smallest).getWeight()) {
                 smallest = index;
@@ -1018,11 +1026,15 @@ public class X509V3ExtensionUtil extends X509Util {
 
         char bit = bits.charAt(0);
         if (bit == '0') {
-            if (left == null) { throw new RuntimeException("Encoded path not in trie"); }
+            if (left == null) {
+                throw new RuntimeException("Encoded path not in trie");
+            }
             return findHuffNodeValueByBits(left, bits.substring(1));
         }
         else if (bit == '1') {
-            if (right == null) { throw new RuntimeException("Encoded path not in trie"); }
+            if (right == null) {
+                throw new RuntimeException("Encoded path not in trie");
+            }
             return findHuffNodeValueByBits(right, bits.substring(1));
         }
         return null;

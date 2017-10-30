@@ -21,7 +21,6 @@ import org.candlepin.pinsetter.core.model.JobStatus;
 
 import com.google.inject.Inject;
 
-import org.hibernate.HibernateException;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -31,8 +30,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
+
+
 
 /**
  * CancelJobJob attempts to cancel the jobs in Quartz for the jobs whose
@@ -54,29 +54,21 @@ public class CancelJobJob extends KingpinJob {
 
     @Override
     public void toExecute(JobExecutionContext ctx) throws JobExecutionException {
-        Set<String> statusIds = new HashSet<String>();
-        List<JobStatus> jobsToCancel = null;
         try {
             Set<JobKey> keys = pinsetterKernel.getSingleJobKeys();
+            Set<String> statusIds = new HashSet<String>();
+
             for (JobKey key : keys) {
                 statusIds.add(key.getName());
             }
 
-            try {
-                jobsToCancel = jobCurator.findCanceledJobs(statusIds).list();
-            }
-            catch (HibernateException e) {
-                log.error("Cannot execute query: ", e);
-                throw new JobExecutionException(e);
-            }
-
-            for (JobStatus j : jobsToCancel) {
+            for (JobStatus j : this.jobCurator.findCanceledJobs(statusIds)) {
                 try {
                     pinsetterKernel.cancelJob(j.getId(), j.getGroup());
-                    log.info("Canceled job: " + j.getId() + ", " + j.getGroup());
+                    log.info("Canceled job: {}, {}", j.getId(), j.getGroup());
                 }
                 catch (PinsetterException e) {
-                    log.error("Exception canceling job " + j.getId(), e);
+                    log.error("Exception canceling job {}", j.getId(), e);
                 }
             }
         }

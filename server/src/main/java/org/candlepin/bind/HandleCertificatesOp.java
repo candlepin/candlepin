@@ -66,6 +66,7 @@ public class HandleCertificatesOp implements BindOperation {
             List<Pool> pools = new LinkedList<Pool>();
             Map<String, Product> products = new HashMap<String, Product>();
             Map<String, PoolQuantity> poolQuantities = context.getPoolQuantities();
+
             for (PoolQuantity poolQuantity : poolQuantities.values()) {
                 Pool pool = poolQuantity.getPool();
                 products.put(pool.getId(), pool.getProduct());
@@ -78,8 +79,9 @@ public class HandleCertificatesOp implements BindOperation {
                 context.getEntitlementMap(),
                 false);
 
-            modifyingEnts = this.eCurator.getDependentEntitlementIds(context.getConsumer(), pools);
+            modifyingEnts = this.eCurator.getDependentEntitlementIdsForPools(context.getConsumer(), pools);
         }
+
         return true;
     }
 

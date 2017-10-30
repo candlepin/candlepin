@@ -22,7 +22,6 @@ import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.ReplicationMode;
@@ -604,27 +603,14 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
      */
     public int markDependentEntitlementsDirty(Iterable<Entitlement> entitlements, boolean excludeInput) {
         if (entitlements != null && entitlements.iterator().hasNext()) {
-            Map<String, Set<String>> cemap = new HashMap<String, Set<String>>();
+            Set<String> entitlementIds = new HashSet<String>();
 
-            // Deduplicate our entitlement IDs and group by consumer, discarding null/incomplete
-            // entitlements
+            // Deduplicate our entitlement IDs, discarding null/incomplete entitlements
             for (Entitlement entitlement : entitlements) {
                 // TODO: Should we throw an exception if we find a malformed/incomplete entitlement
                 // or just continue silently ignoring them?
-
-                if (entitlement != null && entitlement.getId() != null && entitlement.getConsumer() != null) {
-                    String cid = entitlement.getConsumer().getId();
-
-                    if (cid != null) {
-                        Set<String> consumerEntitlements = cemap.get(cid);
-
-                        if (consumerEntitlements == null) {
-                            consumerEntitlements = new HashSet<String>();
-                            cemap.put(cid, consumerEntitlements);
-                        }
-
-                        consumerEntitlements.add(entitlement.getId());
-                    }
+                if (entitlement != null && entitlement.getId() != null) {
+                    entitlementIds.add(entitlement.getId());
                 }
             }
 
@@ -634,21 +620,20 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             // CriteriaBuilder.
             String querySql = "SELECT DISTINCT e2.id " +
                 // Required entitlement
-                "FROM cp_entitlement e1                                                       " +
+                "FROM cp_entitlement e1 " +
                 // Required entitlement => required pool
-                "JOIN cp2_pool_provided_products ppp1 ON ppp1.pool_id = e1.pool_id            " +
+                "JOIN cp2_pool_provided_products ppp1 ON ppp1.pool_id = e1.pool_id " +
                 // Required pool => required product
-                "JOIN cp2_products p ON p.uuid = ppp1.product_uuid                            " +
+                "JOIN cp2_products p ON p.uuid = ppp1.product_uuid " +
                 // Required product => conditional content
-                "JOIN cp2_content_modified_products cmp ON cmp.element = p.product_id         " +
+                "JOIN cp2_content_modified_products cmp ON cmp.element = p.product_id " +
                 // Conditional content => dependent product
-                "JOIN cp2_product_content pc ON pc.content_uuid = cmp.content_uuid            " +
+                "JOIN cp2_product_content pc ON pc.content_uuid = cmp.content_uuid " +
                 // Dependent product => dependent pool
-                "JOIN cp2_pool_provided_products ppp2 ON ppp2.product_uuid = pc.product_uuid  " +
+                "JOIN cp2_pool_provided_products ppp2 ON ppp2.product_uuid = pc.product_uuid " +
                 // Dependent pool => dependent entitlement
-                "JOIN cp_entitlement e2 ON e2.pool_id = ppp2.pool_id                          " +
+                "JOIN cp_entitlement e2 ON e2.pool_id = ppp2.pool_id " +
                 "WHERE e1.consumer_id = e2.consumer_id " +
-                "  AND e1.consumer_id = :consumer_id " +
                 "  AND e1.id != e2.id " +
                 "  AND e2.dirty = false " +
                 "  AND e1.id IN (:entitlement_ids)";
@@ -660,22 +645,15 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             Query query = this.getEntityManager().createNativeQuery(querySql);
 
             int blockSize = Math.min(this.getInBlockSize(),
-                (this.getQueryParameterLimit() - 1) / (excludeInput ? 2 : 1));
+                this.getQueryParameterLimit() / (excludeInput ? 2 : 1));
 
             Set<String> dirtyIds = new HashSet<String>();
 
-            // Execute our query for each of the affected consumers
-            for (Map.Entry<String, Set<String>> entry : cemap.entrySet()) {
-                // This isn't strictly necessary, but it allows the DB to filter the indexes on a
-                // constant, reducing the query's runtime by about half.
-                query.setParameter("consumer_id", entry.getKey());
-
-                // We repeat the query for each block, as it's ~30% faster than adding more in blocks
-                // to the query. Also, considerably less complex.
-                for (List<String> block : Iterables.partition(entry.getValue(), blockSize)) {
-                    query.setParameter("entitlement_ids", block);
-                    dirtyIds.addAll(query.getResultList());
-                }
+            // We repeat the query for each block, as it's ~30% faster than adding more in blocks
+            // to the query. Also, considerably less complex.
+            for (List<String> block : Iterables.partition(entitlementIds, blockSize)) {
+                query.setParameter("entitlement_ids", block);
+                dirtyIds.addAll(query.getResultList());
             }
 
             // Update the affected entitlements, if necessary...
@@ -701,12 +679,10 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         int count = 0;
 
         if (entitlementIds != null && entitlementIds.iterator().hasNext()) {
-            Iterable<List<String>> blocks = Iterables.partition(entitlementIds, getInBlockSize());
-
             String hql = "UPDATE Entitlement SET dirty = true WHERE id IN (:entIds)";
             Query query = this.getEntityManager().createQuery(hql);
 
-            for (List<String> block : blocks) {
+            for (List<String> block : this.partition(entitlementIds)) {
                 count += query.setParameter("entIds", block).executeUpdate();
             }
         }
@@ -715,60 +691,96 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     }
 
     /**
-     * A version of list Modifying that finds Entitlements  of a consumer that modify
-     * input pools .
-     * When dealing with creating entitlements for which it is necessary
-     * to determine their modifier products. We fetch the modifying ents outside the lock,
-     * and once the pool is locked we simply mark the modifying ents as dirty.
-     * @param consumer
-     * @param pools
+     * Fetches dependent entitlement IDs for the specified collection of pools, belonging to the
+     * given consumer.
      *
-     * @return Entitlements that are being modified by the input entitlements
+     * @param consumer
+     *  The consumer for which to find dependent entitlement IDs
+     *
+     * @param pools
+     *  A collection of pools which the fetched entitlements depend upon
+     *
+     * @return
+     *  a collection of entitlement IDs for the entitlements dependent upon the provided pools
+     *  belonging to the given consumer
      */
-    public Collection<String> getDependentEntitlementIds(Consumer consumer, Collection<Pool> pools) {
-        List<String> eids = new LinkedList<String>();
+    public Collection<String> getDependentEntitlementIdsForPools(Consumer consumer,
+        Iterable<Pool> pools) {
 
-        if (CollectionUtils.isNotEmpty(pools)) {
+        Set<String> poolIds = new HashSet<String>();
 
-            String hql =
-                "SELECT DISTINCT eOut.id" +
-                "    FROM Entitlement eOut" +
-                "        JOIN eOut.pool outPool" +
-                "        JOIN outPool.providedProducts outProvided" +
-                "        JOIN outProvided.productContent outProvContent" +
-                "        JOIN outProvContent.content outContent" +
-                "        JOIN outContent.modifiedProductIds outModProdId" +
-                "    WHERE" +
-                "        outPool.endDate >= current_date AND" +
-                "        eOut.owner = :owner AND" +
-                "        eOut.consumer = :consumer AND " +
-                "        EXISTS (" +
-                "            SELECT pIn" +
-                "            FROM Pool pIn" +
-                "                JOIN pIn.product inMktProd" +
-                "                LEFT JOIN pIn.providedProducts inProvidedProd" +
-                "            WHERE pIn in (:pin) AND" +
-                "                  pIn.endDate >= outPool.startDate AND" +
-                "                  pIn.startDate <= outPool.endDate AND" +
-                "                  (inProvidedProd.id = outModProdId OR inMktProd.id = outModProdId))";
-
-            Query query = this.getEntityManager().createQuery(hql);
-
-            Iterable<List<Pool>> blocks = Iterables.partition(pools, getInBlockSize());
-            Owner owner = consumer.getOwner();
-            for (List<Pool> block : blocks) {
-
-                query.setParameter("pin", block)
-                     .setParameter("consumer", consumer)
-                     .setParameter("owner", owner);
-
-                eids.addAll(query.getResultList());
+        if (consumer != null && pools != null && pools.iterator().hasNext()) {
+            for (Pool pool : pools) {
+                if (pool != null && pool.getId() != null) {
+                    poolIds.add(pool.getId());
+                }
             }
         }
 
-        return eids;
+        return this.getDependentEntitlementIdsForPoolIds(consumer, poolIds);
     }
 
+    /**
+     * Fetches dependent entitlement IDs for the specified collection of pools, belonging to the
+     * given consumer.
+     *
+     * @param consumer
+     *  The consumer for which to find dependent entitlement IDs
+     *
+     * @param poolIds
+     *  A collection of IDs of pools, which the fetched entitlements depend upon
+     *
+     * @return
+     *  a collection of entitlement IDs for the entitlements dependent upon the provided pools
+     *  belonging to the given consumer
+     */
+    public Collection<String> getDependentEntitlementIdsForPoolIds(Consumer consumer,
+        Iterable<String> poolIds) {
+
+        Set<String> entitlementIds = new HashSet<String>();
+
+        if (consumer != null && poolIds != null && poolIds.iterator().hasNext()) {
+            // Impl note:
+            // We do this in direct SQL, as it lets us take a sane path from base to dependent
+            // entitlements, rather than the lunacy that would be required with HQL, JPQL or
+            // CriteriaBuilder.
+            String querySql = "SELECT DISTINCT e.id " +
+                // Required pool
+                "FROM cp2_pool_provided_products ppp1 " +
+                // Required pool => required product
+                "JOIN cp2_products p ON p.uuid = ppp1.product_uuid " +
+                // Required product => conditional content
+                "JOIN cp2_content_modified_products cmp ON cmp.element = p.product_id " +
+                // Conditional content => dependent product
+                "JOIN cp2_product_content pc ON pc.content_uuid = cmp.content_uuid " +
+                // Dependent product => dependent pool
+                "JOIN cp2_pool_provided_products ppp2 ON ppp2.product_uuid = pc.product_uuid " +
+                // Dependent pool => dependent entitlement
+                "JOIN cp_entitlement e ON e.pool_id = ppp2.pool_id " +
+                "WHERE e.consumer_id = :consumer_id " +
+                "  AND ppp1.pool_id IN (:pool_ids) ";
+
+
+            Query query = this.getEntityManager().createNativeQuery(querySql)
+                .setParameter("consumer_id", consumer.getId());
+
+            for (List<String> block : this.partition(poolIds)) {
+                query.setParameter("pool_ids", block);
+                entitlementIds.addAll(query.getResultList());
+            }
+        }
+
+        return entitlementIds;
+    }
+
+    /**
+     * @deprecated
+     *  This method is a utility method for revokeEntitlements and, as it has no communication with
+     *  the database, does not belong in this curator
+     *
+     * @return a map of consumers to their entitlements
+     */
+    @Deprecated
     public Map<Consumer, List<Entitlement>> getDistinctConsumers(List<Entitlement> entsToRevoke) {
         Map<Consumer, List<Entitlement>> result = new HashMap<Consumer, List<Entitlement>>();
         for (Entitlement ent : entsToRevoke) {

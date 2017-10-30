@@ -2291,4 +2291,417 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Pool result = sharedPools.get(0);
         assertEquals(sharedPool, result);
     }
+
+    @Test
+    public void testClearPoolSourceEntitlementRefs() {
+        Date startDate = TestUtil.createDate(2010, 3, 2);
+        Date endDate = TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 2);
+
+        Pool pool1 = createPool(owner, product, 20L, startDate, endDate);
+        poolCurator.create(pool1);
+
+        Entitlement e = new Entitlement(pool1, consumer, 5);
+        e.setId("test-entitlement-id-1");
+        entitlementCurator.create(e);
+
+        Pool pool2 = createPool(owner, product, 20L, startDate, endDate);
+        pool2.setSourceEntitlement(e);
+        poolCurator.create(pool2);
+
+        this.poolCurator.clearPoolSourceEntitlementRefs(Arrays.asList(pool2.getId()));
+
+        this.poolCurator.refresh(pool2);
+        assertNull(pool2.getSourceEntitlement());
+    }
+
+    @Test
+    public void testClearPoolSourceEntitlementRefsDoesntAffectUnspecifiedPools() {
+        Date startDate = TestUtil.createDate(2010, 3, 2);
+        Date endDate = TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 2);
+
+        Pool pool1 = createPool(owner, product, 20L, startDate, endDate);
+        poolCurator.create(pool1);
+
+        Entitlement e = new Entitlement(pool1, consumer, 5);
+        e.setId("test-entitlement-id-1");
+        entitlementCurator.create(e);
+
+        Pool pool2 = createPool(owner, product, 20L, startDate, endDate);
+        pool2.setSourceEntitlement(e);
+        poolCurator.create(pool2);
+
+        this.poolCurator.clearPoolSourceEntitlementRefs(Arrays.asList(pool1.getId()));
+
+        this.poolCurator.refresh(pool2);
+        assertSame(e, pool2.getSourceEntitlement());
+    }
+
+
+    @Test
+    public void testClearPoolSourceEntitlementRefsWorksOnMultiplePools() {
+        Date startDate = TestUtil.createDate(2010, 3, 2);
+        Date endDate = TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 2);
+
+        Pool pool1 = createPool(owner, product, 20L, startDate, endDate);
+        poolCurator.create(pool1);
+
+        Entitlement e = new Entitlement(pool1, consumer, 5);
+        e.setId("test-entitlement-id-1");
+        entitlementCurator.create(e);
+
+        Pool pool2 = createPool(owner, product, 20L, startDate, endDate);
+        pool2.setSourceEntitlement(e);
+        poolCurator.create(pool2);
+
+        Pool pool3 = createPool(owner, product, 20L, startDate, endDate);
+        pool3.setSourceEntitlement(e);
+        poolCurator.create(pool3);
+
+        Pool pool4 = createPool(owner, product, 20L, startDate, endDate);
+        pool4.setSourceEntitlement(e);
+        poolCurator.create(pool4);
+
+
+        this.poolCurator.clearPoolSourceEntitlementRefs(Arrays.asList(pool2.getId(), pool3.getId()));
+
+        this.poolCurator.refresh(pool2);
+        this.poolCurator.refresh(pool3);
+        this.poolCurator.refresh(pool4);
+
+        assertNull(pool2.getSourceEntitlement());
+        assertNull(pool3.getSourceEntitlement());
+        assertSame(e, pool4.getSourceEntitlement());
+    }
+
+    @Test
+    public void testGetExistingPoolIdsByIds() {
+        Date startDate = TestUtil.createDate(2010, 3, 2);
+        Date endDate = TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 2);
+
+        Pool pool1 = createPool(owner, product, 20L, startDate, endDate);
+        poolCurator.create(pool1);
+
+        Pool pool2 = createPool(owner, product, 20L, startDate, endDate);
+        poolCurator.create(pool2);
+
+        Pool pool3 = createPool(owner, product, 20L, startDate, endDate);
+        poolCurator.create(pool3);
+
+        Pool pool4 = createPool(owner, product, 20L, startDate, endDate);
+        poolCurator.create(pool4);
+
+        Set<String> output;
+        output = this.poolCurator.getExistingPoolIdsByIds(Arrays.asList(pool2.getId(), pool3.getId()));
+
+        assertFalse(output.contains(pool1.getId()));
+        assertTrue(output.contains(pool2.getId()));
+        assertTrue(output.contains(pool3.getId()));
+        assertFalse(output.contains(pool4.getId()));
+        assertFalse(output.contains("banana"));
+
+        output = this.poolCurator.getExistingPoolIdsByIds(
+            Arrays.asList(pool1.getId(), pool3.getId(), "banana"));
+
+        assertTrue(output.contains(pool1.getId()));
+        assertFalse(output.contains(pool2.getId()));
+        assertTrue(output.contains(pool3.getId()));
+        assertFalse(output.contains(pool4.getId()));
+        assertFalse(output.contains("banana"));
+    }
+
+    @Test
+    public void testGetConsumerStackDerivedPoolIdMap() {
+        Owner owner1 = this.createOwner("owner-1");
+        Owner owner2 = this.createOwner("owner-2");
+
+        Consumer consumer1 = this.createConsumer(owner1);
+        Consumer consumer2 = this.createConsumer(owner1);
+        Consumer consumer3 = this.createConsumer(owner2);
+
+        Date startDate = TestUtil.createDate(2010, 3, 2);
+        Date endDate = TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 2);
+
+        String stackId1 = "123";
+        Product stackingProduct1 = TestUtil.createProduct();
+        stackingProduct1.setAttribute(Product.Attributes.VIRT_LIMIT, "3");
+        stackingProduct1.setAttribute(Product.Attributes.STACKING_ID, stackId1);
+        stackingProduct1 = this.createProduct(stackingProduct1, owner);
+
+        String stackId2 = "456";
+        Product stackingProduct2 = TestUtil.createProduct();
+        stackingProduct2.setAttribute(Product.Attributes.VIRT_LIMIT, "3");
+        stackingProduct2.setAttribute(Product.Attributes.STACKING_ID, stackId2);
+        stackingProduct2 = this.createProduct(stackingProduct2, owner);
+
+        String stackId3 = "789";
+        Product stackingProduct3 = TestUtil.createProduct();
+        stackingProduct3.setAttribute(Product.Attributes.VIRT_LIMIT, "3");
+        stackingProduct3.setAttribute(Product.Attributes.STACKING_ID, stackId3);
+        stackingProduct3 = this.createProduct(stackingProduct3, owner);
+
+        Pool pool1 = createPool(owner, stackingProduct1, 20L, startDate, endDate);
+        pool1.setSourceStack(new SourceStack(consumer1, stackId1));
+        pool1.setAttribute(Pool.Attributes.REQUIRES_HOST, consumer1.getUuid());
+        poolCurator.create(pool1);
+
+        Pool pool2 = createPool(owner, stackingProduct2, 20L, startDate, endDate);
+        pool2.setSourceStack(new SourceStack(consumer1, stackId2));
+        pool2.setAttribute(Pool.Attributes.REQUIRES_HOST, consumer1.getUuid());
+        poolCurator.create(pool2);
+
+        Pool pool3 = createPool(owner, stackingProduct3, 20L, startDate, endDate);
+        pool3.setSourceStack(new SourceStack(consumer2, stackId3));
+        pool3.setAttribute(Pool.Attributes.REQUIRES_HOST, consumer2.getUuid());
+        poolCurator.create(pool3);
+
+        Pool pool4 = createPool(owner, stackingProduct1, 20L, startDate, endDate);
+        pool4.setSourceStack(new SourceStack(consumer2, stackId1));
+        pool4.setAttribute(Pool.Attributes.REQUIRES_HOST, consumer2.getUuid());
+        poolCurator.create(pool4);
+
+        Pool pool5 = createPool(owner, stackingProduct2, 20L, startDate, endDate);
+        pool5.setSourceStack(new SourceStack(consumer2, stackId2));
+        pool5.setAttribute(Pool.Attributes.REQUIRES_HOST, consumer2.getUuid());
+        poolCurator.create(pool5);
+
+        Pool pool6 = createPool(owner, stackingProduct3, 20L, startDate, endDate);
+        pool6.setSourceStack(new SourceStack(consumer3, stackId3));
+        pool6.setAttribute(Pool.Attributes.REQUIRES_HOST, consumer3.getUuid());
+        poolCurator.create(pool6);
+
+
+        Map<String, Set<String>> output;
+
+        output = this.poolCurator.getConsumerStackDerivedPoolIdMap(
+            Arrays.asList(stackId1, stackId2, stackId3));
+
+        assertNotNull(output);
+        assertEquals(3, output.size());
+        assertTrue(output.containsKey(consumer1.getId()));
+        assertTrue(output.containsKey(consumer2.getId()));
+        assertTrue(output.containsKey(consumer3.getId()));
+        assertEquals(output.get(consumer1.getId()), Util.asSet(pool1.getId(), pool2.getId()));
+        assertEquals(output.get(consumer2.getId()), Util.asSet(pool3.getId(), pool4.getId(), pool5.getId()));
+        assertEquals(output.get(consumer3.getId()), Util.asSet(pool6.getId()));
+
+        output = this.poolCurator.getConsumerStackDerivedPoolIdMap(Arrays.asList(stackId1, stackId2));
+
+        assertNotNull(output);
+        assertEquals(2, output.size());
+        assertTrue(output.containsKey(consumer1.getId()));
+        assertTrue(output.containsKey(consumer2.getId()));
+        assertFalse(output.containsKey(consumer3.getId()));
+        assertEquals(output.get(consumer1.getId()), Util.asSet(pool1.getId(), pool2.getId()));
+        assertEquals(output.get(consumer2.getId()), Util.asSet(pool4.getId(), pool5.getId()));
+
+        output = this.poolCurator.getConsumerStackDerivedPoolIdMap(Arrays.asList(stackId1));
+
+        assertNotNull(output);
+        assertEquals(2, output.size());
+        assertTrue(output.containsKey(consumer1.getId()));
+        assertTrue(output.containsKey(consumer2.getId()));
+        assertFalse(output.containsKey(consumer3.getId()));
+        assertEquals(output.get(consumer1.getId()), Util.asSet(pool1.getId()));
+        assertEquals(output.get(consumer2.getId()), Util.asSet(pool4.getId()));
+
+        output = this.poolCurator.getConsumerStackDerivedPoolIdMap(Collections.<String>emptyList());
+
+        assertNotNull(output);
+        assertEquals(0, output.size());
+
+        output = this.poolCurator.getConsumerStackDerivedPoolIdMap(null);
+
+        assertNotNull(output);
+        assertEquals(0, output.size());
+    }
+
+    @Test
+    @SuppressWarnings("checkstyle:methodlength")
+    public void testGetUnentitledStackDerivedPoolIds() {
+        Owner owner1 = this.createOwner("owner-1");
+        Owner owner2 = this.createOwner("owner-2");
+
+        Consumer consumer1 = this.createConsumer(owner1);
+        Consumer consumer2 = this.createConsumer(owner1);
+        Consumer consumer3 = this.createConsumer(owner2);
+
+        Date startDate = TestUtil.createDate(2010, 3, 2);
+        Date endDate = TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 2);
+
+        String stackId1 = "123";
+        Product stackingProduct1 = TestUtil.createProduct();
+        stackingProduct1.setAttribute(Product.Attributes.VIRT_LIMIT, "3");
+        stackingProduct1.setAttribute(Product.Attributes.STACKING_ID, stackId1);
+        stackingProduct1 = this.createProduct(stackingProduct1, owner1);
+
+        Product stackingProduct1b = TestUtil.createProduct();
+        stackingProduct1b.setAttribute(Product.Attributes.VIRT_LIMIT, "3");
+        stackingProduct1b.setAttribute(Product.Attributes.STACKING_ID, stackId1);
+        stackingProduct1b = this.createProduct(stackingProduct1b, owner2);
+
+        String stackId2 = "456";
+        Product stackingProduct2 = TestUtil.createProduct();
+        stackingProduct2.setAttribute(Product.Attributes.VIRT_LIMIT, "3");
+        stackingProduct2.setAttribute(Product.Attributes.STACKING_ID, stackId2);
+        stackingProduct2 = this.createProduct(stackingProduct2, owner1);
+
+        Product stackingProduct2b = TestUtil.createProduct();
+        stackingProduct2b.setAttribute(Product.Attributes.VIRT_LIMIT, "3");
+        stackingProduct2b.setAttribute(Product.Attributes.STACKING_ID, stackId2);
+        stackingProduct2b = this.createProduct(stackingProduct2b, owner2);
+
+        String stackId3 = "789";
+        Product stackingProduct3 = TestUtil.createProduct();
+        stackingProduct3.setAttribute(Product.Attributes.VIRT_LIMIT, "3");
+        stackingProduct3.setAttribute(Product.Attributes.STACKING_ID, stackId3);
+        stackingProduct3 = this.createProduct(stackingProduct3, owner1);
+
+        Product stackingProduct3b = TestUtil.createProduct();
+        stackingProduct3b.setAttribute(Product.Attributes.VIRT_LIMIT, "3");
+        stackingProduct3b.setAttribute(Product.Attributes.STACKING_ID, stackId3);
+        stackingProduct3b = this.createProduct(stackingProduct3b, owner2);
+
+        Pool pool1 = createPool(owner1, stackingProduct1, 20L, startDate, endDate);
+        pool1.setSourceStack(new SourceStack(consumer1, stackId1));
+        pool1.setAttribute(Pool.Attributes.REQUIRES_HOST, consumer1.getUuid());
+        poolCurator.create(pool1);
+
+        Pool pool1a = createPool(owner1, stackingProduct1, 20L, startDate, endDate);
+        poolCurator.create(pool1a);
+
+        Entitlement ent1a = new Entitlement(pool1a, consumer1, 5);
+        ent1a.setId("test-entitlement-id-1a");
+        entitlementCurator.create(ent1a);
+
+        Pool pool1b = createPool(owner1, stackingProduct1, 20L, startDate, endDate);
+        poolCurator.create(pool1b);
+
+        Entitlement ent1b = new Entitlement(pool1b, consumer1, 5);
+        ent1b.setId("test-entitlement-id-1b");
+        entitlementCurator.create(ent1b);
+
+        Pool pool2 = createPool(owner1, stackingProduct2, 20L, startDate, endDate);
+        pool2.setSourceStack(new SourceStack(consumer1, stackId2));
+        pool2.setAttribute(Pool.Attributes.REQUIRES_HOST, consumer1.getUuid());
+        poolCurator.create(pool2);
+
+        Pool pool2a = createPool(owner1, stackingProduct2, 20L, startDate, endDate);
+        poolCurator.create(pool2a);
+
+        Entitlement ent2a = new Entitlement(pool2a, consumer1, 5);
+        ent2a.setId("test-entitlement-id-2a");
+        entitlementCurator.create(ent2a);
+
+        Pool pool3 = createPool(owner1, stackingProduct3, 20L, startDate, endDate);
+        pool3.setSourceStack(new SourceStack(consumer2, stackId3));
+        pool3.setAttribute(Pool.Attributes.REQUIRES_HOST, consumer2.getUuid());
+        poolCurator.create(pool3);
+
+        Pool pool3a = createPool(owner1, stackingProduct3, 20L, startDate, endDate);
+        poolCurator.create(pool3a);
+
+        Entitlement ent3a = new Entitlement(pool3a, consumer2, 5);
+        ent3a.setId("test-entitlement-id-3a");
+        entitlementCurator.create(ent3a);
+
+        Pool pool4 = createPool(owner1, stackingProduct1, 20L, startDate, endDate);
+        pool4.setSourceStack(new SourceStack(consumer2, stackId1));
+        pool4.setAttribute(Pool.Attributes.REQUIRES_HOST, consumer2.getUuid());
+        poolCurator.create(pool4);
+
+        Pool pool4a = createPool(owner1, stackingProduct1, 20L, startDate, endDate);
+        poolCurator.create(pool4a);
+
+        Entitlement ent4a = new Entitlement(pool4a, consumer2, 5);
+        ent4a.setId("test-entitlement-id-4a");
+        entitlementCurator.create(ent4a);
+
+        Pool pool5 = createPool(owner1, stackingProduct2, 20L, startDate, endDate);
+        pool5.setSourceStack(new SourceStack(consumer2, stackId2));
+        pool5.setAttribute(Pool.Attributes.REQUIRES_HOST, consumer2.getUuid());
+        poolCurator.create(pool5);
+
+        Pool pool5a = createPool(owner1, stackingProduct2, 20L, startDate, endDate);
+        poolCurator.create(pool5a);
+
+        Entitlement ent5a = new Entitlement(pool5a, consumer2, 5);
+        ent5a.setId("test-entitlement-id-5a");
+        entitlementCurator.create(ent5a);
+
+        Pool pool6 = createPool(owner2, stackingProduct3b, 20L, startDate, endDate);
+        pool6.setSourceStack(new SourceStack(consumer3, stackId3));
+        pool6.setAttribute(Pool.Attributes.REQUIRES_HOST, consumer3.getUuid());
+        poolCurator.create(pool6);
+
+        Pool pool6a = createPool(owner2, stackingProduct3b, 20L, startDate, endDate);
+        poolCurator.create(pool6a);
+
+        Entitlement ent6a = new Entitlement(pool6a, consumer3, 5);
+        ent6a.setId("test-entitlement-id-6a");
+        entitlementCurator.create(ent6a);
+
+        Pool pool7 = createPool(owner2, stackingProduct1b, 20L, startDate, endDate);
+        pool7.setSourceStack(new SourceStack(consumer3, stackId1));
+        pool7.setAttribute(Pool.Attributes.REQUIRES_HOST, consumer3.getUuid());
+        poolCurator.create(pool7);
+
+        Pool pool8 = createPool(owner2, stackingProduct2b, 20L, startDate, endDate);
+        poolCurator.create(pool8);
+
+        Entitlement ent8 = new Entitlement(pool8, consumer3, 5);
+        ent8.setId("test-entitlement-id-8");
+        entitlementCurator.create(ent8);
+
+        Set<String> output;
+
+        // No entitlements should find existing unentitled stack derived pools
+        output = this.poolCurator.getUnentitledStackDerivedPoolIds(null);
+
+        assertNotNull(output);
+        assertEquals(1, output.size());
+        assertEquals(output, Util.asSet(pool7.getId()));
+
+        output = this.poolCurator.getUnentitledStackDerivedPoolIds(Collections.<String>emptyList());
+
+        assertNotNull(output);
+        assertEquals(1, output.size());
+        assertEquals(output, Util.asSet(pool7.getId()));
+
+        // Providing entitlements should simulate deleted entitlements
+        output = this.poolCurator.getUnentitledStackDerivedPoolIds(
+            Arrays.asList(ent1a.getId(), ent1b.getId(), ent2a.getId(), ent3a.getId()));
+
+        assertNotNull(output);
+        assertEquals(4, output.size());
+        assertEquals(output, Util.asSet(pool1.getId(), pool2.getId(), pool3.getId(), pool7.getId()));
+
+        // Filtering entitlements should not pull pools if more entitlements remain
+        output = this.poolCurator.getUnentitledStackDerivedPoolIds(Arrays.asList(ent1a.getId()));
+
+        assertNotNull(output);
+        assertEquals(1, output.size());
+        assertEquals(output, Util.asSet(pool7.getId()));
+
+        // Filtering entitlements should not pull pools if more entitlements remain
+        output = this.poolCurator.getUnentitledStackDerivedPoolIds(Arrays.asList(ent1b.getId()));
+
+        assertNotNull(output);
+        assertEquals(1, output.size());
+        assertEquals(output, Util.asSet(pool7.getId()));
+
+        // Bad entitlement IDs shouldn't impact output...
+        output = this.poolCurator.getUnentitledStackDerivedPoolIds(
+            Arrays.asList(ent1a.getId(), ent1b.getId(), ent2a.getId(), ent3a.getId(), "bad_ent_id"));
+
+        assertNotNull(output);
+        assertEquals(4, output.size());
+        assertEquals(output, Util.asSet(pool1.getId(), pool2.getId(), pool3.getId(), pool7.getId()));
+
+        output = this.poolCurator.getUnentitledStackDerivedPoolIds(Arrays.asList("bad_ent_id"));
+
+        assertNotNull(output);
+        assertEquals(1, output.size());
+        assertEquals(output, Util.asSet(pool7.getId()));
+    }
+
 }

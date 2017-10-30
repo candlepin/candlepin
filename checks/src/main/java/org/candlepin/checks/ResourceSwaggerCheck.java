@@ -23,7 +23,6 @@ import com.puppycrawl.tools.checkstyle.api.TokenTypes;
  * classes which do not have swagger annotation.
  */
 public class ResourceSwaggerCheck extends AbstractCheck {
-
     private final String resourceClassAnnotationName = "Path";
     private final String resourceMethodAnnotationName = "ApiOperation";
     private final String ignoreAnnotationName = "SuppressSwaggerCheck";
@@ -38,8 +37,17 @@ public class ResourceSwaggerCheck extends AbstractCheck {
 
     @Override
     public int[] getDefaultTokens() {
-        return new int[] { TokenTypes.CLASS_DEF, TokenTypes.METHOD_DEF,
-            TokenTypes.IDENT };
+        return new int[] { TokenTypes.CLASS_DEF, TokenTypes.METHOD_DEF, TokenTypes.IDENT };
+    }
+
+    @Override
+    public int[] getAcceptableTokens() {
+        return new int[] { TokenTypes.CLASS_DEF, TokenTypes.METHOD_DEF, TokenTypes.IDENT};
+    }
+
+    @Override
+    public int[] getRequiredTokens() {
+        return new int[] { TokenTypes.CLASS_DEF, TokenTypes.METHOD_DEF, TokenTypes.IDENT};
     }
 
     @Override

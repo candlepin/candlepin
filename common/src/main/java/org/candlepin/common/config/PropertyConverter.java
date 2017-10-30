@@ -142,7 +142,7 @@ public class PropertyConverter {
 
     public static List<String> toList(Object value) {
         if (value instanceof String) {
-            String[] parts = ((String) value).split("\\s*,\\s*");
+            String[] parts = ((String) value).trim().split("\\s*,\\s*");
             return Arrays.asList(parts);
         }
         else {
@@ -154,7 +154,7 @@ public class PropertyConverter {
 
     public static Set<String> toSet(Object value) {
         if (value instanceof String) {
-            String[] parts = ((String) value).split("\\s*,\\s*");
+            String[] parts = ((String) value).trim().split("\\s*,\\s*");
             return new HashSet<String>(Arrays.asList(parts));
         }
         else {
