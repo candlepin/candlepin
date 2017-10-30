@@ -326,11 +326,13 @@ function get_mock_ent_for_pool(pool, consumer) {
 
 function get_pool_priority(pool, consumer) {
     var priority = 100;
+
     // use virt only if possible
     // if the consumer is not virt, the pool will have been filtered out
     if (Utils.equalsIgnoreCase(pool.getProductAttribute(VIRT_ONLY), "true")) {
         priority += 100;
     }
+
     // better still if host_specific
     if (pool.getAttribute(REQUIRES_HOST_ATTRIBUTE) !== null) {
         priority += 150;
@@ -340,22 +342,27 @@ function get_pool_priority(pool, consumer) {
     if (pool.hasSharedAncestor) {
         priority -= 10;
     }
+
     /*
      * Special case to match socket counts exactly if possible.  We don't want to waste a pair
      * of two socket subscriptions when we have a 4 socket sub.
      */
     var attrsToCheck = [SOCKETS_ATTRIBUTE, CORES_ATTRIBUTE, RAM_ATTRIBUTE, VCPU_ATTRIBUTE];
     var complianceAttrs = getComplianceAttributes(consumer);
-    for (var i=0; i<attrsToCheck.length; i++) {
+    for (var i=0; i < attrsToCheck.length; i++) {
         var attribute = attrsToCheck[i];
+
         if (contains(complianceAttrs, attribute)) {
             var consumerVal = FactValueCalculator.getFact(attribute, consumer);
             var poolVal = parseInt(pool.getProductAttribute(attribute));
+
             if (consumerVal !== null && poolVal !== null && consumerVal > 0 && poolVal > 0) {
                 var required = Math.ceil(consumerVal/poolVal);
+
                 // Don't count pools INSTANCE_MULTIPLIER times for "required", however let's be sure there
                 // are enough available if we give it preference.
                 var multi = (attribute == SOCKETS_ATTRIBUTE) ? pool.getInstanceMulti() : 1;
+
                 if (pool.getAvailable()/multi >= required) {
                     poolVal *= required;
                     // Maximum of 10 with an exact match.  We prefer the closest match possible.
@@ -369,6 +376,7 @@ function get_pool_priority(pool, consumer) {
             }
         }
     }
+
     return priority;
 }
 
