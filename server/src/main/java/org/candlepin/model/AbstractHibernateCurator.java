@@ -1411,4 +1411,12 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     protected <T> Iterable<List<T>> partition(Iterable<T> collection) {
         return Iterables.partition(collection, IN_OPERATOR_BLOCK_SIZE);
     }
+
+    public int getInBlockSize() {
+        return this.IN_OPERATOR_BLOCK_SIZE;
+    }
+
+    public int getQueryParameterLimit() {
+        return this.QUERY_PARAMETER_LIMIT;
+    }
 }
