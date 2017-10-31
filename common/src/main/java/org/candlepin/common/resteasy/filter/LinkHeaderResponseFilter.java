@@ -17,7 +17,6 @@ package org.candlepin.common.resteasy.filter;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
-import org.candlepin.common.paging.Paginate;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -41,9 +40,10 @@ import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.ext.Provider;
 
 /**
- * LinkHeaderPostProcessor
+ * LinkHeaderResponseFilter inserts a Link header into the HTTP response to a request that asked for paging.
+ * The Link header is defined in RFC 5988 and is used to communicated to the client the URLs for the next
+ * page, previous page, first page, and last page.
  */
-@Paginate
 @Provider
 @Priority(Priorities.HEADER_DECORATOR)
 public class LinkHeaderResponseFilter implements ContainerResponseFilter {

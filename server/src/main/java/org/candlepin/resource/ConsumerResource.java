@@ -37,7 +37,6 @@ import org.candlepin.common.exceptions.IseException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
-import org.candlepin.common.paging.Paginate;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.AutobindDisabledForOwnerException;
 import org.candlepin.controller.Entitler;
@@ -350,7 +349,6 @@ public class ConsumerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "consumers")
-    @Paginate
     @SuppressWarnings("checkstyle:indentation")
     public CandlepinQuery<Consumer> list(@QueryParam("username") String userName,
         @QueryParam("type") Set<String> typeLabels,
@@ -1863,7 +1861,6 @@ public class ConsumerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{consumer_uuid}/entitlements")
-    @Paginate
     public List<Entitlement> listEntitlements(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @QueryParam("product") String productId,

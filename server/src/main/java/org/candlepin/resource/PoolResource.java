@@ -24,7 +24,6 @@ import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
-import org.candlepin.common.paging.Paginate;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.Consumer;
@@ -115,7 +114,6 @@ public class PoolResource {
     @Wrapped(element = "pools")
     @Deprecated
     @SecurityHole
-    @Paginate
     public List<Pool> list(@QueryParam("owner") String ownerId,
         @QueryParam("consumer") String consumerUuid,
         @QueryParam("product") String productId,
