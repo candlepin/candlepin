@@ -37,7 +37,7 @@ public class ActivationListenerTest {
         Event event = mock(Event.class);
         when(event.getTarget()).thenReturn(Event.Target.POOL);
         when(event.getType()).thenReturn(Event.Type.CREATED);
-        when(event.getEventData()).thenReturn("{\"subscriptionId\": \"sub-id-1\"}");
+        when(event.getEventData()).thenReturn("{\"subscriptionId\":\"sub-id-1\"}");
         listener.onEvent(event);
         verify(subscriptionService, times(1)).sendActivationEmail("sub-id-1");
     }

@@ -14,6 +14,8 @@
  */
 package org.candlepin.audit;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
 import org.candlepin.model.Consumer;
@@ -25,6 +27,9 @@ import org.candlepin.model.Owned;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * ConsumerEventBuilder Allows us to easily build a consumer modified
  * event one piece at a time.
@@ -33,11 +38,13 @@ import org.candlepin.model.Pool;
 public class EventBuilder {
 
     private final EventFactory factory;
+    private final ObjectMapper mapper;
 
     private Event event;
 
     public EventBuilder(EventFactory factory, Target target, Type type) {
         this.factory = factory;
+        this.mapper = new ObjectMapper();
 
         event = new Event(type, target, null, factory.principalProvider.get(),
                 null, null, null, null, null, null, null);
@@ -67,7 +74,7 @@ public class EventBuilder {
                     event.setReferenceId(referencedPool.getId());
                 }
             }
-            if ((String) entity.getId() != null) {
+            if (entity.getId() != null) {
                 event.setEntityId((String) entity.getId());
                 if (entity instanceof ConsumerProperty) {
                     Consumer owningConsumer = ((ConsumerProperty) entity).getConsumer();
@@ -77,12 +84,14 @@ public class EventBuilder {
                 }
             }
             if (event.getTarget().equals(Target.POOL) && event.getType().equals(Type.CREATED)) {
-                StringBuilder eventDataBuilder = new StringBuilder()
-                    .append("{\"subscriptionId\": \"")
-                    .append(((Pool) entity).getSubscriptionId())
-                    .append("\"")
-                    .append("}");
-                event.setEventData(eventDataBuilder.toString());
+                Map<String, String> eventData = new HashMap<String, String>();
+                eventData.put("subscriptionId", ((Pool) entity).getSubscriptionId());
+                try {
+                    event.setEventData(mapper.writeValueAsString(eventData));
+                }
+                catch (JsonProcessingException e) {
+                    e.printStackTrace();
+                }
             }
         }
         return this;

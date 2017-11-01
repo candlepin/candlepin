@@ -14,6 +14,7 @@
  */
 package org.candlepin.audit;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
 import org.candlepin.common.jackson.HateoasBeanPropertyFilter;
@@ -42,6 +43,8 @@ import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -210,22 +213,23 @@ public class EventFactory {
 
     public Event complianceCreated(Consumer consumer,
         Set<Entitlement> entitlements, ComplianceStatus compliance) {
-        StringBuilder eventDataBuilder = new StringBuilder()
-            .append("{\"consumer\": ")
-            .append("{\"uuid\": \"")
-            .append(consumer.getUuid())
-            .append("\"}")
-            .append(", \"status\": \"")
-            .append(compliance.getStatus())
-            .append("\"")
-            .append("}");
+        Map<String, String> eventData = new HashMap<String, String>();
+        eventData.put("consumer_uuid", consumer.getUuid());
+        eventData.put("status", compliance.getStatus());
+        String eventDataJson = "";
+        try {
+            eventDataJson = mapper.writeValueAsString(eventData);
+        }
+        catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
         // Instead of an internal db id, compliance.created events now use
         // UUID for the 'consumerId' and 'entityId' fields, since Katello
         // is concerned only with the consumer UUID field. This is the first
         // part of a larger piece of work to simplify Event consumption.
         return new Event(Event.Type.CREATED, Event.Target.COMPLIANCE,
             consumer.getName(), principalProvider.get(), consumer.getOwner().getId(), consumer.getUuid(),
-            consumer.getUuid(), eventDataBuilder.toString(),
+            consumer.getUuid(), eventDataJson,
                 buildComplianceDataJson(consumer, entitlements, compliance), null, null);
     }
 

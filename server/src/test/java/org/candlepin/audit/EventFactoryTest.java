@@ -80,8 +80,8 @@ public class EventFactoryTest {
         when(consumer.getUuid()).thenReturn("48b09f4e-f18c-4765-9c41-9aed6f122739");
         when(status.getStatus()).thenReturn("valid");
 
-        String expectedEventData = "{\"consumer\": {\"uuid\": \"48b09f4e-f18c-4765-9c41-9aed6f122739\"}," +
-            " \"status\": \"valid\"}";
+        String expectedEventData = "{\"consumer_uuid\":\"48b09f4e-f18c-4765-9c41-9aed6f122739\"," +
+            "\"status\":\"valid\"}";
         Event event = eventFactory.complianceCreated(consumer, entitlementSet, status);
         assertEquals(expectedEventData, event.getEventData());
     }

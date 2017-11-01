@@ -45,9 +45,8 @@ public class EventBuilderTest {
 
         when(pool.getSubscriptionId()).thenReturn("test-subscription-id");
 
-        String expectedEventData = "{\"subscriptionId\": \"test-subscription-id\"}";
+        String expectedEventData = "{\"subscriptionId\":\"test-subscription-id\"}";
         Event event = eventBuilder.setEventData(pool).buildEvent();
-        assertEquals("The expected event data should have been" +
-            expectedEventData + ", but they weren't", expectedEventData, event.getEventData());
+        assertEquals(expectedEventData, event.getEventData());
     }
 }
