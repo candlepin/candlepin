@@ -481,18 +481,15 @@ public class EntitlerTest {
     @Test
     public void testRevokesLapsedUnmappedGuestEntitlementsOnAutoHeal() throws Exception {
         Owner owner1 = new Owner("o1");
-
         Product product = TestUtil.createProduct();
 
         Pool p1 = TestUtil.createPool(owner1, product);
-
         p1.setAttribute(Pool.Attributes.UNMAPPED_GUESTS_ONLY, "true");
 
         Date thirtySixHoursAgo = new Date(new Date().getTime() - 36L * 60L * 60L * 1000L);
         Date twelveHoursAgo = new Date(new Date().getTime() - 12L * 60L * 60L * 1000L);
 
         Consumer c;
-
         c = TestUtil.createConsumer(owner1);
         c.setCreated(thirtySixHoursAgo);
         c.setFact("virt.uuid", "1");
@@ -514,7 +511,7 @@ public class EntitlerTest {
         entitler.bindByProducts(pids, "abcd1234", null, null);
         AutobindData data = AutobindData.create(c).forProducts(pids);
         verify(pm).entitleByProducts(eq(data));
-        verify(pm).revokeEntitlement(e1);
+        verify(pm).revokeEntitlements(Arrays.asList(e1));
     }
 
     @Test
@@ -564,7 +561,7 @@ public class EntitlerTest {
         int total = entitler.revokeUnmappedGuestEntitlements();
         assertEquals(1, total);
 
-        verify(pm).revokeEntitlement(e2);
+        verify(pm).revokeEntitlements(Arrays.asList(e2));
     }
 
     @Test
