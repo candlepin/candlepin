@@ -14,8 +14,11 @@
  */
 package org.candlepin.audit;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
+import org.candlepin.common.exceptions.IseException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerProperty;
 import org.candlepin.model.Entitlement;
@@ -24,6 +27,11 @@ import org.candlepin.model.Named;
 import org.candlepin.model.Owned;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * ConsumerEventBuilder Allows us to easily build a consumer modified
@@ -32,15 +40,19 @@ import org.candlepin.model.Pool;
  */
 public class EventBuilder {
 
+    private static final Logger log = LoggerFactory.getLogger(EventBuilder.class);
+
     private final EventFactory factory;
+    private final ObjectMapper mapper;
 
     private Event event;
 
     public EventBuilder(EventFactory factory, Target target, Type type) {
         this.factory = factory;
+        this.mapper = new ObjectMapper();
 
         event = new Event(type, target, null, factory.principalProvider.get(),
-                null, null, null, null, null, null);
+                null, null, null, null, null, null, null);
     }
 
     /*  Implementation note (2017/10/16):
@@ -67,13 +79,24 @@ public class EventBuilder {
                     event.setReferenceId(referencedPool.getId());
                 }
             }
-            if ((String) entity.getId() != null) {
+            if (entity.getId() != null) {
                 event.setEntityId((String) entity.getId());
                 if (entity instanceof ConsumerProperty) {
                     Consumer owningConsumer = ((ConsumerProperty) entity).getConsumer();
                     if (owningConsumer != null && owningConsumer.getId() != null) {
                         event.setConsumerId(owningConsumer.getId());
                     }
+                }
+            }
+            if (event.getTarget().equals(Target.POOL) && event.getType().equals(Type.CREATED)) {
+                Map<String, String> eventData = new HashMap<String, String>();
+                eventData.put("subscriptionId", ((Pool) entity).getSubscriptionId());
+                try {
+                    event.setEventData(mapper.writeValueAsString(eventData));
+                }
+                catch (JsonProcessingException e) {
+                    log.error("Error while building JSON for pool.created event.", e);
+                    throw new IseException("Error while building JSON for pool.created event.");
                 }
             }
         }

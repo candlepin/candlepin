@@ -14,7 +14,6 @@
  */
 package org.candlepin.audit;
 
-import org.candlepin.model.Pool;
 import org.candlepin.service.SubscriptionServiceAdapter;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -30,8 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.io.Reader;
-import java.io.StringReader;
 
 /**
  * ActivationListener
@@ -55,11 +52,9 @@ public class ActivationListener implements EventListener {
     public void onEvent(Event e) {
         if (e.getType().equals(Event.Type.CREATED) &&
             e.getTarget().equals(Event.Target.POOL)) {
-            String poolJson = e.getNewEntity();
-            Reader reader = new StringReader(poolJson);
             try {
-                Pool pool = mapper.readValue(reader, Pool.class);
-                subscriptionService.sendActivationEmail(pool.getSubscriptionId());
+                String subscriptionId = mapper.readTree(e.getEventData()).get("subscriptionId").asText();
+                subscriptionService.sendActivationEmail(subscriptionId);
             }
             catch (JsonMappingException ex) {
                 logError(e);

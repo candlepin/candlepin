@@ -14,8 +14,10 @@
  */
 package org.candlepin.audit;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
+import org.candlepin.common.exceptions.IseException;
 import org.candlepin.common.jackson.HateoasBeanPropertyFilter;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.jackson.PoolEventFilter;
@@ -42,6 +44,8 @@ import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -210,14 +214,24 @@ public class EventFactory {
 
     public Event complianceCreated(Consumer consumer,
         Set<Entitlement> entitlements, ComplianceStatus compliance) {
-        // Instead of an internal db id, compliance.created events now use
-        // UUID for the 'consumerId' and 'entityId' fields, since Katello
-        // is concerned only with the consumer UUID field. This is the first
-        // part of a larger piece of work to simplify Event consumption.
-        return new Event(Event.Type.CREATED, Event.Target.COMPLIANCE,
-            consumer.getName(), principalProvider.get(), consumer.getOwner().getId(), consumer.getUuid(),
-            consumer.getUuid(), buildComplianceDataJson(consumer, entitlements, compliance), null,
-            null);
+        Map<String, String> eventData = new HashMap<String, String>();
+        eventData.put("consumer_uuid", consumer.getUuid());
+        eventData.put("status", compliance.getStatus());
+        try {
+            String eventDataJson = mapper.writeValueAsString(eventData);
+            // Instead of an internal db id, compliance.created events now use
+            // UUID for the 'consumerId' and 'entityId' fields, since Katello
+            // is concerned only with the consumer UUID field. This is the first
+            // part of a larger piece of work to simplify Event consumption.
+            return new Event(Event.Type.CREATED, Event.Target.COMPLIANCE,
+                consumer.getName(), principalProvider.get(), consumer.getOwner().getId(), consumer.getUuid(),
+                consumer.getUuid(), eventDataJson,
+                    buildComplianceDataJson(consumer, entitlements, compliance), null, null);
+        }
+        catch (JsonProcessingException e) {
+            log.error("Error while building JSON for compliance.created event.", e);
+            throw new IseException("Error while building JSON for compliance.created event.");
+        }
     }
 
     // Jackson should think all 3 are root entities so hateoas doesn't bite us
