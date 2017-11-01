@@ -695,6 +695,7 @@ public class CandlepinPoolManager implements PoolManager {
     public List<Pool> createAndEnrichPools(Subscription sub, List<Pool> existingPools) {
         List<Pool> pools = poolRules.createAndEnrichPools(sub, existingPools);
         log.debug("Creating {} pools for subscription: {}", pools.size(), sub);
+
         for (Pool pool : pools) {
             createPool(pool);
         }
@@ -711,9 +712,11 @@ public class CandlepinPoolManager implements PoolManager {
     public Pool createAndEnrichPools(Pool pool, List<Pool> existingPools) {
         List<Pool> pools = poolRules.createAndEnrichPools(pool, existingPools);
         log.debug("Creating {} pools: ", pools.size());
+
         for (Pool p : pools) {
             createPool(p);
         }
+
         return pool;
     }
 

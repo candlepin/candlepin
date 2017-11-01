@@ -1185,10 +1185,7 @@ public class OwnerResource {
     @Path("{owner_key}/pools")
     @ApiOperation(
         notes = "Updates a pool for an Owner. assumes this is a normal pool, and " +
-        "errors out otherwise cause we cannot create master pools from bonus pools " +
-        "TODO: while this method replaces the now deprecated updateSubsciption, it " +
-        "still uses it underneath. We need to re-implement the wheel like we did in " +
-        "createPool ",
+        "errors out otherwise cause we cannot create master pools from bonus pools ",
         value = "Update Pool")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
     public void updatePool(@PathParam("owner_key") @Verify(Owner.class) String ownerKey,
@@ -1196,12 +1193,23 @@ public class OwnerResource {
 
         Pool currentPool = this.poolManager.find(newPool.getId());
         if (currentPool == null) {
-            throw new NotFoundException(i18n.tr(
-                "Unable to find a pool with the ID \"{0}\".", newPool.getId()));
+            throw new NotFoundException(
+                i18n.tr("Unable to find a pool with the ID \"{0}\"", newPool.getId()));
         }
 
-        if (currentPool.getType() != PoolType.NORMAL ||
-            newPool.getType() != PoolType.NORMAL) {
+        // Verify the existing pool belongs to the specified owner
+        // If the pool isn't valid for this owner, we'll pretend it doesn't exist to avoid any
+        // potential security concerns.
+        if (currentPool.getOwner() == null || !ownerKey.equals(currentPool.getOwner().getKey())) {
+            throw new NotFoundException(
+                i18n.tr("Unable to find a pool with the ID \"{0}\"", newPool.getId()));
+        }
+
+        // Ignore what the client has specified as the owner, since we already know the owner here
+        newPool.setOwner(currentPool.getOwner());
+
+        // Verify the pool type is one that allows modifications
+        if (currentPool.getType() != PoolType.NORMAL || newPool.getType() != PoolType.NORMAL) {
             throw new BadRequestException(i18n.tr("Cannot update bonus pools, as they are auto generated"));
         }
 
@@ -1218,8 +1226,56 @@ public class OwnerResource {
         newPool.setProduct(currentPool.getProduct());
         newPool.setDerivedProduct(currentPool.getDerivedProduct());
 
+        // Fill out the new pool with data from the existing pool for values which aren't set
+        // TODO: Abstract this out to something more dedicated if we end up needing this logic elsewhere
+
+        // Start by forcefully setting things we don't allow the client to change. Move these down as
+        // necessary.
+        newPool.setActiveSubscription(currentPool.getActiveSubscription());
+        newPool.setCreatedByShare(currentPool.isCreatedByShare());
+        newPool.setHasSharedAncestor(currentPool.hasSharedAncestor());
+        newPool.setSourceEntitlement(currentPool.getSourceEntitlement());
+        newPool.setSourceStack(currentPool.getSourceStack());
+        newPool.setSourceSubscription(currentPool.getSourceSubscription());
+        newPool.setEntitlements(currentPool.getEntitlements());
+        newPool.setRestrictedToUsername(currentPool.getRestrictedToUsername());
+        newPool.setContractNumber(currentPool.getContractNumber());
+        newPool.setAccountNumber(currentPool.getAccountNumber());
+        newPool.setOrderNumber(currentPool.getOrderNumber());
+        newPool.setConsumed(currentPool.getConsumed());
+        newPool.setExported(currentPool.getExported());
+        newPool.setShared(currentPool.getShared());
+        newPool.setUpstreamPoolId(currentPool.getUpstreamPoolId());
+        newPool.setUpstreamEntitlementId(currentPool.getUpstreamEntitlementId());
+        newPool.setUpstreamConsumerId(currentPool.getUpstreamConsumerId());
+        newPool.setCertificate(currentPool.getCertificate());
+        newPool.setCdn(currentPool.getCdn());
+
+        // Set the fields for those that are null (indicating the user didn't change it)
+        if (newPool.getQuantity() == null) {
+            newPool.setQuantity(currentPool.getQuantity());
+        }
+
+        if (newPool.getStartDate() == null) {
+            newPool.setStartDate(currentPool.getStartDate());
+        }
+
+        if (newPool.getEndDate() == null) {
+            newPool.setEndDate(currentPool.getEndDate());
+        }
+
+        if (newPool.getAttributes() == null) {
+            newPool.setAttributes(currentPool.getAttributes());
+        }
+
+        if (newPool.getBranding() == null) {
+            newPool.setBranding(currentPool.getBranding());
+        }
+
+        // Resolve the bits we may not have set
         newPool = resolverUtil.resolvePool(newPool);
 
+        // Apply changes to the pool and its derived pools
         this.poolManager.updateMasterPool(newPool);
     }
 
