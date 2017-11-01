@@ -9,7 +9,7 @@ describe 'Autobind On Owner' do
   end
 
   let!(:owner) do
-    create_owner( owner_key)
+    create_owner(owner_key)
   end
 
   it 'succeeds when requesting bind of multiple pools with same stack id' do
@@ -157,6 +157,11 @@ describe 'Autobind On Owner' do
     # Create the shared pool in Org B first since all else being equal Candlepin
     # will pick an earlier expiring pool in autobind.
     @cp.consume_pool(shared_pool['id'], :uuid => share_consumer['uuid'])
+    sleep 1
+
+    pools = @cp.list_owner_pools(orgB)
+    expect(pools.size).to eq(1)
+    orgBshared_pool = pools.first
 
     orgBconsumer = @cp.register(
       random_string('orgBConsumer'),
@@ -171,6 +176,7 @@ describe 'Autobind On Owner' do
     pool = create_pool_and_subscription(orgB, prod['id'])
     ent = @cp.consume_product(prod['id'], :uuid => orgBconsumer['uuid'])
 
+    expect(ent.first['pool']['id']).to_not eq(orgBshared_pool['id'])
     expect(ent.first['pool']['id']).to eq(pool['id'])
   end
 end

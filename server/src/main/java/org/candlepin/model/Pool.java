@@ -943,14 +943,21 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     }
 
     /**
-     * @return true if this pool or it's parent was created because of a share.
+     * Checks if this pool or its ancestors were created as a result of a share.
+     *
+     * @return true if this pool or its parent was created because of a share.
      */
+    @JsonProperty
     public Boolean hasSharedAncestor() {
         return hasSharedAncestor;
     }
 
     /**
+     * Sets whether or not this pool or any of its ancestors were created as a result of
+     * a share.
+     *
      * @param hasSharedAncestor
+     *  true if this pool or any of its ancestors were created as a result of a share
      */
     public void setHasSharedAncestor(Boolean hasSharedAncestor) {
         this.hasSharedAncestor = hasSharedAncestor;
