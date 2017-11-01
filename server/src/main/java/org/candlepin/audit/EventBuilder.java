@@ -95,7 +95,7 @@ public class EventBuilder {
                     event.setEventData(mapper.writeValueAsString(eventData));
                 }
                 catch (JsonProcessingException e) {
-                    log.error("Error while building JSON for pool.created event.");
+                    log.error("Error while building JSON for pool.created event.", e);
                     throw new IseException("Error while building JSON for pool.created event.");
                 }
             }

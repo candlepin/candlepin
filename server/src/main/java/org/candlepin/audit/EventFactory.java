@@ -217,22 +217,21 @@ public class EventFactory {
         Map<String, String> eventData = new HashMap<String, String>();
         eventData.put("consumer_uuid", consumer.getUuid());
         eventData.put("status", compliance.getStatus());
-        String eventDataJson = "";
         try {
-            eventDataJson = mapper.writeValueAsString(eventData);
+            String eventDataJson = mapper.writeValueAsString(eventData);
+            // Instead of an internal db id, compliance.created events now use
+            // UUID for the 'consumerId' and 'entityId' fields, since Katello
+            // is concerned only with the consumer UUID field. This is the first
+            // part of a larger piece of work to simplify Event consumption.
+            return new Event(Event.Type.CREATED, Event.Target.COMPLIANCE,
+                consumer.getName(), principalProvider.get(), consumer.getOwner().getId(), consumer.getUuid(),
+                consumer.getUuid(), eventDataJson,
+                    buildComplianceDataJson(consumer, entitlements, compliance), null, null);
         }
         catch (JsonProcessingException e) {
-            log.error("Error while building JSON for compliance.created event.");
+            log.error("Error while building JSON for compliance.created event.", e);
             throw new IseException("Error while building JSON for compliance.created event.");
         }
-        // Instead of an internal db id, compliance.created events now use
-        // UUID for the 'consumerId' and 'entityId' fields, since Katello
-        // is concerned only with the consumer UUID field. This is the first
-        // part of a larger piece of work to simplify Event consumption.
-        return new Event(Event.Type.CREATED, Event.Target.COMPLIANCE,
-            consumer.getName(), principalProvider.get(), consumer.getOwner().getId(), consumer.getUuid(),
-            consumer.getUuid(), eventDataJson,
-                buildComplianceDataJson(consumer, entitlements, compliance), null, null);
     }
 
     // Jackson should think all 3 are root entities so hateoas doesn't bite us
