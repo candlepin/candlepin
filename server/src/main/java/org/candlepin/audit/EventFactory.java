@@ -17,6 +17,7 @@ package org.candlepin.audit;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
+import org.candlepin.common.exceptions.IseException;
 import org.candlepin.common.jackson.HateoasBeanPropertyFilter;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.jackson.PoolEventFilter;
@@ -221,7 +222,8 @@ public class EventFactory {
             eventDataJson = mapper.writeValueAsString(eventData);
         }
         catch (JsonProcessingException e) {
-            e.printStackTrace();
+            log.error("Error while building JSON for compliance.created event.");
+            throw new IseException("Error while building JSON for compliance.created event.");
         }
         // Instead of an internal db id, compliance.created events now use
         // UUID for the 'consumerId' and 'entityId' fields, since Katello
