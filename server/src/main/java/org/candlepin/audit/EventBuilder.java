@@ -40,7 +40,7 @@ public class EventBuilder {
         this.factory = factory;
 
         event = new Event(type, target, null, factory.principalProvider.get(),
-                null, null, null, null, null, null);
+                null, null, null, null, null, null, null);
     }
 
     /*  Implementation note (2017/10/16):
@@ -75,6 +75,14 @@ public class EventBuilder {
                         event.setConsumerId(owningConsumer.getId());
                     }
                 }
+            }
+            if (event.getTarget().equals(Target.POOL) && event.getType().equals(Type.CREATED)) {
+                StringBuilder eventDataBuilder = new StringBuilder()
+                    .append("{\"subscriptionId\": \"")
+                    .append(((Pool) entity).getSubscriptionId())
+                    .append("\"")
+                    .append("}");
+                event.setEventData(eventDataBuilder.toString());
             }
         }
         return this;

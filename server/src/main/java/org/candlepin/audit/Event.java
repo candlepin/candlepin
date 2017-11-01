@@ -138,6 +138,9 @@ public class Event implements Persisted {
     private ReferenceType referenceType;
 
     @Transient
+    private String eventData;
+
+    @Transient
     private String newEntity;
 
     @Transient
@@ -148,7 +151,7 @@ public class Event implements Persisted {
 
     public Event(Type type, Target target, String targetName,
         Principal principal, String ownerId, String consumerId,
-        String entityId, String newEntity,
+        String entityId, String eventData, String newEntity,
         String referenceId, ReferenceType referenceType) {
         this.type = type;
         this.target = target;
@@ -159,6 +162,7 @@ public class Event implements Persisted {
         this.ownerId = ownerId;
 
         this.entityId = entityId;
+        this.eventData = eventData;
         this.newEntity = newEntity;
         this.consumerId = consumerId;
         this.referenceId = referenceId;
@@ -249,6 +253,15 @@ public class Event implements Persisted {
 
     public void setEntityId(String entityId) {
         this.entityId = entityId;
+    }
+
+    @XmlTransient
+    public String getEventData() {
+        return eventData;
+    }
+
+    public void setEventData(String eventData) {
+        this.eventData = eventData;
     }
 
     @XmlTransient

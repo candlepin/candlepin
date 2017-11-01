@@ -210,14 +210,23 @@ public class EventFactory {
 
     public Event complianceCreated(Consumer consumer,
         Set<Entitlement> entitlements, ComplianceStatus compliance) {
+        StringBuilder eventDataBuilder = new StringBuilder()
+            .append("{\"consumer\": ")
+            .append("{\"uuid\": \"")
+            .append(consumer.getUuid())
+            .append("\"}")
+            .append(", \"status\": \"")
+            .append(compliance.getStatus())
+            .append("\"")
+            .append("}");
         // Instead of an internal db id, compliance.created events now use
         // UUID for the 'consumerId' and 'entityId' fields, since Katello
         // is concerned only with the consumer UUID field. This is the first
         // part of a larger piece of work to simplify Event consumption.
         return new Event(Event.Type.CREATED, Event.Target.COMPLIANCE,
             consumer.getName(), principalProvider.get(), consumer.getOwner().getId(), consumer.getUuid(),
-            consumer.getUuid(), buildComplianceDataJson(consumer, entitlements, compliance), null,
-            null);
+            consumer.getUuid(), eventDataBuilder.toString(),
+                buildComplianceDataJson(consumer, entitlements, compliance), null, null);
     }
 
     // Jackson should think all 3 are root entities so hateoas doesn't bite us
