@@ -230,7 +230,7 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
     public void getProductCertificate() {
         Owner owner = this.createOwner("Example-Corporation");
 
-        Product entity = this.createProduct(owner);
+        Product entity = this.createProduct("123", "AwesomeOS Core", owner);
         // ensure we check SecurityHole
         securityInterceptor.enable();
 
@@ -243,5 +243,15 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
         ProductCertificate cert1 = ownerProductResource.getProductCertificate(owner.getKey(), entity.getId());
 
         assertEquals(cert, cert1);
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void requiresNumericIdForProductCertificates() {
+        Owner owner = this.createOwner("Example-Corporation");
+
+        Product entity = this.createProduct("MCT123", "AwesomeOS", owner);
+        securityInterceptor.enable();
+
+        ownerProductResource.getProductCertificate(owner.getKey(), entity.getId());
     }
 }

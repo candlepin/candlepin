@@ -228,7 +228,7 @@ public class OwnerProductResource {
         return product.toDTO();
     }
 
-    @ApiOperation(notes = "Retreives a Certificate for a Product", value = "getProductCertificate")
+    @ApiOperation(notes = "Retrieves a Certificate for a Product", value = "getProductCertificate")
     @ApiResponses({ @ApiResponse(code = 404, message = "") })
     @GET
     @Path("/{product_id}/certificate")
@@ -237,7 +237,12 @@ public class OwnerProductResource {
     @Transactional
     public ProductCertificate getProductCertificate(
         @PathParam("owner_key") String ownerKey,
+        @ApiParam(name = "productId", required = true, value = "Numeric product identifier")
         @PathParam("product_id") String productId) {
+
+        if (!productId.matches("\\d+")) {
+            throw new BadRequestException(i18n.tr("Only numeric product IDs are allowed."));
+        }
 
         Owner owner = this.getOwnerByKey(ownerKey);
         Product product = this.fetchProduct(owner, productId);
