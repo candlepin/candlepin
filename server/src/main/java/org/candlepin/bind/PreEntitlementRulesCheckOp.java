@@ -59,7 +59,7 @@ public class PreEntitlementRulesCheckOp implements BindOperation {
          */
         Map<String, PoolQuantity> poolQuantityMap = context.getPoolQuantities();
         if (context.isQuantityRequested()) {
-            log.info("Running pre-entitlement rules.");
+            log.debug("Running pre-entitlement rules.");
             // XXX preEntitlement is run twice for new entitlement creation
             results = enforcer.preEntitlement(context.getConsumer(),
                 poolQuantityMap.values(), callerType);
