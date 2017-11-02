@@ -87,6 +87,7 @@ public class PoolRules {
             log.debug("Increasing pool quantity for instance multiplier: {}", instanceMultiplier);
             result = result * instanceMultiplier;
         }
+
         return result;
     }
 
@@ -114,15 +115,19 @@ public class PoolRules {
      */
     public List<Pool> createAndEnrichPools(Pool masterPool, List<Pool> existingPools) {
         List<Pool> pools = new LinkedList<Pool>();
-        masterPool.setQuantity(calculateQuantity(masterPool.getQuantity(),
-            masterPool.getProduct(), masterPool.getUpstreamPoolId()));
 
-        String virtOnly = masterPool.getProductAttributeValue(Product.Attributes.VIRT_ONLY);
+        masterPool.setQuantity(calculateQuantity(masterPool.getQuantity(), masterPool.getProduct(),
+            masterPool.getUpstreamPoolId()));
+
         // The following will make virt_only a pool attribute. That makes the
         // pool explicitly virt_only to subscription manager and any other
         // downstream consumer.
+        String virtOnly = masterPool.getProductAttributeValue(Product.Attributes.VIRT_ONLY);
         if (virtOnly != null && !virtOnly.isEmpty()) {
             masterPool.setAttribute(Pool.Attributes.VIRT_ONLY, virtOnly);
+        }
+        else {
+            masterPool.removeAttribute(Pool.Attributes.VIRT_ONLY);
         }
 
         log.info("Checking if pools need to be created for: {}", masterPool);
@@ -133,13 +138,16 @@ public class PoolRules {
                 // is not possible without the subscription itself
                 throw new IllegalStateException("Cannot create master pool from bonus pool");
             }
+
             pools.add(masterPool);
             log.info("Creating new master pool: {}", masterPool);
         }
+
         Pool bonusPool = createBonusPool(masterPool, existingPools);
         if (bonusPool != null) {
             pools.add(bonusPool);
         }
+
         return pools;
     }
 

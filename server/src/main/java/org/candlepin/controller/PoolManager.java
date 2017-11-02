@@ -67,12 +67,11 @@ public interface PoolManager {
     Pool convertToMasterPool(Subscription subscription);
 
     /**
-     * Updates the pools using the information stored in the given pool. Because
-     * the input subscription is used to lookup pools, the ID field must be set
-     * for this method to operate properly.
+     * Applies changes to the given pool to itself and any of its derived pools. This may result in
+     * a deletion of the pool if it has been expired as a result of the changes.
      *
      * @param pool
-     *        The pool to use for updating the associated pools
+     *  The pool to update
      */
     void updateMasterPool(Pool pool);
 

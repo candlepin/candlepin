@@ -55,7 +55,7 @@ public class ResolverUtil {
     public Owner resolveOwner(Owner owner) {
         if (owner == null || (owner.getKey() == null && owner.getId() == null)) {
             throw new BadRequestException(
-                    i18n.tr("No owner specified, or owner lacks identifying information"));
+                i18n.tr("No owner specified, or owner lacks identifying information"));
         }
 
         if (owner.getKey() != null) {
