@@ -499,8 +499,11 @@ public class CandlepinPoolManager implements PoolManager {
     protected int cleanupExpiredPoolsImpl() {
         List<Pool> pools = poolCurator.listExpiredPools(PoolCurator.EXPIRED_POOL_BLOCK_SIZE);
 
-        for (Pool pool : pools) {
-            log.info("Cleaning up expired pool: {} (expired: {})", pool.getId(), pool.getEndDate());
+        if (log.isDebugEnabled()) {
+            for (Pool pool : pools) {
+                log.debug("Cleaning up expired pool: {} (expired: {})",
+                    pool.getId(), pool.getEndDate());
+            }
         }
 
         // Delete the block of pools & flush the results to tell Hibernate to evict the objects

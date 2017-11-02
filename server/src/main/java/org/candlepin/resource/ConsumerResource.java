@@ -283,7 +283,7 @@ public class ConsumerResource {
             Map<String, String> facts = consumer.getFacts();
 
             if (facts != null && facts.size() > 0) {
-                log.info("Sanitizing facts for consumer {}", consumer.getName());
+                log.debug("Sanitizing facts for consumer {}", consumer.getName());
                 Map<String, String> sanitized = new HashMap<String, String>();
                 Set<String> lowerCaseKeys = new HashSet<String>();
 
@@ -1730,7 +1730,7 @@ public class ConsumerResource {
             if (!consumer.isShare() && subAdapter.hasUnacceptedSubscriptionTerms(consumer.getOwner())) {
                 return Response.serverError().build();
             }
-            log.info("Checked if consumer has unaccepted subscription terms in {}ms",
+            log.debug("Checked if consumer has unaccepted subscription terms in {}ms",
                 (System.currentTimeMillis() - subTermsStart));
         }
         catch (CandlepinException e) {

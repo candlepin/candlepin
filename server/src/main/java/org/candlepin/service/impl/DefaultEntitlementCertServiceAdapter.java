@@ -367,7 +367,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         boolean save)
         throws GeneralSecurityException, IOException {
 
-        log.info("Generating entitlement cert for entitlements");
+        log.debug("Generating entitlement cert for entitlements");
         KeyPair keyPair = keyPairCurator.getConsumerKeyPair(consumer);
         byte[] pemEncodedKeyPair = pki.getPemEncoded(keyPair.getPrivate());
 
@@ -410,7 +410,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
                 product, products, productModels,
                 BigInteger.valueOf(serial.getId()), keyPair, true);
 
-            log.info("Getting PEM encoded cert.");
+            log.debug("Getting PEM encoded cert.");
             String pem = new String(this.pki.getPemEncoded(x509Cert));
 
             if (shouldGenerateV3(consumer)) {
@@ -449,7 +449,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         }
 
         // Serials need to be saved before the certs.
-        log.info("Persisting new certificate serials");
+        log.debug("Persisting new certificate serials");
         serialCurator.saveOrUpdateAll(serialMap);
 
         // Now that the serials have been saved, update the newly created
