@@ -202,6 +202,36 @@ describe 'Entitlement Resource' do
 
   end
 
+  it 'should handle concurrent binds on manifest consumer and maintain quanities' do
+    owner_client = user_client(@owner, random_string('owner'))
+    prod = create_product(random_string('product'), random_string('product'),
+                          {:attributes => { :'multi-entitlement' => 'yes'},
+                           :owner => @owner['key']})
+    pool1 = create_pool_and_subscription(@owner['key'], prod.id, 50)
+    pool2 = create_pool_and_subscription(@owner['key'], prod.id, 50)
+    pool3 = create_pool_and_subscription(@owner['key'], prod.id, 50)
+    pool4 = create_pool_and_subscription(@owner['key'], prod.id, 50)
+    pool5 = create_pool_and_subscription(@owner['key'], prod.id, 50)
+
+    cp_client = consumer_client(owner_client, random_string('consumer'), "candlepin")
+
+    t1 = Thread.new{cp_client.consume_pool(pool1.id, {:quantity => 40})}
+    t2 = Thread.new{cp_client.consume_pool(pool2.id, {:quantity => 30})}
+    t3 = Thread.new{cp_client.consume_pool(pool3.id, {:quantity => 20})}
+    t4 = Thread.new{cp_client.consume_pool(pool4.id, {:quantity => 25})}
+    t5 = Thread.new{cp_client.consume_pool(pool5.id, {:quantity => 10})}
+    t1.join
+    t2.join
+    t3.join
+    t4.join
+    t5.join
+
+    consumer = cp_client.get_consumer()
+    consumer['entitlementCount'].should == 125
+
+  end
+
+
   it 'should not allow over consumption in pool' do
     owner_client = user_client(@owner, random_string('owner'))
     prod = create_product(random_string('product'), random_string('product'),

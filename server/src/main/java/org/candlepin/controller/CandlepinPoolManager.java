@@ -1553,12 +1553,10 @@ public class CandlepinPoolManager implements PoolManager {
         boolean isDistributor = consumer.getType().isManifest();
 
         /*
-         * Grab an exclusive lock on the consumer to prevent deadlock.
-         * No need to lock for distributors as we wont compute compliance for it.
+         * Grab an exclusive lock on the consumer to prevent deadlock and
+         *  race conditions
          */
-        if (!isDistributor) {
-            consumer = consumerCurator.lockAndLoad(consumer);
-        }
+        consumer = consumerCurator.lockAndLoad(consumer);
 
         // Persist the entitlement after it has been created.  It requires an ID in order to
         // create an entitlement-derived subpool
