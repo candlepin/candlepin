@@ -128,8 +128,6 @@ public class ConsumerResourceUpdateTest {
         when(idCertService.regenerateIdentityCert(any(Consumer.class)))
             .thenReturn(new IdentityCertificate());
 
-        when(consumerEventBuilder.setNewEntity(any(Consumer.class)))
-            .thenReturn(consumerEventBuilder);
         when(consumerEventBuilder.setEventData(any(Consumer.class)))
             .thenReturn(consumerEventBuilder);
         when(eventFactory.getEventBuilder(any(Target.class), any(Type.class)))

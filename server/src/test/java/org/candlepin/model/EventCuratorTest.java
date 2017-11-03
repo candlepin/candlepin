@@ -84,13 +84,12 @@ public class EventCuratorTest extends DatabaseTestFixture {
 
         builder = eventFactory.getEventBuilder(Event.Target.CONSUMER,
                 Event.Type.CREATED);
-        Event consumerCreatedEvent = builder.setNewEntity(newConsumer).buildEvent();
+        Event consumerCreatedEvent = builder.setEventData(newConsumer).buildEvent();
         consumerCreatedEvent.setTimestamp(forcedDate);
 
         builder = eventFactory.getEventBuilder(Event.Target.CONSUMER,
                 Event.Type.MODIFIED);
-        Event consumerModifiedEvent = builder.setNewEntity(newConsumer).
-            setEventData(newConsumer).buildEvent();
+        Event consumerModifiedEvent = builder.setEventData(newConsumer).buildEvent();
         consumerModifiedEvent.setTimestamp(forcedDate);
 
         eventCurator.create(rulesDeletedEvent);

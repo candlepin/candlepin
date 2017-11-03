@@ -993,7 +993,7 @@ public class OwnerResource {
             ownerManager.refreshOwnerForContentAccess(toUpdate);
         }
 
-        Event e = eventBuilder.setNewEntity(toUpdate).buildEvent();
+        Event e = eventBuilder.setEventData(toUpdate).buildEvent();
         sink.queueEvent(e);
         return toUpdate;
     }

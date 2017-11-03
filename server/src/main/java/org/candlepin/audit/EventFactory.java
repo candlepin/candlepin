@@ -99,14 +99,13 @@ public class EventFactory {
 
     public Event consumerCreated(Consumer newConsumer) {
         return getEventBuilder(Target.CONSUMER, Type.CREATED)
-            .setNewEntity(newConsumer)
+            .setEventData(newConsumer)
             .buildEvent();
     }
 
     public Event rulesUpdated(Rules oldRules, Rules newRules) {
         return getEventBuilder(Target.RULES, Type.MODIFIED)
-            .setEventData(oldRules)
-            .setNewEntity(newRules)
+            .setEventData(oldRules, newRules)
             .buildEvent();
     }
 
@@ -118,7 +117,7 @@ public class EventFactory {
 
     public Event activationKeyCreated(ActivationKey key) {
         return getEventBuilder(Target.ACTIVATIONKEY, Type.CREATED)
-            .setNewEntity(key)
+            .setEventData(key)
             .buildEvent();
     }
 
@@ -130,7 +129,7 @@ public class EventFactory {
 
     public Event entitlementCreated(Entitlement e) {
         return getEventBuilder(Target.ENTITLEMENT, Type.CREATED)
-            .setNewEntity(e)
+            .setEventData(e)
             .buildEvent();
     }
 
@@ -148,19 +147,19 @@ public class EventFactory {
 
     public Event entitlementChanged(Entitlement e) {
         return getEventBuilder(Target.ENTITLEMENT, Type.MODIFIED)
-            .setNewEntity(e)
+            .setEventData(e)
             .buildEvent();
     }
 
     public Event ownerCreated(Owner newOwner) {
         return getEventBuilder(Target.OWNER, Type.CREATED)
-            .setNewEntity(newOwner)
+            .setEventData(newOwner)
             .buildEvent();
     }
 
     public Event ownerModified(Owner newOwner) {
         return getEventBuilder(Target.OWNER, Type.MODIFIED)
-            .setNewEntity(newOwner)
+            .setEventData(newOwner)
             .buildEvent();
     }
 
@@ -172,7 +171,7 @@ public class EventFactory {
 
     public Event poolCreated(Pool newPool) {
         return getEventBuilder(Target.POOL, Type.CREATED)
-            .setNewEntity(newPool)
+            .setEventData(newPool)
             .buildEvent();
     }
 
@@ -184,19 +183,19 @@ public class EventFactory {
 
     public Event exportCreated(Consumer consumer) {
         return getEventBuilder(Target.EXPORT, Type.CREATED)
-            .setNewEntity(consumer)
+            .setEventData(consumer)
             .buildEvent();
     }
 
     public Event importCreated(Owner owner) {
         return getEventBuilder(Target.IMPORT, Type.CREATED)
-            .setNewEntity(owner)
+            .setEventData(owner)
             .buildEvent();
     }
 
     public Event guestIdCreated(GuestId guestId) {
         return getEventBuilder(Target.GUESTID, Type.CREATED)
-            .setNewEntity(guestId)
+            .setEventData(guestId)
             .buildEvent();
     }
 
@@ -221,49 +220,14 @@ public class EventFactory {
             String eventDataJson = mapper.writeValueAsString(eventData);
             // Instead of an internal db id, compliance.created events now use
             // UUID for the 'consumerId' and 'entityId' fields, since Katello
-            // is concerned only with the consumer UUID field. This is the first
-            // part of a larger piece of work to simplify Event consumption.
+            // is concerned only with the consumer UUID field.
             return new Event(Event.Type.CREATED, Event.Target.COMPLIANCE,
                 consumer.getName(), principalProvider.get(), consumer.getOwner().getId(), consumer.getUuid(),
-                consumer.getUuid(), eventDataJson,
-                    buildComplianceDataJson(consumer, entitlements, compliance), null, null);
+                consumer.getUuid(), eventDataJson, null, null);
         }
         catch (JsonProcessingException e) {
             log.error("Error while building JSON for compliance.created event.", e);
             throw new IseException("Error while building JSON for compliance.created event.");
         }
-    }
-
-    // Jackson should think all 3 are root entities so hateoas doesn't bite us
-    protected String buildComplianceDataJson(Consumer consumer, Set<Entitlement> entitlements,
-        ComplianceStatus status) {
-
-        StringBuilder builder = new StringBuilder()
-            .append("{\"consumer\": ")
-            .append(entityToJson(consumer))
-            .append(", \"entitlements\": ")
-            .append(entityToJson(entitlements))
-            .append(", \"status\": ")
-            .append(entityToJson(status))
-            .append("}");
-
-        return builder.toString();
-    }
-
-    protected String entityToJson(Object entity) {
-        String newEntityJson = "";
-        // TODO: Throw an auditing exception here
-
-        // Drop data on consumer we do not want serialized, Jackson doesn't
-        // seem to care about XmlTransient annotations when used here:
-
-        try {
-            newEntityJson = mapper.writeValueAsString(entity);
-        }
-        catch (Exception e) {
-            log.warn("Unable to jsonify: {}", entity);
-            log.error("jsonification failed!", e);
-        }
-        return newEntityJson;
     }
 }

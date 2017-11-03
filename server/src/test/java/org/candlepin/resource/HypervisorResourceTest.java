@@ -132,8 +132,6 @@ public class HypervisorResourceTest {
         when(ownerCurator.lookupByKey(any(String.class))).thenReturn(new Owner());
         when(eventFactory.getEventBuilder(any(Target.class), any(Type.class)))
             .thenReturn(consumerEventBuilder);
-        when(consumerEventBuilder.setNewEntity(any(Consumer.class)))
-            .thenReturn(consumerEventBuilder);
         when(consumerEventBuilder.setEventData(any(Consumer.class)))
             .thenReturn(consumerEventBuilder);
     }
