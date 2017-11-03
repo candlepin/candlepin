@@ -1755,6 +1755,7 @@ public class CandlepinPoolManager implements PoolManager {
 
             pool.setConsumed(pool.getConsumed() - entQuantity);
             Consumer consumer = ent.getConsumer();
+            consumerCurator.lockAndLoad(consumer);
             if (consumer.getType().isManifest()) {
                 pool.setExported(pool.getExported() - entQuantity);
             }
@@ -2088,6 +2089,7 @@ public class CandlepinPoolManager implements PoolManager {
                     // Since we're sifting through these already, let's also sort them into consumer lists
                     // for some of the other methods we'll be calling later
                     Consumer consumer = entitlement.getConsumer();
+                    consumerCurator.lockAndLoad(consumer);
                     Pool pool = entitlement.getPool();
 
                     List<Entitlement> stackedEntitlements = consumerEntitlements.get(consumer);
