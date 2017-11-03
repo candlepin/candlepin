@@ -1157,7 +1157,7 @@ public class ConsumerResource {
             // this should update compliance on toUpdate, but not call the curator
             complianceRules.getStatus(toUpdate, null, false, false);
 
-            Event event = eventBuilder.setNewEntity(toUpdate).buildEvent();
+            Event event = eventBuilder.setEventData(toUpdate).buildEvent();
             sink.queueEvent(event);
         }
 
@@ -2274,7 +2274,7 @@ public class ConsumerResource {
         IdentityCertificate ic = generateIdCert(consumer, true);
         consumer.setIdCert(ic);
         consumerCurator.update(consumer);
-        sink.queueEvent(eventBuilder.setNewEntity(consumer).buildEvent());
+        sink.queueEvent(eventBuilder.setEventData(consumer).buildEvent());
         return consumer;
     }
 

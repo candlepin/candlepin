@@ -182,7 +182,6 @@ public class PoolManagerTest {
         when(mockConfig.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
         when(eventFactory.getEventBuilder(any(Target.class), any(Type.class))).thenReturn(eventBuilder);
 
-        when(eventBuilder.setNewEntity(any(Eventful.class))).thenReturn(eventBuilder);
         when(eventBuilder.setEventData(any(Eventful.class))).thenReturn(eventBuilder);
 
         this.principal = TestUtil.createOwnerPrincipal(owner);

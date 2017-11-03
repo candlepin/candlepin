@@ -42,8 +42,6 @@ import java.util.TimeZone;
 public class LoggingListener implements EventListener {
     private static Logger auditLog;
 
-    private boolean verbose;
-
     private final DateFormat df;
 
     @Inject
@@ -67,7 +65,6 @@ public class LoggingListener implements EventListener {
         // Keep these messages in audit.log only
         auditLog.setAdditive(false);
 
-        verbose = config.getBoolean(ConfigProperties.AUDIT_LOG_VERBOSE);
         TimeZone tz = TimeZone.getDefault();
         // Format for ISO8601 to match our other logging:
         df = new SimpleDateFormat("yyyy-MM-dd' 'HH:mm:ssZ");
@@ -78,7 +75,7 @@ public class LoggingListener implements EventListener {
     @SuppressWarnings("checkstyle:indentation")
     public void onEvent(Event e) {
         auditLog.info(
-            "{} principalType={} principal={} target={} entityId={} type={} owner={}\n",
+            "{} principalType={} principal={} target={} entityId={} type={} owner={} eventData={}\n",
             new Object[] {
                 df.format(e.getTimestamp()),
                 e.getPrincipal().getType(),
@@ -86,11 +83,9 @@ public class LoggingListener implements EventListener {
                 e.getTarget(),
                 e.getEntityId(),
                 e.getType(),
-                e.getOwnerId()}
+                e.getOwnerId(),
+                e.getEventData()}
         );
-        if (verbose) {
-            auditLog.info(String.format("==NEW==\n%s\n\n", e.getNewEntity()));
-        }
     }
 
 }

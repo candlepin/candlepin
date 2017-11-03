@@ -631,7 +631,7 @@ public class CandlepinPoolManager implements PoolManager {
             // Build event for this update...
             EventBuilder builder = poolEvents.get(existingPool.getId());
             if (builder != null) {
-                Event event = builder.setNewEntity(existingPool).buildEvent();
+                Event event = builder.setEventData(existingPool).buildEvent();
                 sink.queueEvent(event);
             }
             else {

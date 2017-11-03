@@ -123,7 +123,6 @@ public class ConfigProperties {
      * will be filtered, meaning they will not enter HORNETQ.
      */
     public static final String AUDIT_FILTER_DEFAULT_POLICY = "candlepin.audit.filter.policy";
-    public static final String AUDIT_LOG_VERBOSE = "candlepin.audit.log_verbose";
 
     public static final String PRETTY_PRINT = "candlepin.pretty_print";
     public static final String ACTIVATION_DEBUG_PREFIX = "candlepin.subscription.activation.debug_prefix";
@@ -318,7 +317,6 @@ public class ConfigProperties {
                 "org.candlepin.audit.LoggingListener," +
                 "org.candlepin.audit.ActivationListener");
             this.put(AUDIT_LOG_FILE, "/var/log/candlepin/audit.log");
-            this.put(AUDIT_LOG_VERBOSE, "false");
             this.put(AUDIT_FILTER_ENABLED, "false");
 
             /**

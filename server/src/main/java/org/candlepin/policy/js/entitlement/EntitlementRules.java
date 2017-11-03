@@ -773,7 +773,7 @@ public class EntitlementRules implements Enforcer {
                     // Now we need to reconcile all of recipient's pools that were using the old product.
                     Product resolvedProduct = productManager.updateProduct(
                         sharingOwnerProduct.toDTO(), recipient, true);
-                    builder.setNewEntity(resolvedProduct);
+                    builder.setEventData(resolvedProduct);
                     resolvedProducts.put(resolvedProduct.getId(), resolvedProduct);
                     events.add(builder.buildEvent());
                 }

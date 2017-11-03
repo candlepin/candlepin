@@ -15,10 +15,13 @@
 package org.candlepin.audit;
 
 import org.candlepin.auth.Principal;
+import org.candlepin.common.exceptions.IseException;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.Pool;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -29,6 +32,9 @@ public class EventBuilderTest {
     private EventFactory factory;
     private EventBuilder eventBuilder;
     private PrincipalProvider principalProvider;
+
+    @Rule
+    public ExpectedException exceptions = ExpectedException.none();
 
     @Before
     public void init() throws Exception {
@@ -48,5 +54,15 @@ public class EventBuilderTest {
         String expectedEventData = "{\"subscriptionId\":\"test-subscription-id\"}";
         Event event = eventBuilder.setEventData(pool).buildEvent();
         assertEquals(expectedEventData, event.getEventData());
+    }
+
+    @Test
+    public void testSetEventDataForNonModifiedEventsThrowsIesException() {
+        Pool pool = mock(Pool.class);
+        eventBuilder = new EventBuilder(factory, Event.Target.POOL, Event.Type.CREATED);
+
+        exceptions.expect(IseException.class);
+        exceptions.expectMessage("This method is only for type MODIFIED Events.");
+        eventBuilder.setEventData(pool, pool);
     }
 }

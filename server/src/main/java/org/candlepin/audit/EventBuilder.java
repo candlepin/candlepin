@@ -42,23 +42,41 @@ public class EventBuilder {
 
     private static final Logger log = LoggerFactory.getLogger(EventBuilder.class);
 
-    private final EventFactory factory;
     private final ObjectMapper mapper;
 
     private Event event;
 
     public EventBuilder(EventFactory factory, Target target, Type type) {
-        this.factory = factory;
         this.mapper = new ObjectMapper();
 
         event = new Event(type, target, null, factory.principalProvider.get(),
-                null, null, null, null, null, null, null);
+                null, null, null, null, null, null);
     }
 
-    /*  Implementation note (2017/10/16):
-        This method is currently used instead of setOldEntity, since oldEntity was removed,
-        and it will also be used in the future instead of setNewEntity once newEntity is removed.
-        This is part of simplifying the data Events hold.
+    /**
+     * Utility method used to pass in the old and new version of the modified
+     * entity for {@link Type#MODIFIED} events.
+     * @param oldEntity The target entity before modification
+     * @param newEntity The target entity after modification
+     * @return The builder object
+     */
+    public EventBuilder setEventData(Eventful oldEntity, Eventful newEntity) {
+        if (!event.getType().equals(Type.MODIFIED)) {
+            throw new IseException("This method is only for type MODIFIED Events.");
+        }
+        setEventData(oldEntity);
+        return setEventData(newEntity);
+    }
+
+    /**
+     * This method is used with any type of event and any target entity.
+     * <p>
+     * Note: For {@link Type#MODIFIED} events, it can be called twice consecutively
+     * to first pass in the original, and then the updated entity. Alternatively,
+     * {@link #setEventData(Eventful, Eventful)} can be used in the same use case.
+     * </p>
+     * @param entity The target entity of the Event
+     * @return The builder object
      */
     public EventBuilder setEventData(Eventful entity) {
         if (entity != null) {
@@ -99,17 +117,6 @@ public class EventBuilder {
                     throw new IseException("Error while building JSON for pool.created event.");
                 }
             }
-        }
-        return this;
-    }
-
-    public EventBuilder setNewEntity(Eventful updated) {
-        if (updated != null) {
-            if (event.getType() == Type.DELETED || event.getType() == Type.EXPIRED) {
-                throw new IllegalArgumentException("You cannot set the new entity for a deletion event");
-            }
-            setEventData(updated);
-            event.setNewEntity(factory.entityToJson(updated));
         }
         return this;
     }
