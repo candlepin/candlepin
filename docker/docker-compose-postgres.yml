@@ -1,7 +1,9 @@
 version: '2'
 services:
   db:
-    image: postgres:9.6.2
+    # upgrade to 9.6 requires client version 9.4.1211
+    # https://stackoverflow.com/questions/38427585/postgresql-error-column-am-amcanorder-doesnt-exist
+    image: postgres:9.5.9        
     restart: always
     environment:
       POSTGRES_USER: candlepin
