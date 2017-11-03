@@ -1755,6 +1755,7 @@ public class CandlepinPoolManager implements PoolManager {
 
             pool.setConsumed(pool.getConsumed() - entQuantity);
             Consumer consumer = ent.getConsumer();
+            consumerCurator.lockAndLoad(consumer);
             if (consumer.getType().isManifest()) {
                 pool.setExported(pool.getExported() - entQuantity);
             }
@@ -2056,6 +2057,10 @@ public class CandlepinPoolManager implements PoolManager {
                 this.entitlementCurator.listAllByIds(entitlementIds).list() :
                 Collections.<Entitlement>emptySet();
 
+            for (Entitlement e : entitlements) {
+                consumerCurator.lockAndLoad(e.getConsumer());
+            }
+
             // Unlink the pools and entitlements we're about to delete so we don't error out while
             // trying to delete entitlements.
             this.poolCurator.clearPoolSourceEntitlementRefs(poolIds);
@@ -2116,6 +2121,7 @@ public class CandlepinPoolManager implements PoolManager {
                             pool.setExported(pool.getExported() - quantity);
                         }
                     }
+                    consumer.removeEntitlement(entitlement);
                 }
 
                 this.poolCurator.updateAll(poolsToSave, false, false);
