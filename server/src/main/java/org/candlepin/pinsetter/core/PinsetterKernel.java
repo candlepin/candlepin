@@ -57,6 +57,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -400,11 +401,16 @@ public class PinsetterKernel implements ModeChangeListener {
         }
     }
 
-    public void cancelJob(Serializable id, String group)
-        throws PinsetterException {
+    /**
+     * Cancels the specified job by deleting the job and all triggers from the scheduler.
+     * Assumes that the job is already marked as CANCELED in the JobStatus table.
+     *
+     * @param id the ID of the job to cancel
+     * @param group the job group that the job belongs to
+     * @throws PinsetterException if there is an error deleting the job from the schedule.
+     */
+    public void cancelJob(Serializable id, String group) throws PinsetterException {
         try {
-            // this deletes from the scheduler, it's already marked as
-            // canceled in the JobStatus table
             if (scheduler.deleteJob(jobKey((String) id, group))) {
                 log.info("Canceled job in scheduler: {}:{} ", group, id);
             }
@@ -412,6 +418,33 @@ public class PinsetterKernel implements ModeChangeListener {
         catch (SchedulerException e) {
             throw new PinsetterException("problem canceling " + group + ":" + id, e);
         }
+    }
+
+    /**
+     * Cancels the specified jobs by deleting the jobs and all triggers from the scheduler.
+     * Assumes that the jobs are already marked as CANCELED in the JobStatus table.
+     *
+     * @param toCancel the JobStatus records of the jobs to cancel.
+     * @throws PinsetterException if there is an error deleting the jobs from the schedule.
+     */
+    public void cancelJobs(Collection<JobStatus> toCancel) throws PinsetterException {
+        List<JobKey> jobsToDelete = new LinkedList<JobKey>();
+
+        for (JobStatus status : toCancel) {
+            JobKey key = jobKey(status.getId(), status.getGroup());
+            log.debug("Job {} from group {} will be deleted from the scheduler.",
+                key.getName(), key.getGroup());
+            jobsToDelete.add(key);
+        }
+
+        log.info("Deleting {} cancelled jobs from scheduler.", toCancel.size());
+        try {
+            scheduler.deleteJobs(jobsToDelete);
+        }
+        catch (SchedulerException se) {
+            throw new PinsetterException("Problem canceling jobs.", se);
+        }
+        log.info("Finished deleting jobs from scheduler");
     }
 
     /**
