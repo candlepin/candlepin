@@ -14,10 +14,14 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
-import static org.quartz.JobBuilder.*;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.atMost;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.quartz.JobBuilder.newJob;
 
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.PinsetterException;
@@ -36,9 +40,11 @@ import org.quartz.JobKey;
 import org.quartz.SchedulerException;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -74,22 +80,33 @@ public class CancelJobJobTest extends BaseJobTest{
 
     @Test
     public void cancelTest() throws JobExecutionException, PinsetterException, SchedulerException {
-        JobDetail jd = newJob(Job.class)
-            .withIdentity("Kayfabe", "Deluxe")
+        JobDetail jd1 = newJob(Job.class)
+            .withIdentity("Job1", "G1")
             .build();
 
-        JobStatus js = new JobStatus(jd);
+        JobDetail jd2 = newJob(Job.class)
+            .withIdentity("Job2", "G1")
+            .build();
+
+        JobDetail jd3 = newJob(Job.class)
+            .withIdentity("Job1", "G2")
+            .build();
+
+        List<JobDetail> jobDetailList = Arrays.asList(jd1, jd2, jd3);
         Set<JobStatus> jl = new HashSet<JobStatus>();
-        jl.add(js);
+        for (JobDetail jd : jobDetailList) {
+            jl.add(new JobStatus(jd1));
+        }
 
         Set<JobKey> jobKeys = new HashSet<JobKey>();
-        jobKeys.add(new JobKey("Kayfabe"));
+        jobKeys.add(new JobKey("G1"));
+        jobKeys.add(new JobKey("G2"));
 
         when(pk.getSingleJobKeys()).thenReturn(jobKeys);
         when(j.findCanceledJobs(any(Collection.class))).thenReturn(jl);
 
         cancelJobJob.execute(ctx);
-        verify(pk, atLeastOnce()).cancelJob((Serializable) "Kayfabe", "Deluxe");
+        verify(pk, atMost(1)).cancelJobs(eq(jl));
     }
 
 }
