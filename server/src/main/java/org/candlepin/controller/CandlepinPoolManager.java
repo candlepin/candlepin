@@ -1769,6 +1769,7 @@ public class CandlepinPoolManager implements PoolManager {
 
             pool.setConsumed(pool.getConsumed() - entQuantity);
             Consumer consumer = ent.getConsumer();
+            consumerCurator.lockAndLoad(consumer);
 
             if (consumer.isManifestDistributor()) {
                 pool.setExported(pool.getExported() - entQuantity);
@@ -2083,6 +2084,10 @@ public class CandlepinPoolManager implements PoolManager {
                 this.entitlementCurator.listAllByIds(entitlementIds).list() :
                 Collections.<Entitlement>emptySet();
 
+            for (Entitlement e : entitlements) {
+                consumerCurator.lockAndLoad(e.getConsumer());
+            }
+
             // Mark remaining dependent entitlements dirty for this consumer
             this.entitlementCurator.markDependentEntitlementsDirty(entitlements, true);
 
@@ -2149,6 +2154,7 @@ public class CandlepinPoolManager implements PoolManager {
                             pool.setExported(pool.getExported() - quantity);
                         }
                     }
+                    consumer.removeEntitlement(entitlement);
                 }
 
                 this.poolCurator.updateAll(poolsToSave, false, false);

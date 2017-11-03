@@ -227,17 +227,6 @@ describe 'Entitlement Resource' do
 
   end
 
-
-  def register_and_consume(pool, consumer_type, quantity)
-    user = user_client(@owner, random_string('user'))
-    cp_client = consumer_client(user, random_string('consumer'), consumer_type)
-    begin
-        cp_client.consume_pool(pool.id, {:quantity => quantity})
-    rescue RestClient::Forbidden => e
-        # tests will run that try to over consume, this is expected
-    end
-  end
-
   it 'should end at zero quantity consumed when all consumers are unregistered' do
     owner_client = user_client(@owner, random_string('owner'))
     prod = create_product(random_string('product'), random_string('product'),
@@ -264,6 +253,93 @@ describe 'Entitlement Resource' do
 
   end
 
+  it 'should handle concurrent binds on manifest consumer and maintain quanities' do
+    owner_client = user_client(@owner, random_string('owner'))
+    prod = create_product(random_string('product'), random_string('product'),
+                          {:attributes => { :'multi-entitlement' => 'yes'},
+                           :owner => @owner['key']})
+    pool1 = create_pool_and_subscription(@owner['key'], prod.id, 50)
+    pool2 = create_pool_and_subscription(@owner['key'], prod.id, 50)
+    pool3 = create_pool_and_subscription(@owner['key'], prod.id, 50)
+    pool4 = create_pool_and_subscription(@owner['key'], prod.id, 50)
+    pool5 = create_pool_and_subscription(@owner['key'], prod.id, 50)
+
+    cp_client = consumer_client(owner_client, random_string('consumer'), "candlepin")
+
+    t1 = Thread.new{cp_client.consume_pool(pool1.id, {:quantity => 40})}
+    t2 = Thread.new{cp_client.consume_pool(pool2.id, {:quantity => 30})}
+    t3 = Thread.new{cp_client.consume_pool(pool3.id, {:quantity => 20})}
+    t4 = Thread.new{cp_client.consume_pool(pool4.id, {:quantity => 25})}
+    t5 = Thread.new{cp_client.consume_pool(pool5.id, {:quantity => 10})}
+    t1.join
+    t2.join
+    t3.join
+    t4.join
+    t5.join
+
+    consumer = cp_client.get_consumer()
+    consumer['entitlementCount'].should == 125
+
+  end
+
+  it 'should handle concurrent binds and unbinds and maintain quanities' do
+    owner_client = user_client(@owner, random_string('owner'))
+    prod = create_product(random_string('product'), random_string('product'),
+                          {:attributes => { :'multi-entitlement' => 'yes'},
+                           :owner => @owner['key']})
+    pool1 = create_pool_and_subscription(@owner['key'], prod.id, 50)
+    pool2 = create_pool_and_subscription(@owner['key'], prod.id, 50)
+    pool3 = create_pool_and_subscription(@owner['key'], prod.id, 50)
+    pool4 = create_pool_and_subscription(@owner['key'], prod.id, 50)
+    pool5 = create_pool_and_subscription(@owner['key'], prod.id, 50)
+
+    cp_client = consumer_client(owner_client, random_string('consumer'), "candlepin")
+
+    t1 = Thread.new{consume_delete_ent(pool1, cp_client, 40)}
+    t2 = Thread.new{consume_delete_ent(pool2, cp_client, 30)}
+    t3 = Thread.new{consume_delete_ent(pool3, cp_client, 20)}
+    t4 = Thread.new{consume_delete_ent(pool4, cp_client, 25)}
+    t5 = Thread.new{consume_delete_ent(pool5, cp_client, 10)}
+    t1.join
+    t2.join
+    t3.join
+    t4.join
+    t5.join
+
+    consumer = cp_client.get_consumer()
+    consumer['entitlementCount'].should == 0
+
+  end
+
+  it 'should handle concurrent binds and pool deletes and maintain quanities' do
+    owner_client = user_client(@owner, random_string('owner'))
+    prod = create_product(random_string('product'), random_string('product'),
+                          {:attributes => { :'multi-entitlement' => 'yes'},
+                           :owner => @owner['key']})
+    pool1 = create_pool_and_subscription(@owner['key'], prod.id, 50)
+    pool2 = create_pool_and_subscription(@owner['key'], prod.id, 50)
+    pool3 = create_pool_and_subscription(@owner['key'], prod.id, 50)
+    pool4 = create_pool_and_subscription(@owner['key'], prod.id, 50)
+    pool5 = create_pool_and_subscription(@owner['key'], prod.id, 50)
+
+    cp_client = consumer_client(owner_client, random_string('consumer'), "candlepin")
+
+    t1 = Thread.new{consume_delete_pool(pool1, cp_client, 40)}
+    t2 = Thread.new{consume_delete_pool(pool2, cp_client, 30)}
+    t3 = Thread.new{consume_delete_pool(pool3, cp_client, 20)}
+    t4 = Thread.new{consume_delete_pool(pool4, cp_client, 25)}
+    t5 = Thread.new{consume_delete_pool(pool5, cp_client, 10)}
+    t1.join
+    t2.join
+    t3.join
+    t4.join
+    t5.join
+
+    consumer = cp_client.get_consumer()
+    consumer['entitlementCount'].should == 0
+
+  end
+
   def register_consume_unregister(pool, consumer_type, quantity)
     user = user_client(@owner, random_string('user'))
     cp_client = consumer_client(user, random_string('consumer'), consumer_type)
@@ -275,4 +351,33 @@ describe 'Entitlement Resource' do
     cp_client.unregister
   end
 
+  def consume_delete_ent(pool, consumer_client, quantity)
+    user = user_client(@owner, random_string('user'))
+    begin
+      ent = consumer_client.consume_pool(pool.id, {:quantity => quantity}).first
+      consumer_client.unbind_entitlement(ent.id)
+    rescue RestClient::Forbidden => e
+      # tests will run that try to over consume, this is expected
+    end
+  end
+
+  def consume_delete_pool(pool, consumer_client, quantity)
+    user = user_client(@owner, random_string('user'))
+    begin
+      ent = consumer_client.consume_pool(pool.id, {:quantity => quantity}).first
+      @cp.delete_pool(pool.id)
+    rescue RestClient::Forbidden => e
+      # tests will run that try to over consume, this is expected
+    end
+  end
+
+  def register_and_consume(pool, consumer_type, quantity)
+    user = user_client(@owner, random_string('user'))
+    cp_client = consumer_client(user, random_string('consumer'), consumer_type)
+    begin
+      cp_client.consume_pool(pool.id, {:quantity => quantity})
+    rescue RestClient::Forbidden => e
+      # tests will run that try to over consume, this is expected
+    end
+  end
 end
