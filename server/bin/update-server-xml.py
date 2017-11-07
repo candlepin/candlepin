@@ -155,10 +155,10 @@ class SslContextEditor(AbstractBaseEditor):
             ("secure", "true"),
             ("clientAuth", "want"),
             # Note SSLv3 is not included, to avoid poodle
-            # For the time being, TLSv1 needs to stay enabled to support
-            # existing python-rhsm based clients.
+            # For the time being, TLSv1 needs to stay enabled in Satellite deployments to support
+            # existing python-rhsm based clients (RHEL5).
             ("sslEnabledProtocols", "TLSv1.2,TLSv1.1,TLSv1"),
-            ("SSLProtocol", "TLS"),
+            ("SSLProtocol", "TLSv1.2,TLSv1.1,TLSv1"),
             ("keystoreFile", "conf/keystore"),
             ("truststoreFile", "conf/keystore"),
             ("keystorePass", "password"),
