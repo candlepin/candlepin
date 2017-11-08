@@ -95,6 +95,7 @@ public class BindChain {
     }
 
     public Collection<Entitlement> run() throws EntitlementRefusedException {
+        context.getLockedConsumer();
         if (preProcess(context)) {
             lock(context);
             if (execute(context)) {
