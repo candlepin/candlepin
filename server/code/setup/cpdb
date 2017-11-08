@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2012 Red Hat, Inc.
+# Copyright (c) 2017 Red Hat, Inc.
 #
 # This software is licensed to you under the GNU General Public License,
 # version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -47,36 +47,47 @@ def error_out(command, status, output):
 
 
 class DbSetup(object):
-    def __init__(self, username, password, db, community):
+    def __init__(self, username, password, db, community, verbose):
         self.username = username
         self.db = db
         self.password = password
         self.community = community
+        self.verbose = verbose
 
     def create(self):
         raise NotImplementedError("Implemented by subclasses")
 
     def initialize_schema(self):
-        print("Loading candlepin schema")
+        print("Loading Candlepin schema")
         self._run_liquibase("db/changelog/changelog-create.xml")
 
     def drop(self):
         raise NotImplementedError("Implemented by subclasses")
 
+    def validate(self):
+        """ Validates an existing candlepin database. """
+        print("Validating Candlepin database")
+        self._run_liquibase("db/changelog/changelog-validate.xml")
+
     def update(self):
         """ Upgrades an existing candlepin database. """
-        print("Migrating candlepin database")
+        print("Migrating Candlepin database")
         self._run_liquibase("db/changelog/changelog-update.xml")
 
     def _run_liquibase(self, changelog_path):
         # Figure out what to append to the classpath for liquibase:
         classpath = self.jdbc_jar
+
+        if os.path.exists('target/classes'):
+            classpath = "%s:%s" % (classpath, 'target/classes/')
+
         if os.path.exists(TOMCAT_CLASSPATH):
             classpath = "%s:%s" % (classpath, TOMCAT_CLASSPATH)
+
         if os.path.exists(JBOSS_CLASSPATH):
             classpath = "%s:%s" % (classpath, JBOSS_CLASSPATH)
-        liquibase_options = "--driver=%s --classpath=%s " \
-                "--changeLogFile=%s --url=%s --username=%s " % (
+
+        liquibase_options = "--driver=%s --classpath=%s --changeLogFile=%s --url=%s --username=%s" % (
             self.driver_class,
             classpath,
             changelog_path,
@@ -87,15 +98,18 @@ class DbSetup(object):
         if self.password:
             liquibase_options += " --password=%s" % self.password
 
-        output = run_command("liquibase %s migrate -Dcommunity=%s" % (
-            liquibase_options,
-            self.community))
+        # Add in output level. By default, Liquibase defaults to "off"
+        liquibase_options += " --logLevel=%s" % ('debug' if self.verbose else 'severe')
+
+        print liquibase_options
+
+        output = run_command("liquibase %s migrate -Dcommunity=%s" % (liquibase_options, self.community))
         print output
 
 
 class OracleSetup(DbSetup):
-    def __init__(self, username, password, db, community, oracle_user, oracle_password):
-        super(OracleSetup, self).__init__(username, password, db, community)
+    def __init__(self, username, password, db, community, verbose, oracle_user, oracle_password):
+        super(OracleSetup, self).__init__(username, password, db, community, verbose)
         self.jdbc_jar = "/usr/lib/oracle/11.2/client64/lib/ojdbc6.jar"
         self.driver_class = "oracle.jdbc.OracleDriver"
         self.jdbc_url = "jdbc:oracle:thin:@//%s" % db
@@ -122,7 +136,7 @@ class OracleSetup(DbSetup):
             print("%s user already exists.  Skipping..." % self.username)
             return
 
-        print("Creating candlepin database")
+        print("Creating Candlepin database")
         out = self._runSql('create user %s identified by %s default tablespace users;' %
             (self.username, self.password))
         print out
@@ -131,14 +145,16 @@ class OracleSetup(DbSetup):
         print out
 
     def drop(self):
-        print("Dropping candlepin database")
+        print("Dropping Candlepin database")
         out = self._runSql('drop user %s cascade;' % self.username)
         print out
 
 
 class PostgresqlSetup(DbSetup):
-    def __init__(self, username, password, db, community):
-        super(PostgresqlSetup, self).__init__(username, password, db, community)
+    def __init__(self, host, port, username, password, db, community, verbose):
+        super(PostgresqlSetup, self).__init__(username, password, db, community, verbose)
+        self.host = host
+        self.port = port
         self.jdbc_jar = "/usr/share/java/postgresql-jdbc.jar"
         self.driver_class = "org.postgresql.Driver"
         self.jdbc_url = "jdbc:postgresql:%s" % (self.db)
@@ -170,41 +186,66 @@ if __name__ == "__main__":
     parser = OptionParser()
     parser.add_option("--create",
             dest="create", action="store_true", default=False,
-            help="create the Candlepin database")
+            help="create the Candlepin database; cannot be used with --update or --validate")
+
     parser.add_option("--schema-only",
             dest="schema_only", action="store_true", default=False,
             help="assumes database is already created by another tool and"
                  "applies schema to database; used with --create")
+
+    parser.add_option("--validate",
+            dest="validate", action="store_true", default=False,
+            help="validate the current state of the Candlepin database; cannot be used with --create")
+
     parser.add_option("--update",
             dest="update", action="store_true", default=False,
-            help="update the Candlepin database")
+            help="update the Candlepin database; cannot be used with --create")
 
     parser.add_option("--drop",
             dest="drop", action="store_true", default=False,
             help="drop the existing Candlepin database before creating")
+
     parser.add_option("-u", "--user",
             dest="dbuser", default="candlepin",
             help="database user to use")
+
     parser.add_option("-d", "--database",
             dest="db", default="candlepin",
             help="database name to use")
+
     parser.add_option("-p", "--password",
             dest="dbpassword",
             help="database password to use")
+
+    parser.add_option("--dbhost",
+            dest="dbhost",
+            help="the database host to use (optional)")
+
+    parser.add_option("--dbport",
+            dest="dbport",
+            help="the database port to use (optional)")
+
     parser.add_option("--community",
             action="store_true", default=False,
             dest="community",
             help="true if used in a community fashion")
+
     parser.add_option("--oracle",
             action="store_true", default=False,
             dest="oracle",
             help="run against an Oracle installation")
+
     parser.add_option("--oracle-user",
             dest="oracle_user", default="sys",
             help="Oracle DBA user. Defaults to 'sys'")
+
     parser.add_option("--oracle-password",
             dest="oracle_password",
             help="Oracle DBA password")
+
+    parser.add_option("--verbose",
+            dest="verbose", action="store_true", default=False,
+            help="enables verbose logging/output")
 
     (options, args) = parser.parse_args()
 
@@ -216,9 +257,16 @@ if __name__ == "__main__":
             print("ERROR: Please provide a password for the Candlepin database user.")
             sys.exit(1)
 
-    if (not options.create and not options.update) or \
-        (options.create and options.update):
-        print("ERROR: Please specify --create or --update.")
+    if (not options.create and not options.update and not options.validate):
+        print("ERROR: Please specify --create, --update or --validate.")
+        sys.exit(1)
+
+    if (options.create and options.validate):
+        print("ERROR: --create cannot be used with --validate")
+        sys.exit(1)
+
+    if (options.create and options.update):
+        print("ERROR: --create cannot be used with --update")
         sys.exit(1)
 
     if options.schema_only and not options.create:
@@ -230,16 +278,23 @@ if __name__ == "__main__":
         sys.exit(1)
 
     if options.oracle:
-        dbsetup = OracleSetup(options.dbuser, options.dbpassword, options.db,
-                options.community, options.oracle_user, options.oracle_password)
+        dbsetup = OracleSetup(options.dbuser, options.dbpassword, options.db, options.community,
+            options.verbose, options.oracle_user, options.oracle_password)
     else:
-        dbsetup = PostgresqlSetup(options.dbuser, options.dbpassword, options.db, options.community)
+        dbsetup = PostgresqlSetup(options.dbhost, options.dbport, options.dbuser, options.dbpassword,
+            options.db, options.community, options.verbose)
 
     if options.create:
         if options.drop:
             dbsetup.drop()
+
         if not options.schema_only:
             dbsetup.create()
+
         dbsetup.initialize_schema()
+
+    if options.validate:
+        dbsetup.validate()
+
     if options.update:
         dbsetup.update()

@@ -31,17 +31,29 @@ public class LiquibaseCustomTaskLogger implements CustomTaskLogger {
     }
 
     @Override
-    public void info(String message) {
+    public void info(String message, Object... params) {
+        if (params != null && params.length > 0) {
+            message = String.format(message, params);
+        }
+
         logger.info(message);
     }
 
     @Override
-    public void warn(String message) {
+    public void warn(String message, Object... params) {
+        if (params != null && params.length > 0) {
+            message = String.format(message, params);
+        }
+
         logger.warning(message);
     }
 
     @Override
-    public void error(String message) {
+    public void error(String message, Object... params) {
+        if (params != null && params.length > 0) {
+            message = String.format(message, params);
+        }
+
         logger.severe(message);
     }
 
