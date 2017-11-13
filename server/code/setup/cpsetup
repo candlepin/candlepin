@@ -143,7 +143,7 @@ class CertSetup(object):
             run_command_with_sudo('mkdir -p %s' % self.cert_home)
 
         if os.path.exists(self.ca_key) and os.path.exists(self.ca_cert):
-            print("Cerficiates already exist, skipping...")
+            print("Certificates already exist, skipping...")
             return
 
         print("Creating CA private key password")
