@@ -328,10 +328,12 @@ public class PinsetterKernel implements ModeChangeListener {
         }
         try {
             for (JobEntry jobentry : pendingJobs) {
+                //Trigger cron jobs with higher priority than async ( default 5 )
                 Trigger trigger = newTrigger()
                     .withIdentity(jobentry.getJobName(), CRON_GROUP)
                     .withSchedule(cronSchedule(jobentry.getSchedule())
-                        .withMisfireHandlingInstructionDoNothing())
+                    .withMisfireHandlingInstructionDoNothing())
+                    .withPriority(7)
                     .build();
 
                 scheduleJob(
@@ -350,10 +352,12 @@ public class PinsetterKernel implements ModeChangeListener {
         throws PinsetterException {
 
         try {
+            //Trigger cron jobs with higher priority than async ( default 5 )
             Trigger trigger = newTrigger()
                 .withIdentity(job.getName(), CRON_GROUP)
                 .withSchedule(cronSchedule(crontab)
-                    .withMisfireHandlingInstructionDoNothing())
+                .withMisfireHandlingInstructionDoNothing())
+                .withPriority(7)
                 .build();
 
             scheduleJob(job, jobName, trigger);
