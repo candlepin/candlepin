@@ -22,6 +22,7 @@ import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.controller.Entitler;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerContentOverrideCurator;
+import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Owner;
@@ -63,6 +64,7 @@ public class ConsumerBindUtilTest {
     @Mock private ConsumerContentOverrideCurator consumerContentOverrideCurator;
     @Mock private Entitler entitler;
     @Mock private ServiceLevelValidator serviceLevelValidator;
+    @Mock private ConsumerCurator consumerCurator;
 
     private I18n i18n;
 
@@ -77,7 +79,8 @@ public class ConsumerBindUtilTest {
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
 
         consumerBindUtil = new ConsumerBindUtil(this.entitler, this.i18n,
-                this.consumerContentOverrideCurator, null, this.serviceLevelValidator);
+                this.consumerContentOverrideCurator, null, this.serviceLevelValidator,
+                this.consumerCurator);
     }
 
     private List<ActivationKey> mockActivationKeys() {

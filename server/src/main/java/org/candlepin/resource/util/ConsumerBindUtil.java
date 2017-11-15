@@ -21,6 +21,7 @@ import org.candlepin.controller.Entitler;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerContentOverride;
 import org.candlepin.model.ConsumerContentOverrideCurator;
+import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
@@ -61,6 +62,7 @@ public class ConsumerBindUtil {
     private ConsumerContentOverrideCurator consumerContentOverrideCurator;
     private QuantityRules quantityRules;
     private ServiceLevelValidator serviceLevelValidator;
+    private ConsumerCurator consumerCurator;
     private static Logger log = LoggerFactory.getLogger(ConsumerBindUtil.class);
 
     @Inject
@@ -68,12 +70,14 @@ public class ConsumerBindUtil {
                             I18n i18n,
                             ConsumerContentOverrideCurator consumerContentOverrideCurator,
                             QuantityRules quantityRules,
-                            ServiceLevelValidator serviceLevelValidator) {
+                            ServiceLevelValidator serviceLevelValidator,
+                            ConsumerCurator consumerCurator) {
         this.entitler = entitler;
         this.i18n = i18n;
         this.consumerContentOverrideCurator = consumerContentOverrideCurator;
         this.quantityRules = quantityRules;
         this.serviceLevelValidator = serviceLevelValidator;
+        this.consumerCurator = consumerCurator;
     }
 
     public void handleActivationKeys(Consumer consumer, List<ActivationKey> keys)
@@ -86,6 +90,7 @@ public class ConsumerBindUtil {
             handleActivationKeyOverrides(consumer, key.getContentOverrides());
             handleActivationKeyRelease(consumer, key.getReleaseVer());
             keySuccess &= handleActivationKeyServiceLevel(consumer, key.getServiceLevel(), key.getOwner());
+            consumerCurator.update(consumer);
             if (key.isAutoAttach() != null && key.isAutoAttach()) {
                 handleActivationKeyAutoBind(consumer, key);
             }
