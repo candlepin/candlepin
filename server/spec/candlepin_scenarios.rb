@@ -414,27 +414,33 @@ class ImportUpdateBrandingExporter < Exporter
     #generate 1st (base) export
     product = create_product(random_string(), random_string())
 
-    pools = create_pools_and_subs_with_brandings(product, @owner, candlepin_client)
+    pools = create_pools_with_branding(product, @owner, candlepin_client)
     @export1_filename = create_candlepin_export.export_filename
 
     #generate 2nd (updated) export
-    update_pools_or_subs_on_brandings(pools)
+    update_pools_on_brandings(@owner['key'], pools)
     @export2_filename = create_candlepin_export.export_filename
   end
 
-  def create_pools_and_subs_with_brandings(product, owner, candlepin_client)
+  def create_pools_with_branding(product, owner, candlepin_client)
     pools = Array.new
     i = 0
+
+    branding = createBrandings(product['id'], BRANDINGS_PER_POOL)
+    end_date = Date.new(2025, 5, 29)
+
     begin
-      b = createBrandings(product['id'], BRANDINGS_PER_POOL)
-      params = {:branding => b, :quantity => 2}
-      end_date = Date.new(2025, 5, 29)
-      pool = create_pool_and_subscription(owner['key'], product.id, 200 ,
-              [] , '', '', '', nil, end_date, false, params)
-      candlepin_client.consume_pool(pool.id, {:quantity => 1})
-      pools[i] = pool
+      pools[i] = @cp.create_pool(owner['key'], product.id, {
+        :quantity => 200,
+        :end_date => end_date,
+        :branding => branding
+      })
+
+      candlepin_client.consume_pool(pools[i].id, {:quantity => 1})
+
       i += 1
     end while i < POOLS_COUNT
+
     return pools
   end
 
@@ -456,15 +462,14 @@ class ImportUpdateBrandingExporter < Exporter
         return b
       end
 
-  def update_pools_or_subs_on_brandings(pools)
+  def update_pools_on_brandings(owner_key, pools)
     pools.each do |pool|
-      subOrPool = get_pool_or_subscription(pool)
-      brandings = subOrPool['branding']
+      brandings = pool['branding']
       brandings.each do |b|
         b['name'] = random_string("UPDATE-BrandingName")
       end
-      subOrPool['branding'] = brandings
-      update_pool_or_subscription(subOrPool)
+      pool['branding'] = brandings
+      @cp.update_pool(owner_key, pool)
     end
   end
 
@@ -481,7 +486,16 @@ class ImportUpdateExporter < Exporter
     super()
     product = create_product(random_string("test_prod"), random_string())
     end_date = Date.new(2025, 5, 29)
-    @pool = create_pool_and_subscription(@owner['key'], product.id, 200, [], '', '12345', '6789', nil, end_date)
+
+    @pool = @cp.create_pool(@owner['key'], product.id, {
+      :quantity => 200,
+      :end_date => end_date,
+      :account_number => '12345',
+      :order_number => '6789'
+    })
+
+    @cp.refresh_pools(@owner['key'])
+
     @entitlement1 = @candlepin_client.consume_pool(@pool.id, {:quantity => 15})[0]
   end
 end
@@ -543,16 +557,55 @@ class StandardExporter < Exporter
         :name => "Branded Eng Product"
       }
     ]
-    create_pool_and_subscription(@owner['key'], @products[:product1].id, 2,
-      [@products[:eng_product]['id']], '', '12345', '6789', nil, end_date, true,
-      {:branding => brandings})
-    create_pool_and_subscription(@owner['key'], @products[:product2].id, 4, [], '', '12345', '6789', nil, end_date, true)
-    create_pool_and_subscription(@owner['key'], @products[:virt_product].id, 10, [], '', '12345', '6789', nil, end_date, true)
-    create_pool_and_subscription(@owner['key'], @products[:product3].id, 5, [], '', '12345', '6789', nil, end_date, true,
-      {:derived_product_id => @products[:derived_product]['id'],  :derived_provided_products => [@products[:derived_provided_prod]['id']]})
-    create_pool_and_subscription(@owner['key'], @products[:product_up].id, 10, [], '', '12345', '6789', nil, end_date, true)
-    create_pool_and_subscription(@owner['key'], @products[:product_vdc].id, 5, [], '', '12345', '6789', nil, end_date, false,
-      {:derived_product_id => @products[:product_dc]['id']})
+
+    @cp.create_pool(@owner['key'], @products[:product1].id, {
+      :quantity => 2,
+      :provided_products => [@products[:eng_product]['id']],
+      :account_number => '12345',
+      :order_number => '6789',
+      :end_date => end_date,
+      :branding => brandings
+    })
+
+    @cp.create_pool(@owner['key'], @products[:product2].id, {
+      :quantity => 4,
+      :account_number => '12345',
+      :order_number => '6789',
+      :end_date => end_date
+    })
+
+    @cp.create_pool(@owner['key'], @products[:virt_product].id, {
+      :quantity => 10,
+      :account_number => '12345',
+      :order_number => '6789',
+      :end_date => end_date
+    })
+
+    @cp.create_pool(@owner['key'], @products[:product3].id, {
+      :quantity => 5,
+      :account_number => '12345',
+      :order_number => '6789',
+      :end_date => end_date,
+      :derived_product_id => @products[:derived_product]['id'],
+      :derived_provided_products => [@products[:derived_provided_prod]['id']]
+    })
+
+    @cp.create_pool(@owner['key'], @products[:product_up].id, {
+      :quantity => 10,
+      :account_number => '12345',
+      :order_number => '6789',
+      :end_date => end_date
+    })
+
+    @cp.create_pool(@owner['key'], @products[:product_vdc].id, {
+      :quantity => 5,
+      :account_number => '12345',
+      :order_number => '6789',
+      :end_date => end_date,
+      :derived_product_id => @products[:product_dc]['id']
+    })
+
+    @cp.refresh_pools(@owner['key'])
 
     # Pool names is a list of names of instance variables that will be created
     pool_names = ["pool1", "pool2", "pool3", "pool4", "pool_up", "pool_vdc"]
@@ -595,8 +648,20 @@ class StandardExporter < Exporter
     @cp.add_content_to_product(@owner['key'], product2.id, arch_content.id)
 
     end_date = Date.new(2025, 5, 29)
-    pool1 = create_pool_and_subscription(@owner['key'], product1.id, 12, [], '', '12345', '6789', nil, end_date)
-    pool2 = create_pool_and_subscription(@owner['key'], product2.id, 14, [], '', '12345', '6789', nil, end_date)
+
+    pool1 = @cp.create_pool(@owner['key'], product1.id, {
+      :quantity => 12,
+      :account_number => '12345',
+      :order_number => '6789',
+      :end_date => end_date
+    })
+
+    pool2 = @cp.create_pool(@owner['key'], product2.id, {
+      :quantity => 14,
+      :account_number => '12345',
+      :order_number => '6789',
+      :end_date => end_date
+    })
 
     @candlepin_client.consume_pool(pool1.id, {:quantity => 1})
     @candlepin_client.consume_pool(pool2.id, {:quantity => 1})
@@ -634,8 +699,14 @@ class VirtLimitExporter < Exporter
         :attributes => { :arch => "x86_64", :virt_limit => "2", :'multi-entitlement' => 'yes'}
     })
     end_date = Date.new(2025, 5, 29)
-    create_pool_and_subscription(@owner['key'], @product3.id, 2, [], '', '12345', '6789', nil, end_date, false,
-      {})
+
+    @cp.create_pool(@owner['key'], @product3.id, {
+      :quantity => 2,
+      :account_number => '12345',
+      :order_number => '6789',
+      :end_date => end_date
+    })
+
     # Pool names is a list of names of instance variables that will be created
     @pools = @cp.list_pools(:owner => @owner.id, :product => @product3.id)
     @pool3 = @pools.select{|i| i['type']=='NORMAL'}[0]

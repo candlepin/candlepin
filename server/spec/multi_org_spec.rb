@@ -243,8 +243,17 @@ describe "Multi Org Shares" do
     pp = create_product(nil, nil, :owner => @owner1['key'])
     dp = create_product(nil, nil, :owner => @owner1['key'])
     dpp = create_product(nil, nil, :owner => @owner1['key'])
-    pool = create_pool_and_subscription(@owner1['key'], id, 10, [pp.id],
-        'blah', 'blah', 'blah', nil, nil, false, {:derived_product_id => dp.id, :derived_provided_products => [dpp.id]})
+
+    pool = @cp.create_pool(@owner1['key'], id, {
+      :quantity => 10,
+      :provided_products => [pp.id],
+      :contract_number => 'blah',
+      :account_number => 'blah',
+      :order_number => 'blah',
+      :derived_product_id => dp.id,
+      :derived_provided_products => [dpp.id]
+    })
+
     ent = @user_client.consume_pool(pool['id'], :uuid => share_consumer['uuid'])[0]
     pool = @cp.get_pool(pool['id'])
     owner1_prod = @user_client.get_product(@owner1['key'], id)
@@ -268,8 +277,18 @@ describe "Multi Org Shares" do
     dp = create_product(nil, nil, :owner => @owner1['key'])
     dpp = create_product(nil, nil, :owner => @owner1['key'])
 
-    pool = create_pool_and_subscription(@owner1['key'], id, 10, [pp.id],
-        'blah', 'blah', 'blah', nil, nil, false, {:derived_product_id => dp.id, :derived_provided_products => [dpp.id]})
+    pool = @cp.create_pool(@owner1['key'], id, {
+      :quantity => 10,
+      :provided_products => [pp.id],
+      :contract_number => 'blah',
+      :account_number => 'blah',
+      :order_number => 'blah',
+      :derived_product_id => dp.id,
+      :derived_provided_products => [dpp.id],
+      :subscription_id => random_string('source_sub'),
+      :upstream_pool_id => random_string('upstream')
+    })
+
     ent = @user_client.consume_pool(pool['id'], :uuid => share_consumer['uuid'])[0]
     expect(ent.certificates).to be_empty
     expect(@user_client.list_pool_entitlements(pool['id'])).not_to be_empty
@@ -312,7 +331,7 @@ describe "Multi Org Shares" do
   it 'does not allow to over share a pool' do
     prod = create_product(nil, nil, :owner => @owner1['key'],
         :attributes => {"multi-entitlement" => "yes"})
-    pool = create_pool_and_subscription(@owner1['key'], prod.id, 10)
+    pool = @cp.create_pool(@owner1['key'], prod.id, {:quantity => 10})
     ent = @user_client.consume_pool(pool['id'], :uuid => share_consumer['uuid'])[0]
 
     recipient_pools = @cp.list_owner_pools(@owner2['key'])
@@ -330,7 +349,7 @@ describe "Multi Org Shares" do
   it 'adjusts shared pool quantity when source entitlement is updated' do
     prod = create_product(nil, nil, :owner => @owner1['key'],
         :attributes => {"multi-entitlement" => "yes"})
-    pool = create_pool_and_subscription(@owner1['key'], prod.id, 10)
+    pool = @cp.create_pool(@owner1['key'], prod.id, {:quantity => 10})
     ent = @user_client.consume_pool(pool['id'], :uuid => share_consumer['uuid'], :quantity => 2)[0]
 
     recipient_pools = @cp.list_owner_pools(@owner2['key'])
@@ -346,7 +365,7 @@ describe "Multi Org Shares" do
   it 'deletes a shared pool when source entitlement is revoked' do
     prod = create_product(nil, nil, :owner => @owner1['key'],
         :attributes => {"multi-entitlement" => "yes"})
-    pool = create_pool_and_subscription(@owner1['key'], prod.id, 10)
+    pool = @cp.create_pool(@owner1['key'], prod.id, {:quantity => 10})
     ent = @user_client.consume_pool(pool['id'], :uuid => share_consumer['uuid'])[0]
 
     recipient_pools = @cp.list_owner_pools(@owner2['key'])
@@ -362,7 +381,7 @@ describe "Multi Org Shares" do
 
   it 'should allow multi share even without multi-entitlement' do
     prod = create_product(nil, nil, :owner => @owner1['key'])
-    pool = create_pool_and_subscription(@owner1['key'], prod.id, 10)
+    pool = @cp.create_pool(@owner1['key'], prod.id, {:quantity => 10})
     ent = @user_client.consume_pool(pool['id'], :uuid => share_consumer['uuid'], :quantity => 3)[0]
     recipient_pools = @cp.list_owner_pools(@owner2['key'])
     expect(recipient_pools.length).to eq(1)
@@ -378,7 +397,7 @@ describe "Multi Org Shares" do
     owner1_prod = create_product(id, name, :owner => @owner1['key'], :multiplier => 1)
     create_product(id, name, :owner => @owner2['key'], :multiplier => 2)
 
-    pool = create_pool_and_subscription(@owner1['key'], owner1_prod['id'], 10)
+    pool = @cp.create_pool(@owner1['key'], owner1_prod['id'], {:quantity => 10})
     @user_client.consume_pool(pool['id'], :uuid => share_consumer['uuid'])
 
     expect(@user_client.list_pool_entitlements(pool['id'])).not_to be_empty
@@ -425,14 +444,14 @@ describe "Multi Org Shares" do
     create_product(id, name, :owner => @owner1['key'], :multiplier => 1)
     create_product(id, name, :owner => owner3['key'], :multiplier => 2)
 
-    pool = create_pool_and_subscription(@owner1['key'], id, 10)
+    pool = @cp.create_pool(@owner1['key'], id, {:quantity => 10})
     @user_client.consume_pool(pool['id'], :uuid => share_consumer['uuid'])
 
     owner1_prod = @user_client.get_product(@owner1['key'], id)
     owner2_prod = @user_client.get_product(@owner2['key'], id)
     expect(owner2_prod['uuid']).to eq(owner1_prod['uuid'])
 
-    pool = create_pool_and_subscription(owner3['key'], id, 10)
+    pool = @cp.create_pool(owner3['key'], id, {:quantity => 10})
     owner3_prod = @user_client.get_product(owner3['key'], id)
     @user_client.consume_pool(pool['id'], :uuid => share_consumer2['uuid'])
 
@@ -443,7 +462,7 @@ describe "Multi Org Shares" do
 
   it 'prohibits sharing a share' do
     owner1_prod = create_product(nil, nil, :owner => @owner1['key'])
-    pool = create_pool_and_subscription(@owner1['key'], owner1_prod['id'], 10)
+    pool = @cp.create_pool(@owner1['key'], owner1_prod['id'], {:quantity => 10})
     @user_client.consume_pool(pool['id'], :uuid => share_consumer['uuid'])
     expect(@user_client.list_pool_entitlements(pool['id'])).not_to be_empty
     recipient_pools = @cp.list_owner_pools(@owner2['key'])
@@ -490,7 +509,7 @@ describe "Multi Org Shares" do
     consumer.update_consumer({:installedProducts => installed})
     # active subscription to allow this all to work
     active_prod = create_product(nil, nil, {:owner => @owner1['key']})
-    @active_sub = create_pool_and_subscription(@owner1['key'], active_prod.id, 10)
+    @active_sub = @cp.create_pool(@owner1['key'], active_prod.id, {:quantity => 10})
     consumer.consume_product()
     dev_pool = consumer.list_entitlements()[0]['pool']
     expect do
@@ -499,10 +518,20 @@ describe "Multi Org Shares" do
   end
 
   it 'prohibits sharing an unmapped guest pool' do
-    product = create_product(nil, nil,
-        {:attributes => {:virt_limit => "4", :host_limited => 'true'},
-        :owner => @owner1['key']})
-    create_pool_and_subscription(@owner1['key'], product.id, 10, [])
+    product = create_product(nil, nil, {
+      :attributes => {
+        :virt_limit => "4",
+        :host_limited => 'true'
+      },
+      :owner => @owner1['key']
+    })
+
+    @cp.create_pool(@owner1['key'], product.id, {
+      :quantity => 10,
+      :subscription_id => random_string('source_sub'),
+      :upstream_pool_id => random_string('upstream')
+    })
+
     all_pools = @cp.list_owner_pools(@owner1['key'])
     all_pools.size.should == 2
     unmapped_pool = all_pools.find {|p| p.type == 'UNMAPPED_GUEST'}
@@ -512,10 +541,20 @@ describe "Multi Org Shares" do
   end
 
   it 'does not list unsharable pools for share consumers' do
-    product = create_product(nil, nil,
-        {:attributes => {:virt_limit => "4", :host_limited => 'true'}, :owner => @owner1['key']})
+    product = create_product(nil, nil, {
+      :attributes => {
+        :virt_limit => "4",
+        :host_limited => 'true'
+      },
+      :owner => @owner1['key']
+    })
+
     # Will create an unmapped guest pool
-    create_pool_and_subscription(@owner1['key'], product.id, 10, [])
+    @cp.create_pool(@owner1['key'], product.id, {
+      :quantity => 10,
+      :subscription_id => random_string('source_sub'),
+      :upstream_pool_id => random_string('upstream')
+    })
 
     owner_pools = @user_client.list_owner_pools(@owner1['key'])
     owner_pools.size.should == 2
@@ -526,7 +565,7 @@ describe "Multi Org Shares" do
 
   it 'lists pools for share correctly based on quantity' do
     prod = create_product(nil, nil, :owner => @owner1['key'])
-    pool = create_pool_and_subscription(@owner1['key'], prod.id, 10)
+    pool = @cp.create_pool(@owner1['key'], prod.id, {:quantity => 10})
     pools_length = @user_client.list_owner_pools(@owner1['key'], :consumer => share_consumer['uuid']).length
     expect(pools_length).to eq 1
 
@@ -616,7 +655,12 @@ describe "Multi Org Shares" do
     id = random_string('id')
     create_product(id, name, :owner => @owner1['key'])
 
-    pool = create_pool_and_subscription(@owner1['key'], id, 10)
+    pool = @cp.create_pool(@owner1['key'], id, {
+      :quantity => 10,
+      :subscription_id => random_string('source_sub'),
+      :upstream_pool_id => random_string('upstream')
+    })
+
     ent = @user_client.consume_pool(pool['id'], {:uuid => share_consumer['uuid'], :quantity => 5})[0]
     expect(ent.certificates).to be_empty
     expect(@user_client.list_pool_entitlements(pool['id'])).not_to be_empty
@@ -632,8 +676,7 @@ describe "Multi Org Shares" do
     expect(shared_pool.quantity).to eq(5)
     expect(shared_pool.createdByShare).to_s.eql? "true"
 
-    consumer1 = @user_client.register(
-       random_string('consumer'), :system, nil, {}, nil, @owner2['key'])
+    consumer1 = @user_client.register(random_string('consumer'), :system, nil, {}, nil, @owner2['key'])
     @user_client.consume_pool(shared_pool['id'], {:uuid => consumer1['uuid'], :quantity => 1})
 
     pool.quantity = 5
@@ -659,7 +702,12 @@ describe "Multi Org Shares" do
     id = random_string('id')
     create_product(id, name, :owner => @owner1['key'])
 
-    pool = create_pool_and_subscription(@owner1['key'], id, 10)
+    pool = @cp.create_pool(@owner1['key'], id, {
+      :quantity => 10,
+      :subscription_id => random_string('source_sub'),
+      :upstream_pool_id => random_string('upstream')
+    })
+
     ent = @user_client.consume_pool(pool['id'], {:uuid => share_consumer['uuid'], :quantity => 5})[0]
     expect(ent.certificates).to be_empty
     expect(@user_client.list_pool_entitlements(pool['id'])).not_to be_empty
@@ -701,7 +749,12 @@ describe "Multi Org Shares" do
     id = random_string('id')
     create_product(id, name, :owner => @owner1['key'])
 
-    pool = create_pool_and_subscription(@owner1['key'], id, 10)
+    pool = @cp.create_pool(@owner1['key'], id, {
+      :quantity => 10,
+      :subscription_id => random_string('source_sub'),
+      :upstream_pool_id => random_string('upstream')
+    })
+
     ent = @user_client.consume_pool(pool['id'], {:uuid => share_consumer['uuid'], :quantity => 5})[0]
     expect(ent.certificates).to be_empty
     expect(@user_client.list_pool_entitlements(pool['id'])).not_to be_empty
@@ -717,16 +770,15 @@ describe "Multi Org Shares" do
     expect(shared_pool.quantity).to eq(5)
     expect(shared_pool.createdByShare).to_s.eql? "true"
 
-    consumer1 = @user_client.register(
-       random_string('consumer'), :system, nil, {}, nil, @owner2['key'])
+    consumer1 = @user_client.register(random_string('consumer'), :system, nil, {}, nil, @owner2['key'])
     @user_client.consume_pool(shared_pool['id'], {:uuid => consumer1['uuid'], :quantity => 1})
     sleep 1
-    consumer2 = @user_client.register(
-       random_string('consumer'), :system, nil, {}, nil, @owner1['key'])
+
+    consumer2 = @user_client.register(random_string('consumer'), :system, nil, {}, nil, @owner1['key'])
     @user_client.consume_pool(pool['id'], {:uuid => consumer2['uuid'], :quantity => 1})
     sleep 1
-    consumer3 = @user_client.register(
-       random_string('consumer'), :system, nil, {}, nil, @owner2['key'])
+
+    consumer3 = @user_client.register(random_string('consumer'), :system, nil, {}, nil, @owner2['key'])
     @user_client.consume_pool(shared_pool['id'], {:uuid => consumer3['uuid'], :quantity => 1})
 
     pool.quantity = 1
@@ -752,7 +804,7 @@ describe "Multi Org Shares" do
       :owner => owner_key,
       :attributes => {:virt_limit => 3}
     })
-    pool = create_pool_and_subscription(owner_key, virt_product['id'], 10)
+    pool = @cp.create_pool(owner_key, virt_product['id'], {:quantity => 10})
 
     # create host consumer and consume the virt product
     host = random_string('host')
@@ -822,10 +874,10 @@ describe "Multi Org Shares" do
       :owner => owner_key,
       :attributes => {:virt_limit => 3}
     })
-    pool = create_pool_and_subscription(owner_key, virt_product['id'], 10)
+    pool = @cp.create_pool(owner_key, virt_product['id'], {:quantity => 10})
 
     other_product = create_product(nil, nil, :owner => owner_key)
-    other_pool = create_pool_and_subscription(owner_key, other_product['id'], 10)
+    other_pool = @cp.create_pool(owner_key, other_product['id'], {:quantity => 10})
 
     # create host consumer and consume the virt product
     host = random_string('host')

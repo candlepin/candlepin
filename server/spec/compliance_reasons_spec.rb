@@ -32,7 +32,12 @@ describe 'Single Entitlement Compliance Reasons' do
                  :management_enabled => true,
                  :support_level => 'standard',
                  :support_type => 'excellent',})
-    @product1_pool = create_pool_and_subscription(@owner['key'], @product1.id, 100, [], '1888', '1234')
+
+    @product1_pool = @cp.create_pool(@owner['key'], @product1.id, {
+      :quantity => 100,
+      :contract_number => '1888',
+      :account_number => '1234'
+    })
 
     @user = user_client(@owner, random_string('test-user'))
   end
@@ -371,28 +376,35 @@ describe 'Stacking Compliance Reasons' do
 
     @stack_id = random_string('test-stack-id')
     # Create a stackable RAM product.
-    @stackable_product_1 = create_product(nil, random_string("Stackable"), :attributes =>
-                {:version => '1.2',
-                 :ram => 4,
-                 :sockets => 2,
-                 :cores => 10,
-                 :arch => 'x86_64',
-                 :vcpu => 8,
-                 :support_level => 'standard',
-                 :support_type => 'excellent',
-                 :'multi-entitlement' => 'yes',
-                 :stacking_id => @stack_id})
-    @stackable_pool_1 = create_pool_and_subscription(@owner['key'], @stackable_product_1.id, 10)
+    @stackable_product_1 = create_product(nil, random_string("Stackable"), :attributes => {
+      :version => '1.2',
+      :ram => 4,
+      :sockets => 2,
+      :cores => 10,
+      :arch => 'x86_64',
+      :vcpu => 8,
+      :support_level => 'standard',
+      :support_type => 'excellent',
+      :'multi-entitlement' => 'yes',
+      :stacking_id => @stack_id
+    })
 
-    @not_covered_product = create_product(nil, random_string("Not Covered Product"), :attributes =>
-                {:version => '6.4',
-                 :sockets => 2,
-                 :warning_period => 15,
-                 :management_enabled => true,
-                 :support_level => 'standard',
-                 :support_type => 'excellent',})
-    @not_covered_product_pool = create_pool_and_subscription(@owner['key'], @not_covered_product.id, 100, [],
-                                                              '1999', '3332')
+    @stackable_pool_1 = @cp.create_pool(@owner['key'], @stackable_product_1.id, {:quantity => 10})
+
+    @not_covered_product = create_product(nil, random_string("Not Covered Product"), :attributes => {
+      :version => '6.4',
+      :sockets => 2,
+      :warning_period => 15,
+      :management_enabled => true,
+      :support_level => 'standard',
+      :support_type => 'excellent',
+    })
+
+    @not_covered_product_pool = @cp.create_pool(@owner['key'], @not_covered_product.id, {
+      :quantity => 100,
+      :contract_number => '1999',
+      :account_number => '3332'
+    })
 
     @user = user_client(@owner, random_string('test-user'))
   end

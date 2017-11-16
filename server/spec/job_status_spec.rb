@@ -10,7 +10,7 @@ describe 'Job Status' do
     @user = user_client(@owner, random_string("test_user"))
     @monitoring = create_product
 
-    create_pool_and_subscription(@owner['key'], @monitoring.id, 4)
+    @cp.create_pool(@owner['key'], @monitoring.id, {:quantity => 4})
   end
 
   it 'should contain the owner key' do
@@ -43,7 +43,7 @@ describe 'Job Status' do
   it 'should only find jobs with the correct owner key' do
     owner2 = create_owner(random_string('some_owner'))
     product = create_product(nil, nil, :owner => owner2['key'])
-    create_pool_and_subscription(owner2['key'], product.id, 100)
+    @cp.create_pool(owner2['key'], product.id, {:quantity => 100})
 
     jobs = []
     # Just some random numbers here

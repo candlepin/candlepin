@@ -313,10 +313,12 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
     }
 
     public void setProvidedProducts(Collection<ProductData> providedProducts) {
-        this.providedProducts.clear();
+        if (providedProducts != this.providedProducts) {
+            this.providedProducts.clear();
 
-        if (providedProducts != null) {
-            this.providedProducts.addAll(providedProducts);
+            if (providedProducts != null) {
+                this.providedProducts.addAll(providedProducts);
+            }
         }
     }
 
@@ -365,10 +367,12 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
     }
 
     public void setDerivedProvidedProducts(Collection<ProductData> subProvidedProducts) {
-        this.derivedProvidedProducts.clear();
+        if (subProvidedProducts != this.derivedProvidedProducts) {
+            this.derivedProvidedProducts.clear();
 
-        if (subProvidedProducts != null) {
-            this.derivedProvidedProducts.addAll(subProvidedProducts);
+            if (subProvidedProducts != null) {
+                this.derivedProvidedProducts.addAll(subProvidedProducts);
+            }
         }
     }
 

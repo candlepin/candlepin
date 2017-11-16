@@ -64,37 +64,33 @@ describe 'Derived Products' do
 
     @derived_product = create_product(nil, "derived product 1", {
       :attributes => {
-          :cores => 2,
-          :sockets => 4
+        :cores => 2,
+        :sockets => 4
       }
     })
 
     @derived_product_2 = create_product(nil, "derived product 2", {
       :attributes => {
-          :cores => 2
+        :cores => 2
       }
     })
 
-    @main_pool = create_pool_and_subscription(@owner['key'], @datacenter_product.id,
-      10, [], '', '', '', nil, nil, false,
-      {
-        :derived_product_id => @derived_product['id'],
-        :derived_provided_products => [@eng_product['id']]
-      })
+    @main_pool = @cp.create_pool(@owner['key'], @datacenter_product.id, {
+      :quantity => 10,
+      :derived_product_id => @derived_product['id'],
+      :derived_provided_products => [@eng_product['id']]
+    })
 
-    create_pool_and_subscription(@owner['key'], @datacenter_product_2.id,
-      10, [], '', '', '', nil, nil, false,
-      {
-        :derived_product_id => @derived_product_2['id'],
-        :derived_provided_products => [@eng_product_2['id'], @modified_product['id']]
-      })
+    @cp.create_pool(@owner['key'], @datacenter_product_2.id, {
+      :quantity => 10,
+      :derived_product_id => @derived_product_2['id'],
+      :derived_provided_products => [@eng_product_2['id'], @modified_product['id']]
+    })
 
-    @pools = @cp.list_pools :owner => @owner.id, \
-      :product => @datacenter_product.id
+    @pools = @cp.list_pools :owner => @owner.id, :product => @datacenter_product.id
     @pools.size.should == 1
 
-    @distributor = @user.register(random_string('host'), :candlepin, nil,
-      {}, nil, nil, [], [], nil)
+    @distributor = @user.register(random_string('host'), :candlepin, nil, {}, nil, nil, [], [], nil)
     @distributor_client = Candlepin.new(nil, nil, @distributor['idCert']['cert'], @distributor['idCert']['key'])
   end
 
@@ -112,7 +108,11 @@ describe 'Derived Products' do
         'multi-entitlement' => "yes"
       }
     })
-    create_pool_and_subscription(@owner['key'], instance_product.id, 10, [@eng_product['id']])
+
+    @cp.create_pool(@owner['key'], instance_product.id, {
+      :quantity => 10,
+      :provided_products => [@eng_product['id']]
+    })
 
     @guest_client.consume_product
 
@@ -310,16 +310,18 @@ describe 'Derived Products' do
     # Create a VDC style subscription that has a derived provided product matching @eng_product_2's
     # modifying content set requirement (@modified_product).
     vdc_product = create_product(nil, "base")
-    vdc_pool = create_pool_and_subscription(@owner['key'], vdc_product.id,
-                                            10, [], '', '', '', nil, nil, false,
-                                            {
-                                                :derived_product_id => @derived_product_2['id'],
-                                                :derived_provided_products => [@modified_product['id']]
-                                            })
+    vdc_pool = @cp.create_pool(@owner['key'], vdc_product.id, {
+      :quantity => 10,
+      :derived_product_id => @derived_product_2['id'],
+      :derived_provided_products => [@modified_product['id']]
+    })
 
     # Create a subscription that has a product that has content that has modifier definitions (@eng_product_2)
     modifier_ent_product = create_product(nil, "modifier")
-    modifier_pool = create_pool_and_subscription(@owner['key'], modifier_ent_product.id, 10, [@eng_product_2['id']])
+    modifier_pool = @cp.create_pool(@owner['key'], modifier_ent_product.id, {
+      :quantity => 10,
+      :provided_products => [@eng_product_2['id']]
+    })
 
     # Grab an entitlement from the VDC style subscription.
     vdc_pool_ent = @distributor_client.consume_pool vdc_pool['id']

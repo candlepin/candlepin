@@ -14,23 +14,47 @@ describe 'Subscription Resource' do
   end
 
   it 'should allow owners to create subscriptions and retrieve all' do
-      create_pool_and_subscription(@owner['key'], @some_product.id, 2,
-				[], '', '', '', nil, nil, true)
-      create_pool_and_subscription(@owner['key'], @another_product.id, 3,
-				[], '', '', '', nil, nil, true)
-      create_pool_and_subscription(@owner['key'], @one_more_product.id, 2)
+      @cp.create_pool(@owner['key'], @some_product.id, {
+        :quantity => 2,
+        :subscription_id => random_string('source_sub'),
+        :upstream_pool_id => random_string('upstream')
+      })
+
+      @cp.create_pool(@owner['key'], @another_product.id, {
+        :quantity => 3,
+        :subscription_id => random_string('source_sub'),
+        :upstream_pool_id => random_string('upstream')
+      })
+
+      @cp.create_pool(@owner['key'], @one_more_product.id, {
+        :quantity => 2,
+        :subscription_id => random_string('source_sub'),
+        :upstream_pool_id => random_string('upstream')
+      })
+
       @cp.list_subscriptions(@owner['key']).size.should == 3
   end
 
   it 'should allow admins to delete subscriptions' do
-      pool = create_pool_and_subscription(@owner['key'], @monitoring_product.id, 5)
+      pool = @cp.create_pool(@owner['key'], @monitoring_product.id, {
+        :quantity => 5,
+        :subscription_id => random_string('source_sub'),
+        :upstream_pool_id => random_string('upstream')
+      })
+
       @cp.list_subscriptions(@owner['key']).size.should == 1
-      delete_pool_and_subscription(pool)
+
+      @cp.delete_pool(pool.id)
       @cp.list_subscriptions(@owner['key']).size.should == 0
   end
 
   it 'should not allow clients to fetch subscriptions using id' do
-      pool = create_pool_and_subscription(@owner['key'], @one_more_product.id, 2)
+      pool = @cp.create_pool(@owner['key'], @one_more_product.id, {
+        :quantity => 2,
+        :subscription_id => random_string('source_sub'),
+        :upstream_pool_id => random_string('upstream')
+      })
+
       begin
           @cp.get_subscription(pool['subscriptionId'])
           fail("Should not allow to fetch subscription")
@@ -40,7 +64,12 @@ describe 'Subscription Resource' do
   end
 
   it 'should not allow clients to fetch subscription cert using subscription id' do
-      pool = create_pool_and_subscription(@owner['key'], @one_more_product.id, 2)
+      pool = @cp.create_pool(@owner['key'], @one_more_product.id, {
+        :quantity => 2,
+        :subscription_id => random_string('source_sub'),
+        :upstream_pool_id => random_string('upstream')
+      })
+
       begin
           @cp.get_subscription_cert(pool['subscriptionId'])
           fail("Should not allow to fetch subscription")

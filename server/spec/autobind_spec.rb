@@ -62,12 +62,34 @@ describe 'Autobind On Owner' do
       }
     })
 
-    # create 4 pools, all must provide product "prod" . none of them
-    # should provide enough sockets to heal the host on it's own
-    create_pool_and_subscription(owner['key'], prod['id'], 10)['id']
-    create_pool_and_subscription(owner['key'], prod1['id'], 30, [prod['id']])['id']
-    create_pool_and_subscription(owner['key'], prod2['id'], 30, [prod['id']])['id']
-    create_pool_and_subscription(owner['key'], prod3['id'], 30, [prod['id']])['id']
+    # create 4 pools, all must provide product "prod." none of them
+    # should provide enough sockets to heal the host on its own
+    @cp.create_pool(owner['key'], prod['id'], {
+      :quantity => 10,
+      :subscription_id => random_string('source_sub'),
+      :upstream_pool_id => random_string('upstream')
+    })
+
+    @cp.create_pool(owner['key'], prod1['id'], {
+      :quantity => 30,
+      :provided_products => [prod['id']],
+      :subscription_id => random_string('source_sub'),
+      :upstream_pool_id => random_string('upstream')
+    })
+
+    @cp.create_pool(owner['key'], prod2['id'], {
+      :quantity => 30,
+      :provided_products => [prod['id']],
+      :subscription_id => random_string('source_sub'),
+      :upstream_pool_id => random_string('upstream')
+    })
+
+    @cp.create_pool(owner['key'], prod3['id'], {
+      :quantity => 30,
+      :provided_products => [prod['id']],
+      :subscription_id => random_string('source_sub'),
+      :upstream_pool_id => random_string('upstream')
+    })
 
     # create a guest with "prod" as an installed product
     guest_uuid =  random_string('guest')
@@ -134,7 +156,11 @@ describe 'Autobind On Owner' do
     orgB = random_string('orgB')
     create_owner(orgB)
 
-    shared_pool = create_pool_and_subscription(owner_key, prod['id'])
+    shared_pool = @cp.create_pool(owner_key, prod['id'], {
+      :subscription_id => random_string('source_sub'),
+      :upstream_pool_id => random_string('upstream')
+    })
+
     share_consumer = @cp.register(
       random_string('orgBShare'),
       :share,
@@ -173,7 +199,7 @@ describe 'Autobind On Owner' do
     )
 
     # OrgB now has a shared pool and an unshared pool for prod
-    pool = create_pool_and_subscription(orgB, prod['id'])
+    pool = @cp.create_pool(orgB, prod['id'])
     ent = @cp.consume_product(prod['id'], :uuid => orgBconsumer['uuid'])
 
     expect(ent.first['pool']['id']).to_not eq(orgBshared_pool['id'])

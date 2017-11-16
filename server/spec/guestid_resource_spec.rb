@@ -150,10 +150,22 @@ describe 'GuestId Resource' do
       {}, nil, @owner1['key'], [], [])
     guest_consumer = user_cp.register(random_string('guest'), :system, nil,
       {'virt.uuid' => uuid1, 'virt.is_guest' => 'true'}, nil, @owner1['key'], [], [])
+
     # Create a product/subscription
-    super_awesome = create_product(nil, random_string('super_awesome'),
-                            :attributes => { "virt_limit" => "10", "host_limited" => "true" }, :owner => @owner1['key'])
-    create_pool_and_subscription(@owner1['key'], super_awesome.id, 20)
+    super_awesome = create_product(nil, random_string('super_awesome'), {
+      :attributes => {
+        "virt_limit" => "10",
+        "host_limited" => "true"
+      },
+      :owner => @owner1['key']
+    })
+
+    @cp.create_pool(@owner1['key'], super_awesome.id, {
+      :quantity => 20,
+      :subscription_id => random_string('source_sub'),
+      :upstream_pool_id => random_string('upstream')
+    })
+
     consumer_client = Candlepin.new(nil, nil, host_consumer['idCert']['cert'], host_consumer['idCert']['key'])
     new_consumer_client = Candlepin.new(nil, nil, new_host_consumer['idCert']['cert'], new_host_consumer['idCert']['key'])
     guest_client = Candlepin.new(nil, nil, guest_consumer['idCert']['cert'], guest_consumer['idCert']['key'])
@@ -162,7 +174,6 @@ describe 'GuestId Resource' do
     pools.length.should == 1
     consumer_client.consume_pool(pools[0]['id'], {:quantity => 1})
 
-    @cp.refresh_pools(@owner1['key'])
     pools = guest_client.list_pools :consumer => guest_consumer['uuid']
 
     # The original pool and the new host limited pool should be available
@@ -198,14 +209,24 @@ describe 'GuestId Resource' do
     guests = [{:guestId => uuid1}]
 
     user_cp = user_client(@owner1, random_string('test-user'))
-    host_consumer = user_cp.register(random_string('host'), :system, nil,
-      {}, nil, @owner1['key'], [], [])
+    host_consumer = user_cp.register(random_string('host'), :system, nil, {}, nil, @owner1['key'], [], [])
     guest_consumer = user_cp.register(random_string('guest'), :system, nil,
       {'virt.uuid' => uuid1, 'virt.is_guest' => 'true'}, nil, @owner1['key'], [], [])
+
     # Create a product/subscription
-    super_awesome = create_product(nil, random_string('super_awesome'),
-                            :attributes => { "virt_limit" => "10", "host_limited" => "true" }, :owner => @owner1['key'])
-    create_pool_and_subscription(@owner1['key'], super_awesome.id, 20)
+    super_awesome = create_product(nil, random_string('super_awesome'), {
+      :attributes => {
+        "virt_limit" => "10",
+        "host_limited" => "true"
+      },
+      :owner => @owner1['key']
+    })
+
+    @cp.create_pool(@owner1['key'], super_awesome.id, {
+      :quantity => 20,
+      :subscription_id => random_string('source_sub'),
+      :upstream_pool_id => random_string('upstream')
+    })
 
     consumer_client = Candlepin.new(nil, nil, host_consumer['idCert']['cert'], host_consumer['idCert']['key'])
     guest_client = Candlepin.new(nil, nil, guest_consumer['idCert']['cert'], guest_consumer['idCert']['key'])
@@ -214,7 +235,6 @@ describe 'GuestId Resource' do
     pools.length.should == 1
     consumer_client.consume_pool(pools[0]['id'], {:quantity => 1})
 
-    @cp.refresh_pools(@owner1['key'])
     pools = guest_client.list_pools :consumer => guest_consumer['uuid']
 
     # The original pool and the new host limited pool should be available
@@ -237,8 +257,7 @@ describe 'GuestId Resource' do
 
     guest_client.list_entitlements().length.should == 1
     # Updating to the same host shouldn't revoke entitlements
-    consumer_client.update_guestid({:guestId => uuid1,
-      :attributes => {"some attr" => "crazy new value"}})
+    consumer_client.update_guestid({:guestId => uuid1, :attributes => {"some attr" => "crazy new value"}})
 
     consumer_client.get_guestids().length.should == 1
     guest_client.list_entitlements().length.should == 1

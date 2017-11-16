@@ -729,8 +729,8 @@ describe 'Hypervisor Resource', :type => :virt do
       {'virt.uuid' => uuid1, 'virt.is_guest' => 'true'}, nil, owner['key'], [], [])
     # Create a product/subscription
     super_awesome = create_product(nil, random_string('super_awesome'),
-                            :attributes => { "virt_limit" => "10", "host_limited" => "true" }, :owner => owner['key'])
-    create_pool_and_subscription(owner['key'], super_awesome.id, 20)
+      :attributes => { "virt_limit" => "10", "host_limited" => "true" }, :owner => owner['key'])
+    @cp.create_pool(owner['key'], super_awesome.id, {:quantity => 20})
     consumer_client = Candlepin.new(nil, nil, host_consumer['idCert']['cert'], host_consumer['idCert']['key'])
     new_consumer_client = Candlepin.new(nil, nil, new_host_consumer['idCert']['cert'], new_host_consumer['idCert']['key'])
     guest_client = Candlepin.new(nil, nil, guest_consumer['idCert']['cert'], guest_consumer['idCert']['key'])
@@ -788,8 +788,8 @@ describe 'Hypervisor Resource', :type => :virt do
       {'virt.uuid' => uuid1, 'virt.is_guest' => 'true'}, nil, owner['key'], [], [])
     # Create a product/subscription
     super_awesome = create_product(nil, random_string('super_awesome'),
-                            :attributes => { "virt_limit" => "10", "host_limited" => "true" }, :owner => owner['key'])
-    create_pool_and_subscription(owner['key'], super_awesome.id, 20)
+      :attributes => { "virt_limit" => "10", "host_limited" => "true" }, :owner => owner['key'])
+    @cp.create_pool(owner['key'], super_awesome.id, {:quantity => 20})
     consumer_client = Candlepin.new(nil, nil, host_consumer['idCert']['cert'], host_consumer['idCert']['key'])
     new_consumer_client = Candlepin.new(nil, nil, new_host_consumer['idCert']['cert'], new_host_consumer['idCert']['key'])
     guest_client = Candlepin.new(nil, nil, guest_consumer['idCert']['cert'], guest_consumer['idCert']['key'])
@@ -876,8 +876,10 @@ describe 'Hypervisor Resource', :type => :virt do
       "sockets" => 1,
       "instance_multiplier" => 2,
       "multi-entitlement" => "yes",
-      "host_limited" => "true"}})
-    create_pool_and_subscription(owner['key'], prod1['id'], 10, [prod['id']])
+      "host_limited" => "true"}
+    })
+
+    @cp.create_pool(owner['key'], prod1['id'], {:quantity => 10, :provided_products => [prod['id']]})
 
     guest_facts = {
       "virt.is_guest"=>"true",

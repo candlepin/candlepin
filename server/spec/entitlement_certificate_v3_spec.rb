@@ -65,8 +65,19 @@ describe 'Entitlement Certificate V3' do
     @cp.add_content_to_product(@owner['key'], @product.id, @arch_content.id, false)
 
 
-    @pool = create_pool_and_subscription(@owner['key'], @product.id, 10, [], '12345', '6789', 'order1')
-    @pool_30 = create_pool_and_subscription(@owner['key'], @product_30.id, 10, [], '123456', '67890', 'order2')
+    @pool = @cp.create_pool(@owner['key'], @product.id, {
+      :quantity => 10,
+      :contract_number => '12345',
+      :account_number => '6789',
+      :order_number => 'order1'
+    })
+
+    @pool_30 = @cp.create_pool(@owner['key'], @product_30.id, {
+      :quantity => 10,
+      :contract_number => '123456',
+      :account_number => '67890',
+      :order_number => 'order2'
+    })
 
     @user = user_client(@owner, random_string('billy'))
 
@@ -167,7 +178,16 @@ describe 'Entitlement Certificate V3' do
 
     now = DateTime.now
     branding = [{:productId => product['id'], :type => 'Some Type', :name => 'Super Branded Name'}]
-    create_pool_and_subscription(@owner['key'], product.id, 10, [], '12345', '6789', 'order1', now - 10, now + 365, false, {:branding => branding})
+    @cp.create_pool(@owner['key'], product.id, {
+      :quantity => 10,
+      :contact_number => '12345',
+      :account_number => '6789',
+      :order_number => 'order1',
+      :start_date => now - 10,
+      :end_date => now + 365,
+      :branding => branding
+    })
+
     entitlement = @system.consume_product(product.id)[0]
     json_body = extract_payload(@system.list_certificates[0]['cert'])
 
@@ -181,11 +201,11 @@ describe 'Entitlement Certificate V3' do
 
   it 'encoded the content urls' do
     @content_1 = create_content({:content_url => '/content/dist/rhel/$releasever/$basearch/debug',})
-    add_content_to_product(@owner['key'], @product.id, @content_1.id, true)
+    @cp.add_content_to_product(@owner['key'], @product.id, @content_1.id, true)
     @content_2 = create_content({:content_url => '/content/beta/rhel/$releasever/$basearch/source/SRPMS',})
-    add_content_to_product(@owner['key'], @product.id, @content_2.id, true)
+    @cp.add_content_to_product(@owner['key'], @product.id, @content_2.id, true)
     #refresh the subscription - product resolution will take care of adding the content automatically
-    refresh_upstream_subscription(@pool)
+    @cp.refresh_pools(@owner['key'])
     entitlement = @system.consume_product(@product.id)[0]
 
     json_body = extract_payload(entitlement.certificates[0]['cert'])
@@ -206,10 +226,10 @@ describe 'Entitlement Certificate V3' do
     number = 100
     number.times do |i|
       content = create_content({:content_url => "/content/dist/rhel/$releasever#{i}/$basearch#{i}/debug#{i}",})
-      add_content_to_product(@owner['key'], @product.id, content.id, true)
+      @cp.add_content_to_product(@owner['key'], @product.id, content.id, true)
     end
     #refresh the subscription - product resolution will take care of adding the content automatically
-    refresh_upstream_subscription(@pool)
+    @cp.refresh_pools(@owner['key'])
     entitlement = @system.consume_product(@product.id)[0]
 
     json_body = extract_payload(entitlement.certificates[0]['cert'])

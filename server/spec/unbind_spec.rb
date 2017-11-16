@@ -9,7 +9,7 @@ describe 'Unbind' do
     @user = user_client(@owner, random_string('guy'))
     @monitoring = create_product(nil, random_string('monitoring'))
 
-    create_pool_and_subscription(@owner['key'], @monitoring.id, 4)
+    @cp.create_pool(@owner['key'], @monitoring.id, {:quantity => 4})
   end
 
   it 'should remove a single entitlement' do
@@ -28,7 +28,7 @@ describe 'Unbind' do
     consumer = consumer_client(@user, 'consumer')
 
     testing = create_product(nil, random_string('testing'))
-    create_pool_and_subscription(@owner['key'], testing.id, 4)
+    @cp.create_pool(@owner['key'], testing.id, {:quantity => 4})
 
     pool1 = consumer.list_pools(
       :product => @monitoring.id,
@@ -79,7 +79,7 @@ describe 'Unbind' do
 
   it 'should leave other entitlements intact' do
     virt_host = create_product(nil, random_string('virt_host'))
-    pool = create_pool_and_subscription(@owner['key'], virt_host.id, 5)
+    pool = @cp.create_pool(@owner['key'], virt_host.id, {:quantity => 5})
 
     consumer = consumer_client(@user, 'consumer')
     pool = consumer.list_pools(

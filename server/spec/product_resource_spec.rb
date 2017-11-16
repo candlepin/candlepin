@@ -12,12 +12,13 @@ describe 'Product Resource' do
     @derived_product = create_product random_string('derived_product')
     @derived_prov_product = create_product random_string('derived_provided_product')
 
-    create_pool_and_subscription(@owner['key'], @product.id,
-      10, [@prov_product.id], '222', '', '', nil, nil, false,
-      {
-        :derived_product_id => @derived_product.id,
-        :derived_provided_products => [@derived_prov_product.id]
-      })
+    @cp.create_pool(@owner['key'], @product.id, {
+      :quantity => 10,
+      :provided_products => [@prov_product.id],
+      :contract_number => '222',
+      :derived_product_id => @derived_product.id,
+      :derived_provided_products => [@derived_prov_product.id]
+    })
   end
 
   it 'should fail when fetching non-existing products' do

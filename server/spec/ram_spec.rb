@@ -8,56 +8,68 @@ describe 'RAM Limiting' do
     @owner = create_owner random_string('test_owner')
 
     # Create a product limiting by RAM only.
-    @ram_product = create_product(nil, random_string("Product1"), :attributes =>
-                {:version => '6.4',
-                 :ram => 8,
-                 :warning_period => 15,
-                 :management_enabled => true,
-                 :support_level => 'standard',
-                 :support_type => 'excellent',})
-    @ram_pool = create_pool_and_subscription(@owner['key'], @ram_product.id, 10, [], '1888', '1234')
+    @ram_product = create_product(nil, random_string("Product1"), :attributes => {
+      :version => '6.4',
+      :ram => 8,
+      :warning_period => 15,
+      :management_enabled => true,
+      :support_level => 'standard',
+      :support_type => 'excellent',
+    })
+
+    @ram_pool = @cp.create_pool(@owner['key'], @ram_product.id, {
+      :quantity => 10,
+      :contract_number => '1888',
+      :account_number => '1234'
+    })
 
     # Create a product limiting by RAM and sockets.
-    @ram_and_socket_product = create_product(nil, random_string("Product2"), :attributes =>
-                {:version => '1.2',
-                 :ram => 8,
-                 :sockets => 4,
-                 :warning_period => 15,
-                 :management_enabled => true,
-                 :support_level => 'standard',
-                 :support_type => 'excellent',})
-    @ram_socket_pool = create_pool_and_subscription(@owner['key'], @ram_and_socket_product.id, 5,
-                                              [], '18881', '1222')
+    @ram_and_socket_product = create_product(nil, random_string("Product2"), :attributes => {
+      :version => '1.2',
+      :ram => 8,
+      :sockets => 4,
+      :warning_period => 15,
+      :management_enabled => true,
+      :support_level => 'standard',
+      :support_type => 'excellent',
+    })
+
+    @ram_socket_pool = @cp.create_pool(@owner['key'], @ram_and_socket_product.id, {
+      :quantity => 5,
+      :contract_number => '18881',
+      :account_number => '1222'
+    })
 
     # Create a stackable RAM product.
-    @stackable_ram_product = create_product(nil, random_string("Product1"), :attributes =>
-                {:version => '1.2',
-                 :ram => 2,
-                 :warning_period => 15,
-                 :support_level => 'standard',
-                 :support_type => 'excellent',
-                 :'multi-entitlement' => 'yes',
-                 :stacking_id => '2421'})
-    @stackable_ram_pool = create_pool_and_subscription(@owner['key'], @stackable_ram_product.id, 10)
+    @stackable_ram_product = create_product(nil, random_string("Product1"), :attributes => {
+      :version => '1.2',
+      :ram => 2,
+      :warning_period => 15,
+      :support_level => 'standard',
+      :support_type => 'excellent',
+      :'multi-entitlement' => 'yes',
+      :stacking_id => '2421'
+    })
+
+    @stackable_ram_pool = @cp.create_pool(@owner['key'], @stackable_ram_product.id, {:quantity => 10})
 
     @user = user_client(@owner, random_string('test-user'))
   end
 
   it 'can consume ram entitlement if requesting v3.1 certificate' do
-    system = consumer_client(@user, random_string('system1'), :system, nil,
-                {'system.certificate_version' => '3.1'})
+    system = consumer_client(@user, random_string('system1'), :system, nil, {'system.certificate_version' => '3.1'})
     entitlement = system.consume_product(@ram_product.id)[0]
     entitlement.should_not == nil
   end
 
   it 'consumer status should be valid when consumer RAM is covered' do
-    system = consumer_client(@user, random_string('system1'), :system, nil,
-                {'system.certificate_version' => '3.1',
-                 # Simulate 8 GB of RAM as would be returned from system fact (kb)
-                 'memory.memtotal' => '8000000'})
-    installed = [
-        {'productId' => @ram_product.id, 'productName' => @ram_product.name}
-    ]
+    system = consumer_client(@user, random_string('system1'), :system, nil, {
+      'system.certificate_version' => '3.1',
+       # Simulate 8 GB of RAM as would be returned from system fact (kb)
+      'memory.memtotal' => '8000000'
+    })
+
+    installed = [{'productId' => @ram_product.id, 'productName' => @ram_product.name}]
     system.update_consumer({:installedProducts => installed})
 
     entitlement = system.consume_product(@ram_product.id)[0]
@@ -71,13 +83,13 @@ describe 'RAM Limiting' do
   end
 
   it 'consumer status should be partial when consumer RAM not covered' do
-    system = consumer_client(@user, random_string('system1'), :system, nil,
-                {'system.certificate_version' => '3.1',
-                 # Simulate 16 GB of RAM as would be returned from system fact (kb)
-                 'memory.memtotal' => '16000000'})
-    installed = [
-        {'productId' => @ram_product.id, 'productName' => @ram_product.name}
-    ]
+    system = consumer_client(@user, random_string('system1'), :system, nil, {
+      'system.certificate_version' => '3.1',
+      # Simulate 16 GB of RAM as would be returned from system fact (kb)
+      'memory.memtotal' => '16000000'
+    })
+
+    installed = [{'productId' => @ram_product.id, 'productName' => @ram_product.name}]
     system.update_consumer({:installedProducts => installed})
 
     @ram_pool.should_not == nil

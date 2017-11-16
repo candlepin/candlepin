@@ -10,7 +10,7 @@ describe 'Pool Resource' do
     owner1_client = user_client(owner1, random_string('testuser'))
 
     product = create_product(nil, nil, :owner => owner1['key'])
-    create_pool_and_subscription(owner1['key'], product.id, 10)
+    @cp.create_pool(owner1['key'], product.id, {:quantity => 10})
     @cp.refresh_pools(owner1['key'])
 
     pool = owner1_client.list_pools(:owner => owner1.id).first
@@ -26,7 +26,7 @@ describe 'Pool Resource' do
     owner1_client = user_client(owner1, random_string('testuser'))
 
     product = create_product(nil, nil, :owner => owner1['key'])
-    create_pool_and_subscription(owner1['key'], product.id, 10)
+    @cp.create_pool(owner1['key'], product.id, {:quantity => 10})
     @cp.refresh_pools(owner1['key'])
     pool = owner1_client.list_pools(:owner => owner1.id).first
     pool.member?("upstreamPoolId").should == true
@@ -42,7 +42,7 @@ describe 'Pool Resource' do
     owner1_client = user_client(owner1, random_string('testuser'))
 
     product = create_product(nil, nil, :owner => owner1['key'])
-    pool = create_pool_and_subscription(owner1['key'], product.id, 10)
+    pool = @cp.create_pool(owner1['key'], product.id, {:quantity => 10})
 
     consumer_client = consumer_client(owner1_client, random_string('testsystem'))
 
@@ -62,7 +62,7 @@ describe 'Pool Resource' do
     owner2_client = user_client(owner2, random_string('testuser'))
 
     product = create_product(nil, nil, :owner => owner2['key'])
-    pool = create_pool_and_subscription(owner2['key'], product.id, 10)
+    pool = @cp.create_pool(owner2['key'], product.id, {:quantity => 10})
 
     consumer_client = consumer_client(owner1_client, random_string('testsystem'))
     lambda {
@@ -77,7 +77,7 @@ describe 'Pool Resource' do
     owner2_client = user_client(owner2, random_string('testuser'))
 
     product = create_product(random_string('buskers'), nil, :owner => owner2['key'])
-    pool = create_pool_and_subscription(owner2['key'], product.id, 10)
+    pool = @cp.create_pool(owner2['key'], product.id, {:quantity => 10})
 
     lambda {
       owner1_client.get_pool(pool.id)
@@ -89,7 +89,11 @@ describe 'Pool Resource' do
     owner = create_owner random_string('donaldduck')
     client = user_client(owner, random_string('testusr'))
     product = create_product(nil, nil, :owner => owner['key'])
-    create_pool_and_subscription(owner['key'], product.id, 5, [], '', '', '', now - 60, now - 1)
+    @cp.create_pool(owner['key'], product.id, {
+      :quantity => 5,
+      :start_date => now - 60,
+      :end_date => now - 1
+    })
     (@cp.list_pools :owner => owner.id).size.should == 0
   end
 
@@ -99,7 +103,7 @@ describe 'Pool Resource' do
 
     product = create_product(nil, nil, :owner => owner['key'])
     # Pool with just one entitlement available:
-    pool = create_pool_and_subscription(owner['key'], product.id, 1)
+    pool = @cp.create_pool(owner['key'], product.id, {:quantity => 1})
 
     consumer1_cp = consumer_client(admin_cp, random_string('testsystem'))
     consumer2_cp = consumer_client(admin_cp, random_string('testsystem'))
@@ -121,7 +125,7 @@ describe 'Pool Resource' do
     product = create_product(nil, nil, {:attributes => {:arch => "X86"}, :owner => owner['key']})
 
     # Pool with just one entitlement available:
-    pool = create_pool_and_subscription(owner['key'], product.id, 1)
+    pool = @cp.create_pool(owner['key'], product.id, {:quantity => 1})
 
     consumer1_cp = consumer_client(admin_cp, random_string('testsystem'),
       :system, nil, {"uname.machine" => "X86_64"})
@@ -137,7 +141,7 @@ describe 'Pool Resource' do
     owner1_client = user_client(owner1, random_string('testuser'))
 
     product = create_product(nil, nil, :owner => owner1['key'])
-    pool = create_pool_and_subscription(owner1['key'], product.id, 10)
+    pool = @cp.create_pool(owner1['key'], product.id, {:quantity => 10})
 
     consumer1_cp = consumer_client(owner1_client, random_string('testsystem'))
     ent = consumer1_cp.consume_pool(pool['id'], {:quantity => 1}).first
@@ -163,14 +167,18 @@ describe 'Pool Resource' do
 
   it 'deletes child pools upon parent deletion' do
     owner1 = create_owner random_string('test_owner')
-    product = create_product(nil, nil,
-      {
-        :attributes => {:virt_limit => '10'},
-	:owner => owner1['key']
-      }
-    )
 
-    master_pool = create_pool_and_subscription(owner1['key'], product.id, 10)
+    product = create_product(nil, nil, {
+      :attributes => {:virt_limit => '10'},
+      :owner => owner1['key']
+    })
+
+    master_pool = @cp.create_pool(owner1['key'], product.id, {
+      :quantity => 10,
+      :subscription_id => random_string('source_sub'),
+      :upstream_pool_id => random_string('upstream')
+    })
+
     pools = @cp.list_owner_pools(owner1['key'])
     bonus_pools  = pools.select do |p|
       p['type'] != 'NORMAL'
@@ -186,7 +194,7 @@ describe 'Pool Resource' do
     owner = create_owner random_string('test_owner')
     product = create_product(nil, random_string('some_product'), :owner => owner['key'])
 
-    pool = create_pool_and_subscription(owner['key'], product.id, 25)
+    pool = @cp.create_pool(owner['key'], product.id, {:quantity => 25})
 
     user = user_client(owner, random_string('billy'))
     system = consumer_client(user, 'system')
@@ -201,7 +209,7 @@ describe 'Pool Resource' do
     cdn_label = random_string("test-cdn")
     cdn = create_cdn(cdn_label, "Test CDN", "https://cdn.test.com")
     cdn.id.should_not be nil
-    @opts = {"cdn_label"=> cdn_label}
+    @opts = {"cdn_label" => cdn_label}
     @cp_export = StandardExporter.new
     @cp_export.create_candlepin_export()
     @cp_export_file = @cp_export.export_filename
@@ -232,7 +240,7 @@ describe 'Pool Resource' do
       name = random_string("product-#{i}")
       product = create_product(name, name, :owner => owner['key'])
 
-      create_pool_and_subscription(owner['key'], product.id)
+      @cp.create_pool(owner['key'], product.id)
       pool = @cp.list_owner_pools(owner['key'], {:product => product.id})[0]
 
       consumer_cp = consumer_client(owner_client, random_string('testsystem'))
@@ -262,8 +270,7 @@ describe 'Pool Resource' do
       owner = create_owner random_string('some-owner')
       name = random_string("product-")
       product = create_product(name, name, :owner => owner['key'])
-      created = create_pool_and_subscription(owner['key'], product.id, 11,
-        [], '', '', '', nil, nil, false, :branding => [b1,b2])
+      created = @cp.create_pool(owner['key'], product.id, {:quantity => 11, :branding => [b1, b2]})
       pool = @cp.get_pool(created['id'])
       pool.quantity.should == 11
       pool.branding.size.should == 2

@@ -34,7 +34,7 @@ describe 'Environments Certificate V3' do
         }])
     wait_for_job(job['id'], 15)
 
-    pool = create_pool_and_subscription(@owner['key'], product['id'], 10)
+    pool = @cp.create_pool(@owner['key'], product['id'], {:quantity => 10})
     ent = consumer_cp.consume_pool(pool['id'], {:quantity => 1})[0]
 
     value = extension_from_cert(ent['certificates'][0]['cert'], "1.3.6.1.4.1.2312.9.6")
@@ -62,13 +62,10 @@ describe 'Environments Certificate V3' do
     @cp.add_content_to_product(@owner['key'], product['id'], content2['id'])
 
     # Override enabled to false:
-    job = @org_admin.promote_content(@env['id'],
-        [{
-          :contentId => content['id']
-        }])
+    job = @org_admin.promote_content(@env['id'], [{ :contentId => content['id'] }])
     wait_for_job(job['id'], 15)
 
-    pool = create_pool_and_subscription(@owner['key'], product['id'], 10)
+    pool = @cp.create_pool(@owner['key'], product['id'], {:quantity => 10})
     ent = consumer_cp.consume_pool(pool['id'], {:quantity => 1})[0]
 
     value = extension_from_cert(ent['certificates'][0]['cert'], "1.3.6.1.4.1.2312.9.6")

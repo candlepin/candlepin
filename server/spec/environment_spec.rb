@@ -223,7 +223,7 @@ describe 'Environments' do
         }])
     wait_for_job(job['id'], 15)
 
-    pool = create_pool_and_subscription(@owner['key'], product['id'], 10)
+    pool = @cp.create_pool(@owner['key'], product['id'], {:quantity => 10})
     ent = consumer_cp.consume_pool(pool['id'], {:quantity => 1})[0]
 
     x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])
@@ -254,7 +254,7 @@ describe 'Environments' do
         }])
     wait_for_job(job['id'], 15)
 
-    pool = create_pool_and_subscription(@owner['key'], product['id'], 10)
+    pool = @cp.create_pool(@owner['key'], product['id'], {:quantity => 10})
     ent = consumer_cp.consume_pool(pool['id'], {:quantity => 1})[0]
 
     x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])

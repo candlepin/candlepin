@@ -12,8 +12,8 @@ describe 'Entitlement Resource' do
     @virt_prod= create_product(nil, 'virtualization')
 
     #entitle owner for the virt and monitoring products.
-    create_pool_and_subscription(@owner['key'], @monitoring_prod.id, 6, [], '', '', '', nil, nil, true)
-    create_pool_and_subscription(@owner['key'], @virt_prod.id, 6)
+    @cp.create_pool(@owner['key'], @monitoring_prod.id, {:quantity => 6})
+    @cp.create_pool(@owner['key'], @virt_prod.id, {:quantity => 6})
 
     #create consumer
     user = user_client(@owner, random_string('billy'))
@@ -113,9 +113,14 @@ describe 'Entitlement Resource' do
   it 'should allow consumer to change entitlement quantity' do
     owner_client = user_client(@qowner, random_string('owner'))
     cp_client = consumer_client(owner_client, random_string('consumer'), :system)
-    prod = create_product(random_string('product'), random_string('product'),
-      {:attributes => { :'multi-entitlement' => 'yes'}, :owner => @qowner['key']})
-    pool = create_pool_and_subscription(@qowner['key'], prod.id, 10)
+
+    prod = create_product(random_string('product'), random_string('product'), {
+      :attributes => { :'multi-entitlement' => 'yes'},
+      :owner => @qowner['key']
+    })
+
+    pool = @cp.create_pool(@qowner['key'], prod.id, {:quantity => 10})
+
     entitlement = cp_client.consume_pool(pool.id, {:quantity => 3}).first
     ent_cert_ser = entitlement['certificates'].first['serial']['id']
     entitlement2 = cp_client.consume_pool(pool.id, {:quantity => 2}).first
@@ -146,10 +151,12 @@ describe 'Entitlement Resource' do
   it 'should not allow consumer to change entitlement quantity out of bounds' do
     owner_client = user_client(@qowner, random_string('owner'))
     cp_client = consumer_client(owner_client, random_string('consumer'), :system)
-    prod = create_product(random_string('product'), random_string('product'),
-      {:attributes => { :'multi-entitlement' => 'yes'},
-       :owner => @qowner['key']})
-    pool = create_pool_and_subscription(@qowner['key'], prod.id, 10)
+    prod = create_product(random_string('product'), random_string('product'), {
+      :attributes => { :'multi-entitlement' => 'yes'},
+      :owner => @qowner['key']
+    })
+
+    pool = @cp.create_pool(@qowner['key'], prod.id, {:quantity => 10})
     entitlement = cp_client.consume_pool(pool.id, {:quantity => 3}).first
     entitlement2 = cp_client.consume_pool(pool.id, {:quantity => 2}).first
     entitlement.quantity.should == 3
@@ -169,7 +176,7 @@ describe 'Entitlement Resource' do
     owner_client = user_client(@qowner, random_string('owner'))
     cp_client = consumer_client(owner_client, random_string('consumer'), :system)
     prod = create_product(random_string('product'), random_string('product'), {:owner => @qowner['key']})
-    pool = create_pool_and_subscription(@qowner['key'], prod.id, 10)
+    pool = @cp.create_pool(@qowner['key'], prod.id, {:quantity => 10})
     entitlement = cp_client.consume_pool(pool.id, {:quantity => 1}).first
     entitlement.quantity.should == 1
     pool = cp_client.list_pools({:owner => @qowner['id']}).first
@@ -182,10 +189,11 @@ describe 'Entitlement Resource' do
 
   it 'should handle concurrent requests to pool and maintain quanities' do
     owner_client = user_client(@owner, random_string('owner'))
-    prod = create_product(random_string('product'), random_string('product'),
-      {:attributes => { :'multi-entitlement' => 'yes'},
-       :owner => @owner['key']})
-    pool = create_pool_and_subscription(@owner['key'], prod.id, 50)
+    prod = create_product(random_string('product'), random_string('product'), {
+      :attributes => { :'multi-entitlement' => 'yes'},
+      :owner => @owner['key']
+    })
+    pool = @cp.create_pool(@owner['key'], prod.id, {:quantity => 50})
 
     t1 = Thread.new{register_and_consume(pool, "system", 5)}
     t2 = Thread.new{register_and_consume(pool, "candlepin", 7)}
@@ -204,10 +212,11 @@ describe 'Entitlement Resource' do
 
   it 'should not allow over consumption in pool' do
     owner_client = user_client(@owner, random_string('owner'))
-    prod = create_product(random_string('product'), random_string('product'),
-      {:attributes => { :'multi-entitlement' => 'yes'},
-       :owner => @owner['key']})
-    pool = create_pool_and_subscription(@owner['key'], prod.id, 3)
+    prod = create_product(random_string('product'), random_string('product'), {
+      :attributes => { :'multi-entitlement' => 'yes'},
+      :owner => @owner['key']
+    })
+    pool = @cp.create_pool(@owner['key'], prod.id, {:quantity => 3})
 
     t1 = Thread.new{register_and_consume(pool, "system", 1)}
     t2 = Thread.new{register_and_consume(pool, "candlepin", 1)}
@@ -240,10 +249,11 @@ describe 'Entitlement Resource' do
 
   it 'should end at zero quantity consumed when all consumers are unregistered' do
     owner_client = user_client(@owner, random_string('owner'))
-    prod = create_product(random_string('product'), random_string('product'),
-      {:attributes => { :'multi-entitlement' => 'yes'},
-       :owner => @owner['key']})
-    pool = create_pool_and_subscription(@owner['key'], prod.id, 3)
+    prod = create_product(random_string('product'), random_string('product'), {
+      :attributes => { :'multi-entitlement' => 'yes'},
+      :owner => @owner['key']
+    })
+    pool = @cp.create_pool(@owner['key'], prod.id, {:quantity => 3})
 
     t1 = Thread.new{register_consume_unregister(pool, "system", 1)}
     t2 = Thread.new{register_consume_unregister(pool, "candlepin", 1)}

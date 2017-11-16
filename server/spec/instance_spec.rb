@@ -11,8 +11,7 @@ describe 'Instance Based Subscriptions' do
 
     #create_product() creates products with numeric IDs by default
     @eng_product = create_product()
-    installed_prods = [{'productId' => @eng_product['id'],
-      'productName' => @eng_product['name']}]
+    installed_prods = [{'productId' => @eng_product['id'], 'productName' => @eng_product['name']}]
 
     # For linking the host and the guest:
     @uuid = random_string('system.uuid')
@@ -38,24 +37,22 @@ describe 'Instance Based Subscriptions' do
       }
     })
 
-    create_pool_and_subscription(@owner['key'], @instance_product.id,
-      10, [@eng_product['id']])
-    @pools = @cp.list_pools :owner => @owner.id, \
-      :product => @instance_product.id
+    @cp.create_pool(@owner['key'], @instance_product.id, {
+      :quantity => 10,
+      :provided_products => [@eng_product['id']],
+      :subscription_id => random_string('source_sub'),
+      :upstream_pool_id => random_string('upstream')
+    })
+
+    @pools = @cp.list_pools :owner => @owner.id, :product => @instance_product.id
     @pools.size.should == 2
     instance_pools = @pools.reject do |p|
       has_attribute(p['attributes'], 'unmapped_guests_only')
     end
     instance_pools.size.should == 1
-    # In hosted, we increase the quantity on the subscription. However in standalone,
-    # we assume this already has happened in hosted and the accurate quantity was
-    # exported
+
     @instance_pool = instance_pools.first
-    if is_hosted?
-      @instance_pool.quantity.should == 20
-    else
-      @instance_pool.quantity.should == 10
-    end
+    @instance_pool.quantity.should == 10
   end
 
   it 'should auto-subscribe physical systems with quantity 2 per socket pair' do

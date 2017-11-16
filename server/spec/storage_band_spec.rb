@@ -8,23 +8,25 @@ describe 'Band Limiting' do
     @owner = create_owner random_string('test_owner')
 
     # Create a product limiting by band.
-    @ceph_product = create_product(
-        random_string("storage-limited-sku"),
-        random_string("Storage Limited"),
-        :multiplier => 256,
-        :attributes => {
-            :version => '6.4',
-             # storage_band will always be defined as 1, or not set.
-            :storage_band => 1,
-            :warning_period => 15,
-            :stacking_id => "ceph-node",
-            :'multi-entitlement' => "yes",
-            :support_level => 'standard',
-            :support_type => 'excellent'
-        }
-    )
+    @ceph_product = create_product(random_string("storage-limited-sku"), random_string("Storage Limited"), {
+      :multiplier => 256,
+      :attributes => {
+        :version => '6.4',
+         # storage_band will always be defined as 1, or not set.
+        :storage_band => 1,
+        :warning_period => 15,
+        :stacking_id => "ceph-node",
+        :'multi-entitlement' => "yes",
+        :support_level => 'standard',
+        :support_type => 'excellent'
+      }
+    })
 
-    @ceph_pool = create_pool_and_subscription(@owner['key'], @ceph_product.id, 2, [], '1888', '1234')
+    @ceph_pool = @cp.create_pool(@owner['key'], @ceph_product.id, {
+      :quantity => 2,
+      :contract_number => '1888',
+      :account_number => '1234'
+    })
     @ceph_pool.should_not be_nil
 
     @user = user_client(@owner, random_string('test-user'))

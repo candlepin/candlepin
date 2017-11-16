@@ -16,16 +16,13 @@ describe 'Consumer Resource Activation Key' do
   end
 
   it 'should allow a consumer to register with activation keys' do
-    prod1 = create_product(random_string('product1'), random_string('product1'),
-                           :attributes => { :'multi-entitlement' => 'yes'})
-    create_pool_and_subscription(@owner['key'], prod1.id, 10)
-    pool1 = @cp.list_pools({:owner => @owner['id']}).first
+    prod1 = create_product(random_string('product1'), random_string('product1'), :attributes => {:'multi-entitlement' => 'yes'})
+    pool1 = @cp.create_pool(@owner['key'], prod1.id, {:quantity => 10})
 
     key1 = @cp.create_activation_key(@owner['key'], 'key1')
     @cp.add_pool_to_key(key1['id'], pool1['id'], 3)
     @cp.create_activation_key(@owner['key'], 'key2')
-    consumer = @client.register(random_string('machine1'), :system, nil, {}, nil,
-      @owner['key'], ["key1", "key2"])
+    consumer = @client.register(random_string('machine1'), :system, nil, {}, nil, @owner['key'], ["key1", "key2"])
     consumer.uuid.should_not be_nil
     @cp.get_pool(pool1.id).consumed.should == 3
   end
@@ -34,16 +31,15 @@ describe 'Consumer Resource Activation Key' do
     # create extra product/pool to show selectivity
     prod1 = create_product(random_string('product1'), random_string('product1'))
     prod2 = create_product(random_string('product2'), random_string('product2'))
-    create_pool_and_subscription(@owner['key'], prod1.id, 10, [], '', '', '', nil, nil, true)
-    create_pool_and_subscription(@owner['key'], prod2.id, 10)
-    pool1 = @cp.list_pools(:owner => @owner['id'], :product => prod1.id).first
+
+    pool1 = @cp.create_pool(@owner['key'], prod1.id, {:quantity => 10})
+    pool2 = @cp.create_pool(@owner['key'], prod2.id, {:quantity => 10})
 
     key1 = @cp.create_activation_key(@owner['key'], 'key1')
     @cp.update_activation_key({'id' => key1['id'], "autoAttach" => "true"})
     @cp.add_pool_to_key(key1['id'], pool1['id'])
     @cp.add_prod_id_to_key(key1['id'], prod1.id)
-    consumer = @client.register(random_string('machine1'), :system, nil, {}, nil,
-      @owner['key'], ["key1"])
+    consumer = @client.register(random_string('machine1'), :system, nil, {}, nil, @owner['key'], ["key1"])
     consumer.uuid.should_not be_nil
     @cp.get_pool(pool1.id).consumed.should == 1
   end
@@ -54,8 +50,7 @@ describe 'Consumer Resource Activation Key' do
     override = {"name" => "somename", "value" => "someval", "contentLabel" => "somelabel"}
     @cp.add_content_overrides_to_key(key1['id'], [override])
 
-    consumer = @client.register(random_string('machine1'), :system, nil, {}, nil,
-      @owner['key'], ["key1"])
+    consumer = @client.register(random_string('machine1'), :system, nil, {}, nil, @owner['key'], ["key1"])
     consumer.uuid.should_not be_nil
 
     consumer_overrides = @cp.get_content_overrides(consumer['uuid'])
@@ -78,9 +73,11 @@ describe 'Consumer Resource Activation Key' do
   end
 
   it 'should allow a consumer to register with activation keys with service level' do
-    prod1 = create_product(random_string('product1'), random_string('product1'),
-                           :attributes => { :'support_level' => 'VIP'})
-    create_pool_and_subscription(@owner['key'], prod1.id, 10)
+    prod1 = create_product(random_string('product1'), random_string('product1'), :attributes => {
+      :'support_level' => 'VIP'
+    })
+
+    @cp.create_pool(@owner['key'], prod1.id, {:quantity => 10})
 
     key1 = @cp.create_activation_key(@owner['key'], 'key1', 'VIP')
     key2 = @cp.create_activation_key(@owner['key'], 'key2')
@@ -103,8 +100,7 @@ describe 'Consumer Resource Activation Key' do
     override2 = {"name" => "somename", "value" => "otherval", "contentLabel" => "somelabel"}
     @cp.add_content_overrides_to_key(key1['id'], [override1, override2])
 
-    consumer = @client.register(random_string('machine1'), :system, nil, {}, nil,
-      @owner['key'], ["key2", "key1"])
+    consumer = @client.register(random_string('machine1'), :system, nil, {}, nil, @owner['key'], ["key2", "key1"])
     consumer.uuid.should_not be_nil
 
     consumer_overrides = @cp.get_content_overrides(consumer['uuid'])
@@ -114,12 +110,13 @@ describe 'Consumer Resource Activation Key' do
   end
 
   it 'should allow a consumer to register with activation keys with null quantity' do
-    prod1 = create_product(random_string('product1'), random_string('product1'),
-                           :attributes => { :'multi-entitlement' => 'yes',
-                                            :'stacking_id' => random_string('stacking_id'),
-                                            :'sockets' => '1'})
-    create_pool_and_subscription(@owner['key'], prod1.id, 10)
-    pool1 = @cp.list_pools({:owner => @owner['id']}).first
+    prod1 = create_product(random_string('product1'), random_string('product1'), :attributes => {
+      :'multi-entitlement' => 'yes',
+      :'stacking_id' => random_string('stacking_id'),
+      :'sockets' => '1'
+    })
+
+    pool1 = @cp.create_pool(@owner['key'], prod1.id, {:quantity => 10})
 
     act_key1 = @cp.create_activation_key(@owner['key'], 'act_key1')
 
@@ -137,9 +134,10 @@ describe 'Consumer Resource Activation Key' do
   it 'should allow a consumer to register with an activation key with an auto-attach across pools' do
     # create extra product/pool to show selectivity
     prod1 = create_product(random_string('product1'), random_string('product1'))
-    create_pool_and_subscription(@owner['key'], prod1.id, 1, [], '', '', '', nil, nil, true)
-    create_pool_and_subscription(@owner['key'], prod1.id, 1, [], '', '', '', nil, nil, true)
-    create_pool_and_subscription(@owner['key'], prod1.id, 2)
+
+    @cp.create_pool(@owner['key'], prod1.id, {:quantity => 1})
+    @cp.create_pool(@owner['key'], prod1.id, {:quantity => 1})
+    @cp.create_pool(@owner['key'], prod1.id, {:quantity => 2})
     pools = @cp.list_pools(:owner => @owner['id'], :product => prod1.id)
 
     key1 = @cp.create_activation_key(@owner['key'], 'key1')
@@ -184,8 +182,9 @@ describe 'Consumer Resource Activation Key' do
                                     random_string('product'),
                                     {:attributes => {:support_level => 'VIP'}})
       product = create_product(random_string('product'), random_string('product'))
-      create_pool_and_subscription(@owner['key'], rhel_product.id, 37)
-      create_pool_and_subscription(@owner['key'], product.id, 33)
+
+      @cp.create_pool(@owner['key'], rhel_product.id, {:quantity => 37})
+      @cp.create_pool(@owner['key'], product.id, {:quantity => 33})
 
       ak = random_string('test_token');
       activation_key = @cp.create_activation_key(@owner['key'], ak, 'VIP')
@@ -204,13 +203,15 @@ describe 'Consumer Resource Activation Key' do
   end
 
   it 'should not allow a consumer to register with no-availability pool' do
-    prod1 = create_product(random_string('product1'), random_string('product1'),
-                           :attributes => { :'multi-entitlement' => 'yes'})
-    create_pool_and_subscription(@owner['key'], prod1.id, 0)
-    pool1 = @cp.list_pools({:owner => @owner['id']}).first
+    prod1 = create_product(random_string('product1'), random_string('product1'), :attributes => {
+      :'multi-entitlement' => 'yes'
+    })
+
+    pool1 = @cp.create_pool(@owner['key'], prod1.id, {:quantity => 0})
 
     key1 = @cp.create_activation_key(@owner['key'], 'key1')
     @cp.add_pool_to_key(key1['id'], pool1['id'], 1)
+
     lambda {
       consumer = @client.register(random_string('machine1'), :system, nil, {}, nil, @owner['key'], ["key1"])
     }.should raise_exception(RestClient::BadRequest)

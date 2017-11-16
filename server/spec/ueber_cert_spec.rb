@@ -43,11 +43,26 @@ describe 'Uebercert' do
     @cp.add_content_to_product(owner1['key'], prod1.id, content2.id, true)
     @cp.add_content_to_product(owner1['key'], prod2.id, content3.id, true)
 
-    create_pool_and_subscription(owner1['key'], prod1.id, 10, [], '12345', '6789', 'order1',
-                nil, nil, true)
-    create_pool_and_subscription(owner1['key'], prod2.id, 10, [], 'abcde', 'fghi', 'order2',
-                nil, nil, true)
-    create_pool_and_subscription(owner1['key'], prod3.id, 10, [], 'qwert', 'yuio', 'order3')
+    @cp.create_pool(owner1['key'], prod1.id, {
+      :quantity => 10,
+      :contract_number => '12345',
+      :account_number => '6789',
+      :order_number => 'order1',
+    })
+
+    @cp.create_pool(owner1['key'], prod2.id, {
+      :quantity => 10,
+      :contract_number => 'abcde',
+      :account_number => 'fghi',
+      :order_number => 'order2',
+    })
+
+    @cp.create_pool(owner1['key'], prod3.id, {
+      :quantity => 10,
+      :contract_number => 'qwert',
+      :account_number => 'yuio',
+      :order_number => 'order3',
+    })
 
     # generate and verify cert
     ueber_cert = @cp.generate_ueber_cert(owner1['key'])

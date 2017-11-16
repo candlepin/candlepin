@@ -74,7 +74,7 @@ describe 'Virt Only Pools' do
       }
     })
 
-    create_pool_and_subscription(@owner['key'], product.id, 10)
+    @cp.create_pool(@owner['key'], product.id, {:quantity => 10})
 
     product
   end

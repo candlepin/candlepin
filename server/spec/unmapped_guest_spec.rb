@@ -20,7 +20,12 @@ describe 'Unmapped Guest Pools' do
         :'multi-entitlement' => 'yes'
       }
     })
-    create_pool_and_subscription(@owner['key'], @virt_limit_product.id, 10)
+
+    @cp.create_pool(@owner['key'], @virt_limit_product.id, {
+      :quantity => 10,
+      :subscription_id => random_string('source_sub'),
+      :upstream_pool_id => random_string('upstream')
+    })
 
     # should only be the base pool and the bonus pool for unmapped guests
     @pools = @user.list_pools :owner => @owner.id, :product => @virt_limit_product.id
@@ -75,7 +80,6 @@ describe 'Unmapped Guest Pools' do
         @host1_client.consume_pool(pool['id'], {:quantity => 1})
       end
     end
-    @cp.refresh_pools(@owner['key'])
 
     # should be the base pool, the bonus pool for unmapped guests, plus a pool for the host's guests
     @pools = @user.list_pools :owner => @owner.id, :product => @virt_limit_product.id
@@ -99,7 +103,6 @@ describe 'Unmapped Guest Pools' do
         @host1_client.consume_pool(pool['id'], {:quantity => 1})
       end
     end
-    @cp.refresh_pools(@owner['key'])
 
     # should be the base pool, the bonus pool for unmapped guests, plus a pool for the host's guests
     @pools = @user.list_pools :owner => @owner.id, :product => @virt_limit_product.id
@@ -180,7 +183,6 @@ describe 'Unmapped Guest Pools' do
         @host2_client.consume_pool(pool['id'], :quantity => 1)
       end
     end
-    @cp.refresh_pools(@owner['key'])
 
     # should be the base pool, the bonus pool for unmapped guests, plus two pools for the hosts' guests
     @pools = @user.list_pools :owner => @owner.id, :product => @virt_limit_product.id

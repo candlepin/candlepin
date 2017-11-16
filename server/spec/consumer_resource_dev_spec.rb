@@ -15,24 +15,27 @@ describe 'Consumer Dev Resource' do
 
     # active subscription to allow this all to work
     active_prod = create_product()
-    @active_sub = create_pool_and_subscription(@owner['key'], active_prod.id, 10)
+    @active_sub = @cp.create_pool(@owner['key'], active_prod.id, {:quantity => 10})
     pools = @cp.list_owner_pools(@owner['key'])
     pools.length.should eq(1)
 
-    @dev_product = create_product("dev_product",
-                                  "Dev Product",
-                                  {:attributes => { :expires_after => "60"}})
-    @dev_product_2 = create_product("2nd_dev_product",
-                                  "Dev Product",
-                                  {:attributes => { :expires_after => "60"}})
-    @p_product1 = create_product("p_product_1",
-                                  "Provided Product 1")
-    @p_product2 = create_product("p_product",
-                                  "Provided Product 2")
+    @dev_product = create_product("dev_product", "Dev Product", {
+      :attributes => { :expires_after => "60" }
+    })
+
+    @dev_product_2 = create_product("2nd_dev_product", "Dev Product", {
+      :attributes => { :expires_after => "60" }
+    })
+
+    @p_product1 = create_product("p_product_1", "Provided Product 1")
+    @p_product2 = create_product("p_product", "Provided Product 2")
     @consumer = consumer_client(@user, @consumername, :system, 'dev_user', facts = {:dev_sku => "dev_product"})
+
     installed = [
-        {'productId' => @p_product1.id, 'productName' => @p_product1.name},
-        {'productId' => @p_product2.id, 'productName' => @p_product2.name}]
+      {'productId' => @p_product1.id, 'productName' => @p_product1.name},
+      {'productId' => @p_product2.id, 'productName' => @p_product2.name}
+    ]
+
     @consumer.update_consumer({:installedProducts => installed})
   end
 

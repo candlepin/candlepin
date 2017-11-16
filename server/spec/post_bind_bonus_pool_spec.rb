@@ -7,133 +7,157 @@ describe 'Post bind bonus pool updates' do
   include CandlepinMethods
 
   before(:each) do
-  @owner_key = random_string('test_owner')
-  owner = create_owner @owner_key
+    @owner_key = random_string('test_owner')
+    owner = create_owner @owner_key
 
-  limited_virt_limit_prod = create_product('taylor_limited', 'taylor swift limited',
-    {:owner => @owner_key,
-     :version => "6.1",
-     :attributes => {
-       "virt_limit" => "4",
-       "multi-entitlement" => "yes"}})
-  unlimited_virt_limit_prod = create_product('taylor_unlimited', 'taylor swift unlimited',
-    {:owner => @owner_key,
-     :version => "6.1",
-     :attributes => {
-       "virt_limit" => "unlimited",
-       "multi-entitlement" => "yes"}})
-  host_limited_prod = create_product('taylor_host_limited', 'taylor swift host limited',
-    {:owner => @owner_key,
-     :version => "6.1",
-     :attributes => {
-       "virt_limit" => "unlimited",
-       "multi-entitlement" => "yes",
-       "host_limited" => "true"}})
-  limited_virt_limit_stacked_prod = create_product('taylor_limited_stack', 'taylor swift limited stack',
-    {:owner => @owner_key,
-     :version => "6.1",
-     :attributes => {
-       "virt_limit" => "4",
-       "stacking_id" => "fearless",
-       "multi-entitlement" => "yes"}})
-  host_limited_stacked_prod = create_product('taylor_host_limited_stacked', 'taylor swift host limited stacked',
-    {:owner => @owner_key,
-     :version => "6.1",
-     :attributes => {
-       "virt_limit" => "9",
-       "multi-entitlement" => "yes",
-       "stacking_id" => "badBlood",
-       "host_limited" => "true"}})
+    limited_virt_limit_prod = create_product_for_mode(@owner_key, 'taylor_limited', 'taylor swift limited', {
+      :version => "6.1",
+      :attributes => {
+        "virt_limit" => "4",
+        "multi-entitlement" => "yes"
+      }
+    })
 
-  @limited_master_pool = create_pool_and_subscription(owner['key'], limited_virt_limit_prod['id'], 10)
-  pools = @cp.list_owner_pools(@owner_key)
-  pools.length.should == 2
-  sub_pools = pools.select do |pool|
-    pool['subscriptionId'] == @limited_master_pool['subscriptionId'] &&
-    pool['type'] != 'NORMAL'
-  end
-  sub_pools.length.should == 1
-  @limited_bonus_pool = sub_pools[0]
-  @limited_bonus_pool['quantity'].should == 40
+    unlimited_virt_limit_prod = create_product_for_mode(@owner_key, 'taylor_unlimited', 'taylor swift unlimited', {
+      :version => "6.1",
+      :attributes => {
+        "virt_limit" => "unlimited",
+        "multi-entitlement" => "yes"
+      }
+    })
 
-  @unlimited_master_pool = create_pool_and_subscription(owner['key'], unlimited_virt_limit_prod['id'], 10)
-  pools = @cp.list_owner_pools(@owner_key)
-  pools.length.should == 4
-  sub_pools = pools.select do |pool|
-    pool['subscriptionId'] == @unlimited_master_pool['subscriptionId'] &&
-    pool['type'] != 'NORMAL'
-  end
-  sub_pools.length.should == 1
-  @unlimited_bonus_pool = sub_pools[0]
-  @unlimited_bonus_pool['quantity'].should == -1
+    host_limited_prod = create_product_for_mode(@owner_key, 'taylor_host_limited', 'taylor swift host limited', {
+      :version => "6.1",
+      :attributes => {
+        "virt_limit" => "unlimited",
+        "multi-entitlement" => "yes",
+        "host_limited" => "true"
+      }
+    })
 
-  @hostlimited_master_pool = create_pool_and_subscription(owner['key'], host_limited_prod['id'], 10)
-  pools = @cp.list_owner_pools(@owner_key)
-  pools.length.should == 6
-  sub_pools = pools.select do |pool|
-    pool['subscriptionId'] == @hostlimited_master_pool['subscriptionId'] &&
-    pool['type'] != 'NORMAL'
-  end
-  sub_pools.length.should == 1
-  @hostlimited_bonus_pool = sub_pools[0]
-  @hostlimited_bonus_pool['quantity'].should == -1
+    limited_virt_limit_stacked_prod = create_product_for_mode(@owner_key, 'taylor_limited_stack', 'taylor swift limited stack', {
+      :version => "6.1",
+      :attributes => {
+        "virt_limit" => "4",
+        "stacking_id" => "fearless",
+        "multi-entitlement" => "yes"
+      }
+    })
 
-  @limited_master_stacked_pool = create_pool_and_subscription(owner['key'], limited_virt_limit_stacked_prod['id'], 10)
-  pools = @cp.list_owner_pools(@owner_key)
-  pools.length.should == 8
-  sub_pools = pools.select do |pool|
-    pool['subscriptionId'] == @limited_master_stacked_pool['subscriptionId'] &&
-    pool['type'] != 'NORMAL'
-  end
-  sub_pools.length.should == 1
-  @limited_bonus_stacked_pool = sub_pools[0]
-  @limited_bonus_stacked_pool['quantity'].should == 40
+    host_limited_stacked_prod = create_product_for_mode(@owner_key, 'taylor_host_limited_stacked', 'taylor swift host limited stacked', {
+      :version => "6.1",
+      :attributes => {
+        "virt_limit" => "9",
+        "multi-entitlement" => "yes",
+        "stacking_id" => "badBlood",
+        "host_limited" => "true"
+      }
+    })
 
-  @hostlimited_master_stacked_pool = create_pool_and_subscription(owner['key'], host_limited_stacked_prod['id'], 10)
-  pools = @cp.list_owner_pools(@owner_key)
-  pools.length.should == 10
-  sub_pools = pools.select do |pool|
-    pool['subscriptionId'] == @hostlimited_master_stacked_pool['subscriptionId'] &&
-    pool['type'] != 'NORMAL'
-  end
-  sub_pools.length.should == 1
-  @hostlimited_bonus_stacked_pool = sub_pools[0]
-  @hostlimited_bonus_stacked_pool['quantity'].should == 90
+    @limited_master_pool = create_pool_for_mode(owner['key'], limited_virt_limit_prod['id'], {
+      :quantity => 10
+    })
 
-  guest_uuid =  random_string('guest')
-  guest_facts = {
-    "virt.is_guest"=>"true",
-    "virt.uuid"=>guest_uuid
-  }
-  @guest = @cp.register('guest.bind.com',:system, guest_uuid, guest_facts, 'admin',
-    @owner_key, [], [])
-  @guest_cp = Candlepin.new(nil, nil,
-    @guest['idCert']['cert'], @guest['idCert']['key'])
-  guest_uuid2 =  random_string('guest')
-  guest_facts2 = {
-    "virt.is_guest"=>"true",
-    "virt.uuid"=>guest_uuid2
-  }
-  @guest2 = @cp.register('guest.bind.com',:system, guest_uuid2, guest_facts2, 'admin',
-    @owner_key, [], [])
-  @guest_cp2 = Candlepin.new(nil, nil,
-    @guest2['idCert']['cert'], @guest2['idCert']['key'])
+    pools = @cp.list_owner_pools(@owner_key)
+    pools.length.should == 2
+    sub_pools = pools.select do |pool|
+      pool['subscriptionId'] == @limited_master_pool['subscriptionId'] &&
+      pool['type'] != 'NORMAL'
+    end
+    sub_pools.length.should == 1
+    @limited_bonus_pool = sub_pools[0]
+    @limited_bonus_pool['quantity'].should == 40
 
-  satellite_uuid =  random_string('satellite')
-  @satellite = @cp.register('sallite.bind.com',:candlepin, satellite_uuid, nil, 'admin',
-    @owner_key, [], [])
-  @satellite_cp = Candlepin.new(nil, nil,
-    @satellite['idCert']['cert'], @satellite['idCert']['key'])
-  hypervisor_uuid = random_string('hypervisor')
-  @hypervisor = @cp.register('notguest.bind.com',:system, hypervisor_uuid, {}, 'admin',
-    @owner_key, [], [])
-  @hypervisor_cp = Candlepin.new(nil, nil,
-    @hypervisor['idCert']['cert'], @hypervisor['idCert']['key'])
+    @unlimited_master_pool = create_pool_for_mode(owner['key'], unlimited_virt_limit_prod['id'], {
+      :quantity => 10
+    })
 
-  @owner2_key = random_string('another_owner')
-  create_owner @owner2_key
-  @share_consumer = @cp.register('share_consumer',:share, random_string('share_uuid'), {}, 'admin',
-    @owner_key, [], [], nil, [], nil, [], nil, nil, nil, @owner2_key)
+    pools = @cp.list_owner_pools(@owner_key)
+    pools.length.should == 4
+    sub_pools = pools.select do |pool|
+      pool['subscriptionId'] == @unlimited_master_pool['subscriptionId'] &&
+      pool['type'] != 'NORMAL'
+    end
+    sub_pools.length.should == 1
+    @unlimited_bonus_pool = sub_pools[0]
+    @unlimited_bonus_pool['quantity'].should == -1
+
+    @hostlimited_master_pool = create_pool_for_mode(owner['key'], host_limited_prod['id'], {
+      :quantity => 10
+    })
+
+    pools = @cp.list_owner_pools(@owner_key)
+    pools.length.should == 6
+    sub_pools = pools.select do |pool|
+      pool['subscriptionId'] == @hostlimited_master_pool['subscriptionId'] &&
+      pool['type'] != 'NORMAL'
+    end
+    sub_pools.length.should == 1
+    @hostlimited_bonus_pool = sub_pools[0]
+    @hostlimited_bonus_pool['quantity'].should == -1
+
+    @limited_master_stacked_pool = create_pool_for_mode(owner['key'], limited_virt_limit_stacked_prod['id'], {
+      :quantity => 10
+    })
+
+    pools = @cp.list_owner_pools(@owner_key)
+    pools.length.should == 8
+    sub_pools = pools.select do |pool|
+      pool['subscriptionId'] == @limited_master_stacked_pool['subscriptionId'] &&
+      pool['type'] != 'NORMAL'
+    end
+    sub_pools.length.should == 1
+    @limited_bonus_stacked_pool = sub_pools[0]
+    @limited_bonus_stacked_pool['quantity'].should == 40
+
+    @hostlimited_master_stacked_pool = create_pool_for_mode(owner['key'], host_limited_stacked_prod['id'], {
+      :quantity => 10
+    })
+
+    pools = @cp.list_owner_pools(@owner_key)
+    pools.length.should == 10
+    sub_pools = pools.select do |pool|
+      pool['subscriptionId'] == @hostlimited_master_stacked_pool['subscriptionId'] &&
+      pool['type'] != 'NORMAL'
+    end
+    sub_pools.length.should == 1
+    @hostlimited_bonus_stacked_pool = sub_pools[0]
+    @hostlimited_bonus_stacked_pool['quantity'].should == 90
+
+    guest_uuid =  random_string('guest')
+    guest_facts = {
+      "virt.is_guest"=>"true",
+      "virt.uuid"=>guest_uuid
+    }
+    @guest = @cp.register('guest.bind.com',:system, guest_uuid, guest_facts, 'admin',
+      @owner_key, [], [])
+    @guest_cp = Candlepin.new(nil, nil,
+      @guest['idCert']['cert'], @guest['idCert']['key'])
+    guest_uuid2 =  random_string('guest')
+    guest_facts2 = {
+      "virt.is_guest"=>"true",
+      "virt.uuid"=>guest_uuid2
+    }
+    @guest2 = @cp.register('guest.bind.com',:system, guest_uuid2, guest_facts2, 'admin',
+      @owner_key, [], [])
+    @guest_cp2 = Candlepin.new(nil, nil,
+      @guest2['idCert']['cert'], @guest2['idCert']['key'])
+
+    satellite_uuid =  random_string('satellite')
+    @satellite = @cp.register('sallite.bind.com',:candlepin, satellite_uuid, nil, 'admin',
+      @owner_key, [], [])
+    @satellite_cp = Candlepin.new(nil, nil,
+      @satellite['idCert']['cert'], @satellite['idCert']['key'])
+    hypervisor_uuid = random_string('hypervisor')
+    @hypervisor = @cp.register('notguest.bind.com',:system, hypervisor_uuid, {}, 'admin',
+      @owner_key, [], [])
+    @hypervisor_cp = Candlepin.new(nil, nil,
+      @hypervisor['idCert']['cert'], @hypervisor['idCert']['key'])
+
+    @owner2_key = random_string('another_owner')
+    create_owner @owner2_key
+    @share_consumer = @cp.register('share_consumer',:share, random_string('share_uuid'), {}, 'admin',
+      @owner_key, [], [], nil, [], nil, [], nil, nil, nil, @owner2_key)
   end
 
   #verifies whether bind time pool ( stack or ent derived ) was created or not
@@ -154,6 +178,37 @@ describe 'Post bind bonus pool updates' do
       bind_time_created_pools.length.should == 1
     else
       bind_time_created_pools.length.should == 0
+    end
+  end
+
+  def create_product_for_mode(owner_key, product_id, product_name, params = {})
+    if is_hosted?
+      params[:product_name] = product_name
+      return create_upstream_product(product_id, params)
+    else
+      params[:owner] = owner_key
+      return create_product(product_id, product_name, params)
+    end
+  end
+
+  def create_pool_for_mode(owner_key, product_id, params = {})
+    if is_hosted?
+      sub_id = random_string('source_sub')
+      sub = create_upstream_subscription(sub_id, owner_key, product_id, params)
+
+      @cp.refresh_pools(owner_key)
+
+      pool = @cp.get_pools_for_subscription(owner_key, sub_id).detect do |pool|
+        pool['type'] == 'NORMAL'
+      end
+      expect(pool).to_not be_nil
+
+      return pool
+    else
+      params[:subscription_id] = random_string('source_sub')
+      params[:upstream_pool_id] = random_string('upstream')
+
+      return @cp.create_pool(owner_key, product_id, params)
     end
   end
 
@@ -182,7 +237,6 @@ describe 'Post bind bonus pool updates' do
     #does not create ent derived pool for shares
     verify_bind_time_pool_creation(@share_consumer, @hostlimited_master_pool, 'ENTITLEMENT_DERIVED', false)
   end
-
 
   it 'should create stack derived pool in hosted mode' do
     skip("candlepin running in standalone mode") unless is_hosted?
@@ -391,7 +445,7 @@ describe 'Post bind bonus pool updates' do
       ent1['quantity'].should == 4
     end
   end
-  
+
   it 'should revoke sufficient entitlements when entitlement quantity is updated' do
     skip("candlepin running in standalone mode") unless is_hosted?
     @cp.get_pool(@limited_bonus_pool['id'])['quantity'].should == 40

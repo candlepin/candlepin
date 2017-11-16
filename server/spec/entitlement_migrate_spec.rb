@@ -7,9 +7,8 @@ describe 'Entitlement Migrate' do
 
   before(:each) do
     @owner = create_owner random_string 'owner'
-    @product = create_product(nil, random_string('product'),
-                 :attributes => {:cores => 8})
-    create_pool_and_subscription(@owner['key'], @product.id, 25)
+    @product = create_product(nil, random_string('product'), :attributes => {:cores => 8})
+    @cp.create_pool(@owner['key'], @product.id, {:quantity => 25})
 
     #create consumer
     @user = user_client(@owner, random_string('user'))

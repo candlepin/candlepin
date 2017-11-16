@@ -546,6 +546,8 @@ class Candlepin
       end
     end
 
+    sleep 1
+
     # If we only have one job detail, return the status directly; otherwise return a collection of job results
     return (status.length == 1 ? status[0]['result'] : status.map {|detail| detail['result']})
   end
@@ -1029,18 +1031,15 @@ class Candlepin
   end
 
   def create_pool(owner_key, product_id, params={})
-    quantity = params[:quantity] || 1
-    provided_products = params[:provided_products] || []
-
     start_date = params[:start_date] || DateTime.now
     end_date = params[:end_date] || start_date + 365
 
     pool = {
       'startDate' => start_date,
       'endDate'   => end_date,
-      'quantity'  =>  quantity,
+      'quantity'  =>  params[:quantity] || 1,
       'product' => { 'id' => product_id },
-      'providedProducts' => provided_products.collect { |pid| {'productId' => pid} }
+      'providedProducts' => [],
     }
 
     if params[:branding]
@@ -1072,6 +1071,10 @@ class Candlepin
     elsif params[:subscriptionId] || params[:subscriptionSubKey]
       pool['subscriptionId'] = params[:subscriptionId] || "sub_id-#{rand(9)}#{rand(9)}#{rand(9)}"
       pool['subscriptionSubKey'] = params[:subscriptionSubKey] || 'master'
+    end
+
+    if params[:provided_products]
+      pool['providedProducts'] = params[:provided_products].collect { |pid| {'productId' => pid} }
     end
 
     if params[:derived_provided_products]

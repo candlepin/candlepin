@@ -8,43 +8,66 @@ describe 'Entitlements' do
   before(:each) do
     @owner = create_owner random_string 'test_owner'
     @monitoring = create_product(nil, random_string('monitoring'))
-    @virt = create_product(nil, random_string('virtualization_host'),
-      {:attributes => {"multi-entitlement" => "yes"}})
-    @super_awesome = create_product(nil, random_string('super_awesome'),
-                                    :attributes => {
-                                      'cpu.cpu_socket(s)' => 4,
-                                      'variant' => "Satellite Starter Pack"
-                                    })
-    @virt_limit = create_product(nil, random_string('virt_limit'),
-      {:attributes => {"virt_limit" => "10"}})
 
-    @instance_based = create_product(nil, random_string('instance_based'),
-                                    :attributes => { 'instance_multiplier' => 2,
-                                        'multi-entitlement' => 'yes' })
+    @virt = create_product(nil, random_string('virtualization_host'), :attributes => {
+      "multi-entitlement" => "yes"
+    })
+
+    @super_awesome = create_product(nil, random_string('super_awesome'), :attributes => {
+      'cpu.cpu_socket(s)' => 4,
+      'variant' => "Satellite Starter Pack"
+    })
+
+    @virt_limit = create_product(nil, random_string('virt_limit'), :attributes => {
+      "virt_limit" => "10"
+    })
+
+    @instance_based = create_product(nil, random_string('instance_based'), :attributes => {
+      'instance_multiplier' => 2,
+      'multi-entitlement' => 'yes'
+    })
 
     @ram = @cp.create_product(@owner['key'], random_string("ram-pack"), random_string("RAM Limiting Package"), {
       :attributes => {"ram" => "4"}})
 
     @ram_provided = create_product(nil, random_string("ram provided"), {})
-    content = create_content({:metadata_expire => 6000,
-                                  :required_tags => "TAG1,TAG2"})
-    content2 = create_content({:metadata_expire => 6000,
-                                      :required_tags => "TAG1,TAG2"})
+    content = create_content({:metadata_expire => 6000, :required_tags => "TAG1,TAG2"})
+    content2 = create_content({:metadata_expire => 6000, :required_tags => "TAG1,TAG2"})
     @cp.add_content_to_product(@owner['key'], @ram_provided.id, content.id)
     @cp.add_content_to_product(@owner['key'], @ram_provided.id, content2.id)
 
     #entitle owner for the virt and monitoring products.
-    create_pool_and_subscription(@owner['key'], @virt.id, 20,
-				[], '', '', '', nil, nil, true)
-    create_pool_and_subscription(@owner['key'], @monitoring.id, 4,
-				[], '', '', '', nil, nil, true)
-    create_pool_and_subscription(@owner['key'], @super_awesome.id, 4,
-				[], '', '', '', nil, nil, true)
-    create_pool_and_subscription(@owner['key'], @virt_limit.id, 5,
-				[], '', '', '', nil, nil, true)
-    create_pool_and_subscription(@owner['key'], @instance_based.id, 10,
-				[], '', '', '', nil, nil, true)
-    create_pool_and_subscription(@owner['key'], @ram.id, 4, [@ram_provided.id])
+    @cp.create_pool(@owner['key'], @virt.id, {
+      :quantity => 20,
+      :subscription_id => random_string('source_sub'),
+      :upstream_pool_id => random_string('upstream')
+    })
+    @cp.create_pool(@owner['key'], @monitoring.id, {
+      :quantity => 4,
+      :subscription_id => random_string('source_sub'),
+      :upstream_pool_id => random_string('upstream')
+    })
+    @cp.create_pool(@owner['key'], @super_awesome.id, {
+      :quantity => 4,
+      :subscription_id => random_string('source_sub'),
+      :upstream_pool_id => random_string('upstream')
+    })
+    @cp.create_pool(@owner['key'], @virt_limit.id, {
+      :quantity => 5,
+      :subscription_id => random_string('source_sub'),
+      :upstream_pool_id => random_string('upstream')
+    })
+    @cp.create_pool(@owner['key'], @instance_based.id, {
+      :quantity => 10,
+      :subscription_id => random_string('source_sub'),
+      :upstream_pool_id => random_string('upstream')
+    })
+    @cp.create_pool(@owner['key'], @ram.id, {
+      :quantity => 4,
+      :provided_products => [@ram_provided.id],
+      :subscription_id => random_string('source_sub'),
+      :upstream_pool_id => random_string('upstream')
+    })
 
     #create consumer
     @user = user_client(@owner, random_string('billy'))

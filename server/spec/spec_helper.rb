@@ -1,8 +1,11 @@
 require 'base64'
 require 'zip'
+require 'hostedtest_api'
 
 
 module CleanupHooks
+  include HostedTest
+
   def cleanup_before
     @cp = Candlepin.new('admin', 'admin')
     @owners = []
@@ -26,12 +29,8 @@ module CleanupHooks
       @cp.delete_rules
     end
 
-    if !@cp.get_status()['standalone']
-      begin
-        @cp.delete('/hostedtest/subscriptions/', {}, nil, true)
-      rescue RestClient::ResourceNotFound
-        puts "skipping hostedtest cleanup"
-      end
+    if is_hosted?
+      clear_upstream_data
     end
   end
 end
@@ -57,6 +56,7 @@ RSpec.configure do |config|
 
   config.before(:each, :type => :virt) do
     skip("candlepin running in standalone mode") if is_hosted?
+
     @owner = create_owner random_string('virt_owner')
     @user = user_client(@owner, random_string('virt_user'))
 
@@ -68,14 +68,23 @@ RSpec.configure do |config|
     })
 
     #create two subs, to do migration testing
-    create_pool_and_subscription(@owner['key'], @virt_limit_product.id, 10, [], '', '', '', nil, nil, true)
-    create_pool_and_subscription(@owner['key'], @virt_limit_product.id, 10)
+    @cp.create_pool(@owner['key'], @virt_limit_product.id, {
+      :quantity => 10,
+      :subscription_id => random_string('source_sub'),
+      :upstream_pool_id => random_string('upstream')
+    })
 
-    @pools = @user.list_pools :owner => @owner.id, :product => @virt_limit_product.id
+    @cp.create_pool(@owner['key'], @virt_limit_product.id, {
+      :quantity => 10,
+      :subscription_id => random_string('source_sub'),
+      :upstream_pool_id => random_string('upstream')
+    })
+
+    @pools = @user.list_pools(:owner => @owner.id, :product => @virt_limit_product.id)
 
     # includes an extra unmapped guest pool for each
-    @pools.size.should == 4
-    @virt_limit_pool = filter_unmapped_guest_pools(@pools)[0]
+    expect(@pools.size).to eq(4)
+    @virt_limit_pool = filter_unmapped_guest_pools(@pools).first
 
     # Setup two virt guest consumers:
     @uuid1 = random_string('system.uuid')
