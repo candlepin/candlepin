@@ -1766,7 +1766,16 @@ public class CandlepinPoolManager implements PoolManager {
 
         log.debug("Adjusting consumed quantities on pools");
         List<Pool> poolsToSave = new ArrayList<Pool>();
+        Set<String> entIdsToRevoke = new HashSet<String>();
         for (Entitlement ent : entsToRevoke) {
+            // Collect the entitlement IDs to revoke seeing as we are iterating
+            // them anyway.
+            // TODO: Should we throw an exception if we find a malformed/incomplete entitlement
+            // or just continue silently ignoring them?
+            if (ent != null && ent.getId() != null) {
+                entIdsToRevoke.add(ent.getId());
+            }
+
             //We need to trigger lazy load of provided products
             //to have access to those products later in this method.
             Pool pool = ent.getPool();
@@ -1795,7 +1804,7 @@ public class CandlepinPoolManager implements PoolManager {
          */
         if (regenCertsAndStatuses) {
             log.debug("Marking dependent entitlements as dirty...");
-            int update = this.entitlementCurator.markDependentEntitlementsDirty(entsToRevoke);
+            int update = this.entitlementCurator.markDependentEntitlementsDirty(entIdsToRevoke);
             log.debug("{} dependent entitlements marked dirty.", update);
         }
 
@@ -2089,7 +2098,7 @@ public class CandlepinPoolManager implements PoolManager {
                 Collections.<Entitlement>emptySet();
 
             // Mark remaining dependent entitlements dirty for this consumer
-            this.entitlementCurator.markDependentEntitlementsDirty(entitlements, true);
+            this.entitlementCurator.markDependentEntitlementsDirty(entitlementIds);
 
             // Unlink the pools and entitlements we're about to delete so we don't error out while
             // trying to delete entitlements.
