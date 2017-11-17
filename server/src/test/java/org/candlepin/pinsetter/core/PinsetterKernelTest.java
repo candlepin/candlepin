@@ -53,6 +53,7 @@ import org.quartz.TriggerKey;
 import org.quartz.TriggerListener;
 import org.quartz.impl.JobDetailImpl;
 import org.quartz.impl.StdSchedulerFactory;
+import org.quartz.impl.matchers.GroupMatcher;
 import org.quartz.spi.JobFactory;
 
 import java.util.Collection;
@@ -228,6 +229,24 @@ public class PinsetterKernelTest {
                 sfactory, triggerListener, modeManager);
         pk.shutdown();
         verify(sched, never()).shutdown();
+    }
+
+    @Test
+    public void retriggerTest() throws Exception {
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator,
+            sfactory, triggerListener, modeManager);
+        String job = "CancelJobJob";
+        TriggerKey key = new TriggerKey(job);
+        Set<TriggerKey> keys = new HashSet<TriggerKey>();
+        keys.add(key);
+        when(sched.getTriggerKeys(any(GroupMatcher.class))).thenReturn(keys);
+        pk.retriggerCronJob(job, CancelJobJob.class);
+        ArgumentCaptor<Trigger> triggerCaptor = ArgumentCaptor.forClass(Trigger.class);
+        verify(sched).rescheduleJob(eq(key), triggerCaptor.capture());
+        Trigger capturedTrigger = triggerCaptor.getValue();
+        TriggerKey keynow = capturedTrigger.getKey();
+        String name = keynow.getName();
+        assertTrue(capturedTrigger.getKey().getName().startsWith(job));
     }
 
     @Test
