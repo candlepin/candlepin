@@ -2,7 +2,7 @@
 <config xmlns="http://zanata.org/namespace/config/">
     <url>https://translate.zanata.org/zanata/</url>
     <project>candlepin</project>
-    <project-version>master</project-version>
+    <project-version>candlepin-0.9.54-HOTFIX</project-version>
     <project-type>gettext</project-type>
     <locales>
         <locale>as</locale>
