@@ -134,6 +134,7 @@ public class PinsetterKernel implements ModeChangeListener {
     /**
      * Starts Pinsetter
      * This method does not return until the this.scheduler is shutdown
+     * Note: candlepin always starts in NORMAL mode.
      * @throws PinsetterException error occurred during Quartz or Hibernate
      * startup
      */
@@ -141,9 +142,6 @@ public class PinsetterKernel implements ModeChangeListener {
         try {
             scheduler.start();
             jobCurator.cancelOrphanedJobs(Collections.EMPTY_LIST);
-            if (modeManager.getLastCandlepinModeChange().getMode() != Mode.NORMAL) {
-                scheduler.pauseAll();
-            }
             modeManager.registerModeChangeListener(this);
             configure();
         }
@@ -591,34 +589,26 @@ public class PinsetterKernel implements ModeChangeListener {
         }
     }
 
-    private void pauseAll() {
-        try {
-            log.debug("Pinsetter Kernel is being paused");
-            scheduler.pauseAll();
-        }
-        catch (SchedulerException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void resumeAll() {
-        try {
-            log.debug("Pinsetter Kernel is being resumed");
-            scheduler.resumeAll();
-        }
-        catch (SchedulerException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     @Override
     public void modeChanged(Mode newMode) {
-        if (newMode == Mode.SUSPEND) {
-            pauseAll();
+
+        /* 1510082: Pause and un pause scheduler, never pause all jobs.
+           cause when we do, quartz pauses the thread group itself.
+           Later it does not resume the async thread group correctly, and as a result
+           no async jobs will run.
+         */
+        try {
+            if (newMode == Mode.SUSPEND) {
+                pauseScheduler();
+            }
+            else if (newMode == Mode.NORMAL) {
+                unpauseScheduler();
+            }
         }
-        else if (newMode == Mode.NORMAL) {
-            resumeAll();
+        catch (PinsetterException e) {
+            throw new RuntimeException(e);
         }
+
     }
 
 }
