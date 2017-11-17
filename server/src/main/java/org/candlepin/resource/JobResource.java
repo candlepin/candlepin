@@ -26,7 +26,6 @@ import org.candlepin.pinsetter.core.PinsetterException;
 import org.candlepin.pinsetter.core.PinsetterKernel;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.pinsetter.core.model.JobStatus.JobState;
-import org.candlepin.pinsetter.tasks.KingpinJob;
 import org.candlepin.util.ElementTransformer;
 import org.candlepin.util.Util;
 
@@ -186,7 +185,31 @@ public class JobResource {
         return getSchedulerStatus();
     }
 
-    @ApiOperation(notes = "Triggers select asynchronous jobs", value = "schedule")
+    @ApiOperation(notes = "Re-trigger cron jobs", value = "retrigger")
+    @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 500, message = "") })
+    @POST
+    @Path("retrigger/{task}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @SuppressWarnings("unchecked")
+    public void retrigger(@PathParam("task") String task) {
+
+        /*
+         * at the time of implementing this API, the only jobs that
+         * are permissible are cron jobs.
+         */
+        Class cronJobClass = getCronJobClass(task);
+
+        try {
+            pk.retriggerCronJob(task, cronJobClass);
+        }
+        catch (PinsetterException e) {
+            throw new IseException(i18n.tr("Error trying to schedule {0}: {1}", task,
+                e.getMessage()));
+        }
+    }
+
+    @ApiOperation(notes = "Fires cron jobs asynchronously and immediately", value = "schedule")
     @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 500, message = "") })
     @POST
     @Path("schedule/{task}")
@@ -195,37 +218,35 @@ public class JobResource {
     @SuppressWarnings("unchecked")
     public JobStatus schedule(@PathParam("task") String task) {
 
-        /*
-         * at the time of implementing this API, the only jobs that
-         * are permissible are cron jobs.
-         */
+        Class cronJobClass = getCronJobClass(task);
+        try {
+            /*
+             * at the time of implementing this API, the only jobs that
+             * are permissible are cron jobs.
+             */
+            return pk.scheduleSingleJob(cronJobClass, Util.generateUUID());
+        }
+        catch (PinsetterException e) {
+            throw new IseException(i18n.tr("Error trying to schedule {0}: {1}", task,
+                e.getMessage()));
+        }
+    }
+
+    private Class getCronJobClass(String task) {
         String className = "org.candlepin.pinsetter.tasks." + task;
         try {
-            boolean allowed = false;
             for (String permissibleJob : ConfigProperties.DEFAULT_TASK_LIST) {
                 if (className.equalsIgnoreCase(permissibleJob)) {
-                    allowed = true;
-                    // helps ignore case
-                    className = permissibleJob;
+                    return Class.forName(permissibleJob);
                 }
-            }
-            if (allowed) {
-                Class taskClass = Class.forName(className);
-                return pk.scheduleSingleJob((Class<? extends KingpinJob>) taskClass, Util.generateUUID());
-            }
-            else {
-                throw new BadRequestException(i18n.tr("Not a permissible job: {0}. Only {1} are permissible",
-                    task, prettyPrintJobs(ConfigProperties.DEFAULT_TASK_LIST)));
             }
         }
         catch (ClassNotFoundException e) {
             throw new IseException(i18n.tr("Error trying to schedule {0}: {1}", className,
                 e.getMessage()));
         }
-        catch (PinsetterException e) {
-            throw new IseException(i18n.tr("Error trying to schedule {0}: {1}", className,
-                e.getMessage()));
-        }
+        throw new BadRequestException(i18n.tr("Not a permissible job: {0}. Only {1} are permissible",
+            task, prettyPrintJobs(ConfigProperties.DEFAULT_TASK_LIST)));
     }
 
     private String prettyPrintJobs(String... jobs) {

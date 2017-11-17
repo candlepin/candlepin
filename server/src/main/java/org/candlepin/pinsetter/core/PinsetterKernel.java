@@ -31,6 +31,7 @@ import org.candlepin.model.CandlepinModeChange.Mode;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.pinsetter.tasks.CancelJobJob;
+import org.candlepin.pinsetter.tasks.KingpinJob;
 import org.candlepin.util.PropertyUtil;
 import org.candlepin.util.Util;
 
@@ -47,6 +48,7 @@ import org.quartz.JobListener;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
+import org.quartz.TriggerKey;
 import org.quartz.TriggerListener;
 import org.quartz.impl.JobDetailImpl;
 import org.quartz.impl.StdSchedulerFactory;
@@ -60,6 +62,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
@@ -172,28 +175,28 @@ public class PinsetterKernel implements ModeChangeListener {
 
         List<JobEntry> pendingJobs = new ArrayList<JobEntry>();
         // use a set to remove potential duplicate jobs from config
-        Set<String> jobImpls = new HashSet<String>();
+        Set<String> jobFQNames = new HashSet<String>();
 
         try {
             if (config.getBoolean(ConfigProperties.ENABLE_PINSETTER, true)) {
                 // get the default tasks first
-                addToList(jobImpls, ConfigProperties.DEFAULT_TASKS);
+                addToList(jobFQNames, ConfigProperties.DEFAULT_TASKS);
 
                 // get other tasks
-                addToList(jobImpls, ConfigProperties.TASKS);
+                addToList(jobFQNames, ConfigProperties.TASKS);
             }
             else if (!isClustered()) {
                 // Since pinsetter is disabled, we only want to allow
                 // CancelJob and async jobs on this node.
-                jobImpls.add(CancelJobJob.class.getName());
+                jobFQNames.add(CancelJobJob.class.getName());
             }
 
             // Bail if there is nothing to configure
-            if (jobImpls.size() == 0) {
+            if (jobFQNames.size() == 0) {
                 log.warn("No tasks to schedule");
                 return;
             }
-            log.debug("Jobs implemented:" + jobImpls);
+            log.debug("Jobs implemented:" + jobFQNames);
             Set<JobKey> jobKeys = scheduler.getJobKeys(jobGroupEquals(CRON_GROUP));
 
             /*
@@ -212,9 +215,9 @@ public class PinsetterKernel implements ModeChangeListener {
                 }
             }
 
-            for (String jobImpl : jobImpls) {
+            for (String jobFQName : jobFQNames) {
                 if (log.isDebugEnabled()) {
-                    log.debug("Scheduling " + jobImpl);
+                    log.debug("Scheduling " + jobFQName);
                 }
 
                 // Find all existing cron triggers matching this job impl
@@ -223,7 +226,7 @@ public class PinsetterKernel implements ModeChangeListener {
                     for (JobKey key : jobKeys) {
                         JobDetail jd = scheduler.getJobDetail(key);
                         if (jd != null &&
-                            jd.getJobClass().getName().equals(jobImpl)) {
+                            jd.getJobClass().getName().equals(jobFQName)) {
                             CronTrigger trigger = (CronTrigger) scheduler.getTrigger(
                                 triggerKey(key.getName(), CRON_GROUP));
                             if (trigger != null) {
@@ -235,38 +238,45 @@ public class PinsetterKernel implements ModeChangeListener {
                         }
                     }
                 }
-                // get the default schedule from the job class in case one
-                // is not found in the configuration.
-                String defvalue = PropertyUtil.getStaticPropertyAsString(jobImpl,
-                    "DEFAULT_SCHEDULE");
-
-                String schedule = this.config.getString("pinsetter." +
-                    jobImpl + ".schedule", defvalue);
-
-                if (schedule != null && schedule.length() > 0) {
-                    if (log.isDebugEnabled()) {
-                        log.debug("Scheduler entry for " + jobImpl + ": " +
-                            schedule);
-                    }
-
-                    addUniqueJob(pendingJobs, jobImpl,
-                        existingCronTriggers, schedule);
-                }
-                else {
-                    log.warn("No schedule found for " + jobImpl + ". Skipping...");
+                String schedule = getSchedule(jobFQName);
+                if (schedule != null) {
+                    addUniqueJob(pendingJobs, jobFQName, existingCronTriggers, schedule);
                 }
             }
         }
         catch (SchedulerException e) {
             throw new RuntimeException(e.getLocalizedMessage(), e);
         }
-        catch (Exception e) {
-            throw new RuntimeException(e.getLocalizedMessage(), e);
-        }
         scheduleJobs(pendingJobs);
     }
 
-    /*
+    /** get the default schedule from the job class in case one is not found in the configuration.
+     */
+    private String getSchedule(String jobFQName) {
+        String defvalue = null;
+        try {
+            defvalue = PropertyUtil.getStaticPropertyAsString(jobFQName, "DEFAULT_SCHEDULE");
+        }
+        catch (NoSuchFieldException e) {
+            throw new RuntimeException(e.getLocalizedMessage(), e);
+        }
+        catch (ClassNotFoundException e) {
+            throw new RuntimeException(e.getLocalizedMessage(), e);
+        }
+
+        String schedule = this.config.getString("pinsetter." + jobFQName + ".schedule", defvalue);
+
+        if (schedule != null && schedule.length() > 0) {
+            log.debug("Scheduler entry for {}: {}", jobFQName, schedule);
+            return schedule;
+        }
+        else {
+            log.warn("No schedule found for {}. Skipping...", jobFQName);
+        }
+        return null;
+    }
+
+    /**
      * Adds a unique job, replacing any old ones with different schedules.
      */
     private void addUniqueJob(List<JobEntry> pendingJobs,
@@ -465,7 +475,8 @@ public class PinsetterKernel implements ModeChangeListener {
         return scheduleJob(jobDetail, SINGLE_JOB_GROUP, trigger);
     }
 
-    public JobStatus scheduleSingleJob(Class job, String jobName) throws PinsetterException {
+    public JobStatus scheduleSingleJob(Class<? extends KingpinJob> job, String jobName) throws
+        PinsetterException {
         JobDataMap map = new JobDataMap();
         map.put(PinsetterJobListener.PRINCIPAL_KEY, new SystemPrincipal());
 
@@ -551,6 +562,38 @@ public class PinsetterKernel implements ModeChangeListener {
 
     public Set<JobKey> getSingleJobKeys() throws SchedulerException {
         return scheduler.getJobKeys(GroupMatcher.jobGroupEquals(SINGLE_JOB_GROUP));
+    }
+
+    public void retriggerCronJob(String taskName, Class<? extends KingpinJob> jobClass)  throws
+        PinsetterException {
+        Set<TriggerKey> cronTriggerKeys = null;
+        try {
+            cronTriggerKeys = scheduler.getTriggerKeys(
+                GroupMatcher.triggerGroupEquals(PinsetterKernel.CRON_GROUP));
+            TriggerKey key = null;
+            Iterator<TriggerKey> keysTrigger = cronTriggerKeys.iterator();
+            // We should get only key per job. pick the first one and quit the loop
+            while (key == null && keysTrigger.hasNext()) {
+                TriggerKey current = keysTrigger.next();
+                if (current.getName().contains(taskName)) {
+                    key = current;
+                }
+            }
+            if (key != null) {
+                String newJobName = taskName + "-" + Util.generateUUID();
+                String schedule = getSchedule(jobClass.getName());
+                if (schedule != null) {
+                    Trigger newTrigger = newTrigger()
+                        .withIdentity(newJobName, CRON_GROUP)
+                        .withSchedule(cronSchedule(schedule).withMisfireHandlingInstructionDoNothing())
+                        .build();
+                    scheduler.rescheduleJob(key, newTrigger);
+                }
+            }
+        }
+        catch (SchedulerException e) {
+            throw new PinsetterException("There was a problem rescheduling cron job", e);
+        }
     }
 
     private boolean isClustered() {
