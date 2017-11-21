@@ -102,6 +102,11 @@ public class HypervisorId extends AbstractHibernateObject {
         this.setConsumer(consumer); // Also sets owner
     }
 
+    public HypervisorId(Consumer consumer, String hypervisorId, String reporterId) {
+        this(consumer, hypervisorId);
+        this.setReporterId(reporterId);
+    }
+
     @Override
     public Serializable getId() {
         return this.id;
