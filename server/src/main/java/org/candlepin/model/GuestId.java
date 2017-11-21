@@ -112,7 +112,9 @@ public class GuestId extends AbstractHibernateObject implements Owned, Named, Co
 
     public GuestId(String guestId, Consumer consumer, Map<String, String> attributes) {
         this(guestId, consumer);
-        this.setAttributes(attributes);
+        if (attributes != null) {
+            this.setAttributes(attributes);
+        }
     }
 
     @HateoasInclude

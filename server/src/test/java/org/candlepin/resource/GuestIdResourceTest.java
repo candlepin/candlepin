@@ -14,11 +14,11 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
@@ -26,8 +26,10 @@ import org.candlepin.auth.Principal;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.paging.Page;
-import org.candlepin.common.paging.PageRequest;
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.StandardTranslator;
+import org.candlepin.dto.api.v1.GuestIdDTO;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
@@ -37,6 +39,7 @@ import org.candlepin.model.GuestIdCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resource.util.GuestMigration;
+import org.candlepin.util.ElementTransformer;
 import org.candlepin.util.ServiceLevelValidator;
 
 import com.google.inject.util.Providers;
@@ -44,17 +47,18 @@ import com.google.inject.util.Providers;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
-import javax.inject.Inject;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 
+import javax.inject.Inject;
 import javax.inject.Provider;
 
 /**
@@ -72,6 +76,7 @@ public class GuestIdResourceTest {
     @Mock private EventSink sink;
     @Mock private ServiceLevelValidator mockedServiceLevelValidator;
     @Mock private ConsumerEnricher consumerEnricher;
+    private ModelTranslator translator;
 
     private GuestIdResource guestIdResource;
 
@@ -92,8 +97,9 @@ public class GuestIdResourceTest {
         owner = new Owner("test-owner", "Test Owner");
         ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         consumer = new Consumer("consumer", "test", owner, ct);
+        translator = new StandardTranslator();
         guestIdResource = new GuestIdResource(guestIdCurator,
-            consumerCurator, consumerResource, i18n, eventFactory, sink, migrationProvider);
+            consumerCurator, consumerResource, i18n, eventFactory, sink, migrationProvider, translator);
         when(consumerCurator.findByUuid(consumer.getUuid())).thenReturn(consumer);
         when(consumerCurator.verifyAndLookupConsumer(
             consumer.getUuid())).thenReturn(consumer);
@@ -101,44 +107,35 @@ public class GuestIdResourceTest {
 
     @Test
     public void getGuestIdsEmpty() {
-        when(guestIdCurator.listByConsumer(eq(consumer), any(PageRequest.class)))
-            .thenReturn(buildPaginatedGuestIdList(new LinkedList<GuestId>()));
-        List<GuestId> result = guestIdResource.getGuestIds(consumer.getUuid(), null);
-        assertEquals(0, result.size());
-    }
-
-    @Test
-    public void getGuestIds() {
-        List<GuestId> guestIds = new LinkedList<GuestId>();
-        guestIds.add(new GuestId("1"));
-        guestIds.add(new GuestId("2"));
-        when(guestIdCurator.listByConsumer(eq(consumer), any(PageRequest.class)))
-            .thenReturn(buildPaginatedGuestIdList(guestIds));
-        List<GuestId> result = guestIdResource.getGuestIds(consumer.getUuid(), null);
-        assertEquals(2, result.size());
-        assertTrue(result.contains(new GuestId("1")));
-        assertTrue(result.contains(new GuestId("2")));
+        CandlepinQuery<GuestId> query = mock(CandlepinQuery.class);
+        CandlepinQuery<GuestIdDTO> dtoQuery = mock(CandlepinQuery.class);
+        when(guestIdCurator.listByConsumer(eq(consumer)))
+            .thenReturn(query);
+        when(query.transform((any(ElementTransformer.class)))).thenReturn(dtoQuery);
+        CandlepinQuery<GuestIdDTO> result = guestIdResource.getGuestIds(consumer.getUuid());
+        verify(query, times(1)).transform(any(ElementTransformer.class));
+        assertEquals(result, dtoQuery);
     }
 
     @Test(expected = NotFoundException.class)
     public void getGuestIdNoGuests() {
         when(guestIdCurator.findByConsumerAndId(eq(consumer), any(String.class)))
             .thenReturn(null);
-        GuestId result = guestIdResource.getGuestId(consumer.getUuid(), "some-id");
+        GuestIdDTO result = guestIdResource.getGuestId(consumer.getUuid(), "some-id");
     }
 
     @Test
     public void getGuestId() {
         when(guestIdCurator.findByConsumerAndId(eq(consumer), any(String.class)))
             .thenReturn(new GuestId("guest"));
-        GuestId result = guestIdResource.getGuestId(consumer.getUuid(), "some-id");
-        assertEquals(new GuestId("guest"), result);
+        GuestIdDTO result = guestIdResource.getGuestId(consumer.getUuid(), "some-id");
+        assertEquals(new GuestIdDTO("guest"), result);
     }
 
     @Test
     public void updateGuests() {
-        List<GuestId> guestIds = new LinkedList<GuestId>();
-        guestIds.add(new GuestId("1"));
+        List<GuestIdDTO> guestIds = new LinkedList<GuestIdDTO>();
+        guestIds.add(new GuestIdDTO("1"));
         when(consumerResource.performConsumerUpdates(any(Consumer.class),
             eq(consumer), any(GuestMigration.class))).
             thenReturn(true);
@@ -153,8 +150,8 @@ public class GuestIdResourceTest {
 
     @Test
     public void updateGuestsNoUpdate() {
-        List<GuestId> guestIds = new LinkedList<GuestId>();
-        guestIds.add(new GuestId("1"));
+        List<GuestIdDTO> guestIds = new LinkedList<GuestIdDTO>();
+        guestIds.add(new GuestIdDTO("1"));
 
         // consumerResource tells us nothing changed
         when(consumerResource.performConsumerUpdates(any(Consumer.class),
@@ -169,15 +166,20 @@ public class GuestIdResourceTest {
 
     @Test
     public void updateGuest() {
-        GuestId guest = new GuestId("some_guest");
+        GuestIdDTO guest = new GuestIdDTO("some_guest");
+        GuestId guestEnt = new GuestId();
+        guestEnt.setId("some_id");
         guestIdResource.updateGuest(consumer.getUuid(), guest.getGuestId(), guest);
-        assertEquals(consumer, guest.getConsumer());
-        Mockito.verify(guestIdCurator, Mockito.times(1)).merge(eq(guest));
+        when(guestIdCurator.findByGuestIdAndOrg(anyString(), any(Owner.class))).thenReturn(guestEnt);
+        ArgumentCaptor<GuestId> guestCaptor = ArgumentCaptor.forClass(GuestId.class);
+        Mockito.verify(guestIdCurator, Mockito.times(1)).merge(guestCaptor.capture());
+        GuestId result = guestCaptor.getValue();
+        assertEquals(consumer, result.getConsumer());
     }
 
     @Test(expected = BadRequestException.class)
     public void updateGuestMismatchedGuestId() {
-        GuestId guest = new GuestId("some_guest");
+        GuestIdDTO guest = new GuestIdDTO("some_guest");
         guestIdResource.updateGuest(consumer.getUuid(), "other_id", guest);
     }
 
@@ -187,8 +189,11 @@ public class GuestIdResourceTest {
      */
     @Test
     public void updateGuestNoGuestId() {
-        GuestId guest = new GuestId();
-        guestIdResource.updateGuest(consumer.getUuid(), "some_id", guest);
+        GuestIdDTO guestIdDTO = new GuestIdDTO();
+        guestIdResource.updateGuest(consumer.getUuid(), "some_id", guestIdDTO);
+        ArgumentCaptor<GuestId> guestCaptor = ArgumentCaptor.forClass(GuestId.class);
+        Mockito.verify(guestIdCurator, Mockito.times(1)).merge(guestCaptor.capture());
+        GuestId guest = guestCaptor.getValue();
         assertEquals(consumer, guest.getConsumer());
         assertEquals("some_id", guest.getGuestId());
         Mockito.verify(guestIdCurator, Mockito.times(1)).merge(eq(guest));
@@ -213,7 +218,7 @@ public class GuestIdResourceTest {
         Consumer guestConsumer =
             new Consumer("guest_consumer", "guest_consumer", owner, ct);
         GuestId originalGuest = new GuestId("guest-id", guestConsumer);
-        GuestId guest = new GuestId("guest-id");
+        GuestIdDTO guest = new GuestIdDTO("guest-id");
 
         when(guestIdCurator.findByGuestIdAndOrg(
             eq(guest.getGuestId()), eq(owner))).thenReturn(originalGuest);
@@ -223,7 +228,11 @@ public class GuestIdResourceTest {
         guestIdResource.updateGuest(consumer.getUuid(),
             guest.getGuestId(), guest);
 
-        Mockito.verify(guestIdCurator, Mockito.times(1)).merge(eq(guest));
+        ArgumentCaptor<GuestId> captor = ArgumentCaptor.forClass(GuestId.class);
+        Mockito.verify(guestIdCurator, Mockito.times(1)).merge(captor.capture());
+
+        GuestId guestId = captor.getValue();
+        assertEquals("guest-id", guestId.getGuestId());
 
         // We now check for migration when the system checks in, not during guest ID updates.
         Mockito.verify(consumerResource, Mockito.times(0))

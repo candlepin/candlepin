@@ -948,8 +948,6 @@ public class ProductDTO extends TimestampedCandlepinDTO<ProductDTO> {
 
         this.setId(source.getId());
 
-
-
         this.setName(source.getName());
         this.setMultiplier(source.getMultiplier());
         this.setAttributes(source.getAttributes());

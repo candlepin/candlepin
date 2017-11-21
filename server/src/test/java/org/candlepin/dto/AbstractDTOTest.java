@@ -19,14 +19,13 @@ import static org.junit.Assume.*;
 
 import org.candlepin.util.Util;
 
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -66,7 +65,6 @@ public abstract class AbstractDTOTest<T extends CandlepinDTO<T>> {
                 if (matcher.matches() && method.getParameterTypes().length == 0) {
                     String fieldName = matcher.group(1);
                     Method mutator = this.dtoClass.getMethod("set" + fieldName, method.getReturnType());
-
                     fields.put(fieldName, new Method[] { method, mutator });
                 }
             }

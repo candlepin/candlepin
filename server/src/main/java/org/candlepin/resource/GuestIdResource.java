@@ -23,8 +23,9 @@ import org.candlepin.auth.Verify;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.NotFoundException;
-import org.candlepin.common.paging.Page;
-import org.candlepin.common.paging.PageRequest;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.GuestIdDTO;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.GuestId;
@@ -34,11 +35,11 @@ import org.candlepin.resource.util.GuestMigration;
 
 import com.google.inject.Inject;
 
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -79,11 +80,12 @@ public class GuestIdResource {
     private EventSink sink;
     private EventFactory eventFactory;
     private Provider<GuestMigration> migrationProvider;
+    private ModelTranslator translator;
 
     @Inject
     public GuestIdResource(GuestIdCurator guestIdCurator, ConsumerCurator consumerCurator,
         ConsumerResource consumerResource, I18n i18n, EventFactory eventFactory, EventSink sink,
-        Provider<GuestMigration> migrationProvider) {
+        Provider<GuestMigration> migrationProvider, ModelTranslator translator) {
         this.guestIdCurator = guestIdCurator;
         this.consumerCurator = consumerCurator;
         this.consumerResource = consumerResource;
@@ -91,35 +93,90 @@ public class GuestIdResource {
         this.eventFactory = eventFactory;
         this.sink = sink;
         this.migrationProvider = migrationProvider;
+        this.translator = translator;
     }
 
     @ApiOperation(notes = "Retrieves the List of a Consumer's Guests", value = "getGuestIds")
     @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 404, message = "") })
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<GuestId> getGuestIds(
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-        @Context PageRequest pageRequest) {
+    public CandlepinQuery<GuestIdDTO> getGuestIds(
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
         Consumer consumer = consumerCurator.findByUuid(consumerUuid);
-        Page<List<GuestId>> page = guestIdCurator.listByConsumer(consumer, pageRequest);
-
-        // Store the page for the LinkHeaderResponseFilter
-        ResteasyProviderFactory.pushContext(Page.class, page);
-        List<GuestId> result = page.getPageData();
-        return result;
+        return  translator.translateQuery(guestIdCurator.listByConsumer(consumer), GuestIdDTO.class);
     }
 
     @ApiOperation(notes = "Retrieves a single Guest By its consumer and the guest UUID", value = "getGuestId")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{guest_id}")
-    public GuestId getGuestId(
+    public GuestIdDTO getGuestId(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @PathParam("guest_id") String guestId) {
         Consumer consumer = consumerCurator.findByUuid(consumerUuid);
         GuestId result = validateGuestId(
             guestIdCurator.findByConsumerAndId(consumer, guestId), guestId);
-        return result;
+        return translator.translate(result, GuestIdDTO.class);
+    }
+
+    /**
+     * Populates the specified entity with data from the provided DTO.
+     *
+     * @param guestId
+     *  The entity instance to populate
+     *
+     * @param dto
+     *  The DTO containing the data with which to populate the entity
+     *
+     * @throws IllegalArgumentException
+     *  if either entity or dto are null
+     */
+    protected void populateEntity(GuestId guestId, GuestIdDTO dto) {
+        if (guestId == null) {
+            throw new IllegalArgumentException("the guestId model entity is null");
+        }
+
+        if (dto == null) {
+            throw new IllegalArgumentException("the guestId dto is null");
+        }
+
+        guestId.setId(dto.getId() != null ? dto.getId() : null);
+        guestId.setGuestId(dto.getGuestId() != null ? dto.getGuestId() : null);
+        if (dto.getAttributes() != null) {
+            guestId.setAttributes(dto.getAttributes());
+        }
+    }
+
+    /**
+     * Populates the specified entities with data from the provided DTOs.
+     *
+     * @param entities
+     *  The entities instance to populate
+     *
+     * @param dtos
+     *  The DTO containing the data with which to populate the entity
+     *
+     * @throws IllegalArgumentException
+     *  if either entity or dto are null
+     */
+    protected void populateEntities(List<GuestId> entities, List<GuestIdDTO> dtos) {
+        if (entities == null) {
+            throw new IllegalArgumentException("the guestId model entity is null");
+        }
+
+        if (dtos == null) {
+            throw new IllegalArgumentException("the guestId dto is null");
+        }
+
+        for (GuestIdDTO dto : dtos) {
+            if (dto == null) {
+                continue;
+            }
+
+            GuestId guestId = new GuestId();
+            populateEntity(guestId, dto);
+            entities.add(guestId);
+        }
     }
 
     @ApiOperation(notes = "Updates the List of Guests on a Consumer This method should work " +
@@ -131,11 +188,13 @@ public class GuestIdResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public void updateGuests(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-        @ApiParam(name = "guestIds", required = true) List<GuestId> guestIds) {
+        @ApiParam(name = "guestIds", required = true) List<GuestIdDTO> guestIdDTOs) {
         Consumer toUpdate = consumerCurator.findByUuid(consumerUuid);
 
         // Create a skeleton consumer for consumerResource.performConsumerUpdates
         Consumer consumer = new Consumer();
+        List<GuestId> guestIds = new ArrayList<GuestId>();
+        populateEntities(guestIds, guestIdDTOs);
         consumer.setGuestIds(guestIds);
 
         Set<String> allGuestIds = new HashSet<String>();
@@ -167,7 +226,8 @@ public class GuestIdResource {
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @ApiParam("guest virtual uuid")
         @PathParam("guest_id") String guestId,
-        @ApiParam(name = "updated", required = true, value = "updated guest data to use") GuestId updated) {
+        @ApiParam(name = "updated", required = true, value = "updated guest data to use")
+        GuestIdDTO updatedDTO) {
 
         // I'm not sure this can happen
         if (guestId == null || guestId.isEmpty()) {
@@ -175,30 +235,32 @@ public class GuestIdResource {
                 i18n.tr("Please supply a valid guest id"));
         }
 
-        if (updated == null) {
+        if (updatedDTO == null) {
             // If they're not sending attributes, we can get the guestId from the url
-            updated = new GuestId(guestId);
+            updatedDTO = new GuestIdDTO().setGuestId(guestId);
         }
 
         // Allow the id to be left out in this case, we can use the path param
-        if (updated.getGuestId() == null) {
-            updated.setGuestId(guestId);
+        if (updatedDTO.getGuestId() == null) {
+            updatedDTO.setGuestId(guestId);
         }
 
         // If the guest uuids do not match, something is wrong
-        if (!guestId.equalsIgnoreCase(updated.getGuestId())) {
+        if (!guestId.equalsIgnoreCase(updatedDTO.getGuestId())) {
             throw new BadRequestException(
                 i18n.tr("Guest ID in json \"{0}\" does not match path guest ID \"{1}\"",
-                    updated.getGuestId(), guestId));
+                    updatedDTO.getGuestId(), guestId));
         }
 
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        updated.setConsumer(consumer);
+        GuestId guestIdEntity = new GuestId();
+        populateEntity(guestIdEntity, updatedDTO);
+        guestIdEntity.setConsumer(consumer);
         GuestId toUpdate = guestIdCurator.findByGuestIdAndOrg(guestId, consumer.getOwner());
         if (toUpdate != null) {
-            updated.setId(toUpdate.getId());
+            guestIdEntity.setId(toUpdate.getId());
         }
-        guestIdCurator.merge(updated);
+        guestIdCurator.merge(guestIdEntity);
     }
 
     @ApiOperation(notes = "Removes the Guest from the Consumer", value = "deleteGuest")

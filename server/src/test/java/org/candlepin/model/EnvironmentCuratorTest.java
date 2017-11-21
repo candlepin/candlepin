@@ -58,7 +58,7 @@ public class EnvironmentCuratorTest extends DatabaseTestFixture {
     }
 
     @Test public void listForOwner() {
-        List<Environment> envs = envCurator.listForOwner(owner);
+        List<Environment> envs = envCurator.listForOwner(owner).list();
         assertEquals(1, envs.size());
         assertEquals(envs.get(0), environment);
     }
@@ -66,7 +66,7 @@ public class EnvironmentCuratorTest extends DatabaseTestFixture {
     @Test public void listForOwnerByName() {
         Environment e = envCurator.create(new Environment("env2", "Another Env", owner));
 
-        List<Environment> envs = envCurator.listForOwnerByName(owner, "Another Env");
+        List<Environment> envs = envCurator.listForOwnerByName(owner, "Another Env").list();
         assertEquals(1, envs.size());
         assertEquals(e, envs.get(0));
     }
