@@ -31,6 +31,8 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.StandardTranslator;
+import org.candlepin.dto.api.v1.GuestIdDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
@@ -38,6 +40,7 @@ import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.GuestId;
+import org.candlepin.model.GuestIdCurator;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
@@ -99,6 +102,9 @@ public class HypervisorResourceTest {
     @Mock private ConsumerBindUtil consumerBindUtil;
     @Mock private EventBuilder consumerEventBuilder;
     @Mock private ConsumerEnricher consumerEnricher;
+    @Mock private GuestIdCurator guestIdCurator;
+    private GuestIdResource guestIdResource;
+    private ModelTranslator translator;
 
     private ConsumerResource consumerResource;
     private I18n i18n;
@@ -119,6 +125,8 @@ public class HypervisorResourceTest {
 
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         this.hypervisorType = new ConsumerType(ConsumerTypeEnum.HYPERVISOR);
+        this.translator = new StandardTranslator();
+
         this.consumerResource = new ConsumerResource(this.consumerCurator,
             this.consumerTypeCurator, null, this.subscriptionService, this.ownerService, null,
             this.idCertService, null, this.i18n, this.sink, this.eventFactory, null, null,
@@ -128,8 +136,11 @@ public class HypervisorResourceTest {
             null, null, null, this.consumerBindUtil, null, null,
             new FactValidator(config, this.i18n), null, consumerEnricher, migrationProvider, modelTranslator);
 
+        this.guestIdResource = new GuestIdResource(this.guestIdCurator, this.consumerCurator, this
+            .consumerResource, this.i18n, this.eventFactory, this.sink, migrationProvider, translator);
         hypervisorResource = new HypervisorResource(consumerResource,
-            consumerCurator, i18n, ownerCurator, migrationProvider);
+            consumerCurator, i18n, ownerCurator, migrationProvider, translator, guestIdResource);
+
 
         // Ensure that we get the consumer that was passed in back from the create call.
         when(consumerCurator.create(any(Consumer.class))).thenAnswer(new Answer<Object>() {
@@ -161,9 +172,9 @@ public class HypervisorResourceTest {
     public void hypervisorCheckInCreatesNewConsumer() throws Exception {
         Owner owner = new Owner("admin");
 
-        Map<String, List<GuestId>> hostGuestMap = new HashMap<String, List<GuestId>>();
-        hostGuestMap.put("test-host", new ArrayList(Arrays.asList(new GuestId("GUEST_A"),
-            new GuestId("GUEST_B"))));
+        Map<String, List<GuestIdDTO>> hostGuestMap = new HashMap<String, List<GuestIdDTO>>();
+        hostGuestMap.put("test-host", new ArrayList(Arrays.asList(new GuestIdDTO("GUEST_A"),
+            new GuestIdDTO("GUEST_B"))));
 
         when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
         when(consumerCurator.getHostConsumersMap(any(Owner.class), any(Set.class)))
@@ -205,9 +216,9 @@ public class HypervisorResourceTest {
     public void hypervisorCheckInUpdatesGuestIdsWhenHostConsumerExists() throws Exception {
         Owner owner = new Owner("owner-id", "Owner Id");
 
-        Map<String, List<GuestId>> hostGuestMap = new HashMap<String, List<GuestId>>();
+        Map<String, List<GuestIdDTO>> hostGuestMap = new HashMap<String, List<GuestIdDTO>>();
         String hypervisorId = "test-host";
-        hostGuestMap.put(hypervisorId, new ArrayList(Arrays.asList(new GuestId("GUEST_B"))));
+        hostGuestMap.put(hypervisorId, new ArrayList(Arrays.asList(new GuestIdDTO("GUEST_B"))));
 
         Owner o = new Owner("owner-id", "Owner ID");
         o.setId("owner-id");
@@ -240,10 +251,10 @@ public class HypervisorResourceTest {
     public void hypervisorCheckInReportsFailuresOnCreateFailure() throws Exception {
         Owner owner = new Owner("admin");
 
-        Map<String, List<GuestId>> hostGuestMap = new HashMap<String, List<GuestId>>();
+        Map<String, List<GuestIdDTO>> hostGuestMap = new HashMap<String, List<GuestIdDTO>>();
         String expectedHostVirtId = "test-host-id";
-        hostGuestMap.put(expectedHostVirtId, new ArrayList(Arrays.asList(new GuestId("GUEST_A"),
-            new GuestId("GUEST_B"))));
+        hostGuestMap.put(expectedHostVirtId, new ArrayList(Arrays.asList(new GuestIdDTO("GUEST_A"),
+            new GuestIdDTO("GUEST_B"))));
 
         when(consumerCurator.getHostConsumersMap(any(Owner.class), any(Set.class)))
             .thenReturn(new VirtConsumerMap());
@@ -278,9 +289,9 @@ public class HypervisorResourceTest {
     public void checkInCreatesNoNewConsumerWhenCreateIsFalse() throws Exception {
         Owner owner = new Owner("admin");
 
-        Map<String, List<GuestId>> hostGuestMap = new HashMap<String, List<GuestId>>();
-        hostGuestMap.put("test-host", new ArrayList(Arrays.asList(new GuestId("GUEST_A"),
-            new GuestId("GUEST_B"))));
+        Map<String, List<GuestIdDTO>> hostGuestMap = new HashMap<String, List<GuestIdDTO>>();
+        hostGuestMap.put("test-host", new ArrayList(Arrays.asList(new GuestIdDTO("GUEST_A"),
+            new GuestIdDTO("GUEST_B"))));
 
         when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
 
@@ -319,11 +330,11 @@ public class HypervisorResourceTest {
     public void ensureEmptyHypervisorIdsAreIgnored() throws Exception {
         Owner owner = new Owner("admin");
 
-        Map<String, List<GuestId>> hostGuestMap = new HashMap<String, List<GuestId>>();
-        hostGuestMap.put("", new ArrayList(Arrays.asList(new GuestId("GUEST_A"),
-            new GuestId("GUEST_B"))));
-        hostGuestMap.put("HYPERVISOR_A", new ArrayList(Arrays.asList(new GuestId("GUEST_C"),
-            new GuestId("GUEST_D"))));
+        Map<String, List<GuestIdDTO>> hostGuestMap = new HashMap<String, List<GuestIdDTO>>();
+        hostGuestMap.put("", new ArrayList(Arrays.asList(new GuestIdDTO("GUEST_A"),
+            new GuestIdDTO("GUEST_B"))));
+        hostGuestMap.put("HYPERVISOR_A", new ArrayList(Arrays.asList(new GuestIdDTO("GUEST_C"),
+            new GuestIdDTO("GUEST_D"))));
 
         when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
 
@@ -354,9 +365,9 @@ public class HypervisorResourceTest {
     public void ensureEmptyGuestIdsAreIgnored() throws Exception {
         Owner owner = new Owner("admin");
 
-        Map<String, List<GuestId>> hostGuestMap = new HashMap<String, List<GuestId>>();
+        Map<String, List<GuestIdDTO>> hostGuestMap = new HashMap<String, List<GuestIdDTO>>();
         hostGuestMap.put("HYPERVISOR_A", new ArrayList(
-            Arrays.asList(new GuestId("GUEST_A"), new GuestId(""))));
+            Arrays.asList(new GuestIdDTO("GUEST_A"), new GuestIdDTO(""))));
         when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
 
         when(consumerCurator.getHostConsumersMap(any(Owner.class), any(Set.class)))
@@ -388,7 +399,7 @@ public class HypervisorResourceTest {
     public void treatNullGuestListsAsEmptyGuestLists() throws Exception {
         Owner owner = new Owner("admin");
 
-        Map<String, List<GuestId>> hostGuestMap = new HashMap<String, List<GuestId>>();
+        Map<String, List<GuestIdDTO>> hostGuestMap = new HashMap<String, List<GuestIdDTO>>();
         hostGuestMap.put("HYPERVISOR_A", null);
         when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
 
@@ -419,7 +430,7 @@ public class HypervisorResourceTest {
         Owner owner = new Owner("test_admin");
         owner.setAutobindDisabled(true);
 
-        Map<String, List<GuestId>> hostGuestMap = new HashMap<String, List<GuestId>>();
+        Map<String, List<GuestIdDTO>> hostGuestMap = new HashMap<String, List<GuestIdDTO>>();
         hostGuestMap.put("HYPERVISOR_A", new ArrayList());
         when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
 

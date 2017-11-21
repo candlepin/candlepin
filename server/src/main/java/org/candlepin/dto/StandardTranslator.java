@@ -19,20 +19,32 @@ import org.candlepin.dto.api.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.v1.ActivationKeyTranslator;
 import org.candlepin.dto.api.v1.BrandingDTO;
 import org.candlepin.dto.api.v1.BrandingTranslator;
+import org.candlepin.dto.api.v1.CapabilityDTO;
+import org.candlepin.dto.api.v1.CapabilityTranslator;
 import org.candlepin.dto.api.v1.CdnDTO;
 import org.candlepin.dto.api.v1.CdnTranslator;
 import org.candlepin.dto.api.v1.CertificateDTO;
 import org.candlepin.dto.api.v1.CertificateSerialDTO;
 import org.candlepin.dto.api.v1.CertificateSerialTranslator;
 import org.candlepin.dto.api.v1.CertificateTranslator;
+import org.candlepin.dto.api.v1.ConsumerDTO;
+import org.candlepin.dto.api.v1.ConsumerInstalledProductDTO;
+import org.candlepin.dto.api.v1.ConsumerInstalledProductTranslator;
+import org.candlepin.dto.api.v1.ConsumerTranslator;
 import org.candlepin.dto.api.v1.ConsumerTypeDTO;
 import org.candlepin.dto.api.v1.ConsumerTypeTranslator;
 import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.ContentTranslator;
-import org.candlepin.dto.api.v1.EventDTO;
-import org.candlepin.dto.api.v1.EventTranslator;
 import org.candlepin.dto.api.v1.EntitlementDTO;
 import org.candlepin.dto.api.v1.EntitlementTranslator;
+import org.candlepin.dto.api.v1.EnvironmentDTO;
+import org.candlepin.dto.api.v1.EnvironmentTranslator;
+import org.candlepin.dto.api.v1.EventDTO;
+import org.candlepin.dto.api.v1.EventTranslator;
+import org.candlepin.dto.api.v1.GuestIdDTO;
+import org.candlepin.dto.api.v1.GuestIdTranslator;
+import org.candlepin.dto.api.v1.HypervisorIdDTO;
+import org.candlepin.dto.api.v1.HypervisorIdTranslator;
 import org.candlepin.dto.api.v1.JobStatusDTO;
 import org.candlepin.dto.api.v1.JobStatusTranslator;
 import org.candlepin.dto.api.v1.OwnerDTO;
@@ -49,9 +61,15 @@ import org.candlepin.model.Branding;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.Certificate;
 import org.candlepin.model.CertificateSerial;
+import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCapability;
+import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.Environment;
+import org.candlepin.model.GuestId;
+import org.candlepin.model.HypervisorId;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
@@ -60,7 +78,6 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.pinsetter.core.model.JobStatus;
-
 
 /**
  * The StandardTranslator is a SimpleModelTranslator that comes pre-configured to handle most, if
@@ -72,13 +89,28 @@ public class StandardTranslator extends SimpleModelTranslator {
         // API translators
         /////////////////////////////////////////////
         this.registerTranslator(
+            new ActivationKeyTranslator(), ActivationKey.class, ActivationKeyDTO.class);
+        this.registerTranslator(
+            new CapabilityTranslator(), ConsumerCapability.class, CapabilityDTO.class);
+        this.registerTranslator(
             new CertificateSerialTranslator(), CertificateSerial.class, CertificateSerialDTO.class);
         this.registerTranslator(
             new CertificateTranslator(), Certificate.class, CertificateDTO.class);
         this.registerTranslator(
+            new ConsumerInstalledProductTranslator(), ConsumerInstalledProduct.class,
+            ConsumerInstalledProductDTO.class);
+        this.registerTranslator(
+            new ConsumerTranslator(), Consumer.class, ConsumerDTO.class);
+        this.registerTranslator(
             new ConsumerTypeTranslator(), ConsumerType.class, ConsumerTypeDTO.class);
         this.registerTranslator(
             new ContentTranslator(), Content.class, ContentDTO.class);
+        this.registerTranslator(
+            new EnvironmentTranslator(), Environment.class, EnvironmentDTO.class);
+        this.registerTranslator(
+            new GuestIdTranslator(), GuestId.class, GuestIdDTO.class);
+        this.registerTranslator(
+            new HypervisorIdTranslator(), HypervisorId.class, HypervisorIdDTO.class);
         this.registerTranslator(
             new OwnerTranslator(), Owner.class, OwnerDTO.class);
         this.registerTranslator(
@@ -91,8 +123,6 @@ public class StandardTranslator extends SimpleModelTranslator {
             new EntitlementTranslator(), Entitlement.class, EntitlementDTO.class);
         this.registerTranslator(
             new UpstreamConsumerTranslator(), UpstreamConsumer.class, UpstreamConsumerDTO.class);
-        this.registerTranslator(
-            new ActivationKeyTranslator(), ActivationKey.class, ActivationKeyDTO.class);
         this.registerTranslator(
             new CdnTranslator(), Cdn.class, CdnDTO.class);
         this.registerTranslator(

@@ -14,6 +14,7 @@
  */
 package org.candlepin.resource;
 
+import static org.candlepin.test.TestUtil.createConsumerDTO;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
@@ -33,14 +34,16 @@ import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.CertificateDTO;
+import org.candlepin.dto.api.v1.CertificateSerialDTO;
+import org.candlepin.dto.api.v1.ConsumerDTO;
+import org.candlepin.dto.api.v1.ConsumerTypeDTO;
 import org.candlepin.dto.api.v1.EntitlementDTO;
-import org.candlepin.model.Certificate;
+import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
-import org.candlepin.model.ContentAccessCertificate;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
@@ -102,13 +105,16 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @Inject protected ModelTranslator modelTranslator;
 
     private ConsumerType standardSystemType;
+    private ConsumerTypeDTO standardSystemTypeDTO;
     private ConsumerType personType;
+    private ConsumerTypeDTO personTypeDTO;
     private Consumer consumer;
     private Product product;
     private Pool pool;
 
     private Principal principal;
     private Owner owner;
+    private OwnerDTO ownerDTO;
     private Role ownerAdminRole;
 
     private User someuser;
@@ -123,8 +129,11 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @Before
     public void setUp() {
         standardSystemType = consumerTypeCurator.create(new ConsumerType("standard-system"));
+        standardSystemTypeDTO = new ConsumerTypeDTO(standardSystemType.getLabel());
         personType = consumerTypeCurator.create(new ConsumerType(ConsumerTypeEnum.PERSON));
+        personTypeDTO = new ConsumerTypeDTO(personType.getLabel());
         owner = ownerCurator.create(new Owner("test-owner"));
+        ownerDTO = modelTranslator.translate(owner, OwnerDTO.class);
         owner.setDefaultServiceLevel(DEFAULT_SERVICE_LEVEL);
         ownerCurator.create(owner);
 
@@ -159,7 +168,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     public void testGetCerts() {
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
             null, 1, null, null, false, null, null);
-        List<Certificate> serials = consumerResource
+        List<CertificateDTO> serials = consumerResource
             .getEntitlementCertificates(consumer.getUuid(), null);
         assertEquals(1, serials.size());
     }
@@ -174,7 +183,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             null, 1, null, null, false, null, null);
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
             null, 1, null, null, false, null, null);
-        List<Certificate> certificates = consumerResource
+        List<CertificateDTO> certificates = consumerResource
             .getEntitlementCertificates(consumer.getUuid(), null);
         assertEquals(4, certificates.size());
 
@@ -192,10 +201,10 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @Test
     @SuppressWarnings("checkstyle:indentation")
     public void testCreateConsumer() {
-        Consumer toSubmit = new Consumer(CONSUMER_NAME, USER_NAME, null,
-            standardSystemType);
-        toSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
-        Consumer submitted = consumerResource.create(
+        ConsumerDTO toSubmit = createConsumerDTO(CONSUMER_NAME, USER_NAME, null,
+            standardSystemTypeDTO);
+        toSubmit.setFact(METADATA_NAME, METADATA_VALUE);
+        ConsumerDTO submitted = consumerResource.create(
             toSubmit,
             new UserPrincipal(someuser.getUsername(), Arrays.asList(new Permission [] {
                 new OwnerPermission(owner, Access.ALL) }), false),
@@ -211,8 +220,8 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @Test
     @SuppressWarnings("checkstyle:indentation")
     public void testCreateConsumerVsDefaultServiceLevelForOwner() {
-        Consumer toSubmit = new Consumer(CONSUMER_NAME, USER_NAME, null, standardSystemType);
-        Consumer submitted = consumerResource.create(
+        ConsumerDTO toSubmit = createConsumerDTO(CONSUMER_NAME, USER_NAME, null, standardSystemTypeDTO);
+        ConsumerDTO submitted = consumerResource.create(
             toSubmit,
             new UserPrincipal(someuser.getUsername(), Arrays.asList(new Permission [] {
                 new OwnerPermission(owner, Access.ALL) }), false),
@@ -226,12 +235,13 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @Test(expected = BadRequestException.class)
     public void testCreateConsumerWithUUID() {
         String uuid = "Jar Jar Binks";
-        Consumer toSubmit = new Consumer(CONSUMER_NAME, USER_NAME, null, standardSystemType);
+        ConsumerDTO toSubmit = createConsumerDTO(CONSUMER_NAME, USER_NAME, null, standardSystemTypeDTO);
         assertNull(toSubmit.getId());
         toSubmit.setUuid(uuid);
-        toSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
+        toSubmit.setFact(METADATA_NAME, METADATA_VALUE);
 
-        Consumer submitted = consumerResource.create(toSubmit, principal, null, owner.getKey(), null, true);
+        ConsumerDTO submitted = consumerResource.create(toSubmit, principal, null, owner.getKey(), null,
+            true);
         assertNotNull(submitted);
         assertNotNull(submitted.getId());
         assertNotNull(consumerCurator.find(submitted.getId()));
@@ -242,9 +252,10 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         assertEquals("The Uuids do not match", uuid, submitted.getUuid());
 
         // The second post should fail because of constraint failures
-        Consumer anotherToSubmit = new Consumer(CONSUMER_NAME, USER_NAME, null, standardSystemType);
+        ConsumerDTO anotherToSubmit = createConsumerDTO(CONSUMER_NAME, USER_NAME, null,
+            standardSystemTypeDTO);
         anotherToSubmit.setUuid(uuid);
-        anotherToSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
+        anotherToSubmit.setFact(METADATA_NAME, METADATA_VALUE);
         anotherToSubmit.setId(null);
         consumerResource.create(anotherToSubmit, principal, null, owner.getKey(), null, true);
     }
@@ -262,7 +273,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
         // not setting the username here - this should be set by
         // examining the user principal
-        Consumer consumer = new Consumer("random-consumer", null, null, standardSystemType);
+        ConsumerDTO consumer = createConsumerDTO("random-consumer", null, null, standardSystemTypeDTO);
         consumer = consumerResource.create(consumer, principal, null, null, null, true);
 
         assertEquals(USER_NAME, consumer.getUsername());
@@ -311,11 +322,11 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
     @Test
     public void testRegisterWithConsumerId() {
-        Consumer toSubmit = new Consumer(CONSUMER_NAME, USER_NAME, null, standardSystemType);
+        ConsumerDTO toSubmit = createConsumerDTO(CONSUMER_NAME, USER_NAME, null, standardSystemTypeDTO);
         toSubmit.setUuid("1023131");
-        toSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
+        toSubmit.setFact(METADATA_NAME, METADATA_VALUE);
 
-        Consumer submitted = consumerResource.create(
+        ConsumerDTO submitted = consumerResource.create(
             toSubmit, TestUtil.createPrincipal(someuser.getUsername(), owner, Access.ALL),
             null, null, null, true);
 
@@ -326,14 +337,14 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         assertEquals(METADATA_VALUE, submitted.getFact(METADATA_NAME));
 
         // now pass in consumer type with null id just like the client would
-        ConsumerType type = new ConsumerType(standardSystemType.getLabel());
+        ConsumerTypeDTO type = new ConsumerTypeDTO(standardSystemType.getLabel());
         assertNull(type.getId());
-        Consumer nulltypeid = new Consumer(CONSUMER_NAME, USER_NAME, null, type);
+        ConsumerDTO nulltypeid = createConsumerDTO(CONSUMER_NAME, USER_NAME, null, type);
         submitted = consumerResource.create(
             nulltypeid, TestUtil.createPrincipal(someuser.getUsername(), owner, Access.ALL),
             null, null, null, true);
         assertNotNull(submitted);
-        assertEquals(nulltypeid.getUuid(), submitted.getUuid());
+        assertNotNull(submitted.getUuid());
         assertNotNull(submitted.getType().getId());
     }
 
@@ -341,7 +352,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     public void unbindBySerialWithExistingCertificateShouldPass() {
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
             null, 1, null, null, false, null, null);
-        List<Certificate> serials = consumerResource
+        List<CertificateDTO> serials = consumerResource
             .getEntitlementCertificates(consumer.getUuid(), null);
         assertEquals(1, serials.size());
 
@@ -521,7 +532,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
     @Test
     public void personalNameOverride() {
-        Consumer personal = TestUtil.createConsumer(personType, owner);
+        ConsumerDTO personal = createConsumerDTO(personTypeDTO, ownerDTO);
 
         personal = consumerResource.create(personal, principal, null, null, null, true);
 
@@ -539,7 +550,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         Principal emailuser = TestUtil.createPrincipal(username, owner, Access.ALL);
         setupPrincipal(emailuser);
 
-        Consumer personal = TestUtil.createConsumer(personType, owner);
+        ConsumerDTO personal = createConsumerDTO(personTypeDTO, ownerDTO);
         personal.setName(((UserPrincipal) emailuser).getUsername());
 
         personal = consumerResource.create(personal, emailuser, username, null, null, true);
@@ -550,10 +561,10 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
     @Test(expected = BadRequestException.class)
     public void onlyOnePersonalConsumer() {
-        Consumer personal = TestUtil.createConsumer(personType, owner);
+        ConsumerDTO personal = createConsumerDTO(personTypeDTO, ownerDTO);
         consumerResource.create(personal, principal, null, null, null, true);
 
-        personal = TestUtil.createConsumer(personType, owner);
+        personal = createConsumerDTO(personTypeDTO, ownerDTO);
         consumerResource.create(personal, principal, null, null, null, true);
     }
 
@@ -619,12 +630,15 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         consumer.setFact("system.certificate_version", "3.3");
         consumerCurator.create(consumer);
 
-        List<Certificate> serials = consumerResource.getEntitlementCertificates(consumer.getUuid(), null);
+        List<CertificateDTO> serials = consumerResource.getEntitlementCertificates(consumer.getUuid(), null);
         assertEquals(1, serials.size());
 
-        Certificate original = serials.get(0);
-        assert (original instanceof ContentAccessCertificate);
-        CertificateSerial serial  = original.getSerial();
+        CertificateDTO original = serials.get(0);
+        CertificateSerialDTO serialDTO  = original.getSerial();
+        CertificateSerial serial = new CertificateSerial(serialDTO.getId(), serialDTO.getExpiration());
+        serial.setSerial(serialDTO.getSerial().longValue());
+        serial.setCollected(serialDTO.isCollected());
+        serial.setRevoked(serialDTO.isRevoked());
 
         Calendar cal = Calendar.getInstance();
         cal.setTime(serial.getExpiration());
@@ -634,8 +648,8 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
         serials = consumerResource.getEntitlementCertificates(consumer.getUuid(), null);
         assertEquals(1, serials.size());
-        Certificate updated = serials.get(0);
-        assert (updated instanceof ContentAccessCertificate);
+        CertificateDTO updated = serials.get(0);
+        assert (updated instanceof CertificateDTO);
         assertFalse(original.getSerial().getId() == updated.getSerial().getId());
     }
 }

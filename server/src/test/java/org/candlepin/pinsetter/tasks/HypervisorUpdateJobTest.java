@@ -222,7 +222,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest{
             consumerResource, i18n, subAdapter, complianceRules);
         injector.injectMembers(job);
         job.execute(ctx);
-        verify(consumerResource, never()).create(any(Consumer.class), any(Principal.class),
+        verify(consumerResource, never()).createConsumerFromEntity(any(Consumer.class), any(Principal.class),
             anyString(), anyString(), anyString(), eq(false));
     }
 

@@ -16,8 +16,6 @@ package org.candlepin.dto;
 
 import org.candlepin.model.CandlepinQuery;
 
-
-
 /**
  * The ModelTranslator interface defines common functionality required by every ModelTranslator
  * implementation.

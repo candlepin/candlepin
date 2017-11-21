@@ -20,7 +20,12 @@ import org.candlepin.auth.Access;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.OwnerPermission;
 import org.candlepin.auth.permissions.Permission;
+import org.candlepin.dto.api.v1.ConsumerDTO;
+import org.candlepin.dto.api.v1.ConsumerInstalledProductDTO;
+import org.candlepin.dto.api.v1.ConsumerTypeDTO;
 import org.candlepin.dto.api.v1.ContentDTO;
+import org.candlepin.dto.api.v1.GuestIdDTO;
+import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.dto.api.v1.ProductDTO.ProductContentDTO;
 import org.candlepin.model.Branding;
@@ -54,6 +59,7 @@ import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
@@ -92,6 +98,23 @@ public class TestUtil {
 
     public static Consumer createConsumer(ConsumerType type, Owner owner) {
         return new Consumer("TestConsumer" + randomInt(), "User", owner, type);
+    }
+    public static ConsumerDTO createConsumerDTO(ConsumerTypeDTO type, OwnerDTO owner) {
+        return createConsumerDTO("TestConsumer" + randomInt(), "User", owner, type);
+    }
+
+    public static ConsumerDTO createConsumerDTO(String name, String userName, OwnerDTO owner,
+        ConsumerTypeDTO type) {
+        return (new ConsumerDTO()).setName(name)
+            .setUsername(userName)
+            .setOwner(owner)
+            .setType(type)
+            .setAutoheal(true)
+            .setServiceLevel("")
+            .setEntitlementCount(0L)
+            .setFacts(new HashMap<String, String>())
+            .setInstalledProducts(new HashSet<ConsumerInstalledProductDTO>())
+            .setGuestIds(new ArrayList<GuestIdDTO>());
     }
 
     public static Consumer createConsumer(ConsumerType type, Owner owner, String username) {

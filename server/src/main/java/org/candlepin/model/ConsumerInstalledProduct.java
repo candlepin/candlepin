@@ -106,6 +106,16 @@ public class ConsumerInstalledProduct extends AbstractHibernateObject {
         this.consumer = consumer;
     }
 
+    public ConsumerInstalledProduct(String productId, String productName, Consumer consumer,
+        String version, String arch, String status, Date startDate, Date endDate) {
+        this(productId, productName, consumer);
+        this.version = version;
+        this.arch = arch;
+        this.status = status;
+        this.startDate = startDate;
+        this.endDate = endDate;
+    }
+
     // Helper constructor for tests:
     public ConsumerInstalledProduct(Product p) {
         this.productId = p.getId();

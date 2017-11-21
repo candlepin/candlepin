@@ -326,6 +326,18 @@ public class HypervisorUpdateJob extends KingpinJob {
         }
     }
 
+    private void logReporterWarning(String jobReporterId, Consumer knownHost, String hypervisorId,
+        String ownerKey) {
+        if (jobReporterId != null && knownHost.getHypervisorId() != null &&
+            hypervisorId.equalsIgnoreCase(knownHost.getHypervisorId().getHypervisorId()) &&
+            knownHost.getHypervisorId().getReporterId() != null &&
+            !jobReporterId.equalsIgnoreCase(knownHost.getHypervisorId().getReporterId())) {
+            log.debug("Reporter changed for Hypervisor {} of Owner {} from {} to {}",
+                hypervisorId, ownerKey, knownHost.getHypervisorId().getReporterId(),
+                jobReporterId);
+        }
+    }
+
     /**
      * Creates a {@link JobDetail} that runs this job for the given {@link Owner}.
      *
