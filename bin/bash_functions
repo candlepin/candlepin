@@ -134,7 +134,7 @@ recreate_postgresql() {
      export PGPASSWORD="$DBPASSWORD"
     fi
     # Check if candlepin db exists and drop it if so:
-    if [[ `psql -h $db_host -U $db_user -tAc "SELECT 1 FROM pg_database WHERE datname='$db_name'"` == "1" ]]; then
+    if [[ `psql -h $db_host -U $db_user -q -tAc "SELECT 1 FROM pg_database WHERE datname='$db_name'"` == "1" ]]; then
         info_msg "Database '$db_name' exists.  Dropping it."
         dropdb -h $db_host -w -U "$db_user" "$db_name"
     fi
