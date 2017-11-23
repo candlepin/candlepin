@@ -109,6 +109,8 @@ describe 'Owner Content Resource' do
   end
 
   it 'should force entitlements providing changed content to be regenerated' do
+    # tests standalone mode specific API. in hosted, we refresh, so this test is captured in refresh spec.
+    skip("candlepin running in hosted mode") if is_hosted?
     product_pool = create_pool_and_subscription(@owner['key'], @product.id, 100, [], '1888', '1234')
     consumer_client = consumer_client(@user,  random_string("consumer"))
 

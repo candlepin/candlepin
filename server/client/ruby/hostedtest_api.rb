@@ -205,7 +205,7 @@ module HostedTest
   # to update the upstream entity.
   #
   # input may be either a subscription or a pool, and there is no output
-  def update_pool_or_subscription(subOrPool)
+  def update_pool_or_subscription(subOrPool, refresh=true)
     if is_hosted?
       ensure_hostedtest_resource
       update_hostedtest_subscription(subOrPool)
@@ -214,7 +214,7 @@ module HostedTest
         when Date then subOrPool.startDate+1
         else raise "invalid date format"
       end
-      @cp.refresh_pools(subOrPool['owner']['key'], true)
+      @cp.refresh_pools(subOrPool['owner']['key'], true) if refresh
       sleep 1
     else
       @cp.update_pool(subOrPool['owner']['key'], subOrPool)
