@@ -119,7 +119,7 @@ public class HostedTestSubscriptionResource {
         if (subscription.getId() == null || subscription.getId().trim().length() == 0) {
             subscription.setId(this.idGenerator.generateId());
         }
-        return adapter.createSubscription(resolverUtil.resolveSubscription(subscription));
+        return adapter.createSubscription(resolverUtil.resolveSubscriptionAndProduct(subscription));
     }
 
     /**
@@ -213,10 +213,10 @@ public class HostedTestSubscriptionResource {
         for (Entry<String, Boolean> entry : contentMap.entrySet()) {
             Content content = this.fetchContent(owner, entry.getKey());
             productContent.add(new ProductContent(product, content, entry.getValue()));
+            addContentToUpstreamSubscriptions(product, content, entry.getValue());
         }
 
         return this.productManager.addContentToProduct(product, productContent, owner, true);
-
     }
 
     @POST
@@ -241,8 +241,17 @@ public class HostedTestSubscriptionResource {
             product, Arrays.asList(new ProductContent(product, content, enabled)), owner, true
         );
 
+        addContentToUpstreamSubscriptions(product, content, enabled);
         return product.toDTO();
+    }
 
+    private void addContentToUpstreamSubscriptions(Product product, Content content, boolean enabled) {
+        List<Subscription> subs = adapter.getSubscriptions(product.toDTO());
+        for (Subscription sub: subs) {
+            if (sub.getProduct().getId().contentEquals(product.getId())) {
+                sub.getProduct().addContent(content, enabled);
+            }
+        }
     }
 
     @PUT

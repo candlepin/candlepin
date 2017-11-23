@@ -547,6 +547,19 @@ public class PoolRules {
         return incomingProvided;
     }
 
+    private boolean changedProductsInSet(Set<Product> products, Map<String, Product> changedProducts) {
+
+        if (products != null && changedProducts != null) {
+            for (Product product : products) {
+                if (product != null && changedProducts.get(product.getId()) != null) {
+                    return true;
+                }
+            }
+
+        }
+        return false;
+    }
+
     private boolean checkForChangedProducts(Product incomingProduct, Set<Product> incomingProvided,
         Pool existingPool, Map<String, Product> changedProducts) {
 
@@ -561,8 +574,12 @@ public class PoolRules {
             !currentProvided.equals(incomingProvided);
 
         // Check if the existing product is in the set of changed products
-        if (!productsChanged && changedProducts != null && pid != null) {
-            productsChanged = (changedProducts.get(pid) != null);
+        if (!productsChanged && changedProducts != null) {
+            if (pid != null) {
+                productsChanged = (changedProducts.get(pid) != null);
+            }
+            productsChanged = productsChanged ||
+                changedProductsInSet(incomingProvided, changedProducts);
         }
 
         if (productsChanged) {
@@ -581,7 +598,7 @@ public class PoolRules {
             productsChanged = !pool.getDerivedProduct().getId()
                 .equals(existingPool.getDerivedProduct().getId());
 
-            productsChanged = productsChanged ||
+            productsChanged |=
                 (changedProducts != null && changedProducts.containsKey(pool.getDerivedProduct().getId()));
         }
 
@@ -599,7 +616,8 @@ public class PoolRules {
             }
         }
 
-        productsChanged = productsChanged || !currentProvided.equals(incomingProvided);
+        productsChanged |= !currentProvided.equals(incomingProvided) ||
+            changedProductsInSet(incomingProvided, changedProducts);
 
         if (productsChanged) {
             // 998317: NPE during refresh causes refresh to abort.
