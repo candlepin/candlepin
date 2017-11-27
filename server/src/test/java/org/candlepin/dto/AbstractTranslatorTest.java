@@ -56,7 +56,7 @@ public abstract class AbstractTranslatorTest<S, D, T extends ObjectTranslator<S,
      * object should be verified as well; otherwise, if childrenGenerated is false, nested objects
      * should be null.
      *
-     * @param src
+     * @param source
      *  The source object used in the translate or populate step
      *
      * @param dest

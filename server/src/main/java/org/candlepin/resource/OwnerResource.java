@@ -35,12 +35,11 @@ import org.candlepin.common.exceptions.ResourceMovedException;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.controller.ContentManager;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.OwnerManager;
 import org.candlepin.controller.PoolManager;
-import org.candlepin.controller.ProductManager;
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
 import org.candlepin.model.CandlepinQuery;
@@ -64,15 +63,20 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerInfo;
 import org.candlepin.model.OwnerInfoCurator;
 import org.candlepin.model.Pool;
+import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolFilterBuilder;
+import org.candlepin.model.Product;
+import org.candlepin.model.Release;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.UeberCertificate;
 import org.candlepin.model.UeberCertificateCurator;
 import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
+import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.pinsetter.tasks.HealEntireOrgJob;
 import org.candlepin.pinsetter.tasks.ImportJob;
@@ -122,7 +126,6 @@ import ch.qos.logback.classic.Level;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
@@ -185,9 +188,8 @@ public class OwnerResource {
     private ServiceLevelValidator serviceLevelValidator;
     private Configuration config;
     private ResolverUtil resolverUtil;
-    private ProductManager productManager;
-    private ContentManager contentManager;
     private ConsumerTypeValidator consumerTypeValidator;
+    private OwnerProductCurator ownerProductCurator;
     private ModelTranslator translator;
 
     @Inject
@@ -217,9 +219,8 @@ public class OwnerResource {
         OwnerServiceAdapter ownerService,
         Configuration config,
         ResolverUtil resolverUtil,
-        ProductManager productManager,
-        ContentManager contentManager,
         ConsumerTypeValidator consumerTypeValidator,
+        OwnerProductCurator ownerProductCurator,
         ModelTranslator translator) {
 
         this.ownerCurator = ownerCurator;
@@ -248,9 +249,8 @@ public class OwnerResource {
         this.ownerService = ownerService;
         this.config = config;
         this.resolverUtil = resolverUtil;
-        this.productManager = productManager;
-        this.contentManager = contentManager;
         this.consumerTypeValidator = consumerTypeValidator;
+        this.ownerProductCurator = ownerProductCurator;
         this.translator = translator;
     }
 
@@ -289,11 +289,11 @@ public class OwnerResource {
      */
     protected void populateEntity(Owner entity, OwnerDTO dto) {
         if (entity == null) {
-            throw new IllegalArgumentException("entity is null");
+            throw new IllegalArgumentException("the owner model entity is null");
         }
 
         if (dto == null) {
-            throw new IllegalArgumentException("dto is null");
+            throw new IllegalArgumentException("the owner dto is null");
         }
 
         if (dto.getDisplayName() != null) {
@@ -345,6 +345,138 @@ public class OwnerResource {
         if (dto.isAutobindDisabled() != null) {
             entity.setAutobindDisabled(dto.isAutobindDisabled());
         }
+    }
+
+    /**
+     * Populates the specified entity with data from the provided DTO. This method will not set the
+     * ID field.
+     *
+     * @param entity
+     *  The entity instance to populate
+     *
+     * @param dto
+     *  The DTO containing the data with which to populate the entity
+     *
+     * @throws IllegalArgumentException
+     *  if either entity or dto are null
+     */
+    protected void populateEntity(ActivationKey entity, ActivationKeyDTO dto) {
+        if (entity == null) {
+            throw new IllegalArgumentException("the activation key model entity is null");
+        }
+
+        if (dto == null) {
+            throw new IllegalArgumentException("the activation key dto is null");
+        }
+
+        if (dto.getName() != null) {
+            entity.setName(dto.getName());
+        }
+
+        if (dto.getDescription() != null) {
+            entity.setDescription(dto.getDescription());
+        }
+
+        if (dto.getServiceLevel() != null) {
+            entity.setServiceLevel(dto.getServiceLevel());
+        }
+
+        if (dto.getOwner() != null) {
+            OwnerDTO ownerDto = dto.getOwner();
+            Owner owner = null;
+
+            if (ownerDto.getId() != null) {
+                // look up by ID
+                owner = this.ownerCurator.find(ownerDto.getId());
+            }
+            else if (ownerDto.getKey() != null) {
+                // look up by key
+                owner = this.ownerCurator.lookupByKey(ownerDto.getKey());
+            }
+
+            if (owner == null) {
+                throw new NotFoundException(i18n.tr("Unable to find owner: {0}", ownerDto));
+            }
+
+            entity.setOwner(owner);
+        }
+
+        if (dto.getServiceLevel() != null) {
+            if (dto.getServiceLevel().isEmpty()) {
+                entity.setServiceLevel(null);
+            }
+            else {
+                entity.setServiceLevel(dto.getServiceLevel());
+            }
+        }
+
+        if (dto.getContentOverrides() != null) {
+            if (dto.getContentOverrides().isEmpty()) {
+                entity.setContentOverrides(new HashSet<ActivationKeyContentOverride>());
+            }
+            else {
+                for (ActivationKeyDTO.ActivationKeyContentOverrideDTO overrideDTO :
+                    dto.getContentOverrides()) {
+                    if (overrideDTO != null) {
+                        entity.addContentOverride(
+                            new ActivationKeyContentOverride(entity, overrideDTO.getContentLabel(),
+                            overrideDTO.getName(), overrideDTO.getValue()));
+                    }
+                }
+            }
+        }
+
+        if (dto.getReleaseVersion() != null) {
+            entity.setReleaseVer(new Release(dto.getReleaseVersion()));
+        }
+
+        if (dto.getPools() != null) {
+            if (dto.getPools().isEmpty()) {
+                entity.setPools(new HashSet<ActivationKeyPool>());
+            }
+            else {
+                for (ActivationKeyDTO.ActivationKeyPoolDTO poolDTO : dto.getPools()) {
+                    if (poolDTO != null) {
+                        Pool pool = findPool(poolDTO.getPoolId());
+                        entity.addPool(pool, poolDTO.getQuantity());
+                    }
+                }
+            }
+        }
+
+        if (dto.getProductIds() != null) {
+            if (dto.getProductIds().isEmpty()) {
+                entity.setProducts(new HashSet<Product>());
+            }
+            else {
+                for (String productDTO : dto.getProductIds()) {
+                    if (productDTO != null) {
+                        Product product = findProduct(entity.getOwner(), productDTO);
+                        entity.addProduct(product);
+                    }
+                }
+            }
+        }
+    }
+
+    private Pool findPool(String poolId) {
+        Pool pool = poolManager.find(poolId);
+
+        if (pool == null) {
+            throw new BadRequestException(i18n.tr("Pool with id {0} could not be found.", poolId));
+        }
+
+        return pool;
+    }
+
+    private Product findProduct(Owner o, String productId) {
+        Product product = ownerProductCurator.getProductById(o, productId);
+
+        if (product == null) {
+            throw new BadRequestException(i18n.tr("Product with id {0} could not be found.", productId));
+        }
+
+        return product;
     }
 
     /**
@@ -499,7 +631,7 @@ public class OwnerResource {
      * To un-set the defaultServiceLevel for an owner, submit an empty string.
      *
      * @param key
-     * @param owner
+     * @param dto
      * @return an Owner object
      * @httpcode 404
      * @httpcode 200
@@ -707,19 +839,13 @@ public class OwnerResource {
     @Path("{owner_key}/activation_keys")
     @ApiOperation(notes = "Retrieves a list of Activation Keys for an Owner", value = "Owner Activation Keys")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
-    public List<ActivationKey> ownerActivationKeys(
+    public CandlepinQuery<ActivationKeyDTO> ownerActivationKeys(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @QueryParam("name") String keyName) {
         Owner owner = findOwner(ownerKey);
 
-        if (keyName == null) {
-            return this.activationKeyCurator.listByOwner(owner);
-        }
-        else {
-            List<ActivationKey> results = new ArrayList<ActivationKey>();
-            results.add(activationKeyCurator.lookupForOwner(keyName, owner));
-            return results;
-        }
+        CandlepinQuery<ActivationKey> keys = this.activationKeyCurator.listByOwner(owner, keyName);
+        return translator.translateQuery(keys, ActivationKeyDTO.class);
     }
 
     /**
@@ -738,40 +864,46 @@ public class OwnerResource {
     @ApiOperation(notes = "Creates an Activation Key for the Owner", value = "Create Activation Key")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found"),
         @ApiResponse(code = 400, message = "Invalid activation key") })
-    public ActivationKey createActivationKey(@PathParam("owner_key") @Verify(Owner.class) String ownerKey,
-        @ApiParam(name = "activation_key", required = true) ActivationKey activationKey) {
+    public ActivationKeyDTO createActivationKey(@PathParam("owner_key") @Verify(Owner.class) String ownerKey,
+        @ApiParam(name = "activation_key", required = true) ActivationKeyDTO dto) {
 
         Owner owner = findOwner(ownerKey);
-        activationKey.setOwner(owner);
 
-        if (StringUtils.isBlank(activationKey.getName())) {
+        if (StringUtils.isBlank(dto.getName())) {
             throw new BadRequestException(i18n.tr("Must provide a name for activation key."));
         }
 
-        String testName = activationKey.getName().replace("-", "0").replace("_", "0");
+        String testName = dto.getName().replace("-", "0").replace("_", "0");
 
         if (!testName.matches("[a-zA-Z0-9]*")) {
             throw new BadRequestException(
                 i18n.tr("The activation key name ''{0}'' must be alphanumeric or " +
-                    "include the characters ''-'' or ''_''", activationKey.getName()));
+                    "include the characters ''-'' or ''_''", dto.getName()));
         }
 
-        if (activationKeyCurator.lookupForOwner(activationKey.getName(), owner) != null) {
+        if (activationKeyCurator.lookupForOwner(dto.getName(), owner) != null) {
             throw new BadRequestException(
                 i18n.tr("The activation key name ''{0}'' is already in use for owner {1}",
-                    activationKey.getName(), ownerKey));
+                        dto.getName(), ownerKey));
         }
 
-        if (activationKey.getContentOverrides() != null) {
-            contentOverrideValidator.validate(activationKey.getContentOverrides());
+        serviceLevelValidator.validate(owner, dto.getServiceLevel());
+
+        // Creating and populating the ActivationKey before the content override validation because the
+        // contentOverrideDTOs need to be converted to model content overrides before validation anyway.
+        OwnerDTO ownerDTO = translator.translate(owner, OwnerDTO.class);
+        dto.setOwner(ownerDTO);
+        ActivationKey key = new ActivationKey();
+        this.populateEntity(key, dto);
+
+        if (key.getContentOverrides() != null) {
+            contentOverrideValidator.validate(key.getContentOverrides());
         }
 
-        serviceLevelValidator.validate(owner, activationKey.getServiceLevel());
-
-        ActivationKey newKey = activationKeyCurator.create(activationKey);
+        ActivationKey newKey = activationKeyCurator.create(key);
         sink.emitActivationKeyCreated(newKey);
 
-        return newKey;
+        return translator.translate(newKey, ActivationKeyDTO.class);
     }
 
     /**
