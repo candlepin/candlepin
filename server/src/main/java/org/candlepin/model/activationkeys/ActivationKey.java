@@ -14,6 +14,8 @@
  */
 package org.candlepin.model.activationkeys;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.model.Eventful;
 import org.candlepin.model.Named;
@@ -23,11 +25,13 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.Release;
 
+import org.candlepin.util.Util;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.GenericGenerator;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -44,19 +48,14 @@ import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * ActivationKey
  */
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = ActivationKey.DB_TABLE,
     uniqueConstraints = {@UniqueConstraint(columnNames = {"name", "owner_id"})})
-public class ActivationKey extends AbstractHibernateObject implements Owned, Named, Eventful {
+public class ActivationKey extends AbstractHibernateObject<ActivationKey> implements Owned, Named, Eventful {
 
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp_activation_key";
@@ -189,6 +188,74 @@ public class ActivationKey extends AbstractHibernateObject implements Owned, Nam
         this.owner = owner;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return String.format("ActivationKey [id: %s, name: %s, description: %s]",
+                this.getId(), this.getName(), this.getDescription());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+
+        boolean equals = false;
+
+        if (obj instanceof ActivationKey && super.equals(obj)) {
+            ActivationKey that = (ActivationKey) obj;
+
+            // Pull the owner IDs, as we're not interested in verifying that the owners
+            // themselves are equal; just so long as they point to the same owner.
+            String thisOwnerId = this.getOwner() != null ? this.getOwner().getId() : null;
+            String thatOwnerId = that.getOwner() != null ? that.getOwner().getId() : null;
+
+            equals = new EqualsBuilder()
+                .append(this.getId(), that.getId())
+                .append(this.getName(), that.getName())
+                .append(this.getDescription(), that.getDescription())
+                .append(thisOwnerId, thatOwnerId)
+                .append(this.getReleaseVer(), that.getReleaseVer())
+                .append(this.getServiceLevel(), that.getServiceLevel())
+                .append(this.isAutoAttach(), that.isAutoAttach())
+                .isEquals();
+
+            equals = equals && Util.collectionsAreEqual(this.getPools(), that.getPools(),
+                new Comparator<ActivationKeyPool>() {
+                    public int compare(ActivationKeyPool akp1, ActivationKeyPool akp2) {
+                        return akp1 == akp2 || (akp1 != null && akp1.equals(akp2)) ? 0 : 1;
+                    }
+                });
+
+            equals = equals && Util.collectionsAreEqual(this.getProducts(), that.getProducts(),
+                new Comparator<Product>() {
+                    public int compare(Product prod1, Product prod2) {
+                        return prod1 == prod2 || (prod1 != null && prod1.equals(prod2)) ? 0 : 1;
+                    }
+                });
+
+            return equals;
+        }
+
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        HashCodeBuilder builder = new HashCodeBuilder(7, 17)
+            .append(this.id);
+        return builder.toHashCode();
+    }
+
     public void addProduct(Product product) {
         this.getProducts().add(product);
     }
@@ -305,6 +372,7 @@ public class ActivationKey extends AbstractHibernateObject implements Owned, Nam
                 break;
             }
         }
+
         if (toRemove != null) {
             this.getContentOverrides().remove(toRemove);
         }
@@ -367,6 +435,7 @@ public class ActivationKey extends AbstractHibernateObject implements Owned, Nam
                 break;
             }
         }
+
         if (!found) {
             override.setKey(this);
             this.getContentOverrides().add(override);

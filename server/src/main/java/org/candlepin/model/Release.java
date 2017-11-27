@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+
 import java.io.Serializable;
 
 import javax.xml.bind.annotation.XmlTransient;
@@ -56,6 +57,7 @@ public class Release extends AbstractHibernateObject {
         if (this == anObject) {
             return true;
         }
+
         if (!(anObject instanceof Release)) {
             return false;
         }
@@ -70,7 +72,7 @@ public class Release extends AbstractHibernateObject {
 
     @Override
     public int hashCode() {
-        return releaseVer.hashCode();
+        return this.releaseVer != null ? this.releaseVer.hashCode() : 0;
     }
 
 }
