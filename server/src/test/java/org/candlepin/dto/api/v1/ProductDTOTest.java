@@ -56,11 +56,6 @@ public class ProductDTOTest extends AbstractDTOTest<ProductDTO> {
             attributes.put("attrib-" + i, "value-" + i);
         }
 
-        Map<String, ProductContentDTO> map = new HashMap<String, ProductContentDTO>();
-        ContentDTO content = this.contentDTOTest.getPopulatedDTOInstance();
-        ProductContentDTO pcdto = new ProductContentDTO(content, true);
-        map.put(content.getId(), pcdto);
-
         this.values = new HashMap<String, Object>();
         this.values.put("Uuid", "test_value");
         this.values.put("Id", "test_value");
@@ -109,12 +104,6 @@ public class ProductDTOTest extends AbstractDTOTest<ProductDTO> {
         dto.setAttribute("attrib", "value");
 
         assertTrue(dto.hasAttribute("attrib"));
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testHasAttributeWithNullInput() {
-        ProductDTO dto = new ProductDTO();
-        dto.hasAttribute(null);
     }
 
     @Test

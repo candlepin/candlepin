@@ -14,9 +14,11 @@
  */
 package org.candlepin.dto;
 
+import org.candlepin.dto.api.v1.ActivationKeyDTO;
+import org.candlepin.dto.api.v1.ActivationKeyTranslator;
+import org.candlepin.dto.api.v1.CertificateDTO;
 import org.candlepin.dto.api.v1.CertificateSerialDTO;
 import org.candlepin.dto.api.v1.CertificateSerialTranslator;
-import org.candlepin.dto.api.v1.CertificateDTO;
 import org.candlepin.dto.api.v1.CertificateTranslator;
 import org.candlepin.dto.api.v1.ConsumerTypeDTO;
 import org.candlepin.dto.api.v1.ConsumerTypeTranslator;
@@ -30,16 +32,16 @@ import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
 import org.candlepin.dto.api.v1.UpstreamConsumerTranslator;
 import org.candlepin.dto.shim.ContentDataTranslator;
 import org.candlepin.dto.shim.ProductDataTranslator;
-import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Certificate;
+import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Content;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
 import org.candlepin.model.UpstreamConsumer;
+import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductData;
-
 
 
 /**
@@ -65,6 +67,8 @@ public class StandardTranslator extends SimpleModelTranslator {
             new ProductTranslator(), Product.class, ProductDTO.class);
         this.registerTranslator(
             new UpstreamConsumerTranslator(), UpstreamConsumer.class, UpstreamConsumerDTO.class);
+        this.registerTranslator(
+            new ActivationKeyTranslator(), ActivationKey.class, ActivationKeyDTO.class);
 
         // Shims
         /////////////////////////////////////////////

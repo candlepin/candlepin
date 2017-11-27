@@ -18,8 +18,6 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerContentOverride;
 import org.candlepin.model.ContentOverride;
 
-import org.hibernate.annotations.ForeignKey;
-
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -40,7 +38,6 @@ import javax.xml.bind.annotation.XmlTransient;
 public class ActivationKeyContentOverride extends ContentOverride {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @ForeignKey(name = "fk_content_override_key")
     @JoinColumn(nullable = true)
     private ActivationKey key;
 
