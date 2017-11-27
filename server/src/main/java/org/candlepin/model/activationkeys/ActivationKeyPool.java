@@ -17,9 +17,7 @@ package org.candlepin.model.activationkeys;
 import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.model.Pool;
 
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -56,16 +54,12 @@ public class ActivationKeyPool extends AbstractHibernateObject implements Compar
     private String id;
 
     @ManyToOne
-    @ForeignKey(name = "fk_activation_key_pool_k")
     @JoinColumn(nullable = false)
-    @Index(name = "cp_activation_key_pool_k_fk_idx")
     @NotNull
     private ActivationKey key;
 
     @ManyToOne
-    @ForeignKey(name = "fk_activation_key_pool_p")
     @JoinColumn(nullable = false)
-    @Index(name = "cp_activation_key_pool_p_fk_idx")
     @NotNull
     private Pool pool;
 

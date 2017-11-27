@@ -17,17 +17,19 @@ package org.candlepin.resource;
 import org.candlepin.auth.Verify;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.ActivationKeyDTO;
 import org.candlepin.model.CandlepinQuery;
-import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.Release;
+import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.candlepin.policy.js.activationkey.ActivationKeyRules;
-import org.candlepin.resource.dto.ActivationKeyData;
 import org.candlepin.util.ElementTransformer;
 import org.candlepin.util.ServiceLevelValidator;
 import org.candlepin.util.TransformedIterator;
@@ -72,12 +74,13 @@ public class ActivationKeyResource {
     private ServiceLevelValidator serviceLevelValidator;
     private ActivationKeyRules activationKeyRules;
     private ProductCachedSerializationModule productCachedModule;
+    private ModelTranslator translator;
 
     @Inject
     public ActivationKeyResource(ActivationKeyCurator activationKeyCurator, I18n i18n,
         PoolManager poolManager, ServiceLevelValidator serviceLevelValidator,
         ActivationKeyRules activationKeyRules, OwnerProductCurator ownerProductCurator,
-        ProductCachedSerializationModule productCachedModule) {
+        ProductCachedSerializationModule productCachedModule, ModelTranslator translator) {
 
         this.activationKeyCurator = activationKeyCurator;
         this.i18n = i18n;
@@ -86,6 +89,7 @@ public class ActivationKeyResource {
         this.activationKeyRules = activationKeyRules;
         this.ownerProductCurator = ownerProductCurator;
         this.productCachedModule = productCachedModule;
+        this.translator = translator;
     }
 
     @ApiOperation(notes = "Retrieves a single Activation Key", value = "Get Activation Key")
@@ -93,13 +97,13 @@ public class ActivationKeyResource {
     @GET
     @Path("{activation_key_id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public ActivationKeyData getActivationKey(
+    public ActivationKeyDTO getActivationKey(
         @PathParam("activation_key_id")
         @Verify(ActivationKey.class) String activationKeyId) {
 
         ActivationKey key = activationKeyCurator.verifyAndLookupKey(activationKeyId);
 
-        return new ActivationKeyData(key);
+        return this.translator.translate(key, ActivationKeyDTO.class);
     }
 
     @ApiOperation(notes = "Retrieves a list of Pools based on the Activation Key",
@@ -129,31 +133,35 @@ public class ActivationKeyResource {
     @Path("{activation_key_id}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public ActivationKeyData updateActivationKey(
+    public ActivationKeyDTO updateActivationKey(
         @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId,
-        @ApiParam(name = "update", required = true) ActivationKeyData update) {
+        @ApiParam(name = "update", required = true) ActivationKeyDTO update) {
 
         ActivationKey toUpdate = activationKeyCurator.verifyAndLookupKey(activationKeyId);
         if (update.getName() != null) {
             toUpdate.setName(update.getName());
         }
+
         String serviceLevel = update.getServiceLevel();
         if (serviceLevel != null) {
             serviceLevelValidator.validate(toUpdate.getOwner(), serviceLevel);
             toUpdate.setServiceLevel(serviceLevel);
         }
-        if (update.getReleaseVersion() != null) {
-            toUpdate.setReleaseVer(update.getReleaseVersion());
+
+        if (update.getReleaseVer() != null && update.getReleaseVer().getReleaseVer() != null) {
+            toUpdate.setReleaseVer(new Release(update.getReleaseVer().getReleaseVer()));
         }
+
         if (update.getDescription() != null) {
             toUpdate.setDescription(update.getDescription());
         }
+
         if (update.isAutoAttach() != null) {
             toUpdate.setAutoAttach(update.isAutoAttach());
         }
         activationKeyCurator.merge(toUpdate);
 
-        return new ActivationKeyData(toUpdate);
+        return this.translator.translate(toUpdate, ActivationKeyDTO.class);
     }
 
     @ApiOperation(notes = "Adds a Pool to an Activation Key", value = "Add Pool to Key")
@@ -162,7 +170,7 @@ public class ActivationKeyResource {
     @Path("{activation_key_id}/pools/{pool_id}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.WILDCARD)
-    public ActivationKeyData addPoolToKey(
+    public ActivationKeyDTO addPoolToKey(
         @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId,
         @PathParam("pool_id") @Verify(Pool.class) String poolId,
         @QueryParam("quantity") Long quantity) {
@@ -183,7 +191,7 @@ public class ActivationKeyResource {
         key.addPool(pool, quantity);
         activationKeyCurator.update(key);
 
-        return new ActivationKeyData(key);
+        return this.translator.translate(key, ActivationKeyDTO.class);
     }
 
     @ApiOperation(notes = "Removes a Pool from an Activation Key", value = "Remove Pool From Key")
@@ -191,7 +199,7 @@ public class ActivationKeyResource {
     @DELETE
     @Path("{activation_key_id}/pools/{pool_id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public ActivationKeyData removePoolFromKey(
+    public ActivationKeyDTO removePoolFromKey(
         @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId,
         @PathParam("pool_id")
         @Verify(Pool.class) String poolId) {
@@ -201,7 +209,7 @@ public class ActivationKeyResource {
         key.removePool(pool);
         activationKeyCurator.update(key);
 
-        return new ActivationKeyData(key);
+        return this.translator.translate(key, ActivationKeyDTO.class);
     }
 
     @ApiOperation(notes = "Adds an Product ID to an Activation Key", value = "Add Product ID to key")
@@ -210,7 +218,7 @@ public class ActivationKeyResource {
     @Path("{activation_key_id}/product/{product_id}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.WILDCARD)
-    public ActivationKeyData addProductIdToKey(
+    public ActivationKeyDTO addProductIdToKey(
         @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId,
         @PathParam("product_id") String productId) {
 
@@ -227,7 +235,7 @@ public class ActivationKeyResource {
         key.addProduct(product);
         activationKeyCurator.update(key);
 
-        return new ActivationKeyData(key);
+        return this.translator.translate(key, ActivationKeyDTO.class);
     }
 
     @ApiOperation(notes = "Removes a Product ID from an Activation Key", value = "Remove Product Id from Key")
@@ -235,7 +243,7 @@ public class ActivationKeyResource {
     @DELETE
     @Path("{activation_key_id}/product/{product_id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public ActivationKeyData removeProductIdFromKey(
+    public ActivationKeyDTO removeProductIdFromKey(
         @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId,
         @PathParam("product_id") String productId) {
         ActivationKey key = activationKeyCurator.verifyAndLookupKey(activationKeyId);
@@ -243,15 +251,16 @@ public class ActivationKeyResource {
         key.removeProduct(product);
         activationKeyCurator.update(key);
 
-        return new ActivationKeyData(key);
+        return this.translator.translate(key, ActivationKeyDTO.class);
     }
 
     @ApiOperation(notes = "Retrieves a list of Activation Keys", value = "findActivationKey",
         response = ActivationKey.class, responseContainer = "list")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public CandlepinQuery<ActivationKey> findActivationKey() {
-        return this.activationKeyCurator.listAll();
+    public CandlepinQuery<ActivationKeyDTO> findActivationKey() {
+        CandlepinQuery<ActivationKey> query = this.activationKeyCurator.listAll();
+        return this.translator.translateQuery(query, ActivationKeyDTO.class);
     }
 
     @ApiOperation(notes = "Removes an Activation Key", value = "deleteActivationKey")

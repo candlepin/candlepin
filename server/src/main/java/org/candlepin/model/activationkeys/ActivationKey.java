@@ -14,6 +14,8 @@
  */
 package org.candlepin.model.activationkeys;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.model.Eventful;
 import org.candlepin.model.Named;
@@ -56,7 +58,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Entity
 @Table(name = ActivationKey.DB_TABLE,
     uniqueConstraints = {@UniqueConstraint(columnNames = {"name", "owner_id"})})
-public class ActivationKey extends AbstractHibernateObject implements Owned, Named, Eventful {
+public class ActivationKey extends AbstractHibernateObject<ActivationKey> implements Owned, Named, Eventful {
 
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp_activation_key";
@@ -189,6 +191,71 @@ public class ActivationKey extends AbstractHibernateObject implements Owned, Nam
         this.owner = owner;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return String.format("ActivationKey [id: %s, name: %s, description: %s]",
+                this.getId(), this.getName(), this.getDescription());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+
+        if (obj instanceof ActivationKey && super.equals(obj)) {
+            ActivationKey that = (ActivationKey) obj;
+
+            // Pull the owner IDs, as we're not interested in verifying that the owners
+            // themselves are equal; just so long as they point to the same owner.
+            String thisOwnerId = this.getOwner() != null ? this.getOwner().getId() : null;
+            String thatOwnerId = that.getOwner() != null ? that.getOwner().getId() : null;
+
+            EqualsBuilder builder = new EqualsBuilder()
+                .append(this.getId(), that.getId())
+                .append(this.getName(), that.getName())
+                .append(this.getDescription(), that.getDescription())
+                .append(thisOwnerId, thatOwnerId)
+                .append(this.getReleaseVer(), that.getReleaseVer())
+                .append(this.getServiceLevel(), that.getServiceLevel())
+                .append(this.isAutoAttach(), that.isAutoAttach())
+                .append(this.getPools(), that.getPools())
+                .append(this.getProducts(), that.getProducts());
+
+            return builder.isEquals();
+        }
+
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        // Like with the equals method, we are not interested in hashing nested objects; we're only
+        // concerned with the reference to such an object.
+        HashCodeBuilder builder = new HashCodeBuilder(37, 7)
+            .append(super.hashCode())
+            .append(this.getId())
+            .append(this.getName())
+            .append(this.getDescription())
+            .append(this.getOwner() != null ? this.getOwner().getId() : null)
+            .append(this.getReleaseVer())
+            .append(this.getServiceLevel())
+            .append(this.isAutoAttach())
+            .append(this.getPools())
+            .append(this.getProducts());
+
+        return builder.toHashCode();
+    }
+
     public void addProduct(Product product) {
         this.getProducts().add(product);
     }
@@ -305,6 +372,7 @@ public class ActivationKey extends AbstractHibernateObject implements Owned, Nam
                 break;
             }
         }
+
         if (toRemove != null) {
             this.getContentOverrides().remove(toRemove);
         }
@@ -367,6 +435,7 @@ public class ActivationKey extends AbstractHibernateObject implements Owned, Nam
                 break;
             }
         }
+
         if (!found) {
             override.setKey(this);
             this.getContentOverrides().add(override);
