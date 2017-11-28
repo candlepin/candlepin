@@ -5,8 +5,8 @@
 require 'optparse'
 require 'set'
 require 'tempfile'
-require 'zip/zip'
-require 'zip/zipfilesystem'
+require 'zip'
+require 'zip/filesystem'
 
 require File.expand_path('candlepin_api', File.dirname(__FILE__) + '/../client/ruby')
 
@@ -176,7 +176,7 @@ class SnapshotCommand < CMVCommand
             raise "Cannot write to snapshot file: #{options[:file]}"
         end
 
-        Zip::ZipOutputStream.open(options[:file]) do |zos|
+        Zip::OutputStream.open(options[:file]) do |zos|
             puts "Compiling snapshot..."
 
             self.get_deployment_data(candlepin, orgs) do |obj_path, zip_path, data|
@@ -257,7 +257,7 @@ class VerifyCommand < CMVCommand
             raise "Cannot read from snapshot file: #{options[:file]}"
         end
 
-        snapshot = Zip::ZipFile.open(options[:file])
+        snapshot = Zip::File.open(options[:file])
         processed_files = Set.new
         messages = []
 

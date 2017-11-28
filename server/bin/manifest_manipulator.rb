@@ -2,7 +2,7 @@
 
 require 'optparse'
 require 'json'
-require 'zip/zip'
+require 'zip'
 
 require_relative "../client/ruby/candlepin_api"
 
@@ -58,7 +58,7 @@ end
 FileUtils.remove_dir("tmp") if File.exist?("tmp")
 FileUtils.remove_dir("tmpexport") if File.exist?("tmpexport")
 
-Zip::ZipFile.open(@input) { |zip_file|
+Zip::File.open(@input) { |zip_file|
     zip_file.each { |f|
     f_path=File.join("tmp", f.name)
     FileUtils.mkdir_p(File.dirname(f_path))
@@ -66,7 +66,7 @@ Zip::ZipFile.open(@input) { |zip_file|
     }
 }
 
-Zip::ZipFile.open(File.join("tmp", "consumer_export.zip")) { |zip_file|
+Zip::File.open(File.join("tmp", "consumer_export.zip")) { |zip_file|
     zip_file.each { |f|
     f_path=File.join("tmpexport", f.name)
     FileUtils.mkdir_p(File.dirname(f_path))
@@ -96,7 +96,7 @@ print_and_pause "About to create manifest archive..."
 recursive_path = File.join("tmpexport", "**", "**")
 updated_inner_zip = File.join("tmp", "updatedinner.zip")
 
-Zip::ZipFile::open(updated_inner_zip, Zip::ZipFile::CREATE) {
+Zip::File::open(updated_inner_zip, Zip::File::CREATE) {
   |zipfile|
   Dir[recursive_path].each do |file|
     if File.file?(file)
@@ -107,7 +107,7 @@ end
 
 #add the inner zip to a new manifest
 File.delete(@output) if File.exist?(@output)
-Zip::ZipFile::open(@output, Zip::ZipFile::CREATE) {
+Zip::File::open(@output, Zip::File::CREATE) {
   |zipfile|
    zipfile.add("consumer_export.zip", updated_inner_zip)
    zipfile.add("signature", File.join("tmp", "signature"))
