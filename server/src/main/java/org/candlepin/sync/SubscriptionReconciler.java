@@ -136,12 +136,19 @@ public class SubscriptionReconciler {
 
             for (Pool localSub : map.values()) {
                 // TODO quantity
-                Long quantity = localSub.getQuantity() / localSub.getProduct().getMultiplier();
-                if (quantity.equals(subscription.getQuantity())) {
+                long quantity = localSub.getQuantity() != null ? localSub.getQuantity() : 1;
+
+                long multiplier = localSub.getProduct().getMultiplier() != null ?
+                    localSub.getProduct().getMultiplier() :
+                    1;
+
+                Long effectiveQuantity = Long.valueOf(quantity / multiplier);
+                if (effectiveQuantity.equals(subscription.getQuantity())) {
                     local = localSub;
                     break;
                 }
             }
+
             if (local != null) {
                 mergeSubscription(subscription, local, map);
                 log.info("Merging subscription for incoming entitlement id [{}] into subscription with " +

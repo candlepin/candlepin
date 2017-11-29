@@ -74,7 +74,7 @@ public class PoolRules {
     }
 
     private long calculateQuantity(long quantity, Product product, String upstreamPoolId) {
-        long result = quantity * product.getMultiplier();
+        long result = quantity * (product.getMultiplier() != null ? product.getMultiplier() : 1);
 
         // In hosted, we increase the quantity on the subscription. However in standalone,
         // we assume this already has happened in hosted and the accurate quantity was
@@ -116,8 +116,11 @@ public class PoolRules {
     public List<Pool> createAndEnrichPools(Pool masterPool, List<Pool> existingPools) {
         List<Pool> pools = new LinkedList<Pool>();
 
-        masterPool.setQuantity(calculateQuantity(masterPool.getQuantity(), masterPool.getProduct(),
-            masterPool.getUpstreamPoolId()));
+        long calculated = this.calculateQuantity(
+            masterPool.getQuantity() != null ? masterPool.getQuantity() : 1, masterPool.getProduct(),
+            masterPool.getUpstreamPoolId());
+
+        masterPool.setQuantity(calculated);
 
         // The following will make virt_only a pool attribute. That makes the
         // pool explicitly virt_only to subscription manager and any other
