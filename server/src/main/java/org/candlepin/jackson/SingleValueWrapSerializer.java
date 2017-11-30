@@ -21,18 +21,27 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import java.io.IOException;
 
 /**
- * The ActivationKeyDTOReleaseSerializer handles the serialization of ActivationKeyDTO
- * field ReleaseVersion, writing it in the format of:
- * <pre> {@code "releaseVer":{"releaseVer":"string"} } </pre>
+ * The SingleValueWrapSerializer handles the serialization of wrapping a single field
+ * in a JSON object/single-value-map, in the format of:
+ * <pre> {@code "fieldName":"value" } </pre>
+ *
+ * Classes that extend this class should pass the name of the field they need to wrap
+ * as an argument to the super constructor.
  */
-public class ActivationKeyDTOReleaseSerializer extends JsonSerializer<String> {
+public abstract class SingleValueWrapSerializer extends JsonSerializer<String> {
+
+    private String fieldName;
+
+    public SingleValueWrapSerializer(String fieldName) {
+        this.fieldName = fieldName;
+    }
 
     @Override
     public void serialize(String releaseVersion, JsonGenerator generator, SerializerProvider provider)
         throws IOException {
 
         generator.writeStartObject();
-        generator.writeObjectField("releaseVer", releaseVersion);
+        generator.writeObjectField(fieldName, releaseVersion);
         generator.writeEndObject();
     }
 }

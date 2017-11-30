@@ -22,10 +22,8 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.swagger.annotations.ApiModel;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.candlepin.jackson.ActivationKeyDTOProductDeserializer;
-import org.candlepin.jackson.ActivationKeyDTOProductSerializer;
-import org.candlepin.jackson.ActivationKeyDTOReleaseDeserializer;
-import org.candlepin.jackson.ActivationKeyDTOReleaseSerializer;
+import org.candlepin.jackson.SingleValueWrapSerializer;
+import org.candlepin.jackson.SingleValueWrapDeserializer;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
@@ -177,20 +175,52 @@ public class ActivationKeyDTO  extends TimestampedCandlepinDTO<ActivationKeyDTO>
         }
     }
 
+    /**
+     * Serialization utility class for wrapping the 'releaseVer' field in a JSON object.
+     */
+    private static class ReleaseVersionWrapSerializer extends SingleValueWrapSerializer {
+        public ReleaseVersionWrapSerializer() {
+            super("releaseVer");
+        }
+    }
+
+    /**
+     * Deserialization utility class for for unwrapping the 'releaseVer' field from a JSON object.
+     */
+    private static class ReleaseVersionWrapDeserializer extends SingleValueWrapDeserializer {
+        public ReleaseVersionWrapDeserializer() {
+            super("releaseVer");
+        }
+    }
+
+    /**
+     * Serialization utility class for wrapping the 'productId' field in a JSON object.
+     */
+    private static class ProductWrapSerializer extends SingleValueWrapSerializer {
+        public ProductWrapSerializer() {
+            super("productId");
+        }
+    }
+
+    /**
+     * Deserialization utility class for for unwrapping the 'productId' field from a JSON object.
+     */
+    private static class ProductWrapDeserializer extends SingleValueWrapDeserializer {
+        public ProductWrapDeserializer() {
+            super("productId");
+        }
+    }
+
     private String id;
     private String name;
     private String description;
     private OwnerDTO owner;
 
-    @JsonSerialize(using = ActivationKeyDTOReleaseSerializer.class)
-    @JsonDeserialize(using = ActivationKeyDTOReleaseDeserializer.class)
     private String releaseVer;
     private String serviceLevel;
     private Boolean autoAttach;
     private Set<ActivationKeyPoolDTO> pools;
 
-    @JsonSerialize(using = ActivationKeyDTOProductSerializer.class)
-    @JsonDeserialize(using = ActivationKeyDTOProductDeserializer.class)
     private Set<String> products;
     private Set<ActivationKeyContentOverrideDTO> contentOverrides;
 
@@ -301,7 +331,8 @@ public class ActivationKeyDTO  extends TimestampedCandlepinDTO<ActivationKeyDTO>
      *
      * @return the release version of this ActivationKeyDTO object.
      */
-    @JsonIgnore
+    @JsonSerialize(using = ReleaseVersionWrapSerializer.class)
+    @JsonProperty("releaseVer")
     public String getReleaseVersion() {
         return this.releaseVer;
     }
@@ -313,7 +344,8 @@ public class ActivationKeyDTO  extends TimestampedCandlepinDTO<ActivationKeyDTO>
      *
      * @return a reference to this DTO object.
      */
-    @JsonIgnore
+    @JsonDeserialize(using = ReleaseVersionWrapDeserializer.class)
+    @JsonProperty("releaseVer")
     public ActivationKeyDTO setReleaseVersion(String releaseVersion) {
         this.releaseVer = releaseVersion;
         return this;
@@ -501,7 +533,7 @@ public class ActivationKeyDTO  extends TimestampedCandlepinDTO<ActivationKeyDTO>
      * @return
      *  the products associated with this key, or null if the products have not yet been defined
      */
-    @JsonIgnore
+    @JsonSerialize(contentUsing = ProductWrapSerializer.class)
     public Set<String> getProducts() {
         return this.products != null ? new SetView<String>(this.products) : null;
     }
@@ -513,7 +545,7 @@ public class ActivationKeyDTO  extends TimestampedCandlepinDTO<ActivationKeyDTO>
      * @return
      *  A reference to this DTO
      */
-    @JsonIgnore
+    @JsonDeserialize(contentUsing = ProductWrapDeserializer.class)
     public ActivationKeyDTO setProducts(Set<String> products) {
         if (products != null) {
             if (this.products == null) {

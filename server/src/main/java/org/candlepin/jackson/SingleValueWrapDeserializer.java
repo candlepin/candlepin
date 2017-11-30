@@ -26,36 +26,44 @@ import java.io.IOException;
 import java.util.Iterator;
 
 /**
- * The ActivationKeyDTOReleaseDeserializer handles the deserialization of ActivationKeyDTO
- * field ReleaseVersion, reading it in the formats of either:
- * <pre> {@code "releaseVer":{"releaseVer":"value"} } </pre>
- * or: <pre> {@code "releaseVer":"value" } </pre>
+ * The SingleValueWrapDeserializer handles the deserialization of single fields that are
+ * wrapped in a JSON object/single-value-map, in the format of:
+ * <pre> {@code "fieldName":{"fieldName":"value"} } </pre>
+ * or: <pre> {@code "fieldName":"value" } </pre>
+ *
+ * Classes that extend this class should pass the name of the field they need to unwrap
+ * as an argument to the super constructor.
  */
-public class ActivationKeyDTOReleaseDeserializer extends JsonDeserializer<String> {
+public abstract class SingleValueWrapDeserializer extends JsonDeserializer<String> {
 
-    private static Logger log = LoggerFactory.getLogger(ActivationKeyDTOReleaseDeserializer.class);
+    private static Logger log = LoggerFactory.getLogger(SingleValueWrapDeserializer.class);
 
-    private static final String RELEASE_VERSION = "releaseVer";
+    private String fieldName;
+
+    public SingleValueWrapDeserializer(String fieldName) {
+        this.fieldName = fieldName;
+    }
 
     @Override
     public String deserialize(JsonParser parser, DeserializationContext context)
         throws IOException {
 
         TreeNode node = parser.readValueAsTree();
-        String fieldName = "";
-        if (node.isObject()) {
-            log.debug("Processing " + RELEASE_VERSION + " as an containing object node.");
 
+        if (node.isObject()) {
+            log.debug("Processing " + this.fieldName + " as an containing object node.");
+
+            String fieldName = "";
             for (Iterator<String> fieldNames = node.fieldNames(); fieldNames.hasNext();) {
                 fieldName = fieldNames.next();
-                if (fieldName.equals(RELEASE_VERSION)) {
+                if (fieldName.equals(this.fieldName)) {
                     break;
                 }
             }
 
-            if (!fieldName.equals(RELEASE_VERSION)) {
+            if (!fieldName.equals(this.fieldName)) {
                 throw new CandlepinJsonProcessingException(
-                        "Unexpected field name: '" + fieldName + "'. Expected '" + RELEASE_VERSION + "'.",
+                        "Unexpected field name: '" + fieldName + "'. Expected '" + this.fieldName + "'.",
                         parser.getCurrentLocation()
                 );
             }
@@ -71,14 +79,14 @@ public class ActivationKeyDTOReleaseDeserializer extends JsonDeserializer<String
             return parseValueNode(valueNode);
         }
         else if (node.isValueNode()) {
-            log.debug("Processing " + RELEASE_VERSION + " as a value node.");
+            log.debug("Processing " + this.fieldName + " as a value node.");
 
             return parseValueNode(node);
         }
         else {
             // Uh oh.
             throw new CandlepinJsonProcessingException(
-                "Unexpected " + RELEASE_VERSION + " node type: " + node.asToken(),
+                "Unexpected " + this.fieldName + " node type: " + node.asToken(),
                 parser.getCurrentLocation()
             );
         }
@@ -90,7 +98,7 @@ public class ActivationKeyDTOReleaseDeserializer extends JsonDeserializer<String
         String value = subParser.getValueAsString();
         subParser.close();
 
-        log.debug("Found " + RELEASE_VERSION + " field's value", value);
+        log.debug("Found " + this.fieldName + " field's value", value);
         return value;
     }
 }
