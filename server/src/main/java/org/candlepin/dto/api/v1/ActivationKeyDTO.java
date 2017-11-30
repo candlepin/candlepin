@@ -32,7 +32,6 @@ import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.candlepin.util.SetView;
 
-import javax.xml.bind.annotation.XmlTransient;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -423,7 +422,7 @@ public class ActivationKeyDTO  extends TimestampedCandlepinDTO<ActivationKeyDTO>
      * @return
      *  true if the pool has been added to this activation key; false otherwise.
      */
-    @XmlTransient
+    @JsonIgnore
     public boolean hasPool(Pool pool) {
         if (pool == null) {
             throw new IllegalArgumentException("pool is null");

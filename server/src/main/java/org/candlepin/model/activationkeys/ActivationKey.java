@@ -46,15 +46,10 @@ import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * ActivationKey
  */
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = ActivationKey.DB_TABLE,
     uniqueConstraints = {@UniqueConstraint(columnNames = {"name", "owner_id"})})
