@@ -148,8 +148,8 @@ public class ActivationKeyResource {
             toUpdate.setServiceLevel(serviceLevel);
         }
 
-        if (update.getReleaseVer() != null && update.getReleaseVer().getReleaseVer() != null) {
-            toUpdate.setReleaseVer(new Release(update.getReleaseVer().getReleaseVer()));
+        if (update.getReleaseVersion() != null) {
+            toUpdate.setReleaseVer(new Release(update.getReleaseVersion()));
         }
 
         if (update.getDescription() != null) {

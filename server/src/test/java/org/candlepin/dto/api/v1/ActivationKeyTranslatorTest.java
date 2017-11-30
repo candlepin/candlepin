@@ -130,9 +130,9 @@ public class ActivationKeyTranslatorTest extends
                 }
 
                 Release releaseSource = source.getReleaseVer();
-                ActivationKeyDTO.ReleaseDTO releaseDestination = dest.getReleaseVer();
+                String releaseDestination = dest.getReleaseVersion();
                 if (releaseSource != null) {
-                    assertEquals(releaseSource.getReleaseVer(), releaseDestination.getReleaseVer());
+                    assertEquals(releaseSource.getReleaseVer(), releaseDestination);
                 }
                 else {
                     assertNull(releaseDestination);
@@ -143,7 +143,7 @@ public class ActivationKeyTranslatorTest extends
                 assertNull(dest.getProducts());
                 assertNull(dest.getPools());
                 assertNull(dest.getContentOverrides());
-                assertNull(dest.getReleaseVer());
+                assertNull(dest.getReleaseVersion());
             }
         }
         else {

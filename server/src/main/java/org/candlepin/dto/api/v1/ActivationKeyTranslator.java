@@ -113,7 +113,7 @@ public class ActivationKeyTranslator extends TimestampedEntityTranslator<Activat
 
             Release release = source.getReleaseVer();
             if (release != null) {
-                dest.setReleaseVer(new ActivationKeyDTO.ReleaseDTO(release));
+                dest.setReleaseVersion(release.getReleaseVer());
             }
         }
 

@@ -878,12 +878,12 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     public void testActivationKeyCreateRead() {
         ActivationKeyDTO key = new ActivationKeyDTO();
         key.setName("dd");
-        key.setReleaseVer(new ActivationKeyDTO.ReleaseDTO("release1"));
+        key.setReleaseVersion("release1");
 
         key = ownerResource.createActivationKey(owner.getKey(), key);
         assertNotNull(key.getId());
         assertEquals(key.getOwner().getId(), owner.getId());
-        assertEquals(key.getReleaseVer().getReleaseVer(), "release1");
+        assertEquals(key.getReleaseVersion(), "release1");
         List<ActivationKeyDTO> keys = ownerResource.ownerActivationKeys(owner.getKey(), null);
         assertEquals(1, keys.size());
     }
@@ -892,19 +892,19 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     public void testSearchActivationsKeysByName() {
         ActivationKeyDTO key = new ActivationKeyDTO();
         key.setName("dd");
-        key.setReleaseVer(new ActivationKeyDTO.ReleaseDTO("release1"));
+        key.setReleaseVersion("release1");
         key = ownerResource.createActivationKey(owner.getKey(), key);
         assertNotNull(key.getId());
         assertEquals(key.getOwner().getId(), owner.getId());
-        assertEquals(key.getReleaseVer().getReleaseVer(), "release1");
+        assertEquals(key.getReleaseVersion(), "release1");
 
         key = new ActivationKeyDTO();
         key.setName("blah");
-        key.setReleaseVer(new ActivationKeyDTO.ReleaseDTO("release2"));
+        key.setReleaseVersion("release2");
         key = ownerResource.createActivationKey(owner.getKey(), key);
         assertNotNull(key.getId());
         assertEquals(key.getOwner().getId(), owner.getId());
-        assertEquals(key.getReleaseVer().getReleaseVer(), "release2");
+        assertEquals(key.getReleaseVersion(), "release2");
 
         List<ActivationKeyDTO> keys = ownerResource.ownerActivationKeys(owner.getKey(), "dd");
         assertEquals(1, keys.size());
@@ -938,7 +938,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             null, this.modelTranslator);
         when(oc.lookupByKey(anyString())).thenReturn(o);
         ActivationKeyDTO key = new ActivationKeyDTO();
-        key.setReleaseVer(new ActivationKeyDTO.ReleaseDTO(TestUtil.getStringOfSize(256)));
+        key.setReleaseVersion(TestUtil.getStringOfSize(256));
 
         key = ownerres.createActivationKey(owner.getKey(), key);
     }

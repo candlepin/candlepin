@@ -14,7 +14,6 @@
  */
 package org.candlepin.model;
 
-import org.apache.commons.lang.builder.HashCodeBuilder;
 
 import java.io.Serializable;
 
@@ -73,9 +72,7 @@ public class Release extends AbstractHibernateObject {
 
     @Override
     public int hashCode() {
-        HashCodeBuilder hcBuilder = new HashCodeBuilder();
-        hcBuilder.append(releaseVer);
-        return hcBuilder.toHashCode();
+        return this.releaseVer != null ? this.releaseVer.hashCode() : 0;
     }
 
 }

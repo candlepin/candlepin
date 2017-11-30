@@ -17,22 +17,25 @@ package org.candlepin.dto.api.v1;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.swagger.annotations.ApiModel;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.candlepin.jackson.ActivationKeyDTOProductDeserializer;
+import org.candlepin.jackson.ActivationKeyDTOProductSerializer;
+import org.candlepin.jackson.ActivationKeyDTOReleaseDeserializer;
+import org.candlepin.jackson.ActivationKeyDTOReleaseSerializer;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.Release;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.candlepin.util.SetView;
 
 import javax.xml.bind.annotation.XmlTransient;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -175,70 +178,20 @@ public class ActivationKeyDTO  extends TimestampedCandlepinDTO<ActivationKeyDTO>
         }
     }
 
-    /**
-     * Internal object for Release
-     */
-    public static class ReleaseDTO {
-        protected String releaseVer;
-
-        public ReleaseDTO(String releaseVer) {
-            this.releaseVer = releaseVer;
-        }
-
-        public ReleaseDTO(Release releaseVer) {
-            this.releaseVer = releaseVer.getReleaseVer();
-        }
-
-        public ReleaseDTO() {
-            this.releaseVer = "";
-        }
-
-        public String getReleaseVer() {
-            return this.releaseVer;
-        }
-
-        public ReleaseDTO setReleaseVer(String version) {
-            this.releaseVer = version;
-            return this;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == this) {
-                return true;
-            }
-
-            if (obj instanceof ReleaseDTO) {
-                ReleaseDTO that = (ReleaseDTO) obj;
-
-                EqualsBuilder builder = new EqualsBuilder()
-                    .append(this.getReleaseVer(), that.getReleaseVer());
-
-                return builder.isEquals();
-            }
-
-            return false;
-        }
-
-        @Override
-        public int hashCode() {
-            HashCodeBuilder builder = new HashCodeBuilder(37, 7)
-                .append(this.getReleaseVer());
-
-            return builder.toHashCode();
-        }
-    }
-
-    private static final String PRODUCT_ID = "productId";
-
     private String id;
     private String name;
     private String description;
     private OwnerDTO owner;
-    private ReleaseDTO releaseVer;
+
+    @JsonSerialize(using = ActivationKeyDTOReleaseSerializer.class)
+    @JsonDeserialize(using = ActivationKeyDTOReleaseDeserializer.class)
+    private String releaseVer;
     private String serviceLevel;
     private Boolean autoAttach;
     private Set<ActivationKeyPoolDTO> pools;
+
+    @JsonSerialize(using = ActivationKeyDTOProductSerializer.class)
+    @JsonDeserialize(using = ActivationKeyDTOProductDeserializer.class)
     private Set<String> products;
     private Set<ActivationKeyContentOverrideDTO> contentOverrides;
 
@@ -349,19 +302,21 @@ public class ActivationKeyDTO  extends TimestampedCandlepinDTO<ActivationKeyDTO>
      *
      * @return the release version of this ActivationKeyDTO object.
      */
-    public ReleaseDTO getReleaseVer() {
+    @JsonIgnore
+    public String getReleaseVersion() {
         return this.releaseVer;
     }
 
     /**
      * Sets the release version of this ActivationKeyDTO object.
      *
-     * @param releaseVer the release version of this ActivationKeyDTO object.
+     * @param releaseVersion the release version of this ActivationKeyDTO object.
      *
      * @return a reference to this DTO object.
      */
-    public ActivationKeyDTO setReleaseVer(ReleaseDTO releaseVer) {
-        this.releaseVer = releaseVer;
+    @JsonIgnore
+    public ActivationKeyDTO setReleaseVersion(String releaseVersion) {
+        this.releaseVer = releaseVersion;
         return this;
     }
 
@@ -494,7 +449,7 @@ public class ActivationKeyDTO  extends TimestampedCandlepinDTO<ActivationKeyDTO>
      * @return
      *  True if the pool was removed; false otherwise.
      */
-    @XmlTransient
+    @JsonIgnore
     public boolean removePool(Pool pool) {
         if (pool == null) {
             throw new IllegalArgumentException("pool is null");
@@ -520,7 +475,7 @@ public class ActivationKeyDTO  extends TimestampedCandlepinDTO<ActivationKeyDTO>
      *
      * @return true if this pool was not already contained in this activation key DTO.
      */
-    @XmlTransient
+    @JsonIgnore
     public boolean addPool(ActivationKeyPool pool) {
         if (pool == null || pool.getPool() == null ||
             pool.getPool().getId() == null || pool.getPool().getId().isEmpty()) {
@@ -584,86 +539,13 @@ public class ActivationKeyDTO  extends TimestampedCandlepinDTO<ActivationKeyDTO>
     }
 
     /**
-     * Strictly used only for serialization to maintain the output format:
-     * <pre>
-     * {@code   "products": [
-     *          {
-     *              "productId": "string"
-     *          }
-     *      ]
-     *}</pre>
-     *
-     * @return
-     *  a set of maps that each has a single entry, whose key is 'productId'
-     *  and value is the value of the product id.
-     */
-    @JsonProperty("products")
-    public Set<Map<String, String>> getProductDTOs() {
-        Set<Map<String, String>> productDTOs = new HashSet<Map<String, String>>();
-        if (this.products != null) {
-            for (String productId : this.products) {
-                if (productId != null) {
-                    Map<String, String> productDTO = new HashMap<String, String>();
-                    productDTO.put(PRODUCT_ID, productId);
-                    productDTOs.add(productDTO);
-                }
-            }
-            return productDTOs;
-        }
-
-        return null;
-    }
-
-    /**
-     * Strictly used only for deserialization to maintain the input format:
-     * <pre>
-     * {@code   "products": [
-     *          {
-     *              "productId": "string"
-     *          }
-     *      ]
-     *}</pre>
-     *
-     * @param productDTOs
-     *  a set of maps that each has a single entry, whose key is 'productId'
-     *  and value is the value of the product id.
-     * @return
-     *  a reference to this DTO object
-     */
-    @JsonProperty("products")
-    public ActivationKeyDTO setProductDTOs(Set<Map<String, String>> productDTOs) {
-        if (productDTOs != null) {
-            if (this.products == null) {
-                this.products = new HashSet<String>();
-            }
-            else {
-                this.products.clear();
-            }
-
-            for (Map<String, String> productDTO : productDTOs) {
-                if (productDTO == null || productDTO.get(PRODUCT_ID) == null ||
-                    productDTO.get(PRODUCT_ID).isEmpty()) {
-                    throw new IllegalArgumentException("collection contains null or incomplete dtos");
-                }
-
-                this.products.add(productDTO.get(PRODUCT_ID));
-            }
-        }
-        else {
-            this.products = null;
-        }
-
-        return this;
-    }
-
-    /**
      * Removes the given product from this activation key DTO.
      * @param product
      *  The key's associated product to remove
      * @return
      *  True if the product was removed; false otherwise.
      */
-    @XmlTransient
+    @JsonIgnore
     public boolean removeProduct(Product product) {
         if (product == null) {
             throw new IllegalArgumentException("product is null");
@@ -694,7 +576,7 @@ public class ActivationKeyDTO  extends TimestampedCandlepinDTO<ActivationKeyDTO>
      * @return
      *  true if the product has been added to this activation key; false otherwise.
      */
-    @XmlTransient
+    @JsonIgnore
     public boolean hasProduct(Product product) {
         if (product == null) {
             throw new IllegalArgumentException("product is null");
@@ -720,7 +602,7 @@ public class ActivationKeyDTO  extends TimestampedCandlepinDTO<ActivationKeyDTO>
      *
      * @return true if this product was not already contained in this activation key DTO.
      */
-    @XmlTransient
+    @JsonIgnore
     public boolean addProduct(Product product) {
         if (product == null || product.getId() == null || product.getId().isEmpty()) {
             throw new IllegalArgumentException("product is null or has no id.");
@@ -798,7 +680,7 @@ public class ActivationKeyDTO  extends TimestampedCandlepinDTO<ActivationKeyDTO>
      * @return
      *  True if the content override(s) was removed; false otherwise.
      */
-    @XmlTransient
+    @JsonIgnore
     public boolean removeContentOverride(ActivationKeyContentOverride contentOverride) {
         if (contentOverride == null) {
             throw new IllegalArgumentException("content override is null");
@@ -827,7 +709,7 @@ public class ActivationKeyDTO  extends TimestampedCandlepinDTO<ActivationKeyDTO>
      *
      * @return true if this content override was not already contained in this activation key DTO.
      */
-    @XmlTransient
+    @JsonIgnore
     public boolean addContentOverride(ActivationKeyContentOverride contentOverride) {
         if (contentOverride == null) {
             throw new IllegalArgumentException("pool is null or has no id.");
@@ -876,7 +758,7 @@ public class ActivationKeyDTO  extends TimestampedCandlepinDTO<ActivationKeyDTO>
                 .append(this.getName(), that.getName())
                 .append(this.getDescription(), that.getDescription())
                 .append(thisOwnerId, thatOwnerId)
-                .append(this.getReleaseVer(), that.getReleaseVer())
+                .append(this.getReleaseVersion(), that.getReleaseVersion())
                 .append(this.getServiceLevel(), that.getServiceLevel())
                 .append(this.isAutoAttach(), that.isAutoAttach())
                 .append(this.getPools(), that.getPools())
@@ -903,7 +785,7 @@ public class ActivationKeyDTO  extends TimestampedCandlepinDTO<ActivationKeyDTO>
             .append(this.getName())
             .append(this.getDescription())
             .append(this.getOwner() != null ? this.getOwner().getId() : null)
-            .append(this.getReleaseVer())
+            .append(this.getReleaseVersion())
             .append(this.getServiceLevel())
             .append(this.isAutoAttach())
             .append(this.getPools())
@@ -921,9 +803,7 @@ public class ActivationKeyDTO  extends TimestampedCandlepinDTO<ActivationKeyDTO>
         ActivationKeyDTO copy = (ActivationKeyDTO) super.clone();
 
         OwnerDTO owner = this.getOwner();
-        ReleaseDTO release = this.getReleaseVer();
         copy.owner = owner != null ? owner.clone() : null;
-        copy.releaseVer = release != null ? new ActivationKeyDTO.ReleaseDTO(release.getReleaseVer()) : null;
         copy.pools = this.getPools();
         copy.products = this.getProducts();
         copy.contentOverrides = this.getContentOverrides();
@@ -942,7 +822,7 @@ public class ActivationKeyDTO  extends TimestampedCandlepinDTO<ActivationKeyDTO>
             .setName(source.getName())
             .setDescription(source.getDescription())
             .setOwner(source.getOwner())
-            .setReleaseVer(source.getReleaseVer())
+            .setReleaseVersion(source.getReleaseVersion())
             .setServiceLevel(source.getServiceLevel())
             .setAutoAttach(source.isAutoAttach())
             .setPools(source.getPools())

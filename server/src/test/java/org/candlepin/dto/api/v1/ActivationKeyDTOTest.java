@@ -53,7 +53,7 @@ public class ActivationKeyDTOTest extends AbstractDTOTest<ActivationKeyDTO> {
         this.values.put("Name", "test-name");
         this.values.put("Description", "test-description");
         this.values.put("Owner", owner);
-        this.values.put("ReleaseVer", new ActivationKeyDTO.ReleaseDTO("test-release-ver"));
+        this.values.put("ReleaseVersion", "test-release-ver");
         this.values.put("ServiceLevel", "test-service-level");
         this.values.put("AutoAttach", true);
         this.values.put("Created", new Date());

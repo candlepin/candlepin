@@ -91,13 +91,13 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
 
         output.setName("JarJarBinks");
         output.setServiceLevel("level2");
-        output.setReleaseVer(new ActivationKeyDTO.ReleaseDTO("release2"));
+        output.setReleaseVersion("release2");
         activationKeyResource.updateActivationKey(key.getId(), output);
 
         output = activationKeyResource.getActivationKey(key.getId());
         assertEquals("JarJarBinks", output.getName());
         assertEquals("level2", output.getServiceLevel());
-        assertEquals("release2", output.getReleaseVer());
+        assertEquals("release2", output.getReleaseVersion());
 
         activationKeyResource.deleteActivationKey(key.getId());
         output = activationKeyResource.getActivationKey(key.getId());
@@ -350,7 +350,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         update.setOwner(ownerDto);
         update.setName("dd");
         update.setServiceLevel("level1");
-        update.setReleaseVer(new ActivationKeyDTO.ReleaseDTO(TestUtil.getStringOfSize(256)));
+        update.setReleaseVersion(TestUtil.getStringOfSize(256));
 
         activationKeyResource.updateActivationKey(key.getId(), update);
     }

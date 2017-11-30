@@ -427,8 +427,8 @@ public class OwnerResource {
             }
         }
 
-        if (dto.getReleaseVer() != null) {
-            entity.setReleaseVer(new Release(dto.getReleaseVer().getReleaseVer()));
+        if (dto.getReleaseVersion() != null) {
+            entity.setReleaseVer(new Release(dto.getReleaseVersion()));
         }
 
         if (dto.getPools() != null) {
