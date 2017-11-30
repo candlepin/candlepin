@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.1.8
+Version: 2.1.9
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,18 @@ fi
 
 #raw
 %changelog
+* Thu Nov 30 2017 Kevin Howell <khowell@redhat.com> 2.1.9-1
+- 1512884: Force re-trigger cron jobs (adarshvritant@gmail.com)
+- Prioritize cron jobs over async jobs (adarshvritant@gmail.com)
+- 1511615: mode change breaks pinsetter (adarshvritant@gmail.com)
+- Added a per-org products migration validation Liquibase task
+  (crog@redhat.com)
+- Improve performance of CancelJobJob (mstead@redhat.com)
+- 1507958: Fixed an exception while deleting unmapped guest entitlements
+  (crog@redhat.com)
+- 1503618: Add index ( target id, type ) on cp_job (root@localhost.localdomain)
+- Move job ID partitioning to the curators (wpoteat@redhat.com)
+
 * Thu Oct 26 2017 Kevin Howell <khowell@redhat.com> 2.1.8-1
 - Database fixes for async jobs (wpoteat@redhat.com)
 - Add a setting to allow users to mask capabilities. (awood@redhat.com)
