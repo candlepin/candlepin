@@ -175,7 +175,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @JsonDeserialize(contentConverter = StringTrimmingConverter.class)
     private Map<String, String> facts;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private KeyPair keyPair;
 
     private Date lastCheckin;
