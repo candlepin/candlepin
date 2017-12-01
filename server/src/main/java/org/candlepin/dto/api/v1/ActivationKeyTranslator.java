@@ -78,7 +78,8 @@ public class ActivationKeyTranslator extends TimestampedEntityTranslator<Activat
             if (pools != null && !pools.isEmpty()) {
                 for (ActivationKeyPool poolEntry : pools) {
                     if (poolEntry != null) {
-                        dest.addPool(poolEntry);
+                        dest.addPool(new ActivationKeyDTO.ActivationKeyPoolDTO(
+                            poolEntry.getPool().getId(), poolEntry.getQuantity()));
                     }
                 }
             }
@@ -90,19 +91,23 @@ public class ActivationKeyTranslator extends TimestampedEntityTranslator<Activat
             if (products != null && !products.isEmpty()) {
                 for (Product prod : products) {
                     if (prod != null) {
-                        dest.addProduct(prod);
+                        dest.addProductId(prod.getId());
                     }
                 }
             }
             else {
-                dest.setProducts(Collections.<String>emptySet());
+                dest.setProductIds(Collections.<String>emptySet());
             }
 
             Set<ActivationKeyContentOverride> overrides = source.getContentOverrides();
             if (overrides != null && !overrides.isEmpty()) {
                 for (ActivationKeyContentOverride override : overrides) {
                     if (override != null) {
-                        dest.addContentOverride(override);
+                        dest.addContentOverride(
+                            new ActivationKeyDTO.ActivationKeyContentOverrideDTO(
+                            override.getContentLabel(),
+                            override.getName(),
+                            override.getValue()));
                     }
                 }
             }

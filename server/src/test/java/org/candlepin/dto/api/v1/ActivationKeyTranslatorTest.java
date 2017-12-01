@@ -95,7 +95,7 @@ public class ActivationKeyTranslatorTest extends
                         .verifyOutput(source.getOwner(), dest.getOwner(), true);
 
                 for (Product prod : source.getProducts()) {
-                    for (String prodDto : dest.getProducts()) {
+                    for (String prodDto : dest.getProductIds()) {
 
                         assertNotNull(prodDto);
 
@@ -140,7 +140,7 @@ public class ActivationKeyTranslatorTest extends
             }
             else {
                 assertNull(dest.getOwner());
-                assertNull(dest.getProducts());
+                assertNull(dest.getProductIds());
                 assertNull(dest.getPools());
                 assertNull(dest.getContentOverrides());
                 assertNull(dest.getReleaseVersion());

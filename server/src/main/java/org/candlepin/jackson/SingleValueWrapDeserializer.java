@@ -23,7 +23,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Iterator;
 
 /**
  * The SingleValueWrapDeserializer handles the deserialization of single fields that are
@@ -51,27 +50,12 @@ public abstract class SingleValueWrapDeserializer extends JsonDeserializer<Strin
         TreeNode node = parser.readValueAsTree();
 
         if (node.isObject()) {
-            log.debug("Processing " + this.fieldName + " as an containing object node.");
+            log.debug("Processing {} as a containing object node.", this.fieldName);
 
-            String fieldName = "";
-            for (Iterator<String> fieldNames = node.fieldNames(); fieldNames.hasNext();) {
-                fieldName = fieldNames.next();
-                if (fieldName.equals(this.fieldName)) {
-                    break;
-                }
-            }
-
-            if (!fieldName.equals(this.fieldName)) {
+            TreeNode valueNode = node.path(this.fieldName);
+            if (valueNode.isMissingNode()) {
                 throw new CandlepinJsonProcessingException(
-                        "Unexpected field name: '" + fieldName + "'. Expected '" + this.fieldName + "'.",
-                        parser.getCurrentLocation()
-                );
-            }
-
-            TreeNode valueNode = node.get(fieldName);
-            if (!valueNode.isValueNode()) {
-                throw new CandlepinJsonProcessingException(
-                        "Unexpected value type in: " + valueNode.asToken(),
+                        "The field " + this.fieldName + " is missing from: " + node.asToken(),
                         parser.getCurrentLocation()
                 );
             }
@@ -79,7 +63,7 @@ public abstract class SingleValueWrapDeserializer extends JsonDeserializer<Strin
             return parseValueNode(valueNode);
         }
         else if (node.isValueNode()) {
-            log.debug("Processing " + this.fieldName + " as a value node.");
+            log.debug("Processing {} as a value node.", this.fieldName);
 
             return parseValueNode(node);
         }
@@ -98,7 +82,7 @@ public abstract class SingleValueWrapDeserializer extends JsonDeserializer<Strin
         String value = subParser.getValueAsString();
         subParser.close();
 
-        log.debug("Found " + this.fieldName + " field's value", value);
+        log.debug("Found {} field's value", this.fieldName);
         return value;
     }
 }

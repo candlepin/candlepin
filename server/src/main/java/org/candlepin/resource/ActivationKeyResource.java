@@ -159,7 +159,7 @@ public class ActivationKeyResource {
         if (update.isAutoAttach() != null) {
             toUpdate.setAutoAttach(update.isAutoAttach());
         }
-        activationKeyCurator.merge(toUpdate);
+        toUpdate = activationKeyCurator.merge(toUpdate);
 
         return this.translator.translate(toUpdate, ActivationKeyDTO.class);
     }

@@ -25,11 +25,13 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.Release;
 
+import org.candlepin.util.Util;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.GenericGenerator;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -204,6 +206,8 @@ public class ActivationKey extends AbstractHibernateObject<ActivationKey> implem
             return true;
         }
 
+        boolean equals = false;
+
         if (obj instanceof ActivationKey && super.equals(obj)) {
             ActivationKey that = (ActivationKey) obj;
 
@@ -212,7 +216,7 @@ public class ActivationKey extends AbstractHibernateObject<ActivationKey> implem
             String thisOwnerId = this.getOwner() != null ? this.getOwner().getId() : null;
             String thatOwnerId = that.getOwner() != null ? that.getOwner().getId() : null;
 
-            EqualsBuilder builder = new EqualsBuilder()
+            equals = new EqualsBuilder()
                 .append(this.getId(), that.getId())
                 .append(this.getName(), that.getName())
                 .append(this.getDescription(), that.getDescription())
@@ -220,10 +224,23 @@ public class ActivationKey extends AbstractHibernateObject<ActivationKey> implem
                 .append(this.getReleaseVer(), that.getReleaseVer())
                 .append(this.getServiceLevel(), that.getServiceLevel())
                 .append(this.isAutoAttach(), that.isAutoAttach())
-                .append(this.getPools(), that.getPools())
-                .append(this.getProducts(), that.getProducts());
+                .isEquals();
 
-            return builder.isEquals();
+            equals = equals && Util.collectionsAreEqual(this.getPools(), that.getPools(),
+                new Comparator<ActivationKeyPool>() {
+                    public int compare(ActivationKeyPool akp1, ActivationKeyPool akp2) {
+                        return akp1 == akp2 || (akp1 != null && akp1.equals(akp2)) ? 0 : 1;
+                    }
+                });
+
+            equals = equals && Util.collectionsAreEqual(this.getProducts(), that.getProducts(),
+                new Comparator<Product>() {
+                    public int compare(Product prod1, Product prod2) {
+                        return prod1 == prod2 || (prod1 != null && prod1.equals(prod2)) ? 0 : 1;
+                    }
+                });
+
+            return equals;
         }
 
         return false;
@@ -234,20 +251,8 @@ public class ActivationKey extends AbstractHibernateObject<ActivationKey> implem
      */
     @Override
     public int hashCode() {
-        // Like with the equals method, we are not interested in hashing nested objects; we're only
-        // concerned with the reference to such an object.
-        HashCodeBuilder builder = new HashCodeBuilder(37, 7)
-            .append(super.hashCode())
-            .append(this.getId())
-            .append(this.getName())
-            .append(this.getDescription())
-            .append(this.getOwner() != null ? this.getOwner().getId() : null)
-            .append(this.getReleaseVer())
-            .append(this.getServiceLevel())
-            .append(this.isAutoAttach())
-            .append(this.getPools())
-            .append(this.getProducts());
-
+        HashCodeBuilder builder = new HashCodeBuilder(7, 17)
+            .append(this.id);
         return builder.toHashCode();
     }
 

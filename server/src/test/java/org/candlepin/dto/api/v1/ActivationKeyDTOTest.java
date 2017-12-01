@@ -15,10 +15,6 @@
 package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.AbstractDTOTest;
-import org.candlepin.model.Pool;
-import org.candlepin.model.Product;
-import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
-import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.junit.Test;
 
 import java.util.Date;
@@ -61,13 +57,12 @@ public class ActivationKeyDTOTest extends AbstractDTOTest<ActivationKeyDTO> {
 
         Set<ActivationKeyDTO.ActivationKeyPoolDTO> pools =
             new HashSet<ActivationKeyDTO.ActivationKeyPoolDTO>();
-        pools.add(new ActivationKeyDTO.ActivationKeyPoolDTO("test-id-pool", 1L));
+        pools.add(new ActivationKeyDTO.ActivationKeyPoolDTO("test-id-pool", null));
         this.values.put("Pools", pools);
 
-        Set<String> prods =
-            new HashSet<String>();
+        Set<String> prods = new HashSet<String>();
         prods.add("test-id-prod");
-        this.values.put("Products", prods);
+        this.values.put("ProductIds", prods);
 
         Set<Map<String, String>> productDTOs = new HashSet<Map<String, String>>();
         Map<String, String> productDTO = new HashMap<String, String>();
@@ -104,114 +99,86 @@ public class ActivationKeyDTOTest extends AbstractDTOTest<ActivationKeyDTO> {
     @Test
     public void testHasProductWithAbsentProduct() {
         ActivationKeyDTO dto = new ActivationKeyDTO();
-        Product prod = new Product();
-        prod.setId("test-id-prod-1");
-        assertFalse(dto.hasProduct(prod));
+        assertFalse(dto.hasProductId("test-id-prod-1"));
     }
 
     @Test
     public void testHasProductWithPresentProduct() {
         ActivationKeyDTO dto = new ActivationKeyDTO();
-        Set<String> products =
-            new HashSet<String>();
+        Set<String> products = new HashSet<String>();
         products.add("test-id-prod-2");
-        dto.setProducts(products);
+        dto.setProductIds(products);
 
-        Product prod = new Product();
-        prod.setId("test-id-prod-2");
-
-        assertTrue(dto.hasProduct(prod));
+        assertTrue(dto.hasProductId("test-id-prod-2"));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testHasProductWithNullInput() {
         ActivationKeyDTO dto = new ActivationKeyDTO();
-        dto.hasProduct(null);
+        dto.hasProductId(null);
     }
 
     @Test
     public void testRemoveProductWithAbsentProduct() {
         ActivationKeyDTO dto = new ActivationKeyDTO();
 
-        Product prod = new Product();
-        prod.setId("test-id-prod-3");
-        assertFalse(dto.removeProduct(prod));
+        assertFalse(dto.removeProductId("test-id-prod-3"));
 
-        dto.setProducts(new HashSet<String>());
-        assertFalse(dto.removeProduct(prod));
+        dto.setProductIds(new HashSet<String>());
+        assertFalse(dto.removeProductId("test-id-prod-3"));
     }
 
     @Test
     public void testRemoveProductWithPresentProduct() {
         ActivationKeyDTO dto = new ActivationKeyDTO();
 
-        Set<String> products =
-            new HashSet<String>();
+        Set<String> products = new HashSet<String>();
         products.add("test-id-prod-4");
-        dto.setProducts(products);
+        dto.setProductIds(products);
 
-        Product prod = new Product();
-        prod.setId("test-id-prod-4");
-        assertTrue(dto.removeProduct(prod));
+        assertTrue(dto.removeProductId("test-id-prod-4"));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testRemoveProductWithNullInput() {
         ActivationKeyDTO dto = new ActivationKeyDTO();
-        dto.removeProduct(null);
+        dto.removeProductId(null);
     }
 
     @Test
     public void testAddProductWithAbsentProduct() {
         ActivationKeyDTO dto = new ActivationKeyDTO();
 
-        Product prod = new Product();
-        prod.setId("test-id-prod-5");
-        assertTrue(dto.addProduct(prod));
+        assertTrue(dto.addProductId("test-id-prod-5"));
     }
 
     @Test
     public void testAddProductWithPresentProduct() {
         ActivationKeyDTO dto = new ActivationKeyDTO();
 
-        Product prod = new Product();
-        prod.setId("test-id-prod-6");
-        assertTrue(dto.addProduct(prod));
+        assertTrue(dto.addProductId("test-id-prod-6"));
 
-        Product prod2 = new Product();
-        prod2.setId("test-id-prod-6");
-        assertFalse(dto.addProduct(prod2));
+        assertFalse(dto.addProductId("test-id-prod-6"));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testAddProductWithNullInput() {
         ActivationKeyDTO dto = new ActivationKeyDTO();
-        dto.addProduct(null);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testAddProductWithNullProductId() {
-        ActivationKeyDTO dto = new ActivationKeyDTO();
-
-        Product prod = new Product();
-        assertTrue(dto.addProduct(prod));
+        dto.addProductId(null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testAddProductWithEmptyProductId() {
         ActivationKeyDTO dto = new ActivationKeyDTO();
 
-        Product prod = new Product();
-        prod.setId("");
-        assertTrue(dto.addProduct(prod));
+        assertTrue(dto.addProductId(""));
     }
 
     @Test
     public void testHasPoolWithAbsentPool() {
         ActivationKeyDTO dto = new ActivationKeyDTO();
-        Pool pool = new Pool();
-        pool.setId("test-id-pool-1");
-        assertFalse(dto.hasPool(pool));
+
+        assertFalse(dto.hasPool("test-id-pool-1"));
     }
 
     @Test
@@ -219,13 +186,10 @@ public class ActivationKeyDTOTest extends AbstractDTOTest<ActivationKeyDTO> {
         ActivationKeyDTO dto = new ActivationKeyDTO();
         Set<ActivationKeyDTO.ActivationKeyPoolDTO> pools =
             new HashSet<ActivationKeyDTO.ActivationKeyPoolDTO>();
-        pools.add(new ActivationKeyDTO.ActivationKeyPoolDTO("test-id-pool-2"));
+        pools.add(new ActivationKeyDTO.ActivationKeyPoolDTO("test-id-pool-2", null));
         dto.setPools(pools);
 
-        Pool pool2 = new Pool();
-        pool2.setId("test-id-pool-2");
-
-        assertTrue(dto.hasPool(pool2));
+        assertTrue(dto.hasPool("test-id-pool-2"));
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -238,12 +202,10 @@ public class ActivationKeyDTOTest extends AbstractDTOTest<ActivationKeyDTO> {
     public void testRemovePoolWithAbsentPool() {
         ActivationKeyDTO dto = new ActivationKeyDTO();
 
-        Pool pool = new Pool();
-        pool.setId("test-id-pool-3");
-        assertFalse(dto.removePool(pool));
+        assertFalse(dto.removePool("test-id-pool-3"));
 
         dto.setPools(new HashSet<ActivationKeyDTO.ActivationKeyPoolDTO>());
-        assertFalse(dto.removePool(pool));
+        assertFalse(dto.removePool("test-id-pool-3"));
     }
 
     @Test
@@ -252,13 +214,10 @@ public class ActivationKeyDTOTest extends AbstractDTOTest<ActivationKeyDTO> {
 
         Set<ActivationKeyDTO.ActivationKeyPoolDTO> pools =
             new HashSet<ActivationKeyDTO.ActivationKeyPoolDTO>();
-        pools.add(new ActivationKeyDTO.ActivationKeyPoolDTO("test-id-pool-4"));
+        pools.add(new ActivationKeyDTO.ActivationKeyPoolDTO("test-id-pool-4", null));
         dto.setPools(pools);
 
-        Pool pool2 = new Pool();
-        pool2.setId("test-id-pool-4");
-
-        assertTrue(dto.removePool(pool2));
+        assertTrue(dto.removePool("test-id-pool-4"));
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -271,10 +230,9 @@ public class ActivationKeyDTOTest extends AbstractDTOTest<ActivationKeyDTO> {
     public void testAddPoolWithAbsentPool() {
         ActivationKeyDTO dto = new ActivationKeyDTO();
 
-        ActivationKeyPool akPool = new ActivationKeyPool();
-        Pool pool = new Pool();
-        pool.setId("test-id-pool-5");
-        akPool.setPool(pool);
+        ActivationKeyDTO.ActivationKeyPoolDTO akPool =
+            new ActivationKeyDTO.ActivationKeyPoolDTO("test-id-pool-5", null);
+
         assertTrue(dto.addPool(akPool));
     }
 
@@ -282,16 +240,14 @@ public class ActivationKeyDTOTest extends AbstractDTOTest<ActivationKeyDTO> {
     public void testAddPoolWithPresentPool() {
         ActivationKeyDTO dto = new ActivationKeyDTO();
 
-        ActivationKeyPool akPool = new ActivationKeyPool();
-        Pool pool = new Pool();
-        pool.setId("test-id-pool-6");
-        akPool.setPool(pool);
+        ActivationKeyDTO.ActivationKeyPoolDTO akPool =
+            new ActivationKeyDTO.ActivationKeyPoolDTO("test-id-pool-6", null);
+
         assertTrue(dto.addPool(akPool));
 
-        ActivationKeyPool akPool2 = new ActivationKeyPool();
-        Pool pool2 = new Pool();
-        pool2.setId("test-id-pool-6");
-        akPool2.setPool(pool2);
+        ActivationKeyDTO.ActivationKeyPoolDTO akPool2 =
+            new ActivationKeyDTO.ActivationKeyPoolDTO("test-id-pool-6", null);
+
         assertFalse(dto.addPool(akPool2));
     }
 
@@ -302,29 +258,23 @@ public class ActivationKeyDTOTest extends AbstractDTOTest<ActivationKeyDTO> {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testAddPoolWithNullPoolId() {
-        ActivationKeyDTO dto = new ActivationKeyDTO();
-
-        ActivationKeyPool pool = new ActivationKeyPool();
-        assertTrue(dto.addPool(pool));
-    }
-
-    @Test(expected = IllegalArgumentException.class)
     public void testAddPoolWithEmptyPoolId() {
         ActivationKeyDTO dto = new ActivationKeyDTO();
 
-        ActivationKeyPool pool = new ActivationKeyPool();
-        pool.setId("");
-        assertTrue(dto.addPool(pool));
+        ActivationKeyDTO.ActivationKeyPoolDTO akPool =
+            new ActivationKeyDTO.ActivationKeyPoolDTO("", null);
+        assertTrue(dto.addPool(akPool));
     }
 
     @Test
     public void testRemoveContentOverrideWithAbsentContentOverride() {
         ActivationKeyDTO dto = new ActivationKeyDTO();
 
-        ActivationKeyContentOverride override = new ActivationKeyContentOverride();
-        override.setName("test-name-override-3");
-        override.setContentLabel("test-contentLabel-override-3");
+        ActivationKeyDTO.ActivationKeyContentOverrideDTO override =
+            new ActivationKeyDTO.ActivationKeyContentOverrideDTO(
+            "test-contentLabel-override-3",
+            "test-name-override-3",
+            "test-value-override-3");
         assertFalse(dto.removeContentOverride(override));
 
         dto.setContentOverrides(new HashSet<ActivationKeyDTO.ActivationKeyContentOverrideDTO>());
@@ -343,9 +293,11 @@ public class ActivationKeyDTOTest extends AbstractDTOTest<ActivationKeyDTO> {
             "test-value-override-4"));
         dto.setContentOverrides(overrides);
 
-        ActivationKeyContentOverride override = new ActivationKeyContentOverride();
-        override.setContentLabel("test-contentLabel-override-4");
-        override.setName("test-name-override-4");
+        ActivationKeyDTO.ActivationKeyContentOverrideDTO override =
+            new ActivationKeyDTO.ActivationKeyContentOverrideDTO(
+            "test-contentLabel-override-4",
+            "test-name-override-4",
+            "test-value-override-4");
 
         assertTrue(dto.removeContentOverride(override));
     }
@@ -360,10 +312,11 @@ public class ActivationKeyDTOTest extends AbstractDTOTest<ActivationKeyDTO> {
     public void testAddContentOverrideWithAbsentContentOverride() {
         ActivationKeyDTO dto = new ActivationKeyDTO();
 
-        ActivationKeyContentOverride override = new ActivationKeyContentOverride();
-        override.setName("test-name-override-5");
-        override.setContentLabel("test-contentLabel-override-5");
-        override.setValue("test-value-override-5");
+        ActivationKeyDTO.ActivationKeyContentOverrideDTO override =
+            new ActivationKeyDTO.ActivationKeyContentOverrideDTO(
+            "test-contentLabel-override-5",
+            "test-name-override-5",
+            "test-value-override-5");
         assertTrue(dto.addContentOverride(override));
     }
 
@@ -371,16 +324,18 @@ public class ActivationKeyDTOTest extends AbstractDTOTest<ActivationKeyDTO> {
     public void testAddContentOverrideWithPresentContentOverride() {
         ActivationKeyDTO dto = new ActivationKeyDTO();
 
-        ActivationKeyContentOverride override = new ActivationKeyContentOverride();
-        override.setName("test-name-override-6");
-        override.setContentLabel("test-contentLabel-override-6");
-        override.setValue("test-value-override-6");
+        ActivationKeyDTO.ActivationKeyContentOverrideDTO override =
+            new ActivationKeyDTO.ActivationKeyContentOverrideDTO(
+            "test-contentLabel-override-6",
+            "test-name-override-6",
+            "test-value-override-6");
         assertTrue(dto.addContentOverride(override));
 
-        ActivationKeyContentOverride override2 = new ActivationKeyContentOverride();
-        override2.setName("test-name-override-6");
-        override2.setContentLabel("test-contentLabel-override-6");
-        override2.setValue("test-value-override-6");
+        ActivationKeyDTO.ActivationKeyContentOverrideDTO override2 =
+            new ActivationKeyDTO.ActivationKeyContentOverrideDTO(
+            "test-contentLabel-override-6",
+            "test-name-override-6",
+            "test-value-override-6");
         assertFalse(dto.addContentOverride(override2));
     }
 
@@ -388,35 +343,5 @@ public class ActivationKeyDTOTest extends AbstractDTOTest<ActivationKeyDTO> {
     public void testAddContentOverrideWithNullInput() {
         ActivationKeyDTO dto = new ActivationKeyDTO();
         dto.addContentOverride(null);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testAddContentOverrideWithNullName() {
-        ActivationKeyDTO dto = new ActivationKeyDTO();
-
-        ActivationKeyContentOverride override = new ActivationKeyContentOverride();
-        override.setContentLabel("test-contentLabel-override-7");
-        override.setValue("test-value-override-7");
-        assertTrue(dto.addContentOverride(override));
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testAddContentOverrideWithNullValue() {
-        ActivationKeyDTO dto = new ActivationKeyDTO();
-
-        ActivationKeyContentOverride override = new ActivationKeyContentOverride();
-        override.setContentLabel("test-contentLabel-override-8");
-        override.setName("test-name-override-8");
-        assertTrue(dto.addContentOverride(override));
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testAddContentOverrideWithNullContentLabel() {
-        ActivationKeyDTO dto = new ActivationKeyDTO();
-
-        ActivationKeyContentOverride override = new ActivationKeyContentOverride();
-        override.setValue("test-value-override-9");
-        override.setName("test-name-override-9");
-        assertTrue(dto.addContentOverride(override));
     }
 }

@@ -290,11 +290,11 @@ public class OwnerResource {
      */
     protected void populateEntity(Owner entity, OwnerDTO dto) {
         if (entity == null) {
-            throw new IllegalArgumentException("entity is null");
+            throw new IllegalArgumentException("the owner model entity is null");
         }
 
         if (dto == null) {
-            throw new IllegalArgumentException("dto is null");
+            throw new IllegalArgumentException("the owner dto is null");
         }
 
         if (dto.getDisplayName() != null) {
@@ -363,11 +363,11 @@ public class OwnerResource {
      */
     protected void populateEntity(ActivationKey entity, ActivationKeyDTO dto) {
         if (entity == null) {
-            throw new IllegalArgumentException("entity is null");
+            throw new IllegalArgumentException("the activation key model entity is null");
         }
 
         if (dto == null) {
-            throw new IllegalArgumentException("dto is null");
+            throw new IllegalArgumentException("the activation key dto is null");
         }
 
         if (dto.getName() != null) {
@@ -445,12 +445,12 @@ public class OwnerResource {
             }
         }
 
-        if (dto.getProducts() != null) {
-            if (dto.getProducts().isEmpty()) {
+        if (dto.getProductIds() != null) {
+            if (dto.getProductIds().isEmpty()) {
                 entity.setProducts(new HashSet<Product>());
             }
             else {
-                for (String productDTO : dto.getProducts()) {
+                for (String productDTO : dto.getProductIds()) {
                     if (productDTO != null) {
                         Product product = findProduct(entity.getOwner(), productDTO);
                         entity.addProduct(product);
@@ -845,6 +845,8 @@ public class OwnerResource {
         @QueryParam("name") String keyName) {
         Owner owner = findOwner(ownerKey);
 
+        // TODO: upgrade this to the CandlepinQuery framework and also update
+        // activationKeyCurator.listByOwner
         if (keyName == null) {
             List<ActivationKey> keys = this.activationKeyCurator.listByOwner(owner);
             List<ActivationKeyDTO> keyDTOs = new ArrayList<ActivationKeyDTO>();

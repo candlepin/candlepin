@@ -37,11 +37,11 @@ public abstract class SingleValueWrapSerializer extends JsonSerializer<String> {
     }
 
     @Override
-    public void serialize(String releaseVersion, JsonGenerator generator, SerializerProvider provider)
+    public void serialize(String fieldValue, JsonGenerator generator, SerializerProvider provider)
         throws IOException {
 
         generator.writeStartObject();
-        generator.writeObjectField(fieldName, releaseVersion);
+        generator.writeObjectField(fieldName, fieldValue);
         generator.writeEndObject();
     }
 }
