@@ -190,9 +190,8 @@ public class ResolverUtil {
     public Subscription resolveSubscription(Subscription subscription) {
         // Impl note:
         // We don't check that the subscription exists here, because it's
-        // entirely possible that it
-        // doesn't (i.e. during creation). We just need to make sure it's not
-        // null.
+        // entirely possible that it doesn't (i.e. during creation). We just
+        // need to make sure it's not null.
         if (subscription == null) {
             throw new BadRequestException(i18n.tr("No subscription specified"));
         }
@@ -213,6 +212,52 @@ public class ResolverUtil {
             this.validateProductData(product, owner, true);
         }
 
+        // TODO: Do we need to resolve Branding objects?
+
+        return subscription;
+    }
+
+    /**
+     * used to resolve subscription but it resolves the product too.
+     * currently used in hostedtest resources
+     * @param subscription
+     * @return the resolved subscription
+     */
+    public Subscription resolveSubscriptionAndProduct(Subscription subscription) {
+        // Impl note:
+        // We don't check that the subscription exists here, because it's
+        // entirely possible that it doesn't (i.e. during creation).
+        // We just need to make sure it's not null.
+        if (subscription == null) {
+            throw new BadRequestException(i18n.tr("No subscription specified"));
+        }
+
+        // Ensure the owner is set and is valid
+        Owner owner = this.resolveOwner(subscription.getOwner());
+        subscription.setOwner(owner);
+
+        subscription.setProduct(
+            new ProductData(this.resolveProduct(owner, subscription.getProduct().getId())));
+        if (subscription.getDerivedProduct() != null) {
+            ProductData p = new ProductData(
+                this.resolveProduct(owner, subscription.getDerivedProduct().getId()));
+            subscription.setDerivedProduct(p);
+        }
+
+        HashSet<ProductData> providedProducts = new HashSet<ProductData>();
+        for (ProductData product : subscription.getProvidedProducts()) {
+            if (product != null) {
+                providedProducts.add(new ProductData(this.resolveProduct(owner, product.getId())));
+            }
+        }
+        subscription.setProvidedProducts(providedProducts);
+        HashSet<ProductData> derivedProvidedProducts = new HashSet<ProductData>();
+        for (ProductData product : subscription.getDerivedProvidedProducts()) {
+            if (product != null) {
+                derivedProvidedProducts.add(new ProductData(this.resolveProduct(owner, product.getId())));
+            }
+        }
+        subscription.setDerivedProvidedProducts(derivedProvidedProducts);
         // TODO: Do we need to resolve Branding objects?
 
         return subscription;
