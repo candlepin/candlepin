@@ -33,7 +33,8 @@ describe 'Entitlement Certificate V1 Size' do
 
   after(:each) do
     @content_list.each do |content|
-      @cp.delete_content(@owner['key'], content.id)
+      # cant delete content in hosted mode as its locked
+      @cp.delete_content(@owner['key'], content.id) unless is_hosted?
     end
   end
 

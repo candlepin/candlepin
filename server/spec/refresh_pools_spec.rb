@@ -7,6 +7,7 @@ require 'rest_client'
 describe 'Refresh Pools' do
   include CandlepinMethods
   include VirtHelper
+  include CertificateMethods
 
   before(:each) do
     skip("candlepin running in standalone mode") unless is_hosted?
@@ -295,4 +296,255 @@ describe 'Refresh Pools' do
     pools.length.should == 1
   end
 
+  def concat_serials(normal_ent, bonus_ent)
+    normal_serial = normal_ent['certificates'][0]['serial']['id']
+    bonus_serial = bonus_ent['certificates'][0]['serial']['id']
+    'normalEnt:' + normal_serial.to_s + '::bonusEnt:' + bonus_serial.to_s
+  end
+
+  def test_entitlement_regeneration
+    @owner = create_owner random_string('test_owner')
+    @product = create_product(nil, nil, :attributes =>
+                {:version => '6.4',
+                 :arch => 'i386, x86_64',
+                 :sockets => 4,
+                 :cores => 8,
+                 :ram => 16,
+                 :warning_period => 15,
+                 :management_enabled => true,
+                 :stacking_id => '8888',
+		 :virt_limit => "unlimited",
+		 :host_limited => "true",
+                 :virt_only => 'false',
+                 :support_level => 'standard',
+                 :support_type => 'excellent',})
+
+    @provided_product = create_product(nil, nil, :attributes =>
+                {:version => '6.4',
+                 :arch => 'i386, x86_64',
+                 :sockets => 4,
+                 :cores => 8,
+                 :ram => 16,
+                 :warning_period => 15,
+                 :management_enabled => true,
+                 :stacking_id => '8888',
+                 :virt_only => 'false',
+                 :support_level => 'standard',
+                 :support_type => 'excellent',})
+
+    @derived_provided_product = create_product(nil, nil, :attributes =>
+                {:version => '6.4',
+                 :arch => 'i386, x86_64',
+                 :sockets => 4,
+                 :cores => 8,
+                 :ram => 16,
+                 :warning_period => 15,
+                 :management_enabled => true,
+                 :stacking_id => '8888',
+                 :virt_only => 'false',
+                 :support_level => 'standard',
+                 :support_type => 'excellent',})
+
+    @derived_product = create_product(nil, "derived product 1", {
+      :attributes => {
+          :cores => 2,
+          :sockets => 4
+      }
+    })
+
+    @content = create_content({:gpg_url => 'gpg_url',
+                               :content_url => '/content/dist/rhel/$releasever/$basearch/os',
+                               :metadata_expire => 6400,
+                               :required_tags => 'TAG1,TAG2',})
+
+    @content2 = create_content({:gpg_url => 'gpg_url',
+                               :content_url => '/content/dist/rhel/$releasever/$basearch/os',
+                               :metadata_expire => 6400,
+                               :required_tags => 'TAG1,TAG2',})
+
+    @content3 = create_content({:gpg_url => 'gpg_url',
+                               :content_url => '/content/dist/rhel/$releasever/$basearch/os',
+                               :metadata_expire => 6400,
+                               :required_tags => 'TAG1,TAG2',})
+
+    @cp.add_content_to_product(@owner['key'], @product.id, @content.id, false)
+    @cp.add_content_to_product(@owner['key'], @provided_product.id, @content2.id, false)
+    @cp.add_content_to_product(@owner['key'], @derived_provided_product.id, @content3.id, false)
+
+    @pool = create_pool_and_subscription(@owner['key'], @product.id, 10, [@provided_product.id],
+					 '12345', '6789', 'order1', nil, nil, false,
+					 {:derived_product_id => @derived_product['id'],
+                                          :derived_provided_products => [@derived_provided_product.id]
+                                         })
+    sub = get_hostedtest_subscription(@pool['subscriptionId'])
+
+    @bonus_pool = @cp.list_owner_pools(@owner['key']).select {|p| p['type'] == 'UNMAPPED_GUEST' }[0]
+
+    # create an entitlement with a product and content
+    @user = user_client(@owner, random_string('billy'))
+    @system = consumer_client(@user, random_string('system1'), :system, nil,
+                {'system.certificate_version' => '3.3',
+                 'uname.machine' => 'i386'})
+    @guest = consumer_client(@user, 'virty', :system, nil, {
+      'virt.is_guest' => true,
+      'system.certificate_version' => '3.3'
+    })
+
+    entitlement = @system.consume_pool(@pool['id'], {:quantity => 1})[0]
+    bonus_entitlement = @guest.consume_pool(@bonus_pool['id'], {:quantity => 1})[0]
+
+    json_body = extract_payload(entitlement['certificates'][0]['cert'])
+    bonus_json_body = extract_payload(bonus_entitlement['certificates'][0]['cert'])
+
+    serial_concat = concat_serials(entitlement, bonus_entitlement)
+
+    # verify serial does not change on simple refresh
+    @cp.refresh_pools(@owner['key'], false, false, false)
+    entitlement =  @cp.get_entitlement(entitlement['id'])
+    bonus_entitlement =  @cp.get_entitlement(bonus_entitlement['id'])
+
+    concat_serials(entitlement, bonus_entitlement).should == serial_concat
+
+    # modify sub object, update upstream sub but dont refresh
+    sub = yield(sub, @owner)
+    update_pool_or_subscription(sub, false)
+
+    # verify serial does not change on content update request that does not regenerate cert
+    entitlement =  @cp.get_entitlement(entitlement['id'])
+    bonus_entitlement =  @cp.get_entitlement(bonus_entitlement['id'])
+    concat_serials(entitlement, bonus_entitlement).should == serial_concat
+    # this time when we refresh, serial should change
+    @cp.refresh_pools(@owner['key'], false, false, false)
+    entitlement =  @cp.get_entitlement(entitlement['id'])
+    bonus_entitlement =  @cp.get_entitlement(bonus_entitlement['id'])
+    concat_serials(entitlement, bonus_entitlement).should_not == serial_concat
+    json_body = extract_payload(entitlement['certificates'][0]['cert'])
+    return json_body, @product
+  end
+
+  it 'regenerates entitlements when modifiedProductIds of content change' do
+    test_entitlement_regeneration { |sub, owner|
+      prod_id_2 = random_string('modifying_prod')
+      create_product(prod_id_2, prod_id_2, {
+        :owner => owner['key']
+      })
+      sub['product']['productContent'][0]['content']['modifiedProductIds'] = [prod_id_2]
+      sub
+    }
+  end
+
+  it 'regenerates entitlements when modifiedProductIds of content of a provided product change' do
+    test_entitlement_regeneration { |sub, owner|
+      prod_id_2 = random_string('modifying_prod')
+      create_product(prod_id_2, prod_id_2, {
+        :owner => owner['key']
+      })
+      sub['providedProducts'][0]['productContent'][0]['content']['modifiedProductIds'] = [prod_id_2]
+      sub
+    }
+  end
+
+  it 'regenerates entitlements when modifiedProductIds of content of a derived provided product change' do
+    test_entitlement_regeneration { |sub, owner|
+      prod_id_2 = random_string('modifying_prod')
+      create_product(prod_id_2, prod_id_2, {
+        :owner => owner['key']
+      })
+      sub['derivedProvidedProducts'][0]['productContent'][0]['content']['modifiedProductIds'] = [prod_id_2]
+      sub
+    }
+  end
+
+  it 'regenerates entitlements when provided product is added' do
+    pp_name = random_string('pp_name')
+    pp_id = random_string(nil, true)
+    json_body, main_product = test_entitlement_regeneration { |sub, owner|
+      pp = create_product(pp_id, pp_name, {:attributes =>
+                  {:version => '6.4',
+                   :arch => 'i386, x86_64',
+                   :sockets => 4,
+                   :cores => 8,
+                   :ram => 16,
+                   :warning_period => 15,
+                   :management_enabled => true,
+                   :stacking_id => '8888',
+                   :virt_only => 'false',
+                   :support_level => 'standard',
+                   :support_type => 'excellent',}, :owner => owner['key']})
+      pp_content = create_content({:gpg_url => 'gpg_url',
+                   :content_url => '/content/dist/rhel/$releasever/$basearch/os',
+                   :metadata_expire => 6400,
+                   :required_tags => 'TAG1,TAG2',})
+      pp['productContent'] = [{'content' => pp_content, 'enabled' => 'true'}]
+      sub['providedProducts'].push(pp)
+      sub
+    }
+    pp = json_body['products'].find {|p| p['id'] == pp_id}
+    pp['name'].should == pp_name
+  end
+
+  it 'regenerates entitlements when provided product is removed' do
+    json_body, main_product = test_entitlement_regeneration { |sub, owner|
+      sub['providedProducts'] = []
+      sub
+    }
+    json_body['products'].size.should == 1
+  end
+
+  it 'regenerates entitlements when label of a content changes' do
+    json_body, main_product = test_entitlement_regeneration { |sub, owner|
+      sub['product']['productContent'][0]['content']['label'] = 'shakeItOff'
+      sub
+    }
+    product_json = json_body['products'].find {|p| p['id'] == main_product['id']}
+    product_json['content'][0]['label'].should == 'shakeItOff'
+  end
+
+  it 'regenerates entitlements when releaseVer of a content changes' do
+    test_entitlement_regeneration { |sub|
+      sub['product']['productContent'][0]['content']['releaseVer'] = 'badBlood'
+      sub
+    }
+    # releasever is not in json
+  end
+
+  it 'regenerates entitlements when vendor of a content changes' do
+    json_body, main_product = test_entitlement_regeneration { |sub|
+      sub['product']['productContent'][0]['content']['vendor'] = 'blankSpace'
+      sub
+    }
+    product_json = json_body['products'].find {|p| p['id'] == main_product['id']}
+    product_json['content'][0]['vendor'].should == 'blankSpace'
+  end
+
+  it 'regenerates entitlements when adding a content' do
+    json_body, main_product = test_entitlement_regeneration { |sub|
+      productContent =
+        { "content"=>{ "created"=>"2017-11-24T13:41:39+0000",
+		       "updated"=>"2017-11-24T13:41:39+0000",
+		       "uuid"=>"theStroyOfUs",
+		       "id"=>"twentyTwo",
+		       "type"=>"yum",
+		       "label"=>"teardropsOnMyGuitar",
+		       "name"=>"swiftrocks",
+		       "vendor"=>"fifteen",
+		       "releaseVer"=>nil},
+          "enabled"=>true }
+
+      sub['product']['productContent'].push(productContent)
+      sub
+    }
+    product_json = json_body['products'].find {|p| p['id'] == main_product['id']}
+    content = product_json['content'].find {|c| c['id'] == 'twentyTwo'}
+    content['name'].should == 'swiftrocks'
+  end
+
+  it 'regenerates entitlements when deleting a content' do
+    json_body, main_product = test_entitlement_regeneration { |sub|
+      sub['product']['productContent'] = []
+      sub
+    }
+    product_json = json_body['products'].find {|p| p['id'] == main_product['id']}
+    product_json['content'].should == []
+  end
 end
