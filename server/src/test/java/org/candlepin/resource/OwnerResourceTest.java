@@ -884,7 +884,11 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertNotNull(key.getId());
         assertEquals(key.getOwner().getId(), owner.getId());
         assertEquals(key.getReleaseVersion(), "release1");
-        List<ActivationKeyDTO> keys = ownerResource.ownerActivationKeys(owner.getKey(), null);
+        CandlepinQuery<ActivationKeyDTO> result = ownerResource.ownerActivationKeys(owner.getKey(), null);
+
+        assertNotNull(result);
+        List<ActivationKeyDTO> keys = result.list();
+
         assertEquals(1, keys.size());
     }
 
@@ -906,10 +910,14 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals(key.getOwner().getId(), owner.getId());
         assertEquals(key.getReleaseVersion(), "release2");
 
-        List<ActivationKeyDTO> keys = ownerResource.ownerActivationKeys(owner.getKey(), "dd");
+        CandlepinQuery<ActivationKeyDTO> result = ownerResource.ownerActivationKeys(owner.getKey(), "dd");
+        assertNotNull(result);
+        List<ActivationKeyDTO> keys = result.list();
         assertEquals(1, keys.size());
 
-        keys = ownerResource.ownerActivationKeys(owner.getKey(), null);
+        result = ownerResource.ownerActivationKeys(owner.getKey(), null);
+        assertNotNull(result);
+        keys = result.list();
         assertEquals(2, keys.size());
     }
 

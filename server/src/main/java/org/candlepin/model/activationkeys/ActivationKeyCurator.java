@@ -16,13 +16,13 @@ package org.candlepin.model.activationkeys;
 
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.model.AbstractHibernateCurator;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Owner;
 
 import com.google.inject.persist.Transactional;
 
+import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
-
-import java.util.List;
 
 /**
  * SubscriptionTokenCurator
@@ -33,9 +33,15 @@ public class ActivationKeyCurator extends AbstractHibernateCurator<ActivationKey
         super(ActivationKey.class);
     }
 
-    public List<ActivationKey> listByOwner(Owner owner) {
-        return (List<ActivationKey>) currentSession().createCriteria(ActivationKey.class)
-        .add(Restrictions.eq("owner", owner)).list();
+    public CandlepinQuery<ActivationKey> listByOwner(String keyName, Owner owner) {
+        DetachedCriteria criteria = DetachedCriteria.forClass(ActivationKey.class)
+            .add(Restrictions.eq("owner", owner));
+
+        if (keyName != null) {
+            criteria.add(Restrictions.eq("name", keyName));
+        }
+
+        return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
     }
 
     @Transactional

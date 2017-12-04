@@ -126,7 +126,6 @@ import ch.qos.logback.classic.Level;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
@@ -840,27 +839,13 @@ public class OwnerResource {
     @Path("{owner_key}/activation_keys")
     @ApiOperation(notes = "Retrieves a list of Activation Keys for an Owner", value = "Owner Activation Keys")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
-    public List<ActivationKeyDTO> ownerActivationKeys(
+    public CandlepinQuery<ActivationKeyDTO> ownerActivationKeys(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @QueryParam("name") String keyName) {
         Owner owner = findOwner(ownerKey);
 
-        // TODO: upgrade this to the CandlepinQuery framework and also update
-        // activationKeyCurator.listByOwner
-        if (keyName == null) {
-            List<ActivationKey> keys = this.activationKeyCurator.listByOwner(owner);
-            List<ActivationKeyDTO> keyDTOs = new ArrayList<ActivationKeyDTO>();
-            for (ActivationKey key : keys) {
-                keyDTOs.add(translator.translate(key, ActivationKeyDTO.class));
-            }
-            return keyDTOs;
-        }
-        else {
-            List<ActivationKeyDTO> results = new ArrayList<ActivationKeyDTO>();
-            results.add(translator.translate(
-                activationKeyCurator.lookupForOwner(keyName, owner), ActivationKeyDTO.class));
-            return results;
-        }
+        CandlepinQuery<ActivationKey> keys = this.activationKeyCurator.listByOwner(keyName, owner);
+        return translator.translateQuery(keys, ActivationKeyDTO.class);
     }
 
     /**
