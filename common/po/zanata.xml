@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <config xmlns="http://zanata.org/namespace/config/">
-    <url>https://translate.zanata.org/zanata/</url>
+    <url>https://vendors.zanata.redhat.com/</url>
     <project>candlepin</project>
     <project-version>candlepin-2.1-HOTFIX</project-version>
     <project-type>gettext</project-type>
