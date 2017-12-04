@@ -844,7 +844,7 @@ public class OwnerResource {
         @QueryParam("name") String keyName) {
         Owner owner = findOwner(ownerKey);
 
-        CandlepinQuery<ActivationKey> keys = this.activationKeyCurator.listByOwner(keyName, owner);
+        CandlepinQuery<ActivationKey> keys = this.activationKeyCurator.listByOwner(owner, keyName);
         return translator.translateQuery(keys, ActivationKeyDTO.class);
     }
 

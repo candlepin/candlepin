@@ -141,7 +141,7 @@ public class OwnerManager {
             }
         }
 
-        for (ActivationKey key : activationKeyCurator.listByOwner(null, owner)) {
+        for (ActivationKey key : activationKeyCurator.listByOwner(owner)) {
             log.info("Deleting activation key: {}", key);
             activationKeyCurator.delete(key);
         }

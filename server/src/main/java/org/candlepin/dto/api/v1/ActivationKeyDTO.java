@@ -754,8 +754,11 @@ public class ActivationKeyDTO  extends TimestampedCandlepinDTO<ActivationKeyDTO>
      */
     @JsonIgnore
     public boolean addContentOverride(ActivationKeyContentOverrideDTO contentOverrideDto) {
-        if (contentOverrideDto == null) {
-            throw new IllegalArgumentException("contentOverrideDto is null.");
+        if (contentOverrideDto == null ||
+            contentOverrideDto.getContentLabel() == null || contentOverrideDto.getContentLabel().isEmpty() ||
+            contentOverrideDto.getName() == null || contentOverrideDto.getName().isEmpty() ||
+            contentOverrideDto.getValue() == null || contentOverrideDto.getValue().isEmpty()) {
+            throw new IllegalArgumentException("contentOverrideDto is null or incomplete");
         }
 
         if (this.contentOverrides == null) {

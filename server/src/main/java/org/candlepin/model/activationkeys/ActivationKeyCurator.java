@@ -33,7 +33,7 @@ public class ActivationKeyCurator extends AbstractHibernateCurator<ActivationKey
         super(ActivationKey.class);
     }
 
-    public CandlepinQuery<ActivationKey> listByOwner(String keyName, Owner owner) {
+    public CandlepinQuery<ActivationKey> listByOwner(Owner owner, String keyName) {
         DetachedCriteria criteria = DetachedCriteria.forClass(ActivationKey.class)
             .add(Restrictions.eq("owner", owner));
 
@@ -42,6 +42,10 @@ public class ActivationKeyCurator extends AbstractHibernateCurator<ActivationKey
         }
 
         return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
+    }
+
+    public CandlepinQuery<ActivationKey> listByOwner(Owner owner) {
+        return this.listByOwner(owner, null);
     }
 
     @Transactional
