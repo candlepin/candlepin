@@ -6,8 +6,10 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
-    <changeSet id="20171108140157-1" author="crog">
-        <preConditions onSqlOutput="FAIL" onFail="CONTINUE">
+    <property name="precondition_failure_msg" value="Per-org products migration appears to have been run; skipping validation task"/>
+
+    <changeSet id="20171108140157-1" author="crog" runAlways="true">
+        <preConditions onSqlOutput="FAIL" onFail="CONTINUE" onFailMessage="${precondition_failure_msg}">
             <columnExists tableName="cp_pool" columnName="productid"/>
             <columnExists tableName="cp_pool" columnName="derivedproductid"/>
             <tableExists tableName="cp_subscription"/>
