@@ -14,31 +14,17 @@
  */
 package org.candlepin.liquibase;
 
+
+
 /**
- * SystemOutLogger
- *
- * Simple logging class that logs messages to System.out
+ * Liquibase wrapper class for the per-org products upgrade task
  */
-public class SystemOutLogger implements CustomTaskLogger {
+public class PerOrgProductsMigrationValidationLiquibaseWrapper
+    extends LiquibaseCustomTaskWrapper<PerOrgProductsMigrationValidationTask> {
 
-
-    @Override
-    public void info(String message, Object... params) {
-        System.out.printf(message, params);
-        System.out.println();
+    public PerOrgProductsMigrationValidationLiquibaseWrapper() {
+        super(PerOrgProductsMigrationValidationTask.class);
     }
 
-    @Override
-    public void warn(String message, Object... params) {
-        System.out.print("WARN: ");
-        System.out.printf(message, params);
-        System.out.println();
-    }
-
-    @Override
-    public void error(String message, Object... params) {
-        System.out.printf(message, params);
-        System.out.println();
-    }
-
+    // Nothing else to do here
 }
