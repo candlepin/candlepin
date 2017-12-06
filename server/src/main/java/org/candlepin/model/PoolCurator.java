@@ -154,36 +154,44 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @param ents Entitlements for which we search the pools
      * @return Pools created as a result of creation of one of the ents.
      */
-    public List<Pool> listBySourceEntitlements(List<Entitlement> ents) {
-        if (ents.size() == 0) {
-            return new ArrayList<Pool>();
+    public Set<Pool> listBySourceEntitlements(Iterable<Entitlement> ents) {
+        if (ents == null || !ents.iterator().hasNext()) {
+            return new HashSet<Pool>();
         }
 
-        List<Pool> results = createSecureCriteria()
-            .add(CPRestrictions.in("sourceEntitlement", ents))
-            .setFetchMode("entitlements", FetchMode.JOIN)
-            .list();
+        Set<Pool> output = new HashSet<Pool>();
 
-        if (results == null) {
-            results = new LinkedList<Pool>();
+        // Impl note:
+        // We're using the partitioning here as it's slightly faster to do individual queries,
+        // and we eliminate the risk of hitting the query param limit. Since we weren't using
+        // a CPQuery object to begin with, this is a low-effort win here.
+        for (List<Entitlement> block : this.partition(ents)) {
+            List<Pool> pools = createSecureCriteria()
+                .add(CPRestrictions.in("sourceEntitlement", block))
+                .setFetchMode("entitlements", FetchMode.JOIN)
+                .list();
+
+            if (pools != null) {
+                output.addAll(pools);
+            }
         }
 
-        if (results.size() > 0) {
-            List<Pool> pools = listBySourceEntitlements(convertPoolsToEntitlements(results));
-            results.addAll(pools);
+        if (output.size() > 0) {
+            Set<Pool> pools = this.listBySourceEntitlements(convertPoolsToEntitlements(output));
+            output.addAll(pools);
         }
 
-        return results;
+        return output;
     }
 
-    private List<Entitlement> convertPoolsToEntitlements(List<Pool> pools) {
-        List<Entitlement> result = new ArrayList<Entitlement>();
+    private Set<Entitlement> convertPoolsToEntitlements(Collection<Pool> pools) {
+        Set<Entitlement> output = new HashSet<Entitlement>();
 
         for (Pool p : pools) {
-            result.addAll(p.getEntitlements());
+            output.addAll(p.getEntitlements());
         }
 
-        return result;
+        return output;
     }
 
     /**

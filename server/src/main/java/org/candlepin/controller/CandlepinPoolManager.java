@@ -1718,18 +1718,21 @@ public class CandlepinPoolManager implements PoolManager {
     @Traceable
     public void revokeEntitlements(List<Entitlement> entsToRevoke, Set<String> alreadyDeletedPools,
         boolean regenCertsAndStatuses) {
-        if (log.isDebugEnabled()) {
-            log.debug("Starting batch revoke of entitlements: {}", getEntIds(entsToRevoke));
-        }
 
         if (CollectionUtils.isEmpty(entsToRevoke)) {
             return;
         }
 
-        List<Pool> poolsToDelete = poolCurator.listBySourceEntitlements(entsToRevoke);
-        if (log.isDebugEnabled()) {
-            log.debug("Found additional pools to delete by source entitlements: {}",
-                getPoolIds(poolsToDelete));
+        log.debug("Starting batch revoke of {} entitlements", entsToRevoke.size());
+        if (log.isTraceEnabled()) {
+            log.trace("Entitlements IDs: {}", getEntIds(entsToRevoke));
+        }
+
+        Set<Pool> poolsToDelete = this.poolCurator.listBySourceEntitlements(entsToRevoke);
+
+        log.debug("Found {} additional pools to delete from source entitlements", poolsToDelete.size());
+        if (log.isTraceEnabled()) {
+            log.trace("Additional pool IDs: {}", getPoolIds(poolsToDelete));
         }
 
         List<Pool> poolsToLock = new ArrayList<Pool>();
@@ -1746,7 +1749,7 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         poolCurator.lockAndLoad(poolsToLock);
-        log.info("Batch revoking {} entitlements ", entsToRevoke.size());
+        log.info("Batch revoking {} entitlements", entsToRevoke.size());
         entsToRevoke = new ArrayList<Entitlement>(entsToRevoke);
 
         for (Pool pool : poolsToDelete) {

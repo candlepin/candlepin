@@ -1032,7 +1032,8 @@ public class PoolManagerTest {
 
         List<Pool> poolsWithSource = createPoolsWithSourceEntitlement(e, product);
         poolsWithSource.get(0).getEntitlements().add(e3);
-        when(mockPoolCurator.listBySourceEntitlements(entsToDelete)).thenReturn(poolsWithSource);
+        Set<Pool> poolsWithSourceAsSet = new HashSet<Pool>(poolsWithSource);
+        when(mockPoolCurator.listBySourceEntitlements(entsToDelete)).thenReturn(poolsWithSourceAsSet);
 
         PreUnbindHelper preHelper = mock(PreUnbindHelper.class);
         ValidationResult result = new ValidationResult();
@@ -1046,7 +1047,7 @@ public class PoolManagerTest {
         manager.revokeEntitlements(entsToDelete);
         entsToDelete.add(e3);
         verify(entitlementCurator).batchDelete(eq(entsToDelete));
-        verify(mockPoolCurator).batchDelete(eq(poolsWithSource), anySetOf(String.class));
+        verify(mockPoolCurator).batchDelete(eq(poolsWithSourceAsSet), anySetOf(String.class));
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })

@@ -514,6 +514,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         if (guestId == null) {
             return null;
         }
+
         String guestLower = guestId.toLowerCase();
         if (cachedHosts.containsKey(guestLower)) {
             return cachedHosts.get(guestLower);
