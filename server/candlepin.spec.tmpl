@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 0.9.54.25
+Version: 0.9.54.26
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,14 @@ fi
 
 #raw
 %changelog
+* Thu Dec 07 2017 Kevin Howell <khowell@redhat.com> 0.9.54.26-1
+- 1519900: Added a per-org products migration validation Liquibase task
+  (crog@redhat.com)
+- 1504105: Capture consumer activation key settings before attaching
+  (wpoteat@redhat.com)
+- Changes to make mysql work (adarshvritant@gmail.com)
+- 1469573: purge orphaned pools (adarshvritant@gmail.com)
+
 * Mon Aug 07 2017 Alex Wood <awood@redhat.com> 0.9.54.25-1
 - Break up massive in clauses in listBySourceEntitlements. (awood@redhat.com)
 - 1440924: Adjust message when activation key registration fails
