@@ -1,23 +1,18 @@
-# fvalen <fvalen@fedoraproject.org>, 2012. #zanata
-# fvalen <fvalen@fedoraproject.org>, 2013. #zanata
-# fvalen <fvalen@fedoraproject.org>, 2014. #zanata
-# Vritant Jain <vrjain@redhat.com>, 2015. #zanata
-# John Sefler <jsefler@redhat.com>, 2016. #zanata
-# Omino Magico <francescobagaglia046@gmail.com>, 2017. #zanata
+# ljanda <ljanda@redhat.com>, 2017. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-11-16 11:55-0500\n"
-"PO-Revision-Date: 2017-11-10 04:00-0500\n"
-"Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
-"Language-Team: Italian\n"
+"POT-Creation-Date: 2017-12-07 14:57-0500\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2017-11-10 09:00+0000\n"
+"Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
+"Language-Team: Italian\n"
 "Language: it\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
-"X-Generator: Zanata 3.9.6\n"
+"X-Generator: Zanata 4.2.1\n"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -413,10 +408,10 @@ msgstr ""
 msgid "Subscription pool {0} do not exist."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:1850
+#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:1853
 msgid ""
-"Unmapped guest entitlement expired without establishing a host/guest "
-"mapping."
+"Unmapped guest entitlement expired without establishing a host/guest mapping."
+""
 msgstr ""
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:207
@@ -426,8 +421,8 @@ msgstr ""
 #: server/src/main/java/org/candlepin/controller/Entitler.java:257
 #: server/src/main/java/org/candlepin/controller/Entitler.java:497
 msgid ""
-"Development units may only be used on hosted servers and with orgs that have"
-" active subscriptions."
+"Development units may only be used on hosted servers and with orgs that have "
+"active subscriptions."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:467
@@ -481,21 +476,21 @@ msgid ""
 "details"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/hostedtest/HostedTestSubscriptionResource.java:272
+#: server/src/main/java/org/candlepin/hostedtest/HostedTestSubscriptionResource.java:281
 #: server/src/main/java/org/candlepin/model/EntitlementCurator.java:422
 #: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:157
 #, java-format
 msgid "Product with ID ''{0}'' could not be found."
 msgstr "Impossibile trovare il prodotto con ID ''{0}''."
 
-#: server/src/main/java/org/candlepin/hostedtest/HostedTestSubscriptionResource.java:283
+#: server/src/main/java/org/candlepin/hostedtest/HostedTestSubscriptionResource.java:292
 #: server/src/main/java/org/candlepin/resource/OwnerContentResource.java:122
 #: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:130
 #, java-format
 msgid "Owner with key \"{0}\" was not found."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/hostedtest/HostedTestSubscriptionResource.java:294
+#: server/src/main/java/org/candlepin/hostedtest/HostedTestSubscriptionResource.java:303
 #: server/src/main/java/org/candlepin/resource/OwnerContentResource.java:149
 #: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:186
 #, java-format
@@ -506,14 +501,14 @@ msgstr ""
 msgid "Request failed due to concurrent modification, please re-try."
 msgstr "Richiesta fallita a causa di una modifica simultanea, riprovare."
 
-#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:555
+#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:556
 #, java-format
 msgid "The system with UUID {0} is a virtual guest. It does not have guests."
 msgstr ""
 "Il sistema con un UUID {0} è un guest virtuale. Non presenta alcun guest."
 
-#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:679
-#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:688
+#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:680
+#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:689
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:159
 #, java-format
 msgid "Unit with ID ''{0}'' could not be found."
@@ -534,8 +529,8 @@ msgstr ""
 #, java-format
 msgid "Problem generating ueber cert for owner {0}"
 msgstr ""
-"Problemi durante la generazione di un euber cert (certificato master) per il"
-" proprietario {0}"
+"Problemi durante la generazione di un euber cert (certificato master) per il "
+"proprietario {0}"
 
 #: server/src/main/java/org/candlepin/model/activationkeys/ActivationKeyCurator.java:62
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:817
@@ -579,8 +574,8 @@ msgid ""
 "to the activation key with a quantity greater than one."
 msgstr ""
 "Errore: Solo i pool con sottoscrizioni al prodotto con entitlement multipli "
-"possono essere aggiunti alla chiave di attivazione con una quantità maggiore"
-" di uno."
+"possono essere aggiunti alla chiave di attivazione con una quantità maggiore "
+"di uno."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author fvalen
@@ -659,8 +654,8 @@ msgstr "il secondo parametro dovrebbe essere il numero relativo alla priorità"
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:157
 #, java-format
 msgid ""
-"This unit has already had the subscription matching pool ID ''{1}'' "
-"attached."
+"This unit has already had the subscription matching pool ID ''{1}'' attached."
+""
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:159
@@ -1314,35 +1309,36 @@ msgstr "Impossibile trovare l''hypervisor in org ''{0}''"
 msgid "Host to guest mapping was not provided for hypervisor update."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/JobResource.java:125
+#: server/src/main/java/org/candlepin/resource/JobResource.java:124
 msgid ""
 "You must specify exactly one of owner key, unit UUID, or principal name."
 msgstr ""
-"Specifica una chiave del proprietario, UUID dell''unità o un nome "
-"principale."
+"Specifica una chiave del proprietario, UUID dell''unità o un nome principale."
+""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author fvalen
-#: server/src/main/java/org/candlepin/resource/JobResource.java:184
+#: server/src/main/java/org/candlepin/resource/JobResource.java:183
 msgid "Error setting scheduler status"
 msgstr "Errore impostazione stato dello scheduler"
 
-#: server/src/main/java/org/candlepin/resource/JobResource.java:217
-#, java-format
-msgid "Not a permissible job: {0}. Only {1} are permissible"
-msgstr ""
-
-#: server/src/main/java/org/candlepin/resource/JobResource.java:222
-#: server/src/main/java/org/candlepin/resource/JobResource.java:226
+#: server/src/main/java/org/candlepin/resource/JobResource.java:207
+#: server/src/main/java/org/candlepin/resource/JobResource.java:230
+#: server/src/main/java/org/candlepin/resource/JobResource.java:245
 #, java-format
 msgid "Error trying to schedule {0}: {1}"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/JobResource.java:258
+#: server/src/main/java/org/candlepin/resource/JobResource.java:248
+#, java-format
+msgid "Not a permissible job: {0}. Only {1} are permissible"
+msgstr ""
+
+#: server/src/main/java/org/candlepin/resource/JobResource.java:279
 msgid "job already canceled"
 msgstr "lavoro già cancellato"
 
-#: server/src/main/java/org/candlepin/resource/JobResource.java:261
+#: server/src/main/java/org/candlepin/resource/JobResource.java:282
 msgid "cannot cancel a job that is in a finished state"
 msgstr "impossibile cancellare un lavoro con uno stato finito"
 
@@ -1394,8 +1390,8 @@ msgstr "Impossibile creare il Proprietario: {0}"
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:383
 #, java-format
 msgid ""
-"owner ''{0}'' cannot be deleted while there is a share consumer. You may use"
-" 'force' to bypass."
+"owner ''{0}'' cannot be deleted while there is a share consumer. You may use "
+"'force' to bypass."
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
@@ -1657,8 +1653,8 @@ msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:104
 msgid ""
-"None of the subscriptions on the activation key were available for "
-"attaching."
+"None of the subscriptions on the activation key were available for attaching."
+""
 msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:132
@@ -1686,7 +1682,8 @@ msgid "Unable to find a product with the ID \"{0}\" for owner \"{1}\""
 msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:117
-#: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:197
+#: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:196
+#: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:232
 msgid "No subscription specified"
 msgstr ""
 
@@ -1715,8 +1712,8 @@ msgstr "Impossibile trovare {0} con id {1}."
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See knowledge database "
-"https://access.redhat.com/knowledge/node/129003 for more information."
+"to address this problem. See knowledge database https://access.redhat.com/"
+"knowledge/node/129003 for more information."
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
@@ -1735,15 +1732,15 @@ msgid ""
 "This subscription management application has already been imported by "
 "another owner."
 msgstr ""
-"L''applicazione di gestione della sottoscrizione è stata già importata da un"
-" altro proprietario."
+"L''applicazione di gestione della sottoscrizione è stata già importata da un "
+"altro proprietario."
 
 #: server/src/main/java/org/candlepin/sync/ConsumerImporter.java:84
 msgid ""
 "Owner has already imported from another subscription management application."
 msgstr ""
-"Il proprietario ha già eseguito l''importazione da un''altra applicazione di"
-" gestione della sottoscrizione."
+"Il proprietario ha già eseguito l''importazione da un''altra applicazione di "
+"gestione della sottoscrizione."
 
 #: server/src/main/java/org/candlepin/sync/EntitlementImporter.java:195
 #, java-format
