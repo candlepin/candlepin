@@ -323,7 +323,8 @@ public class ActivationKeyDTO  extends TimestampedCandlepinDTO<ActivationKeyDTO>
      *
      * @return the release version of this ActivationKeyDTO object.
      */
-    @JsonSerialize(using = ReleaseVersionWrapSerializer.class)
+    @JsonSerialize(using = ReleaseVersionWrapSerializer.class,
+        nullsUsing = ReleaseVersionWrapSerializer.class)
     @JsonProperty("releaseVer")
     public String getReleaseVersion() {
         return this.releaseVer;
@@ -697,10 +698,7 @@ public class ActivationKeyDTO  extends TimestampedCandlepinDTO<ActivationKeyDTO>
             }
 
             for (ActivationKeyContentOverrideDTO dto : contentOverrides) {
-                if (dto == null ||
-                    dto.getContentLabel() == null || dto.getContentLabel().isEmpty() ||
-                    dto.getName() == null || dto.getName().isEmpty() ||
-                    dto.getValue() == null || dto.getValue().isEmpty()) {
+                if (isNullOrIncomplete(dto)) {
                     throw new IllegalArgumentException("collection contains null " +
                         "or incomplete content override");
                 }
@@ -754,10 +752,7 @@ public class ActivationKeyDTO  extends TimestampedCandlepinDTO<ActivationKeyDTO>
      */
     @JsonIgnore
     public boolean addContentOverride(ActivationKeyContentOverrideDTO contentOverrideDto) {
-        if (contentOverrideDto == null ||
-            contentOverrideDto.getContentLabel() == null || contentOverrideDto.getContentLabel().isEmpty() ||
-            contentOverrideDto.getName() == null || contentOverrideDto.getName().isEmpty() ||
-            contentOverrideDto.getValue() == null || contentOverrideDto.getValue().isEmpty()) {
+        if (isNullOrIncomplete(contentOverrideDto)) {
             throw new IllegalArgumentException("contentOverrideDto is null or incomplete");
         }
 
@@ -766,6 +761,13 @@ public class ActivationKeyDTO  extends TimestampedCandlepinDTO<ActivationKeyDTO>
         }
 
         return this.contentOverrides.add(contentOverrideDto);
+    }
+
+    private boolean isNullOrIncomplete(ActivationKeyContentOverrideDTO contentOverrideDto) {
+        return contentOverrideDto == null ||
+            contentOverrideDto.getContentLabel() == null || contentOverrideDto.getContentLabel().isEmpty() ||
+            contentOverrideDto.getName() == null || contentOverrideDto.getName().isEmpty() ||
+            contentOverrideDto.getValue() == null || contentOverrideDto.getValue().isEmpty();
     }
 
     /**
