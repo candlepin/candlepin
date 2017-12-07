@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.1.9
+Version: 2.1.10
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,13 @@ fi
 
 #raw
 %changelog
+* Thu Dec 07 2017 Kevin Howell <khowell@redhat.com> 2.1.10-1
+- 1499001: Fixed parameter limit issues with
+  PoolCurator.listBySourceEntitlements (crog@redhat.com)
+- Forward port of Liquibase migration validation improvements (crog@redhat.com)
+- 1514483: entitlements are regenerated on content change of provided products
+  (adarshvritant@gmail.com)
+
 * Thu Nov 30 2017 Kevin Howell <khowell@redhat.com> 2.1.9-1
 - 1512884: Force re-trigger cron jobs (adarshvritant@gmail.com)
 - Prioritize cron jobs over async jobs (adarshvritant@gmail.com)
