@@ -1,23 +1,18 @@
-# fvalen <fvalen@fedoraproject.org>, 2012. #zanata
-# fvalen <fvalen@fedoraproject.org>, 2013. #zanata
-# fvalen <fvalen@fedoraproject.org>, 2014. #zanata
-# Vritant Jain <vrjain@redhat.com>, 2015. #zanata
-# John Sefler <jsefler@redhat.com>, 2016. #zanata
-# Omino Magico <francescobagaglia046@gmail.com>, 2017. #zanata
+# ljanda <ljanda@redhat.com>, 2017. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-11-16 11:23-0500\n"
-"PO-Revision-Date: 2017-11-10 04:00-0500\n"
-"Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
-"Language-Team: Italian\n"
+"POT-Creation-Date: 2017-12-07 09:54-0500\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2017-11-10 09:00+0000\n"
+"Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
+"Language-Team: Italian\n"
 "Language: it\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
-"X-Generator: Zanata 3.9.6\n"
+"X-Generator: Zanata 4.2.1\n"
 
 #: common/src/main/java/org/candlepin/common/exceptions/mappers/BadRequestExceptionMapper.java:58
 #, java-format
@@ -567,8 +562,8 @@ msgstr ""
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:238
 msgid ""
-"Development units may only be used on hosted servers and with orgs that have"
-" active subscriptions."
+"Development units may only be used on hosted servers and with orgs that have "
+"active subscriptions."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:352
@@ -630,8 +625,8 @@ msgstr "proprietario con chiave: {0} non è stato trovato."
 #, java-format
 msgid "Problem generating ueber cert for owner {0}"
 msgstr ""
-"Problemi durante la generazione di un euber cert (certificato master) per il"
-" proprietario {0}"
+"Problemi durante la generazione di un euber cert (certificato master) per il "
+"proprietario {0}"
 
 #: server/src/main/java/org/candlepin/model/UeberCertificateGenerator.java:182
 #, java-format
@@ -668,8 +663,8 @@ msgid ""
 "to the activation key with a quantity greater than one."
 msgstr ""
 "Errore: Solo i pool con sottoscrizioni al prodotto con entitlement multipli "
-"possono essere aggiunti alla chiave di attivazione con una quantità maggiore"
-" di uno."
+"possono essere aggiunti alla chiave di attivazione con una quantità maggiore "
+"di uno."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author fvalen
@@ -709,8 +704,8 @@ msgstr "Le sottoscrizioni per {0} sono scadute il: {1}"
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:41
 #, java-format
 msgid ""
-"This unit has already had the subscription matching pool ID ''{0}'' "
-"attached."
+"This unit has already had the subscription matching pool ID ''{0}'' attached."
+""
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:46
@@ -1266,8 +1261,8 @@ msgstr "Impossibile trovare l''hypervisor in org ''{0}''"
 msgid ""
 "You must specify exactly one of owner key, unit UUID, or principal name."
 msgstr ""
-"Specifica una chiave del proprietario, UUID dell''unità o un nome "
-"principale."
+"Specifica una chiave del proprietario, UUID dell''unità o un nome principale."
+""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author fvalen
@@ -1542,13 +1537,13 @@ msgstr "Utente {0} non trovato"
 msgid "(Temporary)"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:99
+#: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:104
 msgid ""
-"None of the subscriptions on the activation key were available for "
-"attaching."
+"None of the subscriptions on the activation key were available for attaching."
+""
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:126
+#: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:131
 #, java-format
 msgid "Cannot bind to pool ''{0}'' in activation key ''{1}'': {2}"
 msgstr ""
@@ -1596,8 +1591,8 @@ msgstr ""
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See kbase "
-"https://access.redhat.com/knowledge/node/129003 for more information."
+"to address this problem. See kbase https://access.redhat.com/knowledge/node/"
+"129003 for more information."
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
@@ -1616,15 +1611,15 @@ msgid ""
 "This subscription management application has already been imported by "
 "another owner."
 msgstr ""
-"L''applicazione di gestione della sottoscrizione è stata già importata da un"
-" altro proprietario."
+"L''applicazione di gestione della sottoscrizione è stata già importata da un "
+"altro proprietario."
 
 #: server/src/main/java/org/candlepin/sync/ConsumerImporter.java:85
 msgid ""
 "Owner has already imported from another subscription management application."
 msgstr ""
-"Il proprietario ha già eseguito l''importazione da un''altra applicazione di"
-" gestione della sottoscrizione."
+"Il proprietario ha già eseguito l''importazione da un''altra applicazione di "
+"gestione della sottoscrizione."
 
 #: server/src/main/java/org/candlepin/sync/EntitlementImporter.java:162
 msgid "Unable to find product with ID: "

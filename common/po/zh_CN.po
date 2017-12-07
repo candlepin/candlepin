@@ -1,23 +1,19 @@
-# leahliu <lliu@redhat.com>, 2012. #zanata
-# leahliu <lliu@redhat.com>, 2013. #zanata
-# leahliu <lliu@redhat.com>, 2014. #zanata
-# John Sefler <jsefler@redhat.com>, 2016. #zanata
-# Mingye Wang <arthur2e5@aosc.xyz>, 2016. #zanata
-# leahliu <lliu@redhat.com>, 2016. #zanata
+# ljanda <ljanda@redhat.com>, 2017. #zanata
+# tfu <tfu@redhat.com>, 2017. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-11-16 11:23-0500\n"
-"PO-Revision-Date: 2017-11-10 04:11-0500\n"
-"Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
-"Language-Team: Chinese (Simplified, China)\n"
+"POT-Creation-Date: 2017-12-07 09:54-0500\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: zh-Hans-CN\n"
+"PO-Revision-Date: 2017-11-15 07:33+0000\n"
+"Last-Translator: tfu <tfu@redhat.com>\n"
+"Language-Team: Chinese (Simplified, China)\n"
+"Language: zh-Hans\n"
 "Plural-Forms: nplurals=1; plural=0\n"
-"X-Generator: Zanata 3.9.6\n"
+"X-Generator: Zanata 4.2.1\n"
 
 #: common/src/main/java/org/candlepin/common/exceptions/mappers/BadRequestExceptionMapper.java:58
 #, java-format
@@ -384,21 +380,21 @@ msgstr "{0} 删除的单元 {1}"
 #: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:129
 #, java-format
 msgid "{0} created new owner {1}"
-msgstr "{0} 创建的新拥有者 {1}"
+msgstr "{0} 创建的新所有者 {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author xhuang
 #: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:130
 #, java-format
 msgid "{0} modified the owner {1}"
-msgstr "{0} 修改的拥有者 {1}"
+msgstr "{0} 修改的所有者 {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:131
 #, java-format
 msgid "{0} deleted the owner {1}"
-msgstr "{0} 删除的拥有者 {1}"
+msgstr "{0} 删除的所有者 {1}"
 
 #: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:133
 #, java-format
@@ -559,12 +555,12 @@ msgstr ""
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:191
 msgid "Auto-attach is disabled for owner '{0}'."
-msgstr ""
+msgstr "所有者 '{0}' 的自动附加功能已被禁用。"
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:238
 msgid ""
-"Development units may only be used on hosted servers and with orgs that have"
-" active subscriptions."
+"Development units may only be used on hosted servers and with orgs that have "
+"active subscriptions."
 msgstr "开发单元只能用于托管的服务器且有活跃订阅的机构。"
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:352
@@ -617,7 +613,7 @@ msgstr "在数据库中未找到任何规则文件"
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:1327
 #, java-format
 msgid "owner with key: {0} was not found."
-msgstr "无法找到密钥 {0} 的拥有者。"
+msgstr "无法找到密钥 {0} 的所有者。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author xhuang
@@ -640,7 +636,7 @@ msgstr "没有找到 id 为 {0} 的激活码"
 #: server/src/main/java/org/candlepin/pinsetter/tasks/HealEntireOrgJob.java:73
 #, java-format
 msgid "Auto-attach is disabled for owner {0}."
-msgstr ""
+msgstr "所有者 {0} 的自动附加功能已被禁用。"
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:78
 msgid ""
@@ -699,8 +695,8 @@ msgstr "{0} 的订阅于 {1} 过期"
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:41
 #, java-format
 msgid ""
-"This unit has already had the subscription matching pool ID ''{0}'' "
-"attached."
+"This unit has already had the subscription matching pool ID ''{0}'' attached."
+""
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:46
@@ -1026,7 +1022,7 @@ msgstr "在自动绑定时无法指定数量。"
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1565
 #, java-format
 msgid "Ignoring request to auto-attach. It is disabled for org ''{0}''."
-msgstr ""
+msgstr "忽略自动负载请求。机构 ''{0}'' 已禁用这个功能。"
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1610
 #, java-format
@@ -1186,7 +1182,7 @@ msgstr "这个环境中不存在内容：{0}"
 #: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:274
 #, java-format
 msgid "One of the content does not exist in the environment anymore: {0}"
-msgstr ""
+msgstr "一个内容已不存在于环境中：{0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author xhuang
@@ -1224,7 +1220,7 @@ msgstr ""
 #, java-format
 msgid ""
 "Could not update host/guest mapping. Auto-attach is disabled for owner {0}."
-msgstr ""
+msgstr "无法更新主机/客户机映射。所有者 {0} 的自动附加功能已被禁用。"
 
 #: server/src/main/java/org/candlepin/resource/HypervisorResource.java:193
 #, java-format
@@ -1234,7 +1230,7 @@ msgstr "无法在 org ''{0}'' 中找到 hypervisor"
 #: server/src/main/java/org/candlepin/resource/JobResource.java:112
 msgid ""
 "You must specify exactly one of owner key, unit UUID, or principal name."
-msgstr "您必须指定拥有者密钥值、单元 UUID 或 principal 名字中的一个。"
+msgstr "您必须指定所有者密钥值、单元 UUID 或 principal 名字中的一个。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author xhuang
@@ -1253,12 +1249,12 @@ msgstr "无法取消已处于完成状态的任务"
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:299
 #, java-format
 msgid "Could not create the Owner: {0}. Parent {1} does not exist."
-msgstr "无法创建拥有者：{0}。上级 {1} 不存在。"
+msgstr "无法创建所有者：{0}。上级 {1} 不存在。"
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:311
 #, java-format
 msgid "Could not create the Owner: {0}"
-msgstr "无法创建拥有者：{0}"
+msgstr "无法创建所有者：{0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author xhuang
@@ -1276,7 +1272,7 @@ msgstr "激活码名称 ''{0}'' 必须是字母数字或者包含字符 ''-'' �
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:544
 #, java-format
 msgid "The activation key name ''{0}'' is already in use for owner {1}"
-msgstr "激活码名称 ''{0}'' 已被拥有者 {1} 使用"
+msgstr "激活码名称 ''{0}'' 已被所有者 {1} 使用"
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:628
 #, java-format
@@ -1299,7 +1295,7 @@ msgstr "用户 {0} 不能访问客户 {1}"
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:763
 msgid "The flags add_future and only_future cannot be used at the same time."
-msgstr ""
+msgstr "add_future 标识和 only_future 标识不能同时使用。"
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:880
 #: server/src/main/java/org/candlepin/resource/SubscriptionResource.java:202
@@ -1346,11 +1342,11 @@ msgstr "已被 {0} 删除的订阅"
 
 #: server/src/main/java/org/candlepin/resource/PoolResource.java:126
 msgid "Cannot filter on both owner and unit"
-msgstr "无法同时过滤拥有者和单元"
+msgstr "无法同时过滤所有者和单元"
 
 #: server/src/main/java/org/candlepin/resource/PoolResource.java:130
 msgid "A unit or owner is needed to filter on product"
-msgstr "根据产品过滤需要有单元或者拥有者"
+msgstr "根据产品过滤需要有单元或者所有者"
 
 #: server/src/main/java/org/candlepin/resource/PoolResource.java:149
 #, java-format
@@ -1362,14 +1358,14 @@ msgstr "用户 {0} 不能访问单元 {1}"
 #: server/src/main/java/org/candlepin/resource/PoolResource.java:160
 #, java-format
 msgid "owner: {0}"
-msgstr "拥有者：{0}"
+msgstr "所有者：{0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: server/src/main/java/org/candlepin/resource/PoolResource.java:164
 #, java-format
 msgid "User {0} cannot access owner {1}"
-msgstr "用户 {0} 不能访问拥有者 {1}"
+msgstr "用户 {0} 不能访问所有者 {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1418,7 +1414,7 @@ msgstr ""
 #: server/src/main/java/org/candlepin/resource/RoleResource.java:84
 #, java-format
 msgid "No such owner: {0}"
-msgstr "没有这个拥有者：{0}"
+msgstr "没有这个所有者：{0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1504,13 +1500,13 @@ msgstr "未找到用户 {0}"
 msgid "(Temporary)"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:99
+#: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:104
 msgid ""
-"None of the subscriptions on the activation key were available for "
-"attaching."
-msgstr ""
+"None of the subscriptions on the activation key were available for attaching."
+""
+msgstr "激活码中没有可用的订阅用来进行附加。"
 
-#: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:126
+#: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:131
 #, java-format
 msgid "Cannot bind to pool ''{0}'' in activation key ''{1}'': {2}"
 msgstr "无法绑定池 ''{0}'' 在激活码 ''{1}'' 中: {2}"
@@ -1556,8 +1552,8 @@ msgstr ""
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See kbase "
-"https://access.redhat.com/knowledge/node/129003 for more information."
+"to address this problem. See kbase https://access.redhat.com/knowledge/node/"
+"129003 for more information."
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
@@ -1574,12 +1570,12 @@ msgstr "Upstream 订阅管理程序无 ID"
 msgid ""
 "This subscription management application has already been imported by "
 "another owner."
-msgstr "这个订阅管理程序已经由另一个拥有者导入。"
+msgstr "这个订阅管理程序已经由另一个所有者导入。"
 
 #: server/src/main/java/org/candlepin/sync/ConsumerImporter.java:85
 msgid ""
 "Owner has already imported from another subscription management application."
-msgstr "拥有者已从另一个订阅管理程序中导入。"
+msgstr "所有者已从另一个订阅管理程序中导入。"
 
 #: server/src/main/java/org/candlepin/sync/EntitlementImporter.java:162
 msgid "Unable to find product with ID: "
@@ -1595,7 +1591,7 @@ msgstr "错误的元数据类型"
 # keys
 #: server/src/main/java/org/candlepin/sync/Importer.java:187
 msgid "Invalid owner"
-msgstr "无效拥有者"
+msgstr "无效所有者"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1667,39 +1663,39 @@ msgstr "不允许覆盖值：{0}"
 #: server/src/main/java/org/candlepin/util/PropertyValidator.java:77
 #, java-format
 msgid "The {0} name \"{1}\" must not exceed {2} characters in length"
-msgstr ""
+msgstr "{0} 名称 \"{1}\" 不能超过 {2} 个字符"
 
 #: server/src/main/java/org/candlepin/util/PropertyValidator.java:84
 #, java-format
 msgid "The value for {0} \"{1}\" must not exceed {2} characters in length"
-msgstr ""
+msgstr "{0} 的值 \"{1}\" 不能超过 {2} 个字符"
 
 #: server/src/main/java/org/candlepin/util/PropertyValidator.java:105
 #, java-format
 msgid "The {0} \"{1}\" must be an integer value"
-msgstr ""
+msgstr "{0} \"{1}\" 必须是一个整数值"
 
 #: server/src/main/java/org/candlepin/util/PropertyValidator.java:124
 #: server/src/main/java/org/candlepin/util/PropertyValidator.java:129
 #, java-format
 msgid "The {0} \"{1}\" must be a positive, integer value"
-msgstr ""
+msgstr "{0} \"{1}\" 必须是一个正的整数值"
 
 #: server/src/main/java/org/candlepin/util/PropertyValidator.java:148
 #, java-format
 msgid "The {0} \"{1}\" must be a long-integer value"
-msgstr ""
+msgstr "{0} \"{1}\" 必须是一个长整数值"
 
 #: server/src/main/java/org/candlepin/util/PropertyValidator.java:167
 #: server/src/main/java/org/candlepin/util/PropertyValidator.java:172
 #, java-format
 msgid "The {0} \"{1}\" must be a positive, long-integer value"
-msgstr ""
+msgstr "{0} \"{1}\" 必须是一个正的长整数值"
 
 #: server/src/main/java/org/candlepin/util/PropertyValidator.java:192
 #, java-format
 msgid "The {0} \"{1}\" must be a Boolean value"
-msgstr ""
+msgstr "{0} \"{1}\" 必须是一个布尔值"
 
 #: server/src/main/java/org/candlepin/util/ServiceLevelValidator.java:68
 #, java-format

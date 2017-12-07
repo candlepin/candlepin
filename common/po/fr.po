@@ -1,27 +1,19 @@
-# samfreemanz <sfriedma@redhat.com>, 2012. #zanata
-# samfreemanz <sfriedma@redhat.com>, 2013. #zanata
-# John Sefler <jsefler@redhat.com>, 2014. #zanata
-# jcarbone <jcarbone@redhat.com>, 2014. #zanata
-# samfreemanz <sfriedma@redhat.com>, 2014. #zanata
-# Eliovir <eliovir@gmail.com>, 2015. #zanata
-# Vritant Jain <vrjain@redhat.com>, 2015. #zanata
-# John Sefler <jsefler@redhat.com>, 2016. #zanata
-# jcarbone <jcarbone@redhat.com>, 2016. #zanata
-# Ludek Janda <ljanda@redhat.com>, 2017. #zanata
+# croe <croe@redhat.com>, 2017. #zanata
+# ljanda <ljanda@redhat.com>, 2017. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-11-16 11:23-0500\n"
-"PO-Revision-Date: 2017-11-13 04:47-0500\n"
-"Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
-"Language-Team: French\n"
+"POT-Creation-Date: 2017-12-07 09:54-0500\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2017-11-13 12:35+0000\n"
+"Last-Translator: croe <croe@redhat.com>\n"
+"Language-Team: French\n"
 "Language: fr\n"
 "Plural-Forms: nplurals=2; plural=(n > 1)\n"
-"X-Generator: Zanata 3.9.6\n"
+"X-Generator: Zanata 4.2.1\n"
 
 #: common/src/main/java/org/candlepin/common/exceptions/mappers/BadRequestExceptionMapper.java:58
 #, java-format
@@ -63,8 +55,8 @@ msgstr ""
 #: common/src/main/java/org/candlepin/common/resteasy/interceptor/PageRequestInterceptor.java:122
 msgid "the order parameter must be either ''ascending'' or ''descending''"
 msgstr ""
-"le paramètre d''ordre doit être soit « ascending » (ascendant), ou « "
-"descending » (descendant)"
+"le paramètre d''ordre doit être soit « ascending » (ascendant), ou "
+"« descending » (descendant)"
 
 #: common/src/main/java/org/candlepin/common/resteasy/interceptor/PageRequestInterceptor.java:132
 msgid "Expected a positive integer."
@@ -569,12 +561,12 @@ msgstr ""
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:191
 msgid "Auto-attach is disabled for owner '{0}'."
-msgstr "Auto-attach désactivé pour le propriétaire ''{0}''."
+msgstr "Auto-attach désactivé pour le propriétaire '{0}'."
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:238
 msgid ""
-"Development units may only be used on hosted servers and with orgs that have"
-" active subscriptions."
+"Development units may only be used on hosted servers and with orgs that have "
+"active subscriptions."
 msgstr ""
 "Les unités de développement ne peuvent être utilisées que sur les serveurs "
 "hébergés et avec les entreprises possédant un abonnement en cours."
@@ -583,7 +575,7 @@ msgstr ""
 #, java-format
 msgid "SKU product not available to this development unit: ''{0}''"
 msgstr ""
-"Le produit SKU n''est pas disponible pour cette unité de développement : "
+"Le produit SKU n'est pas disponible pour cette unité de développement : "
 "''{0}''"
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:358
@@ -667,15 +659,15 @@ msgid ""
 "Cannot add pools that are restricted to unit type ''person'' to activation "
 "keys."
 msgstr ""
-"Impossible d''ajouter les pools restreints au type d''unité « personne » aux"
-" clés d''activation."
+"Impossible d''ajouter les pools restreints au type d''unité « personne » aux "
+"clés d''activation."
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:82
 #, java-format
 msgid "Multi-entitlement not supported for pool ''{0}''"
 msgstr ""
-"Les multiples droits d''accès ne sont pas pris en charge par le pool "
-"''{0}''."
+"Les multiples droits d''accès ne sont pas pris en charge par le pool ''{0}''."
+""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author samfreemanz
@@ -699,8 +691,8 @@ msgid ""
 "Guest has not been reported on any host and is using a temporary unmapped "
 "guest subscription."
 msgstr ""
-"L''invité n''a pas été reporté sur un hôte et utilise un abonnement invité non"
-" mappé temporaire."
+"L'invité n'a pas été reporté sur un hôte et utilise un abonnement invité non "
+"mappé temporaire."
 
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:97
 #, java-format
@@ -728,8 +720,8 @@ msgstr "Les abonnements pour {0} expirent le : {1}"
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:41
 #, java-format
 msgid ""
-"This unit has already had the subscription matching pool ID ''{0}'' "
-"attached."
+"This unit has already had the subscription matching pool ID ''{0}'' attached."
+""
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:46
@@ -900,12 +892,13 @@ msgstr ""
 #: server/src/main/java/org/candlepin/resource/ActivationKeyResource.java:190
 #, java-format
 msgid "Pool ID \"{0}\" has already been registered with this activation key"
-msgstr "L''ID de pool \"{0}\" a déjà été enregistré avec cette clé d''activation"
+msgstr "L'ID de pool \"{0}\" a déjà été enregistré avec cette clé d'activation"
 
 #: server/src/main/java/org/candlepin/resource/ActivationKeyResource.java:240
 #, java-format
 msgid "Product ID \"{0}\" has already been registered with this activation key"
-msgstr "L''ID de produit \"{0}\" a déjà été enregistré avec cette clé d''activation"
+msgstr ""
+"L'ID de produit \"{0}\" a déjà été enregistré avec cette clé d'activation"
 
 #: server/src/main/java/org/candlepin/resource/ActivationKeyResource.java:306
 #, java-format
@@ -1063,7 +1056,7 @@ msgstr "Impossible de spécifier une quantité lors de la liaison automatique."
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1565
 #, java-format
 msgid "Ignoring request to auto-attach. It is disabled for org ''{0}''."
-msgstr "Demande d''auto-attach ignorée. Désactivé pour org ''{0}''."
+msgstr "Demande d'auto-attach ignorée. Désactivé pour org ''{0}''."
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1610
 #, java-format
@@ -1226,17 +1219,17 @@ msgstr "Environnement inconnu : {0}"
 #: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:197
 #, java-format
 msgid "The content with id {0} has already been promoted in this environment."
-msgstr "Le contenu avec l''ID {0} a déjà été promu dans cet environnement."
+msgstr "Le contenu avec l'ID {0} a déjà été promu dans cet environnement."
 
 #: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:259
 #, java-format
 msgid "Content does not exist in environment: {0}"
-msgstr "Aucun contenu dans l''environnement : {0}"
+msgstr "Aucun contenu dans l'environnement : {0}"
 
 #: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:274
 #, java-format
 msgid "One of the content does not exist in the environment anymore: {0}"
-msgstr "Une partie du contenu n''existe plus dans l''environnement : {0}"
+msgstr "Une partie du contenu n'existe plus dans l'environnement : {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author samfreemanz
@@ -1329,7 +1322,7 @@ msgid ""
 "The activation key name ''{0}'' must be alphanumeric or include the "
 "characters ''-'' or ''_''"
 msgstr ""
-"Le nom de la clé d''activation \"{0}\" doit contenir des caractères "
+"Le nom de la clé d'activation \"{0}\" doit contenir des caractères "
 "alphanumériques ou les caractères - ou _"
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:544
@@ -1571,18 +1564,18 @@ msgstr "L’utilisateur {0} est introuvable"
 msgid "(Temporary)"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:99
+#: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:104
 msgid ""
-"None of the subscriptions on the activation key were available for "
-"attaching."
-msgstr "Aucun abonnement lié à la clé d''activation ne peut être attaché."
+"None of the subscriptions on the activation key were available for attaching."
+""
+msgstr "Aucun abonnement lié à la clé d'activation ne peut être attaché."
 
-#: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:126
+#: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:131
 #, java-format
 msgid "Cannot bind to pool ''{0}'' in activation key ''{1}'': {2}"
 msgstr ""
-"Impossible de créer la liaison au pool « {0} » dans la clé d’activation « "
-"{1} » : {2}"
+"Impossible de créer la liaison au pool « {0} » dans la clé d’activation "
+"« {1} » : {2}"
 
 #: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:328
 msgid "Unable to verify request."
@@ -1625,8 +1618,8 @@ msgstr ""
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See kbase "
-"https://access.redhat.com/knowledge/node/129003 for more information."
+"to address this problem. See kbase https://access.redhat.com/knowledge/node/"
+"129003 for more information."
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
@@ -1646,8 +1639,8 @@ msgid ""
 "This subscription management application has already been imported by "
 "another owner."
 msgstr ""
-"Cette application de gestion d''abonnements a déjà été importée par un autre"
-" propriétaire."
+"Cette application de gestion d''abonnements a déjà été importée par un autre "
+"propriétaire."
 
 #: server/src/main/java/org/candlepin/sync/ConsumerImporter.java:85
 msgid ""

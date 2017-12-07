@@ -1,33 +1,24 @@
-# nnakakit <nnakakit@fedoraproject.org>, 2012. #zanata
-# noriko <noriko@fedoraproject.org>, 2012. #zanata
-# kmoriguc <kmoriguc@redhat.com>, 2013. #zanata
-# noriko <noriko@fedoraproject.org>, 2013. #zanata
-# asasaki <asasaki@redhat.com>, 2014. #zanata
-# kmoriguc <kmoriguc@redhat.com>, 2014. #zanata
-# noriko <noriko@fedoraproject.org>, 2014. #zanata
-# John Sefler <jsefler@redhat.com>, 2016. #zanata
-# noriko <noriko@fedoraproject.org>, 2016. #zanata
-# John Sefler <jsefler@redhat.com>, 2017. #zanata
-# sandeeps <sandeeps@fedoraproject.org>, 2017. #zanata
+# amoewaki <amoewaki@redhat.com>, 2017. #zanata
+# ljanda <ljanda@redhat.com>, 2017. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-11-16 11:23-0500\n"
-"PO-Revision-Date: 2017-11-10 03:59-0500\n"
-"Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
-"Language-Team: Japanese\n"
+"POT-Creation-Date: 2017-12-07 09:54-0500\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2017-12-01 12:38+0000\n"
+"Last-Translator: amoewaki <amoewaki@redhat.com>\n"
+"Language-Team: Japanese\n"
 "Language: ja\n"
 "Plural-Forms: nplurals=1; plural=0\n"
-"X-Generator: Zanata 3.9.6\n"
+"X-Generator: Zanata 4.2.1\n"
 
 #: common/src/main/java/org/candlepin/common/exceptions/mappers/BadRequestExceptionMapper.java:58
 #, java-format
 msgid "Invalid format for query parameter {0}. Expected format: {1}"
-msgstr "クエリーパラメーター {0} には無効な形式です。予想される形式: {1}"
+msgstr "クエリーパラメーター {0} には無効な形式です。要求される形式: {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -61,11 +52,11 @@ msgstr "offset と limit のパラメーターは正の整数にしてくださ�
 
 #: common/src/main/java/org/candlepin/common/resteasy/interceptor/PageRequestInterceptor.java:122
 msgid "the order parameter must be either ''ascending'' or ''descending''"
-msgstr "order のパラメーターは \"ascending\" (昇順) または \"descending\" (降順) にしてください"
+msgstr "order のパラメーターは、\"ascending\" (昇順) または \"descending\" (降順) にしてください"
 
 #: common/src/main/java/org/candlepin/common/resteasy/interceptor/PageRequestInterceptor.java:132
 msgid "Expected a positive integer."
-msgstr "正の整数が予想されていました。"
+msgstr "正の整数が必要です。"
 
 #: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:40
 msgid "must be false"
@@ -91,7 +82,7 @@ msgstr "{0} またはそれ以上にしてください"
 msgid ""
 "numeric value out of bounds (<{integer} digits>.<{fraction} digits> "
 "expected)"
-msgstr "数値が領域外です (期待値 <{integer} digits>.<{fraction} digits>)"
+msgstr "数値が領域外です (必要な値 <{integer} digits>.<{fraction} digits>)"
 
 #: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:55
 msgid "must be in the future"
@@ -99,7 +90,7 @@ msgstr "将来の日付にしてください"
 
 #: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:63
 msgid "may not be null"
-msgstr "値を持たせてください"
+msgstr "null にはしないでください"
 
 #: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:65
 msgid "must be null"
@@ -249,7 +240,7 @@ msgstr ""
 #: gutterball/src/main/java/org/candlepin/gutterball/report/StatusReasonMessageGenerator.java:60
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:60
 msgid "Not supported by a valid subscription."
-msgstr "有効なサブスクリプションでサポートされていません"
+msgstr "有効なサブスクリプションでサポートされていません。"
 
 #: gutterball/src/main/java/org/candlepin/gutterball/report/StatusReasonMessageGenerator.java:63
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:63
@@ -449,14 +440,14 @@ msgstr "{0} は製品 {1} のプールを削除しました"
 #: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:142
 #, java-format
 msgid "{0} created an export for unit {1}"
-msgstr "{0} はユニット {1} のエクスポートを作成しました。"
+msgstr "{0} は、ユニット {1} のエクスポートを作成しました。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author khasida
 #: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:143
 #, java-format
 msgid "{0} imported a manifest for owner {1}"
-msgstr "{0} は所有者 {1} のマニフェストをインポートしました"
+msgstr "{0} は、所有者 {1} のマニフェストをインポートしました"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author khasida
@@ -505,14 +496,14 @@ msgstr "{0} はロール {1} を削除しました"
 #: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:151
 #, java-format
 msgid "{0} created new subscription for product {1}"
-msgstr "{0} は製品 {1} の新しいサブスクリプションを作成しました"
+msgstr "{0} は、製品 {1} の新しいサブスクリプションを作成しました"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author khasida
 #: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:155
 #, java-format
 msgid "{0} deleted a subscription for product {1}"
-msgstr "{0} は製品 {1} のサブスクリプションを削除しました"
+msgstr "{0} は、製品 {1} のサブスクリプションを削除しました"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author khasida
@@ -526,7 +517,7 @@ msgstr "{0} はアクティベーションキー {1} を作成しました"
 #: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:159
 #, java-format
 msgid "{0} deleted the activation key {1}"
-msgstr "{0} はアクティベーションキー {1} を削除しました"
+msgstr "{0} は、アクティベーションキー {1} を削除しました"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -550,12 +541,12 @@ msgstr ""
 #: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:165
 #, java-format
 msgid "{0} removed the rules from the database"
-msgstr "{0} によりデータベースのルールが削除されました"
+msgstr "{0} により、データベースのルールが削除されました"
 
 #: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:167
 #, java-format
 msgid "Compliance recalculated for consumer {1}"
-msgstr "コンシューマー {1} についてコンプライアンスが再計算されました"
+msgstr "コンシューマー {1} のコンプライアンスが再計算されました"
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:110
 #, java-format
@@ -564,18 +555,18 @@ msgstr ""
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:191
 msgid "Auto-attach is disabled for owner '{0}'."
-msgstr ""
+msgstr "所有者 '{0}' の自動アタッチは無効です。"
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:238
 msgid ""
-"Development units may only be used on hosted servers and with orgs that have"
-" active subscriptions."
-msgstr "開発ユニットの使用は、有効なサブスクリプションがある組織を持ちホストされているサーバー上に限定されます。"
+"Development units may only be used on hosted servers and with orgs that have "
+"active subscriptions."
+msgstr "開発ユニットを使用するには、組織に有効なサブスクリプションが必要があります。また、ホストサーバーでの使用に限定されます。"
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:352
 #, java-format
 msgid "SKU product not available to this development unit: ''{0}''"
-msgstr "この開発ユニットでは SKU 製品は利用できません: ''{0}''"
+msgstr "この開発ユニットでは SKU 製品を利用できません: ''{0}''"
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:358
 #, java-format
@@ -601,7 +592,7 @@ msgstr "ID が ''{0}'' のユニットは見つかりませんでした。"
 #: server/src/main/java/org/candlepin/model/ConsumerTypeCurator.java:71
 #, java-format
 msgid "No such unit type(s): {0}"
-msgstr "そのようなユニットタイプはありません: {0}"
+msgstr "そのようなユニットタイプは存在しません: {0}"
 
 #: server/src/main/java/org/candlepin/model/RulesCurator.java:104
 msgid "No rules file found in the database"
@@ -645,18 +636,18 @@ msgstr "{0} のアクティベーションキーは見つかりませんでし�
 #: server/src/main/java/org/candlepin/pinsetter/tasks/HealEntireOrgJob.java:73
 #, java-format
 msgid "Auto-attach is disabled for owner {0}."
-msgstr ""
+msgstr "所有者 {0} の自動アタッチは無効です。"
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:78
 msgid ""
 "Cannot add pools that are restricted to unit type ''person'' to activation "
 "keys."
-msgstr "ユニットタイプ ''person'' に制限されているプールはアクティベーションキーに追加できません。"
+msgstr "ユニットタイプ ''person'' に制限されているプールは、アクティベーションキーに追加できません。"
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:82
 #, java-format
 msgid "Multi-entitlement not supported for pool ''{0}''"
-msgstr "プール ''{0}'' では複数エンタイトルメントには対応していません"
+msgstr "プール ''{0}'' ではマルチエンタイトルメントには対応していません"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author khasida
@@ -664,7 +655,7 @@ msgstr "プール ''{0}'' では複数エンタイトルメントには対応し
 msgid ""
 "Error: Only pools with multi-entitlement product subscriptions can be added "
 "to the activation key with a quantity greater than one."
-msgstr "エラー: 複数エンタイトルメントの製品サブスクリプションを持つプールのみが１以上の数量でアクティベーションキーに追加できます"
+msgstr "エラー: 数量が 1 以上のアクティベーションキーには、マルチエンタイトルメント製品サブスクリプションが含まれるプールのみを追加できます。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author khasida
@@ -694,7 +685,7 @@ msgstr "''{0}'' には名前、優先度、および１つ以上の属性を持�
 # keys
 #: server/src/main/java/org/candlepin/policy/js/entitlement/AbstractEntitlementRules.java:148
 msgid "second parameter should be the priority number."
-msgstr "2 つ目のパラメーターは優先度番号でなければなりません"
+msgstr "2 つ目のパラメーターは、優先度番号でなければなりません"
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:156
 #, java-format
@@ -704,8 +695,8 @@ msgstr "{0} のサブスクリプションの有効期限: {1}"
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:41
 #, java-format
 msgid ""
-"This unit has already had the subscription matching pool ID ''{0}'' "
-"attached."
+"This unit has already had the subscription matching pool ID ''{0}'' attached."
+""
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:46
@@ -875,12 +866,12 @@ msgstr ""
 #: server/src/main/java/org/candlepin/resource/ActivationKeyResource.java:190
 #, java-format
 msgid "Pool ID \"{0}\" has already been registered with this activation key"
-msgstr "プール ID \"{0}\" はこのアクティベーションキーで既に登録済みです。"
+msgstr "プール ID \"{0}\" は、このアクティベーションキーで既に登録されています。"
 
 #: server/src/main/java/org/candlepin/resource/ActivationKeyResource.java:240
 #, java-format
 msgid "Product ID \"{0}\" has already been registered with this activation key"
-msgstr "製品 ID \"{0}\" はこのアクティベーションキーで既に登録済みです。"
+msgstr "製品 ID \"{0}\" は、このアクティベーションキーで既に登録されています。"
 
 #: server/src/main/java/org/candlepin/resource/ActivationKeyResource.java:306
 #, java-format
@@ -921,7 +912,7 @@ msgstr ""
 # keys, author khasida
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:482
 msgid "Cannot specify username with activation keys."
-msgstr "アクティベーションキーではユーザー名は指定できません。"
+msgstr "アクティベーションキーでユーザー名は指定できません。"
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:501
 msgid "None of the activation keys specified exist for this org."
@@ -929,7 +920,7 @@ msgstr "指定したアクティベーションキーのいずれもこの組織
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:511
 msgid "A unit type of ''person'' cannot be used with activation keys"
-msgstr "''person'' のユニットタイプはアクティベーションキーでは使用できません。"
+msgstr "''person'' のユニットタイプは、アクティベーションキーで使用できません。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -961,7 +952,7 @@ msgstr "システム名は # 文字で開始できません"
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:715
 #, java-format
 msgid "Activation key ''{0}'' not found for organization ''{1}''."
-msgstr "組織 ''{1}'' 用のアクティベーションキー ''{0}'' は見つかりません"
+msgstr "組織 ''{1}'' 用のアクティベーションキー ''{0}'' は見つかりません。"
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:735
 #, java-format
@@ -1031,7 +1022,7 @@ msgstr "自動バインド時に数量を指定できません。"
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1565
 #, java-format
 msgid "Ignoring request to auto-attach. It is disabled for org ''{0}''."
-msgstr ""
+msgstr "自動アタッチの要求が無効。組織 ''{0}'' では無効になっています。"
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1610
 #, java-format
@@ -1102,7 +1093,7 @@ msgstr "ID が ''{0}'' のユニットタイプは見つかりませんでした
 #: server/src/main/java/org/candlepin/resource/ConsumerTypeResource.java:118
 #, java-format
 msgid "Problem creating unit type: {0}"
-msgstr "ユニットタイプ の作成に問題があります: {0}"
+msgstr "ユニットタイプの作成に問題があります: {0}"
 
 #: server/src/main/java/org/candlepin/resource/ConsumerTypeResource.java:139
 #, java-format
@@ -1153,7 +1144,7 @@ msgstr "エンタイトルメントのアップストリームの証明書が見
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:404
 #, java-format
 msgid "Entitlement migration is not permissible for units of type ''{0}''"
-msgstr "エンタイトルメントの移行はタイプ ''{0}'' のユニットについては許容されません。"
+msgstr "エンタイトルメントの移行は、タイプ ''{0}'' のユニットについては許容されません。"
 
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:409
 msgid "Source and destination units must belong to the same organization"
@@ -1161,7 +1152,7 @@ msgstr "ソースと宛先ユニットは同じ組織に属する必要があり
 
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:416
 msgid "The entitlement cannot be utilized by the destination unit: "
-msgstr "エンタイトルメントは宛先ユニットが使用することはできません: "
+msgstr "エンタイトルメントは、宛先ユニットが使用することはできません: "
 
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:437
 msgid ""
@@ -1181,7 +1172,7 @@ msgstr "そのような環境はありません: {0}"
 #: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:197
 #, java-format
 msgid "The content with id {0} has already been promoted in this environment."
-msgstr "ID {0} のコンテンツはすでにこの環境ではプロモートされています。"
+msgstr "ID {0} のコンテンツは、すでにこの環境ではプロモートされています。"
 
 #: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:259
 #, java-format
@@ -1191,7 +1182,7 @@ msgstr "環境にコンテンツがありません: {0}"
 #: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:274
 #, java-format
 msgid "One of the content does not exist in the environment anymore: {0}"
-msgstr ""
+msgstr "コンテンツの一部が、この環境にありません: {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author khasida
@@ -1229,7 +1220,7 @@ msgstr ""
 #, java-format
 msgid ""
 "Could not update host/guest mapping. Auto-attach is disabled for owner {0}."
-msgstr ""
+msgstr "ホストとゲストのマッピングをアップデートできませんでした。所有者 {0} の自動アタッチは無効です。"
 
 #: server/src/main/java/org/candlepin/resource/HypervisorResource.java:193
 #, java-format
@@ -1277,12 +1268,12 @@ msgid ""
 "The activation key name ''{0}'' must be alphanumeric or include the "
 "characters ''-'' or ''_''"
 msgstr ""
-"アクティベーションキーの名前 ''{0}'' はアルファベットと数字の組み合わせにするか、''-'' または ''_'' の記号を含ませてください。"
+"アクティベーションキーの名前 ''{0}'' は、アルファベットと数字の組み合わせにするか、''-'' または ''_'' の記号を含ませてください。"
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:544
 #, java-format
 msgid "The activation key name ''{0}'' is already in use for owner {1}"
-msgstr "アクティベーションキー名「{0}」はすでに所有者 {1} に使用されています。"
+msgstr "アクティベーションキー名 ''{0}'' は、すでに所有者 {1} に使用されています。"
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:628
 #, java-format
@@ -1305,7 +1296,7 @@ msgstr "ユーザー {0} はコンシューマー {1} にアクセスできま�
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:763
 msgid "The flags add_future and only_future cannot be used at the same time."
-msgstr ""
+msgstr "add_future フラグと only_future フラグを同時に使用することはできません。"
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:880
 #: server/src/main/java/org/candlepin/resource/SubscriptionResource.java:202
@@ -1395,7 +1386,7 @@ msgstr "コンシューマ: {0} は見つかりません"
 #: server/src/main/java/org/candlepin/resource/PoolResource.java:317
 #, java-format
 msgid "Subscription Pool with ID ''{0}'' could not be found."
-msgstr "ID「{0}」のサブスクリプションプールは見つかりませんでした。"
+msgstr "ID ''{0}' のサブスクリプションプールは見つかりませんでした。"
 
 #: server/src/main/java/org/candlepin/resource/PoolResource.java:271
 #, java-format
@@ -1424,7 +1415,7 @@ msgstr ""
 #: server/src/main/java/org/candlepin/resource/RoleResource.java:84
 #, java-format
 msgid "No such owner: {0}"
-msgstr "そのような所有者はいません: {0}"
+msgstr "そのような所有者は存在しません: {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author khasida
@@ -1510,13 +1501,13 @@ msgstr "ユーザー {0} が見つかりません"
 msgid "(Temporary)"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:99
+#: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:104
 msgid ""
-"None of the subscriptions on the activation key were available for "
-"attaching."
-msgstr ""
+"None of the subscriptions on the activation key were available for attaching."
+""
+msgstr "割り当てに使用できるアクティベーションキーのサブスクリプションはありません。"
 
-#: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:126
+#: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:131
 #, java-format
 msgid "Cannot bind to pool ''{0}'' in activation key ''{1}'': {2}"
 msgstr "アクティベーションキー ''{1}'' でプール ''{0}'' にバインドできません: {2}"
@@ -1562,15 +1553,15 @@ msgstr ""
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See kbase "
-"https://access.redhat.com/knowledge/node/129003 for more information."
+"to address this problem. See kbase https://access.redhat.com/knowledge/node/"
+"129003 for more information."
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author khasida
 #: server/src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java:110
 msgid "Standalone candlepin does not support redeeming a subscription."
-msgstr "単独型の candlepin はサブスクリプションの引き換えサポートは行っていません。"
+msgstr "単独型の candlepin では、サブスクリプションの引き換えサポートは行っていません。"
 
 #: server/src/main/java/org/candlepin/sync/ConsumerImporter.java:62
 msgid "No ID for upstream subscription management application."
@@ -1646,19 +1637,19 @@ msgstr "証明書例外チェックアーカイブ署名"
 
 #: server/src/main/java/org/candlepin/sync/Importer.java:344
 msgid "The archive does not contain the required meta.json file"
-msgstr "アーカイブには必要な meta.json ファイルが含まれていません"
+msgstr "アーカイブに必要な meta.json ファイルが含まれていません"
 
 #: server/src/main/java/org/candlepin/sync/Importer.java:349
 msgid "The archive does not contain the required consumer_types directory"
-msgstr "アーカイブには必要な consumer_types ディレクトリーが含まれていません"
+msgstr "アーカイブに必要な consumer_types ディレクトリーが含まれていません"
 
 #: server/src/main/java/org/candlepin/sync/Importer.java:354
 msgid "The archive does not contain the required consumer.json file"
-msgstr "アーカイブには必要な consumer.json ファイルが含まれていません"
+msgstr "アーカイブに必要な consumer.json ファイルが含まれていません"
 
 #: server/src/main/java/org/candlepin/sync/Importer.java:360
 msgid "The archive does not contain the required entitlements directory"
-msgstr "アーカイブには必要なエンタイトルメントのディレクトリーが含まれていません"
+msgstr "アーカイブに必要なエンタイトルメントのディレクトリーが含まれていません"
 
 #: server/src/main/java/org/candlepin/sync/Importer.java:631
 #, java-format
@@ -1673,41 +1664,41 @@ msgstr "次の値の無効化は許可されていません: {0}"
 #: server/src/main/java/org/candlepin/util/PropertyValidator.java:77
 #, java-format
 msgid "The {0} name \"{1}\" must not exceed {2} characters in length"
-msgstr ""
+msgstr "{0} の名前 \"{1}\" の長さは、{2} 文字以下にしてください。"
 
 #: server/src/main/java/org/candlepin/util/PropertyValidator.java:84
 #, java-format
 msgid "The value for {0} \"{1}\" must not exceed {2} characters in length"
-msgstr ""
+msgstr "{0} の値 \"{1}\" の長さは、{2} 文字以下にしてください。"
 
 #: server/src/main/java/org/candlepin/util/PropertyValidator.java:105
 #, java-format
 msgid "The {0} \"{1}\" must be an integer value"
-msgstr ""
+msgstr "{0} の \"{1}\" は整数にしてください。"
 
 #: server/src/main/java/org/candlepin/util/PropertyValidator.java:124
 #: server/src/main/java/org/candlepin/util/PropertyValidator.java:129
 #, java-format
 msgid "The {0} \"{1}\" must be a positive, integer value"
-msgstr ""
+msgstr "{0} の \"{1}\" は、正の整数値にしてください。"
 
 #: server/src/main/java/org/candlepin/util/PropertyValidator.java:148
 #, java-format
 msgid "The {0} \"{1}\" must be a long-integer value"
-msgstr ""
+msgstr "{0} の \"{1}\" は、長整数値にしてください。"
 
 #: server/src/main/java/org/candlepin/util/PropertyValidator.java:167
 #: server/src/main/java/org/candlepin/util/PropertyValidator.java:172
 #, java-format
 msgid "The {0} \"{1}\" must be a positive, long-integer value"
-msgstr ""
+msgstr "{0} の \"{1}\" は、正の長整数値にしてください。"
 
 #: server/src/main/java/org/candlepin/util/PropertyValidator.java:192
 #, java-format
 msgid "The {0} \"{1}\" must be a Boolean value"
-msgstr ""
+msgstr "{0} の \"{1}\" は、ブーリアン値にしてください。"
 
 #: server/src/main/java/org/candlepin/util/ServiceLevelValidator.java:68
 #, java-format
 msgid "Service level ''{0}'' is not available to units of organization {1}."
-msgstr "サービスレベル {0} は組織 {1} のユニットに使用できません。"
+msgstr "サービスレベル {0} は、組織 {1} のユニットに使用できません。"

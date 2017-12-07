@@ -1,22 +1,19 @@
-# eukim <eukim@fedoraproject.org>, 2012. #zanata
-# eukim <eukim@fedoraproject.org>, 2013. #zanata
-# eukim <eukim@fedoraproject.org>, 2014. #zanata
-# eukim <eukim@fedoraproject.org>, 2016. #zanata
-# John Sefler <jsefler@redhat.com>, 2017. #zanata
+# eukim <eukim@redhat.com>, 2017. #zanata
+# ljanda <ljanda@redhat.com>, 2017. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-11-16 11:23-0500\n"
-"PO-Revision-Date: 2017-11-10 03:59-0500\n"
-"Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
-"Language-Team: Korean\n"
+"POT-Creation-Date: 2017-12-07 09:54-0500\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2017-11-20 03:46+0000\n"
+"Last-Translator: eukim <eukim@redhat.com>\n"
+"Language-Team: Korean\n"
 "Language: ko\n"
 "Plural-Forms: nplurals=1; plural=0\n"
-"X-Generator: Zanata 3.9.6\n"
+"X-Generator: Zanata 4.2.1\n"
 
 #: common/src/main/java/org/candlepin/common/exceptions/mappers/BadRequestExceptionMapper.java:58
 #, java-format
@@ -558,12 +555,12 @@ msgstr ""
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:191
 msgid "Auto-attach is disabled for owner '{0}'."
-msgstr ""
+msgstr "소유자  '{0}'의 자동 연결이 비활성화되어 있습니다. "
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:238
 msgid ""
-"Development units may only be used on hosted servers and with orgs that have"
-" active subscriptions."
+"Development units may only be used on hosted servers and with orgs that have "
+"active subscriptions."
 msgstr "개발 장치는 활성 서브스크립션이 있는 조직에서 호스팅되는 서버에서만 사용할 수 있습니다."
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:352
@@ -639,7 +636,7 @@ msgstr "ID {0}을(를) 갖는 활성화 키를 찾을 수 없습니다."
 #: server/src/main/java/org/candlepin/pinsetter/tasks/HealEntireOrgJob.java:73
 #, java-format
 msgid "Auto-attach is disabled for owner {0}."
-msgstr ""
+msgstr "{0} 소유자의 자동 연결이 비활성화되어 있습니다."
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:78
 msgid ""
@@ -698,8 +695,8 @@ msgstr "{0}의 서브스크립션이 만료되었습니다: {1}"
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:41
 #, java-format
 msgid ""
-"This unit has already had the subscription matching pool ID ''{0}'' "
-"attached."
+"This unit has already had the subscription matching pool ID ''{0}'' attached."
+""
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:46
@@ -1025,7 +1022,7 @@ msgstr "자동 바인딩 시 수량을 지정할 수 없습니다. "
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1565
 #, java-format
 msgid "Ignoring request to auto-attach. It is disabled for org ''{0}''."
-msgstr ""
+msgstr "자동 연결 요청을 무시합니다. 조직 ''{0}''에 대해 사용 중지되었습니다. "
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1610
 #, java-format
@@ -1185,7 +1182,7 @@ msgstr "컨텐츠가 환경에 존재하지 않습니다: {0}"
 #: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:274
 #, java-format
 msgid "One of the content does not exist in the environment anymore: {0}"
-msgstr ""
+msgstr "컨텐츠 중 일부가 환경에 더 이상 존재하지 않습니다: {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
@@ -1223,7 +1220,7 @@ msgstr ""
 #, java-format
 msgid ""
 "Could not update host/guest mapping. Auto-attach is disabled for owner {0}."
-msgstr ""
+msgstr "호스트/게스트 매핑을 업데이트할 수 없습니다. {0} 소유자의 자동 연결이 비활성화되어 있습니다."
 
 #: server/src/main/java/org/candlepin/resource/HypervisorResource.java:193
 #, java-format
@@ -1298,7 +1295,7 @@ msgstr "사용자 {0}은(는) 소비자 {1}에 액세스할 수 없음 "
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:763
 msgid "The flags add_future and only_future cannot be used at the same time."
-msgstr ""
+msgstr "add_future 플래그와 only_future 플래그를 동시에 사용할 수 없습니다 "
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:880
 #: server/src/main/java/org/candlepin/resource/SubscriptionResource.java:202
@@ -1503,13 +1500,13 @@ msgstr "사용자 {0}을(를) 찾을 수 없습니다 "
 msgid "(Temporary)"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:99
+#: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:104
 msgid ""
-"None of the subscriptions on the activation key were available for "
-"attaching."
-msgstr ""
+"None of the subscriptions on the activation key were available for attaching."
+""
+msgstr "연결에 사용할 수 있는 활성 키의 서브스크립션이 없습니다."
 
-#: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:126
+#: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:131
 #, java-format
 msgid "Cannot bind to pool ''{0}'' in activation key ''{1}'': {2}"
 msgstr "활성키 ''{1}''에서 풀 ''{0}''에 바인딩할 수 없습니다: {2}"
@@ -1555,8 +1552,8 @@ msgstr ""
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See kbase "
-"https://access.redhat.com/knowledge/node/129003 for more information."
+"to address this problem. See kbase https://access.redhat.com/knowledge/node/"
+"129003 for more information."
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
@@ -1666,39 +1663,39 @@ msgstr "다음의 값을 덮어쓰기하는 것이 허용되지 않습니다: {0
 #: server/src/main/java/org/candlepin/util/PropertyValidator.java:77
 #, java-format
 msgid "The {0} name \"{1}\" must not exceed {2} characters in length"
-msgstr ""
+msgstr "{0} 이름 \"{1}\"은 {2}자를 초과해서는 안됩니다."
 
 #: server/src/main/java/org/candlepin/util/PropertyValidator.java:84
 #, java-format
 msgid "The value for {0} \"{1}\" must not exceed {2} characters in length"
-msgstr ""
+msgstr "{0} 값 \"{1}\"은 {2}자를 초과해서는 안됩니다."
 
 #: server/src/main/java/org/candlepin/util/PropertyValidator.java:105
 #, java-format
 msgid "The {0} \"{1}\" must be an integer value"
-msgstr ""
+msgstr "{0} \"{1}\"은/는 정수 값이어야 합니다. "
 
 #: server/src/main/java/org/candlepin/util/PropertyValidator.java:124
 #: server/src/main/java/org/candlepin/util/PropertyValidator.java:129
 #, java-format
 msgid "The {0} \"{1}\" must be a positive, integer value"
-msgstr ""
+msgstr "{0} \"{1}\"은/는 양의 정수 값이어야 합니다. "
 
 #: server/src/main/java/org/candlepin/util/PropertyValidator.java:148
 #, java-format
 msgid "The {0} \"{1}\" must be a long-integer value"
-msgstr ""
+msgstr "{0} \"{1}\"은/는 정수(Long) 값이어야 합니다. "
 
 #: server/src/main/java/org/candlepin/util/PropertyValidator.java:167
 #: server/src/main/java/org/candlepin/util/PropertyValidator.java:172
 #, java-format
 msgid "The {0} \"{1}\" must be a positive, long-integer value"
-msgstr ""
+msgstr "{0} \"{1}\"은/는 양의 정수(Long) 값이어야 합니다. "
 
 #: server/src/main/java/org/candlepin/util/PropertyValidator.java:192
 #, java-format
 msgid "The {0} \"{1}\" must be a Boolean value"
-msgstr ""
+msgstr " {0} \"{1}\"은/는 부울 값이어야 합니다 "
 
 #: server/src/main/java/org/candlepin/util/ServiceLevelValidator.java:68
 #, java-format
