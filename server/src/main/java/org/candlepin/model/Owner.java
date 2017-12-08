@@ -122,9 +122,12 @@ public class Owner extends AbstractHibernateObject<Owner>
 
     /**
      * When set, autobind will be disabled no matter if it is set on the Consumer or not.
+     *
+     * Impl note:
+     *  This needs to allow null values due to pre-existing nulls which may come from the database.
      */
     @Column(name = "autobind_disabled")
-    private boolean autobindDisabled;
+    private Boolean autobindDisabled;
 
     /**
      * Determines the behavior of the content access.
@@ -145,6 +148,7 @@ public class Owner extends AbstractHibernateObject<Owner>
         this.consumers = new HashSet<Consumer>();
         this.pools = new HashSet<Pool>();
         this.environments = new HashSet<Environment>();
+        this.autobindDisabled = false;
     }
 
     /**
@@ -458,14 +462,14 @@ public class Owner extends AbstractHibernateObject<Owner>
     }
 
     /**
-     * Returns the true value of the autobindDisabled setting.
+     * Checks if autobind is disabled for consumers of this owner/organization.
      *
-     * @return True if autobind is disabled for this owner, False or null otherwise.
-     *         A value of null means that it is unset, and considered in code as False.
+     * @return
+     *  true if autobind is disabled for this owner/organization; false otherwise
      */
     @JsonProperty("autobindDisabled")
     public boolean isAutobindDisabled() {
-        return autobindDisabled;
+        return this.autobindDisabled != null ? this.autobindDisabled.booleanValue() : false;
     }
 
     public void setAutobindDisabled(boolean autobindDisabled) {
