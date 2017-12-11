@@ -23,6 +23,7 @@
     - ruby
     - rubygems
     - ruby-devel
+    - rubygem-bundler
     - java-1.8.0-openjdk-devel
     - postgresql-jdbc
     - postgresql-server
@@ -173,7 +174,6 @@
     user_install: False
   with_items:
     - json_pure
-    - bundler
   tags:
     - candlepin-root
 
