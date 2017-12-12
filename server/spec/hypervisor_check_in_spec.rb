@@ -902,4 +902,26 @@ describe 'Hypervisor Resource', :type => :virt do
     user = user_client(owner, random_string("user"))
     job_detail = async_update_hypervisor(owner, user, 'hypervisor.bind.com', hypervisor_id, ["blah"])
   end
+
+  it 'should be able to update a consumer with a hypervisor_id, and check it in as a hypervisor concurrently' do
+    host_hyp_id = random_string('host')
+    mapping = get_host_guest_mapping(host_hyp_id, [])
+    consumer = @user.register(@expected_host_name, :hypervisor, nil, {"test_fact" => "fact_value"},
+                              nil, nil, [], [], nil, [])
+    threads = []
+    i = 0
+    loop do
+      threads[i] = Thread.new{@cp.update_consumer({:uuid => consumer.uuid, :hypervisorId => host_hyp_id})}
+      i += 1
+      threads[i] = Thread.new{consumer.hypervisor_check_in(@owner['key'], mapping)}
+      i += 1
+      break if i == 12
+    end
+    i = 0
+    loop do
+      threads[i].join
+      i += 1
+      break if i == 12
+    end
+  end
 end

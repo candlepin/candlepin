@@ -1006,6 +1006,7 @@ public class ConsumerResource {
         @Context Principal principal) {
 
         Consumer toUpdate = consumerCurator.verifyAndLookupConsumer(uuid);
+        consumerCurator.lockAndLoad(toUpdate);
 
         VirtConsumerMap guestConsumerMap = new VirtConsumerMap();
         if (consumer.getGuestIds() != null) {

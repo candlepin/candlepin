@@ -15,6 +15,7 @@
 package org.candlepin.sync;
 
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
@@ -33,8 +34,20 @@ public class ConsumerExporter {
 
     void export(ObjectMapper mapper, Writer writer, Consumer consumer,
         String weburl, String apiurl) throws IOException {
+
+        ConsumerType type = consumer.getType();
+        ConsumerType tdto = null;
+
+        if (type != null) {
+            tdto = new ConsumerType();
+
+            tdto.setId(type.getId());
+            tdto.setLabel(type.getLabel());
+            tdto.setManifest(type.isManifest());
+        }
+
         ConsumerDto dto = new ConsumerDto(consumer.getUuid(), consumer.getName(),
-            consumer.getType(), consumer.getOwner(), weburl, apiurl, consumer.getContentAccessMode());
+            tdto, consumer.getOwner(), weburl, apiurl, consumer.getContentAccessMode());
 
         mapper.writeValue(writer, dto);
     }
