@@ -7,14 +7,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-11-16 11:55-0500\n"
+"POT-Creation-Date: 2017-12-07 15:00-0500\n"
 "PO-Revision-Date: 2014-11-18 12:27-0500\n"
 "Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
 "Language-Team: Marathi <sshedmak@redhat.com>\n"
+"Language: mr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: mr\n"
 "Plural-Forms: nplurals=2; plural=(n!=1);\n"
 "X-Generator: Zanata 3.9.6\n"
 
@@ -83,11 +83,9 @@ msgstr "{0} पेक्षा जास्त किंवा समांत�
 
 #: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:50
 msgid ""
-"numeric value out of bounds (<{integer} digits>.<{fraction} digits> "
-"expected)"
+"numeric value out of bounds (<{integer} digits>.<{fraction} digits> expected)"
 msgstr ""
-"संख्यायीक मूल्य व्याप्तिच्या बाहेर (<{integer} digits>.<{fraction} digits> "
-"अपेक्षीत)"
+"संख्यायीक मूल्य व्याप्तिच्या बाहेर (<{integer} digits>.<{fraction} digits> अपेक्षीत)"
 
 #: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:53
 msgid "must be in the future"
@@ -410,10 +408,9 @@ msgstr ""
 msgid "Subscription pool {0} do not exist."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:1850
+#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:1853
 msgid ""
-"Unmapped guest entitlement expired without establishing a host/guest "
-"mapping."
+"Unmapped guest entitlement expired without establishing a host/guest mapping."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:207
@@ -423,8 +420,8 @@ msgstr ""
 #: server/src/main/java/org/candlepin/controller/Entitler.java:257
 #: server/src/main/java/org/candlepin/controller/Entitler.java:497
 msgid ""
-"Development units may only be used on hosted servers and with orgs that have"
-" active subscriptions."
+"Development units may only be used on hosted servers and with orgs that have "
+"active subscriptions."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:467
@@ -463,8 +460,8 @@ msgid ""
 "Unit {0} cannot be exported. A manifest cannot be made for units of type "
 "''{1}''."
 msgstr ""
-"युनिट {0} ला एक्सपोर्ट करणे अशक्य. ''{1}'' प्रकारच्या युनिट्सकरिता मॅनिफेस्ट"
-" निर्माण करणे अशक्य."
+"युनिट {0} ला एक्सपोर्ट करणे अशक्य. ''{1}'' प्रकारच्या युनिट्सकरिता मॅनिफेस्ट निर्माण करणे "
+"अशक्य."
 
 #: server/src/main/java/org/candlepin/controller/ManifestManager.java:307
 #, java-format
@@ -478,21 +475,21 @@ msgid ""
 "details"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/hostedtest/HostedTestSubscriptionResource.java:272
+#: server/src/main/java/org/candlepin/hostedtest/HostedTestSubscriptionResource.java:281
 #: server/src/main/java/org/candlepin/model/EntitlementCurator.java:422
 #: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:157
 #, java-format
 msgid "Product with ID ''{0}'' could not be found."
 msgstr "ID ''{0}'' सह उत्पादन आढळले नाही."
 
-#: server/src/main/java/org/candlepin/hostedtest/HostedTestSubscriptionResource.java:283
+#: server/src/main/java/org/candlepin/hostedtest/HostedTestSubscriptionResource.java:292
 #: server/src/main/java/org/candlepin/resource/OwnerContentResource.java:122
 #: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:130
 #, java-format
 msgid "Owner with key \"{0}\" was not found."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/hostedtest/HostedTestSubscriptionResource.java:294
+#: server/src/main/java/org/candlepin/hostedtest/HostedTestSubscriptionResource.java:303
 #: server/src/main/java/org/candlepin/resource/OwnerContentResource.java:149
 #: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:186
 #, java-format
@@ -503,13 +500,13 @@ msgstr ""
 msgid "Request failed due to concurrent modification, please re-try."
 msgstr "समवर्ती सुधारणामुळे विनंती अपयशी, कृपया पुन्हा प्रयत्न करा."
 
-#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:555
+#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:556
 #, java-format
 msgid "The system with UUID {0} is a virtual guest. It does not have guests."
 msgstr "UUID {0} सह प्रणाली वर्च्युअल अतिथी आहे. अतिथी आढळले नाही."
 
-#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:679
-#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:688
+#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:680
+#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:689
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:159
 #, java-format
 msgid "Unit with ID ''{0}'' could not be found."
@@ -572,8 +569,8 @@ msgid ""
 "Error: Only pools with multi-entitlement product subscriptions can be added "
 "to the activation key with a quantity greater than one."
 msgstr ""
-"त्रुटी: फक्त बहु-एंटाइटलमेंट उत्पादन सबस्क्रिप्शन्स् सह पूल्स्ला ॲक्टिवेशन "
-"किमध्ये समाविष्ट करणे शक्य आहे."
+"त्रुटी: फक्त बहु-एंटाइटलमेंट उत्पादन सबस्क्रिप्शन्स् सह पूल्स्ला ॲक्टिवेशन किमध्ये समाविष्ट करणे "
+"शक्य आहे."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
@@ -652,8 +649,7 @@ msgstr "दुसरे घटक प्राधान्यक्रम क्
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:157
 #, java-format
 msgid ""
-"This unit has already had the subscription matching pool ID ''{1}'' "
-"attached."
+"This unit has already had the subscription matching pool ID ''{1}'' attached."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:159
@@ -736,8 +732,7 @@ msgstr ""
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:189
 #, java-format
 msgid ""
-"Pool is restricted to virtual guests in their first day of existence: "
-"''{1}''"
+"Pool is restricted to virtual guests in their first day of existence: ''{1}''"
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:191
@@ -880,8 +875,7 @@ msgid "Problem creating unit {0}"
 msgstr "युनिट {0} निर्माण करतेवेळी त्रुटी"
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:591
-msgid ""
-"A consumer cannot be converted to a share type once it has been created"
+msgid "A consumer cannot be converted to a share type once it has been created"
 msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:596
@@ -1196,8 +1190,7 @@ msgstr "एंटाइटलमेंट: {0} करिता अपस्ट�
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:341
 #, java-format
 msgid "Entitlement migration is not permissible for units of type ''{0}''"
-msgstr ""
-"प्रकार ''{0}'' च्या युनिट्सकरिता एंटाइटलमेंट स्थानांतरन स्वीकार्य नाही"
+msgstr "प्रकार ''{0}'' च्या युनिट्सकरिता एंटाइटलमेंट स्थानांतरन स्वीकार्य नाही"
 
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:346
 msgid "Source and destination units must belong to the same organization"
@@ -1212,8 +1205,7 @@ msgid ""
 "The quantity specified must be greater than zero and less than or equal to "
 "the total for this entitlement"
 msgstr ""
-"निर्देशीत प्रमाण शून्यपेक्षा जास्त पाहिजे आणि या एंटाइटलमेंटकरिता कमी किंवा "
-"समांतर पाहिजे"
+"निर्देशीत प्रमाण शून्यपेक्षा जास्त पाहिजे आणि या एंटाइटलमेंटकरिता कमी किंवा समांतर पाहिजे"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
@@ -1291,34 +1283,34 @@ msgstr "संस्था ''{0}'' अंतर्गत हाइपरवा�
 msgid "Host to guest mapping was not provided for hypervisor update."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/JobResource.java:125
+#: server/src/main/java/org/candlepin/resource/JobResource.java:124
 msgid ""
 "You must specify exactly one of owner key, unit UUID, or principal name."
-msgstr ""
-"अगदी तसेच मालकी कि, युनिट UUID, किंवा प्राथमिक नाव निर्देशीत करणे आवश्यक."
+msgstr "अगदी तसेच मालकी कि, युनिट UUID, किंवा प्राथमिक नाव निर्देशीत करणे आवश्यक."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: server/src/main/java/org/candlepin/resource/JobResource.java:184
+#: server/src/main/java/org/candlepin/resource/JobResource.java:183
 msgid "Error setting scheduler status"
 msgstr "शेड्युअलर स्तिथी निश्चित करतेवेळी त्रुटी"
 
-#: server/src/main/java/org/candlepin/resource/JobResource.java:217
-#, java-format
-msgid "Not a permissible job: {0}. Only {1} are permissible"
-msgstr ""
-
-#: server/src/main/java/org/candlepin/resource/JobResource.java:222
-#: server/src/main/java/org/candlepin/resource/JobResource.java:226
+#: server/src/main/java/org/candlepin/resource/JobResource.java:207
+#: server/src/main/java/org/candlepin/resource/JobResource.java:230
+#: server/src/main/java/org/candlepin/resource/JobResource.java:245
 #, java-format
 msgid "Error trying to schedule {0}: {1}"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/JobResource.java:258
+#: server/src/main/java/org/candlepin/resource/JobResource.java:248
+#, java-format
+msgid "Not a permissible job: {0}. Only {1} are permissible"
+msgstr ""
+
+#: server/src/main/java/org/candlepin/resource/JobResource.java:279
 msgid "job already canceled"
 msgstr "जॉब आधिपासूनच रद्द केले"
 
-#: server/src/main/java/org/candlepin/resource/JobResource.java:261
+#: server/src/main/java/org/candlepin/resource/JobResource.java:282
 msgid "cannot cancel a job that is in a finished state"
 msgstr "पूर्णत्व स्तरमध्ये असलेले जॉब रद्द करणे अशक्य"
 
@@ -1370,8 +1362,8 @@ msgstr "मालक: {0} निर्माण करणे अशक्य"
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:383
 #, java-format
 msgid ""
-"owner ''{0}'' cannot be deleted while there is a share consumer. You may use"
-" 'force' to bypass."
+"owner ''{0}'' cannot be deleted while there is a share consumer. You may use "
+"'force' to bypass."
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
@@ -1529,8 +1521,7 @@ msgstr "UUID ''{0}'' सह उत्पादन आढळले नाही."
 #: server/src/main/java/org/candlepin/resource/ProductResource.java:215
 #: server/src/main/java/org/candlepin/resource/ProductResource.java:233
 #: server/src/main/java/org/candlepin/resource/ProductResource.java:250
-msgid ""
-"Organization-agnostic product write operations are no longer supported."
+msgid "Organization-agnostic product write operations are no longer supported."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/ProductResource.java:265
@@ -1628,8 +1619,7 @@ msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:104
 msgid ""
-"None of the subscriptions on the activation key were available for "
-"attaching."
+"None of the subscriptions on the activation key were available for attaching."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:132
@@ -1655,7 +1645,8 @@ msgid "Unable to find a product with the ID \"{0}\" for owner \"{1}\""
 msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:117
-#: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:197
+#: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:196
+#: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:232
 msgid "No subscription specified"
 msgstr ""
 
@@ -1684,8 +1675,8 @@ msgstr "{0} , id {1} सह आढळले नाही."
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See knowledge database "
-"https://access.redhat.com/knowledge/node/129003 for more information."
+"to address this problem. See knowledge database https://access.redhat.com/"
+"knowledge/node/129003 for more information."
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
@@ -1702,14 +1693,12 @@ msgstr "अपस्ट्रिम सबस्क्रिप्शन मॅ�
 msgid ""
 "This subscription management application has already been imported by "
 "another owner."
-msgstr ""
-"सबस्क्रिप्शन मॅनेजमेंट ॲप्लिकेशन आधिपासूनच इतर मालकीतर्फे आयात केले आहे."
+msgstr "सबस्क्रिप्शन मॅनेजमेंट ॲप्लिकेशन आधिपासूनच इतर मालकीतर्फे आयात केले आहे."
 
 #: server/src/main/java/org/candlepin/sync/ConsumerImporter.java:84
 msgid ""
 "Owner has already imported from another subscription management application."
-msgstr ""
-"इतर सबस्क्रिप्शन मॅनेजमेंट ॲप्लिकेशनपासून मालकी आधिपासूनच आयात केली आहे."
+msgstr "इतर सबस्क्रिप्शन मॅनेजमेंट ॲप्लिकेशनपासून मालकी आधिपासूनच आयात केली आहे."
 
 #: server/src/main/java/org/candlepin/sync/EntitlementImporter.java:195
 #, java-format
