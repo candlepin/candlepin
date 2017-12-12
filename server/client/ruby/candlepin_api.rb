@@ -78,7 +78,8 @@ class Candlepin
               owner_key=nil, activation_keys=[], installedProducts=[],
               environment=nil, capabilities=[], hypervisor_id=nil,
               content_tags=[], created_date=nil, last_checkin_date=nil,
-              annotations=nil, recipient_owner_key=nil, user_agent=nil)
+              annotations=nil, recipient_owner_key=nil, user_agent=nil,
+              entitlement_count=0, id_cert=nil)
 
     consumer = {
       :type => {:label => type},
@@ -95,6 +96,10 @@ class Candlepin
     consumer[:lastCheckin] = last_checkin_date if last_checkin_date
     consumer[:annotations] = annotations if annotations
     consumer[:recipientOwnerKey] = recipient_owner_key if recipient_owner_key
+
+    #note: ent count and id_cert are added to demonstrate erroneous input
+    consumer[:entitlementCount] = entitlement_count if entitlement_count
+    consumer[:idCert] = id_cert if id_cert
 
     params = {}
 
