@@ -7,21 +7,29 @@
   tags:
     - candlepin-user
 
-- name: Run Bundle install
-  command: /usr/local/bin/bundle install
-  args:
-      chdir: "{{candlepin_checkout}}"
+- name: Gem refreshing
+  command: gem update --system
   tags:
     - candlepin-user
-  ## TODO: new way whenever we want to switch to >= ansible-2.0.0 :
-  # - name: Run Bundle install
-  # bundler:
-  #   executable: /usr/local/bin/bundle
-  #   state: latest
-  #   user_install: true
-  #   chdir: "{{candlepin_checkout}}"
-  # tags:
-  #   - candlepin-user
+
+- name: Install gem dependencies
+  gem:
+    name: "{{item}}"
+    user_install: False
+  with_items:
+    - json_pure
+    - bundler
+  tags:
+    - candlepin-user
+
+- name: Run Bundle install
+  bundler:
+    executable: /usr/bin/bundle
+    state: latest
+    user_install: true
+    chdir: "{{candlepin_checkout}}"
+  tags:
+    - candlepin-user
 
 - name: Add JAVA_HOME to bashrc
   lineinfile:

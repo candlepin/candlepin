@@ -10,7 +10,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   if Vagrant.has_plugin?("vagrant-hostmanager")
     config.hostmanager.enabled = true
     config.hostmanager.manage_host = true
-    config.hostmanager.manage_guest = true
+    config.hostmanager.manage_guest = false
     config.hostmanager.include_offline = true
   end
 
