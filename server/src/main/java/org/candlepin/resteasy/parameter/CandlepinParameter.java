@@ -29,8 +29,7 @@ public abstract class CandlepinParameter {
     protected String paramName;
     protected String paramValue;
 
-    public CandlepinParameter(String queryParamName, String queryParameterValue) {
-        this.paramName = queryParamName;
+    public CandlepinParameter(String queryParameterValue) {
         this.paramValue = queryParameterValue;
     }
 
@@ -43,4 +42,11 @@ public abstract class CandlepinParameter {
      */
     abstract void parse() throws CandlepinParameterParseException;
 
+    public String getParamName() {
+        return paramName;
+    }
+
+    public void setParamName(String paramName) {
+        this.paramName = paramName;
+    }
 }

@@ -46,8 +46,8 @@ public class CandlepinParameterUnmarshaller
         CandlepinParameter param = null;
         try {
             Constructor<? extends CandlepinParameter> ctor =
-                parameterClass.getConstructor(String.class, String.class);
-            param = ctor.newInstance(this.parameterName, parameterString);
+                parameterClass.getConstructor(String.class);
+            param = ctor.newInstance(parameterString);
         }
         catch (Exception e) {
             throw new RuntimeException(
@@ -55,6 +55,7 @@ public class CandlepinParameterUnmarshaller
                     this.parameterName, ex);
         }
 
+        param.setParamName(this.parameterName);
         param.parse();
         return param;
     }
