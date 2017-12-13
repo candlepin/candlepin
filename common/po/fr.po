@@ -5,13 +5,13 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2017-12-07 09:54-0500\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
 "PO-Revision-Date: 2017-11-13 12:35+0000\n"
 "Last-Translator: croe <croe@redhat.com>\n"
 "Language-Team: French\n"
 "Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1)\n"
 "X-Generator: Zanata 4.2.1\n"
 
@@ -84,8 +84,7 @@ msgstr "doit être supérieur ou égal à {0}"
 
 #: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:51
 msgid ""
-"numeric value out of bounds (<{integer} digits>.<{fraction} digits> "
-"expected)"
+"numeric value out of bounds (<{integer} digits>.<{fraction} digits> expected)"
 msgstr ""
 "valeur numérique hors limites (<{integer} digits>.<{fraction} digits> "
 "attendu)"
@@ -561,7 +560,7 @@ msgstr ""
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:191
 msgid "Auto-attach is disabled for owner '{0}'."
-msgstr "Auto-attach désactivé pour le propriétaire '{0}'."
+msgstr "Auto-attach désactivé pour le propriétaire ''{0}''."
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:238
 msgid ""
@@ -575,7 +574,7 @@ msgstr ""
 #, java-format
 msgid "SKU product not available to this development unit: ''{0}''"
 msgstr ""
-"Le produit SKU n'est pas disponible pour cette unité de développement : "
+"Le produit SKU n''est pas disponible pour cette unité de développement : "
 "''{0}''"
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:358
@@ -667,7 +666,6 @@ msgstr ""
 msgid "Multi-entitlement not supported for pool ''{0}''"
 msgstr ""
 "Les multiples droits d''accès ne sont pas pris en charge par le pool ''{0}''."
-""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author samfreemanz
@@ -691,7 +689,7 @@ msgid ""
 "Guest has not been reported on any host and is using a temporary unmapped "
 "guest subscription."
 msgstr ""
-"L'invité n'a pas été reporté sur un hôte et utilise un abonnement invité non "
+"L''invité n''a pas été reporté sur un hôte et utilise un abonnement invité non "
 "mappé temporaire."
 
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:97
@@ -721,7 +719,6 @@ msgstr "Les abonnements pour {0} expirent le : {1}"
 #, java-format
 msgid ""
 "This unit has already had the subscription matching pool ID ''{0}'' attached."
-""
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:46
@@ -805,8 +802,7 @@ msgstr ""
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:118
 #, java-format
 msgid ""
-"Pool is restricted to virtual guests in their first day of existence: "
-"''{0}''"
+"Pool is restricted to virtual guests in their first day of existence: ''{0}''"
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:122
@@ -892,13 +888,13 @@ msgstr ""
 #: server/src/main/java/org/candlepin/resource/ActivationKeyResource.java:190
 #, java-format
 msgid "Pool ID \"{0}\" has already been registered with this activation key"
-msgstr "L'ID de pool \"{0}\" a déjà été enregistré avec cette clé d'activation"
+msgstr "L''ID de pool \"{0}\" a déjà été enregistré avec cette clé d''activation"
 
 #: server/src/main/java/org/candlepin/resource/ActivationKeyResource.java:240
 #, java-format
 msgid "Product ID \"{0}\" has already been registered with this activation key"
 msgstr ""
-"L'ID de produit \"{0}\" a déjà été enregistré avec cette clé d'activation"
+"L''ID de produit \"{0}\" a déjà été enregistré avec cette clé d''activation"
 
 #: server/src/main/java/org/candlepin/resource/ActivationKeyResource.java:306
 #, java-format
@@ -1056,7 +1052,7 @@ msgstr "Impossible de spécifier une quantité lors de la liaison automatique."
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1565
 #, java-format
 msgid "Ignoring request to auto-attach. It is disabled for org ''{0}''."
-msgstr "Demande d'auto-attach ignorée. Désactivé pour org ''{0}''."
+msgstr "Demande d''auto-attach ignorée. Désactivé pour org ''{0}''."
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1610
 #, java-format
@@ -1121,8 +1117,7 @@ msgstr "Le système avec l''UUID {0} n''est pas un invité virtuel."
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2166
 #, java-format
 msgid "Deletion record for hypervisor ''{0}'' not found."
-msgstr ""
-"L''archive de suppression pour l''hyperviseur « {0} » est introuvable."
+msgstr "L''archive de suppression pour l''hyperviseur « {0} » est introuvable."
 
 #: server/src/main/java/org/candlepin/resource/ConsumerTypeResource.java:95
 #, java-format
@@ -1168,8 +1163,7 @@ msgstr "L''objet avec l''ID « {0} » est introuvable."
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:139
 #, java-format
 msgid "Unit ''{0}'' has no subscription for product ''{1}''."
-msgstr ""
-"L''unité « {0} » ne possède pas d''abonnement pour le produit « {1} »."
+msgstr "L''unité « {0} » ne possède pas d''abonnement pour le produit « {1} »."
 
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:244
 msgid "Quantity value must be greater than 0."
@@ -1191,8 +1185,7 @@ msgstr ""
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:409
 msgid "Source and destination units must belong to the same organization"
 msgstr ""
-"Les unités de source et destination doivent appartenir à la même "
-"organisation"
+"Les unités de source et destination doivent appartenir à la même organisation"
 
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:416
 msgid "The entitlement cannot be utilized by the destination unit: "
@@ -1219,17 +1212,17 @@ msgstr "Environnement inconnu : {0}"
 #: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:197
 #, java-format
 msgid "The content with id {0} has already been promoted in this environment."
-msgstr "Le contenu avec l'ID {0} a déjà été promu dans cet environnement."
+msgstr "Le contenu avec l''ID {0} a déjà été promu dans cet environnement."
 
 #: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:259
 #, java-format
 msgid "Content does not exist in environment: {0}"
-msgstr "Aucun contenu dans l'environnement : {0}"
+msgstr "Aucun contenu dans l''environnement : {0}"
 
 #: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:274
 #, java-format
 msgid "One of the content does not exist in the environment anymore: {0}"
-msgstr "Une partie du contenu n'existe plus dans l'environnement : {0}"
+msgstr "Une partie du contenu n''existe plus dans l''environnement : {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author samfreemanz
@@ -1302,8 +1295,7 @@ msgstr "impossible d''annuler une tâche terminée"
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:299
 #, java-format
 msgid "Could not create the Owner: {0}. Parent {1} does not exist."
-msgstr ""
-"Impossible de créer le propriétaire : {0}. Le parent {1} n’existe pas."
+msgstr "Impossible de créer le propriétaire : {0}. Le parent {1} n’existe pas."
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:311
 #, java-format
@@ -1322,7 +1314,7 @@ msgid ""
 "The activation key name ''{0}'' must be alphanumeric or include the "
 "characters ''-'' or ''_''"
 msgstr ""
-"Le nom de la clé d'activation \"{0}\" doit contenir des caractères "
+"Le nom de la clé d''activation \"{0}\" doit contenir des caractères "
 "alphanumériques ou les caractères - ou _"
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:544
@@ -1515,8 +1507,7 @@ msgstr "Utilisateur inconnu : {0}"
 #: server/src/main/java/org/candlepin/resource/RulesResource.java:93
 msgid "Error decoding the rules. The text should be base 64 encoded"
 msgstr ""
-"Erreur lors du décodage des règles. Le texte devrait être encodé avec base "
-"64"
+"Erreur lors du décodage des règles. Le texte devrait être encodé avec base 64"
 
 #: server/src/main/java/org/candlepin/resource/RulesResource.java:125
 msgid "couldn''t read rules file"
@@ -1567,8 +1558,7 @@ msgstr ""
 #: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:104
 msgid ""
 "None of the subscriptions on the activation key were available for attaching."
-""
-msgstr "Aucun abonnement lié à la clé d'activation ne peut être attaché."
+msgstr "Aucun abonnement lié à la clé d''activation ne peut être attaché."
 
 #: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:131
 #, java-format
@@ -1618,8 +1608,8 @@ msgstr ""
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See kbase https://access.redhat.com/knowledge/node/"
-"129003 for more information."
+"to address this problem. See kbase https://access.redhat.com/knowledge/"
+"node/129003 for more information."
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document

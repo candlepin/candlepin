@@ -6,14 +6,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-11-16 11:23-0500\n"
+"POT-Creation-Date: 2017-12-07 09:54-0500\n"
 "PO-Revision-Date: 2017-10-18 11:49-0400\n"
 "Last-Translator: John Sefler <jsefler@redhat.com>\n"
 "Language-Team: Tamil <kde-i18n-doc@kde.org>\n"
+"Language: ta-IN\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: ta-IN\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Zanata 3.9.6\n"
 
@@ -21,8 +21,7 @@ msgstr ""
 #, java-format
 msgid "Invalid format for query parameter {0}. Expected format: {1}"
 msgstr ""
-"வினவல் அளவுரு {0} க்கு செல்லுபடியாகாத வடிவமைப்பு. எதிர்பார்க்கும் "
-"வடிவமைப்பு: {1}"
+"வினவல் அளவுரு {0} க்கு செல்லுபடியாகாத வடிவமைப்பு. எதிர்பார்க்கும் வடிவமைப்பு: {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -84,11 +83,10 @@ msgstr "{0} க்கு சமமாக அல்லது அதிகமா�
 
 #: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:51
 msgid ""
-"numeric value out of bounds (<{integer} digits>.<{fraction} digits> "
-"expected)"
+"numeric value out of bounds (<{integer} digits>.<{fraction} digits> expected)"
 msgstr ""
-"எண் மதிப்பு எல்லைகளுக்கு அப்பாலுள்ளது (<{integer} digits>.<{fraction} "
-"digits> எதிர்பார்க்கப்படுகிறது)"
+"எண் மதிப்பு எல்லைகளுக்கு அப்பாலுள்ளது (<{integer} digits>.<{fraction} digits> "
+"எதிர்பார்க்கப்படுகிறது)"
 
 #: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:55
 msgid "must be in the future"
@@ -565,8 +563,8 @@ msgstr ""
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:238
 msgid ""
-"Development units may only be used on hosted servers and with orgs that have"
-" active subscriptions."
+"Development units may only be used on hosted servers and with orgs that have "
+"active subscriptions."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:352
@@ -581,15 +579,12 @@ msgstr ""
 
 #: server/src/main/java/org/candlepin/model/AbstractHibernateCurator.java:460
 msgid "Request failed due to concurrent modification, please re-try."
-msgstr ""
-"ஒரே சமயத்திலான மாற்றத்தினால் கோரிக்கை தோல்வியடைந்தது, மீண்டும் "
-"முயற்சிக்கவும்."
+msgstr "ஒரே சமயத்திலான மாற்றத்தினால் கோரிக்கை தோல்வியடைந்தது, மீண்டும் முயற்சிக்கவும்."
 
 #: server/src/main/java/org/candlepin/model/ConsumerCurator.java:540
 #, java-format
 msgid "The system with UUID {0} is a virtual guest. It does not have guests."
-msgstr ""
-"UUID {0} கொண்ட கணினி ஒரு மெய்நிகர் விருந்தினர். அதில் விருந்தினர்கள் இல்லை."
+msgstr "UUID {0} கொண்ட கணினி ஒரு மெய்நிகர் விருந்தினர். அதில் விருந்தினர்கள் இல்லை."
 
 #: server/src/main/java/org/candlepin/model/ConsumerCurator.java:672
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1753
@@ -665,8 +660,8 @@ msgid ""
 "Error: Only pools with multi-entitlement product subscriptions can be added "
 "to the activation key with a quantity greater than one."
 msgstr ""
-"பிழை: பல்-உரிம தயாரிப்பு சந்தாக்கள் செயல்பாட்டு விசையுடன் உள்ள ஒரு அளவை விட "
-"அதிகமான ஒன்றாக சேர்க்கப்படலாம்."
+"பிழை: பல்-உரிம தயாரிப்பு சந்தாக்கள் செயல்பாட்டு விசையுடன் உள்ள ஒரு அளவை விட அதிகமான "
+"ஒன்றாக சேர்க்கப்படலாம்."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ifelix
@@ -706,8 +701,7 @@ msgstr "{0} க்கான சந்தாவானது காலாவதி
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:41
 #, java-format
 msgid ""
-"This unit has already had the subscription matching pool ID ''{0}'' "
-"attached."
+"This unit has already had the subscription matching pool ID ''{0}'' attached."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:46
@@ -790,8 +784,7 @@ msgstr ""
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:118
 #, java-format
 msgid ""
-"Pool is restricted to virtual guests in their first day of existence: "
-"''{0}''"
+"Pool is restricted to virtual guests in their first day of existence: ''{0}''"
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:122
@@ -1069,8 +1062,8 @@ msgid ""
 "Unit {0} cannot be exported. A manifest cannot be made for units of type "
 "''{1}''."
 msgstr ""
-"அலகு {0} ஐ ஏற்றுமதி செய்ய முடியாது. ''{1}'' வகை அலகுகளுக்கு மேனிஃபெஸ்ட்டை "
-"உருவாக்க முடியாது."
+"அலகு {0} ஐ ஏற்றுமதி செய்ய முடியாது. ''{1}'' வகை அலகுகளுக்கு மேனிஃபெஸ்ட்டை உருவாக்க "
+"முடியாது."
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1919
 #, java-format
@@ -1161,8 +1154,7 @@ msgstr "''{0}'' வகை அலகுகளுக்கு உரிமை இ�
 
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:409
 msgid "Source and destination units must belong to the same organization"
-msgstr ""
-"மூலம் மற்றும் இலக்கு அலகுகள் ஒரே நிறுவனத்தைச் சார்ந்தவையாக இருக்க வேண்டும்"
+msgstr "மூலம் மற்றும் இலக்கு அலகுகள் ஒரே நிறுவனத்தைச் சார்ந்தவையாக இருக்க வேண்டும்"
 
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:416
 msgid "The entitlement cannot be utilized by the destination unit: "
@@ -1173,8 +1165,8 @@ msgid ""
 "The quantity specified must be greater than zero and less than or equal to "
 "the total for this entitlement"
 msgstr ""
-"குறிப்பிடப்படும் அளவானது பூச்சியத்தை விடப் பெரிதாகவும், இந்த உரிமைக்கான "
-"மொத்த எண்ணிக்கைக்கு சமமாக அல்லது குறைவாகவும் இருக்க வேண்டும்"
+"குறிப்பிடப்படும் அளவானது பூச்சியத்தை விடப் பெரிதாகவும், இந்த உரிமைக்கான மொத்த "
+"எண்ணிக்கைக்கு சமமாக அல்லது குறைவாகவும் இருக்க வேண்டும்"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ifelix
@@ -1215,8 +1207,7 @@ msgstr "செல்லுபடியான விருந்தினர் i
 #, java-format
 msgid "Guest ID in json \"{0}\" does not match path guest ID \"{1}\""
 msgstr ""
-"json \"{0}\" இல் உள்ள விருந்தினரானது பாதை விருந்தினர் ID \"{1}\" க்குப் "
-"பொருந்தவில்லை"
+"json \"{0}\" இல் உள்ள விருந்தினரானது பாதை விருந்தினர் ID \"{1}\" க்குப் பொருந்தவில்லை"
 
 #: server/src/main/java/org/candlepin/resource/GuestIdResource.java:242
 #, java-format
@@ -1249,8 +1240,8 @@ msgstr "நிறுவனம் ''{0}'' இல் ஹைப்பர்வை�
 msgid ""
 "You must specify exactly one of owner key, unit UUID, or principal name."
 msgstr ""
-"உரிமையாளர் விசை, அலகு UUID அல்லது முதன்மைப் பெயர் இவற்றில் ஒன்றை "
-"துல்லியமாகக் குறிப்பிட வேண்டும்."
+"உரிமையாளர் விசை, அலகு UUID அல்லது முதன்மைப் பெயர் இவற்றில் ஒன்றை துல்லியமாகக் குறிப்பிட "
+"வேண்டும்."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ifelix
@@ -1293,8 +1284,7 @@ msgstr ""
 #, java-format
 msgid "The activation key name ''{0}'' is already in use for owner {1}"
 msgstr ""
-"செயல்படுத்தல் விசை பெயர் ''{0}'' ஆனது ஏற்கனவே உரிமையாளர் {1} க்கு "
-"பயன்பாட்டில் உள்ளது"
+"செயல்படுத்தல் விசை பெயர் ''{0}'' ஆனது ஏற்கனவே உரிமையாளர் {1} க்கு பயன்பாட்டில் உள்ளது"
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:628
 #, java-format
@@ -1476,10 +1466,10 @@ msgstr "இது போன்ற பயனர் இல்லை: {0}"
 #: server/src/main/java/org/candlepin/resource/RulesResource.java:93
 msgid "Error decoding the rules. The text should be base 64 encoded"
 msgstr ""
-"விதிகளை மறைகுறியாக்குவதில் பிழை. உரை அடிப்படை 64 மறைகுறியாக்கப்பட்டதாக "
-"இருக்க வேண்டும்விதிகளை மறைகுறியாக்குவதில் பிழை. உரை அடிப்படை 64 "
-"மறைகுறியாக்கப்பட்டதவிதிகளை மறைகுறியாக்குவதில் பிழை. உரை அடிப்படை 64 "
-"மறைகுறியாக்கப்பட்டதவிதிகளை மறைகுறியாக்விதிகளை மறைகுறியாக்க"
+"விதிகளை மறைகுறியாக்குவதில் பிழை. உரை அடிப்படை 64 மறைகுறியாக்கப்பட்டதாக இருக்க "
+"வேண்டும்விதிகளை மறைகுறியாக்குவதில் பிழை. உரை அடிப்படை 64 மறைகுறியாக்கப்பட்டதவிதிகளை "
+"மறைகுறியாக்குவதில் பிழை. உரை அடிப்படை 64 மறைகுறியாக்கப்பட்டதவிதிகளை "
+"மறைகுறியாக்விதிகளை மறைகுறியாக்க"
 
 #: server/src/main/java/org/candlepin/resource/RulesResource.java:125
 msgid "couldn''t read rules file"
@@ -1526,18 +1516,17 @@ msgstr "{0} எனும் பயனர் இல்லை"
 msgid "(Temporary)"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:99
+#: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:104
 msgid ""
-"None of the subscriptions on the activation key were available for "
-"attaching."
+"None of the subscriptions on the activation key were available for attaching."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:126
+#: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:131
 #, java-format
 msgid "Cannot bind to pool ''{0}'' in activation key ''{1}'': {2}"
 msgstr ""
-"''{1}'' எனும் செயலிலா செயல்பாட்டு விசையில் உள்ள ''{0}'' எனும் "
-"தொகுப்பகத்துடன் பிணைக்க முடியாது: {2}"
+"''{1}'' எனும் செயலிலா செயல்பாட்டு விசையில் உள்ள ''{0}'' எனும் தொகுப்பகத்துடன் பிணைக்க "
+"முடியாது: {2}"
 
 #: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:328
 msgid "Unable to verify request."
@@ -1580,16 +1569,15 @@ msgstr ""
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See kbase "
-"https://access.redhat.com/knowledge/node/129003 for more information."
+"to address this problem. See kbase https://access.redhat.com/knowledge/"
+"node/129003 for more information."
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ifelix
 #: server/src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java:110
 msgid "Standalone candlepin does not support redeeming a subscription."
-msgstr ""
-"தனியாகநிற்கும் candlepin ஒரு சந்தாவை மீட்டெடுப்பதற்கு துணைபுரியவில்லை."
+msgstr "தனியாகநிற்கும் candlepin ஒரு சந்தாவை மீட்டெடுப்பதற்கு துணைபுரியவில்லை."
 
 #: server/src/main/java/org/candlepin/sync/ConsumerImporter.java:62
 msgid "No ID for upstream subscription management application."
@@ -1600,15 +1588,13 @@ msgid ""
 "This subscription management application has already been imported by "
 "another owner."
 msgstr ""
-"இந்த சந்தா நிர்வாகி பயன்பாடு மற்றொரு உரிமையாளரால் ஏற்கனவே இறக்குமதி "
-"செய்யப்பட்டுள்ளது."
+"இந்த சந்தா நிர்வாகி பயன்பாடு மற்றொரு உரிமையாளரால் ஏற்கனவே இறக்குமதி செய்யப்பட்டுள்ளது."
 
 #: server/src/main/java/org/candlepin/sync/ConsumerImporter.java:85
 msgid ""
 "Owner has already imported from another subscription management application."
 msgstr ""
-"ஏற்கனவே மற்றொரு சந்தா நிர்வாகி பயன்பாட்டிலிருந்து உரிமையாளர் இறக்குமதி "
-"செய்யப்பட்டுள்ளார்."
+"ஏற்கனவே மற்றொரு சந்தா நிர்வாகி பயன்பாட்டிலிருந்து உரிமையாளர் இறக்குமதி செய்யப்பட்டுள்ளார்."
 
 #: server/src/main/java/org/candlepin/sync/EntitlementImporter.java:162
 msgid "Unable to find product with ID: "

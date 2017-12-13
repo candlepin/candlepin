@@ -4,15 +4,15 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2017-12-07 09:54-0500\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
 "PO-Revision-Date: 2017-11-10 08:59+0000\n"
 "Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
 "Language-Team: Russian\n"
 "Language: ru\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
-"n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)\n"
 "X-Generator: Zanata 4.2.1\n"
 
 #: common/src/main/java/org/candlepin/common/exceptions/mappers/BadRequestExceptionMapper.java:58
@@ -84,8 +84,7 @@ msgstr "должно быть больше или равно {0}"
 
 #: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:51
 msgid ""
-"numeric value out of bounds (<{integer} digits>.<{fraction} digits> "
-"expected)"
+"numeric value out of bounds (<{integer} digits>.<{fraction} digits> expected)"
 msgstr ""
 "число выходит за пределы допустимого диапазона (ожидается <{integer} digits>."
 "<{fraction} digits>)"
@@ -713,7 +712,6 @@ msgstr "Срок действия подписок для {0} истек {1}"
 #, java-format
 msgid ""
 "This unit has already had the subscription matching pool ID ''{0}'' attached."
-""
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:46
@@ -796,8 +794,7 @@ msgstr ""
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:118
 #, java-format
 msgid ""
-"Pool is restricted to virtual guests in their first day of existence: "
-"''{0}''"
+"Pool is restricted to virtual guests in their first day of existence: ''{0}''"
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:122
@@ -1178,8 +1175,7 @@ msgid ""
 "The quantity specified must be greater than zero and less than or equal to "
 "the total for this entitlement"
 msgstr ""
-"Число должно быть больше нуля, но меньше максимального значения для "
-"полномочи"
+"Число должно быть больше нуля, но меньше максимального значения для полномочи"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ypoyarko
@@ -1288,8 +1284,7 @@ msgstr "Необходимо указать имя ключа активации
 msgid ""
 "The activation key name ''{0}'' must be alphanumeric or include the "
 "characters ''-'' or ''_''"
-msgstr ""
-"Имя ключа «{0}» может содержать буквы, цифры, а также знаки «-» и «_»."
+msgstr "Имя ключа «{0}» может содержать буквы, цифры, а также знаки «-» и «_»."
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:544
 #, java-format
@@ -1525,14 +1520,12 @@ msgstr ""
 #: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:104
 msgid ""
 "None of the subscriptions on the activation key were available for attaching."
-""
 msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:131
 #, java-format
 msgid "Cannot bind to pool ''{0}'' in activation key ''{1}'': {2}"
-msgstr ""
-"Не удалось установить связь с пулом «{0}» в ключе активации «{1}»: {2}"
+msgstr "Не удалось установить связь с пулом «{0}» в ключе активации «{1}»: {2}"
 
 #: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:328
 msgid "Unable to verify request."
@@ -1575,8 +1568,8 @@ msgstr ""
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See kbase https://access.redhat.com/knowledge/node/"
-"129003 for more information."
+"to address this problem. See kbase https://access.redhat.com/knowledge/"
+"node/129003 for more information."
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
