@@ -4,16 +4,18 @@
         xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
-        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
     <!-- Include definitions for cert.type, timestamp.type, etc. -->
     <include file="db/changelog/datatypes.xml"/>
 
     <changeSet id="20161109145238-1" author="wpoteat">
+        <validCheckSum>7:e7d90208e03c95b6b43ff73e4a6c441b</validCheckSum>
+
         <comment>add-owner-environment-content-access</comment>
         <createTable tableName="cp_owner_env_content_access">
             <column name="id" type="VARCHAR(32)">
-                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_owner_env_content_access_pkey"/>
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_owner_ec_access_pkey"/>
             </column>
             <column name="owner_id" type="VARCHAR(32)">
                 <constraints nullable="false"/>
@@ -33,7 +35,7 @@
         <addForeignKeyConstraint baseColumnNames="environment_id" baseTableName="cp_owner_env_content_access" constraintName="fk_owner_env_cont_acc_env" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_environment" referencesUniqueColumn="false"/>
     </changeSet>
     <changeSet author="wpoteat" id="20161109145238-02">
-        <addUniqueConstraint columnNames="owner_id, environment_id" constraintName="cp_owner_env_content_access_ukey" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_owner_env_content_access"/>
+        <addUniqueConstraint columnNames="owner_id, environment_id" constraintName="cp_owner_ec_access_ukey" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_owner_env_content_access"/>
     </changeSet>
 
 </databaseChangeLog>

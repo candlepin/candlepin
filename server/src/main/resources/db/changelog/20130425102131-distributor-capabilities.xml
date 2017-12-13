@@ -6,6 +6,9 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
+    <!-- Include definitions for cert.type, timestamp.type, etc. -->
+    <include file="db/changelog/datatypes.xml"/>
+
     <!-- The Postgresql only changes in this file were an oversight and are corrected in
          a separate changelog, 20130611152026-add-missing-capability-indexes-on-oracle.xml -->
     <changeSet id="20130425102131" author="wpoteat" dbms="oracle,postgresql">
@@ -27,8 +30,10 @@
         </createIndex>
         <addForeignKeyConstraint baseColumnNames="consumer_id" baseTableName="cp_consumer_capability" baseTableSchemaName="public" constraintName="fk_cnsmr_capability_cnsmr" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    
+
     <changeSet id="20130425102131-2" author="wpoteat" dbms="oracle,postgresql">
+        <validCheckSum>7:99cf6849e828630689bead090ccca338</validCheckSum>
+
         <createTable tableName="cp_dist_version">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_dist_version_pkey"/>
@@ -39,15 +44,15 @@
             <column name="display_name" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
-            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
-            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="created" type="${timestamp.type}"/>
+            <column name="updated" type="${timestamp.type}"/>
         </createTable>
     </changeSet>
     <changeSet id="20130425102131-3" author="wpoteat" dbms="postgresql">
         <createIndex tableName="cp_dist_version" indexName="cp_dist_version_id_idx">
             <column name="id"/>
         </createIndex>
-        <addUniqueConstraint columnNames="name" constraintName="cp_dist_version_name_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_dist_version"/> 
+        <addUniqueConstraint columnNames="name" constraintName="cp_dist_version_name_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_dist_version"/>
     </changeSet>
 
     <changeSet id="20130425102131-4" author="wpoteat" dbms="oracle,postgresql">
@@ -69,5 +74,5 @@
         </createIndex>
         <addForeignKeyConstraint baseColumnNames="dist_version_id" baseTableName="cp_dist_version_capability" baseTableSchemaName="public" constraintName="fk_dist_vrsn_capability" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_dist_version" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    
+
 </databaseChangeLog>
