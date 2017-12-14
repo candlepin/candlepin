@@ -32,6 +32,7 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.pinsetter.tasks.HypervisorUpdateJob;
 import org.candlepin.resource.dto.HypervisorCheckInResult;
+import org.candlepin.resource.util.GuestMigration;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -52,6 +53,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import javax.inject.Provider;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.POST;
@@ -80,14 +82,17 @@ public class HypervisorResource {
     private ConsumerResource consumerResource;
     private I18n i18n;
     private OwnerCurator ownerCurator;
+    private Provider<GuestMigration> migrationProvider;
 
     @Inject
     public HypervisorResource(ConsumerResource consumerResource,
-        ConsumerCurator consumerCurator, I18n i18n, OwnerCurator ownerCurator) {
+        ConsumerCurator consumerCurator, I18n i18n, OwnerCurator ownerCurator, Provider<GuestMigration>
+        migrationProvider) {
         this.consumerResource = consumerResource;
         this.consumerCurator = consumerCurator;
         this.i18n = i18n;
         this.ownerCurator = ownerCurator;
+        this.migrationProvider = migrationProvider;
     }
 
     /**
@@ -171,10 +176,6 @@ public class HypervisorResource {
             log.warn("Ignoring {} empty/null guest id(s).", emptyGuestIdCount);
         }
 
-        // Maps virt guest ID to registered consumer for guest, if one exists:
-        VirtConsumerMap guestConsumersMap = consumerCurator.getGuestConsumersMap(
-            owner, allGuestIds);
-
         HypervisorCheckInResult result = new HypervisorCheckInResult();
         for (Entry<String, List<GuestId>> hostEntry : hostGuestMap.entrySet()) {
             String hypervisorId = hostEntry.getKey();
@@ -206,7 +207,7 @@ public class HypervisorResource {
                 else {
                     consumer = hypervisorConsumersMap.get(hypervisorId);
                 }
-                boolean guestIdsUpdated = addGuestIds(consumer, hostEntry.getValue(), guestConsumersMap);
+                boolean guestIdsUpdated = addGuestIds(consumer, hostEntry.getValue());
 
                 Date now = new Date();
                 consumerCurator.updateLastCheckin(consumer, now);
@@ -287,14 +288,20 @@ public class HypervisorResource {
      * Add a list of guestIds to the given consumer,
      * return whether or not there was any change
      */
-    private boolean addGuestIds(Consumer consumer, List<GuestId> guestIds,
-        VirtConsumerMap guestConsumerMap) {
+    private boolean addGuestIds(Consumer consumer, List<GuestId> guestIds) {
         Consumer withIds = new Consumer();
         withIds.setGuestIds(guestIds);
+
+        GuestMigration guestMigration = migrationProvider.get().buildMigrationManifest(withIds, consumer);
         boolean guestIdsUpdated =
-            consumerResource.performConsumerUpdates(withIds, consumer, guestConsumerMap);
+            consumerResource.performConsumerUpdates(withIds, consumer, guestMigration);
         if (guestIdsUpdated) {
-            consumerCurator.update(consumer);
+            if (guestMigration.isMigrationPending()) {
+                guestMigration.migrate();
+            }
+            else {
+                consumerCurator.update(consumer);
+            }
         }
         return guestIdsUpdated;
     }

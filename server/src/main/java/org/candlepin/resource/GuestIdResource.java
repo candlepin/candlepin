@@ -30,6 +30,7 @@ import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.GuestIdCurator;
 import org.candlepin.model.VirtConsumerMap;
+import org.candlepin.resource.util.GuestMigration;
 
 import com.google.inject.Inject;
 
@@ -42,6 +43,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.inject.Provider;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -76,17 +78,19 @@ public class GuestIdResource {
     private I18n i18n;
     private EventSink sink;
     private EventFactory eventFactory;
+    private Provider<GuestMigration> migrationProvider;
 
     @Inject
-    public GuestIdResource(GuestIdCurator guestIdCurator,
-        ConsumerCurator consumerCurator, ConsumerResource consumerResource,
-        I18n i18n, EventFactory eventFactory, EventSink sink) {
+    public GuestIdResource(GuestIdCurator guestIdCurator, ConsumerCurator consumerCurator,
+        ConsumerResource consumerResource, I18n i18n, EventFactory eventFactory, EventSink sink,
+        Provider<GuestMigration> migrationProvider) {
         this.guestIdCurator = guestIdCurator;
         this.consumerCurator = consumerCurator;
         this.consumerResource = consumerResource;
         this.i18n = i18n;
         this.eventFactory = eventFactory;
         this.sink = sink;
+        this.migrationProvider = migrationProvider;
     }
 
     @ApiOperation(notes = "Retrieves the List of a Consumer's Guests", value = "getGuestIds")
@@ -141,8 +145,14 @@ public class GuestIdResource {
         VirtConsumerMap guestConsumerMap = consumerCurator.getGuestConsumersMap(
             toUpdate.getOwner(), allGuestIds);
 
-        if (consumerResource.performConsumerUpdates(consumer, toUpdate, guestConsumerMap)) {
-            consumerCurator.update(toUpdate);
+        GuestMigration guestMigration = migrationProvider.get().buildMigrationManifest(consumer, toUpdate);
+        if (consumerResource.performConsumerUpdates(consumer, toUpdate, guestMigration)) {
+            if (guestMigration.isMigrationPending()) {
+                guestMigration.migrate();
+            }
+            else {
+                consumerCurator.update(toUpdate);
+            }
         }
     }
 

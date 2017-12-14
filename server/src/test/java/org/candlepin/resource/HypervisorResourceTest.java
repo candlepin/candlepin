@@ -51,11 +51,14 @@ import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.resource.dto.HypervisorCheckInResult;
 import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.resource.util.ConsumerEnricher;
+import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.util.FactValidator;
+
+import com.google.inject.util.Providers;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -75,6 +78,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+
+import javax.inject.Provider;
 
 @RunWith(MockitoJUnitRunner.class)
 public class HypervisorResourceTest {
@@ -101,9 +106,15 @@ public class HypervisorResourceTest {
     private ConsumerType hypervisorType;
     private HypervisorResource hypervisorResource;
 
+    private Provider<GuestMigration> migrationProvider;
+    private GuestMigration testMigration;
+
     @Before
     public void setupTest() {
         Configuration config = new CandlepinCommonTestConfig();
+
+        testMigration = new GuestMigration(consumerCurator, eventFactory, sink);
+        migrationProvider = Providers.of(testMigration);
 
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         this.hypervisorType = new ConsumerType(ConsumerTypeEnum.HYPERVISOR);
@@ -114,10 +125,10 @@ public class HypervisorResourceTest {
             this.activationKeyCurator, null, this.complianceRules,
             this.deletedConsumerCurator, null, null, config,
             null, null, null, this.consumerBindUtil, null, null,
-            new FactValidator(config, this.i18n), null, consumerEnricher);
+            new FactValidator(config, this.i18n), null, consumerEnricher, migrationProvider);
 
         hypervisorResource = new HypervisorResource(consumerResource,
-            consumerCurator, i18n, ownerCurator);
+            consumerCurator, i18n, ownerCurator, migrationProvider);
 
         // Ensure that we get the consumer that was passed in back from the create call.
         when(consumerCurator.create(any(Consumer.class))).thenAnswer(new Answer<Object>() {

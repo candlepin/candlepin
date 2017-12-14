@@ -116,6 +116,7 @@ import org.candlepin.resource.RulesResource;
 import org.candlepin.resource.StatusResource;
 import org.candlepin.resource.SubscriptionResource;
 import org.candlepin.resource.UserResource;
+import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.resource.util.ResolverUtil;
 import org.candlepin.resteasy.DateFormatter;
 import org.candlepin.resteasy.JsonProvider;
@@ -206,6 +207,7 @@ public class CandlepinModule extends AbstractModule {
         bind(PKIReader.class).to(BouncyCastlePKIReader.class).asEagerSingleton();
         bind(X509ExtensionUtil.class);
         bind(ResolverUtil.class);
+        bind(GuestMigration.class);
         bind(ConsumerResource.class);
         bind(ConsumerContentOverrideResource.class);
         bind(ActivationKeyContentOverrideResource.class);

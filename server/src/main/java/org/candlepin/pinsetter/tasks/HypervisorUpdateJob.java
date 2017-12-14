@@ -32,6 +32,7 @@ import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.resource.ConsumerResource;
 import org.candlepin.resource.dto.HypervisorUpdateResult;
+import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
@@ -68,6 +69,8 @@ import java.util.Set;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
+import javax.inject.Provider;
+
 /**
  * Asynchronous job for refreshing the entitlement pools for specific
  * {@link Owner}. A job will wait for a running job of the same Owner to
@@ -80,6 +83,7 @@ public class HypervisorUpdateJob extends KingpinJob {
     private ConsumerCurator consumerCurator;
     private ConsumerResource consumerResource;
     private I18n i18n;
+    private Provider<GuestMigration> migrationProvider;
 
     public static final String CREATE = "create";
     public static final String REPORTER_ID = "reporter_id";
@@ -89,11 +93,12 @@ public class HypervisorUpdateJob extends KingpinJob {
 
     @Inject
     public HypervisorUpdateJob(OwnerCurator ownerCurator, ConsumerCurator consumerCurator,
-        ConsumerResource consumerResource, I18n i18n) {
+        ConsumerResource consumerResource, I18n i18n, Provider<GuestMigration> migrationProvider) {
         this.ownerCurator = ownerCurator;
         this.consumerCurator = consumerCurator;
         this.consumerResource = consumerResource;
         this.i18n = i18n;
+        this.migrationProvider = migrationProvider;
     }
 
     public static JobStatus scheduleJob(JobCurator jobCurator,
@@ -184,7 +189,7 @@ public class HypervisorUpdateJob extends KingpinJob {
      * @param context the job's execution context
      */
     @Transactional
-    @SuppressWarnings("checkstyle:indentation")
+    @SuppressWarnings({"checkstyle:indentation", "checkstyle:methodlength"})
     public void toExecute(JobExecutionContext context) throws JobExecutionException {
         try {
             JobDataMap map = context.getMergedJobDataMap();
@@ -224,9 +229,6 @@ public class HypervisorUpdateJob extends KingpinJob {
             // Maps virt hypervisor ID to registered consumer for that hypervisor, should one exist:
             VirtConsumerMap hypervisorConsumersMap = consumerCurator.getHostConsumersMap(owner, hosts);
 
-            // Maps virt guest ID to registered consumer for guest, if one exists:
-            VirtConsumerMap guestConsumersMap = consumerCurator.getGuestConsumersMap(owner, guests);
-
             for (String hypervisorId : hosts) {
                 Consumer knownHost = hypervisorConsumersMap.get(hypervisorId);
                 Consumer incoming = incomingHosts.get(hypervisorId);
@@ -239,8 +241,17 @@ public class HypervisorUpdateJob extends KingpinJob {
                     else {
                         log.debug("Registering new host consumer for hypervisor ID: {}", hypervisorId);
                         Consumer newHost = createConsumerForHypervisorId(hypervisorId, owner, principal);
-                        consumerResource.performConsumerUpdates(incoming, newHost, guestConsumersMap, false);
+
+                        GuestMigration guestMigration = migrationProvider.get().buildMigrationManifest(
+                            incoming, newHost);
+                        consumerResource.performConsumerUpdates(incoming, newHost, guestMigration);
                         consumerResource.create(newHost, principal, null, owner.getKey(), null, false);
+
+                        // Now that we have the new consumer persisted, immediately migrate the guests to it
+                        if (guestMigration.isMigrationPending()) {
+                            guestMigration.migrate();
+                        }
+
                         hypervisorConsumersMap.add(hypervisorId, newHost);
                         result.created(updateCheckinTime(newHost));
                         reportedOnConsumer = newHost;
@@ -265,9 +276,19 @@ public class HypervisorUpdateJob extends KingpinJob {
                     Hibernate.initialize(knownHost.getCapabilities());
                     Hibernate.initialize(knownHost.getInstalledProducts());
                     Hibernate.initialize(knownHost.getEntitlements());
-                    if (consumerResource.performConsumerUpdates(incoming, knownHost, guestConsumersMap,
-                        false)) {
-                        consumerCurator.update(knownHost);
+
+                    GuestMigration guestMigration = migrationProvider.get().buildMigrationManifest(incoming,
+                        knownHost);
+
+                    if (consumerResource.performConsumerUpdates(incoming, knownHost, guestMigration,
+                       false)) {
+                        if (guestMigration.isMigrationPending()) {
+                            guestMigration.migrate();
+                        }
+                        else {
+                            consumerCurator.update(knownHost);
+                        }
+
                         result.updated(updateCheckinTime(knownHost));
                     }
                     else {

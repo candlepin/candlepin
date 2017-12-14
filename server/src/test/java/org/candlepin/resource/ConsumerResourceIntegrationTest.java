@@ -17,6 +17,8 @@ package org.candlepin.resource;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import org.candlepin.audit.EventFactory;
+import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
@@ -49,6 +51,7 @@ import org.candlepin.pki.PKIReader;
 import org.candlepin.pki.impl.BouncyCastlePKIReader;
 import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.resource.util.ConsumerEnricher;
+import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.service.ContentAccessCertServiceAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
@@ -58,6 +61,7 @@ import org.candlepin.test.TestUtil;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
+import com.google.inject.util.Providers;
 
 import org.junit.After;
 import org.junit.Before;
@@ -73,6 +77,7 @@ import java.util.List;
 import java.util.Set;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
 
@@ -552,11 +557,15 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @SuppressWarnings("unchecked")
     @Test
     public void testRegenerateEntitlementCertificateWithValidConsumerByEntitlement() {
+        GuestMigration testMigration = new GuestMigration(consumerCurator, mock(EventFactory.class), mock
+            (EventSink.class));
+        Provider<GuestMigration> migrationProvider = Providers.of(testMigration);
+
         ConsumerResource cr = new ConsumerResource(
             this.consumerCurator, null, null, null, null, this.entitlementCurator, null, null, null, null,
             null, null, null, null, this.poolManager, null, null, null, null, null, null, null, null,
             new CandlepinCommonTestConfig(), null, null, null, mock(ConsumerBindUtil.class),
-            null, null, null, null, consumerEnricher);
+            null, null, null, null, consumerEnricher, migrationProvider);
 
         Response rsp = consumerResource.bind(consumer.getUuid(), pool.getId().toString(), null, 1, null,
             null, false, null, null);

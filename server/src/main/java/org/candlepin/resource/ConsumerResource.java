@@ -78,7 +78,6 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Release;
 import org.candlepin.model.User;
-import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.pinsetter.tasks.EntitleByProductsJob;
@@ -93,6 +92,7 @@ import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resource.util.ConsumerTypeValidator;
 import org.candlepin.resource.util.EntitlementFinderUtil;
+import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.resteasy.DateFormat;
 import org.candlepin.resteasy.parameter.CandlepinParam;
@@ -123,6 +123,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Authorization;
+
 import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -138,6 +145,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import javax.inject.Provider;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -154,13 +162,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.annotations.Authorization;
 
 /**
  * API Gateway for Consumers
@@ -206,6 +207,7 @@ public class ConsumerResource {
     private FactValidator factValidator;
     private ConsumerTypeValidator consumerTypeValidator;
     private ConsumerEnricher consumerEnricher;
+    private Provider<GuestMigration> migrationProvider;
 
     @Inject
     @SuppressWarnings({"checkstyle:parameternumber"})
@@ -231,7 +233,8 @@ public class ConsumerResource {
         ContentAccessCertServiceAdapter contentAccessCertService,
         FactValidator factValidator,
         ConsumerTypeValidator consumerTypeValidator,
-        ConsumerEnricher consumerEnricher) {
+        ConsumerEnricher consumerEnricher,
+        Provider<GuestMigration> migrationProvider) {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -269,6 +272,7 @@ public class ConsumerResource {
         this.factValidator = factValidator;
         this.consumerTypeValidator = consumerTypeValidator;
         this.consumerEnricher = consumerEnricher;
+        this.migrationProvider = migrationProvider;
     }
 
     /**
@@ -1004,14 +1008,11 @@ public class ConsumerResource {
 
         Consumer toUpdate = consumerCurator.verifyAndLookupConsumer(uuid);
 
-        VirtConsumerMap guestConsumerMap = new VirtConsumerMap();
         if (consumer.getGuestIds() != null) {
             Set<String> allGuestIds = new HashSet<String>();
             for (GuestId gid : consumer.getGuestIds()) {
                 allGuestIds.add(gid.getGuestId());
             }
-
-            guestConsumerMap = consumerCurator.getGuestConsumersMap(toUpdate.getOwner(), allGuestIds);
         }
 
         // Sanitize the inbound facts before applying the update
@@ -1021,9 +1022,17 @@ public class ConsumerResource {
             validateShareConsumerUpdate(toUpdate, consumer, principal);
         }
 
-        if (performConsumerUpdates(consumer, toUpdate, guestConsumerMap)) {
+        GuestMigration guestMigration = migrationProvider.get();
+        guestMigration.buildMigrationManifest(consumer, toUpdate);
+
+        if (performConsumerUpdates(consumer, toUpdate, guestMigration)) {
             try {
-                consumerCurator.update(toUpdate);
+                if (guestMigration.isMigrationPending()) {
+                    guestMigration.migrate();
+                }
+                else {
+                    consumerCurator.update(toUpdate);
+                }
             }
             catch (CandlepinException ce) {
                 // If it is one of ours, rethrow it.
@@ -1037,14 +1046,14 @@ public class ConsumerResource {
     }
 
     public boolean performConsumerUpdates(Consumer updated, Consumer toUpdate,
-        VirtConsumerMap guestConsumerMap) {
+        GuestMigration guestMigration) {
 
-        return performConsumerUpdates(updated, toUpdate, guestConsumerMap, true);
+        return performConsumerUpdates(updated, toUpdate, guestMigration, true);
     }
 
     @Transactional
     public boolean performConsumerUpdates(Consumer updated, Consumer toUpdate,
-        VirtConsumerMap guestConsumerMap, boolean isIdCert) {
+        GuestMigration guestMigration, boolean isIdCert) {
 
         log.debug("Updating consumer: {}", toUpdate.getUuid());
 
@@ -1054,14 +1063,15 @@ public class ConsumerResource {
         EventBuilder eventBuilder = eventFactory.getEventBuilder(Target.CONSUMER, Type.MODIFIED)
             .setEventData(toUpdate);
 
+
         // version changed on non-checked in consumer, or list of capabilities
         // changed on checked in consumer
         boolean changesMade = updateCapabilities(toUpdate, updated);
 
         changesMade = checkForFactsUpdate(toUpdate, updated) || changesMade;
         changesMade = checkForInstalledProductsUpdate(toUpdate, updated) || changesMade;
-        changesMade = checkForGuestsUpdate(toUpdate, updated, guestConsumerMap) || changesMade;
         changesMade = checkForHypervisorIdUpdate(toUpdate, updated) || changesMade;
+        changesMade = guestMigration.isMigrationPending() || changesMade;
 
         if (updated.getContentTags() != null &&
             !updated.getContentTags().equals(toUpdate.getContentTags())) {
@@ -1225,7 +1235,6 @@ public class ConsumerResource {
      * @return a boolean
      */
     private boolean checkForInstalledProductsUpdate(Consumer existing, Consumer incoming) {
-
         if (incoming.getInstalledProducts() == null) {
             log.debug("Installed packages not included in this consumer update, skipping update.");
             return false;
@@ -1242,89 +1251,6 @@ public class ConsumerResource {
         return false;
     }
 
-    /**
-     * Check if the host consumers guest IDs have changed. If they do not appear to
-     * have been specified in this PUT, skip updating guest IDs entirely.
-     *
-     * If a consumer's guest was already reported by another consumer (host),
-     * all entitlements related to the other host are revoked. Also, if a
-     * guest ID is removed from this host, then all entitlements related to
-     * this host are revoked from the guest.
-     * Will return true if guest IDs were included in request and have changed.
-     *
-     * @param existing existing consumer
-     * @param incoming incoming consumer
-     * @return a boolean
-     */
-    private boolean checkForGuestsUpdate(Consumer existing, Consumer incoming,
-        VirtConsumerMap guestConsumerMap) {
-
-        if (incoming.getGuestIds() == null) {
-            log.debug("Guests not included in this consumer update, skipping update.");
-            return false;
-        }
-
-        log.debug("Updating {} guest IDs.", incoming.getGuestIds().size());
-        List<GuestId> removedGuests = getRemovedGuestIds(existing, incoming);
-        List<GuestId> addedGuests = getAddedGuestIds(existing, incoming);
-
-        List<GuestId> existingGuests = existing.getGuestIds();
-
-        // remove guests that are missing.
-        if (existingGuests != null) {
-            log.debug("removing IDs.");
-            for (GuestId guestId : removedGuests) {
-                existingGuests.remove(guestId);
-                if (log.isDebugEnabled()) {
-                    log.debug("Guest ID removed: {}", guestId);
-                }
-                sink.queueEvent(eventFactory.guestIdDeleted(guestId));
-            }
-        }
-        // Check guests that are existing/added.
-        for (GuestId guestId : incoming.getGuestIds()) {
-
-            if (addedGuests.contains(guestId)) {
-                // Add the guestId.
-                existing.addGuestId(guestId);
-                if (log.isDebugEnabled()) {
-                    log.debug("New guest ID added: {}", guestId.getGuestId());
-                }
-                sink.queueEvent(eventFactory.guestIdCreated(guestId));
-            }
-        }
-
-        // If nothing shows as being added, and nothing shows as being removed, we should
-        // return false here and stop. This is done after the above logic however, as we
-        // still need to watch out for multiple hosts reporting the same guest, even if
-        // the list they are reporting has not changed.
-        if (removedGuests.size() == 0 && addedGuests.size() == 0) {
-            return false;
-        }
-
-        // Otherwise something must have changed:
-        return true;
-    }
-
-    private List<GuestId> getAddedGuestIds(Consumer existing, Consumer incoming) {
-        return getDifferenceInGuestIds(incoming, existing);
-    }
-
-    private List<GuestId> getRemovedGuestIds(Consumer existing, Consumer incoming) {
-        return getDifferenceInGuestIds(existing, incoming);
-    }
-
-    private List<GuestId> getDifferenceInGuestIds(Consumer c1, Consumer c2) {
-        List<GuestId> ids1 = c1.getGuestIds() == null ?
-            new ArrayList<GuestId>() : new ArrayList<GuestId>(c1.getGuestIds());
-        List<GuestId> ids2 = c2.getGuestIds() == null ?
-            new ArrayList<GuestId>() : new ArrayList<GuestId>(c2.getGuestIds());
-
-        List<GuestId> removedGuests = new ArrayList<GuestId>(ids1);
-        removedGuests.removeAll(ids2);
-        return removedGuests;
-    }
-
     /*
      * Check if this consumer is a guest, and if it appears to have migrated.
      * We only check for existing entitlements, restricted to a host that does not match
@@ -1332,7 +1258,7 @@ public class ConsumerResource {
      * db. If autobind has been disabled for the guest's owner, the host_restricted entitlements
      * from the old host are still removed, but no auto-bind occurs.
      */
-    protected void checkForGuestMigration(Consumer guest) {
+    protected void revokeOnGuestMigration(Consumer guest) {
         if (!guest.isGuest()) {
             // This isn't a guest, skip this entire step.
             return;
@@ -1350,9 +1276,10 @@ public class ConsumerResource {
         for (Entitlement entitlement : guest.getEntitlements()) {
             Pool pool = entitlement.getPool();
 
-            // If there is no host required or the pool isn't for unmapped guests, skip it
-            if (!(pool.hasAttribute(Pool.Attributes.REQUIRES_HOST) || pool.isUnmappedGuestPool() ||
-                isVirtOnly(pool))) {
+            // If there is no host required, the pool isn't for unmapped guests, or the pool is not
+            // virt-only then the host-guest dynamic doesn't apply, so skip it.
+            if (!pool.hasAttribute(Pool.Attributes.REQUIRES_HOST) && !pool.isUnmappedGuestPool() &&
+                !isVirtOnly(pool)) {
                 continue;
             }
 
@@ -1461,7 +1388,7 @@ public class ConsumerResource {
             return new ArrayList<Certificate>();
         }
 
-        checkForGuestMigration(consumer);
+        revokeOnGuestMigration(consumer);
         poolManager.regenerateDirtyEntitlements(consumer);
 
         Set<Long> serialSet = this.extractSerials(serials);
@@ -1559,7 +1486,7 @@ public class ConsumerResource {
             return null;
         }
 
-        checkForGuestMigration(consumer);
+        revokeOnGuestMigration(consumer);
         Set<Long> serialSet = this.extractSerials(serials);
         // filtering requires a null set, so make this null if it is
         // empty
@@ -1627,7 +1554,7 @@ public class ConsumerResource {
             return new ArrayList<CertificateSerialDto>();
         }
 
-        checkForGuestMigration(consumer);
+        revokeOnGuestMigration(consumer);
         poolManager.regenerateDirtyEntitlements(consumer);
 
         List<CertificateSerialDto> allCerts = new LinkedList<CertificateSerialDto>();
@@ -1873,7 +1800,7 @@ public class ConsumerResource {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
 
         if (regen) {
-            checkForGuestMigration(consumer);
+            revokeOnGuestMigration(consumer);
         }
 
         EntitlementFilterBuilder filters = EntitlementFinderUtil.createFilter(matches, attrFilters);
