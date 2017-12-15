@@ -178,7 +178,7 @@ public class PoolResource {
 
         Page<List<Pool>> page = poolManager.listAvailableEntitlementPools(c, null, o,
             productId, null, activeOnDate, listAll, new PoolFilterBuilder(), pageRequest,
-            false, false);
+            false, false, null);
         List<Pool> poolList = page.getPageData();
 
         calculatedAttributesUtil.setCalculatedAttributes(poolList, activeOnDate);

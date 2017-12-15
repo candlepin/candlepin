@@ -185,7 +185,7 @@ public interface PoolManager {
     Page<List<Pool>> listAvailableEntitlementPools(Consumer consumer, ActivationKey key,
         Owner owner, String productId, String subscriptionId, Date activeOn,
         boolean includeWarnings, PoolFilterBuilder filterBuilder, PageRequest pageRequest,
-        boolean addFuture, boolean onlyFuture);
+        boolean addFuture, boolean onlyFuture, Date after);
 
     /**
      *  Get the available service levels for consumers for this owner. Exempt

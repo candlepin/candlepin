@@ -1066,7 +1066,8 @@ public class PoolManagerTest {
         when(page.getPageData()).thenReturn(pools);
         when(mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
             any(Owner.class), any(String.class), any(String.class), eq(now),
-            any(PoolFilterBuilder.class), any(PageRequest.class), anyBoolean(), anyBoolean(), anyBoolean()))
+            any(PoolFilterBuilder.class), any(PageRequest.class), anyBoolean(), anyBoolean(), anyBoolean(),
+            any(Date.class)))
             .thenReturn(page);
 
         CandlepinQuery mockQuery = mock(CandlepinQuery.class);
@@ -1117,7 +1118,8 @@ public class PoolManagerTest {
         when(page.getPageData()).thenReturn(pools);
         when(mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class), any(Owner.class),
             any(String.class), any(String.class), eq(now),
-            any(PoolFilterBuilder.class), any(PageRequest.class), anyBoolean(), anyBoolean(), anyBoolean()))
+            any(PoolFilterBuilder.class), any(PageRequest.class), anyBoolean(), anyBoolean(), anyBoolean(),
+            any(Date.class)))
             .thenReturn(page);
 
         CandlepinQuery mockQuery = mock(CandlepinQuery.class);
@@ -1344,7 +1346,7 @@ public class PoolManagerTest {
         when(mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
             any(Owner.class), anyString(), anyString(), eq(now),
             any(PoolFilterBuilder.class),
-            any(PageRequest.class), anyBoolean(), anyBoolean(), anyBoolean()))
+            any(PageRequest.class), anyBoolean(), anyBoolean(), anyBoolean(), any(Date.class)))
                 .thenReturn(page);
         CandlepinQuery mockQuery = mock(CandlepinQuery.class);
         when(mockPoolCurator.listAllByIds(any(List.class))).thenReturn(mockQuery);

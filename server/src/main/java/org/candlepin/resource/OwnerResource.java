@@ -782,6 +782,9 @@ public class OwnerResource {
         @ApiParam("When set to true, it will return only future dated pools to the result, " +
                 "based on the activeon date.")
         @QueryParam("only_future") @DefaultValue("false") boolean onlyFuture,
+        @ApiParam("Will only return pools with a start date after the supplied date. " +
+                "Overrides the activeOn date.")
+        @QueryParam("after") @DateFormat Date after,
         @Context Principal principal,
         @Context PageRequest pageRequest) {
 
@@ -820,6 +823,14 @@ public class OwnerResource {
             throw new BadRequestException(
                 i18n.tr("The flags add_future and only_future cannot be used at the same time."));
         }
+        if (after != null && (addFuture || onlyFuture)) {
+            throw new BadRequestException(
+                    i18n.tr("The flags add_future and only_future cannot be used with the parameter after."));
+        }
+        if (after != null) {
+            activeOn = null;
+        }
+
         // Process the filters passed for the attributes
         PoolFilterBuilder poolFilters = new PoolFilterBuilder();
         for (KeyValueParameter filterParam : attrFilters) {
@@ -831,7 +842,7 @@ public class OwnerResource {
 
         Page<List<Pool>> page = poolManager.listAvailableEntitlementPools(
             c, key, owner, productId, subscriptionId, activeOn, listAll, poolFilters, pageRequest,
-        addFuture, onlyFuture);
+        addFuture, onlyFuture, after);
         List<Pool> poolList = page.getPageData();
         calculatedAttributesUtil.setCalculatedAttributes(poolList, activeOn);
         calculatedAttributesUtil.setQuantityAttributes(poolList, c, activeOn);

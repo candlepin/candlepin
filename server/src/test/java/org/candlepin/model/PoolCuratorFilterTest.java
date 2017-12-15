@@ -97,7 +97,7 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
     private void searchTest(PoolFilterBuilder filters, int expectedResults, String ... expectedIds) {
         Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
             null, owner, (Collection<String>) null, null, null, filters, req, false,
-            false, false);
+            false, false, null);
         List<Pool> results = page.getPageData();
 
         assertEquals(expectedResults, results.size());

@@ -864,10 +864,31 @@ describe 'Owner Resource Future Pool Tests' do
     pools[0].id.should eq(@future_pool2.id)
   end
 
+  it 'can fetch pools that start after specified date' do
+    test_date_1 = @now + 350
+    test_date_2 = @now + 750
+    pools = @cp.list_owner_pools(@owner['key'],{:after => test_date_1.to_s})
+    pools.length.should eq(2)
+    pools[0].id.should_not eq(@current_pool.id)
+    pools[1].id.should_not eq(@current_pool.id)
+    pools = @cp.list_owner_pools(@owner['key'],{:after => test_date_2.to_s})
+    pools.length.should eq(1)
+    pools[0].id.should eq(@future_pool2.id)
+  end
+
   it 'cannot use both add_future and only_future flags' do
     lambda do
         pools = @cp.list_owner_pools(@owner['key'],{:only_future => "true", :add_future => "true"})
      end.should raise_exception(RestClient::BadRequest)
+  end
+
+  it 'cannot use after and either add_future or only_future flags' do
+    lambda do
+      pools = @cp.list_owner_pools(@owner['key'],{:after => @now+500, :only_future => "true"})
+    end.should raise_exception(RestClient::BadRequest)
+    lambda do
+      pools = @cp.list_owner_pools(@owner['key'],{:after => @now+500, :add_future => "true"})
+    end.should raise_exception(RestClient::BadRequest)
   end
 
 end
