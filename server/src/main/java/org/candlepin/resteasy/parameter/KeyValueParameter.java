@@ -31,12 +31,11 @@ public class KeyValueParameter extends CandlepinParameter {
      *     FORMAT: paramName=key:value
      * </pre>
      *
-     * @param queryParamName the name of the query parameter as entered in the URL.
      * @param queryParameterValue the value of the query parameter as entered in the URL
      *                            in the format: key:value
      */
-    public KeyValueParameter(String queryParamName, String queryParameterValue) {
-        super(queryParamName, queryParameterValue);
+    public KeyValueParameter(String queryParameterValue) {
+        super(queryParameterValue);
     }
 
     @Override

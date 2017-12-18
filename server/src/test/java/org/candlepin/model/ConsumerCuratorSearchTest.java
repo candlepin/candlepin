@@ -974,7 +974,8 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
          */
         public TestingKeyValueParameter(String key,
             String value) {
-            super(key, value);
+            super(value);
+            this.paramName = key;
         }
 
         @Override
