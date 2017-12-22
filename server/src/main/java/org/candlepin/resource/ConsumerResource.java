@@ -1119,7 +1119,7 @@ public class ConsumerResource {
 
             log.info("Updating consumer name: {} -> {}", toUpdate.getName(), updated.getName());
             toUpdate.setName(updated.getName());
-
+            changesMade = true;
             // get the new name into the id cert if we are using the cert
             if (isIdCert) {
                 IdentityCertificate ic = generateIdCert(toUpdate, true);
