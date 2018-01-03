@@ -6,9 +6,8 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
-    <property name="timestamp.type" value="TIMESTAMP WITHOUT TIME ZONE" dbms="oracle"/>
-    <property name="timestamp.type" value="TIMESTAMP WITHOUT TIME ZONE" dbms="postgresql"/>
-    <property name="timestamp.type" value="DATETIME" dbms="mysql"/>
+    <!-- Include definitions for cert.type, timestamp.type, etc. -->
+    <include file="db/changelog/datatypes.xml"/>
 
     <changeSet id="20161109145238-1" author="wpoteat">
         <comment>add-owner-environment-content-access</comment>

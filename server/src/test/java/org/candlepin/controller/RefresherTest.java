@@ -72,6 +72,16 @@ public class RefresherTest {
     }
 
     @Test
+    public void testRefreshDateSet() {
+        Owner owner = TestUtil.createOwner();
+
+        refresher.add(owner);
+        refresher.run();
+
+        verify(ownerManager).updateRefreshDate(owner);
+    }
+
+    @Test
     public void testProductOnlyExaminedOnce() {
         Product product = mock(Product.class);
         ProductData productData = mock(ProductData.class);

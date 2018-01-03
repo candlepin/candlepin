@@ -160,6 +160,7 @@ public class Refresher {
             poolManager.recalculatePoolQuantitiesForOwner(owner);
 
             ownerManager.refreshContentAccessMode(this.ownerAdapter, owner);
+            ownerManager.updateRefreshDate(owner);
         }
     }
 

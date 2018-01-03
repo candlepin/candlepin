@@ -6,12 +6,8 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
-    <property name="timestamp.type" value="TIMESTAMP WITHOUT TIME ZONE" dbms="oracle"/>
-    <property name="timestamp.type" value="TIMESTAMP WITHOUT TIME ZONE" dbms="postgresql"/>
-    <property name="timestamp.type" value="DATETIME" dbms="mysql"/>
-    <property name="cert.type" value="BLOB" dbms="oracle"/>
-    <property name="cert.type" value="bytea" dbms="postgresql"/>
-    <property name="cert.type" value="BLOB" dbms="mysql"/>
+    <!-- Include definitions for cert.type, timestamp.type, etc. -->
+    <include file="db/changelog/datatypes.xml"/>
 
     <changeSet id="20161013145834-1" author="wpoteat">
         <createTable tableName="cp_cont_access_cert">
@@ -49,8 +45,7 @@
             onUpdate="NO ACTION"
             referencedColumnNames="id"
             referencedTableName="cp_cont_access_cert"
-            referencesUniqueColumn="false"
-	/>
+            referencesUniqueColumn="false" />
     </changeSet>
 
     <changeSet author="wpoteat" id="20161013145834-4">
