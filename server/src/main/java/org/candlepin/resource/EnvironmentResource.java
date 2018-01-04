@@ -32,6 +32,7 @@ import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.OwnerContentCurator;
+import org.candlepin.model.OwnerEnvContentAccessCurator;
 import org.candlepin.pinsetter.tasks.RegenEnvEntitlementCertsJob;
 import org.candlepin.util.RdbmsExceptionTranslator;
 import org.candlepin.util.Util;
@@ -89,13 +90,15 @@ public class EnvironmentResource {
     private PoolManager poolManager;
     private ConsumerCurator consumerCurator;
     private OwnerContentCurator ownerContentCurator;
+    private OwnerEnvContentAccessCurator ownerEnvContentAccessCurator;
     private RdbmsExceptionTranslator rdbmsExceptionTranslator;
 
     @Inject
     public EnvironmentResource(EnvironmentCurator envCurator, I18n i18n,
         EnvironmentContentCurator envContentCurator, ConsumerResource consumerResource,
         PoolManager poolManager, ConsumerCurator consumerCurator, OwnerContentCurator ownerContentCurator,
-        RdbmsExceptionTranslator rdbmsExceptionTranslator) {
+        RdbmsExceptionTranslator rdbmsExceptionTranslator,
+        OwnerEnvContentAccessCurator ownerEnvContentAccessCurator) {
 
         this.envCurator = envCurator;
         this.i18n = i18n;
@@ -105,6 +108,7 @@ public class EnvironmentResource {
         this.consumerCurator = consumerCurator;
         this.ownerContentCurator = ownerContentCurator;
         this.rdbmsExceptionTranslator = rdbmsExceptionTranslator;
+        this.ownerEnvContentAccessCurator = ownerEnvContentAccessCurator;
     }
 
     @ApiOperation(notes = "Retrieves a single Environment", value = "getEnv")
@@ -244,6 +248,7 @@ public class EnvironmentResource {
 
         try {
             contentIds = batchCreate(contentToPromote, env);
+            clearContentAccessCerts(env);
         }
         catch (PersistenceException pe) {
             if (rdbmsExceptionTranslator.isConstraintViolationDuplicateEntry(pe)) {
@@ -305,6 +310,7 @@ public class EnvironmentResource {
         try {
             envContentCurator.bulkDeleteTransactional(
                 new ArrayList<EnvironmentContent>(demotedContent.values()));
+            clearContentAccessCerts(e);
         }
         catch (RollbackException hibernateException) {
             if (rdbmsExceptionTranslator.isUpdateHadNoEffectException(hibernateException)) {
@@ -358,8 +364,13 @@ public class EnvironmentResource {
             env.getEnvironmentContent().add(envcontent);
             contentIds.add(promoteMe.getContentId());
         }
-
         return contentIds;
+    }
+
+    @Transactional
+    private void clearContentAccessCerts(Environment env) {
+        ownerEnvContentAccessCurator.removeAllForEnvironment(env.getId());
+        ownerEnvContentAccessCurator.refresh();
     }
 
     private Environment lookupEnvironment(String envId) {
