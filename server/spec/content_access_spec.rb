@@ -123,6 +123,47 @@ describe 'Content Access' do
       are_content_urls_present(value, urls).should == true
   end
 
+  it "environment content changes show in content access cert" do
+    @env = @user.create_environment(@owner['key'], random_string('testenv'),
+                                    "My Test Env 1", "For test systems only.")
+    @env['environmentContent'].size.should == 0
+
+    consumer = @user.register(random_string('consumer'), :system, nil,
+                              {'system.certificate_version' => '3.3'},nil, nil, [], [], @env['id'])
+    consumer['environment'].should_not be_nil
+    @consumer = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+    certs = @consumer.list_certificates
+    certs.length.should == 1
+    json_body = extract_payload(certs[0]['cert'])
+    json_body['products'][0]['content'].length.should == 0
+
+    job = @user.promote_content(@env['id'],
+            [{
+                 :contentId => @content['id'],
+                 :enabled => false,
+             }])
+    wait_for_job(job['id'], 15)
+    @env = @user.get_environment(@env['id'])
+    @env['environmentContent'].size.should == 1
+
+    certs = @consumer.list_certificates
+    certs.length.should == 1
+    json_body = extract_payload(certs[0]['cert'])
+    json_body['products'][0]['content'].length.should == 1
+    content = json_body['products'][0]['content'][0]
+    content['id'].should == @content['id']
+
+    job = @user.demote_content(@env['id'], [@content['id']])
+    wait_for_job(job['id'], 15)
+    @env = @user.get_environment(@env['id'])
+    @env['environmentContent'].size.should == 0
+
+    certs = @consumer.list_certificates
+    certs.length.should == 1
+    json_body = extract_payload(certs[0]['cert'])
+    json_body['products'][0]['content'].length.should == 0
+  end
+
   it "can remove the content access certificate from the consumer when org content access mode removed" do
       skip("candlepin running in standalone mode") unless is_hosted?
       @consumer = consumer_client(@user, @consumername, type=:system, username=nil, facts= {'system.certificate_version' => '3.3'})
