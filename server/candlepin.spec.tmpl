@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.2.0
+Version: 2.3.0
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,89 @@ fi
 
 #raw
 %changelog
+* Thu Jan 04 2018 Kevin Howell <khowell@redhat.com> 2.3.0-1
+- Optimized the delete orphaned pools Liquibase task (crog@redhat.com)
+- Refactor KeyValueParameter to remove warnings. (awood@redhat.com)
+- 1499003: Fixed parameter limit issues with
+  PoolCurator.listBySourceEntitlements (crog@redhat.com)
+- Forward port of Liquibase migration validation improvements (crog@redhat.com)
+- 1517848: Set the KeyPair object to lazy load. (awood@redhat.com)
+- 1514484: entitlements are regenerated on content change of provided products
+  (adarshvritant@gmail.com)
+- 1500837: Fixed an exception that could occur when updating pools
+  (crog@redhat.com)
+- Update rubyzip usage (jturel@gmail.com)
+- 1512881: Force re-trigger cron jobs (adarshvritant@gmail.com)
+- Prioritize cron jobs over async jobs (adarshvritant@gmail.com)
+- 1510082: mode change breaks pinsetter (adarshvritant@gmail.com)
+- Added a per-org products migration validation Liquibase task
+  (crog@redhat.com)
+- 1478087: Adjust the settings for sslProtocol in server.xml (awood@redhat.com)
+- 1509952: FIPS deployment need key length of at least 2048 bits
+  (adarshvritant@gmail.com)
+- Improve performance of CancelJobJob (mstead@redhat.com)
+- Event Simplification: Removed newEntity field (nmoumoul@redhat.com)
+- 1503158: Lower several logging messages to debug level. (awood@redhat.com)
+- 1442159: Validate product cert generation is for engineering products.
+  (awood@redhat.com)
+- 1500843: Fixed several issues with OwnerResource.updatePool (crog@redhat.com)
+- Event Simplification: Added eventData to Events (nmoumoul@redhat.com)
+- 1507959: Fixed an exception while deleting unmapped guest entitlements
+  (crog@redhat.com)
+- Fixed an issue with shared pools not being deprioritized (crog@redhat.com)
+- Remove all reference to the Paginate annotation. (awood@redhat.com)
+- 1503619: Add index ( target id, type ) on cp_job (root@localhost.localdomain)
+- Event Simplification: Removed oldEntity from Events (nmoumoul@redhat.com)
+- Moved job ID partitioning to the curators (crog@redhat.com)
+- 1506014: Optimized pool serialization and dependent entitlement lookup
+  (crog@redhat.com)
+- Database fixes for async jobs (wpoteat@redhat.com)
+- Add a setting to allow users to mask capabilities. (awood@redhat.com)
+- Add an index on consumer_id for cp_consumer_content_tags (awood@redhat.com)
+- 1504710: Do not use schema version past what is available in RHEL 7.
+  (awood@redhat.com)
+- 1503299: bind with an empty string as POST body (adarshvritant@gmail.com)
+- Made several optimizations to PoolManager.deletePools (crog@redhat.com)
+- Correcting style issues flagged by latest Checkstyle. (awood@redhat.com)
+- 1503176: Delete missing products from activation keys while upgrading.
+  (awood@redhat.com)
+- 1487758 Added index on cp_consumer.username field (nmoumoul@redhat.com)
+- 1500852: Optimized fetching/deleting pools by subscription IDs
+  (crog@redhat.com)
+- 1496855: Updated how conditional content/modifier entitlements are marked
+  dirty (crog@redhat.com)
+- 1474443 compliance.created events now use UUID for 'consumerId' field
+  (nmoumoul@redhat.com)
+- 1498216: Use the environment name in the certificate (wpoteat@redhat.com)
+- 1497707: Execute HypervisorUpdateJobs in the order they were received
+  (csnyder@redhat.com)
+- 1497288: Mark jobs canceled when shutting down (awood@redhat.com)
+- Corrected additional calls to systemctl (crog@redhat.com)
+- 1482949: Limit consumer check-in time updates to specific calls
+  (awood@redhat.com)
+- Pool deleted events no longer contain old pool entities (crog@redhat.com)
+- 1469577: purge orphan pools via liquibase (adarshvritant@gmail.com)
+- Added the new Traceable and TraceableParam annotations (crog@redhat.com)
+- 1488508: Added a cleanup task to remove extraneous upstream pool data
+  (crog@redhat.com)
+- 1488508: Restricted upstream info migration to master pools (crog@redhat.com)
+- Updated select rspec tests to use "skip" over "pending" (crog@redhat.com)
+- Added a valid checksum to a problematic Liquibase changeset (crog@redhat.com)
+- Fixed an issue with some PoolCurator tests and functionality
+  (crog@redhat.com)
+- Create activation keys in test data (adarshvritant@gmail.com)
+- 1487375: Fix registration issue when owner's autobind is disabled.
+  (mstead@redhat.com)
+- Fix custom pool lookup for bonus pool (adarshvritant@gmail.com)
+- 1482937: Fix regression in scoping of JsRunnerRequestCache
+  (bcourt@redhat.com)
+- Discontinue ambiguous subscription resources in sharing world
+  (adarshvritant@gmail.com)
+- Make UpstreamConsumer lazy load (bcourt@redhat.com)
+- Update rules to 5.26 (related: 1476897) (csnyder@redhat.com)
+- Remove an unused backreference from IdentityCertificate. (bcourt@redhat.com)
+- add unit test for fetching shared pools of a pool (adarshvritant@gmail.com)
+
 * Fri Aug 11 2017 Vritant Jain <adarshvritant@gmail.com> 2.2.0-1
 - Spec test fixes (csnyder@redhat.com)
 - 1476897: Choose host_specific/virt_only pools first (csnyder@redhat.com)
