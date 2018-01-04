@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-12-07 15:00-0500\n"
+"POT-Creation-Date: 2018-01-04 09:58-0500\n"
 "PO-Revision-Date: 2017-11-15 07:34+0000\n"
 "Last-Translator: tfu <tfu@redhat.com>\n"
 "Language-Team: Chinese (Simplified, China)\n"
@@ -411,7 +411,7 @@ msgstr "未映射的虚拟机权限尚未建立主机/虚拟机映射就已过�
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:207
 msgid "Auto-attach is disabled for owner '{0}'."
-msgstr "所有者 ''{0}'' 的自动附加功能已被禁用。"
+msgstr "所有者 '{0}' 的自动附加功能已被禁用。"
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:257
 #: server/src/main/java/org/candlepin/controller/Entitler.java:497
@@ -1356,7 +1356,7 @@ msgid ""
 "owner ''{0}'' cannot be deleted while there is a share consumer. You may use "
 "'force' to bypass."
 msgstr ""
-"当有共享消费者时，所有者 ''{0}'' 不能被删除。您需要使用 ''force'' 来跳过这个限"
+"当有共享消费者时，所有者 ''{0}'' 不能被删除。您需要使用 'force' 来跳过这个限"
 "制。"
 
 # translation auto-copied from project Candlepin, version master, document
