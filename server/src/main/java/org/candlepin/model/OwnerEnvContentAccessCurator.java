@@ -78,10 +78,20 @@ public class OwnerEnvContentAccessCurator extends AbstractHibernateCurator<Owner
         return (resultList == null || resultList.isEmpty()) ? null : resultList.get(0);
     }
 
+    @Transactional
     public void removeAllForOwner(String ownerId) {
-        this.currentSession().createQuery("delete from OwnerEnvContentAccess where owner_id = :ownerId")
-            .setParameter("ownerId", ownerId)
-            .executeUpdate();
+        this.currentSession().createQuery(
+                "delete from OwnerEnvContentAccess where owner_id = :ownerId")
+                .setParameter("ownerId", ownerId)
+                .executeUpdate();
+    }
+
+    @Transactional
+    public void removeAllForEnvironment(String environmentId) {
+        this.currentSession().createQuery(
+                "delete from OwnerEnvContentAccess where environment_id = :environmentId")
+                .setParameter("environmentId", environmentId)
+                .executeUpdate();
     }
 
     public void saveOrUpdate(OwnerEnvContentAccess ownerEnvContentAccess) {
