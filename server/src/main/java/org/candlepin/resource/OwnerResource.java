@@ -1521,9 +1521,11 @@ public class OwnerResource {
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @QueryParam("hypervisor_id") List<String> hypervisorIds) {
 
-        return (hypervisorIds == null || hypervisorIds.isEmpty()) ?
+        CandlepinQuery<Consumer> out = (hypervisorIds == null || hypervisorIds.isEmpty()) ?
             this.consumerCurator.getHypervisorsForOwner(ownerKey) :
             this.consumerCurator.getHypervisorsBulk(hypervisorIds, ownerKey);
+
+        return out;
     }
 
     private ConflictOverrides processConflictOverrideParams(String[] overrideConflicts) {

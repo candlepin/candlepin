@@ -278,7 +278,7 @@ public class ConsumerResource {
      * @param consumer
      *  The consumer containing the facts to sanitize
      */
-    private void sanitizeConsumerFacts(Consumer consumer) {
+    public void sanitizeConsumerFacts(Consumer consumer) {
         if (consumer != null) {
             Map<String, String> facts = consumer.getFacts();
 
@@ -549,7 +549,6 @@ public class ConsumerResource {
                 IdentityCertificate idCert = generateIdCert(consumer, false);
                 consumer.setIdCert(idCert);
             }
-            sink.emitConsumerCreated(consumer);
 
             if (keys.size() > 0) {
                 consumerBindUtil.handleActivationKeys(consumer, keys, owner.autobindDisabled());
@@ -560,6 +559,7 @@ public class ConsumerResource {
             complianceRules.getStatus(consumer, null, false, false);
             consumerCurator.update(consumer);
 
+            sink.emitConsumerCreated(consumer);
             log.info("Consumer {} created in org {}", consumer.getUuid(), consumer.getOwner().getKey());
 
             return consumer;
@@ -1045,6 +1045,11 @@ public class ConsumerResource {
         return performConsumerUpdates(updated, toUpdate, guestConsumerMap, true);
     }
 
+    public boolean performConsumerUpdates(Consumer updated, Consumer toUpdate, boolean isIdCert) {
+
+        return performConsumerUpdates(updated, toUpdate, new VirtConsumerMap(), isIdCert);
+    }
+
     @Transactional
     public boolean performConsumerUpdates(Consumer updated, Consumer toUpdate,
         VirtConsumerMap guestConsumerMap, boolean isIdCert) {
@@ -1063,7 +1068,7 @@ public class ConsumerResource {
 
         changesMade = checkForFactsUpdate(toUpdate, updated) || changesMade;
         changesMade = checkForInstalledProductsUpdate(toUpdate, updated) || changesMade;
-        changesMade = checkForGuestsUpdate(toUpdate, updated, guestConsumerMap) || changesMade;
+        changesMade = checkForGuestsUpdate(toUpdate, updated) || changesMade;
         changesMade = checkForHypervisorIdUpdate(toUpdate, updated) || changesMade;
 
         if (updated.getContentTags() != null &&
@@ -1133,13 +1138,16 @@ public class ConsumerResource {
         if (updated.getContentAccessMode() != null &&
             !updated.getContentAccessMode().equals(toUpdate.getContentAccessMode()) &&
             toUpdate.isManifestDistributor()) {
+
             if (!toUpdate.getOwner().isAllowedContentAccessMode(updated.getContentAccessMode())) {
                 throw new BadRequestException(i18n.tr(
                     "The consumer cannot use the supplied content access mode."));
             }
+
             toUpdate.setContentAccessMode(updated.getContentAccessMode());
             changesMade = true;
         }
+
         if (!StringUtils.isEmpty(updated.getContentAccessMode()) && !toUpdate.isManifestDistributor()) {
             throw new BadRequestException(i18n.tr("The consumer cannot be assigned a content access mode."));
         }
@@ -1204,7 +1212,7 @@ public class ConsumerResource {
      * @param incoming incoming consumer
      * @return a boolean
      */
-    private boolean checkForFactsUpdate(Consumer existing, Consumer incoming) {
+    public boolean checkForFactsUpdate(Consumer existing, Consumer incoming) {
         if (incoming.getFacts() == null) {
             log.debug("Facts not included in this consumer update, skipping update.");
             return false;
@@ -1259,8 +1267,7 @@ public class ConsumerResource {
      * @param incoming incoming consumer
      * @return a boolean
      */
-    private boolean checkForGuestsUpdate(Consumer existing, Consumer incoming,
-        VirtConsumerMap guestConsumerMap) {
+    public boolean checkForGuestsUpdate(Consumer existing, Consumer incoming) {
 
         if (incoming.getGuestIds() == null) {
             log.debug("Guests not included in this consumer update, skipping update.");
@@ -1281,7 +1288,6 @@ public class ConsumerResource {
                 if (log.isDebugEnabled()) {
                     log.debug("Guest ID removed: {}", guestId);
                 }
-                sink.queueEvent(eventFactory.guestIdDeleted(guestId));
             }
         }
         // Check guests that are existing/added.
@@ -1293,7 +1299,6 @@ public class ConsumerResource {
                 if (log.isDebugEnabled()) {
                     log.debug("New guest ID added: {}", guestId.getGuestId());
                 }
-                sink.queueEvent(eventFactory.guestIdCreated(guestId));
             }
         }
 

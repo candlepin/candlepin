@@ -184,6 +184,20 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     }
 
     /**
+     * @param entity to be created.
+     * @param flush whether or not to flush after the persist.
+     * @return newly created entity.
+     */
+    @Transactional
+    public E create(E entity, boolean flush) {
+        getEntityManager().persist(entity);
+        if (flush) {
+            flush();
+        }
+        return entity;
+    }
+
+    /**
      * @return all entities for a particular type.
      */
     public CandlepinQuery<E> listAll() {

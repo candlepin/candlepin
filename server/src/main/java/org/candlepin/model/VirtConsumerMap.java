@@ -74,6 +74,10 @@ public class VirtConsumerMap {
         return null;
     }
 
+    public java.util.Collection<Consumer> getConsumers() {
+        return this.virtUuidToConsumerMap.values();
+    }
+
     public int size() {
         return virtUuidToConsumerMap.keySet().size();
     }
