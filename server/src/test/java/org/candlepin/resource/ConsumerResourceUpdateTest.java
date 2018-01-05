@@ -754,6 +754,7 @@ public class ConsumerResourceUpdateTest {
         updated.setName("new name");
 
         resource.updateConsumer(consumer.getUuid(), updated, principal);
+        verify(consumerCurator, times(1)).update(eq(consumer));
 
         assertEquals(updated.getName(), consumer.getName());
         assertNotNull(consumer.getIdCert());
