@@ -20,6 +20,80 @@ describe 'Consumer Resource' do
     @consumer2 = consumer_client(@user2, random_string("consumer2"))
   end
 
+  it 'should not allow setting recipient owner on non share consumers' do
+    expect do
+      @user2.register(
+        random_string('orgBShare'),
+        :system,
+        nil,
+        {},
+        nil,
+        @owner2['key'],
+        [],
+        [],
+        nil,
+        [],
+        nil,
+        [],
+        nil,
+        nil,
+        nil,
+        @owner2['key'])
+    end.to raise_error(RestClient::BadRequest)
+  end
+
+  it 'should not allow setting entitlement count on register' do
+     consumer = @user2.register(
+        random_string('newConsumer'),
+        :system,
+        nil,
+        {},
+        nil,
+        @owner2['key'],
+        [],
+        [],
+        nil,
+        [],
+        nil,
+        [],
+        nil,
+        nil,
+        nil,
+        nil,
+        nil,
+	3)
+     consumer['entitlementCount'].should == 0
+  end
+
+  it 'should not allow copying id cert to other consumers' do
+
+     consumer_old = @user2.register(random_string('consumer1'))
+     id_cert = consumer_old['idCert']
+
+     consumer = @user2.register(
+        random_string('newConsumer'),
+        :system,
+        nil,
+        {},
+        nil,
+        @owner2['key'],
+        [],
+        [],
+        nil,
+        [],
+        nil,
+        [],
+        nil,
+        nil,
+        nil,
+        nil,
+        nil,
+        0,
+        id_cert)
+
+     consumer['idCert'].should_not == id_cert
+  end
+
   it 'should receive paged data back when requested' do
     id_list = []
     (1..4).each do |i|

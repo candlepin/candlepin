@@ -485,6 +485,20 @@ public class ConsumerResource {
         else {
             consumer.setCanActivate(subAdapter.canActivateSubscription(consumer));
             consumer.setAutoheal(true); // this is the default
+            if (StringUtils.isNotEmpty(consumer.getRecipientOwnerKey())) {
+                throw new BadRequestException(i18n.tr("Only share consumers can specify recipient owners"));
+            }
+        }
+
+        if (consumer.getEntitlementCount() != 0) {
+            log.warn("ignoring incoming entitlement count during register: {}",
+                consumer.getEntitlementCount());
+            consumer.setEntitlementCount(0);
+        }
+
+        if (consumer.getIdCert() != null) {
+            log.warn("ignoring incoming identity cert during register: {}", consumer.getIdCert());
+            consumer.setIdCert(null);
         }
 
         consumer.setOwner(owner);
@@ -617,7 +631,7 @@ public class ConsumerResource {
         if (!consumer.getReleaseVer().equals(new Release(null))) {
             throw new BadRequestException(i18n.tr("A unit type of \"share\" cannot have a release version"));
         }
-        if (!consumer.getInstalledProducts().isEmpty()) {
+        if (CollectionUtils.isNotEmpty(consumer.getInstalledProducts())) {
             throw new BadRequestException(i18n.tr("A unit type of \"share\" cannot have installed products"));
         }
         if (StringUtils.isNotBlank(consumer.getContentAccessMode())) {
@@ -730,8 +744,7 @@ public class ConsumerResource {
      * @param userName
      * @return a String object
      */
-    private String setUserName(Consumer consumer, Principal principal,
-        String userName) {
+    private String setUserName(Consumer consumer, Principal principal, String userName) {
         if (userName == null) {
             userName = principal.getUsername();
         }
