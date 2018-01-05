@@ -271,7 +271,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o, String productId, Date activeOn) {
         return listAvailableEntitlementPools(c, o,
             (productId != null ? Arrays.asList(productId) : (Collection<String>) null), null, activeOn,
-            new PoolFilterBuilder(), null, false, false, false).getPageData();
+            new PoolFilterBuilder(), null, false, false, false, null).getPageData();
     }
 
     @SuppressWarnings("unchecked")
@@ -280,24 +280,24 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         Date activeOn) {
 
         return listAvailableEntitlementPools(c, o, productIds, null, activeOn,
-            new PoolFilterBuilder(), null, false, false, false).getPageData();
+            new PoolFilterBuilder(), null, false, false, false, null).getPageData();
     }
 
     @Transactional
     public List<Pool> listByFilter(PoolFilterBuilder filters) {
         return listAvailableEntitlementPools(
             null, null, (Set<String>) null, null, null, filters, null, false,
-            false, false).getPageData();
+            false, false, null).getPageData();
     }
 
     @Transactional
     public Page<List<Pool>> listAvailableEntitlementPools(Consumer c, Owner o, String productId,
         String subscriptionId, Date activeOn, PoolFilterBuilder filters,
-        PageRequest pageRequest, boolean postFilter, boolean addFuture, boolean onlyFuture) {
+        PageRequest pageRequest, boolean postFilter, boolean addFuture, boolean onlyFuture, Date after) {
 
         return this.listAvailableEntitlementPools(c, o,
             (productId != null ? Arrays.asList(productId) : (Collection<String>) null), subscriptionId,
-            activeOn, filters, pageRequest, postFilter, addFuture, onlyFuture);
+            activeOn, filters, pageRequest, postFilter, addFuture, onlyFuture, after);
     }
 
     /**
@@ -320,7 +320,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     // TODO: Remove the methodlength suppression once this method is cleaned up
     public Page<List<Pool>> listAvailableEntitlementPools(Consumer consumer, Owner owner,
         Collection<String> productIds, String subscriptionId, Date activeOn, PoolFilterBuilder filters,
-        PageRequest pageRequest, boolean postFilter, boolean addFuture, boolean onlyFuture) {
+        PageRequest pageRequest, boolean postFilter, boolean addFuture, boolean onlyFuture, Date after) {
 
         if (log.isDebugEnabled()) {
             log.debug("Listing available pools for:");
@@ -329,6 +329,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             log.debug("    products: {}", productIds);
             log.debug("    subscription: {}", subscriptionId);
             log.debug("    active on: {}", activeOn);
+            log.debug("    after: {}", after);
         }
 
         boolean joinedProvided = false;
@@ -410,6 +411,10 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             else {
                 criteria.add(Restrictions.ge("Pool.endDate", activeOn));
             }
+        }
+
+        if (after != null) {
+            criteria.add(Restrictions.gt("Pool.startDate", after));
         }
 
 
