@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.1.11
+Version: 2.1.12
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,9 @@ fi
 
 #raw
 %changelog
+* Tue Jan 09 2018 Kevin Howell <khowell@redhat.com> 2.1.12-1
+- Sync zanata translations (khowell@redhat.com)
+
 * Thu Jan 04 2018 Kevin Howell <khowell@redhat.com> 2.1.11-1
 - Optimized the delete orphaned pools Liquibase task (crog@redhat.com)
 
