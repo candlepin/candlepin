@@ -4,6 +4,7 @@ require 'candlepin_scenarios'
 
 require 'rubygems'
 require 'rest_client'
+require 'time'
 
 describe 'Owner Resource' do
   include CandlepinMethods
@@ -137,6 +138,19 @@ describe 'Owner Resource' do
     pools.length.should == 0
   end
 
+  it "updates owners on a refresh" do
+    skip("candlepin running in standalone mode") unless is_hosted?
+    now = Time.now
+    owner_key = random_string("new_owner1")
+    @cp.refresh_pools(owner_key, false, true)
+
+    new_owner = @cp.get_owner(owner_key)
+    @owners << new_owner # this will clean up new_owner at the end of the test.
+
+    # Zero the milliseconds by converting to int since MySQL doesn't have millisecond resolution
+    expect(Time.parse(new_owner['lastRefreshed']).utc.to_i).to be >= now.utc.to_i
+  end
+
   it "lets only superadmin users refresh pools" do
     owner = create_owner random_string('test_owner')
     ro_owner_client = user_client(owner, random_string('testuser'), true)
@@ -242,7 +256,7 @@ describe 'Owner Resource' do
       }
     )
     create_pool_and_subscription(owner['key'], product1.id, 10,
-				[], '', '', '', nil, nil, true)
+      [], '', '', '', nil, nil, true)
     create_pool_and_subscription(owner['key'], product2.id, 10)
 
     # Set an initial service level:
@@ -364,9 +378,9 @@ describe 'Owner Resource' do
     )
 
     create_pool_and_subscription(owner['key'], product1.id, 10,
-				[], '', '', '', nil, nil, true)
+      [], '', '', '', nil, nil, true)
     create_pool_and_subscription(owner['key'], product2.id, 10,
-				[], '', '', '', nil, nil, true)
+      [], '', '', '', nil, nil, true)
     create_pool_and_subscription(owner['key'], product3.id, 10)
 
     levels = consumer_client.list_owner_service_levels(owner['key'])
@@ -790,7 +804,7 @@ describe 'Owner Resource Entitlement List Tests' do
 
     #entitle owner for the virt and monitoring products.
     create_pool_and_subscription(@owner['key'], @monitoring_prod.id, 6,
-				[], '', '', '', nil, nil, true)
+      [], '', '', '', nil, nil, true)
     create_pool_and_subscription(@owner['key'], @virt_prod.id, 6)
 
     #create consumer

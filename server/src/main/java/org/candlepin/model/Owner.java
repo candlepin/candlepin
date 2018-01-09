@@ -25,6 +25,7 @@ import org.candlepin.service.ContentAccessCertServiceAdapter;
 import org.hibernate.annotations.GenericGenerator;
 
 import java.io.Serializable;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -90,6 +91,10 @@ public class Owner extends AbstractHibernateObject implements Serializable,
     @Column(nullable = true)
     @Size(max = 255)
     private String contentPrefix;
+
+    @ApiModelProperty(readOnly = true)
+    @Column(name = "last_refreshed")
+    private Date lastRefreshed;
 
     @OneToMany(mappedBy = "owner", targetEntity = Consumer.class)
     private Set<Consumer> consumers;
@@ -223,6 +228,20 @@ public class Owner extends AbstractHibernateObject implements Serializable,
      */
     public void setContentPrefix(String contentPrefix) {
         this.contentPrefix = contentPrefix;
+    }
+
+    /**
+     * @return the date this owner was last refreshed
+     */
+    public Date getLastRefreshed() {
+        return lastRefreshed;
+    }
+
+    /**
+     * @param lastRefreshed the date to set the lastRefreshed value to
+     */
+    public void setLastRefreshed(Date lastRefreshed) {
+        this.lastRefreshed = lastRefreshed;
     }
 
     /**

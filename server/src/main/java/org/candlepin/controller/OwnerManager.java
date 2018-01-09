@@ -46,8 +46,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
-
-
+import java.util.Date;
 
 /**
  * Used to perform operations on Owners that need more than just the owner
@@ -280,5 +279,10 @@ public class OwnerManager {
         // removed cached versions of content access cert data
         ownerEnvContentAccessCurator.removeAllForOwner(owner.getId());
         ownerCurator.flush();
+    }
+
+    public void updateRefreshDate(Owner owner) {
+        owner.setLastRefreshed(new Date());
+        ownerCurator.merge(owner);
     }
 }
