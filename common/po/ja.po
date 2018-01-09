@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-01-04 09:58-0500\n"
+"POT-Creation-Date: 2018-01-09 13:31-0500\n"
 "PO-Revision-Date: 2017-12-01 12:39+0000\n"
 "Last-Translator: amoewaki <amoewaki@redhat.com>\n"
 "Language-Team: Japanese\n"
@@ -415,7 +415,7 @@ msgstr ""
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:207
 msgid "Auto-attach is disabled for owner '{0}'."
-msgstr "所有者 '{0}' の自動アタッチは無効です。"
+msgstr "所有者 ''{0}'' の自動アタッチは無効です。"
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:257
 #: server/src/main/java/org/candlepin/controller/Entitler.java:497
@@ -1408,7 +1408,7 @@ msgid ""
 "owner ''{0}'' cannot be deleted while there is a share consumer. You may use "
 "'force' to bypass."
 msgstr ""
-"共有コンシューマーがある場合は、所有者 ''{0}'' を削除できません。'force' を使"
+"共有コンシューマーがある場合は、所有者 ''{0}'' を削除できません。''force'' を使"
 "用すればこの問題を回避できます。"
 
 # translation auto-copied from project Candlepin, version master, document
@@ -1557,7 +1557,7 @@ msgstr "コンシューマ: {0} は見つかりません"
 #: server/src/main/java/org/candlepin/resource/PoolResource.java:277
 #, java-format
 msgid "Subscription Pool with ID ''{0}'' could not be found."
-msgstr "ID ''{0}' のサブスクリプションプールは見つかりませんでした。"
+msgstr "ID ''{0}'' のサブスクリプションプールは見つかりませんでした。"
 
 #: server/src/main/java/org/candlepin/resource/PoolResource.java:240
 #, java-format
