@@ -54,12 +54,15 @@ import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.resource.util.ConsumerEnricher;
+import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.util.FactValidator;
 import org.candlepin.util.ServiceLevelValidator;
+
+import com.google.inject.util.Providers;
 
 import org.apache.commons.lang.StringUtils;
 import org.junit.Assert;
@@ -83,6 +86,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 
+import javax.inject.Provider;
 
 /**
  *
@@ -122,9 +126,15 @@ public class ConsumerResourceCreationTest {
     protected Role role;
     private User user;
 
+    private GuestMigration testMigration;
+    private Provider<GuestMigration> migrationProvider;
+
     @Before
     public void init() throws Exception {
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
+
+        testMigration = new GuestMigration(consumerCurator, factory, sink);
+        migrationProvider = Providers.of(testMigration);
 
         this.config = initConfig();
         this.resource = new ConsumerResource(
@@ -132,7 +142,7 @@ public class ConsumerResourceCreationTest {
             null, this.idCertService, null, this.i18n, this.sink, null, null, null, this.userService, null,
             null, this.ownerCurator, this.activationKeyCurator, null, this.complianceRules,
             this.deletedConsumerCurator, null, null, this.config, null, null, null, this.consumerBindUtil,
-            null, null, new FactValidator(this.config, this.i18n), null, consumerEnricher);
+            null, null, new FactValidator(this.config, this.i18n), null, consumerEnricher, migrationProvider);
 
         this.system = initSystem();
 

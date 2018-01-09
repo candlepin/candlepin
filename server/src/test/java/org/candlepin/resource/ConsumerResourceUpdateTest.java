@@ -55,6 +55,7 @@ import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.resource.util.ConsumerEnricher;
+import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -62,6 +63,8 @@ import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.FactValidator;
 import org.candlepin.util.ServiceLevelValidator;
+
+import com.google.inject.util.Providers;
 
 import org.junit.Before;
 import org.junit.Ignore;
@@ -79,6 +82,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
+
+import javax.inject.Provider;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ConsumerResourceUpdateTest {
@@ -106,12 +111,17 @@ public class ConsumerResourceUpdateTest {
     private I18n i18n;
 
     private ConsumerResource resource;
+    private Provider<GuestMigration> migrationProvider;
+    private GuestMigration testMigration;
 
     @Before
     public void init() throws Exception {
         Configuration config = new CandlepinCommonTestConfig();
 
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
+
+        testMigration = new GuestMigration(consumerCurator, eventFactory, sink);
+        migrationProvider = Providers.of(testMigration);
 
         this.resource = new ConsumerResource(this.consumerCurator,
             this.consumerTypeCurator, null, this.subscriptionService, this.ownerService, null,
@@ -120,7 +130,7 @@ public class ConsumerResourceUpdateTest {
             this.activationKeyCurator, this.entitler, this.complianceRules,
             this.deletedConsumerCurator, this.environmentCurator, null,
             config, null, null, null, this.consumerBindUtil,
-            null, null, new FactValidator(config, this.i18n), null, consumerEnricher);
+            null, null, new FactValidator(config, this.i18n), null, consumerEnricher, migrationProvider);
 
         when(complianceRules.getStatus(any(Consumer.class), any(Date.class), any(Boolean.class),
             any(Boolean.class))).thenReturn(new ComplianceStatus(new Date()));
@@ -840,14 +850,14 @@ public class ConsumerResourceUpdateTest {
 
         Consumer update = getFakeConsumer();
         update.setCapabilities(caps1);
-        assertFalse(resource.performConsumerUpdates(update, existing, null));
+        assertFalse(resource.performConsumerUpdates(update, existing, testMigration));
 
         update.setCapabilities(caps2);
-        assertTrue(resource.performConsumerUpdates(update, existing, null));
+        assertTrue(resource.performConsumerUpdates(update, existing, testMigration));
 
         // need a new consumer here, can't null out capabilities
         update = getFakeConsumer();
-        assertFalse(resource.performConsumerUpdates(update, existing, null));
+        assertFalse(resource.performConsumerUpdates(update, existing, testMigration));
 
     }
 

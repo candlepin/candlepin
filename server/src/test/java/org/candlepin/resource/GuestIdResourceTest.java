@@ -34,9 +34,11 @@ import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.GuestIdCurator;
 import org.candlepin.model.Owner;
-import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.resource.util.ConsumerEnricher;
+import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.util.ServiceLevelValidator;
+
+import com.google.inject.util.Providers;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -51,7 +53,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 
-
+import javax.inject.Provider;
 
 /**
  * GuestIdResourceTest
@@ -75,14 +77,20 @@ public class GuestIdResourceTest {
     private Owner owner;
     private ConsumerType ct;
 
+    private GuestMigration testMigration;
+    private Provider<GuestMigration> migrationProvider;
+
     @Before
     public void setUp() {
+        testMigration = Mockito.spy(new GuestMigration(consumerCurator, eventFactory, sink));
+        migrationProvider = Providers.of(testMigration);
+
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         owner = new Owner("test-owner", "Test Owner");
         ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         consumer = new Consumer("consumer", "test", owner, ct);
         guestIdResource = new GuestIdResource(guestIdCurator,
-            consumerCurator, consumerResource, i18n, eventFactory, sink);
+            consumerCurator, consumerResource, i18n, eventFactory, sink, migrationProvider);
         when(consumerCurator.findByUuid(consumer.getUuid())).thenReturn(consumer);
         when(consumerCurator.verifyAndLookupConsumer(
             consumer.getUuid())).thenReturn(consumer);
@@ -129,14 +137,15 @@ public class GuestIdResourceTest {
         List<GuestId> guestIds = new LinkedList<GuestId>();
         guestIds.add(new GuestId("1"));
         when(consumerResource.performConsumerUpdates(any(Consumer.class),
-            eq(consumer), any(VirtConsumerMap.class))).
+            eq(consumer), any(GuestMigration.class))).
             thenReturn(true);
 
         guestIdResource.updateGuests(consumer.getUuid(), guestIds);
+
         Mockito.verify(consumerResource, Mockito.times(1))
-            .performConsumerUpdates(any(Consumer.class), eq(consumer), any(VirtConsumerMap.class));
+            .performConsumerUpdates(any(Consumer.class), eq(consumer), any(GuestMigration.class));
         // consumerResource returned true, so the consumer should be updated
-        Mockito.verify(consumerCurator, Mockito.times(1)).update(eq(consumer));
+        Mockito.verify(testMigration, Mockito.times(1)).migrate();
     }
 
     @Test
@@ -146,12 +155,12 @@ public class GuestIdResourceTest {
 
         // consumerResource tells us nothing changed
         when(consumerResource.performConsumerUpdates(any(Consumer.class),
-            eq(consumer), any(VirtConsumerMap.class))).
+            eq(consumer), any(GuestMigration.class))).
             thenReturn(false);
 
         guestIdResource.updateGuests(consumer.getUuid(), guestIds);
         Mockito.verify(consumerResource, Mockito.times(1))
-            .performConsumerUpdates(any(Consumer.class), eq(consumer), any(VirtConsumerMap.class));
+            .performConsumerUpdates(any(Consumer.class), eq(consumer), any(GuestMigration.class));
         Mockito.verify(consumerCurator, Mockito.never()).update(eq(consumer));
     }
 
@@ -269,7 +278,7 @@ public class GuestIdResourceTest {
         public ConsumerResourceForTesting() {
             super(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, consumerEnricher);
+                null, null, null, null, consumerEnricher, null);
         }
 
         public void checkForMigration(Consumer host, Consumer guest) {
