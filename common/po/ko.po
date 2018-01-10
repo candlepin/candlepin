@@ -416,7 +416,7 @@ msgstr ""
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:207
 msgid "Auto-attach is disabled for owner '{0}'."
-msgstr "소유자  '{0}'의 자동 연결이 비활성화되어 있습니다. "
+msgstr "소유자  ''{0}''의 자동 연결이 비활성화되어 있습니다. "
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:257
 #: server/src/main/java/org/candlepin/controller/Entitler.java:497
@@ -686,7 +686,7 @@ msgstr "풀 ''{1}''은/는 호스트에서 실행 중인 게스트로 제한됩�
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:167
 #, java-format
 msgid "Pool ''{1}'' is restricted to a specific consumer."
-msgstr "풀 ''{1}'은/는 특정 소비자로 제한됩니다. "
+msgstr "풀 ''{1}''은/는 특정 소비자로 제한됩니다. "
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:169
 msgid "Pool not available to subscription management applications."
@@ -801,7 +801,7 @@ msgstr "가상 시스템에만 서브스크립션 ''{1}''을/를 연결할 수 �
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:215
 #, java-format
 msgid "Unable to attach subscription for the product ''{1}'': {0}."
-msgstr "제품 ''{1}'에 대한 서브스크립션을 연결할 수 없습니다: {0}"
+msgstr "제품 ''{1}''에 대한 서브스크립션을 연결할 수 없습니다: {0}"
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:223
 #, java-format
@@ -1385,7 +1385,7 @@ msgid ""
 "owner ''{0}'' cannot be deleted while there is a share consumer. You may use "
 "'force' to bypass."
 msgstr ""
-"공유 소비자가 있을 경우 소유자 ''{0}''을/를 삭제할 수 없습니다. 'force'를 사"
+"공유 소비자가 있을 경우 소유자 ''{0}''을/를 삭제할 수 없습니다. ''force''를 사"
 "용하여 우회할 수 있습니다. "
 
 # translation auto-copied from project Candlepin, version master, document
