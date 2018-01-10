@@ -1,69 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <databaseChangeLog
-        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
-        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <property dbms="postgresql, mysql" name="unrevoked_value" value="false"/>
+    <property dbms="oracle" name="unrevoked_value" value="0"/>
+
+    <property dbms="postgresql, mysql" name="revoked_value" value="true"/>
+    <property dbms="oracle" name="revoked_value" value="1"/>
 
     <changeSet id="20170301083925-1" author="mstead">
+        <validCheckSum>7:e5dc16a5b9672bbdf38bdac361c9d289</validCheckSum>
+
         <comment>
             Calculate the value of the field for all known serials
             based on existence of entitlement certificates.
         </comment>
 
-        <sql dbms="postgresql,oracle">
-            update cp_cert_serial cs
-            set revoked = true
-            from
-                (select cs.id from cp_cert_serial cs
-                 left outer join cp_ent_certificate ec on ec.serial_id = cs.id
-                 left outer join cp_cdn_certificate cdnc on cs.id = cdnc.serial_id
-                 left outer join cp_id_cert idcert on cs.id = idcert.serial_id
-                 left outer join cp_cont_access_cert cacert on cs.id = cacert.serial_id
-                 left outer join cp_ueber_cert ueber on cs.id = ueber.serial_id
-                 where ec.id is null and cdnc.id is null and idcert.id is null and cacert.id is null and ueber.id is null
-                 ) revoked_cert
-            where cs.id = revoked_cert.id;
+        <sql dbms="postgresql, oracle, mysql">
+            UPDATE cp_cert_serial cs SET revoked = ${revoked_value}
+                WHERE revoked = ${unrevoked_value}
+                AND NOT EXISTS (SELECT 1 FROM cp_ent_certificate ec WHERE ec.serial_id = cs.id)
+                AND NOT EXISTS (SELECT 1 FROM cp_cdn_certificate cc WHERE cc.serial_id = cs.id)
+                AND NOT EXISTS (SELECT 1 FROM cp_id_cert ic WHERE ic.serial_id = cs.id)
+                AND NOT EXISTS (SELECT 1 FROM cp_cont_access_cert cac WHERE cac.serial_id = cs.id)
+                AND NOT EXISTS (SELECT 1 FROM cp_ueber_cert uc WHERE uc.serial_id = cs.id);
         </sql>
-
-        <sql dbms="mysql">
-            update cp_cert_serial cs
-            left outer join cp_ent_certificate ec on ec.serial_id = cs.id
-            left outer join cp_cdn_certificate cdnc on cs.id = cdnc.serial_id
-            left outer join cp_id_cert idcert on cs.id = idcert.serial_id
-            left outer join cp_cont_access_cert cacert on cs.id = cacert.serial_id
-            left outer join cp_ueber_cert ueber on cs.id = ueber.serial_id
-            set revoked = true
-            where ec.id is null and cdnc.id is null and idcert.id is null and cacert.id is null and ueber.id is null;
-        </sql>
-
-        <rollback>
-            <sql dbms="postgresql,oracle">
-                update cp_cert_serial cs
-                set revoked = false
-                from
-                (select cs.id from cp_cert_serial cs
-                left outer join cp_ent_certificate ec on ec.serial_id = cs.id
-                left outer join cp_cdn_certificate cdnc on cs.id = cdnc.serial_id
-                left outer join cp_id_cert idcert on cs.id = idcert.serial_id
-                left outer join cp_cont_access_cert cacert on cs.id = cacert.serial_id
-                left outer join cp_ueber_cert ueber on cs.id = ueber.serial_id
-                where ec.id is null and cdnc.id is null and idcert.id is null and cacert.id is null and ueber.id is null
-                ) revoked_cert
-                where cs.id = revoked_cert.id;
-            </sql>
-            <sql dbms="mysql">
-                update cp_cert_serial cs
-                left outer join cp_ent_certificate ec on ec.serial_id = cs.id
-                left outer join cp_cdn_certificate cdnc on cs.id = cdnc.serial_id
-                left outer join cp_id_cert idcert on cs.id = idcert.serial_id
-                left outer join cp_cont_access_cert cacert on cs.id = cacert.serial_id
-                left outer join cp_ueber_cert ueber on cs.id = ueber.serial_id
-                set revoked = false
-                where ec.id is null and cdnc.id is null and idcert.id is null and cacert.id is null and ueber.id is null;
-            </sql>
-        </rollback>
     </changeSet>
 
 </databaseChangeLog>

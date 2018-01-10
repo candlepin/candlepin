@@ -4,47 +4,28 @@
         xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
-        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
     <property
-    dbms="postgresql,oracle"
-    name="fill_in_quantity_consumed_value"
-    value="update cp_pool
-        set quantity_consumed = coalesce(subquery.quantity, 0)
-        FROM (select pool_id, sum(quantity) quantity from cp_entitlement ent group by pool_id) subquery
-        where cp_pool.id = subquery.pool_id;" />
+      dbms="postgresql, oracle, mysql"
+      name="fill_in_quantity_consumed_value"
+      value="UPDATE cp_pool SET quantity_consumed = coalesce(
+        (SELECT sum(cp_entitlement.quantity) FROM cp_entitlement WHERE cp_entitlement.pool_id = cp_pool.id), 0);"/>
 
     <property
-    dbms="mysql,hsqldb"
-    name="fill_in_quantity_consumed_value"
-    value="update cp_pool p set p.quantity_consumed =
-        coalesce((select sum(quantity) quantity from cp_entitlement ent where ent.pool_id = p.id),0);" />
+      dbms="postgresql,oracle, mysql"
+      name="fill_in_quantity_exported_value"
+      value="UPDATE cp_pool SET quantity_exported = coalesce(
+        (SELECT sum(cp_entitlement.quantity) FROM cp_entitlement
+          JOIN cp_consumer ON cp_consumer.id = cp_entitlement.consumer_id
+          JOIN cp_consumer_type ON cp_consumer_type.id = cp_consumer.type_id
+          WHERE cp_consumer_type.manifest = 'Y'
+          AND cp_entitlement.pool_id = cp_pool.id),
+        0);"/>
 
-    <property
-    dbms="postgresql,oracle"
-    name="fill_in_quantity_exported_value"
-    value="update cp_pool
-        set quantity_exported = coalesce(subquery.quantity, 0)
-        FROM (select ent.pool_id pool_id, sum(ent.quantity) quantity
-              from cp_entitlement ent, cp_consumer cons, cp_consumer_type ctype
-              where ent.consumer_id = cons.id
-              and cons.type_id = ctype.id
-              and ctype.manifest = 'Y'
-              group by ent.pool_id) subquery
-        where cp_pool.id = subquery.pool_id;" />
+    <changeSet id="20170206114359-1" author="wpoteat, crog" dbms="postgresql, oracle, mysql, hsqldb">
+        <validCheckSum>7:506efa873b8eb83ddc5971b6fb110753</validCheckSum>
 
-    <property
-    dbms="mysql, hsqldb"
-    name="fill_in_quantity_exported_value"
-    value="update cp_pool p set p.quantity_exported =
-        coalesce((select sum(ent.quantity) quantity
-              from cp_entitlement ent, cp_consumer cons, cp_consumer_type ctype
-              where ent.pool_id = p.id
-              and ent.consumer_id = cons.id
-              and cons.type_id = ctype.id
-              and ctype.manifest = 'Y'),0);" />
-
-    <changeSet id="20170206114359-1" author="wpoteat">
         <comment>Add columns for consumed and exported quantities to pool</comment>
         <addColumn tableName="cp_pool">
             <column name="quantity_consumed" type="${serial.type}" defaultValueNumeric="0">
@@ -54,8 +35,8 @@
                  <constraints nullable="false"/>
             </column>
         </addColumn>
-        <sql>${fill_in_quantity_consumed_value}</sql>
-        <sql>${fill_in_quantity_exported_value}</sql>
+        <sql dbms="postgresql, oracle, mysql">${fill_in_quantity_consumed_value}</sql>
+        <sql dbms="postgresql, oracle, mysql">${fill_in_quantity_exported_value}</sql>
         <rollback>
             alter table cp_pool drop column if exists quantity_consumed;
             alter table cp_pool drop column if exists quantity_exported;

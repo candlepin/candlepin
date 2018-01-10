@@ -61,9 +61,8 @@
 
     <changeSet id="20170202093945-3" author="mstead" dbms="oracle">
         <comment>Add indexes for the foreign keys in oracle.</comment>
-        <createIndex indexName="owner_fk" tableName="cp_ueber_cert" unique="true">
-            <column name="ueber_cert_id"/>
-        </createIndex>
+
+        <!-- Oracle automatically creates an index for the unique constraint -->
         <createIndex indexName="ueber_cert_serial_fk" tableName="cp_ueber_cert" unique="false">
             <column name="serial_id"/>
         </createIndex>
