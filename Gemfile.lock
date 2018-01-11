@@ -114,7 +114,7 @@ DEPENDENCIES
   pry
   pry-byebug
   pry-stack_explorer
-  qpid_proton
+  qpid_proton (~> 0.17.0)
   rest-client (~> 1.6.0)
   rspec (~> 3.0)
   rubocop (= 0.36.0)
