@@ -23,16 +23,15 @@ public class EnvironmentContent {
 
     private String environmentId;
     private String contentId;
-    private boolean enabled;
+    private Boolean enabled;
 
     /**
      * Creates a new, empty EnvironmentContent instance with the default values. By default, the
-     * environment and content IDs will be null, while the enabled flag will be set to true.
+     * environment and content IDs will be null, while the enabled flag will be set to null.
      */
     public EnvironmentContent() {
         this.environmentId = null;
         this.contentId = null;
-        this.enabled = true;
     }
 
     /**
@@ -47,7 +46,7 @@ public class EnvironmentContent {
      * @param enabled
      *  The initial value to use for the enabled flag
      */
-    public EnvironmentContent(String environmentId, String contentId, boolean enabled) {
+    public EnvironmentContent(String environmentId, String contentId, Boolean enabled) {
         this.environmentId = environmentId;
         this.contentId = contentId;
         this.enabled = enabled;
@@ -101,7 +100,7 @@ public class EnvironmentContent {
      * @return
      *  The current state of the enabled flag
      */
-    public boolean getEnabled() {
+    public Boolean getEnabled() {
         return this.enabled;
     }
 
@@ -111,7 +110,7 @@ public class EnvironmentContent {
      * @param enabled
      *  The new state for the enabled flag
      */
-    public void setEnabled(boolean enabled) {
+    public void setEnabled(Boolean enabled) {
         this.enabled = enabled;
     }
 
