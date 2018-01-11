@@ -66,6 +66,30 @@ describe 'Environments' do
     envs[0]['id'].should == 'testenv2'
   end
 
+  it 'sets content.enabled to nil by default' do
+    content = create_content
+    job = @org_admin.promote_content(@env['id'], [{:contentId => content['id']}])
+    wait_for_job(job['id'], 15)
+    @env = @org_admin.get_environment(@env['id'])
+    @env['environmentContent'][0]['enabled'].should == nil
+  end
+
+  it 'can have enabled content' do
+    content = create_content
+    job = @org_admin.promote_content(@env['id'], [{:contentId => content['id'],:enabled => true}])
+    wait_for_job(job['id'], 15)
+    @env = @org_admin.get_environment(@env['id'])
+    @env['environmentContent'][0]['enabled'].should == true
+  end
+
+  it 'can have disabled content' do
+    content = create_content
+    job = @org_admin.promote_content(@env['id'], [{:contentId => content['id'],:enabled => false}])
+    wait_for_job(job['id'], 15)
+    @env = @org_admin.get_environment(@env['id'])
+    @env['environmentContent'][0]['enabled'].should == false
+  end
+
   it 'can have promoted content' do
     content = create_content
     job = @org_admin.promote_content(@env['id'], [{:contentId => content['id']}])
