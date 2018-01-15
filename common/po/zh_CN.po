@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-01-09 13:31-0500\n"
+"POT-Creation-Date: 2018-01-15 10:55-0500\n"
 "PO-Revision-Date: 2017-11-15 07:34+0000\n"
 "Last-Translator: tfu <tfu@redhat.com>\n"
 "Language-Team: Chinese (Simplified, China)\n"
@@ -1200,42 +1200,42 @@ msgstr "所指定的数量必须大于 0 且小于等于这个权利的总数"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author leahliu
-#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:119
-#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:135
-#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:369
+#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:123
+#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:139
+#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:380
 #, java-format
 msgid "No such environment: {0}"
 msgstr "没有这个环境：{0}"
 
-#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:177
+#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:181
 msgid "No environment specified, or environment lacks owner information"
 msgstr "未指定环境，或环境缺少所有者信息。"
 
-#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:183
+#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:187
 msgid "No content ID specified"
 msgstr "未指定内容 ID"
 
-#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:191
+#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:195
 #, java-format
 msgid "Unable to find content with the ID \"{0}\"."
 msgstr "无法找到 ID 为 \"{0}\" 的内容。"
 
-#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:237
+#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:241
 #, java-format
 msgid "The content with id {0} has already been promoted in this environment."
 msgstr "已将 id 为 {0} 的内容推入这个环境。"
 
-#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:253
+#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:258
 #, java-format
 msgid "Some of the content is already associated with Environment: {0}"
 msgstr "一些内容已和环境相关联：{0}"
 
-#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:299
+#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:304
 #, java-format
 msgid "Content does not exist in environment: {0}"
 msgstr "这个环境中不存在内容：{0}"
 
-#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:313
+#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:319
 #, java-format
 msgid "One of the content does not exist in the environment anymore: {0}"
 msgstr "一个内容已不存在于环境中：{0}"

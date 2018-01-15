@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-01-09 13:31-0500\n"
+"POT-Creation-Date: 2018-01-15 10:55-0500\n"
 "PO-Revision-Date: 2017-11-10 09:00+0000\n"
 "Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
 "Language-Team: Portuguese (Brazil)\n"
@@ -1233,44 +1233,44 @@ msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author gcintra
-#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:119
-#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:135
-#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:369
+#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:123
+#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:139
+#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:380
 #, java-format
 msgid "No such environment: {0}"
 msgstr "Não existe tal ambiente: {0}"
 
-#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:177
+#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:181
 msgid "No environment specified, or environment lacks owner information"
 msgstr ""
 "Nenhum ambiente especificado ou faltam informações sobre o proprietário do "
 "ambiente "
 
-#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:183
+#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:187
 msgid "No content ID specified"
 msgstr "Nenhuma ID do conteúdo especificada "
 
-#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:191
+#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:195
 #, java-format
 msgid "Unable to find content with the ID \"{0}\"."
 msgstr "Não é possível localizar o conteúdo com a ID \"{0}\"."
 
-#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:237
+#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:241
 #, java-format
 msgid "The content with id {0} has already been promoted in this environment."
 msgstr "O conteúdo com a id {0} já foi promovido neste ambiente. "
 
-#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:253
+#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:258
 #, java-format
 msgid "Some of the content is already associated with Environment: {0}"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:299
+#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:304
 #, java-format
 msgid "Content does not exist in environment: {0}"
 msgstr "O conteúdo não existe no ambiente: {0}"
 
-#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:313
+#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:319
 #, java-format
 msgid "One of the content does not exist in the environment anymore: {0}"
 msgstr ""
