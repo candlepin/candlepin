@@ -13,7 +13,7 @@ describe 'Derived Products' do
 
     #create_product() creates products with numeric IDs by default
     @eng_product = create_product()
-    @eng_product_2 = create_product()
+    @eng_product_2 = create_product(nil, "eng_product_2")
     @modified_product = create_product()
 
     @eng_product_content = create_content({:gpg_url => 'gpg_url',
@@ -258,6 +258,32 @@ describe 'Derived Products' do
     found.should == true
   end
 
+  it 'distributor entitlement cert does not include modifier content when base entitlement is deleted' do
+
+    setup_data = setup_modifier_test()
+    vdc_pool_ent = setup_data[:vdc_pool_ent]
+
+    # Unbind the base entitlement. This should trigger the removal of the modifier content since the
+    # distributor no longer has an entitlement that provides @modified_product.
+    @distributor_client.unbind_entitlement(vdc_pool_ent[0]["id"])
+    ents = @distributor_client.list_entitlements
+    ents.size.should == 1
+    verify_modifier_content(ents[0], false)
+  end
+
+  it 'distributor entitlement cert does not include modifier content when base pool is deleted' do
+
+    setup_data = setup_modifier_test()
+    vdc_pool = setup_data[:vdc_pool]
+
+    # Delete the base pool. This should trigger the removal of the modifier content since the
+    # distributor no longer has an entitlement that provides @modified_product.
+    @cp.delete_pool(vdc_pool['id'])
+    ents = @distributor_client.list_entitlements
+    ents.size.should == 1
+    verify_modifier_content(ents[0], false)
+  end
+
   it 'host entitlement cert does not include derived content' do
     entitlement = @physical_client.consume_pool @main_pool['id']
     entitlement.should_not be_nil
@@ -269,4 +295,71 @@ describe 'Derived Products' do
     product['id'].should == @datacenter_product.id
     product['content'].size.should == 0
   end
+
+
+  def setup_modifier_test
+    # Content for modified product is only included if it provides the modified product
+    # through derived provided products, provided products, or through another entitlement.
+    dist_name = random_string("CP Distributor")
+    create_distributor_version(dist_name,
+                               "Subscription Asset Manager",
+                               ["cert_v3", "derived_product"])
+
+    @distributor_client.update_consumer({:facts => {'distributor_version' => dist_name}})
+
+    # Create a VDC style subscription that has a derived provided product matching @eng_product_2's
+    # modifying content set requirement (@modified_product).
+    vdc_product = create_product(nil, "base")
+    vdc_pool = create_pool_and_subscription(@owner['key'], vdc_product.id,
+                                            10, [], '', '', '', nil, nil, false,
+                                            {
+                                                :derived_product_id => @derived_product_2['id'],
+                                                :derived_provided_products => [@modified_product['id']]
+                                            })
+
+    # Create a subscription that has a product that has content that has modifier definitions (@eng_product_2)
+    modifier_ent_product = create_product(nil, "modifier")
+    modifier_pool = create_pool_and_subscription(@owner['key'], modifier_ent_product.id, 10, [@eng_product_2['id']])
+
+    # Grab an entitlement from the VDC style subscription.
+    vdc_pool_ent = @distributor_client.consume_pool vdc_pool['id']
+    vdc_pool_ent.should_not be_nil
+
+    # Grab an entitlement from the modifier pool. Already having an entitlement that provides @modified_product
+    # permits the addition of the additional content set from the modifier product.
+    modifier_pool_ent = @distributor_client.consume_pool modifier_pool['id']
+    modifier_pool_ent.should_not be_nil
+    verify_modifier_content(modifier_pool_ent[0], true)
+
+    setup_data = {}
+    setup_data[:vdc_pool] = vdc_pool
+    setup_data[:vdc_pool_ent] = vdc_pool_ent
+    setup_data[:modifier_pool] = modifier_pool
+    setup_data[:modifier_pool_ent] = modifier_pool_ent
+    return setup_data
+  end
+
+  # Verifies that the specified entitlement contains/does not contain the modifier
+  # content as per the test setup.
+  def verify_modifier_content(entitlement, content_should_exist)
+    json_body = extract_payload(entitlement['certificates'][0]['cert'])
+    products = json_body['products']
+    products.size.should == 2
+
+    found = false;
+    products.each do |cert_product|
+      if cert_product['id'] == @eng_product_2.id
+        content_sets = cert_product['content']
+        if content_should_exist
+          found = true;
+          content_sets.size.should == 1
+          content_sets[0]['id'].should == @product_modifier_content.id
+        else
+          content_sets.size.should == 0
+        end
+      end
+    end
+    found.should == content_should_exist
+  end
+
 end
