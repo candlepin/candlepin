@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.1.12
+Version: 2.1.13
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,12 @@ fi
 
 #raw
 %changelog
+* Mon Jan 15 2018 Kevin Howell <khowell@redhat.com> 2.1.13-1
+- 1531107: Round 4 of ueber data cleanup. (adarshvritant@gmail.com)
+- 1533211: Set the default enabled value for Environment Content to Null
+  (bcourt@redhat.com)
+- 1525626: Environment content changes in Golden Ticket (wpoteat@redhat.com)
+
 * Tue Jan 09 2018 Kevin Howell <khowell@redhat.com> 2.1.12-1
 - Sync zanata translations (khowell@redhat.com)
 
