@@ -396,10 +396,22 @@ public class DatabaseTestFixture {
 
     protected Consumer createConsumer(Owner owner) {
         ConsumerType type = new ConsumerType("test-consumer-type-" + TestUtil.randomInt());
-        consumerTypeCurator.create(type);
         Consumer c = new Consumer("test-consumer", "test-user", owner, type);
-        consumerCurator.create(c);
-        return c;
+        return persistConsumer(type, c);
+    }
+
+    protected Consumer createDistributor(Owner owner) {
+        ConsumerType type = new ConsumerType("test-distributor-type-" + TestUtil.randomInt());
+        type.setManifest(true);
+        Consumer c = new Consumer("test-distributor", "test-user", owner, type);
+        return persistConsumer(type, c);
+    }
+
+    private Consumer persistConsumer(ConsumerType type, Consumer consumer) {
+        consumerTypeCurator.create(type);
+        consumer.setType(type);
+        consumerCurator.create(consumer);
+        return consumer;
     }
 
     protected Entitlement createEntitlement(Owner owner, Consumer consumer, Pool pool,

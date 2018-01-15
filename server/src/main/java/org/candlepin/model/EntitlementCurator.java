@@ -577,92 +577,63 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
      * Marks all dependent entitlements of the given entitlements dirty, excluding those specified
      * as input. The result is the number of entitlements marked dirty by this operation.
      *
-     * @param entitlements
-     *  The collection of entitlements for which to mark dependent entitlements dirty
+     * @param entitlementIds
+     *  The collection of entitlement Ids for which to mark dependent entitlements dirty
      *
      * @return
      *  the number of entitlements marked dirty as a result of this operation
      */
-    public int markDependentEntitlementsDirty(Iterable<Entitlement> entitlements) {
-        return this.markDependentEntitlementsDirty(entitlements, true);
-    }
+    public int markDependentEntitlementsDirty(Iterable<String> entitlementIds) {
+        if (entitlementIds != null && entitlementIds.iterator().hasNext()) {
+            Set<String> eids = new HashSet<String>();
+            if (entitlementIds != null && entitlementIds.iterator().hasNext()) {
+                // Find all entitlements that are modified by any of the specified entitlements.
+                eids.addAll(findDependentEntitlementsByProvidedProduct(entitlementIds));
 
-    /**
-     * Marks all dependent entitlements of the given entitlements dirty, returning the number of
-     * entitlements marked dirty as a result of this operation.
-     *
-     * @param entitlements
-     *  The collection of entitlements for which to mark dependent entitlements dirty
-     *
-     * @param excludeInput
-     *  Whether or not the input entitlements should be excluded from the set of dependent
-     *  entitlements
-     *
-     * @return
-     *  the number of entitlements marked dirty as a result of this operation
-     */
-    public int markDependentEntitlementsDirty(Iterable<Entitlement> entitlements, boolean excludeInput) {
-        if (entitlements != null && entitlements.iterator().hasNext()) {
-            Set<String> entitlementIds = new HashSet<String>();
-
-            // Deduplicate our entitlement IDs, discarding null/incomplete entitlements
-            for (Entitlement entitlement : entitlements) {
-                // TODO: Should we throw an exception if we find a malformed/incomplete entitlement
-                // or just continue silently ignoring them?
-                if (entitlement != null && entitlement.getId() != null) {
-                    entitlementIds.add(entitlement.getId());
+                // Distributors require modified product content matched on derived products to flow
+                // downstream in the manifest. Determine if there are any modified entitlements based
+                // on derived products of any distributors and include those as well.
+                //
+                // We do this in a separate query as it gives us a chance to skip the second query
+                // if it does not apply to any of the specified entitlements.
+                //
+                // We do the filter here to avoid any unnecessary work in the
+                // following query and to reduce the number of entitlements to check.
+                Set<String> distributorEntitlements = filterDistributorEntitlementIds(entitlementIds);
+                if (!distributorEntitlements.isEmpty()) {
+                    eids.addAll(findDependentEntitlementsByDerivedProvidedProduct(distributorEntitlements));
                 }
             }
 
-            // Impl note:
-            // We do this in direct SQL, as it lets us take a sane path from base to dependent
-            // entitlements, rather than the lunacy that would be required with HQL, JPQL or
-            // CriteriaBuilder.
-            String querySql = "SELECT DISTINCT e2.id " +
-                // Required entitlement
-                "FROM cp_entitlement e1 " +
-                // Required entitlement => required pool
-                "JOIN cp2_pool_provided_products ppp1 ON ppp1.pool_id = e1.pool_id " +
-                // Required pool => required product
-                "JOIN cp2_products p ON p.uuid = ppp1.product_uuid " +
-                // Required product => conditional content
-                "JOIN cp2_content_modified_products cmp ON cmp.element = p.product_id " +
-                // Conditional content => dependent product
-                "JOIN cp2_product_content pc ON pc.content_uuid = cmp.content_uuid " +
-                // Dependent product => dependent pool
-                "JOIN cp2_pool_provided_products ppp2 ON ppp2.product_uuid = pc.product_uuid " +
-                // Dependent pool => dependent entitlement
-                "JOIN cp_entitlement e2 ON e2.pool_id = ppp2.pool_id " +
-                "WHERE e1.consumer_id = e2.consumer_id " +
-                "  AND e1.id != e2.id " +
-                "  AND e2.dirty = false " +
-                "  AND e1.id IN (:entitlement_ids)";
-
-            if (excludeInput) {
-                querySql += " AND e2.id NOT IN (:entitlement_ids)";
-            }
-
-            Query query = this.getEntityManager().createNativeQuery(querySql);
-
-            int blockSize = Math.min(this.getInBlockSize(),
-                this.getQueryParameterLimit() / (excludeInput ? 2 : 1));
-
-            Set<String> dirtyIds = new HashSet<String>();
-
-            // We repeat the query for each block, as it's ~30% faster than adding more in blocks
-            // to the query. Also, considerably less complex.
-            for (List<String> block : Iterables.partition(entitlementIds, blockSize)) {
-                query.setParameter("entitlement_ids", block);
-                dirtyIds.addAll(query.getResultList());
-            }
-
+            // At this point we have all of the entitlements that need to be marked dirty.
             // Update the affected entitlements, if necessary...
-            if (dirtyIds.size() > 0) {
-                return this.markEntitlementsDirty(dirtyIds);
+            return eids.isEmpty() ? 0 : this.markEntitlementsDirty(eids);
+        }
+        return 0;
+    }
+
+    /**
+     * Given a collection of entitlement IDs, determine which belong to a distributor.
+     *
+     * @param entsIdsToFilter the Entitlement IDs to filter
+     * @return all entitlement IDs that belong to a distributor.
+     */
+    public Set<String> filterDistributorEntitlementIds(Iterable<String> entsIdsToFilter) {
+        Set<String> filteredIds = new HashSet<String>();
+        if (entsIdsToFilter != null && entsIdsToFilter.iterator().hasNext()) {
+            String querySql = "SELECT DISTINCT e.id " +
+                "FROM Entitlement e JOIN e.consumer c JOIN c.type t " +
+                "WHERE t.manifest = true AND e.id IN (:entitlement_ids)";
+
+            Query query = this.getEntityManager().createQuery(querySql);
+            int blockSize = Math.min(this.getInBlockSize(), this.getQueryParameterLimit());
+
+            for (List<String> block : Iterables.partition(entsIdsToFilter, blockSize)) {
+                query.setParameter("entitlement_ids", block);
+                filteredIds.addAll(query.getResultList());
             }
         }
-
-        return 0;
+        return filteredIds;
     }
 
     /**
@@ -688,89 +659,6 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         }
 
         return count;
-    }
-
-    /**
-     * Fetches dependent entitlement IDs for the specified collection of pools, belonging to the
-     * given consumer.
-     *
-     * @param consumer
-     *  The consumer for which to find dependent entitlement IDs
-     *
-     * @param pools
-     *  A collection of pools which the fetched entitlements depend upon
-     *
-     * @return
-     *  a collection of entitlement IDs for the entitlements dependent upon the provided pools
-     *  belonging to the given consumer
-     */
-    public Collection<String> getDependentEntitlementIdsForPools(Consumer consumer,
-        Iterable<Pool> pools) {
-
-        Set<String> poolIds = new HashSet<String>();
-
-        if (consumer != null && pools != null && pools.iterator().hasNext()) {
-            for (Pool pool : pools) {
-                if (pool != null && pool.getId() != null) {
-                    poolIds.add(pool.getId());
-                }
-            }
-        }
-
-        return this.getDependentEntitlementIdsForPoolIds(consumer, poolIds);
-    }
-
-    /**
-     * Fetches dependent entitlement IDs for the specified collection of pools, belonging to the
-     * given consumer.
-     *
-     * @param consumer
-     *  The consumer for which to find dependent entitlement IDs
-     *
-     * @param poolIds
-     *  A collection of IDs of pools, which the fetched entitlements depend upon
-     *
-     * @return
-     *  a collection of entitlement IDs for the entitlements dependent upon the provided pools
-     *  belonging to the given consumer
-     */
-    public Collection<String> getDependentEntitlementIdsForPoolIds(Consumer consumer,
-        Iterable<String> poolIds) {
-
-        Set<String> entitlementIds = new HashSet<String>();
-
-        if (consumer != null && poolIds != null && poolIds.iterator().hasNext()) {
-            // Impl note:
-            // We do this in direct SQL, as it lets us take a sane path from base to dependent
-            // entitlements, rather than the lunacy that would be required with HQL, JPQL or
-            // CriteriaBuilder.
-            String querySql = "SELECT DISTINCT e.id " +
-                // Required pool
-                "FROM cp2_pool_provided_products ppp1 " +
-                // Required pool => required product
-                "JOIN cp2_products p ON p.uuid = ppp1.product_uuid " +
-                // Required product => conditional content
-                "JOIN cp2_content_modified_products cmp ON cmp.element = p.product_id " +
-                // Conditional content => dependent product
-                "JOIN cp2_product_content pc ON pc.content_uuid = cmp.content_uuid " +
-                // Dependent product => dependent pool
-                "JOIN cp2_pool_provided_products ppp2 ON ppp2.product_uuid = pc.product_uuid " +
-                // Dependent pool => dependent entitlement
-                "JOIN cp_entitlement e ON e.pool_id = ppp2.pool_id " +
-                "WHERE e.consumer_id = :consumer_id " +
-                "  AND ppp1.pool_id IN (:pool_ids) ";
-
-
-            Query query = this.getEntityManager().createNativeQuery(querySql)
-                .setParameter("consumer_id", consumer.getId());
-
-            for (List<String> block : this.partition(poolIds)) {
-                query.setParameter("pool_ids", block);
-                entitlementIds.addAll(query.getResultList());
-            }
-        }
-
-        return entitlementIds;
     }
 
     /**
@@ -987,4 +875,175 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
 
         return (Entitlement) activeNowQuery.uniqueResult();
     }
+
+    /**
+     * Finds the dependent entitlements for the specified entitlements, matching
+     * on provided products only. Dependent entitlements are those who's
+     * content are being modified by the consumption of another entitlement.
+     *
+     * @param entitlementIds the entitlements to match on.
+     * @return the set of entitlement IDs for the matched modifier entitlements.
+     */
+    private Set<String> findDependentEntitlementsByProvidedProduct(Iterable<String> entitlementIds) {
+        String queryStr = "SELECT DISTINCT e2.id " +
+            // Required entitlement
+            "FROM cp_entitlement e1 " +
+            // Required entitlement => required pool
+            "JOIN cp2_pool_provided_products ppp1 ON ppp1.pool_id = e1.pool_id " +
+            // Required pool => required product
+            "JOIN cp2_products p ON p.uuid = ppp1.product_uuid " +
+            // Required product => conditional content
+            "JOIN cp2_content_modified_products cmp ON cmp.element = p.product_id " +
+            // Conditional content => dependent product
+            "JOIN cp2_product_content pc ON pc.content_uuid = cmp.content_uuid " +
+            // Dependent product => dependent pool
+            "JOIN cp2_pool_provided_products ppp2 ON ppp2.product_uuid = pc.product_uuid " +
+            // Dependent pool => dependent entitlement
+            "JOIN cp_entitlement e2 ON e2.pool_id = ppp2.pool_id " +
+            "WHERE e1.consumer_id = e2.consumer_id " +
+            "  AND e1.id != e2.id " +
+            "  AND e2.dirty = false " +
+            "  AND e1.id IN (:entitlement_ids)" +
+            "  AND e2.id NOT IN (:entitlement_ids)";
+
+        Query query = getEntityManager().createNativeQuery(queryStr);
+
+        Set<String> result = new HashSet<String>();
+        if (entitlementIds == null || !entitlementIds.iterator().hasNext()) {
+            return result;
+        }
+
+        int blockSize = Math.min(this.getInBlockSize(), this.getQueryParameterLimit() / 2);
+        for (List<String> block : Iterables.partition(entitlementIds, blockSize)) {
+            result.addAll(query.setParameter("entitlement_ids", block).getResultList());
+        }
+        return result;
+    }
+
+    /**
+     * Finds the dependent entitlements for the specified entitlements, matching
+     * on derived provided products only. Dependent entitlements are those who's
+     * content are being modified by the consumption of another entitlement.
+     *
+     * @param entitlementIds the entitlements to match on.
+     * @return the set of entitlement IDs for the matched modifier entitlements.
+     */
+    private Set<String> findDependentEntitlementsByDerivedProvidedProduct(Iterable<String> entitlementIds) {
+        String queryStr = "SELECT DISTINCT e2.id " +
+            // Required entitlement
+            "FROM cp_entitlement e1 " +
+            // Required entitlement => required pool
+            "JOIN cp2_pool_derprov_products ppp1 ON ppp1.pool_id = e1.pool_id " +
+            // Required pool => required product
+            "JOIN cp2_products p ON p.uuid = ppp1.product_uuid " +
+            // Required product => conditional content
+            "JOIN cp2_content_modified_products cmp ON cmp.element = p.product_id " +
+            // Conditional content => dependent product
+            "JOIN cp2_product_content pc ON pc.content_uuid = cmp.content_uuid " +
+            // Dependent product => dependent pool
+            "JOIN cp2_pool_provided_products ppp2 ON ppp2.product_uuid = pc.product_uuid " +
+            // Dependent pool => dependent entitlement
+            "JOIN cp_entitlement e2 ON e2.pool_id = ppp2.pool_id " +
+            "WHERE e1.consumer_id = e2.consumer_id " +
+            "  AND e1.id != e2.id " +
+            "  AND e2.dirty = false " +
+            "  AND e1.id IN (:entitlement_ids)" +
+            "  AND e2.id NOT IN (:entitlement_ids)";
+        Query query = getEntityManager().createNativeQuery(queryStr);
+
+        Set<String> result = new HashSet<String>();
+        if (entitlementIds == null || !entitlementIds.iterator().hasNext()) {
+            return result;
+        }
+
+        int blockSize = Math.min(this.getInBlockSize(), this.getQueryParameterLimit() / 2);
+        for (List<String> block : Iterables.partition(entitlementIds, blockSize)) {
+            result.addAll(query.setParameter("entitlement_ids", block).getResultList());
+        }
+        return result;
+    }
+
+    /**
+     * Fetches dependent entitlement IDs for the specified collection of pools, belonging to the
+     * given consumer. Dependent entitlements are those who's content are being modified by the
+     * consumption of another entitlement.
+     *
+     * @param consumer
+     *  The consumer for which to find dependent entitlement IDs
+     *
+     * @param poolIds
+     *  A collection of IDs of pools, which the fetched entitlements depend upon
+     *
+     * @return
+     *  a collection of entitlement IDs for the entitlements dependent upon the provided pools
+     *  belonging to the given consumer
+     */
+    public Collection<String> getDependentEntitlementIdsForPools(Consumer consumer,
+        Iterable<String> poolIds) {
+        Set<String> entitlementIds = new HashSet<String>();
+
+        if (consumer != null && poolIds != null && poolIds.iterator().hasNext()) {
+            // Impl note:
+            // We do this in direct SQL, as it lets us take a sane path from base to dependent
+            // entitlements, rather than the lunacy that would be required with HQL, JPQL or
+            // CriteriaBuilder.
+            String querySql = "SELECT DISTINCT e.id " +
+                // Required pool
+                "FROM cp2_pool_provided_products ppp1 " +
+                // Required pool => required product
+                "JOIN cp2_products p ON p.uuid = ppp1.product_uuid " +
+                // Required product => conditional content
+                "JOIN cp2_content_modified_products cmp ON cmp.element = p.product_id " +
+                // Conditional content => dependent product
+                "JOIN cp2_product_content pc ON pc.content_uuid = cmp.content_uuid " +
+                // Dependent product => dependent pool
+                "JOIN cp2_pool_provided_products ppp2 ON ppp2.product_uuid = pc.product_uuid " +
+                // Dependent pool => dependent entitlement
+                "JOIN cp_entitlement e ON e.pool_id = ppp2.pool_id " +
+                "WHERE e.consumer_id = :consumer_id " +
+                "  AND ppp1.pool_id IN (:pool_ids) ";
+
+
+            int blockSize = Math.min(this.getInBlockSize(), this.getQueryParameterLimit() - 1);
+            Query query = getEntityManager().createNativeQuery(querySql)
+                .setParameter("consumer_id", consumer.getId());
+
+            for (List<String> block : Iterables.partition(poolIds, blockSize)) {
+                query.setParameter("pool_ids", block);
+                entitlementIds.addAll(query.getResultList());
+            }
+
+            // Need to check for dependent ents matching the derived provided products
+            // if we are processing a distributor. We do this in a separate query to
+            // avoid unnecessary query overhead when we are not dealing with a distributor.
+            if (consumer.isManifestDistributor()) {
+                querySql = "SELECT DISTINCT e.id " +
+                    // Required pool
+                    "FROM cp2_pool_derprov_products ppp1 " +
+                    // Required pool => required product
+                    "JOIN cp2_products p ON p.uuid = ppp1.product_uuid " +
+                    // Required product => conditional content
+                    "JOIN cp2_content_modified_products cmp ON cmp.element = p.product_id " +
+                    // Conditional content => dependent product
+                    "JOIN cp2_product_content pc ON pc.content_uuid = cmp.content_uuid " +
+                    // Dependent product => dependent pool
+                    "JOIN cp2_pool_provided_products ppp2 ON ppp2.product_uuid = pc.product_uuid " +
+                    // Dependent pool => dependent entitlement
+                    "JOIN cp_entitlement e ON e.pool_id = ppp2.pool_id " +
+                    "WHERE e.consumer_id = :consumer_id " +
+                    "  AND ppp1.pool_id IN (:pool_ids) ";
+
+                query = getEntityManager().createNativeQuery(querySql)
+                    .setParameter("consumer_id", consumer.getId());
+
+                for (List<String> block : Iterables.partition(poolIds, blockSize)) {
+                    query.setParameter("pool_ids", block);
+                    entitlementIds.addAll(query.getResultList());
+                }
+            }
+        }
+
+        return entitlementIds;
+    }
+
 }

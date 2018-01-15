@@ -63,14 +63,14 @@ public class HandleCertificatesOp implements BindOperation {
     public boolean preProcess(BindContext context) {
 
         if (!context.getConsumer().isShare()) {
-            List<Pool> pools = new LinkedList<Pool>();
+            List<String> poolIds = new LinkedList<String>();
             Map<String, Product> products = new HashMap<String, Product>();
             Map<String, PoolQuantity> poolQuantities = context.getPoolQuantities();
 
             for (PoolQuantity poolQuantity : poolQuantities.values()) {
                 Pool pool = poolQuantity.getPool();
                 products.put(pool.getId(), pool.getProduct());
-                pools.add(pool);
+                poolIds.add(pool.getId());
             }
 
             certs = ecGenerator.generateEntitlementCertificates(context.getConsumer(),
@@ -79,7 +79,8 @@ public class HandleCertificatesOp implements BindOperation {
                 context.getEntitlementMap(),
                 false);
 
-            modifyingEnts = this.eCurator.getDependentEntitlementIdsForPools(context.getConsumer(), pools);
+            modifyingEnts = this.eCurator.getDependentEntitlementIdsForPools(context.getConsumer(),
+                poolIds);
         }
 
         return true;
