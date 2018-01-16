@@ -24,6 +24,8 @@ import junitparams.JUnitParamsRunner;
 
 import org.junit.runner.RunWith;
 
+import java.util.Date;
+
 
 
 /**
@@ -67,6 +69,7 @@ public class OwnerTranslatorTest extends
             owner.setAutobindDisabled(true);
             owner.setContentAccessModeList(String.format("cam%1$d-a,cam%1$d-b,cam%1$d-c", i));
             owner.setContentAccessMode(String.format("cam%d-b", i));
+            owner.setLastRefreshed(new Date());
 
             parent = owner;
         }
@@ -92,6 +95,7 @@ public class OwnerTranslatorTest extends
             assertEquals(source.isAutobindDisabled(), dest.isAutobindDisabled());
             assertEquals(source.getContentAccessMode(), dest.getContentAccessMode());
             assertEquals(source.getContentAccessModeList(), dest.getContentAccessModeList());
+            assertEquals(source.getLastRefreshed(), dest.getLastRefreshed());
 
             // Parent owner is a special case, since it's recursion-based rather than relying on a
             // factory to handle it. As such, it should always be present.
