@@ -65,6 +65,7 @@ public class OwnerTranslator extends TimestampedEntityTranslator<Owner, OwnerDTO
         dest.setAutobindDisabled(source.isAutobindDisabled());
         dest.setContentAccessMode(source.getContentAccessMode());
         dest.setContentAccessModeList(source.getContentAccessModeList());
+        dest.setLastRefreshed(source.getLastRefreshed());
 
         // TODO: Should this actually follow the nested child rules of all the other objects?
         Owner parent = source.getParentOwner();
