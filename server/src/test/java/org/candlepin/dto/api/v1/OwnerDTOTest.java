@@ -65,6 +65,7 @@ public class OwnerDTOTest extends AbstractDTOTest<OwnerDTO> {
         this.values.put("ContentAccessModeList", "test-access-mode-list");
         this.values.put("Created", new Date());
         this.values.put("Updated", new Date());
+        this.values.put("LastRefreshed", new Date());
     }
 
     /**

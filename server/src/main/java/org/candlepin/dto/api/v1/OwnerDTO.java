@@ -22,6 +22,8 @@ import io.swagger.annotations.ApiModel;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
+import java.util.Date;
+
 
 
 /**
@@ -42,6 +44,7 @@ public class OwnerDTO extends TimestampedCandlepinDTO<OwnerDTO> implements Linka
     protected Boolean autobindDisabled;
     protected String contentAccessMode;
     protected String contentAccessModeList;
+    protected Date lastRefreshed;
 
     /**
      * Initializes a new OwnerDTO instance with null values.
@@ -61,10 +64,12 @@ public class OwnerDTO extends TimestampedCandlepinDTO<OwnerDTO> implements Linka
         super(source);
     }
 
+    @JsonProperty
     public String getId() {
         return this.id;
     }
 
+    @JsonIgnore
     public OwnerDTO setId(String id) {
         this.id = id;
         return this;
@@ -88,10 +93,12 @@ public class OwnerDTO extends TimestampedCandlepinDTO<OwnerDTO> implements Linka
         return this;
     }
 
+    @JsonProperty
     public OwnerDTO getParentOwner() {
         return this.parentOwner;
     }
 
+    @JsonIgnore
     public OwnerDTO setParentOwner(OwnerDTO parentOwner) {
         this.parentOwner = parentOwner;
         return this;
@@ -135,10 +142,12 @@ public class OwnerDTO extends TimestampedCandlepinDTO<OwnerDTO> implements Linka
         return this;
     }
 
+    @JsonProperty
     public Boolean isAutobindDisabled() {
         return autobindDisabled;
     }
 
+    @JsonIgnore
     public OwnerDTO setAutobindDisabled(Boolean autobindDisabled) {
         this.autobindDisabled = autobindDisabled;
         return this;
@@ -159,6 +168,34 @@ public class OwnerDTO extends TimestampedCandlepinDTO<OwnerDTO> implements Linka
 
     public OwnerDTO setContentAccessModeList(String contentAccessModeList) {
         this.contentAccessModeList = contentAccessModeList;
+        return this;
+    }
+
+    /**
+     * Fetches the date this owner was last refreshed, or null if the owner has not been refreshed
+     * or this field has not been set.
+     *
+     * @return
+     *  the date this owner was last refreshed, or null if the owner has not been refreshed or this
+     *  field is not defined
+     */
+    @JsonProperty
+    public Date getLastRefreshed() {
+        return lastRefreshed;
+    }
+
+    /**
+     * Sets or clears the date this owner was last refreshed.
+     *
+     * @param lastRefreshed
+     *  The date this owner was last refreshed, or null to clear the last refresh value
+     *
+     * @return
+     *  A reference to this DTO
+     */
+    @JsonIgnore
+    public OwnerDTO setLastRefreshed(Date lastRefreshed) {
+        this.lastRefreshed = lastRefreshed;
         return this;
     }
 
@@ -212,7 +249,8 @@ public class OwnerDTO extends TimestampedCandlepinDTO<OwnerDTO> implements Linka
                 .append(this.getLogLevel(), that.getLogLevel())
                 .append(this.isAutobindDisabled(), that.isAutobindDisabled())
                 .append(this.getContentAccessMode(), that.getContentAccessMode())
-                .append(this.getContentAccessModeList(), that.getContentAccessModeList());
+                .append(this.getContentAccessModeList(), that.getContentAccessModeList())
+                .append(this.getLastRefreshed(), that.getLastRefreshed());
 
             return builder.isEquals();
         }
@@ -240,7 +278,8 @@ public class OwnerDTO extends TimestampedCandlepinDTO<OwnerDTO> implements Linka
             .append(this.getLogLevel())
             .append(this.isAutobindDisabled())
             .append(this.getContentAccessMode())
-            .append(this.getContentAccessModeList());
+            .append(this.getContentAccessModeList())
+            .append(this.getLastRefreshed());
 
         return builder.toHashCode();
     }
@@ -257,6 +296,9 @@ public class OwnerDTO extends TimestampedCandlepinDTO<OwnerDTO> implements Linka
 
         UpstreamConsumerDTO consumer = this.getUpstreamConsumer();
         copy.upstreamConsumer = consumer != null ? (UpstreamConsumerDTO) consumer.clone() : null;
+
+        Date lastRefreshed = this.getLastRefreshed();
+        copy.lastRefreshed = lastRefreshed != null ? (Date) lastRefreshed.clone() : null;
 
         return copy;
     }
@@ -279,6 +321,7 @@ public class OwnerDTO extends TimestampedCandlepinDTO<OwnerDTO> implements Linka
         this.setAutobindDisabled(source.isAutobindDisabled());
         this.setContentAccessMode(source.getContentAccessMode());
         this.setContentAccessModeList(source.getContentAccessModeList());
+        this.setLastRefreshed(source.getLastRefreshed());
 
         return this;
     }
