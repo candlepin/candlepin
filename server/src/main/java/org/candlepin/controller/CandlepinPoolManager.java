@@ -2098,9 +2098,11 @@ public class CandlepinPoolManager implements PoolManager {
                 this.entitlementCurator.listAllByIds(entitlementIds).list() :
                 Collections.<Entitlement>emptySet();
 
+            List<String> consumerIds = new ArrayList<String>();
             for (Entitlement e : entitlements) {
-                consumerCurator.lockAndLoad(e.getConsumer());
+                consumerIds.add(e.getConsumer().getId());
             }
+            consumerCurator.lockAndLoadByIds(consumerIds);
 
             // Mark remaining dependent entitlements dirty for this consumer
             this.entitlementCurator.markDependentEntitlementsDirty(entitlementIds);
