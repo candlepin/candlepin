@@ -1520,10 +1520,10 @@ public class OwnerResource {
     public CandlepinQuery<Consumer> getHypervisors(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @QueryParam("hypervisor_id") List<String> hypervisorIds) {
-
+        Owner owner = ownerCurator.lookupByKey(ownerKey);
         CandlepinQuery<Consumer> out = (hypervisorIds == null || hypervisorIds.isEmpty()) ?
-            this.consumerCurator.getHypervisorsForOwner(ownerKey) :
-            this.consumerCurator.getHypervisorsBulk(hypervisorIds, ownerKey);
+            this.consumerCurator.getHypervisorsForOwner(owner.getId()) :
+            this.consumerCurator.getHypervisorsBulk(hypervisorIds, owner.getId());
 
         return out;
     }

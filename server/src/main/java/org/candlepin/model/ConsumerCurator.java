@@ -664,11 +664,11 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
     @SuppressWarnings("unchecked")
     @Transactional
-    public CandlepinQuery<Consumer> getHypervisorsForOwner(String ownerKey) {
+    public CandlepinQuery<Consumer> getHypervisorsForOwner(String ownerId) {
         DetachedCriteria criteria = this.createSecureDetachedCriteria()
             .createAlias("owner", "o")
             .createAlias("hypervisorId", "hvsr")
-            .add(Restrictions.eq("o.key", ownerKey))
+            .add(Restrictions.eq("o.id", ownerId))
             .add(Restrictions.isNotNull("hvsr.hypervisorId"));
 
         return this.cpQueryFactory.<Consumer>buildQuery(this.currentSession(), criteria);

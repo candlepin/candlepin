@@ -17,7 +17,6 @@ package org.candlepin.pinsetter.tasks;
 import static org.quartz.JobBuilder.newJob;
 
 import org.candlepin.auth.Principal;
-import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -97,13 +96,13 @@ public class HypervisorUpdateJob extends KingpinJob {
 
     @Inject
     public HypervisorUpdateJob(OwnerCurator ownerCurator, ConsumerCurator consumerCurator,
-                               ConsumerTypeCurator consumerTypeCurator, ConsumerResource consumerResource, I18n i18n,
+                               ConsumerTypeCurator consumerTypeCurator,
+                               ConsumerResource consumerResource, I18n i18n,
                                SubscriptionServiceAdapter subAdapter,
                                ComplianceRules complianceRules) {
 
         this.ownerCurator = ownerCurator;
         this.consumerCurator = consumerCurator;
-        this.consumerTypeCurator = consumerTypeCurator;
         this.consumerResource = consumerResource;
         this.i18n = i18n;
         this.subAdapter = subAdapter;
