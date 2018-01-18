@@ -232,6 +232,7 @@ public class HostedTestSubscriptionResource {
             ContentDTO cdto = this.translator.translate(content, ContentDTO.class);
 
             changed |= pdto.addContent(cdto, enabled);
+            addContentToUpstreamSubscriptions(product, content, enabled);
         }
 
         if (changed) {
@@ -239,6 +240,15 @@ public class HostedTestSubscriptionResource {
         }
 
         return this.translator.translate(product, ProductDTO.class);
+    }
+
+    private void addContentToUpstreamSubscriptions(Product product, Content content, boolean enabled) {
+        List<Subscription> subs = adapter.getSubscriptions(product.toDTO());
+        for (Subscription sub: subs) {
+            if (sub.getProduct().getId().contentEquals(product.getId())) {
+                sub.getProduct().addContent(content, enabled);
+            }
+        }
     }
 
     @POST
