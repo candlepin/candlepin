@@ -26,9 +26,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 
 
 
@@ -121,14 +121,16 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
 
         this.clearUuids(s.getProduct());
         this.clearUuids(s.getDerivedProduct());
+
         if (CollectionUtils.isNotEmpty(s.getProvidedProducts())) {
-            for (ProductData productData : s.getProvidedProducts()) {
-                this.clearUuids(productData);
+            for (ProductData pdata : s.getProvidedProducts()) {
+                this.clearUuids(pdata);
             }
         }
+
         if (CollectionUtils.isNotEmpty(s.getDerivedProvidedProducts())) {
-            for (ProductData productData : s.getDerivedProvidedProducts()) {
-                this.clearUuids(productData);
+            for (ProductData pdata : s.getDerivedProvidedProducts()) {
+                this.clearUuids(pdata);
             }
         }
 
@@ -146,7 +148,6 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
                     }
                 }
             }
-
         }
     }
 

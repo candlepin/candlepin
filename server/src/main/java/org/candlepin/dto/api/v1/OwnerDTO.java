@@ -24,8 +24,6 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 
 import java.util.Date;
 
-
-
 /**
  * A DTO representation of the Owner entity
  */
