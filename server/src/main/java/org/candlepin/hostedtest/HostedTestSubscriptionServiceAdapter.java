@@ -16,17 +16,19 @@ package org.candlepin.hostedtest;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
+import org.candlepin.model.dto.ProductContentData;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.service.SubscriptionServiceAdapter;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 
 
 
@@ -117,8 +119,37 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
             productMap.put(s.getProduct().getId(), new ArrayList<Subscription>());
         }
 
+        this.clearUuids(s.getProduct());
+        this.clearUuids(s.getDerivedProduct());
+
+        if (CollectionUtils.isNotEmpty(s.getProvidedProducts())) {
+            for (ProductData pdata : s.getProvidedProducts()) {
+                this.clearUuids(pdata);
+            }
+        }
+
+        if (CollectionUtils.isNotEmpty(s.getDerivedProvidedProducts())) {
+            for (ProductData pdata : s.getDerivedProvidedProducts()) {
+                this.clearUuids(pdata);
+            }
+        }
+
         productMap.get(s.getProduct().getId()).add(s);
         return s;
+    }
+
+    private void clearUuids(ProductData pdata) {
+        if (pdata != null) {
+            pdata.setUuid(null);
+
+            if (pdata.getProductContent() != null) {
+                for (ProductContentData pcdata : pdata.getProductContent()) {
+                    if (pcdata.getContent() != null) {
+                        pcdata.getContent().setUuid(null);
+                    }
+                }
+            }
+        }
     }
 
     public Subscription updateSubscription(Subscription ss) {
