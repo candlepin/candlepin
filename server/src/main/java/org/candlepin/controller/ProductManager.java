@@ -740,7 +740,7 @@ public class ProductManager {
      * @return
      *  true if this product would be changed by the given DTO; false otherwise
      */
-    private boolean isChangedBy(Product entity, ProductDTO dto) {
+    public static boolean isChangedBy(Product entity, ProductDTO dto) {
         // Check simple properties first
         if (dto.getId() != null && !dto.getId().equals(entity.getId())) {
             return true;
@@ -794,8 +794,10 @@ public class ProductManager {
                                 // At this point, we've either matched the UUIDs (which means we're
                                 // referencing identical products) or the UUID isn't present on the DTO, but
                                 // the IDs match (which means we're pointing toward the same product).
-                                return update.isEnabled() != null &&
-                                    update.isEnabled().equals(existing.isEnabled()) ? 0 : 1;
+
+                                return (update.isEnabled() != null &&
+                                    !update.isEnabled().equals(existing.isEnabled())) ||
+                                    ContentManager.isChangedBy(content, cdto) ? 1 : 0;
                             }
                         }
                     }
@@ -805,7 +807,7 @@ public class ProductManager {
             };
 
             if (!Util.collectionsAreEqual((Collection) entity.getProductContent(),
-                (Collection) productContent)) {
+                (Collection) productContent, comparator)) {
 
                 return true;
             }
@@ -827,7 +829,7 @@ public class ProductManager {
      * @return
      *  true if this product would be changed by the given DTO; false otherwise
      */
-    private boolean isChangedBy(Product entity, ProductData dto) {
+    public static boolean isChangedBy(Product entity, ProductData dto) {
         // Check simple properties first
         if (dto.getId() != null && !dto.getId().equals(entity.getId())) {
             return true;
@@ -881,8 +883,10 @@ public class ProductManager {
                                 // At this point, we've either matched the UUIDs (which means we're
                                 // referencing identical products) or the UUID isn't present on the DTO, but
                                 // the IDs match (which means we're pointing toward the same product).
-                                return update.isEnabled() != null &&
-                                    update.isEnabled().equals(existing.isEnabled()) ? 0 : 1;
+
+                                return (update.isEnabled() != null &&
+                                    !update.isEnabled().equals(existing.isEnabled())) ||
+                                    ContentManager.isChangedBy(content, cdto) ? 1 : 0;
                             }
                         }
                     }
@@ -892,7 +896,7 @@ public class ProductManager {
             };
 
             if (!Util.collectionsAreEqual((Collection) entity.getProductContent(),
-                (Collection) productContent)) {
+                (Collection) productContent, comparator)) {
 
                 return true;
             }
