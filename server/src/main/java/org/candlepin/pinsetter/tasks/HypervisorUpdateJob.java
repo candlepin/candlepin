@@ -18,6 +18,7 @@ import static org.quartz.JobBuilder.newJob;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.common.filter.LoggingFilter;
+import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
@@ -96,10 +97,10 @@ public class HypervisorUpdateJob extends KingpinJob {
 
     @Inject
     public HypervisorUpdateJob(OwnerCurator ownerCurator, ConsumerCurator consumerCurator,
-                               ConsumerTypeCurator consumerTypeCurator,
-                               ConsumerResource consumerResource, I18n i18n,
-                               SubscriptionServiceAdapter subAdapter,
-                               ComplianceRules complianceRules) {
+        ConsumerTypeCurator consumerTypeCurator,
+        ConsumerResource consumerResource, I18n i18n,
+        SubscriptionServiceAdapter subAdapter,
+        ComplianceRules complianceRules) {
 
         this.ownerCurator = ownerCurator;
         this.consumerCurator = consumerCurator;
@@ -109,6 +110,9 @@ public class HypervisorUpdateJob extends KingpinJob {
         this.complianceRules = complianceRules;
 
         this.hypervisorType = consumerTypeCurator.lookupByLabel(ConsumerTypeEnum.HYPERVISOR.getLabel());
+        if (this.hypervisorType == null) {
+            consumerTypeCurator.create(new ConsumerType(ConsumerTypeEnum.HYPERVISOR));
+        }
     }
 
     public static JobStatus scheduleJob(JobCurator jobCurator,
@@ -217,6 +221,14 @@ public class HypervisorUpdateJob extends KingpinJob {
                 return;
             }
 
+            if (owner.autobindDisabled()) {
+                log.debug("Could not update host/guest mapping. Auto-Attach is disabled for owner {}",
+                        owner.getKey());
+                throw new BadRequestException(
+                        i18n.tr("Could not update host/guest mapping. Auto-attach is disabled for owner {0}.",
+                                owner.getKey()));
+            }
+
             byte[] data = (byte[]) map.get(DATA);
             String json = decompress(data);
             HypervisorList hypervisors = (HypervisorList) Util.fromJson(json, HypervisorList.class);
@@ -231,10 +243,6 @@ public class HypervisorUpdateJob extends KingpinJob {
             // Maps virt hypervisor ID to registered consumer for that hypervisor, should one exist:
             VirtConsumerMap hypervisorConsumersMap = consumerCurator.getHostConsumersMap(owner, hosts);
 
-            Set<Consumer> newConsumers = new HashSet<Consumer>();
-            Set<Consumer> updatedConsumers = new HashSet<Consumer>();
-
-
             for (String hypervisorId : hosts) {
                 Consumer knownHost = hypervisorConsumersMap.get(hypervisorId);
                 Consumer incoming = incomingHosts.get(hypervisorId);
@@ -246,16 +254,8 @@ public class HypervisorUpdateJob extends KingpinJob {
                     }
                     else {
                         log.debug("Registering new host consumer for hypervisor ID: {}", hypervisorId);
-                        Consumer newHost = createConsumerForHypervisorId(hypervisorId, owner, principal);
-                        consumerResource.checkForFactsUpdate(newHost, incoming);
-                        newHost.setGuestIds(incoming.getGuestIds());
-                        if (newHost.getGuestIds() != null) {
-                            for (GuestId g : newHost.getGuestIds()) {
-                                g.setConsumer(newHost);
-                            }
-                        }
-                        complianceRules.getStatus(newHost, null, false, false);
-                        newConsumers.add(newHost);
+                        Consumer newHost = createConsumerForHypervisorId(hypervisorId, owner, principal,
+                            incoming);
                         hypervisorConsumersMap.add(hypervisorId, newHost);
                         result.created(newHost);
                         reportedOnConsumer = newHost;
@@ -278,7 +278,7 @@ public class HypervisorUpdateJob extends KingpinJob {
 
                      if (changesMade) {
                          complianceRules.getStatus(knownHost, null, false, false);
-                         updatedConsumers.add(knownHost);
+                         result.updated(knownHost);
                     }
                     else {
                          result.unchanged(knownHost);
@@ -300,20 +300,12 @@ public class HypervisorUpdateJob extends KingpinJob {
             }
 
             Date now = new Date();
+            java.util.Collection<Consumer> c = hypervisorConsumersMap.getConsumers();
+
             for (Consumer consumer : hypervisorConsumersMap.getConsumers()) {
                 consumer.setLastCheckin(now);
-
-                if (newConsumers.contains(consumer)) {
-                    consumerCurator.create(consumer, false);
-                    result.created(consumer);
-                }
-                else if (updatedConsumers.contains(consumer)) {
+                consumer = result.wasCreated(consumer) ? consumerCurator.create(consumer, false) :
                     consumerCurator.update(consumer, false);
-                    result.updated(consumer);
-                } else {
-                    result.unchanged(consumer);
-                }
-
             }
 
             consumerCurator.flush();
@@ -393,9 +385,15 @@ public class HypervisorUpdateJob extends KingpinJob {
     /*
      * Create a new hypervisor type consumer to represent the incoming hypervisorId
      */
-    private Consumer createConsumerForHypervisorId(String incHypervisorId, Owner owner, Principal principal) {
+    private Consumer createConsumerForHypervisorId(String incHypervisorId, Owner owner, Principal principal,
+        Consumer incoming) {
         Consumer consumer = new Consumer();
-        consumer.setName(sanitizeHypervisorId(incHypervisorId));
+        if (incoming.getName() != null) {
+            consumer.setName(incoming.getName());
+        }
+        else {
+            consumer.setName(sanitizeHypervisorId(incHypervisorId));
+        }
         consumer.setType(this.hypervisorType);
         consumer.setFact("uname.machine", "x86_64");
         consumer.setGuestIds(new ArrayList<GuestId>());
@@ -404,18 +402,30 @@ public class HypervisorUpdateJob extends KingpinJob {
         consumer.setCanActivate(subAdapter.canActivateSubscription(consumer));
         if (owner.getDefaultServiceLevel() != null) {
             consumer.setServiceLevel(owner.getDefaultServiceLevel());
-        } else {
+        }
+        else {
             consumer.setServiceLevel("");
         }
         if (principal.getUsername() != null) {
             consumer.setUsername(principal.getUsername());
         }
+        // TODO: Refactor this to not call resource methods directly
         consumerResource.sanitizeConsumerFacts(consumer);
 
 
         // Create HypervisorId
         HypervisorId hypervisorId = new HypervisorId(consumer, incHypervisorId);
         consumer.setHypervisorId(hypervisorId);
+
+        // TODO: Refactor this to not call resource methods directly
+        consumerResource.checkForFactsUpdate(consumer, incoming);
+        consumer.setGuestIds(incoming.getGuestIds());
+        if (consumer.getGuestIds() != null) {
+            for (GuestId g : consumer.getGuestIds()) {
+                g.setConsumer(consumer);
+            }
+        }
+        complianceRules.getStatus(consumer, null, false, false);
         return consumer;
     }
 

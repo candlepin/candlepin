@@ -19,8 +19,14 @@ import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.auth.Principal;
-import org.candlepin.model.*;
-import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.HypervisorId;
+import org.candlepin.model.JobCurator;
+import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.pinsetter.core.model.JobStatus.JobState;
 import org.candlepin.policy.js.compliance.ComplianceRules;
@@ -76,9 +82,11 @@ public class HypervisorUpdateJobTest extends BaseJobTest{
         consumerCurator = mock(ConsumerCurator.class);
         consumerResource = mock(ConsumerResource.class);
         consumerTypeCurator = mock(ConsumerTypeCurator.class);
+        when(consumerTypeCurator.lookupByLabel("hypervisor")).thenReturn(new ConsumerType("hypervisor"));
         subAdapter = mock(SubscriptionServiceAdapter.class);
         complianceRules = mock(ComplianceRules.class);
         when(owner.getId()).thenReturn("joe");
+        when(owner.getKey()).thenReturn("joe");
         when(principal.getUsername()).thenReturn("joe user");
 
         hypervisorJson =
@@ -113,8 +121,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest{
             consumerTypeCurator, consumerResource, i18n, subAdapter, complianceRules);
         injector.injectMembers(job);
         job.execute(ctx);
-        verify(consumerResource).create(any(Consumer.class), eq(principal), anyString(), eq("joe"),
-            anyString(), eq(false));
+        verify(consumerCurator).create(any(Consumer.class), eq(false));
     }
 
     @Test
@@ -129,12 +136,11 @@ public class HypervisorUpdateJobTest extends BaseJobTest{
             new VirtConsumerMap());
 
         HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerTypeCurator,
-                consumerResource, i18n, subAdapter, complianceRules);
+            consumerResource, i18n, subAdapter, complianceRules);
         injector.injectMembers(job);
         job.execute(ctx);
         ArgumentCaptor<Consumer> argument = ArgumentCaptor.forClass(Consumer.class);
-        verify(consumerResource).create(argument.capture(), eq(principal), anyString(), eq("joe"),
-            anyString(), eq(false));
+        verify(consumerCurator).create(argument.capture(), eq(false));
         assertEquals("createReporterId", argument.getValue().getHypervisorId().getReporterId());
     }
 
@@ -153,11 +159,12 @@ public class HypervisorUpdateJobTest extends BaseJobTest{
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
 
         HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerTypeCurator,
-                consumerResource, i18n, subAdapter, complianceRules);
+            consumerResource, i18n, subAdapter, complianceRules);
         injector.injectMembers(job);
         job.execute(ctx);
-        verify(consumerResource).performConsumerUpdates(any(Consumer.class), eq(hypervisor),
-            any(VirtConsumerMap.class), eq(false));
+        verify(consumerResource).checkForGuestsUpdate(any(Consumer.class), any(Consumer.class));
+        verify(consumerResource).checkForFactsUpdate(any(Consumer.class), any(Consumer.class));
+        verify(consumerCurator).update(any(Consumer.class), eq(false));
     }
 
     @Test
@@ -176,7 +183,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest{
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
 
         HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerTypeCurator,
-                consumerResource, i18n, subAdapter, complianceRules);
+            consumerResource, i18n, subAdapter, complianceRules);
         injector.injectMembers(job);
         job.execute(ctx);
         assertEquals("updateReporterId", hypervisor.getHypervisorId().getReporterId());
@@ -196,9 +203,11 @@ public class HypervisorUpdateJobTest extends BaseJobTest{
         JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal, null);
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
+        when(consumerCurator.getHostConsumersMap(eq(owner), any(Set.class)))
+            .thenReturn(new VirtConsumerMap());
 
         HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerTypeCurator,
-                consumerResource, i18n, subAdapter, complianceRules);
+            consumerResource, i18n, subAdapter, complianceRules);
         injector.injectMembers(job);
         job.execute(ctx);
         verify(consumerResource, never()).create(any(Consumer.class), any(Principal.class),
@@ -227,13 +236,17 @@ public class HypervisorUpdateJobTest extends BaseJobTest{
             .thenReturn(new VirtConsumerMap());
 
         HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerTypeCurator,
-                consumerResource, i18n, subAdapter, complianceRules);
+            consumerResource, i18n, subAdapter, complianceRules);
         injector.injectMembers(job);
         job.execute(ctx);
 
         Set<String> expectedSet = new HashSet<String>();
         expectedSet.add("guestId_1_999");
-        verify(consumerCurator, times(1)).getGuestConsumersMap(eq(owner), eq(expectedSet));
+        //verify(consumerCurator, times(1)).getGuestConsumersMap(eq(owner), eq(expectedSet));
+        ArgumentCaptor<Consumer> argument = ArgumentCaptor.forClass(Consumer.class);
+        verify(consumerCurator, times(1)).create(argument.capture(), eq(false));
+        assertEquals(expectedSet.size(), argument.getValue().getGuestIds().size());
+        assertTrue(expectedSet.contains(argument.getValue().getGuestIds().get(0).getGuestId()));
     }
 
     /*
@@ -246,7 +259,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest{
         JobStatus preExistingJobStatus = new JobStatus();
         preExistingJobStatus.setState(JobState.WAITING);
         HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerTypeCurator,
-                consumerResource, i18n, subAdapter, complianceRules);
+            consumerResource, i18n, subAdapter, complianceRules);
         JobStatus newlyScheduledJobStatus = new JobStatus();
 
         JobCurator jobCurator = mock(JobCurator.class);
@@ -273,32 +286,6 @@ public class HypervisorUpdateJobTest extends BaseJobTest{
         when(jobCurator.findNumRunningByClassAndTarget(owner.getKey(), HypervisorUpdateJob.class))
                 .thenReturn(1L);
         assertFalse(HypervisorUpdateJob.isSchedulable(jobCurator, newJob));
-    }
-
-    @Test
-    public void ensureJobFailsWhenAutobindDisabledForTargetOwner() throws Exception {
-        // Disabled autobind
-        when(owner.autobindDisabled()).thenReturn(true);
-        when(ownerCurator.lookupByKey(eq("joe"))).thenReturn(owner);
-
-        JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal, null);
-        JobExecutionContext ctx = mock(JobExecutionContext.class);
-        when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
-        when(consumerCurator.getHostConsumersMap(eq(owner), any(Set.class)))
-            .thenReturn(new VirtConsumerMap());
-
-        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerTypeCurator,
-                consumerResource, i18n, subAdapter, complianceRules);
-        injector.injectMembers(job);
-
-        try {
-            job.execute(ctx);
-            fail("Expected exception due to autobind being disabled.");
-        }
-        catch (JobExecutionException jee) {
-            assertEquals(jee.getCause().getMessage(),
-                "Could not update host/guest mapping. Auto-attach is disabled for owner joe.");
-        }
     }
 
 }

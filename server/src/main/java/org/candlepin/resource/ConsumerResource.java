@@ -78,7 +78,6 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Release;
 import org.candlepin.model.User;
-import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.pinsetter.tasks.EntitleByProductsJob;
@@ -1007,14 +1006,11 @@ public class ConsumerResource {
 
         Consumer toUpdate = consumerCurator.verifyAndLookupConsumer(uuid);
 
-        VirtConsumerMap guestConsumerMap = new VirtConsumerMap();
         if (consumer.getGuestIds() != null) {
             Set<String> allGuestIds = new HashSet<String>();
             for (GuestId gid : consumer.getGuestIds()) {
                 allGuestIds.add(gid.getGuestId());
             }
-
-            guestConsumerMap = consumerCurator.getGuestConsumersMap(toUpdate.getOwner(), allGuestIds);
         }
 
         // Sanitize the inbound facts before applying the update
@@ -1024,7 +1020,7 @@ public class ConsumerResource {
             validateShareConsumerUpdate(toUpdate, consumer, principal);
         }
 
-        if (performConsumerUpdates(consumer, toUpdate, guestConsumerMap)) {
+        if (performConsumerUpdates(consumer, toUpdate)) {
             try {
                 consumerCurator.update(toUpdate);
             }
@@ -1039,20 +1035,13 @@ public class ConsumerResource {
         }
     }
 
-    public boolean performConsumerUpdates(Consumer updated, Consumer toUpdate,
-        VirtConsumerMap guestConsumerMap) {
+    public boolean performConsumerUpdates(Consumer updated, Consumer toUpdate) {
 
-        return performConsumerUpdates(updated, toUpdate, guestConsumerMap, true);
-    }
-
-    public boolean performConsumerUpdates(Consumer updated, Consumer toUpdate, boolean isIdCert) {
-
-        return performConsumerUpdates(updated, toUpdate, new VirtConsumerMap(), isIdCert);
+        return performConsumerUpdates(updated, toUpdate, true);
     }
 
     @Transactional
-    public boolean performConsumerUpdates(Consumer updated, Consumer toUpdate,
-        VirtConsumerMap guestConsumerMap, boolean isIdCert) {
+    public boolean performConsumerUpdates(Consumer updated, Consumer toUpdate, boolean isIdCert) {
 
         log.debug("Updating consumer: {}", toUpdate.getUuid());
 

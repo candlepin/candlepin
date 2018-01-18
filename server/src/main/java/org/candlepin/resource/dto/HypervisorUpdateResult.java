@@ -46,6 +46,18 @@ public class HypervisorUpdateResult implements Serializable {
         this.failed = new HashSet<String>();
     }
 
+    public boolean wasCreated(Consumer c) {
+        return created.contains(c);
+    }
+
+    public boolean wasUpdated(Consumer c) {
+        return updated.contains(c);
+    }
+
+    public boolean wasUnchanged(Consumer c) {
+        return unchanged.contains(c);
+    }
+
     public void created(Consumer c) {
         this.created.add(c);
     }

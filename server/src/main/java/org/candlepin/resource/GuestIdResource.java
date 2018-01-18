@@ -29,7 +29,6 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.GuestIdCurator;
-import org.candlepin.model.VirtConsumerMap;
 
 import com.google.inject.Inject;
 
@@ -38,9 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -134,14 +131,7 @@ public class GuestIdResource {
         Consumer consumer = new Consumer();
         consumer.setGuestIds(guestIds);
 
-        Set<String> allGuestIds = new HashSet<String>();
-        for (GuestId gid : consumer.getGuestIds()) {
-            allGuestIds.add(gid.getGuestId());
-        }
-        VirtConsumerMap guestConsumerMap = consumerCurator.getGuestConsumersMap(
-            toUpdate.getOwner(), allGuestIds);
-
-        if (consumerResource.performConsumerUpdates(consumer, toUpdate, guestConsumerMap)) {
+        if (consumerResource.performConsumerUpdates(consumer, toUpdate)) {
             consumerCurator.update(toUpdate);
         }
     }

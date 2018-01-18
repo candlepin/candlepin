@@ -43,7 +43,6 @@ import org.candlepin.model.GuestId;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.policy.js.compliance.ComplianceRules;
@@ -85,7 +84,6 @@ public class HypervisorResourceTest {
     @Mock private ConsumerCurator consumerCurator;
     @Mock private ConsumerTypeCurator consumerTypeCurator;
     @Mock private OwnerCurator ownerCurator;
-    @Mock private OwnerProductCurator ownerProductCurator;
     @Mock private EventSink sink;
     @Mock private EventFactory eventFactory;
     @Mock private ActivationKeyCurator activationKeyCurator;
