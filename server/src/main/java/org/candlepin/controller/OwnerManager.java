@@ -27,6 +27,7 @@ import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerEnvContentAccessCurator;
 import org.candlepin.model.OwnerProductCurator;
+import org.candlepin.model.OwnerProductShareCurator;
 import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.PermissionBlueprintCurator;
 import org.candlepin.model.Pool;
@@ -77,6 +78,7 @@ public class OwnerManager {
     private OwnerEnvContentAccessCurator ownerEnvContentAccessCurator;
     private UeberCertificateCurator uberCertificateCurator;
     private OwnerServiceAdapter ownerServiceAdapter;
+    private OwnerProductShareCurator shareCurator;
 
     @Inject
     public OwnerManager(ConsumerCurator consumerCurator,
@@ -88,7 +90,8 @@ public class OwnerManager {
         ContentAccessCertServiceAdapter contentAccessCertService,
         ContentAccessCertificateCurator contentAccessCertCurator,
         OwnerEnvContentAccessCurator ownerEnvContentAccessCurator,
-        UeberCertificateCurator uberCertificateCurator, OwnerServiceAdapter ownerServiceAdapter) {
+        UeberCertificateCurator uberCertificateCurator, OwnerServiceAdapter ownerServiceAdapter,
+        OwnerProductShareCurator shareCurator) {
 
         this.consumerCurator = consumerCurator;
         this.activationKeyCurator = activationKeyCurator;
@@ -106,6 +109,7 @@ public class OwnerManager {
         this.ownerEnvContentAccessCurator = ownerEnvContentAccessCurator;
         this.uberCertificateCurator = uberCertificateCurator;
         this.ownerServiceAdapter = ownerServiceAdapter;
+        this.shareCurator = shareCurator;
     }
     @Transactional
     public void cleanupAndDelete(Owner owner, boolean revokeCerts) {
@@ -173,6 +177,9 @@ public class OwnerManager {
             perm.getRole().getPermissions().remove(perm);
             permissionCurator.delete(perm);
         }
+
+        log.info("Deleting all shares...");
+        this.shareCurator.removeShares(shareCurator.findProductSharesBySharer(owner, false, null));
 
         log.info("Deleting all products...");
         this.productManager.removeAllProducts(owner);

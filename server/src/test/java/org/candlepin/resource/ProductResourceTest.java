@@ -95,10 +95,10 @@ public class ProductResourceTest extends DatabaseTestFixture {
         Owner owner = this.createOwner("Example-Corporation");
         ProductData productData = this.buildTestProductDTO();
 
-        assertNull(this.ownerProductCurator.getProductById(owner.getKey(), productData.getId()));
+        assertNull(this.productShareManager.resolveProductById(owner, productData.getId(), false));
 
         ProductData result = productResource.createProduct(productData);
-        Product entity = this.ownerProductCurator.getProductById(owner.getKey(), productData.getId());
+        Product entity = this.productShareManager.resolveProductById(owner, productData.getId(), false);
 
         assertNotNull(entity);
         assertFalse(entity.isChangedBy(result));
@@ -111,10 +111,10 @@ public class ProductResourceTest extends DatabaseTestFixture {
         ContentData contentData = TestUtil.createContentDTO();
         productData.addContent(contentData, true);
 
-        assertNull(this.ownerProductCurator.getProductById(owner.getKey(), productData.getId()));
+        assertNull(this.productShareManager.resolveProductById(owner, productData.getId(), false));
 
         ProductData result = productResource.createProduct(productData);
-        Product entity = this.ownerProductCurator.getProductById(owner.getKey(), productData.getId());
+        Product entity = this.productShareManager.resolveProductById(owner, productData.getId(), false);
 
         assertNotNull(entity);
         assertFalse(entity.isChangedBy(result));

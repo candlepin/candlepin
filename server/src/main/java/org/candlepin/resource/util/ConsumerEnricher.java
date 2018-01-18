@@ -14,10 +14,10 @@
  */
 package org.candlepin.resource.util;
 
+import org.candlepin.controller.OwnerProductShareManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.Product;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.compliance.DateRange;
@@ -25,7 +25,6 @@ import org.candlepin.policy.js.compliance.DateRange;
 import com.google.inject.Inject;
 
 import org.apache.commons.collections.CollectionUtils;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,12 +46,13 @@ public class ConsumerEnricher {
     private static final String GREEN_STATUS = "green";
 
     private ComplianceRules complianceRules;
-    private OwnerProductCurator ownerProductCurator;
+    private OwnerProductShareManager ownerProductShareManager;
 
     @Inject
-    public ConsumerEnricher(ComplianceRules complianceRules, OwnerProductCurator ownerProductCurator) {
+    public ConsumerEnricher(ComplianceRules complianceRules,
+        OwnerProductShareManager ownerProductShareManager) {
         this.complianceRules = complianceRules;
-        this.ownerProductCurator = ownerProductCurator;
+        this.ownerProductShareManager = ownerProductShareManager;
     }
 
     public void enrich(Consumer consumer) {
@@ -73,7 +73,8 @@ public class ConsumerEnricher {
             productIds.add(cip.getProductId());
         }
 
-        for (Product product : this.ownerProductCurator.getProductsByIds(consumer.getOwner(), productIds)) {
+        for (Product product :
+            this.ownerProductShareManager.resolveProductsByIds(consumer.getOwner(), productIds, true)) {
             productMap.put(product.getId(), product);
         }
 

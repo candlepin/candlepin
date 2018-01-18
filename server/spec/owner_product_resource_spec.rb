@@ -246,67 +246,6 @@ describe 'Owner Product Resource' do
     end
   end
 
-  it 'lists products in pages' do
-    @owner = create_owner random_string('test_owner')
-
-    prod1_id = "test_product-1"
-    prod2_id = "test_product-2"
-    prod3_id = "test_product-3"
-
-    # The creation order here is important. By default, Candlepin sorts in descending order of the
-    # entity's creation time, so we need to create them backward to let the default sorting order
-    # let us page through them in ascending order.
-    prod3 = create_product(prod3_id, random_string("test_name"))
-    sleep 1
-    prod2 = create_product(prod2_id, random_string("test_name"))
-    sleep 1
-    prod1 = create_product(prod1_id, random_string("test_name"))
-
-    p1set = @cp.list_products_by_owner(@owner['key'], nil, {:page=>1, :per_page=>1})
-    expect(p1set.size).to eq(1)
-    expect(p1set[0]['id']).to eq(prod1_id)
-
-    p2set = @cp.list_products_by_owner(@owner['key'], nil, {:page=>2, :per_page=>1})
-    expect(p2set.size).to eq(1)
-    expect(p2set[0]['id']).to eq(prod2_id)
-
-    p3set = @cp.list_products_by_owner(@owner['key'], nil, {:page=>3, :per_page=>1})
-    expect(p3set.size).to eq(1)
-    expect(p3set[0]['id']).to eq(prod3_id)
-
-    p4set = @cp.list_products_by_owner(@owner['key'], nil, {:page=>4, :per_page=>1})
-    expect(p4set.size).to eq(0)
-  end
-
-  it 'lists products in sorted pages' do
-    @owner = create_owner random_string('test_owner')
-
-    prod1_id = "test_product-1"
-    prod2_id = "test_product-2"
-    prod3_id = "test_product-3"
-
-    # The creation order here is important so we don't accidentally setup the correct ordering by
-    # default.
-    prod2 = create_product(prod2_id, random_string("test_name"))
-    prod1 = create_product(prod1_id, random_string("test_name"))
-    prod3 = create_product(prod3_id, random_string("test_name"))
-
-    p1set = @cp.list_products_by_owner(@owner['key'], nil, {:page=>1, :per_page=>1, :sort_by=>"id"})
-    expect(p1set.size).to eq(1)
-    expect(p1set[0]['id']).to eq(prod3_id)
-
-    p2set = @cp.list_products_by_owner(@owner['key'], nil, {:page=>2, :per_page=>1, :sort_by=>"id"})
-    expect(p2set.size).to eq(1)
-    expect(p2set[0]['id']).to eq(prod2_id)
-
-    p3set = @cp.list_products_by_owner(@owner['key'], nil, {:page=>3, :per_page=>1, :sort_by=>"id"})
-    expect(p3set.size).to eq(1)
-    expect(p3set[0]['id']).to eq(prod1_id)
-
-    p4set = @cp.list_products_by_owner(@owner['key'], nil, {:page=>4, :per_page=>1, :sort_by=>"id"})
-    expect(p4set.size).to eq(0)
-  end
-
   it 'should return correct exception for contraint violations' do
     lambda {
       prod = create_product(random_string("test_id"), random_string("test_name"), {

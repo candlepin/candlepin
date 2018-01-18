@@ -14,10 +14,21 @@
  */
 package org.candlepin.controller;
 
-import static org.hamcrest.Matchers.hasItems;
-import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyCollection;
+import static org.mockito.Matchers.anyCollectionOf;
+import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyListOf;
+import static org.mockito.Matchers.anyMap;
+import static org.mockito.Matchers.anyMapOf;
+import static org.mockito.Matchers.anySetOf;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.audit.Event;
@@ -55,7 +66,6 @@ import org.candlepin.model.Eventful;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolCurator;
@@ -84,12 +94,8 @@ import org.candlepin.policy.js.pool.PoolUpdate;
 import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
-import org.candlepin.test.MockResultIterator;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
-
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -104,6 +110,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
+
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -150,7 +159,7 @@ public class PoolManagerTest {
     @Mock private ContentManager mockContentManager;
     @Mock private OwnerCurator mockOwnerCurator;
     @Mock private OwnerContentCurator mockOwnerContentCurator;
-    @Mock private OwnerProductCurator mockOwnerProductCurator;
+    @Mock private OwnerProductShareManager mockOwnerProductShareManager;
     @Mock private OwnerManager mockOwnerManager;
     @Mock private PinsetterKernel pinsetterKernel;
     @Mock private BindChainFactory mockBindChainFactory;
@@ -190,7 +199,7 @@ public class PoolManagerTest {
             mockPoolCurator, mockEventSink, eventFactory, mockConfig, enforcerMock, poolRulesMock,
             entitlementCurator, consumerCuratorMock, certCuratorMock, mockECGenerator,
             complianceRules, autobindRules, activationKeyRules, mockProductCurator, mockProductManager,
-            mockContentManager, mockOwnerContentCurator, mockOwnerCurator, mockOwnerProductCurator,
+            mockContentManager, mockOwnerContentCurator, mockOwnerCurator, mockOwnerProductShareManager,
             mockOwnerManager, pinsetterKernel, i18n, mockBindChainFactory
         ));
 
@@ -412,11 +421,13 @@ public class PoolManagerTest {
     }
 
     private void mockProduct(Owner owner, Product p) {
-        when(mockOwnerProductCurator.getProductById(eq(owner), eq(p.getId()))).thenReturn(p);
+        when(mockOwnerProductShareManager.resolveProductById(eq(owner),
+            eq(p.getId()), eq(true)))
+            .thenReturn(p);
     }
 
     private void mockProducts(Owner owner, final Map<String, Product> products) {
-        when(mockOwnerProductCurator.getProductById(eq(owner), any(String.class)))
+        when(mockOwnerProductShareManager.resolveProductById(eq(owner), any(String.class), eq(true)))
             .thenAnswer(new Answer<Product>() {
                 @Override
                 public Product answer(InvocationOnMock invocation) throws Throwable {
@@ -427,10 +438,10 @@ public class PoolManagerTest {
                 }
             });
 
-        when(mockOwnerProductCurator.getProductsByIds(eq(owner), any(Collection.class)))
-            .thenAnswer(new Answer<CandlepinQuery<Product>>() {
+        when(mockOwnerProductShareManager.resolveProductsByIds(eq(owner), any(Collection.class), eq(true)))
+            .thenAnswer(new Answer<List<Product>>() {
                 @Override
-                public CandlepinQuery<Product> answer(InvocationOnMock invocation) throws Throwable {
+                public List<Product> answer(InvocationOnMock invocation) throws Throwable {
                     Object[] args = invocation.getArguments();
                     Collection<String> pids = (Collection<String>) args[1];
                     List<Product> output = new LinkedList<Product>();
@@ -443,12 +454,7 @@ public class PoolManagerTest {
                         }
                     }
 
-                    CandlepinQuery cqmock = mock(CandlepinQuery.class);
-                    when(cqmock.list()).thenReturn(output);
-                    when(cqmock.iterator()).thenReturn(output.iterator());
-                    when(cqmock.iterate()).thenReturn(new MockResultIterator(output.iterator()));
-
-                    return cqmock;
+                    return output;
                 }
             });
     }
@@ -538,7 +544,7 @@ public class PoolManagerTest {
         // Why is this test in pool manager? It looks like a pool rules test.
 
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator,
-            mockOwnerProductCurator, mockProductCurator);
+            mockOwnerProductShareManager, mockProductCurator);
         Product product = TestUtil.createProduct();
         product.setLocked(true);
 
@@ -573,7 +579,7 @@ public class PoolManagerTest {
         this.mockProducts(owner, product, subProduct);
 
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator,
-            mockOwnerProductCurator, mockProductCurator);
+            mockOwnerProductShareManager, mockProductCurator);
         List<Pool> pools = pRules.createAndEnrichPools(sub);
         assertEquals(1, pools.size());
 
@@ -595,7 +601,7 @@ public class PoolManagerTest {
         this.mockProducts(owner, product, subProduct);
 
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator,
-            mockOwnerProductCurator, mockProductCurator);
+            mockOwnerProductShareManager, mockProductCurator);
         List<Pool> pools = pRules.createAndEnrichPools(sub);
         assertEquals(1, pools.size());
 
@@ -618,7 +624,7 @@ public class PoolManagerTest {
         this.mockProducts(owner, product, subProduct, subProvidedProduct);
 
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator,
-            mockOwnerProductCurator, mockProductCurator);
+            mockOwnerProductShareManager, mockProductCurator);
         List<Pool> pools = pRules.createAndEnrichPools(sub);
         assertEquals(1, pools.size());
 
@@ -639,7 +645,7 @@ public class PoolManagerTest {
         this.mockProducts(owner, product);
 
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator,
-            mockOwnerProductCurator, mockProductCurator);
+            mockOwnerProductShareManager, mockProductCurator);
         List<Pool> pools = pRules.createAndEnrichPools(sub);
         assertEquals(1, pools.size());
 
@@ -1494,7 +1500,7 @@ public class PoolManagerTest {
     public void createPoolsForExistingSubscriptionsNoneExist() {
         Owner owner = this.getOwner();
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator,
-            mockOwnerProductCurator, mockProductCurator);
+            mockOwnerProductShareManager, mockProductCurator);
         List<Subscription> subscriptions = Util.newList();
         Product prod = TestUtil.createProduct();
         Set<Product> products = new HashSet<Product>();
@@ -1524,7 +1530,7 @@ public class PoolManagerTest {
     public void createPoolsForExistingPoolNoneExist() {
         Owner owner = this.getOwner();
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator,
-            mockOwnerProductCurator, mockProductCurator);
+            mockOwnerProductShareManager, mockProductCurator);
         Product prod = TestUtil.createProduct();
         prod.setAttribute(Product.Attributes.VIRT_LIMIT, "4");
         Pool p = TestUtil.createPool(owner, prod);
@@ -1543,7 +1549,7 @@ public class PoolManagerTest {
     public void createPoolsForExistingSubscriptionsMasterExist() {
         Owner owner = this.getOwner();
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator,
-            mockOwnerProductCurator, mockProductCurator);
+            mockOwnerProductShareManager, mockProductCurator);
         List<Subscription> subscriptions = Util.newList();
         Product prod = TestUtil.createProduct();
         Set<Product> products = new HashSet<Product>();
@@ -1572,7 +1578,7 @@ public class PoolManagerTest {
         Product prod = TestUtil.createProduct();
         prod.setAttribute(Product.Attributes.VIRT_LIMIT, "4");
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator,
-            mockOwnerProductCurator, mockProductCurator);
+            mockOwnerProductShareManager, mockProductCurator);
         List<Pool> existingPools = new LinkedList<Pool>();
         Pool p = TestUtil.createPool(prod);
         p.setSourceSubscription(new SourceSubscription(TestUtil.randomString(), "master"));
@@ -1586,7 +1592,7 @@ public class PoolManagerTest {
     public void createPoolsForExistingSubscriptionsBonusExist() {
         Owner owner = this.getOwner();
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator,
-            mockOwnerProductCurator, mockProductCurator);
+            mockOwnerProductShareManager, mockProductCurator);
         List<Subscription> subscriptions = Util.newList();
         Product prod = TestUtil.createProduct();
         Set<Product> products = new HashSet<Product>();
@@ -1615,7 +1621,7 @@ public class PoolManagerTest {
     public void createPoolsForPoolBonusExist() {
         Owner owner = this.getOwner();
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator,
-            mockOwnerProductCurator, mockProductCurator);
+            mockOwnerProductShareManager, mockProductCurator);
         Product prod = TestUtil.createProduct();
         prod.setAttribute(Product.Attributes.VIRT_LIMIT, "4");
         List<Pool> existingPools = new LinkedList<Pool>();

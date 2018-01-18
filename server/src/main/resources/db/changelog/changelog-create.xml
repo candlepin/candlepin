@@ -1224,4 +1224,5 @@
     <include file="db/changelog/20171023140857-add-modified-prods-index.xml"/>
     <include file="db/changelog/20171017062314-add-target-index-on-job-table.xml"/>
     <include file="db/changelog/20180102110530-create-owner-refresh-date-column.xml"/>
+    <include file="db/changelog/20180117092637-add-owner-product-share-table.xml"/>
 </databaseChangeLog>

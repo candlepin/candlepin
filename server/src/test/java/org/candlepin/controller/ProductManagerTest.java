@@ -17,7 +17,6 @@ package org.candlepin.controller;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.AdditionalAnswers.*;
 
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
@@ -54,7 +53,8 @@ public class ProductManagerTest extends DatabaseTestFixture {
         this.mockEntCertGenerator = mock(EntitlementCertificateGenerator.class);
 
         this.productManager = new ProductManager(
-            this.mockEntCertGenerator, this.ownerContentCurator, this.ownerProductCurator, this.productCurator
+            this.mockEntCertGenerator, this.ownerContentCurator, this.ownerProductCurator,
+            this.productCurator, this.productShareManager
         );
     }
 
@@ -63,11 +63,11 @@ public class ProductManagerTest extends DatabaseTestFixture {
         Owner owner = this.createOwner("test-owner", "Test Owner");
         ProductData dto = TestUtil.createProductDTO("p1", "prod1");
 
-        assertNull(this.ownerProductCurator.getProductById(owner, "p1"));
+        assertNull(this.productShareManager.resolveProductById(owner, "p1", false));
 
         Product output = this.productManager.createProduct(dto, owner);
 
-        assertEquals(output, this.ownerProductCurator.getProductById(owner, "p1"));
+        assertEquals(output, this.productShareManager.resolveProductById(owner, "p1", false));
     }
 
     @Test(expected = IllegalStateException.class)
@@ -78,7 +78,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         Product output = this.productManager.createProduct(dto, owner);
 
         assertNotNull(output);
-        assertEquals(output, this.ownerProductCurator.getProductById(owner, dto.getId()));
+        assertEquals(output, this.productShareManager.resolveProductById(owner, dto.getId(), false));
 
         this.productManager.createProduct(dto, owner);
     }
@@ -128,7 +128,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         // gets around to removing them
         assertNotNull(this.productCurator.find(product.getUuid()));
         assertEquals(0, this.ownerProductCurator.getOwnerCount(product));
-        assertNotNull(this.ownerProductCurator.getProductById(owner, product.getId()));
+        assertNotNull(this.productShareManager.resolveProductById(owner, product.getId(), false));
 
         if (regenCerts) {
             // TODO: Is there a better way to do this? We won't know the exact product instance,
@@ -294,7 +294,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         // until the orphan cleanup job has a chance to run and remove them.
         assertNotNull(this.productCurator.find(product.getUuid()));
         assertEquals(0, this.ownerProductCurator.getOwnerCount(product));
-        assertNotNull(this.ownerProductCurator.getProductById(owner, product.getId()));
+        assertNotNull(this.productShareManager.resolveProductById(owner, product.getId(), false));
         assertNotNull(this.contentCurator.find(content.getUuid()));
 
         if (regenCerts) {

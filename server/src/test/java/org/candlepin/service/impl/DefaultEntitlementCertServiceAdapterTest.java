@@ -313,9 +313,9 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set empty = new HashSet<String>();
         when(productCurator.getPoolProvidedProductUuids(anyString())).thenReturn(empty);
 
-        // when(productAdapter.getProductById(eq(product.getOwner()), eq(product.getId())))
+        // when(productAdapter.resolveProductById(eq(product.getOwner()), eq(product.getId())))
         //     .thenReturn(product);
-        // when(productAdapter.getProductById(
+        // when(productAdapter.resolveProductById(
         //     eq(largeContentProduct.getOwner()), eq(largeContentProduct.getId()))
         // ).thenReturn(largeContentProduct);
     }

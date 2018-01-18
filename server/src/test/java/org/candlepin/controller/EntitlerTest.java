@@ -96,6 +96,7 @@ public class EntitlerTest {
     @Mock private ProductServiceAdapter productAdapter;
     @Mock private ProductManager productManager;
     @Mock private ContentManager contentManager;
+    @Mock private OwnerProductShareManager productShareManager;
 
     private ValidationResult fakeOutResult(String msg) {
         ValidationResult result = new ValidationResult();
@@ -120,7 +121,7 @@ public class EntitlerTest {
     }
 
     private void mockProducts(Owner owner, final Map<String, Product> products) {
-        when(ownerProductCurator.getProductById(eq(owner), any(String.class)))
+        when(productShareManager.resolveProductById(eq(owner), any(String.class), eq(true)))
             .thenAnswer(new Answer<Product>() {
                 @Override
                 public Product answer(InvocationOnMock invocation) throws Throwable {
@@ -131,7 +132,7 @@ public class EntitlerTest {
                 }
             });
 
-        when(ownerProductCurator.getProductsByIds(eq(owner), any(Collection.class)))
+        when(productShareManager.resolveProductsByIds(eq(owner), any(Collection.class), eq(true)))
             .thenAnswer(new Answer<Collection<Product>>() {
                 @Override
                 public Collection<Product> answer(InvocationOnMock invocation) throws Throwable {
@@ -614,7 +615,7 @@ public class EntitlerTest {
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(true);
         when(poolCurator.hasActiveEntitlementPools(eq(owner), any(Date.class))).thenReturn(true);
         when(productAdapter.getProductsByIds(any(Owner.class), any(List.class))).thenReturn(devProdDTOs);
-        when(ownerProductCurator.getProductById(eq(owner), eq(p.getId()))).thenReturn(p);
+        when(productShareManager.resolveProductById(eq(owner), eq(p.getId()), eq(true))).thenReturn(p);
 
         AutobindData ad = new AutobindData(devSystem);
         entitler.bindByProducts(ad);
@@ -634,7 +635,7 @@ public class EntitlerTest {
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
         when(poolCurator.hasActiveEntitlementPools(eq(owner), any(Date.class))).thenReturn(false);
         when(productAdapter.getProductsByIds(any(Owner.class), any(List.class))).thenReturn(devProdDTOs);
-        when(ownerProductCurator.getProductById(eq(owner), eq(p.getId()))).thenReturn(p);
+        when(productShareManager.resolveProductById(eq(owner), eq(p.getId()), eq(true))).thenReturn(p);
 
         AutobindData ad = new AutobindData(devSystem);
         entitler.bindByProducts(ad);
@@ -672,8 +673,8 @@ public class EntitlerTest {
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
         when(poolCurator.hasActiveEntitlementPools(eq(owner), any(Date.class))).thenReturn(true);
         when(productAdapter.getProductsByIds(any(Owner.class), any(List.class))).thenReturn(devProdDTOs);
-        when(ownerProductCurator.getProductById(eq(owner), eq(p.getId()))).thenReturn(p);
-        when(ownerProductCurator.getProductById(eq(owner), eq(ip.getId()))).thenReturn(ip);
+        when(productShareManager.resolveProductById(eq(owner), eq(p.getId()), eq(false))).thenReturn(p);
+        when(productShareManager.resolveProductById(eq(owner), eq(ip.getId()), eq(false))).thenReturn(ip);
 
         mockUpdateProduct(p, owner);
         mockUpdateProduct(ip, owner);

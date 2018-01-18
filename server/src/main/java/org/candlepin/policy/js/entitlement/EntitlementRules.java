@@ -20,21 +20,19 @@ import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.controller.OwnerProductShareManager;
+import org.candlepin.controller.OwnerProductShareManager.ResolvedProduct;
 import org.candlepin.controller.PoolManager;
-import org.candlepin.controller.ProductManager;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.OwnerProductCurator;
-import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.model.ProductShare;
-import org.candlepin.model.ProductShareCurator;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
@@ -84,9 +82,7 @@ public class EntitlementRules implements Enforcer {
     private ProductCurator productCurator;
     private RulesObjectMapper objectMapper = null;
     private OwnerCurator ownerCurator;
-    private OwnerProductCurator ownerProductCurator;
-    private ProductShareCurator shareCurator;
-    private ProductManager productManager;
+    private OwnerProductShareManager shareManager;
     private EventSink eventSink;
     private EventFactory eventFactory;
 
@@ -95,11 +91,8 @@ public class EntitlementRules implements Enforcer {
     @Inject
     public EntitlementRules(DateSource dateSource,
         JsRunner jsRules, I18n i18n, Configuration config, ConsumerCurator consumerCurator,
-        ProductCurator productCurator, RulesObjectMapper mapper,
-        OwnerCurator ownerCurator, OwnerProductCurator ownerProductCurator,
-        ProductShareCurator productShareCurator, ProductManager productManager, EventSink eventSink,
-        EventFactory eventFactory) {
-
+        ProductCurator productCurator, RulesObjectMapper mapper, OwnerCurator ownerCurator,
+        OwnerProductShareManager shareManager, EventSink eventSink, EventFactory eventFactory) {
         this.jsRules = jsRules;
         this.dateSource = dateSource;
         this.i18n = i18n;
@@ -108,9 +101,7 @@ public class EntitlementRules implements Enforcer {
         this.productCurator = productCurator;
         this.objectMapper = mapper;
         this.ownerCurator = ownerCurator;
-        this.ownerProductCurator = ownerProductCurator;
-        this.shareCurator = productShareCurator;
-        this.productManager = productManager;
+        this.shareManager = shareManager;
         this.eventSink = eventSink;
         this.eventFactory = eventFactory;
         jsRules.init("entitlement_name_space");
@@ -646,9 +637,23 @@ public class EntitlementRules implements Enforcer {
             if (sourcePool.getDerivedProvidedProducts() != null) {
                 allProducts.addAll(sourcePool.getDerivedProvidedProducts());
             }
-            Map<String, Product> resolvedProducts =
-                resolveProductShares(sharingOwner, recipient, allProducts);
-            Product product = resolvedProducts.get(sourcePool.getProduct().getId());
+            Map<String, ResolvedProduct> resolvedProducts =
+                shareManager.resolveProductsAndUpdateProductShares(sharingOwner, recipient, allProducts);
+
+            Map<String, Product> refreshRequiredProducts = new HashMap<String, Product>();
+            for (ResolvedProduct resolvedProduct : resolvedProducts.values()) {
+                if (resolvedProduct.isRefreshDue()) {
+                    refreshRequiredProducts.put(resolvedProduct.getProduct().getId(),
+                        resolvedProduct.getProduct());
+                    EventBuilder builder =
+                        eventFactory.getEventBuilder(Event.Target.PRODUCT, Event.Type.MODIFIED);
+                    builder.setEventData(resolvedProduct.getProduct());
+                    eventSink.queueEvent(builder.buildEvent());
+                }
+            }
+            poolManager.refreshAffectedPools(recipient, refreshRequiredProducts);
+
+            Product product = resolvedProducts.get(sourcePool.getProduct().getId()).getProduct();
 
             Set<Product> providedProducts = copySetFromResolved(sourcePool.getProvidedProducts(),
                 resolvedProducts);
@@ -668,7 +673,8 @@ public class EntitlementRules implements Enforcer {
                 sourcePool.getOrderNumber()
             );
             if (sourcePool.getDerivedProduct() != null) {
-                Product derivedProduct = resolvedProducts.get(sourcePool.getDerivedProduct().getId());
+                Product derivedProduct =
+                    resolvedProducts.get(sourcePool.getDerivedProduct().getId()).getProduct();
                 sharedPool.setDerivedProduct(derivedProduct);
             }
             Set<Product> derivedProvidedProducts = copySetFromResolved(
@@ -706,112 +712,19 @@ public class EntitlementRules implements Enforcer {
         if (CollectionUtils.isNotEmpty(sharedPoolsToCreate)) {
             poolManager.createPools(sharedPoolsToCreate);
         }
+
+        eventSink.sendEvents();
     }
 
-    private Set<Product> copySetFromResolved(Set<Product> products, Map<String, Product> resolvedProducts) {
+    private Set<Product> copySetFromResolved(Set<Product> products,
+        Map<String, ResolvedProduct> resolvedProducts) {
         Set<Product> result = new HashSet<Product>();
         if (products != null) {
             for (Product product : products) {
-                result.add(resolvedProducts.get(product.getId()));
+                result.add(resolvedProducts.get(product.getId()).getProduct());
             }
         }
         return result;
-    }
-
-    private Map<String, Product> resolveProductShares(Owner sharingOwner, Owner recipient,
-        Set<Product> products) {
-        Map<String, Product> sharedProductsIdMap = new HashMap<String, Product>();
-        Map<String, Product> sharedProductsUuidMap = new HashMap<String, Product>();
-        Map<String, Product> resolvedProducts = new HashMap<String, Product>();
-        List<Event> events = new LinkedList<Event>();
-        List<ProductShare> sharesToDelete = new LinkedList<ProductShare>();
-        List<ProductShare> sharesToCreate = new LinkedList<ProductShare>();
-        Map<String, ProductShare> existingSharesMap = new HashMap<String, ProductShare>();
-
-        for (Product product: products) {
-            sharedProductsIdMap.put(product.getId(), product);
-            sharedProductsUuidMap.put(product.getUuid(), product);
-        }
-        List<Product> recipientProducts = ownerProductCurator.getProductsByIds(
-            recipient, sharedProductsIdMap.keySet()).list();
-
-        for (Product product: recipientProducts) {
-            Map<String, Product> conflictedRecipientProducts = new HashMap<String, Product>();
-            if (sharedProductsUuidMap.containsKey(product.getUuid())) {
-                // Recipient has a product with the same ID already.  If they are the same instance
-                // use then nothing needs doing.  Everything is already in place.
-                resolvedProducts.put(product.getId(), product);
-                log.debug("Owner {} has the same product {} as the sharer {}",
-                    recipient.getKey(), product.getId(), sharingOwner.getKey());
-            }
-            else {
-                // The recipient and owner have two products with the same ID but they are different
-                // instances since their uuids do not match.
-                conflictedRecipientProducts.put(product.getId(), product);
-            }
-
-            if (conflictedRecipientProducts.size() > 0) {
-                List<ProductShare> existingShares = shareCurator.findProductSharesByRecipient(
-                    recipient, conflictedRecipientProducts.keySet());
-
-                for (ProductShare pShare: existingShares) {
-                    existingSharesMap.put(pShare.getProduct().getId(), pShare);
-                }
-            }
-
-            for (String id: conflictedRecipientProducts.keySet()) {
-                if (!existingSharesMap.containsKey(id)) {
-                    // If the recipient's product isn't from a share, let the recipient just continue to
-                    // use its existing product definition.
-                    log.debug("Owner {} already has product {} defined that is not a share",
-                        recipient.getKey(), id);
-                    resolvedProducts.put(id, conflictedRecipientProducts.get(id));
-                }
-                else {
-                    // If the recipient's product is a share then two owners are sharing into the same
-                    // recipient and we must resolve the conflict.
-                    Product sharingOwnerProduct = sharedProductsIdMap.get(id);
-                    Product existingProduct = conflictedRecipientProducts.get(id);
-                    ProductShare existingShare = existingSharesMap.get(id);
-                    log.debug("Owner {} already has a share for Product {} from owner {}. Solving conflict.",
-                        recipient.getKey(), id, existingShare.getOwner());
-
-                    EventBuilder builder = eventFactory.getEventBuilder(
-                        Event.Target.PRODUCT, Event.Type.MODIFIED);
-                    builder.setEventData(existingProduct);
-                    sharesToDelete.add(existingShare);
-                    sharesToCreate.add(new ProductShare(sharingOwner, sharingOwnerProduct, recipient));
-                    // Now we need to reconcile all of recipient's pools that were using the old product.
-                    Product resolvedProduct = productManager.updateProduct(
-                        sharingOwnerProduct.toDTO(), recipient, true);
-                    builder.setEventData(resolvedProduct);
-                    resolvedProducts.put(resolvedProduct.getId(), resolvedProduct);
-                    events.add(builder.buildEvent());
-                }
-            }
-
-        }
-
-        Set<String> idsNonExisting = new HashSet<String>(sharedProductsIdMap.keySet());
-        idsNonExisting.removeAll(resolvedProducts.keySet());
-
-        for (String id: idsNonExisting) {
-            // The recipient doesn't have a definition for the product at all.  Link the recipient
-            // and product and create a record of a share.
-            log.debug("Linking product {} from owner {} to owner {} as product share",
-                id, sharingOwner.getKey(), recipient.getKey());
-            Product sharedProduct = sharedProductsIdMap.get(id);
-            ownerProductCurator.mapProductToOwner(sharedProduct, recipient);
-            sharesToCreate.add(new ProductShare(sharingOwner, sharedProduct, recipient));
-            resolvedProducts.put(id, sharedProduct);
-        }
-
-        shareCurator.bulkDelete(sharesToDelete);
-        shareCurator.saveOrUpdateAll(sharesToCreate, false, false);
-        for (Event event: events) {
-            eventSink.queueEvent(event);
-        }
-        return resolvedProducts;
     }
 
     private void postBindVirtLimit(PoolManager poolManager, Consumer c,

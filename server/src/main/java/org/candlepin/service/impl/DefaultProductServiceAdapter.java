@@ -14,13 +14,12 @@
  */
 package org.candlepin.service.impl;
 
+import org.candlepin.controller.OwnerProductShareManager;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
-import org.candlepin.model.ResultIterator;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.UniqueIdGenerator;
@@ -30,23 +29,22 @@ import com.google.inject.persist.Transactional;
 
 import java.util.Collection;
 import java.util.LinkedList;
-
-
+import java.util.List;
 
 /**
  * Default implementation of the ProductserviceAdapter.
  */
 public class DefaultProductServiceAdapter implements ProductServiceAdapter {
 
-    private OwnerProductCurator ownerProductCurator;
+    private OwnerProductShareManager ownerProductShareManager;
     private ProductCertificateCurator prodCertCurator;
 
     @Inject
-    public DefaultProductServiceAdapter(OwnerProductCurator ownerProductCurator,
+    public DefaultProductServiceAdapter(OwnerProductShareManager ownerProductShareManager,
         ProductCertificateCurator prodCertCurator, ContentCurator contentCurator,
         UniqueIdGenerator idGenerator) {
 
-        this.ownerProductCurator = ownerProductCurator;
+        this.ownerProductShareManager = ownerProductShareManager;
         this.prodCertCurator = prodCertCurator;
     }
 
@@ -54,26 +52,19 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
     public ProductCertificate getProductCertificate(Owner owner, String productId) {
         // for product cert storage/generation - not sure if this should go in
         // a separate service?
-        Product entity = this.ownerProductCurator.getProductById(owner, productId);
+        Product entity = this.ownerProductShareManager.resolveProductById(owner, productId, true);
         return entity != null ? this.prodCertCurator.getCertForProduct(entity) : null;
     }
 
     @Override
     @Transactional
     public Collection<ProductData> getProductsByIds(Owner owner, Collection<String> ids) {
-        Collection<ProductData> productData = new LinkedList<ProductData>();
-
-        ResultIterator<Product> iterator = this.ownerProductCurator
-            .getProductsByIds(owner, ids)
-            .iterate(0, true);
-
-        while (iterator.hasNext()) {
-            productData.add(iterator.next().toDTO());
+        List<Product> products = this.ownerProductShareManager.resolveProductsByIds(owner, ids, true);
+        List<ProductData> productList = new LinkedList<ProductData>();
+        for (Product product : products) {
+            productList.add(product.toDTO());
         }
-
-        iterator.close();
-
-        return productData;
+        return productList;
     }
 
 }

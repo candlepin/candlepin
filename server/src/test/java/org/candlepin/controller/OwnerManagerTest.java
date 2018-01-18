@@ -27,6 +27,7 @@ import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerEnvContentAccessCurator;
 import org.candlepin.model.OwnerProductCurator;
+import org.candlepin.model.OwnerProductShareCurator;
 import org.candlepin.model.PermissionBlueprintCurator;
 import org.candlepin.model.UeberCertificateCurator;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
@@ -80,6 +81,8 @@ public class OwnerManagerTest {
     private UeberCertificateCurator uberCertificateCurator;
     @Mock
     private OwnerServiceAdapter ownerServiceAdapter;
+    @Mock
+    private OwnerProductShareCurator ownerProductShareCurator;
 
     @Before
     public void setUp() {
@@ -87,7 +90,7 @@ public class OwnerManagerTest {
             exportCurator, importRecordCurator, permissionCurator, ownerProductCurator, productManager,
             ownerContentCurator, contentManager, ownerCurator, contentAccessCertService,
             contentAccessCertCurator, ownerEnvContentAccessCurator, uberCertificateCurator,
-            ownerServiceAdapter);
+            ownerServiceAdapter, ownerProductShareCurator);
     }
 
     @Test

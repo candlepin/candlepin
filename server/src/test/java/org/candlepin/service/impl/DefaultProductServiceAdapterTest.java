@@ -15,20 +15,20 @@
 package org.candlepin.service.impl;
 
 import static org.junit.Assert.*;
-import static org.mockito.AdditionalAnswers.returnsFirstArg;
-import static org.mockito.Matchers.*;
+import static org.mockito.AdditionalAnswers.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyCollection;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.model.CandlepinQuery;
+import org.candlepin.controller.OwnerProductShareManager;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
-import org.candlepin.model.ResultIterator;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.test.TestUtil;
@@ -50,7 +50,7 @@ import java.util.List;
 public class DefaultProductServiceAdapterTest {
     private String someid = "deadbeef";
     private DefaultProductServiceAdapter dpsa;
-    private OwnerProductCurator opc;
+    private OwnerProductShareManager opsm;
     private ProductCertificateCurator pcc;
     private UniqueIdGenerator idgen;
     private PKIUtility pki;
@@ -59,7 +59,7 @@ public class DefaultProductServiceAdapterTest {
 
     @Before
     public void init() {
-        opc = mock(OwnerProductCurator.class);
+        opsm = mock(OwnerProductShareManager.class);
         idgen = mock(UniqueIdGenerator.class);
         Configuration config = mock(Configuration.class);
         pki = mock(PKIUtility.class);
@@ -67,23 +67,24 @@ public class DefaultProductServiceAdapterTest {
         cc = mock(ContentCurator.class);
         pcc = spy(new ProductCertificateCurator(pki, extUtil));
         when(config.getBoolean(ConfigProperties.ENV_CONTENT_FILTERING)).thenReturn(false);
-        dpsa = new DefaultProductServiceAdapter(opc, pcc, cc, idgen);
+        dpsa = new DefaultProductServiceAdapter(opsm, pcc, cc, idgen);
     }
 
     @Test
     public void productsByIds() {
         Owner o = mock(Owner.class);
+        Product p1 = mock(Product.class);
+        Product p2 = mock(Product.class);
+        List<Product> products = new ArrayList<Product>();
+        products.add(p1);
+        products.add(p2);
+        when(opsm.resolveProductsByIds(any(Owner.class), anyCollection(), eq(true))).thenReturn(products);
         List<String> ids = new ArrayList<String>();
-        CandlepinQuery<Product> ccmock = mock(CandlepinQuery.class);
-        ResultIterator<Product> iterator = mock(ResultIterator.class);
-
-        when(opc.getProductsByIds(any(Owner.class), anyCollection())).thenReturn(ccmock);
-        when(ccmock.iterate(anyInt(), anyBoolean())).thenReturn(iterator);
-
         ids.add(someid);
-
         dpsa.getProductsByIds(o, ids);
-        verify(opc).getProductsByIds(eq(o), eq(ids));
+        verify(opsm).resolveProductsByIds(eq(o), eq(ids), eq(true));
+        verify(p1).toDTO();
+        verify(p2).toDTO();
     }
 
     @Test
@@ -92,7 +93,7 @@ public class DefaultProductServiceAdapterTest {
         Product product = TestUtil.createProduct("test_product");
         ProductCertificate cert = mock(ProductCertificate.class);
 
-        when(opc.getProductById(eq(owner), eq(product.getId()))).thenReturn(product);
+        when(opsm.resolveProductById(eq(owner), eq(product.getId()), eq(true))).thenReturn(product);
         doReturn(cert).when(pcc).findForProduct(eq(product));
 
         ProductCertificate result = dpsa.getProductCertificate(owner, product.getId());
@@ -107,7 +108,7 @@ public class DefaultProductServiceAdapterTest {
         Product product = TestUtil.createProduct("test_product");
         ProductCertificate cert = mock(ProductCertificate.class);
 
-        when(opc.getProductById(eq(owner), eq(product.getId()))).thenReturn(product);
+        when(opsm.resolveProductById(eq(owner), eq(product.getId()), eq(true))).thenReturn(product);
         doAnswer(returnsFirstArg()).when(pcc).create(any(ProductCertificate.class));
         doReturn(null).when(pcc).findForProduct(eq(product));
 

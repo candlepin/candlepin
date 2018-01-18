@@ -16,11 +16,11 @@ package org.candlepin.resource;
 
 import org.candlepin.auth.Verify;
 import org.candlepin.common.exceptions.BadRequestException;
+import org.candlepin.controller.OwnerProductShareManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.activationkeys.ActivationKey;
@@ -66,7 +66,7 @@ import io.swagger.annotations.Authorization;
 public class ActivationKeyResource {
     private static Logger log = LoggerFactory.getLogger(ActivationKeyResource.class);
     private ActivationKeyCurator activationKeyCurator;
-    private OwnerProductCurator ownerProductCurator;
+    private OwnerProductShareManager ownerProductShareManager;
     private PoolManager poolManager;
     private I18n i18n;
     private ServiceLevelValidator serviceLevelValidator;
@@ -76,7 +76,7 @@ public class ActivationKeyResource {
     @Inject
     public ActivationKeyResource(ActivationKeyCurator activationKeyCurator, I18n i18n,
         PoolManager poolManager, ServiceLevelValidator serviceLevelValidator,
-        ActivationKeyRules activationKeyRules, OwnerProductCurator ownerProductCurator,
+        ActivationKeyRules activationKeyRules, OwnerProductShareManager ownerProductShareManager,
         ProductCachedSerializationModule productCachedModule) {
 
         this.activationKeyCurator = activationKeyCurator;
@@ -84,7 +84,7 @@ public class ActivationKeyResource {
         this.poolManager = poolManager;
         this.serviceLevelValidator = serviceLevelValidator;
         this.activationKeyRules = activationKeyRules;
-        this.ownerProductCurator = ownerProductCurator;
+        this.ownerProductShareManager = ownerProductShareManager;
         this.productCachedModule = productCachedModule;
     }
 
@@ -280,7 +280,7 @@ public class ActivationKeyResource {
     }
 
     private Product confirmProduct(Owner o, String prodId) {
-        Product prod = this.ownerProductCurator.getProductById(o, prodId);
+        Product prod = this.ownerProductShareManager.resolveProductById(o, prodId, true);
 
         if (prod == null) {
             throw new BadRequestException(i18n.tr("Product with id {0} could not be found.", prodId));

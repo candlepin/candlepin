@@ -16,12 +16,12 @@ package org.candlepin.policy.js.pool;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.controller.OwnerProductShareManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
@@ -59,17 +59,17 @@ public class PoolRules {
     private PoolManager poolManager;
     private Configuration config;
     private EntitlementCurator entCurator;
-    private OwnerProductCurator ownerProductCurator;
+    private OwnerProductShareManager shareManager;
     private ProductCurator productCurator;
 
     @Inject
     public PoolRules(PoolManager poolManager, Configuration config, EntitlementCurator entCurator,
-        OwnerProductCurator ownerProductCurator, ProductCurator productCurator) {
+        OwnerProductShareManager shareManager, ProductCurator productCurator) {
 
         this.poolManager = poolManager;
         this.config = config;
         this.entCurator = entCurator;
-        this.ownerProductCurator = ownerProductCurator;
+        this.shareManager = shareManager;
         this.productCurator = productCurator;
     }
 
@@ -197,7 +197,7 @@ public class PoolRules {
             // Using derived here because only one derived pool is created for
             // this subscription
             Pool bonusPool = PoolHelper.clonePool(masterPool, sku, virtQuantity, virtAttributes, "derived",
-                ownerProductCurator, null, productCurator);
+                shareManager, null, productCurator);
 
             log.info("Creating new derived pool: {}", bonusPool);
             return bonusPool;

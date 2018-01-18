@@ -15,8 +15,7 @@
 package org.candlepin;
 
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.audit.EventSink;
 import org.candlepin.audit.NoopEventSinkImpl;
@@ -79,8 +78,8 @@ import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.service.UserServiceAdapter;
-import org.candlepin.service.impl.DefaultExportExtensionAdapter;
 import org.candlepin.service.impl.DefaultContentAccessCertServiceAdapter;
+import org.candlepin.service.impl.DefaultExportExtensionAdapter;
 import org.candlepin.service.impl.DefaultIdentityCertServiceAdapter;
 import org.candlepin.service.impl.DefaultOwnerServiceAdapter;
 import org.candlepin.service.impl.DefaultProductServiceAdapter;
@@ -90,10 +89,10 @@ import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
 import org.candlepin.service.impl.stub.StubEntitlementCertServiceAdapter;
 import org.candlepin.sync.file.DBManifestService;
 import org.candlepin.sync.file.ManifestFileService;
-import org.candlepin.test.VerifyAuthorizationFilterFactory;
 import org.candlepin.test.DateSourceForTesting;
 import org.candlepin.test.EnforcerForTesting;
 import org.candlepin.test.PKIReaderForTesting;
+import org.candlepin.test.VerifyAuthorizationFilterFactory;
 import org.candlepin.util.DateSource;
 import org.candlepin.util.ExpiryDateFunction;
 import org.candlepin.util.Util;

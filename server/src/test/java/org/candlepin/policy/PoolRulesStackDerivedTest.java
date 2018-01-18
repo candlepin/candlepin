@@ -14,18 +14,16 @@
  */
 package org.candlepin.policy;
 
-import static org.hamcrest.Matchers.hasItems;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.AdditionalAnswers.returnsFirstArg;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
+import static org.mockito.AdditionalAnswers.*;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.controller.OwnerProductShareManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
@@ -34,7 +32,6 @@ import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
@@ -78,7 +75,7 @@ public class PoolRulesStackDerivedTest {
     private Consumer consumer;
 
     @Mock private RulesCurator rulesCuratorMock;
-    @Mock private OwnerProductCurator ownerProductCuratorMock;
+    @Mock private OwnerProductShareManager ownerProductShareManager;
     @Mock private PoolManager poolManagerMock;
     @Mock private Configuration configMock;
     @Mock private EntitlementCurator entCurMock;
@@ -128,7 +125,7 @@ public class PoolRulesStackDerivedTest {
 
         when(configMock.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
 
-        poolRules = new PoolRules(poolManagerMock, configMock, entCurMock, ownerProductCuratorMock,
+        poolRules = new PoolRules(poolManagerMock, configMock, entCurMock, ownerProductShareManager,
             productCurator);
         principal = TestUtil.createOwnerPrincipal();
         owner = principal.getOwners().get(0);
@@ -141,19 +138,19 @@ public class PoolRulesStackDerivedTest {
         prod1.setAttribute(Product.Attributes.VIRT_LIMIT, "2");
         prod1.setAttribute(Product.Attributes.STACKING_ID, STACK);
         prod1.setAttribute("testattr1", "1");
-        when(ownerProductCuratorMock.getProductById(owner, prod1.getId())).thenReturn(prod1);
+        when(ownerProductShareManager.resolveProductById(owner, prod1.getId(), true)).thenReturn(prod1);
 
         prod2 = TestUtil.createProduct("prod2", "prod2");
         prod2.setAttribute(Product.Attributes.VIRT_LIMIT, "unlimited");
         prod2.setAttribute(Product.Attributes.STACKING_ID, STACK);
         prod2.setAttribute("testattr2", "2");
-        when(ownerProductCuratorMock.getProductById(owner, prod2.getId())).thenReturn(prod2);
+        when(ownerProductShareManager.resolveProductById(owner, prod2.getId(), true)).thenReturn(prod2);
 
         prod3 = TestUtil.createProduct("prod3", "prod3");
         prod3.setAttribute(Product.Attributes.VIRT_LIMIT, "9");
         prod3.setAttribute(Product.Attributes.STACKING_ID, STACK + "3");
         prod3.setAttribute("testattr2", "2");
-        when(ownerProductCuratorMock.getProductById(owner, prod3.getId())).thenReturn(prod3);
+        when(ownerProductShareManager.resolveProductById(owner, prod3.getId(), true)).thenReturn(prod3);
 
         provided1 = TestUtil.createProduct();
         provided2 = TestUtil.createProduct();

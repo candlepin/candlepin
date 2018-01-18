@@ -15,10 +15,13 @@
 package org.candlepin.resource.util;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyCollection;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.audit.EventSink;
+import org.candlepin.controller.OwnerProductShareManager;
 import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
@@ -29,7 +32,6 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
@@ -44,7 +46,6 @@ import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.compliance.DateRange;
 import org.candlepin.policy.js.compliance.StatusReasonMessageGenerator;
 import org.candlepin.test.TestUtil;
-import org.candlepin.test.MockResultIterator;
 import org.candlepin.util.Util;
 
 import com.google.inject.Provider;
@@ -57,7 +58,6 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
-
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -92,7 +92,7 @@ public class InstalledProductStatusCalculatorTest {
     @Mock private JsRunnerRequestCache cache;
     @Mock private PoolCurator poolCurator;
     @Mock private ProductCurator productCurator;
-    @Mock private OwnerProductCurator ownerProductCurator;
+    @Mock private OwnerProductShareManager ownerProductShareManager;
 
     private JsRunnerProvider provider;
     private I18n i18n;
@@ -120,7 +120,7 @@ public class InstalledProductStatusCalculatorTest {
         this.complianceRules = new ComplianceRules(provider.get(), this.entCurator,
             new StatusReasonMessageGenerator(i18n), eventSink, this.consumerCurator, objectMapper);
 
-        this.consumerEnricher = new ConsumerEnricher(this.complianceRules, this.ownerProductCurator);
+        this.consumerEnricher = new ConsumerEnricher(this.complianceRules, this.ownerProductShareManager);
     }
 
     @Test
@@ -911,13 +911,13 @@ public class InstalledProductStatusCalculatorTest {
             productMap.put(product.getId(), product);
         }
 
-        doAnswer(new Answer<CandlepinQuery<Product>>() {
+        doAnswer(new Answer<List<Product>>() {
             @Override
-            public CandlepinQuery<Product> answer(InvocationOnMock invocation) throws Throwable {
+            public List<Product> answer(InvocationOnMock invocation) throws Throwable {
                 Object[] args = invocation.getArguments();
                 Collection<String> productIds = (Collection<String>) args[1];
 
-                Collection<Product> products = new LinkedList<Product>();
+                List<Product> products = new LinkedList<Product>();
                 for (String productId : productIds) {
                     Product product = productMap.get(productId);
 
@@ -926,13 +926,9 @@ public class InstalledProductStatusCalculatorTest {
                     }
                 }
 
-                CandlepinQuery cqmock = mock(CandlepinQuery.class);
-                when(cqmock.iterator()).thenReturn(products.iterator());
-                when(cqmock.iterate()).thenReturn(new MockResultIterator(products.iterator()));
-
-                return cqmock;
+                return products;
             }
-        }).when(this.ownerProductCurator).getProductsByIds(eq(owner), anyCollection());
+        }).when(this.ownerProductShareManager).resolveProductsByIds(eq(owner), anyCollection(), eq(true));
     }
 
     private ConsumerInstalledProduct getInstalledProduct(Consumer consumer, Product product) {

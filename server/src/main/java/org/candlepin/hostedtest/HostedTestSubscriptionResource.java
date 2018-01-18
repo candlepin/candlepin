@@ -16,6 +16,7 @@ package org.candlepin.hostedtest;
 
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.util.SuppressSwaggerCheck;
+import org.candlepin.controller.OwnerProductShareManager;
 import org.candlepin.controller.ProductManager;
 import org.candlepin.model.Content;
 import org.candlepin.model.Owner;
@@ -87,6 +88,9 @@ public class HostedTestSubscriptionResource {
 
     @Inject
     private OwnerProductCurator ownerProductCurator;
+
+    @Inject
+    private OwnerProductShareManager ownerProductShareManager;
 
     @Inject
     private I18n i18n;
@@ -274,7 +278,7 @@ public class HostedTestSubscriptionResource {
     }
 
     protected Product fetchProduct(Owner owner, String productId) {
-        Product product = this.ownerProductCurator.getProductById(owner, productId);
+        Product product = this.ownerProductShareManager.resolveProductById(owner, productId, false);
 
         if (product == null) {
             throw new NotFoundException(

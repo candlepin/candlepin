@@ -158,7 +158,7 @@ public class PoolHelperTest {
         targetPool2.setId("jso_speedwagon2");
         targetPool2.setAttribute(Product.Attributes.VIRT_LIMIT, "unlimited");
 
-        // when(psa.getProductById(targetProduct.getUuid())).thenReturn(targetProduct);
+        // when(psa.resolveProductById(targetProduct.getUuid())).thenReturn(targetProduct);
         when(ent.getConsumer()).thenReturn(cons);
 
         List<Pool> targetPools = new ArrayList<Pool>();
@@ -223,7 +223,7 @@ public class PoolHelperTest {
         when(productCurator.getPoolDerivedProvidedProductsCached(targetPool))
             .thenReturn(derivedProducts);
         targetPool.setAttribute(Product.Attributes.VIRT_LIMIT, "unlimited");
-        // when(psa.getProductById(subProduct.getUuid())).thenReturn(subProduct);
+        // when(psa.resolveProductById(subProduct.getUuid())).thenReturn(subProduct);
         when(ent.getConsumer()).thenReturn(cons);
 
         List<Pool> targetPools = new ArrayList<Pool>();
