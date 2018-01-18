@@ -726,7 +726,7 @@ public class ContentManager {
      * @return
      *  true if this content would be changed by the given DTO; false otherwise
      */
-    public boolean isChangedBy(Content entity, ContentDTO dto) {
+    public static boolean isChangedBy(Content entity, ContentDTO dto) {
         if (dto.getId() != null && !dto.getId().equals(entity.getId())) {
             return true;
         }
@@ -800,7 +800,7 @@ public class ContentManager {
      * @return
      *  true if this content would be changed by the given DTO; false otherwise
      */
-    public boolean isChangedBy(Content entity, ContentData dto) {
+    public static boolean isChangedBy(Content entity, ContentData dto) {
         if (dto.getId() != null && !dto.getId().equals(entity.getId())) {
             return true;
         }
