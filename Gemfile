@@ -13,7 +13,7 @@ gem 'stringex'
 gem 'digest-murmurhash'
 gem 'httpclient'
 gem 'activesupport', '~> 4.2'
-gem 'qpid_proton', '~> 0.17.0'
+gem 'qpid_proton'
 
 # Remove this once we are fully using the new Ruby bindings
 gem 'rest-client', '~> 1.6.0'
