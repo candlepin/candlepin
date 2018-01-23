@@ -26,6 +26,7 @@ import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.HypervisorId;
 import org.candlepin.model.JobCurator;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.Owner;
 import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.pinsetter.core.model.JobStatus.JobState;

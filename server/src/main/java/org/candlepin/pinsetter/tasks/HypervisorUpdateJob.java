@@ -33,7 +33,7 @@ import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.resource.ConsumerResource;
-import org.candlepin.resource.dto.HypervisorUpdateResult;
+import org.candlepin.resource.dto.HypervisorUpdateResultUuids;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.Util;
 
@@ -59,6 +59,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -111,7 +112,7 @@ public class HypervisorUpdateJob extends KingpinJob {
 
         this.hypervisorType = consumerTypeCurator.lookupByLabel(ConsumerTypeEnum.HYPERVISOR.getLabel());
         if (this.hypervisorType == null) {
-            consumerTypeCurator.create(new ConsumerType(ConsumerTypeEnum.HYPERVISOR));
+            this.hypervisorType = consumerTypeCurator.create(new ConsumerType(ConsumerTypeEnum.HYPERVISOR));
         }
     }
 
@@ -212,7 +213,7 @@ public class HypervisorUpdateJob extends KingpinJob {
             Principal principal = (Principal) map.get(PRINCIPAL);
             String jobReporterId = map.getString(REPORTER_ID);
 
-            HypervisorUpdateResult result = new HypervisorUpdateResult();
+            HypervisorUpdateResultUuids result = new HypervisorUpdateResultUuids();
 
             Owner owner = ownerCurator.lookupByKey(ownerKey);
             if (owner == null) {
@@ -300,7 +301,7 @@ public class HypervisorUpdateJob extends KingpinJob {
             }
 
             Date now = new Date();
-            java.util.Collection<Consumer> c = hypervisorConsumersMap.getConsumers();
+            Collection<Consumer> c = hypervisorConsumersMap.getConsumers();
 
             for (Consumer consumer : hypervisorConsumersMap.getConsumers()) {
                 consumer.setLastCheckin(now);
@@ -409,6 +410,7 @@ public class HypervisorUpdateJob extends KingpinJob {
         if (principal.getUsername() != null) {
             consumer.setUsername(principal.getUsername());
         }
+        consumer.setEntitlementCount(0L);
         // TODO: Refactor this to not call resource methods directly
         consumerResource.sanitizeConsumerFacts(consumer);
 
