@@ -27,6 +27,8 @@ import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.StandardTranslator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
@@ -70,6 +72,7 @@ public class GuestIdResourceTest {
     @Mock private EventSink sink;
     @Mock private ServiceLevelValidator mockedServiceLevelValidator;
     @Mock private ConsumerEnricher consumerEnricher;
+    private ModelTranslator translator;
 
     private GuestIdResource guestIdResource;
 
@@ -89,6 +92,7 @@ public class GuestIdResourceTest {
         owner = new Owner("test-owner", "Test Owner");
         ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         consumer = new Consumer("consumer", "test", owner, ct);
+        translator = new StandardTranslator();
         guestIdResource = new GuestIdResource(guestIdCurator,
             consumerCurator, consumerResource, i18n, eventFactory, sink, migrationProvider);
         when(consumerCurator.findByUuid(consumer.getUuid())).thenReturn(consumer);
@@ -278,7 +282,7 @@ public class GuestIdResourceTest {
         public ConsumerResourceForTesting() {
             super(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, consumerEnricher, null);
+                null, null, null, null, consumerEnricher, null, translator);
         }
 
         public void checkForMigration(Consumer host, Consumer guest) {

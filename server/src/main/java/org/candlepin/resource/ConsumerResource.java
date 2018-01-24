@@ -42,6 +42,8 @@ import org.candlepin.controller.AutobindDisabledForOwnerException;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.EventDTO;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.Certificate;
@@ -208,6 +210,7 @@ public class ConsumerResource {
     private ConsumerTypeValidator consumerTypeValidator;
     private ConsumerEnricher consumerEnricher;
     private Provider<GuestMigration> migrationProvider;
+    private ModelTranslator translator;
 
     @Inject
     @SuppressWarnings({"checkstyle:parameternumber"})
@@ -234,7 +237,8 @@ public class ConsumerResource {
         FactValidator factValidator,
         ConsumerTypeValidator consumerTypeValidator,
         ConsumerEnricher consumerEnricher,
-        Provider<GuestMigration> migrationProvider) {
+        Provider<GuestMigration> migrationProvider,
+        ModelTranslator translator) {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -273,6 +277,7 @@ public class ConsumerResource {
         this.consumerTypeValidator = consumerTypeValidator;
         this.consumerEnricher = consumerEnricher;
         this.migrationProvider = migrationProvider;
+        this.translator = translator;
     }
 
     /**
@@ -1969,14 +1974,21 @@ public class ConsumerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}/events")
-    public List<Event> getConsumerEvents(
+    public List<EventDTO> getConsumerEvents(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         List<Event> events = this.eventCurator.listMostRecent(FEED_LIMIT, consumer).list();
+
+        List<EventDTO> eventDTOs = null;
         if (events != null) {
             eventAdapter.addMessageText(events);
+
+            eventDTOs = new ArrayList<EventDTO>();
+            for (Event event : events) {
+                eventDTOs.add(this.translator.translate(event, EventDTO.class));
+            }
         }
-        return events;
+        return eventDTOs;
     }
 
     @ApiOperation(notes = "Retrieves and Event Atom Feed for a Consumer", value = "getConsumerAtomFeed")

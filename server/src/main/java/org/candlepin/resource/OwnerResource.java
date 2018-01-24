@@ -40,6 +40,7 @@ import org.candlepin.controller.OwnerManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.ActivationKeyDTO;
+import org.candlepin.dto.api.v1.EventDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
 import org.candlepin.model.CandlepinQuery;
@@ -126,6 +127,7 @@ import ch.qos.logback.classic.Level;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
@@ -1212,17 +1214,22 @@ public class OwnerResource {
     @Path("{owner_key}/events")
     @ApiOperation(notes = "Retrieves a list of Events for an Owner", value = "Get Events")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found")})
-    public List<Event> getEvents(
+    public List<EventDTO> getEvents(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
         Owner o = findOwner(ownerKey);
 
         List<Event> events = this.eventCurator.listMostRecent(FEED_LIMIT, o).list();
 
+        List<EventDTO> eventDTOs = null;
         if (events != null) {
             eventAdapter.addMessageText(events);
-        }
 
-        return events;
+            eventDTOs = new ArrayList<EventDTO>();
+            for (Event event : events) {
+                eventDTOs.add(this.translator.translate(event, EventDTO.class));
+            }
+        }
+        return eventDTOs;
     }
 
     /**

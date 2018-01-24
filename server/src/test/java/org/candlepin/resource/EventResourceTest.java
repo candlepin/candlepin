@@ -24,6 +24,8 @@ import org.candlepin.audit.EventAdapter;
 import org.candlepin.auth.PrincipalData;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.EventDTO;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.EventCurator;
 
@@ -45,11 +47,13 @@ import java.util.List;
 public class EventResourceTest {
     protected Injector injector;
     private EventCurator ec;
+    private ModelTranslator translator;
 
     @Before
     public void init() {
         Configuration config = mock(Configuration.class);
         ec = mock(EventCurator.class);
+        translator = mock(ModelTranslator.class);
         injector = Guice.createInjector(
             new TestingModules.MockJpaModule(),
             new TestingModules.StandardTest(config),
@@ -61,8 +65,9 @@ public class EventResourceTest {
     public void getevent() {
         Event e = getEvent();
         when(ec.find(eq("8aba"))).thenReturn(e);
-        EventResource er = new EventResource(ec, null, injector.getInstance(EventAdapter.class));
-        assertEquals(e, er.getEvent("8aba"));
+        when(translator.translate(any(Event.class), any(Class.class))).thenReturn(getEventDTO());
+        EventResource er = new EventResource(ec, null, injector.getInstance(EventAdapter.class), translator);
+        assertEquals(getEventDTO(), er.getEvent("8aba"));
     }
 
     @Test(expected = NotFoundException.class)
@@ -70,13 +75,13 @@ public class EventResourceTest {
         when(ec.find(anyString())).thenReturn(null);
         EventResource er = new EventResource(ec,
             injector.getInstance(I18n.class),
-            injector.getInstance(EventAdapter.class));
+            injector.getInstance(EventAdapter.class), translator);
         er.getEvent("foo");
     }
 
     @Test
     public void listEventsNoEvents() {
-        EventResource er = new EventResource(ec, null, injector.getInstance(EventAdapter.class));
+        EventResource er = new EventResource(ec, null, injector.getInstance(EventAdapter.class), translator);
         CandlepinQuery cpQueryMock = mock(CandlepinQuery.class);
 
         when(ec.listAll()).thenReturn(cpQueryMock);
@@ -86,16 +91,20 @@ public class EventResourceTest {
 
     @Test
     public void testListEvents() {
-        EventResource er = new EventResource(ec, null, injector.getInstance(EventAdapter.class));
+        EventResource er = new EventResource(ec, null, injector.getInstance(EventAdapter.class), translator);
         CandlepinQuery cpQueryMock = mock(CandlepinQuery.class);
 
         List<Event> events = new ArrayList<Event>();
         events.add(getEvent());
 
+        List<EventDTO> eventDTOs = new ArrayList<EventDTO>();
+        eventDTOs.add(getEventDTO());
+
         when(ec.listAll()).thenReturn(cpQueryMock);
         when(cpQueryMock.list()).thenReturn(events);
+        when(translator.translate(any(Event.class), any(Class.class))).thenReturn(getEventDTO());
 
-        assertEquals(events, er.listEvents());
+        assertEquals(eventDTOs, er.listEvents());
     }
 
     protected Event getEvent() {
@@ -103,6 +112,14 @@ public class EventResourceTest {
         e.setTarget(Event.Target.CONSUMER);
         e.setType(Event.Type.CREATED);
         e.setPrincipal(new PrincipalData());
+        return e;
+    }
+
+    private EventDTO getEventDTO() {
+        EventDTO e = new EventDTO();
+        e.setTarget("CONSUMER");
+        e.setType("CREATED");
+        e.setPrincipal(new EventDTO.PrincipalDataDTO("type", "name"));
         return e;
     }
 }
