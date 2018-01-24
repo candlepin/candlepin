@@ -847,7 +847,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         List<String> hypervisorIds = new LinkedList<String>();
         hypervisorIds.add(hypervisorid);
         hypervisorIds.add("not really a hypervisor");
-        List<Consumer> results = consumerCurator.getHypervisorsBulk(hypervisorIds, owner.getKey()).list();
+        List<Consumer> results = consumerCurator.getHypervisorsBulk(hypervisorIds, owner.getId()).list();
         assertEquals(1, results.size());
         assertEquals(consumer, results.get(0));
     }
@@ -861,7 +861,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         List<String> hypervisorIds = new LinkedList<String>();
         hypervisorIds.add(hypervisorid.toUpperCase());
         hypervisorIds.add("NOT really a hypervisor");
-        List<Consumer> results = consumerCurator.getHypervisorsBulk(hypervisorIds, owner.getKey()).list();
+        List<Consumer> results = consumerCurator.getHypervisorsBulk(hypervisorIds, owner.getId()).list();
         assertEquals(1, results.size());
         assertEquals(consumer, results.get(0));
     }
@@ -891,7 +891,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumer2 = consumerCurator.create(consumer2);
         Consumer nonHypervisor = new Consumer("testConsumer3", "testUser3", owner, ct);
         nonHypervisor = consumerCurator.create(nonHypervisor);
-        List<Consumer> results = consumerCurator.getHypervisorsForOwner(owner.getKey()).list();
+        List<Consumer> results = consumerCurator.getHypervisorsForOwner(owner.getId()).list();
         assertEquals(1, results.size());
         assertEquals(consumer, results.get(0));
     }

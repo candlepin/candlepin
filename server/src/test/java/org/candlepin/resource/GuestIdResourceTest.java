@@ -34,7 +34,6 @@ import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.GuestIdCurator;
 import org.candlepin.model.Owner;
-import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.util.ServiceLevelValidator;
 
@@ -129,12 +128,12 @@ public class GuestIdResourceTest {
         List<GuestId> guestIds = new LinkedList<GuestId>();
         guestIds.add(new GuestId("1"));
         when(consumerResource.performConsumerUpdates(any(Consumer.class),
-            eq(consumer), any(VirtConsumerMap.class))).
+            eq(consumer))).
             thenReturn(true);
 
         guestIdResource.updateGuests(consumer.getUuid(), guestIds);
         Mockito.verify(consumerResource, Mockito.times(1))
-            .performConsumerUpdates(any(Consumer.class), eq(consumer), any(VirtConsumerMap.class));
+            .performConsumerUpdates(any(Consumer.class), eq(consumer));
         // consumerResource returned true, so the consumer should be updated
         Mockito.verify(consumerCurator, Mockito.times(1)).update(eq(consumer));
     }
@@ -146,12 +145,12 @@ public class GuestIdResourceTest {
 
         // consumerResource tells us nothing changed
         when(consumerResource.performConsumerUpdates(any(Consumer.class),
-            eq(consumer), any(VirtConsumerMap.class))).
+            eq(consumer))).
             thenReturn(false);
 
         guestIdResource.updateGuests(consumer.getUuid(), guestIds);
         Mockito.verify(consumerResource, Mockito.times(1))
-            .performConsumerUpdates(any(Consumer.class), eq(consumer), any(VirtConsumerMap.class));
+            .performConsumerUpdates(any(Consumer.class), eq(consumer));
         Mockito.verify(consumerCurator, Mockito.never()).update(eq(consumer));
     }
 

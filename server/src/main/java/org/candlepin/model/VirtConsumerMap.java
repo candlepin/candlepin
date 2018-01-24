@@ -19,6 +19,7 @@ import org.candlepin.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -72,6 +73,10 @@ public class VirtConsumerMap {
         }
 
         return null;
+    }
+
+    public Collection<Consumer> getConsumers() {
+        return this.virtUuidToConsumerMap.values();
     }
 
     public int size() {

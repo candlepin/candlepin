@@ -135,6 +135,23 @@ class Candlepin
     return post_text(path, params, json_data, 'json')
   end
 
+  def hypervisor_update_file(owner, json_file, create_missing=nil, reporter_id=nil)
+    path = get_path("hypervisors") + "/#{owner}"
+    params = {}
+
+    params[:create_missing] = create_missing unless create_missing.nil?
+    params[:reporter_id] = reporter_id unless reporter_id.nil?
+
+    json_data = ''
+    File.open(json_file) do |f|
+      f.each_line do |line|
+        json_data << "\n" << line
+      end
+    end
+
+    return post_text(path, params, json_data, 'json')
+  end
+
   def remove_deletion_record(deleted_uuid)
     path = get_path("consumers") + "/#{deleted_uuid}/deletionrecord"
     return delete(path)

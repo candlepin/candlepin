@@ -27,6 +27,7 @@ import com.google.inject.persist.Transactional;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.Criteria;
+import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
 import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
@@ -76,11 +77,19 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @Transactional
     @Override
     public Consumer create(Consumer entity) {
+        return create(entity, true);
+    }
+
+
+    @Transactional
+    @Override
+    public Consumer create(Consumer entity, boolean flush) {
         entity.ensureUUID();
         this.validateFacts(entity);
 
-        return super.create(entity);
+        return super.create(entity, flush);
     }
+
 
     @Override
     @Transactional
@@ -613,7 +622,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     public VirtConsumerMap getHostConsumersMap(Owner owner, Iterable<String> hypervisorIds) {
         VirtConsumerMap hypervisorMap = new VirtConsumerMap();
 
-        for (Consumer consumer : this.getHypervisorsBulk(hypervisorIds, owner.getKey())) {
+        for (Consumer consumer : this.getHypervisorsBulk(hypervisorIds, owner.getId())) {
             hypervisorMap.add(consumer.getHypervisorId().getHypervisorId(), consumer);
         }
 
@@ -622,12 +631,12 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
     /**
      * @param hypervisorIds list of unique hypervisor identifiers
-     * @param ownerKey Org namespace to search
+     * @param ownerId Org namespace to search
      * @return Consumer that matches the given
      */
     @SuppressWarnings("unchecked")
     @Transactional
-    public CandlepinQuery<Consumer> getHypervisorsBulk(Iterable<String> hypervisorIds, String ownerKey) {
+    public CandlepinQuery<Consumer> getHypervisorsBulk(Iterable<String> hypervisorIds, String ownerId) {
         if (hypervisorIds == null || !hypervisorIds.iterator().hasNext()) {
             return this.cpQueryFactory.<Consumer>buildQuery();
         }
@@ -635,9 +644,10 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         DetachedCriteria criteria = DetachedCriteria.forClass(Consumer.class)
             .createAlias("owner", "o")
             .createAlias("hypervisorId", "hvsr")
-            .add(Restrictions.eq("o.key", ownerKey))
+            .add(Restrictions.eq("o.id", ownerId))
             .add(this.getHypervisorIdRestriction(hypervisorIds))
-            .addOrder(Order.asc("hvsr.hypervisorId"));
+            .addOrder(Order.asc("hvsr.hypervisorId"))
+            .setFetchMode("type", FetchMode.SELECT);
 
         return this.cpQueryFactory.<Consumer>buildQuery(this.currentSession(), criteria)
             .setLockMode(LockModeType.PESSIMISTIC_WRITE);
@@ -654,11 +664,11 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
     @SuppressWarnings("unchecked")
     @Transactional
-    public CandlepinQuery<Consumer> getHypervisorsForOwner(String ownerKey) {
+    public CandlepinQuery<Consumer> getHypervisorsForOwner(String ownerId) {
         DetachedCriteria criteria = this.createSecureDetachedCriteria()
             .createAlias("owner", "o")
             .createAlias("hypervisorId", "hvsr")
-            .add(Restrictions.eq("o.key", ownerKey))
+            .add(Restrictions.eq("o.id", ownerId))
             .add(Restrictions.isNotNull("hvsr.hypervisorId"));
 
         return this.cpQueryFactory.<Consumer>buildQuery(this.currentSession(), criteria);

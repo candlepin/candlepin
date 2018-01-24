@@ -204,7 +204,7 @@ public class HypervisorResource {
                 else {
                     consumer = hypervisorConsumersMap.get(hypervisorId);
                 }
-                boolean guestIdsUpdated = addGuestIds(consumer, hostEntry.getValue(), guestConsumersMap);
+                boolean guestIdsUpdated = addGuestIds(consumer, hostEntry.getValue());
 
                 Date now = new Date();
                 consumerCurator.updateLastCheckin(consumer, now);
@@ -264,9 +264,9 @@ public class HypervisorResource {
 
         log.info("Hypervisor update by principal: " + principal);
         Owner owner = this.getOwner(ownerKey);
-
         return HypervisorUpdateJob.forOwner(owner, hypervisorJson, createMissing, principal, reporterId);
     }
+
 
     /*
      * Get the owner or bust
@@ -284,12 +284,11 @@ public class HypervisorResource {
      * Add a list of guestIds to the given consumer,
      * return whether or not there was any change
      */
-    private boolean addGuestIds(Consumer consumer, List<GuestId> guestIds,
-        VirtConsumerMap guestConsumerMap) {
+    private boolean addGuestIds(Consumer consumer, List<GuestId> guestIds) {
         Consumer withIds = new Consumer();
         withIds.setGuestIds(guestIds);
         boolean guestIdsUpdated =
-            consumerResource.performConsumerUpdates(withIds, consumer, guestConsumerMap);
+            consumerResource.performConsumerUpdates(withIds, consumer);
         if (guestIdsUpdated) {
             consumerCurator.update(consumer);
         }
