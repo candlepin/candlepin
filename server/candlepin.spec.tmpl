@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.2.1
+Version: 2.2.2
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,12 @@ fi
 
 #raw
 %changelog
+* Wed Jan 24 2018 Christopher Snyder <csnyder@redhat.com> 2.2.2-1
+- 1531628: Reduced scope of consumer lock to exclude type in some queries
+  (crog@redhat.com)
+- 1514515: Correctly update distributor's modified product content
+  (mstead@redhat.com)
+
 * Thu Jan 04 2018 Kevin Howell <khowell@redhat.com> 2.2.1-1
 - 
 
