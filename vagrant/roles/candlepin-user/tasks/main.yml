@@ -8,7 +8,7 @@
     - candlepin-user
 
 - name: Run Bundle install
-  command: /usr/bin/bundle install
+  command: /usr/bin/bundle install --without=proton
   args:
       chdir: "{{candlepin_checkout}}"
   tags:
