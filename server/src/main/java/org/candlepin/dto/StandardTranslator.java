@@ -14,6 +14,7 @@
  */
 package org.candlepin.dto;
 
+import org.candlepin.audit.Event;
 import org.candlepin.dto.api.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.v1.ActivationKeyTranslator;
 import org.candlepin.dto.api.v1.CertificateDTO;
@@ -24,6 +25,8 @@ import org.candlepin.dto.api.v1.ConsumerTypeDTO;
 import org.candlepin.dto.api.v1.ConsumerTypeTranslator;
 import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.ContentTranslator;
+import org.candlepin.dto.api.v1.EventDTO;
+import org.candlepin.dto.api.v1.EventTranslator;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.OwnerTranslator;
 import org.candlepin.dto.api.v1.ProductDTO;
@@ -69,6 +72,11 @@ public class StandardTranslator extends SimpleModelTranslator {
             new UpstreamConsumerTranslator(), UpstreamConsumer.class, UpstreamConsumerDTO.class);
         this.registerTranslator(
             new ActivationKeyTranslator(), ActivationKey.class, ActivationKeyDTO.class);
+
+        // Event translators
+        /////////////////////////////////////////////
+        this.registerTranslator(
+            new EventTranslator(), Event.class, EventDTO.class);
 
         // Shims
         /////////////////////////////////////////////
