@@ -17,12 +17,15 @@ package org.candlepin.resource;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventAdapter;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.EventDTO;
 import org.candlepin.model.EventCurator;
 
 import com.google.inject.Inject;
 
 import org.xnap.commons.i18n.I18n;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -48,25 +51,34 @@ public class EventResource {
     private EventCurator eventCurator;
     private I18n i18n;
     private EventAdapter eventAdapter;
+    private ModelTranslator translator;
 
     @Inject
-    public EventResource(EventCurator eventCurator, I18n i18n, EventAdapter eventAdapter) {
+    public EventResource(EventCurator eventCurator, I18n i18n, EventAdapter eventAdapter,
+        ModelTranslator translator) {
+
         this.eventCurator = eventCurator;
         this.i18n = i18n;
         this.eventAdapter = eventAdapter;
+        this.translator = translator;
     }
 
     @ApiOperation(notes = "Retrieves a list of Events", value = "listEvents")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Event> listEvents() {
+    public List<EventDTO> listEvents() {
         List<Event> events = eventCurator.listAll().list();
 
+        List<EventDTO> eventDTOs = null;
         if (events != null) {
             eventAdapter.addMessageText(events);
-        }
 
-        return events;
+            eventDTOs = new ArrayList<EventDTO>();
+            for (Event event : events) {
+                eventDTOs.add(this.translator.translate(event, EventDTO.class));
+            }
+        }
+        return eventDTOs;
     }
 
     @ApiOperation(notes = "Retrieves a single Event", value = "getEvent")
@@ -74,7 +86,7 @@ public class EventResource {
     @GET
     @Path("{uuid}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Event getEvent(@PathParam("uuid") String uuid) {
+    public EventDTO getEvent(@PathParam("uuid") String uuid) {
         Event toReturn = eventCurator.find(uuid);
 
         if (toReturn != null) {
@@ -83,7 +95,7 @@ public class EventResource {
             events.add(toReturn);
             eventAdapter.addMessageText(events);
 
-            return toReturn;
+            return this.translator.translate(toReturn, EventDTO.class);
         }
 
         throw new NotFoundException(i18n.tr("Event with ID ''{0}'' could not be found.", uuid));

@@ -25,6 +25,8 @@ import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.CertificateDTO;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -84,16 +86,19 @@ public class PoolResource {
     private I18n i18n;
     private PoolManager poolManager;
     private CalculatedAttributesUtil calculatedAttributesUtil;
+    private ModelTranslator translator;
 
     @Inject
     public PoolResource(ConsumerCurator consumerCurator, OwnerCurator ownerCurator,
-        I18n i18n, PoolManager poolManager, CalculatedAttributesUtil calculatedAttributesUtil) {
+        I18n i18n, PoolManager poolManager, CalculatedAttributesUtil calculatedAttributesUtil,
+        ModelTranslator translator) {
 
         this.consumerCurator = consumerCurator;
         this.ownerCurator = ownerCurator;
         this.i18n = i18n;
         this.poolManager = poolManager;
         this.calculatedAttributesUtil = calculatedAttributesUtil;
+        this.translator = translator;
     }
 
     /**
@@ -340,9 +345,9 @@ public class PoolResource {
     @Path("{pool_id}/cert")
     @Consumes({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
     @Produces({ MediaType.APPLICATION_JSON})
-    public SubscriptionsCertificate getSubCert(
+    public CertificateDTO getSubCert(
         @PathParam("pool_id") String poolId) {
 
-        return this.getPoolCertificate(poolId);
+        return this.translator.translate(this.getPoolCertificate(poolId), CertificateDTO.class);
     }
 }

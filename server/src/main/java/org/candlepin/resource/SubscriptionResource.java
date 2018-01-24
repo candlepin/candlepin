@@ -19,10 +19,10 @@ import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.exceptions.ResourceMovedException;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.dto.api.v1.CertificateDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Pool;
-import org.candlepin.model.SubscriptionsCertificate;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.service.SubscriptionServiceAdapter;
 
@@ -124,7 +124,7 @@ public class SubscriptionResource {
     @Path("{subscription_id}/cert")
     @Consumes({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
     @Produces({ MediaType.APPLICATION_JSON})
-    public SubscriptionsCertificate getSubCert(
+    public CertificateDTO getSubCert(
         @PathParam("subscription_id") String subscriptionId) {
 
         throw new ResourceMovedException("pools/{pool_id}/cert");

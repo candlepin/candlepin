@@ -32,6 +32,8 @@ import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.StandardTranslator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCapability;
 import org.candlepin.model.ConsumerCurator;
@@ -107,6 +109,7 @@ public class ConsumerResourceUpdateTest {
     @Mock private ConsumerBindUtil consumerBindUtil;
     @Mock private ConsumerEnricher consumerEnricher;
     @Mock private Principal principal;
+    private ModelTranslator translator;
 
     private I18n i18n;
 
@@ -119,7 +122,7 @@ public class ConsumerResourceUpdateTest {
         Configuration config = new CandlepinCommonTestConfig();
 
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-
+        this.translator = new StandardTranslator();
         testMigration = new GuestMigration(consumerCurator, eventFactory, sink);
         migrationProvider = Providers.of(testMigration);
 
@@ -130,7 +133,8 @@ public class ConsumerResourceUpdateTest {
             this.activationKeyCurator, this.entitler, this.complianceRules,
             this.deletedConsumerCurator, this.environmentCurator, null,
             config, null, null, null, this.consumerBindUtil,
-            null, null, new FactValidator(config, this.i18n), null, consumerEnricher, migrationProvider);
+            null, null, new FactValidator(config, this.i18n),
+            null, consumerEnricher, migrationProvider, translator);
 
         when(complianceRules.getStatus(any(Consumer.class), any(Date.class), any(Boolean.class),
             any(Boolean.class))).thenReturn(new ComplianceStatus(new Date()));
