@@ -31,6 +31,7 @@ import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.controller.CandlepinPoolManager;
+import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.Certificate;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
@@ -96,6 +97,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @Inject private IdentityCertServiceAdapter icsa;
     @Inject private CertificateSerialCurator serialCurator;
     @Inject private ConsumerEnricher consumerEnricher;
+    @Inject protected ModelTranslator modelTranslator;
 
     private ConsumerType standardSystemType;
     private ConsumerType personType;
@@ -562,7 +564,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             this.consumerCurator, null, null, null, null, this.entitlementCurator, null, null, null, null,
             null, null, null, null, this.poolManager, null, null, null, null, null, null, null, null,
             new CandlepinCommonTestConfig(), null, null, null, mock(ConsumerBindUtil.class),
-            null, null, null, null, consumerEnricher, migrationProvider);
+            null, null, null, null, consumerEnricher, migrationProvider, modelTranslator);
 
         Response rsp = consumerResource.bind(consumer.getUuid(), pool.getId().toString(), null, 1, null,
             null, false, null, null);

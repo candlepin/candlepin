@@ -30,6 +30,8 @@ import org.candlepin.auth.UserPrincipal;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.config.CandlepinCommonTestConfig;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.StandardTranslator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
@@ -97,6 +99,7 @@ public class HypervisorResourceTest {
     @Mock private ConsumerBindUtil consumerBindUtil;
     @Mock private EventBuilder consumerEventBuilder;
     @Mock private ConsumerEnricher consumerEnricher;
+    private ModelTranslator translator;
 
     private ConsumerResource consumerResource;
     private I18n i18n;
@@ -115,6 +118,7 @@ public class HypervisorResourceTest {
 
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         this.hypervisorType = new ConsumerType(ConsumerTypeEnum.HYPERVISOR);
+        this.translator = new StandardTranslator();
         this.consumerResource = new ConsumerResource(this.consumerCurator,
             this.consumerTypeCurator, null, this.subscriptionService, this.ownerService, null,
             this.idCertService, null, this.i18n, this.sink, this.eventFactory, null, null,
@@ -122,7 +126,7 @@ public class HypervisorResourceTest {
             this.activationKeyCurator, null, this.complianceRules,
             this.deletedConsumerCurator, null, null, config,
             null, null, null, this.consumerBindUtil, null, null,
-            new FactValidator(config, this.i18n), null, consumerEnricher, migrationProvider);
+            new FactValidator(config, this.i18n), null, consumerEnricher, migrationProvider, translator);
 
         hypervisorResource = new HypervisorResource(consumerResource,
             consumerCurator, i18n, ownerCurator, migrationProvider);
