@@ -25,7 +25,6 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import javax.xml.bind.annotation.XmlTransient;
 
 /**
  * Brand mapping is carried on subscription data and passed to clients through entitlement
@@ -39,7 +38,7 @@ import javax.xml.bind.annotation.XmlTransient;
  */
 @Entity
 @Table(name = Branding.DB_TABLE)
-public class Branding extends AbstractHibernateObject {
+public class Branding extends AbstractHibernateObject<Branding> {
 
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp_branding";
@@ -75,7 +74,6 @@ public class Branding extends AbstractHibernateObject {
         this.name = name;
     }
 
-    @XmlTransient
     public String getId() {
         return id;
     }

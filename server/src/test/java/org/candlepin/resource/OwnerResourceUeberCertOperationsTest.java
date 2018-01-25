@@ -32,6 +32,7 @@ import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Role;
 import org.candlepin.model.RoleCurator;
 import org.candlepin.model.UeberCertificate;
@@ -57,6 +58,7 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
     private static final String OWNER_NAME = "Jar_Jar_Binks";
 
     @Inject private OwnerCurator ownerCurator;
+    @Inject private ProductCurator productCurator;
     @Inject private ConsumerCurator consumerCurator;
     @Inject private ConsumerTypeCurator consumerTypeCurator;
     @Inject private EntitlementCurator entitlementCurator;
@@ -91,7 +93,8 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
         setupPrincipal(principal);
 
         or = new OwnerResource(
-            ownerCurator, null, consumerCurator, i18n, null, null, null, null, null, poolManager, null, null,
+            ownerCurator, productCurator, null, consumerCurator, i18n, null, null, null,
+            null, null, poolManager, null, null,
             null, null, consumerTypeCurator, entCertCurator, entitlementCurator, ueberCertCurator,
             ueberCertGenerator, null,  null, contentOverrideValidator, serviceLevelValidator, null, null,
             null, null, null, this.modelTranslator);

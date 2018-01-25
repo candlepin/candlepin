@@ -44,6 +44,7 @@ import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.EventDTO;
+import org.candlepin.dto.api.v1.EntitlementDTO;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.Certificate;
@@ -1748,18 +1749,24 @@ public class ConsumerResource {
             }
         }
 
-        // we need to supply the compliance type for the pools
-        // the method in this class does not do quantity
+        List<EntitlementDTO> entitlementDTOs = null;
         if (entitlements != null) {
+            entitlementDTOs = new ArrayList<EntitlementDTO>();
+
             for (Entitlement ent : entitlements) {
+                // we need to supply the compliance type for the pools
+                // the method in this class does not do quantity
                 addCalculatedAttributes(ent);
+
+                entitlementDTOs.add(this.translator.translate(ent, EntitlementDTO.class));
             }
         }
+
         // Trigger events:
         entitler.sendEvents(entitlements);
 
         return Response.status(Response.Status.OK)
-            .type(MediaType.APPLICATION_JSON).entity(entitlements).build();
+            .type(MediaType.APPLICATION_JSON).entity(entitlementDTOs).build();
     }
 
     @ApiOperation(notes = "Retrieves a list of Pools and quantities that would be the " +
@@ -1823,7 +1830,7 @@ public class ConsumerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{consumer_uuid}/entitlements")
-    public List<Entitlement> listEntitlements(
+    public List<EntitlementDTO> listEntitlements(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @QueryParam("product") String productId,
         @QueryParam("regen") @DefaultValue("true") Boolean regen,
@@ -1859,7 +1866,11 @@ public class ConsumerResource {
             }
         }
 
-        return entitlementsPage.getPageData();
+        List<EntitlementDTO> entitlementDTOs = new ArrayList<EntitlementDTO>();
+        for (Entitlement entitlement : entitlementsPage.getPageData()) {
+            entitlementDTOs.add(this.translator.translate(entitlement, EntitlementDTO.class));
+        }
+        return entitlementDTOs;
     }
 
     @ApiOperation(notes = "Retrieves the Owner associated to a Consumer", value = "getOwner")

@@ -78,6 +78,7 @@ import org.mockito.stubbing.Answer;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
+import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -118,7 +119,7 @@ public class ConsumerResourceCreationTest {
     @Mock private ServiceLevelValidator serviceLevelValidator;
     @Mock private ConsumerBindUtil consumerBindUtil;
     @Mock private ConsumerEnricher consumerEnricher;
-    protected ModelTranslator modelTranslator;
+    @Inject protected ModelTranslator modelTranslator;
 
     private I18n i18n;
 
@@ -128,7 +129,6 @@ public class ConsumerResourceCreationTest {
     protected Owner owner;
     protected Role role;
     private User user;
-
     private GuestMigration testMigration;
     private Provider<GuestMigration> migrationProvider;
 
