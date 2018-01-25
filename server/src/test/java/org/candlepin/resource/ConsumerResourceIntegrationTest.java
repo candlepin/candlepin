@@ -34,6 +34,8 @@ import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.CertificateDTO;
+import org.candlepin.dto.api.v1.EntitlementDTO;
 import org.candlepin.model.Certificate;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
@@ -293,7 +295,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             consumer.getUuid(), pool.getId().toString(), null, 1, null,
             null, false, null, null);
 
-        List<Entitlement> resultList = (List<Entitlement>) rsp.getEntity();
+        List<EntitlementDTO> resultList = (List<EntitlementDTO>) rsp.getEntity();
 
         consumer = consumerCurator.findByUuid(consumer.getUuid());
         assertEquals(1, consumer.getEntitlements().size());
@@ -302,7 +304,11 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         assertEquals(Long.valueOf(1), pool.getConsumed());
         assertEquals(1, resultList.size());
         assertEquals(pool.getId(), resultList.get(0).getPool().getId());
-        assertEquals(1, entitlementCertificateCurator.listForEntitlement(resultList.get(0)).size());
+
+        Entitlement ent = new Entitlement();
+        ent.setId(resultList.get(0).getId());
+
+        assertEquals(1, entitlementCertificateCurator.listForEntitlement(ent).size());
     }
 
     @Test
@@ -567,19 +573,22 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             this.consumerCurator, null, null, null, null, this.entitlementCurator, null, null, null, null,
             null, null, null, null, this.poolManager, null, null, null, null, null, null, null, null,
             new CandlepinCommonTestConfig(), null, null, null, mock(ConsumerBindUtil.class),
-            null, null, null, null, consumerEnricher, migrationProvider, modelTranslator);
+            null, null, null, null, consumerEnricher, migrationProvider, this.modelTranslator);
 
         Response rsp = consumerResource.bind(consumer.getUuid(), pool.getId().toString(), null, 1, null,
             null, false, null, null);
 
-        List<Entitlement> resultList = (List<Entitlement>) rsp.getEntity();
-        Entitlement ent = resultList.get(0);
+        List<EntitlementDTO> resultList = (List<EntitlementDTO>) rsp.getEntity();
+        EntitlementDTO ent = resultList.get(0);
         assertEquals(1, ent.getCertificates().size());
-        Certificate entCertBefore = ent.getCertificates().iterator().next();
+        CertificateDTO entCertBefore = ent.getCertificates().iterator().next();
 
         cr.regenerateEntitlementCertificates(this.consumer.getUuid(), ent.getId(), false);
+
+        Entitlement entWithRefreshedCerts = entitlementCurator.find(ent.getId());
+        ent = this.modelTranslator.translate(entWithRefreshedCerts, EntitlementDTO.class);
         assertEquals(1, ent.getCertificates().size());
-        Certificate entCertAfter = ent.getCertificates().iterator().next();
+        CertificateDTO entCertAfter = ent.getCertificates().iterator().next();
 
         assertFalse(entCertBefore.equals(entCertAfter));
     }

@@ -26,6 +26,8 @@ import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.Entitler;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.EntitlementDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
@@ -73,14 +75,16 @@ public class EntitlementResourceTest {
     @Mock private SubscriptionResource subResource;
     @Mock private EntitlementRules entRules;
     @Mock private EntitlementRulesTranslator messageTranslator;
+    @Mock protected ModelTranslator modelTranslator;
 
     private EntitlementResource entResource;
+
 
     @Before
     public void before() {
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         entResource = new EntitlementResource(entitlementCurator, consumerCurator,
-            poolManager, i18n, entitler, entRules, messageTranslator);
+            poolManager, i18n, entitler, entRules, messageTranslator, modelTranslator);
         owner = new Owner("admin");
         consumer = new Consumer("myconsumer", "bill", owner,
             TestUtil.createConsumerType());
@@ -234,10 +238,15 @@ public class EntitlementResourceTest {
         Page<List<Entitlement>> page = new Page<List<Entitlement>>();
         page.setPageData(entitlements);
 
+        EntitlementDTO entitlementDTO = new EntitlementDTO();
+        entitlementDTO.setId("getEntitlementList");
+
         when(entitlementCurator.listAll(isA(EntitlementFilterBuilder.class), isA(PageRequest.class)))
                 .thenReturn(page);
+        when(modelTranslator.translate(isA(Entitlement.class),
+                eq(EntitlementDTO.class))).thenReturn(entitlementDTO);
 
-        List<Entitlement> result = entResource.listAllForConsumer(null, null, null, req);
+        List<EntitlementDTO> result = entResource.listAllForConsumer(null, null, null, req);
 
         assertEquals(1, result.size());
         assertEquals("getEntitlementList", result.get(0).getId());
@@ -260,12 +269,17 @@ public class EntitlementResourceTest {
         Page<List<Entitlement>> page = new Page<List<Entitlement>>();
         page.setPageData(entitlements);
 
+        EntitlementDTO entitlementDTO = new EntitlementDTO();
+        entitlementDTO.setId("getAllEntitlementsForConsumer");
+
         when(consumerCurator.findByUuid(eq(consumer.getUuid()))).thenReturn(consumer);
         when(
                 entitlementCurator.listByConsumer(isA(Consumer.class), anyString(),
                         isA(EntitlementFilterBuilder.class), isA(PageRequest.class))).thenReturn(page);
+        when(modelTranslator.translate(isA(Entitlement.class),
+            eq(EntitlementDTO.class))).thenReturn(entitlementDTO);
 
-        List<Entitlement> result = entResource.listAllForConsumer(consumer.getUuid(), null, null, req);
+        List<EntitlementDTO> result = entResource.listAllForConsumer(consumer.getUuid(), null, null, req);
 
         assertEquals(1, result.size());
         assertEquals("getAllEntitlementsForConsumer", result.get(0).getId());

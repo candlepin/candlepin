@@ -19,6 +19,7 @@ import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.ActivationKeyDTO;
+import org.candlepin.dto.api.v1.PoolDTO;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerProductCurator;
@@ -107,21 +108,21 @@ public class ActivationKeyResource {
     }
 
     @ApiOperation(notes = "Retrieves a list of Pools based on the Activation Key",
-        value = "Get Activation Key Pools", response = Pool.class, responseContainer = "list")
+        value = "Get Activation Key Pools", response = PoolDTO.class, responseContainer = "list")
     @ApiResponses({ @ApiResponse(code = 400, message = "")})
     @GET
     @Path("{activation_key_id}/pools")
     @Produces(MediaType.APPLICATION_JSON)
-    public Iterator<Pool> getActivationKeyPools(
+    public Iterator<PoolDTO> getActivationKeyPools(
         @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId) {
 
         ActivationKey key = activationKeyCurator.verifyAndLookupKey(activationKeyId);
 
-        return new TransformedIterator<ActivationKeyPool, Pool>(key.getPools().iterator(),
-            new ElementTransformer<ActivationKeyPool, Pool>() {
+        return new TransformedIterator<ActivationKeyPool, PoolDTO>(key.getPools().iterator(),
+            new ElementTransformer<ActivationKeyPool, PoolDTO>() {
                 @Override
-                public Pool transform(ActivationKeyPool akp) {
-                    return akp.getPool();
+                public PoolDTO transform(ActivationKeyPool akp) {
+                    return translator.translate(akp.getPool(), PoolDTO.class);
                 }
             }
         );

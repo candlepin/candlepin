@@ -14,8 +14,6 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.common.jackson.HateoasInclude;
-
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.Column;
@@ -27,20 +25,14 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.Size;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 
 /**
  * SourceSubscription represents the subscription
  * from which a pool was created.
  */
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = SourceSubscription.DB_TABLE)
-public class SourceSubscription extends AbstractHibernateObject {
+public class SourceSubscription extends AbstractHibernateObject<SourceSubscription> {
 
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp2_pool_source_sub";
@@ -73,7 +65,6 @@ public class SourceSubscription extends AbstractHibernateObject {
      */
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, unique = true)
-    @XmlTransient
     private Pool pool;
 
     public SourceSubscription() {
@@ -130,7 +121,6 @@ public class SourceSubscription extends AbstractHibernateObject {
      * @return the id
      */
     @Override
-    @HateoasInclude
     public String getId() {
         return id;
     }
