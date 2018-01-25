@@ -179,7 +179,20 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      */
     @Transactional
     public E create(E entity) {
-        save(entity);
+        return create(entity, true);
+    }
+
+    /**
+     * @param entity to be created.
+     * @param flush whether or not to flush after the persist.
+     * @return newly created entity.
+     */
+    @Transactional
+    public E create(E entity, boolean flush) {
+        getEntityManager().persist(entity);
+        if (flush) {
+            flush();
+        }
         return entity;
     }
 
@@ -545,8 +558,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
     @Transactional
     protected void save(E anObject) {
-        getEntityManager().persist(anObject);
-        flush();
+        create(anObject, true);
     }
 
     public void flush() {

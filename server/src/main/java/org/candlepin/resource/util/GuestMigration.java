@@ -14,8 +14,6 @@
  */
 package org.candlepin.resource.util;
 
-import org.candlepin.audit.EventFactory;
-import org.candlepin.audit.EventSink;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.GuestId;
@@ -39,17 +37,13 @@ public class GuestMigration {
     private static final Logger log = LoggerFactory.getLogger(GuestMigration.class);
 
     private ConsumerCurator consumerCurator;
-    private EventFactory eventFactory;
-    private EventSink sink;
 
     private boolean migrationPending;
     private MigrationManifest manifest;
 
     @Inject
-    public GuestMigration(ConsumerCurator consumerCurator, EventFactory eventFactory, EventSink sink) {
+    public GuestMigration(ConsumerCurator consumerCurator) {
         this.consumerCurator = consumerCurator;
-        this.eventFactory = eventFactory;
-        this.sink = sink;
 
         migrationPending = false;
     }
@@ -59,12 +53,17 @@ public class GuestMigration {
     }
 
     public void migrate() {
+        migrate(true);
+    }
+
+    public void migrate(boolean flush) {
         if (!migrationPending) {
             throw new IllegalStateException("No migration is pending");
         }
 
         manifest.writeMigrationChanges();
-        consumerCurator.bulkUpdate(manifest.asSet());
+        consumerCurator.bulkUpdate(manifest.asSet(), flush);
+        migrationPending = false;
     }
 
     /**
@@ -96,7 +95,6 @@ public class GuestMigration {
             for (GuestId guestId : removedGuests) {
                 existingGuests.remove(guestId);
                 log.debug("Guest ID removed: {}", guestId);
-                sink.queueEvent(eventFactory.guestIdDeleted(guestId));
             }
         }
 
@@ -104,19 +102,7 @@ public class GuestMigration {
         for (GuestId guestId : incoming.getGuestIds()) {
             if (addedGuests.contains(guestId)) {
                 manifest.addGuestId(guestId);
-                Consumer guest = guestId.getConsumer();
-
-                // If it's a brand new guest, there won't be a host to look up
-                if (guest != null) {
-                    // TODO is it possible for real guests to not resolve to a host? It occurs in unit tests.
-                    Consumer oldHost = consumerCurator.getHost(guest);
-                    if (oldHost != null) {
-                        manifest.addOldMapping(oldHost, guest);
-                    }
-                }
-
                 log.debug("New guest ID added: {}", guestId);
-                sink.queueEvent(eventFactory.guestIdCreated(guestId));
             }
         }
 
@@ -153,7 +139,7 @@ public class GuestMigration {
     public static class MigrationManifest {
         private Consumer newHost;
         private List<GuestId> newGuests = new ArrayList<GuestId>();
-        private Map<Consumer, List<Consumer>> oldMappings = new HashMap<Consumer, List<Consumer>>();
+        private Map<Consumer, List<GuestId>> oldMappings = new HashMap<Consumer, List<GuestId>>();
 
         public MigrationManifest(Consumer newHost) {
             this.newHost = newHost;
@@ -163,9 +149,9 @@ public class GuestMigration {
             newGuests.add(guestId);
         }
 
-        public void addOldMapping(Consumer host, Consumer guest) {
+        public void addOldMapping(Consumer host, GuestId guest) {
             if (!oldMappings.containsKey(host)) {
-                oldMappings.put(host, new ArrayList<Consumer>());
+                oldMappings.put(host, new ArrayList<GuestId>());
             }
 
             oldMappings.get(host).add(guest);
@@ -188,9 +174,9 @@ public class GuestMigration {
                 newHost.addGuestId(id);
             }
 
-            for (Map.Entry<Consumer, List<Consumer>> entry : oldMappings.entrySet()) {
+            for (Map.Entry<Consumer, List<GuestId>> entry : oldMappings.entrySet()) {
                 Consumer oldHost = entry.getKey();
-                List<Consumer> transferedGuests = entry.getValue();
+                List<GuestId> transferedGuests = entry.getValue();
                 oldHost.getGuestIds().removeAll(transferedGuests);
             }
         }

@@ -14,13 +14,10 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
@@ -113,7 +110,7 @@ public class HypervisorResourceTest {
     public void setupTest() {
         Configuration config = new CandlepinCommonTestConfig();
 
-        testMigration = new GuestMigration(consumerCurator, eventFactory, sink);
+        testMigration = new GuestMigration(consumerCurator);
         migrationProvider = Providers.of(testMigration);
 
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
@@ -137,6 +134,14 @@ public class HypervisorResourceTest {
                 return invocation.getArguments()[0];
             }
         });
+
+        when(consumerCurator.create(any(Consumer.class), any(Boolean.class)))
+            .thenAnswer(new Answer<Object>() {
+                @Override
+                public Object answer(InvocationOnMock invocation) throws Throwable {
+                    return invocation.getArguments()[0];
+                }
+            });
         when(complianceRules.getStatus(any(Consumer.class), any(Date.class), any(Boolean.class)))
             .thenReturn(new ComplianceStatus(new Date()));
 
@@ -388,7 +393,6 @@ public class HypervisorResourceTest {
         when(consumerCurator.getGuestConsumersMap(any(Owner.class), any(Set.class)))
             .thenReturn(new VirtConsumerMap());
 
-        when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
         when(principal.canAccess(eq(owner), eq(SubResource.CONSUMERS), eq(Access.CREATE)))
             .thenReturn(true);
         when(consumerTypeCurator.lookupByLabel(eq(ConsumerTypeEnum.HYPERVISOR.getLabel())))
