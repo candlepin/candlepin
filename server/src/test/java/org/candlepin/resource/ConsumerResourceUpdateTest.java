@@ -33,7 +33,6 @@ import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.StandardTranslator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCapability;
 import org.candlepin.model.ConsumerCurator;
@@ -77,6 +76,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
+import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -109,20 +109,19 @@ public class ConsumerResourceUpdateTest {
     @Mock private ConsumerBindUtil consumerBindUtil;
     @Mock private ConsumerEnricher consumerEnricher;
     @Mock private Principal principal;
-    private ModelTranslator translator;
 
     private I18n i18n;
 
     private ConsumerResource resource;
     private Provider<GuestMigration> migrationProvider;
     private GuestMigration testMigration;
+    @Inject protected ModelTranslator modelTranslator;
 
     @Before
     public void init() throws Exception {
         Configuration config = new CandlepinCommonTestConfig();
 
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        this.translator = new StandardTranslator();
         testMigration = new GuestMigration(consumerCurator, eventFactory, sink);
         migrationProvider = Providers.of(testMigration);
 
@@ -134,7 +133,7 @@ public class ConsumerResourceUpdateTest {
             this.deletedConsumerCurator, this.environmentCurator, null,
             config, null, null, null, this.consumerBindUtil,
             null, null, new FactValidator(config, this.i18n),
-            null, consumerEnricher, migrationProvider, translator);
+            null, consumerEnricher, migrationProvider, modelTranslator);
 
         when(complianceRules.getStatus(any(Consumer.class), any(Date.class), any(Boolean.class),
             any(Boolean.class))).thenReturn(new ComplianceStatus(new Date()));

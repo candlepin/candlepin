@@ -41,8 +41,12 @@ import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.v1.EventDTO;
+import org.candlepin.dto.api.v1.BrandingDTO;
+import org.candlepin.dto.api.v1.EntitlementDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
+import org.candlepin.dto.api.v1.PoolDTO;
 import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
+import org.candlepin.model.Branding;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -68,7 +72,9 @@ import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Release;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.UeberCertificate;
 import org.candlepin.model.UeberCertificateCurator;
@@ -129,6 +135,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -165,6 +172,7 @@ public class OwnerResource {
     private static final int FEED_LIMIT = 1000;
 
     private OwnerCurator ownerCurator;
+    private ProductCurator productCurator;
     private OwnerInfoCurator ownerInfoCurator;
     private ActivationKeyCurator activationKeyCurator;
     private OwnerServiceAdapter ownerService;
@@ -196,6 +204,7 @@ public class OwnerResource {
 
     @Inject
     public OwnerResource(OwnerCurator ownerCurator,
+        ProductCurator productCurator,
         ActivationKeyCurator activationKeyCurator,
         ConsumerCurator consumerCurator,
         I18n i18n,
@@ -226,6 +235,7 @@ public class OwnerResource {
         ModelTranslator translator) {
 
         this.ownerCurator = ownerCurator;
+        this.productCurator = productCurator;
         this.ownerInfoCurator = ownerInfoCurator;
         this.activationKeyCurator = activationKeyCurator;
         this.consumerCurator = consumerCurator;
@@ -256,8 +266,28 @@ public class OwnerResource {
         this.translator = translator;
     }
 
-    private Owner findOwner(String key) {
-        Owner owner = ownerCurator.lookupByKey(key);
+    /**
+     * Returns the owner object that is identified by the given key, if it is found in the system.
+     * Otherwise, it throws a NotFoundException.
+     *
+     * @param key the key that is associated with the owner we are searching for.
+     *
+     * @return the owner that was found in the system based on the given key.
+     *
+     * @throws NotFoundException
+     *  if the owner with the given key was not found in the system.
+     *
+     * @throws BadRequestException
+     *  if the given Owner key is null or empty.
+     */
+    private Owner findOwnerByKey(String key) {
+        Owner owner;
+        if (key != null && !key.isEmpty()) {
+            owner = ownerCurator.lookupByKey(key);
+        }
+        else {
+            throw new BadRequestException(i18n.tr("Owner key is null or empty."));
+        }
 
         if (owner == null) {
             throw new NotFoundException(i18n.tr("owner with key: {0} was not found.", key));
@@ -266,14 +296,187 @@ public class OwnerResource {
         return owner;
     }
 
+    /**
+     * Returns the owner object that is identified by the given id, if it is found in the system.
+     * Otherwise, it throws a NotFoundException.
+     *
+     * @param id the id of the owner we are searching for.
+     *
+     * @return the owner that was found in the system based on the given id.
+     *
+     * @throws NotFoundException
+     *  if the owner with the given id was not found in the system.
+     *
+     * @throws BadRequestException
+     *  if the given Owner id is null or empty.
+     */
+    private Owner findOwnerById(String id) {
+        Owner owner = null;
+        if (id != null && !id.isEmpty()) {
+            owner = ownerCurator.find(id);
+        }
+        else {
+            throw new BadRequestException(i18n.tr("Owner id is null or empty."));
+        }
+
+        if (owner == null) {
+            throw new NotFoundException(i18n.tr("owner with id: {0} was not found.", id));
+        }
+
+        return owner;
+    }
+
+    /**
+     * Returns the owner object that is identified by the given id or key, if it is found in the system.
+     * A search with the id has priority. If the id is null, only then a search with the key is performed.
+     * If both the id and the key are null, a {@link BadRequestException} is thrown.
+     *
+     * @param id the id of the owner we are searching for.
+     *
+     * @param key the key that is associated with the owner we are searching for.
+     *
+     * @return the owner that was found in the system based on the given id or key.
+     *
+     * @throws BadRequestException
+     *  If both the id and the key are null or empty.
+     */
+    private Owner findOwnerByIdOrKey(String id, String key) {
+        if (id != null && !id.isEmpty()) {
+            return this.findOwnerById(id);
+        }
+        else if (key != null && !key.isEmpty()) {
+            return this.findOwnerByKey(key);
+        }
+        else {
+            throw new BadRequestException(i18n.tr(
+                "Owner lookup failed because id and key were null or empty."));
+        }
+    }
+
+    /**
+     * Returns the entitlement object that is identified by the given id, if it is found in the system.
+     * Otherwise, it throws a NotFoundException.
+     *
+     * @param entitlementId the id of the entitlement we are searching for.
+     *
+     * @return the entitlement that was found in the system based on the given id.
+     *
+     * @throws NotFoundException
+     *  if the entitlement with the given id was not found in the system.
+     *
+     * @throws BadRequestException
+     *  if the given Entitlement id is null or empty.
+     */
+    private Entitlement findEntitlement(String entitlementId) {
+        Entitlement entitlement = null;
+        if (entitlementId != null && !entitlementId.isEmpty()) {
+            entitlement = entitlementCurator.find(entitlementId);
+        }
+        else {
+            throw new BadRequestException(i18n.tr("Entitlement id is null or empty."));
+        }
+
+        if (entitlement == null) {
+            throw new NotFoundException(
+                    i18n.tr("Entitlement with id {0} could not be found.", entitlementId));
+        }
+
+        return entitlement;
+    }
+
+    /**
+     * Returns the consumer object that is identified by the given uuid, if it is found in the system.
+     * Otherwise, it throws a NotFoundException.
+     *
+     * @param consumerUuid the uuid of the consumer we are searching for.
+     *
+     * @return the consumer that was found in the system based on the given uuid.
+     *
+     * @throws NotFoundException
+     *  if the consumer with the given uuid was not found in the system.
+     *
+     * @throws BadRequestException
+     *  if the given Consumer id is null or empty.
+     */
     private Consumer findConsumer(String consumerUuid) {
-        Consumer consumer = consumerCurator.findByUuid(consumerUuid);
+        Consumer consumer;
+        if (consumerUuid != null && !consumerUuid.isEmpty()) {
+            consumer = consumerCurator.findByUuid(consumerUuid);
+        }
+        else {
+            throw new BadRequestException(i18n.tr("Consumer id is null or empty."));
+        }
 
         if (consumer == null) {
             throw new NotFoundException(i18n.tr("No such unit: {0}", consumerUuid));
         }
 
         return consumer;
+    }
+
+    /**
+     * Returns the pool object that is identified by the given id, if it is found in the system.
+     * Otherwise, it throws a NotFoundException.
+     *
+     * @param poolId the id of the pool we are searching for.
+     *
+     * @return the pool that was found in the system based on the given id.
+     *
+     * @throws NotFoundException
+     *  if the pool with the given id was not found in the system.
+     *
+     * @throws BadRequestException
+     *  if the given Pool id is null or empty.
+     */
+    private Pool findPool(String poolId) {
+        Pool pool;
+        if (poolId != null && !poolId.isEmpty()) {
+            pool = poolManager.find(poolId);
+        }
+        else {
+            throw new BadRequestException(i18n.tr("Pool id is null or empty."));
+        }
+
+        if (pool == null) {
+            throw new BadRequestException(i18n.tr("Pool with id {0} could not be found.", poolId));
+        }
+
+        return pool;
+    }
+
+    /**
+     * Returns the product object that is identified by the given product id and owner object,
+     * if it is found in the system. Otherwise, it throws a NotFoundException.
+     *
+     * @param o the owner of the product we are searching for.
+     *
+     * @return the id of the product we are searching for.
+     *
+     * @throws NotFoundException
+     *  if the product with the given owner and product id was not found in the system.
+     *
+     * @throws BadRequestException
+     *  if the given product id is null or empty, or if the given owner is null.
+     */
+    private Product findProduct(Owner o, String productId) {
+        Product product;
+        if (productId != null && !productId.isEmpty()) {
+            if (o != null) {
+                product = ownerProductCurator.getProductById(o, productId);
+            }
+            else {
+                throw new BadRequestException(i18n.tr("Owner is null."));
+            }
+        }
+        else {
+            throw new BadRequestException(i18n.tr("Product id is null or empty."));
+        }
+
+        if (product == null) {
+            throw new BadRequestException(i18n.tr("Product with id {0} could not be found.", productId));
+        }
+
+        return product;
     }
 
     /**
@@ -461,24 +664,151 @@ public class OwnerResource {
         }
     }
 
-    private Pool findPool(String poolId) {
-        Pool pool = poolManager.find(poolId);
-
-        if (pool == null) {
-            throw new BadRequestException(i18n.tr("Pool with id {0} could not be found.", poolId));
+    /**
+     * Populates the specified entity with data from the provided DTO.
+     *
+     * @param entity
+     *  The entity instance to populate
+     *
+     * @param dto
+     *  The DTO containing the data with which to populate the entity
+     *
+     * @throws IllegalArgumentException
+     *  if either entity or dto are null
+     */
+    @SuppressWarnings("checkstyle:methodlength")
+    protected void populateEntity(Pool entity, PoolDTO dto) {
+        if (entity == null) {
+            throw new IllegalArgumentException("entity is null");
         }
 
-        return pool;
-    }
-
-    private Product findProduct(Owner o, String productId) {
-        Product product = ownerProductCurator.getProductById(o, productId);
-
-        if (product == null) {
-            throw new BadRequestException(i18n.tr("Product with id {0} could not be found.", productId));
+        if (dto == null) {
+            throw new IllegalArgumentException("dto is null");
         }
 
-        return product;
+        if (dto.getId() != null) {
+            entity.setId(dto.getId());
+        }
+
+        if (dto.getStartDate() != null) {
+            entity.setStartDate(dto.getStartDate());
+        }
+
+        if (dto.getEndDate() != null) {
+            entity.setEndDate(dto.getEndDate());
+        }
+
+        if (dto.getQuantity() != null) {
+            entity.setQuantity(dto.getQuantity());
+        }
+
+        if (dto.getContractNumber() != null) {
+            entity.setContractNumber(dto.getContractNumber());
+        }
+
+        if (dto.getOrderNumber() != null) {
+            entity.setOrderNumber(dto.getOrderNumber());
+        }
+
+        if (dto.getAccountNumber() != null) {
+            entity.setAccountNumber(dto.getAccountNumber());
+        }
+
+        if (dto.getUpstreamPoolId() != null) {
+            entity.setUpstreamPoolId(dto.getUpstreamPoolId());
+        }
+
+        if (dto.getAttributes() != null) {
+            if (dto.getAttributes().isEmpty()) {
+                entity.setAttributes(Collections.<String, String>emptyMap());
+            }
+            else {
+                entity.setAttributes(dto.getAttributes());
+            }
+        }
+
+        if (dto.getBranding() != null) {
+            if (dto.getBranding().isEmpty()) {
+                entity.setBranding(Collections.<Branding>emptySet());
+            }
+            else {
+                Set<Branding> branding = new HashSet<Branding>();
+                for (BrandingDTO brandingDTO : dto.getBranding()) {
+                    if (brandingDTO != null) {
+                        branding.add(new Branding(
+                            brandingDTO.getProductId(),
+                            brandingDTO.getType(),
+                            brandingDTO.getName()));
+                    }
+                }
+                entity.setBranding(branding);
+            }
+        }
+
+        if (dto.getProvidedProducts() != null) {
+            if (dto.getProvidedProducts().isEmpty()) {
+                entity.setProvidedProductDtos(Collections.<ProvidedProduct>emptySet());
+            }
+            else {
+                Set<Product> products = new HashSet<Product>();
+                for (PoolDTO.ProvidedProductDTO providedProductDTO : dto.getProvidedProducts()) {
+                    if (providedProductDTO != null) {
+                        Product newProd = findProduct(entity.getOwner(), providedProductDTO.getProductId());
+                        products.add(newProd);
+                    }
+                }
+                entity.setProvidedProducts(products);
+            }
+        }
+
+        if (dto.getDerivedProvidedProducts() != null) {
+            if (dto.getDerivedProvidedProducts().isEmpty()) {
+                entity.setDerivedProvidedProductDtos(Collections.<ProvidedProduct>emptySet());
+            }
+            else {
+                Set<Product> derivedProducts = new HashSet<Product>();
+                for (PoolDTO.ProvidedProductDTO derivedProvidedProductDTO :
+                    dto.getDerivedProvidedProducts()) {
+                    if (derivedProvidedProductDTO != null) {
+                        Product newDerivedProd =
+                            findProduct(entity.getOwner(), derivedProvidedProductDTO.getProductId());
+                        derivedProducts.add(newDerivedProd);
+                    }
+                }
+                entity.setDerivedProvidedProducts(derivedProducts);
+            }
+        }
+
+        // The owner might already be populated in the endpoint method.
+        if (entity.getOwner() == null) {
+            if (dto.getOwner() != null) {
+                OwnerDTO ownerDTO = dto.getOwner();
+                entity.setOwner(findOwnerByIdOrKey(ownerDTO.getId(), ownerDTO.getKey()));
+            }
+        }
+
+        if (dto.getProductId() != null && entity.getOwner() != null) {
+            Product product = findProduct(entity.getOwner(), dto.getProductId());
+            entity.setProduct(product);
+        }
+
+        if (dto.getDerivedProductId() != null && entity.getOwner() != null) {
+            Product derivedProduct = findProduct(entity.getOwner(), dto.getDerivedProductId());
+            entity.setDerivedProduct(derivedProduct);
+        }
+
+        if (dto.getSourceEntitlement() != null) {
+            EntitlementDTO sourceEntitlementDTO = dto.getSourceEntitlement();
+            entity.setSourceEntitlement(findEntitlement(sourceEntitlementDTO.getId()));
+        }
+
+        if (dto.getSubscriptionSubKey() != null) {
+            entity.setSubscriptionSubKey(dto.getSubscriptionSubKey());
+        }
+
+        if (dto.getSubscriptionId() != null) {
+            entity.setSubscriptionId(dto.getSubscriptionId());
+        }
     }
 
     /**
@@ -530,7 +860,7 @@ public class OwnerResource {
     @ApiOperation(notes = "Retrieves a single Owner", value = "Get Owner")
     @ApiResponses({ @ApiResponse(code = 404, message = "An owner not found") })
     public OwnerDTO getOwner(@PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
-        Owner owner = findOwner(ownerKey);
+        Owner owner = findOwnerByKey(ownerKey);
         return this.translator.translate(owner, OwnerDTO.class);
     }
 
@@ -549,7 +879,7 @@ public class OwnerResource {
     @ApiResponses({ @ApiResponse(code = 404, message = "An owner not found") })
     public OwnerInfo getOwnerInfo(@PathParam("owner_key")
         @Verify(value = Owner.class, subResource = SubResource.CONSUMERS) String ownerKey) {
-        Owner owner = findOwner(ownerKey);
+        Owner owner = findOwnerByKey(ownerKey);
         return ownerInfoCurator.lookupByOwner(owner);
     }
 
@@ -649,7 +979,7 @@ public class OwnerResource {
     public OwnerDTO updateOwner(@PathParam("owner_key") @Verify(Owner.class) String key,
         @ApiParam(name = "owner", required = true) OwnerDTO dto) {
 
-        Owner owner = findOwner(key);
+        Owner owner = findOwnerByKey(key);
 
         log.debug("Updating owner: {}", key);
 
@@ -711,7 +1041,7 @@ public class OwnerResource {
         @QueryParam("revoke") @DefaultValue("true") boolean revoke,
         @QueryParam("force") @DefaultValue("false") boolean force) {
 
-        Owner owner = findOwner(ownerKey);
+        Owner owner = findOwnerByKey(ownerKey);
         Event event = eventFactory.ownerDeleted(owner);
 
         if (!force && consumerCurator.doesShareConsumerExist(owner)) {
@@ -749,7 +1079,7 @@ public class OwnerResource {
     @ApiOperation(notes = "Retrieves the list of Entitlements for an Owner",
         value = "List Owner Entitlements")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
-    public List<Entitlement> ownerEntitlements(
+    public List<EntitlementDTO> ownerEntitlements(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @QueryParam("product") String productId,
         @QueryParam("matches") String matches,
@@ -757,7 +1087,7 @@ public class OwnerResource {
         List<KeyValueParameter> attrFilters,
         @Context PageRequest pageRequest) {
 
-        Owner owner = findOwner(ownerKey);
+        Owner owner = findOwnerByKey(ownerKey);
 
         EntitlementFilterBuilder filters = EntitlementFinderUtil.createFilter(matches, attrFilters);
         Page<List<Entitlement>> entitlementsPage = entitlementCurator
@@ -766,7 +1096,11 @@ public class OwnerResource {
         // Store the page for the LinkHeaderPostInterceptor
         ResteasyProviderFactory.pushContext(Page.class, entitlementsPage);
 
-        return entitlementsPage.getPageData();
+        List<EntitlementDTO> entitlementDTOs = new ArrayList<EntitlementDTO>();
+        for (Entitlement entitlement : entitlementsPage.getPageData()) {
+            entitlementDTOs.add(this.translator.translate(entitlement, EntitlementDTO.class));
+        }
+        return entitlementDTOs;
     }
 
     /**
@@ -814,7 +1148,7 @@ public class OwnerResource {
         subResource = SubResource.SERVICE_LEVELS) String ownerKey,
         @Context Principal principal,
         @QueryParam("exempt") @DefaultValue("false") String exempt) {
-        Owner owner = findOwner(ownerKey);
+        Owner owner = findOwnerByKey(ownerKey);
 
         if (principal.getType().equals("consumer")) {
             Consumer c = consumerCurator.findByUuid(principal.getName());
@@ -844,7 +1178,7 @@ public class OwnerResource {
     public CandlepinQuery<ActivationKeyDTO> ownerActivationKeys(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @QueryParam("name") String keyName) {
-        Owner owner = findOwner(ownerKey);
+        Owner owner = findOwnerByKey(ownerKey);
 
         CandlepinQuery<ActivationKey> keys = this.activationKeyCurator.listByOwner(owner, keyName);
         return translator.translateQuery(keys, ActivationKeyDTO.class);
@@ -869,7 +1203,7 @@ public class OwnerResource {
     public ActivationKeyDTO createActivationKey(@PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @ApiParam(name = "activation_key", required = true) ActivationKeyDTO dto) {
 
-        Owner owner = findOwner(ownerKey);
+        Owner owner = findOwnerByKey(ownerKey);
 
         if (StringUtils.isBlank(dto.getName())) {
             throw new BadRequestException(i18n.tr("Must provide a name for activation key."));
@@ -924,7 +1258,7 @@ public class OwnerResource {
     public Environment createEnv(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @ApiParam(name = "environment", required = true) Environment env) {
-        Owner owner = findOwner(ownerKey);
+        Owner owner = findOwnerByKey(ownerKey);
         env.setOwner(owner);
         env = envCurator.create(env);
         return env;
@@ -947,7 +1281,7 @@ public class OwnerResource {
         @Verify(Owner.class) String ownerKey,
         @ApiParam("Environment name filter to search for.")
         @QueryParam("name") String envName) {
-        Owner owner = findOwner(ownerKey);
+        Owner owner = findOwnerByKey(ownerKey);
         List<Environment> envs = null;
         if (envName == null) {
             envs = envCurator.listForOwner(owner);
@@ -975,7 +1309,7 @@ public class OwnerResource {
         @QueryParam("level") @DefaultValue("DEBUG")
         @ApiParam(allowableValues = "ALL, TRACE, DEBUG, INFO, WARN, ERROR, OFF") String level) {
 
-        Owner owner = findOwner(ownerKey);
+        Owner owner = findOwnerByKey(ownerKey);
 
         Level logLevel = Level.toLevel(level, null);
         if (logLevel == null) {
@@ -999,7 +1333,7 @@ public class OwnerResource {
     @ApiOperation(notes = "Remove the Log Level of an Owner", value = "Remove Log Level")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found")})
     public void deleteLogLevel(@PathParam("owner_key") String ownerKey) {
-        Owner owner = findOwner(ownerKey);
+        Owner owner = findOwnerByKey(ownerKey);
         owner.setLogLevel(null);
         ownerCurator.merge(owner);
     }
@@ -1037,7 +1371,7 @@ public class OwnerResource {
         @QueryParam("contract") List<String> contracts,
         @Context PageRequest pageRequest) {
 
-        Owner owner = findOwner(ownerKey);
+        Owner owner = findOwnerByKey(ownerKey);
         List<ConsumerType> types = consumerTypeValidator.findAndValidateTypeLabels(typeLabels);
 
         return this.consumerCurator.searchOwnerConsumers(
@@ -1062,7 +1396,7 @@ public class OwnerResource {
         @QueryParam("subscription_id") List<String> subscriptionIds,
         @QueryParam("contract") List<String> contracts) {
 
-        findOwner(ownerKey);
+        findOwnerByKey(ownerKey);
         consumerTypeValidator.findAndValidateTypeLabels(typeLabels);
 
         return consumerCurator.countConsumers(ownerKey, typeLabels, skus, subscriptionIds, contracts);
@@ -1088,7 +1422,7 @@ public class OwnerResource {
         @ApiResponse(code = 404, message = "Owner not found"),
         @ApiResponse(code = 400, message = "Invalid request")
     })
-    public List<Pool> listPools(
+    public List<PoolDTO> listPools(
         @PathParam("owner_key") @Verify(value = Owner.class, subResource = SubResource.POOLS) String ownerKey,
         @QueryParam("consumer") String consumerUuid,
         @QueryParam("activation_key") String activationKeyName,
@@ -1117,7 +1451,7 @@ public class OwnerResource {
         @Context Principal principal,
         @Context PageRequest pageRequest) {
 
-        Owner owner = findOwner(ownerKey);
+        Owner owner = findOwnerByKey(ownerKey);
 
         Consumer c = null;
         if (consumerUuid != null) {
@@ -1178,7 +1512,12 @@ public class OwnerResource {
 
         // Store the page for the LinkHeaderResponseFilter
         ResteasyProviderFactory.pushContext(Page.class, page);
-        return poolList;
+
+        List<PoolDTO> poolDTOs = new ArrayList<PoolDTO>();
+        for (Pool pool : poolList) {
+            poolDTOs.add(translator.translate(pool, PoolDTO.class));
+        }
+        return poolDTOs;
     }
 
     /**
@@ -1195,7 +1534,7 @@ public class OwnerResource {
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found")})
     public Feed getOwnerAtomFeed(@PathParam("owner_key")
         @Verify(Owner.class) String ownerKey) {
-        Owner o = findOwner(ownerKey);
+        Owner o = findOwnerByKey(ownerKey);
         String path = String.format("/owners/%s/atom", ownerKey);
         Feed feed = this.eventAdapter.toFeed(this.eventCurator.listMostRecent(FEED_LIMIT, o).list(), path);
         feed.setTitle("Event feed for owner " + o.getDisplayName());
@@ -1216,7 +1555,7 @@ public class OwnerResource {
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found")})
     public List<EventDTO> getEvents(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
-        Owner o = findOwner(ownerKey);
+        Owner o = findOwnerByKey(ownerKey);
 
         List<Event> events = this.eventCurator.listMostRecent(FEED_LIMIT, o).list();
 
@@ -1246,7 +1585,7 @@ public class OwnerResource {
     @ApiOperation(notes = "Retrieves a list of Subscriptions for an Owner", value = "List Subscriptions")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
     public List<Subscription> getSubscriptions(@PathParam("owner_key") String ownerKey) {
-        Owner owner = this.findOwner(ownerKey);
+        Owner owner = this.findOwnerByKey(ownerKey);
 
         List<Subscription> subscriptions = new LinkedList<Subscription>();
 
@@ -1284,7 +1623,7 @@ public class OwnerResource {
         Subscription subscription) {
 
         // Correct owner & products
-        Owner owner = findOwner(ownerKey);
+        Owner owner = findOwnerByKey(ownerKey);
         subscription.setOwner(owner);
 
         subscription = resolverUtil.resolveSubscription(subscription);
@@ -1389,17 +1728,25 @@ public class OwnerResource {
         "upstream subscription, and are most commonly used for custom content delivery " +
         "in Satellite. Also helps in on-site deployment testing", value = "Create Pool")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
-    public Pool createPool(@PathParam("owner_key") @Verify(Owner.class) String ownerKey,
-        @ApiParam(name = "pool", required = true) Pool pool) {
+    public PoolDTO createPool(@PathParam("owner_key") @Verify(Owner.class) String ownerKey,
+        @ApiParam(name = "pool", required = true) PoolDTO inputPoolDTO) {
 
-        log.info("Creating custom pool for owner {}: {}" + ownerKey, pool);
+        log.info("Creating custom pool for owner {}: {}" + ownerKey, inputPoolDTO);
 
-        // Correct owner & products
-        Owner owner = findOwner(ownerKey);
+        Pool pool = new Pool();
+
+        // Correct owner
+        Owner owner = findOwnerByKey(ownerKey);
         pool.setOwner(owner);
 
-        pool = resolverUtil.resolvePool(pool);
-        return poolManager.createAndEnrichPools(pool);
+        // Populate the rest of the pool
+        this.populateEntity(pool, inputPoolDTO);
+
+        // Resolve products
+        //pool = resolverUtil.resolvePool(pool);
+
+        pool = poolManager.createAndEnrichPools(pool);
+        return this.translator.translate(pool, PoolDTO.class);
     }
 
     /**
@@ -1423,12 +1770,12 @@ public class OwnerResource {
         value = "Update Pool")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
     public void updatePool(@PathParam("owner_key") @Verify(Owner.class) String ownerKey,
-        @ApiParam(name = "pool", required = true) Pool newPool) {
+        @ApiParam(name = "pool", required = true) PoolDTO newPoolDTO) {
 
-        Pool currentPool = this.poolManager.find(newPool.getId());
+        Pool currentPool = this.poolManager.find(newPoolDTO.getId());
         if (currentPool == null) {
             throw new NotFoundException(
-                i18n.tr("Unable to find a pool with the ID \"{0}\"", newPool.getId()));
+                i18n.tr("Unable to find a pool with the ID \"{0}\"", newPoolDTO.getId()));
         }
 
         // Verify the existing pool belongs to the specified owner
@@ -1436,21 +1783,24 @@ public class OwnerResource {
         // potential security concerns.
         if (currentPool.getOwner() == null || !ownerKey.equals(currentPool.getOwner().getKey())) {
             throw new NotFoundException(
-                i18n.tr("Unable to find a pool with the ID \"{0}\"", newPool.getId()));
+                i18n.tr("Unable to find a pool with the ID \"{0}\"", newPoolDTO.getId()));
         }
 
-        // Ignore what the client has specified as the owner, since we already know the owner here
-        newPool.setOwner(currentPool.getOwner());
-
         // Verify the pool type is one that allows modifications
-        if (currentPool.getType() != PoolType.NORMAL || newPool.getType() != PoolType.NORMAL) {
+        if (currentPool.getType() != PoolType.NORMAL) {
             throw new BadRequestException(i18n.tr("Cannot update bonus pools, as they are auto generated"));
         }
 
-        if (currentPool.isCreatedByShare() || newPool.isCreatedByShare()) {
+        if (currentPool.isCreatedByShare()) {
             throw new BadRequestException(i18n.tr("Cannot update shared pools, This should be triggered " +
                 "by updating the share entitlement instead"));
         }
+
+        Pool newPool = new Pool();
+        this.populateEntity(newPool, newPoolDTO);
+
+        // Ignore what the client has specified as the owner, since we already know the owner here
+        newPool.setOwner(currentPool.getOwner());
 
         /*
          * These are @JsonIgnored. If a client creates a pool and subsequently
@@ -1549,7 +1899,7 @@ public class OwnerResource {
     public JobDetail undoImports(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey, @Context Principal principal) {
 
-        Owner owner = findOwner(ownerKey);
+        Owner owner = findOwnerByKey(ownerKey);
 
         if (this.exportCurator.lookupByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner) == null) {
             throw new NotFoundException("No import found for owner " + ownerKey);
@@ -1592,7 +1942,7 @@ public class OwnerResource {
 
         ConflictOverrides overrides = processConflictOverrideParams(overrideConflicts);
         UploadMetadata fileData = new UploadMetadata();
-        Owner owner = findOwner(ownerKey);
+        Owner owner = findOwnerByKey(ownerKey);
 
         try {
             fileData = getArchiveFromResponse(input);
@@ -1662,7 +2012,7 @@ public class OwnerResource {
 
         ConflictOverrides overrides = processConflictOverrideParams(overrideConflicts);
         UploadMetadata fileData = new UploadMetadata();
-        Owner owner = findOwner(ownerKey);
+        Owner owner = findOwnerByKey(ownerKey);
 
         try {
             fileData = getArchiveFromResponse(input);
@@ -1701,7 +2051,7 @@ public class OwnerResource {
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
     public CandlepinQuery<ImportRecord> getImports(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
-        Owner owner = findOwner(ownerKey);
+        Owner owner = findOwnerByKey(ownerKey);
 
         return this.importRecordCurator.findRecords(owner);
     }
@@ -1745,7 +2095,7 @@ public class OwnerResource {
     public UeberCertificate getUeberCertificate(@Context Principal principal,
         @Verify(Owner.class) @PathParam("owner_key") String ownerKey) {
 
-        Owner o = findOwner(ownerKey);
+        Owner o = findOwnerByKey(ownerKey);
         if (o == null) {
             throw new NotFoundException(i18n.tr("Owner with key: {0} was not found.", ownerKey));
         }
@@ -1775,7 +2125,7 @@ public class OwnerResource {
     public List<UpstreamConsumerDTO> getUpstreamConsumers(@Context Principal principal,
         @Verify(Owner.class) @PathParam("owner_key") String ownerKey) {
 
-        Owner owner = findOwner(ownerKey);
+        Owner owner = findOwnerByKey(ownerKey);
         UpstreamConsumer consumer = owner.getUpstreamConsumer();
         UpstreamConsumerDTO dto = this.translator.translate(consumer, UpstreamConsumerDTO.class);
 

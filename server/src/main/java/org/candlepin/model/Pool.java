@@ -82,7 +82,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @Entity
 @Table(name = Pool.DB_TABLE)
 @JsonFilter("PoolFilter")
-public class Pool extends AbstractHibernateObject implements Persisted, Owned, Named, Comparable<Pool>,
+public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named, Comparable<Pool>,
     Eventful {
 
     /** Name of the table backing this object in the database */
@@ -1171,11 +1171,6 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         return getConsumed() > this.quantity;
     }
 
-    @HateoasInclude
-    public String getHref() {
-        return "/pools/" + getId();
-    }
-
     /**
      * @return the subscriptionSubKey
      */
@@ -1413,6 +1408,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         if (sourceSubscription == null && !StringUtils.isBlank(subid)) {
             setSourceSubscription(new SourceSubscription());
         }
+
         if (sourceSubscription != null) {
             sourceSubscription.setSubscriptionId(subid);
             if (StringUtils.isBlank(sourceSubscription.getSubscriptionId()) &&
@@ -1426,6 +1422,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         if (sourceSubscription == null && !StringUtils.isBlank(subkey)) {
             setSourceSubscription(new SourceSubscription());
         }
+
         if (sourceSubscription != null) {
             sourceSubscription.setSubscriptionSubKey(subkey);
             if (StringUtils.isBlank(sourceSubscription.getSubscriptionId()) &&

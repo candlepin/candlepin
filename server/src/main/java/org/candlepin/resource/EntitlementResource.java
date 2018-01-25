@@ -24,6 +24,8 @@ import org.candlepin.common.paging.PageRequest;
 import org.candlepin.common.util.SuppressSwaggerCheck;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.EntitlementDTO;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -91,13 +93,15 @@ public class EntitlementResource {
     private Entitler entitler;
     private Enforcer enforcer;
     private EntitlementRulesTranslator messageTranslator;
+    private ModelTranslator translator;
 
     @Inject
     public EntitlementResource(EntitlementCurator entitlementCurator,
         ConsumerCurator consumerCurator,
         PoolManager poolManager,
         I18n i18n,
-        Entitler entitler, Enforcer enforcer, EntitlementRulesTranslator messageTranslator) {
+        Entitler entitler, Enforcer enforcer, EntitlementRulesTranslator messageTranslator,
+        ModelTranslator translator) {
 
         this.entitlementCurator = entitlementCurator;
         this.consumerCurator = consumerCurator;
@@ -106,6 +110,7 @@ public class EntitlementResource {
         this.entitler = entitler;
         this.enforcer = enforcer;
         this.messageTranslator = messageTranslator;
+        this.translator = translator;
     }
 
     private void verifyExistence(Object o, String id) {
@@ -120,7 +125,7 @@ public class EntitlementResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("consumer/{consumer_uuid}/product/{product_id}")
-    public Entitlement hasEntitlement(@PathParam("consumer_uuid") String consumerUuid,
+    public EntitlementDTO hasEntitlement(@PathParam("consumer_uuid") String consumerUuid,
         @PathParam("product_id") String productId) {
 
         Consumer consumer = consumerCurator.findByUuid(consumerUuid);
@@ -128,7 +133,7 @@ public class EntitlementResource {
 
         for (Entitlement e : consumer.getEntitlements()) {
             if (e.getPool().getProductId().equals(productId)) {
-                return e;
+                return this.translator.translate(e, EntitlementDTO.class);
             }
         }
 
@@ -141,7 +146,7 @@ public class EntitlementResource {
     @ApiResponses({ @ApiResponse(code = 400, message = "") })
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Entitlement> listAllForConsumer(
+    public List<EntitlementDTO> listAllForConsumer(
         @QueryParam("consumer") String consumerUuid,
         @QueryParam("matches") String matches,
         @QueryParam("attribute") @CandlepinParam(type = KeyValueParameter.class)
@@ -164,7 +169,12 @@ public class EntitlementResource {
 
         // Store the page for the LinkHeaderResponseFilter
         ResteasyProviderFactory.pushContext(Page.class, p);
-        return p.getPageData();
+
+        List<EntitlementDTO> entitlementDTOs = new ArrayList<EntitlementDTO>();
+        for (Entitlement entitlement : p.getPageData()) {
+            entitlementDTOs.add(this.translator.translate(entitlement, EntitlementDTO.class));
+        }
+        return entitlementDTOs;
     }
 
     @ApiOperation(notes = "Retrieves a single Entitlement", value = "getEntitlement")
@@ -172,7 +182,7 @@ public class EntitlementResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{entitlement_id}")
-    public Entitlement getEntitlement(
+    public EntitlementDTO getEntitlement(
         @PathParam("entitlement_id") @Verify(Entitlement.class) String entitlementId) {
 
         Entitlement entitlement = entitlementCurator.find(entitlementId);
@@ -188,7 +198,7 @@ public class EntitlementResource {
         // generation of a new entitlement object, as the name would imply.
         poolManager.regenerateDirtyEntitlements(Arrays.asList(entitlement));
 
-        return entitlement;
+        return this.translator.translate(entitlement, EntitlementDTO.class);
     }
 
     @ApiOperation(notes = "Updates an Entitlement. This only works for the quantity.",
@@ -200,7 +210,8 @@ public class EntitlementResource {
     @Path("{entitlement_id}")
     public void updateEntitlement(
         @PathParam("entitlement_id") @Verify(Entitlement.class) String id,
-        @ApiParam(name = "update", required = true) Entitlement update) {
+        @ApiParam(name = "update", required = true) EntitlementDTO update) {
+        //TODO Why do we accept a whole Entitlement object here, if we only use the quantity field???
 
         // Check that quantity param was set and is not 0:
         if (update.getQuantity() <= 0) {
@@ -377,8 +388,13 @@ public class EntitlementResource {
             throw new NotFoundException(
                 i18n.tr("Entitlement with ID ''{0}'' could not be found.", id));
         }
+
+        List<EntitlementDTO> entitlementDTOs = new ArrayList<EntitlementDTO>();
+        for (Entitlement entitlementModel : entitlements) {
+            entitlementDTOs.add(this.translator.translate(entitlementModel, EntitlementDTO.class));
+        }
         return Response.status(Response.Status.OK)
-                .type(MediaType.APPLICATION_JSON).entity(entitlements).build();
+                .type(MediaType.APPLICATION_JSON).entity(entitlementDTOs).build();
 
     }
 

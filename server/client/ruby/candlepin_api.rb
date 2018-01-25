@@ -1022,7 +1022,7 @@ class Candlepin
       'startDate' => start_date,
       'endDate'   => end_date,
       'quantity'  =>  quantity,
-      'product' => { 'id' => product_id },
+      'productId' => product_id,
       'providedProducts' => provided_products.collect { |pid| {'productId' => pid} }
     }
 
@@ -1043,13 +1043,12 @@ class Candlepin
     end
 
     if params[:derived_product_id]
-      pool['derivedProduct'] = { 'id' => params[:derived_product_id] }
+      pool['derivedProductId'] = params[:derived_product_id]
     end
 
     if params[:source_subscription]
-      pool['sourceSubscription'] = {}
-      pool['sourceSubscription']['subscriptionId'] = params[:source_subscription]['id']
-      pool['sourceSubscription']['subscriptionSubKey'] = 'master'
+      pool['subscriptionId'] = params[:source_subscription]['id']
+      pool['subscriptionSubKey'] = 'master'
     end
 
     if params[:derived_provided_products]

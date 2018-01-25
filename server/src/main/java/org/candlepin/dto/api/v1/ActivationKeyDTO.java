@@ -35,7 +35,7 @@ import java.util.Set;
  * A DTO representation of the ActivationKey entity
  */
 @ApiModel(parent = TimestampedCandlepinDTO.class, description = "DTO representing an activation key")
-public class ActivationKeyDTO  extends TimestampedCandlepinDTO<ActivationKeyDTO> {
+public class ActivationKeyDTO extends TimestampedCandlepinDTO<ActivationKeyDTO> {
     public static final long serialVersionUID = 1L;
 
     /**

@@ -36,7 +36,7 @@ import java.util.Map;
 
 
 /**
- * Test suite for the UpstreamConsumerTranslator class
+ * Test suite for the ProductTranslator class
  */
 @RunWith(JUnitParamsRunner.class)
 public class ProductTranslatorTest extends

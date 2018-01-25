@@ -28,7 +28,6 @@ import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.StandardTranslator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
@@ -51,6 +50,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
+import javax.inject.Inject;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -72,13 +72,13 @@ public class GuestIdResourceTest {
     @Mock private EventSink sink;
     @Mock private ServiceLevelValidator mockedServiceLevelValidator;
     @Mock private ConsumerEnricher consumerEnricher;
-    private ModelTranslator translator;
 
     private GuestIdResource guestIdResource;
 
     private Consumer consumer;
     private Owner owner;
     private ConsumerType ct;
+    @Inject protected ModelTranslator modelTranslator;
 
     private GuestMigration testMigration;
     private Provider<GuestMigration> migrationProvider;
@@ -92,7 +92,6 @@ public class GuestIdResourceTest {
         owner = new Owner("test-owner", "Test Owner");
         ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         consumer = new Consumer("consumer", "test", owner, ct);
-        translator = new StandardTranslator();
         guestIdResource = new GuestIdResource(guestIdCurator,
             consumerCurator, consumerResource, i18n, eventFactory, sink, migrationProvider);
         when(consumerCurator.findByUuid(consumer.getUuid())).thenReturn(consumer);
@@ -282,7 +281,7 @@ public class GuestIdResourceTest {
         public ConsumerResourceForTesting() {
             super(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, consumerEnricher, null, translator);
+                null, null, null, null, consumerEnricher, null, modelTranslator);
         }
 
         public void checkForMigration(Consumer host, Consumer guest) {
