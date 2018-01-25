@@ -26,6 +26,9 @@ import java.util.Set;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+/**
+ * Test suite for the ActivationKeyDTO class
+ */
 public class ActivationKeyDTOTest extends AbstractDTOTest<ActivationKeyDTO> {
 
     protected Map<String, Object> values;

@@ -44,7 +44,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Entity
 @Table(name = SubscriptionsCertificate.DB_TABLE)
 @JsonFilter("SubscriptionCertificateFilter")
-public class SubscriptionsCertificate extends AbstractCertificate {
+public class SubscriptionsCertificate extends AbstractCertificate<SubscriptionsCertificate>
+    implements Certificate<SubscriptionsCertificate> {
 
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp_certificate";

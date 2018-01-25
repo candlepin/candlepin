@@ -16,8 +16,6 @@ package org.candlepin.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import org.candlepin.common.jackson.HateoasInclude;
-
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.Column;
@@ -30,15 +28,13 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.Size;
 
-
-
 /**
  * SourceSubscription represents the subscription
  * from which a pool was created.
  */
 @Entity
 @Table(name = SourceSubscription.DB_TABLE)
-public class SourceSubscription extends AbstractHibernateObject {
+public class SourceSubscription extends AbstractHibernateObject<SourceSubscription> {
 
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp2_pool_source_sub";
@@ -71,7 +67,6 @@ public class SourceSubscription extends AbstractHibernateObject {
      */
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, unique = true)
-    @JsonIgnore
     private Pool pool;
 
     public SourceSubscription() {
@@ -128,7 +123,6 @@ public class SourceSubscription extends AbstractHibernateObject {
      * @return the id
      */
     @Override
-    @HateoasInclude
     public String getId() {
         return id;
     }

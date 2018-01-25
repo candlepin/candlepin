@@ -14,9 +14,6 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.common.jackson.HateoasInclude;
-
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.Column;
@@ -30,21 +27,15 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 
 /**
  * PoolSourceStack represents the source of a derived pool from a stack.
  *
  * This allows us to enforce one-subpool-per-stack with a database constraint.
  */
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = SourceStack.DB_TABLE)
-public class SourceStack extends AbstractHibernateObject {
+public class SourceStack extends AbstractHibernateObject<SourceStack> {
 
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp_pool_source_stack";
@@ -72,7 +63,6 @@ public class SourceStack extends AbstractHibernateObject {
      * pool.
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @ForeignKey(name = "fk_sourcestack_consumer")
     @JoinColumn(nullable = false)
     @NotNull
     private Consumer sourceConsumer;
@@ -81,9 +71,7 @@ public class SourceStack extends AbstractHibernateObject {
      * pool derived from the source
      */
     @OneToOne(fetch = FetchType.LAZY)
-    @ForeignKey(name = "fk_sourcestack_pool")
     @JoinColumn(nullable = false, unique = true)
-    @XmlTransient
     @NotNull
     private Pool derivedPool;
 
@@ -146,7 +134,6 @@ public class SourceStack extends AbstractHibernateObject {
     /**
      * @return the id
      */
-    @HateoasInclude
     public String getId() {
         return id;
     }

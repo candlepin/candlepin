@@ -81,7 +81,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Entity
 @Table(name = Pool.DB_TABLE)
 @JsonFilter("PoolFilter")
-public class Pool extends AbstractHibernateObject implements Persisted, Owned, Named, Comparable<Pool>,
+public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named, Comparable<Pool>,
     Eventful {
 
     /** Name of the table backing this object in the database */
@@ -1167,11 +1167,6 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
             return false;
         }
         return getConsumed() > this.quantity;
-    }
-
-    @HateoasInclude
-    public String getHref() {
-        return "/pools/" + getId();
     }
 
     /**
