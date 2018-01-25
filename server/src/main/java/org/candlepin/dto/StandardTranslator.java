@@ -17,6 +17,8 @@ package org.candlepin.dto;
 import org.candlepin.audit.Event;
 import org.candlepin.dto.api.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.v1.ActivationKeyTranslator;
+import org.candlepin.dto.api.v1.BrandingDTO;
+import org.candlepin.dto.api.v1.BrandingTranslator;
 import org.candlepin.dto.api.v1.CertificateDTO;
 import org.candlepin.dto.api.v1.CertificateSerialDTO;
 import org.candlepin.dto.api.v1.CertificateSerialTranslator;
@@ -27,19 +29,26 @@ import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.ContentTranslator;
 import org.candlepin.dto.api.v1.EventDTO;
 import org.candlepin.dto.api.v1.EventTranslator;
+import org.candlepin.dto.api.v1.EntitlementDTO;
+import org.candlepin.dto.api.v1.EntitlementTranslator;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.OwnerTranslator;
+import org.candlepin.dto.api.v1.PoolDTO;
+import org.candlepin.dto.api.v1.PoolTranslator;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.dto.api.v1.ProductTranslator;
 import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
 import org.candlepin.dto.api.v1.UpstreamConsumerTranslator;
 import org.candlepin.dto.shim.ContentDataTranslator;
 import org.candlepin.dto.shim.ProductDataTranslator;
-import org.candlepin.model.Certificate;
+import org.candlepin.model.Branding;
 import org.candlepin.model.CertificateSerial;
+import org.candlepin.model.Certificate;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Content;
+import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
+import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.activationkeys.ActivationKey;
@@ -68,6 +77,12 @@ public class StandardTranslator extends SimpleModelTranslator {
             new OwnerTranslator(), Owner.class, OwnerDTO.class);
         this.registerTranslator(
             new ProductTranslator(), Product.class, ProductDTO.class);
+        this.registerTranslator(
+            new PoolTranslator(), Pool.class, PoolDTO.class);
+        this.registerTranslator(
+            new BrandingTranslator(), Branding.class, BrandingDTO.class);
+        this.registerTranslator(
+            new EntitlementTranslator(), Entitlement.class, EntitlementDTO.class);
         this.registerTranslator(
             new UpstreamConsumerTranslator(), UpstreamConsumer.class, UpstreamConsumerDTO.class);
         this.registerTranslator(
