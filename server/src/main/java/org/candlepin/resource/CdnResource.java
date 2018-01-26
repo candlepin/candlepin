@@ -29,7 +29,6 @@ import org.candlepin.model.CdnCurator;
 
 import com.google.inject.Inject;
 
-import org.apache.commons.lang.StringUtils;
 import org.candlepin.model.CertificateSerial;
 import org.xnap.commons.i18n.I18n;
 
@@ -108,6 +107,10 @@ public class CdnResource {
         Cdn cndToCreate = new Cdn();
         this.populateEntity(cndToCreate, cdnDTOInput);
 
+        if (cdnDTOInput.getLabel() != null) {
+            cndToCreate.setLabel(cdnDTOInput.getLabel());
+        }
+
         return this.translator.translate(cdnManager.createCdn(cndToCreate), CdnDTO.class);
     }
 
@@ -117,18 +120,10 @@ public class CdnResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{label}")
     public CdnDTO update(@PathParam("label") String label,
-        @ApiParam(name = "cdn", required = true) Cdn cdnDTOInput,
+        @ApiParam(name = "cdn", required = true) CdnDTO cdnDTOInput,
         @Context Principal principal) {
         Cdn existing = verifyAndLookupCdn(label);
-        if (!StringUtils.isBlank(cdnDTOInput.getName())) {
-            existing.setName(cdnDTOInput.getName());
-        }
-        if (!StringUtils.isBlank(cdnDTOInput.getUrl())) {
-            existing.setUrl(cdnDTOInput.getUrl());
-        }
-        if (cdnDTOInput.getCertificate() != null) {
-            existing.setCertificate(cdnDTOInput.getCertificate());
-        }
+        this.populateEntity(existing, cdnDTOInput);
         cdnManager.updateCdn(existing);
         return this.translator.translate(existing, CdnDTO.class);
     }
@@ -157,10 +152,6 @@ public class CdnResource {
 
         if (dto.getName() != null) {
             entity.setName(dto.getName());
-        }
-
-        if (dto.getLabel() != null) {
-            entity.setLabel(dto.getLabel());
         }
 
         if (dto.getUrl() != null) {
