@@ -26,10 +26,10 @@ import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.CdnDTO;
 import org.candlepin.dto.api.v1.CertificateDTO;
 import org.candlepin.dto.api.v1.EntitlementDTO;
 import org.candlepin.dto.api.v1.PoolDTO;
-import org.candlepin.model.Cdn;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
@@ -270,7 +270,7 @@ public class PoolResource {
     @GET
     @Path("{pool_id}/cdn")
     @Produces(MediaType.APPLICATION_JSON)
-    public Cdn getPoolCdn(
+    public CdnDTO getPoolCdn(
         @PathParam("pool_id") @Verify(Pool.class) String id) {
 
         Pool pool = poolManager.find(id);
@@ -280,7 +280,7 @@ public class PoolResource {
                 "Subscription Pool with ID ''{0}'' could not be found.", id));
         }
 
-        return pool.getCdn();
+        return this.translator.translate(pool.getCdn(), CdnDTO.class);
     }
 
     @ApiOperation(notes = "Retrieve a list of Entitlements for a Pool", value = "getPoolEntitlements")

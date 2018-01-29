@@ -19,6 +19,8 @@ import org.candlepin.dto.api.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.v1.ActivationKeyTranslator;
 import org.candlepin.dto.api.v1.BrandingDTO;
 import org.candlepin.dto.api.v1.BrandingTranslator;
+import org.candlepin.dto.api.v1.CdnDTO;
+import org.candlepin.dto.api.v1.CdnTranslator;
 import org.candlepin.dto.api.v1.CertificateDTO;
 import org.candlepin.dto.api.v1.CertificateSerialDTO;
 import org.candlepin.dto.api.v1.CertificateSerialTranslator;
@@ -42,8 +44,9 @@ import org.candlepin.dto.api.v1.UpstreamConsumerTranslator;
 import org.candlepin.dto.shim.ContentDataTranslator;
 import org.candlepin.dto.shim.ProductDataTranslator;
 import org.candlepin.model.Branding;
-import org.candlepin.model.CertificateSerial;
+import org.candlepin.model.Cdn;
 import org.candlepin.model.Certificate;
+import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
@@ -87,6 +90,8 @@ public class StandardTranslator extends SimpleModelTranslator {
             new UpstreamConsumerTranslator(), UpstreamConsumer.class, UpstreamConsumerDTO.class);
         this.registerTranslator(
             new ActivationKeyTranslator(), ActivationKey.class, ActivationKeyDTO.class);
+        this.registerTranslator(
+            new CdnTranslator(), Cdn.class, CdnDTO.class);
 
         // Event translators
         /////////////////////////////////////////////

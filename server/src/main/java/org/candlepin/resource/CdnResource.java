@@ -18,13 +18,18 @@ import org.candlepin.auth.Principal;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.CdnManager;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.CdnDTO;
+import org.candlepin.dto.api.v1.CertificateDTO;
+import org.candlepin.dto.api.v1.CertificateSerialDTO;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Cdn;
+import org.candlepin.model.CdnCertificate;
 import org.candlepin.model.CdnCurator;
 
 import com.google.inject.Inject;
 
-import org.apache.commons.lang.StringUtils;
+import org.candlepin.model.CertificateSerial;
 import org.xnap.commons.i18n.I18n;
 
 import javax.ws.rs.Consumes;
@@ -55,20 +60,22 @@ public class CdnResource {
     private I18n i18n;
     private CdnCurator curator;
     private CdnManager cdnManager;
+    private ModelTranslator translator;
 
     @Inject
-    public CdnResource(I18n i18n, CdnCurator curator, CdnManager manager) {
+    public CdnResource(I18n i18n, CdnCurator curator, CdnManager manager, ModelTranslator translator) {
         this.i18n = i18n;
         this.curator = curator;
         this.cdnManager = manager;
+        this.translator = translator;
     }
 
     @ApiOperation(notes = "Retrieves a list of CDN's", value = "getContentDeliveryNetworks",
-        response = Cdn.class, responseContainer = "list")
+        response = CdnDTO.class, responseContainer = "list")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public CandlepinQuery<Cdn> getContentDeliveryNetworks() {
-        return curator.listAll();
+    public CandlepinQuery<CdnDTO> getContentDeliveryNetworks() {
+        return this.translator.translateQuery(curator.listAll(), CdnDTO.class);
     }
 
     @ApiOperation(notes = "Removes a CDN", value = "delete")
@@ -88,14 +95,23 @@ public class CdnResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Cdn create(
-        @ApiParam(name = "cdn", required = true) Cdn cdn,
+    public CdnDTO create(
+        @ApiParam(name = "cdn", required = true) CdnDTO cdnDTOInput,
         @Context Principal principal) {
-        Cdn existing = curator.lookupByLabel(cdn.getLabel());
+        Cdn existing = curator.lookupByLabel(cdnDTOInput.getLabel());
         if (existing != null) {
-            throw new BadRequestException(i18n.tr("A CDN with the label {0} already exists", cdn.getLabel()));
+            throw new BadRequestException(i18n.tr(
+                "A CDN with the label {0} already exists", cdnDTOInput.getLabel()));
         }
-        return cdnManager.createCdn(cdn);
+
+        Cdn cndToCreate = new Cdn();
+        this.populateEntity(cndToCreate, cdnDTOInput);
+
+        if (cdnDTOInput.getLabel() != null) {
+            cndToCreate.setLabel(cdnDTOInput.getLabel());
+        }
+
+        return this.translator.translate(cdnManager.createCdn(cndToCreate), CdnDTO.class);
     }
 
     @ApiOperation(notes = "Updates a CDN @return a Cdn object", value = "update")
@@ -103,21 +119,78 @@ public class CdnResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{label}")
-    public Cdn update(@PathParam("label") String label,
-        @ApiParam(name = "cdn", required = true) Cdn cdn,
+    public CdnDTO update(@PathParam("label") String label,
+        @ApiParam(name = "cdn", required = true) CdnDTO cdnDTOInput,
         @Context Principal principal) {
         Cdn existing = verifyAndLookupCdn(label);
-        if (!StringUtils.isBlank(cdn.getName())) {
-            existing.setName(cdn.getName());
-        }
-        if (!StringUtils.isBlank(cdn.getUrl())) {
-            existing.setUrl(cdn.getUrl());
-        }
-        if (cdn.getCertificate() != null) {
-            existing.setCertificate(cdn.getCertificate());
-        }
+        this.populateEntity(existing, cdnDTOInput);
         cdnManager.updateCdn(existing);
-        return existing;
+        return this.translator.translate(existing, CdnDTO.class);
+    }
+
+    /**
+     * Populates the specified entity with data from the provided DTO.
+     * This method will not set the ID field.
+     *
+     * @param entity
+     *  The entity instance to populate
+     *
+     * @param dto
+     *  The DTO containing the data with which to populate the entity
+     *
+     * @throws IllegalArgumentException
+     *  if either entity or dto are null
+     */
+    private void populateEntity(Cdn entity, CdnDTO dto) {
+        if (entity == null) {
+            throw new IllegalArgumentException("the Cdn model entity is null");
+        }
+
+        if (dto == null) {
+            throw new IllegalArgumentException("the Cdn dto is null");
+        }
+
+        if (dto.getName() != null) {
+            entity.setName(dto.getName());
+        }
+
+        if (dto.getUrl() != null) {
+            entity.setUrl(dto.getUrl());
+        }
+
+        if (dto.getCertificate() != null) {
+            CertificateDTO certDTO = dto.getCertificate();
+            CdnCertificate cdnCert;
+
+            if (certDTO.getKey() != null && certDTO.getCert() != null) {
+                cdnCert = new CdnCertificate();
+                cdnCert.setCert(certDTO.getCert());
+                cdnCert.setKey(certDTO.getKey());
+
+                if (certDTO.getSerial() != null) {
+                    CertificateSerialDTO certSerialDTO = certDTO.getSerial();
+                    CertificateSerial certSerial = new CertificateSerial();
+                    certSerial.setExpiration(certSerialDTO.getExpiration());
+                    if (certSerialDTO.getSerial() != null) {
+                        certSerial.setSerial(certSerialDTO.getSerial().longValue());
+                    }
+
+                    if (certSerialDTO.isCollected() != null) {
+                        certSerial.setCollected(certSerialDTO.isCollected());
+                    }
+
+                    if (certSerialDTO.isRevoked() != null) {
+                        certSerial.setRevoked(certSerialDTO.isRevoked());
+                    }
+
+                    cdnCert.setSerial(certSerial);
+                }
+                entity.setCertificate(cdnCert);
+            }
+            else {
+                throw new BadRequestException(i18n.tr("cdn certificate has null key or cert."));
+            }
+        }
     }
 
     private Cdn verifyAndLookupCdn(String label) {

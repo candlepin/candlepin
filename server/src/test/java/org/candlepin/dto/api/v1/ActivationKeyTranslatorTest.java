@@ -43,8 +43,7 @@ public class ActivationKeyTranslatorTest extends
     @Override
     protected void initModelTranslator(ModelTranslator modelTranslator) {
         this.ownerTranslatorTest.initModelTranslator(modelTranslator);
-        modelTranslator.registerTranslator(
-            this.translator, ActivationKey.class, ActivationKeyDTO.class);
+        modelTranslator.registerTranslator(this.translator, ActivationKey.class, ActivationKeyDTO.class);
     }
 
     @Override
