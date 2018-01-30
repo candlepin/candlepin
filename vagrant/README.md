@@ -84,3 +84,11 @@ tasks that are dependant on the existance of the variable 'my_cool_var'.
 1. Optionally specify the port to connect to the profiling agent by setting the `CANDLEPIN_YOURKIT_AGENT_PORT`.
    The default port is 35675.
 1. Run `vagrant up`
+
+## Testing QPID
+In order to run the qpid tests a few additional steps must be completed manually.
+1. Ensure that the rubygem-qpid_proton rpm is installed.
+1. Install the proton bundle: `bundle install --with proton` This will error due to version mismatch.  
+1. Update the qpid_proton gem: `bundle update qpid_proton` 
+1. Install qpid (from the /vagrant/server directory): `./bin/deploy -qag`
+1. Run the QPID tests: `buildr rspec:qpid` 
