@@ -30,6 +30,7 @@
     - postgresql
     - qpid-proton-c-devel
     - qpid-proton-c
+    - rubygem-qpid_proton
     - zlib
     - zlib-devel
     - liquibase

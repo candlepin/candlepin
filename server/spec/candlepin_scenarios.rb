@@ -1,9 +1,14 @@
 require 'candlepin_api'
 require 'hostedtest_api'
-require 'qpid_proton'
 
 require 'pp'
 require 'zip'
+
+begin
+  require 'qpid_proton'
+rescue LoadError
+  # This is okay
+end
 
 module CandlepinMethods
 
