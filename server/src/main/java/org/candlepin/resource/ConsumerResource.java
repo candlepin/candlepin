@@ -1020,6 +1020,7 @@ public class ConsumerResource {
         @Context Principal principal) {
 
         Consumer toUpdate = consumerCurator.verifyAndLookupConsumer(uuid);
+        consumerCurator.lockAndLoad(toUpdate);
 
         if (consumer.getGuestIds() != null) {
             Set<String> allGuestIds = new HashSet<String>();
