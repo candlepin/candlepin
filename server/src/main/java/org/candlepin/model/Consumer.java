@@ -148,7 +148,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @JoinColumn(name = "cont_acc_cert_id")
     private ContentAccessCertificate contentAccessCert;
 
-    @ManyToOne
+    @ManyToOne (fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
     @ForeignKey(name = "fk_consumer_consumer_type")
     private ConsumerType type;
