@@ -4,13 +4,13 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-01-15 10:55-0500\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 "PO-Revision-Date: 2017-11-10 09:00+0000\n"
 "Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
 "Language-Team: Portuguese (Brazil)\n"
 "Language: pt_BR\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 "X-Generator: Zanata 4.3.2\n"
 
@@ -80,7 +80,8 @@ msgstr "deve ser maior do que ou igual a {0}"
 
 #: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:50
 msgid ""
-"numeric value out of bounds (<{integer} digits>.<{fraction} digits> expected)"
+"numeric value out of bounds (<{integer} digits>.<{fraction} digits> "
+"expected)"
 msgstr ""
 "valor numérico fora do limite (<{integer} digits>.<{fraction} digits> "
 "esperado)"
@@ -411,6 +412,7 @@ msgstr ""
 #: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:1853
 msgid ""
 "Unmapped guest entitlement expired without establishing a host/guest mapping."
+""
 msgstr ""
 "A intitulação não mapeada do convidado expirou sem estabelecer um mapeamento "
 "do host/ convidado. "
@@ -662,6 +664,7 @@ msgstr "o segundo parâmetro deve ser o número de prioridade."
 #, java-format
 msgid ""
 "This unit has already had the subscription matching pool ID ''{1}'' attached."
+""
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:159
@@ -693,6 +696,7 @@ msgstr ""
 msgid "Pool not available to subscription management applications."
 msgstr ""
 "O pool não está disponível para as aplicações de gerenciamento de subscrição."
+""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:171
 #, java-format
@@ -745,7 +749,8 @@ msgstr ""
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:189
 #, java-format
 msgid ""
-"Pool is restricted to virtual guests in their first day of existence: ''{1}''"
+"Pool is restricted to virtual guests in their first day of existence: "
+"''{1}''"
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:191
@@ -888,7 +893,8 @@ msgid "Problem creating unit {0}"
 msgstr "Erro ao criar unidade {0}"
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:591
-msgid "A consumer cannot be converted to a share type once it has been created"
+msgid ""
+"A consumer cannot be converted to a share type once it has been created"
 msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:596
@@ -959,8 +965,7 @@ msgstr "Não pode especificar o nome de usuário com as chaves de ativação."
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:686
 msgid "A unit type of ''person'' cannot be used with activation keys"
-msgstr ""
-"Um tipo de unidade \"pessoa\" não pode ser usado com chaves de ativação"
+msgstr "Um tipo de unidade \"pessoa\" não pode ser usado com chaves de ativação"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1564,7 +1569,8 @@ msgstr "Product com UUID ''{0}''  não foram encontrados."
 #: server/src/main/java/org/candlepin/resource/ProductResource.java:215
 #: server/src/main/java/org/candlepin/resource/ProductResource.java:233
 #: server/src/main/java/org/candlepin/resource/ProductResource.java:250
-msgid "Organization-agnostic product write operations are no longer supported."
+msgid ""
+"Organization-agnostic product write operations are no longer supported."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/ProductResource.java:265
@@ -1664,6 +1670,7 @@ msgstr "{0}{1}"
 #: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:104
 msgid ""
 "None of the subscriptions on the activation key were available for attaching."
+""
 msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:132
@@ -1854,12 +1861,14 @@ msgstr "O arquivo não contém o arquivo consumer.json requerido"
 
 #: server/src/main/java/org/candlepin/sync/Importer.java:486
 msgid "The archive does not contain the required entitlements directory"
-msgstr "O arquivo não contém o diretório de direitos a serviços como requerido"
+msgstr ""
+"O arquivo não contém o diretório de direitos a serviços como requerido"
 
 #: server/src/main/java/org/candlepin/sync/Importer.java:784
 #, java-format
 msgid "The archive {0} is not a properly compressed file or is empty"
-msgstr "O arquivo {0} não é um arquivo comprimido adequadamente ou está vazio."
+msgstr ""
+"O arquivo {0} não é um arquivo comprimido adequadamente ou está vazio."
 
 #: server/src/main/java/org/candlepin/util/ContentOverrideValidator.java:58
 #, java-format
