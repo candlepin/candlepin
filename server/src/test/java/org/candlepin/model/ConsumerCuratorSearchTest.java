@@ -47,7 +47,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
     @Inject private Configuration config;
 
     private Owner owner;
-    private ConsumerType ct;
+    private ConsumerType ct, st;
 
     @Before
     public void setUp() {
@@ -55,7 +55,8 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         owner = ownerCurator.create(owner);
         ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         ct = consumerTypeCurator.create(ct);
-
+        st = new ConsumerType(ConsumerTypeEnum.SHARE);
+        st = consumerTypeCurator.create(st);
         config.setProperty(ConfigProperties.INTEGER_FACTS, "system.count, system.multiplier");
         config.setProperty(ConfigProperties.NON_NEG_INTEGER_FACTS, "system.count");
     }
@@ -187,6 +188,64 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
             owner, null, null, uuids, null, factFilters, null, null, null).list();
         assertEquals(1, results.size());
         assertEquals(consumer, results.get(0));
+    }
+
+    @Test
+    public void testSearchShareConsumer() {
+        Owner recipientOwner = new Owner("britneySwift", "britneySwift");
+        recipientOwner = ownerCurator.create(recipientOwner);
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, st);
+        consumer.setRecipientOwnerKey(recipientOwner.getKey());
+        consumer = consumerCurator.create(consumer);
+
+        // Create another consumer to make sure we're not just retrieving everything
+        Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner, st);
+        otherConsumer = consumerCurator.create(otherConsumer);
+
+        Owner otherOwner = new Owner("test-owner1", "Test Owner1");
+        otherOwner = ownerCurator.create(otherOwner);
+        Consumer otherOwnCons = new Consumer("testConsumer3", "testUser3", otherOwner, st);
+        otherOwnCons.setRecipientOwnerKey(recipientOwner.getKey());
+        otherOwnCons = consumerCurator.create(otherOwnCons);
+
+        Consumer result = consumerCurator.getSharingConsumer(owner, recipientOwner.getKey());
+        assertEquals(consumer, result);
+    }
+
+    @Test
+    public void testSearchAllRecipientShareConsumers() {
+        Owner recipientOwner = new Owner("britneySwift", "britneySwift");
+        recipientOwner = ownerCurator.create(recipientOwner);
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, st);
+        consumer.setRecipientOwnerKey(recipientOwner.getKey());
+        consumer = consumerCurator.create(consumer);
+
+        // Create another consumer to make sure we're not just retrieving everything
+        Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner, ct);
+        otherConsumer = consumerCurator.create(otherConsumer);
+
+        Owner otherOwner = new Owner("test-owner1", "Test Owner1");
+        otherOwner = ownerCurator.create(otherOwner);
+        Consumer otherOwnCons = new Consumer("testConsumer3", "testUser3", otherOwner, st);
+        otherOwnCons.setRecipientOwnerKey(recipientOwner.getKey());
+        otherOwnCons = consumerCurator.create(otherOwnCons);
+
+        List<Consumer> results = consumerCurator.listByRecipientOwner(recipientOwner).list();
+        assertEquals(2, results.size());
+        assertTrue(results.contains(consumer));
+        assertTrue(results.contains(otherOwnCons));
+    }
+
+    @Test
+    public void testReturnOnlyIfRecipientOwnerMatches() {
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, st);
+        consumer.setRecipientOwnerKey("britneySwift");
+        consumer = consumerCurator.create(consumer);
+
+        Owner otherOwner = new Owner("taylorSpears", "taylorSpears");
+        otherOwner = ownerCurator.create(otherOwner);
+        List<Consumer> results = consumerCurator.listByRecipientOwner(otherOwner).list();
+        assertEquals(0, results.size());
     }
 
     @Test

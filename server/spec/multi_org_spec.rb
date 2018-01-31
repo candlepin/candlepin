@@ -61,6 +61,49 @@ describe "Multi Org Shares" do
     expect(share['idCert']).to be_nil
   end
 
+  it 'ensures unique sharing consumer between two owners' do
+    share_consumer = @user_client.register(
+      random_string('orgBShare'),
+      :share,
+      nil,
+      {},
+      nil,
+      @owner1['key'],
+      [],
+      [],
+      nil,
+      [],
+      nil,
+      [],
+      nil,
+      nil,
+      nil,
+      @owner2['key']
+    )
+    share_consumer2 = @user_client.register(
+      random_string('orgBShare'),
+      :share,
+      nil,
+      {},
+      nil,
+      @owner1['key'],
+      [],
+      [],
+      nil,
+      [],
+      nil,
+      [],
+      nil,
+      nil,
+      nil,
+      @owner2['key']
+    )
+    share_consumer.should == share_consumer2
+    share_consumer2['type']['label'].should == "share"
+    share_consumer2['owner']['key'].should == @owner1['key']
+    share_consumer2['recipientOwnerKey'].should == @owner2['key']
+  end
+
   it 'cannot create a share consumer with installed products' do
      p_product1 = create_product("p_product_1",
         "Provided Product 1",
