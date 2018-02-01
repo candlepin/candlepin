@@ -228,8 +228,8 @@ define "candlepin" do
   manifest["Copyright"] = "Red Hat, Inc. #{Date.today.strftime('%Y')}"
 
   compile.using(:debug => true)
-  compile.options.target = '1.6'
-  compile.options.source = '1.6'
+  compile.options.target = '1.8'
+  compile.options.source = '1.8'
 
   desc "Custom Checkstyle checks for candlepin"
   define "checks" do
