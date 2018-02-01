@@ -314,6 +314,13 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         return this.cpQueryFactory.<Consumer>buildQuery(this.currentSession(), criteria);
     }
 
+    @Transactional
+    public Consumer getSharingConsumer(Owner sharingOwner, String recipientOwnerKey) {
+        return (Consumer) createSecureCriteria()
+            .add(Restrictions.eq("owner", sharingOwner))
+            .add(Restrictions.eq("recipientOwnerKey", recipientOwnerKey)).uniqueResult();
+    }
+
     public boolean doesShareConsumerExist(Owner owner) {
         long result = (Long) createSecureCriteria()
             .add(Restrictions.eq("owner", owner))

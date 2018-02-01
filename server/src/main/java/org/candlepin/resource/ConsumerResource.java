@@ -483,8 +483,13 @@ public class ConsumerResource {
             // Share consumers do not need identity certificates so refuse to create them.
             identityCertCreation = false;
             validateShareConsumer(consumer, principal, keys);
+            // if there exists a share consumer between the two orgs, return it.
+            Consumer existingShareConsumer = consumerCurator.getSharingConsumer(owner, consumer
+                .getRecipientOwnerKey());
+            if (existingShareConsumer != null) {
+                return existingShareConsumer;
+            }
             consumer.setAutoheal(false);
-
         }
         else {
             consumer.setCanActivate(subAdapter.canActivateSubscription(consumer));
