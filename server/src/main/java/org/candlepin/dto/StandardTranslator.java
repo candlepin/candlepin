@@ -33,6 +33,8 @@ import org.candlepin.dto.api.v1.EventDTO;
 import org.candlepin.dto.api.v1.EventTranslator;
 import org.candlepin.dto.api.v1.EntitlementDTO;
 import org.candlepin.dto.api.v1.EntitlementTranslator;
+import org.candlepin.dto.api.v1.JobStatusDTO;
+import org.candlepin.dto.api.v1.JobStatusTranslator;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.OwnerTranslator;
 import org.candlepin.dto.api.v1.PoolDTO;
@@ -57,6 +59,7 @@ import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductData;
+import org.candlepin.pinsetter.core.model.JobStatus;
 
 
 /**
@@ -92,6 +95,8 @@ public class StandardTranslator extends SimpleModelTranslator {
             new ActivationKeyTranslator(), ActivationKey.class, ActivationKeyDTO.class);
         this.registerTranslator(
             new CdnTranslator(), Cdn.class, CdnDTO.class);
+        this.registerTranslator(
+            new JobStatusTranslator(), JobStatus.class, JobStatusDTO.class);
 
         // Event translators
         /////////////////////////////////////////////
