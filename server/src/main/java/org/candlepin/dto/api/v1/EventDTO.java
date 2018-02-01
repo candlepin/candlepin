@@ -432,6 +432,15 @@ public class EventDTO extends CandlepinDTO<EventDTO> {
      * {@inheritDoc}
      */
     @Override
+    public String toString() {
+        return String.format("EventDTO [id: %s, target: %s, type: %s, timestamp: %s, entity id: %s]",
+            this.getId(), this.getTarget(), this.getType(), this.getTimestamp(), this.getEntityId());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public boolean equals(Object obj) {
         if (obj == this) {
             return true;

@@ -242,10 +242,6 @@ public class JobStatus extends AbstractHibernateObject {
         return correlationId;
     }
 
-    public String getStatusPath() {
-        return "/jobs/" + this.id;
-    }
-
     public void setResult(String result) {
         // truncate the result to fit column
         if (result == null || result.length() < RESULT_COL_LENGTH) {
