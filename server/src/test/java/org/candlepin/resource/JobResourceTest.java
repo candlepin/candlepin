@@ -20,6 +20,9 @@ import static org.mockito.Mockito.*;
 
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.StandardTranslator;
+import org.candlepin.dto.api.v1.JobStatusDTO;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.JobCurator;
 import org.candlepin.model.TransformedCandlepinQuery;
@@ -53,12 +56,14 @@ public class JobResourceTest {
     @Mock private JobCurator jobCurator;
     @Mock private PinsetterKernel pinsetterKernel;
     private I18n i18n;
+    private ModelTranslator translator;
 
     @Before
     public void init() {
         MockitoAnnotations.initMocks(this);
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        jobResource = new JobResource(jobCurator, pinsetterKernel, i18n);
+        translator = new StandardTranslator();
+        jobResource = new JobResource(jobCurator, pinsetterKernel, i18n, translator);
     }
 
     private void mockCPQueryTransform(final CandlepinQuery query) {
@@ -134,7 +139,7 @@ public class JobResourceTest {
         when(jobCurator.findByPrincipalName(eq("admin"))).thenReturn(query);
         this.mockCPQueryTransform(query);
 
-        Collection<JobStatus> real = jobResource.getStatuses(null, null, "admin").list();
+        Collection<JobStatusDTO> real = jobResource.getStatuses(null, null, "admin").list();
         assertNotNull(real);
         assertEquals(1, real.size());
     }
@@ -152,7 +157,7 @@ public class JobResourceTest {
         when(jobCurator.findByOwnerKey(eq("admin"))).thenReturn(query);
         this.mockCPQueryTransform(query);
 
-        Collection<JobStatus> real = jobResource.getStatuses("admin", null, null).list();
+        Collection<JobStatusDTO> real = jobResource.getStatuses("admin", null, null).list();
         assertNotNull(real);
         assertEquals(1, real.size());
     }
@@ -170,7 +175,7 @@ public class JobResourceTest {
         when(jobCurator.findByConsumerUuid(eq("abcd"))).thenReturn(query);
         this.mockCPQueryTransform(query);
 
-        Collection<JobStatus> real = jobResource.getStatuses(null, "abcd", null).list();
+        Collection<JobStatusDTO> real = jobResource.getStatuses(null, "abcd", null).list();
         assertNotNull(real);
         assertEquals(1, real.size());
     }
@@ -212,6 +217,7 @@ public class JobResourceTest {
         CandlepinQuery query = mock(CandlepinQuery.class);
         when(query.list()).thenReturn(statuses);
         when(jobCurator.findByPrincipalName(eq("foo"))).thenReturn(query);
+        when(query.transform(any(ElementTransformer.class))).thenReturn(query);
 
         jobResource.getStatuses(null, "", "foo");
     }
@@ -246,6 +252,7 @@ public class JobResourceTest {
         when(jobCurator.findByOwnerKey(any(String.class))).thenReturn(query);
         when(jobCurator.findByConsumerUuid(any(String.class))).thenReturn(query);
         when(jobCurator.findByPrincipalName(any(String.class))).thenReturn(query);
+        when(query.transform(any(ElementTransformer.class))).thenReturn(query);
 
         assertFalse(expectException("owner", "uuid", "pname"));
         assertFalse(expectException("owner", null, "pname"));
