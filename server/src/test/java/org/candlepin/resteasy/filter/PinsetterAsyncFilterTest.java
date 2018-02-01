@@ -24,6 +24,8 @@ import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.OwnerPermission;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.common.exceptions.ServiceUnavailableException;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.JobStatusDTO;
 import org.candlepin.model.Owner;
 import org.candlepin.pinsetter.core.PinsetterException;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
@@ -55,13 +57,14 @@ public class PinsetterAsyncFilterTest {
     @Mock private ServerResponse response;
     @Mock private Provider<Principal> principalProvider;
     @Mock private PinsetterKernel pinsetterKernel;
+    @Mock private ModelTranslator translator;
 
     private PinsetterAsyncFilter interceptor;
 
     @Before
     public void init() {
         this.interceptor = new PinsetterAsyncFilter(this.pinsetterKernel,
-            this.principalProvider);
+            this.principalProvider, this.translator);
     }
 
     @Test
@@ -137,13 +140,15 @@ public class PinsetterAsyncFilterTest {
     public void jobStatusSet() throws PinsetterException {
         JobDetail detail = newJob(RefreshPoolsJob.class).build();
         JobStatus status = new JobStatus();
+        JobStatusDTO statusDTO = new JobStatusDTO();
 
         when(response.getEntity()).thenReturn(detail);
         when(this.pinsetterKernel.scheduleSingleJob(detail)).thenReturn(status);
+        when(this.translator.translate(status, JobStatusDTO.class)).thenReturn(statusDTO);
 
         this.interceptor.postProcess(response);
 
-        verify(response).setEntity(status);
+        verify(response).setEntity(statusDTO);
     }
 
     @Test(expected = ServiceUnavailableException.class)
@@ -168,6 +173,6 @@ public class PinsetterAsyncFilterTest {
         this.interceptor.postProcess(response);
 
         verify(this.pinsetterKernel, times(3)).scheduleSingleJob(any(JobDetail.class));
-        verify(this.response, times(1)).setEntity(any(JobStatus[].class));
+        verify(this.response, times(1)).setEntity(any(JobStatusDTO[].class));
     }
 }

@@ -19,6 +19,8 @@ import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.IseException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.JobStatusDTO;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.JobCurator;
 import org.candlepin.model.SchedulerStatus;
@@ -66,14 +68,16 @@ public class JobResource {
     private JobCurator curator;
     private PinsetterKernel pk;
     private I18n i18n;
+    private ModelTranslator translator;
 
     private static Logger log = LoggerFactory.getLogger(JobResource.class);
 
     @Inject
-    public JobResource(JobCurator curator, PinsetterKernel pk, I18n i18n) {
+    public JobResource(JobCurator curator, PinsetterKernel pk, I18n i18n, ModelTranslator translator) {
         this.curator = curator;
         this.pk = pk;
         this.i18n = i18n;
+        this.translator = translator;
     }
 
 
@@ -110,7 +114,7 @@ public class JobResource {
     @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 404, message = "") })
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public CandlepinQuery<JobStatus> getStatuses(
+    public CandlepinQuery<JobStatusDTO> getStatuses(
         @QueryParam("owner") String ownerKey,
         @QueryParam("consumer") String uuid,
         @QueryParam("principal") String principalName) {
@@ -140,12 +144,13 @@ public class JobResource {
             throw new NotFoundException("");
         }
 
-        return statuses.transform(new ElementTransformer<JobStatus, JobStatus>() {
-            @Override
-            public JobStatus transform(JobStatus jobStatus) {
-                return jobStatus.cloakResultData(true);
-            }
-        });
+        return this.translator.translateQuery(
+            statuses.transform(new ElementTransformer<JobStatus, JobStatus>() {
+                @Override
+                public JobStatus transform(JobStatus jobStatus) {
+                    return jobStatus.cloakResultData(true);
+                }
+            }), JobStatusDTO.class);
     }
 
     @ApiOperation(notes = "Retrieves the Scheduler Status", value = "getSchedulerStatus")
@@ -216,7 +221,7 @@ public class JobResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @SuppressWarnings("unchecked")
-    public JobStatus schedule(@PathParam("task") String task) {
+    public JobStatusDTO schedule(@PathParam("task") String task) {
 
         Class cronJobClass = getCronJobClass(task);
         try {
@@ -224,7 +229,8 @@ public class JobResource {
              * at the time of implementing this API, the only jobs that
              * are permissible are cron jobs.
              */
-            return pk.scheduleSingleJob(cronJobClass, Util.generateUUID());
+            return this.translator.translate(
+                pk.scheduleSingleJob(cronJobClass, Util.generateUUID()), JobStatusDTO.class);
         }
         catch (PinsetterException e) {
             throw new IseException(i18n.tr("Error trying to schedule {0}: {1}", task,
@@ -261,11 +267,11 @@ public class JobResource {
     @GET
     @Path("/{job_id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public JobStatus getStatus(@PathParam("job_id") @Verify(JobStatus.class) String jobId,
+    public JobStatusDTO getStatus(@PathParam("job_id") @Verify(JobStatus.class) String jobId,
         @QueryParam("result_data") @DefaultValue("false") boolean resultData) {
         JobStatus js = curator.find(jobId);
         js.cloakResultData(!resultData);
-        return js;
+        return this.translator.translate(js, JobStatusDTO.class);
     }
 
     @ApiOperation(notes = "Cancels a Job Status", value = "cancel")
@@ -273,7 +279,7 @@ public class JobResource {
     @DELETE
     @Path("/{job_id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public JobStatus cancel(@PathParam("job_id") @Verify(JobStatus.class) String jobId) {
+    public JobStatusDTO cancel(@PathParam("job_id") @Verify(JobStatus.class) String jobId) {
         JobStatus j = curator.find(jobId);
         if (j.getState().equals(JobState.CANCELED)) {
             throw new BadRequestException(i18n.tr("job already canceled"));
@@ -281,7 +287,7 @@ public class JobResource {
         if (j.isDone()) {
             throw new BadRequestException(i18n.tr("cannot cancel a job that is in a finished state"));
         }
-        return curator.cancel(jobId);
+        return this.translator.translate(curator.cancel(jobId), JobStatusDTO.class);
     }
 
     @ApiOperation(notes = "Retrieves a Job Status and Removes if finished",
@@ -290,7 +296,7 @@ public class JobResource {
     @Path("/{job_id}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.WILDCARD)
-    public JobStatus getStatusAndDeleteIfFinished(
+    public JobStatusDTO getStatusAndDeleteIfFinished(
         @PathParam("job_id") @Verify(JobStatus.class) String jobId) {
         JobStatus status = curator.find(jobId);
 
@@ -298,6 +304,6 @@ public class JobResource {
             curator.delete(status);
         }
 
-        return status;
+        return this.translator.translate(status, JobStatusDTO.class);
     }
 }
