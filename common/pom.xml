@@ -16,6 +16,14 @@
   <name>Candlepin Common</name>
   <description>Common code for Candlepin</description>
   <properties>
+    <junit-junit.version>4.12</junit-junit.version>
+    <org.hamcrest-hamcrest-library.version>1.3</org.hamcrest-hamcrest-library.version>
+    <org.hamcrest-hamcrest-core.version>1.3</org.hamcrest-hamcrest-core.version>
+    <org.mockito-mockito-all.version>1.9.5</org.mockito-mockito-all.version>
+    <pl.pragmatists-JUnitParams.version>1.0.3</pl.pragmatists-JUnitParams.version>
+    <org.jukito-jukito.version>1.4</org.jukito-jukito.version>
+    <org.liquibase-liquibase-core.version>3.1.0</org.liquibase-liquibase-core.version>
+    <com.mattbertolini-liquibase-slf4j.version>1.2.1</com.mattbertolini-liquibase-slf4j.version>
     <commons-codec-commons-codec.version>1.4</commons-codec-commons-codec.version>
     <commons-collections-commons-collections.version>3.2</commons-collections-commons-collections.version>
     <commons-io-commons-io.version>1.4</commons-io-commons-io.version>
@@ -60,8 +68,106 @@
     <javax.transaction-jta.version>1.1</javax.transaction-jta.version>
     <net.oauth.core-oauth.version>20100527</net.oauth.core-oauth.version>
     <net.oauth.core-oauth-provider.version>20100527</net.oauth.core-oauth-provider.version>
+    <org.jmock-jmock.version>2.5.1</org.jmock-jmock.version>
+    <org.jmock-jmock-junit4.version>2.5.1</org.jmock-jmock-junit4.version>
   </properties>
   <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>${junit-junit.version}</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest-library</artifactId>
+      <version>${org.hamcrest-hamcrest-library.version}</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest-core</artifactId>
+      <version>${org.hamcrest-hamcrest-core.version}</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-all</artifactId>
+      <version>${org.mockito-mockito-all.version}</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>pl.pragmatists</groupId>
+      <artifactId>JUnitParams</artifactId>
+      <version>${pl.pragmatists-JUnitParams.version}</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.jukito</groupId>
+      <artifactId>jukito</artifactId>
+      <version>${org.jukito-jukito.version}</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.liquibase</groupId>
+      <artifactId>liquibase-core</artifactId>
+      <version>${org.liquibase-liquibase-core.version}</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>com.mattbertolini</groupId>
+      <artifactId>liquibase-slf4j</artifactId>
+      <version>${com.mattbertolini-liquibase-slf4j.version}</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
     <dependency>
       <groupId>commons-codec</groupId>
       <artifactId>commons-codec</artifactId>
@@ -539,6 +645,30 @@
       <groupId>net.oauth.core</groupId>
       <artifactId>oauth-provider</artifactId>
       <version>${net.oauth.core-oauth-provider.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.jmock</groupId>
+      <artifactId>jmock</artifactId>
+      <version>${org.jmock-jmock.version}</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.jmock</groupId>
+      <artifactId>jmock-junit4</artifactId>
+      <version>${org.jmock-jmock-junit4.version}</version>
+      <scope>test</scope>
       <exclusions>
         <exclusion>
           <groupId>*</groupId>
