@@ -69,6 +69,7 @@ CORE_TESTING = [
   'org.mockito:mockito-all:jar:1.9.5',
   'pl.pragmatists:JUnitParams:jar:1.0.3',
 ]
+Buildr.settings.build['junit'] = '4.12' # Buildr uses 4.11 by default
 
 JUKITO = ['org.jukito:jukito:jar:1.4']
 
@@ -227,9 +228,7 @@ define "candlepin" do
   project.version = pom_version(path_to('pom.xml'))
   manifest["Copyright"] = "Red Hat, Inc. #{Date.today.strftime('%Y')}"
 
-  compile.using(:debug => true)
-  compile.options.target = '1.8'
-  compile.options.source = '1.8'
+  compile.using(:debug => true, :source => '1.8', :target => '1.8')
 
   desc "Custom Checkstyle checks for candlepin"
   define "checks" do
@@ -245,7 +244,6 @@ define "candlepin" do
 
     compile.with(compile_classpath)
   end
-
 
   # path_to() (and it's alias _()) simply provides the absolute path to
   # a directory relative to the project.
@@ -293,15 +291,15 @@ define "candlepin" do
       JAVAX,
       OAUTH,
     ]
-
     compile.with(compile_classpath)
 
-    test.with([
+    test_classpath = [
       CORE_TESTING,
       JUKITO,
       LIQUIBASE,
       LIQUIBASE_SLF4J,
-    ])
+    ]
+    test.with(test_classpath)
     test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ]
 
     package(:jar).tap do |jar|
@@ -405,13 +403,14 @@ define "candlepin" do
       filter(path_to(:src, :main, :resources)).into(path_to(:target, :classes)).run
     end
 
-    # the other dependencies transfer from compile.classpath automagically
-    test.with([
+    test_classpath = [
       CORE_TESTING,
       JUKITO,
       HSQLDB,
       LIQUIBASE_SLF4J,
-    ])
+    ]
+    # The entries in test_classpath will be supplemented automatically with the compile_classpath
+    test.with(test_classpath)
     test.using(:java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ])
 
     ### Javadoc
