@@ -24,11 +24,7 @@ module PomTask
     end
 
     def provided_dependencies=(val)
-      if val.respond_to?(:each)
-        @provided_dependencies = val
-      else
-        @provided_dependencies = [val]
-      end
+      @provided_dependencies = Array(val).flatten.uniq
     end
 
     def provided_dependencies
@@ -36,11 +32,7 @@ module PomTask
     end
 
     def runtime_dependencies=(val)
-      if val.respond_to?(:each)
-        @runtime_dependencies = val
-      else
-        @runtime_dependencies = [val]
-      end
+      @runtime_dependencies = Array(val).flatten.uniq
     end
 
     def runtime_dependencies
@@ -48,11 +40,7 @@ module PomTask
     end
 
     def optional_dependencies=(val)
-      if val.respond_to?(:each)
-        @optional_dependencies = val
-      else
-        @optional_dependencies = [val]
-      end
+      @optional_dependencies = Array(val).flatten.uniq
     end
 
     def optional_dependencies
@@ -168,10 +156,22 @@ module PomTask
       @artifact = artifact
       @project = project
       @config = project.pom
+
       # Filter anything that can't be treated as an artifact
-      @dependencies = project.compile.dependencies.select do |dep|
+      compile_dependencies = project.compile.dependencies.select do |dep|
         dep.respond_to?(:to_spec)
       end
+
+      test_dependencies = project.test.dependencies.select do |dep|
+        dep.respond_to?(:to_spec)
+      end
+
+      # Test dependencies includes all the compile dependencies as well, so we
+      # need to take a set difference to determine which ones are truly only for tests
+      @dependencies = test_dependencies
+      @test_dependencies = test_dependencies - compile_dependencies
+      # Covert all the Artifact objects to their "group:name:jar:version" equivalent
+      @test_dependencies.map!(&:to_spec)
       @buffer = ""
     end
 
@@ -270,6 +270,8 @@ module PomTask
                 xml.scope("provided")
               elsif @config.runtime_dependencies.include?(dep.to_spec)
                 xml.scope("runtime")
+              elsif @test_dependencies.include?(dep.to_spec)
+                xml.scope("test")
               end
 
               if @config.optional_dependencies.include?(dep.to_spec)
