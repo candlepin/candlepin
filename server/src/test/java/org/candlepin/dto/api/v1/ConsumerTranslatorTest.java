@@ -146,8 +146,7 @@ public class ConsumerTranslatorTest extends
     }
 
     @Override
-    protected void verifyOutput(Consumer source, ConsumerDTO dest,
-        boolean childrenGenerated) {
+    protected void verifyOutput(Consumer source, ConsumerDTO dest, boolean childrenGenerated) {
 
         if (source != null) {
             assertEquals(source.getId(), dest.getId());
@@ -166,39 +165,46 @@ public class ConsumerTranslatorTest extends
             assertEquals(source.getAnnotations(), dest.getAnnotations());
             assertEquals(source.getContentAccessMode(), dest.getContentAccessMode());
 
-
             if (childrenGenerated) {
-
                 assertEquals(source.getReleaseVer().getReleaseVer(), dest.getReleaseVersion());
+
                 this.ownerTranslatorTest.verifyOutput(source.getOwner(), dest.getOwner(), childrenGenerated);
                 this.environmentTranslatorTest.verifyOutput(source.getEnvironment(), dest.getEnvironment(),
                     childrenGenerated);
-                this.hypervisorIdTranslatorTest.verifyOutput(source.getHypervisorId(), dest.getHypervisorId
-                    (), childrenGenerated);
-                this.consumerTypeTranslatorTest
-                    .verifyOutput(source.getType(), dest.getType(), true);
-                this.certificateTranslatorTest
-                    .verifyOutput(source.getIdCert(), dest.getIdCert(), true);
+                this.hypervisorIdTranslatorTest.verifyOutput(source.getHypervisorId(), dest.getHypervisorId(),
+                    childrenGenerated);
+                this.consumerTypeTranslatorTest.verifyOutput(source.getType(), dest.getType(), true);
+                this.certificateTranslatorTest.verifyOutput(source.getIdCert(), dest.getIdCert(), true);
 
-                for (ConsumerInstalledProduct cip : source.getInstalledProducts()) {
-                    for (ConsumerInstalledProductDTO cipDTO : dest.getInstalledProducts()) {
-                        assertNotNull(cip);
-                        assertNotNull(cipDTO);
-                        this.cipTranslatorTest.verifyOutput(cip, cipDTO, childrenGenerated);
-                    }
-                }
-
-                for (ConsumerCapability cc : source.getCapabilities()) {
-                    boolean verified = false;
-                    for (CapabilityDTO ccDTO : dest.getCapabilities()) {
-                        assertNotNull(cc);
-                        assertNotNull(ccDTO);
-                        if (cc.getName().contentEquals(ccDTO.getName())) {
-                            this.capabilityTranslatorTest.verifyOutput(cc, ccDTO, childrenGenerated);
-                            verified = true;
+                if (source.getInstalledProducts() != null) {
+                    for (ConsumerInstalledProduct cip : source.getInstalledProducts()) {
+                        for (ConsumerInstalledProductDTO cipDTO : dest.getInstalledProducts()) {
+                            assertNotNull(cip);
+                            assertNotNull(cipDTO);
+                            this.cipTranslatorTest.verifyOutput(cip, cipDTO, childrenGenerated);
                         }
                     }
-                    assertTrue(verified);
+                }
+                else {
+                    assertNull(dest.getInstalledProducts());
+                }
+
+                if (source.getCapabilities() != null) {
+                    for (ConsumerCapability cc : source.getCapabilities()) {
+                        boolean verified = false;
+                        for (CapabilityDTO ccDTO : dest.getCapabilities()) {
+                            assertNotNull(cc);
+                            assertNotNull(ccDTO);
+                            if (cc.getName().contentEquals(ccDTO.getName())) {
+                                this.capabilityTranslatorTest.verifyOutput(cc, ccDTO, childrenGenerated);
+                                verified = true;
+                            }
+                        }
+                        assertTrue(verified);
+                    }
+                }
+                else {
+                    assertNull(dest.getCapabilities());
                 }
 
                 assertEquals(0, dest.getGuestIds().size());
