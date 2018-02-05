@@ -20,6 +20,7 @@ import static org.mockito.Mockito.mock;
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.common.config.Configuration;
+import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.resource.ConsumerResource;
 import org.candlepin.test.DatabaseTestFixture;
@@ -137,7 +138,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         Date beforeUpdateDate = consumer.getUpdated();
 
         // Create a new consumer, can't re-use reference to the old:
-        Consumer newConsumer = new Consumer();
+        ConsumerDTO newConsumer = new ConsumerDTO();
         newConsumer.setUuid(consumer.getUuid());
         newConsumer.setFact("FACT", "FACT_VALUE");
 

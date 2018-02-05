@@ -14,6 +14,10 @@
  */
 package org.candlepin.dto.api.v1;
 
+import org.candlepin.common.jackson.HateoasArrayExclude;
+import org.candlepin.common.jackson.HateoasInclude;
+
+import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.swagger.annotations.ApiModel;
@@ -21,12 +25,17 @@ import io.swagger.annotations.ApiModel;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
-
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * A DTO representation of the UpstreamConsumer entity
  */
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.PROPERTY)
 @ApiModel(parent = TimestampedCandlepinDTO.class, description = "DTO representing an upstream consumer")
+@JsonFilter("ApiHateoas")
 public class UpstreamConsumerDTO extends TimestampedCandlepinDTO<UpstreamConsumerDTO> {
     public static final long serialVersionUID = 1L;
 
@@ -58,6 +67,7 @@ public class UpstreamConsumerDTO extends TimestampedCandlepinDTO<UpstreamConsume
         super(source);
     }
 
+    @HateoasInclude
     public String getId() {
         return this.id;
     }
@@ -67,6 +77,7 @@ public class UpstreamConsumerDTO extends TimestampedCandlepinDTO<UpstreamConsume
         return this;
     }
 
+    @HateoasInclude
     public String getUuid() {
         return this.uuid;
     }
@@ -76,6 +87,7 @@ public class UpstreamConsumerDTO extends TimestampedCandlepinDTO<UpstreamConsume
         return this;
     }
 
+    @HateoasInclude
     public String getName() {
         return this.name;
     }
@@ -124,6 +136,7 @@ public class UpstreamConsumerDTO extends TimestampedCandlepinDTO<UpstreamConsume
     }
 
     @JsonProperty("idCert")
+    @HateoasArrayExclude
     public CertificateDTO getIdentityCertificate() {
         return this.identityCert;
     }

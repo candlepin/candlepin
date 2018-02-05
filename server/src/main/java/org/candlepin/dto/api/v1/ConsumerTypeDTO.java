@@ -15,6 +15,7 @@
 package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.CandlepinDTO;
+import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 
 import io.swagger.annotations.ApiModel;
 
@@ -39,6 +40,26 @@ public class ConsumerTypeDTO extends CandlepinDTO<ConsumerTypeDTO> {
      */
     public ConsumerTypeDTO() {
         // Intentionally left empty
+    }
+
+    public ConsumerTypeDTO(ConsumerTypeEnum type) {
+        this.label = type.getLabel();
+        this.manifest = type.isManifest();
+    }
+
+    /**
+     * ConsumerTypeDTO constructor with label
+     *
+     * @param labelIn to set
+     */
+    public ConsumerTypeDTO(String labelIn) {
+        this.label = labelIn;
+        for (ConsumerTypeEnum cte : ConsumerTypeEnum.values()) {
+            if (cte.getLabel().equals(labelIn)) {
+                this.manifest = cte.isManifest();
+                break;
+            }
+        }
     }
 
     /**
@@ -130,11 +151,8 @@ public class ConsumerTypeDTO extends CandlepinDTO<ConsumerTypeDTO> {
      */
     @Override
     public ConsumerTypeDTO clone() {
-        ConsumerTypeDTO copy = super.clone();
-
         // Nothing to do here; all the fields are immutable types.
-
-        return copy;
+        return super.clone();
     }
 
     /**

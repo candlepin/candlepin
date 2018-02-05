@@ -244,8 +244,13 @@ public class HypervisorUpdateJob extends KingpinJob {
 
                         GuestMigration guestMigration = migrationProvider.get().buildMigrationManifest(
                             incoming, newHost);
-                        consumerResource.performConsumerUpdates(incoming, newHost, guestMigration);
-                        consumerResource.create(newHost, principal, null, owner.getKey(), null, false);
+                        consumerResource.performConsumerUpdates(incoming, newHost, guestMigration, false);
+                        consumerResource.createConsumerFromEntity(newHost,
+                            principal,
+                            null,
+                            owner.getKey(),
+                            null,
+                            false);
 
                         // Now that we have the new consumer persisted, immediately migrate the guests to it
                         if (guestMigration.isMigrationPending()) {
@@ -259,14 +264,7 @@ public class HypervisorUpdateJob extends KingpinJob {
                 }
                 else {
                     reportedOnConsumer = knownHost;
-                    if (jobReporterId != null && knownHost.getHypervisorId() != null &&
-                        hypervisorId.equalsIgnoreCase(knownHost.getHypervisorId().getHypervisorId()) &&
-                        knownHost.getHypervisorId().getReporterId() != null &&
-                        !jobReporterId.equalsIgnoreCase(knownHost.getHypervisorId().getReporterId())) {
-                        log.debug("Reporter changed for Hypervisor {} of Owner {} from {} to {}",
-                            hypervisorId, ownerKey, knownHost.getHypervisorId().getReporterId(),
-                            jobReporterId);
-                    }
+                    logReporterWarning(jobReporterId, knownHost, hypervisorId, ownerKey);
                     /* Impl. Note (2017-10-27):
                     Now that events no longer serialize whole Objects for the purpose of storing
                     the oldEntity field, forcing initialization of lazy-loaded collections as a side-effect,
@@ -314,6 +312,18 @@ public class HypervisorUpdateJob extends KingpinJob {
             log.error("HypervisorUpdateJob encountered a problem.", e);
             context.setResult(e.getMessage());
             throw new JobExecutionException(e.getMessage(), e, false);
+        }
+    }
+
+    private void logReporterWarning(String jobReporterId, Consumer knownHost, String hypervisorId,
+        String ownerKey) {
+        if (jobReporterId != null && knownHost.getHypervisorId() != null &&
+            hypervisorId.equalsIgnoreCase(knownHost.getHypervisorId().getHypervisorId()) &&
+            knownHost.getHypervisorId().getReporterId() != null &&
+            !jobReporterId.equalsIgnoreCase(knownHost.getHypervisorId().getReporterId())) {
+            log.debug("Reporter changed for Hypervisor {} of Owner {} from {} to {}",
+                hypervisorId, ownerKey, knownHost.getHypervisorId().getReporterId(),
+                jobReporterId);
         }
     }
 
