@@ -21,7 +21,6 @@ import io.swagger.annotations.ApiModel;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.candlepin.common.jackson.HateoasInclude;
-import org.candlepin.model.Consumer;
 import org.candlepin.util.SetView;
 import org.candlepin.util.Util;
 
@@ -33,6 +32,8 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+
+
 
 /**
  * A DTO representation of the Entitlement entity
@@ -47,7 +48,7 @@ public class EntitlementDTO extends TimestampedCandlepinDTO<EntitlementDTO> impl
 
     private String id;
     private OwnerDTO owner;
-    private Consumer consumer; //TODO: Turn into ConsumerDTO once that is introduced
+    private ConsumerDTO consumer;
     private PoolDTO pool;
     private Integer quantity;
     private Boolean deletedFromPool;
@@ -123,8 +124,7 @@ public class EntitlementDTO extends TimestampedCandlepinDTO<EntitlementDTO> impl
      *
      * @return return the associated Consumer.
      */
-    //TODO: Replace with ConsumerDTO once that gets introduced.
-    public Consumer getConsumer() {
+    public ConsumerDTO getConsumer() {
         return consumer;
     }
 
@@ -135,8 +135,7 @@ public class EntitlementDTO extends TimestampedCandlepinDTO<EntitlementDTO> impl
      *
      * @return a reference to this EntitlementDTO object.
      */
-    //TODO: Replace with ConsumerDTO once that gets introduced.
-    public EntitlementDTO setConsumer(Consumer consumer) {
+    public EntitlementDTO setConsumer(ConsumerDTO consumer) {
         this.consumer = consumer;
         return this;
     }
@@ -454,18 +453,14 @@ public class EntitlementDTO extends TimestampedCandlepinDTO<EntitlementDTO> impl
 
         OwnerDTO owner = this.getOwner();
         copy.owner = owner != null ? owner.clone() : null;
+
         PoolDTO pool = this.getPool();
         copy.pool = pool != null ? pool.clone() : null;
-        Consumer consumer = this.getConsumer();
-        //TODO change Consumer to ConsumerDTO.
-        copy.consumer = consumer != null ?
-            new Consumer(consumer.getName(), consumer.getUsername(),
-                consumer.getOwner(), consumer.getType()) : null;
-        if (consumer != null) {
-            copy.consumer.setUuid(consumer.getUuid());
-        }
 
-        copy.certificates = this.getCertificates();
+        ConsumerDTO consumer = this.getConsumer();
+        copy.consumer = consumer != null ? consumer.clone() : null;
+
+        copy.setCertificates(this.getCertificates());
 
         copy.endDate = this.endDate != null ? (Date) this.endDate.clone() : null;
         copy.startDate = this.startDate != null ? (Date) this.startDate.clone() : null;

@@ -63,8 +63,7 @@ public class ConsumerDTOTest extends AbstractDTOTest<ConsumerDTO> {
             facts.put("fact-" + i, "value-" + i);
         }
 
-        Set<ConsumerInstalledProductDTO> installedProducts =
-            new HashSet<ConsumerInstalledProductDTO>();
+        Set<ConsumerInstalledProductDTO> installedProducts = new HashSet<ConsumerInstalledProductDTO>();
         for (int i = 0; i < 5; ++i) {
             ConsumerInstalledProductDTO installedProductDTO = cipDTOTest.getPopulatedDTOInstance();
             installedProducts.add(installedProductDTO.setId("cip-" + i));
