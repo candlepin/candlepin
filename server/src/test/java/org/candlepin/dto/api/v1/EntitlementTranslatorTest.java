@@ -39,12 +39,14 @@ public class EntitlementTranslatorTest extends
     private OwnerTranslatorTest ownerTranslatorTest = new OwnerTranslatorTest();
     private CertificateTranslatorTest certificateTranslatorTest = new CertificateTranslatorTest();
     private PoolTranslatorTest poolTranslatorTest = new PoolTranslatorTest();
+    private ConsumerTranslatorTest consumerTranslatorTest = new ConsumerTranslatorTest();
 
     @Override
     protected void initModelTranslator(ModelTranslator modelTranslator) {
         this.ownerTranslatorTest.initModelTranslator(modelTranslator);
         this.certificateTranslatorTest.initModelTranslator(modelTranslator);
         this.poolTranslatorTest.initModelTranslator(modelTranslator);
+        this.consumerTranslatorTest.initModelTranslator(modelTranslator);
 
         modelTranslator.registerTranslator(this.translator, Entitlement.class, EntitlementDTO.class);
     }
@@ -74,7 +76,6 @@ public class EntitlementTranslatorTest extends
         certs.add(entCert);
         source.setCertificates(certs);
 
-        //TODO: use ConsumerDTO once it gets introduced.
         Consumer consumer = new Consumer();
         consumer.setUuid("consumer-uuid");
         source.setConsumer(consumer);
@@ -96,10 +97,9 @@ public class EntitlementTranslatorTest extends
             assertEquals(source.deletedFromPool(), dest.isDeletedFromPool());
 
             if (childrenGenerated) {
-                this.ownerTranslatorTest
-                    .verifyOutput(source.getOwner(), dest.getOwner(), true);
-
+                this.ownerTranslatorTest.verifyOutput(source.getOwner(), dest.getOwner(), true);
                 this.poolTranslatorTest.verifyOutput(source.getPool(), dest.getPool(), true);
+                this.consumerTranslatorTest.verifyOutput(source.getConsumer(), dest.getConsumer(), true);
 
                 // These getters' returned fields live on the pool, so they're children.
                 assertEquals(source.getStartDate(), dest.getStartDate());
@@ -117,8 +117,6 @@ public class EntitlementTranslatorTest extends
                     }
                 }
 
-                //TODO: use ConsumerTranslatorTest to verify once it gets introduced.
-                assertEquals(source.getConsumer(), dest.getConsumer());
             }
             else {
                 assertNull(dest.getOwner());
