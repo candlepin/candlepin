@@ -29,63 +29,69 @@ import java.util.Map;
 
 import javax.validation.MessageInterpolator;
 
+
+
 /**
  * CandlepinMessageInterpolator
  */
+@SuppressWarnings("checkstyle:indentation")
 public class CandlepinMessageInterpolator implements MessageInterpolator {
-    @SuppressWarnings("checkstyle:indentation")
-    public static final Map<String, ValidationMessage> MESSAGES =
-        new HashMap<String, ValidationMessage>() {
-            {
-                put("{javax.validation.constraints.AssertFalse.message}",
-                    new ValidationMessage(I18n.marktr("must be false")));
-                put("{javax.validation.constraints.AssertTrue.message}",
-                    new ValidationMessage(I18n.marktr("must be true")));
-                put("{javax.validation.constraints.DigitsMax.message}",
-                    new ValidationMessage(I18n.marktr("must be less than or equal to {0}"), "value"));
-                put("{javax.validation.constraints.DigitsMin.message}",
-                    new ValidationMessage(I18n.marktr("must be greater than or equal to {0}"), "value"));
-                put("{javax.validation.constraints.Digits.message}",
-                    new ValidationMessage(I18n.marktr(
-                        "numeric value out of bounds (<{integer} digits>.<{fraction} digits> expected)"),
-                        "integer", "fraction"));
-                put("{javax.validation.constraints.Future.message}",
-                    new ValidationMessage(I18n.marktr("must be in the future")));
-                put("{javax.validation.constraints.Max.message}",
-                    new ValidationMessage(I18n.marktr("must be less than or equal to {0}"), "value"));
-                put("{javax.validation.constraints.Min.message}",
-                    new ValidationMessage(I18n.marktr("must be greater than or equal to {0}"), "value"));
-                put("{javax.validation.constraints.NotNull.message}",
-                    new ValidationMessage(I18n.marktr("may not be null")));
-                put("{javax.validation.constraints.Null.message}",
-                    new ValidationMessage(I18n.marktr("must be null")));
-                put("{javax.validation.constraints.Past.message}",
-                    new ValidationMessage(I18n.marktr("must be in the past")));
-                put("{javax.validation.constraints.Pattern.message}",
-                    new ValidationMessage(I18n.marktr("must match ''{regexp}''"), "regexp"));
-                put("{javax.validation.constraints.Size.message}",
-                    new ValidationMessage(I18n.marktr("size must be between {0} and {1}"), "min", "max"));
-                put("{org.hibernate.validator.constraints.CreditCardNumber.message}",
-                    new ValidationMessage(I18n.marktr("invalid credit card number")));
-                put("{org.hibernate.validator.constraints.Email.message}",
-                    new ValidationMessage(I18n.marktr("not a well-formed email address")));
-                put("{org.hibernate.validator.constraints.Length.message}",
-                    new ValidationMessage(I18n.marktr("size must be between {0} and {1}"), "min", "max"));
-                put("{org.hibernate.validator.constraints.NotBlank.message}",
-                    new ValidationMessage(I18n.marktr("may not be empty")));
-                put("{org.hibernate.validator.constraints.NotEmpty.message}",
-                    new ValidationMessage(I18n.marktr("may not be empty")));
-                put("{org.hibernate.validator.constraints.Range.message}",
-                    new ValidationMessage(I18n.marktr("must be between {min} and {max}"), "min", "max"));
-                put("{org.hibernate.validator.constraints.SafeHtml.message}",
-                    new ValidationMessage(I18n.marktr("may have unsafe HTML content")));
-                put("{org.hibernate.validator.constraints.ScriptAssert.message}",
-                    new ValidationMessage(I18n.marktr("script expression ''{0}'' didn't evaluate to true"),
-                        "script"));
-                put("{org.hibernate.validator.constraints.URL.message}",
-                    new ValidationMessage(I18n.marktr("must be a valid URL")));
-            }
-        };
+    public static final Map<String, ValidationMessage> MESSAGES;
+
+    static {
+        HashMap<String, ValidationMessage> msgs = new HashMap<String, ValidationMessage>();
+
+        msgs.put("{javax.validation.constraints.AssertFalse.message}",
+            new ValidationMessage(I18n.marktr("must be false")));
+        msgs.put("{javax.validation.constraints.AssertTrue.message}",
+            new ValidationMessage(I18n.marktr("must be true")));
+        msgs.put("{javax.validation.constraints.DigitsMax.message}",
+            new ValidationMessage(I18n.marktr("must be less than or equal to {0}"), "value"));
+        msgs.put("{javax.validation.constraints.DigitsMin.message}",
+            new ValidationMessage(I18n.marktr("must be greater than or equal to {0}"), "value"));
+        msgs.put("{javax.validation.constraints.Digits.message}",
+            new ValidationMessage(I18n.marktr(
+                "numeric value out of bounds (<{integer} digits>.<{fraction} digits> expected)"),
+                "integer", "fraction"));
+        msgs.put("{javax.validation.constraints.Future.message}",
+            new ValidationMessage(I18n.marktr("must be in the future")));
+        msgs.put("{javax.validation.constraints.Max.message}",
+            new ValidationMessage(I18n.marktr("must be less than or equal to {0}"), "value"));
+        msgs.put("{javax.validation.constraints.Min.message}",
+            new ValidationMessage(I18n.marktr("must be greater than or equal to {0}"), "value"));
+        msgs.put("{javax.validation.constraints.NotNull.message}",
+            new ValidationMessage(I18n.marktr("may not be null")));
+        msgs.put("{javax.validation.constraints.Null.message}",
+            new ValidationMessage(I18n.marktr("must be null")));
+        msgs.put("{javax.validation.constraints.Past.message}",
+            new ValidationMessage(I18n.marktr("must be in the past")));
+        msgs.put("{javax.validation.constraints.Pattern.message}",
+            new ValidationMessage(I18n.marktr("must match ''{regexp}''"), "regexp"));
+        msgs.put("{javax.validation.constraints.Size.message}",
+            new ValidationMessage(I18n.marktr("size must be between {0} and {1}"), "min", "max"));
+        msgs.put("{org.hibernate.validator.constraints.CreditCardNumber.message}",
+            new ValidationMessage(I18n.marktr("invalid credit card number")));
+        msgs.put("{org.hibernate.validator.constraints.Email.message}",
+            new ValidationMessage(I18n.marktr("not a well-formed email address")));
+        msgs.put("{org.hibernate.validator.constraints.Length.message}",
+            new ValidationMessage(I18n.marktr("size must be between {0} and {1}"), "min", "max"));
+        msgs.put("{org.hibernate.validator.constraints.NotBlank.message}",
+            new ValidationMessage(I18n.marktr("may not be empty")));
+        msgs.put("{org.hibernate.validator.constraints.NotEmpty.message}",
+            new ValidationMessage(I18n.marktr("may not be empty")));
+        msgs.put("{org.hibernate.validator.constraints.Range.message}",
+            new ValidationMessage(I18n.marktr("must be between {min} and {max}"), "min", "max"));
+        msgs.put("{org.hibernate.validator.constraints.SafeHtml.message}",
+            new ValidationMessage(I18n.marktr("may have unsafe HTML content")));
+        msgs.put("{org.hibernate.validator.constraints.ScriptAssert.message}",
+            new ValidationMessage(I18n.marktr("script expression ''{0}'' didn't evaluate to true"),
+                "script"));
+        msgs.put("{org.hibernate.validator.constraints.URL.message}",
+            new ValidationMessage(I18n.marktr("must be a valid URL")));
+
+
+        MESSAGES = Collections.<String, ValidationMessage>unmodifiableMap(msgs);
+    }
 
     /**
      * Validation message
@@ -104,7 +110,6 @@ public class CandlepinMessageInterpolator implements MessageInterpolator {
         public String getMessage() {
             return message;
         }
-
 
         public void setMessage(String message) {
             this.message = message;
@@ -134,19 +139,13 @@ public class CandlepinMessageInterpolator implements MessageInterpolator {
     }
 
     @Override
-    public String interpolate(String messageTemplate, Context context,
-        Locale locale) {
+    public String interpolate(String messageTemplate, Context context, Locale locale) {
         Map<String, Object> attrs = context.getConstraintDescriptor().getAttributes();
-
         ValidationMessage validationMessage = MESSAGES.get(messageTemplate);
         List<Object> paramList = new ArrayList<Object>();
+
         for (String param : validationMessage.getParamNames()) {
-            if (attrs.containsKey(param)) {
-                paramList.add(attrs.get(param));
-            }
-            else {
-                paramList.add(param);
-            }
+            paramList.add(attrs.containsKey(param) ? attrs.get(param) : param);
         }
 
         return i18nProvider.get().tr(validationMessage.getMessage(), paramList.toArray());

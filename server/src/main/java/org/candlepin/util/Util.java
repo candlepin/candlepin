@@ -287,7 +287,16 @@ public class Util {
           [1] http://en.wikipedia.org/wiki/Birthday_problem
          */
 
-        return Math.abs(new SecureRandom().nextLong());
+        long rnd;
+
+        // Impl note:
+        // Math.abs cannot negate MIN_VALUE, so we'll generate a new value when that happens.
+        do {
+            rnd = new SecureRandom().nextLong();
+        }
+        while (rnd == Long.MIN_VALUE);
+
+        return Math.abs(rnd);
     }
 
     public static String toBase64(byte [] data) {

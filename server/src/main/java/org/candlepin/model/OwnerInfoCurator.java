@@ -376,10 +376,6 @@ public class OwnerInfoCurator {
         }
 
         Long res = (Long) criteria.uniqueResult();
-        if (res == null) {
-            return 0;
-        }
-
         return res != null ? res.intValue() : 0;
     }
 

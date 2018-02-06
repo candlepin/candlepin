@@ -97,6 +97,8 @@ public class PoolTypeUpgradeTask extends LiquibaseCustomTask {
             }
         } while (count > 0);
 
+        queryStatement.close();
+
         this.logger.info(String.format("%d total rows updated", rows));
 
         return rows;

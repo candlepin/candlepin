@@ -32,8 +32,7 @@ import javax.ws.rs.core.Response.Status;
 public class ImportConflictException extends CandlepinException {
 
     public ImportConflictException(String message, Importer.Conflict type) {
-        super(Status.CONFLICT, new ConflictExceptionMessage(
-            message, type));
+        super(Status.CONFLICT, new ConflictExceptionMessage(message, type));
     }
 
     /**

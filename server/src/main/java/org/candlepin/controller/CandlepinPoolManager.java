@@ -1534,6 +1534,7 @@ public class CandlepinPoolManager implements PoolManager {
      */
     public Entitlement adjustEntitlementQuantity(Consumer consumer, Entitlement entitlement, Integer quantity)
         throws EntitlementRefusedException {
+
         int change = quantity - entitlement.getQuantity();
         if (change == 0) {
             return entitlement;
@@ -1546,23 +1547,19 @@ public class CandlepinPoolManager implements PoolManager {
         log.debug("Updating entitlement, Locking pool: {}", entitlement.getPool().getId());
 
         Pool pool = poolCurator.lockAndLoad(entitlement.getPool());
-
-        if (log.isDebugEnabled()) {
-            log.debug("Locked pool: {} consumed: {}", pool, pool.getConsumed());
-        }
-
         if (pool == null) {
-            throw new IllegalArgumentException(i18n.tr("Subscription pool {0} do not exist.",
-                    pool.getId()));
+            throw new RuntimeException("Unable to lock pool for entitlement: " + entitlement);
         }
+
+        log.debug("Locked pool: {} consumed: {}", pool, pool.getConsumed());
 
         ValidationResult result = enforcer.update(consumer, entitlement, change);
         if (!result.isSuccessful()) {
-            log.warn("Entitlement not updated: {} for pool: {}",
-                result.getErrors().toString(), pool.getId());
+            log.warn("Entitlement not updated: {} for pool: {}", result.getErrors().toString(), pool.getId());
 
             Map<String, ValidationResult> errorMap = new HashMap<String, ValidationResult>();
             errorMap.put(pool.getId(), result);
+
             throw new EntitlementRefusedException(errorMap);
         }
 
@@ -1587,13 +1584,10 @@ public class CandlepinPoolManager implements PoolManager {
         entMap.put(pool.getId(), entitlement);
         Map<String, PoolQuantity> poolQuantityMap = new HashMap<String, PoolQuantity>();
         poolQuantityMap.put(pool.getId(), new PoolQuantity(pool, change));
+
         // the only thing we do here is decrement bonus pool quantity
-        enforcer.postEntitlement(this,
-            consumer,
-            entMap,
-            new ArrayList<Pool>(),
-            true,
-            poolQuantityMap);
+        enforcer.postEntitlement(this, consumer, entMap, new ArrayList<Pool>(), true, poolQuantityMap);
+
         // we might have changed the bonus pool quantities, revoke ents if needed.
         checkBonusPoolQuantities(consumer.getOwner(), entMap);
 
@@ -1601,7 +1595,8 @@ public class CandlepinPoolManager implements PoolManager {
         if (consumer.isShare()) {
             pool.setShared(pool.getShared() + change);
             List<Pool> sharedPools = poolCurator.listBySourceEntitlement(entitlement).list();
-            for (Pool p: sharedPools) {
+
+            for (Pool p : sharedPools) {
                 setPoolQuantity(p, entitlement.getQuantity().longValue());
             }
         }
@@ -1617,7 +1612,6 @@ public class CandlepinPoolManager implements PoolManager {
          */
         complianceRules.getStatus(consumer, null, false, false);
         consumerCurator.update(consumer);
-
         poolCurator.flush();
 
         return entitlement;
@@ -1800,13 +1794,14 @@ public class CandlepinPoolManager implements PoolManager {
         List<Pool> poolsToSave = new ArrayList<Pool>();
         Set<String> entIdsToRevoke = new HashSet<String>();
         for (Entitlement ent : entsToRevoke) {
-            // Collect the entitlement IDs to revoke seeing as we are iterating
-            // them anyway.
             // TODO: Should we throw an exception if we find a malformed/incomplete entitlement
             // or just continue silently ignoring them?
-            if (ent != null && ent.getId() != null) {
-                entIdsToRevoke.add(ent.getId());
+            if (ent == null || ent.getId() == null) {
+                continue;
             }
+
+            // Collect the entitlement IDs to revoke seeing as we are iterating over them anyway.
+            entIdsToRevoke.add(ent.getId());
 
             //We need to trigger lazy load of provided products
             //to have access to those products later in this method.

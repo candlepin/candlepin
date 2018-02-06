@@ -161,6 +161,7 @@ public abstract class PKIUtility {
             CertificateFactory cf = CertificateFactory.getInstance("X509");
             X509Certificate cert =
                 (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(certData));
+
             return cert;
         }
         catch (Exception e) {
@@ -181,25 +182,30 @@ public abstract class PKIUtility {
         }
     }
 
-    public boolean verifySHA256WithRSAHashAgainstCACerts(
-        File input, byte[] signedHash) throws CertificateException, IOException {
-        log.debug("Verify against: " + reader.getCACert().getSerialNumber());
+    public boolean verifySHA256WithRSAHashAgainstCACerts(File input, byte[] signedHash)
+        throws CertificateException, IOException {
+
+        log.debug("Verify against: {}", reader.getCACert().getSerialNumber());
+
         if (verifySHA256WithRSAHash(new FileInputStream(input), signedHash,
             reader.getCACert())) {
             return true;
         }
+
         for (X509Certificate cert : reader.getUpstreamCACerts()) {
-            log.debug("Verify against: " + cert.getSerialNumber());
-            if (verifySHA256WithRSAHash(new FileInputStream(input), signedHash,
-                cert)) {
-                return true;
+            log.debug("Verify against: {}", cert.getSerialNumber());
+
+            try (InputStream istream = new FileInputStream(input)) {
+                if (verifySHA256WithRSAHash(istream, signedHash, cert)) {
+                    return true;
+                }
             }
         }
+
         return false;
     }
 
-    public boolean verifySHA256WithRSAHash(InputStream input,
-        byte[] signedHash, Certificate certificate) {
+    public boolean verifySHA256WithRSAHash(InputStream input, byte[] signedHash, Certificate certificate) {
         try {
             Signature signature = Signature.getInstance("SHA256withRSA");
             signature.initVerify(certificate);
@@ -217,8 +223,10 @@ public abstract class PKIUtility {
 
     private void updateSignature(InputStream input, Signature signature)
         throws IOException, SignatureException {
+
         byte[] dataBytes = new byte[4096];
         int nread = 0;
+
         while ((nread = input.read(dataBytes)) != -1) {
             signature.update(dataBytes, 0, nread);
         }

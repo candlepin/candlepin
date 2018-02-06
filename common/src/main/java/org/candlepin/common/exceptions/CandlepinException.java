@@ -45,6 +45,7 @@ public class CandlepinException extends RuntimeException {
 
     public CandlepinException(Status returnCode, ExceptionMessage em, boolean logException) {
         super(em.getDisplayMessage(), null);
+
         this.returnCode = returnCode;
         this.message = em;
         this.logException = logException;
@@ -56,6 +57,7 @@ public class CandlepinException extends RuntimeException {
 
     public CandlepinException(Status returnCode, String message, boolean logException, Throwable e) {
         super(message, e);
+
         this.returnCode = returnCode;
         this.message = new ExceptionMessage(message);
         this.logException = logException;
@@ -68,6 +70,7 @@ public class CandlepinException extends RuntimeException {
     public Status httpReturnCode() {
         return returnCode;
     }
+
     /**
      * Add the ability for exceptions to set headers in the response. This
      * allows me to use basic auth from the browser. Should be overridden

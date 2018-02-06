@@ -14,25 +14,28 @@
  */
 package org.candlepin.util;
 
-import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+
+
 
 /**
  * Arch
  */
 public class Arch {
 
-    private static ArrayList<String> x86Labels = new ArrayList<String>() {
-        {
-            add("i386");
-            add("i486");
-            add("i586");
-            add("i686");
-        }
-    };
+    private static final List<String> X86_LABELS = Collections.<String>unmodifiableList(Arrays.<String>asList(
+        "i386",
+        "i486",
+        "i586",
+        "i686"
+    ));
 
     private Arch() {
+        // Intentionally left empty
     }
 
     /*
@@ -44,9 +47,11 @@ public class Arch {
      */
     public static Set<String> parseArches(String arches) {
         Set<String> archesSet = new HashSet<String>();
+
         if (arches == null || arches.trim().equals("")) {
             return archesSet;
         }
+
         // split on comma, but try to include any whitespace
         // or repeated commas
         for (String arch : arches.split(",[\\s,]*")) {
@@ -54,6 +59,7 @@ public class Arch {
                 archesSet.add(arch.trim());
             }
         }
+
         return archesSet;
     }
 
@@ -86,7 +92,7 @@ public class Arch {
         }
         // x86 is an alias for anything that
         // could run on an i?86 machine
-        else if (contentArch.equals("x86") && x86Labels.contains(consumerArch)) {
+        else if (contentArch.equals("x86") && X86_LABELS.contains(consumerArch)) {
             compatible = true;
         }
 

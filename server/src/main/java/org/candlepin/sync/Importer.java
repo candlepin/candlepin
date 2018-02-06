@@ -548,6 +548,10 @@ public class Importer {
             throw new ImportConflictException(conflictExceptions);
         }
 
+        if (consumer == null) {
+            throw new IllegalStateException("No consumer found during import");
+        }
+
         // If the consumer has no entitlements, this products directory will end up empty.
         // This also implies there will be no entitlements to import.
         Meta meta = mapper.readValue(metadata, Meta.class);

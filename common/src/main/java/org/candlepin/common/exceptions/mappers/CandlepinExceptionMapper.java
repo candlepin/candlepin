@@ -27,7 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import java.util.LinkedList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -46,13 +46,13 @@ import javax.ws.rs.core.Response.Status;
 public class CandlepinExceptionMapper {
     private static Logger log = LoggerFactory.getLogger(CandlepinExceptionMapper.class);
 
-    private static final List<MediaType> DESIRED_RESPONSE_TYPES = new LinkedList<MediaType>() {
-        {
-            add(MediaType.APPLICATION_JSON_TYPE);
-            add(MediaType.TEXT_PLAIN_TYPE);
-            add(MediaType.APPLICATION_ATOM_XML_TYPE);
-        }
-    };
+    // This should be an unmodifiable list, but the MediaTypeHelper.getBestType actually manipulates its
+    // input lists.
+    private static final List<MediaType> DESIRED_RESPONSE_TYPES = Arrays.<MediaType>asList(
+        MediaType.APPLICATION_JSON_TYPE,
+        MediaType.TEXT_PLAIN_TYPE,
+        MediaType.APPLICATION_ATOM_XML_TYPE
+    );
 
     // Use a provider so we get a scoped HttpServletRequest
     @Inject

@@ -26,8 +26,8 @@ import org.slf4j.LoggerFactory;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -77,8 +77,7 @@ public class QpidQmf {
     }
 
     @Inject
-    public QpidQmf(QpidConnection qpidConnection, Configuration config)
-        throws URISyntaxException {
+    public QpidQmf(QpidConnection qpidConnection, Configuration config) throws URISyntaxException {
         this.qpidConnection = qpidConnection;
         this.config = config;
     }
@@ -99,14 +98,17 @@ public class QpidQmf {
      * @return
      * @throws JMSException
      */
-    private List<Map<String, Object>> runQuery(String targetType,
-        Map<Object, Object> query) throws JMSException {
+    private List<Map<String, Object>> runQuery(String targetType, Map<Object, Object> query)
+        throws JMSException {
+
         Session session = null;
         List<Map<String, Object>> result = new ArrayList<Map<String, Object>>();
         Connection connection = null;
+
         try {
             AMQAnyDestination qmfQueue = null;
             AMQAnyDestination responseQueue = null;
+
             try {
                 qmfQueue = new AMQAnyDestination("qmf.default.direct/broker");
                 responseQueue = new AMQAnyDestination(
@@ -115,6 +117,7 @@ public class QpidQmf {
             catch (URISyntaxException e) {
                 throw new RuntimeException("Couldn't create destinations", e);
             }
+
             connection = qpidConnection.newConnection();
             session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             MessageProducer sender = session.createProducer(qmfQueue);
@@ -130,8 +133,7 @@ public class QpidQmf {
             sender.send(request);
 
 
-            Message response = receiver.receive(
-                config.getInt(ConfigProperties.QPID_QMF_RECEIVE_TIMEOUT));
+            Message response = receiver.receive(config.getInt(ConfigProperties.QPID_QMF_RECEIVE_TIMEOUT));
 
             if (response != null) {
                 if (response instanceof MapMessage) {
@@ -142,6 +144,7 @@ public class QpidQmf {
                     while (en.hasMoreElements()) {
                         Map<String, Object> next = (Map<String, Object>)
                             mm.getObject(en.nextElement().toString());
+
                         result.add(next);
                     }
                     return result;
@@ -171,6 +174,7 @@ public class QpidQmf {
                 log.warn("Error closing the Qpid connection", e);
             }
         }
+
         return null;
     }
 
@@ -193,8 +197,7 @@ public class QpidQmf {
         try {
             for (String queue : getExchangeBoundQueueNames("event")) {
                 Object qinfo = getQueueInfo(queue);
-                boolean flowStopped =  QpidQmf.<Boolean>extractValue(qinfo,
-                    "_values", "flowStopped");
+                boolean flowStopped =  QpidQmf.<Boolean>extractValue(qinfo, "_values", "flowStopped");
 
                 /**
                  * The reason we need to indicate this state of FLOW_STOPPED is that it only
@@ -234,7 +237,8 @@ public class QpidQmf {
      * @throws JMSException Error connecting
      */
     private Set<String> getExchangeBoundQueueNames(String exchangeName) throws JMSException {
-        List<Map<String, Object>> mm = runQuery("_schema_id", singularMap("_class_name", "binding"));
+        List<Map<String, Object>> mm = runQuery("_schema_id",
+            Collections.singletonMap("_class_name", "binding"));
 
         Set<String> result = new HashSet<String>();
 
@@ -255,26 +259,17 @@ public class QpidQmf {
      */
     private Map<String, Object> getQueueInfo(String queueName) throws JMSException {
         log.debug("Getting info about queue {}", queueName);
-        List<Map<String, Object>> mm =  runQuery("_object_id", singularMap("_object_name", queueName));
-        if (mm.size() == 0) {
+        List<Map<String, Object>> mm = runQuery("_object_id",
+            Collections.singletonMap("_object_name", queueName));
+
+        if (mm == null || mm.size() == 0) {
             throw new RuntimeException("Couldn't find a queue in Qpid: " + queueName);
         }
-        if (mm.size() > 1) {
+        else if (mm.size() > 1) {
             throw new RuntimeException("Found unexpected amount of information about queue: " + queueName);
         }
-        return mm.get(0);
-    }
 
-    /**
-     * Map with one entry, key and value
-     * @param key
-     * @param value
-     * @return Map with one entry
-     */
-    private static Map<Object, Object> singularMap(Object key, Object value) {
-        Map<Object, Object> query = new HashMap<Object, Object>();
-        query.put(key, value);
-        return query;
+        return mm.get(0);
     }
 
     /**
@@ -300,29 +295,28 @@ public class QpidQmf {
         for (String key : mapKeys) {
             log.debug("Extracting key {} from the object", key);
             if (!(object instanceof Map)) {
-                throw new RuntimeException("The object under key " + key + " is not a map! The object:" +
-                    object);
+                String msg = String.format("The object under key %s is not a map! Object: %s", key, object);
+                throw new RuntimeException(msg);
             }
 
             object = ((Map<String, Object>) object).get(key);
             log.debug("Extracted {} under key {}", object, key);
             if (object == null) {
-                throw new RuntimeException("The extracted value at key " + key + " was null!: ");
+                throw new RuntimeException("The extracted value at key " + key + " was null!");
             }
         }
 
         if (object instanceof byte[]) {
-            log.debug("Found byte array that will be Stringified to {}",
-                new String((byte[]) object));
+            log.debug("Found byte array that will be Stringified to {}", new String((byte[]) object));
             return (T) new String((byte[]) object);
         }
+
         if (object instanceof Boolean) {
             log.debug("Found boolean");
             return (T) object;
         }
         else {
-            throw new RuntimeException(
-                "Expected the value to be byte[] but found: " + object.getClass());
+            throw new RuntimeException("Expected the value to be byte[] but found: " + object.getClass());
         }
     }
 

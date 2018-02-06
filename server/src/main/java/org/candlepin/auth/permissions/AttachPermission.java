@@ -22,6 +22,8 @@ import org.candlepin.model.Pool;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Restrictions;
 
+
+
 /**
  * Allows viewing and attaching a subscription for a specific pool in an org.
  *
@@ -41,17 +43,13 @@ public class AttachPermission extends TypedPermission<Pool> {
     }
 
     @Override
-    public boolean canAccessTarget(Pool target, SubResource subResource,
-        Access required) {
-
+    public boolean canAccessTarget(Pool target, SubResource subResource, Access required) {
         // Allow viewing a specific pool:
         if (subResource.equals(SubResource.NONE) && Access.READ_ONLY.equals(required)) {
             return target.getOwner().getKey().equals(owner.getKey());
         }
-
         // Allow subscribing to a pool:
-        else if (subResource.equals(SubResource.ENTITLEMENTS) &&
-            Access.CREATE.equals(required)) {
+        else if (subResource.equals(SubResource.ENTITLEMENTS) && Access.CREATE.equals(required)) {
             return target.getOwner().getKey().equals(owner.getKey());
         }
 

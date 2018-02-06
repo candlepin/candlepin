@@ -130,22 +130,35 @@ public class CandlepinQueryInterceptor implements PostProcessInterceptor {
             response.setEntity(new StreamingOutput() {
                 @Override
                 public void write(OutputStream stream) throws IOException, WebApplicationException {
-                    JsonGenerator generator = mapper.getJsonFactory().createGenerator(stream);
-                    ResultIterator<Object> iterator = query.iterate();
+                    JsonGenerator generator = null;
+                    ResultIterator<Object> iterator = null;
 
-                    generator.writeStartArray();
+                    try {
+                        generator = mapper.getJsonFactory().createGenerator(stream);
+                        iterator = query.iterate();
 
-                    while (iterator.hasNext()) {
-                        mapper.writeValue(generator, iterator.next());
+                        generator.writeStartArray();
+
+                        while (iterator.hasNext()) {
+                            mapper.writeValue(generator, iterator.next());
+                        }
+
+                        generator.writeEndArray();
                     }
+                    finally {
+                        if (generator != null) {
+                            generator.flush();
+                            generator.close();
+                        }
 
-                    generator.writeEndArray();
-                    generator.flush();
-                    generator.close();
+                        if (iterator != null) {
+                            iterator.close();
+                        }
 
-                    iterator.close();
-
-                    session.close();
+                        if (session != null) {
+                            session.close();
+                        }
+                    }
                 }
             });
         }

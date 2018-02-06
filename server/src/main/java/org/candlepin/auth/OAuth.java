@@ -99,8 +99,7 @@ public class OAuth implements AuthProvider {
                 if (!AuthUtil.getHeader(httpRequest, TrustedUserAuth.USER_HEADER).equals("")) {
                     principal = userAuth.getPrincipal(httpRequest);
                 }
-                else if (!AuthUtil.getHeader(httpRequest,
-                    TrustedConsumerAuth.CONSUMER_HEADER).equals("")) {
+                else if (!AuthUtil.getHeader(httpRequest, TrustedConsumerAuth.CONSUMER_HEADER).equals("")) {
                     principal = consumerAuth.getPrincipal(httpRequest);
                 }
                 else {
@@ -115,19 +114,17 @@ public class OAuth implements AuthProvider {
             // XXX: for some reason invalid signature (like bad password) has a
             // status code of 200. make it 401 unauthorized instead.
             if (e.getProblem().equals("signature_invalid")) {
-                throw new NotAuthorizedException(
-                    i18n.tr("Invalid OAuth unit or secret"));
+                throw new NotAuthorizedException(i18n.tr("Invalid OAuth unit or secret"));
             }
-            Response.Status returnCode = Response.Status.fromStatusCode(e
-                .getHttpStatusCode());
-            String message = i18n.tr("OAuth problem encountered. Internal message is: {0}",
-                e.getMessage());
+
+            Response.Status returnCode = Response.Status.fromStatusCode(e.getHttpStatusCode());
+            String message = i18n.tr("OAuth problem encountered. Internal message is: {0}", e.getMessage());
+
             throw new CandlepinException(returnCode, message);
         }
         catch (OAuthException e) {
             log.debug("OAuth Error", e);
-            String message = i18n.tr("OAuth error encountered. Internal message is: {0}",
-                e.getMessage());
+            String message = i18n.tr("OAuth error encountered. Internal message is: {0}", e.getMessage());
             throw new BadRequestException(message);
         }
         catch (URISyntaxException e) {

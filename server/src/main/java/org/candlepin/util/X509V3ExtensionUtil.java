@@ -951,6 +951,7 @@ public class X509V3ExtensionUtil extends X509Util {
                 name += (char) b;
             }
         }
+
         pathDictionary.add(new HuffNode(END_NODE, weight));
         List<HuffNode> triePathDictionary = new ArrayList<HuffNode>();
         triePathDictionary.addAll(pathDictionary);
@@ -964,14 +965,31 @@ public class X509V3ExtensionUtil extends X509Util {
         // check for size bits
         int nodeCount = value;
         if (value > 127) {
-            byte[] count = new byte[value - 128];
-            bais.read(count);
+            int length = value - 128;
             int total = 0;
-            for (int k = 0; k < value - 128; k++) {
-                total = (total << 8) | (count[k] & 0xFF);
+
+            if (length > 0) {
+                byte[] count = new byte[length];
+                int offset = 0;
+
+                do {
+                    int bytesRead = bais.read(count, offset, length - offset);
+
+                    if (bytesRead != -1) {
+                        for (; bytesRead > 0; --bytesRead) {
+                            total = (total << 8) | (count[offset++] & 0xFF);
+                        }
+                    }
+                    else {
+                        break;
+                    }
+                }
+                while (offset < length);
             }
+
             nodeCount = total;
         }
+
         value = bais.read();
         while (value != -1) {
             String someBits = Integer.toString(value, 2);
@@ -981,9 +999,11 @@ public class X509V3ExtensionUtil extends X509Util {
             nodeBits.append(someBits);
             value = bais.read();
         }
+
         for (int j = 0; j < nodeCount; j++) {
             nodeDictionary.add(new HuffNode(new PathNode(), j));
         }
+
         List<HuffNode> trieNodeDictionary = new ArrayList<HuffNode>();
         trieNodeDictionary.addAll(nodeDictionary);
         HuffNode nodeTrie = makeTrie(trieNodeDictionary);

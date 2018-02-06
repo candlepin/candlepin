@@ -151,8 +151,8 @@ public abstract class KingpinJob implements Job {
     public abstract void toExecute(JobExecutionContext context)
         throws JobExecutionException;
 
-    public static JobStatus scheduleJob(JobCurator jobCurator,
-        Scheduler scheduler, JobDetail detail, Trigger trigger) throws SchedulerException {
+    public static JobStatus scheduleJob(JobCurator jobCurator, Scheduler scheduler, JobDetail detail,
+        Trigger trigger) throws SchedulerException {
 
         scheduler.getListenerManager().addJobListenerMatcher(
             PinsetterJobListener.LISTENER_NAME,
@@ -188,8 +188,10 @@ public abstract class KingpinJob implements Job {
 
     private static void failStatus(JobCurator curator, JobStatus status) {
         // if there was any error in scheduling, ensure that the status is updated
-        status.setState(JobStatus.JobState.FAILED);
-        curator.merge(status);
+        if (status != null) {
+            status.setState(JobStatus.JobState.FAILED);
+            curator.merge(status);
+        }
     }
 
     public static boolean isSchedulable(JobCurator jobCurator, JobStatus status) {

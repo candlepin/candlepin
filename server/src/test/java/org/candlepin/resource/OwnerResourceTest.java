@@ -814,7 +814,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     public void countShouldThrowExceptionIfUnknownOwner() throws Exception {
         String key = "unknown";
         ex.expect(NotFoundException.class);
-        ex.expectMessage(i18n.tr("owner with key: {0} was not found", key));
+        ex.expectMessage(i18n.tr("Owner with key: {0} was not found", key));
         createConsumer(owner);
 
         ownerResource.countConsumers(key, typeLabels,

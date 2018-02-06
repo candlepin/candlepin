@@ -133,18 +133,17 @@ public class CrlFileUtil {
      */
     public File stripCRLFile(File file) throws IOException {
         File tempFile = File.createTempFile("candlepin_crl_", ".pem");
-        BufferedReader r = new BufferedReader(new FileReader(file));
-        BufferedWriter w = new BufferedWriter(new FileWriter(tempFile));
 
-        String line = null;
+        try (BufferedReader r = new BufferedReader(new FileReader(file));
+            BufferedWriter w = new BufferedWriter(new FileWriter(tempFile))) {
 
-        try {
+            String line = null;
+
             do {
                 line = r.readLine();
             }
             while (line != null &&
-                (WHITESPACE.matcher(line).matches() || CRL_HEADER_PATTERN.matcher(line).matches())
-            );
+                (WHITESPACE.matcher(line).matches() || CRL_HEADER_PATTERN.matcher(line).matches()));
 
             if (line == null) {
                 throw new IOException("No data left in file " + file);
@@ -155,11 +154,8 @@ public class CrlFileUtil {
                 line = r.readLine();
             }
             while (line != null && !CRL_FOOTER_PATTERN.matcher(line).matches());
+
             return tempFile;
-        }
-        finally {
-            w.close();
-            r.close();
         }
     }
 
