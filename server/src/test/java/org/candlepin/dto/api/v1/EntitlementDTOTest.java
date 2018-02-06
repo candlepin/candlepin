@@ -15,8 +15,6 @@
 package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.AbstractDTOTest;
-import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerType;
 import org.junit.Test;
 
 import java.util.Date;
@@ -27,6 +25,8 @@ import java.util.Set;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+
+
 
 /**
  * Test suite for the EntitlementDTO class
@@ -56,12 +56,12 @@ public class EntitlementDTOTest  extends AbstractDTOTest<EntitlementDTO> {
         pool.setProductId("pool_product_id");
         pool.setProductName("pool_product_name");
 
-        //TODO: change to ConsumerDTO once it gets introduced.
-        Consumer consumer = new Consumer();
+        ConsumerDTO consumer = new ConsumerDTO();
         consumer.setId("consumer_id");
+        consumer.setUuid("consumer_uuid");
         consumer.setName("consumer_name");
         consumer.setUsername("consumer_username");
-        consumer.setType(new ConsumerType());
+        consumer.setType(new ConsumerTypeDTO());
 
         Set<CertificateDTO> certs = new HashSet<CertificateDTO>();
         CertificateDTO certificate = new CertificateDTO();
