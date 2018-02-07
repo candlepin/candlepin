@@ -500,8 +500,7 @@ describe "Multi Org Shares" do
 
   it 'prohibits sharing an unmapped guest pool' do
     product = create_product(nil, nil,
-        {:attributes => {:virt_limit => "4",
-                         :host_limited => 'true'},
+        {:attributes => {:virt_limit => "4", :host_limited => 'true'},
         :owner => @owner1['key']})
     create_pool_and_subscription(@owner1['key'], product.id, 10, [])
     all_pools = @cp.list_owner_pools(@owner1['key'])

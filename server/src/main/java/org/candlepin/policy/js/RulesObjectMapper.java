@@ -27,7 +27,7 @@ import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
-import com.fasterxml.jackson.datatype.hibernate4.Hibernate4Module;
+import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 import com.google.inject.Inject;
 
@@ -59,40 +59,40 @@ public class RulesObjectMapper {
     private ObjectMapper mapper;
 
     @Inject
+    @SuppressWarnings("checkstyle:indentation")
     public RulesObjectMapper(ProductCachedSerializationModule poolCachedSerializationModule) {
         this.mapper = new ObjectMapper();
 
-        SimpleFilterProvider filterProvider = new SimpleFilterProvider();
-        filterProvider.setFailOnUnknownId(false);
-        filterProvider = filterProvider.addFilter("PoolAttributeFilter",
-            SimpleBeanPropertyFilter.serializeAllExcept("created", "updated", "id"));
-        filterProvider = filterProvider.addFilter("ProductAttributeFilter",
-                SimpleBeanPropertyFilter.serializeAllExcept("created", "updated", "id", "product"));
-        filterProvider = filterProvider.addFilter("ProvidedProductFilter",
-            SimpleBeanPropertyFilter.serializeAllExcept("created", "updated"));
-        filterProvider = filterProvider.addFilter("ConsumerFilter",
-            SimpleBeanPropertyFilter.serializeAllExcept("idCert"));
-        filterProvider = filterProvider.addFilter("EntitlementFilter",
-            SimpleBeanPropertyFilter.serializeAllExcept("certificates", "consumer"));
-        filterProvider = filterProvider.addFilter("OwnerFilter",
-            SimpleBeanPropertyFilter.serializeAllExcept("parentOwner", "consumers",
-                "activationKeys", "environments", "pools"));
-        this.mapper.setFilters(filterProvider);
+        SimpleFilterProvider filterProvider = new SimpleFilterProvider()
+            .setFailOnUnknownId(false)
+            .addFilter("PoolAttributeFilter",
+                SimpleBeanPropertyFilter.serializeAllExcept("created", "updated", "id"))
+            .addFilter("ProductAttributeFilter",
+                SimpleBeanPropertyFilter.serializeAllExcept("created", "updated", "id", "product"))
+            .addFilter("ProvidedProductFilter",
+                SimpleBeanPropertyFilter.serializeAllExcept("created", "updated"))
+            .addFilter("ConsumerFilter",
+                SimpleBeanPropertyFilter.serializeAllExcept("idCert"))
+            .addFilter("EntitlementFilter",
+                SimpleBeanPropertyFilter.serializeAllExcept("certificates", "consumer"))
+            .addFilter("OwnerFilter",
+                SimpleBeanPropertyFilter.serializeAllExcept("parentOwner", "consumers", "activationKeys",
+                    "environments", "pools"));
 
-        Hibernate4Module hbm = new Hibernate4Module();
-        hbm.enable(Hibernate4Module.Feature.FORCE_LAZY_LOADING);
+        this.mapper.setFilterProvider(filterProvider);
+
+        Hibernate5Module hbm = new Hibernate5Module();
+        hbm.enable(Hibernate5Module.Feature.FORCE_LAZY_LOADING);
 
         mapper.registerModule(hbm);
         mapper.registerModule(poolCachedSerializationModule);
         // Very important for deployments so new rules files can return additional
         // properties that this current server doesn't know how to serialize, but still
         // shouldn't fail on.
-        this.mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
-            false);
+        this.mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
         AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
-        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector(
-            mapper.getTypeFactory());
+        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector(mapper.getTypeFactory());
         AnnotationIntrospector pair = new AnnotationIntrospectorPair(primary, secondary);
         this.mapper.setAnnotationIntrospector(pair);
     }

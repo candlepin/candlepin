@@ -78,9 +78,10 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
         :attributes => {
             :cores => 2,
             :stacking_id => "stackme2-derived",
-            :sockets=>4
+            :sockets => 4
         }
     })
+
     # We'd like there to be three subs, two that require a specific host and one that provides both required products
     # in one. These first two are similar to VDC subscriptions, hence the name datacenter.
     @cp.create_pool(@owner['key'], datacenter_product_1.id, {:quantity => 10, :derived_product_id => derived_product_1['id']})

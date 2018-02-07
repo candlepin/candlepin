@@ -43,7 +43,6 @@ import java.util.Map;
  * one call per entity type.
  */
 public class BindContext {
-
     private Consumer consumer;
     private Consumer lockedConsumer;
     private Map<String, PoolQuantity> poolQuantities;
@@ -119,6 +118,7 @@ public class BindContext {
     public Map<String, Entitlement> getEntitlementMap() {
         if (entitlementMap == null) {
             entitlementMap = new HashMap<String, Entitlement>();
+
             for (PoolQuantity poolQuantity : poolQuantities.values()) {
                 Pool pool = poolQuantity.getPool();
                 Entitlement ent = new Entitlement(consumer, poolQuantity.getQuantity());

@@ -70,7 +70,8 @@ public class ConsumerExporterTest {
         json.append("\"urlWeb\":\"/subscriptions\",");
         json.append("\"urlApi\":\"/candlepin\",");
         json.append("\"contentAccessMode\":\"access_mode\"}");
-        assertTrue(TestUtil.isJsonEqual(json.toString(), writer.toString()));
+        assertTrue(json.toString() + "\n" + writer.toString(),
+            TestUtil.isJsonEqual(json.toString(), writer.toString()));
 
         // change sibling order to ensure that isJsonEqual can reconcile
         json = new StringBuffer();
