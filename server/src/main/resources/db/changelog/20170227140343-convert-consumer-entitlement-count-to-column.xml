@@ -13,8 +13,12 @@
             (SELECT sum(cp_entitlement.quantity)
                 FROM cp_entitlement WHERE cp_entitlement.consumer_id = cp_consumer.id), 0);"/>
 
-     <changeSet id="20170227140343-1" author="wpoteat, crog" dbms="postgresql, mysql, oracle, hsqldb">
+     <changeSet id="20170227140343-1" author="wpoteat, crog, jiri" dbms="postgresql, mysql, oracle, hsqldb">
         <validCheckSum>7:124ba8236ee0308696be406ea2a5958a</validCheckSum>
+
+        <preConditions onFail="MARK_RAN">
+            <not><columnExists tableName="cp_consumer" columnName="entitlement_count"/></not>
+        </preConditions>
 
          <comment>Add column for entitlement quantity on consumer</comment>
          <addColumn tableName="cp_consumer">
