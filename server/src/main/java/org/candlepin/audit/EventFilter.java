@@ -28,7 +28,8 @@ import java.util.Set;
 
 /**
  * This class is used to filter audit events so that they cannot enter
- * HornetQ queues.
+ * ActiveMQ queues.
+ *
  * This functionality is introduced as a hack to limit number of
  * audited events. Many users of Candlepin reported high memory usage
  * and crashes. Those issues were challenging to reproduce and

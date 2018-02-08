@@ -21,7 +21,7 @@ import static org.mockito.Mockito.*;
 
 import org.candlepin.TestingModules;
 import org.candlepin.audit.AMQPBusPublisher;
-import org.candlepin.audit.HornetqContextListener;
+import org.candlepin.audit.ActiveMQContextListener;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.ConfigurationException;
 import org.candlepin.common.config.ConfigurationPrefixes;
@@ -59,7 +59,7 @@ import javax.servlet.ServletContextEvent;
 public class CandlepinContextListenerTest {
     private Configuration config;
     private CandlepinContextListener listener;
-    private HornetqContextListener hqlistener;
+    private ActiveMQContextListener hqlistener;
     private PinsetterContextListener pinlistener;
     private AMQPBusPublisher buspublisher;
     private ScheduledExecutorService executorService;
@@ -80,7 +80,7 @@ public class CandlepinContextListenerTest {
             new MapConfiguration(ConfigProperties.DEFAULT_PROPERTIES));
         when(config.strippedSubset(eq(ConfigurationPrefixes.LOGGING_CONFIG_PREFIX)))
             .thenReturn(new MapConfiguration());
-        hqlistener = mock(HornetqContextListener.class);
+        hqlistener = mock(ActiveMQContextListener.class);
         pinlistener = mock(PinsetterContextListener.class);
         buspublisher = mock(AMQPBusPublisher.class);
         executorService = mock(ScheduledExecutorService.class);
@@ -116,7 +116,7 @@ public class CandlepinContextListenerTest {
 
     @Test
     public void contextInitialized() {
-        when(config.getBoolean(eq(ConfigProperties.HORNETQ_ENABLED))).thenReturn(true);
+        when(config.getBoolean(eq(ConfigProperties.ACTIVEMQ_ENABLED))).thenReturn(true);
         prepareForInitialization();
         listener.contextInitialized(evt);
         verify(hqlistener).contextInitialized(any(Injector.class));
@@ -151,8 +151,8 @@ public class CandlepinContextListenerTest {
     }
 
     @Test
-    public void hornetQDisabled() {
-        when(config.getBoolean(eq(ConfigProperties.HORNETQ_ENABLED))).thenReturn(false);
+    public void activeMQDisabled() {
+        when(config.getBoolean(eq(ConfigProperties.ACTIVEMQ_ENABLED))).thenReturn(false);
         prepareForInitialization();
         listener.contextInitialized(evt);
         verifyNoMoreInteractions(hqlistener);
@@ -160,7 +160,7 @@ public class CandlepinContextListenerTest {
 
     @Test
     public void contextDestroyed() {
-        when(config.getBoolean(eq(ConfigProperties.HORNETQ_ENABLED))).thenReturn(true);
+        when(config.getBoolean(eq(ConfigProperties.ACTIVEMQ_ENABLED))).thenReturn(true);
         prepareForInitialization();
 
         // we actually have to call contextInitialized before we
@@ -235,7 +235,7 @@ public class CandlepinContextListenerTest {
         @Override
         protected void configure() {
             bind(PinsetterContextListener.class).toInstance(pinlistener);
-            bind(HornetqContextListener.class).toInstance(hqlistener);
+            bind(ActiveMQContextListener.class).toInstance(hqlistener);
             bind(AMQPBusPublisher.class).toInstance(buspublisher);
             bind(ScheduledExecutorService.class).toInstance(executorService);
         }

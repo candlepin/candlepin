@@ -43,13 +43,13 @@ import org.candlepin.test.TestUtil;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.hornetq.api.core.HornetQBuffers;
-import org.hornetq.api.core.HornetQException;
-import org.hornetq.api.core.client.ClientMessage;
-import org.hornetq.api.core.client.ClientProducer;
-import org.hornetq.api.core.client.ClientSession;
-import org.hornetq.api.core.client.ClientSessionFactory;
-import org.hornetq.api.core.client.ServerLocator;
+import org.apache.activemq.artemis.api.core.ActiveMQBuffers;
+import org.apache.activemq.artemis.api.core.ActiveMQException;
+import org.apache.activemq.artemis.api.core.client.ClientMessage;
+import org.apache.activemq.artemis.api.core.client.ClientProducer;
+import org.apache.activemq.artemis.api.core.client.ClientSession;
+import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
+import org.apache.activemq.artemis.api.core.client.ServerLocator;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -91,7 +91,7 @@ public class EventSinkImplTest {
         when(mockClientSession.createProducer(anyString())).thenReturn(mockClientProducer);
         when(mockClientSession.createMessage(anyBoolean())).thenReturn(mockClientMessage);
         when(mockClientMessage.getBodyBuffer()).thenReturn(
-            HornetQBuffers.fixedBuffer(2000));
+            ActiveMQBuffers.fixedBuffer(2000));
         when(mockSessionFactory.getServerLocator()).thenReturn(mockLocator);
         this.mapper = spy(new ObjectMapper());
         this.eventSinkImpl = createEventSink(mockSessionFactory);
@@ -124,7 +124,7 @@ public class EventSinkImplTest {
     public void eventSinkShouldThrowExceptionWhenSessionCreationFailsInConstructor()
         throws Exception {
         final ClientSessionFactory csFactory = mock(ClientSessionFactory.class);
-        doThrow(new HornetQException()).when(csFactory.createSession());
+        doThrow(new ActiveMQException()).when(csFactory.createSession());
         createEventSink(csFactory);
         fail("Runtime exception should have been thrown.");
     }
@@ -138,7 +138,7 @@ public class EventSinkImplTest {
     @Test(expected = RuntimeException.class)
     public void eventSinkShouldThrowExceptionWhenProducerCreationFailsInConstructor()
         throws Exception {
-        doThrow(new HornetQException()).when(
+        doThrow(new ActiveMQException()).when(
             mockClientSession.createProducer(anyString()));
         createEventSink(mockSessionFactory);
         fail("Runtime exception should have been thrown.");

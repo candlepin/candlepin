@@ -28,6 +28,7 @@ gendb() {
         # queue to fire:
         info_msg "Cleaning hornetq journal"
         $SUDO rm -rf /var/lib/candlepin/hornetq/*
+        $SUDO rm -rf /var/lib/candlepin/activemq-artemis/*
     else
         MESSAGE="Updating Database"
         CHANGELOG="changelog-update.xml"

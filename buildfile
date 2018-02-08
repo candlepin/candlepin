@@ -138,7 +138,7 @@ HSQLDB_OLD = 'org.hsqldb:hsqldb:jar:1.8.0.10'
 ORACLE = ['com.oracle:ojdbc6:jar:11.2.0', 'org.quartz-scheduler:quartz-oracle:jar:2.1.5']
 
 COMMONS = ['commons-codec:commons-codec:jar:1.4',
-           'commons-collections:commons-collections:jar:3.2',
+           'commons-collections:commons-collections:jar:3.2.2',
            'commons-io:commons-io:jar:1.4',
            'commons-lang:commons-lang:jar:2.5']
 
@@ -164,7 +164,7 @@ GUICE =  [group('guice-assistedinject', 'guice-multibindings',
            'aopalliance:aopalliance:jar:1.0',
            'javax.inject:javax.inject:jar:1']
 
-COLLECTIONS = 'com.google.guava:guava:jar:13.0'
+COLLECTIONS = 'com.google.guava:guava:jar:19.0'
 
 OAUTH= [group('oauth',
               'oauth-provider',
@@ -173,14 +173,20 @@ OAUTH= [group('oauth',
 
 QUARTZ = 'org.quartz-scheduler:quartz:jar:2.2.1'
 
-HORNETQ = [group('hornetq-server',
-                 'hornetq-core-client',
-                 'hornetq-commons',
-                 'hornetq-journal',
-                 # 'hornetq-resources', #Native libs for libaio
-                 :under=>'org.hornetq',
-                 :version=>'2.4.7.Final'),
-            'io.netty:netty-all:jar:4.0.13.Final']
+ACTIVEMQ = [group('artemis-server',
+                  'artemis-core-client',
+                  'artemis-commons',
+                  'artemis-selector',
+                  'artemis-journal',
+                  :under => 'org.apache.activemq',
+                  :version => '2.4.0'),
+            'io.netty:netty-all:jar:4.1.16.Final',
+            'commons-beanutils:commons-beanutils:jar:1.9.3',
+            # 'commons-logging:commons-logging:jar:1.2',
+            'org.jgroups:jgroups:jar:3.6.13.Final',
+            'org.apache.geronimo.specs:geronimo-json_1.0_spec:jar:1.0-alpha-1',
+            'org.apache.johnzon:johnzon-core:jar:0.9.5'
+           ]
 
 SCHEMASPY = 'net.sourceforge:schemaSpy:jar:4.1.1'
 
@@ -375,7 +381,7 @@ define "candlepin" do
       GETTEXT_COMMONS,
       GUICE,
       HIBERNATE,
-      HORNETQ,
+      ACTIVEMQ,
       JACKSON,
       LIQUIBASE,
       LOGGING,

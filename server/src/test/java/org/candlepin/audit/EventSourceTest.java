@@ -20,11 +20,11 @@ import static org.mockito.Mockito.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.hornetq.api.core.HornetQException;
-import org.hornetq.api.core.HornetQExceptionType;
-import org.hornetq.api.core.client.ClientConsumer;
-import org.hornetq.api.core.client.ClientSession;
-import org.hornetq.api.core.client.ClientSessionFactory;
+import org.apache.activemq.artemis.api.core.ActiveMQException;
+import org.apache.activemq.artemis.api.core.ActiveMQExceptionType;
+import org.apache.activemq.artemis.api.core.client.ClientConsumer;
+import org.apache.activemq.artemis.api.core.client.ClientSession;
+import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -66,7 +66,7 @@ public class EventSourceTest {
     @Test(expected = RuntimeException.class)
     public void shouldThrowRunTimeExceptionWhenSessionCreateFailsDuringEventSourceCreation()
         throws Exception {
-        doThrow(new HornetQException()).when(clientSession).start();
+        doThrow(new ActiveMQException()).when(clientSession).start();
         createEventSourceStubbedWithFactoryCreation();
         fail("Should have thrown runtime exception");
     }
@@ -74,7 +74,7 @@ public class EventSourceTest {
     @Test
     public void shouldNotThrowExceptionWhenQueueCreationFails() throws Exception {
         EventSource eventSource = createEventSourceStubbedWithFactoryCreation();
-        doThrow(new HornetQException(HornetQExceptionType.QUEUE_DOES_NOT_EXIST))
+        doThrow(new ActiveMQException(ActiveMQExceptionType.QUEUE_DOES_NOT_EXIST))
             .when(clientSession).createQueue(anyString(), anyString(), eq(true));
         EventListener eventListener = mock(EventListener.class);
         eventSource.registerListener(eventListener);
@@ -104,7 +104,7 @@ public class EventSourceTest {
         ClientConsumer mockCC = mock(ClientConsumer.class);
         when(clientSession.createConsumer(anyString()))
             .thenReturn(mockCC);
-        doThrow(new HornetQException(HornetQExceptionType.QUEUE_EXISTS))
+        doThrow(new ActiveMQException(ActiveMQExceptionType.QUEUE_EXISTS))
             .when(clientSession).createQueue(anyString(), anyString());
         EventListener eventListener = mock(EventListener.class);
         //invoke
@@ -128,7 +128,7 @@ public class EventSourceTest {
     public void shouldStopAndCloseSessionOnShutdownWhenExceptionThrownOnStop()
         throws Exception {
         EventSource eventSource = createEventSourceStubbedWithFactoryCreation();
-        doThrow(new HornetQException()).when(clientSession).stop();
+        doThrow(new ActiveMQException()).when(clientSession).stop();
 
         eventSource.shutDown();
 
@@ -139,7 +139,7 @@ public class EventSourceTest {
     public void shouldStopAndCloseSessionOnShutdownWhenExceptionThrownOnClose()
         throws Exception {
         EventSource eventSource = createEventSourceStubbedWithFactoryCreation();
-        doThrow(new HornetQException()).when(clientSession).close();
+        doThrow(new ActiveMQException()).when(clientSession).close();
 
         eventSource.shutDown();
         verify(this.clientSession).stop();

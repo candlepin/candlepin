@@ -17,14 +17,14 @@ package org.candlepin.audit;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 
-import org.hornetq.api.core.HornetQException;
-import org.hornetq.api.core.HornetQExceptionType;
-import org.hornetq.api.core.TransportConfiguration;
-import org.hornetq.api.core.client.ClientConsumer;
-import org.hornetq.api.core.client.ClientSession;
-import org.hornetq.api.core.client.ClientSessionFactory;
-import org.hornetq.api.core.client.HornetQClient;
-import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory;
+import org.apache.activemq.artemis.api.core.ActiveMQException;
+import org.apache.activemq.artemis.api.core.ActiveMQExceptionType;
+import org.apache.activemq.artemis.api.core.TransportConfiguration;
+import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
+import org.apache.activemq.artemis.api.core.client.ClientConsumer;
+import org.apache.activemq.artemis.api.core.client.ClientSession;
+import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
+import org.apache.activemq.artemis.core.remoting.impl.invm.InVMConnectorFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +45,7 @@ public class EventSource {
 
         try {
             factory =  createSessionFactory();
-            // Specify a message ack batch size of 0 to have hornetq immediately ack
+            // Specify a message ack batch size of 0 to have ActiveMQ immediately ack
             // any message successfully received with the server. Not doing so can lead
             // to duplicate messages if the server goes down before the batch ack size is
             // reached.
@@ -62,7 +62,7 @@ public class EventSource {
      * @throws Exception
      */
     protected ClientSessionFactory createSessionFactory() throws Exception {
-        return HornetQClient.createServerLocatorWithoutHA(
+        return ActiveMQClient.createServerLocatorWithoutHA(
             new TransportConfiguration(
                 InVMConnectorFactory.class.getName())).createSessionFactory();
     }
@@ -73,8 +73,8 @@ public class EventSource {
             session.close();
             factory.close();
         }
-        catch (HornetQException e) {
-            log.warn("Exception while trying to shutdown hornetq", e);
+        catch (ActiveMQException e) {
+            log.warn("Exception while trying to shutdown ActiveMQ", e);
         }
     }
 
@@ -87,10 +87,10 @@ public class EventSource {
                 session.createQueue(QUEUE_ADDRESS, queueName, true);
                 log.debug("created new event queue " + queueName);
             }
-            catch (HornetQException e) {
+            catch (ActiveMQException e) {
                 // if the queue exists already we already created it in a previous run,
                 // so that's fine.
-                if (e.getType() != HornetQExceptionType.QUEUE_EXISTS) {
+                if (e.getType() != ActiveMQExceptionType.QUEUE_EXISTS) {
                     throw e;
                 }
             }
@@ -98,7 +98,7 @@ public class EventSource {
             ClientConsumer consumer = session.createConsumer(queueName);
             consumer.setMessageHandler(new ListenerWrapper(listener, mapper));
         }
-        catch (HornetQException e) {
+        catch (ActiveMQException e) {
             log.error("Unable to register listener :" + listener, e);
         }
     }

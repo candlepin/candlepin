@@ -32,9 +32,9 @@
     <geronimo-spec-geronimo-spec-jms.version>1.1-rc4</geronimo-spec-geronimo-spec-jms.version>
     <org.bouncycastle-bcmail-jdk16.version>1.46</org.bouncycastle-bcmail-jdk16.version>
     <org.bouncycastle-bcprov-jdk16.version>1.46</org.bouncycastle-bcprov-jdk16.version>
-    <com.google.guava-guava.version>13.0</com.google.guava-guava.version>
+    <com.google.guava-guava.version>19.0</com.google.guava-guava.version>
     <commons-codec-commons-codec.version>1.4</commons-codec-commons-codec.version>
-    <commons-collections-commons-collections.version>3.2</commons-collections-commons-collections.version>
+    <commons-collections-commons-collections.version>3.2.2</commons-collections-commons-collections.version>
     <commons-io-commons-io.version>1.4</commons-io-commons-io.version>
     <commons-lang-commons-lang.version>2.5</commons-lang-commons-lang.version>
     <com.googlecode.gettext-commons-gettext-commons.version>0.9.8</com.googlecode.gettext-commons-gettext-commons.version>
@@ -71,11 +71,16 @@
     <org.hibernate.javax.persistence-hibernate-jpa-2.1-api.version>1.0.0.Final</org.hibernate.javax.persistence-hibernate-jpa-2.1-api.version>
     <javax.validation-validation-api.version>1.0.0.GA</javax.validation-validation-api.version>
     <javax.transaction-jta.version>1.1</javax.transaction-jta.version>
-    <org.hornetq-hornetq-server.version>2.4.7.Final</org.hornetq-hornetq-server.version>
-    <org.hornetq-hornetq-core-client.version>2.4.7.Final</org.hornetq-hornetq-core-client.version>
-    <org.hornetq-hornetq-commons.version>2.4.7.Final</org.hornetq-hornetq-commons.version>
-    <org.hornetq-hornetq-journal.version>2.4.7.Final</org.hornetq-hornetq-journal.version>
-    <io.netty-netty-all.version>4.0.13.Final</io.netty-netty-all.version>
+    <org.apache.activemq-artemis-server.version>2.4.0</org.apache.activemq-artemis-server.version>
+    <org.apache.activemq-artemis-core-client.version>2.4.0</org.apache.activemq-artemis-core-client.version>
+    <org.apache.activemq-artemis-commons.version>2.4.0</org.apache.activemq-artemis-commons.version>
+    <org.apache.activemq-artemis-selector.version>2.4.0</org.apache.activemq-artemis-selector.version>
+    <org.apache.activemq-artemis-journal.version>2.4.0</org.apache.activemq-artemis-journal.version>
+    <io.netty-netty-all.version>4.1.16.Final</io.netty-netty-all.version>
+    <commons-beanutils-commons-beanutils.version>1.9.3</commons-beanutils-commons-beanutils.version>
+    <org.jgroups-jgroups.version>3.6.13.Final</org.jgroups-jgroups.version>
+    <org.apache.geronimo.specs-geronimo-json_1.0_spec.version>1.0-alpha-1</org.apache.geronimo.specs-geronimo-json_1.0_spec.version>
+    <org.apache.johnzon-johnzon-core.version>0.9.5</org.apache.johnzon-johnzon-core.version>
     <com.fasterxml.jackson.core-jackson-annotations.version>2.9.4</com.fasterxml.jackson.core-jackson-annotations.version>
     <com.fasterxml.jackson.core-jackson-core.version>2.9.4</com.fasterxml.jackson.core-jackson-core.version>
     <com.fasterxml.jackson.core-jackson-databind.version>2.9.4</com.fasterxml.jackson.core-jackson-databind.version>
@@ -725,9 +730,9 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>org.hornetq</groupId>
-      <artifactId>hornetq-server</artifactId>
-      <version>${org.hornetq-hornetq-server.version}</version>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>artemis-server</artifactId>
+      <version>${org.apache.activemq-artemis-server.version}</version>
       <exclusions>
         <exclusion>
           <groupId>*</groupId>
@@ -736,9 +741,9 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>org.hornetq</groupId>
-      <artifactId>hornetq-core-client</artifactId>
-      <version>${org.hornetq-hornetq-core-client.version}</version>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>artemis-core-client</artifactId>
+      <version>${org.apache.activemq-artemis-core-client.version}</version>
       <exclusions>
         <exclusion>
           <groupId>*</groupId>
@@ -747,9 +752,9 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>org.hornetq</groupId>
-      <artifactId>hornetq-commons</artifactId>
-      <version>${org.hornetq-hornetq-commons.version}</version>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>artemis-commons</artifactId>
+      <version>${org.apache.activemq-artemis-commons.version}</version>
       <exclusions>
         <exclusion>
           <groupId>*</groupId>
@@ -758,9 +763,20 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>org.hornetq</groupId>
-      <artifactId>hornetq-journal</artifactId>
-      <version>${org.hornetq-hornetq-journal.version}</version>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>artemis-selector</artifactId>
+      <version>${org.apache.activemq-artemis-selector.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>artemis-journal</artifactId>
+      <version>${org.apache.activemq-artemis-journal.version}</version>
       <exclusions>
         <exclusion>
           <groupId>*</groupId>
@@ -772,6 +788,50 @@
       <groupId>io.netty</groupId>
       <artifactId>netty-all</artifactId>
       <version>${io.netty-netty-all.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>commons-beanutils</groupId>
+      <artifactId>commons-beanutils</artifactId>
+      <version>${commons-beanutils-commons-beanutils.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.jgroups</groupId>
+      <artifactId>jgroups</artifactId>
+      <version>${org.jgroups-jgroups.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.geronimo.specs</groupId>
+      <artifactId>geronimo-json_1.0_spec</artifactId>
+      <version>${org.apache.geronimo.specs-geronimo-json_1.0_spec.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.johnzon</groupId>
+      <artifactId>johnzon-core</artifactId>
+      <version>${org.apache.johnzon-johnzon-core.version}</version>
       <exclusions>
         <exclusion>
           <groupId>*</groupId>
