@@ -75,14 +75,14 @@ JUKITO = ['org.jukito:jukito:jar:1.4']
 
 LOGBACK = [group('logback-core', 'logback-classic',
                  :under => 'ch.qos.logback',
-                 :version => '1.1.3')]
+                 :version => '1.2.3')]
 
 # Artifacts that bridge other logging frameworks to slf4j. Mime4j uses
 # JCL for example.
 SLF4J_BRIDGES = [group('jcl-over-slf4j', 'log4j-over-slf4j',
                        :under => 'org.slf4j',
                        :version => '1.7.12')]
-SLF4J = 'org.slf4j:slf4j-api:jar:1.7.12'
+SLF4J = 'org.slf4j:slf4j-api:jar:1.7.25'
 
 LOGGING = [LOGBACK, SLF4J_BRIDGES, SLF4J]
 
