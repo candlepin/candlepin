@@ -165,8 +165,8 @@ module HostedTest
         pool = find_main_pool(owner_key, sub['id'], activeon=active_on, true)
       end
     else
-      params[:source_subscription] = { 'id' => random_str('source_sub_') }
-      params[:upstream_pool_id] = random_str('upstream_')
+      params[:subscription_id] = random_str('source_sub')
+      params[:upstream_pool_id] = random_str('upstream')
       pool = @cp.create_pool(owner_key, product_id, params)
     end
     return pool

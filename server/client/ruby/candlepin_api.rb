@@ -1047,9 +1047,14 @@ class Candlepin
     end
 
     if params[:source_subscription]
-      pool['sourceSubscription'] = {}
-      pool['sourceSubscription']['subscriptionId'] = params[:source_subscription]['id']
-      pool['sourceSubscription']['subscriptionSubKey'] = 'master'
+      pool['subscriptionId'] = params[:source_subscription]['id'] || "sub_id-#{rand(9)}#{rand(9)}#{rand(9)}"
+      pool['subscriptionSubKey'] = params[:source_subscription]['subkey'] || 'master'
+    elsif params[:subscription_id] || params[:subscription_subkey]
+      pool['subscriptionId'] = params[:subscription_id] || "sub_id-#{rand(9)}#{rand(9)}#{rand(9)}"
+      pool['subscriptionSubKey'] = params[:subscription_subkey] || 'master'
+    elsif params[:subscriptionId] || params[:subscriptionSubKey]
+      pool['subscriptionId'] = params[:subscriptionId] || "sub_id-#{rand(9)}#{rand(9)}#{rand(9)}"
+      pool['subscriptionSubKey'] = params[:subscriptionSubKey] || 'master'
     end
 
     if params[:derived_provided_products]

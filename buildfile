@@ -3,7 +3,7 @@
 ### Repositories
 repositories.remote << "http://awood.fedorapeople.org/ivy/candlepin/"
 repositories.remote << "http://repository.jboss.org/nexus/content/groups/public/"
-repositories.remote << "http://oauth.googlecode.com/svn/code/maven/"
+repositories.remote << "https://repo.maven.apache.org/maven2/"
 repositories.remote << "http://central.maven.org/maven2/"
 
 require 'date'
@@ -46,7 +46,7 @@ RESTEASY = [group('jaxrs-api',
             'javax.ws.rs:javax.ws.rs-api:jar:2.0.1']
 
 JACKSON_NS = "com.fasterxml.jackson"
-JACKSON_VERSION = "2.4.5"
+JACKSON_VERSION = "2.9.4"
 JACKSON = [group('jackson-annotations', 'jackson-core', 'jackson-databind',
                  :under=> "#{JACKSON_NS}.core",
                  :version => JACKSON_VERSION),
@@ -56,7 +56,7 @@ JACKSON = [group('jackson-annotations', 'jackson-core', 'jackson-databind',
            group('jackson-module-jsonSchema', 'jackson-module-jaxb-annotations',
                  :under=> "#{JACKSON_NS}.module",
                  :version => JACKSON_VERSION),
-           group('jackson-datatype-hibernate4',
+           group('jackson-datatype-hibernate5',
                 :under=> "#{JACKSON_NS}.datatype",
                 :version => JACKSON_VERSION)]
 

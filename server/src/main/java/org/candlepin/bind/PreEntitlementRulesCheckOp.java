@@ -40,8 +40,7 @@ public class PreEntitlementRulesCheckOp implements BindOperation {
     private static Logger log = LoggerFactory.getLogger(PreEntitlementRulesCheckOp.class);
 
     @Inject
-    public PreEntitlementRulesCheckOp(Enforcer enforcer,
-        @Assisted CallerType callerType) {
+    public PreEntitlementRulesCheckOp(Enforcer enforcer, @Assisted CallerType callerType) {
         this.enforcer = enforcer;
         this.callerType = callerType;
     }
@@ -61,8 +60,7 @@ public class PreEntitlementRulesCheckOp implements BindOperation {
         if (context.isQuantityRequested()) {
             log.debug("Running pre-entitlement rules.");
             // XXX preEntitlement is run twice for new entitlement creation
-            results = enforcer.preEntitlement(context.getConsumer(),
-                poolQuantityMap.values(), callerType);
+            results = enforcer.preEntitlement(context.getConsumer(), poolQuantityMap.values(), callerType);
 
             EntitlementRefusedException exception = checkResults();
             if (exception != null) {
@@ -80,19 +78,20 @@ public class PreEntitlementRulesCheckOp implements BindOperation {
      */
     @Override
     public boolean execute(BindContext context) {
-
         if (context.isQuantityRequested()) {
-            for (PoolQuantity poolQuantity: context.getPoolQuantities().values()) {
+            for (PoolQuantity poolQuantity : context.getPoolQuantities().values()) {
                 Pool pool = poolQuantity.getPool();
                 enforcer.finishValidation(results.get(pool.getId()),
                     pool, context.getPoolQuantities().get(pool.getId()).getQuantity());
             }
+
             EntitlementRefusedException exception = checkResults();
             if (exception != null) {
                 context.setException(exception, Thread.currentThread().getStackTrace());
                 return false;
             }
         }
+
         return true;
     }
 

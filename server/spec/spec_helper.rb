@@ -71,8 +71,7 @@ RSpec.configure do |config|
     create_pool_and_subscription(@owner['key'], @virt_limit_product.id, 10, [], '', '', '', nil, nil, true)
     create_pool_and_subscription(@owner['key'], @virt_limit_product.id, 10)
 
-    @pools = @user.list_pools :owner => @owner.id, \
-      :product => @virt_limit_product.id
+    @pools = @user.list_pools :owner => @owner.id, :product => @virt_limit_product.id
 
     # includes an extra unmapped guest pool for each
     @pools.size.should == 4

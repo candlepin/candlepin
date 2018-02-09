@@ -1488,9 +1488,11 @@ public class CandlepinPoolManager implements PoolManager {
     @Transactional
     public List<Entitlement> entitleByPools(Consumer consumer, Map<String, Integer> poolQuantities)
         throws EntitlementRefusedException {
+
         if (MapUtils.isNotEmpty(poolQuantities)) {
             return createEntitlements(consumer, poolQuantities, CallerType.BIND);
         }
+
         return new ArrayList<Entitlement>();
     }
 
@@ -1615,9 +1617,8 @@ public class CandlepinPoolManager implements PoolManager {
      * See BZ #1274074 and git history for details
      */
     @Transactional
-    protected List<Entitlement> createEntitlements(Consumer consumer,
-        Map<String, Integer> poolQuantityMap, CallerType caller)
-        throws EntitlementRefusedException {
+    protected List<Entitlement> createEntitlements(Consumer consumer, Map<String, Integer> poolQuantityMap,
+        CallerType caller) throws EntitlementRefusedException {
 
         Collection<Entitlement> ents = bindChainFactory
             .create(consumer, poolQuantityMap, caller)

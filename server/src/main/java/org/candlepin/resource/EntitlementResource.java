@@ -204,8 +204,7 @@ public class EntitlementResource {
 
         // Check that quantity param was set and is not 0:
         if (update.getQuantity() <= 0) {
-            throw new BadRequestException(
-                i18n.tr("Quantity value must be greater than 0."));
+            throw new BadRequestException(i18n.tr("Quantity value must be greater than 0."));
         }
 
         // Verify entitlement exists:
@@ -214,13 +213,11 @@ public class EntitlementResource {
             // make sure that this will be a change
             if (!entitlement.getQuantity().equals(update.getQuantity())) {
                 Consumer consumer = entitlement.getConsumer();
-                entitler.adjustEntitlementQuantity(consumer, entitlement,
-                    update.getQuantity());
+                entitler.adjustEntitlementQuantity(consumer, entitlement, update.getQuantity());
             }
         }
         else {
-            throw new NotFoundException(
-                i18n.tr("Entitlement with ID ''{0}'' could not be found.", id));
+            throw new NotFoundException(i18n.tr("Entitlement with ID ''{0}'' could not be found.", id));
         }
     }
 

@@ -113,15 +113,10 @@ public class Entitler {
         this.contentManager = contentManager;
     }
 
-    public List<Entitlement> bindByPoolQuantities(String consumeruuid,
-        Map<String, Integer> poolIdAndQuantities) throws EntitlementRefusedException {
-        Consumer c = consumerCurator.findByUuid(consumeruuid);
-        return bindByPoolQuantities(c, poolIdAndQuantities);
-    }
-
     public List<Entitlement> bindByPoolQuantity(Consumer consumer, String poolId, Integer quantity) {
         Map<String, Integer> poolMap = new HashMap<String, Integer>();
         poolMap.put(poolId, quantity);
+
         try {
             return bindByPoolQuantities(consumer, poolMap);
         }
@@ -135,9 +130,17 @@ public class Entitler {
         }
     }
 
+    public List<Entitlement> bindByPoolQuantities(String consumeruuid,
+        Map<String, Integer> poolIdAndQuantities) throws EntitlementRefusedException {
+
+        Consumer c = consumerCurator.findByUuid(consumeruuid);
+        return bindByPoolQuantities(c, poolIdAndQuantities);
+    }
+
     public List<Entitlement> bindByPoolQuantities(Consumer consumer,
         Map<String, Integer> poolIdAndQuantities) throws EntitlementRefusedException {
         // Attempt to create entitlements:
+
         try {
             List<Entitlement> entitlementList = poolManager.entitleByPools(consumer, poolIdAndQuantities);
             log.debug("Created {} entitlements.", entitlementList.size());

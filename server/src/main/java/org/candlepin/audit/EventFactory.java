@@ -37,7 +37,7 @@ import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair;
 import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
-import com.fasterxml.jackson.datatype.hibernate4.Hibernate4Module;
+import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 import com.google.inject.Inject;
 
@@ -81,10 +81,10 @@ public class EventFactory {
             SimpleBeanPropertyFilter.serializeAllExcept("created", "updated", "productId", "id"));
         filterProvider = filterProvider.addFilter("SubscriptionCertificateFilter",
             SimpleBeanPropertyFilter.serializeAllExcept("cert", "key"));
-        mapper.setFilters(filterProvider);
+        mapper.setFilterProvider(filterProvider);
 
-        Hibernate4Module hbm = new Hibernate4Module();
-        hbm.enable(Hibernate4Module.Feature.FORCE_LAZY_LOADING);
+        Hibernate5Module hbm = new Hibernate5Module();
+        hbm.enable(Hibernate5Module.Feature.FORCE_LAZY_LOADING);
         mapper.registerModule(hbm);
 
         AnnotationIntrospector primary = new JacksonAnnotationIntrospector();

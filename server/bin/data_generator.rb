@@ -696,7 +696,7 @@ class CandlepinDataGenerator
         params[:quantity] = pool[:quantity] || 1
 
         source_sub_id_pool_lock.synchronize do
-          params[:source_subscription] = { 'id' => (source_sub_id_pool += 1) }
+          params[:subscription_id] = (source_sub_id_pool += 1)
         end
 
         print "  Creating pool for product: #{pool[:product_id]}\n"

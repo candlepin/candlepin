@@ -82,7 +82,7 @@ class SyncUtils {
         filterProvider.setFailOnUnknownId(false);
         filterProvider = filterProvider.addFilter("EntitlementFilter",
             SimpleBeanPropertyFilter.serializeAllExcept("consumer"));
-        mapper.setFilters(filterProvider);
+        mapper.setFilterProvider(filterProvider);
         mapper.registerModule(productCachedModule);
         if (config != null) {
             mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,

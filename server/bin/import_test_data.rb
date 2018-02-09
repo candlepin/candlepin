@@ -265,7 +265,7 @@ def create_mkt_product_and_pools(cp, owner, product)
   end_date =  start_date + 365
 
   @sourceSubId += 1
-  params[:source_subscription] = { 'id' => "#{@sourceSubId}" }
+  params[:subscription_id] = "#{@sourceSubId}"
 
   pool = create_pool_and_subscription(
     owner['name'],
@@ -283,7 +283,7 @@ def create_mkt_product_and_pools(cp, owner, product)
 
   contract_number += 1
   @sourceSubId += 1
-  params[:source_subscription] = { 'id' => "#{@sourceSubId}" }
+  params[:subscription_id] = "#{@sourceSubId}"
 
   pool = create_pool_and_subscription(
     owner['name'],
@@ -300,7 +300,7 @@ def create_mkt_product_and_pools(cp, owner, product)
   )
 
   @sourceSubId += 1
-  params[:source_subscription] = { 'id' => "#{@sourceSubId}" }
+  params[:subscription_id] = "#{@sourceSubId}"
 
   # Create a pool for the future:
   pool = create_pool_and_subscription(

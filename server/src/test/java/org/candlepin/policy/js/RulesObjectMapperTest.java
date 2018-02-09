@@ -57,8 +57,7 @@ public class RulesObjectMapperTest {
         context = new HashMap<String, Object>();
         owner = new Owner("test");
         ProductCurator productCurator = Mockito.mock(ProductCurator.class);
-        objMapper = new RulesObjectMapper(
-                new ProductCachedSerializationModule(productCurator));
+        objMapper = new RulesObjectMapper(new ProductCachedSerializationModule(productCurator));
     }
 
     @Test
@@ -121,12 +120,13 @@ public class RulesObjectMapperTest {
         context.put("pool", p);
 
         String output = objMapper.toJsonString(context);
+
         // Shouldn't see timestamps:
-        assertFalse(output.contains("\"created\""));
-        assertFalse(output.contains("\"updated\""));
+        assertFalse(output, output.contains("\"created\""));
+        assertFalse(output, output.contains("\"updated\""));
 
         // Shouldn't see a productId:
-        assertFalse(output.contains("PRODID"));
+        assertFalse(output, output.contains("PRODID"));
     }
 
     /*

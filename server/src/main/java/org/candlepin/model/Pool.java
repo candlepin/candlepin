@@ -69,7 +69,6 @@ import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 
 
 
@@ -243,7 +242,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     @OneToOne(mappedBy = "derivedPool", targetEntity = SourceStack.class)
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
-    @XmlTransient
+    @JsonIgnore
     private SourceStack sourceStack;
 
     /**
@@ -253,7 +252,6 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     @OneToOne(mappedBy = "pool", targetEntity = SourceSubscription.class)
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
-    @XmlTransient
     private SourceSubscription sourceSubscription;
 
     @Column(nullable = false)
@@ -644,7 +642,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      * @return
      *  the value set for the given attribute, or null if the attribute is not set
      */
-    @XmlTransient
+    @JsonIgnore
     public String getAttributeValue(String key) {
         if (key == null) {
             throw new IllegalArgumentException("key is null");
@@ -665,7 +663,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      * @return
      *  true if the attribute is defined for this pool; false otherwise
      */
-    @XmlTransient
+    @JsonIgnore
     public boolean hasAttribute(String key) {
         if (key == null) {
             throw new IllegalArgumentException("key is null");
@@ -694,7 +692,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      * @return
      *  true if the attribute is defined for this pool's product; false otherwise
      */
-    @XmlTransient
+    @JsonIgnore
     public boolean hasProductAttribute(String key) {
         if (key == null) {
             throw new IllegalArgumentException("key is null");
@@ -845,7 +843,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      * @param dateSource date to compare to.
      * @return true if the pool is considered expired based on the given date.
      */
-    @XmlTransient
+    @JsonIgnore
     public boolean isExpired(DateSource dateSource) {
         return getEndDate().before(dateSource.currentDate());
     }
@@ -869,7 +867,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     /**
      * @return True if entitlement pool is unlimited.
      */
-    @XmlTransient
+    @JsonIgnore
     public boolean isUnlimited() {
         return this.getQuantity() < 0;
     }
@@ -900,7 +898,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         return null;
     }
 
-    @XmlTransient
+    @JsonIgnore
     public SourceStack getSourceStack() {
         return sourceStack;
     }
@@ -1135,7 +1133,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      *
      * @return The entitlements.
      */
-    @XmlTransient
+    @JsonIgnore
     public Set<Entitlement> getEntitlements() {
         return this.entitlements;
     }
@@ -1162,7 +1160,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      *
      * @return true if consumed>quantity else false.
      */
-    @XmlTransient
+    @JsonIgnore
     public boolean isOverflowing() {
         // Unlimited pools can't be overflowing:
         if (this.quantity == -1) {
@@ -1281,7 +1279,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         }
     }
 
-    @XmlTransient
+    @JsonIgnore
     public String getProductAttributeValue(String key) {
         return this.getProductAttributes().get(key);
     }
@@ -1397,15 +1395,17 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         this.branding = branding;
     }
 
-    @XmlTransient
+    @JsonIgnore
     public SourceSubscription getSourceSubscription() {
         return sourceSubscription;
     }
 
+    @JsonIgnore
     public void setSourceSubscription(SourceSubscription sourceSubscription) {
         if (sourceSubscription != null) {
             sourceSubscription.setPool(this);
         }
+
         this.sourceSubscription = sourceSubscription;
     }
 
@@ -1413,6 +1413,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         if (sourceSubscription == null && !StringUtils.isBlank(subid)) {
             setSourceSubscription(new SourceSubscription());
         }
+
         if (sourceSubscription != null) {
             sourceSubscription.setSubscriptionId(subid);
             if (StringUtils.isBlank(sourceSubscription.getSubscriptionId()) &&
@@ -1426,6 +1427,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         if (sourceSubscription == null && !StringUtils.isBlank(subkey)) {
             setSourceSubscription(new SourceSubscription());
         }
+
         if (sourceSubscription != null) {
             sourceSubscription.setSubscriptionSubKey(subkey);
             if (StringUtils.isBlank(sourceSubscription.getSubscriptionId()) &&
@@ -1461,12 +1463,12 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     }
 
     @Override
-    @XmlTransient
+    @JsonIgnore
     public String getName() {
         return this.getProductName();
     }
 
-    @XmlTransient
+    @JsonIgnore
     public boolean isMarkedForDelete() {
         return this.markedForDelete;
     }
@@ -1519,7 +1521,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         this.cdn = cdn;
     }
 
-    @XmlTransient
+    @JsonIgnore
     public SubscriptionsCertificate getCertificate() {
         return this.cert;
     }

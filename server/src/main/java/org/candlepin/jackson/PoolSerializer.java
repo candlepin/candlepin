@@ -24,6 +24,9 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 
 import java.io.IOException;
+import java.util.Set;
+
+
 
 /**
  * Jackson JsonSerializer that will populate transient fields on
@@ -59,8 +62,8 @@ public class PoolSerializer extends BeanSerializerBase {
         super(src, objectIdWriter, filterId);
     }
 
-    protected PoolSerializer(BeanSerializerBase src, String[] toIgnore) {
-        super(src, toIgnore);
+    protected PoolSerializer(BeanSerializerBase src, Set<String> toIgnore) {
+        super(src, toIgnore.toArray(new String[0]));
     }
 
     @Override
@@ -69,12 +72,12 @@ public class PoolSerializer extends BeanSerializerBase {
     }
 
     @Override
-    protected BeanSerializerBase withFilterId(Object filterId) {
+    public BeanSerializerBase withFilterId(Object filterId) {
         return new PoolSerializer(this, _objectIdWriter, filterId);
     }
 
     @Override
-    protected BeanSerializerBase withIgnorals(String[] toIgnore) {
+    protected BeanSerializerBase withIgnorals(Set<String> toIgnore) {
         return new PoolSerializer(this, toIgnore);
     }
 

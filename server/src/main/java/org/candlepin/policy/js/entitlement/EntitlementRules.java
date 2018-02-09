@@ -99,6 +99,7 @@ public class EntitlementRules implements Enforcer {
         OwnerCurator ownerCurator, OwnerProductCurator ownerProductCurator,
         ProductShareCurator productShareCurator, ProductManager productManager, EventSink eventSink,
         EventFactory eventFactory) {
+
         this.jsRules = jsRules;
         this.dateSource = dateSource;
         this.i18n = i18n;
@@ -116,14 +117,14 @@ public class EntitlementRules implements Enforcer {
     }
 
     @Override
-    public ValidationResult preEntitlement(Consumer consumer, Pool entitlementPool,
-        Integer quantity) {
+    public ValidationResult preEntitlement(Consumer consumer, Pool entitlementPool, Integer quantity) {
         return preEntitlement(consumer, entitlementPool, quantity, CallerType.UNKNOWN);
     }
 
     @Override
-    public ValidationResult preEntitlement(Consumer consumer, Pool entitlementPool,
-        Integer quantity, CallerType caller) {
+    public ValidationResult preEntitlement(Consumer consumer, Pool entitlementPool, Integer quantity,
+        CallerType caller) {
+
         return preEntitlement(
             consumer,
             getHost(consumer, new ArrayList<Pool>(Arrays.asList(entitlementPool))),
@@ -134,19 +135,23 @@ public class EntitlementRules implements Enforcer {
 
     public ValidationResult preEntitlement(Consumer consumer, Consumer host,
         Pool entitlementPool, Integer quantity, CallerType caller) {
+
         List<PoolQuantity> poolQuantities = new ArrayList<PoolQuantity>();
         poolQuantities.add(new PoolQuantity(entitlementPool, quantity));
+
         return preEntitlement(consumer, host, poolQuantities, caller).get(entitlementPool.getId());
     }
 
     @Override
     public Map<String, ValidationResult> preEntitlement(Consumer consumer,
-        Collection<PoolQuantity> entitlementPoolQuantities,
-        CallerType caller) {
+        Collection<PoolQuantity> entitlementPoolQuantities, CallerType caller) {
+
         List<Pool> pools = new ArrayList<Pool>();
+
         for (PoolQuantity pq : entitlementPoolQuantities) {
             pools.add(pq.getPool());
         }
+
         return preEntitlement(
             consumer,
             getHost(consumer, pools),
@@ -224,6 +229,7 @@ public class EntitlementRules implements Enforcer {
             String json = jsRules.runJsFunction(String.class, "validate_pools_list", args);
             TypeReference<Map<String, ValidationResult>> typeref =
                 new TypeReference<Map<String, ValidationResult>>() {};
+
             try {
                 resultMap = objectMapper.toObject(json, typeref);
             }
@@ -258,6 +264,7 @@ public class EntitlementRules implements Enforcer {
                 }
             }
         }
+
         return filteredPools;
     }
 
@@ -273,6 +280,7 @@ public class EntitlementRules implements Enforcer {
         if (!consumer.hasFact("virt.uuid")) {
             return null;
         }
+
         List<Owner> potentialOwners = new ArrayList<Owner>(Arrays.asList(consumer.getOwner()));
         for (Pool p : pools) {
             if (p.isCreatedByShare()) {
@@ -522,6 +530,7 @@ public class EntitlementRules implements Enforcer {
     protected void runPostEntitlement(PoolManager poolManager, Consumer consumer,
         Map<String, Entitlement> entitlementMap, List<Pool> subPoolsForStackIds, boolean isUpdate,
         Map<String, PoolQuantity> poolQuantityMap) {
+
         Map<String, Map<String, String>> flatAttributeMaps = new HashMap<String, Map<String, String>>();
         Map<String, Entitlement> virtLimitEntitlements = new HashMap<String, Entitlement>();
 
@@ -533,6 +542,7 @@ public class EntitlementRules implements Enforcer {
                 flatAttributeMaps.put(entry.getKey(), attributes);
             }
         }
+
         // Perform pool management based on the attributes of the pool:
         if (!virtLimitEntitlements.isEmpty()) {
             /* Share and manifest consumers only need to compute postBindVirtLimit in hosted mode
@@ -543,6 +553,7 @@ public class EntitlementRules implements Enforcer {
              */
             if (!(consumer.isShare() || consumer.isManifestDistributor()) ||
                 !config.getBoolean(ConfigProperties.STANDALONE)) {
+
                 postBindVirtLimit(poolManager, consumer, virtLimitEntitlements, flatAttributeMaps,
                     subPoolsForStackIds, isUpdate, poolQuantityMap);
             }
@@ -824,7 +835,7 @@ public class EntitlementRules implements Enforcer {
         List<Pool> createHostRestrictedPoolFor = new ArrayList<Pool>();
         List<Entitlement> decrementHostedBonusPoolQuantityFor = new ArrayList<Entitlement>();
 
-        for (Entitlement entitlement: entitlementMap.values()) {
+        for (Entitlement entitlement : entitlementMap.values()) {
             Pool pool = entitlement.getPool();
             Map<String, String> attributes = attributeMaps.get(pool.getId());
             boolean hostLimited = "true".equals(attributes.get(Product.Attributes.HOST_LIMITED));
@@ -959,6 +970,9 @@ public class EntitlementRules implements Enforcer {
     public void postEntitlement(PoolManager poolManager, Consumer consumer,
         Map<String, Entitlement> entitlements, List<Pool> subPoolsForStackIds, boolean isUpdate,
         Map<String, PoolQuantity> poolQuantityMap) {
+
+        // TODO: Why are we calling a separate method here instead of just doing that method's work here?
+
         runPostEntitlement(poolManager,
             consumer,
             entitlements,
