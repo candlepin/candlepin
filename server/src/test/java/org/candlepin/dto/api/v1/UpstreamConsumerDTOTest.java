@@ -51,12 +51,14 @@ public class UpstreamConsumerDTOTest extends AbstractDTOTest<UpstreamConsumerDTO
         this.values.put("WebUrl", "test-web-url");
         this.values.put("ConsumerType", type);
         this.values.put("IdentityCertificate", cert);
+        this.values.put("OwnerId", "test-owner-id");
+        this.values.put("ContentAccessMode", "test-content-access-mode");
         this.values.put("Created", new Date());
         this.values.put("Updated", new Date());
     }
 
     /**
-     * @{inheritDocs}
+     * {@inheritDoc}
      */
     @Override
     protected Object getInputValueForMutator(String field) {
@@ -64,7 +66,7 @@ public class UpstreamConsumerDTOTest extends AbstractDTOTest<UpstreamConsumerDTO
     }
 
     /**
-     * @{inheritDocs}
+     * {@inheritDoc}
      */
     @Override
     protected Object getOutputValueForAccessor(String field, Object input) {

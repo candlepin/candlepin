@@ -39,12 +39,13 @@ public class CertificateSerialDTOTest extends AbstractDTOTest<CertificateSerialD
         this.values.put("Date", new Date());
         this.values.put("Collected", true);
         this.values.put("Revoked", true);
+        this.values.put("Expiration", new Date());
         this.values.put("Created", new Date());
         this.values.put("Updated", new Date());
     }
 
     /**
-     * @{inheritDocs}
+     * {@inheritDoc}
      */
     @Override
     protected Object getInputValueForMutator(String field) {
@@ -52,7 +53,7 @@ public class CertificateSerialDTOTest extends AbstractDTOTest<CertificateSerialD
     }
 
     /**
-     * @{inheritDocs}
+     * {@inheritDoc}
      */
     @Override
     protected Object getOutputValueForAccessor(String field, Object input) {

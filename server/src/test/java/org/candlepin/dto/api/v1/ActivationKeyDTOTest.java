@@ -83,7 +83,7 @@ public class ActivationKeyDTOTest extends AbstractDTOTest<ActivationKeyDTO> {
     }
 
     /**
-     * @{inheritDocs}
+     * {@inheritDoc}
      */
     @Override
     protected Object getInputValueForMutator(String field) {
@@ -91,7 +91,7 @@ public class ActivationKeyDTOTest extends AbstractDTOTest<ActivationKeyDTO> {
     }
 
     /**
-     * @{inheritDocs}
+     * {@inheritDoc}
      */
     @Override
     protected Object getOutputValueForAccessor(String field, Object input) {

@@ -39,10 +39,12 @@ public class ConsumerInstalledProductDTOTest extends AbstractDTOTest<ConsumerIns
         this.values.put("Status", "test_value");
         this.values.put("StartDate", new Date());
         this.values.put("EndDate", new Date());
+        this.values.put("Created", new Date());
+        this.values.put("Updated", new Date());
     }
 
     /**
-     * @{inheritDocs}
+     * {@inheritDoc}
      */
     @Override
     protected Object getInputValueForMutator(String field) {
@@ -50,7 +52,7 @@ public class ConsumerInstalledProductDTOTest extends AbstractDTOTest<ConsumerIns
     }
 
     /**
-     * @{inheritDocs}
+     * {@inheritDoc}
      */
     @Override
     protected Object getOutputValueForAccessor(String field, Object input) {

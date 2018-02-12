@@ -185,7 +185,8 @@ public class UpstreamConsumerDTO extends TimestampedCandlepinDTO<UpstreamConsume
                 .append(this.getWebUrl(), that.getWebUrl())
                 .append(this.getOwnerId(), that.getOwnerId())
                 .append(this.getConsumerType(), that.getConsumerType())
-                .append(this.getIdentityCertificate(), that.getIdentityCertificate());
+                .append(this.getIdentityCertificate(), that.getIdentityCertificate())
+                .append(this.getContentAccessMode(), that.getContentAccessMode());
 
             return builder.isEquals();
         }
@@ -207,7 +208,8 @@ public class UpstreamConsumerDTO extends TimestampedCandlepinDTO<UpstreamConsume
             .append(this.getWebUrl())
             .append(this.getOwnerId())
             .append(this.getConsumerType())
-            .append(this.getIdentityCertificate());
+            .append(this.getIdentityCertificate())
+            .append(this.getContentAccessMode());
 
         return builder.toHashCode();
     }
@@ -243,6 +245,7 @@ public class UpstreamConsumerDTO extends TimestampedCandlepinDTO<UpstreamConsume
         this.setOwnerId(source.getOwnerId());
         this.setConsumerType(source.getConsumerType());
         this.setIdentityCertificate(source.getIdentityCertificate());
+        this.setContentAccessMode(source.getContentAccessMode());
 
         return this;
     }

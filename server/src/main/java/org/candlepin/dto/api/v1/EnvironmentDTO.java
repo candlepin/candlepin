@@ -367,13 +367,24 @@ public class EnvironmentDTO extends TimestampedCandlepinDTO<EnvironmentDTO> {
     public int hashCode() {
         String thisOid = this.getOwner() != null ? this.getOwner().getId() : null;
 
+        // Map.values doesn't properly implement .hashCode, so we need to manually calculate
+        // this ourselves using the algorithm defined by list.hashCode()
+        int ecHashCode = 0;
+        Collection<EnvironmentContentDTO> environmentContent = this.getEnvironmentContent();
+
+        if (environmentContent != null) {
+            for (EnvironmentContentDTO dto : environmentContent) {
+                ecHashCode = 31 * ecHashCode + (dto != null ? dto.hashCode() : 0);
+            }
+        }
+
         HashCodeBuilder builder = new HashCodeBuilder(37, 7)
             .append(super.hashCode())
             .append(this.getId())
             .append(this.getName())
             .append(this.getDescription())
             .append(thisOid)
-            .append(this.getEnvironmentContent());
+            .append(ecHashCode);
 
         return builder.toHashCode();
     }
