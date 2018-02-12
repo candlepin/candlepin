@@ -21,6 +21,7 @@ import org.candlepin.dto.AbstractDTOTest;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -48,14 +49,16 @@ public class ContentDTOTest extends AbstractDTOTest<ContentDTO> {
         this.values.put("RequiredTags", "test_value");
         this.values.put("ReleaseVersion", "test_value");
         this.values.put("GpgUrl", "test_value");
-        this.values.put("MetadataExpire", 1234L);
+        this.values.put("MetadataExpiration", 1234L);
         this.values.put("ModifiedProductIds", Arrays.asList("1", "2", "3"));
         this.values.put("Arches", "test_value");
         this.values.put("Locked", Boolean.TRUE);
+        this.values.put("Created", new Date());
+        this.values.put("Updated", new Date());
     }
 
     /**
-     * @{inheritDocs}
+     * {@inheritDoc}
      */
     @Override
     protected Object getInputValueForMutator(String field) {
@@ -63,7 +66,7 @@ public class ContentDTOTest extends AbstractDTOTest<ContentDTO> {
     }
 
     /**
-     * @{inheritDocs}
+     * {@inheritDoc}
      */
     @Override
     protected Object getOutputValueForAccessor(String field, Object input) {

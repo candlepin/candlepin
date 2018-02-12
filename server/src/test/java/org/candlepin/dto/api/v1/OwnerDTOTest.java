@@ -69,7 +69,7 @@ public class OwnerDTOTest extends AbstractDTOTest<OwnerDTO> {
     }
 
     /**
-     * @{inheritDocs}
+     * {@inheritDoc}
      */
     @Override
     protected Object getInputValueForMutator(String field) {
@@ -77,7 +77,7 @@ public class OwnerDTOTest extends AbstractDTOTest<OwnerDTO> {
     }
 
     /**
-     * @{inheritDocs}
+     * {@inheritDoc}
      */
     @Override
     protected Object getOutputValueForAccessor(String field, Object input) {

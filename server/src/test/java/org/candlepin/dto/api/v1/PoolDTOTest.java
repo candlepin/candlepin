@@ -142,11 +142,17 @@ public class PoolDTOTest extends AbstractDTOTest<PoolDTO> {
         this.values.put("Updated", new Date());
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected Object getInputValueForMutator(String field) {
         return this.values.get(field);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected Object getOutputValueForAccessor(String field, Object input) {
         // Nothing to do here
