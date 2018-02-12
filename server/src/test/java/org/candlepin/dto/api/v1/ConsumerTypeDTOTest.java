@@ -41,7 +41,7 @@ public class ConsumerTypeDTOTest extends AbstractDTOTest<ConsumerTypeDTO> {
     }
 
     /**
-     * @{inheritDocs}
+     * {@inheritDoc}
      */
     @Override
     protected Object getInputValueForMutator(String field) {
@@ -49,7 +49,7 @@ public class ConsumerTypeDTOTest extends AbstractDTOTest<ConsumerTypeDTO> {
     }
 
     /**
-     * @{inheritDocs}
+     * {@inheritDoc}
      */
     @Override
     protected Object getOutputValueForAccessor(String field, Object input) {

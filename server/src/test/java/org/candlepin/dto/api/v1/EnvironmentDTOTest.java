@@ -18,6 +18,7 @@ import org.candlepin.dto.AbstractDTOTest;
 import org.candlepin.dto.api.v1.EnvironmentDTO.EnvironmentContentDTO;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -47,12 +48,14 @@ public class EnvironmentDTOTest extends AbstractDTOTest<EnvironmentDTO> {
         this.values.put("Id", "test_value");
         this.values.put("Name", "test_value");
         this.values.put("Description", "test_value");
-        this.values.put("ProductContent", environmentContent);
+        this.values.put("EnvironmentContent", environmentContent);
         this.values.put("Owner", ownerDTOTest.getPopulatedDTOInstance());
+        this.values.put("Created", new Date());
+        this.values.put("Updated", new Date());
     }
 
     /**
-     * @{inheritDocs}
+     * {@inheritDoc}
      */
     @Override
     protected Object getInputValueForMutator(String field) {
@@ -60,7 +63,7 @@ public class EnvironmentDTOTest extends AbstractDTOTest<EnvironmentDTO> {
     }
 
     /**
-     * @{inheritDocs}
+     * {@inheritDoc}
      */
     @Override
     protected Object getOutputValueForAccessor(String field, Object input) {

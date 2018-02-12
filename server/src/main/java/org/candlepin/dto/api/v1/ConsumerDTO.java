@@ -906,7 +906,8 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
                 .append(this.getAnnotations(), that.getAnnotations())
                 .append(this.getContentAccessMode(), that.getContentAccessMode())
                 .append(this.getType(), that.getType())
-                .append(this.getIdCert(), that.getIdCert());
+                .append(this.getIdCert(), that.getIdCert())
+                .append(this.getGuestIds(), that.getGuestIds());
 
             return builder.isEquals();
         }
@@ -947,7 +948,8 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
             .append(this.getAnnotations())
             .append(this.getContentAccessMode())
             .append(this.getType())
-            .append(this.getIdCert());
+            .append(this.getIdCert())
+            .append(this.getGuestIds());
 
         return builder.toHashCode();
     }

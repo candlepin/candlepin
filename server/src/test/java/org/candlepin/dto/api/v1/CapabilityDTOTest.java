@@ -16,6 +16,7 @@ package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.AbstractDTOTest;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,10 +33,12 @@ public class CapabilityDTOTest extends AbstractDTOTest<CapabilityDTO> {
         this.values = new HashMap<String, Object>();
         this.values.put("Id", "test_value");
         this.values.put("Name", "test_value");
+        this.values.put("Created", new Date());
+        this.values.put("Updated", new Date());
     }
 
     /**
-     * @{inheritDocs}
+     * {@inheritDoc}
      */
     @Override
     protected Object getInputValueForMutator(String field) {
@@ -43,7 +46,7 @@ public class CapabilityDTOTest extends AbstractDTOTest<CapabilityDTO> {
     }
 
     /**
-     * @{inheritDocs}
+     * {@inheritDoc}
      */
     @Override
     protected Object getOutputValueForAccessor(String field, Object input) {

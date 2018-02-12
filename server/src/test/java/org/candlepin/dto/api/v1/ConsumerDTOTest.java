@@ -90,13 +90,13 @@ public class ConsumerDTOTest extends AbstractDTOTest<ConsumerDTO> {
         this.values.put("Id", "test-id");
         this.values.put("Uuid", "test-uuid");
         this.values.put("Name", "test-name");
-        this.values.put("UserName", "test-user-name");
+        this.values.put("Username", "test-user-name");
         this.values.put("EntitlementStatus", "test-entitlement-status");
         this.values.put("ServiceLevel", "test-service-level");
-        this.values.put("ReleaseVer", "test-release-ver");
+        this.values.put("ReleaseVersion", "test-release-ver");
         this.values.put("Owner", this.ownerDTOTest.getPopulatedDTOInstance());
         this.values.put("Environment", this.environmentDTOTest.getPopulatedDTOInstance());
-        this.values.put("EntitlementCount", 0L);
+        this.values.put("EntitlementCount", 1L);
         this.values.put("Facts", facts);
         this.values.put("LastCheckin", new Date());
         this.values.put("InstalledProducts", installedProducts);
@@ -104,11 +104,11 @@ public class ConsumerDTOTest extends AbstractDTOTest<ConsumerDTO> {
         this.values.put("Capabilities", capabilityDTOS);
         this.values.put("HypervisorId", hypervisorIdDTOTest.getPopulatedDTOInstance());
         this.values.put("ContentTags", contentTags);
-        this.values.put("AutoHeal", Boolean.TRUE);
+        this.values.put("Autoheal", Boolean.TRUE);
         this.values.put("RecipientOwnerKey", "test-recipient-owner");
         this.values.put("Annotations", "test-annotations");
         this.values.put("ContentAccessMode", "test-content-access-mode");
-        this.values.put("ConsumerType", type);
+        this.values.put("Type", type);
         this.values.put("IdentityCertificate", cert);
         this.values.put("GuestIds", guestIdDTOS);
         this.values.put("Created", new Date());
@@ -124,10 +124,13 @@ public class ConsumerDTOTest extends AbstractDTOTest<ConsumerDTO> {
         this.values.put("addInstalledProduct", installedProductDTO);
         this.values.put("removeInstalledProduct", installedProductDTO.getProductId());
 
+        CertificateDTO idCert = new CertificateDTO();
+        cert.setId("cert-id");
+        this.values.put("IdCert", idCert);
     }
 
     /**
-     * @{inheritDocs}
+     * {@inheritDoc}
      */
     @Override
     protected Object getInputValueForMutator(String field) {
@@ -135,7 +138,7 @@ public class ConsumerDTOTest extends AbstractDTOTest<ConsumerDTO> {
     }
 
     /**
-     * @{inheritDocs}
+     * {@inheritDoc}
      */
     @Override
     protected Object getOutputValueForAccessor(String field, Object input) {

@@ -50,7 +50,7 @@ public class CertificateDTOTest extends AbstractDTOTest<CertificateDTO> {
     }
 
     /**
-     * @{inheritDocs}
+     * {@inheritDoc}
      */
     @Override
     protected Object getInputValueForMutator(String field) {
@@ -58,7 +58,7 @@ public class CertificateDTOTest extends AbstractDTOTest<CertificateDTO> {
     }
 
     /**
-     * @{inheritDocs}
+     * {@inheritDoc}
      */
     @Override
     protected Object getOutputValueForAccessor(String field, Object input) {

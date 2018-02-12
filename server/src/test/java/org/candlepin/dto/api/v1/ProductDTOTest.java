@@ -23,6 +23,7 @@ import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -56,6 +57,12 @@ public class ProductDTOTest extends AbstractDTOTest<ProductDTO> {
             attributes.put("attrib-" + i, "value-" + i);
         }
 
+        Collection<String> dependentProductIds = new LinkedList<String>();
+
+        for (int i = 0; i < 5; ++i) {
+            dependentProductIds.add("dependentProdId" + i);
+        }
+
         this.values = new HashMap<String, Object>();
         this.values.put("Uuid", "test_value");
         this.values.put("Id", "test_value");
@@ -73,10 +80,15 @@ public class ProductDTOTest extends AbstractDTOTest<ProductDTO> {
         this.values.put("Locked", Boolean.TRUE);
         this.values.put("ProductContent", productContent);
         this.values.put("Attributes", attributes);
+        this.values.put("DependentProductIds", dependentProductIds);
+        this.values.put("Multiplier", 3L);
+        this.values.put("Href", "test-href");
+        this.values.put("Created", new Date());
+        this.values.put("Updated", new Date());
     }
 
     /**
-     * @{inheritDocs}
+     * {@inheritDoc}
      */
     @Override
     protected Object getInputValueForMutator(String field) {
@@ -84,7 +96,7 @@ public class ProductDTOTest extends AbstractDTOTest<ProductDTO> {
     }
 
     /**
-     * @{inheritDocs}
+     * {@inheritDoc}
      */
     @Override
     protected Object getOutputValueForAccessor(String field, Object input) {
