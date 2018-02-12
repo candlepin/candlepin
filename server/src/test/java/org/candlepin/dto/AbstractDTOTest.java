@@ -234,7 +234,7 @@ public abstract class AbstractDTOTest<T extends CandlepinDTO<T>> {
         Object input = this.getInputValueForMutator(field);
         methods[1].invoke(dtoA, input);
 
-        assumeFalse(dtoA.equals(dtoB));
+        assertFalse(dtoA.equals(dtoB));
 
         methods[1].invoke(dtoB, input);
 
@@ -255,7 +255,7 @@ public abstract class AbstractDTOTest<T extends CandlepinDTO<T>> {
             Object input = this.getInputValueForMutator(field);
             methods[1].invoke(dtoA, input);
 
-            assumeFalse(dtoA.equals(dtoB));
+            assertFalse(dtoA.equals(dtoB));
 
             methods[1].invoke(dtoB, input);
         }
@@ -276,7 +276,7 @@ public abstract class AbstractDTOTest<T extends CandlepinDTO<T>> {
         Object input = this.getInputValueForMutator(field);
         methods[1].invoke(dtoA, input);
 
-        assumeFalse(dtoA.hashCode() == dtoB.hashCode());
+        assertFalse(dtoA.hashCode() == dtoB.hashCode());
 
         methods[1].invoke(dtoB, input);
 
@@ -297,11 +297,11 @@ public abstract class AbstractDTOTest<T extends CandlepinDTO<T>> {
             Object input = this.getInputValueForMutator(field);
             methods[1].invoke(dtoA, input);
 
-            assumeFalse(dtoA.hashCode() == dtoB.hashCode());
+            assertFalse(dtoA.hashCode() == dtoB.hashCode());
 
             methods[1].invoke(dtoB, input);
 
-            assumeTrue(dtoA.hashCode() == dtoB.hashCode());
+            assertTrue(dtoA.hashCode() == dtoB.hashCode());
         }
 
         assertEquals(dtoA.hashCode(), dtoB.hashCode());
@@ -320,7 +320,7 @@ public abstract class AbstractDTOTest<T extends CandlepinDTO<T>> {
         Object input = this.getInputValueForMutator(field);
         methods[1].invoke(dtoA, input);
 
-        assumeFalse(dtoA.equals(dtoB));
+        assertFalse(dtoA.equals(dtoB));
 
         dtoB.populate(dtoA);
         assertEquals(dtoA, dtoB);
