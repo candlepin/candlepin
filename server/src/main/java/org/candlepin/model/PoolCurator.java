@@ -862,15 +862,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return pool;
     }
 
-    @Transactional
-    public Pool create(Pool entity) {
-        /* Ensure all referenced PoolAttributes are correctly pointing to
-         * this pool. This is useful for pools being created from
-         * incoming json.
-         */
-        return super.create(entity);
-    }
-
     private static final String CONSUMER_FILTER = "Entitlement_CONSUMER_FILTER";
 
     @SuppressWarnings("checkstyle:indentation")

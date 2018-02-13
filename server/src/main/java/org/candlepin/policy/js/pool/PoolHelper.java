@@ -140,8 +140,12 @@ public class PoolHelper {
             else {
                 // attribute per 795431, useful for rolling up pool info in headpin
                 consumerSpecificPool.setAttribute(Pool.Attributes.SOURCE_POOL_ID, pool.getId());
-                consumerSpecificPool.setSourceSubscription(new SourceSubscription(pool.getSubscriptionId(),
-                    sourceEntitlements.get(pool.getId()).getId()));
+
+                String subscriptionId = pool.getSubscriptionId();
+                if (subscriptionId != null && !subscriptionId.isEmpty()) {
+                    consumerSpecificPool.setSourceSubscription(new SourceSubscription(subscriptionId,
+                        sourceEntitlements.get(pool.getId()).getId()));
+                }
             }
             poolsToCreate.add(consumerSpecificPool);
         }
