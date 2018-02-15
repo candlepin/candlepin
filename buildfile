@@ -87,7 +87,6 @@ SLF4J = 'org.slf4j:slf4j-api:jar:1.7.12'
 LOGGING = [LOGBACK, SLF4J_BRIDGES, SLF4J]
 
 JAVAX = ['org.hibernate.javax.persistence:hibernate-jpa-2.1-api:jar:1.0.0.Final',
-         'javax.validation:validation-api:jar:1.0.0.GA',
          'javax.transaction:jta:jar:1.1']
 ANTLR = ['antlr:antlr:jar:2.7.7']
 
@@ -96,14 +95,18 @@ EHCACHE = ['org.hibernate:hibernate-ehcache:jar:5.1.1.Final',
            'org.ehcache:jcache:jar:1.0.0', 'javax.cache:cache-api:jar:1.0.0',
            'net.sf.ehcache:management-ehcache-v2:jar:2.10.1']
 
+VALIDATOR = ['org.hibernate.validator:hibernate-validator:jar:6.0.7.Final',
+             'org.hibernate.validator:hibernate-validator-annotation-processor:jar:6.0.7.Final',
+             'javax.validation:validation-api:jar:2.0.1.Final']
+
 HIBERNATE = [group('hibernate-core', 'hibernate-entitymanager', 'hibernate-c3p0',
                    :under => 'org.hibernate',
                    :version => '5.1.1.Final'),
              'org.hibernate.common:hibernate-commons-annotations:jar:5.0.1.Final',
              'org.hibernate:hibernate-tools:jar:3.2.4.GA',
-             'org.hibernate:hibernate-validator:jar:4.3.1.Final',
              ANTLR,
              EHCACHE,
+             VALIDATOR,
              'asm:asm:jar:3.0',
              'cglib:cglib:jar:2.2',
              'org.javassist:javassist:jar:3.20.0-GA',
@@ -290,6 +293,7 @@ define "candlepin" do
       JACKSON,
       JAVAX,
       OAUTH,
+      VALIDATOR,
     ]
     compile.with(compile_classpath)
 
