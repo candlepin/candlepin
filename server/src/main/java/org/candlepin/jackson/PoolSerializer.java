@@ -35,7 +35,7 @@ import java.util.Set;
  * so it didn't require any special handling. But since now, the provided
  * products are taken from reference cache, this PoolSerializer is necessary
  * in various places: Rules, REST response
- * serialization, HornetQ, AMQP. The reason for choosing
+ * serialization, ActiveMQ, AMQP. The reason for choosing
  * JsonSerializer extension is that it is a simplest way to insert code just
  * before default serialization of a Pool. Without disturbing other extensions
  * that we already have in serialization (filtering, Hateoas)

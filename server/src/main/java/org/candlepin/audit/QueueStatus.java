@@ -19,7 +19,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
- * Simple DTO for returning status of the HornetQ queues. Used for checking if events
+ * Simple DTO for returning status of the ActiveMQ queues. Used for checking if events
  * are piling up for some reason or being delivered correctly.
  */
 @XmlRootElement

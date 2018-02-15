@@ -415,7 +415,7 @@ public class CandlepinModule extends AbstractModule {
     }
 
     private void configureEventSink() {
-        if (config.getBoolean(ConfigProperties.HORNETQ_ENABLED)) {
+        if (config.getBoolean(ConfigProperties.ACTIVEMQ_ENABLED)) {
             bind(EventSink.class).to(EventSinkImpl.class);
         }
         else {

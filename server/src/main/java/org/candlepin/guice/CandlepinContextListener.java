@@ -15,11 +15,11 @@
 package org.candlepin.guice;
 
 import static org.candlepin.config.ConfigProperties.ENCRYPTED_PROPERTIES;
-import static org.candlepin.config.ConfigProperties.HORNETQ_ENABLED;
+import static org.candlepin.config.ConfigProperties.ACTIVEMQ_ENABLED;
 import static org.candlepin.config.ConfigProperties.PASSPHRASE_SECRET_FILE;
 
 import org.candlepin.audit.AMQPBusPublisher;
-import org.candlepin.audit.HornetqContextListener;
+import org.candlepin.audit.ActiveMQContextListener;
 import org.candlepin.audit.QpidQmf;
 import org.candlepin.audit.QpidQmf.QpidStatus;
 import org.candlepin.common.config.Configuration;
@@ -89,7 +89,7 @@ import io.swagger.converter.ModelConverters;
 public class CandlepinContextListener extends GuiceResteasyBootstrapServletContextListener {
     public static final String CONFIGURATION_NAME = Configuration.class.getName();
 
-    private HornetqContextListener hornetqListener;
+    private ActiveMQContextListener activeMQContextListener;
     private PinsetterContextListener pinsetterListener;
     private LoggerContextListener loggerListener;
 
@@ -165,13 +165,13 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
             mw.startPeriodicExecutions();
         }
 
-        if (config.getBoolean(HORNETQ_ENABLED)) {
+        if (config.getBoolean(ACTIVEMQ_ENABLED)) {
             try {
-                hornetqListener = injector.getInstance(HornetqContextListener.class);
-                hornetqListener.contextInitialized(injector);
+                activeMQContextListener = injector.getInstance(ActiveMQContextListener.class);
+                activeMQContextListener.contextInitialized(injector);
             }
             catch (Exception e) {
-                log.error("Exception occurred while trying to load HornetQ", e);
+                log.error("Exception occurred while trying to load ActiveMQ", e);
             }
         }
 
@@ -198,8 +198,8 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
     @Override
     public void contextDestroyed(ServletContextEvent event) {
         super.contextDestroyed(event);
-        if (config.getBoolean(HORNETQ_ENABLED)) {
-            hornetqListener.contextDestroyed();
+        if (config.getBoolean(ACTIVEMQ_ENABLED)) {
+            activeMQContextListener.contextDestroyed();
         }
         pinsetterListener.contextDestroyed();
         loggerListener.contextDestroyed();

@@ -29,16 +29,16 @@ import org.candlepin.policy.js.compliance.ComplianceStatus;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Singleton;
 
-import org.hornetq.api.core.HornetQException;
-import org.hornetq.api.core.SimpleString;
-import org.hornetq.api.core.TransportConfiguration;
-import org.hornetq.api.core.client.ClientMessage;
-import org.hornetq.api.core.client.ClientProducer;
-import org.hornetq.api.core.client.ClientSession;
-import org.hornetq.api.core.client.ClientSessionFactory;
-import org.hornetq.api.core.client.HornetQClient;
-import org.hornetq.api.core.client.ServerLocator;
-import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory;
+import org.apache.activemq.artemis.api.core.ActiveMQException;
+import org.apache.activemq.artemis.api.core.SimpleString;
+import org.apache.activemq.artemis.api.core.TransportConfiguration;
+import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
+import org.apache.activemq.artemis.api.core.client.ClientMessage;
+import org.apache.activemq.artemis.api.core.client.ClientProducer;
+import org.apache.activemq.artemis.api.core.client.ClientSession;
+import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
+import org.apache.activemq.artemis.api.core.client.ServerLocator;
+import org.apache.activemq.artemis.core.remoting.impl.invm.InVMConnectorFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,7 +54,6 @@ import javax.inject.Inject;
  */
 @Singleton
 public class EventSinkImpl implements EventSink {
-
     private static Logger log = LoggerFactory.getLogger(EventSinkImpl.class);
     private EventFactory eventFactory;
     private ClientSessionFactory factory;
@@ -73,8 +72,6 @@ public class EventSinkImpl implements EventSink {
     private ThreadLocal<ClientSession> sessions = new ThreadLocal<ClientSession>();
     private ThreadLocal<ClientProducer> producers = new ThreadLocal<ClientProducer>();
 
-
-
     @Inject
     public EventSinkImpl(EventFilter eventFilter, EventFactory eventFactory,
         ObjectMapper mapper, Configuration config, ModeManager modeManager) {
@@ -83,7 +80,7 @@ public class EventSinkImpl implements EventSink {
         this.config = config;
         this.eventFilter = eventFilter;
         this.modeManager = modeManager;
-        largeMsgSize = config.getInt(ConfigProperties.HORNETQ_LARGE_MSG_SIZE);
+        largeMsgSize = config.getInt(ConfigProperties.ACTIVEMQ_LARGE_MSG_SIZE);
     }
 
     /**
@@ -92,11 +89,11 @@ public class EventSinkImpl implements EventSink {
      */
     @Override
     public void initialize() throws Exception {
-        factory =  createClientSessionFactory();
+        factory = createClientSessionFactory();
     }
 
     protected ClientSessionFactory createClientSessionFactory() throws Exception {
-        ServerLocator locator = HornetQClient.createServerLocatorWithoutHA(
+        ServerLocator locator = ActiveMQClient.createServerLocatorWithoutHA(
             new TransportConfiguration(InVMConnectorFactory.class.getName()));
         locator.setMinLargeMessageSize(largeMsgSize);
         return locator.createSessionFactory();
@@ -107,17 +104,17 @@ public class EventSinkImpl implements EventSink {
         if (session == null || session.isClosed()) {
             try {
                 /*
-                 * Use a transacted HornetQ session, events will not be dispatched until
+                 * Use a transacted ActiveMQ session, events will not be dispatched until
                  * commit() is called on it, and a call to rollback() will revert any queued
                  * messages safely and the session is then ready to start over the next time
                  * the thread is used.
                  */
                 session = factory.createTransactedSession();
             }
-            catch (HornetQException e) {
+            catch (ActiveMQException e) {
                 throw new RuntimeException(e);
             }
-            log.debug("Created new HornetQ session.");
+            log.debug("Created new ActiveMQ session.");
             sessions.set(session);
         }
         return session;
@@ -129,10 +126,10 @@ public class EventSinkImpl implements EventSink {
             try {
                 producer = getClientSession().createProducer(EventSource.QUEUE_ADDRESS);
             }
-            catch (HornetQException e) {
+            catch (ActiveMQException e) {
                 throw new RuntimeException(e);
             }
-            log.info("Created new HornetQ producer.");
+            log.info("Created new ActiveMQ producer.");
             producers.set(producer);
         }
         return producer;
@@ -145,14 +142,14 @@ public class EventSinkImpl implements EventSink {
 
             ClientSession session = getClientSession();
             session.start();
-            for (String listenerClassName : HornetqContextListener.getHornetqListeners(config)) {
+            for (String listenerClassName : ActiveMQContextListener.getActiveMQListeners(config)) {
                 String queueName = "event." + listenerClassName;
                 long msgCount = session.queueQuery(new SimpleString(queueName)).getMessageCount();
                 results.add(new QueueStatus(queueName, msgCount));
             }
         }
         catch (Exception e) {
-            log.error("Error looking up hornetq queue info: ", e);
+            log.error("Error looking up ActiveMQ queue info: ", e);
         }
         return results;
     }
@@ -163,10 +160,10 @@ public class EventSinkImpl implements EventSink {
      * automatically after each successful REST API request, and KingpingJob. If either
      * is not successful, rollback() must be called.
      *
-     * Events are filtered, meaning that some of them might not even get into HornetQ.
+     * Events are filtered, meaning that some of them might not even get into ActiveMQ.
      * Details about the filtering are documented in EventFilter class
      *
-     * HornetQ transaction actually manages the queue of events to be sent.
+     * ActiveMQ transaction actually manages the queue of events to be sent.
      */
     @Override
     public void queueEvent(Event event) {
@@ -200,25 +197,25 @@ public class EventSinkImpl implements EventSink {
     @Override
     public void sendEvents() {
         try {
-            log.debug("Committing hornetq transaction.");
+            log.debug("Committing ActiveMQ transaction.");
             getClientSession().commit();
         }
         catch (Exception e) {
             // This would be pretty bad, but we always try not to let event errors
             // interfere with the operation of the overall application.
-            log.error("Error committing hornetq transaction", e);
+            log.error("Error committing ActiveMQ transaction", e);
         }
     }
 
     @Override
     public void rollback() {
-        log.warn("Rolling back hornetq transaction.");
+        log.warn("Rolling back ActiveMQ transaction.");
         try {
             ClientSession session = getClientSession();
             session.rollback();
         }
-        catch (HornetQException e) {
-            log.error("Error rolling back hornetq transaction", e);
+        catch (ActiveMQException e) {
+            log.error("Error rolling back ActiveMQ transaction", e);
         }
     }
 

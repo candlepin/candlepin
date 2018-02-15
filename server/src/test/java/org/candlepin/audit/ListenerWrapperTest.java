@@ -21,11 +21,11 @@ import org.candlepin.auth.PrincipalData;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.hornetq.api.core.HornetQBuffer;
-import org.hornetq.api.core.HornetQBuffers;
-import org.hornetq.api.core.HornetQException;
-import org.hornetq.api.core.HornetQExceptionType;
-import org.hornetq.api.core.client.ClientMessage;
+import org.apache.activemq.artemis.api.core.ActiveMQBuffer;
+import org.apache.activemq.artemis.api.core.ActiveMQBuffers;
+import org.apache.activemq.artemis.api.core.ActiveMQException;
+import org.apache.activemq.artemis.api.core.ActiveMQExceptionType;
+import org.apache.activemq.artemis.api.core.client.ClientMessage;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -44,19 +44,19 @@ public class ListenerWrapperTest {
     @Mock private EventListener mockEventListener;
     @Mock private ClientMessage mockClientMessage;
     @Spy private ObjectMapper mapper = new ObjectMapper();
-    @Spy private HornetQBuffer hornetQBuffer = HornetQBuffers.fixedBuffer(1000);
+    @Spy private ActiveMQBuffer activeMQBuffer = ActiveMQBuffers.fixedBuffer(1000);
     private ListenerWrapper listenerWrapper;
 
     @Before
     public void init() {
         this.listenerWrapper = new ListenerWrapper(mockEventListener, mapper);
         when(mockClientMessage.getBodyBuffer())
-            .thenReturn(hornetQBuffer);
+            .thenReturn(activeMQBuffer);
     }
 
     @Test(expected = RuntimeException.class)
     public void whenMapperReadThrowsExceptionThenOnMessageShouldFail() throws Exception {
-        doReturn("test123").when(hornetQBuffer).readString();
+        doReturn("test123").when(activeMQBuffer).readString();
         doThrow(new JsonMappingException("Induced exception"))
             .when(mapper).readValue(anyString(), eq(Event.class));
         this.listenerWrapper.onMessage(mockClientMessage);
@@ -65,8 +65,8 @@ public class ListenerWrapperTest {
     @Test
     public void whenMsgAcknowledgeThrowsExceptionThenOnMessageShouldntFail()
         throws Exception {
-        doReturn(eventJson()).when(hornetQBuffer).readString();
-        doThrow(new HornetQException(HornetQExceptionType.DISCONNECTED,
+        doReturn(eventJson()).when(activeMQBuffer).readString();
+        doThrow(new ActiveMQException(ActiveMQExceptionType.DISCONNECTED,
             "Induced exception for junit testing"))
             .when(mockClientMessage).acknowledge();
         this.listenerWrapper.onMessage(mockClientMessage);
@@ -76,7 +76,7 @@ public class ListenerWrapperTest {
     @Test
     public void whenProperClientMsgPassedThenOnMessageShouldSucceed()
         throws Exception {
-        doReturn(eventJson()).when(hornetQBuffer).readString();
+        doReturn(eventJson()).when(activeMQBuffer).readString();
         this.listenerWrapper.onMessage(mockClientMessage);
         verify(this.mockEventListener).onEvent(any(Event.class));
         verify(this.mockClientMessage).acknowledge();

@@ -18,9 +18,9 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.hornetq.api.core.HornetQException;
-import org.hornetq.api.core.client.ClientMessage;
-import org.hornetq.api.core.client.MessageHandler;
+import org.apache.activemq.artemis.api.core.ActiveMQException;
+import org.apache.activemq.artemis.api.core.client.ClientMessage;
+import org.apache.activemq.artemis.api.core.client.MessageHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +44,7 @@ public class ListenerWrapper implements MessageHandler {
         String body = msg.getBodyBuffer().readString();
         log.debug("Got event: {}", body);
 
-        // Exceptions thrown here will cause the event to remain in hornetq:
+        // Exceptions thrown here will cause the event to remain in ActiveMQ:
         try {
             Event event = mapper.readValue(body, Event.class);
             listener.onEvent(event);
@@ -64,10 +64,10 @@ public class ListenerWrapper implements MessageHandler {
 
         try {
             msg.acknowledge();
-            log.debug("Hornetq message acknowledged for listener: " + listener);
+            log.debug("ActiveMQ message acknowledged for listener: " + listener);
         }
-        catch (HornetQException e) {
-            log.error("Unable to acknowledge hornetq msg", e);
+        catch (ActiveMQException e) {
+            log.error("Unable to acknowledge ActiveMQ msg", e);
         }
     }
 

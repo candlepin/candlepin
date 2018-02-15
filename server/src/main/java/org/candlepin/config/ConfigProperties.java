@@ -63,44 +63,48 @@ public class ConfigProperties {
     public static final String CA_CERT_UPSTREAM = "candlepin.upstream_ca_cert";
     public static final String CA_KEY_PASSWORD = "candlepin.ca_key_password";
 
-    public static final String HORNETQ_ENABLED = "candlepin.audit.hornetq.enable";
-    public static final String HORNETQ_BASE_DIR = "candlepin.audit.hornetq.base_dir";
+    /*
+     * XXX The actual property key refers to HornetQ which was ActiveMQ's ancestor.  We have to keep the
+     * key unchanged for compatibility reasons.
+     */
+    public static final String ACTIVEMQ_ENABLED = "candlepin.audit.hornetq.enable";
+    public static final String ACTIVEMQ_BASE_DIR = "candlepin.audit.hornetq.base_dir";
     /**
      * This number is large message size. Any message
      * that is bigger than this number is regarded as large.
-     * That means that HornetQ will page this message
+     * That means that ActiveMQ will page this message
      * to a disk. Setting this number to something high
      * e.g. 1 000 0000 will effectively disable the
      * functionality. This is handy when you expect a lot of
      * messages and you do not want to run out of disk space.
      */
-    public static final String HORNETQ_LARGE_MSG_SIZE = "candlepin.audit.hornetq.large_msg_size";
+    public static final String ACTIVEMQ_LARGE_MSG_SIZE = "candlepin.audit.hornetq.large_msg_size";
 
     /**
      * Setting number of server threads that will be
-     * created for Hornet. -1 means that default value
+     * created for ActiveMQ. -1 means that default value
      * will be used.
      */
-    public static final String HORNETQ_MAX_SCHEDULED_THREADS =
+    public static final String ACTIVEMQ_MAX_SCHEDULED_THREADS =
         "candlepin.audit.hornetq.max_scheduled_threads";
-    public static final String HORNETQ_MAX_THREADS = "candlepin.audit.hornetq.max_threads";
+    public static final String ACTIVEMQ_MAX_THREADS = "candlepin.audit.hornetq.max_threads";
     /**
      * This can be either BLOCK or PAGE. When set to PAGE then
-     * Hornet will keep only up to HORNET_MAX_QUEUE_SIZE
+     * ActiveMQ will keep only up to ACTIVEMQ_MAX_QUEUE_SIZE
      * kilobytes of queue messages in memory. Anything above
-     * HORNET_MAX_QUEUE_SIZE will be paged to a hard disk.
+     * ACTIVEMQ_MAX_QUEUE_SIZE will be paged to a hard disk.
      * When set to BLOCK then after reaching
-     * HORNET_MAX_QUEUE_SIZE, all the producers will be blocked until
+     * ACTIVEMQ_MAX_QUEUE_SIZE, all the producers will be blocked until
      * the queues are freed up by consumers. Thus, BLOCK
      * may be dangerous when consumers fail, because
      * producers will timeout.
      */
-    public static final String HORNETQ_ADDRESS_FULL_POLICY = "candlepin.audit.hornetq.address_full_policy";
-    public static final String HORNETQ_MAX_QUEUE_SIZE = "candlepin.audit.hornetq.max_queue_size";
+    public static final String ACTIVEMQ_ADDRESS_FULL_POLICY = "candlepin.audit.hornetq.address_full_policy";
+    public static final String ACTIVEMQ_MAX_QUEUE_SIZE = "candlepin.audit.hornetq.max_queue_size";
     /**
-     * This is applicable only for PAGE setting of HORNETQ_ADDRESS_FULL_POLICY.
+     * This is applicable only for PAGE setting of ACTIVEMQ_ADDRESS_FULL_POLICY.
      */
-    public static final String HORNETQ_MAX_PAGE_SIZE = "candlepin.audit.hornetq.max_page_size";
+    public static final String ACTIVEMQ_MAX_PAGE_SIZE = "candlepin.audit.hornetq.max_page_size";
 
     public static final String AUDIT_LISTENERS = "candlepin.audit.listeners";
     public static final String AUDIT_LOG_FILE = "candlepin.audit.log_file";
@@ -120,7 +124,7 @@ public class ConfigProperties {
     /**
      * Can be set to DO_FILTER or DO_NOT_FILTER.
      * When set to DO_FILTER, then events that are not either in DO_FILTER nor DO_NOT_FILTER
-     * will be filtered, meaning they will not enter HORNETQ.
+     * will be filtered, meaning they will not enter ActiveMQ.
      */
     public static final String AUDIT_FILTER_DEFAULT_POLICY = "candlepin.audit.filter.policy";
 
@@ -303,15 +307,15 @@ public class ConfigProperties {
 
             this.put(ACTIVATION_DEBUG_PREFIX, "");
 
-            this.put(HORNETQ_ENABLED, "true");
-            this.put(HORNETQ_BASE_DIR, "/var/lib/candlepin/hornetq");
-            this.put(HORNETQ_LARGE_MSG_SIZE, Integer.toString(100 * 1024));
+            this.put(ACTIVEMQ_ENABLED, "true");
+            this.put(ACTIVEMQ_BASE_DIR, "/var/lib/candlepin/activemq-artemis");
+            this.put(ACTIVEMQ_LARGE_MSG_SIZE, Integer.toString(100 * 1024));
 
-            this.put(HORNETQ_MAX_THREADS, "-1");
-            this.put(HORNETQ_MAX_SCHEDULED_THREADS, "-1");
-            this.put(HORNETQ_ADDRESS_FULL_POLICY, "PAGE");
-            this.put(HORNETQ_MAX_QUEUE_SIZE, "10");
-            this.put(HORNETQ_MAX_PAGE_SIZE, "1");
+            this.put(ACTIVEMQ_MAX_THREADS, "-1");
+            this.put(ACTIVEMQ_MAX_SCHEDULED_THREADS, "-1");
+            this.put(ACTIVEMQ_ADDRESS_FULL_POLICY, "PAGE");
+            this.put(ACTIVEMQ_MAX_QUEUE_SIZE, "10");
+            this.put(ACTIVEMQ_MAX_PAGE_SIZE, "1");
             this.put(AUDIT_LISTENERS,
                 "org.candlepin.audit.DatabaseListener," +
                 "org.candlepin.audit.LoggingListener," +

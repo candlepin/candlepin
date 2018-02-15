@@ -19,22 +19,22 @@ import org.candlepin.config.ConfigProperties;
 import com.google.common.collect.Lists;
 import com.google.inject.Injector;
 
+import org.apache.activemq.artemis.api.core.SimpleString;
+import org.apache.activemq.artemis.api.core.TransportConfiguration;
+import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
+import org.apache.activemq.artemis.api.core.client.ClientSession;
+import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
+import org.apache.activemq.artemis.api.core.client.ServerLocator;
+import org.apache.activemq.artemis.core.config.Configuration;
+import org.apache.activemq.artemis.core.config.impl.ConfigurationImpl;
+import org.apache.activemq.artemis.core.remoting.impl.invm.InVMAcceptorFactory;
+import org.apache.activemq.artemis.core.remoting.impl.invm.InVMConnectorFactory;
+import org.apache.activemq.artemis.core.server.JournalType;
+import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
+import org.apache.activemq.artemis.core.settings.impl.AddressFullMessagePolicy;
+import org.apache.activemq.artemis.core.settings.impl.AddressSettings;
 import org.apache.commons.io.FileUtils;
-import org.hornetq.api.core.HornetQException;
-import org.hornetq.api.core.SimpleString;
-import org.hornetq.api.core.TransportConfiguration;
-import org.hornetq.api.core.client.ClientSession;
-import org.hornetq.api.core.client.ClientSessionFactory;
-import org.hornetq.api.core.client.HornetQClient;
-import org.hornetq.api.core.client.ServerLocator;
-import org.hornetq.core.config.Configuration;
-import org.hornetq.core.config.impl.ConfigurationImpl;
-import org.hornetq.core.remoting.impl.invm.InVMAcceptorFactory;
-import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory;
-import org.hornetq.core.server.JournalType;
-import org.hornetq.core.server.embedded.EmbeddedHornetQ;
-import org.hornetq.core.settings.impl.AddressFullMessagePolicy;
-import org.hornetq.core.settings.impl.AddressSettings;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,24 +46,24 @@ import java.util.Map;
 
 
 /**
- * HornetqContextListener - Invoked from our core CandlepinContextListener, thus
+ * ActiveMQContextListener - Invoked from our core CandlepinContextListener, thus
  * doesn't actually implement ServletContextListener.
  */
-public class HornetqContextListener {
-    private static  Logger log = LoggerFactory.getLogger(HornetqContextListener.class);
+public class ActiveMQContextListener {
+    private static  Logger log = LoggerFactory.getLogger(ActiveMQContextListener.class);
 
-    private EmbeddedHornetQ hornetqServer;
+    private EmbeddedActiveMQ activeMQServer;
     private EventSource eventSource;
 
     public void contextDestroyed() {
-        if (hornetqServer != null) {
+        if (activeMQServer != null) {
             eventSource.shutDown();
             try {
-                hornetqServer.stop();
-                log.info("Hornetq server stopped.");
+                activeMQServer.stop();
+                log.info("ActiveMQ server stopped.");
             }
             catch (Exception e) {
-                log.error("Error stopping hornetq server", e);
+                log.error("Error stopping ActiveMQ server", e);
             }
 
         }
@@ -73,7 +73,7 @@ public class HornetqContextListener {
         org.candlepin.common.config.Configuration candlepinConfig =
             injector.getInstance(org.candlepin.common.config.Configuration.class);
 
-        if (hornetqServer == null) {
+        if (activeMQServer == null) {
             Configuration config = new ConfigurationImpl();
 
             HashSet<TransportConfiguration> transports =
@@ -94,7 +94,7 @@ public class HornetqContextListener {
             config.setCreateBindingsDir(true);
             config.setCreateJournalDir(true);
 
-            String baseDir = candlepinConfig.getString(ConfigProperties.HORNETQ_BASE_DIR);
+            String baseDir = candlepinConfig.getString(ConfigProperties.ACTIVEMQ_BASE_DIR);
 
             config.setBindingsDirectory(new File(baseDir, "bindings").toString());
             config.setJournalDirectory(new File(baseDir, "journal").toString());
@@ -105,9 +105,9 @@ public class HornetqContextListener {
             AddressSettings pagingConfig = new AddressSettings();
 
             String addressPolicyString =
-                candlepinConfig.getString(ConfigProperties.HORNETQ_ADDRESS_FULL_POLICY);
-            long maxQueueSizeInMb = candlepinConfig.getInt(ConfigProperties.HORNETQ_MAX_QUEUE_SIZE);
-            long maxPageSizeInMb = candlepinConfig.getInt(ConfigProperties.HORNETQ_MAX_PAGE_SIZE);
+                candlepinConfig.getString(ConfigProperties.ACTIVEMQ_ADDRESS_FULL_POLICY);
+            long maxQueueSizeInMb = candlepinConfig.getInt(ConfigProperties.ACTIVEMQ_MAX_QUEUE_SIZE);
+            long maxPageSizeInMb = candlepinConfig.getInt(ConfigProperties.ACTIVEMQ_MAX_PAGE_SIZE);
 
             AddressFullMessagePolicy addressPolicy = null;
             if (addressPolicyString.equals("PAGE")) {
@@ -117,7 +117,7 @@ public class HornetqContextListener {
                 addressPolicy = AddressFullMessagePolicy.BLOCK;
             }
             else {
-                throw new IllegalArgumentException("Unknown HORNETQ_ADDRESS_FULL_POLICY: " +
+                throw new IllegalArgumentException("Unknown ACTIVEMQ_ADDRESS_FULL_POLICY: " +
                         addressPolicyString + " . Please use one of: PAGE, BLOCK");
             }
 
@@ -131,8 +131,8 @@ public class HornetqContextListener {
             settings.put("#", pagingConfig);
             config.setAddressesSettings(settings);
 
-            int maxScheduledThreads = candlepinConfig.getInt(ConfigProperties.HORNETQ_MAX_SCHEDULED_THREADS);
-            int maxThreads = candlepinConfig.getInt(ConfigProperties.HORNETQ_MAX_THREADS);
+            int maxScheduledThreads = candlepinConfig.getInt(ConfigProperties.ACTIVEMQ_MAX_SCHEDULED_THREADS);
+            int maxThreads = candlepinConfig.getInt(ConfigProperties.ACTIVEMQ_MAX_THREADS);
             if (maxThreads != -1) {
                 config.setThreadPoolMaxSize(maxThreads);
             }
@@ -148,26 +148,26 @@ public class HornetqContextListener {
              * If buffer size would be < LARGE_MSG_SIZE we may get exceptions such as this:
              * Can't write records bigger than the bufferSize(XXXYYY) on the journal
              */
-            int largeMsgSize = candlepinConfig.getInt(ConfigProperties.HORNETQ_LARGE_MSG_SIZE);
+            int largeMsgSize = candlepinConfig.getInt(ConfigProperties.ACTIVEMQ_LARGE_MSG_SIZE);
             config.setJournalBufferSize_AIO(largeMsgSize);
             config.setJournalBufferSize_NIO(largeMsgSize);
 
-            hornetqServer = new EmbeddedHornetQ();
-            hornetqServer.setConfiguration(config);
+            activeMQServer = new EmbeddedActiveMQ();
+            activeMQServer.setConfiguration(config);
         }
         try {
-            hornetqServer.start();
-            log.info("Hornetq server started");
+            activeMQServer.start();
+            log.info("ActiveMQ server started");
         }
         catch (Exception e) {
-            log.error("Failed to start hornetq message server:", e);
+            log.error("Failed to start ActiveMQ message server:", e);
             throw new RuntimeException(e);
         }
 
         setupAmqp(injector, candlepinConfig);
         cleanupOldQueues();
 
-        List<String> listeners = getHornetqListeners(candlepinConfig);
+        List<String> listeners = getActiveMQListeners(candlepinConfig);
 
         eventSource = injector.getInstance(EventSource.class);
         for (int i = 0; i < listeners.size(); i++) {
@@ -209,9 +209,9 @@ public class HornetqContextListener {
 
     /**
      * @param candlepinConfig
-     * @return List of class names that will be configured as HornetQ listeners.
+     * @return List of class names that will be configured as ActiveMQ listeners.
      */
-    public static List<String> getHornetqListeners(
+    public static List<String> getActiveMQListeners(
         org.candlepin.common.config.Configuration candlepinConfig) {
         //AMQP integration here - If it is disabled, don't add it to listeners.
         List<String> listeners = Lists.newArrayList(
@@ -231,9 +231,9 @@ public class HornetqContextListener {
     private void cleanupOldQueues() {
         log.debug("Cleaning old message queues");
         try {
-            String [] queues = hornetqServer.getHornetQServer().getHornetQServerControl().getQueueNames();
+            String [] queues = activeMQServer.getActiveMQServer().getActiveMQServerControl().getQueueNames();
 
-            ServerLocator locator = HornetQClient.createServerLocatorWithoutHA(
+            ServerLocator locator = ActiveMQClient.createServerLocatorWithoutHA(
                 new TransportConfiguration(InVMConnectorFactory.class.getName()));
 
             ClientSessionFactory factory =  locator.createSessionFactory();
@@ -257,13 +257,9 @@ public class HornetqContextListener {
             session.stop();
             session.close();
         }
-        catch (HornetQException e) {
-            log.error("Problem cleaning old message queues:", e);
-            throw new RuntimeException(e);
-        }
         catch (Exception e) {
             log.error("Problem cleaning old message queues:", e);
-            throw new RuntimeException(e);
+            throw new RuntimeException("Problem cleaning message queue", e);
         }
     }
 }

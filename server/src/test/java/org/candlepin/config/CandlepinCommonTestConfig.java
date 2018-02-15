@@ -39,7 +39,7 @@ public class CandlepinCommonTestConfig extends MapConfiguration {
             setProperty(ConfigProperties.CA_KEY, key);
             setProperty(ConfigProperties.CA_KEY_PASSWORD, "password");
             setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp");
-            setProperty(ConfigProperties.HORNETQ_LARGE_MSG_SIZE, "0");
+            setProperty(ConfigProperties.ACTIVEMQ_LARGE_MSG_SIZE, "0");
 
             setProperty(DatabaseConfigFactory.IN_OPERATOR_BLOCK_SIZE, "10");
             setProperty(DatabaseConfigFactory.CASE_OPERATOR_BLOCK_SIZE, "10");

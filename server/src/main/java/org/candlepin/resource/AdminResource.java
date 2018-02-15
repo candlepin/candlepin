@@ -108,7 +108,7 @@ public class AdminResource {
     @Produces({MediaType.APPLICATION_JSON})
     @Path("queues")
     @ApiOperation(
-        notes = "Basic information on the HornetQ queues and how many messages are pending in each.",
+        notes = "Basic information on the ActiveMQ queues and how many messages are pending in each.",
         value = "Get Queue Stats")
     public List<QueueStatus> getQueueStats() {
         return sink.getQueueInfo();
