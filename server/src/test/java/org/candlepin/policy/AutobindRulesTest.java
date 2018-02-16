@@ -23,6 +23,8 @@ import static org.mockito.Mockito.when;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.StandardTranslator;
 import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
@@ -83,6 +85,7 @@ public class AutobindRulesTest {
     private Owner owner;
     private Consumer consumer;
     private String productId = "a-product";
+    private ModelTranslator translator;
 
     private static final String HIGHEST_QUANTITY_PRODUCT = "QUANTITY001";
     private Map<String, String> activeGuestAttrs;
@@ -100,8 +103,9 @@ public class AutobindRulesTest {
         when(rulesCurator.getUpdated()).thenReturn(TestDateUtil.date(2010, 1, 1));
         when(cacheProvider.get()).thenReturn(cache);
         JsRunner jsRules = new JsRunnerProvider(rulesCurator, cacheProvider).get();
+        translator = new StandardTranslator();
         autobindRules = new AutobindRules(jsRules, mockProductCurator,
-            new RulesObjectMapper(new ProductCachedSerializationModule(mockProductCurator)));
+            new RulesObjectMapper(new ProductCachedSerializationModule(mockProductCurator)), translator);
 
         owner = new Owner();
         consumer = new Consumer("test consumer", "test user", owner,

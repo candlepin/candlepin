@@ -14,6 +14,8 @@
  */
 package org.candlepin.policy.js.autobind;
 
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.rules.v1.PoolDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.Pool;
@@ -53,12 +55,15 @@ public class AutobindRules {
     private static Logger log = LoggerFactory.getLogger(AutobindRules.class);
     private RulesObjectMapper mapper;
     private ProductCurator productCurator;
+    private ModelTranslator translator;
 
     @Inject
-    public AutobindRules(JsRunner jsRules, ProductCurator productCurator, RulesObjectMapper mapper) {
+    public AutobindRules(JsRunner jsRules, ProductCurator productCurator, RulesObjectMapper mapper,
+        ModelTranslator translator) {
         this.jsRules = jsRules;
         this.productCurator = productCurator;
         this.mapper = mapper;
+        this.translator = translator;
         jsRules.init("autobind_name_space");
     }
 
@@ -93,12 +98,17 @@ public class AutobindRules {
             }
         }
 
+        List<PoolDTO> poolDTOs = new ArrayList<PoolDTO>();
+        for (Pool pool : pools) {
+            poolDTOs.add(this.translator.translate(pool, PoolDTO.class));
+        }
+
         // Provide objects for the script:
         JsonJsContext args = new JsonJsContext(mapper);
         args.put("consumer", consumer);
         args.put("owner", consumer.getOwner());
         args.put("serviceLevelOverride", serviceLevelOverride);
-        args.put("pools", pools.toArray());
+        args.put("pools", poolDTOs.toArray());
         args.put("products", productIds);
         args.put("log", log, false);
         args.put("compliance", compliance);

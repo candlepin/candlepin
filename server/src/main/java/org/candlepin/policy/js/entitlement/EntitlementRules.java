@@ -22,6 +22,8 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.ProductManager;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.rules.v1.PoolDTO;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -89,6 +91,7 @@ public class EntitlementRules implements Enforcer {
     private ProductManager productManager;
     private EventSink eventSink;
     private EventFactory eventFactory;
+    private ModelTranslator translator;
 
     private static final String POST_PREFIX = "post_";
 
@@ -98,7 +101,7 @@ public class EntitlementRules implements Enforcer {
         ProductCurator productCurator, RulesObjectMapper mapper,
         OwnerCurator ownerCurator, OwnerProductCurator ownerProductCurator,
         ProductShareCurator productShareCurator, ProductManager productManager, EventSink eventSink,
-        EventFactory eventFactory) {
+        EventFactory eventFactory, ModelTranslator translator) {
 
         this.jsRules = jsRules;
         this.dateSource = dateSource;
@@ -113,6 +116,7 @@ public class EntitlementRules implements Enforcer {
         this.productManager = productManager;
         this.eventSink = eventSink;
         this.eventFactory = eventFactory;
+        this.translator = translator;
 
         jsRules.init("entitlement_name_space");
     }
@@ -215,11 +219,17 @@ public class EntitlementRules implements Enforcer {
         Map<String, ValidationResult> resultMap = new HashMap<String, ValidationResult>();
 
         if (!consumer.isShare()) {
+
+            List<PoolDTO> poolDTOs = new ArrayList<PoolDTO>();
+            for (Pool pool : pools) {
+                poolDTOs.add(this.translator.translate(pool, PoolDTO.class));
+            }
+
             args.put("consumer", consumer);
             args.put("hostConsumer", getHost(consumer, pools));
             args.put("consumerEntitlements", consumer.getEntitlements());
             args.put("standalone", config.getBoolean(ConfigProperties.STANDALONE));
-            args.put("pools", pools);
+            args.put("pools", poolDTOs);
             args.put("caller", CallerType.LIST_POOLS.getLabel());
             args.put("log", log, false);
 
