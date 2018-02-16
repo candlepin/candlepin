@@ -15,6 +15,7 @@
 package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.CandlepinDTO;
+import org.candlepin.dto.TimestampedCandlepinDTO;
 import org.candlepin.util.Util;
 
 import com.fasterxml.jackson.annotation.JsonCreator;

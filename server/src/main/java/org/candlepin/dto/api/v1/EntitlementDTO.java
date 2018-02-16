@@ -21,6 +21,7 @@ import io.swagger.annotations.ApiModel;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.candlepin.common.jackson.HateoasInclude;
+import org.candlepin.dto.TimestampedCandlepinDTO;
 import org.candlepin.util.SetView;
 import org.candlepin.util.Util;
 

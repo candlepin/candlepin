@@ -15,6 +15,8 @@
 package org.candlepin.policy.js.compliance;
 
 import org.candlepin.audit.EventSink;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.rules.v1.ConsumerDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
@@ -51,11 +53,12 @@ public class ComplianceRules {
     private EventSink eventSink;
     private ConsumerCurator consumerCurator;
     private RulesObjectMapper mapper;
+    private ModelTranslator translator;
 
     @Inject
     public ComplianceRules(JsRunner jsRules, EntitlementCurator entCurator,
         StatusReasonMessageGenerator generator, EventSink eventSink, ConsumerCurator consumerCurator,
-        RulesObjectMapper mapper) {
+        RulesObjectMapper mapper, ModelTranslator translator) {
 
         this.jsRules = jsRules;
         this.entCurator = entCurator;
@@ -63,6 +66,7 @@ public class ComplianceRules {
         this.eventSink = eventSink;
         this.consumerCurator = consumerCurator;
         this.mapper = mapper;
+        this.translator = translator;
 
         jsRules.init("compliance_name_space");
     }
@@ -155,7 +159,7 @@ public class ComplianceRules {
         }
 
         JsonJsContext args = new JsonJsContext(mapper);
-        args.put("consumer", c);
+        args.put("consumer", this.translator.translate(c, ConsumerDTO.class));
         args.put("entitlements", allEnts);
         args.put("ondate", date);
         args.put("calculateCompliantUntil", calculateCompliantUntil);
@@ -215,7 +219,7 @@ public class ComplianceRules {
     public boolean isStackCompliant(Consumer consumer, String stackId, List<Entitlement> entsToConsider) {
         JsonJsContext args = new JsonJsContext(mapper);
         args.put("stack_id", stackId);
-        args.put("consumer", consumer);
+        args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
         args.put("entitlements", entsToConsider);
         args.put("log", log, false);
         args.put("guestIds", consumer.getGuestIds());
@@ -227,7 +231,7 @@ public class ComplianceRules {
         List<Entitlement> ents = entCurator.listByConsumerAndDate(consumer, onDate).list();
 
         JsonJsContext args = new JsonJsContext(mapper);
-        args.put("consumer", consumer);
+        args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
         args.put("entitlement", ent);
         args.put("entitlements", ents);
         args.put("log", log, false);
