@@ -26,6 +26,7 @@ import org.candlepin.audit.EventSink;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.ProductManager;
+import org.candlepin.dto.ModelTranslator;
 import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
@@ -88,6 +89,7 @@ public class EnforcerTest extends DatabaseTestFixture {
     @Mock private ProductManager mockProductManager;
     @Mock private EventSink mockEventSink;
     @Mock private EventFactory mockEventFactory;
+    @Mock private ModelTranslator translator;
 
     private Enforcer enforcer;
     private Owner owner;
@@ -130,7 +132,7 @@ public class EnforcerTest extends DatabaseTestFixture {
             mockProductCurator,
             new RulesObjectMapper(new ProductCachedSerializationModule(mockProductCurator)),
             mockOwnerCurator, mockOwnerProductCurator, mockProductShareCurator, mockProductManager,
-            mockEventSink, mockEventFactory
+            mockEventSink, mockEventFactory, translator
         );
     }
 

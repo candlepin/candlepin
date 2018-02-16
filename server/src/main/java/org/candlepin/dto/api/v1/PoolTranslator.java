@@ -15,6 +15,7 @@
 package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.TimestampedEntityTranslator;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;

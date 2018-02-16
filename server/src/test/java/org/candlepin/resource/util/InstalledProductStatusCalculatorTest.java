@@ -19,6 +19,8 @@ import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.audit.EventSink;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.StandardTranslator;
 import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
@@ -94,12 +96,15 @@ public class InstalledProductStatusCalculatorTest {
     @Mock private ProductCurator productCurator;
     @Mock private OwnerProductCurator ownerProductCurator;
 
+    private ModelTranslator translator;
     private JsRunnerProvider provider;
     private I18n i18n;
     private ConsumerEnricher consumerEnricher;
 
     @Before
     public void setUp() {
+        translator = new StandardTranslator();
+
         MockitoAnnotations.initMocks(this);
 
         // Load the default production rules:
@@ -118,7 +123,8 @@ public class InstalledProductStatusCalculatorTest {
             new RulesObjectMapper(new ProductCachedSerializationModule(productCurator));
 
         this.complianceRules = new ComplianceRules(provider.get(), this.entCurator,
-            new StatusReasonMessageGenerator(i18n), eventSink, this.consumerCurator, objectMapper);
+            new StatusReasonMessageGenerator(i18n), eventSink, this.consumerCurator,
+            objectMapper, translator);
 
         this.consumerEnricher = new ConsumerEnricher(this.complianceRules, this.ownerProductCurator);
     }
