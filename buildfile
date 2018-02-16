@@ -73,60 +73,68 @@ Buildr.settings.build['junit'] = '4.12' # Buildr uses 4.11 by default
 
 JUKITO = ['org.jukito:jukito:jar:1.4']
 
-LOGBACK = [group('logback-core', 'logback-classic',
-                 :under => 'ch.qos.logback',
-                 :version => '1.2.3')]
+LOGBACK = [
+  group('logback-core', 'logback-classic',
+    :under => 'ch.qos.logback',
+    :version => '1.2.3')
+]
 
 # Artifacts that bridge other logging frameworks to slf4j. Mime4j uses
 # JCL for example.
-SLF4J_BRIDGES = [group('jcl-over-slf4j', 'log4j-over-slf4j',
-                       :under => 'org.slf4j',
-                       :version => '1.7.12')]
+SLF4J_BRIDGES = [
+  group('jcl-over-slf4j', 'log4j-over-slf4j',
+    :under => 'org.slf4j',
+    :version => '1.7.12')
+]
 SLF4J = 'org.slf4j:slf4j-api:jar:1.7.25'
 
 LOGGING = [LOGBACK, SLF4J_BRIDGES, SLF4J]
 
-JAVAX = ['org.hibernate.javax.persistence:hibernate-jpa-2.1-api:jar:1.0.0.Final',
-         'javax.validation:validation-api:jar:1.0.0.GA',
-         'javax.transaction:jta:jar:1.1']
+JAVAX = [
+  'org.hibernate.javax.persistence:hibernate-jpa-2.1-api:jar:1.0.2.Final',
+  transitive('javax.validation:validation-api:jar:2.0.1.Final'),
+  'javax.transaction:jta:jar:1.1'
+]
+
 ANTLR = ['antlr:antlr:jar:2.7.7']
 
-EHCACHE = ['org.hibernate:hibernate-ehcache:jar:5.1.1.Final',
-           'net.sf.ehcache:ehcache:jar:2.10.1',
-           'org.ehcache:jcache:jar:1.0.0', 'javax.cache:cache-api:jar:1.0.0',
-           'net.sf.ehcache:management-ehcache-v2:jar:2.10.1']
+EHCACHE = [
+  'org.hibernate:hibernate-ehcache:jar:5.1.1.Final',
+  'net.sf.ehcache:ehcache:jar:2.10.1',
+  'org.ehcache:jcache:jar:1.0.0',
+  'javax.cache:cache-api:jar:1.0.0',
+  'net.sf.ehcache:management-ehcache-v2:jar:2.10.1'
+]
 
-HIBERNATE = [group('hibernate-core', 'hibernate-entitymanager', 'hibernate-c3p0',
-                   :under => 'org.hibernate',
-                   :version => '5.1.1.Final'),
-             'org.hibernate.common:hibernate-commons-annotations:jar:5.0.1.Final',
-             'org.hibernate:hibernate-tools:jar:3.2.4.GA',
-             'org.hibernate:hibernate-validator:jar:4.3.1.Final',
-             ANTLR,
-             EHCACHE,
-             'asm:asm:jar:3.0',
-             'cglib:cglib:jar:2.2',
-             'org.javassist:javassist:jar:3.20.0-GA',
-             'com.fasterxml:classmate:jar:1.3.0',
-             'org.freemarker:freemarker:jar:2.3.15',
-             'com.mchange:c3p0:jar:0.9.5.2',
-             'com.mchange:mchange-commons-java:jar:0.2.11',
-             'dom4j:dom4j:jar:1.6.1',
-             'org.jboss:jandex:jar:2.0.0.Final',
-              'org.jboss.logging:jboss-logging:jar:3.3.0.Final'
-             ] + JAVAX
+HIBERNATE = [
+  transitive(group('hibernate-core', 'hibernate-entitymanager', 'hibernate-c3p0',
+    :under => 'org.hibernate',
+    :version => '5.1.1.Final')),
+
+  transitive('org.hibernate.common:hibernate-commons-annotations:jar:5.0.2.Final'),
+  'org.hibernate:hibernate-tools:jar:3.2.4.GA',
+
+  transitive('org.hibernate.validator:hibernate-validator:jar:6.0.7.Final'),
+  transitive('org.hibernate.validator:hibernate-validator-annotation-processor:jar:6.0.7.Final'),
+
+  ANTLR,
+  EHCACHE,
+] + JAVAX
 
 POSTGRESQL = 'postgresql:postgresql:jar:9.0-801.jdbc4'
 
-SWAGGER = [group('swagger-jaxrs', 'swagger-core','swagger-models','swagger-annotations',
-                     :under => 'io.swagger',
-                     :version => '1.5.7'),
-          'org.reflections:reflections:jar:0.9.10',
-          'org.apache.commons:commons-lang3:jar:3.2.1',
-           group('jackson-dataformat-yaml', 'jackson-dataformat-xml',
-                  :under => 'com.fasterxml.jackson.dataformat',
-                  :version => JACKSON_VERSION)
-         ]
+SWAGGER = [
+  group('swagger-jaxrs', 'swagger-core','swagger-models','swagger-annotations',
+    :under => 'io.swagger',
+    :version => '1.5.7'),
+
+  'org.reflections:reflections:jar:0.9.10',
+  'org.apache.commons:commons-lang3:jar:3.2.1',
+
+  group('jackson-dataformat-yaml', 'jackson-dataformat-xml',
+    :under => 'com.fasterxml.jackson.dataformat',
+    :version => JACKSON_VERSION)
+]
 
 MYSQL = 'mysql:mysql-connector-java:jar:5.1.26'
 
@@ -156,20 +164,23 @@ BOUNCYCASTLE = group('bcmail-jdk16', 'bcprov-jdk16',
 
 SERVLET = 'javax.servlet:servlet-api:jar:2.5'
 
-GUICE =  [group('guice-assistedinject', 'guice-multibindings',
-                'guice-servlet', 'guice-throwingproviders', 'guice-persist',
-                :under=>'com.google.inject.extensions',
-                :version=>'3.0'),
-           'com.google.inject:guice:jar:3.0',
-           'aopalliance:aopalliance:jar:1.0',
-           'javax.inject:javax.inject:jar:1']
+GUICE = [
+  group('guice-assistedinject', 'guice-multibindings', 'guice-servlet', 'guice-throwingproviders', 'guice-persist',
+    :under=>'com.google.inject.extensions',
+    :version=>'3.0'),
+
+  'com.google.inject:guice:jar:3.0',
+  'aopalliance:aopalliance:jar:1.0',
+  'javax.inject:javax.inject:jar:1'
+]
 
 COLLECTIONS = 'com.google.guava:guava:jar:19.0'
 
-OAUTH= [group('oauth',
-              'oauth-provider',
-              :under => 'net.oauth.core',
-              :version => '20100527')]
+OAUTH = [
+  group('oauth', 'oauth-provider',
+    :under => 'net.oauth.core',
+    :version => '20100527')
+]
 
 QUARTZ = 'org.quartz-scheduler:quartz:jar:2.2.1'
 
@@ -415,6 +426,7 @@ define "candlepin" do
       HSQLDB,
       LIQUIBASE_SLF4J,
     ]
+
     # The entries in test_classpath will be supplemented automatically with the compile_classpath
     test.with(test_classpath)
     test.using(:java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ])
