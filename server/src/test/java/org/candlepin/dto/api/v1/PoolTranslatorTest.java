@@ -42,8 +42,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Test suite for the PoolTranslator class.
  */
-public class PoolTranslatorTest extends
-    AbstractTranslatorTest<Pool, PoolDTO, PoolTranslator> {
+public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, PoolTranslator> {
 
     protected PoolTranslator translator = new PoolTranslator();
 

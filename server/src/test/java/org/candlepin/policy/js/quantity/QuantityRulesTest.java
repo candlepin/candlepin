@@ -18,6 +18,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.StandardTranslator;
 import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
@@ -72,6 +74,7 @@ public class QuantityRulesTest {
     private Owner owner;
     private QuantityRules quantityRules;
     private JsRunnerProvider provider;
+    private ModelTranslator translator;
 
     @Mock private RulesCurator rulesCuratorMock;
     @Mock private Provider<JsRunnerRequestCache> cacheProvider;
@@ -90,8 +93,9 @@ public class QuantityRulesTest {
         when(rulesCuratorMock.getRules()).thenReturn(rules);
         when(cacheProvider.get()).thenReturn(cache);
         provider = new JsRunnerProvider(rulesCuratorMock, cacheProvider);
+        translator = new StandardTranslator();
         quantityRules = new QuantityRules(provider.get(),
-                new RulesObjectMapper(new ProductCachedSerializationModule(productCurator)));
+                new RulesObjectMapper(new ProductCachedSerializationModule(productCurator)), translator);
 
         owner = new Owner("Test Owner " + TestUtil.randomInt());
         product = TestUtil.createProduct();
