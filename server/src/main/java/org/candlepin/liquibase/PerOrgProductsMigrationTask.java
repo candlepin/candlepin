@@ -48,8 +48,8 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
     public PerOrgProductsMigrationTask(Database database, CustomTaskLogger logger) {
         super(database, logger);
 
-        this.migratedProducts = new HashMap<String, String>();
-        this.migratedContent = new HashMap<String, String>();
+        this.migratedProducts = new HashMap<>();
+        this.migratedContent = new HashMap<>();
     }
 
     /**
@@ -427,8 +427,8 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
     protected void migrateProductData(String orgid) throws DatabaseException, SQLException {
         this.logger.info("  Migrating product data...");
 
-        List<Object[]> productRows = new LinkedList<Object[]>();
-        Set<String> uuidCache = new HashSet<String>();
+        List<Object[]> productRows = new LinkedList<>();
+        Set<String> uuidCache = new HashSet<>();
 
         ResultSet productInfo = this.executeQuery(
             "SELECT DISTINCT p.id, p.created, p.updated, p.multiplier, p.name " +
@@ -627,8 +627,8 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
     protected void migrateContentData(String orgid) throws DatabaseException, SQLException {
         this.logger.info("  Migrating content data...");
 
-        List<Object[]> contentRows = new LinkedList<Object[]>();
-        Set<String> uuidCache = new HashSet<String>();
+        List<Object[]> contentRows = new LinkedList<>();
+        Set<String> uuidCache = new HashSet<>();
 
         ResultSet contentInfo = this.executeQuery(
             "SELECT DISTINCT c.id, c.created, c.updated, c.contenturl, c.gpgurl, c.label, " +

@@ -62,9 +62,9 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
     private Owner owner;
     private ProductData product;
     private ProductData derivedProduct;
-    private Set<ProductData> providedProducts = new HashSet<ProductData>();
-    private Set<ProductData> derivedProvidedProducts = new HashSet<ProductData>();
-    private Set<Branding> branding = new HashSet<Branding>();
+    private Set<ProductData> providedProducts = new HashSet<>();
+    private Set<ProductData> derivedProvidedProducts = new HashSet<>();
+    private Set<Branding> branding = new HashSet<>();
     private Long quantity;
     private Date startDate;
     private Date endDate;
@@ -490,7 +490,7 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
         copy.modified = this.modified != null ? (Date) this.modified.clone() : null;
 
         if (this.providedProducts != null) {
-            copy.providedProducts = new HashSet<ProductData>();
+            copy.providedProducts = new HashSet<>();
 
             for (ProductData dto : this.providedProducts) {
                 copy.providedProducts.add((ProductData) dto.clone());
@@ -498,7 +498,7 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
         }
 
         if (this.derivedProvidedProducts != null) {
-            copy.derivedProvidedProducts = new HashSet<ProductData>();
+            copy.derivedProvidedProducts = new HashSet<>();
 
             for (ProductData dto : this.derivedProvidedProducts) {
                 copy.derivedProvidedProducts.add((ProductData) dto.clone());
@@ -506,7 +506,7 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
         }
 
         if (this.branding != null) {
-            copy.branding = new HashSet<Branding>();
+            copy.branding = new HashSet<>();
             copy.branding.addAll(this.branding);
         }
 
@@ -609,7 +609,7 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
         // Will work only if source is stored in the database and linked to provided products there!
         Collection<Product> products = productCurator.getPoolProvidedProductsCached(source);
         if (products != null) {
-            Collection<ProductData> pdata = new LinkedList<ProductData>();
+            Collection<ProductData> pdata = new LinkedList<>();
 
             for (Product product : products) {
                 pdata.add(product.toDTO());
@@ -623,7 +623,7 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
 
         products = productCurator.getPoolDerivedProvidedProductsCached(source);
         if (products != null) {
-            Collection<ProductData> pdata = new LinkedList<ProductData>();
+            Collection<ProductData> pdata = new LinkedList<>();
 
             for (Product product : products) {
                 pdata.add(product.toDTO());

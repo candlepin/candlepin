@@ -211,7 +211,7 @@ public class EventFactory {
     }
 
     public Event complianceCreated(Consumer consumer, ComplianceStatus compliance) {
-        Map<String, String> eventData = new HashMap<String, String>();
+        Map<String, String> eventData = new HashMap<>();
         eventData.put("consumer_uuid", consumer.getUuid());
         eventData.put("status", compliance.getStatus());
         try {

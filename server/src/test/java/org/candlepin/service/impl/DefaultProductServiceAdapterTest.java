@@ -73,7 +73,7 @@ public class DefaultProductServiceAdapterTest {
     @Test
     public void productsByIds() {
         Owner o = mock(Owner.class);
-        List<String> ids = new ArrayList<String>();
+        List<String> ids = new ArrayList<>();
         CandlepinQuery<Product> ccmock = mock(CandlepinQuery.class);
         ResultIterator<Product> iterator = mock(ResultIterator.class);
 

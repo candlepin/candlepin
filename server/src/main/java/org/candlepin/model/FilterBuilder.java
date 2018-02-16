@@ -52,9 +52,9 @@ public abstract class FilterBuilder {
     protected List<Criterion> otherCriteria;
 
     public FilterBuilder() {
-        this.attributeFilters = new HashMap<String, List<String>>();
-        this.idFilters = new LinkedList<String>();
-        this.otherCriteria = new LinkedList<Criterion>();
+        this.attributeFilters = new HashMap<>();
+        this.idFilters = new LinkedList<>();
+        this.otherCriteria = new LinkedList<>();
     }
 
     public FilterBuilder addIdFilter(String id) {
@@ -75,13 +75,13 @@ public abstract class FilterBuilder {
 
     public void addAttributeFilter(String attrName) {
         if (!attributeFilters.containsKey(attrName)) {
-            attributeFilters.put(attrName, new LinkedList<String>());
+            attributeFilters.put(attrName, new LinkedList<>());
         }
     }
 
     public void addAttributeFilter(String attrName, String attrValue) {
         if (!attributeFilters.containsKey(attrName)) {
-            attributeFilters.put(attrName, new LinkedList<String>());
+            attributeFilters.put(attrName, new LinkedList<>());
         }
         attributeFilters.get(attrName).add(attrValue);
     }

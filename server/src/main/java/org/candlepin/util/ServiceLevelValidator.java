@@ -49,7 +49,7 @@ public class ServiceLevelValidator {
     }
 
     public void validate(Owner owner, Collection<String> serviceLevels) {
-        Set<String> invalidServiceLevels = new HashSet<String>();
+        Set<String> invalidServiceLevels = new HashSet<>();
 
         for (String serviceLevel : serviceLevels) {
             if (!StringUtils.isBlank(serviceLevel)) {

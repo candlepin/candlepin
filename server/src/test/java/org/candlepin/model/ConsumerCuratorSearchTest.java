@@ -64,7 +64,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
     @Test
     public void testSearchOwnerConsumersNoMatches() {
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        Map<String, String> facts = new HashMap<String, String>();
+        Map<String, String> facts = new HashMap<>();
         facts.put("testkey", "testval");
         facts.put("otherkey", "otherval");
         consumer.setFacts(facts);
@@ -72,12 +72,12 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
 
         // Create another consumer to make sure we're not just retreiving everyhting
         Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner, ct);
-        Map<String, String> otherFacts = new HashMap<String, String>();
+        Map<String, String> otherFacts = new HashMap<>();
         otherFacts.put("otherconsumerkey", "testval");
         otherConsumer.setFacts(otherFacts);
         otherConsumer = consumerCurator.create(otherConsumer);
 
-        List<KeyValueParameter> factFilters = new LinkedList<KeyValueParameter>();
+        List<KeyValueParameter> factFilters = new LinkedList<>();
         factFilters.add(new TestingKeyValueParameter("notAKey", "notAVal"));
         List<Consumer> results = consumerCurator.searchOwnerConsumers(
             owner, null, null, null, null, factFilters, null, null, null).list();
@@ -87,7 +87,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
     @Test
     public void testSearchConsumersNoOwner() {
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        Map<String, String> facts = new HashMap<String, String>();
+        Map<String, String> facts = new HashMap<>();
         facts.put("testkey", "testval");
         facts.put("otherkey", "otherval");
         consumer.setFacts(facts);
@@ -95,12 +95,12 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
 
         // Create another consumer to make sure we're not just retrieving everything
         Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner, ct);
-        Map<String, String> otherFacts = new HashMap<String, String>();
+        Map<String, String> otherFacts = new HashMap<>();
         otherFacts.put("otherconsumerkey", "testval");
         otherConsumer.setFacts(otherFacts);
         otherConsumer = consumerCurator.create(otherConsumer);
 
-        List<KeyValueParameter> factFilters = new LinkedList<KeyValueParameter>();
+        List<KeyValueParameter> factFilters = new LinkedList<>();
         factFilters.add(new TestingKeyValueParameter("testkey", "testval"));
         List<Consumer> results = consumerCurator.searchOwnerConsumers(
             null, null, null, null, null, factFilters, null, null, null).list();
@@ -111,7 +111,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
     @Test
     public void testSearchConsumersUuids() {
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        Map<String, String> facts = new HashMap<String, String>();
+        Map<String, String> facts = new HashMap<>();
         facts.put("key", "val");
         facts.put("otherkey", "otherval");
         consumer.setFacts(facts);
@@ -119,14 +119,14 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
 
         // Create another consumer to make sure we're not just retrieving everything
         Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner, ct);
-        Map<String, String> otherFacts = new HashMap<String, String>();
+        Map<String, String> otherFacts = new HashMap<>();
         otherFacts.put("key", "val");
         otherConsumer.setFacts(otherFacts);
         otherConsumer = consumerCurator.create(otherConsumer);
 
-        List<KeyValueParameter> factFilters = new LinkedList<KeyValueParameter>();
+        List<KeyValueParameter> factFilters = new LinkedList<>();
         factFilters.add(new TestingKeyValueParameter("key", "val"));
-        List<String> uuids = new LinkedList<String>();
+        List<String> uuids = new LinkedList<>();
         uuids.add(consumer.getUuid());
         List<Consumer> results = consumerCurator.searchOwnerConsumers(
             null, null, null, uuids, null, factFilters, null, null, null).list();
@@ -146,7 +146,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         consumer2.setHypervisorId(new HypervisorId(hypervisorid2));
         consumer2 = consumerCurator.create(consumer2);
 
-        List<String> hypervisorIds = new ArrayList<String>();
+        List<String> hypervisorIds = new ArrayList<>();
         hypervisorIds.add(hypervisorid.toUpperCase());
 
         List<Consumer> results = consumerCurator.searchOwnerConsumers(
@@ -158,7 +158,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
     @Test
     public void testSearchConsumersUuidsAndOwner() {
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        Map<String, String> facts = new HashMap<String, String>();
+        Map<String, String> facts = new HashMap<>();
         facts.put("key", "val");
         facts.put("otherkey", "otherval");
         consumer.setFacts(facts);
@@ -166,7 +166,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
 
         // Create another consumer to make sure we're not just retrieving everything
         Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner, ct);
-        Map<String, String> otherFacts = new HashMap<String, String>();
+        Map<String, String> otherFacts = new HashMap<>();
         otherFacts.put("key", "val");
         otherConsumer.setFacts(otherFacts);
         otherConsumer = consumerCurator.create(otherConsumer);
@@ -174,14 +174,14 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         Owner otherOwner = new Owner("test-owner1", "Test Owner1");
         otherOwner = ownerCurator.create(otherOwner);
         Consumer otherOwnCons = new Consumer("testConsumer3", "testUser3", otherOwner, ct);
-        Map<String, String> otherOwnFacts = new HashMap<String, String>();
+        Map<String, String> otherOwnFacts = new HashMap<>();
         otherOwnFacts.put("key", "val");
         otherOwnCons.setFacts(otherOwnFacts);
         otherOwnCons = consumerCurator.create(otherOwnCons);
 
-        List<KeyValueParameter> factFilters = new LinkedList<KeyValueParameter>();
+        List<KeyValueParameter> factFilters = new LinkedList<>();
         factFilters.add(new TestingKeyValueParameter("key", "val"));
-        List<String> uuids = new LinkedList<String>();
+        List<String> uuids = new LinkedList<>();
         uuids.add(consumer.getUuid());
         uuids.add(otherOwnCons.getUuid());
         List<Consumer> results = consumerCurator.searchOwnerConsumers(
@@ -251,7 +251,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
     @Test
     public void testSearchOwnerConsumers() {
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        Map<String, String> facts = new HashMap<String, String>();
+        Map<String, String> facts = new HashMap<>();
         facts.put("testkey", "testval");
         facts.put("otherkey", "otherval");
         consumer.setFacts(facts);
@@ -259,12 +259,12 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
 
         // Create another consumer to make sure we're not just retrieving everything
         Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner, ct);
-        Map<String, String> otherFacts = new HashMap<String, String>();
+        Map<String, String> otherFacts = new HashMap<>();
         otherFacts.put("otherconsumerkey", "testval");
         otherConsumer.setFacts(otherFacts);
         otherConsumer = consumerCurator.create(otherConsumer);
 
-        List<KeyValueParameter> factFilters = new LinkedList<KeyValueParameter>();
+        List<KeyValueParameter> factFilters = new LinkedList<>();
         factFilters.add(new TestingKeyValueParameter("testkey", "testval"));
         List<Consumer> results = consumerCurator.searchOwnerConsumers(
             owner, null, null, null, null, factFilters, null, null, null).list();
@@ -275,12 +275,12 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
     @Test
     public void testSearchOwnerConsumersEscaping() {
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        Map<String, String> facts = new HashMap<String, String>();
+        Map<String, String> facts = new HashMap<>();
         facts.put("a", "\"')");
         consumer.setFacts(facts);
         consumer = consumerCurator.create(consumer);
 
-        List<KeyValueParameter> factFilters = new LinkedList<KeyValueParameter>();
+        List<KeyValueParameter> factFilters = new LinkedList<>();
         factFilters.add(new TestingKeyValueParameter("a", "\"')"));
         List<Consumer> results = consumerCurator.searchOwnerConsumers(
             owner, null, null, null, null, factFilters, null, null, null).list();
@@ -291,12 +291,12 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
     @Test
     public void testSearchOwnerConsumersKeyEscaping() {
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        Map<String, String> facts = new HashMap<String, String>();
+        Map<String, String> facts = new HashMap<>();
         facts.put("%", "'); SELECT id from cp_owners");
         consumer.setFacts(facts);
         consumer = consumerCurator.create(consumer);
 
-        List<KeyValueParameter> factFilters = new LinkedList<KeyValueParameter>();
+        List<KeyValueParameter> factFilters = new LinkedList<>();
         factFilters.add(new TestingKeyValueParameter("%", "'); SELECT id from cp_owners"));
         List<Consumer> results = consumerCurator.searchOwnerConsumers(
             owner, null, null, null, null, factFilters, null, null, null).list();
@@ -307,12 +307,12 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
     @Test
     public void testSearchOwnerConsumersMoreEscapingWithWildcard() {
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        Map<String, String> facts = new HashMap<String, String>();
+        Map<String, String> facts = new HashMap<>();
         facts.put("%", "'); SELECT * from cp_owners");
         consumer.setFacts(facts);
         consumer = consumerCurator.create(consumer);
 
-        List<KeyValueParameter> factFilters = new LinkedList<KeyValueParameter>();
+        List<KeyValueParameter> factFilters = new LinkedList<>();
         factFilters.add(new TestingKeyValueParameter("%", "'); SELECT * from cp_owners"));
         List<Consumer> results = consumerCurator.searchOwnerConsumers(
             owner, null, null, null, null, factFilters, null, null, null).list();
@@ -323,7 +323,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
     @Test
     public void testSearchOwnerConsumersInsensitiveValue() {
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        Map<String, String> facts = new HashMap<String, String>();
+        Map<String, String> facts = new HashMap<>();
         facts.put("testkey", "testval");
         facts.put("otherkey", "otherval");
         consumer.setFacts(facts);
@@ -331,12 +331,12 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
 
         // Create another consumer to make sure we're not just retreiving everyhting
         Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner, ct);
-        Map<String, String> otherFacts = new HashMap<String, String>();
+        Map<String, String> otherFacts = new HashMap<>();
         otherFacts.put("otherconsumerkey", "testval");
         otherConsumer.setFacts(otherFacts);
         otherConsumer = consumerCurator.create(otherConsumer);
 
-        List<KeyValueParameter> factFilters = new LinkedList<KeyValueParameter>();
+        List<KeyValueParameter> factFilters = new LinkedList<>();
         factFilters.add(new TestingKeyValueParameter("testkey", "teSTVal"));
         List<Consumer> results = consumerCurator.searchOwnerConsumers(
             owner, null, null, null, null, factFilters, null, null, null).list();
@@ -347,7 +347,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
     @Test
     public void testSearchOwnerConsumersSensitiveKey() {
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        Map<String, String> facts = new HashMap<String, String>();
+        Map<String, String> facts = new HashMap<>();
         facts.put("testkey", "testval");
         facts.put("otherkey", "otherval");
         consumer.setFacts(facts);
@@ -355,12 +355,12 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
 
         // Create another consumer to make sure we're not just retreiving everyhting
         Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner, ct);
-        Map<String, String> otherFacts = new HashMap<String, String>();
+        Map<String, String> otherFacts = new HashMap<>();
         otherFacts.put("otherconsumerkey", "testval");
         otherConsumer.setFacts(otherFacts);
         otherConsumer = consumerCurator.create(otherConsumer);
 
-        List<KeyValueParameter> factFilters = new LinkedList<KeyValueParameter>();
+        List<KeyValueParameter> factFilters = new LinkedList<>();
         factFilters.add(new TestingKeyValueParameter("Testkey", "testval"));
         List<Consumer> results = consumerCurator.searchOwnerConsumers(
             owner, null, null, null, null, factFilters, null, null, null).list();
@@ -370,7 +370,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
     @Test
     public void testSearchOwnerConsumersKeyWildcard() {
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        Map<String, String> facts = new HashMap<String, String>();
+        Map<String, String> facts = new HashMap<>();
         facts.put("testkey", "testval");
         //facts.put("otherkey", "otherval");
         consumer.setFacts(facts);
@@ -378,12 +378,12 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
 
         // Create another consumer to make sure we're not just retreiving everyhting
         Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner, ct);
-        Map<String, String> otherFacts = new HashMap<String, String>();
+        Map<String, String> otherFacts = new HashMap<>();
         otherFacts.put("otherconsumerkey123", "testval");
         otherConsumer.setFacts(otherFacts);
         otherConsumer = consumerCurator.create(otherConsumer);
 
-        List<KeyValueParameter> factFilters = new LinkedList<KeyValueParameter>();
+        List<KeyValueParameter> factFilters = new LinkedList<>();
         factFilters.add(new TestingKeyValueParameter("*key*", "testval"));
         List<Consumer> results = consumerCurator.searchOwnerConsumers(
             owner, null, null, null, null, factFilters, null, null, null).list();
@@ -393,7 +393,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
     @Test
     public void testSearchOwnerConsumersValueWildcard() {
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        Map<String, String> facts = new HashMap<String, String>();
+        Map<String, String> facts = new HashMap<>();
         facts.put("key", "testingval");
         //facts.put("otherkey", "otherval");
         consumer.setFacts(facts);
@@ -401,12 +401,12 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
 
         // Create another consumer to make sure we're not just retreiving everyhting
         Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner, ct);
-        Map<String, String> otherFacts = new HashMap<String, String>();
+        Map<String, String> otherFacts = new HashMap<>();
         otherFacts.put("key", "testvaltwo");
         otherConsumer.setFacts(otherFacts);
         otherConsumer = consumerCurator.create(otherConsumer);
 
-        List<KeyValueParameter> factFilters = new LinkedList<KeyValueParameter>();
+        List<KeyValueParameter> factFilters = new LinkedList<>();
         factFilters.add(new TestingKeyValueParameter("key", "*val*"));
         List<Consumer> results = consumerCurator.searchOwnerConsumers(
             owner, null, null, null, null, factFilters, null, null, null).list();
@@ -416,7 +416,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
     @Test
     public void testSearchOwnerConsumersValueWildcardMiddle() {
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        Map<String, String> facts = new HashMap<String, String>();
+        Map<String, String> facts = new HashMap<>();
         facts.put("key", "testingvaltest");
         //facts.put("otherkey", "otherval");
         consumer.setFacts(facts);
@@ -424,12 +424,12 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
 
         // Create another consumer to make sure we're not just retreiving everyhting
         Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner, ct);
-        Map<String, String> otherFacts = new HashMap<String, String>();
+        Map<String, String> otherFacts = new HashMap<>();
         otherFacts.put("key", "testvaltwotest");
         otherConsumer.setFacts(otherFacts);
         otherConsumer = consumerCurator.create(otherConsumer);
 
-        List<KeyValueParameter> factFilters = new LinkedList<KeyValueParameter>();
+        List<KeyValueParameter> factFilters = new LinkedList<>();
         factFilters.add(new TestingKeyValueParameter("key", "test*test"));
         List<Consumer> results = consumerCurator.searchOwnerConsumers(
             owner, null, null, null, null, factFilters, null, null, null).list();
@@ -439,7 +439,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
     @Test
     public void testSearchOwnerConsumersValueAnd() {
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        Map<String, String> facts = new HashMap<String, String>();
+        Map<String, String> facts = new HashMap<>();
         facts.put("key1", "value1");
         facts.put("key2", "value2");
         //facts.put("otherkey", "otherval");
@@ -448,13 +448,13 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
 
         // Create another consumer to make sure we're not just retreiving everyhting
         Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner, ct);
-        Map<String, String> otherFacts = new HashMap<String, String>();
+        Map<String, String> otherFacts = new HashMap<>();
         otherFacts.put("key1", "value1");
         otherFacts.put("key2", "value3notsame");
         otherConsumer.setFacts(otherFacts);
         otherConsumer = consumerCurator.create(otherConsumer);
 
-        List<KeyValueParameter> factFilters = new LinkedList<KeyValueParameter>();
+        List<KeyValueParameter> factFilters = new LinkedList<>();
         factFilters.add(new TestingKeyValueParameter("key1", "value1"));
         factFilters.add(new TestingKeyValueParameter("key2", "value2"));
         List<Consumer> results = consumerCurator.searchOwnerConsumers(
@@ -466,7 +466,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
     @Test
     public void testSearchOwnerConsumersValueAndOr() {
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        Map<String, String> facts = new HashMap<String, String>();
+        Map<String, String> facts = new HashMap<>();
         facts.put("key1", "value1");
         facts.put("key2", "value2");
         //facts.put("otherkey", "otherval");
@@ -475,13 +475,13 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
 
         // Create another consumer to make sure we're not just retreiving everyhting
         Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner, ct);
-        Map<String, String> otherFacts = new HashMap<String, String>();
+        Map<String, String> otherFacts = new HashMap<>();
         otherFacts.put("key1", "value1");
         otherFacts.put("key2", "value3");
         otherConsumer.setFacts(otherFacts);
         otherConsumer = consumerCurator.create(otherConsumer);
 
-        List<KeyValueParameter> factFilters = new LinkedList<KeyValueParameter>();
+        List<KeyValueParameter> factFilters = new LinkedList<>();
         factFilters.add(new TestingKeyValueParameter("key1", "value1"));
         factFilters.add(new TestingKeyValueParameter("key2", "value2"));
         factFilters.add(new TestingKeyValueParameter("key2", "value3"));
@@ -493,7 +493,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
     @Test
     public void testSearchOwnerConsumersNoMatch() {
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        Map<String, String> facts = new HashMap<String, String>();
+        Map<String, String> facts = new HashMap<>();
         facts.put("key1", "value1");
         facts.put("key2", "value2");
         //facts.put("otherkey", "otherval");
@@ -502,13 +502,13 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
 
         // Create another consumer to make sure we're not just retreiving everyhting
         Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner, ct);
-        Map<String, String> otherFacts = new HashMap<String, String>();
+        Map<String, String> otherFacts = new HashMap<>();
         otherFacts.put("key1", "value2");
         otherFacts.put("key2", "value1");
         otherConsumer.setFacts(otherFacts);
         otherConsumer = consumerCurator.create(otherConsumer);
 
-        List<KeyValueParameter> factFilters = new LinkedList<KeyValueParameter>();
+        List<KeyValueParameter> factFilters = new LinkedList<>();
         factFilters.add(new TestingKeyValueParameter("key1", "value2"));
         factFilters.add(new TestingKeyValueParameter("key2", "value1"));
         List<Consumer> results = consumerCurator.searchOwnerConsumers(
@@ -532,7 +532,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         Pool pool = new Pool(
             owner,
             p,
-            new HashSet<Product>(),
+            new HashSet<>(),
             1L,
             TestDateUtil.date(2010, 1, 1),
             TestDateUtil.date(2030, 1, 1),
@@ -544,7 +544,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         Pool pool2 = new Pool(
             owner,
             p,
-            new HashSet<Product>(),
+            new HashSet<>(),
             1L,
             TestDateUtil.date(2010, 1, 1),
             TestDateUtil.date(2030, 1, 1),
@@ -568,7 +568,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         Entitlement e2 = createEntitlement(owner, otherConsumer, pool2, cert);
         entitlementCurator.create(e2);
 
-        List<String> subscriptionIds = new ArrayList<String>();
+        List<String> subscriptionIds = new ArrayList<>();
         subscriptionIds.add(source1);
         List<Consumer> results = consumerCurator.searchOwnerConsumers(
             owner, null, null, null, null, null, null, subscriptionIds, null).list();
@@ -591,7 +591,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         Pool pool = new Pool(
             owner,
             p,
-            new HashSet<Product>(),
+            new HashSet<>(),
             1L,
             TestDateUtil.date(2010, 1, 1),
             TestDateUtil.date(2030, 1, 1),
@@ -603,7 +603,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         Pool pool2 = new Pool(
             owner,
             p,
-            new HashSet<Product>(),
+            new HashSet<>(),
             1L,
             TestDateUtil.date(2010, 1, 1),
             TestDateUtil.date(2030, 1, 1),
@@ -625,7 +625,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         Entitlement e2 = createEntitlement(owner, otherConsumer, pool2, cert);
         entitlementCurator.create(e2);
 
-        List<String> contracts = new ArrayList<String>();
+        List<String> contracts = new ArrayList<>();
         contracts.add("CONTRACT_123");
         List<Consumer> results = consumerCurator.searchOwnerConsumers(
             owner, null, null, null, null, null, null, null, contracts).list();
@@ -655,7 +655,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         Pool pool = new Pool(
             owner,
             p,
-            new HashSet<Product>(),
+            new HashSet<>(),
             1L,
             TestDateUtil.date(2010, 1, 1),
             TestDateUtil.date(2030, 1, 1),
@@ -667,7 +667,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         Pool pool2 = new Pool(
             owner,
             p2,
-            new HashSet<Product>(),
+            new HashSet<>(),
             1L,
             TestDateUtil.date(2010, 1, 1),
             TestDateUtil.date(2030, 1, 1),
@@ -689,7 +689,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         Entitlement e2 = createEntitlement(owner, consumer, pool2, cert);
         entitlementCurator.create(e2);
 
-        List<String> skus = new ArrayList<String>();
+        List<String> skus = new ArrayList<>();
         skus.add("SKU1");
         List<Consumer> results = consumerCurator.searchOwnerConsumers(
             owner, null, null, null, null, null, skus, null, null).list();
@@ -724,7 +724,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         Pool pool = new Pool(
             owner,
             p,
-            new HashSet<Product>(),
+            new HashSet<>(),
             10L,
             TestDateUtil.date(2010, 1, 1),
             TestDateUtil.date(2030, 1, 1),
@@ -736,7 +736,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         Pool pool2 = new Pool(
             owner,
             p2,
-            new HashSet<Product>(),
+            new HashSet<>(),
             10L,
             TestDateUtil.date(2010, 1, 1),
             TestDateUtil.date(2030, 1, 1),
@@ -761,7 +761,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         Entitlement e3 = createEntitlement(owner, otherConsumer, pool2, cert);
         entitlementCurator.create(e3);
 
-        List<String> skus = new ArrayList<String>();
+        List<String> skus = new ArrayList<>();
         skus.add("SKU1");
         skus.add("SKU2");
         List<Consumer> results = consumerCurator.searchOwnerConsumers(
@@ -807,7 +807,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         Pool pool = new Pool(
             owner,
             p,
-            new HashSet<Product>(),
+            new HashSet<>(),
             10L,
             TestDateUtil.date(2010, 1, 1),
             TestDateUtil.date(2030, 1, 1),
@@ -819,7 +819,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         Pool pool2 = new Pool(
             owner2,
             p2,
-            new HashSet<Product>(),
+            new HashSet<>(),
             10L,
             TestDateUtil.date(2010, 1, 1),
             TestDateUtil.date(2030, 1, 1),
@@ -842,7 +842,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         Entitlement e2 = createEntitlement(owner2, otherConsumer, pool2, cert);
         entitlementCurator.create(e2);
 
-        List<String> skus = new ArrayList<String>();
+        List<String> skus = new ArrayList<>();
         skus.add("SKU1");
         List<Consumer> results = consumerCurator.searchOwnerConsumers(
             owner, null, null, null, null, null, skus, null, null).list();
@@ -879,7 +879,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         Pool pool = new Pool(
             owner,
             p,
-            new HashSet<Product>(),
+            new HashSet<>(),
             10L,
             TestDateUtil.date(2010, 1, 1),
             TestDateUtil.date(2030, 1, 1),
@@ -891,7 +891,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         Pool pool2 = new Pool(
             owner,
             p,
-            new HashSet<Product>(),
+            new HashSet<>(),
             10L,
             TestDateUtil.date(2010, 1, 1),
             TestDateUtil.date(2030, 1, 1),
@@ -916,7 +916,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         Entitlement e3 = createEntitlement(owner, otherConsumer, pool2, cert);
         entitlementCurator.create(e3);
 
-        List<String> contracts = new ArrayList<String>();
+        List<String> contracts = new ArrayList<>();
         contracts.add("CONTRACT_123");
         contracts.add("CONTRACT_XXX");
         List<Consumer> results = consumerCurator.searchOwnerConsumers(
@@ -962,7 +962,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         Pool pool = new Pool(
             owner,
             p,
-            new HashSet<Product>(),
+            new HashSet<>(),
             1L,
             TestDateUtil.date(2010, 1, 1),
             TestDateUtil.date(2030, 1, 1),
@@ -974,7 +974,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         Pool pool2 = new Pool(
             owner,
             p,
-            new HashSet<Product>(),
+            new HashSet<>(),
             1L,
             TestDateUtil.date(2010, 1, 1),
             TestDateUtil.date(2030, 1, 1),
@@ -987,7 +987,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         Pool pool3 = new Pool(
             owner,
             p2,
-            new HashSet<Product>(),
+            new HashSet<>(),
             1L,
             TestDateUtil.date(2010, 1, 1),
             TestDateUtil.date(2030, 1, 1),
@@ -1012,10 +1012,10 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         Entitlement e3 = createEntitlement(owner, consumer3, pool3, cert);
         entitlementCurator.create(e3);
 
-        List<String> skus = new ArrayList<String>();
+        List<String> skus = new ArrayList<>();
         skus.add("SKU1");
 
-        List<String> contracts = new ArrayList<String>();
+        List<String> contracts = new ArrayList<>();
         contracts.add("CONTRACT_123");
 
         List<Consumer> results = consumerCurator.searchOwnerConsumers(

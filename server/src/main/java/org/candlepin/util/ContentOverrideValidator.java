@@ -48,7 +48,7 @@ public class ContentOverrideValidator {
     }
 
     public void validate(Collection<? extends ContentOverride> overrides) {
-        Set<String> invalidOverrides = new HashSet<String>();
+        Set<String> invalidOverrides = new HashSet<>();
         for (ContentOverride override : overrides) {
             if (!overrideRules.canOverrideForConsumer(override.getName())) {
                 invalidOverrides.add(override.getName());
@@ -62,7 +62,7 @@ public class ContentOverrideValidator {
     }
 
     public void validate(ContentOverride override) {
-        List<ContentOverride> tmpList = new LinkedList<ContentOverride>();
+        List<ContentOverride> tmpList = new LinkedList<>();
         tmpList.add(override);
         validate(tmpList);
     }

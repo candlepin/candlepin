@@ -799,7 +799,7 @@ public class InstalledProductStatusCalculatorTest {
     private Entitlement mockEntitlement(Owner owner, Consumer consumer, Product product, DateRange range,
         Product... providedProducts) {
 
-        Set<Product> provided = new HashSet<Product>();
+        Set<Product> provided = new HashSet<>();
         for (Product pp : providedProducts) {
             provided.add(pp);
         }
@@ -904,7 +904,7 @@ public class InstalledProductStatusCalculatorTest {
     }
 
     private Map<String, String> getActiveGuestAttrs() {
-        Map<String, String> activeGuestAttrs = new HashMap<String, String>();
+        Map<String, String> activeGuestAttrs = new HashMap<>();
         activeGuestAttrs.put("virtWhoType", "libvirt");
         activeGuestAttrs.put("active", "1");
 
@@ -912,7 +912,7 @@ public class InstalledProductStatusCalculatorTest {
     }
 
     private void mockOwnerProducts(Owner owner, Collection<Product> products) {
-        final Map<String, Product> productMap = new HashMap<String, Product>();
+        final Map<String, Product> productMap = new HashMap<>();
         for (Product product : products) {
             productMap.put(product.getId(), product);
         }
@@ -923,7 +923,7 @@ public class InstalledProductStatusCalculatorTest {
                 Object[] args = invocation.getArguments();
                 Collection<String> productIds = (Collection<String>) args[1];
 
-                Collection<Product> products = new LinkedList<Product>();
+                Collection<Product> products = new LinkedList<>();
                 for (String productId : productIds) {
                     Product product = productMap.get(productId);
 

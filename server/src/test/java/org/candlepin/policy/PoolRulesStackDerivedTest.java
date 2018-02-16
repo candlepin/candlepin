@@ -108,7 +108,7 @@ public class PoolRulesStackDerivedTest {
     private Product provided3;
     private Product provided4;
 
-    private List<Entitlement> stackedEnts = new LinkedList<Entitlement>();
+    private List<Entitlement> stackedEnts = new LinkedList<>();
 
     private Pool stackDerivedPool;
     private Pool stackDerivedPool2;
@@ -191,11 +191,11 @@ public class PoolRulesStackDerivedTest {
         pool2.setAttribute(Product.Attributes.VIRT_LIMIT, "60");
         pool4.setAttribute(Product.Attributes.VIRT_LIMIT, "80");
 
-        List<Pool> reqPools = new ArrayList<Pool>();
+        List<Pool> reqPools = new ArrayList<>();
         reqPools.add(pool2);
-        Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
+        Map<String, Entitlement> entitlements = new HashMap<>();
         entitlements.put(pool2.getId(), stackedEnts.get(0));
-        Map<String, Map<String, String>> attributes = new HashMap<String, Map<String, String>>();
+        Map<String, Map<String, String>> attributes = new HashMap<>();
         attributes.put(pool2.getId(), PoolHelper.getFlattenedAttributes(pool2));
         when(poolManagerMock.createPools(Matchers.anyListOf(Pool.class))).then(returnsFirstArg());
         List<Pool> resPools = PoolHelper.createHostRestrictedPools(poolManagerMock, consumer, reqPools,

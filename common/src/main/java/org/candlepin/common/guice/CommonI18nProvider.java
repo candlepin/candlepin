@@ -48,7 +48,7 @@ public class CommonI18nProvider implements Provider<I18n> {
 
     private static Logger log = LoggerFactory.getLogger(CommonI18nProvider.class);
 
-    private static ConcurrentHashMap<Locale, I18n> cache = new ConcurrentHashMap<Locale, I18n>();
+    private static ConcurrentHashMap<Locale, I18n> cache = new ConcurrentHashMap<>();
 
     private ServletRequest request;
 

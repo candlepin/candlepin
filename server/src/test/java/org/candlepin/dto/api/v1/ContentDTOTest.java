@@ -38,7 +38,7 @@ public class ContentDTOTest extends AbstractDTOTest<ContentDTO> {
     public ContentDTOTest() {
         super(ContentDTO.class);
 
-        this.values = new HashMap<String, Object>();
+        this.values = new HashMap<>();
         this.values.put("Uuid", "test_value");
         this.values.put("Id", "test_value");
         this.values.put("Type", "test_value");

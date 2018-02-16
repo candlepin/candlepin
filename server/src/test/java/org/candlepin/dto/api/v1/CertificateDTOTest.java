@@ -40,7 +40,7 @@ public class CertificateDTOTest extends AbstractDTOTest<CertificateDTO> {
         serial.setCollected(true);
         serial.setRevoked(true);
 
-        this.values = new HashMap<String, Object>();
+        this.values = new HashMap<>();
         this.values.put("Id", "test-id");
         this.values.put("Key", "test-key");
         this.values.put("Cert", "test-cert");

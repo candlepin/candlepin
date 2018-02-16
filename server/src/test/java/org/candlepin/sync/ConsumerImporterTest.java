@@ -90,7 +90,7 @@ public class ConsumerImporterTest {
     public void importHandlesUnknownPropertiesGracefully() throws Exception {
 
         // Override default config to error out on unknown properties:
-        Map<String, String> configProps = new HashMap<String, String>();
+        Map<String, String> configProps = new HashMap<>();
         configProps.put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
         mapper = TestSyncUtils.getTestSyncUtils(new MapConfiguration(configProps));
 
@@ -102,7 +102,7 @@ public class ConsumerImporterTest {
     @Test(expected = JsonMappingException.class)
     public void importFailsOnUnknownPropertiesWithNonDefaultConfig() throws Exception {
         // Override default config to error out on unknown properties:
-        Map<String, String> configProps = new HashMap<String, String>();
+        Map<String, String> configProps = new HashMap<>();
         configProps.put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "true");
         mapper = TestSyncUtils.getTestSyncUtils(new MapConfiguration(configProps));
 

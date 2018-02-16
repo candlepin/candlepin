@@ -89,7 +89,7 @@ public class ConsumerBindUtilTest {
         ActivationKey key1 = new ActivationKey("key1", owner);
         ActivationKey key2 = new ActivationKey("key2", owner);
         ActivationKey key3 = new ActivationKey("key3", owner);
-        List<ActivationKey> keys = new LinkedList<ActivationKey>();
+        List<ActivationKey> keys = new LinkedList<>();
         keys.add(key1);
         keys.add(key2);
         keys.add(key3);
@@ -103,17 +103,17 @@ public class ConsumerBindUtilTest {
 
         Pool pool = TestUtil.createPool(owner, prod);
         pool.setId("id-string");
-        List<String> poolIds = new ArrayList<String>();
+        List<String> poolIds = new ArrayList<>();
         poolIds.add(pool.getId());
 
-        List<ActivationKey> keys = new ArrayList<ActivationKey>();
+        List<ActivationKey> keys = new ArrayList<>();
         ActivationKey key1 = new ActivationKey("key1", owner);
         keys.add(key1);
         key1.addPool(pool, 0L);
         key1.setAutoAttach(true);
 
         Consumer consumer = new Consumer("sys.example.com", null, null, system);
-        Set<ConsumerInstalledProduct> cips = new HashSet<ConsumerInstalledProduct>();
+        Set<ConsumerInstalledProduct> cips = new HashSet<>();
         ConsumerInstalledProduct cip = new ConsumerInstalledProduct(consumer, prod);
         cips.add(cip);
         consumer.setInstalledProducts(cips);
@@ -128,13 +128,13 @@ public class ConsumerBindUtilTest {
         Product prod = TestUtil.createProduct();
         String[] prodIds = new String[]{prod.getId()};
 
-        List<ActivationKey> keys = new ArrayList<ActivationKey>();
+        List<ActivationKey> keys = new ArrayList<>();
         ActivationKey key1 = new ActivationKey("key1", owner);
         keys.add(key1);
         key1.setAutoAttach(true);
 
         Consumer consumer = new Consumer("sys.example.com", null, null, system);
-        Set<ConsumerInstalledProduct> cips = new HashSet<ConsumerInstalledProduct>();
+        Set<ConsumerInstalledProduct> cips = new HashSet<>();
         ConsumerInstalledProduct cip = new ConsumerInstalledProduct(consumer, prod);
         cips.add(cip);
         consumer.setInstalledProducts(cips);
@@ -152,14 +152,14 @@ public class ConsumerBindUtilTest {
         Product prod2 = TestUtil.createProduct();
         String[] prodIds = new String[]{prod1.getId(), prod2.getId()};
 
-        List<ActivationKey> keys = new ArrayList<ActivationKey>();
+        List<ActivationKey> keys = new ArrayList<>();
         ActivationKey key1 = new ActivationKey("key1", owner);
         keys.add(key1);
         key1.addProduct(prod2);
         key1.setAutoAttach(true);
 
         Consumer consumer = new Consumer("sys.example.com", null, null, system);
-        Set<ConsumerInstalledProduct> cips = new HashSet<ConsumerInstalledProduct>();
+        Set<ConsumerInstalledProduct> cips = new HashSet<>();
         ConsumerInstalledProduct cip = new ConsumerInstalledProduct(consumer, prod1);
         cips.add(cip);
         consumer.setInstalledProducts(cips);
@@ -171,7 +171,7 @@ public class ConsumerBindUtilTest {
 
     @Test(expected = BadRequestException.class)
     public void registerFailWithKeyServiceLevelNotExist() throws Exception {
-        List<ActivationKey> keys = new ArrayList<ActivationKey>();
+        List<ActivationKey> keys = new ArrayList<>();
         ActivationKey key1 = new ActivationKey("key1", owner);
         keys.add(key1);
         key1.setServiceLevel("I don't exist");
@@ -197,7 +197,7 @@ public class ConsumerBindUtilTest {
 
     @Test(expected = BadRequestException.class)
     public void registerFailWithNoGoodKeyPool() throws Exception {
-        List<ActivationKey> keys = new ArrayList<ActivationKey>();
+        List<ActivationKey> keys = new ArrayList<>();
         ActivationKey key1 = new ActivationKey("key1", owner);
         keys.add(key1);
 
@@ -214,7 +214,7 @@ public class ConsumerBindUtilTest {
 
     @Test
     public void registerPassWithOneGoodKeyPool() throws Exception {
-        List<ActivationKey> keys = new ArrayList<ActivationKey>();
+        List<ActivationKey> keys = new ArrayList<>();
         ActivationKey key1 = new ActivationKey("key1", owner);
         keys.add(key1);
 
@@ -241,7 +241,7 @@ public class ConsumerBindUtilTest {
 
     @Test
     public void registerPassWithOneGoodKey() throws Exception {
-        List<ActivationKey> keys = new ArrayList<ActivationKey>();
+        List<ActivationKey> keys = new ArrayList<>();
         ActivationKey key1 = new ActivationKey("key1", owner);
         ActivationKey key2 = new ActivationKey("key2", owner);
         keys.add(key1);
@@ -270,7 +270,7 @@ public class ConsumerBindUtilTest {
 
     @Test
     public void registerPassWhenAutobindDisabledForOwnerAndKeyHasAutobindEnabled() throws Exception {
-        List<ActivationKey> keys = new ArrayList<ActivationKey>();
+        List<ActivationKey> keys = new ArrayList<>();
         ActivationKey key1 = new ActivationKey("key1", owner);
         key1.setAutoAttach(true);
         keys.add(key1);

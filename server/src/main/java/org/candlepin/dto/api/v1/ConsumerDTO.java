@@ -344,7 +344,7 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
      */
     @HateoasArrayExclude
     public Map<String, String> getFacts() {
-        return this.facts != null ? new MapView<String, String>(facts) : null;
+        return this.facts != null ? new MapView<>(facts) : null;
     }
 
     /**
@@ -357,7 +357,7 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
     public ConsumerDTO setFacts(Map<String, String> facts) {
         if (facts != null) {
             if (this.facts == null) {
-                this.facts = new HashMap<String, String>();
+                this.facts = new HashMap<>();
             }
             else {
                 this.facts.clear();
@@ -385,7 +385,7 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
         }
 
         if (facts == null) {
-            facts = new HashMap<String, String>();
+            facts = new HashMap<>();
         }
 
         this.facts.put(key, value);
@@ -419,8 +419,7 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
      * @return the installedProducts of the consumer, or null if it has not yet been defined
      */
     public Set<ConsumerInstalledProductDTO> getInstalledProducts() {
-        return this.installedProducts != null ?
-            new SetView<ConsumerInstalledProductDTO>(this.installedProducts) : null;
+        return this.installedProducts != null ? new SetView<>(this.installedProducts) : null;
     }
 
     /**
@@ -433,7 +432,7 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
     public ConsumerDTO setInstalledProducts(Set<ConsumerInstalledProductDTO> installedProducts) {
         if (installedProducts != null) {
             if (this.installedProducts == null) {
-                this.installedProducts = new HashSet<ConsumerInstalledProductDTO>();
+                this.installedProducts = new HashSet<>();
             }
             else {
                 this.installedProducts.clear();
@@ -465,7 +464,7 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
             throw new IllegalArgumentException("null or incomplete consumer installed product");
         }
         if (installedProducts == null) {
-            installedProducts = new HashSet<ConsumerInstalledProductDTO>();
+            installedProducts = new HashSet<>();
         }
         return installedProducts.add(installedProduct);
     }
@@ -520,7 +519,7 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
      * @return the capabilities of the consumer, or null if it has not yet been defined
      */
     public Set<CapabilityDTO> getCapabilities() {
-        return this.capabilities != null ? new SetView<CapabilityDTO>(capabilities) : null;
+        return this.capabilities != null ? new SetView<>(capabilities) : null;
     }
 
     /**
@@ -533,7 +532,7 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
     public ConsumerDTO setCapabilities(Set<CapabilityDTO> capabilities) {
         if (capabilities != null) {
             if (this.capabilities == null) {
-                this.capabilities = new HashSet<CapabilityDTO>();
+                this.capabilities = new HashSet<>();
             }
             else {
                 this.capabilities.clear();
@@ -580,7 +579,7 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
      * @return the content tags of the consumer, or null if it has not yet been defined
      */
     public Set<String> getContentTags() {
-        return this.contentTags != null ? new SetView<String>(this.contentTags) : null;
+        return this.contentTags != null ? new SetView<>(this.contentTags) : null;
     }
 
     /**
@@ -593,7 +592,7 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
     public ConsumerDTO setContentTags(Set<String> contentTags) {
         if (contentTags != null) {
             if (this.contentTags == null) {
-                this.contentTags = new HashSet<String>();
+                this.contentTags = new HashSet<>();
             }
             else {
                 this.contentTags.clear();
@@ -740,8 +739,7 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
      * The rest call however will never return a guestId list, we only accept guestIds.
      */
     public List<GuestIdDTO> getGuestIds() {
-        return this.guestIds != null ?
-            new ListView<GuestIdDTO>(this.guestIds) : null;
+        return this.guestIds != null ? new ListView<>(this.guestIds) : null;
     }
 
     /**
@@ -755,7 +753,7 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
     public ConsumerDTO setGuestIds(List<GuestIdDTO> guestIds) {
         if (guestIds != null) {
             if (this.guestIds == null) {
-                this.guestIds = new LinkedList<GuestIdDTO>();
+                this.guestIds = new LinkedList<>();
             }
             else {
                 this.guestIds.clear();
@@ -786,7 +784,7 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
             throw new IllegalArgumentException("guestId is null");
         }
         if (guestIds == null) {
-            guestIds = new ArrayList<GuestIdDTO>();
+            guestIds = new ArrayList<>();
         }
         boolean exists = false;
         for (GuestIdDTO guestIdDTO : guestIds) {

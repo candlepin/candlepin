@@ -71,7 +71,7 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
 
     @Before
     public void setup() {
-        this.testContentCurator = new TestHibernateCurator<Content>(Content.class);
+        this.testContentCurator = new TestHibernateCurator<>(Content.class);
         this.injectMembers(this.testContentCurator);
     }
 
@@ -83,7 +83,7 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
         Content c2 = this.createContent("c2", "content 2", owner);
         Content c3 = this.createContent("c3", "content 3", owner);
 
-        Map<Object, Object> values = new HashMap<Object, Object>();
+        Map<Object, Object> values = new HashMap<>();
         values.put("content 1", "update 1");
         values.put("content 2", "update 2");
         values.put("content ?", "should not exist");
@@ -111,7 +111,7 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
         Content c2 = this.createContent("c2", "content 2", owner);
         Content c3 = this.createContent("c3", "content 3", owner);
 
-        Map<Object, Object> values = new HashMap<Object, Object>();
+        Map<Object, Object> values = new HashMap<>();
         values.put("content 1", "update 1");
 
         int result = this.testContentCurator.bulkSQLUpdate(Content.DB_TABLE, "name", values, null);
@@ -133,7 +133,7 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
         Content c2 = this.createContent("c2", "content 2", owner);
         Content c3 = this.createContent("c3", "content 3", owner);
 
-        Map<Object, Object> values = new HashMap<Object, Object>();
+        Map<Object, Object> values = new HashMap<>();
         values.put("content B", "update 1");
 
         int result = this.testContentCurator.bulkSQLUpdate(Content.DB_TABLE, "name", values, null);
@@ -155,7 +155,7 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
         Content c2 = this.createContent("c2", "content 2", owner);
         Content c3 = this.createContent("c3", "content 3", owner);
 
-        Map<Object, Object> values = new HashMap<Object, Object>();
+        Map<Object, Object> values = new HashMap<>();
 
         int result = this.testContentCurator.bulkSQLUpdate(Content.DB_TABLE, "name", values, null);
 
@@ -176,12 +176,12 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
         Content c2 = this.createContent("c2", "content 2", owner);
         Content c3 = this.createContent("c3", "content 3", owner);
 
-        Map<Object, Object> values = new HashMap<Object, Object>();
+        Map<Object, Object> values = new HashMap<>();
         values.put("content 1", "update 1");
         values.put("content 2", "update 2");
         values.put("content ?", "should not exist");
 
-        Map<String, Object> criteria = new HashMap<String, Object>();
+        Map<String, Object> criteria = new HashMap<>();
         criteria.put("name", values.keySet());
 
         int result = this.testContentCurator.bulkSQLUpdate(Content.DB_TABLE, "name", values, criteria);
@@ -205,12 +205,12 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
         Content c2 = this.createContent("c2", "content 2", owner);
         Content c3 = this.createContent("c3", "content 3", owner);
 
-        Map<Object, Object> values = new HashMap<Object, Object>();
+        Map<Object, Object> values = new HashMap<>();
         values.put("content 1", "update 1");
         values.put("content 2", "update 2");
         values.put("content ?", "should not exist");
 
-        Map<String, Object> criteria = new HashMap<String, Object>();
+        Map<String, Object> criteria = new HashMap<>();
         criteria.put("name", values.keySet());
         criteria.put("content_id", "c2");
 
@@ -268,7 +268,7 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
             this.createContent("c" + i, "content-" + i, owner);
         }
 
-        Map<Object, Object> values = new LinkedHashMap<Object, Object>();
+        Map<Object, Object> values = new LinkedHashMap<>();
 
         for (int i = 1; i <= count; ++i) {
             // We want every odd value to be unaffected, but we still want a fake update entry
@@ -294,7 +294,7 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
     }
 
     protected Object[] largeValueSetAndCriteriaSizes() {
-        List<Object[]> entries = new LinkedList<Object[]>();
+        List<Object[]> entries = new LinkedList<>();
 
         // Declaring these as variables because the constant names are loooooooong
         int caseBlockSize = getConfigForParameters().getInt(DatabaseConfigFactory.CASE_OPERATOR_BLOCK_SIZE);
@@ -313,7 +313,7 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
     public void testBulkSQLUpdateWithLargeValueSetAndCriteriaList(int valueCount, int criteriaListSize) {
         Owner owner = this.createOwner();
 
-        Map<Object, Object> values = new HashMap<Object, Object>();
+        Map<Object, Object> values = new HashMap<>();
 
         for (int i = 1; i <= valueCount; ++i) {
             this.createContent("c" + i, "content-" + i, owner);
@@ -323,8 +323,8 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
             values.put("content-" + (i % 2 == 0 ? i : "X" + i), "update-" + i);
         }
 
-        Map<String, Object> criteria = new HashMap<String, Object>();
-        List<String> valueList = new LinkedList<String>();
+        Map<String, Object> criteria = new HashMap<>();
+        List<String> valueList = new LinkedList<>();
         criteria.put("name", valueList);
 
         for (int i = 1; i <= criteriaListSize; ++i) {

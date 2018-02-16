@@ -30,7 +30,7 @@ public class ConsumerInstalledProductDTOTest extends AbstractDTOTest<ConsumerIns
     public ConsumerInstalledProductDTOTest() {
         super(ConsumerInstalledProductDTO.class);
 
-        this.values = new HashMap<String, Object>();
+        this.values = new HashMap<>();
         this.values.put("Id", "test_value");
         this.values.put("ProductId", "test_value");
         this.values.put("ProductName", "test_value");

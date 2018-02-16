@@ -121,7 +121,7 @@ import io.swagger.util.PrimitiveType;
  */
 public class CandlepinSwaggerModelConverter extends AbstractModelConverter implements ModelConverter {
     private static final Logger log = LoggerFactory.getLogger(CandlepinSwaggerModelConverter.class);
-    private Map<JavaType, NestedComplexType> nestedJavaTypes = new HashMap<JavaType, NestedComplexType>();
+    private Map<JavaType, NestedComplexType> nestedJavaTypes = new HashMap<>();
 
     @Inject
     public CandlepinSwaggerModelConverter(ObjectMapper mapper) {
@@ -304,7 +304,7 @@ public class CandlepinSwaggerModelConverter extends AbstractModelConverter imple
         }
 
         // see if @JsonIgnoreProperties exist
-        Set<String> propertiesToIgnore = new HashSet<String>();
+        Set<String> propertiesToIgnore = new HashSet<>();
         JsonIgnoreProperties ignoreProperties = beanDesc.getClassAnnotations()
             .get(JsonIgnoreProperties.class);
         if (ignoreProperties != null) {
@@ -330,14 +330,14 @@ public class CandlepinSwaggerModelConverter extends AbstractModelConverter imple
             model.setDiscriminator(disc);
         }
 
-        List<Property> props = new ArrayList<Property>();
+        List<Property> props = new ArrayList<>();
         for (BeanPropertyDefinition propDef : beanDesc.findProperties()) {
             parseProperty(context, isNested, beanDesc, propertiesToIgnore, props, propDef);
         }
 
         Collections.sort(props, getPropertyComparator());
 
-        Map<String, Property> modelProps = new LinkedHashMap<String, Property>();
+        Map<String, Property> modelProps = new LinkedHashMap<>();
         for (Property prop : props) {
             modelProps.put(prop.getName(), prop);
         }
@@ -395,7 +395,7 @@ public class CandlepinSwaggerModelConverter extends AbstractModelConverter imple
              */
             !(isNested && !member.hasAnnotation(HateoasInclude.class))) {
 
-            List<Annotation> annotationList = new ArrayList<Annotation>();
+            List<Annotation> annotationList = new ArrayList<>();
             for (Annotation a : member.annotations()) {
                 annotationList.add(a);
             }
@@ -711,7 +711,7 @@ public class CandlepinSwaggerModelConverter extends AbstractModelConverter imple
     }
 
     protected void applyBeanValidatorAnnotations(Property property, Annotation[] annotations) {
-        Map<String, Annotation> annos = new HashMap<String, Annotation>();
+        Map<String, Annotation> annos = new HashMap<>();
         if (annotations != null) {
             for (Annotation anno : annotations) {
                 annos.put(anno.annotationType().getName(), anno);

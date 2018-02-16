@@ -233,9 +233,9 @@ public class EntitlementResourceTest {
 
         Entitlement e = TestUtil.createEntitlement();
         e.setId("getEntitlementList");
-        List<Entitlement> entitlements = new ArrayList<Entitlement>();
+        List<Entitlement> entitlements = new ArrayList<>();
         entitlements.add(e);
-        Page<List<Entitlement>> page = new Page<List<Entitlement>>();
+        Page<List<Entitlement>> page = new Page<>();
         page.setPageData(entitlements);
 
         EntitlementDTO entitlementDTO = new EntitlementDTO();
@@ -264,9 +264,9 @@ public class EntitlementResourceTest {
 
         Entitlement e = TestUtil.createEntitlement(owner, consumer, pool, null);
         e.setId("getAllEntitlementsForConsumer");
-        List<Entitlement> entitlements = new ArrayList<Entitlement>();
+        List<Entitlement> entitlements = new ArrayList<>();
         entitlements.add(e);
-        Page<List<Entitlement>> page = new Page<List<Entitlement>>();
+        Page<List<Entitlement>> page = new Page<>();
         page.setPageData(entitlements);
 
         EntitlementDTO entitlementDTO = new EntitlementDTO();

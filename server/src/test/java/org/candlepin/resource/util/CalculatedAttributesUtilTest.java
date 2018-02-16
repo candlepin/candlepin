@@ -98,7 +98,7 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
         SuggestedQuantity suggested = new SuggestedQuantity();
         suggested.setSuggested(1L);
         suggested.setIncrement(1L);
-        Map<String, SuggestedQuantity> suggestedMap = new HashMap<String, SuggestedQuantity>();
+        Map<String, SuggestedQuantity> suggestedMap = new HashMap<>();
         suggestedMap.put(pool1.getId(), suggested);
         when(quantityRules.getSuggestedQuantities(any(List.class),
             any(Consumer.class), any(Date.class))).
@@ -150,7 +150,7 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
         SuggestedQuantity suggested = new SuggestedQuantity();
         suggested.setSuggested(1L);
         suggested.setIncrement(12L);
-        Map<String, SuggestedQuantity> suggestedMap = new HashMap<String, SuggestedQuantity>();
+        Map<String, SuggestedQuantity> suggestedMap = new HashMap<>();
         suggestedMap.put(pool2.getId(), suggested);
         when(quantityRules.getSuggestedQuantities(any(List.class),
             any(Consumer.class), any(Date.class))).

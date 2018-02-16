@@ -200,14 +200,14 @@ public class ListView<E> extends CollectionView<E> implements List<E> {
      * {@inheritDoc}
      */
     public ListIterator<E> listIterator() {
-        return new ListViewIterator<E>(((List<E>) this.collection).listIterator());
+        return new ListViewIterator<>(((List<E>) this.collection).listIterator());
     }
 
     /**
      * {@inheritDoc}
      */
     public ListIterator<E> listIterator(int index) {
-        return new ListViewIterator<E>(((List<E>) this.collection).listIterator(index));
+        return new ListViewIterator<>(((List<E>) this.collection).listIterator(index));
     }
 
     /**
@@ -245,7 +245,7 @@ public class ListView<E> extends CollectionView<E> implements List<E> {
      *  a view of the specified range within this list
      */
     public List<E> subList(int fromIndex, int toIndex) {
-        return new ListView<E>(((List<E>) this.collection).subList(fromIndex, toIndex));
+        return new ListView<>(((List<E>) this.collection).subList(fromIndex, toIndex));
     }
 
 }

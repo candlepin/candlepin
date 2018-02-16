@@ -76,7 +76,7 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
 
         CandlepinPoolManager anotherEntitler = injector.getInstance(CandlepinPoolManager.class);
 
-        Map<String, Integer> poolQuantities = new HashMap<String, Integer>();
+        Map<String, Integer> poolQuantities = new HashMap<>();
         poolQuantities.put(consumerPool.getId(), 1);
         anotherEntitler.entitleByPools(consumer, poolQuantities);
         poolQuantities.put(consumerPool.getId(), 1);
@@ -97,7 +97,7 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
 
         CandlepinPoolManager anotherEntitler = injector.getInstance(CandlepinPoolManager.class);
 
-        Map<String, Integer> poolQuantities = new HashMap<String, Integer>();
+        Map<String, Integer> poolQuantities = new HashMap<>();
         poolQuantities.put(consumerPool.getId(), 1);
         List<Entitlement> e1 = poolManager.entitleByPools(consumer, poolQuantities);
         assertEquals(1, e1.size());

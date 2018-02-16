@@ -85,7 +85,6 @@ import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
-import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.pinsetter.tasks.HealEntireOrgJob;
 import org.candlepin.pinsetter.tasks.ImportJob;
@@ -604,7 +603,7 @@ public class OwnerResource {
 
         if (dto.getContentOverrides() != null) {
             if (dto.getContentOverrides().isEmpty()) {
-                entity.setContentOverrides(new HashSet<ActivationKeyContentOverride>());
+                entity.setContentOverrides(new HashSet<>());
             }
             else {
                 for (ActivationKeyDTO.ActivationKeyContentOverrideDTO overrideDTO :
@@ -624,7 +623,7 @@ public class OwnerResource {
 
         if (dto.getPools() != null) {
             if (dto.getPools().isEmpty()) {
-                entity.setPools(new HashSet<ActivationKeyPool>());
+                entity.setPools(new HashSet<>());
             }
             else {
                 for (ActivationKeyDTO.ActivationKeyPoolDTO poolDTO : dto.getPools()) {
@@ -638,7 +637,7 @@ public class OwnerResource {
 
         if (dto.getProductIds() != null) {
             if (dto.getProductIds().isEmpty()) {
-                entity.setProducts(new HashSet<Product>());
+                entity.setProducts(new HashSet<>());
             }
             else {
                 for (String productDTO : dto.getProductIds()) {
@@ -760,7 +759,7 @@ public class OwnerResource {
                 entity.setBranding(Collections.<Branding>emptySet());
             }
             else {
-                Set<Branding> branding = new HashSet<Branding>();
+                Set<Branding> branding = new HashSet<>();
                 for (BrandingDTO brandingDTO : dto.getBranding()) {
                     if (brandingDTO != null) {
                         branding.add(new Branding(
@@ -778,7 +777,7 @@ public class OwnerResource {
                 entity.setProvidedProductDtos(Collections.<ProvidedProduct>emptySet());
             }
             else {
-                Set<Product> products = new HashSet<Product>();
+                Set<Product> products = new HashSet<>();
                 for (PoolDTO.ProvidedProductDTO providedProductDTO : dto.getProvidedProducts()) {
                     if (providedProductDTO != null) {
                         Product newProd = findProduct(entity.getOwner(), providedProductDTO.getProductId());
@@ -794,7 +793,7 @@ public class OwnerResource {
                 entity.setDerivedProvidedProductDtos(Collections.<ProvidedProduct>emptySet());
             }
             else {
-                Set<Product> derivedProducts = new HashSet<Product>();
+                Set<Product> derivedProducts = new HashSet<>();
                 for (PoolDTO.ProvidedProductDTO derivedProvidedProductDTO :
                     dto.getDerivedProvidedProducts()) {
                     if (derivedProvidedProductDTO != null) {
@@ -1124,7 +1123,7 @@ public class OwnerResource {
         // Store the page for the LinkHeaderPostInterceptor
         ResteasyProviderFactory.pushContext(Page.class, entitlementsPage);
 
-        List<EntitlementDTO> entitlementDTOs = new ArrayList<EntitlementDTO>();
+        List<EntitlementDTO> entitlementDTOs = new ArrayList<>();
         for (Entitlement entitlement : entitlementsPage.getPageData()) {
             entitlementDTOs.add(this.translator.translate(entitlement, EntitlementDTO.class));
         }
@@ -1181,7 +1180,7 @@ public class OwnerResource {
         if (principal.getType().equals("consumer")) {
             Consumer c = consumerCurator.findByUuid(principal.getName());
             if (c.isDev()) {
-                Set<String> result = new HashSet<String>();
+                Set<String> result = new HashSet<>();
                 result.add("");
                 return result;
             }
@@ -1543,7 +1542,7 @@ public class OwnerResource {
         // Store the page for the LinkHeaderResponseFilter
         ResteasyProviderFactory.pushContext(Page.class, page);
 
-        List<PoolDTO> poolDTOs = new ArrayList<PoolDTO>();
+        List<PoolDTO> poolDTOs = new ArrayList<>();
         for (Pool pool : poolList) {
             poolDTOs.add(translator.translate(pool, PoolDTO.class));
         }
@@ -1593,7 +1592,7 @@ public class OwnerResource {
         if (events != null) {
             eventAdapter.addMessageText(events);
 
-            eventDTOs = new ArrayList<EventDTO>();
+            eventDTOs = new ArrayList<>();
             for (Event event : events) {
                 eventDTOs.add(this.translator.translate(event, EventDTO.class));
             }
@@ -1617,7 +1616,7 @@ public class OwnerResource {
     public List<Subscription> getSubscriptions(@PathParam("owner_key") String ownerKey) {
         Owner owner = this.findOwnerByKey(ownerKey);
 
-        List<Subscription> subscriptions = new LinkedList<Subscription>();
+        List<Subscription> subscriptions = new LinkedList<>();
 
         for (Pool pool : this.poolManager.listPoolsByOwner(owner).list()) {
             SourceSubscription srcsub = pool.getSourceSubscription();

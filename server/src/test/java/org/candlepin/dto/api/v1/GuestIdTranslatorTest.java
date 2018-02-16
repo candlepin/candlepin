@@ -50,7 +50,7 @@ public class GuestIdTranslatorTest extends
     protected GuestId initSourceObject() {
         GuestId source = new GuestId();
 
-        Map<String, String> attributes = new HashMap<String, String>();
+        Map<String, String> attributes = new HashMap<>();
         attributes.put("attrib_1", "attrib_value_1");
         attributes.put("attrib_2", "attrib_value_2");
         attributes.put("attrib_3", "attrib_value_3");

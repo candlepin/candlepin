@@ -50,7 +50,7 @@ public class QpidConfigBuilder {
      * @return Map of configurations for Qpid Broker
      */
     public Map<String, String> buildBrokerDetails(Context ctx) {
-        Map<String, String> brokerConfig = new HashMap<String, String>();
+        Map<String, String> brokerConfig = new HashMap<>();
 
         int maxRetries = config.getInt(ConfigProperties.AMQP_CONNECTION_RETRY_ATTEMPTS);
         long waitTimeInSeconds = config.getLong(ConfigProperties.AMQP_CONNECTION_RETRY_INTERVAL);

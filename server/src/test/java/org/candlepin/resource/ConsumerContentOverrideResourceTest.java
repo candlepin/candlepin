@@ -80,7 +80,7 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
     public void setUp() {
         consumer = new Consumer("test-consumer", "test-user", new Owner(
             "Test Owner"), new ConsumerType("test-consumer-type-"));
-        MultivaluedMap<String, String> mvm = new MultivaluedMapImpl<String, String>();
+        MultivaluedMap<String, String> mvm = new MultivaluedMapImpl<>();
         mvm.add("consumer_uuid", consumer.getUuid());
         context = mock(UriInfo.class);
         when(context.getPathParameters()).thenReturn(mvm);
@@ -99,7 +99,7 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testAddOverride() {
-        List<ContentOverride> entries = new LinkedList<ContentOverride>();
+        List<ContentOverride> entries = new LinkedList<>();
         ConsumerContentOverride toAdd = new ConsumerContentOverride(consumer, "label",
             "overridename", "overridevalue");
         entries.add(toAdd);

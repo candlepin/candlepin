@@ -177,7 +177,7 @@ public class TransformedCandlepinQuery<I, O> implements CandlepinQuery<O> {
      */
     @Override
     public List<O> list() {
-        List<O> output = new LinkedList<O>();
+        List<O> output = new LinkedList<>();
         ResultIterator<O> iterator = this.iterate(); // Should we auto-evict here?
 
         try {
@@ -266,7 +266,7 @@ public class TransformedCandlepinQuery<I, O> implements CandlepinQuery<O> {
     @Override
     public ResultIterator<O> iterate(int column, boolean evict) {
         ResultIterator<I> iterator = this.query.iterate(column, evict);
-        return new TransformedResultIterator<I, O>(iterator, this.transformer);
+        return new TransformedResultIterator<>(iterator, this.transformer);
     }
 
     /**

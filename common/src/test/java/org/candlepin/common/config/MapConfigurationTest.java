@@ -64,7 +64,7 @@ public class MapConfigurationTest {
         config.clear();
 
         Set<String> keySet = (Set<String>) newConfig.getKeys();
-        assertEquals(new HashSet<String>(Arrays.asList("x.1", "x.2", "x.3")), keySet);
+        assertEquals(new HashSet<>(Arrays.asList("x.1", "x.2", "x.3")), keySet);
     }
 
 
@@ -72,7 +72,7 @@ public class MapConfigurationTest {
         ex.expect(RuntimeException.class);
         ex.expectCause(IsInstanceOf.<Throwable>instanceOf(ConfigurationException.class));
 
-        HashMap<String, String> m = new HashMap<String, String>();
+        HashMap<String, String> m = new HashMap<>();
         m.put(null, "x");
         m.put("hello", "world");
         assertTrue(m.containsKey(null));
@@ -108,7 +108,7 @@ public class MapConfigurationTest {
         assertNotSame(config, mergedConfig);
 
         Set<String> keySet = (Set<String>) mergedConfig.getKeys();
-        assertEquals(new HashSet<String>(Arrays.asList("x.1", "x.2", "a.1")), keySet);
+        assertEquals(new HashSet<>(Arrays.asList("x.1", "x.2", "a.1")), keySet);
 
         assertEquals("y", mergedConfig.getProperty("x.1"));
     }
@@ -161,7 +161,7 @@ public class MapConfigurationTest {
         config.setProperty("x", "y");
         config.setProperty("a", "b");
         Set<String> keySet = (Set<String>) config.getKeys();
-        assertEquals(new HashSet<String>(Arrays.asList("x", "a")), keySet);
+        assertEquals(new HashSet<>(Arrays.asList("x", "a")), keySet);
     }
 
     @Test
@@ -292,7 +292,7 @@ public class MapConfigurationTest {
     @Test
     public void testGetSet() {
         config.setProperty("x", "  a  , b  ,  c  ");
-        Set<String> expected = new HashSet<String>(Arrays.asList("a", "b", "c"));
+        Set<String> expected = new HashSet<>(Arrays.asList("a", "b", "c"));
         assertEquals(expected, config.getSet("x"));
     }
 
@@ -304,7 +304,7 @@ public class MapConfigurationTest {
     @SuppressWarnings("serial")
     @Test
     public void toPropertiesWithDefaults() {
-        Map<String, String> defaults = new HashMap<String, String>();
+        Map<String, String> defaults = new HashMap<>();
         defaults.put("a", "defaultvalue");
         defaults.put("z", "should have a value");
 

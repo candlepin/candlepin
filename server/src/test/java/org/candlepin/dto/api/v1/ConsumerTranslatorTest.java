@@ -100,13 +100,13 @@ public class ConsumerTranslatorTest extends
         consumer.setType(this.consumerTypeTranslatorTest.initSourceObject());
         consumer.setIdCert((IdentityCertificate) this.certificateTranslatorTest.initSourceObject());
 
-        Map<String, String> facts = new HashMap<String, String>();
+        Map<String, String> facts = new HashMap<>();
         for (int i = 0; i < 5; ++i) {
             facts.put("fact-" + i, "value-" + i);
         }
         consumer.setFacts(facts);
 
-        Set<ConsumerInstalledProduct> installedProducts = new HashSet<ConsumerInstalledProduct>();
+        Set<ConsumerInstalledProduct> installedProducts = new HashSet<>();
         for (int i = 0; i < 5; ++i) {
             ConsumerInstalledProduct installedProduct = cipTranslatorTest.initSourceObject();
             installedProduct.setId("installedProduct-" + i);
@@ -114,7 +114,7 @@ public class ConsumerTranslatorTest extends
         }
         consumer.setInstalledProducts(installedProducts);
 
-        Set<ConsumerCapability> capabilities = new HashSet<ConsumerCapability>();
+        Set<ConsumerCapability> capabilities = new HashSet<>();
         for (int i = 0; i < 5; ++i) {
             ConsumerCapability capability = capabilityTranslatorTest.initSourceObject();
             capability.setName("capability-" + i);
@@ -122,13 +122,13 @@ public class ConsumerTranslatorTest extends
         }
         consumer.setCapabilities(capabilities);
 
-        Set<String> contentTags = new HashSet<String>();
+        Set<String> contentTags = new HashSet<>();
         for (int i = 0; i < 5; ++i) {
             contentTags.add("contentTag-" + i);
         }
         consumer.setContentTags(contentTags);
 
-        List<GuestId> guestIds = new LinkedList<GuestId>();
+        List<GuestId> guestIds = new LinkedList<>();
         for (int i = 0; i < 5; ++i) {
             GuestId guestId = guestIdTranslatorTest.initSourceObject();
             guestId.setId("guestId-" + i);

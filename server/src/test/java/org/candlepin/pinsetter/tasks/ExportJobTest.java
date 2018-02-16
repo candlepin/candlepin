@@ -58,7 +58,7 @@ public class ExportJobTest extends BaseJobTest {
         String webappPrefix = "webapp-prefix";
         String apiUrl = "url";
 
-        Map<String, String> extData = new HashMap<String, String>();
+        Map<String, String> extData = new HashMap<>();
         extData.put("version", "sat-6.2");
 
         JobDetail detail = job.scheduleExport(distributor, cdnLabel, webappPrefix, apiUrl, extData);
@@ -80,7 +80,7 @@ public class ExportJobTest extends BaseJobTest {
         String webappPrefix = "webapp-prefix";
         String apiUrl = "url";
         String manifestId = "1234";
-        Map<String, String> extData = new HashMap<String, String>();
+        Map<String, String> extData = new HashMap<>();
 
         ExportResult result = new ExportResult(distributor.getUuid(), manifestId);
         when(manifestManager.generateAndStoreManifest(eq(distributor.getUuid()), eq(cdnLabel),

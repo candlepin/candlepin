@@ -30,7 +30,7 @@ public class CapabilityDTOTest extends AbstractDTOTest<CapabilityDTO> {
     public CapabilityDTOTest() {
         super(CapabilityDTO.class);
 
-        this.values = new HashMap<String, Object>();
+        this.values = new HashMap<>();
         this.values.put("Id", "test_value");
         this.values.put("Name", "test_value");
         this.values.put("Created", new Date());

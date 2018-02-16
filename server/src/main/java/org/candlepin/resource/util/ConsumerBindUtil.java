@@ -111,7 +111,7 @@ public class ConsumerBindUtil {
             return true;
         }
         boolean onePassed = false;
-        List<ActivationKeyPool> toBind = new LinkedList<ActivationKeyPool>();
+        List<ActivationKeyPool> toBind = new LinkedList<>();
         for (ActivationKeyPool akp : key.getPools()) {
             if (akp.getPool().getId() != null) {
                 toBind.add(akp);
@@ -139,8 +139,8 @@ public class ConsumerBindUtil {
     private void handleActivationKeyAutoBind(Consumer consumer, ActivationKey key)
         throws AutobindDisabledForOwnerException {
         try {
-            Set<String> productIds = new HashSet<String>();
-            List<String> poolIds = new ArrayList<String>();
+            Set<String> productIds = new HashSet<>();
+            List<String> poolIds = new ArrayList<>();
 
             for (Product akp : key.getProducts()) {
                 productIds.add(akp.getId());

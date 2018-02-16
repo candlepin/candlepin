@@ -46,9 +46,11 @@ public class ColumnarResultIteratorTest extends DatabaseTestFixture {
         this.ownerCurator.create(TestUtil.createOwner());
         Query query = this.session.createQuery("SELECT o FROM Owner o");
 
-        ColumnarResultIterator<Owner> iterator = new ColumnarResultIterator<Owner>(
-            this.session, query.scroll(ScrollMode.FORWARD_ONLY), 0, false
-        );
+        ColumnarResultIterator<Owner> iterator = new ColumnarResultIterator<>(
+            this.session,
+            query.scroll(ScrollMode.FORWARD_ONLY),
+            0,
+            false);
 
         try {
             assertTrue(iterator.hasNext());
@@ -62,9 +64,11 @@ public class ColumnarResultIteratorTest extends DatabaseTestFixture {
     public void testHasNextWithoutElements() {
         Query query = this.session.createQuery("SELECT o FROM Owner o");
 
-        ColumnarResultIterator<Owner> iterator = new ColumnarResultIterator<Owner>(
-            this.session, query.scroll(ScrollMode.FORWARD_ONLY), 0, false
-        );
+        ColumnarResultIterator<Owner> iterator = new ColumnarResultIterator<>(
+            this.session,
+            query.scroll(ScrollMode.FORWARD_ONLY),
+            0,
+            false);
 
         try {
             assertFalse(iterator.hasNext());
@@ -85,12 +89,14 @@ public class ColumnarResultIteratorTest extends DatabaseTestFixture {
 
         Query query = this.session.createQuery("SELECT o FROM Owner o");
 
-        ColumnarResultIterator<Owner> iterator = new ColumnarResultIterator<Owner>(
-            this.session, query.scroll(ScrollMode.FORWARD_ONLY), 0, false
-        );
+        ColumnarResultIterator<Owner> iterator = new ColumnarResultIterator<>(
+            this.session,
+            query.scroll(ScrollMode.FORWARD_ONLY),
+            0,
+            false);
 
         try {
-            List<Owner> owners = new LinkedList<Owner>();
+            List<Owner> owners = new LinkedList<>();
 
             // Note: Since we're testing everything in isolation here, we can't
             // be expecting .hasNext to be functional here. :)
@@ -111,9 +117,11 @@ public class ColumnarResultIteratorTest extends DatabaseTestFixture {
     public void testNextWithoutElements() {
         Query query = this.session.createQuery("SELECT o FROM Owner o");
 
-        ColumnarResultIterator<Owner> iterator = new ColumnarResultIterator<Owner>(
-            this.session, query.scroll(ScrollMode.FORWARD_ONLY), 0, false
-        );
+        ColumnarResultIterator<Owner> iterator = new ColumnarResultIterator<>(
+            this.session,
+            query.scroll(ScrollMode.FORWARD_ONLY),
+            0,
+            false);
 
         try {
             iterator.next(); // Kaboom
@@ -128,9 +136,11 @@ public class ColumnarResultIteratorTest extends DatabaseTestFixture {
         this.ownerCurator.create(TestUtil.createOwner());
         Query query = this.session.createQuery("SELECT o FROM Owner o");
 
-        ColumnarResultIterator<Owner> iterator = new ColumnarResultIterator<Owner>(
-            this.session, query.scroll(ScrollMode.FORWARD_ONLY), 0, false
-        );
+        ColumnarResultIterator<Owner> iterator = new ColumnarResultIterator<>(
+            this.session,
+            query.scroll(ScrollMode.FORWARD_ONLY),
+            0,
+            false);
 
         try {
             iterator.next();

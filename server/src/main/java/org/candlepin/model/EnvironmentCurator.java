@@ -84,7 +84,7 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
 
         if (ids != null && !ids.isEmpty()) {
             // We have some matching content, delete environment content first...
-            Map<String, Object> criteria = new HashMap<String, Object>();
+            Map<String, Object> criteria = new HashMap<>();
             criteria.put("environment_id", owner.getId());
 
             count = this.bulkSQLDelete(EnvironmentContent.DB_TABLE, criteria);

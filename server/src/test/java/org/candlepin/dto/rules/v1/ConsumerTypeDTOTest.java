@@ -31,7 +31,7 @@ public class ConsumerTypeDTOTest extends AbstractDTOTest<ConsumerTypeDTO> {
     public ConsumerTypeDTOTest() {
         super(ConsumerTypeDTO.class);
 
-        this.values = new HashMap<String, Object>();
+        this.values = new HashMap<>();
         this.values.put("Label", "test-label");
         this.values.put("Manifest", true);
     }

@@ -34,7 +34,6 @@ import org.candlepin.controller.Entitler;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
-import org.candlepin.dto.api.v1.CapabilityDTO;
 import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.ConsumerInstalledProductDTO;
 import org.candlepin.dto.api.v1.EnvironmentDTO;
@@ -185,8 +184,8 @@ public class ConsumerResourceUpdateTest {
 
     @Test
     public void testUpdatesOnContentTagChanges() {
-        HashSet<String> originalTags = new HashSet<String>(Arrays.asList(new String[] {"hello", "world"}));
-        HashSet<String> changedTags = new HashSet<String>(Arrays.asList(new String[] {"x", "y"}));
+        HashSet<String> originalTags = new HashSet<>(Arrays.asList(new String[] { "hello", "world" }));
+        HashSet<String> changedTags = new HashSet<>(Arrays.asList(new String[] { "x", "y" }));
 
         ConsumerDTO c = getFakeConsumerDTO();
         c.setContentTags(originalTags);
@@ -402,7 +401,7 @@ public class ConsumerResourceUpdateTest {
         when(this.consumerCurator.verifyAndLookupConsumer(uuid)).thenReturn(existing);
 
         ConsumerDTO updated = new ConsumerDTO();
-        updated.setGuestIds(new ArrayList<GuestIdDTO>());
+        updated.setGuestIds(new ArrayList<>());
         this.resource.updateConsumer(existing.getUuid(), updated, principal);
         assertTrue(existing.getGuestIds().isEmpty());
     }
@@ -671,8 +670,8 @@ public class ConsumerResourceUpdateTest {
         GuestIdDTO expectedGuestId = new GuestIdDTO("GUEST_ID_1");
 
         Consumer existing = getFakeConsumer();
-        existing.setFacts(new HashMap<String, String>());
-        existing.setInstalledProducts(new HashSet<ConsumerInstalledProduct>());
+        existing.setFacts(new HashMap<>());
+        existing.setInstalledProducts(new HashSet<>());
 
         ConsumerDTO updated = new ConsumerDTO();
         updated.setUuid(uuid);
@@ -811,7 +810,7 @@ public class ConsumerResourceUpdateTest {
     @Test
     public void consumerCapabilityUpdate() {
         Consumer c = getFakeConsumer();
-        Set<ConsumerCapability> caps = new HashSet<ConsumerCapability>();
+        Set<ConsumerCapability> caps = new HashSet<>();
         ConsumerCapability cca = new ConsumerCapability(c, "capability_a");
         ConsumerCapability ccb = new ConsumerCapability(c, "capability_b");
         ConsumerCapability ccc = new ConsumerCapability(c, "capability_c");
@@ -832,7 +831,7 @@ public class ConsumerResourceUpdateTest {
 
         // empty capability list in update object does change existing
         updated = new ConsumerDTO();
-        updated.setCapabilities(new HashSet<CapabilityDTO>());
+        updated.setCapabilities(new HashSet<>());
         resource.updateConsumer(c.getUuid(), updated, principal);
         assertEquals(0, c.getCapabilities().size());
     }
@@ -840,8 +839,8 @@ public class ConsumerResourceUpdateTest {
     @Test
     public void consumerChangeDetection() {
         Consumer existing = getFakeConsumer();
-        Set<ConsumerCapability> caps1 = new HashSet<ConsumerCapability>();
-        Set<ConsumerCapability> caps2 = new HashSet<ConsumerCapability>();
+        Set<ConsumerCapability> caps1 = new HashSet<>();
+        Set<ConsumerCapability> caps2 = new HashSet<>();
         ConsumerCapability cca = new ConsumerCapability(existing, "capability_a");
         ConsumerCapability ccb = new ConsumerCapability(existing, "capability_b");
         ConsumerCapability ccc = new ConsumerCapability(existing, "capability_c");
@@ -896,7 +895,7 @@ public class ConsumerResourceUpdateTest {
     private ConsumerDTO createConsumerDTOWithGuests(String ... guestIds) {
         Consumer consumer = createConsumerWithGuests(guestIds);
         // re-add guestIds as consumer translator removes them.
-        List<GuestIdDTO> guestIdDTOS = new LinkedList<GuestIdDTO>();
+        List<GuestIdDTO> guestIdDTOS = new LinkedList<>();
         for (GuestId guestId : consumer.getGuestIds()) {
             guestIdDTOS.add(translator.translate(guestId, GuestIdDTO.class));
         }

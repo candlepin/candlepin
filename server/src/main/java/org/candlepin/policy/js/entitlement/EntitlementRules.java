@@ -138,7 +138,7 @@ public class EntitlementRules implements Enforcer {
 
         return preEntitlement(
             consumer,
-            getHost(consumer, new ArrayList<Pool>(Arrays.asList(entitlementPool))),
+            getHost(consumer, new ArrayList<>(Arrays.asList(entitlementPool))),
             entitlementPool,
             quantity,
             caller);
@@ -147,7 +147,7 @@ public class EntitlementRules implements Enforcer {
     public ValidationResult preEntitlement(Consumer consumer, Consumer host,
         Pool entitlementPool, Integer quantity, CallerType caller) {
 
-        List<PoolQuantity> poolQuantities = new ArrayList<PoolQuantity>();
+        List<PoolQuantity> poolQuantities = new ArrayList<>();
         poolQuantities.add(new PoolQuantity(entitlementPool, quantity));
 
         return preEntitlement(consumer, host, poolQuantities, caller).get(entitlementPool.getId());
@@ -157,7 +157,7 @@ public class EntitlementRules implements Enforcer {
     public Map<String, ValidationResult> preEntitlement(Consumer consumer,
         Collection<PoolQuantity> entitlementPoolQuantities, CallerType caller) {
 
-        List<Pool> pools = new ArrayList<Pool>();
+        List<Pool> pools = new ArrayList<>();
 
         for (PoolQuantity pq : entitlementPoolQuantities) {
             pools.add(pq.getPool());
@@ -175,7 +175,7 @@ public class EntitlementRules implements Enforcer {
     public Map<String, ValidationResult> preEntitlement(Consumer consumer, Consumer host,
         Collection<PoolQuantity> entitlementPoolQuantities, CallerType caller) {
 
-        Map<String, ValidationResult> resultMap = new HashMap<String, ValidationResult>();
+        Map<String, ValidationResult> resultMap = new HashMap<>();
 
         /* This document describes the java script portion of the pre entitlement rules check:
          * http://www.candlepinproject.org/docs/candlepin/pre_entitlement_rules_check.html
@@ -232,7 +232,7 @@ public class EntitlementRules implements Enforcer {
     @SuppressWarnings("checkstyle:indentation")
     public List<Pool> filterPools(Consumer consumer, List<Pool> pools, boolean showAll) {
         JsonJsContext args = new JsonJsContext(objectMapper);
-        Map<String, ValidationResult> resultMap = new HashMap<String, ValidationResult>();
+        Map<String, ValidationResult> resultMap = new HashMap<>();
 
         if (!consumer.isShare()) {
             Stream<PoolDTO> poolStream = pools == null ? Stream.empty() :
@@ -262,7 +262,7 @@ public class EntitlementRules implements Enforcer {
             }
         }
 
-        List<Pool> filteredPools = new LinkedList<Pool>();
+        List<Pool> filteredPools = new LinkedList<>();
         for (Pool pool : pools) {
             ValidationResult result;
             if (consumer.isShare()) {
@@ -305,7 +305,7 @@ public class EntitlementRules implements Enforcer {
             return null;
         }
 
-        List<Owner> potentialOwners = new ArrayList<Owner>(Arrays.asList(consumer.getOwner()));
+        List<Owner> potentialOwners = new ArrayList<>(Arrays.asList(consumer.getOwner()));
         for (Pool p : pools) {
             if (p.isCreatedByShare()) {
                 potentialOwners.add(p.getSourceEntitlement().getOwner());
@@ -357,14 +357,14 @@ public class EntitlementRules implements Enforcer {
 
     public List<Rule> rulesForAttributes(Set<String> attributes,
         Map<String, Set<Rule>> rules) {
-        Set<Rule> possibleMatches = new HashSet<Rule>();
+        Set<Rule> possibleMatches = new HashSet<>();
         for (String attribute : attributes) {
             if (rules.containsKey(attribute)) {
                 possibleMatches.addAll(rules.get(attribute));
             }
         }
 
-        List<Rule> matches = new LinkedList<Rule>();
+        List<Rule> matches = new LinkedList<>();
         for (Rule rule : possibleMatches) {
             if (attributes.containsAll(rule.getAttributes())) {
                 matches.add(rule);
@@ -372,14 +372,14 @@ public class EntitlementRules implements Enforcer {
         }
 
         // Always run the global rule, and run it first
-        matches.add(new Rule("global", 0, new HashSet<String>()));
+        matches.add(new Rule("global", 0, new HashSet<>()));
 
         Collections.sort(matches, new RuleOrderComparator());
         return matches;
     }
 
     public Map<String, Set<Rule>> parseAttributeMappings(String mappings) {
-        Map<String, Set<Rule>> toReturn = new HashMap<String, Set<Rule>>();
+        Map<String, Set<Rule>> toReturn = new HashMap<>();
         if (mappings.trim().isEmpty()) {
             return toReturn;
         }
@@ -390,7 +390,7 @@ public class EntitlementRules implements Enforcer {
             Rule rule = parseRule(mapping);
             for (String attribute : rule.getAttributes()) {
                 if (!toReturn.containsKey(attribute)) {
-                    toReturn.put(attribute, new HashSet<Rule>(Collections.singletonList(rule)));
+                    toReturn.put(attribute, new HashSet<>(Collections.singletonList(rule)));
                 }
 
                 toReturn.get(attribute).add(rule);
@@ -408,7 +408,7 @@ public class EntitlementRules implements Enforcer {
                 i18n.tr("\"{0}\" Should contain name, priority and at least one attribute", toParse));
         }
 
-        Set<String> attributes = new HashSet<String>();
+        Set<String> attributes = new HashSet<>();
         for (int i = 2; i < tokens.length; i++) {
             attributes.add(tokens[i].trim());
         }
@@ -555,8 +555,8 @@ public class EntitlementRules implements Enforcer {
         Map<String, Entitlement> entitlementMap, List<Pool> subPoolsForStackIds, boolean isUpdate,
         Map<String, PoolQuantity> poolQuantityMap) {
 
-        Map<String, Map<String, String>> flatAttributeMaps = new HashMap<String, Map<String, String>>();
-        Map<String, Entitlement> virtLimitEntitlements = new HashMap<String, Entitlement>();
+        Map<String, Map<String, String>> flatAttributeMaps = new HashMap<>();
+        Map<String, Entitlement> virtLimitEntitlements = new HashMap<>();
 
         for (Entry<String, Entitlement> entry : entitlementMap.entrySet()) {
             Entitlement entitlement = entry.getValue();
@@ -653,13 +653,13 @@ public class EntitlementRules implements Enforcer {
 
         Owner sharingOwner = c.getOwner();
         Owner recipient = ownerCurator.lookupByKey(c.getRecipientOwnerKey());
-        List<Pool> sharedPoolsToCreate = new ArrayList<Pool>();
+        List<Pool> sharedPoolsToCreate = new ArrayList<>();
 
         for (Entitlement entitlement: entitlementMap.values()) {
             Pool sourcePool = entitlement.getPool();
             // resolve and copy all products
             // Handle any product creation/manipulation incurred by the share action
-            Set<Product> allProducts = new HashSet<Product>();
+            Set<Product> allProducts = new HashSet<>();
             allProducts.add(sourcePool.getProduct());
             if (sourcePool.getProvidedProducts() != null) {
                 allProducts.addAll(sourcePool.getProvidedProducts());
@@ -735,7 +735,7 @@ public class EntitlementRules implements Enforcer {
     }
 
     private Set<Product> copySetFromResolved(Set<Product> products, Map<String, Product> resolvedProducts) {
-        Set<Product> result = new HashSet<Product>();
+        Set<Product> result = new HashSet<>();
         if (products != null) {
             for (Product product : products) {
                 result.add(resolvedProducts.get(product.getId()));
@@ -746,14 +746,14 @@ public class EntitlementRules implements Enforcer {
 
     private Map<String, Product> resolveProductShares(Owner sharingOwner, Owner recipient,
         Set<Product> products) {
-        Map<String, Product> sharedProductsIdMap = new HashMap<String, Product>();
-        Map<String, Product> sharedProductsUuidMap = new HashMap<String, Product>();
-        Map<String, Product> resolvedProducts = new HashMap<String, Product>();
-        List<Event> events = new LinkedList<Event>();
-        List<ProductShare> sharesToDelete = new LinkedList<ProductShare>();
-        List<ProductShare> sharesToCreate = new LinkedList<ProductShare>();
-        Map<String, ProductShare> existingSharesMap = new HashMap<String, ProductShare>();
-        Map<String, String> productRefsToUpdate = new HashMap<String, String>();
+        Map<String, Product> sharedProductsIdMap = new HashMap<>();
+        Map<String, Product> sharedProductsUuidMap = new HashMap<>();
+        Map<String, Product> resolvedProducts = new HashMap<>();
+        List<Event> events = new LinkedList<>();
+        List<ProductShare> sharesToDelete = new LinkedList<>();
+        List<ProductShare> sharesToCreate = new LinkedList<>();
+        Map<String, ProductShare> existingSharesMap = new HashMap<>();
+        Map<String, String> productRefsToUpdate = new HashMap<>();
 
         for (Product product: products) {
             sharedProductsIdMap.put(product.getId(), product);
@@ -764,7 +764,7 @@ public class EntitlementRules implements Enforcer {
             recipient, sharedProductsIdMap.keySet()).list();
 
         for (Product product: recipientProducts) {
-            Map<String, Product> conflictedRecipientProducts = new HashMap<String, Product>();
+            Map<String, Product> conflictedRecipientProducts = new HashMap<>();
             if (sharedProductsUuidMap.containsKey(product.getUuid())) {
                 // Recipient has a product with the same ID already.  If they are the same instance
                 // use then nothing needs doing.  Everything is already in place.
@@ -820,7 +820,7 @@ public class EntitlementRules implements Enforcer {
 
         }
 
-        Set<String> idsNonExisting = new HashSet<String>(sharedProductsIdMap.keySet());
+        Set<String> idsNonExisting = new HashSet<>(sharedProductsIdMap.keySet());
         idsNonExisting.removeAll(resolvedProducts.keySet());
 
         for (String id: idsNonExisting) {
@@ -846,8 +846,8 @@ public class EntitlementRules implements Enforcer {
         Map<String, Entitlement> entitlementMap, Map<String, Map<String, String>> attributeMaps,
         List<Pool> subPoolsForStackIds, boolean isUpdate, Map<String, PoolQuantity> poolQuantityMap) {
 
-        Set<String> stackIdsThathaveSubPools = new HashSet<String>();
-        Set<String> alreadyCoveredStackIds = new HashSet<String>();
+        Set<String> stackIdsThathaveSubPools = new HashSet<>();
+        Set<String> alreadyCoveredStackIds = new HashSet<>();
         if (CollectionUtils.isNotEmpty(subPoolsForStackIds)) {
             for (Pool pool : subPoolsForStackIds) {
                 stackIdsThathaveSubPools.add(pool.getSourceStackId());
@@ -860,8 +860,8 @@ public class EntitlementRules implements Enforcer {
 
         boolean isStandalone = config.getBoolean(ConfigProperties.STANDALONE);
 
-        List<Pool> createHostRestrictedPoolFor = new ArrayList<Pool>();
-        List<Entitlement> decrementHostedBonusPoolQuantityFor = new ArrayList<Entitlement>();
+        List<Pool> createHostRestrictedPoolFor = new ArrayList<>();
+        List<Entitlement> decrementHostedBonusPoolQuantityFor = new ArrayList<>();
 
         for (Entitlement entitlement : entitlementMap.values()) {
             Pool pool = entitlement.getPool();
@@ -928,15 +928,15 @@ public class EntitlementRules implements Enforcer {
         }
 
         // pre-fetch subscription and respective pools in a batch
-        Set<String> subscriptionIds = new HashSet<String>();
+        Set<String> subscriptionIds = new HashSet<>();
         for (Entitlement entitlement : entitlements) {
             subscriptionIds.add(entitlement.getPool().getSubscriptionId());
         }
         List<Pool> subscriptionPools = poolManager.lookupBySubscriptionIds(c.getOwner(), subscriptionIds);
-        Map<String, List<Pool>> subscriptionPoolMap = new HashMap<String, List<Pool>>();
+        Map<String, List<Pool>> subscriptionPoolMap = new HashMap<>();
         for (Pool pool : subscriptionPools) {
             if (!subscriptionPoolMap.containsKey(pool.getSubscriptionId())) {
-                subscriptionPoolMap.put(pool.getSubscriptionId(), new ArrayList<Pool>());
+                subscriptionPoolMap.put(pool.getSubscriptionId(), new ArrayList<>());
             }
             subscriptionPoolMap.get(pool.getSubscriptionId()).add(pool);
         }

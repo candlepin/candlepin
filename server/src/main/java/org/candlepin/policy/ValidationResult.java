@@ -32,8 +32,8 @@ public class ValidationResult {
      * default ctor
      */
     public ValidationResult() {
-        errors = new LinkedList<ValidationError>();
-        warnings = new LinkedList<ValidationWarning>();
+        errors = new LinkedList<>();
+        warnings = new LinkedList<>();
     }
 
     /**

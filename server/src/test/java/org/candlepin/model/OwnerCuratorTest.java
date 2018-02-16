@@ -75,7 +75,7 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
     }
 
     private void associateProductToOwner(Owner o, Product p, Product provided) {
-        Set<Product> providedProducts = new HashSet<Product>();
+        Set<Product> providedProducts = new HashSet<>();
         providedProducts.add(provided);
 
         Pool pool = TestUtil.createPool(o, p, providedProducts, 5);
@@ -100,7 +100,7 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         associateProductToOwner(owner, product, provided);
         associateProductToOwner(owner2, product2, provided2);
 
-        List<String> productIds = new ArrayList<String>();
+        List<String> productIds = new ArrayList<>();
         productIds.add(provided.getId());
         productIds.add(provided2.getId());
         List<Owner> results = ownerCurator.lookupOwnersByActiveProduct(productIds).list();
@@ -117,7 +117,7 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
 
         associateProductToOwner(owner, product, provided);
 
-        List<String> productIds = new ArrayList<String>();
+        List<String> productIds = new ArrayList<>();
         productIds.add(provided.getId());
         List<Owner> results = ownerCurator.lookupOwnersByActiveProduct(productIds).list();
 
@@ -132,7 +132,7 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         Product product = this.createProduct(owner);
         Product provided = this.createProduct(owner);
 
-        Set<Product> providedProducts = new HashSet<Product>();
+        Set<Product> providedProducts = new HashSet<>();
         providedProducts.add(provided);
 
         // Create pool with end date in the past.
@@ -157,7 +157,7 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         Entitlement ent = createEntitlement(owner, consumer, pool, cert);
         entitlementCurator.create(ent);
 
-        List<String> productIds = new ArrayList<String>();
+        List<String> productIds = new ArrayList<>();
         productIds.add(provided.getId());
         List<Owner> results = ownerCurator.lookupOwnersByActiveProduct(productIds).list();
 
@@ -235,8 +235,8 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         pool1.setOwner(owner1);
         pool1.setProduct(prod4);
         pool1.setDerivedProduct(prod4d);
-        pool1.setProvidedProducts(new HashSet<Product>(Arrays.asList(prod1o1)));
-        pool1.setDerivedProvidedProducts(new HashSet<Product>(Arrays.asList(prod2o1)));
+        pool1.setProvidedProducts(new HashSet<>(Arrays.asList(prod1o1)));
+        pool1.setDerivedProvidedProducts(new HashSet<>(Arrays.asList(prod2o1)));
         pool1.setStartDate(TestUtil.createDate(2000, 1, 1));
         pool1.setEndDate(TestUtil.createDate(3000, 1, 1));
         pool1.setQuantity(5L);
@@ -245,8 +245,8 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         pool2.setOwner(owner2);
         pool2.setProduct(prod5);
         pool2.setDerivedProduct(prod5d);
-        pool2.setProvidedProducts(new HashSet<Product>(Arrays.asList(prod1o2, prod2o2)));
-        pool2.setDerivedProvidedProducts(new HashSet<Product>(Arrays.asList(prod3o2)));
+        pool2.setProvidedProducts(new HashSet<>(Arrays.asList(prod1o2, prod2o2)));
+        pool2.setDerivedProvidedProducts(new HashSet<>(Arrays.asList(prod3o2)));
         pool2.setStartDate(TestUtil.createDate(1000, 1, 1));
         pool2.setEndDate(TestUtil.createDate(2000, 1, 1));
         pool2.setQuantity(5L);
@@ -255,8 +255,8 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         pool3.setOwner(owner3);
         pool3.setProduct(prod6);
         pool3.setDerivedProduct(prod6d);
-        pool3.setProvidedProducts(new HashSet<Product>(Arrays.asList(prod1o3)));
-        pool3.setDerivedProvidedProducts(new HashSet<Product>(Arrays.asList(prod3o3)));
+        pool3.setProvidedProducts(new HashSet<>(Arrays.asList(prod1o3)));
+        pool3.setDerivedProvidedProducts(new HashSet<>(Arrays.asList(prod3o3)));
         pool3.setStartDate(new Date());
         pool3.setEndDate(new Date());
         pool3.setQuantity(5L);

@@ -44,7 +44,7 @@ public class ModeManagerImpl implements ModeManager {
     private static Logger log = LoggerFactory.getLogger(ModeManagerImpl.class);
     private CandlepinModeChange cpMode = new CandlepinModeChange(
         new Date(), Mode.NORMAL, Reason.STARTUP);
-    private List<ModeChangeListener> listeners = new ArrayList<ModeChangeListener>();
+    private List<ModeChangeListener> listeners = new ArrayList<>();
     private Configuration config;
     private I18n i18n;
 

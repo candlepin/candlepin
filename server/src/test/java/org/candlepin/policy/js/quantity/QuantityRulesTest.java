@@ -107,7 +107,7 @@ public class QuantityRulesTest {
         Entitlement e = TestUtil.createEntitlement(owner, consumer, pool,
             new EntitlementCertificate());
 
-        Set<Entitlement> entSet = new HashSet<Entitlement>();
+        Set<Entitlement> entSet = new HashSet<>();
         entSet.add(e);
 
         pool.setEntitlements(entSet);
@@ -143,7 +143,7 @@ public class QuantityRulesTest {
     @Test
     public void testNonMultiEntitlementPoolMultiPool() {
         pool.getProduct().setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "no");
-        List<Pool> pools = new LinkedList<Pool>();
+        List<Pool> pools = new LinkedList<>();
         pools.add(pool);
         Map<String, SuggestedQuantity> results = quantityRules.getSuggestedQuantities(
             pools, TestUtil.createConsumer(), new Date());
@@ -178,7 +178,7 @@ public class QuantityRulesTest {
         Entitlement e = createValidEntitlement(pool);
         e.setQuantity(2);
 
-        Set<Entitlement> ents = new HashSet<Entitlement>();
+        Set<Entitlement> ents = new HashSet<>();
         ents.add(e);
 
         consumer.setEntitlements(ents);
@@ -241,7 +241,7 @@ public class QuantityRulesTest {
         Entitlement e = createValidEntitlement(pool);
         e.setQuantity(2);
 
-        Set<Entitlement> ents = new HashSet<Entitlement>();
+        Set<Entitlement> ents = new HashSet<>();
         ents.add(e);
 
         consumer.setEntitlements(ents);
@@ -378,7 +378,7 @@ public class QuantityRulesTest {
         Entitlement e = createValidEntitlement(pool2);
         e.setQuantity(2);
 
-        Set<Entitlement> ents = new HashSet<Entitlement>();
+        Set<Entitlement> ents = new HashSet<>();
         ents.add(e);
 
         consumer.setEntitlements(ents);
@@ -397,7 +397,7 @@ public class QuantityRulesTest {
         Entitlement e = createValidEntitlement(pool);
         e.setQuantity(1000);
 
-        Set<Entitlement> ents = new HashSet<Entitlement>();
+        Set<Entitlement> ents = new HashSet<>();
         ents.add(e);
 
         consumer.setEntitlements(ents);
@@ -418,7 +418,7 @@ public class QuantityRulesTest {
         pool.setEndDate(TestUtil.createDate(9001, 1, 1));
         e.setQuantity(2);
 
-        Set<Entitlement> ents = new HashSet<Entitlement>();
+        Set<Entitlement> ents = new HashSet<>();
         ents.add(e);
 
         consumer.setEntitlements(ents);
@@ -448,7 +448,7 @@ public class QuantityRulesTest {
             TestUtil.createEntitlement(owner, consumer, currentPool, null);
         currentEntitlement.setQuantity(2);
 
-        Set<Entitlement> ents = new HashSet<Entitlement>();
+        Set<Entitlement> ents = new HashSet<>();
         ents.add(currentEntitlement);
         consumer.setEntitlements(ents);
 
@@ -483,7 +483,7 @@ public class QuantityRulesTest {
         Entitlement e = createValidEntitlement(futurePool);
         e.setQuantity(4);
 
-        Set<Entitlement> ents = new HashSet<Entitlement>();
+        Set<Entitlement> ents = new HashSet<>();
         ents.add(e);
 
         consumer.setEntitlements(ents);
@@ -505,7 +505,7 @@ public class QuantityRulesTest {
         Entitlement e = createValidEntitlement(pool);
         e.setQuantity(4);
 
-        Set<Entitlement> ents = new HashSet<Entitlement>();
+        Set<Entitlement> ents = new HashSet<>();
         ents.add(e);
 
         consumer.setEntitlements(ents);
@@ -530,7 +530,7 @@ public class QuantityRulesTest {
         Entitlement e = TestUtil.createEntitlement(owner, consumer, pool1,
             new EntitlementCertificate());
 
-        Set<Entitlement> entSet = new HashSet<Entitlement>();
+        Set<Entitlement> entSet = new HashSet<>();
         entSet.add(e);
         pool1.setEntitlements(entSet);
         pool1.getProduct().setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes");
@@ -555,7 +555,7 @@ public class QuantityRulesTest {
     @Test
     public void testInsufficientGuestLimit() {
         consumer.setFact(SOCKET_FACT, "8");
-        Map<String, String> guestAttrs = new HashMap<String, String>();
+        Map<String, String> guestAttrs = new HashMap<>();
         guestAttrs.put("virtWhoType", "libvirt");
         guestAttrs.put("active", "1");
         for (int i = 0; i < 5; i++) {

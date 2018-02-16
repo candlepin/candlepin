@@ -96,7 +96,7 @@ public class PoolUpdate {
      */
     public String toString() {
         StringBuffer buffer = new StringBuffer();
-        List<String> changes = new LinkedList<String>();
+        List<String> changes = new LinkedList<>();
 
         buffer.append("PoolUpdate[pool: ");
         buffer.append(pool.getId());

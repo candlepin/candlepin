@@ -150,9 +150,9 @@ public class Owner extends AbstractHibernateObject<Owner>
      * Default constructor
      */
     public Owner() {
-        this.consumers = new HashSet<Consumer>();
-        this.pools = new HashSet<Pool>();
-        this.environments = new HashSet<Environment>();
+        this.consumers = new HashSet<>();
+        this.pools = new HashSet<>();
+        this.environments = new HashSet<>();
         this.autobindDisabled = false;
     }
 
@@ -297,7 +297,7 @@ public class Owner extends AbstractHibernateObject<Owner>
     public void addEntitlementPool(Pool pool) {
         pool.setOwner(this);
         if (this.pools == null) {
-            this.pools = new HashSet<Pool>();
+            this.pools = new HashSet<>();
         }
         this.pools.add(pool);
     }

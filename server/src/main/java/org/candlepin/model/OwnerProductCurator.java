@@ -256,7 +256,7 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
      */
     @Transactional
     public Set<String> filterUnknownProductIds(Owner owner, Collection<String> productIds) {
-        Set<String> existingIds = new HashSet<String>();
+        Set<String> existingIds = new HashSet<>();
 
         if (productIds != null && !productIds.isEmpty()) {
             existingIds.addAll(this.createSecureCriteria()
@@ -483,7 +483,7 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
 
         Session session = this.currentSession();
 
-        Map<String, Object> criteria = new HashMap<String, Object>();
+        Map<String, Object> criteria = new HashMap<>();
         Map<Object, Object> uuidMap = Map.class.cast(productUuidMap);
         criteria.put("product_uuid", productUuidMap.keySet());
         criteria.put("owner_id", owner.getId());
@@ -608,7 +608,7 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
             }
 
             // Owner products ////////////////////////////////
-            Map<String, Object> criteria = new HashMap<String, Object>();
+            Map<String, Object> criteria = new HashMap<>();
             criteria.put("product_uuid", productUuids);
             criteria.put("owner_id", owner.getId());
 

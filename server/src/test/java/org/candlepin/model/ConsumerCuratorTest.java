@@ -580,7 +580,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testConsumerFactsVerifySuccess() {
-        Map<String, String> facts = new HashMap<String, String>();
+        Map<String, String> facts = new HashMap<>();
         facts.put("system.count", "3");
         facts.put("system.multiplier", "-2");
 
@@ -594,7 +594,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test(expected = PropertyValidationException.class)
     public void testConsumerFactsVerifyBadInt() {
-        Map<String, String> facts = new HashMap<String, String>();
+        Map<String, String> facts = new HashMap<>();
         facts.put("system.count", "zzz");
         facts.put("system.multiplier", "-2");
 
@@ -604,7 +604,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test(expected = PropertyValidationException.class)
     public void testConsumerFactsVerifyBadPositive() {
-        Map<String, String> facts = new HashMap<String, String>();
+        Map<String, String> facts = new HashMap<>();
         facts.put("system.count", "-2");
         facts.put("system.multiplier", "-2");
 
@@ -614,7 +614,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test(expected = PropertyValidationException.class)
     public void testConsumerFactsVerifyBadUpdateValue() {
-        Map<String, String> facts = new HashMap<String, String>();
+        Map<String, String> facts = new HashMap<>();
         facts.put("system.count", "3");
         facts.put("system.multiplier", "-2");
 
@@ -630,7 +630,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testSubstringConfigList() {
-        Map<String, String> facts = new HashMap<String, String>();
+        Map<String, String> facts = new HashMap<>();
         facts.put("system.cou", "this should not be checked");
 
         factConsumer.setFacts(facts);
@@ -694,7 +694,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         gConsumer2.getFacts().put("virt.uuid", guestId2);
         consumerCurator.create(gConsumer2);
 
-        Set<String> guestIds = new HashSet<String>();
+        Set<String> guestIds = new HashSet<>();
         guestIds.add(guestId1ReverseEndian); // reversed endian match
         guestIds.add(guestId2); // direct match
         VirtConsumerMap guestMap = consumerCurator.getGuestConsumersMap(owner, guestIds);
@@ -721,7 +721,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         gConsumer2.getFacts().put("virt.uuid", guestId2);
         consumerCurator.create(gConsumer2);
 
-        Set<String> guestIds = new HashSet<String>();
+        Set<String> guestIds = new HashSet<>();
         guestIds.add(guestId1ReverseEndian.toUpperCase()); // reversed endian match
         guestIds.add(guestId2.toUpperCase()); // direct match
         VirtConsumerMap guestMap = consumerCurator.getGuestConsumersMap(owner, guestIds);
@@ -829,7 +829,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumer2.setHypervisorId(new HypervisorId(hypervisorId2));
         consumer2 = consumerCurator.create(consumer2);
 
-        Set<String> hypervisorIds = new HashSet<String>();
+        Set<String> hypervisorIds = new HashSet<>();
         hypervisorIds.add(hypervisorId1);
         hypervisorIds.add(hypervisorId2);
         hypervisorIds.add("not really a hypervisor");
@@ -846,7 +846,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
         consumer.setHypervisorId(new HypervisorId(hypervisorid));
         consumer = consumerCurator.create(consumer);
-        List<String> hypervisorIds = new LinkedList<String>();
+        List<String> hypervisorIds = new LinkedList<>();
         hypervisorIds.add(hypervisorid);
         hypervisorIds.add("not really a hypervisor");
         List<Consumer> results = consumerCurator.getHypervisorsBulk(hypervisorIds, owner.getId()).list();
@@ -860,7 +860,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
         consumer.setHypervisorId(new HypervisorId(hypervisorid));
         consumer = consumerCurator.create(consumer);
-        List<String> hypervisorIds = new LinkedList<String>();
+        List<String> hypervisorIds = new LinkedList<>();
         hypervisorIds.add(hypervisorid.toUpperCase());
         hypervisorIds.add("NOT really a hypervisor");
         List<Consumer> results = consumerCurator.getHypervisorsBulk(hypervisorIds, owner.getId()).list();
@@ -876,7 +876,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumer.setHypervisorId(new HypervisorId(hypervisorid));
         consumer = consumerCurator.create(consumer);
         List<Consumer> results = consumerCurator
-            .getHypervisorsBulk(new LinkedList<String>(), owner.getId())
+            .getHypervisorsBulk(new LinkedList<>(), owner.getId())
             .list();
 
         assertEquals(0, results.size());
@@ -935,7 +935,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     @Test
     public void testConsumerDeleteCascadesToContentTag() {
         Consumer c = new Consumer("testConsumer", "testUser", owner, ct);
-        c.setContentTags(new HashSet<String>(Arrays.asList(new String[] {"t1", "t2"})));
+        c.setContentTags(new HashSet<>(Arrays.asList(new String[] { "t1", "t2" })));
 
         String countQuery = "SELECT COUNT(*) FROM cp_consumer_content_tags";
 
@@ -962,10 +962,10 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     @Test
     public void emptyCollectionsShouldCountAllExistingConsumers() throws Exception {
         createConsumer(owner);
-        typeLabels = new HashSet<String>();
-        skus = new LinkedList<String>();
-        subscriptionIds = new LinkedList<String>();
-        contracts = new LinkedList<String>();
+        typeLabels = new HashSet<>();
+        skus = new LinkedList<>();
+        subscriptionIds = new LinkedList<>();
+        contracts = new LinkedList<>();
 
         int count = consumerCurator.countConsumers(owner.getKey(), typeLabels,
             skus, subscriptionIds, contracts);
@@ -1035,7 +1035,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         String l1 = c1.getType().getLabel();
         String l2 = c2.getType().getLabel();
         assertNotEquals(l1, l2);
-        HashSet<String> typeLabels = new HashSet<String>(1);
+        HashSet<String> typeLabels = new HashSet<>(1);
         typeLabels.add(l1);
 
         int count = consumerCurator.countConsumers(owner.getKey(), typeLabels,
@@ -1052,7 +1052,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         String l2 = c2.getType().getLabel();
 
         assertNotEquals(l1, l2);
-        HashSet<String> typeLabels = new HashSet<String>(1);
+        HashSet<String> typeLabels = new HashSet<>(1);
         typeLabels.add(l1);
         typeLabels.add(l2);
 
@@ -1065,7 +1065,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     @Test
     public void countShouldReturnZeroWhenUnknownLabel() throws Exception {
         createConsumer(owner);
-        Set<String> labels = new HashSet<String>();
+        Set<String> labels = new HashSet<>();
         labels.add("unknown-label");
 
         int count = consumerCurator.countConsumers(owner.getKey(), labels,
@@ -1080,7 +1080,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         Consumer c = createConsumer(owner);
         Product mktProduct = createMktProductAndBindItToConsumer(owner, c);
         Product notMktproduct = createProductAndBindItToConsumer(owner, c);
-        List<String> skus = new ArrayList<String>();
+        List<String> skus = new ArrayList<>();
         skus.add(notMktproduct.getId());
 
         int count = consumerCurator.countConsumers(owner.getKey(), typeLabels,
@@ -1104,7 +1104,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
         assertNotEquals(p1.getId(), p2.getId());
 
-        List<String> skus = new ArrayList<String>();
+        List<String> skus = new ArrayList<>();
         skus.add(p1.getId());
 
         int count = consumerCurator.countConsumers(owner.getKey(), typeLabels,
@@ -1117,7 +1117,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     public void testDisjunctionInCountingWithSkus() {
         Product p1 = createConsumerWithBindingToMKTProduct(owner);
         Product p2 = createConsumerWithBindingToMKTProduct(owner);
-        List<String> skus = new ArrayList<String>();
+        List<String> skus = new ArrayList<>();
         skus.add(p1.getId());
         skus.add(p2.getId());
 
@@ -1134,7 +1134,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         Product p2 = createMktProductAndBindItToConsumer(owner, c);
         assertNotEquals(p1.getId(), p2.getId());
 
-        List<String> skus = new ArrayList<String>();
+        List<String> skus = new ArrayList<>();
         skus.add(p1.getId());
         skus.add(p2.getId());
 
@@ -1147,7 +1147,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     @Test
     public void countShouldReturnZeroIfUnknownSku() throws Exception {
         createConsumer(owner);
-        List<String> skus = new ArrayList<String>();
+        List<String> skus = new ArrayList<>();
         skus.add("unknown-sku");
 
         int count = consumerCurator.countConsumers(owner.getKey(), typeLabels,
@@ -1164,7 +1164,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         Pool p2 = createConsumerWithBindingToProduct(owner, product);
         assertNotEquals(p1.getSubscriptionId(), p2.getSubscriptionId());
 
-        List<String> ids = new ArrayList<String>();
+        List<String> ids = new ArrayList<>();
         ids.add(p1.getSubscriptionId());
 
         int count = consumerCurator.countConsumers(owner.getKey(), typeLabels,
@@ -1180,7 +1180,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         Pool p2 = createConsumerWithBindingToProduct(owner, product);
         assertNotEquals(p1.getSubscriptionId(), p2.getSubscriptionId());
 
-        List<String> ids = new ArrayList<String>();
+        List<String> ids = new ArrayList<>();
         ids.add(p1.getSubscriptionId());
         ids.add(p2.getSubscriptionId());
 
@@ -1197,7 +1197,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         Pool p2 = createPoolAndBindItToConsumer(owner, c);
         assertNotEquals(p1.getSubscriptionId(), p2.getSubscriptionId());
 
-        List<String> ids = new ArrayList<String>();
+        List<String> ids = new ArrayList<>();
         ids.add(p1.getSubscriptionId());
         ids.add(p2.getSubscriptionId());
 
@@ -1210,7 +1210,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     @Test
     public void countShouldReturnZeroIfUnknownSubscriptionId() throws Exception {
         createConsumer(owner);
-        List<String> ids = new ArrayList<String>();
+        List<String> ids = new ArrayList<>();
         ids.add("unknown-subId");
 
         int count = consumerCurator.countConsumers(owner.getKey(), typeLabels,
@@ -1226,7 +1226,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         Pool p1 = createConsumerWithBindingToProduct(owner, product, "contract-1");
         createConsumerAndEntitlement(owner, p1);
         createConsumerWithBindingToProduct(owner, product, "contract-2");
-        List<String> c = new ArrayList<String>();
+        List<String> c = new ArrayList<>();
         c.add(p1.getContractNumber());
 
         int count = consumerCurator.countConsumers(owner.getKey(), typeLabels,
@@ -1240,7 +1240,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         Product product = createProduct(owner);
         Pool p1 = createConsumerWithBindingToProduct(owner, product, "contract-1");
         Pool p2 = createConsumerWithBindingToProduct(owner, product, "contract-2");
-        List<String> c = new ArrayList<String>();
+        List<String> c = new ArrayList<>();
         c.add(p1.getContractNumber());
         c.add(p2.getContractNumber());
 
@@ -1257,7 +1257,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         String contr2 = "contract-2";
         createProductAndBindItToConsumer(owner, c, contr1);
         createProductAndBindItToConsumer(owner, c, contr2);
-        List<String> contracts = new ArrayList<String>();
+        List<String> contracts = new ArrayList<>();
         contracts.add(contr1);
         contracts.add(contr2);
 
@@ -1270,7 +1270,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     @Test
     public void countShouldReturnZeroIfUnknownContractNumber() throws Exception {
         createConsumer(owner);
-        List<String> c = new ArrayList<String>();
+        List<String> c = new ArrayList<>();
         c.add("unknown-contract");
 
         int count = consumerCurator.countConsumers(owner.getKey(), typeLabels,
@@ -1293,10 +1293,10 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         Consumer c3 = createConsumerAndBindItToProduct(owner, skuProduct, subscriptionId);
         Consumer c4 = createConsumerAndBindItToProduct(owner, skuProduct, subscriptionId, poolContract);
 
-        Set<String> labels = new HashSet<String>();
-        List<String> skus = new ArrayList<String>();
-        List<String> subIds = new ArrayList<String>();
-        List<String> contracts = new ArrayList<String>();
+        Set<String> labels = new HashSet<>();
+        List<String> skus = new ArrayList<>();
+        List<String> subIds = new ArrayList<>();
+        List<String> contracts = new ArrayList<>();
         labels.add(c1.getType().getLabel());
         labels.add(c2.getType().getLabel());
         labels.add(c3.getType().getLabel());

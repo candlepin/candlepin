@@ -85,7 +85,7 @@ public class PoolRulesInstanceTest {
     public void hostedCreateInstanceBasedPool() {
         Subscription s = createInstanceBasedSub("INSTANCEPROD", 100, 2, false);
         Pool p = TestUtil.copyFromSub(s);
-        List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<Pool>());
+        List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<>());
         assertEquals(1, pools.size());
 
         Pool pool = pools.get(0);
@@ -98,7 +98,7 @@ public class PoolRulesInstanceTest {
     public void standaloneCreateInstanceBasedPool() {
         Subscription s = createInstanceBasedSub("INSTANCEPROD", 100, 2, true);
         Pool p = TestUtil.copyFromSub(s);
-        List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<Pool>());
+        List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<>());
         assertEquals(1, pools.size());
 
         Pool pool = pools.get(0);
@@ -113,7 +113,7 @@ public class PoolRulesInstanceTest {
     public void hostedInstanceBasedUpdatePool() {
         Subscription s = createInstanceBasedSub("INSTANCEPROD", 100, 2, false);
         Pool p = TestUtil.copyFromSub(s);
-        List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<Pool>());
+        List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<>());
         assertEquals(1, pools.size());
         Pool pool = pools.get(0);
 
@@ -123,7 +123,7 @@ public class PoolRulesInstanceTest {
         // Change the quantity:
         p.setQuantity(new Long(200));
 
-        List<Pool> existingPools = new LinkedList<Pool>();
+        List<Pool> existingPools = new LinkedList<>();
         existingPools.add(pool);
         List<PoolUpdate> updates = poolRules.updatePools(p, existingPools, p.getQuantity(),
             TestUtil.stubChangedProducts(p.getProduct()));
@@ -138,7 +138,7 @@ public class PoolRulesInstanceTest {
     public void hostedInstanceBasedRemoved() {
         Subscription s = createInstanceBasedSub("INSTANCEPROD", 100, 2, false);
         Pool masterPool = TestUtil.copyFromSub(s);
-        List<Pool> pools = poolRules.createAndEnrichPools(masterPool, new LinkedList<Pool>());
+        List<Pool> pools = poolRules.createAndEnrichPools(masterPool, new LinkedList<>());
         assertEquals(1, pools.size());
         Pool pool = pools.get(0);
 
@@ -148,7 +148,7 @@ public class PoolRulesInstanceTest {
         masterPool = TestUtil.copyFromSub(s);
         masterPool.getProduct().removeAttribute(Product.Attributes.INSTANCE_MULTIPLIER);
 
-        List<Pool> existingPools = new LinkedList<Pool>();
+        List<Pool> existingPools = new LinkedList<>();
         existingPools.add(pool);
         List<PoolUpdate> updates = poolRules.updatePools(masterPool, existingPools, s.getQuantity(),
             TestUtil.stubChangedProducts(masterPool.getProduct()));
@@ -164,7 +164,7 @@ public class PoolRulesInstanceTest {
     public void standaloneInstanceBasedUpdatePool() {
         Subscription s = createInstanceBasedSub("INSTANCEPROD", 100, 2, true);
         Pool masterPool = TestUtil.copyFromSub(s);
-        List<Pool> pools = poolRules.createAndEnrichPools(masterPool, new LinkedList<Pool>());
+        List<Pool> pools = poolRules.createAndEnrichPools(masterPool, new LinkedList<>());
         assertEquals(1, pools.size());
         Pool pool = pools.get(0);
 
@@ -174,7 +174,7 @@ public class PoolRulesInstanceTest {
         // Change the quantity as well:
         masterPool.setQuantity(new Long(200));
 
-        List<Pool> existingPools = new LinkedList<Pool>();
+        List<Pool> existingPools = new LinkedList<>();
         existingPools.add(pool);
         List<PoolUpdate> updates = poolRules.updatePools(masterPool, existingPools,
             masterPool.getQuantity(), TestUtil.stubChangedProducts(masterPool.getProduct()));

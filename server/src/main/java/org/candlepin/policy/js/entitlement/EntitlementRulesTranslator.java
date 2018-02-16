@@ -151,7 +151,7 @@ public class EntitlementRulesTranslator {
         // {2} - Pool product (sku) name
         // {3} - Product multiplier
         // {4} - Post (for host-limited pools)
-        POOL_ERROR_MESSAGES = new HashMap<String, String>();
+        POOL_ERROR_MESSAGES = new HashMap<>();
 
         POOL_ERROR_MESSAGES.put(PoolErrorKeys.ALREADY_ATTACHED,
             I18n.marktr("This unit has already had the subscription matching pool ID \"{1}\" attached."));
@@ -201,7 +201,7 @@ public class EntitlementRulesTranslator {
         // Product error messages can contain the following variables
         // {0} - Error key
         // {1} - Product ID
-        PRODUCT_ERROR_MESSAGES = new HashMap<String, String>();
+        PRODUCT_ERROR_MESSAGES = new HashMap<>();
 
         PRODUCT_ERROR_MESSAGES.put(ProductErrorKeys.ALREADY_ATTACHED,
             I18n.marktr("This system already has a subscription for the product \"{1}\" attached."));
@@ -217,7 +217,7 @@ public class EntitlementRulesTranslator {
         // Entitlement error messages can contain the following variables
         // {0} - Error key
         // {1} - Entitlement ID
-        ENTITLEMENT_ERROR_MESSAGES = new HashMap<String, String>();
+        ENTITLEMENT_ERROR_MESSAGES = new HashMap<>();
 
         ENTITLEMENT_ERROR_MESSAGES.put(EntitlementErrorKeys.INSUFFICIENT_QUANTITY,
             I18n.marktr("Insufficient pool quantity available for adjustment to entitlement \"{1}\"."));

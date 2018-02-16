@@ -73,7 +73,7 @@ public class CandlepinRequestScope implements Scope {
      * We really need single per resteasy session, so let resteasy handle scoping for us.
      */
     private class CandlepinRequestScopeData {
-        private Map<Key<?>, Object> scopeData = new HashMap<Key<?>, Object>();
+        private Map<Key<?>, Object> scopeData = new HashMap<>();
 
         public Map<Key<?>, Object> get() {
             return scopeData;

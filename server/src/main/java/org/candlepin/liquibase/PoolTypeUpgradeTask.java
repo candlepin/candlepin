@@ -59,7 +59,7 @@ public class PoolTypeUpgradeTask extends LiquibaseCustomTask {
         int rows = 0;
         int count = 0;
 
-        ArrayList<String> list = new ArrayList<String>(UPDATE_BATCH_SIZE);
+        ArrayList<String> list = new ArrayList<>(UPDATE_BATCH_SIZE);
         StringBuilder paramList;
 
         PreparedStatement queryStatement = this.prepareStatement(querySQL, argv);

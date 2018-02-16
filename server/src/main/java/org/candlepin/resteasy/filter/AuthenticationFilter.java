@@ -70,7 +70,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     private ConsumerCurator consumerCurator;
     private Injector injector;
     private Configuration config;
-    private List<AuthProvider> providers = new ArrayList<AuthProvider>();
+    private List<AuthProvider> providers = new ArrayList<>();
 
     @Inject
     public AuthenticationFilter(Configuration config,

@@ -42,7 +42,7 @@ public class ProductDTOTest extends AbstractDTOTest<ProductDTO> {
     public ProductDTOTest() {
         super(ProductDTO.class);
 
-        Collection<ProductContentDTO> productContent = new LinkedList<ProductContentDTO>();
+        Collection<ProductContentDTO> productContent = new LinkedList<>();
 
         for (int i = 0; i < 5; ++i) {
             ContentDTO content = this.contentDTOTest.getPopulatedDTOInstance();
@@ -51,19 +51,19 @@ public class ProductDTOTest extends AbstractDTOTest<ProductDTO> {
             productContent.add(new ProductContentDTO(content, i % 2 != 0));
         }
 
-        Map<String, String> attributes = new HashMap<String, String>();
+        Map<String, String> attributes = new HashMap<>();
 
         for (int i = 0; i < 5; ++i) {
             attributes.put("attrib-" + i, "value-" + i);
         }
 
-        Collection<String> dependentProductIds = new LinkedList<String>();
+        Collection<String> dependentProductIds = new LinkedList<>();
 
         for (int i = 0; i < 5; ++i) {
             dependentProductIds.add("dependentProdId" + i);
         }
 
-        this.values = new HashMap<String, Object>();
+        this.values = new HashMap<>();
         this.values.put("Uuid", "test_value");
         this.values.put("Id", "test_value");
         this.values.put("Type", "test_value");

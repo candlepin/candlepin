@@ -106,7 +106,7 @@ public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, Po
         source.setStartDate(new Date());
         source.setEndDate(new Date());
 
-        Map<String, String> attributes = new HashMap<String, String>();
+        Map<String, String> attributes = new HashMap<>();
         attributes.put(Pool.Attributes.SOURCE_POOL_ID, "true");
         source.setAttributes(attributes);
 
@@ -123,11 +123,11 @@ public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, Po
         branding.setName("branding-name-1");
         branding.setProductId("branding-prod-id-1");
         branding.setType("branding-type-1");
-        Set<Branding> brandingSet = new HashSet<Branding>();
+        Set<Branding> brandingSet = new HashSet<>();
         brandingSet.add(branding);
         source.setBranding(brandingSet);
 
-        Map<String, String> calculatedAttributes = new HashMap<String, String>();
+        Map<String, String> calculatedAttributes = new HashMap<>();
         calculatedAttributes.put("calc-attribute-key-3", "calc-attribute-value-3");
         calculatedAttributes.put("calc-attribute-key-4", "calc-attribute-value-4");
         source.setCalculatedAttributes(calculatedAttributes);
@@ -141,7 +141,7 @@ public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, Po
         Product derivedProduct = new Product();
         derivedProduct.setId("derived-product-id-2");
         derivedProduct.setName("derived-product-name-2");
-        derivedProduct.setAttributes(new HashMap<String, String>());
+        derivedProduct.setAttributes(new HashMap<>());
         derivedProduct.setAttribute(Product.Attributes.ARCHITECTURE, "POWER");
         derivedProduct.setAttribute(Product.Attributes.STACKING_ID, "2221");
         source.setDerivedProduct(derivedProduct);
@@ -149,14 +149,14 @@ public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, Po
         ProvidedProduct providedProd = new ProvidedProduct();
         providedProd.setProductId("provided-product-id-1");
         providedProd.setProductName("provided-product-name-1");
-        Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
+        Set<ProvidedProduct> providedProducts = new HashSet<>();
         providedProducts.add(providedProd);
         source.setProvidedProductDtos(providedProducts);
 
         ProvidedProduct derivedProvidedProd = new ProvidedProduct();
         derivedProvidedProd.setProductId("derived-provided-product-id-1");
         derivedProvidedProd.setProductName("derived-provided-product-name-1");
-        Set<ProvidedProduct> derivedProvidedProducts = new HashSet<ProvidedProduct>();
+        Set<ProvidedProduct> derivedProvidedProducts = new HashSet<>();
         derivedProvidedProducts.add(derivedProvidedProd);
         source.setDerivedProvidedProductDtos(derivedProvidedProducts);
 

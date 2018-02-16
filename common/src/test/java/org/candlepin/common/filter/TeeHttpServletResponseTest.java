@@ -58,7 +58,7 @@ public class TeeHttpServletResponseTest {
         tee.getOutputStream().write("this is my body".getBytes());
 
         // Map content types to whether they should be logged as text or base64 encoded
-        Map<String, Boolean> types = new HashMap<String, Boolean>();
+        Map<String, Boolean> types = new HashMap<>();
         types.put(MediaType.APPLICATION_JSON, true);
         types.put(MediaType.APPLICATION_ATOM_XML, true);
         types.put(MediaType.TEXT_PLAIN, true);

@@ -103,8 +103,8 @@ public class UserResource {
     public List<Role> getUserRoles(@PathParam("username")
         @Verify(User.class) String username) {
         User myUser = userService.findByLogin(username);
-        List<Role> roles = new LinkedList<Role>();
-        Set<User> s = new HashSet<User>();
+        List<Role> roles = new LinkedList<>();
+        Set<User> s = new HashSet<>();
         s.add(myUser);
         for (Role r : myUser.getRoles()) {
             // Copy onto a detached role object so we can omit users list, which could

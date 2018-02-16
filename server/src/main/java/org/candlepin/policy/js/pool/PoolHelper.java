@@ -64,7 +64,7 @@ public class PoolHelper {
      *         have priority.
      */
     public static Map<String, String> getFlattenedAttributes(Pool pool) {
-        Map<String, String> attributes = new HashMap<String, String>();
+        Map<String, String> attributes = new HashMap<>();
 
         if (pool != null) {
             attributes.putAll(pool.getProductAttributes());
@@ -83,8 +83,8 @@ public class PoolHelper {
     public static List<Pool> createHostRestrictedPools(PoolManager poolManager, Consumer consumer,
         List<Pool> pools, Map<String, Entitlement> sourceEntitlements,
         Map<String, Map<String, String>> attributeMaps, ProductCurator productCurator) {
-        List<Pool> poolsToCreate = new ArrayList<Pool>();
-        List<Pool> poolsToUpdateFromStack = new ArrayList<Pool>();
+        List<Pool> poolsToCreate = new ArrayList<>();
+        List<Pool> poolsToUpdateFromStack = new ArrayList<>();
         for (Pool pool : pools) {
             Product product = pool.getProduct();
             Pool consumerSpecificPool = null;
@@ -229,7 +229,7 @@ public class PoolHelper {
         Pool pool = createPool(product, sourcePool.getOwner(), quantity,
             sourcePool.getStartDate(), sourcePool.getEndDate(),
             sourcePool.getContractNumber(), sourcePool.getAccountNumber(),
-            sourcePool.getOrderNumber(), new HashSet<Product>(), sourceEntitlement,
+            sourcePool.getOrderNumber(), new HashSet<>(), sourceEntitlement,
             sourcePool.hasSharedAncestor());
 
         SourceSubscription srcSub = sourcePool.getSourceSubscription();
@@ -269,7 +269,7 @@ public class PoolHelper {
         Pool pool = new Pool(
             owner,
             product,
-            new HashSet<Product>(),
+            new HashSet<>(),
             q,
             startDate,
             endDate,

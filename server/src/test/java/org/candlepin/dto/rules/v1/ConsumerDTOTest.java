@@ -44,22 +44,22 @@ public class ConsumerDTOTest extends AbstractDTOTest<ConsumerDTO> {
         type.setLabel("type_label");
         type.setManifest(true);
 
-        Map<String, String> facts = new HashMap<String, String>();
+        Map<String, String> facts = new HashMap<>();
         for (int i = 0; i < 5; ++i) {
             facts.put("fact-" + i, "value-" + i);
         }
 
-        Set<String> installedProducts = new HashSet<String>();
+        Set<String> installedProducts = new HashSet<>();
         for (int i = 0; i < 5; ++i) {
             installedProducts.add("cip-" + i);
         }
 
-        Set<String> capabilityDTOS = new HashSet<String>();
+        Set<String> capabilityDTOS = new HashSet<>();
         for (int i = 0; i < 5; ++i) {
             capabilityDTOS.add("capability-" + i);
         }
 
-        this.values = new HashMap<String, Object>();
+        this.values = new HashMap<>();
         this.values.put("Uuid", "test-uuid");
         this.values.put("Username", "test-user-name");
         this.values.put("ServiceLevel", "test-service-level");

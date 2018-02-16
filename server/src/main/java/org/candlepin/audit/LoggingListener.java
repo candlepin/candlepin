@@ -54,7 +54,7 @@ public class LoggingListener implements EventListener {
         encoder.setPattern("%m");
         encoder.start();
 
-        FileAppender<ILoggingEvent> appender = new FileAppender<ILoggingEvent>();
+        FileAppender<ILoggingEvent> appender = new FileAppender<>();
         appender.setFile(config.getString(ConfigProperties.AUDIT_LOG_FILE));
         appender.setEncoder(encoder);
         appender.setName("AUDITLOG");

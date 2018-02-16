@@ -44,7 +44,7 @@ public class SimpleModelTranslator implements ModelTranslator {
      * Initializes a new ModelTranslator instance.
      */
     public SimpleModelTranslator() {
-        this.translators = new HashMap<Class, Map<Class, ObjectTranslator>>();
+        this.translators = new HashMap<>();
     }
 
     /**
@@ -68,7 +68,7 @@ public class SimpleModelTranslator implements ModelTranslator {
 
         Map<Class, ObjectTranslator> inputMappings = this.translators.get(outputClass);
         if (inputMappings == null) {
-            inputMappings = new HashMap<Class, ObjectTranslator>();
+            inputMappings = new HashMap<>();
             this.translators.put(outputClass, inputMappings);
         }
 

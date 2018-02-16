@@ -29,7 +29,7 @@ import java.util.Set;
  *
  */
 public class ProductEntitlements {
-    private Map<String, Set<Entitlement>> entsByProductIds = new HashMap<String, Set<Entitlement>>();
+    private Map<String, Set<Entitlement>> entsByProductIds = new HashMap<>();
 
     public ProductEntitlements(Collection<Entitlement> entitlements, ProductCurator productCurator) {
         for (Entitlement ent : entitlements) {
@@ -42,7 +42,7 @@ public class ProductEntitlements {
 
     private void addProductIdToMap(String pid, Entitlement e) {
         if (!entsByProductIds.containsKey(pid)) {
-            entsByProductIds.put(pid, new HashSet<Entitlement>());
+            entsByProductIds.put(pid, new HashSet<>());
         }
         entsByProductIds.get(pid).add(e);
     }

@@ -118,7 +118,7 @@ public class ActivationKeyResource {
 
         ActivationKey key = activationKeyCurator.verifyAndLookupKey(activationKeyId);
 
-        return new TransformedIterator<ActivationKeyPool, PoolDTO>(key.getPools().iterator(),
+        return new TransformedIterator<>(key.getPools().iterator(),
             new ElementTransformer<ActivationKeyPool, PoolDTO>() {
                 @Override
                 public PoolDTO transform(ActivationKeyPool akp) {

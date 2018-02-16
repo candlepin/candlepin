@@ -93,12 +93,12 @@ public class CancelJobJobTest extends BaseJobTest{
             .build();
 
         List<JobDetail> jobDetailList = Arrays.asList(jd1, jd2, jd3);
-        Set<JobStatus> jl = new HashSet<JobStatus>();
+        Set<JobStatus> jl = new HashSet<>();
         for (JobDetail jd : jobDetailList) {
             jl.add(new JobStatus(jd1));
         }
 
-        Set<JobKey> jobKeys = new HashSet<JobKey>();
+        Set<JobKey> jobKeys = new HashSet<>();
         jobKeys.add(new JobKey("G1"));
         jobKeys.add(new JobKey("G2"));
 

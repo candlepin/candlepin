@@ -47,7 +47,7 @@ public class ContentTest extends DatabaseTestFixture {
 
         Content content = TestUtil.createContent("test-content");
 
-        HashSet<String> modifiedProductIds = new HashSet<String>();
+        HashSet<String> modifiedProductIds = new HashSet<>();
         modifiedProductIds.add("ProductA");
         modifiedProductIds.add("ProductB");
 

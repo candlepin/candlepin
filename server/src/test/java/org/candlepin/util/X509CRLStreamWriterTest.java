@@ -156,13 +156,13 @@ public class X509CRLStreamWriterTest {
 
         X509CRL changedCrl = readCRL();
 
-        Set<BigInteger> discoveredSerials = new HashSet<BigInteger>();
+        Set<BigInteger> discoveredSerials = new HashSet<>();
 
         for (X509CRLEntry entry : changedCrl.getRevokedCertificates()) {
             discoveredSerials.add(entry.getSerialNumber());
         }
 
-        Set<BigInteger> expected = new HashSet<BigInteger>();
+        Set<BigInteger> expected = new HashSet<>();
         expected.add(new BigInteger("100"));
         assertEquals(expected, discoveredSerials);
     }
@@ -204,7 +204,7 @@ public class X509CRLStreamWriterTest {
             (RSAPrivateKey) keyPair.getPrivate(), (RSAPublicKey) keyPair.getPublic());
 
         // Add enough items to cause the number of length bytes to change
-        Set<BigInteger> newSerials = new HashSet<BigInteger>(Arrays.asList(
+        Set<BigInteger> newSerials = new HashSet<>(Arrays.asList(
             new BigInteger("2358215310"),
             new BigInteger("7231352433"),
             new BigInteger("8233181205"),
@@ -225,7 +225,7 @@ public class X509CRLStreamWriterTest {
 
         X509CRL changedCrl = readCRL();
 
-        Set<BigInteger> discoveredSerials = new HashSet<BigInteger>();
+        Set<BigInteger> discoveredSerials = new HashSet<>();
 
         for (X509CRLEntry entry : changedCrl.getRevokedCertificates()) {
             discoveredSerials.add(entry.getSerialNumber());
@@ -246,7 +246,7 @@ public class X509CRLStreamWriterTest {
         crlBuilder.addExtension(Extension.cRLNumber, false, new CRLNumber(new BigInteger("127")));
 
         BigInteger serial = new BigInteger("741696FE9E30AD27", 16);
-        Set<BigInteger> expected = new HashSet<BigInteger>();
+        Set<BigInteger> expected = new HashSet<>();
         for (int i = 0; i < 10000; i++) {
             serial = serial.add(BigInteger.TEN);
             crlBuilder.addCRLEntry(serial, new Date(), CRLReason.privilegeWithdrawn);
@@ -262,7 +262,7 @@ public class X509CRLStreamWriterTest {
             (RSAPrivateKey) keyPair.getPrivate(), (RSAPublicKey) keyPair.getPublic());
 
         // Add enough items to cause the number of length bytes to change
-        Set<BigInteger> newSerials = new HashSet<BigInteger>(Arrays.asList(
+        Set<BigInteger> newSerials = new HashSet<>(Arrays.asList(
             new BigInteger("2358215310"),
             new BigInteger("7231352433"),
             new BigInteger("8233181205"),
@@ -283,7 +283,7 @@ public class X509CRLStreamWriterTest {
 
         X509CRL changedCrl = readCRL();
 
-        Set<BigInteger> discoveredSerials = new HashSet<BigInteger>();
+        Set<BigInteger> discoveredSerials = new HashSet<>();
 
         for (X509CRLEntry entry : changedCrl.getRevokedCertificates()) {
             discoveredSerials.add(entry.getSerialNumber());
@@ -300,11 +300,11 @@ public class X509CRLStreamWriterTest {
         X509CRLStreamWriter stream = new X509CRLStreamWriter(crlToChange,
             (RSAPrivateKey) keyPair.getPrivate(), (RSAPublicKey) keyPair.getPublic());
 
-        Set<BigInteger> expected = new HashSet<BigInteger>();
+        Set<BigInteger> expected = new HashSet<>();
         expected.add(new BigInteger("100"));
 
         // Add enough items to cause the number of length bytes to change
-        Set<BigInteger> newSerials = new HashSet<BigInteger>(Arrays.asList(
+        Set<BigInteger> newSerials = new HashSet<>(Arrays.asList(
             new BigInteger("2358215310"),
             new BigInteger("7231352433"),
             new BigInteger("8233181205"),
@@ -325,7 +325,7 @@ public class X509CRLStreamWriterTest {
 
         X509CRL changedCrl = readCRL();
 
-        Set<BigInteger> discoveredSerials = new HashSet<BigInteger>();
+        Set<BigInteger> discoveredSerials = new HashSet<>();
 
         for (X509CRLEntry entry : changedCrl.getRevokedCertificates()) {
             discoveredSerials.add(entry.getSerialNumber());
@@ -346,11 +346,11 @@ public class X509CRLStreamWriterTest {
         X509CRLStreamWriter stream = new X509CRLStreamWriter(crlToChange,
             (RSAPrivateKey) keyPair.getPrivate(), (RSAPublicKey) keyPair.getPublic());
 
-        Set<BigInteger> expected = new HashSet<BigInteger>();
+        Set<BigInteger> expected = new HashSet<>();
         expected.add(new BigInteger("100"));
 
         // Add enough items to cause the number of length bytes to change
-        Set<BigInteger> newSerials = new HashSet<BigInteger>(Arrays.asList(
+        Set<BigInteger> newSerials = new HashSet<>(Arrays.asList(
             new BigInteger("2358215310"),
             new BigInteger("7231352433"),
             new BigInteger("8233181205"),
@@ -371,7 +371,7 @@ public class X509CRLStreamWriterTest {
 
         X509CRL changedCrl = readCRL();
 
-        Set<BigInteger> discoveredSerials = new HashSet<BigInteger>();
+        Set<BigInteger> discoveredSerials = new HashSet<>();
 
         for (X509CRLEntry entry : changedCrl.getRevokedCertificates()) {
             discoveredSerials.add(entry.getSerialNumber());
@@ -403,7 +403,7 @@ public class X509CRLStreamWriterTest {
             (RSAPrivateKey) keyPair.getPrivate(), (RSAPublicKey) keyPair.getPublic());
 
         // Add enough items to cause the number of length bytes to change
-        Set<BigInteger> newSerials = new HashSet<BigInteger>(Arrays.asList(
+        Set<BigInteger> newSerials = new HashSet<>(Arrays.asList(
             new BigInteger("2358215310"),
             new BigInteger("7231352433"),
             new BigInteger("8233181205"),
@@ -423,7 +423,7 @@ public class X509CRLStreamWriterTest {
 
         X509CRL changedCrl = readCRL();
 
-        Set<BigInteger> discoveredSerials = new HashSet<BigInteger>();
+        Set<BigInteger> discoveredSerials = new HashSet<>();
 
         for (X509CRLEntry entry : changedCrl.getRevokedCertificates()) {
             discoveredSerials.add(entry.getSerialNumber());
@@ -470,7 +470,7 @@ public class X509CRLStreamWriterTest {
             (RSAPrivateKey) keyPair.getPrivate(), (RSAPublicKey) keyPair.getPublic());
 
         // Add enough items to cause the number of length bytes to change
-        Set<BigInteger> newSerials = new HashSet<BigInteger>(Arrays.asList(
+        Set<BigInteger> newSerials = new HashSet<>(Arrays.asList(
             new BigInteger("2358215310"),
             new BigInteger("7231352433"),
             new BigInteger("8233181205"),
@@ -513,13 +513,13 @@ public class X509CRLStreamWriterTest {
             X509CRL originalCrl = new JcaX509CRLConverter().setProvider(BC_PROVIDER).getCRL(holder);
             X509CRL changedCrl = readCRL(differentKeyPair.getPublic());
 
-            Set<BigInteger> discoveredSerials = new HashSet<BigInteger>();
+            Set<BigInteger> discoveredSerials = new HashSet<>();
 
             for (X509CRLEntry entry : changedCrl.getRevokedCertificates()) {
                 discoveredSerials.add(entry.getSerialNumber());
             }
 
-            Set<BigInteger> expected = new HashSet<BigInteger>();
+            Set<BigInteger> expected = new HashSet<>();
             expected.add(new BigInteger("100"));
             assertEquals(expected, discoveredSerials);
 
@@ -589,13 +589,13 @@ public class X509CRLStreamWriterTest {
 
         X509CRL changedCrl = readCRL();
 
-        Set<BigInteger> discoveredSerials = new HashSet<BigInteger>();
+        Set<BigInteger> discoveredSerials = new HashSet<>();
 
         for (X509CRLEntry entry : changedCrl.getRevokedCertificates()) {
             discoveredSerials.add(entry.getSerialNumber());
         }
 
-        Set<BigInteger> expected = new HashSet<BigInteger>();
+        Set<BigInteger> expected = new HashSet<>();
         expected.add(new BigInteger("100"));
         expected.add(new BigInteger("9000"));
 
@@ -735,13 +735,13 @@ public class X509CRLStreamWriterTest {
 
         X509CRL changedCrl = readCRL();
 
-        Set<BigInteger> discoveredSerials = new HashSet<BigInteger>();
+        Set<BigInteger> discoveredSerials = new HashSet<>();
 
         for (X509CRLEntry entry : changedCrl.getRevokedCertificates()) {
             discoveredSerials.add(entry.getSerialNumber());
         }
 
-        Set<BigInteger> expected = new HashSet<BigInteger>();
+        Set<BigInteger> expected = new HashSet<>();
         expected.add(new BigInteger("100"));
         expected.add(new BigInteger("9000"));
 

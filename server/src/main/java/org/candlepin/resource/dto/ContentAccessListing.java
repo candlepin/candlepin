@@ -24,7 +24,7 @@ import java.util.Map;
  */
 public class ContentAccessListing {
     private Date lastUpdate;
-    private Map<Long, List<String>> content = new HashMap<Long, List<String>>();
+    private Map<Long, List<String>> content = new HashMap<>();
 
     public void setLastUpdate(Date lastUpdate) {
         this.lastUpdate = lastUpdate;

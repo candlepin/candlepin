@@ -96,7 +96,7 @@ public class ComplianceStatusHasherTest {
         assertEquals(initialHash, generateHash(testStatus, consumer));
 
         Entitlement ent = createEntitlement(Calendar.getInstance(), owner, consumer, "test-ent");
-        HashSet<Entitlement> ents = new HashSet<Entitlement>();
+        HashSet<Entitlement> ents = new HashSet<>();
         ents.add(ent);
         testStatus.getCompliantProducts().put(ent.getPool().getProductId(), ents);
 
@@ -110,7 +110,7 @@ public class ComplianceStatusHasherTest {
         assertEquals(initialHash, generateHash(testStatus, consumer));
 
         Entitlement ent = createEntitlement(Calendar.getInstance(), owner, consumer, "test-ent");
-        HashSet<Entitlement> ents = new HashSet<Entitlement>();
+        HashSet<Entitlement> ents = new HashSet<>();
         ents.add(ent);
         testStatus.getPartiallyCompliantProducts().put(ent.getPool().getProductId(), ents);
 
@@ -124,7 +124,7 @@ public class ComplianceStatusHasherTest {
         assertEquals(initialHash, generateHash(testStatus, consumer));
 
         Entitlement ent = createEntitlement(Calendar.getInstance(), owner, consumer, "test-ent");
-        HashSet<Entitlement> ents = new HashSet<Entitlement>();
+        HashSet<Entitlement> ents = new HashSet<>();
         ents.add(ent);
         testStatus.getPartialStacks().put("p-stack-2", ents);
 
@@ -166,7 +166,7 @@ public class ComplianceStatusHasherTest {
         ComplianceReason reason = testStatus.getReasons().iterator().next();
 
         // Test new attribute map same values
-        Map<String, String> newAttrs = new HashMap<String, String>();
+        Map<String, String> newAttrs = new HashMap<>();
         newAttrs.putAll(reason.getAttributes());
         reason.setAttributes(newAttrs);
         assertEquals(initialHash, generateHash(testStatus, consumer));
@@ -196,7 +196,7 @@ public class ComplianceStatusHasherTest {
         String firstFactKey = initialConsumerFacts.keySet().iterator().next();
 
         // Same facts, new map.
-        consumer.setFacts(new HashMap<String, String>(initialConsumerFacts));
+        consumer.setFacts(new HashMap<>(initialConsumerFacts));
         assertEquals(initialHash, generateHash(testStatus, consumer));
 
         // Facts cleared
@@ -204,19 +204,19 @@ public class ComplianceStatusHasherTest {
         assertNotEquals(initialHash, generateHash(testStatus, consumer));
 
         // Fact added
-        consumer.setFacts(new HashMap<String, String>(initialConsumerFacts));
+        consumer.setFacts(new HashMap<>(initialConsumerFacts));
         assertEquals(initialHash, generateHash(testStatus, consumer));
         consumer.setFact("another", "fact");
         assertNotEquals(initialHash, generateHash(testStatus, consumer));
 
         // Fact removed
-        consumer.setFacts(new HashMap<String, String>(initialConsumerFacts));
+        consumer.setFacts(new HashMap<>(initialConsumerFacts));
         assertEquals(initialHash, generateHash(testStatus, consumer));
         consumer.getFacts().remove(firstFactKey);
         assertNotEquals(initialHash, generateHash(testStatus, consumer));
 
         // Fact changed
-        consumer.setFacts(new HashMap<String, String>(initialConsumerFacts));
+        consumer.setFacts(new HashMap<>(initialConsumerFacts));
         assertEquals(initialHash, generateHash(testStatus, consumer));
         consumer.setFact(firstFactKey, "Different Value");
         assertNotEquals(initialHash, generateHash(testStatus, consumer));
@@ -230,10 +230,10 @@ public class ComplianceStatusHasherTest {
         assertEquals(initialHash, generateHash(testStatus, consumer));
 
         Set<ConsumerInstalledProduct> initialInstalled = consumer.getInstalledProducts();
-        consumer.setInstalledProducts(new HashSet<ConsumerInstalledProduct>(initialInstalled));
+        consumer.setInstalledProducts(new HashSet<>(initialInstalled));
         assertEquals(initialHash, generateHash(testStatus, consumer));
 
-        consumer.setInstalledProducts(new HashSet<ConsumerInstalledProduct>(initialInstalled));
+        consumer.setInstalledProducts(new HashSet<>(initialInstalled));
         assertEquals(initialHash, generateHash(testStatus, consumer));
         ConsumerInstalledProduct installed = new ConsumerInstalledProduct(product.getUuid(),
             product.getName());
@@ -268,7 +268,7 @@ public class ComplianceStatusHasherTest {
         assertEquals(initialHash, generateHash(testStatus, consumer));
 
         Set<Entitlement> initialEnts = consumer.getEntitlements();
-        consumer.setEntitlements(new HashSet<Entitlement>(initialEnts));
+        consumer.setEntitlements(new HashSet<>(initialEnts));
         assertEquals(initialHash, generateHash(testStatus, consumer));
 
         // Create and add an entitlement to the consumer.
@@ -332,7 +332,7 @@ public class ComplianceStatusHasherTest {
         Product product1 = TestUtil.createProduct("installed-1");
         Product product2 = TestUtil.createProduct("installed-2");
 
-        Set<ConsumerInstalledProduct> installedProducts = new HashSet<ConsumerInstalledProduct>();
+        Set<ConsumerInstalledProduct> installedProducts = new HashSet<>();
         installedProducts.add(new ConsumerInstalledProduct(product1));
         installedProducts.add(new ConsumerInstalledProduct(product2));
         consumer.setInstalledProducts(installedProducts);
@@ -376,7 +376,7 @@ public class ComplianceStatusHasherTest {
         reason.setKey(key);
         reason.setMessage(key + ": This is a test!");
 
-        Map<String, String> attrs = new HashMap<String, String>();
+        Map<String, String> attrs = new HashMap<>();
         attrs.put(key + "-attr", key + "-value");
         reason.setAttributes(attrs);
         return reason;

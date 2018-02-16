@@ -109,7 +109,7 @@ public class User extends AbstractHibernateObject {
     private String id;
 
     @ManyToMany(targetEntity = Role.class, mappedBy = "users")
-    private Set<Role> roles = new HashSet<Role>();
+    private Set<Role> roles = new HashSet<>();
 
     @Column(nullable = false, unique = true)
     @Size(max = 255)
@@ -134,8 +134,8 @@ public class User extends AbstractHibernateObject {
     private Set<Permission> permissions;
 
     public User() {
-        this.roles = new HashSet<Role>();
-        this.permissions = new HashSet<Permission>();
+        this.roles = new HashSet<>();
+        this.permissions = new HashSet<>();
     }
 
     public User(String login, String password) {
@@ -221,7 +221,7 @@ public class User extends AbstractHibernateObject {
      */
     @XmlTransient
     public Set<Owner> getOwners(SubResource sub, Access accessLevel) {
-        Set<Owner> owners = new HashSet<Owner>();
+        Set<Owner> owners = new HashSet<>();
         if (sub == null) {
             sub = SubResource.NONE;
         }
@@ -264,7 +264,7 @@ public class User extends AbstractHibernateObject {
     @XmlTransient
     public Set<Permission> getPermissions() {
         PermissionFactory permFactory = new PermissionFactory();
-        Set<Permission> perms = new HashSet<Permission>();
+        Set<Permission> perms = new HashSet<>();
         for (Role r : getRoles()) {
             perms.addAll(permFactory.createPermissions(this, r.getPermissions()));
         }

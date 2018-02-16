@@ -48,12 +48,12 @@ public class ComplianceStatus {
     private Set<ComplianceReason> reasons;
 
     public ComplianceStatus() {
-        this.nonCompliantProducts = new HashSet<String>();
-        this.compliantProducts = new HashMap<String, Set<Entitlement>>();
-        this.partiallyCompliantProducts = new HashMap<String, Set<Entitlement>>();
-        this.partialStacks = new HashMap<String, Set<Entitlement>>();
-        this.productComplianceDateRanges = new HashMap<String, DateRange>();
-        this.reasons = new HashSet<ComplianceReason>();
+        this.nonCompliantProducts = new HashSet<>();
+        this.compliantProducts = new HashMap<>();
+        this.partiallyCompliantProducts = new HashMap<>();
+        this.partialStacks = new HashMap<>();
+        this.productComplianceDateRanges = new HashMap<>();
+        this.reasons = new HashSet<>();
     }
 
     public ComplianceStatus(Date date) {
@@ -101,7 +101,7 @@ public class ComplianceStatus {
 
     public void addPartiallyCompliantProduct(String productId, Entitlement entitlement) {
         if (!partiallyCompliantProducts.containsKey(productId)) {
-            partiallyCompliantProducts.put(productId, new HashSet<Entitlement>());
+            partiallyCompliantProducts.put(productId, new HashSet<>());
         }
 
         partiallyCompliantProducts.get(productId).add(entitlement);
@@ -109,7 +109,7 @@ public class ComplianceStatus {
 
     public void addCompliantProduct(String productId, Entitlement entitlement) {
         if (!compliantProducts.containsKey(productId)) {
-            compliantProducts.put(productId, new HashSet<Entitlement>());
+            compliantProducts.put(productId, new HashSet<>());
         }
 
         compliantProducts.get(productId).add(entitlement);
@@ -127,7 +127,7 @@ public class ComplianceStatus {
 
     public void addPartialStack(String stackId, Entitlement entitlement) {
         if (!partialStacks.containsKey(stackId)) {
-            partialStacks.put(stackId, new HashSet<Entitlement>());
+            partialStacks.put(stackId, new HashSet<>());
         }
 
         partialStacks.get(stackId).add(entitlement);
@@ -167,7 +167,7 @@ public class ComplianceStatus {
 
     public void setReasons(Set<ComplianceReason> reasons) {
         if (reasons == null) {
-            reasons = new HashSet<ComplianceReason>();
+            reasons = new HashSet<>();
         }
 
         this.reasons = reasons;

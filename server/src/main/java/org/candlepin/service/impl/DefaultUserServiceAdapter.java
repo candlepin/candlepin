@@ -66,7 +66,7 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
 
     @Override
     public Role createRole(Role role) {
-        Set<User> actualUsers = new HashSet<User>();
+        Set<User> actualUsers = new HashSet<>();
 
         for (User user : role.getUsers()) {
             User actualUser = findByLogin(user.getUsername());

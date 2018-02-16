@@ -66,7 +66,7 @@ public class EnvironmentTranslatorTest extends
         source.setDescription("test_description");
         source.setOwner(ownerTranslatorTest.initSourceObject());
 
-        Set<EnvironmentContent> environmentContents = new HashSet<EnvironmentContent>();
+        Set<EnvironmentContent> environmentContents = new HashSet<>();
         for (int i = 0; i < 3; ++i) {
             Content content = TestUtil.createContent("content-" + i);
             content.setUuid(content.getId() + "_uuid");

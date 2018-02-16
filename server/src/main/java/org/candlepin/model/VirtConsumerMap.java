@@ -36,7 +36,7 @@ public class VirtConsumerMap {
     private Map<String, Consumer> virtUuidToConsumerMap;
 
     public VirtConsumerMap() {
-        virtUuidToConsumerMap = new HashMap<String, Consumer>();
+        virtUuidToConsumerMap = new HashMap<>();
     }
 
 

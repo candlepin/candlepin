@@ -32,7 +32,7 @@ public class PoolQuantityDTOTest extends AbstractDTOTest<PoolQuantityDTO> {
         PoolDTO pdto = new PoolDTO();
         pdto.setId("test-pool-id");
 
-        this.values = new HashMap<String, Object>();
+        this.values = new HashMap<>();
         this.values.put("Quantity", 8);
         this.values.put("Pool", pdto);
     }

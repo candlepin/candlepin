@@ -33,7 +33,7 @@ public class ProductCertificateDTOTest extends AbstractDTOTest<ProductCertificat
         ProductDTO pdto = new ProductDTO();
         pdto.setId("test-prod-id");
 
-        this.values = new HashMap<String, Object>();
+        this.values = new HashMap<>();
         this.values.put("Id", "test-id");
         this.values.put("Key", "test-key");
         this.values.put("Cert", "test-cert");

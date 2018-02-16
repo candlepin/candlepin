@@ -128,7 +128,7 @@ public class JobResourceTest {
 
     @Test
     public void getStatusesByPrincipal() {
-        List<JobStatus> statuses = new ArrayList<JobStatus>();
+        List<JobStatus> statuses = new ArrayList<>();
         JobStatus status = new JobStatus();
         statuses.add(status);
 
@@ -146,7 +146,7 @@ public class JobResourceTest {
 
     @Test
     public void getStatusesByOwner() {
-        List<JobStatus> statuses = new ArrayList<JobStatus>();
+        List<JobStatus> statuses = new ArrayList<>();
         JobStatus status = new JobStatus();
         statuses.add(status);
 
@@ -164,7 +164,7 @@ public class JobResourceTest {
 
     @Test
     public void getStatusesByUuid() {
-        List<JobStatus> statuses = new ArrayList<JobStatus>();
+        List<JobStatus> statuses = new ArrayList<>();
         JobStatus status = new JobStatus();
         statuses.add(status);
 
@@ -210,7 +210,7 @@ public class JobResourceTest {
 
     @Test
     public void emptyStringIsAlsoValid() {
-        List<JobStatus> statuses = new ArrayList<JobStatus>();
+        List<JobStatus> statuses = new ArrayList<>();
         JobStatus status = new JobStatus();
         statuses.add(status);
 
@@ -243,7 +243,7 @@ public class JobResourceTest {
 
     @Test
     public void verifyInput() {
-        List<JobStatus> statuses = new ArrayList<JobStatus>();
+        List<JobStatus> statuses = new ArrayList<>();
         JobStatus status = new JobStatus();
         statuses.add(status);
 

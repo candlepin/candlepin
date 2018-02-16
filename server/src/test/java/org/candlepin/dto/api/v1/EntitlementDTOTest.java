@@ -38,7 +38,7 @@ public class EntitlementDTOTest  extends AbstractDTOTest<EntitlementDTO> {
     public EntitlementDTOTest() {
         super(EntitlementDTO.class);
 
-        this.values = new HashMap<String, Object>();
+        this.values = new HashMap<>();
 
         OwnerDTO owner = new OwnerDTO();
         owner.setId("owner_id");
@@ -63,7 +63,7 @@ public class EntitlementDTOTest  extends AbstractDTOTest<EntitlementDTO> {
         consumer.setUsername("consumer_username");
         consumer.setType(new ConsumerTypeDTO());
 
-        Set<CertificateDTO> certs = new HashSet<CertificateDTO>();
+        Set<CertificateDTO> certs = new HashSet<>();
         CertificateDTO certificate = new CertificateDTO();
         certificate.setId("cert-id");
         certificate.setKey("cert-key");

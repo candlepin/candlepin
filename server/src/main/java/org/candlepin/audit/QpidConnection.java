@@ -31,6 +31,7 @@ import org.apache.qpid.jms.BrokerDetails;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -180,7 +181,7 @@ public class QpidConnection {
             log.debug("creating topic session");
             session = createTopicSession();
             log.info("AMQP session created successfully...");
-            Map<Target, Map<Type, TopicPublisher>> pm = Util.newMap();
+            Map<Target, Map<Type, TopicPublisher>> pm = new HashMap<>();
             buildAllTopicPublishers(pm);
             producerMap = pm;
             connectionStatus = STATUS.CONNECTED;
@@ -280,7 +281,7 @@ public class QpidConnection {
         throws JMSException, NamingException {
 
         for (Target target : Target.values()) {
-            Map<Type, TopicPublisher> typeToTpMap = Util.newMap();
+            Map<Type, TopicPublisher> typeToTpMap = new HashMap<>();
             for (Type type : Type.values()) {
                 storeTopicProducer(type, target, typeToTpMap);
             }

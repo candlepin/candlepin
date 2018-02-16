@@ -47,7 +47,7 @@ public class StatusReasonMessageGenerator {
         // {0} - reason key
         // {1} - value covered by entitlement
         // {2} - value present on consumer
-        REASON_MESSAGES = new HashMap<String, String>();
+        REASON_MESSAGES = new HashMap<>();
 
         REASON_MESSAGES.put(ComplianceReason.ReasonKeys.NOT_COVERED,
             I18n.marktr("Not supported by a valid subscription."));
@@ -111,7 +111,7 @@ public class StatusReasonMessageGenerator {
     }
 
     private String getStackedMarketingName(String stackId, Consumer consumer, Date onDate) {
-        Set<String> results = new HashSet<String>();
+        Set<String> results = new HashSet<>();
         for (Entitlement e : getEntitlementsOnDate(consumer, onDate)) {
             String sid = e.getPool().getProduct().getAttributeValue(Product.Attributes.STACKING_ID);
 
@@ -144,7 +144,7 @@ public class StatusReasonMessageGenerator {
     }
 
     private Set<Entitlement> getEntitlementsOnDate(Consumer c, Date onDate) {
-        Set<Entitlement> result = new HashSet<Entitlement>();
+        Set<Entitlement> result = new HashSet<>();
         for (Entitlement ent : c.getEntitlements()) {
             if (ent.isValidOnDate(onDate)) {
                 result.add(ent);

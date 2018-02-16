@@ -114,7 +114,7 @@ public class EventBuilder {
             }
 
             if (event.getTarget().equals(Target.POOL) && event.getType().equals(Type.CREATED)) {
-                Map<String, String> eventData = new HashMap<String, String>();
+                Map<String, String> eventData = new HashMap<>();
                 eventData.put("subscriptionId", ((Pool) entity).getSubscriptionId());
 
                 try {

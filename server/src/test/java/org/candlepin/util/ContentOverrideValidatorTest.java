@@ -86,7 +86,7 @@ public class ContentOverrideValidatorTest extends DatabaseTestFixture  {
 
     @Test
     public void testValidateValidCollection() {
-        List<ContentOverride> overrides = new LinkedList<ContentOverride>();
+        List<ContentOverride> overrides = new LinkedList<>();
         overrides.add(new ContentOverride("label", "testname", "value"));
         overrides.add(new ContentOverride("other label", "other name", "other value"));
 
@@ -116,7 +116,7 @@ public class ContentOverrideValidatorTest extends DatabaseTestFixture  {
     @Test
     public void testValidateCollectionBothInvalid() {
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
-        List<ContentOverride> overrides = new LinkedList<ContentOverride>();
+        List<ContentOverride> overrides = new LinkedList<>();
         overrides.add(new ContentOverride("label", "baseurl", "value"));
         overrides.add(new ContentOverride("other label", "name", "other value"));
 

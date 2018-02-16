@@ -92,7 +92,7 @@ public class Entitlement extends AbstractHibernateObject<Entitlement>
     // certificates.
     @OneToMany(mappedBy = "entitlement", cascade = CascadeType.ALL)
     @BatchSize(size = 100)
-    private Set<EntitlementCertificate> certificates = new HashSet<EntitlementCertificate>();
+    private Set<EntitlementCertificate> certificates = new HashSet<>();
 
 
     private Integer quantity;

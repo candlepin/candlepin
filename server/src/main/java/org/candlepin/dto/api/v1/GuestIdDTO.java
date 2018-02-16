@@ -59,7 +59,7 @@ public class GuestIdDTO extends TimestampedCandlepinDTO<GuestIdDTO> {
     public GuestIdDTO(String guestId) {
         this();
         this.guestId = guestId;
-        attributes = new HashMap<String, String>();
+        attributes = new HashMap<>();
     }
 
     /**
@@ -124,8 +124,7 @@ public class GuestIdDTO extends TimestampedCandlepinDTO<GuestIdDTO> {
      */
     @HateoasArrayExclude
     public Map<String, String> getAttributes() {
-        return this.attributes != null ?
-            new MapView<String, String>(attributes) : null;
+        return this.attributes != null ? new MapView<>(attributes) : null;
     }
 
     /**
@@ -141,7 +140,7 @@ public class GuestIdDTO extends TimestampedCandlepinDTO<GuestIdDTO> {
     public GuestIdDTO setAttributes(Map<String, String> attributes) {
         if (attributes != null) {
             if (this.attributes == null) {
-                this.attributes = new HashMap<String, String>();
+                this.attributes = new HashMap<>();
             }
             else {
                 this.attributes.clear();

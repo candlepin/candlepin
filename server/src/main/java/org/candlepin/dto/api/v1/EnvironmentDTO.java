@@ -239,7 +239,7 @@ public class EnvironmentDTO extends TimestampedCandlepinDTO<EnvironmentDTO> {
     public EnvironmentDTO setEnvironmentContent(Collection<EnvironmentContentDTO> environmentContent) {
         if (environmentContent != null) {
             if (this.environmentContent == null) {
-                this.environmentContent = new HashMap<String, EnvironmentContentDTO>();
+                this.environmentContent = new HashMap<>();
             }
             else {
                 this.environmentContent.clear();
@@ -287,7 +287,7 @@ public class EnvironmentDTO extends TimestampedCandlepinDTO<EnvironmentDTO> {
         String contentId = dto.getContent().getId();
 
         if (this.environmentContent == null) {
-            this.environmentContent = new HashMap<String, EnvironmentContentDTO>();
+            this.environmentContent = new HashMap<>();
             changed = true;
         }
         else {

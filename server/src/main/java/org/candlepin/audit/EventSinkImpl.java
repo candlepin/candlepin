@@ -67,8 +67,8 @@ public class EventSinkImpl implements EventSink {
      * on them per request/job. This is handled in EventFilter for the API, and KingpinJob
      * for quartz jobs.
      */
-    private ThreadLocal<ClientSession> sessions = new ThreadLocal<ClientSession>();
-    private ThreadLocal<ClientProducer> producers = new ThreadLocal<ClientProducer>();
+    private ThreadLocal<ClientSession> sessions = new ThreadLocal<>();
+    private ThreadLocal<ClientProducer> producers = new ThreadLocal<>();
 
     @Inject
     public EventSinkImpl(EventFilter eventFilter, EventFactory eventFactory,
@@ -135,7 +135,7 @@ public class EventSinkImpl implements EventSink {
 
     @Override
     public List<QueueStatus> getQueueInfo() {
-        List<QueueStatus> results = new LinkedList<QueueStatus>();
+        List<QueueStatus> results = new LinkedList<>();
         try {
 
             ClientSession session = getClientSession();

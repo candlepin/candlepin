@@ -58,10 +58,10 @@ public class Role extends AbstractHibernateObject implements Linkable {
         name = "cp_role_users",
         joinColumns = @JoinColumn(name = "role_id"),
         inverseJoinColumns = @JoinColumn(name = "user_id"))
-    private Set<User> users = new HashSet<User>();
+    private Set<User> users = new HashSet<>();
 
     @OneToMany(mappedBy = "role", cascade = CascadeType.ALL)
-    private Set<PermissionBlueprint> permissions = new HashSet<PermissionBlueprint>();
+    private Set<PermissionBlueprint> permissions = new HashSet<>();
 
     @Column(unique = true, nullable = false)
     @Size(max = 255)

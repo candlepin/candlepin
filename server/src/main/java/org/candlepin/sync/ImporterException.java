@@ -28,7 +28,7 @@ public class ImporterException extends SyncException {
     /**
      * The data that was collected from an import before this exception was thrown.
      */
-    private Map<String, Object> collectedData = new HashMap<String, Object>();
+    private Map<String, Object> collectedData = new HashMap<>();
 
     public ImporterException(String msg) {
         super(msg);

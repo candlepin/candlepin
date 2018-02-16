@@ -145,7 +145,7 @@ public class StatusReasonMessageGeneratorTest {
 
     @Test
     public void testNonInstalled() {
-        HashMap<String, String> attrs = new HashMap<String, String>();
+        HashMap<String, String> attrs = new HashMap<>();
         attrs.put("product_id", "prod1");
         ComplianceReason reason = buildReason("NOTCOVERED", attrs);
 
@@ -168,7 +168,7 @@ public class StatusReasonMessageGeneratorTest {
     }
 
     private Map<String, String> buildGeneralAttributes(String has, String covered) {
-        HashMap<String, String> result = new HashMap<String, String>();
+        HashMap<String, String> result = new HashMap<>();
         result.put("entitlement_id", "ent1");
         result.put("has", has);
         result.put("covered", covered);
@@ -176,7 +176,7 @@ public class StatusReasonMessageGeneratorTest {
     }
 
     private Map<String, String> buildStackedAttributes(String has, String covered) {
-        HashMap<String, String> result = new HashMap<String, String>();
+        HashMap<String, String> result = new HashMap<>();
         result.put("stack_id", "stack");
         result.put("has", has);
         result.put("covered", covered);

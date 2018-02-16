@@ -78,7 +78,7 @@ public class CrlFileUtilTest {
 
         this.cfu = new CrlFileUtil(this.pkiReader, this.pkiUtility, this.certSerialCurator);
         this.temp = File.createTempFile("cp_test_crl-", ".pem");
-        this.initialEntry = new HashSet<BigInteger>();
+        this.initialEntry = new HashSet<>();
         this.initialEntry.add(BigInteger.ONE);
     }
 
@@ -106,12 +106,12 @@ public class CrlFileUtilTest {
     public void testNewCRLIsUnmodified() throws Exception {
         this.cfu.initializeCRLFile(temp, initialEntry);
         this.cfu.updateCRLFile(temp, null, null);
-        assertThat(new HashSet<BigInteger>(), new ContainsSerials(temp));
+        assertThat(new HashSet<>(), new ContainsSerials(temp));
     }
 
     @Test
     public void testNewCRLContainsRevokedSerials() throws Exception {
-        Set<BigInteger> revoke = new HashSet<BigInteger>(Arrays.asList(
+        Set<BigInteger> revoke = new HashSet<>(Arrays.asList(
             new BigInteger("9711838712"),
             new BigInteger("1122402922"),
             new BigInteger("1032531028")
@@ -124,13 +124,13 @@ public class CrlFileUtilTest {
 
     @Test
     public void testNewCRLContainsRevokedSerialsButNotUnrevokedSerials() throws Exception {
-        Set<BigInteger> revoke = new HashSet<BigInteger>(Arrays.asList(
+        Set<BigInteger> revoke = new HashSet<>(Arrays.asList(
             new BigInteger("3512918537"),
             new BigInteger("1631181032"),
             new BigInteger("9136184178")
         ));
 
-        Set<BigInteger> unrevoke = new HashSet<BigInteger>(Arrays.asList(
+        Set<BigInteger> unrevoke = new HashSet<>(Arrays.asList(
             new BigInteger("1235821531"),
             new BigInteger("1631181032"),
             new BigInteger("3823318120")
@@ -145,7 +145,7 @@ public class CrlFileUtilTest {
 
     @Test
     public void testExistingCRLIsUnmodified() throws Exception {
-        Set<BigInteger> prime = new HashSet<BigInteger>(Arrays.asList(
+        Set<BigInteger> prime = new HashSet<>(Arrays.asList(
             new BigInteger("1321822616"),
             new BigInteger("3216227128"),
             new BigInteger("2231351827")
@@ -161,13 +161,13 @@ public class CrlFileUtilTest {
 
     @Test
     public void testModifiedCRLContainsRevokedSerials() throws Exception {
-        Set<BigInteger> prime = new HashSet<BigInteger>(Arrays.asList(
+        Set<BigInteger> prime = new HashSet<>(Arrays.asList(
             new BigInteger("2358215310"),
             new BigInteger("7231352433"),
             new BigInteger("8233181205")
         ));
 
-        Set<BigInteger> revoke = new HashSet<BigInteger>(Arrays.asList(
+        Set<BigInteger> revoke = new HashSet<>(Arrays.asList(
             new BigInteger("1132072301"),
             new BigInteger("7717218925"),
             new BigInteger("2196151762")
@@ -185,19 +185,19 @@ public class CrlFileUtilTest {
 
     @Test
     public void testModifiedCRLContainsRevokedSerialsButNotUnrevokedSerials() throws Exception {
-        Set<BigInteger> prime = new HashSet<BigInteger>(Arrays.asList(
+        Set<BigInteger> prime = new HashSet<>(Arrays.asList(
             new BigInteger("4420205175"),
             new BigInteger("2475450918"),
             new BigInteger("1501013497")
         ));
 
-        Set<BigInteger> revoke = new HashSet<BigInteger>(Arrays.asList(
+        Set<BigInteger> revoke = new HashSet<>(Arrays.asList(
             new BigInteger("5219615176"),
             new BigInteger("2239819513"),
             new BigInteger("21822616321")
         ));
 
-        Set<BigInteger> unrevoke = new HashSet<BigInteger>(Arrays.asList(
+        Set<BigInteger> unrevoke = new HashSet<>(Arrays.asList(
             new BigInteger("2239819513"),
             new BigInteger("6227128223"),
             new BigInteger("4420205175")
@@ -226,7 +226,7 @@ public class CrlFileUtilTest {
                 in = new BufferedInputStream(new FileInputStream(f));
                 x509crl = (X509CRL) CertificateFactory.getInstance("X.509").generateCRL(in);
                 x509crl.verify(pkiReader.getCACert().getPublicKey(), BC_PROVIDER.PROVIDER_NAME);
-                Set<BigInteger> s = new HashSet<BigInteger>();
+                Set<BigInteger> s = new HashSet<>();
 
                 for (X509CRLEntry entry : x509crl.getRevokedCertificates()) {
                     s.add(entry.getSerialNumber());

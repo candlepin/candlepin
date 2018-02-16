@@ -82,7 +82,7 @@ public class Environment extends AbstractHibernateObject implements Serializable
 
     @OneToMany(mappedBy = "environment", targetEntity = EnvironmentContent.class,
         cascade = CascadeType.ALL)
-    private Set<EnvironmentContent> environmentContent = new HashSet<EnvironmentContent>();
+    private Set<EnvironmentContent> environmentContent = new HashSet<>();
 
     public Environment() {
         // Intentionally left empty

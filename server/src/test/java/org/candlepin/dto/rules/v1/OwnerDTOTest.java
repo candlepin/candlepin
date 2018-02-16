@@ -31,7 +31,7 @@ public class OwnerDTOTest extends AbstractDTOTest<OwnerDTO> {
     public OwnerDTOTest() {
         super(OwnerDTO.class);
 
-        this.values = new HashMap<String, Object>();
+        this.values = new HashMap<>();
         this.values.put("DefaultServiceLevel", "test-service-level");
         this.values.put("Id", "test-id");
     }

@@ -56,12 +56,12 @@ public class ProductTest extends DatabaseTestFixture {
     }
 
     protected Object[][] getValuesForEqualityAndReplication() {
-        Map<String, String> attributes1 = new HashMap<String, String>();
+        Map<String, String> attributes1 = new HashMap<>();
         attributes1.put("a1", "v1");
         attributes1.put("a2", "v2");
         attributes1.put("a3", "v3");
 
-        Map<String, String> attributes2 = new HashMap<String, String>();
+        Map<String, String> attributes2 = new HashMap<>();
         attributes2.put("a4", "v4");
         attributes2.put("a5", "v5");
         attributes2.put("a6", "v6");

@@ -36,7 +36,7 @@ public class VersionUtil {
     }
 
     public static Map<String, String> getVersionMap() {
-        Map<String, String> map = new HashMap<String, String>();
+        Map<String, String> map = new HashMap<>();
 
         map.put("version", "Unknown");
         map.put("release", "Unknown");

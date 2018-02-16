@@ -78,7 +78,7 @@ public class BindContext {
 
     public Map<String, PoolQuantity> getPoolQuantities() {
         if (poolQuantities == null) {
-            poolQuantities = new HashMap<String, PoolQuantity>();
+            poolQuantities = new HashMap<>();
 
             for (Pool pool : poolCurator.listAllByIds(quantities.keySet())) {
                 Integer quantity = quantities.get(pool.getId());
@@ -117,7 +117,7 @@ public class BindContext {
 
     public Map<String, Entitlement> getEntitlementMap() {
         if (entitlementMap == null) {
-            entitlementMap = new HashMap<String, Entitlement>();
+            entitlementMap = new HashMap<>();
 
             for (PoolQuantity poolQuantity : poolQuantities.values()) {
                 Pool pool = poolQuantity.getPool();

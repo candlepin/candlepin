@@ -43,7 +43,7 @@ public class UpstreamConsumerDTOTest extends AbstractDTOTest<UpstreamConsumerDTO
         cert.setCert("cert_cert");
         cert.setSerial(new CertificateSerialDTO());
 
-        this.values = new HashMap<String, Object>();
+        this.values = new HashMap<>();
         this.values.put("Id", "test-id");
         this.values.put("Uuid", "test-uuid");
         this.values.put("Name", "test-name");

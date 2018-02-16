@@ -69,7 +69,7 @@ public class FixDuplicatePools {
             for (Entry<SubPair, List<String>> entry : subPoolsMap.entrySet()) {
                 SubPair sub = entry.getKey();
                 List<String> ids = entry.getValue();
-                List<String> poolsToRemove = new LinkedList<String>();
+                List<String> poolsToRemove = new LinkedList<>();
 
                 // Keep one pool
                 String poolToKeep = ids.get(0);
@@ -130,7 +130,7 @@ public class FixDuplicatePools {
      */
     private Map<SubPair, List<String>> getSubPoolMap() throws Exception {
         Statement stmt = conn.createStatement();
-        Map<SubPair, List<String>> subPoolsMap = new HashMap<SubPair, List<String>>();
+        Map<SubPair, List<String>> subPoolsMap = new HashMap<>();
         ResultSet rs = stmt.executeQuery(
             "SELECT cp_pool.id, cp_pool.subscriptionid, " +
             "cp_pool.subscriptionsubkey, cp_pool.owner_id " +
@@ -146,12 +146,12 @@ public class FixDuplicatePools {
 
         // We need to be completely sure that we aren't moving subscriptions
         // from one owner to another.
-        Map<SubPair, String> subOwners = new HashMap<SubPair, String>();
+        Map<SubPair, String> subOwners = new HashMap<>();
 
         while (rs.next()) {
             SubPair current = new SubPair(rs.getString(2), rs.getString(3));
             if (!subPoolsMap.containsKey(current)) {
-                subPoolsMap.put(current, new LinkedList<String>());
+                subPoolsMap.put(current, new LinkedList<>());
                 subOwners.put(current, rs.getString(4));
             }
             else if (!subOwners.get(current).equals(rs.getString(4))) {

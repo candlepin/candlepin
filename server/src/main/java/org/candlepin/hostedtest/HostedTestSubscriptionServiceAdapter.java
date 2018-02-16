@@ -41,21 +41,21 @@ import java.util.Map;
 public class HostedTestSubscriptionServiceAdapter implements SubscriptionServiceAdapter {
     private static Logger log = LoggerFactory.getLogger(HostedTestSubscriptionServiceAdapter.class);
 
-    private static Map<String, Subscription> idMap = new HashMap<String, Subscription>();
-    private static Map<String, List<Subscription>> ownerMap = new HashMap<String, List<Subscription>>();
-    private static Map<String, List<Subscription>> productMap = new HashMap<String, List<Subscription>>();
+    private static Map<String, Subscription> idMap = new HashMap<>();
+    private static Map<String, List<Subscription>> ownerMap = new HashMap<>();
+    private static Map<String, List<Subscription>> productMap = new HashMap<>();
 
     @Override
     public List<Subscription> getSubscriptions(Owner owner) {
         if (ownerMap.containsKey(owner.getKey())) {
             return ownerMap.get(owner.getKey());
         }
-        return new ArrayList<Subscription>();
+        return new ArrayList<>();
     }
 
     @Override
     public List<String> getSubscriptionIds(Owner owner) {
-        List<String> ids = new ArrayList<String>();
+        List<String> ids = new ArrayList<>();
         List<Subscription> subscriptions = ownerMap.get(owner.getKey());
         if (subscriptions != null) {
             for (Subscription subscription : subscriptions) {
@@ -71,7 +71,7 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
         if (productMap.containsKey(product.getId())) {
             return productMap.get(product.getId());
         }
-        return new ArrayList<Subscription>();
+        return new ArrayList<>();
     }
 
     @Override
@@ -81,7 +81,7 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
 
     @Override
     public List<Subscription> getSubscriptions() {
-        List<Subscription> result = new ArrayList<Subscription>();
+        List<Subscription> result = new ArrayList<>();
         for (String id : idMap.keySet()) {
             result.add(idMap.get(id));
         }
@@ -112,11 +112,11 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
     public Subscription createSubscription(Subscription s) {
         idMap.put(s.getId(), s);
         if (!ownerMap.containsKey(s.getOwner().getKey())) {
-            ownerMap.put(s.getOwner().getKey(), new ArrayList<Subscription>());
+            ownerMap.put(s.getOwner().getKey(), new ArrayList<>());
         }
         ownerMap.get(s.getOwner().getKey()).add(s);
         if (!productMap.containsKey(s.getProduct().getId())) {
-            productMap.put(s.getProduct().getId(), new ArrayList<Subscription>());
+            productMap.put(s.getProduct().getId(), new ArrayList<>());
         }
 
         this.clearUuids(s.getProduct());

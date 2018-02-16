@@ -471,7 +471,7 @@ public class DatabaseTestFixture {
         if (consumers != null) {
             // Ugly hack to deal with how environment currently encapsulates its collections
             if (!(consumers instanceof List)) {
-                consumers = new LinkedList<Consumer>(consumers);
+                consumers = new LinkedList<>(consumers);
             }
 
             environment.setConsumers((List<Consumer>) consumers);
@@ -521,7 +521,7 @@ public class DatabaseTestFixture {
         Pool pool = new Pool(
             owner,
             product,
-            new HashSet<Product>(),
+            new HashSet<>(),
             quantity,
             startDate,
             endDate,
@@ -539,7 +539,7 @@ public class DatabaseTestFixture {
         Pool pool = new Pool(
             owner,
             product,
-            new HashSet<Product>(),
+            new HashSet<>(),
             quantity,
             startDate,
             endDate,

@@ -114,7 +114,7 @@ public class Entitler {
     }
 
     public List<Entitlement> bindByPoolQuantity(Consumer consumer, String poolId, Integer quantity) {
-        Map<String, Integer> poolMap = new HashMap<String, Integer>();
+        Map<String, Integer> poolMap = new HashMap<>();
         poolMap.put(poolId, quantity);
 
         try {
@@ -352,15 +352,15 @@ public class Entitler {
      *         from the adapter.
      */
     private DeveloperProducts getDevProductMap(Consumer consumer, String sku) {
-        List<String> devProductIds = new ArrayList<String>();
+        List<String> devProductIds = new ArrayList<>();
         devProductIds.add(sku);
         for (ConsumerInstalledProduct ip : consumer.getInstalledProducts()) {
             devProductIds.add(ip.getProductId());
         }
 
         Owner owner = consumer.getOwner();
-        Map<String, ProductData> productMap = new HashMap<String, ProductData>();
-        Map<String, ContentData> contentMap = new HashMap<String, ContentData>();
+        Map<String, ProductData> productMap = new HashMap<>();
+        Map<String, ContentData> contentMap = new HashMap<>();
 
         log.debug("Importing products for dev pool resolution...");
         for (ProductData product : this.productAdapter.getProductsByIds(owner, devProductIds)) {
@@ -490,7 +490,7 @@ public class Entitler {
     public List<PoolQuantity> getDryRun(Consumer consumer,
         String serviceLevelOverride) {
 
-        List<PoolQuantity> result = new ArrayList<PoolQuantity>();
+        List<PoolQuantity> result = new ArrayList<>();
         try {
             Owner owner = consumer.getOwner();
             if (consumer.isDev()) {
@@ -544,7 +544,7 @@ public class Entitler {
             entitlementCurator.findByPoolAttribute(consumer, "unmapped_guests_only", "true") :
             entitlementCurator.findByPoolAttribute("unmapped_guests_only", "true");
 
-        List<Entitlement> entsToDelete = new LinkedList<Entitlement>();
+        List<Entitlement> entsToDelete = new LinkedList<>();
 
         for (Entitlement entitlement : unmappedGuestEntitlements) {
             if (!entitlement.isValid()) {

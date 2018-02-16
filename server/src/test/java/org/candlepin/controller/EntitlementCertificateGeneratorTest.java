@@ -109,11 +109,11 @@ public class EntitlementCertificateGeneratorTest {
         when(pool.getProduct()).thenReturn(product);
         Entitlement entitlement = mock(Entitlement.class);
         when(entitlement.getConsumer()).thenReturn(consumer);
-        Map<String, Product> expectedProducts = new HashMap<String, Product>();
+        Map<String, Product> expectedProducts = new HashMap<>();
         expectedProducts.put("Swift", product);
-        Map<String, Entitlement> expected = new HashMap<String, Entitlement>();
+        Map<String, Entitlement> expected = new HashMap<>();
         expected.put("Swift", entitlement);
-        Map<String, PoolQuantity> poolQuantityMap = new HashMap<String, PoolQuantity>();
+        Map<String, PoolQuantity> poolQuantityMap = new HashMap<>();
         poolQuantityMap.put("Swift", new PoolQuantity(pool, 0));
         ecGenerator.generateEntitlementCertificate(pool, entitlement);
         verify(mockEntCertAdapter).generateEntitlementCerts(eq(consumer), eq(poolQuantityMap), eq(expected),
@@ -129,11 +129,11 @@ public class EntitlementCertificateGeneratorTest {
         Product product = mock(Product.class);
         Entitlement entitlement = mock(Entitlement.class);
         Pool pool = mock(Pool.class);
-        Map<String, Product> products = new HashMap<String, Product>();
+        Map<String, Product> products = new HashMap<>();
         products.put("Taylor", product);
-        Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
+        Map<String, Entitlement> entitlements = new HashMap<>();
         entitlements.put("Taylor", entitlement);
-        Map<String, PoolQuantity> poolQuantities = new HashMap<String, PoolQuantity>();
+        Map<String, PoolQuantity> poolQuantities = new HashMap<>();
         poolQuantities.put("Taylor", new PoolQuantity(pool, 1));
         ecGenerator.generateEntitlementCertificates(consumer, products, poolQuantities, entitlements, true);
         verify(mockEntCertAdapter).generateEntitlementCerts(eq(consumer), eq(poolQuantities), eq
@@ -242,7 +242,7 @@ public class EntitlementCertificateGeneratorTest {
         Environment environment = new Environment();
         List<Entitlement> entitlements = this.generateEntitlements();
 
-        HashMap<String, EntitlementCertificate> ecMap = new HashMap<String, EntitlementCertificate>();
+        HashMap<String, EntitlementCertificate> ecMap = new HashMap<>();
         for (Entitlement entitlement : entitlements) {
             ecMap.put(entitlement.getPool().getId(), new EntitlementCertificate());
         }
@@ -273,7 +273,7 @@ public class EntitlementCertificateGeneratorTest {
         Product product = TestUtil.createProduct();
         Pool pool = TestUtil.createPool(owner, product);
         Entitlement entitlement = TestUtil.createEntitlement(owner, consumer, pool, null);
-        Set<Entitlement> entitlements = new HashSet<Entitlement>();
+        Set<Entitlement> entitlements = new HashSet<>();
         entitlements.add(entitlement);
         pool.setEntitlements(entitlements);
 
@@ -294,11 +294,11 @@ public class EntitlementCertificateGeneratorTest {
         Product product = TestUtil.createProduct();
         Pool pool = TestUtil.createPool(owner, product);
         Entitlement entitlement = TestUtil.createEntitlement(owner, consumer, pool, null);
-        Set<Entitlement> entitlements = new HashSet<Entitlement>();
+        Set<Entitlement> entitlements = new HashSet<>();
         entitlements.add(entitlement);
         pool.setEntitlements(entitlements);
 
-        HashMap<String, EntitlementCertificate> ecMap = new HashMap<String, EntitlementCertificate>();
+        HashMap<String, EntitlementCertificate> ecMap = new HashMap<>();
         ecMap.put(pool.getId(), new EntitlementCertificate());
 
         when(this.mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class), eq(owner),
@@ -337,7 +337,7 @@ public class EntitlementCertificateGeneratorTest {
         Pool pool = TestUtil.createPool(owner, product);
         pool.setSourceSubscription(new SourceSubscription("source-sub-id", "master"));
 
-        Map<String, EntitlementCertificate> entCerts = new HashMap<String, EntitlementCertificate>();
+        Map<String, EntitlementCertificate> entCerts = new HashMap<>();
         entCerts.put(pool.getId(), new EntitlementCertificate());
 
         when(this.mockEntCertAdapter.generateEntitlementCerts(
@@ -396,7 +396,7 @@ public class EntitlementCertificateGeneratorTest {
         Collection<String> entitlements = Arrays.asList(entitlement.getId());
         pool.setEntitlements(new HashSet(Arrays.asList(entitlement)));
 
-        HashMap<String, EntitlementCertificate> ecMap = new HashMap<String, EntitlementCertificate>();
+        HashMap<String, EntitlementCertificate> ecMap = new HashMap<>();
         ecMap.put(pool.getId(), new EntitlementCertificate());
 
         when(this.mockEntitlementCurator.find(eq(entitlement.getId()))).thenReturn(entitlement);

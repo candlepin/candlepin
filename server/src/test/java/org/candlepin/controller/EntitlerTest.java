@@ -137,7 +137,7 @@ public class EntitlerTest {
                 public Collection<Product> answer(InvocationOnMock invocation) throws Throwable {
                     Object[] args = invocation.getArguments();
                     Collection<String> pids = (Collection<String>) args[1];
-                    Set<Product> output = new HashSet<Product>();
+                    Set<Product> output = new HashSet<>();
 
                     for (String pid : pids) {
                         Product product = products.get(pid);
@@ -153,7 +153,7 @@ public class EntitlerTest {
     }
 
     private void mockProducts(Owner owner, Product... products) {
-        Map<String, Product> productMap = new HashMap<String, Product>();
+        Map<String, Product> productMap = new HashMap<>();
 
         for (Product product : products) {
             productMap.put(product.getId(), product);
@@ -169,7 +169,7 @@ public class EntitlerTest {
                 public ImportResult<Product> answer(InvocationOnMock invocation) throws Throwable {
                     Object[] args = invocation.getArguments();
                     Map<String, ProductData> productData = (Map<String, ProductData>) args[1];
-                    ImportResult<Product> importResult = new ImportResult<Product>();
+                    ImportResult<Product> importResult = new ImportResult<>();
                     Map<String, Product> output = importResult.getCreatedEntities();
 
                     if (productData != null) {
@@ -189,7 +189,7 @@ public class EntitlerTest {
 
     private void mockProductImport(Owner owner, Product... products) {
         this.mockContentImport(owner, Collections.<String, Content>emptyMap());
-        Map<String, Product> productMap = new HashMap<String, Product>();
+        Map<String, Product> productMap = new HashMap<>();
 
         for (Product product : products) {
             productMap.put(product.getId(), product);
@@ -205,7 +205,7 @@ public class EntitlerTest {
                 public ImportResult<Content> answer(InvocationOnMock invocation) throws Throwable {
                     Object[] args = invocation.getArguments();
                     Map<String, ContentData> contentData = (Map<String, ContentData>) args[1];
-                    ImportResult<Content> importResult = new ImportResult<Content>();
+                    ImportResult<Content> importResult = new ImportResult<>();
                     Map<String, Content> output = importResult.getCreatedEntities();
 
                     if (contentData != null) {
@@ -224,7 +224,7 @@ public class EntitlerTest {
     }
 
     private void mockContentImport(Owner owner, Content... contents) {
-        Map<String, Content> contentMap = new HashMap<String, Content>();
+        Map<String, Content> contentMap = new HashMap<>();
 
         for (Content content : contents) {
             contentMap.put(content.getId(), content);
@@ -237,11 +237,11 @@ public class EntitlerTest {
     public void bindByPoolString() throws EntitlementRefusedException {
         String poolid = "pool10";
         Entitlement ent = mock(Entitlement.class);
-        List<Entitlement> eList = new ArrayList<Entitlement>();
+        List<Entitlement> eList = new ArrayList<>();
         eList.add(ent);
         when(cc.findByUuid(eq("abcd1234"))).thenReturn(consumer);
 
-        Map<String, Integer> pQs = new HashMap<String, Integer>();
+        Map<String, Integer> pQs = new HashMap<>();
         pQs.put(poolid, 1);
 
         when(pm.entitleByPools(eq(consumer), eq(pQs))).thenReturn(eList);
@@ -256,11 +256,11 @@ public class EntitlerTest {
         String poolid = "pool10";
         Pool pool = mock(Pool.class);
         Entitlement ent = mock(Entitlement.class);
-        List<Entitlement> eList = new ArrayList<Entitlement>();
+        List<Entitlement> eList = new ArrayList<>();
         eList.add(ent);
 
         when(pm.find(eq(poolid))).thenReturn(pool);
-        Map<String, Integer> pQs = new HashMap<String, Integer>();
+        Map<String, Integer> pQs = new HashMap<>();
         pQs.put(poolid, 1);
         when(pm.entitleByPools(eq(consumer), eq(pQs))).thenReturn(eList);
 
@@ -290,7 +290,7 @@ public class EntitlerTest {
     public void nullPool() throws EntitlementRefusedException {
         String poolid = "foo";
         Consumer c = TestUtil.createConsumer(); // keeps me from casting null
-        Map<String, Integer> pQs = new HashMap<String, Integer>();
+        Map<String, Integer> pQs = new HashMap<>();
         pQs.put(poolid, 1);
         when(cc.findByUuid(eq(c.getUuid()))).thenReturn(c);
         when(pm.entitleByPools(eq(c), eq(pQs))).thenThrow(new IllegalArgumentException());
@@ -369,13 +369,13 @@ public class EntitlerTest {
         try {
             String poolid = "pool10";
             Pool pool = mock(Pool.class);
-            Map<String, ValidationResult> fakeResult = new HashMap<String, ValidationResult>();
+            Map<String, ValidationResult> fakeResult = new HashMap<>();
             fakeResult.put(poolid, fakeOutResult(msg));
             EntitlementRefusedException ere = new EntitlementRefusedException(fakeResult);
 
             when(pool.getId()).thenReturn(poolid);
             when(poolCurator.find(eq(poolid))).thenReturn(pool);
-            Map<String, Integer> pQs = new HashMap<String, Integer>();
+            Map<String, Integer> pQs = new HashMap<>();
             pQs.put(poolid, 1);
             when(pm.entitleByPools(eq(consumer), eq(pQs))).thenThrow(ere);
             entitler.bindByPoolQuantity(consumer, poolid, 1);
@@ -432,7 +432,7 @@ public class EntitlerTest {
     private void bindByProductErrorTest(String msg) throws Exception {
         try {
             String[] pids = {"prod1", "prod2", "prod3"};
-            Map<String, ValidationResult> fakeResult = new HashMap<String, ValidationResult>();
+            Map<String, ValidationResult> fakeResult = new HashMap<>();
             fakeResult.put("blah", fakeOutResult(msg));
             EntitlementRefusedException ere = new EntitlementRefusedException(fakeResult);
             AutobindData data = AutobindData.create(consumer).forProducts(pids);
@@ -446,7 +446,7 @@ public class EntitlerTest {
 
     @Test
     public void events() {
-        List<Entitlement> ents = new ArrayList<Entitlement>();
+        List<Entitlement> ents = new ArrayList<>();
         ents.add(mock(Entitlement.class));
         ents.add(mock(Entitlement.class));
 
@@ -469,7 +469,7 @@ public class EntitlerTest {
 
     @Test
     public void noEventsWhenListEmpty() {
-        List<Entitlement> ents = new ArrayList<Entitlement>();
+        List<Entitlement> ents = new ArrayList<>();
         entitler.sendEvents(ents);
         verify(sink, never()).queueEvent(any(Event.class));
     }
@@ -492,7 +492,7 @@ public class EntitlerTest {
 
         Entitlement e1 = TestUtil.createEntitlement(owner1, c, p1, null);
         e1.setEndDateOverride(twelveHoursAgo);
-        Set<Entitlement> entitlementSet1 = new HashSet<Entitlement>();
+        Set<Entitlement> entitlementSet1 = new HashSet<>();
         entitlementSet1.add(e1);
 
         p1.setEntitlements(entitlementSet1);
@@ -533,7 +533,7 @@ public class EntitlerTest {
 
         Entitlement e1 = TestUtil.createEntitlement(owner1, c, p1, null);
         e1.setEndDateOverride(new Date(new Date().getTime() + 1L * 60L * 60L * 1000L));
-        Set<Entitlement> entitlementSet1 = new HashSet<Entitlement>();
+        Set<Entitlement> entitlementSet1 = new HashSet<>();
         entitlementSet1.add(e1);
 
         p1.setEntitlements(entitlementSet1);
@@ -543,7 +543,7 @@ public class EntitlerTest {
 
         Entitlement e2 = TestUtil.createEntitlement(owner2, c, p2, null);
         e2.setEndDateOverride(thirtySixHoursAgo);
-        Set<Entitlement> entitlementSet2 = new HashSet<Entitlement>();
+        Set<Entitlement> entitlementSet2 = new HashSet<>();
         entitlementSet2.add(e2);
 
         p2.setEntitlements(entitlementSet2);
@@ -563,13 +563,13 @@ public class EntitlerTest {
     @Test
     public void testDevPoolCreationAtBind() throws Exception {
         Owner owner = TestUtil.createOwner("o");
-        List<ProductData> devProdDTOs = new ArrayList<ProductData>();
+        List<ProductData> devProdDTOs = new ArrayList<>();
         Product p = TestUtil.createProduct("test-product", "Test Product");
 
         p.setAttribute(Product.Attributes.SUPPORT_LEVEL, "Premium");
         devProdDTOs.add(p.toDTO());
         Pool activePool = TestUtil.createPool(owner, p);
-        List<Pool> activeList = new ArrayList<Pool>();
+        List<Pool> activeList = new ArrayList<>();
         activeList.add(activePool);
         Pool devPool = mock(Pool.class);
 
@@ -595,12 +595,12 @@ public class EntitlerTest {
     @Test(expected = ForbiddenException.class)
     public void testDevPoolCreationAtBindFailStandalone() throws Exception {
         Owner owner = TestUtil.createOwner("o");
-        List<ProductData> devProdDTOs = new ArrayList<ProductData>();
+        List<ProductData> devProdDTOs = new ArrayList<>();
         Product p = TestUtil.createProduct("test-product", "Test Product");
         devProdDTOs.add(p.toDTO());
 
         Pool activePool = TestUtil.createPool(owner, p);
-        List<Pool> activeList = new ArrayList<Pool>();
+        List<Pool> activeList = new ArrayList<>();
         activeList.add(activePool);
 
         Consumer devSystem = TestUtil.createConsumer(owner);
@@ -619,7 +619,7 @@ public class EntitlerTest {
     @Test(expected = ForbiddenException.class)
     public void testDevPoolCreationAtBindFailNotActive() throws Exception {
         Owner owner = TestUtil.createOwner("o");
-        List<ProductData> devProdDTOs = new ArrayList<ProductData>();
+        List<ProductData> devProdDTOs = new ArrayList<>();
         Product p = TestUtil.createProduct("test-product", "Test Product");
         devProdDTOs.add(p.toDTO());
 
@@ -652,13 +652,13 @@ public class EntitlerTest {
     @Test
     public void testDevPoolCreationAtBindFailNoSkuProduct() throws Exception {
         Owner owner = TestUtil.createOwner("o");
-        List<ProductData> devProdDTOs = new ArrayList<ProductData>();
+        List<ProductData> devProdDTOs = new ArrayList<>();
         Product p = TestUtil.createProduct("test-product", "Test Product");
         Product ip = TestUtil.createProduct("test-product-installed", "Installed Test Product");
         devProdDTOs.add(ip.toDTO());
 
         Pool activePool = TestUtil.createPool(owner, p);
-        List<Pool> activeList = new ArrayList<Pool>();
+        List<Pool> activeList = new ArrayList<>();
         activeList.add(activePool);
 
         Consumer devSystem = TestUtil.createConsumer(owner);
@@ -689,7 +689,7 @@ public class EntitlerTest {
     @Test
     public void testDevPoolCreationAtBindNoFailMissingInstalledProduct() throws Exception {
         Owner owner = TestUtil.createOwner("o");
-        List<ProductData> devProdDTOs = new ArrayList<ProductData>();
+        List<ProductData> devProdDTOs = new ArrayList<>();
         Product p = TestUtil.createProduct("test-product", "Test Product");
         Product ip1 = TestUtil.createProduct("test-product-installed-1", "Installed Test Product 1");
         Product ip2 = TestUtil.createProduct("test-product-installed-2", "Installed Test Product 2");
@@ -697,7 +697,7 @@ public class EntitlerTest {
         devProdDTOs.add(ip1.toDTO());
 
         Pool activePool = TestUtil.createPool(owner, p);
-        List<Pool> activeList = new ArrayList<Pool>();
+        List<Pool> activeList = new ArrayList<>();
         activeList.add(activePool);
 
         Consumer devSystem = TestUtil.createConsumer(owner);
@@ -722,7 +722,7 @@ public class EntitlerTest {
     @Test
     public void testCreatedDevPoolAttributes() {
         Owner owner = TestUtil.createOwner("o");
-        List<ProductData> devProdDTOs = new ArrayList<ProductData>();
+        List<ProductData> devProdDTOs = new ArrayList<>();
         Product p1 = TestUtil.createProduct("dev-product", "Dev Product");
         p1.setAttribute(Product.Attributes.SUPPORT_LEVEL, "Premium");
         p1.setAttribute("expires_after", "47");
@@ -757,7 +757,7 @@ public class EntitlerTest {
     @Test
     public void testCreatedDevSkuWithNoSla() {
         Owner owner = TestUtil.createOwner("o");
-        List<ProductData> devProdDTOs = new ArrayList<ProductData>();
+        List<ProductData> devProdDTOs = new ArrayList<>();
         final Product p1 = TestUtil.createProduct("dev-product", "Dev Product");
         devProdDTOs.add(p1.toDTO());
         Consumer devSystem = TestUtil.createConsumer(owner);
@@ -774,7 +774,7 @@ public class EntitlerTest {
                 public ImportResult<Product> answer(InvocationOnMock invocation) throws Throwable {
                     Object[] args = invocation.getArguments();
                     Map<String, ProductData> productData = (Map<String, ProductData>) args[1];
-                    ImportResult<Product> importResult = new ImportResult<Product>();
+                    ImportResult<Product> importResult = new ImportResult<>();
                     Map<String, Product> output = importResult.getCreatedEntities();
 
                     // We need to copy the attributes from the product data to the product to

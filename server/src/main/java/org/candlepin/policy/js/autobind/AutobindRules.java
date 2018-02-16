@@ -73,7 +73,7 @@ public class AutobindRules {
         List<Pool> pools, ComplianceStatus compliance, String serviceLevelOverride,
         Set<String> exemptLevels, boolean considerDerived) {
 
-        List<PoolQuantity> bestPools = new ArrayList<PoolQuantity>();
+        List<PoolQuantity> bestPools = new ArrayList<>();
         int poolsBeforeContentFilter = pools.size();
         pools = filterPoolsForV1Certificates(consumer, pools);
         log.debug("pools.size() before V1 certificate filter: {}, after: {}",
@@ -100,7 +100,7 @@ public class AutobindRules {
             }
         }
 
-        List<PoolDTO> poolDTOs = new ArrayList<PoolDTO>();
+        List<PoolDTO> poolDTOs = new ArrayList<>();
         for (Pool pool : pools) {
             poolDTOs.add(this.translator.translate(pool, PoolDTO.class));
         }
@@ -157,7 +157,7 @@ public class AutobindRules {
     }
 
     private void logProducts(String message, String[] productIds, Consumer consumer, boolean debug) {
-        List<String> consumerProducts = new LinkedList<String>();
+        List<String> consumerProducts = new LinkedList<>();
         if (consumer != null && consumer.getInstalledProducts() != null) {
             for (ConsumerInstalledProduct product: consumer.getInstalledProducts()) {
                 consumerProducts.add(product.getProductId());
@@ -181,7 +181,7 @@ public class AutobindRules {
      */
     protected List<PoolQuantity> selectBestPoolDefault(List<Pool> pools) {
         if (pools.size() > 0) {
-            List<PoolQuantity> toReturn = new ArrayList<PoolQuantity>();
+            List<PoolQuantity> toReturn = new ArrayList<>();
             for (Pool pool : pools) {
                 toReturn.add(new PoolQuantity(pool, 1));
             }
@@ -198,7 +198,7 @@ public class AutobindRules {
     private List<Pool> filterPoolsForV1Certificates(Consumer consumer,
         List<Pool> pools) {
         if (!consumer.isCertV3Capable()) {
-            List<Pool> newPools = new LinkedList<Pool>();
+            List<Pool> newPools = new LinkedList<>();
 
             for (Pool p : pools) {
                 boolean contentOk = true;

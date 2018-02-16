@@ -61,7 +61,7 @@ public class OAuth implements AuthProvider {
     private TrustedUserAuth userAuth;
     private TrustedConsumerAuth consumerAuth;
     private TrustedExternalSystemAuth systemAuth;
-    private Map<String, OAuthAccessor> accessors = new HashMap<String, OAuthAccessor>();
+    private Map<String, OAuthAccessor> accessors = new HashMap<>();
 
     protected Provider<I18n> i18nProvider;
 

@@ -164,7 +164,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Before
     public void setUp() {
         owner = ownerCurator.create(new Owner(OWNER_NAME));
-        owners = new ArrayList<Owner>();
+        owners = new ArrayList<>();
         owners.add(owner);
         product = this.createProduct(owner);
         typeLabels = null;
@@ -192,11 +192,11 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     public void testRefreshPoolsWithNewSubscriptions() {
         Product prod = this.createProduct(owner);
 
-        List<Subscription> subscriptions = new LinkedList<Subscription>();
+        List<Subscription> subscriptions = new LinkedList<>();
         ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
         OwnerServiceAdapter ownerAdapter = new DefaultOwnerServiceAdapter(this.ownerCurator, this.i18n);
 
-        Subscription sub = TestUtil.createSubscription(owner, prod, new HashSet<Product>());
+        Subscription sub = TestUtil.createSubscription(owner, prod, new HashSet<>());
         sub.setId(Util.generateDbUUID());
         sub.setQuantity(2000L);
         sub.setStartDate(TestUtil.createDate(2010, 2, 9));
@@ -223,11 +223,11 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             TestUtil.createDate(2009, 11, 30),
             TestUtil.createDate(2015, 11, 30));
 
-        List<Subscription> subscriptions = new LinkedList<Subscription>();
+        List<Subscription> subscriptions = new LinkedList<>();
         ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
         OwnerServiceAdapter ownerAdapter = new DefaultOwnerServiceAdapter(this.ownerCurator, this.i18n);
 
-        Subscription sub = TestUtil.createSubscription(owner, prod, new HashSet<Product>());
+        Subscription sub = TestUtil.createSubscription(owner, prod, new HashSet<>());
         sub.setId(Util.generateDbUUID());
         sub.setQuantity(2000L);
         sub.setStartDate(TestUtil.createDate(2010, 2, 9));
@@ -255,11 +255,11 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     public void testRefreshPoolsWithRemovedSubscriptions() {
         Product prod = this.createProduct(owner);
 
-        List<Subscription> subscriptions = new LinkedList<Subscription>();
+        List<Subscription> subscriptions = new LinkedList<>();
         ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
         OwnerServiceAdapter ownerAdapter = new DefaultOwnerServiceAdapter(this.ownerCurator, this.i18n);
 
-        Subscription sub = TestUtil.createSubscription(owner, prod, new HashSet<Product>());
+        Subscription sub = TestUtil.createSubscription(owner, prod, new HashSet<>());
         sub.setId(Util.generateDbUUID());
         sub.setQuantity(2000L);
         sub.setStartDate(TestUtil.createDate(2010, 2, 9));
@@ -293,11 +293,11 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Product prod = this.createProduct(owner);
         Product prod2 = this.createProduct(owner);
 
-        List<Subscription> subscriptions = new LinkedList<Subscription>();
+        List<Subscription> subscriptions = new LinkedList<>();
         ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
         OwnerServiceAdapter ownerAdapter = new DefaultOwnerServiceAdapter(this.ownerCurator, this.i18n);
 
-        Subscription sub = TestUtil.createSubscription(owner, prod, new HashSet<Product>());
+        Subscription sub = TestUtil.createSubscription(owner, prod, new HashSet<>());
         sub.setId(Util.generateDbUUID());
         sub.setQuantity(2000L);
         sub.setStartDate(TestUtil.createDate(2010, 2, 9));
@@ -305,7 +305,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         sub.setModified(TestUtil.createDate(2010, 2, 12));
         subscriptions.add(sub);
 
-        Subscription sub2 = TestUtil.createSubscription(owner, prod2, new HashSet<Product>());
+        Subscription sub2 = TestUtil.createSubscription(owner, prod2, new HashSet<>());
         sub2.setId(Util.generateDbUUID());
         sub2.setQuantity(800L);
         sub2.setStartDate(TestUtil.createDate(2010, 2, 9));
@@ -328,11 +328,11 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         productCurator.merge(prod);
         config.setProperty(ConfigProperties.STANDALONE, "false");
 
-        List<Subscription> subscriptions = new LinkedList<Subscription>();
+        List<Subscription> subscriptions = new LinkedList<>();
         ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
         OwnerServiceAdapter ownerAdapter = new DefaultOwnerServiceAdapter(this.ownerCurator, this.i18n);
 
-        Subscription sub = TestUtil.createSubscription(owner, prod, new HashSet<Product>());
+        Subscription sub = TestUtil.createSubscription(owner, prod, new HashSet<>());
         sub.setId(Util.generateDbUUID());
         sub.setQuantity(2000L);
         sub.setStartDate(TestUtil.createDate(2010, 2, 9));
@@ -383,11 +383,11 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         productCurator.merge(prod);
         config.setProperty(ConfigProperties.STANDALONE, "false");
 
-        List<Subscription> subscriptions = new LinkedList<Subscription>();
+        List<Subscription> subscriptions = new LinkedList<>();
         ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
         OwnerServiceAdapter ownerAdapter = new DefaultOwnerServiceAdapter(this.ownerCurator, this.i18n);
 
-        Subscription sub = TestUtil.createSubscription(owner, prod, new HashSet<Product>());
+        Subscription sub = TestUtil.createSubscription(owner, prod, new HashSet<>());
         sub.setId(Util.generateDbUUID());
         sub.setQuantity(2000L);
         sub.setStartDate(TestUtil.createDate(2010, 2, 9));
@@ -441,7 +441,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         poolCurator.create(pool);
 
         // Give those consumers entitlements:
-        Map<String, Integer> pQs = new HashMap<String, Integer>();
+        Map<String, Integer> pQs = new HashMap<>();
         pQs.put(pool.getId(), 1);
         poolManager.entitleByPools(c1, pQs);
         assertEquals(2, consumerCurator.listByOwner(owner).list().size());
@@ -482,7 +482,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         ownerResource.listPools(owner.getKey(), null, null, null, null, false, null,
-            null, new ArrayList<KeyValueParameter>(), false, false, null, principal, null);
+            null, new ArrayList<>(), false, false, null, principal, null);
     }
 
     @Test
@@ -516,15 +516,14 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         poolCurator.create(pool2);
 
         List<PoolDTO> nowList = ownerResource.listPools(owner.getKey(), c.getUuid(), null, null, null, false,
-            new Date(), null, new ArrayList<KeyValueParameter>(), false, false, null, principal, null);
+            new Date(), null, new ArrayList<>(), false, false, null, principal, null);
 
         assertEquals(1, nowList.size());
         assert (nowList.get(0).getId().equals(pool1.getId()));
 
         Date activeOn = new Date(pool2.getStartDate().getTime() + 1000L * 60 * 60 * 24);
         List<PoolDTO> futureList = ownerResource.listPools(owner.getKey(), c.getUuid(), null, null, null,
-            false, activeOn, null, new ArrayList<KeyValueParameter>(), false, false, null,
-            principal, null);
+            false, activeOn, null, new ArrayList<>(), false, false, null, principal, null);
         assertEquals(1, futureList.size());
         assert (futureList.get(0).getId().equals(pool2.getId()));
     }
@@ -541,7 +540,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         List<PoolDTO> pools = ownerResource.listPools(owner.getKey(),
             null, null, null, null, true, null, null,
-            new ArrayList<KeyValueParameter>(), false, false, null, principal, null);
+            new ArrayList<>(), false, false, null, principal, null);
         assertEquals(2, pools.size());
     }
 
@@ -560,7 +559,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Pool pool2 = TestUtil.createPool(owner, p2);
         poolCurator.create(pool2);
 
-        List<KeyValueParameter> params = new ArrayList<KeyValueParameter>();
+        List<KeyValueParameter> params = new ArrayList<>();
         params.add(createKeyValueParam("cores", "12"));
 
         List<PoolDTO> pools = ownerResource.listPools(owner.getKey(), null,
@@ -591,12 +590,12 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Pool pool2 = TestUtil.createPool(owner, p2);
         poolCurator.create(pool2);
 
-        List<KeyValueParameter> params = new ArrayList<KeyValueParameter>();
+        List<KeyValueParameter> params = new ArrayList<>();
         List<PoolDTO> pools = ownerResource.listPools(owner.getKey(), null,
             null, null, null, true, null, null, params, false, false, null, principal, null);
         assertEquals(2, pools.size());
 
-        params = new ArrayList<KeyValueParameter>();
+        params = new ArrayList<>();
         params.add(createKeyValueParam(Pool.Attributes.DEVELOPMENT_POOL, "!true"));
         pools = ownerResource.listPools(owner.getKey(), null,
             null, null, null, true, null, null, params, false, false, null, principal, null);
@@ -628,7 +627,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         // Filtering should just cause this to return no results:
         ownerResource.listPools(owner.getKey(), null, null, null, null, true, null,
-            null, new ArrayList<KeyValueParameter>(), false, false, null, principal, null);
+            null, new ArrayList<>(), false, false, null, principal, null);
     }
 
     @Test(expected = ForbiddenException.class)
@@ -712,20 +711,29 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         securityInterceptor.enable();
 
-        ownerResource.listConsumers(owner.getKey(), null, null,
-            new ArrayList<String>(), null, null, null, null, null, null);
+        ownerResource.listConsumers(
+            owner.getKey(),
+            null,
+            null,
+            new ArrayList<>(),
+            null,
+            null,
+            null,
+            null,
+            null,
+            null);
     }
 
     @Test
     public void consumerCanListConsumersByIdWhenOtherParametersPresent() {
         Consumer c = createConsumer(owner);
-        List<String> uuids = new ArrayList<String>();
+        List<String> uuids = new ArrayList<>();
         uuids.add(c.getUuid());
 
         setupPrincipal(owner, Access.ALL);
         securityInterceptor.enable();
 
-        Set<String> types = new HashSet<String>();
+        Set<String> types = new HashSet<>();
         types.add("type");
         consumerTypeCurator.create(new ConsumerType("type"));
 
@@ -745,7 +753,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Owner owner2 = ownerCurator.create(new Owner("Owner2"));
         Consumer c2 = createConsumer(owner2);
 
-        List<String> uuids = new ArrayList<String>();
+        List<String> uuids = new ArrayList<>();
         uuids.add(c.getUuid());
         uuids.add(c2.getUuid());
 
@@ -771,10 +779,19 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ex.expect(BadRequestException.class);
         ex.expectMessage(IsEqual.<String>equalTo("No such unit type(s): unknown"));
 
-        Set<String> types = new HashSet<String>();
+        Set<String> types = new HashSet<>();
         types.add("unknown");
-        ownerResource.listConsumers(owner.getKey(), null, types,
-            new ArrayList<String>(), null, null, null, null, null, null);
+        ownerResource.listConsumers(
+            owner.getKey(),
+            null,
+            types,
+            new ArrayList<>(),
+            null,
+            null,
+            null,
+            null,
+            null,
+            null);
     }
 
     @Test
@@ -782,7 +799,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Consumer c = createConsumer(owner);
         Consumer c2 = createConsumer(owner);
 
-        List<String> uuids = new ArrayList<String>();
+        List<String> uuids = new ArrayList<>();
         uuids.add(c.getUuid());
         uuids.add(c2.getUuid());
 
@@ -815,7 +832,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ex.expect(BadRequestException.class);
         ex.expectMessage(IsEqual.<String>equalTo("No such unit type(s): unknown"));
 
-        Set<String> types = new HashSet<String>();
+        Set<String> types = new HashSet<>();
         types.add("unknown");
 
         ownerResource.countConsumers(owner.getKey(), types,
@@ -846,7 +863,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         List<PoolDTO> pools = ownerResource.listPools(owner.getKey(), c.getUuid(), null,
-            p.getId(), null, true, null, null, new ArrayList<KeyValueParameter>(), false, false, null,
+            p.getId(), null, true, null, null, new ArrayList<>(), false, false, null,
             principal, null);
         assertEquals(1, pools.size());
         PoolDTO returnedPool = pools.get(0);
@@ -867,7 +884,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ownerCurator.create(owner2);
 
         ownerResource.listPools(owner.getKey(), c.getUuid(), null, p.getUuid(),  null, true, null, null,
-            new ArrayList<KeyValueParameter>(), false, false, null,
+            new ArrayList<>(), false, false, null,
             setupPrincipal(owner2, Access.NONE), null);
     }
 
@@ -967,11 +984,11 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         Product prod = this.createProduct(owner);
 
-        List<Subscription> subscriptions = new LinkedList<Subscription>();
+        List<Subscription> subscriptions = new LinkedList<>();
         ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
         OwnerServiceAdapter ownerAdapter = new DefaultOwnerServiceAdapter(this.ownerCurator, this.i18n);
 
-        Subscription sub = TestUtil.createSubscription(owner, prod, new HashSet<Product>());
+        Subscription sub = TestUtil.createSubscription(owner, prod, new HashSet<>());
         sub.setId(Util.generateDbUUID());
         sub.setQuantity(1000L);
         sub.setStartDate(TestUtil.createDate(2009, 11, 30));
@@ -1174,11 +1191,11 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         prod2.setAttribute(Product.Attributes.SUPPORT_LEVEL, "standard");
         productCurator.merge(prod2);
 
-        List<Subscription> subscriptions = new LinkedList<Subscription>();
+        List<Subscription> subscriptions = new LinkedList<>();
         ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
         OwnerServiceAdapter ownerAdapter = new DefaultOwnerServiceAdapter(this.ownerCurator, this.i18n);
 
-        Subscription sub1 = TestUtil.createSubscription(owner, prod1, new HashSet<Product>());
+        Subscription sub1 = TestUtil.createSubscription(owner, prod1, new HashSet<>());
         sub1.setId(Util.generateDbUUID());
         sub1.setQuantity(2000L);
         sub1.setStartDate(TestUtil.createDate(2010, 2, 9));
@@ -1186,7 +1203,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         sub1.setModified(TestUtil.createDate(2010, 2, 12));
         subscriptions.add(sub1);
 
-        Subscription sub2 = TestUtil.createSubscription(owner, prod2, new HashSet<Product>());
+        Subscription sub2 = TestUtil.createSubscription(owner, prod2, new HashSet<>());
         sub2.setId(Util.generateDbUUID());
         sub2.setQuantity(2000L);
         sub2.setStartDate(TestUtil.createDate(2010, 2, 9));
@@ -1293,10 +1310,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         MultipartInput input = mock(MultipartInput.class);
         InputPart part = mock(InputPart.class);
         File archive = mock(File.class);
-        List<InputPart> parts = new ArrayList<InputPart>();
+        List<InputPart> parts = new ArrayList<>();
         parts.add(part);
-        MultivaluedMap<String, String> mm = new MultivaluedMapImpl<String, String>();
-        List<String> contDis = new ArrayList<String>();
+        MultivaluedMap<String, String> mm = new MultivaluedMapImpl<>();
+        List<String> contDis = new ArrayList<>();
         contDis.add("form-data; name=\"upload\"; filename=\"test_file.zip\"");
         mm.put("Content-Disposition", contDis);
 
@@ -1327,10 +1344,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         MultipartInput input = mock(MultipartInput.class);
         InputPart part = mock(InputPart.class);
         File archive = mock(File.class);
-        List<InputPart> parts = new ArrayList<InputPart>();
+        List<InputPart> parts = new ArrayList<>();
         parts.add(part);
-        MultivaluedMap<String, String> mm = new MultivaluedMapImpl<String, String>();
-        List<String> contDis = new ArrayList<String>();
+        MultivaluedMap<String, String> mm = new MultivaluedMapImpl<>();
+        List<String> contDis = new ArrayList<>();
         contDis.add("form-data; name=\"upload\"; filename=\"test_file.zip\"");
         mm.put("Content-Disposition", contDis);
 
@@ -1364,10 +1381,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         MultipartInput input = mock(MultipartInput.class);
         InputPart part = mock(InputPart.class);
         File archive = mock(File.class);
-        List<InputPart> parts = new ArrayList<InputPart>();
+        List<InputPart> parts = new ArrayList<>();
         parts.add(part);
-        MultivaluedMap<String, String> mm = new MultivaluedMapImpl<String, String>();
-        List<String> contDis = new ArrayList<String>();
+        MultivaluedMap<String, String> mm = new MultivaluedMapImpl<>();
+        List<String> contDis = new ArrayList<>();
         contDis.add("form-data; name=\"upload\"; filename=\"test_file.zip\"");
         mm.put("Content-Disposition", contDis);
 
@@ -1606,9 +1623,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         Entitlement e = TestUtil.createEntitlement(owner, consumer, pool, null);
         e.setId("getAllEntitlementsForOwner");
-        List<Entitlement> entitlements = new ArrayList<Entitlement>();
+        List<Entitlement> entitlements = new ArrayList<>();
         entitlements.add(e);
-        Page<List<Entitlement>> page = new Page<List<Entitlement>>();
+        Page<List<Entitlement>> page = new Page<>();
         page.setPageData(entitlements);
 
         OwnerCurator oc = mock(OwnerCurator.class);

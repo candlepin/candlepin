@@ -54,7 +54,7 @@ import javax.inject.Provider;
  */
 public class StoreFactory {
     private final Map<Class<? extends Persisted>, EntityStore<? extends Persisted>> storeMap =
-        new HashMap<Class<? extends Persisted>, EntityStore<? extends Persisted>>();
+        new HashMap<>();
 
     @Inject
     public StoreFactory(Injector injector) {
@@ -259,7 +259,7 @@ public class StoreFactory {
 
         @Override
         public List<User> lookup(Collection<String> keys) {
-            List<User> users = new ArrayList<User>();
+            List<User> users = new ArrayList<>();
             for (String username : keys) {
                 users.add(new User(username, null));
             }

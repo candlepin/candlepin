@@ -155,7 +155,7 @@ public class PropertyConverter {
     public static Set<String> toSet(Object value) {
         if (value instanceof String) {
             String[] parts = ((String) value).trim().split("\\s*,\\s*");
-            return new HashSet<String>(Arrays.asList(parts));
+            return new HashSet<>(Arrays.asList(parts));
         }
         else {
             String msg = formatErrorMessage(value, Set.class);

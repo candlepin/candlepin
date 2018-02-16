@@ -78,7 +78,7 @@ public class EnforcerForTesting implements Enforcer {
     @Override
     public Map<String, ValidationResult> preEntitlement(Consumer consumer,
         Collection<PoolQuantity> entitlementPoolQuantities, CallerType caller) {
-        Map<String, ValidationResult> result = new HashMap<String, ValidationResult>();
+        Map<String, ValidationResult> result = new HashMap<>();
         for (PoolQuantity pool : entitlementPoolQuantities) {
             result.put(pool.getPool().getId(), preEntitlement(consumer, pool.getPool(), pool.getQuantity()));
         }

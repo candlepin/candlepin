@@ -291,7 +291,7 @@ public class ProductResource {
         // Replace this with the commented out block below once the job scheduling is no longer performed
         // via PinsetterAsyncFilter
         ResultIterator<Owner> iterator = this.ownerCurator.lookupOwnersWithProduct(productUuids).iterate();
-        List<JobDetail> details = new LinkedList<JobDetail>();
+        List<JobDetail> details = new LinkedList<>();
         while (iterator.hasNext()) {
             details.add(RefreshPoolsJob.forOwner(iterator.next(), lazyRegen));
         }

@@ -35,7 +35,7 @@ public class ConsumerDTOTest extends AbstractDTOTest<ConsumerDTO> {
         type.setLabel("type_label");
         type.setManifest(true);
 
-        this.values = new HashMap<String, Object>();
+        this.values = new HashMap<>();
         this.values.put("Uuid", "test-uuid");
         this.values.put("Name", "test-name");
         this.values.put("Owner", "test-owner-id");

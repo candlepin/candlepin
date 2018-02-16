@@ -40,10 +40,10 @@ public class HypervisorCheckInResult implements Serializable {
     private Set<String> failed;
 
     public HypervisorCheckInResult() {
-        this.created = new HashSet<Consumer>();
-        this.updated = new HashSet<Consumer>();
-        this.unchanged = new HashSet<Consumer>();
-        this.failed = new HashSet<String>();
+        this.created = new HashSet<>();
+        this.updated = new HashSet<>();
+        this.unchanged = new HashSet<>();
+        this.failed = new HashSet<>();
     }
 
     public void created(Consumer c) {

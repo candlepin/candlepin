@@ -20,7 +20,6 @@ import static org.junit.Assert.assertTrue;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
-import org.candlepin.auth.permissions.Permission;
 import org.candlepin.auth.permissions.PermissionFactory;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.CandlepinPoolManager;
@@ -88,8 +87,7 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
 
         User user = new User("testing user", "pass");
         principal = new UserPrincipal("testing user",
-            new ArrayList<Permission>(permFactory.createPermissions(user,
-                ownerAdminRole.getPermissions())), false);
+            new ArrayList<>(permFactory.createPermissions(user, ownerAdminRole.getPermissions())), false);
         setupPrincipal(principal);
 
         or = new OwnerResource(

@@ -262,7 +262,7 @@ public class PoolDTO extends CandlepinDTO<PoolDTO> {
      */
     @JsonSerialize(using = CandlepinLegacyAttributeSerializer.class)
     public Map<String, String> getAttributes() {
-        return this.attributes != null ? new MapView<String, String>(this.attributes) : null;
+        return this.attributes != null ? new MapView<>(this.attributes) : null;
     }
 
     /**
@@ -278,7 +278,7 @@ public class PoolDTO extends CandlepinDTO<PoolDTO> {
     public PoolDTO setAttributes(Map<String, String> attributes) {
         if (attributes != null) {
             if (this.attributes == null) {
-                this.attributes = new HashMap<String, String>();
+                this.attributes = new HashMap<>();
             }
             else {
                 this.attributes.clear();
@@ -422,7 +422,7 @@ public class PoolDTO extends CandlepinDTO<PoolDTO> {
      */
     @JsonSerialize(using = CandlepinLegacyAttributeSerializer.class)
     public Map<String, String> getProductAttributes() {
-        return this.productAttributes != null ? new MapView<String, String>(this.productAttributes) : null;
+        return this.productAttributes != null ? new MapView<>(this.productAttributes) : null;
     }
 
     /**
@@ -438,7 +438,7 @@ public class PoolDTO extends CandlepinDTO<PoolDTO> {
     public PoolDTO setProductAttributes(Map<String, String> productAttributes) {
         if (productAttributes != null) {
             if (this.productAttributes == null) {
-                this.productAttributes = new HashMap<String, String>();
+                this.productAttributes = new HashMap<>();
             }
             else {
                 this.productAttributes.clear();
@@ -509,7 +509,7 @@ public class PoolDTO extends CandlepinDTO<PoolDTO> {
      *  the provided products associated with this key, or null if they have not yet been defined
      */
     public Set<ProvidedProductDTO> getProvidedProducts() {
-        return this.providedProducts != null ? new SetView<ProvidedProductDTO>(this.providedProducts) : null;
+        return this.providedProducts != null ? new SetView<>(this.providedProducts) : null;
     }
 
     /**
@@ -524,7 +524,7 @@ public class PoolDTO extends CandlepinDTO<PoolDTO> {
     public PoolDTO setProvidedProducts(Set<ProvidedProductDTO> providedProducts) {
         if (providedProducts != null) {
             if (this.providedProducts == null) {
-                this.providedProducts = new HashSet<ProvidedProductDTO>();
+                this.providedProducts = new HashSet<>();
             }
             else {
                 this.providedProducts.clear();
@@ -561,7 +561,7 @@ public class PoolDTO extends CandlepinDTO<PoolDTO> {
         }
 
         if (this.providedProducts == null) {
-            this.providedProducts = new HashSet<ProvidedProductDTO>();
+            this.providedProducts = new HashSet<>();
         }
 
         return this.providedProducts.add(providedProduct);
@@ -580,8 +580,7 @@ public class PoolDTO extends CandlepinDTO<PoolDTO> {
      *  the derived provided products associated with this key, or null if they have not yet been defined
      */
     public Set<ProvidedProductDTO> getDerivedProvidedProducts() {
-        return this.derivedProvidedProducts != null ?
-                new SetView<ProvidedProductDTO>(this.derivedProvidedProducts) : null;
+        return this.derivedProvidedProducts != null ? new SetView<>(this.derivedProvidedProducts) : null;
     }
 
     /**
@@ -596,7 +595,7 @@ public class PoolDTO extends CandlepinDTO<PoolDTO> {
     public PoolDTO setDerivedProvidedProducts(Set<ProvidedProductDTO> derivedProvidedProducts) {
         if (derivedProvidedProducts != null) {
             if (this.derivedProvidedProducts == null) {
-                this.derivedProvidedProducts = new HashSet<ProvidedProductDTO>();
+                this.derivedProvidedProducts = new HashSet<>();
             }
             else {
                 this.derivedProvidedProducts.clear();
@@ -633,7 +632,7 @@ public class PoolDTO extends CandlepinDTO<PoolDTO> {
         }
 
         if (this.derivedProvidedProducts == null) {
-            this.derivedProvidedProducts = new HashSet<ProvidedProductDTO>();
+            this.derivedProvidedProducts = new HashSet<>();
         }
 
         return this.derivedProvidedProducts.add(derivedProvidedProduct);

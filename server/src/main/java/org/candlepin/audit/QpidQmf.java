@@ -102,7 +102,7 @@ public class QpidQmf {
         throws JMSException {
 
         Session session = null;
-        List<Map<String, Object>> result = new ArrayList<Map<String, Object>>();
+        List<Map<String, Object>> result = new ArrayList<>();
         Connection connection = null;
 
         try {
@@ -240,7 +240,7 @@ public class QpidQmf {
         List<Map<String, Object>> mm = runQuery("_schema_id",
             Collections.singletonMap("_class_name", "binding"));
 
-        Set<String> result = new HashSet<String>();
+        Set<String> result = new HashSet<>();
 
         for (Map<String, Object> res : mm) {
             if (extractValue(res, "_values", "exchangeRef", "_object_name")

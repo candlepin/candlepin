@@ -73,7 +73,7 @@ public class EventResource {
         if (events != null) {
             eventAdapter.addMessageText(events);
 
-            eventDTOs = new ArrayList<EventDTO>();
+            eventDTOs = new ArrayList<>();
             for (Event event : events) {
                 eventDTOs.add(this.translator.translate(event, EventDTO.class));
             }
@@ -90,7 +90,7 @@ public class EventResource {
         Event toReturn = eventCurator.find(uuid);
 
         if (toReturn != null) {
-            List<Event> events = new LinkedList<Event>();
+            List<Event> events = new LinkedList<>();
 
             events.add(toReturn);
             eventAdapter.addMessageText(events);

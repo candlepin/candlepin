@@ -56,7 +56,6 @@ import org.candlepin.pki.impl.BouncyCastlePKIReader;
 import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resource.util.GuestMigration;
-import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.service.ContentAccessCertServiceAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
@@ -293,7 +292,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         setupPrincipal(owner, Access.READ_ONLY);
         securityInterceptor.enable();
         consumerResource.exportData(mock(HttpServletResponse.class), consumer.getUuid(), null, null, null,
-            new ArrayList<KeyValueParameter>());
+            new ArrayList<>());
         // if no exception, we're good
     }
 
@@ -358,7 +357,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
         consumerResource.unbindBySerial(consumer.getUuid(), serials.get(0).getSerial().getId());
         assertEquals(0, consumerResource.listEntitlements(
-            consumer.getUuid(), null, true, "", new ArrayList<KeyValueParameter>(), null).size());
+            consumer.getUuid(), null, true, "", new ArrayList<>(), null).size());
     }
 
     @Test(expected = NotFoundException.class)
@@ -445,7 +444,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         setupPrincipal(new ConsumerPrincipal(consumer));
         securityInterceptor.enable();
 
-        consumerResource.list(null, null, null, new ArrayList<String>(), null, null, null);
+        consumerResource.list(null, null, null, new ArrayList<>(), null, null, null);
     }
 
     @Test(expected = BadRequestException.class)
@@ -455,7 +454,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
         setupAdminPrincipal("admin");
         securityInterceptor.enable();
-        List<String> uuidList = new ArrayList<String>();
+        List<String> uuidList = new ArrayList<>();
         uuidList.add(consumer.getUuid());
         consumerResource.list("username", toSet("typeLabel"), owner.getKey(), uuidList,
             null, null, new PageRequest());
@@ -474,7 +473,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         assertEquals(3, consumerResource.listEntitlements(
-            consumer.getUuid(), null, true, "", new ArrayList<KeyValueParameter>(), null).size());
+            consumer.getUuid(), null, true, "", new ArrayList<>(), null).size());
     }
 
     @Test(expected = NotFoundException.class)
@@ -493,7 +492,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         consumerResource.listEntitlements(consumer.getUuid(), null, true,
-            "", new ArrayList<KeyValueParameter>(), null);
+            "", new ArrayList<>(), null);
     }
 
     @Test(expected = NotFoundException.class)
@@ -512,7 +511,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         setupPrincipal(evilOwner, Access.ALL);
 
         consumerResource.listEntitlements(consumer.getUuid(), null, true,
-            "", new ArrayList<KeyValueParameter>(), null);
+            "", new ArrayList<>(), null);
     }
 
     @Test
@@ -527,7 +526,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         assertEquals(3, consumerResource.listEntitlements(
-            consumer.getUuid(), null, true, "", new ArrayList<KeyValueParameter>(), null).size());
+            consumer.getUuid(), null, true, "", new ArrayList<>(), null).size());
     }
 
     @Test
@@ -615,7 +614,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     }
 
     private Set<String> toSet(String s) {
-        Set<String> result = new HashSet<String>();
+        Set<String> result = new HashSet<>();
         result.add(s);
         return result;
     }

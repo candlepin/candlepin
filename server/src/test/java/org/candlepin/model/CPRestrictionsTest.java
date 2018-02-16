@@ -52,7 +52,7 @@ public class CPRestrictionsTest {
 
     @Test
     public void testIn() {
-        List<String> items = new LinkedList<String>();
+        List<String> items = new LinkedList<>();
         StringBuilder expected = new StringBuilder("taylor in (");
 
         int inBlockSize = config.getInt(DatabaseConfigFactory.IN_OPERATOR_BLOCK_SIZE);
@@ -76,7 +76,7 @@ public class CPRestrictionsTest {
 
     @Test
     public void testInSimple() {
-        List<String> items = new LinkedList<String>();
+        List<String> items = new LinkedList<>();
         String expected = "swift in (";
         int i = 0;
 
@@ -95,7 +95,7 @@ public class CPRestrictionsTest {
 
     @Test
     public void testInAsArray() {
-        List<String> items = new LinkedList<String>();
+        List<String> items = new LinkedList<>();
         StringBuilder expected = new StringBuilder("taylor in (");
 
         int inBlockSize = config.getInt(DatabaseConfigFactory.IN_OPERATOR_BLOCK_SIZE);
@@ -119,7 +119,7 @@ public class CPRestrictionsTest {
 
     @Test
     public void testInSimpleAsArray() {
-        List<String> items = new LinkedList<String>();
+        List<String> items = new LinkedList<>();
         String expected = "swift in (";
         int i = 0;
 

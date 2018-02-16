@@ -453,7 +453,7 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
 
         Session session = this.currentSession();
 
-        Map<String, Object> criteria = new HashMap<String, Object>();
+        Map<String, Object> criteria = new HashMap<>();
         Map<Object, Object> uuidMap = Map.class.cast(contentUuidMap);
         criteria.put("content_uuid", contentUuidMap.keySet());
         criteria.put("owner_id", owner.getId());
@@ -516,7 +516,7 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
             Session session = this.currentSession();
 
             // Owner content
-            Map<String, Object> criteria = new HashMap<String, Object>();
+            Map<String, Object> criteria = new HashMap<>();
             criteria.put("owner_id", owner.getId());
             criteria.put("content_uuid", contentUuids);
 

@@ -70,7 +70,7 @@ public class HashableStringGenerators {
 
         StringBuilder builder = new StringBuilder();
         // TODO Is there a better way to do this without having to iterate twice?
-        List<String> generated = new LinkedList<String>();
+        List<String> generated = new LinkedList<>();
         for (T item : target) {
             generated.add(generator.generate(item));
         }

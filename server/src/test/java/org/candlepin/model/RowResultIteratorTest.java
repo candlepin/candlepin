@@ -84,7 +84,7 @@ public class RowResultIteratorTest extends DatabaseTestFixture {
         RowResultIterator iterator = new RowResultIterator(query.scroll(ScrollMode.FORWARD_ONLY));
 
         try {
-            List<Owner> owners = new LinkedList<Owner>();
+            List<Owner> owners = new LinkedList<>();
 
             // Note: Since we're testing everything in isolation here, we can't
             // be expecting .hasNext to be functional here. :)

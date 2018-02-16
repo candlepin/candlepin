@@ -123,7 +123,7 @@ public class VerifyAuthorizationFilter extends AbstractAuthorizationFilter {
         Object[] args = methodInjector.injectArguments(request, response);
 
         // LinkedHashMap preserves insertion order
-        Map<Verify, Object> argMap = new LinkedHashMap<Verify, Object>();
+        Map<Verify, Object> argMap = new LinkedHashMap<>();
 
         Annotation[][] allAnnotations = method.getParameterAnnotations();
 
@@ -151,7 +151,7 @@ public class VerifyAuthorizationFilter extends AbstractAuthorizationFilter {
         Owner owner = null;
 
         for (Map.Entry<Verify, Object> entry : argMap.entrySet()) {
-            List<Persisted> accessedObjects = new ArrayList<Persisted>();
+            List<Persisted> accessedObjects = new ArrayList<>();
             Object obj = entry.getValue();
             Verify verify = entry.getKey();
             Class<? extends Persisted> verifyType = verify.value();
@@ -209,7 +209,7 @@ public class VerifyAuthorizationFilter extends AbstractAuthorizationFilter {
             return Collections.emptyList();
         }
 
-        List<Persisted> entities = new ArrayList<Persisted>();
+        List<Persisted> entities = new ArrayList<>();
         Class<? extends Persisted> verifyType = verify.value();
 
         if (requestValue instanceof String) {

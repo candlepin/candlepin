@@ -305,7 +305,7 @@ public class OwnerProductResource {
 
         Owner owner = this.getOwnerByKey(ownerKey);
         Product product = this.fetchProduct(owner, productId);
-        Collection<ProductContent> productContent = new LinkedList<ProductContent>();
+        Collection<ProductContent> productContent = new LinkedList<>();
 
         if (product.isLocked()) {
             throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", product.getId()));

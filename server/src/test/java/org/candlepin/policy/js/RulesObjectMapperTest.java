@@ -54,7 +54,7 @@ public class RulesObjectMapperTest {
 
     @Before
     public void begin() {
-        context = new HashMap<String, Object>();
+        context = new HashMap<>();
         owner = new Owner("test");
         ProductCurator productCurator = Mockito.mock(ProductCurator.class);
         objMapper = new RulesObjectMapper(new ProductCachedSerializationModule(productCurator));
@@ -91,10 +91,10 @@ public class RulesObjectMapperTest {
 
     @Test
     public void filterEntitlementCert() {
-        List<Entitlement> allEnts = new LinkedList<Entitlement>();
+        List<Entitlement> allEnts = new LinkedList<>();
 
         Entitlement e = new Entitlement();
-        Set<EntitlementCertificate> entCerts = new HashSet<EntitlementCertificate>();
+        Set<EntitlementCertificate> entCerts = new HashSet<>();
         EntitlementCertificate cert = new EntitlementCertificate();
         cert.setCert("FILTERME");
         cert.setKey("FILTERME");

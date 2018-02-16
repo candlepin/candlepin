@@ -46,7 +46,7 @@ public class SweepBarJobTest extends BaseJobTest {
         MockitoAnnotations.initMocks(this);
         sweepBarJob = new SweepBarJob(j, pk);
         injector.injectMembers(sweepBarJob);
-        Set<JobKey> mockJK = new HashSet<JobKey>();
+        Set<JobKey> mockJK = new HashSet<>();
         JobKey jk = new JobKey("test key");
         mockJK.add(jk);
         when(pk.getSingleJobKeys()).thenReturn(mockJK);    }

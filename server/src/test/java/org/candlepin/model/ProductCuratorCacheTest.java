@@ -73,7 +73,7 @@ public class ProductCuratorCacheTest extends CacheTestFixture {
         productCurator.getProductsByUuidCached(Collections.singleton(p1.getUuid()));
         Assert.assertTrue(productCache.containsKey(p1.getUuid()));
 
-        Set<String> uuids = new HashSet<String>(Arrays.asList(p1.getUuid(), p2.getUuid()));
+        Set<String> uuids = new HashSet<>(Arrays.asList(p1.getUuid(), p2.getUuid()));
 
         Set<Product> products = productCurator.getProductsByUuidCached(uuids);
 
@@ -84,7 +84,7 @@ public class ProductCuratorCacheTest extends CacheTestFixture {
 
     @Test
     public void emptyUuidSet() {
-        Set<Product> products = productCurator.getProductsByUuidCached(new HashSet<String>());
+        Set<Product> products = productCurator.getProductsByUuidCached(new HashSet<>());
         Assert.assertEquals(new HashSet<String>(), products);
     }
 }

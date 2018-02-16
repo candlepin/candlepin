@@ -61,7 +61,7 @@ public class ProductShareCuratorTest extends DatabaseTestFixture {
         Product product = createProduct();
         Product product2 = createProduct();
 
-        Set<String> productIds = new HashSet<String>();
+        Set<String> productIds = new HashSet<>();
         productIds.add(product.getId());
         productIds.add(product2.getId());
         assertTrue(productShareCurator.findProductSharesByRecipient(recipientOwner, productIds).isEmpty());

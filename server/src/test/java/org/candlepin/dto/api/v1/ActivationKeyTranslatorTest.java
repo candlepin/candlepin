@@ -64,12 +64,12 @@ public class ActivationKeyTranslatorTest extends
 
         Product prod = new Product();
         prod.setId("prod-1-id");
-        source.setProducts(new HashSet<Product>());
+        source.setProducts(new HashSet<>());
         source.addProduct(prod);
 
         Pool pool = new Pool();
         pool.setId("pool-1-id");
-        source.setPools(new HashSet<ActivationKeyPool>());
+        source.setPools(new HashSet<>());
         source.addPool(pool, 1L);
 
         return source;

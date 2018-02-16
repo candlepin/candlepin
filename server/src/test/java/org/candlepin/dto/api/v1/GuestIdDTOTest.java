@@ -29,13 +29,13 @@ public class GuestIdDTOTest extends AbstractDTOTest<GuestIdDTO> {
 
     public GuestIdDTOTest() {
         super(GuestIdDTO.class);
-        Map<String, String> attributes = new HashMap<String, String>();
+        Map<String, String> attributes = new HashMap<>();
 
         for (int i = 0; i < 5; ++i) {
             attributes.put("attrib-" + i, "value-" + i);
         }
 
-        this.values = new HashMap<String, Object>();
+        this.values = new HashMap<>();
         this.values.put("Id", "test_value");
         this.values.put("GuestId", "test_value");
         this.values.put("Attributes", attributes);

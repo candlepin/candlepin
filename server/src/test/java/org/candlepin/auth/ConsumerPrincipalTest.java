@@ -122,7 +122,7 @@ public class ConsumerPrincipalTest {
     public void accessToMultipleConsumerEntitlements() {
         Consumer c = mock(Consumer.class);
         when(c.getUuid()).thenReturn("consumer-uuid");
-        List<Entitlement> entitlements = new ArrayList<Entitlement>();
+        List<Entitlement> entitlements = new ArrayList<>();
         for (int i = 0; i < 5; i++) {
             Entitlement e = mock(Entitlement.class);
             when(e.getConsumer()).thenReturn(c);
@@ -138,7 +138,7 @@ public class ConsumerPrincipalTest {
         Consumer c0 = mock(Consumer.class);
         when(c.getUuid()).thenReturn("consumer-uuid");
         when(c0.getUuid()).thenReturn("consumer-0-uuid");
-        List<Entitlement> entitlements = new ArrayList<Entitlement>();
+        List<Entitlement> entitlements = new ArrayList<>();
         for (int i = 0; i < 5; i++) {
             Entitlement e = mock(Entitlement.class);
             if (i == 3) {

@@ -85,7 +85,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         providedProduct = TestUtil.createProduct();
         productCurator.create(providedProduct);
 
-        Set<Product> providedProducts = new HashSet<Product>();
+        Set<Product> providedProducts = new HashSet<>();
         providedProducts.add(providedProduct);
 
         derivedProduct = TestUtil.createProduct();
@@ -94,7 +94,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         derivedProvidedProduct = TestUtil.createProduct();
         productCurator.create(derivedProvidedProduct);
 
-        Set<Product> derivedProvidedProducts = new HashSet<Product>();
+        Set<Product> derivedProvidedProducts = new HashSet<>();
         derivedProvidedProducts.add(derivedProvidedProduct);
 
         pool = new Pool(
@@ -155,7 +155,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testWithSimpleJsonAttribute() throws Exception {
-        Map<String, String> data = new HashMap<String, String>();
+        Map<String, String> data = new HashMap<>();
         data.put("a", "1");
         data.put("b", "2");
         ObjectMapper mapper = new ObjectMapper();
@@ -176,12 +176,12 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testJsonListOfHashes() throws Exception {
-        List<Map<String, String>> data = new LinkedList<Map<String, String>>();
-        Map<String, String> contentSet1 = new HashMap<String, String>();
+        List<Map<String, String>> data = new LinkedList<>();
+        Map<String, String> contentSet1 = new HashMap<>();
         contentSet1.put("name", "cs1");
         contentSet1.put("url", "url");
 
-        Map<String, String> contentSet2 = new HashMap<String, String>();
+        Map<String, String> contentSet2 = new HashMap<>();
         contentSet2.put("name", "cs2");
         contentSet2.put("url", "url2");
 
@@ -230,7 +230,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     @Test
     public void testDependentProducts() {
         Product prod = new Product("test-label", "test-product-name");
-        HashSet<String> dependentProductIds = new HashSet<String>();
+        HashSet<String> dependentProductIds = new HashSet<>();
         dependentProductIds.add("ProductX");
         prod.setDependentProductIds(dependentProductIds);
         productCurator.create(prod);
@@ -484,7 +484,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         this.ownerProductCurator.mapProductToOwner(p, this.owner);
         this.ownerContentCurator.mapContentToOwner(content, this.owner);
 
-        List<String> contentIds = new LinkedList<String>();
+        List<String> contentIds = new LinkedList<>();
         contentIds.add(content.getId());
         List<Product> products = productCurator.getProductsByContent(owner, contentIds).list();
         assertEquals(1, products.size());
@@ -500,7 +500,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         contentCurator.create(content);
         productCurator.create(p);
 
-        List<String> contentUuids = new LinkedList<String>();
+        List<String> contentUuids = new LinkedList<>();
         contentUuids.add(content.getUuid());
 
         List<Product> products = productCurator.getProductsByContentUuids(contentUuids).list();
@@ -570,7 +570,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         productCurator.create(prod);
         prod.setAttribute("testattr", "testVal");
 
-        Set<String> uuids = new HashSet<String>();
+        Set<String> uuids = new HashSet<>();
         uuids.add(prod.getUuid());
         uuids.add(product.getUuid());
 
@@ -582,12 +582,12 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     @Test
     public void testPoolProvidedProducts() {
         Set<String> uuids = productCurator.getPoolProvidedProductUuids(pool.getId());
-        assertEquals(new HashSet<String>(Arrays.asList(providedProduct.getUuid())), uuids);
+        assertEquals(new HashSet<>(Arrays.asList(providedProduct.getUuid())), uuids);
     }
 
     @Test
     public void testDerivedPoolProvidedProducts() {
         Set<String> uuids = productCurator.getDerivedPoolProvidedProductUuids(pool.getId());
-        assertEquals(new HashSet<String>(Arrays.asList(derivedProvidedProduct.getUuid())), uuids);
+        assertEquals(new HashSet<>(Arrays.asList(derivedProvidedProduct.getUuid())), uuids);
     }
 }

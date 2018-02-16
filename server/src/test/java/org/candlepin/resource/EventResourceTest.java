@@ -94,10 +94,10 @@ public class EventResourceTest {
         EventResource er = new EventResource(ec, null, injector.getInstance(EventAdapter.class), translator);
         CandlepinQuery cpQueryMock = mock(CandlepinQuery.class);
 
-        List<Event> events = new ArrayList<Event>();
+        List<Event> events = new ArrayList<>();
         events.add(getEvent());
 
-        List<EventDTO> eventDTOs = new ArrayList<EventDTO>();
+        List<EventDTO> eventDTOs = new ArrayList<>();
         eventDTOs.add(getEventDTO());
 
         when(ec.listAll()).thenReturn(cpQueryMock);

@@ -194,7 +194,7 @@ public class PoolResource {
         // Store the page for the LinkHeaderResponseFilter
         ResteasyProviderFactory.pushContext(Page.class, page);
 
-        List<PoolDTO> poolDTOs = new ArrayList<PoolDTO>();
+        List<PoolDTO> poolDTOs = new ArrayList<>();
         for (Pool pool : poolList) {
             poolDTOs.add(translator.translate(pool, PoolDTO.class));
         }
@@ -299,7 +299,7 @@ public class PoolResource {
                 "Subscription Pool with ID \"{0}\" could not be found.", id));
         }
 
-        List<EntitlementDTO> entitlementDTOs = new ArrayList<EntitlementDTO>();
+        List<EntitlementDTO> entitlementDTOs = new ArrayList<>();
         for (Entitlement entitlement : pool.getEntitlements()) {
             entitlementDTOs.add(this.translator.translate(entitlement, EntitlementDTO.class));
         }

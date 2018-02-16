@@ -59,11 +59,11 @@ public class EventFilter {
     /**
      * Events that must not be filtered.
      */
-    private Set<EventTypeAndTarget> toNotFilter = new HashSet<EventTypeAndTarget>();
+    private Set<EventTypeAndTarget> toNotFilter = new HashSet<>();
     /**
      * Events that must be filtered.
      */
-    private Set<EventTypeAndTarget> toFilter = new HashSet<EventTypeAndTarget>();
+    private Set<EventTypeAndTarget> toFilter = new HashSet<>();
 
     private Configuration config;
 

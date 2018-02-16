@@ -49,7 +49,7 @@ public class CustomizableModules {
     @SuppressWarnings("unchecked")
     public Set<Module> customizedConfiguration(Configuration moduleConfig) {
         try {
-            Set<Module> toReturn = new HashSet<Module>();
+            Set<Module> toReturn = new HashSet<>();
 
             for (String key : moduleConfig.getKeys()) {
                 log.info("Found custom module " + key);

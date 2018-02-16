@@ -51,7 +51,7 @@ public class PropertyValidatorTest {
      * Utility method for fetching validators
      */
     private Validator getValidator(Class<? extends Validator> validatorClass, Object... args) {
-        Map<Class, Class> translator = new HashMap<Class, Class>();
+        Map<Class, Class> translator = new HashMap<>();
         translator.put(Boolean.class, Boolean.TYPE);
         translator.put(Character.class, Character.TYPE);
         translator.put(Byte.class, Byte.TYPE);

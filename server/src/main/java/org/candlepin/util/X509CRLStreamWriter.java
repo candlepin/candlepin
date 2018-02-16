@@ -179,10 +179,10 @@ public class X509CRLStreamWriter {
     public X509CRLStreamWriter(InputStream crlToChange,
         RSAPrivateKey key, AuthorityKeyIdentifier aki)
         throws CryptoException, IOException {
-        this.deletedEntries = new HashSet<BigInteger>();
+        this.deletedEntries = new HashSet<>();
         this.deletedEntriesLength = 0;
 
-        this.newEntries = new LinkedList<DERSequence>();
+        this.newEntries = new LinkedList<>();
         this.crlIn = crlToChange;
 
         this.count = new AtomicInteger();

@@ -51,7 +51,7 @@ public class OwnerDTOTest extends AbstractDTOTest<OwnerDTO> {
         consumer.setWebUrl("http://www.url.com");
         consumer.setOwnerId("owner_id");
 
-        this.values = new HashMap<String, Object>();
+        this.values = new HashMap<>();
         this.values.put("Id", "test-id");
         this.values.put("Key", "test-key");
         this.values.put("DisplayName", "test-name");

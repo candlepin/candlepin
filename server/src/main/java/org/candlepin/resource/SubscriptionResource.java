@@ -87,7 +87,7 @@ public class SubscriptionResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<Subscription> getSubscriptions() {
-        List<Subscription> subscriptions = new LinkedList<Subscription>();
+        List<Subscription> subscriptions = new LinkedList<>();
 
         for (Pool pool : this.poolManager.getMasterPools()) {
             subscriptions.add(this.poolManager.fabricateSubscriptionFromPool(pool));

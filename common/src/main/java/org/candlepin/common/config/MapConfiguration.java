@@ -32,7 +32,7 @@ public class MapConfiguration extends AbstractConfiguration {
     private Map<String, String> configMap;
 
     public MapConfiguration() {
-        configMap = new ConcurrentHashMap<String, String>();
+        configMap = new ConcurrentHashMap<>();
     }
 
     public MapConfiguration(Map<String, String> configMap) {
@@ -45,7 +45,7 @@ public class MapConfiguration extends AbstractConfiguration {
             throw new RuntimeException(
                 new ConfigurationException("Keys with a null value are not supported"));
         }
-        this.configMap = new ConcurrentHashMap<String, String>(configMap);
+        this.configMap = new ConcurrentHashMap<>(configMap);
     }
 
     public MapConfiguration(Configuration config) {
@@ -69,7 +69,7 @@ public class MapConfiguration extends AbstractConfiguration {
     }
 
     protected Map<String, String> subsetMap(String prefix) {
-        Map<String, String> subset = new ConcurrentHashMap<String, String>();
+        Map<String, String> subset = new ConcurrentHashMap<>();
 
         for (Map.Entry<String, String> e : configMap.entrySet()) {
             // ConcurrentHashMaps do not allow null as a key but other

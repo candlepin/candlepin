@@ -391,7 +391,7 @@ public class DetachedCandlepinQuery<T> implements CandlepinQuery<T> {
         }
 
         ScrollableResults cursor = executable.scroll(ScrollMode.FORWARD_ONLY);
-        return new ColumnarResultIterator<T>(this.session, cursor, column, evict);
+        return new ColumnarResultIterator<>(this.session, cursor, column, evict);
     }
 
     /**

@@ -178,9 +178,9 @@ public class PinsetterKernel implements ModeChangeListener {
     private void configure() {
         log.debug("Scheduling tasks");
 
-        List<JobEntry> pendingJobs = new ArrayList<JobEntry>();
+        List<JobEntry> pendingJobs = new ArrayList<>();
         // use a set to remove potential duplicate jobs from config
-        Set<String> jobFQNames = new HashSet<String>();
+        Set<String> jobFQNames = new HashSet<>();
 
         try {
             if (config.getBoolean(ConfigProperties.ENABLE_PINSETTER, true)) {
@@ -225,7 +225,7 @@ public class PinsetterKernel implements ModeChangeListener {
                 log.debug("Scheduling {}", jobFQName);
 
                 // Find all existing cron triggers matching this job impl
-                List<CronTrigger> existingCronTriggers = new LinkedList<CronTrigger>();
+                List<CronTrigger> existingCronTriggers = new LinkedList<>();
                 if (jobKeys != null) {
                     for (JobKey key : jobKeys) {
                         JobDetail jd = scheduler.getJobDetail(key);
@@ -445,7 +445,7 @@ public class PinsetterKernel implements ModeChangeListener {
      * @throws PinsetterException if there is an error deleting the jobs from the schedule.
      */
     public void cancelJobs(Collection<JobStatus> toCancel) throws PinsetterException {
-        List<JobKey> jobsToDelete = new LinkedList<JobKey>();
+        List<JobKey> jobsToDelete = new LinkedList<>();
 
         for (JobStatus status : toCancel) {
             JobKey key = jobKey(status.getId(), status.getGroup());

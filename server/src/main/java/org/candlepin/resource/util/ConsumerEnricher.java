@@ -66,8 +66,8 @@ public class ConsumerEnricher {
         Map<String, DateRange> ranges = status.getProductComplianceDateRanges();
 
         // Compile the product IDs for the products we're going to be enriching
-        Set<String> productIds = new HashSet<String>();
-        Map<String, Product> productMap = new HashMap<String, Product>();
+        Set<String> productIds = new HashSet<>();
+        Map<String, Product> productMap = new HashMap<>();
 
         for (ConsumerInstalledProduct cip : consumer.getInstalledProducts()) {
             productIds.add(cip.getProductId());

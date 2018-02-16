@@ -20,7 +20,6 @@ import org.candlepin.model.Product;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
-import org.candlepin.util.Util;
 
 import com.google.inject.persist.UnitOfWork;
 
@@ -28,6 +27,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -47,8 +48,8 @@ public class Refresher {
     private UnitOfWork uow;
     private static Logger log = LoggerFactory.getLogger(Refresher.class);
 
-    private Map<String, Owner> owners = Util.newMap();
-    private Set<Product> products = Util.newSet();
+    private Map<String, Owner> owners = new HashMap<>();
+    private Set<Product> products = new HashSet<>();
 
     Refresher(CandlepinPoolManager poolManager, SubscriptionServiceAdapter subAdapter,
         OwnerServiceAdapter ownerAdapter, OwnerManager ownerManager, boolean lazy) {
@@ -97,7 +98,7 @@ public class Refresher {
         // If products were specified on the refresher, lookup any subscriptions
         // using them, regardless of organization, and trigger a refresh for those
         // specific subscriptions.
-        Set<Subscription> subscriptions = Util.newSet();
+        Set<Subscription> subscriptions = new HashSet<>();
         for (Product product : products) {
             // TODO: This adapter call is not implemented in prod, and cannot be. We plan
             // to fix this whole code path in near future by looking for pools using the

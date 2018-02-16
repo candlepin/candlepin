@@ -398,7 +398,7 @@ public class ActivationKeyDTO extends TimestampedCandlepinDTO<ActivationKeyDTO> 
      *  the pools associated with this key, or null if the pools have not yet been defined
      */
     public Set<ActivationKeyPoolDTO> getPools() {
-        return this.pools != null ? new SetView<ActivationKeyPoolDTO>(this.pools) : null;
+        return this.pools != null ? new SetView<>(this.pools) : null;
     }
 
     /**
@@ -416,7 +416,7 @@ public class ActivationKeyDTO extends TimestampedCandlepinDTO<ActivationKeyDTO> 
     public ActivationKeyDTO setPools(Set<ActivationKeyPoolDTO> pools) {
         if (pools != null) {
             if (this.pools == null) {
-                this.pools = new HashSet<ActivationKeyPoolDTO>();
+                this.pools = new HashSet<>();
             }
             else {
                 this.pools.clear();
@@ -515,7 +515,7 @@ public class ActivationKeyDTO extends TimestampedCandlepinDTO<ActivationKeyDTO> 
         }
 
         if (this.pools == null) {
-            this.pools = new HashSet<ActivationKeyPoolDTO>();
+            this.pools = new HashSet<>();
         }
 
         return this.pools.add(poolDto);
@@ -535,7 +535,7 @@ public class ActivationKeyDTO extends TimestampedCandlepinDTO<ActivationKeyDTO> 
     @JsonSerialize(contentUsing = ProductWrapSerializer.class)
     @JsonProperty("products")
     public Set<String> getProductIds() {
-        return this.products != null ? new SetView<String>(this.products) : null;
+        return this.products != null ? new SetView<>(this.products) : null;
     }
 
     /**
@@ -552,7 +552,7 @@ public class ActivationKeyDTO extends TimestampedCandlepinDTO<ActivationKeyDTO> 
     public ActivationKeyDTO setProductIds(Set<String> products) {
         if (products != null) {
             if (this.products == null) {
-                this.products = new HashSet<String>();
+                this.products = new HashSet<>();
             }
             else {
                 this.products.clear();
@@ -653,7 +653,7 @@ public class ActivationKeyDTO extends TimestampedCandlepinDTO<ActivationKeyDTO> 
         }
 
         if (this.products == null) {
-            this.products = new HashSet<String>();
+            this.products = new HashSet<>();
         }
 
         return this.products.add(productId);
@@ -672,8 +672,7 @@ public class ActivationKeyDTO extends TimestampedCandlepinDTO<ActivationKeyDTO> 
      *  or null if the content overrideshave not yet been defined
      */
     public Set<ActivationKeyContentOverrideDTO> getContentOverrides() {
-        return this.contentOverrides != null ?
-            new SetView<ActivationKeyContentOverrideDTO>(this.contentOverrides) : null;
+        return this.contentOverrides != null ? new SetView<>(this.contentOverrides) : null;
     }
 
     /**
@@ -692,7 +691,7 @@ public class ActivationKeyDTO extends TimestampedCandlepinDTO<ActivationKeyDTO> 
     public ActivationKeyDTO setContentOverrides(Set<ActivationKeyContentOverrideDTO> contentOverrides) {
         if (contentOverrides != null) {
             if (this.contentOverrides == null) {
-                this.contentOverrides = new HashSet<ActivationKeyContentOverrideDTO>();
+                this.contentOverrides = new HashSet<>();
             }
             else {
                 this.contentOverrides.clear();
@@ -732,7 +731,7 @@ public class ActivationKeyDTO extends TimestampedCandlepinDTO<ActivationKeyDTO> 
             return false;
         }
 
-        List<ActivationKeyContentOverrideDTO> remove = new LinkedList<ActivationKeyContentOverrideDTO>();
+        List<ActivationKeyContentOverrideDTO> remove = new LinkedList<>();
 
         for (ActivationKeyContentOverrideDTO candidate : this.getContentOverrides()) {
             if (candidate.getContentLabel().equals(contentOverrideDto.getContentLabel()) &&
@@ -758,7 +757,7 @@ public class ActivationKeyDTO extends TimestampedCandlepinDTO<ActivationKeyDTO> 
         }
 
         if (this.contentOverrides == null) {
-            this.contentOverrides = new HashSet<ActivationKeyContentOverrideDTO>();
+            this.contentOverrides = new HashSet<>();
         }
 
         return this.contentOverrides.add(contentOverrideDto);

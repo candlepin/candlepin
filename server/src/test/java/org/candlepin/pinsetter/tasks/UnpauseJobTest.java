@@ -61,7 +61,7 @@ public class UnpauseJobTest extends BaseJobTest{
 
     @Test
     public void noUnPausesTest() throws JobExecutionException {
-        when(jobCurator.findWaitingJobs()).thenReturn(new EmptyCandlepinQuery<JobStatus>());
+        when(jobCurator.findWaitingJobs()).thenReturn(new EmptyCandlepinQuery<>());
         unpauseJob.execute(ctx);
         try {
             verify(pk, never()).addTrigger(any(JobStatus.class));
@@ -78,7 +78,7 @@ public class UnpauseJobTest extends BaseJobTest{
             .build();
 
         JobStatus js = new JobStatus(jd, true);
-        List<JobStatus> jl = new ArrayList<JobStatus>();
+        List<JobStatus> jl = new ArrayList<>();
         jl.add(js);
 
         CandlepinQuery query = mock(CandlepinQuery.class);
@@ -111,7 +111,7 @@ public class UnpauseJobTest extends BaseJobTest{
         status.setState(JobStatus.JobState.CREATED);
         assertEquals("unknown.class", status.getJobClass());
 
-        List<JobStatus> jl = new ArrayList<JobStatus>();
+        List<JobStatus> jl = new ArrayList<>();
         jl.add(status);
 
         CandlepinQuery query = mock(CandlepinQuery.class);

@@ -75,7 +75,7 @@ public class OwnerInfoCurator {
         // Make sure this doesn't choke on MySQL, since we're doing queries with the cursor open.
 
         List<ConsumerType> types = consumerTypeCurator.listAll().list();
-        HashMap<String, ConsumerType> typeHash = new HashMap<String, ConsumerType>();
+        HashMap<String, ConsumerType> typeHash = new HashMap<>();
         for (ConsumerType type : types) {
             // Store off the type for later use
             typeHash.put(type.getLabel(), type);
@@ -307,7 +307,7 @@ public class OwnerInfoCurator {
     }
 
     private Collection<String> getProductFamilies(Owner owner, Date date) {
-        Set<String> families = new HashSet<String>();
+        Set<String> families = new HashSet<>();
 
         String queryStr = "select distinct value(attr) from Pool p " +
             "join p.attributes as attr " +

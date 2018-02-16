@@ -315,7 +315,7 @@ public class ProductManager {
             throw new IllegalArgumentException("owner is null");
         }
 
-        ImportResult<Product> importResult = new ImportResult<Product>();
+        ImportResult<Product> importResult = new ImportResult<>();
 
         if (productData == null || productData.isEmpty()) {
             // Nothing to import
@@ -326,10 +326,10 @@ public class ProductManager {
         Map<String, Product> createdProducts = importResult.getCreatedEntities();
         Map<String, Product> updatedProducts = importResult.getUpdatedEntities();
 
-        Map<String, Integer> productVersions = new HashMap<String, Integer>();
-        Map<String, Product> sourceProducts = new HashMap<String, Product>();
-        Map<String, List<Product>> existingVersions = new HashMap<String, List<Product>>();
-        List<OwnerProduct> ownerProductBuffer = new LinkedList<OwnerProduct>();
+        Map<String, Integer> productVersions = new HashMap<>();
+        Map<String, Product> sourceProducts = new HashMap<>();
+        Map<String, List<Product>> existingVersions = new HashMap<>();
+        List<OwnerProduct> ownerProductBuffer = new LinkedList<>();
 
         // - Divide imported products into sets of updates and creates
         log.debug("Fetching existing products for update...");
@@ -373,7 +373,7 @@ public class ProductManager {
         for (Product alt : this.ownerProductCurator.getProductsByVersions(owner, productVersions)) {
             List<Product> alternates = existingVersions.get(alt.getId());
             if (alternates == null) {
-                alternates = new LinkedList<Product>();
+                alternates = new LinkedList<>();
                 existingVersions.put(alt.getId(), alternates);
             }
 
@@ -385,7 +385,7 @@ public class ProductManager {
 
         // We're about to start modifying the maps, so we need to clone the created set before we
         // start adding the update forks to it.
-        Map<String, Product> stagedEntities = new HashMap<String, Product>(createdProducts);
+        Map<String, Product> stagedEntities = new HashMap<>(createdProducts);
 
         // Process the created group...
         // Check our created set for existing versions:
@@ -448,7 +448,7 @@ public class ProductManager {
         this.ownerProductCurator.saveAll(ownerProductBuffer, true, true);
 
         // Perform bulk reference update
-        Map<String, String> productUuidMap = new HashMap<String, String>();
+        Map<String, String> productUuidMap = new HashMap<>();
         for (Product update : updatedProducts.values()) {
             Product source = sourceProducts.get(update.getId());
 
@@ -531,7 +531,7 @@ public class ProductManager {
      */
     public void removeProducts(Owner owner, Collection<Product> products) {
         if (products != null && !products.isEmpty()) {
-            Map<String, Product> productMap = new HashMap<String, Product>();
+            Map<String, Product> productMap = new HashMap<>();
             for (Product product : products) {
                 productMap.put(product.getUuid(), product);
             }
@@ -591,7 +591,7 @@ public class ProductManager {
             throw new IllegalArgumentException("owner is null");
         }
 
-        Map<String, Content> contentMap = new HashMap<String, Content>();
+        Map<String, Content> contentMap = new HashMap<>();
 
         if (update.getProductContent() != null) {
             // Grab all of the content objects at once so we don't hit the DB a few thousand times
@@ -663,11 +663,11 @@ public class ProductManager {
         }
 
         if (update.getProductContent() != null) {
-            Collection<ProductContent> productContent = new LinkedList<ProductContent>();
+            Collection<ProductContent> productContent = new LinkedList<>();
 
             // Sort the existing ProductContent so we aren't iterating on it several times.
             // TODO: Remove this if/when product content is stored as a map on products.
-            Map<String, ProductContent> existingLinks = new HashMap<String, ProductContent>();
+            Map<String, ProductContent> existingLinks = new HashMap<>();
             for (ProductContent pc : entity.getProductContent()) {
                 existingLinks.put(pc.getContent().getId(), pc);
             }
@@ -955,11 +955,11 @@ public class ProductManager {
         }
 
         if (update.getProductContent() != null) {
-            Collection<ProductContent> productContent = new LinkedList<ProductContent>();
+            Collection<ProductContent> productContent = new LinkedList<>();
 
             // Sort the existing ProductContent so we aren't iterating on it several times.
             // TODO: Remove this if/when product content is stored as a map on products.
-            Map<String, ProductContent> existingLinks = new HashMap<String, ProductContent>();
+            Map<String, ProductContent> existingLinks = new HashMap<>();
             for (ProductContent pc : entity.getProductContent()) {
                 existingLinks.put(pc.getContent().getId(), pc);
             }

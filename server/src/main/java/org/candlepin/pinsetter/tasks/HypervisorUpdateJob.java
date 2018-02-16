@@ -230,9 +230,9 @@ public class HypervisorUpdateJob extends KingpinJob {
             log.debug("Hypervisor consumers for create/update: {}", hypervisors.getHypervisors().size());
             log.debug("Updating hypervisor consumers for org {0}", ownerKey);
 
-            Set<String> hosts = new HashSet<String>();
-            Set<String> guests = new HashSet<String>();
-            Map<String, Consumer> incomingHosts = new HashMap<String, Consumer>();
+            Set<String> hosts = new HashSet<>();
+            Set<String> guests = new HashSet<>();
+            Map<String, Consumer> incomingHosts = new HashMap<>();
             parseHypervisorList(hypervisors, hosts, guests, incomingHosts);
             // TODO Need to ensure that we retrieve existing guestIds from the DB before continuing.
 
@@ -414,7 +414,7 @@ public class HypervisorUpdateJob extends KingpinJob {
         }
         consumer.setType(hypervisorType);
         consumer.setFact("uname.machine", "x86_64");
-        consumer.setGuestIds(new ArrayList<GuestId>());
+        consumer.setGuestIds(new ArrayList<>());
         consumer.setLastCheckin(new Date());
         consumer.setOwner(owner);
         consumer.setAutoheal(true);
@@ -470,7 +470,7 @@ public class HypervisorUpdateJob extends KingpinJob {
      */
     private Consumer syncGuestIds(Consumer incoming, Map<String, GuestId> guestIdMap) {
         List<GuestId> current = incoming.getGuestIds();
-        List<GuestId> updated = new ArrayList<GuestId>(current.size());
+        List<GuestId> updated = new ArrayList<>(current.size());
 
         for (GuestId gid : current) {
             GuestId persisted = guestIdMap.get(gid.getGuestId());

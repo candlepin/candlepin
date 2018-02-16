@@ -111,7 +111,7 @@ public class AutobindRulesTest {
         consumer = new Consumer("test consumer", "test user", owner,
             new ConsumerType(ConsumerTypeEnum.SYSTEM));
         compliance = new ComplianceStatus();
-        activeGuestAttrs = new HashMap<String, String>();
+        activeGuestAttrs = new HashMap<>();
         activeGuestAttrs.put("virtWhoType", "libvirt");
         activeGuestAttrs.put("active", "1");
     }
@@ -123,11 +123,11 @@ public class AutobindRulesTest {
         Pool pool = TestUtil.createPool(owner, product);
         pool.setId("DEAD-BEEF");
 
-        List<Pool> pools = new LinkedList<Pool>();
+        List<Pool> pools = new LinkedList<>();
         pools.add(pool);
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
+            new String[]{ productId }, pools, compliance, null, new HashSet<>(),
             false);
 
         assertEquals(1, bestPools.size());
@@ -137,18 +137,18 @@ public class AutobindRulesTest {
     public void testSelectBestPoolsFiltersTooMuchContent() {
         Pool pool = createV3OnlyPool();
 
-        List<Pool> pools = new LinkedList<Pool>();
+        List<Pool> pools = new LinkedList<>();
         pools.add(pool);
 
         List<PoolQuantity> poolQs = autobindRules.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
+            new String[]{ productId }, pools, compliance, null, new HashSet<>(),
             false);
         assertEquals(0, poolQs.size());
 
         // Try again with explicitly setting the consumer to cert v1:
         consumer.setFact("system.certificate_version", "1.0");
         poolQs = autobindRules.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
+            new String[]{ productId }, pools, compliance, null, new HashSet<>(),
             false);
         assertEquals(0, poolQs.size());
     }
@@ -162,7 +162,7 @@ public class AutobindRulesTest {
     public void testSelectBestPoolsDoesntFilterTooMuchContentForHypervisor() {
         Pool pool = createV3OnlyPool();
 
-        List<Pool> pools = new LinkedList<Pool>();
+        List<Pool> pools = new LinkedList<>();
         pools.add(pool);
 
         // Create a hypervisor consumer which does *not* have a certificate version fact.
@@ -171,7 +171,7 @@ public class AutobindRulesTest {
                 new ConsumerType(ConsumerTypeEnum.HYPERVISOR));
 
         List<PoolQuantity> results = autobindRules.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null, new HashSet<String>(), false);
+            new String[]{ productId }, pools, compliance, null, new HashSet<>(), false);
         assertEquals(1, results.size());
     }
 
@@ -179,13 +179,13 @@ public class AutobindRulesTest {
     public void testSelectBestPoolsLotsOfContentV3Client() {
         Pool pool = createV3OnlyPool();
 
-        List<Pool> pools = new LinkedList<Pool>();
+        List<Pool> pools = new LinkedList<>();
         pools.add(pool);
 
         // Shouldn't throw an exception as we do for certv1 clients.
         consumer.setFact("system.certificate_version", "3.5");
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
+            new String[]{ productId }, pools, compliance, null, new HashSet<>(),
             false);
         assertEquals(1, bestPools.size());
     }
@@ -231,11 +231,11 @@ public class AutobindRulesTest {
         Pool pool = TestUtil.createPool(owner, product);
         pool.setId("DEAD-BEEF");
 
-        List<Pool> pools = new LinkedList<Pool>();
+        List<Pool> pools = new LinkedList<>();
         pools.add(pool);
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
+            new String[]{ productId }, pools, compliance, null, new HashSet<>(),
             false);
 
         assertEquals(1, bestPools.size());
@@ -270,13 +270,13 @@ public class AutobindRulesTest {
         Pool pool2 = createPool("DEAD-BEEF2", owner, sku2, provided);
         Pool pool3 = createPool("DEAD-BEEF3", owner, sku1, provided);
 
-        List<Pool> pools = new LinkedList<Pool>();
+        List<Pool> pools = new LinkedList<>();
         pools.add(pool1);
         pools.add(pool2);
         pools.add(pool3);
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
-            new String[]{ provided.getId() }, pools, compliance, null, new HashSet<String>(),
+            new String[]{ provided.getId() }, pools, compliance, null, new HashSet<>(),
             false);
 
         assertEquals(1, bestPools.size());
@@ -313,14 +313,13 @@ public class AutobindRulesTest {
 
         Pool pool3 = createPool("DEAD-BEEF3", owner, sku1, provided);
 
-        List<Pool> pools = new LinkedList<Pool>();
+        List<Pool> pools = new LinkedList<>();
         pools.add(pool1);
         pools.add(pool2);
         pools.add(pool3);
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
-            new String[]{ provided.getId() }, pools, compliance, null,
-            new HashSet<String>(), false);
+            new String[]{ provided.getId() }, pools, compliance, null, new HashSet<>(), false);
 
         assertEquals(2, bestPools.size());
         //higher quantity from this pool, as it is virt_only
@@ -372,7 +371,7 @@ public class AutobindRulesTest {
         Pool noSLAPool = TestUtil.createPool(owner, noSLAProduct);
         noSLAPool.setId("pool-1");
 
-        List<Pool> pools = new LinkedList<Pool>();
+        List<Pool> pools = new LinkedList<>();
         pools.add(noSLAPool);
         pools.add(slaPremiumPool);
         pools.add(slaStandardPool);
@@ -382,7 +381,7 @@ public class AutobindRulesTest {
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
             new String[]{ productId, slaPremiumProdId, slaStandardProdId},
-            pools, compliance, null, new HashSet<String>(), false);
+            pools, compliance, null, new HashSet<>(), false);
 
         assertEquals(2, bestPools.size());
         assertTrue(bestPools.contains(new PoolQuantity(slaPremiumPool, 1)));
@@ -414,7 +413,7 @@ public class AutobindRulesTest {
         Pool noSLAPool = TestUtil.createPool(owner, noSLAProduct);
         noSLAPool.setId("pool-1");
 
-        List<Pool> pools = new LinkedList<Pool>();
+        List<Pool> pools = new LinkedList<>();
         pools.add(noSLAPool);
         pools.add(slaPremiumPool);
         pools.add(slaStandardPool);
@@ -425,7 +424,7 @@ public class AutobindRulesTest {
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
             new String[]{ productId, slaPremiumProdId, slaStandardProdId},
-            pools, compliance, null, new HashSet<String>(), false);
+            pools, compliance, null, new HashSet<>(), false);
 
         assertEquals(2, bestPools.size());
         assertTrue(bestPools.contains(new PoolQuantity(slaPremiumPool, 1)));
@@ -452,7 +451,7 @@ public class AutobindRulesTest {
         pool2.setId("DEAD-BEEF2");
         pool2.addProvidedProduct(product3);
 
-        List<Pool> pools = new LinkedList<Pool>();
+        List<Pool> pools = new LinkedList<>();
         //pools.add(pool1);
         pools.add(pool2);
 
@@ -464,7 +463,7 @@ public class AutobindRulesTest {
 
         List<PoolQuantity> result = autobindRules.selectBestPools(consumer,
             new String[]{ productId2, productId3 },
-            pools, compliance, null, new HashSet<String>(), false);
+            pools, compliance, null, new HashSet<>(), false);
         assertNotNull(result);
         // We can make sure the partial stack wasn't completed
         for (PoolQuantity pq : result) {
@@ -488,8 +487,8 @@ public class AutobindRulesTest {
     public void testSelectBestPoolNoPools() {
         // There are no pools for the product in this case:
         assertEquals(0, autobindRules.selectBestPools(consumer,
-            new String[] {HIGHEST_QUANTITY_PRODUCT}, new LinkedList<Pool>(), compliance,
-            null, new HashSet<String>(), false).size());
+            new String[] {HIGHEST_QUANTITY_PRODUCT}, new LinkedList<>(), compliance,
+            null, new HashSet<>(), false).size());
     }
 
     @Test
@@ -506,8 +505,7 @@ public class AutobindRulesTest {
             = Arrays.asList(new Pool[] {pool1, pool2});
 
         List<PoolQuantity> result = autobindRules.selectBestPools(consumer,
-            new String[] {product.getId()}, availablePools, compliance, null,
-            new HashSet<String>(), false);
+            new String[] {product.getId()}, availablePools, compliance, null, new HashSet<>(), false);
         assertNotNull(result);
         for (PoolQuantity pq : result) {
             assertEquals(new Integer(1), pq.getQuantity());
@@ -549,7 +547,7 @@ public class AutobindRulesTest {
         product.setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes");
         product.setAttribute(Product.Attributes.SOCKETS, "2");
 
-        Set<Product> derivedProvided = new HashSet<Product>();
+        Set<Product> derivedProvided = new HashSet<>();
         derivedProvided.add(TestUtil.createProduct(derivedEngPid, derivedEngPid));
 
         Product derivedProduct = TestUtil.createProduct("derivedProd", "A derived test product");
@@ -557,7 +555,7 @@ public class AutobindRulesTest {
         product.setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes");
 
         Pool pool = TestUtil.createPool(
-            owner, product, new HashSet<Product>(), derivedProduct, derivedProvided, 100
+            owner, product, new HashSet<>(), derivedProduct, derivedProvided, 100
         );
 
         pool.setId("DEAD-BEEF-DER");
@@ -565,7 +563,7 @@ public class AutobindRulesTest {
         when(mockProductCurator.getPoolDerivedProvidedProductsCached(pool.getId()))
             .thenReturn(derivedProvided);
 
-        List<Pool> pools = new LinkedList<Pool>();
+        List<Pool> pools = new LinkedList<>();
         pools.add(pool);
         return pools;
     }
@@ -579,7 +577,7 @@ public class AutobindRulesTest {
         String engProdId = "928";
         List<Pool> pools = createDerivedPool(engProdId);
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
-            new String[]{ engProdId }, pools, compliance, null, new HashSet<String>(),
+            new String[]{ engProdId }, pools, compliance, null, new HashSet<>(),
             true);
         assertEquals(1, bestPools.size());
     }
@@ -589,7 +587,7 @@ public class AutobindRulesTest {
         List<Pool> pools = createInstanceBasedPool();
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
+            new String[]{ productId }, pools, compliance, null, new HashSet<>(),
             false);
 
         assertEquals(1, bestPools.size());
@@ -603,7 +601,7 @@ public class AutobindRulesTest {
         setupConsumer("8", false);
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
+            new String[]{ productId }, pools, compliance, null, new HashSet<>(),
             false);
 
         assertEquals(1, bestPools.size());
@@ -618,7 +616,7 @@ public class AutobindRulesTest {
         setupConsumer("8", false);
 
         assertEquals(0, autobindRules.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
+            new String[]{ productId }, pools, compliance, null, new HashSet<>(),
             false).size());
     }
 
@@ -629,7 +627,7 @@ public class AutobindRulesTest {
         setupConsumer("8", false);
 
         assertEquals(0, autobindRules.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
+            new String[]{ productId }, pools, compliance, null, new HashSet<>(),
             false).size());
     }
 
@@ -645,7 +643,7 @@ public class AutobindRulesTest {
         compliance.addPartialStack("1", mockEnt);
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
+            new String[]{ productId }, pools, compliance, null, new HashSet<>(),
             false);
 
         assertEquals(1, bestPools.size());
@@ -666,7 +664,7 @@ public class AutobindRulesTest {
         setupConsumer("8", true);
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
+            new String[]{ productId }, pools, compliance, null, new HashSet<>(),
             false);
 
         assertEquals(1, bestPools.size());
@@ -690,7 +688,7 @@ public class AutobindRulesTest {
         Pool pool = TestUtil.createPool(owner, product, 100);
         pool.setId("DEAD-BEEF");
 
-        List<Pool> pools = new LinkedList<Pool>();
+        List<Pool> pools = new LinkedList<>();
         pools.add(pool);
         return pools;
     }
@@ -703,7 +701,7 @@ public class AutobindRulesTest {
         Pool pool = TestUtil.createPool(owner, product, quantity);
         pool.setId("DEAD-BEEF-SOCKETS-" + TestUtil.randomInt());
 
-        List<Pool> pools = new LinkedList<Pool>();
+        List<Pool> pools = new LinkedList<>();
         pools.add(pool);
         return pools;
     }
@@ -714,7 +712,7 @@ public class AutobindRulesTest {
         setupConsumer("8", true);
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
+            new String[]{ productId }, pools, compliance, null, new HashSet<>(),
             false);
 
         assertEquals(1, bestPools.size());
@@ -734,7 +732,7 @@ public class AutobindRulesTest {
         pool.setAttribute(Product.Attributes.VIRT_ONLY, "true");
         pool.setAttribute(Pool.Attributes.REQUIRES_HOST, "BLAH");
 
-        List<Pool> pools = new LinkedList<Pool>();
+        List<Pool> pools = new LinkedList<>();
         pools.add(pool);
         return pools;
     }
@@ -746,7 +744,7 @@ public class AutobindRulesTest {
         Pool pool = TestUtil.createPool(owner, product, 100);
         pool.setId("DEAD-BEEF");
 
-        List<Pool> pools = new LinkedList<Pool>();
+        List<Pool> pools = new LinkedList<>();
         pools.add(pool);
         return pools;
     }
@@ -758,7 +756,7 @@ public class AutobindRulesTest {
         setupConsumer("8", false);
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
+            new String[]{ productId }, pools, compliance, null, new HashSet<>(),
             false);
 
         assertEquals(1, bestPools.size());
@@ -773,12 +771,11 @@ public class AutobindRulesTest {
         Pool pool = TestUtil.createPool(owner, product, -1);
         pool.setId("POOL-ID");
 
-        List<Pool> pools = new LinkedList<Pool>();
+        List<Pool> pools = new LinkedList<>();
         pools.add(pool);
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
-            new String[]{ product.getId() }, pools, compliance, null,
-            new HashSet<String>(), false);
+            new String[]{ product.getId() }, pools, compliance, null, new HashSet<>(), false);
         assertEquals(1, bestPools.size());
         assertEquals(new Integer(1), bestPools.get(0).getQuantity());
         assertEquals("POOL-ID", bestPools.get(0).getPool().getId());
@@ -791,12 +788,11 @@ public class AutobindRulesTest {
         Pool pool = TestUtil.createPool(owner, product, -1);
         pool.setId("POOL-ID");
 
-        List<Pool> pools = new LinkedList<Pool>();
+        List<Pool> pools = new LinkedList<>();
         pools.add(pool);
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
-            new String[]{ product.getId() }, pools, compliance, null,
-            new HashSet<String>(), false);
+            new String[]{ product.getId() }, pools, compliance, null, new HashSet<>(), false);
         assertEquals(1, bestPools.size());
         assertEquals(new Integer(4), bestPools.get(0).getQuantity());
         assertEquals("POOL-ID", bestPools.get(0).getPool().getId());
@@ -821,13 +817,12 @@ public class AutobindRulesTest {
         serverPool.setId("POOL-ID1");
         hyperPool.setId("Pool-ID2");
 
-        List<Pool> pools = new LinkedList<Pool>();
+        List<Pool> pools = new LinkedList<>();
         pools.add(serverPool);
         pools.add(hyperPool);
 
         assertEquals(0, autobindRules.selectBestPools(consumer,
-            new String[]{ server.getUuid() }, pools, compliance, null,
-            new HashSet<String>(), false).size());
+            new String[]{ server.getUuid() }, pools, compliance, null, new HashSet<>(), false).size());
     }
 
     /*
@@ -858,13 +853,12 @@ public class AutobindRulesTest {
         // to pick up the unlimited guest_limit
         compliance.addCompliantProduct(hypervisor.getId(), entitlement);
 
-        List<Pool> pools = new LinkedList<Pool>();
+        List<Pool> pools = new LinkedList<>();
         pools.add(serverPool);
         pools.add(hyperPool);
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
-            new String[]{ server.getId() }, pools, compliance, null,
-            new HashSet<String>(), false);
+            new String[]{ server.getId() }, pools, compliance, null, new HashSet<>(), false);
         assertEquals(1, bestPools.size());
         assertEquals(new Integer(4), bestPools.get(0).getQuantity());
         assertEquals("POOL-ID1", bestPools.get(0).getPool().getId());
@@ -898,13 +892,12 @@ public class AutobindRulesTest {
         // to pick up the unlimited guest_limit
         compliance.addCompliantProduct(hypervisor.getId(), entitlement);
 
-        List<Pool> pools = new LinkedList<Pool>();
+        List<Pool> pools = new LinkedList<>();
         pools.add(serverPool);
         pools.add(hyperPool);
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
-            new String[]{ server.getId() }, pools, compliance, null,
-            new HashSet<String>(), false);
+            new String[]{ server.getId() }, pools, compliance, null, new HashSet<>(), false);
         assertEquals(1, bestPools.size());
         assertEquals(new Integer(1), bestPools.get(0).getQuantity());
         assertEquals("POOL-ID1", bestPools.get(0).getPool().getId());
@@ -965,7 +958,7 @@ public class AutobindRulesTest {
         setupConsumer("32", false);
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
+            new String[]{ productId }, pools, compliance, null, new HashSet<>(),
             false);
 
         // Should always pick the 2 socket subscriptions because less are required
@@ -982,7 +975,7 @@ public class AutobindRulesTest {
         setupConsumer("8", false);
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
+            new String[]{ productId }, pools, compliance, null, new HashSet<>(),
             false);
 
         // Should always pick the 2 socket subscriptions because there is no over-coverage
@@ -999,7 +992,7 @@ public class AutobindRulesTest {
         setupConsumer("8", false);
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
+            new String[]{ productId }, pools, compliance, null, new HashSet<>(),
             false);
 
         // Should always pick the 3 socket subscription, becuase 3*3 gives 1 socket over-coverage,
@@ -1017,7 +1010,7 @@ public class AutobindRulesTest {
         setupConsumer("9", false);
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
+            new String[]{ productId }, pools, compliance, null, new HashSet<>(),
             false);
 
         // Should always pick the 2 5 socket subscriptions over 9 1 socket subscriptions
@@ -1036,7 +1029,7 @@ public class AutobindRulesTest {
         setupConsumer("32", false);
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
+            new String[]{ productId }, pools, compliance, null, new HashSet<>(),
             false);
 
         // Should always pick the 2 socket subscriptions because less are required
@@ -1053,7 +1046,7 @@ public class AutobindRulesTest {
         setupConsumer("8", false);
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
+            new String[]{ productId }, pools, compliance, null, new HashSet<>(),
             false);
 
         // Should always pick the 2 socket subscriptions because there is no over-coverage
@@ -1070,7 +1063,7 @@ public class AutobindRulesTest {
         setupConsumer("8", false);
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
+            new String[]{ productId }, pools, compliance, null, new HashSet<>(),
             false);
 
         // Should always pick the 3 socket subscription, becuase 3*3 gives 1 socket over-coverage,
@@ -1088,7 +1081,7 @@ public class AutobindRulesTest {
         setupConsumer("9", false);
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
+            new String[]{ productId }, pools, compliance, null, new HashSet<>(),
             false);
 
         // Should always pick the 2 5 socket subscriptions over 9 1 socket subscriptions

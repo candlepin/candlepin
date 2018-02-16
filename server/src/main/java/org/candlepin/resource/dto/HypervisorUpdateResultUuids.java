@@ -41,10 +41,10 @@ public class HypervisorUpdateResultUuids implements Serializable {
     private Set<String> failed;
 
     public HypervisorUpdateResultUuids() {
-        this.created = new HashSet<String>();
-        this.updated = new HashSet<String>();
-        this.unchanged = new HashSet<String>();
-        this.failed = new HashSet<String>();
+        this.created = new HashSet<>();
+        this.updated = new HashSet<>();
+        this.unchanged = new HashSet<>();
+        this.failed = new HashSet<>();
     }
 
     public boolean wasCreated(Consumer c) {

@@ -46,7 +46,7 @@ public class Arch {
      *         exist
      */
     public static Set<String> parseArches(String arches) {
-        Set<String> archesSet = new HashSet<String>();
+        Set<String> archesSet = new HashSet<>();
 
         if (arches == null || arches.trim().equals("")) {
             return archesSet;

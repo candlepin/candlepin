@@ -173,7 +173,7 @@ public class EntitlementImporterTest {
     }
 
     private Map<String, Product> buildProductCache(Product... products) {
-        Map<String, Product> productsById = new HashMap<String, Product>();
+        Map<String, Product> productsById = new HashMap<>();
         for (Product p : products) {
             productsById.put(p.getId(), p);
         }

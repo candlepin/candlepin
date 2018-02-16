@@ -60,12 +60,12 @@ public class ModifierTestDataGenerator {
 
     private Owner owner;
 
-    private List<Consumer> consumers = new ArrayList<Consumer>();
-    private List<Content> contents = new ArrayList<Content>();
-    private List<Product> engProducts = new ArrayList<Product>();
-    private List<Product> mktProducts = new ArrayList<Product>();
-    private List<Entitlement> entitlements = new ArrayList<Entitlement>();
-    private List<Pool> pools = new ArrayList<Pool>();
+    private List<Consumer> consumers = new ArrayList<>();
+    private List<Content> contents = new ArrayList<>();
+    private List<Product> engProducts = new ArrayList<>();
+    private List<Product> mktProducts = new ArrayList<>();
+    private List<Entitlement> entitlements = new ArrayList<>();
+    private List<Pool> pools = new ArrayList<>();
 
     public void createTestData(Owner owner) {
         this.owner = owner;
@@ -79,7 +79,7 @@ public class ModifierTestDataGenerator {
 
         for (int i = 0; i < 10; i++) {
             Content content = TestUtil.createContent("fakecontent-" + i);
-            Set<String> modified = new HashSet<String>();
+            Set<String> modified = new HashSet<>();
 
             /**
              * Content 0 modifies every product
@@ -130,7 +130,7 @@ public class ModifierTestDataGenerator {
         }
 
         for (int i = 0; i < 10; i++) {
-            List<Product> provided = new ArrayList<Product>();
+            List<Product> provided = new ArrayList<>();
             provided.add(engProducts.get(i));
             Date start = TestUtil.createDate(2000, 1, 1);
             Date end = null;
@@ -151,7 +151,7 @@ public class ModifierTestDataGenerator {
 
             //Pool 2 doesn't have provided products
             if (i == 2) {
-                provided = new ArrayList<Product>();
+                provided = new ArrayList<>();
             }
 
             Pool p = createPool(i, start, end, provided);
@@ -184,7 +184,7 @@ public class ModifierTestDataGenerator {
 
 
     public List<Entitlement> getEntitlements(Integer ... indexes) {
-        List<Entitlement> result = new ArrayList<Entitlement>();
+        List<Entitlement> result = new ArrayList<>();
         for (Integer i : indexes) {
             result.add(entitlements.get(i));
         }

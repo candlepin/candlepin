@@ -66,13 +66,13 @@ public class ConsumerTranslatorTest extends
         consumer.setOwner(this.ownerTranslatorTest.initSourceObject());
         consumer.setType(this.consumerTypeTranslatorTest.initSourceObject());
 
-        Map<String, String> facts = new HashMap<String, String>();
+        Map<String, String> facts = new HashMap<>();
         for (int i = 0; i < 5; ++i) {
             facts.put("fact-" + i, "value-" + i);
         }
         consumer.setFacts(facts);
 
-        Set<ConsumerInstalledProduct> installedProducts = new HashSet<ConsumerInstalledProduct>();
+        Set<ConsumerInstalledProduct> installedProducts = new HashSet<>();
         for (int i = 0; i < 5; ++i) {
             ConsumerInstalledProduct installedProduct = new ConsumerInstalledProduct();
             installedProduct.setProductId("installedProduct-" + i);
@@ -80,7 +80,7 @@ public class ConsumerTranslatorTest extends
         }
         consumer.setInstalledProducts(installedProducts);
 
-        Set<ConsumerCapability> capabilities = new HashSet<ConsumerCapability>();
+        Set<ConsumerCapability> capabilities = new HashSet<>();
         for (int i = 0; i < 5; ++i) {
             ConsumerCapability capability = new ConsumerCapability();
             capability.setName("capability-" + i);

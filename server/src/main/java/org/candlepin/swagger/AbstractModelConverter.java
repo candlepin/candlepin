@@ -60,7 +60,7 @@ public abstract class AbstractModelConverter implements ModelConverter {
      * Minor optimization: no need to keep on resolving same types over and over
      * again.
      */
-    protected Map<JavaType, String> pResolvedTypeNames = new ConcurrentHashMap<JavaType, String>();
+    protected Map<JavaType, String> pResolvedTypeNames = new ConcurrentHashMap<>();
 
     protected AbstractModelConverter(ObjectMapper mapper) {
         AnnotationIntrospector primary = new JacksonAnnotationIntrospector();

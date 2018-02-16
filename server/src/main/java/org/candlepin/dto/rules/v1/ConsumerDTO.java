@@ -203,7 +203,7 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> {
      */
     @HateoasArrayExclude
     public Map<String, String> getFacts() {
-        return this.facts != null ? new MapView<String, String>(facts) : null;
+        return this.facts != null ? new MapView<>(facts) : null;
     }
 
     /**
@@ -216,7 +216,7 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> {
     public ConsumerDTO setFacts(Map<String, String> facts) {
         if (facts != null) {
             if (this.facts == null) {
-                this.facts = new HashMap<String, String>();
+                this.facts = new HashMap<>();
             }
             else {
                 this.facts.clear();
@@ -245,7 +245,7 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> {
         }
 
         if (facts == null) {
-            facts = new HashMap<String, String>();
+            facts = new HashMap<>();
         }
 
         this.facts.put(key, value);
@@ -259,7 +259,7 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> {
      */
     @JsonSerialize(contentUsing = InstalledProductIdWrapSerializer.class)
     public Set<String> getInstalledProducts() {
-        return this.installedProducts != null ? new SetView<String>(this.installedProducts) : null;
+        return this.installedProducts != null ? new SetView<>(this.installedProducts) : null;
     }
 
     /**
@@ -273,7 +273,7 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> {
     public ConsumerDTO setInstalledProducts(Set<String> installedProducts) {
         if (installedProducts != null) {
             if (this.installedProducts == null) {
-                this.installedProducts = new HashSet<String>();
+                this.installedProducts = new HashSet<>();
             }
             else {
                 this.installedProducts.clear();
@@ -305,7 +305,7 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> {
             throw new IllegalArgumentException("null or empty consumer installed product");
         }
         if (installedProducts == null) {
-            installedProducts = new HashSet<String>();
+            installedProducts = new HashSet<>();
         }
         return installedProducts.add(installedProduct);
     }
@@ -340,7 +340,7 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> {
      */
     @JsonSerialize(contentUsing = CapabilityNameWrapSerializer.class)
     public Set<String> getCapabilities() {
-        return this.capabilities != null ? new SetView<String>(capabilities) : null;
+        return this.capabilities != null ? new SetView<>(capabilities) : null;
     }
 
     /**
@@ -354,7 +354,7 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> {
     public ConsumerDTO setCapabilities(Set<String> capabilities) {
         if (capabilities != null) {
             if (this.capabilities == null) {
-                this.capabilities = new HashSet<String>();
+                this.capabilities = new HashSet<>();
             }
             else {
                 this.capabilities.clear();

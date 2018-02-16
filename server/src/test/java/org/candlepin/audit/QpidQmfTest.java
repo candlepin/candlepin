@@ -53,7 +53,7 @@ public class QpidQmfTest {
 
     @Test
     public void extractStringWrongValueTypeTest() throws JMSException {
-        Map<String, Object> map = new HashMap<String, Object>();
+        Map<String, Object> map = new HashMap<>();
         map.put("key", "value");
 
         try {
@@ -68,7 +68,7 @@ public class QpidQmfTest {
 
     @Test
     public void extractStringTooDeepTest() throws JMSException {
-        Map<String, Object> map = new HashMap<String, Object>();
+        Map<String, Object> map = new HashMap<>();
         map.put("key", "value");
 
         try {
@@ -83,7 +83,7 @@ public class QpidQmfTest {
 
     @Test
     public void extractStringWrongKeyTest() throws JMSException {
-        Map<String, Object> map = new HashMap<String, Object>();
+        Map<String, Object> map = new HashMap<>();
         map.put("key", "value");
 
         try {
@@ -99,7 +99,7 @@ public class QpidQmfTest {
 
     @Test
     public void extractStringTest() throws JMSException {
-        Map<String, Object> map = new HashMap<String, Object>();
+        Map<String, Object> map = new HashMap<>();
         map.put("key", "value".getBytes());
 
         Assert.assertEquals("value", QpidQmf.extractValue(map, "key"));
@@ -108,9 +108,9 @@ public class QpidQmfTest {
 
     @Test
     public void extractStringTwoLevelsTest() throws JMSException {
-        Map<String, Object> l2 = new HashMap<String, Object>();
+        Map<String, Object> l2 = new HashMap<>();
         l2.put("key", "value".getBytes());
-        Map<String, Object> map = new HashMap<String, Object>();
+        Map<String, Object> map = new HashMap<>();
         map.put("keyl1", l2);
 
         Assert.assertEquals("value", QpidQmf.extractValue(map, "keyl1", "key"));

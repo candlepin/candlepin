@@ -272,8 +272,7 @@ public class ImporterTest {
             Importer.Conflict.DISTRIBUTOR_CONFLICT);
         ImportConflictException e3 = new ImportConflictException("testing2",
             Importer.Conflict.MANIFEST_OLD);
-        List<ImportConflictException> exceptions =
-            new LinkedList<ImportConflictException>();
+        List<ImportConflictException> exceptions = new LinkedList<>();
         exceptions.add(e2);
         exceptions.add(e3);
 
@@ -465,7 +464,7 @@ public class ImporterTest {
     }
 
     private Map<String, File> getTestImportFiles() {
-        Map<String, File> importFiles = new HashMap<String, File>();
+        Map<String, File> importFiles = new HashMap<>();
         importFiles.put(ImportFile.META.fileName(), mock(File.class));
         importFiles.put(ImportFile.RULES_FILE.fileName(), mock(File.class));
         importFiles.put(ImportFile.CONSUMER_TYPE.fileName(), mock(File.class));
@@ -586,7 +585,7 @@ public class ImporterTest {
         when(pm.getRefresher(any(SubscriptionServiceAdapter.class), any(OwnerServiceAdapter.class)))
             .thenReturn(refresher);
 
-        Map<String, File> importFiles = new HashMap<String, File>();
+        Map<String, File> importFiles = new HashMap<>();
         File ruleDir = mock(File.class);
         File[] rulesFiles = createMockJsFile(mockJsPath);
         when(ruleDir.listFiles()).thenReturn(rulesFiles);
@@ -765,7 +764,7 @@ public class ImporterTest {
 
     private DistributorVersion createTestDistributerVersion() {
         DistributorVersion dVersion = new DistributorVersion("test-dist-ver");
-        Set<DistributorVersionCapability> capabilities = new HashSet<DistributorVersionCapability>();
+        Set<DistributorVersionCapability> capabilities = new HashSet<>();
         capabilities.add(new DistributorVersionCapability(null, "capability-1"));
         capabilities.add(new DistributorVersionCapability(null, "capability-2"));
         capabilities.add(new DistributorVersionCapability(null, "capability-3"));
@@ -865,11 +864,11 @@ public class ImporterTest {
 
         Meta meta = new Meta("1.0", new Date(), "test-user", "candlepin", "testcdn");
 
-        List<Subscription> subscriptions = new ArrayList<Subscription>();
+        List<Subscription> subscriptions = new ArrayList<>();
         Subscription subscription = new Subscription();
         subscriptions.add(subscription);
 
-        Map<String, Object> data = new HashMap<String, Object>();
+        Map<String, Object> data = new HashMap<>();
         data.put("meta", meta);
         data.put("subscriptions", subscriptions);
 
@@ -901,7 +900,7 @@ public class ImporterTest {
 
         Meta meta = new Meta("1.0", new Date(), "test-user", "candlepin", "testcdn");
 
-        Map<String, Object> data = new HashMap<String, Object>();
+        Map<String, Object> data = new HashMap<>();
         data.put("meta", meta);
         data.put("subscriptions",  new ArrayList<Subscription>());
 
@@ -933,7 +932,7 @@ public class ImporterTest {
 
         Meta meta = new Meta("1.0", new Date(), "test-user", "candlepin", "testcdn");
 
-        Map<String, Object> data = new HashMap<String, Object>();
+        Map<String, Object> data = new HashMap<>();
         data.put("meta", meta);
         data.put("subscriptions",  new ArrayList<Subscription>());
 
@@ -953,8 +952,8 @@ public class ImporterTest {
             null, eventSinkMock, i18n,
             null, null, su, importRecordCurator, this.mockSubReconciler, this.translator);
 
-        Map<String, Object> data = new HashMap<String, Object>();
-        List<Subscription> subscriptions = new ArrayList<Subscription>();
+        Map<String, Object> data = new HashMap<>();
+        List<Subscription> subscriptions = new ArrayList<>();
         Subscription subscription1 = new Subscription();
         //expires tomorrow
         subscription1.setEndDate(new Date((new Date()).getTime() + (1000 * 60 * 60 * 24)));
@@ -986,7 +985,7 @@ public class ImporterTest {
             null, eventSinkMock, i18n,
             null, null, su, importRecordCurator, this.mockSubReconciler, this.translator);
 
-        Map<String, Object> data = new HashMap<String, Object>();
+        Map<String, Object> data = new HashMap<>();
         data.put("subscriptions", new ArrayList<Subscription>());
 
         ImportRecord record = importer.recordImportSuccess(owner, data, new ConflictOverrides(), "test.zip");

@@ -157,7 +157,7 @@ public class HypervisorResource {
             consumerCurator.getHostConsumersMap(owner, hostGuestDTOMap.keySet());
 
         int emptyGuestIdCount = 0;
-        Set<String> allGuestIds = new HashSet<String>();
+        Set<String> allGuestIds = new HashSet<>();
 
         Collection<List<GuestIdDTO>> idsLists = hostGuestDTOMap.values();
         for (List<GuestIdDTO> guestIds : idsLists) {
@@ -192,7 +192,7 @@ public class HypervisorResource {
             // (https://github.com/rails/rails/issues/13766#issuecomment-32730270)
             // See bzs 1332637, 1332635
             if (hostEntry.getValue() == null) {
-                hostEntry.setValue(new ArrayList<GuestIdDTO>());
+                hostEntry.setValue(new ArrayList<>());
             }
             try {
                 log.debug("Syncing virt host: {} ({} guest IDs)", hypervisorId, hostEntry.getValue().size());
@@ -214,7 +214,7 @@ public class HypervisorResource {
                 else {
                     consumer = hypervisorConsumersMap.get(hypervisorId);
                 }
-                List<GuestId> guestIds = new ArrayList<GuestId>();
+                List<GuestId> guestIds = new ArrayList<>();
                 guestIdResource.populateEntities(guestIds, hostEntry.getValue());
                 boolean guestIdsUpdated = addGuestIds(consumer, guestIds);
 
@@ -324,7 +324,7 @@ public class HypervisorResource {
         consumer.setName(incHypervisorId);
         consumer.setType(new ConsumerType(ConsumerTypeEnum.HYPERVISOR));
         consumer.setFact("uname.machine", "x86_64");
-        consumer.setGuestIds(new ArrayList<GuestId>());
+        consumer.setGuestIds(new ArrayList<>());
         consumer.setOwner(owner);
         // Create HypervisorId
         HypervisorId hypervisorId = new HypervisorId(consumer, incHypervisorId);

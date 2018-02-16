@@ -359,7 +359,7 @@ public class ContentManager {
             throw new IllegalArgumentException("owner is null");
         }
 
-        ImportResult<Content> importResult = new ImportResult<Content>();
+        ImportResult<Content> importResult = new ImportResult<>();
 
         if (contentData == null || contentData.isEmpty()) {
             // Nothing to import
@@ -370,10 +370,10 @@ public class ContentManager {
         Map<String, Content> createdContent = importResult.getCreatedEntities();
         Map<String, Content> updatedContent = importResult.getUpdatedEntities();
 
-        Map<String, Integer> contentVersions = new HashMap<String, Integer>();
-        Map<String, Content> sourceContent = new HashMap<String, Content>();
-        Map<String, List<Content>> existingVersions = new HashMap<String, List<Content>>();
-        List<OwnerContent> ownerContentBuffer = new LinkedList<OwnerContent>();
+        Map<String, Integer> contentVersions = new HashMap<>();
+        Map<String, Content> sourceContent = new HashMap<>();
+        Map<String, List<Content>> existingVersions = new HashMap<>();
+        List<OwnerContent> ownerContentBuffer = new LinkedList<>();
 
         // - Divide imported products into sets of updates and creates
         log.debug("Fetching existing content for update...");
@@ -416,7 +416,7 @@ public class ContentManager {
         for (Content alt : this.ownerContentCurator.getContentByVersions(owner, contentVersions)) {
             List<Content> alternates = existingVersions.get(alt.getId());
             if (alternates == null) {
-                alternates = new LinkedList<Content>();
+                alternates = new LinkedList<>();
                 existingVersions.put(alt.getId(), alternates);
             }
 
@@ -428,7 +428,7 @@ public class ContentManager {
 
         // We're about to start modifying the maps, so we need to clone the created set before we
         // start adding the update forks to it.
-        Map<String, Content> stagedEntities = new HashMap<String, Content>(createdContent);
+        Map<String, Content> stagedEntities = new HashMap<>(createdContent);
 
         // Process the created group...
         // Check our created set for existing versions:
@@ -497,7 +497,7 @@ public class ContentManager {
 
         if (affectedProducts != null && !affectedProducts.isEmpty()) {
             // Get the collection of content those products use
-            Map<String, Content> affectedProductsContent = new HashMap<String, Content>();
+            Map<String, Content> affectedProductsContent = new HashMap<>();
             for (Content content : this.contentCurator.getContentByProducts(affectedProducts)) {
                 affectedProductsContent.put(content.getId(), content);
             }
@@ -505,8 +505,8 @@ public class ContentManager {
             // Update the content map so it references the updated content
             affectedProductsContent.putAll(updatedContent);
 
-            Map<String, ProductData> affectedProductData = new HashMap<String, ProductData>();
-            Map<String, ContentData> contentDTOCache = new HashMap<String, ContentData>();
+            Map<String, ProductData> affectedProductData = new HashMap<>();
+            Map<String, ContentData> contentDTOCache = new HashMap<>();
 
             for (Product product : affectedProducts) {
                 ProductData pdto = product.toDTO();
@@ -535,7 +535,7 @@ public class ContentManager {
         }
 
         // Perform bulk reference update
-        Map<String, String> contentUuidMap = new HashMap<String, String>();
+        Map<String, String> contentUuidMap = new HashMap<>();
         for (Content update : updatedContent.values()) {
             Content source = sourceContent.get(update.getId());
 
@@ -606,7 +606,7 @@ public class ContentManager {
      */
     public void removeContent(Owner owner, Collection<Content> content, boolean regenerateEntitlementCerts) {
         if (content != null && !content.isEmpty()) {
-            Map<String, Content> contentMap = new HashMap<String, Content>();
+            Map<String, Content> contentMap = new HashMap<>();
             for (Content entity : content) {
                 contentMap.put(entity.getUuid(), entity);
             }
@@ -668,12 +668,12 @@ public class ContentManager {
 
                 if (!(contentUuids instanceof Set)) {
                     // Convert this to a set so our filtering lookups aren't painfully slow
-                    contentUuids = new HashSet<String>(contentUuids);
+                    contentUuids = new HashSet<>(contentUuids);
                 }
 
                 // Get the collection of content those products use, throwing out the ones we'll be
                 // removing shortly
-                Map<String, Content> affectedProductsContent = new HashMap<String, Content>();
+                Map<String, Content> affectedProductsContent = new HashMap<>();
                 for (Content content : this.contentCurator.getContentByProducts(affectedProducts)) {
                     if (!contentUuids.contains(content.getUuid())) {
                         affectedProductsContent.put(content.getId(), content);
@@ -682,7 +682,7 @@ public class ContentManager {
 
                 // Convert our affectedProducts into DTOs (hoping Hibernate uses its entity cache
                 // instead of pulling down the content list for each product...)
-                Map<String, ProductData> affectedProductData = new HashMap<String, ProductData>();
+                Map<String, ProductData> affectedProductData = new HashMap<>();
                 for (Product product : affectedProducts) {
                     ProductData pdto = product.toDTO();
 

@@ -62,9 +62,9 @@ public class StubEntitlementCertServiceAdapter extends BaseEntitlementCertServic
         Product product)
         throws GeneralSecurityException, IOException {
 
-        Map<String, Entitlement> ents = new HashMap<String, Entitlement>();
-        Map<String, PoolQuantity> poolQuantityMap = new HashMap<String, PoolQuantity>();
-        Map<String, Product> productMap = new HashMap<String, Product>();
+        Map<String, Entitlement> ents = new HashMap<>();
+        Map<String, PoolQuantity> poolQuantityMap = new HashMap<>();
+        Map<String, Product> productMap = new HashMap<>();
 
         Pool pool = entitlement.getPool();
         ents.put(pool.getId(), entitlement);
@@ -79,7 +79,7 @@ public class StubEntitlementCertServiceAdapter extends BaseEntitlementCertServic
     public Map<String, EntitlementCertificate> generateEntitlementCerts(Consumer consumer,
         Map<String, PoolQuantity> poolQuantityMap, Map<String, Entitlement> entitlements,
         Map<String, Product> products, boolean save) throws GeneralSecurityException, IOException {
-        Map<String, EntitlementCertificate> result = new HashMap<String, EntitlementCertificate>();
+        Map<String, EntitlementCertificate> result = new HashMap<>();
 
         for (Entry<String, Entitlement> entry: entitlements.entrySet()) {
             Entitlement entitlement = entry.getValue();

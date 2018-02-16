@@ -139,32 +139,32 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         productCurator.create(monitoring);
         productCurator.create(provisioning);
 
-        List<Subscription> subscriptions = new LinkedList<Subscription>();
+        List<Subscription> subscriptions = new LinkedList<>();
 
         ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
 
-        Subscription sub1 = TestUtil.createSubscription(o, virtHost, new HashSet<Product>());
+        Subscription sub1 = TestUtil.createSubscription(o, virtHost, new HashSet<>());
         sub1.setId(Util.generateDbUUID());
         sub1.setQuantity(5L);
         sub1.setStartDate(new Date());
         sub1.setEndDate(TestUtil.createDate(3020, 12, 12));
         sub1.setModified(new Date());
 
-        Subscription sub2 = TestUtil.createSubscription(o, virtHostPlatform, new HashSet<Product>());
+        Subscription sub2 = TestUtil.createSubscription(o, virtHostPlatform, new HashSet<>());
         sub2.setId(Util.generateDbUUID());
         sub2.setQuantity(5L);
         sub2.setStartDate(new Date());
         sub2.setEndDate(TestUtil.createDate(3020, 12, 12));
         sub2.setModified(new Date());
 
-        Subscription sub3 = TestUtil.createSubscription(o, monitoring, new HashSet<Product>());
+        Subscription sub3 = TestUtil.createSubscription(o, monitoring, new HashSet<>());
         sub3.setId(Util.generateDbUUID());
         sub3.setQuantity(5L);
         sub3.setStartDate(new Date());
         sub3.setEndDate(TestUtil.createDate(3020, 12, 12));
         sub3.setModified(new Date());
 
-        sub4 = TestUtil.createSubscription(o, provisioning, new HashSet<Product>());
+        sub4 = TestUtil.createSubscription(o, provisioning, new HashSet<>());
         sub4.setId(Util.generateDbUUID());
         sub4.setQuantity(5L);
         sub4.setStartDate(new Date());
@@ -249,7 +249,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
             monitoring.getId()).get(0);
         assertEquals(Long.valueOf(5), monitoringPool.getQuantity());
 
-        Map<String, Integer> poolQuantities = new HashMap<String, Integer>();
+        Map<String, Integer> poolQuantities = new HashMap<>();
         poolQuantities.put(monitoringPool.getId(), 3);
         List<Entitlement> eList = poolManager.entitleByPools(parentSystem, poolQuantities);
         assertEquals(1, eList.size());
@@ -286,7 +286,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         Assert.assertNotNull(brandingSet);
         Assert.assertEquals(2, brandingSet.size());
-        ArrayList<Branding> list = new ArrayList<Branding>();
+        ArrayList<Branding> list = new ArrayList<>();
         list.addAll(brandingSet);
         list.sort(new Comparator<Branding>() {
 
@@ -326,7 +326,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     public void testEntitleByProductsWithModifierAndModifiee() throws EntitlementRefusedException {
         Product modifier = TestUtil.createProduct("modifier", "modifier");
 
-        Set<String> modified = new HashSet<String>();
+        Set<String> modified = new HashSet<>();
         modified.add(PRODUCT_VIRT_HOST);
         Content content = TestUtil.createContent("modifier-content", "modifier-content");
         content.setModifiedProductIds(modified);
@@ -336,10 +336,10 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         productCurator.create(modifier);
         this.ownerContentCurator.mapContentToOwner(content, this.o);
 
-        List<Subscription> subscriptions = new LinkedList<Subscription>();
+        List<Subscription> subscriptions = new LinkedList<>();
         ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
 
-        Subscription sub = TestUtil.createSubscription(o, modifier, new HashSet<Product>());
+        Subscription sub = TestUtil.createSubscription(o, modifier, new HashSet<>());
         sub.setQuantity(5L);
         sub.setStartDate(new Date());
         sub.setEndDate(TestUtil.createDate(3020, 12, 12));
@@ -384,11 +384,11 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         productCurator.create(product1);
         productCurator.create(product2);
 
-        List<Subscription> subscriptions = new LinkedList<Subscription>();
+        List<Subscription> subscriptions = new LinkedList<>();
         ImportSubscriptionServiceAdapter subAdapter
             = new ImportSubscriptionServiceAdapter(subscriptions);
 
-        Subscription subscription = TestUtil.createSubscription(o, product1, new HashSet<Product>());
+        Subscription subscription = TestUtil.createSubscription(o, product1, new HashSet<>());
         subscription.setId(Util.generateDbUUID());
         subscription.setQuantity(5L);
         subscription.setStartDate(new Date());
@@ -550,7 +550,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
     @SuppressWarnings("unchecked")
     public static <T> Set<T> transform(Set<?> set, Transformer t) {
-        Set<T> result = Util.newSet();
+        Set<T> result = new HashSet<>();
         for (Iterator iterator = set.iterator(); iterator.hasNext();) {
             result.add((T) t.transform(iterator.next()));
         }
@@ -559,7 +559,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
     private Set<EntitlementCertificate> collectEntitlementCertIds(
         Consumer consumer) {
-        Set<EntitlementCertificate> ids = Util.newSet();
+        Set<EntitlementCertificate> ids = new HashSet<>();
         for (Entitlement entitlement : consumer.getEntitlements()) {
             for (EntitlementCertificate ec : entitlement.getCertificates()) {
                 ids.add(ec);
@@ -633,7 +633,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         Pool pool2 = createPool(owner, p, 10L,
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
         poolCurator.create(pool2);
-        List<String> possPools = new ArrayList<String>();
+        List<String> possPools = new ArrayList<>();
         possPools.add(pool1.getId());
 
         AutobindData ad = new AutobindData(devSystem);
@@ -668,7 +668,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
             TestUtil.createDate(2050, 3, 2));
         poolCurator.create(pool2);
 
-        Map<String, Integer> poolQuantities = new HashMap<String, Integer>();
+        Map<String, Integer> poolQuantities = new HashMap<>();
         poolQuantities.put(pool1.getId(), 1);
         poolQuantities.put(pool2.getId(), 1);
 
@@ -722,7 +722,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         poolCurator.merge(pool2);
         poolCurator.flush();
 
-        Map<String, Integer> poolQuantities = new HashMap<String, Integer>();
+        Map<String, Integer> poolQuantities = new HashMap<>();
         poolQuantities.put(pool1.getId(), 1);
         poolQuantities.put(pool2.getId(), 1);
 
@@ -765,7 +765,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         pool2.setConsumed(1L);
         poolCurator.create(pool2);
 
-        Map<String, Integer> poolQuantities = new HashMap<String, Integer>();
+        Map<String, Integer> poolQuantities = new HashMap<>();
         poolQuantities.put(pool1.getId(), 0);
         poolQuantities.put(pool2.getId(), 0);
 
@@ -804,10 +804,10 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         Date expiredEnd = new Date(ct - 3600000);
 
         Owner owner = this.createOwner();
-        List<Consumer> consumers = new LinkedList<Consumer>();
-        List<Product> products = new LinkedList<Product>();
-        List<Pool> pools = new LinkedList<Pool>();
-        List<Entitlement> entitlements = new LinkedList<Entitlement>();
+        List<Consumer> consumers = new LinkedList<>();
+        List<Product> products = new LinkedList<>();
+        List<Pool> pools = new LinkedList<>();
+        List<Entitlement> entitlements = new LinkedList<>();
 
         int objCount = 6;
 

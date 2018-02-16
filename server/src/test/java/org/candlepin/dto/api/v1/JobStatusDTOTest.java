@@ -32,7 +32,7 @@ public class JobStatusDTOTest extends AbstractDTOTest<JobStatusDTO> {
         super(JobStatusDTO.class);
 
         Object bytes = Strings.toByteArray("random byte array");
-        this.values = new HashMap<String, Object>();
+        this.values = new HashMap<>();
         this.values.put("Id", "test-id");
         this.values.put("Group", "test-job-group");
         this.values.put("State", "test-state");

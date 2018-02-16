@@ -42,14 +42,14 @@ public class PoolDTOTest extends AbstractDTOTest<PoolDTO> {
         PoolDTO.ProvidedProductDTO derivedProvidedProd =
             new PoolDTO.ProvidedProductDTO("derived-provided-product-id", "derived-provided-product-name");
 
-        this.values = new HashMap<String, Object>();
+        this.values = new HashMap<>();
         this.values.put("Id", "test-id");
         this.values.put("HasSharedAncestor", true);
         this.values.put("Quantity", 1L);
         this.values.put("StartDate", new Date());
         this.values.put("EndDate", new Date());
 
-        Map<String, String> attributes = new HashMap<String, String>();
+        Map<String, String> attributes = new HashMap<>();
         attributes.put("attribute-key-1", "attribute-value-1");
         attributes.put("attribute-key-2", "attribute-value-2");
         this.values.put("Attributes", attributes);
@@ -59,18 +59,18 @@ public class PoolDTOTest extends AbstractDTOTest<PoolDTO> {
 
         this.values.put("ProductId", "product-id-1");
 
-        Map<String, String> productAttributes = new HashMap<String, String>();
+        Map<String, String> productAttributes = new HashMap<>();
         productAttributes.put("prod-attribute-key-1", "prod-attribute-value-1");
         productAttributes.put("prod-attribute-key-2", "prod-attribute-value-2");
         this.values.put("ProductAttributes", productAttributes);
 
         this.values.put("DerivedProductId", "derived-prod-id-1");
 
-        Set<PoolDTO.ProvidedProductDTO> providedProducts = new HashSet<PoolDTO.ProvidedProductDTO>();
+        Set<PoolDTO.ProvidedProductDTO> providedProducts = new HashSet<>();
         providedProducts.add(providedProd);
         this.values.put("ProvidedProducts", providedProducts);
 
-        Set<PoolDTO.ProvidedProductDTO> derivedProvidedProducts = new HashSet<PoolDTO.ProvidedProductDTO>();
+        Set<PoolDTO.ProvidedProductDTO> derivedProvidedProducts = new HashSet<>();
         derivedProvidedProducts.add(derivedProvidedProd);
         this.values.put("DerivedProvidedProducts", derivedProvidedProducts);
     }
@@ -101,7 +101,7 @@ public class PoolDTOTest extends AbstractDTOTest<PoolDTO> {
     @Test
     public void testHasAttributeWithPresentAttribute() {
         PoolDTO dto = new PoolDTO();
-        Map<String, String> attributes = new HashMap<String, String>();
+        Map<String, String> attributes = new HashMap<>();
         attributes.put("attribute-key-2", "attribute-value-2");
         dto.setAttributes(attributes);
 
@@ -120,7 +120,7 @@ public class PoolDTOTest extends AbstractDTOTest<PoolDTO> {
 
         assertFalse(dto.removeAttribute("attribute-key-3"));
 
-        dto.setAttributes(new HashMap<String, String>());
+        dto.setAttributes(new HashMap<>());
 
         assertFalse(dto.removeAttribute("attribute-key-3"));
     }
@@ -129,7 +129,7 @@ public class PoolDTOTest extends AbstractDTOTest<PoolDTO> {
     public void testRemoveAttributeWithPresentAttribute() {
         PoolDTO dto = new PoolDTO();
 
-        Map<String, String> attributes = new HashMap<String, String>();
+        Map<String, String> attributes = new HashMap<>();
         attributes.put("attribute-key-4", "attribute-value-4");
         dto.setAttributes(attributes);
 
@@ -151,7 +151,7 @@ public class PoolDTOTest extends AbstractDTOTest<PoolDTO> {
     @Test
     public void testHasProductAttributeWithPresentProductAttribute() {
         PoolDTO dto = new PoolDTO();
-        Map<String, String> productAttributes = new HashMap<String, String>();
+        Map<String, String> productAttributes = new HashMap<>();
         productAttributes.put("prod-attribute-key-2", "prod-attribute-value-2");
         dto.setProductAttributes(productAttributes);
 

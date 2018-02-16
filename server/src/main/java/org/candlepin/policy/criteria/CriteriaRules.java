@@ -68,7 +68,7 @@ public class CriteriaRules  {
             hostConsumer = consumerCurator.getHost(consumer);
         }
 
-        List<Criterion> criteriaFilters = new LinkedList<Criterion>();
+        List<Criterion> criteriaFilters = new LinkedList<>();
 
         // Don't load virt_only pools if this consumer isn't a guest
         // or a manifest consumer
