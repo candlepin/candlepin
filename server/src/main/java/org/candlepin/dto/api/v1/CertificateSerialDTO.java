@@ -18,6 +18,7 @@ import io.swagger.annotations.ApiModel;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.candlepin.dto.TimestampedCandlepinDTO;
 
 import java.math.BigInteger;
 import java.util.Date;

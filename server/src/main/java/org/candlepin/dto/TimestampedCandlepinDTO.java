@@ -12,9 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.dto.api.v1;
-
-import org.candlepin.dto.CandlepinDTO;
+package org.candlepin.dto;
 
 import io.swagger.annotations.ApiModel;
 

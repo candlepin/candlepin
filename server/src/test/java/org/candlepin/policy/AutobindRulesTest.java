@@ -23,6 +23,8 @@ import static org.mockito.Mockito.when;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.StandardTranslator;
 import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
@@ -77,7 +79,7 @@ public class AutobindRulesTest {
     @Mock private RulesCurator rulesCurator;
     @Mock private ProductCurator mockProductCurator;
 
-
+    private ModelTranslator translator;
     private ComplianceStatus compliance;
     private AutobindRules autobindRules; // TODO rename
     private Owner owner;
@@ -89,6 +91,8 @@ public class AutobindRulesTest {
 
     @Before
     public void createEnforcer() throws Exception {
+        translator = new StandardTranslator();
+
         MockitoAnnotations.initMocks(this);
 
         when(config.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
@@ -101,7 +105,7 @@ public class AutobindRulesTest {
         when(cacheProvider.get()).thenReturn(cache);
         JsRunner jsRules = new JsRunnerProvider(rulesCurator, cacheProvider).get();
         autobindRules = new AutobindRules(jsRules, mockProductCurator,
-            new RulesObjectMapper(new ProductCachedSerializationModule(mockProductCurator)));
+            new RulesObjectMapper(new ProductCachedSerializationModule(mockProductCurator)), translator);
 
         owner = new Owner();
         consumer = new Consumer("test consumer", "test user", owner,
