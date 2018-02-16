@@ -18,7 +18,6 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.ModeManager;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Rules;
@@ -44,7 +43,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 
 import javax.inject.Inject;
 
@@ -270,8 +268,7 @@ public class EventSinkImpl implements EventSink {
     }
 
     @Override
-    public void emitCompliance(Consumer consumer,
-        Set<Entitlement> entitlements, ComplianceStatus compliance) {
-        queueEvent(eventFactory.complianceCreated(consumer, entitlements, compliance));
+    public void emitCompliance(Consumer consumer, ComplianceStatus compliance) {
+        queueEvent(eventFactory.complianceCreated(consumer, compliance));
     }
 }

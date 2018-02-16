@@ -198,7 +198,7 @@ public class ComplianceRules {
         if (complianceChanged) {
             log.debug("Compliance has changed, sending Compliance event.");
             c.setComplianceStatusHash(newHash);
-            eventSink.emitCompliance(c, c.getEntitlements(), status);
+            eventSink.emitCompliance(c, status);
         }
 
         boolean entStatusChanged = !status.getStatus().equals(c.getEntitlementStatus());

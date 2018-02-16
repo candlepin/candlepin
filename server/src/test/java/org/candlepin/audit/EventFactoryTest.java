@@ -19,18 +19,15 @@ import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.google.common.collect.Sets;
 import org.candlepin.auth.Principal;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.Entitlement;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.Owner;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Set;
 
 /**
  * EventFactoryTest
@@ -73,7 +70,6 @@ public class EventFactoryTest {
         Consumer consumer = mock(Consumer.class);
         Owner owner = mock(Owner.class);
         ComplianceStatus status = mock(ComplianceStatus.class);
-        Set<Entitlement> entitlementSet = Sets.newHashSet();
 
         when(consumer.getName()).thenReturn("consumer-name");
         when(consumer.getOwner()).thenReturn(owner);
@@ -82,7 +78,7 @@ public class EventFactoryTest {
 
         String expectedEventData = "{\"consumer_uuid\":\"48b09f4e-f18c-4765-9c41-9aed6f122739\"," +
             "\"status\":\"valid\"}";
-        Event event = eventFactory.complianceCreated(consumer, entitlementSet, status);
+        Event event = eventFactory.complianceCreated(consumer, status);
         assertEquals(expectedEventData, event.getEventData());
     }
 }

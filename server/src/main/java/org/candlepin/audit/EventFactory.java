@@ -46,7 +46,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * EventFactory
@@ -211,8 +210,7 @@ public class EventFactory {
              .buildEvent();
     }
 
-    public Event complianceCreated(Consumer consumer,
-        Set<Entitlement> entitlements, ComplianceStatus compliance) {
+    public Event complianceCreated(Consumer consumer, ComplianceStatus compliance) {
         Map<String, String> eventData = new HashMap<String, String>();
         eventData.put("consumer_uuid", consumer.getUuid());
         eventData.put("status", compliance.getStatus());

@@ -15,7 +15,6 @@
 package org.candlepin.audit;
 
 import org.candlepin.model.Consumer;
-import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Rules;
@@ -27,7 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.Set;
 
 import javax.inject.Inject;
 
@@ -110,9 +108,8 @@ public class NoopEventSinkImpl implements EventSink {
     }
 
     @Override
-    public void emitCompliance(Consumer consumer,
-        Set<Entitlement> entitlements, ComplianceStatus compliance) {
-        log.debug("emitCompliance: entitlements: {} ComplianceStatus: {}", entitlements, compliance);
+    public void emitCompliance(Consumer consumer, ComplianceStatus compliance) {
+        log.debug("emitCompliance: ComplianceStatus: {}", compliance);
     }
 
     @Override
