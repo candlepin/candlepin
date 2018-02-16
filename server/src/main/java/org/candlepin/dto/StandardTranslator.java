@@ -27,12 +27,8 @@ import org.candlepin.dto.api.v1.CertificateDTO;
 import org.candlepin.dto.api.v1.CertificateSerialDTO;
 import org.candlepin.dto.api.v1.CertificateSerialTranslator;
 import org.candlepin.dto.api.v1.CertificateTranslator;
-import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.ConsumerInstalledProductDTO;
 import org.candlepin.dto.api.v1.ConsumerInstalledProductTranslator;
-import org.candlepin.dto.api.v1.ConsumerTranslator;
-import org.candlepin.dto.api.v1.ConsumerTypeDTO;
-import org.candlepin.dto.api.v1.ConsumerTypeTranslator;
 import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.ContentTranslator;
 import org.candlepin.dto.api.v1.EntitlementDTO;
@@ -47,8 +43,6 @@ import org.candlepin.dto.api.v1.HypervisorIdDTO;
 import org.candlepin.dto.api.v1.HypervisorIdTranslator;
 import org.candlepin.dto.api.v1.JobStatusDTO;
 import org.candlepin.dto.api.v1.JobStatusTranslator;
-import org.candlepin.dto.api.v1.OwnerDTO;
-import org.candlepin.dto.api.v1.OwnerTranslator;
 import org.candlepin.dto.api.v1.PoolDTO;
 import org.candlepin.dto.api.v1.PoolTranslator;
 import org.candlepin.dto.api.v1.ProductDTO;
@@ -100,9 +94,11 @@ public class StandardTranslator extends SimpleModelTranslator {
             new ConsumerInstalledProductTranslator(), ConsumerInstalledProduct.class,
             ConsumerInstalledProductDTO.class);
         this.registerTranslator(
-            new ConsumerTranslator(), Consumer.class, ConsumerDTO.class);
+            new org.candlepin.dto.api.v1.ConsumerTranslator(),
+            Consumer.class, org.candlepin.dto.api.v1.ConsumerDTO.class);
         this.registerTranslator(
-            new ConsumerTypeTranslator(), ConsumerType.class, ConsumerTypeDTO.class);
+            new org.candlepin.dto.api.v1.ConsumerTypeTranslator(),
+            ConsumerType.class, org.candlepin.dto.api.v1.ConsumerTypeDTO.class);
         this.registerTranslator(
             new ContentTranslator(), Content.class, ContentDTO.class);
         this.registerTranslator(
@@ -112,7 +108,8 @@ public class StandardTranslator extends SimpleModelTranslator {
         this.registerTranslator(
             new HypervisorIdTranslator(), HypervisorId.class, HypervisorIdDTO.class);
         this.registerTranslator(
-            new OwnerTranslator(), Owner.class, OwnerDTO.class);
+            new org.candlepin.dto.api.v1.OwnerTranslator(),
+            Owner.class, org.candlepin.dto.api.v1.OwnerDTO.class);
         this.registerTranslator(
             new ProductTranslator(), Product.class, ProductDTO.class);
         this.registerTranslator(
@@ -141,6 +138,18 @@ public class StandardTranslator extends SimpleModelTranslator {
             new ContentDataTranslator(), ContentData.class, ContentDTO.class);
         this.registerTranslator(
             new ProductDataTranslator(), ProductData.class, ProductDTO.class);
+
+        // Rules framework translators
+        /////////////////////////////////////////////
+        this.registerTranslator(
+            new org.candlepin.dto.rules.v1.ConsumerTranslator(),
+            Consumer.class, org.candlepin.dto.rules.v1.ConsumerDTO.class);
+        this.registerTranslator(
+            new org.candlepin.dto.rules.v1.ConsumerTypeTranslator(),
+            ConsumerType.class, org.candlepin.dto.rules.v1.ConsumerTypeDTO.class);
+        this.registerTranslator(
+            new org.candlepin.dto.rules.v1.OwnerTranslator(),
+            Owner.class, org.candlepin.dto.rules.v1.OwnerDTO.class);
     }
 
     // Nothing else to do here.

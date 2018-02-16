@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2017 Red Hat, Inc.
+ * Copyright (c) 2009 - 2018 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -12,44 +12,41 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.dto.api.v1;
+package org.candlepin.dto.rules.v1;
 
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
-import org.candlepin.model.TimestampedEntity;
+import org.candlepin.model.Owner;
 
 
 
 /**
- * The TimestampedEntityTranslator provides common functionality for translating and populating
- * DTOs derived from model objects which contain the created and updated timestamps.
- *
- * @param <I>
- *  The input entity type supported by this translator
- *
- * @param <O>
- *  The output DTO type generated/managed by this translator
+ * The OwnerTranslator provides translation from Owner model objects to OwnerDTOs,
+ * as used by the Rules framework.
  */
-public abstract class TimestampedEntityTranslator
-    <I extends TimestampedEntity, O extends TimestampedCandlepinDTO> implements ObjectTranslator<I, O> {
+public class OwnerTranslator implements ObjectTranslator<Owner, OwnerDTO> {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public abstract O translate(I source);
+    public OwnerDTO translate(Owner source) {
+        return this.translate(null, source);
+    }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public abstract O translate(ModelTranslator translator, I source);
+    public OwnerDTO translate(ModelTranslator translator, Owner source) {
+        return source != null ? this.populate(translator, source, new OwnerDTO()) : null;
+    }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public O populate(I source, O destination) {
+    public OwnerDTO populate(Owner source, OwnerDTO destination) {
         return this.populate(null, source, destination);
     }
 
@@ -57,18 +54,18 @@ public abstract class TimestampedEntityTranslator
      * {@inheritDoc}
      */
     @Override
-    public O populate(ModelTranslator translator, I source, O destination) {
+    public OwnerDTO populate(ModelTranslator translator, Owner source, OwnerDTO dest) {
         if (source == null) {
             throw new IllegalArgumentException("source is null");
         }
 
-        if (destination == null) {
+        if (dest == null) {
             throw new IllegalArgumentException("destination is null");
         }
 
-        destination.setCreated(source.getCreated());
-        destination.setUpdated(source.getUpdated());
+        dest.setId(source.getId());
+        dest.setDefaultServiceLevel(source.getDefaultServiceLevel());
 
-        return destination;
+        return dest;
     }
 }

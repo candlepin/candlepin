@@ -23,6 +23,8 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.ProductManager;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.StandardTranslator;
 import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -101,6 +103,7 @@ public class EntitlementRulesTestFixture {
     protected Consumer consumer;
     protected String productId = "a-product";
     protected PoolRules poolRules;
+    protected ModelTranslator translator;
 
     @Before
     public void createEnforcer() throws Exception {
@@ -118,6 +121,7 @@ public class EntitlementRulesTestFixture {
         when(cacheProvider.get()).thenReturn(cache);
 
         JsRunner jsRules = new JsRunnerProvider(rulesCurator, cacheProvider).get();
+        translator = new StandardTranslator();
         enforcer = new EntitlementRules(
             new DateSourceImpl(),
             jsRules,
@@ -131,7 +135,8 @@ public class EntitlementRulesTestFixture {
             productShareCurator,
             productManager,
             eventSink,
-            eventFactory
+            eventFactory,
+            translator
         );
 
         owner = new Owner();

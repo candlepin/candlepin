@@ -24,6 +24,7 @@ import io.swagger.annotations.ApiModel;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.candlepin.dto.TimestampedCandlepinDTO;
 
 import java.util.Date;
 import javax.xml.bind.annotation.XmlAccessType;
