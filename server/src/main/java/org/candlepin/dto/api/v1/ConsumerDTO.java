@@ -16,6 +16,7 @@ package org.candlepin.dto.api.v1;
 
 import org.candlepin.common.jackson.HateoasArrayExclude;
 import org.candlepin.common.jackson.HateoasInclude;
+import org.candlepin.dto.TimestampedCandlepinDTO;
 import org.candlepin.jackson.SingleValueWrapDeserializer;
 import org.candlepin.jackson.SingleValueWrapSerializer;
 import org.candlepin.util.ListView;

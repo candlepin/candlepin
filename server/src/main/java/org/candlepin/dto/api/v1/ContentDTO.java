@@ -14,6 +14,7 @@
  */
 package org.candlepin.dto.api.v1;
 
+import org.candlepin.dto.TimestampedCandlepinDTO;
 import org.candlepin.util.SetView;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
