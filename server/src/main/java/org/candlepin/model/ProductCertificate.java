@@ -53,6 +53,10 @@ public class ProductCertificate extends AbstractCertificate {
         return id;
     }
 
+    public void setId(String id) {
+        this.id = id;
+    }
+
     @ManyToOne
     @JoinColumn(name = "product_uuid", nullable = false)
     @NotNull
