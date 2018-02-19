@@ -16,8 +16,11 @@ package org.candlepin.policy.js.activationkey;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.StandardTranslator;
 import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
@@ -38,7 +41,6 @@ import com.google.inject.Provider;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
@@ -61,6 +63,7 @@ public class ActivationKeyRulesTest {
     private I18n i18n;
     private JsRunnerProvider provider;
     private Owner owner = TestUtil.createOwner();
+    private ModelTranslator translator;
 
     @Before
     public void setUp() {
@@ -77,9 +80,10 @@ public class ActivationKeyRulesTest {
         when(cacheProvider.get()).thenReturn(cache);
 
         provider = new JsRunnerProvider(rulesCuratorMock, cacheProvider);
-        ProductCurator productCurator = Mockito.mock(ProductCurator.class);
+        ProductCurator productCurator = mock(ProductCurator.class);
+        translator = new StandardTranslator();
         actKeyRules = new ActivationKeyRules(provider.get(), i18n,
-                new RulesObjectMapper(new ProductCachedSerializationModule(productCurator)));
+                new RulesObjectMapper(new ProductCachedSerializationModule(productCurator)), translator);
     }
 
     @Test

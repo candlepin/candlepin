@@ -24,6 +24,7 @@ import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.ProductManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.rules.v1.ConsumerDTO;
+import org.candlepin.dto.rules.v1.PoolDTO;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -223,12 +224,17 @@ public class EntitlementRules implements Enforcer {
         Map<String, ValidationResult> resultMap = new HashMap<String, ValidationResult>();
 
         if (!consumer.isShare()) {
+            List<PoolDTO> poolDTOs = new ArrayList<PoolDTO>();
+            for (Pool pool : pools) {
+                poolDTOs.add(this.translator.translate(pool, PoolDTO.class));
+            }
+
             args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
             args.put("hostConsumer",
                 this.translator.translate(getHost(consumer, pools), ConsumerDTO.class));
             args.put("consumerEntitlements", consumer.getEntitlements());
             args.put("standalone", config.getBoolean(ConfigProperties.STANDALONE));
-            args.put("pools", pools);
+            args.put("pools", poolDTOs);
             args.put("caller", CallerType.LIST_POOLS.getLabel());
             args.put("log", log, false);
 

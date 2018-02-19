@@ -79,20 +79,18 @@ public class AutobindRulesTest {
     @Mock private RulesCurator rulesCurator;
     @Mock private ProductCurator mockProductCurator;
 
-    private ModelTranslator translator;
     private ComplianceStatus compliance;
     private AutobindRules autobindRules; // TODO rename
     private Owner owner;
     private Consumer consumer;
     private String productId = "a-product";
+    private ModelTranslator translator;
 
     private static final String HIGHEST_QUANTITY_PRODUCT = "QUANTITY001";
     private Map<String, String> activeGuestAttrs;
 
     @Before
     public void createEnforcer() throws Exception {
-        translator = new StandardTranslator();
-
         MockitoAnnotations.initMocks(this);
 
         when(config.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
@@ -104,6 +102,8 @@ public class AutobindRulesTest {
         when(rulesCurator.getUpdated()).thenReturn(TestDateUtil.date(2010, 1, 1));
         when(cacheProvider.get()).thenReturn(cache);
         JsRunner jsRules = new JsRunnerProvider(rulesCurator, cacheProvider).get();
+
+        translator = new StandardTranslator();
         autobindRules = new AutobindRules(jsRules, mockProductCurator,
             new RulesObjectMapper(new ProductCachedSerializationModule(mockProductCurator)), translator);
 
