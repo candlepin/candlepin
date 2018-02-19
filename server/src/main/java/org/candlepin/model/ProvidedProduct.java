@@ -14,23 +14,14 @@
  */
 package org.candlepin.model;
 
-import com.fasterxml.jackson.annotation.JsonFilter;
-
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
 import java.io.Serializable;
-
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * Represents a product provided by a Pool
  * ProvidedProduct
  */
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.PROPERTY)
-@JsonFilter("ProvidedProductFilter")
 public class ProvidedProduct implements Serializable {
 
     private static final long serialVersionUID = -6596019311091733072L;
@@ -81,6 +72,7 @@ public class ProvidedProduct implements Serializable {
         if (this == anObject) {
             return true;
         }
+
         if (!(anObject instanceof ProvidedProduct)) {
             return false;
         }

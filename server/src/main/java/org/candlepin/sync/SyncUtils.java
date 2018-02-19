@@ -47,16 +47,14 @@ class SyncUtils {
         if (!baseDir.exists() && !baseDir.mkdirs()) {
             throw new IseException("Unable to create base dir for sync: " + baseDir);
         }
-        File tmp = File.createTempFile(baseName, Long.toString(System.nanoTime()),
-            baseDir);
+        File tmp = File.createTempFile(baseName, Long.toString(System.nanoTime()), baseDir);
 
         if (!tmp.delete()) {
             throw new IOException("Could not delete temp file: " + tmp.getAbsolutePath());
         }
 
         if (!tmp.mkdirs()) {
-            throw new IOException("Could not create temp directory: " +
-                tmp.getAbsolutePath());
+            throw new IOException("Could not create temp directory: " + tmp.getAbsolutePath());
         }
 
         return (tmp);
@@ -84,6 +82,7 @@ class SyncUtils {
             SimpleBeanPropertyFilter.serializeAllExcept("consumer"));
         mapper.setFilterProvider(filterProvider);
         mapper.registerModule(productCachedModule);
+
         if (config != null) {
             mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
                 config.getBoolean(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES));

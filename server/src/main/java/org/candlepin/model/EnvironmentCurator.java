@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 
 import org.slf4j.Logger;
@@ -37,15 +38,20 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
     }
 
     @SuppressWarnings("unchecked")
-    public List<Environment> listForOwner(Owner o) {
-        return this.currentSession().createCriteria(Environment.class)
-            .add(Restrictions.eq("owner", o)).list();
+    public CandlepinQuery<Environment> listForOwner(Owner o) {
+        DetachedCriteria criteria = this.createSecureDetachedCriteria()
+            .add(Restrictions.eq("owner", o));
+
+        return this.cpQueryFactory.<Environment>buildQuery(this.currentSession(), criteria);
     }
 
     @SuppressWarnings("unchecked")
-    public List<Environment> listForOwnerByName(Owner o, String envName) {
-        return this.currentSession().createCriteria(Environment.class)
-            .add(Restrictions.eq("owner", o)).add(Restrictions.eq("name", envName)).list();
+    public CandlepinQuery<Environment> listForOwnerByName(Owner o, String envName) {
+        DetachedCriteria criteria = this.createSecureDetachedCriteria()
+            .add(Restrictions.eq("owner", o))
+            .add(Restrictions.eq("name", envName));
+
+        return this.cpQueryFactory.<Environment>buildQuery(this.currentSession(), criteria);
     }
 
     @SuppressWarnings("unchecked")

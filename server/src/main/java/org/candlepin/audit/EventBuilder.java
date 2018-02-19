@@ -84,21 +84,27 @@ public class EventBuilder {
             if (entity instanceof Named && ((Named) entity).getName() != null) {
                 event.setTargetName(((Named) entity).getName());
             }
+
             if (entity instanceof Owned) {
                 Owner entityOwner = ((Owned) entity).getOwner();
+
                 if (entityOwner != null && entityOwner.getId() != null) {
                     event.setOwnerId(entityOwner.getId());
                 }
             }
+
             if (entity instanceof Entitlement) {
                 event.setReferenceType(Event.ReferenceType.POOL);
                 Pool referencedPool = ((Entitlement) entity).getPool();
+
                 if (referencedPool != null && referencedPool.getId() != null) {
                     event.setReferenceId(referencedPool.getId());
                 }
             }
+
             if (entity.getId() != null) {
                 event.setEntityId((String) entity.getId());
+
                 if (entity instanceof ConsumerProperty) {
                     Consumer owningConsumer = ((ConsumerProperty) entity).getConsumer();
                     if (owningConsumer != null && owningConsumer.getId() != null) {
@@ -106,9 +112,11 @@ public class EventBuilder {
                     }
                 }
             }
+
             if (event.getTarget().equals(Target.POOL) && event.getType().equals(Type.CREATED)) {
                 Map<String, String> eventData = new HashMap<String, String>();
                 eventData.put("subscriptionId", ((Pool) entity).getSubscriptionId());
+
                 try {
                     event.setEventData(mapper.writeValueAsString(eventData));
                 }
@@ -118,6 +126,7 @@ public class EventBuilder {
                 }
             }
         }
+
         return this;
     }
 

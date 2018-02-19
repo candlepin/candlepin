@@ -36,8 +36,8 @@ import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.dto.ContentData;
-import org.candlepin.model.dto.ProductContentData;
 import org.candlepin.model.dto.ProductData;
+import org.candlepin.model.dto.ProductContentData;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
@@ -204,7 +204,7 @@ public class Entitler {
         Consumer consumer = data.getConsumer();
         Owner owner = consumer.getOwner();
 
-        if (!consumer.isDev() && owner.autobindDisabled()) {
+        if (!consumer.isDev() && owner.isAutobindDisabled()) {
             log.info("Skipping auto-attach for consumer '{}'. Auto-attach is disabled for owner {}.",
                 consumer, owner.getKey());
             throw new AutobindDisabledForOwnerException(i18n.tr("Auto-attach is disabled for owner '{0}'.",
@@ -394,8 +394,8 @@ public class Entitler {
                     for (ProductContentData pcd : pcdCollection) {
                         // Impl note:
                         // We aren't checking for duplicate mappings to the same content, since our
-                        // current implementation of ProductData prevents such a thing. However, if it
-                        // is reasonably possible that we could end up with ProductData instances which
+                        // current implementation of ProductDTO prevents such a thing. However, if it
+                        // is reasonably possible that we could end up with ProductDTO instances which
                         // do not prevent duplicate content mappings, we should add checks here to
                         // check for, and throw out, such mappings
 

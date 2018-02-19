@@ -120,8 +120,12 @@ public class HypervisorUpdateJobTest extends BaseJobTest{
             i18n, migrationProvider);
         injector.injectMembers(job);
         job.execute(ctx);
-        verify(consumerResource).create(any(Consumer.class), eq(principal), anyString(), eq("joe"),
-            anyString(), eq(false));
+        verify(consumerResource).createConsumerFromEntity(any(Consumer.class),
+            eq(principal),
+            anyString(),
+            eq("joe"),
+            anyString(),
+            eq(false));
     }
 
     @Test
@@ -140,8 +144,12 @@ public class HypervisorUpdateJobTest extends BaseJobTest{
         injector.injectMembers(job);
         job.execute(ctx);
         ArgumentCaptor<Consumer> argument = ArgumentCaptor.forClass(Consumer.class);
-        verify(consumerResource).create(argument.capture(), eq(principal), anyString(), eq("joe"),
-            anyString(), eq(false));
+        verify(consumerResource).createConsumerFromEntity(argument.capture(),
+            eq(principal),
+            anyString(),
+            eq("joe"),
+            anyString(),
+            eq(false));
         assertEquals("createReporterId", argument.getValue().getHypervisorId().getReporterId());
     }
 
@@ -208,7 +216,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest{
             i18n, migrationProvider);
         injector.injectMembers(job);
         job.execute(ctx);
-        verify(consumerResource, never()).create(any(Consumer.class), any(Principal.class),
+        verify(consumerResource, never()).createConsumerFromEntity(any(Consumer.class), any(Principal.class),
             anyString(), anyString(), anyString(), eq(false));
     }
 
@@ -272,14 +280,15 @@ public class HypervisorUpdateJobTest extends BaseJobTest{
         JobStatus newJob = new JobStatus(detail);
         JobCurator jobCurator = mock(JobCurator.class);
         when(jobCurator.findNumRunningByClassAndTarget(owner.getKey(), HypervisorUpdateJob.class))
-                .thenReturn(1L);
+            .thenReturn(1L);
+
         assertFalse(HypervisorUpdateJob.isSchedulable(jobCurator, newJob));
     }
 
     @Test
     public void ensureJobFailsWhenAutobindDisabledForTargetOwner() throws Exception {
         // Disabled autobind
-        when(owner.autobindDisabled()).thenReturn(true);
+        when(owner.isAutobindDisabled()).thenReturn(true);
         when(ownerCurator.lookupByKey(eq("joe"))).thenReturn(owner);
 
         JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal, null);

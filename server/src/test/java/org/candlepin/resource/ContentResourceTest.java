@@ -21,6 +21,10 @@ import static org.mockito.Mockito.*;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.SimpleModelTranslator;
+import org.candlepin.dto.api.v1.ContentDTO;
+import org.candlepin.dto.api.v1.ContentTranslator;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
@@ -32,7 +36,6 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.model.dto.ContentData;
 import org.candlepin.service.impl.DefaultUniqueIdGenerator;
 
 import org.junit.Before;
@@ -58,6 +61,7 @@ public class ContentResourceTest {
     private PoolManager poolManager;
     private ProductCurator productCurator;
     private OwnerCurator oc;
+    private ModelTranslator modelTranslator;
 
     @Before
     public void init() {
@@ -68,8 +72,11 @@ public class ContentResourceTest {
         oc = mock(OwnerCurator.class);
         productCurator = mock(ProductCurator.class);
 
+        this.modelTranslator = new SimpleModelTranslator();
+        this.modelTranslator.registerTranslator(new ContentTranslator(), Content.class, ContentDTO.class);
+
         cr = new ContentResource(cc, i18n, new DefaultUniqueIdGenerator(), envContentCurator,
-            poolManager, productCurator, oc);
+            poolManager, productCurator, oc, this.modelTranslator);
     }
 
     @Test
@@ -90,15 +97,16 @@ public class ContentResourceTest {
     public void getContent() {
         Owner owner = mock(Owner.class);
         Content content = mock(Content.class);
-        ContentData contentData = mock(ContentData.class);
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
+        ContentDTO expected = this.modelTranslator.translate(content, ContentDTO.class);
 
         when(cqmock.list()).thenReturn(Arrays.asList(owner));
         when(oc.listAll()).thenReturn(cqmock);
         when(cc.lookupByUuid(eq("10"))).thenReturn(content);
-        when(content.toDTO()).thenReturn(contentData);
 
-        assertEquals(contentData, cr.getContent("10"));
+        ContentDTO output = cr.getContent("10");
+
+        assertEquals(expected, output);
     }
 
     @Test(expected = BadRequestException.class)
@@ -125,8 +133,7 @@ public class ContentResourceTest {
         Content content = mock(Content.class);
         when(content.getId()).thenReturn("10");
         when(cc.find(eq("10"))).thenReturn(content);
-        EnvironmentContent ec =
-            new EnvironmentContent(mock(Environment.class), content, true);
+        EnvironmentContent ec = new EnvironmentContent(mock(Environment.class), content, true);
         List<EnvironmentContent> envContents = Arrays.asList(ec);
         when(envContentCurator.lookupByContent(owner, content.getId())).thenReturn(envContents);
 

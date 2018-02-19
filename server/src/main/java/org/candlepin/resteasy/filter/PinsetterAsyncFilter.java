@@ -16,6 +16,8 @@ package org.candlepin.resteasy.filter;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.common.exceptions.ServiceUnavailableException;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.JobStatusDTO;
 import org.candlepin.pinsetter.core.PinsetterException;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
 import org.candlepin.pinsetter.core.PinsetterKernel;
@@ -45,12 +47,14 @@ import javax.ws.rs.ext.Provider;
 public class PinsetterAsyncFilter implements PostProcessInterceptor {
     private PinsetterKernel pinsetterKernel;
     private com.google.inject.Provider<Principal> principalProvider;
+    private ModelTranslator translator;
 
     @Inject
     public PinsetterAsyncFilter(PinsetterKernel pinsetterKernel,
-        com.google.inject.Provider<Principal> principalProvider) {
+        com.google.inject.Provider<Principal> principalProvider, ModelTranslator translator) {
         this.pinsetterKernel = pinsetterKernel;
         this.principalProvider = principalProvider;
+        this.translator = translator;
     }
 
     /**
@@ -67,7 +71,7 @@ public class PinsetterAsyncFilter implements PostProcessInterceptor {
             setJobPrincipal(jobDetail);
 
             JobStatus status = this.scheduleJob(jobDetail);
-            response.setEntity(status);
+            response.setEntity(this.translator.translate(status, JobStatusDTO.class));
             response.setStatus(HttpResponseCodes.SC_ACCEPTED);
         }
         else if (entity instanceof JobDetail[]) {
@@ -81,7 +85,11 @@ public class PinsetterAsyncFilter implements PostProcessInterceptor {
                 statuses[i++] = status;
             }
 
-            response.setEntity(statuses);
+            JobStatusDTO[] dtoStatuses = new JobStatusDTO[statuses.length];
+            for (int j = 0; j < statuses.length; j++) {
+                dtoStatuses[j] = this.translator.translate(statuses[j], JobStatusDTO.class);
+            }
+            response.setEntity(dtoStatuses);
             response.setStatus(HttpResponseCodes.SC_ACCEPTED);
         }
     }

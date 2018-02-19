@@ -22,6 +22,8 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.ProductManager;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.rules.v1.ConsumerDTO;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -89,6 +91,7 @@ public class EntitlementRules implements Enforcer {
     private ProductManager productManager;
     private EventSink eventSink;
     private EventFactory eventFactory;
+    private ModelTranslator translator;
 
     private static final String POST_PREFIX = "post_";
 
@@ -98,7 +101,7 @@ public class EntitlementRules implements Enforcer {
         ProductCurator productCurator, RulesObjectMapper mapper,
         OwnerCurator ownerCurator, OwnerProductCurator ownerProductCurator,
         ProductShareCurator productShareCurator, ProductManager productManager, EventSink eventSink,
-        EventFactory eventFactory) {
+        EventFactory eventFactory, ModelTranslator translator) {
 
         this.jsRules = jsRules;
         this.dateSource = dateSource;
@@ -113,6 +116,8 @@ public class EntitlementRules implements Enforcer {
         this.productManager = productManager;
         this.eventSink = eventSink;
         this.eventFactory = eventFactory;
+        this.translator = translator;
+
         jsRules.init("entitlement_name_space");
     }
 
@@ -172,8 +177,8 @@ public class EntitlementRules implements Enforcer {
          */
         if (!consumer.isShare()) {
             JsonJsContext args = new JsonJsContext(objectMapper);
-            args.put("consumer", consumer);
-            args.put("hostConsumer", host);
+            args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
+            args.put("hostConsumer", this.translator.translate(host, ConsumerDTO.class));
             args.put("consumerEntitlements", consumer.getEntitlements());
             args.put("standalone", config.getBoolean(ConfigProperties.STANDALONE));
             args.put("poolQuantities", entitlementPoolQuantities);
@@ -218,8 +223,9 @@ public class EntitlementRules implements Enforcer {
         Map<String, ValidationResult> resultMap = new HashMap<String, ValidationResult>();
 
         if (!consumer.isShare()) {
-            args.put("consumer", consumer);
-            args.put("hostConsumer", getHost(consumer, pools));
+            args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
+            args.put("hostConsumer",
+                this.translator.translate(getHost(consumer, pools), ConsumerDTO.class));
             args.put("consumerEntitlements", consumer.getEntitlements());
             args.put("standalone", config.getBoolean(ConfigProperties.STANDALONE));
             args.put("pools", pools);
@@ -727,11 +733,13 @@ public class EntitlementRules implements Enforcer {
         List<ProductShare> sharesToDelete = new LinkedList<ProductShare>();
         List<ProductShare> sharesToCreate = new LinkedList<ProductShare>();
         Map<String, ProductShare> existingSharesMap = new HashMap<String, ProductShare>();
+        Map<String, String> productRefsToUpdate = new HashMap<String, String>();
 
         for (Product product: products) {
             sharedProductsIdMap.put(product.getId(), product);
             sharedProductsUuidMap.put(product.getUuid(), product);
         }
+
         List<Product> recipientProducts = ownerProductCurator.getProductsByIds(
             recipient, sharedProductsIdMap.keySet()).list();
 

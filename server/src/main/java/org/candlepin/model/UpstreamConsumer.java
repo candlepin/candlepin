@@ -44,7 +44,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Entity
 @Table(name = UpstreamConsumer.DB_TABLE)
 @JsonFilter("ApiHateoas")
-public class UpstreamConsumer extends AbstractHibernateObject {
+public class UpstreamConsumer extends AbstractHibernateObject<UpstreamConsumer> {
 
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp_upstream_consumer";
@@ -229,18 +229,27 @@ public class UpstreamConsumer extends AbstractHibernateObject {
     }
 
     /**
-    *
-    * @return the Content Access Mode
-    */
+     *
+     * @return the Content Access Mode
+     */
     public String getContentAccessMode() {
         return this.contentAccessMode;
     }
 
     /**
-    *
-    * @param contentAccessMode
-    */
+     *
+     * @param contentAccessMode
+     */
     public void setContentAccessMode(String contentAccessMode) {
         this.contentAccessMode = contentAccessMode;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return String.format("UpstreamConsumer [uuid: %s, name: %s, owner id: %s]",
+            this.getUuid(), this.getName(), this.getOwnerId());
     }
 }

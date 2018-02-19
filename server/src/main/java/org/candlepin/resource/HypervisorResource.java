@@ -21,6 +21,8 @@ import org.candlepin.auth.Verify;
 import org.candlepin.auth.UpdateConsumerCheckIn;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.GuestIdDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
@@ -83,16 +85,21 @@ public class HypervisorResource {
     private I18n i18n;
     private OwnerCurator ownerCurator;
     private Provider<GuestMigration> migrationProvider;
+    private ModelTranslator translator;
+    private GuestIdResource guestIdResource;
 
     @Inject
     public HypervisorResource(ConsumerResource consumerResource,
-        ConsumerCurator consumerCurator, I18n i18n, OwnerCurator ownerCurator, Provider<GuestMigration>
-        migrationProvider) {
+        ConsumerCurator consumerCurator, I18n i18n, OwnerCurator ownerCurator,
+        Provider<GuestMigration> migrationProvider, ModelTranslator translator,
+        GuestIdResource guestIdResource) {
         this.consumerResource = consumerResource;
         this.consumerCurator = consumerCurator;
         this.i18n = i18n;
         this.ownerCurator = ownerCurator;
         this.migrationProvider = migrationProvider;
+        this.translator = translator;
+        this.guestIdResource = guestIdResource;
     }
 
     /**
@@ -116,7 +123,7 @@ public class HypervisorResource {
     @UpdateConsumerCheckIn
     @SuppressWarnings("checkstyle:indentation")
     public HypervisorCheckInResult hypervisorUpdate(
-        Map<String, List<GuestId>> hostGuestMap, @Context Principal principal,
+        Map<String, List<GuestIdDTO>> hostGuestDTOMap, @Context Principal principal,
         @QueryParam("owner") @Verify(value = Owner.class,
             require = Access.READ_ONLY,
             subResource = SubResource.HYPERVISOR) String ownerKey,
@@ -126,14 +133,14 @@ public class HypervisorResource {
         @QueryParam("create_missing") @DefaultValue("true") boolean createMissing) {
         log.debug("Hypervisor check-in by principal: {}", principal);
 
-        if (hostGuestMap == null) {
+        if (hostGuestDTOMap == null) {
             log.debug("Host/Guest mapping provided during hypervisor checkin was null.");
             throw new BadRequestException(
                 i18n.tr("Host to guest mapping was not provided for hypervisor check-in."));
         }
 
         Owner owner = this.getOwner(ownerKey);
-        if (owner.autobindDisabled()) {
+        if (owner.isAutobindDisabled()) {
             log.debug("Could not update host/guest mapping. Auto-attach is disabled for owner {}",
                 owner.getKey());
             throw new BadRequestException(
@@ -141,25 +148,25 @@ public class HypervisorResource {
                     owner.getKey()));
         }
 
-        if (hostGuestMap.remove("") != null) {
+        if (hostGuestDTOMap.remove("") != null) {
             log.warn("Ignoring empty hypervisor id");
         }
 
         // Maps virt hypervisor ID to registered consumer for that hypervisor, should one exist:
         VirtConsumerMap hypervisorConsumersMap =
-            consumerCurator.getHostConsumersMap(owner, hostGuestMap.keySet());
+            consumerCurator.getHostConsumersMap(owner, hostGuestDTOMap.keySet());
 
         int emptyGuestIdCount = 0;
         Set<String> allGuestIds = new HashSet<String>();
 
-        Collection<List<GuestId>> idsLists = hostGuestMap.values();
-        for (List<GuestId> guestIds : idsLists) {
+        Collection<List<GuestIdDTO>> idsLists = hostGuestDTOMap.values();
+        for (List<GuestIdDTO> guestIds : idsLists) {
             // ignore null guest lists
             // See bzs 1332637, 1332635
             if (guestIds == null) {
                 continue;
             }
-            for (Iterator<GuestId> guestIdsItr = guestIds.iterator(); guestIdsItr.hasNext();) {
+            for (Iterator<GuestIdDTO> guestIdsItr = guestIds.iterator(); guestIdsItr.hasNext();) {
                 String id = guestIdsItr.next().getGuestId();
 
                 if (StringUtils.isEmpty(id)) {
@@ -177,7 +184,7 @@ public class HypervisorResource {
         }
 
         HypervisorCheckInResult result = new HypervisorCheckInResult();
-        for (Entry<String, List<GuestId>> hostEntry : hostGuestMap.entrySet()) {
+        for (Entry<String, List<GuestIdDTO>> hostEntry : hostGuestDTOMap.entrySet()) {
             String hypervisorId = hostEntry.getKey();
             // Treat null guest list as an empty list.
             // We can get an empty list here from katello due to an update
@@ -185,7 +192,7 @@ public class HypervisorResource {
             // (https://github.com/rails/rails/issues/13766#issuecomment-32730270)
             // See bzs 1332637, 1332635
             if (hostEntry.getValue() == null) {
-                hostEntry.setValue(new ArrayList<GuestId>());
+                hostEntry.setValue(new ArrayList<GuestIdDTO>());
             }
             try {
                 log.debug("Syncing virt host: {} ({} guest IDs)", hypervisorId, hostEntry.getValue().size());
@@ -207,7 +214,9 @@ public class HypervisorResource {
                 else {
                     consumer = hypervisorConsumersMap.get(hypervisorId);
                 }
-                boolean guestIdsUpdated = addGuestIds(consumer, hostEntry.getValue());
+                List<GuestId> guestIds = new ArrayList<GuestId>();
+                guestIdResource.populateEntities(guestIds, hostEntry.getValue());
+                boolean guestIdsUpdated = addGuestIds(consumer, guestIds);
 
                 Date now = new Date();
                 consumerCurator.updateLastCheckin(consumer, now);
@@ -321,7 +330,12 @@ public class HypervisorResource {
         HypervisorId hypervisorId = new HypervisorId(consumer, incHypervisorId);
         consumer.setHypervisorId(hypervisorId);
         // Create Consumer
-        return consumerResource.create(consumer, principal, null, owner.getKey(), null, false);
+        return consumerResource.createConsumerFromEntity(consumer,
+            principal,
+            null,
+            owner.getKey(),
+            null,
+            false);
     }
 
 }

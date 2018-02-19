@@ -25,8 +25,9 @@ import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.CandlepinPoolManager;
+import org.candlepin.dto.api.v1.EntitlementDTO;
+import org.candlepin.dto.api.v1.PoolDTO;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
@@ -34,6 +35,7 @@ import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
+import org.hamcrest.collection.IsCollectionWithSize;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -96,7 +98,8 @@ public class PoolResourceTest extends DatabaseTestFixture {
         poolCurator.create(pool2);
         poolCurator.create(pool3);
 
-        poolResource = new PoolResource(consumerCurator, ownerCurator, i18n, poolManager, attrUtil);
+        poolResource = new PoolResource(consumerCurator, ownerCurator, i18n,
+            poolManager, attrUtil, this.modelTranslator);
 
         // Consumer system with too many cpu cores:
 
@@ -122,20 +125,21 @@ public class PoolResourceTest extends DatabaseTestFixture {
 
     @Test(expected = ForbiddenException.class)
     public void testUserCannotListAllPools() {
-        List<Pool> pools = poolResource.list(null, null, null, false, null, adminPrincipal, null);
+        List<PoolDTO> pools = poolResource.list(null, null, null, false, null, adminPrincipal, null);
         assertEquals(3, pools.size());
     }
 
     @Test
     public void testListAll() {
-        List<Pool> pools = poolResource.list(null, null, null, false, null,
+        List<PoolDTO> pools = poolResource.list(null, null, null, false, null,
             setupAdminPrincipal("superadmin"), null);
         assertEquals(3, pools.size());
     }
 
     @Test
     public void testListForOrg() {
-        List<Pool> pools = poolResource.list(owner1.getId(), null, null, false, null, adminPrincipal, null);
+        List<PoolDTO> pools = poolResource.list(owner1.getId(), null, null,
+            false, null, adminPrincipal, null);
         assertEquals(2, pools.size());
         Principal p = setupPrincipal(owner2, Access.ALL);
         pools = poolResource.list(owner2.getId(), null, null, false, null, p, null);
@@ -145,7 +149,8 @@ public class PoolResourceTest extends DatabaseTestFixture {
     @Ignore
     @Test
     public void testListForProduct() {
-        List<Pool> pools = poolResource.list(null, null, product1.getId(), false, null, adminPrincipal, null);
+        List<PoolDTO> pools = poolResource.list(null, null, product1.getId(),
+            false, null, adminPrincipal, null);
         assertEquals(2, pools.size());
         pools = poolResource.list(null, null, product2.getId(), false, null,
             adminPrincipal, null);
@@ -154,30 +159,31 @@ public class PoolResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testListForOrgAndProduct() {
-        List<Pool> pools = poolResource.list(owner1.getId(), null, product1.getId(), false,
+        List<PoolDTO> pools = poolResource.list(owner1.getId(), null, product1.getId(), false,
             null, adminPrincipal, null);
         assertEquals(1, pools.size());
     }
 
     @Test(expected = NotFoundException.class)
     public void testCannotListPoolsInAnotherOwner() {
-        List<Pool> pools = poolResource.list(owner2.getId(), null, product2.getId(),
+        List<PoolDTO> pools = poolResource.list(owner2.getId(), null, product2.getId(),
             false, null, adminPrincipal, null);
         assertEquals(0, pools.size());
     }
 
     @Test
     public void testListConsumerAndProductFiltering() {
-        List<Pool> pools = poolResource.list(null, passConsumer.getUuid(),
+        List<PoolDTO> pools = poolResource.list(null, passConsumer.getUuid(),
             product1.getId(), false, null, adminPrincipal, null);
         assertEquals(1, pools.size());
 
-        verify(attrUtil, times(1)).setCalculatedAttributes(eq(pools), any(Date.class));
+        verify(attrUtil, times(1))
+            .setCalculatedAttributes((List<Pool>) argThat(IsCollectionWithSize.hasSize(1)), any(Date.class));
     }
 
     @Test(expected = NotFoundException.class)
     public void testCannotListPoolsForConsumerInAnotherOwner() {
-        List<Pool> pools = poolResource.list(null, failConsumer.getUuid(),
+        List<PoolDTO> pools = poolResource.list(null, failConsumer.getUuid(),
             product1.getId(), false, null, adminPrincipal, null);
         assertEquals(0, pools.size());
     }
@@ -193,11 +199,12 @@ public class PoolResourceTest extends DatabaseTestFixture {
     @Test
     public void testListConsumerFiltering() {
         setupPrincipal(new ConsumerPrincipal(passConsumer));
-        List<Pool> pools = poolResource.list(null, passConsumer.getUuid(), null, false,
+        List<PoolDTO> pools = poolResource.list(null, passConsumer.getUuid(), null, false,
             null, adminPrincipal, null);
         assertEquals(2, pools.size());
 
-        verify(attrUtil, times(1)).setCalculatedAttributes(eq(pools), any(Date.class));
+        verify(attrUtil, times(1))
+            .setCalculatedAttributes((List<Pool>) argThat(IsCollectionWithSize.hasSize(2)), any(Date.class));
     }
 
     @Test(expected = NotFoundException.class)
@@ -218,7 +225,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
 
     @Test(expected = NotFoundException.class)
     public void ownerAdminCannotListAnotherOwnersPools() {
-        List<Pool> pools = poolResource.list(owner1.getId(), null, null, false, null,
+        List<PoolDTO> pools = poolResource.list(owner1.getId(), null, null, false, null,
             adminPrincipal, null);
         assertEquals(2, pools.size());
 
@@ -262,7 +269,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
     public void testActiveOnDate() {
         // Need to be a super admin to do this:
         String activeOn = Integer.toString(START_YEAR + 1);
-        List<Pool> pools = poolResource.list(null, null, null, false, activeOn,
+        List<PoolDTO> pools = poolResource.list(null, null, null, false, activeOn,
             setupAdminPrincipal("superadmin"), null);
         assertEquals(3, pools.size());
 
@@ -274,7 +281,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testCalculatedAttributesEmpty() {
-        Pool p = poolResource.getPool(pool1.getId(), null, null, adminPrincipal);
+        PoolDTO p = poolResource.getPool(pool1.getId(), null, null, adminPrincipal);
         assertTrue(p.getCalculatedAttributes().isEmpty());
     }
 
@@ -291,8 +298,9 @@ public class PoolResourceTest extends DatabaseTestFixture {
         poolResource.getPool(pool1.getId(), "xyzzy", null, adminPrincipal);
     }
 
+    @Test
     public void testEmptyEntitlementList() {
-        List<Entitlement> ents =
+        List<EntitlementDTO> ents =
             poolResource.getPoolEntitlements(pool1.getId(),  adminPrincipal);
         assertEquals(0, ents.size());
     }
