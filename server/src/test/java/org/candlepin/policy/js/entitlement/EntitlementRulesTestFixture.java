@@ -121,6 +121,7 @@ public class EntitlementRulesTestFixture {
         when(cacheProvider.get()).thenReturn(cache);
 
         JsRunner jsRules = new JsRunnerProvider(rulesCurator, cacheProvider).get();
+
         translator = new StandardTranslator();
         enforcer = new EntitlementRules(
             new DateSourceImpl(),

@@ -83,8 +83,6 @@ public class QuantityRulesTest {
 
     @Before
     public void setUp() {
-        translator = new StandardTranslator();
-
         MockitoAnnotations.initMocks(this);
 
         // Load the default production rules:
@@ -95,6 +93,8 @@ public class QuantityRulesTest {
         when(rulesCuratorMock.getRules()).thenReturn(rules);
         when(cacheProvider.get()).thenReturn(cache);
         provider = new JsRunnerProvider(rulesCuratorMock, cacheProvider);
+
+        translator = new StandardTranslator();
         quantityRules = new QuantityRules(provider.get(),
                 new RulesObjectMapper(new ProductCachedSerializationModule(productCurator)), translator);
 

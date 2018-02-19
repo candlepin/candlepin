@@ -15,6 +15,8 @@
 package org.candlepin.policy.js.activationkey;
 
 import org.candlepin.common.exceptions.BadRequestException;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.rules.v1.PoolDTO;
 import org.candlepin.model.Pool;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.policy.ValidationResult;
@@ -41,26 +43,28 @@ public class ActivationKeyRules {
     private JsRunner jsRules;
     private RulesObjectMapper mapper;
     private I18n i18n;
+    private ModelTranslator translator;
 
     @Inject
-    public ActivationKeyRules(JsRunner jsRules, I18n i18n, RulesObjectMapper mapper) {
+    public ActivationKeyRules(JsRunner jsRules, I18n i18n, RulesObjectMapper mapper,
+        ModelTranslator translator) {
         this.jsRules = jsRules;
         this.i18n = i18n;
 
         this.mapper = mapper;
+        this.translator = translator;
         jsRules.init("activation_key_name_space");
     }
 
     public ValidationResult runPreActKey(ActivationKey key, Pool pool, Long quantity) {
         JsonJsContext args = new JsonJsContext(mapper);
         args.put("key", key);
-        args.put("pool", pool);
+        args.put("pool", this.translator.translate(pool, PoolDTO.class));
         args.put("quantity", quantity);
         args.put("log", log, false);
 
         String json = jsRules.invokeRule("validate_pool", args);
-        ValidationResult result = mapper.toObject(json, ValidationResult.class);
-        return result;
+        return mapper.toObject(json, ValidationResult.class);
     }
 
     public void validatePoolForActKey(ActivationKey key, Pool pool, Long quantity) {
