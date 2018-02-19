@@ -17,6 +17,7 @@ package org.candlepin.policy.js.autobind;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.rules.v1.ConsumerDTO;
 import org.candlepin.dto.rules.v1.OwnerDTO;
+import org.candlepin.dto.rules.v1.PoolDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.Pool;
@@ -99,12 +100,17 @@ public class AutobindRules {
             }
         }
 
+        List<PoolDTO> poolDTOs = new ArrayList<PoolDTO>();
+        for (Pool pool : pools) {
+            poolDTOs.add(this.translator.translate(pool, PoolDTO.class));
+        }
+
         // Provide objects for the script:
         JsonJsContext args = new JsonJsContext(mapper);
         args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
         args.put("owner", this.translator.translate(consumer.getOwner(), OwnerDTO.class));
         args.put("serviceLevelOverride", serviceLevelOverride);
-        args.put("pools", pools.toArray());
+        args.put("pools", poolDTOs.toArray());
         args.put("products", productIds);
         args.put("log", log, false);
         args.put("compliance", compliance);

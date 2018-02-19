@@ -43,8 +43,6 @@ import org.candlepin.dto.api.v1.HypervisorIdDTO;
 import org.candlepin.dto.api.v1.HypervisorIdTranslator;
 import org.candlepin.dto.api.v1.JobStatusDTO;
 import org.candlepin.dto.api.v1.JobStatusTranslator;
-import org.candlepin.dto.api.v1.PoolDTO;
-import org.candlepin.dto.api.v1.PoolTranslator;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.dto.api.v1.ProductTranslator;
 import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
@@ -113,7 +111,8 @@ public class StandardTranslator extends SimpleModelTranslator {
         this.registerTranslator(
             new ProductTranslator(), Product.class, ProductDTO.class);
         this.registerTranslator(
-            new PoolTranslator(), Pool.class, PoolDTO.class);
+            new org.candlepin.dto.api.v1.PoolTranslator(),
+            Pool.class, org.candlepin.dto.api.v1.PoolDTO.class);
         this.registerTranslator(
             new BrandingTranslator(), Branding.class, BrandingDTO.class);
         this.registerTranslator(
@@ -150,6 +149,9 @@ public class StandardTranslator extends SimpleModelTranslator {
         this.registerTranslator(
             new org.candlepin.dto.rules.v1.OwnerTranslator(),
             Owner.class, org.candlepin.dto.rules.v1.OwnerDTO.class);
+        this.registerTranslator(
+            new org.candlepin.dto.rules.v1.PoolTranslator(),
+            Pool.class, org.candlepin.dto.rules.v1.PoolDTO.class);
     }
 
     // Nothing else to do here.
