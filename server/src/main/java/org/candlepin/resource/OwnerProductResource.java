@@ -25,6 +25,7 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.ProductManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.ContentDTO;
+import org.candlepin.dto.api.v1.ProductCertificateDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.model.Content;
 import org.candlepin.model.CandlepinQuery;
@@ -225,7 +226,7 @@ public class OwnerProductResource {
     @Produces(MediaType.APPLICATION_JSON)
     @SecurityHole
     @Transactional
-    public ProductCertificate getProductCertificate(
+    public ProductCertificateDTO getProductCertificate(
         @PathParam("owner_key") String ownerKey,
         @ApiParam(name = "productId", required = true, value = "Numeric product identifier")
         @PathParam("product_id") String productId) {
@@ -237,7 +238,8 @@ public class OwnerProductResource {
         Owner owner = this.getOwnerByKey(ownerKey);
         Product product = this.fetchProduct(owner, productId);
 
-        return this.productCertCurator.getCertForProduct(product);
+        ProductCertificate productCertificate = this.productCertCurator.getCertForProduct(product);
+        return this.translator.translate(productCertificate, ProductCertificateDTO.class);
     }
 
     @ApiOperation(notes = "Creates a Product.  Returns either the new created Product or " +

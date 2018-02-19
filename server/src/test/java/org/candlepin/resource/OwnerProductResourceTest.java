@@ -24,6 +24,7 @@ import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.controller.ProductManager;
 import org.candlepin.dto.api.v1.ContentDTO;
+import org.candlepin.dto.api.v1.ProductCertificateDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.model.Content;
 import org.candlepin.model.Owner;
@@ -246,9 +247,10 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
         cert.setProduct(entity);
         productCertificateCurator.create(cert);
 
-        ProductCertificate cert1 = ownerProductResource.getProductCertificate(owner.getKey(), entity.getId());
-
-        assertEquals(cert, cert1);
+        ProductCertificateDTO cert1 = ownerProductResource.getProductCertificate(owner.getKey(),
+            entity.getId());
+        ProductCertificateDTO expected = this.modelTranslator.translate(cert, ProductCertificateDTO.class);
+        assertEquals(cert1, expected);
     }
 
     @Test(expected = BadRequestException.class)

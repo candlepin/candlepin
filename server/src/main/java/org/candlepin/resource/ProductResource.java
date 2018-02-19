@@ -20,6 +20,7 @@ import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.ProductCertificateDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Owner;
@@ -131,14 +132,15 @@ public class ProductResource {
     @Path("/{product_uuid}/certificate")
     @Produces(MediaType.APPLICATION_JSON)
     @SecurityHole
-    public ProductCertificate getProductCertificate(
+    public ProductCertificateDTO getProductCertificate(
         @PathParam("product_uuid") String productUuid) {
 
         // TODO:
         // Should this be enabled globally? This will create a cert if it hasn't yet been created.
 
         Product product = this.fetchProduct(productUuid);
-        return this.productCertCurator.getCertForProduct(product);
+        ProductCertificate productCertificate = this.productCertCurator.getCertForProduct(product);
+        return this.translator.translate(productCertificate, ProductCertificateDTO.class);
     }
 
     /**
