@@ -24,6 +24,7 @@ import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.dto.api.v1.ContentDTO;
+import org.candlepin.dto.api.v1.ProductCertificateDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Pool;
@@ -168,9 +169,9 @@ public class ProductResourceTest extends DatabaseTestFixture {
         cert.setProduct(entity);
         productCertificateCurator.create(cert);
 
-        ProductCertificate cert1 = productResource.getProductCertificate(entity.getUuid());
-
-        assertEquals(cert, cert1);
+        ProductCertificateDTO cert1 = productResource.getProductCertificate(entity.getUuid());
+        ProductCertificateDTO expected = this.modelTranslator.translate(cert, ProductCertificateDTO.class);
+        assertEquals(cert1, expected);
     }
 
     private List<Owner> setupDBForOwnerProdTests() {
