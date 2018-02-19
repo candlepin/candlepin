@@ -43,6 +43,8 @@ import org.candlepin.dto.api.v1.HypervisorIdDTO;
 import org.candlepin.dto.api.v1.HypervisorIdTranslator;
 import org.candlepin.dto.api.v1.JobStatusDTO;
 import org.candlepin.dto.api.v1.JobStatusTranslator;
+import org.candlepin.dto.api.v1.PoolQuantityDTO;
+import org.candlepin.dto.api.v1.PoolQuantityTranslator;
 import org.candlepin.dto.api.v1.ProductCertificateDTO;
 import org.candlepin.dto.api.v1.ProductCertificateTranslator;
 import org.candlepin.dto.api.v1.ProductDTO;
@@ -66,6 +68,7 @@ import org.candlepin.model.GuestId;
 import org.candlepin.model.HypervisorId;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.UpstreamConsumer;
@@ -128,6 +131,8 @@ public class StandardTranslator extends SimpleModelTranslator {
             new JobStatusTranslator(), JobStatus.class, JobStatusDTO.class);
         this.registerTranslator(
             new ProductCertificateTranslator(), ProductCertificate.class, ProductCertificateDTO.class);
+        this.registerTranslator(
+            new PoolQuantityTranslator(), PoolQuantity.class, PoolQuantityDTO.class);
 
         // Event translators
         /////////////////////////////////////////////
