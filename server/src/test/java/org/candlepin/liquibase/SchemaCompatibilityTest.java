@@ -93,10 +93,10 @@ public class SchemaCompatibilityTest {
     }
 
     private List<File> gatherChangesets() throws Exception {
-        PathMatcher xmlMatcher = FileSystems.getDefault().getPathMatcher("glob:*.xml");
+        final PathMatcher xmlMatcher = FileSystems.getDefault().getPathMatcher("glob:*.xml");
         Path resources = Paths.get("src", "main", "resources", "db", "changelog");
 
-        List<File> matches = new ArrayList<File>();
+        final List<File> matches = new ArrayList<File>();
         Files.walkFileTree(resources, new FileVisitor<Path>() {
             @Override
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {

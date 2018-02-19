@@ -51,6 +51,7 @@ import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.ConsumerInstalledProductDTO;
 import org.candlepin.dto.api.v1.GuestIdDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
+import org.candlepin.dto.api.v1.PoolQuantityDTO;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.Certificate;
@@ -1954,7 +1955,7 @@ public class ConsumerResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{consumer_uuid}/entitlements/dry-run")
-    public List<PoolQuantity> dryBind(
+    public List<PoolQuantityDTO> dryBind(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @QueryParam("service_level") String serviceLevel) {
 
@@ -1970,21 +1971,26 @@ public class ConsumerResource {
         try {
             consumerBindUtil.validateServiceLevel(consumer.getOwner(), serviceLevel);
             dryRunPools = entitler.getDryRun(consumer, serviceLevel);
-            if (dryRunPools == null) {
-                return new ArrayList<PoolQuantity>();
-            }
         }
         catch (ForbiddenException fe) {
-            return dryRunPools;
+            return Collections.<PoolQuantityDTO>emptyList();
         }
         catch (BadRequestException bre) {
             throw bre;
         }
         catch (RuntimeException re) {
-            return dryRunPools;
+            return Collections.<PoolQuantityDTO>emptyList();
         }
-
-        return dryRunPools;
+        if (dryRunPools != null) {
+            List<PoolQuantityDTO> dryRunPoolDtos = new ArrayList<PoolQuantityDTO>();
+            for (PoolQuantity pq : dryRunPools) {
+                dryRunPoolDtos.add(this.translator.translate(pq, PoolQuantityDTO.class));
+            }
+            return dryRunPoolDtos;
+        }
+        else {
+            return Collections.<PoolQuantityDTO>emptyList();
+        }
     }
 
     private Entitlement verifyAndLookupEntitlement(String entitlementId) {
