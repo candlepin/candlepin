@@ -64,10 +64,12 @@
     <com.fasterxml.jackson.module-jackson-module-jaxb-annotations.version>2.9.4</com.fasterxml.jackson.module-jackson-module-jaxb-annotations.version>
     <com.fasterxml.jackson.datatype-jackson-datatype-hibernate5.version>2.9.4</com.fasterxml.jackson.datatype-jackson-datatype-hibernate5.version>
     <org.hibernate.javax.persistence-hibernate-jpa-2.1-api.version>1.0.0.Final</org.hibernate.javax.persistence-hibernate-jpa-2.1-api.version>
-    <javax.validation-validation-api.version>1.0.0.GA</javax.validation-validation-api.version>
     <javax.transaction-jta.version>1.1</javax.transaction-jta.version>
     <net.oauth.core-oauth.version>20100527</net.oauth.core-oauth.version>
     <net.oauth.core-oauth-provider.version>20100527</net.oauth.core-oauth-provider.version>
+    <org.hibernate.validator-hibernate-validator.version>6.0.7.Final</org.hibernate.validator-hibernate-validator.version>
+    <org.hibernate.validator-hibernate-validator-annotation-processor.version>6.0.7.Final</org.hibernate.validator-hibernate-validator-annotation-processor.version>
+    <javax.validation-validation-api.version>2.0.1.Final</javax.validation-validation-api.version>
     <org.jmock-jmock.version>2.5.1</org.jmock-jmock.version>
     <org.jmock-jmock-junit4.version>2.5.1</org.jmock-jmock-junit4.version>
   </properties>
@@ -609,17 +611,6 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>javax.validation</groupId>
-      <artifactId>validation-api</artifactId>
-      <version>${javax.validation-validation-api.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>*</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
       <groupId>javax.transaction</groupId>
       <artifactId>jta</artifactId>
       <version>${javax.transaction-jta.version}</version>
@@ -645,6 +636,39 @@
       <groupId>net.oauth.core</groupId>
       <artifactId>oauth-provider</artifactId>
       <version>${net.oauth.core-oauth-provider.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.hibernate.validator</groupId>
+      <artifactId>hibernate-validator</artifactId>
+      <version>${org.hibernate.validator-hibernate-validator.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.hibernate.validator</groupId>
+      <artifactId>hibernate-validator-annotation-processor</artifactId>
+      <version>${org.hibernate.validator-hibernate-validator-annotation-processor.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>javax.validation</groupId>
+      <artifactId>validation-api</artifactId>
+      <version>${javax.validation-validation-api.version}</version>
       <exclusions>
         <exclusion>
           <groupId>*</groupId>

@@ -142,10 +142,10 @@ import org.candlepin.sync.Exporter;
 import org.candlepin.sync.MetaExporter;
 import org.candlepin.sync.RulesExporter;
 import org.candlepin.util.AttributeValidator;
-import org.candlepin.util.FactValidator;
 import org.candlepin.util.DateSource;
 import org.candlepin.util.DateSourceImpl;
 import org.candlepin.util.ExpiryDateFunction;
+import org.candlepin.util.FactValidator;
 import org.candlepin.util.X509ExtensionUtil;
 
 import com.google.common.base.Function;
@@ -159,11 +159,14 @@ import com.google.inject.persist.jpa.JpaPersistModule;
 
 import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
 import org.hibernate.validator.HibernateValidator;
-import org.hibernate.validator.HibernateValidatorConfiguration;
 import org.quartz.JobListener;
 import org.quartz.TriggerListener;
 import org.quartz.spi.JobFactory;
 import org.xnap.commons.i18n.I18n;
+
+import io.swagger.jaxrs.config.BeanConfig;
+import io.swagger.jaxrs.listing.ApiListingResource;
+import io.swagger.jaxrs.listing.SwaggerSerializers;
 
 import java.util.Properties;
 import java.util.concurrent.ScheduledExecutorService;
@@ -173,10 +176,6 @@ import javax.inject.Provider;
 import javax.validation.MessageInterpolator;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
-
-import io.swagger.jaxrs.config.BeanConfig;
-import io.swagger.jaxrs.listing.ApiListingResource;
-import io.swagger.jaxrs.listing.SwaggerSerializers;
 
 
 
@@ -320,11 +319,10 @@ public class CandlepinModule extends AbstractModule {
 
     @Provides
     protected ValidatorFactory getValidationFactory(Provider<MessageInterpolator> interpolatorProvider) {
-        HibernateValidatorConfiguration configure =
-            Validation.byProvider(HibernateValidator.class).configure();
-
-        configure.messageInterpolator(interpolatorProvider.get());
-        return configure.buildValidatorFactory();
+        return Validation.byProvider(HibernateValidator.class)
+            .configure()
+            .messageInterpolator(interpolatorProvider.get())
+            .buildValidatorFactory();
     }
 
     protected void configureJPA() {
