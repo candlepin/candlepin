@@ -14,6 +14,7 @@
  */
 package org.candlepin.sync;
 
+import org.candlepin.dto.manifest.v1.ConsumerTypeDTO;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 
@@ -40,7 +41,12 @@ public class ConsumerTypeImporter {
 
     public ConsumerType createObject(ObjectMapper mapper, Reader reader)
         throws IOException {
-        ConsumerType consumerType = mapper.readValue(reader, ConsumerType.class);
+        ConsumerTypeDTO consumerTypeDTO = mapper.readValue(reader, ConsumerTypeDTO.class);
+
+        ConsumerType consumerType = new ConsumerType();
+        consumerType.setManifest(
+            consumerTypeDTO.isManifest() != null ? consumerTypeDTO.isManifest() : false);
+        consumerType.setLabel(consumerTypeDTO.getLabel());
         consumerType.setId(null);
         return consumerType;
     }

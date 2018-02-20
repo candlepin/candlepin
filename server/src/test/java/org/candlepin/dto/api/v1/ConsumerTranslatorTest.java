@@ -38,7 +38,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Test suite for the UpstreamConsumerTranslator class
+ * Test suite for the ConsumerTranslator class
  */
 @RunWith(JUnitParamsRunner.class)
 public class ConsumerTranslatorTest extends

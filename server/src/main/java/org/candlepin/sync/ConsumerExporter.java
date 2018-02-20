@@ -14,6 +14,8 @@
  */
 package org.candlepin.sync;
 
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.manifest.v1.ConsumerDTO;
 import org.candlepin.model.Consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,15 +29,19 @@ import java.io.Writer;
  */
 public class ConsumerExporter {
 
+    private ModelTranslator translator;
+
     @Inject
-    ConsumerExporter() {
+    ConsumerExporter(ModelTranslator translator) {
+        this.translator = translator;
     }
 
     void export(ObjectMapper mapper, Writer writer, Consumer consumer,
         String weburl, String apiurl) throws IOException {
-        ConsumerDto dto = new ConsumerDto(consumer.getUuid(), consumer.getName(),
-            consumer.getType(), consumer.getOwner(), weburl, apiurl, consumer.getContentAccessMode());
+        ConsumerDTO consumerDTO = this.translator.translate(consumer, ConsumerDTO.class);
 
-        mapper.writeValue(writer, dto);
+        consumerDTO.setUrlApi(apiurl);
+        consumerDTO.setUrlWeb(weburl);
+        mapper.writeValue(writer, consumerDTO);
     }
 }

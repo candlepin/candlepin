@@ -23,6 +23,9 @@ import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.common.util.VersionUtil;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.StandardTranslator;
+import org.candlepin.dto.manifest.v1.ConsumerDTO;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.CandlepinQuery;
@@ -113,13 +116,15 @@ public class ExporterTest {
     private ProductCurator pc;
     private SyncUtils su;
     private ExportExtensionAdapter exportExtensionAdapter;
+    private ModelTranslator translator;
 
     @Before
     public void setUp() {
         ctc = mock(ConsumerTypeCurator.class);
         me = new MetaExporter();
-        ce = new ConsumerExporter();
-        cte = new ConsumerTypeExporter();
+        translator = new StandardTranslator();
+        ce = new ConsumerExporter(translator);
+        cte = new ConsumerTypeExporter(translator);
         rc = mock(RulesCurator.class);
         re = new RulesExporter(rc);
         ece = new EntitlementCertExporter();
@@ -789,15 +794,17 @@ public class ExporterTest {
                 }
             ));
 
-            ConsumerDto c = om.readValue(
-                new FileInputStream("/tmp/" + filename), ConsumerDto.class);
+            ConsumerDTO c = om.readValue(
+                new FileInputStream("/tmp/" + filename), ConsumerDTO.class);
 
             assertEquals("localhost:8443/apiurl", c.getUrlApi());
             assertEquals("localhost:8443/weburl", c.getUrlWeb());
             assertEquals("8auuid", c.getUuid());
             assertEquals("consumer_name", c.getName());
             assertEquals("access_mode", c.getContentAccessMode());
-            assertEquals(new ConsumerType(ConsumerTypeEnum.CANDLEPIN), c.getType());
+            ConsumerType type = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
+            assertEquals(type.getLabel(), c.getType().getLabel());
+            assertEquals(type.getId(), c.getType().getId());
         }
     }
 

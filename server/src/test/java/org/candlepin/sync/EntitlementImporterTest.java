@@ -20,6 +20,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.audit.EventSink;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.StandardTranslator;
+import org.candlepin.dto.manifest.v1.ConsumerDTO;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerial;
@@ -70,24 +73,27 @@ public class EntitlementImporterTest {
     private EntitlementImporter importer;
     private I18n i18n;
     private Consumer consumer;
-    private ConsumerDto consumerDto;
+    private ConsumerDTO consumerDTO;
     private EntitlementCertificate cert;
     private Reader reader;
     private Meta meta;
     private Cdn testCdn;
+    private ModelTranslator translator;
 
 
     @Before
     public void init() {
         this.owner = new Owner();
+        this.translator = new StandardTranslator();
 
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         this.importer = new EntitlementImporter(certSerialCurator, cdnCurator,
             i18n, mockProductCurator);
 
         consumer = TestUtil.createConsumer(owner);
-        consumerDto = new ConsumerDto(consumer.getUuid(), consumer.getName(),
-            consumer.getType(), consumer.getOwner(), "", "", consumer.getContentAccessMode());
+        consumerDTO = this.translator.translate(consumer, ConsumerDTO.class);
+        consumerDTO.setUrlWeb("");
+        consumerDTO.setUrlApi("");
 
         cert = createEntitlementCertificate("my-test-key", "my-cert");
         reader = mock(Reader.class);
@@ -126,7 +132,8 @@ public class EntitlementImporterTest {
         Map<String, Product> productsById = buildProductCache(
             parentProduct, provided1, derivedProduct, derivedProvided1);
 
-        Subscription sub = importer.importObject(om, reader, owner, productsById, consumerDto, meta);
+        Subscription sub = importer.importObject(om, reader, owner,
+            productsById, consumerDTO.getUuid(), meta);
 
         assertEquals(pool.getId(), sub.getUpstreamPoolId());
         assertEquals(consumer.getUuid(), sub.getUpstreamConsumerId());

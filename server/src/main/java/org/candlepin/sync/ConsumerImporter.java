@@ -14,8 +14,11 @@
  */
 package org.candlepin.sync;
 
+import org.candlepin.dto.manifest.v1.ConsumerDTO;
+import org.candlepin.dto.manifest.v1.ConsumerTypeDTO;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
+import org.candlepin.model.ConsumerType;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.IdentityCertificateCurator;
 import org.candlepin.model.Owner;
@@ -51,11 +54,11 @@ public class ConsumerImporter {
         this.serialCurator = serialCurator;
     }
 
-    public ConsumerDto createObject(ObjectMapper mapper, Reader reader) throws IOException {
-        return mapper.readValue(reader, ConsumerDto.class);
+    public ConsumerDTO createObject(ObjectMapper mapper, Reader reader) throws IOException {
+        return mapper.readValue(reader, ConsumerDTO.class);
     }
 
-    public void store(Owner owner, ConsumerDto consumer, ConflictOverrides forcedConflicts,
+    public void store(Owner owner, ConsumerDTO consumer, ConflictOverrides forcedConflicts,
         IdentityCertificate idcert) throws SyncDataFormatException {
 
         if (consumer.getUuid() == null) {
@@ -111,9 +114,13 @@ public class ConsumerImporter {
         }
 
         // create an UpstreamConsumer from the imported ConsumerDto
-        UpstreamConsumer uc = new UpstreamConsumer(consumer.getName(), consumer.getOwner(),
-            consumer.getType(), consumer.getUuid());
+        ConsumerType type = new ConsumerType();
+        populateEntity(type, consumer.getType());
+        Owner consumerDTOOwner = new Owner();
+        consumerDTOOwner.setId(consumer.getOwner());
 
+        UpstreamConsumer uc = new UpstreamConsumer(consumer.getName(),
+            consumerDTOOwner, type, consumer.getUuid());
         uc.setWebUrl(consumer.getUrlWeb());
         uc.setApiUrl(consumer.getUrlApi());
         uc.setIdCert(idcert);
@@ -123,4 +130,40 @@ public class ConsumerImporter {
         curator.merge(owner);
     }
 
+    /**
+     * Populates the specified entity with data from the provided DTO.
+     *
+     * @param entity
+     *  The entity instance to populate
+     *
+     * @param dto
+     *  The DTO containing the data with which to populate the entity
+     *
+     * @throws IllegalArgumentException
+     *  if either entity or dto are null
+     */
+    protected void populateEntity(ConsumerType entity, ConsumerTypeDTO dto) {
+        if (entity == null) {
+            throw new IllegalArgumentException("the consumer type model entity is null");
+        }
+
+        if (dto == null) {
+            throw new IllegalArgumentException("the consumer type dto is null");
+        }
+
+        if (dto.getId() != null) {
+            entity.setId(dto.getId());
+        }
+
+        if (dto.getLabel() != null) {
+            entity.setLabel(dto.getLabel());
+        }
+
+        if (dto.isManifest() != null) {
+            entity.setManifest(dto.isManifest());
+        }
+        else {
+            entity.setManifest(false);
+        }
+    }
 }
