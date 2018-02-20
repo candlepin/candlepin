@@ -26,17 +26,14 @@ import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 
 
@@ -52,52 +49,6 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
      */
     public OwnerProductCurator() {
         super(OwnerProduct.class);
-    }
-
-    public Product getProductById(Owner owner, String productId) {
-        return this.getProductById(owner.getId(), productId);
-    }
-
-    @Transactional
-    public Product getProductById(String ownerId, String productId) {
-        return (Product) this.createSecureCriteria()
-            .createAlias("owner", "owner")
-            .createAlias("product", "product")
-            .setProjection(Projections.property("product"))
-            .add(Restrictions.eq("owner.id", ownerId))
-            .add(Restrictions.eq("product.id", productId))
-            .uniqueResult();
-    }
-
-    public CandlepinQuery<Owner> getOwnersByProduct(Product product) {
-        return this.getOwnersByProduct(product.getId());
-    }
-
-    public CandlepinQuery<Owner> getOwnersByProduct(String productId) {
-        // Impl note:
-        // We have to do this in two queries due to how Hibernate processes projections here. We're
-        // working around a number of issues:
-        //  1. Hibernate does not rearrange a query based on a projection, but instead, performs a
-        //     second query (as we're doing here).
-        //  2. Because the initial query is not rearranged, we are actually pulling a collection of
-        //     join objects, so filtering/sorting via CandlepinQuery is incorrect or broken
-        //  3. The second query Hibernate performs uses the IN operator without any protection for
-        //     the MySQL/MariaDB or Oracle element limits.
-        String jpql = "SELECT op.owner.id FROM OwnerProduct op WHERE op.product.id = :product_id";
-
-        List<String> ids = this.getEntityManager()
-            .createQuery(jpql, String.class)
-            .setParameter("product_id", productId)
-            .getResultList();
-
-        if (ids != null && !ids.isEmpty()) {
-            DetachedCriteria criteria = this.createSecureDetachedCriteria(Owner.class, null)
-                .add(CPRestrictions.in("id", ids));
-
-            return this.cpQueryFactory.<Owner>buildQuery(this.currentSession(), criteria);
-        }
-
-        return this.cpQueryFactory.<Owner>buildQuery();
     }
 
     /**
@@ -241,36 +192,6 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
         return count > 0;
     }
 
-    /**
-     * Filters the given list of Red Hat product IDs by removing the IDs which represent unknown
-     * products for the specified owner.
-     *
-     * @param owner
-     *  The owner to search
-     *
-     * @param productIds
-     *  A collection of Red Hat product IDs to filter
-     *
-     * @return
-     *  A new set containing only product IDs for products which exist for the given owner
-     */
-    @Transactional
-    public Set<String> filterUnknownProductIds(Owner owner, Collection<String> productIds) {
-        Set<String> existingIds = new HashSet<String>();
-
-        if (productIds != null && !productIds.isEmpty()) {
-            existingIds.addAll(this.createSecureCriteria()
-                .createAlias("owner", "owner")
-                .createAlias("product", "product")
-                .setProjection(Projections.property("product.id"))
-                .add(Restrictions.eq("owner.id", owner.getId()))
-                .add(CPRestrictions.in("product.id", productIds))
-                .list());
-        }
-
-        return existingIds;
-    }
-
     @Transactional
     public boolean isProductMappedToOwner(Product product, Owner owner) {
         String jpql = "SELECT count(op) FROM OwnerProduct op " +
@@ -320,42 +241,6 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
         }
 
         return count;
-    }
-
-    @Transactional
-    public boolean removeOwnerFromProduct(Product product, Owner owner) {
-        String jpql = "DELETE FROM OwnerProduct op " +
-            "WHERE op.product.uuid = :product_uuid AND op.owner.id = :owner_id";
-
-        int rows = this.getEntityManager()
-            .createQuery(jpql)
-            .setParameter("owner_id", owner.getId())
-            .setParameter("product_uuid", product.getUuid())
-            .executeUpdate();
-
-        return rows > 0;
-    }
-
-    @Transactional
-    public int clearOwnersForProduct(Product product) {
-        String jpql = "DELETE FROM OwnerProduct op " +
-            "WHERE op.product.uuid = :product_uuid";
-
-        return this.getEntityManager()
-            .createQuery(jpql)
-            .setParameter("product_uuid", product.getUuid())
-            .executeUpdate();
-    }
-
-    @Transactional
-    public int clearProductsForOwner(Owner owner) {
-        String jpql = "DELETE FROM OwnerProduct op " +
-            "WHERE op.owner.id = :owner_id";
-
-        return this.getEntityManager()
-            .createQuery(jpql)
-            .setParameter("owner_id", owner.getId())
-            .executeUpdate();
     }
 
     /**

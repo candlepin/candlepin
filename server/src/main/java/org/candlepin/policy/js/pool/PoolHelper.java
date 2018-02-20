@@ -14,12 +14,12 @@
  */
 package org.candlepin.policy.js.pool;
 
+import org.candlepin.controller.OwnerProductShareManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
@@ -28,7 +28,6 @@ import org.candlepin.model.SourceSubscription;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -182,7 +181,7 @@ public class PoolHelper {
      * @param destination bonus pool
      */
     private static void copyProvidedProducts(Pool source, Pool destination,
-        OwnerProductCurator curator, ProductCurator productCurator) {
+        OwnerProductShareManager shareManager, ProductCurator productCurator) {
         Set<Product> products;
 
         // If the source pool has id filled, we assume that it is stored in the
@@ -209,7 +208,7 @@ public class PoolHelper {
         for (Product product : products) {
             // If no result is returned here, the product has not been correctly imported
             // into the organization, indicating a problem somewhere in the sync or refresh code:
-            Product destprod = curator.getProductById(destination.getOwner(), product.getId());
+            Product destprod = shareManager.resolveProductById(destination.getOwner(), product.getId(), true);
             if (destprod == null) {
                 throw new RuntimeException("Product " + product.getId() +
                     " has not been imported into org " + destination.getOwner().getKey());
@@ -219,7 +218,7 @@ public class PoolHelper {
     }
 
     public static Pool clonePool(Pool sourcePool, Product product, String quantity,
-        Map<String, String> attributes, String subKey, OwnerProductCurator curator,
+        Map<String, String> attributes, String subKey, OwnerProductShareManager shareManager,
         Entitlement sourceEntitlement, ProductCurator productCurator) {
 
         Pool pool = createPool(product, sourcePool.getOwner(), quantity,
@@ -233,7 +232,7 @@ public class PoolHelper {
             pool.setSourceSubscription(new SourceSubscription(srcSub.getSubscriptionId(), subKey));
         }
 
-        copyProvidedProducts(sourcePool, pool, curator, productCurator);
+        copyProvidedProducts(sourcePool, pool, shareManager, productCurator);
 
         // Add in the new attributes
         for (Entry<String, String> entry : attributes.entrySet()) {

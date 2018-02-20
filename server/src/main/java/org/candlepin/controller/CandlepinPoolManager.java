@@ -37,7 +37,6 @@ import org.candlepin.model.Environment;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolCurator;
@@ -66,9 +65,9 @@ import org.candlepin.policy.js.pool.PoolUpdate;
 import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
-import org.candlepin.util.Util;
 import org.candlepin.util.Traceable;
 import org.candlepin.util.TraceableParam;
+import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -124,7 +123,7 @@ public class CandlepinPoolManager implements PoolManager {
     private ContentManager contentManager;
     private OwnerContentCurator ownerContentCurator;
     private OwnerCurator ownerCurator;
-    private OwnerProductCurator ownerProductCurator;
+    private OwnerProductShareManager ownerProductShareManager;
     private PinsetterKernel pinsetterKernel;
     private OwnerManager ownerManager;
     private BindChainFactory bindChainFactory;
@@ -155,7 +154,7 @@ public class CandlepinPoolManager implements PoolManager {
         ContentManager contentManager,
         OwnerContentCurator ownerContentCurator,
         OwnerCurator ownerCurator,
-        OwnerProductCurator ownerProductCurator,
+        OwnerProductShareManager ownerProductShareManager,
         OwnerManager ownerManager,
         PinsetterKernel pinsetterKernel,
         I18n i18n,
@@ -180,7 +179,7 @@ public class CandlepinPoolManager implements PoolManager {
         this.contentManager = contentManager;
         this.ownerContentCurator = ownerContentCurator;
         this.ownerCurator = ownerCurator;
-        this.ownerProductCurator = ownerProductCurator;
+        this.ownerProductShareManager = ownerProductShareManager;
         this.ownerManager = ownerManager;
         this.pinsetterKernel = pinsetterKernel;
         this.i18n = i18n;
@@ -344,7 +343,7 @@ public class CandlepinPoolManager implements PoolManager {
 
             log.debug("Processing subscription: {}", sub);
             Pool pool = this.convertToMasterPoolImpl(sub, owner, importedProducts);
-            this.refreshPoolsForMasterPool(pool, false, lazy, updatedProducts);
+            this.refreshPoolsForMasterPool(pool, false, lazy, updatedProducts, false);
         }
 
         // delete pools whose subscription disappeared:
@@ -395,12 +394,36 @@ public class CandlepinPoolManager implements PoolManager {
         return owner;
     }
 
+    /**
+     * This method is used during update of pools, refreshing owner, manifest import, and also
+     * during share binds.
+     * During share binds, shared pools may need to be updated if the most recent shared product
+     * to this org has changed. in that case, we do not want to update the non-shared pools of this
+     * subscription. we also do not want to delete any migrated pools.
+     *
+     * @param pool the pool representing the subscription to refresh
+     * @param updateStackDerived true if we should update stack derived pools in the refresh as well
+     * @param lazy false if we should regenerate entitlements immediately instead of delay regeneration
+     *             to later when it will be used
+     * @param changedProducts the products that need to be applied/updated on the pool
+     * @param refreshShares true if we should refresh shared pools, false otherwise
+     */
     @Transactional
     void refreshPoolsForMasterPool(Pool pool, boolean updateStackDerived, boolean lazy,
-        Map<String, Product> changedProducts) {
+        Map<String, Product> changedProducts, boolean refreshShares) {
 
-        // These don't all necessarily belong to this owner
-        List<Pool> subscriptionPools = poolCurator.getPoolsBySubscriptionId(pool.getSubscriptionId()).list();
+        List<Pool> allSubscriptionPools = poolCurator.getPoolsBySubscriptionId(pool.getSubscriptionId())
+            .list();
+        List<Pool> subscriptionPools = new LinkedList<>();
+
+        // choose the subset of pools depending on what we are refreshing
+        for (Pool poolToAdd : allSubscriptionPools) {
+            if ((refreshShares && poolToAdd.hasSharedAncestor()) ||
+                !refreshShares && !poolToAdd.hasSharedAncestor()) {
+                subscriptionPools.add(poolToAdd);
+            }
+        }
+
         log.debug("Found {} pools for subscription {}", subscriptionPools.size(), pool.getSubscriptionId());
         if (log.isDebugEnabled()) {
             for (Pool p : subscriptionPools) {
@@ -430,8 +453,11 @@ public class CandlepinPoolManager implements PoolManager {
             }
         }
 
-        // Cleans up pools on other owners who have migrated subs away
-        removeAndDeletePoolsOnOtherOwners(subscriptionPools, pool);
+        // this is only relevant for non-share refresh
+        if (!refreshShares) {
+            // Cleans up pools on other owners who have migrated subs away
+            removeAndDeletePoolsOnOtherOwners(subscriptionPools, pool);
+        }
 
         // capture the original quantity to check for updates later
         Long originalQuantity = pool.getQuantity();
@@ -764,7 +790,8 @@ public class CandlepinPoolManager implements PoolManager {
             this.deletePoolsForSubscriptions(subscriptions);
         }
         else {
-            this.refreshPoolsForMasterPool(pool, false, true, Collections.<String, Product>emptyMap());
+            this.refreshPoolsForMasterPool(pool, false, true, Collections.<String, Product>emptyMap(),
+                false);
         }
     }
 
@@ -969,11 +996,32 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         // Build the product map from the product IDs we pulled off the subscription...
-        for (Product product : this.ownerProductCurator.getProductsByIds(owner, productIds)) {
+        for (Product product : this.ownerProductShareManager.resolveProductsByIds(owner, productIds, true)) {
             productMap.put(product.getId(), product);
         }
 
         return this.convertToMasterPoolImpl(sub, owner, productMap);
+    }
+
+    /**
+     * Refreshes all pools affected in an owner given the products that changed.
+     * All products that affect non-master pools should affect master pools as well,
+     * so refreshing master pools should fix child pools.
+     * @param owner
+     * @param productMap
+     */
+    @Override
+    public void refreshAffectedPools(Owner owner, Map<String, Product> productMap) {
+        List<Pool> affectedPools = poolCurator.listAvailableEntitlementPools(null,
+            owner, productMap.keySet(), null);
+        for (Pool pool : affectedPools) {
+            /* Just refresh normal pools. All products that affect sub pools, have to affect
+             * master pools as well. Simply refreshing master pools will fix all the others */
+            if (pool.getType() == Pool.PoolType.NORMAL) {
+                //TODO: what happens when derived / derProvProds change? this seems missing
+                this.refreshPoolsForMasterPool(pool, true, true, productMap, true);
+            }
+        }
     }
 
     // TODO:

@@ -1249,7 +1249,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
         if (ids != null && !ids.isEmpty()) {
             DetachedCriteria criteria = this.createSecureDetachedCriteria(Pool.class, null)
-                .add(Restrictions.eq("hasSharedAncestor", Boolean.FALSE))
                 .add(CPRestrictions.in("id", ids))
                 .addOrder(Order.asc("id"));
 

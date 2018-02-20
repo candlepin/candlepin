@@ -17,6 +17,7 @@ package org.candlepin.model;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
+import org.candlepin.controller.OwnerProductShareManager;
 
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
@@ -63,20 +64,20 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     private static Logger log = LoggerFactory.getLogger(EntitlementCurator.class);
 
     private CandlepinQueryFactory cpQueryFactory;
-    private OwnerProductCurator ownerProductCurator;
     private ProductCurator productCurator;
+    private OwnerProductShareManager shareManager;
 
     /**
      * default ctor
      */
     @Inject
-    public EntitlementCurator(OwnerProductCurator ownerProductCurator, ProductCurator productCurator,
+    public EntitlementCurator(OwnerProductShareManager shareManager, ProductCurator productCurator,
         CandlepinQueryFactory cpQueryFactory) {
         super(Entitlement.class);
 
         this.cpQueryFactory = cpQueryFactory;
-        this.ownerProductCurator = ownerProductCurator;
         this.productCurator = productCurator;
+        this.shareManager = shareManager;
     }
 
     // TODO: handles addition of new entitlements only atm!
@@ -416,7 +417,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
 
         // No need to add filters when matching by product.
         if (object != null && productId != null) {
-            Product p = this.ownerProductCurator.getProductById(owner, productId);
+            Product p = this.shareManager.resolveProductById(owner, productId, true);
             if (p == null) {
                 throw new BadRequestException(i18n.tr(
                     "Product with ID ''{0}'' could not be found.", productId));

@@ -15,7 +15,6 @@
 package org.candlepin.model;
 
 import static org.junit.Assert.*;
-import static org.hamcrest.Matchers.*;
 
 import org.candlepin.model.activationkeys.ActivationKey;
 
@@ -74,10 +73,10 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         Product product = this.createProduct();
         this.createOwnerProductMapping(owner, product);
 
-        Product resultA = this.ownerProductCurator.getProductById(owner, product.getId());
+        Product resultA = this.productShareManager.resolveProductById(owner, product.getId(), false);
         assertEquals(resultA, product);
 
-        Product resultB = this.ownerProductCurator.getProductById(owner.getId(), product.getId());
+        Product resultB = this.productShareManager.resolveProductById(owner, product.getId(), true);
         assertEquals(resultB, product);
 
         assertSame(resultA, resultB);
@@ -88,10 +87,10 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         Owner owner = this.createOwner();
         Product product = this.createProduct();
 
-        Product resultA = this.ownerProductCurator.getProductById(owner, product.getId());
+        Product resultA = this.productShareManager.resolveProductById(owner, product.getId(), true);
         assertNull(resultA);
 
-        Product resultB = this.ownerProductCurator.getProductById(owner.getId(), product.getId());
+        Product resultB = this.productShareManager.resolveProductById(owner, product.getId(), true);
         assertNull(resultB);
     }
 
@@ -102,43 +101,11 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         Product product2 = this.createProduct();
         this.createOwnerProductMapping(owner, product1);
 
-        Product resultA = this.ownerProductCurator.getProductById(owner, product2.getId());
+        Product resultA = this.productShareManager.resolveProductById(owner, product2.getId(), true);
         assertNull(resultA);
 
-        Product resultB = this.ownerProductCurator.getProductById(owner.getId(), product2.getId());
+        Product resultB = this.productShareManager.resolveProductById(owner, product2.getId(), true);
         assertNull(resultB);
-    }
-
-    @Test
-    public void testGetOwnersByProduct() {
-        Owner owner1 = this.createOwner();
-        Owner owner2 = this.createOwner();
-        Owner owner3 = this.createOwner();
-        Product product = this.createProduct();
-        this.createOwnerProductMapping(owner1, product);
-        this.createOwnerProductMapping(owner2, product);
-
-        Collection<Owner> ownersA = this.ownerProductCurator.getOwnersByProduct(product).list();
-        Collection<Owner> ownersB = this.ownerProductCurator.getOwnersByProduct(product.getId()).list();
-
-        assertTrue(ownersA.contains(owner1));
-        assertTrue(ownersA.contains(owner2));
-        assertFalse(ownersA.contains(owner3));
-        assertEquals(ownersA, ownersB);
-    }
-
-    @Test
-    public void testGetOwnersByProductWithUnmappedProduct() {
-        Owner owner1 = this.createOwner();
-        Owner owner2 = this.createOwner();
-        Owner owner3 = this.createOwner();
-        Product product = this.createProduct();
-
-        Collection<Owner> ownersA = this.ownerProductCurator.getOwnersByProduct(product).list();
-        Collection<Owner> ownersB = this.ownerProductCurator.getOwnersByProduct(product.getId()).list();
-
-        assertTrue(ownersA.isEmpty());
-        assertTrue(ownersB.isEmpty());
     }
 
     @Test
@@ -384,126 +351,6 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         assertFalse(this.isProductMappedToOwner(product1, owner3));
         assertFalse(this.isProductMappedToOwner(product2, owner3));
         assertFalse(this.isProductMappedToOwner(product3, owner3));
-    }
-
-    @Test
-    public void testRemoveProductFromOwner() {
-        Owner owner1 = this.createOwner();
-        Owner owner2 = this.createOwner();
-        Owner owner3 = this.createOwner();
-        Product product1 = this.createProduct();
-        Product product2 = this.createProduct();
-        Product product3 = this.createProduct();
-
-        List<Owner> owners = Arrays.asList(owner1, owner2, owner3);
-        List<Product> products = Arrays.asList(product1, product2, product3);
-
-        this.createOwnerProductMapping(owner1, product1);
-        this.createOwnerProductMapping(owner1, product2);
-        this.createOwnerProductMapping(owner1, product3);
-        this.createOwnerProductMapping(owner2, product1);
-        this.createOwnerProductMapping(owner2, product2);
-        this.createOwnerProductMapping(owner2, product3);
-        this.createOwnerProductMapping(owner3, product1);
-        this.createOwnerProductMapping(owner3, product2);
-        this.createOwnerProductMapping(owner3, product3);
-
-        int removed = 0;
-        for (int i = 0; i < owners.size(); ++i) {
-            for (int j = 0; j < products.size(); ++j) {
-                int offset = 0;
-
-                for (Owner owner : owners) {
-                    for (Product product : products) {
-                        if (removed > offset++) {
-                            assertFalse(this.isProductMappedToOwner(product, owner));
-                        }
-                        else {
-                            assertTrue(this.isProductMappedToOwner(product, owner));
-                        }
-                    }
-                }
-
-                boolean result = this.ownerProductCurator.removeOwnerFromProduct(
-                    products.get(j), owners.get(i)
-                );
-
-                assertTrue(result);
-
-                result = this.ownerProductCurator.removeOwnerFromProduct(
-                    products.get(j), owners.get(i)
-                );
-
-                assertFalse(result);
-
-
-                ++removed;
-            }
-        }
-    }
-
-    @Test
-    public void testClearOwnersForProduct() {
-        Owner owner1 = this.createOwner();
-        Owner owner2 = this.createOwner();
-        Owner owner3 = this.createOwner();
-        Product product1 = this.createProduct();
-        Product product2 = this.createProduct();
-        Product product3 = this.createProduct();
-
-        this.createOwnerProductMapping(owner1, product1);
-        this.createOwnerProductMapping(owner1, product2);
-        this.createOwnerProductMapping(owner1, product3);
-        this.createOwnerProductMapping(owner2, product1);
-        this.createOwnerProductMapping(owner2, product2);
-        this.createOwnerProductMapping(owner2, product3);
-        this.createOwnerProductMapping(owner3, product1);
-        this.createOwnerProductMapping(owner3, product2);
-        this.createOwnerProductMapping(owner3, product3);
-
-        this.ownerProductCurator.clearOwnersForProduct(product1);
-
-        assertFalse(this.isProductMappedToOwner(product1, owner1));
-        assertTrue(this.isProductMappedToOwner(product2, owner1));
-        assertTrue(this.isProductMappedToOwner(product3, owner1));
-        assertFalse(this.isProductMappedToOwner(product1, owner2));
-        assertTrue(this.isProductMappedToOwner(product2, owner2));
-        assertTrue(this.isProductMappedToOwner(product3, owner2));
-        assertFalse(this.isProductMappedToOwner(product1, owner3));
-        assertTrue(this.isProductMappedToOwner(product2, owner3));
-        assertTrue(this.isProductMappedToOwner(product3, owner3));
-    }
-
-    @Test
-    public void testClearProductsForOwner() {
-        Owner owner1 = this.createOwner();
-        Owner owner2 = this.createOwner();
-        Owner owner3 = this.createOwner();
-        Product product1 = this.createProduct();
-        Product product2 = this.createProduct();
-        Product product3 = this.createProduct();
-
-        this.createOwnerProductMapping(owner1, product1);
-        this.createOwnerProductMapping(owner1, product2);
-        this.createOwnerProductMapping(owner1, product3);
-        this.createOwnerProductMapping(owner2, product1);
-        this.createOwnerProductMapping(owner2, product2);
-        this.createOwnerProductMapping(owner2, product3);
-        this.createOwnerProductMapping(owner3, product1);
-        this.createOwnerProductMapping(owner3, product2);
-        this.createOwnerProductMapping(owner3, product3);
-
-        this.ownerProductCurator.clearProductsForOwner(owner1);
-
-        assertFalse(this.isProductMappedToOwner(product1, owner1));
-        assertFalse(this.isProductMappedToOwner(product2, owner1));
-        assertFalse(this.isProductMappedToOwner(product3, owner1));
-        assertTrue(this.isProductMappedToOwner(product1, owner2));
-        assertTrue(this.isProductMappedToOwner(product2, owner2));
-        assertTrue(this.isProductMappedToOwner(product3, owner2));
-        assertTrue(this.isProductMappedToOwner(product1, owner3));
-        assertTrue(this.isProductMappedToOwner(product2, owner3));
-        assertTrue(this.isProductMappedToOwner(product3, owner3));
     }
 
     @Test

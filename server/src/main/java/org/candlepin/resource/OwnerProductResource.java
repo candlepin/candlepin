@@ -14,17 +14,17 @@
  */
 package org.candlepin.resource;
 
-import org.apache.commons.lang3.StringUtils;
 import org.candlepin.auth.Verify;
 import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.controller.OwnerProductShareManager;
 import org.candlepin.controller.ProductManager;
 import org.candlepin.model.Content;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
@@ -36,18 +36,28 @@ import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.pinsetter.tasks.RefreshPoolsForProductJob;
-import org.candlepin.util.ElementTransformer;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.quartz.JobDetail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Authorization;
+
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -63,14 +73,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.annotations.Authorization;
 
 /**
  * API Gateway into /product
@@ -90,12 +94,13 @@ public class OwnerProductResource {
     private ProductCertificateCurator productCertCurator;
     private ProductCurator productCurator;
     private ProductManager productManager;
+    private OwnerProductShareManager shareManager;
 
     @Inject
     public OwnerProductResource(Configuration config, I18n i18n, OwnerCurator ownerCurator,
         OwnerContentCurator ownerContentCurator, OwnerProductCurator ownerProductCurator,
         ProductCertificateCurator productCertCurator, ProductCurator productCurator,
-        ProductManager productManager) {
+        ProductManager productManager, OwnerProductShareManager shareManager) {
 
         this.config = config;
         this.i18n = i18n;
@@ -105,6 +110,7 @@ public class OwnerProductResource {
         this.productCertCurator = productCertCurator;
         this.productCurator = productCurator;
         this.productManager = productManager;
+        this.shareManager = shareManager;
     }
 
     /**
@@ -149,8 +155,8 @@ public class OwnerProductResource {
      * @return
      *  the Product instance for the product with the specified id
      */
-    protected Product fetchProduct(Owner owner, String productId) {
-        Product product = this.ownerProductCurator.getProductById(owner, productId);
+    protected Product fetchProduct(Owner owner, String productId, boolean includeShares) {
+        Product product = this.shareManager.resolveProductById(owner, productId, includeShares);
 
         if (product == null) {
             throw new NotFoundException(
@@ -194,22 +200,20 @@ public class OwnerProductResource {
         response = Product.class, responseContainer = "list")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public CandlepinQuery<ProductData> listProducts(
+    public List<ProductData> listProducts(
         @Verify(Owner.class) @PathParam("owner_key") String ownerKey,
-        @QueryParam("product") List<String> productIds) {
+        @QueryParam("product") List<String> productIds,
+        @Context PageRequest pageRequest) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
-
-        CandlepinQuery<Product> query = productIds != null && !productIds.isEmpty() ?
-            this.ownerProductCurator.getProductsByIds(owner, productIds) :
-            this.ownerProductCurator.getProductsByOwner(owner);
-
-        return query.transform(new ElementTransformer<Product, ProductData>() {
-            @Override
-            public ProductData transform(Product element) {
-                return element.toDTO();
-            }
-        });
+        List<ProductData> result = new ArrayList<ProductData>();
+        List<Product> products = CollectionUtils.isNotEmpty(productIds) ?
+            this.shareManager.resolveProductsByIds(owner, productIds, true) :
+            this.shareManager.resolveAllProducts(owner, true);
+        for (Product product : products) {
+            result.add(product.toDTO());
+        }
+        return result;
     }
 
     @ApiOperation(notes = "Retrieves a single Product", value = "getProduct")
@@ -223,9 +227,16 @@ public class OwnerProductResource {
         @PathParam("product_id") String productId) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
-        Product product = this.fetchProduct(owner, productId);
-
-        return product.toDTO();
+        List<Product> products = this.shareManager.resolveProductsByIds(owner,
+            Collections.singleton(productId), true);
+        if (products.size() > 0) {
+            return products.iterator().next().toDTO();
+        }
+        else {
+            throw new NotFoundException(
+                i18n.tr("Product with ID \"{0}\" could not be found.", productId)
+            );
+        }
     }
 
     @ApiOperation(notes = "Retrieves a Certificate for a Product", value = "getProductCertificate")
@@ -245,7 +256,7 @@ public class OwnerProductResource {
         }
 
         Owner owner = this.getOwnerByKey(ownerKey);
-        Product product = this.fetchProduct(owner, productId);
+        Product product = this.fetchProduct(owner, productId, true);
 
         return this.productCertCurator.getCertForProduct(product);
     }
@@ -288,7 +299,7 @@ public class OwnerProductResource {
         }
 
         Owner owner = this.getOwnerByKey(ownerKey);
-        Product existing = this.fetchProduct(owner, productId);
+        Product existing = this.fetchProduct(owner, productId, false);
 
         if (existing.isLocked()) {
             throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", existing.getId()));
@@ -311,7 +322,7 @@ public class OwnerProductResource {
         @ApiParam(name = "contentMap", required = true) Map<String, Boolean> contentMap) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
-        Product product = this.fetchProduct(owner, productId);
+        Product product = this.fetchProduct(owner, productId, false);
         Collection<ProductContent> productContent = new LinkedList<ProductContent>();
 
         if (product.isLocked()) {
@@ -343,7 +354,7 @@ public class OwnerProductResource {
         @QueryParam("enabled") Boolean enabled) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
-        Product product = this.fetchProduct(owner, productId);
+        Product product = this.fetchProduct(owner, productId, false);
         Content content = this.fetchContent(owner, contentId);
 
         if (product.isLocked()) {
@@ -370,7 +381,7 @@ public class OwnerProductResource {
         @PathParam("content_id") String contentId) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
-        Product product = this.fetchProduct(owner, productId);
+        Product product = this.fetchProduct(owner, productId, false);
         Content content = this.fetchContent(owner, contentId);
 
         if (product.isLocked()) {
@@ -392,7 +403,7 @@ public class OwnerProductResource {
         @PathParam("product_id") String productId) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
-        Product product = this.fetchProduct(owner, productId);
+        Product product = this.fetchProduct(owner, productId, false);
 
         if (product.isLocked()) {
             throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", product.getId()));
@@ -427,7 +438,7 @@ public class OwnerProductResource {
         }
 
         Owner owner = this.getOwnerByKey(ownerKey);
-        Product product = this.fetchProduct(owner, productId);
+        Product product = this.fetchProduct(owner, productId, true);
 
         return RefreshPoolsForProductJob.forProduct(product, lazyRegen);
     }

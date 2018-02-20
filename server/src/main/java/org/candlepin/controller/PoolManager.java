@@ -66,6 +66,8 @@ public interface PoolManager {
 
     Pool convertToMasterPool(Subscription subscription);
 
+    void refreshAffectedPools(Owner owner, Map<String, Product> productMap);
+
     /**
      * Applies changes to the given pool to itself and any of its derived pools. This may result in
      * a deletion of the pool if it has been expired as a result of the changes.

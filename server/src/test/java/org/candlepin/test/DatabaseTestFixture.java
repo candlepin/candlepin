@@ -27,6 +27,7 @@ import org.candlepin.auth.permissions.Permission;
 import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.CandlepinCommonTestConfig;
+import org.candlepin.controller.OwnerProductShareManager;
 import org.candlepin.guice.CandlepinRequestScope;
 import org.candlepin.guice.TestPrincipalProviderSetter;
 import org.candlepin.junit.CandlepinLiquibaseResource;
@@ -57,13 +58,14 @@ import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerInfoCurator;
 import org.candlepin.model.OwnerProductCurator;
+import org.candlepin.model.OwnerProductShare;
+import org.candlepin.model.OwnerProductShareCurator;
 import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.model.ProductShareCurator;
 import org.candlepin.model.Role;
 import org.candlepin.model.RoleCurator;
 import org.candlepin.model.SourceSubscription;
@@ -99,6 +101,7 @@ import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -155,7 +158,8 @@ public class DatabaseTestFixture {
     @Inject protected PoolCurator poolCurator;
     @Inject protected RoleCurator roleCurator;
     @Inject protected UserCurator userCurator;
-    @Inject protected ProductShareCurator productShareCurator;
+    @Inject protected OwnerProductShareCurator productShareCurator;
+    @Inject protected OwnerProductShareManager productShareManager;
 
     @Inject protected ResourceLocatorMap locatorMap;
 
@@ -597,6 +601,19 @@ public class DatabaseTestFixture {
         this.ownerProductCurator.mapProductToOwners(product, owners);
 
         return product;
+    }
+
+    public OwnerProductShare createShare(Owner sharingOwner, Owner recipientOwner, Product product,
+        boolean active) {
+        OwnerProductShare share = new OwnerProductShare();
+        share.setActive(active);
+        share.setProduct(product);
+        share.setSharingOwner(sharingOwner);
+        share.setRecipientOwner(recipientOwner);
+        share.setProductId(product.getId());
+        share.setShareDate(new Date());
+        productShareCurator.saveOrUpdateAll(Collections.singleton(share), true, false);
+        return share;
     }
 
     protected Principal setupPrincipal(Owner owner, Access role) {

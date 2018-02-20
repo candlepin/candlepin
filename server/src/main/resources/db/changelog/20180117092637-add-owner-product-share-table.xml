@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <!-- Include definitions for cert.type, timestamp.type, etc. -->
+    <include file="db/changelog/datatypes.xml"/>
+
+    <changeSet id="20180117092637-1" author="vrjain">
+        <comment>Drop legacy product share table</comment>
+        <dropTable tableName="cp2_product_shares"/>
+    </changeSet>
+
+    <changeSet id="20180117092637-2" author="vrjain">
+        <comment> add owner product share table</comment>
+        <createTable tableName="cp2_owner_product_shares">
+            <column name="id" type="varchar(32)">
+                <constraints primaryKey="true" primaryKeyName="cp2_owner_product_shares_pk"/>
+            </column>
+            <column name="product_id" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sharing_owner_product_uuid" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sharing_owner_id" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="recipient_owner_id" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="share_date" type="${timestamp.type}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="${timestamp.type}"/>
+            <column name="updated" type="${timestamp.type}"/>
+            <column name="active" type="BOOLEAN"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20180117092637-3" author="vrjain">
+        <addForeignKeyConstraint constraintName="cp2_owner_product_share_fk1"
+            onDelete="CASCADE"
+            baseTableName="cp2_owner_product_shares"
+            baseColumnNames="sharing_owner_id"
+            referencedTableName="cp_owner"
+            referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="20180117092637-4" author="vrjain">
+        <addForeignKeyConstraint constraintName="cp2_owner_product_share_fk2"
+            onDelete="CASCADE"
+            baseTableName="cp2_owner_product_shares"
+            baseColumnNames="recipient_owner_id"
+            referencedTableName="cp_owner"
+            referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="20180117092637-5" author="vrjain">
+        <addForeignKeyConstraint constraintName="cp2_product_share_fk3"
+            baseTableName="cp2_owner_product_shares"
+            baseColumnNames="sharing_owner_id, sharing_owner_product_uuid"
+            referencedTableName="cp2_owner_products"
+            referencedColumnNames="owner_id, product_uuid"/>
+    </changeSet>
+
+</databaseChangeLog>
+<!-- vim: set expandtab sts=4 sw=4 ai: -->

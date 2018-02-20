@@ -15,14 +15,14 @@
 package org.candlepin.policy.js.entitlement;
 
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.controller.OwnerProductShareManager;
 import org.candlepin.controller.PoolManager;
-import org.candlepin.controller.ProductManager;
 import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -31,11 +31,9 @@ import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.model.ProductShareCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.dto.Subscription;
@@ -79,7 +77,7 @@ public class EntitlementRulesTestFixture {
     @Mock
     protected EntitlementCurator entCurMock;
     @Mock
-    protected OwnerProductCurator ownerProductCuratorMock;
+    protected OwnerProductShareManager ownerProductShareManager;
     @Mock
     private Provider<JsRunnerRequestCache> cacheProvider;
     @Mock
@@ -89,13 +87,11 @@ public class EntitlementRulesTestFixture {
     @Mock
     private OwnerCurator ownerCurator;
     @Mock
-    protected ProductShareCurator productShareCurator;
+    protected OwnerProductShareManager productShareManager;
     @Mock
-    protected ProductManager productManager;
+    private EventFactory eventFactory;
     @Mock
-    protected EventSink eventSink;
-    @Mock
-    protected EventFactory eventFactory;
+    private EventSink eventSink;
 
     protected Owner owner;
     protected Consumer consumer;
@@ -127,9 +123,7 @@ public class EntitlementRulesTestFixture {
             productCurator,
             new RulesObjectMapper(new ProductCachedSerializationModule(productCurator)),
             ownerCurator,
-            ownerProductCuratorMock,
-            productShareCurator,
-            productManager,
+            productShareManager,
             eventSink,
             eventFactory
         );
@@ -138,7 +132,7 @@ public class EntitlementRulesTestFixture {
         consumer = new Consumer("test consumer", "test user", owner,
             new ConsumerType(ConsumerTypeEnum.SYSTEM));
 
-        poolRules = new PoolRules(poolManagerMock, config, entCurMock, ownerProductCuratorMock,
+        poolRules = new PoolRules(poolManagerMock, config, entCurMock, ownerProductShareManager,
                 productCurator);
     }
 
@@ -146,7 +140,7 @@ public class EntitlementRulesTestFixture {
         String virtLimit) {
         Product product = TestUtil.createProduct(productId, productId);
         product.setAttribute(Product.Attributes.VIRT_LIMIT, virtLimit);
-        when(ownerProductCuratorMock.getProductById(owner, productId)).thenReturn(product);
+        when(ownerProductShareManager.resolveProductById(owner, productId, true)).thenReturn(product);
         Subscription s = TestUtil.createSubscription(owner, product);
         s.setQuantity(new Long(quantity));
         s.setId("subId");

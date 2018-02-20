@@ -14,23 +14,19 @@
  */
 package org.candlepin.policy;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.controller.OwnerProductShareManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
@@ -74,7 +70,7 @@ public class PoolRulesTest {
     @Mock private PoolManager poolManagerMock;
     @Mock private Configuration configMock;
     @Mock private EntitlementCurator entCurMock;
-    @Mock private OwnerProductCurator ownerProdCuratorMock;
+    @Mock private OwnerProductShareManager ownerProdShareManager;
     @Mock private ProductCurator  productCurator;
 
     private UserPrincipal principal;
@@ -92,7 +88,7 @@ public class PoolRulesTest {
 
         when(configMock.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
 
-        poolRules = new PoolRules(poolManagerMock, configMock, entCurMock, ownerProdCuratorMock,
+        poolRules = new PoolRules(poolManagerMock, configMock, entCurMock, ownerProdShareManager,
                 productCurator);
         principal = TestUtil.createOwnerPrincipal();
         owner = principal.getOwners().get(0);
@@ -103,7 +99,7 @@ public class PoolRulesTest {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Product product = TestUtil.createProduct();
 
-        when(this.ownerProdCuratorMock.getProductById(owner, product.getId())).thenReturn(product);
+        when(this.ownerProdShareManager.resolveProductById(owner, product.getId(), true)).thenReturn(product);
         Pool p = TestUtil.createPool(owner, product);
         p.getProduct().setAttribute(Product.Attributes.VIRT_LIMIT, "badvalue");
         p.setQuantity(10L);
@@ -492,12 +488,13 @@ public class PoolRulesTest {
         Product derivedProvidedProd1 = TestUtil.createProduct();
         Product derivedProvidedProd2 = TestUtil.createProduct();
 
-        when(ownerProdCuratorMock.getProductById(owner, provided1.getId())).thenReturn(provided1);
-        when(ownerProdCuratorMock.getProductById(owner, provided2.getId())).thenReturn(provided2);
-        when(ownerProdCuratorMock.getProductById(owner, derivedProd.getId())).thenReturn(derivedProd);
-        when(ownerProdCuratorMock.getProductById(owner, derivedProvidedProd1.getId()))
+        when(ownerProdShareManager.resolveProductById(owner, provided1.getId(), true)).thenReturn(provided1);
+        when(ownerProdShareManager.resolveProductById(owner, provided2.getId(), true)).thenReturn(provided2);
+        when(ownerProdShareManager.resolveProductById(owner, derivedProd.getId(), true))
+            .thenReturn(derivedProd);
+        when(ownerProdShareManager.resolveProductById(owner, derivedProvidedProd1.getId(), true))
             .thenReturn(derivedProvidedProd1);
-        when(ownerProdCuratorMock.getProductById(owner, derivedProvidedProd2.getId()))
+        when(ownerProdShareManager.resolveProductById(owner, derivedProvidedProd2.getId(), true))
             .thenReturn(derivedProvidedProd2);
 
         p.setId("mockPoolRuleTestID");
@@ -601,29 +598,29 @@ public class PoolRulesTest {
 
         Product product = TestUtil.createProduct(productId, productId);
         product.setAttribute(Product.Attributes.VIRT_LIMIT, Integer.toString(virtLimit));
-        when(ownerProdCuratorMock.getProductById(owner, product.getId()))
+        when(ownerProdShareManager.resolveProductById(owner, product.getId(), true))
             .thenReturn(product);
 
         Product derivedProd = TestUtil.createProduct(derivedProductId, derivedProductId);
         // We'll look for this to make sure it makes it to correct pools:
         derivedProd.setAttribute(DERIVED_ATTR, "nobodycares");
-        when(ownerProdCuratorMock.getProductById(owner, derivedProd.getId()))
+        when(ownerProdShareManager.resolveProductById(owner, derivedProd.getId(), true))
             .thenReturn(derivedProd);
 
         // Create some provided products:
         Product provided1 = TestUtil.createProduct();
-        when(ownerProdCuratorMock.getProductById(owner, provided1.getId()))
+        when(ownerProdShareManager.resolveProductById(owner, provided1.getId(), true))
             .thenReturn(provided1);
         Product provided2 = TestUtil.createProduct();
-        when(ownerProdCuratorMock.getProductById(owner, provided2.getId()))
+        when(ownerProdShareManager.resolveProductById(owner, provided2.getId(), true))
             .thenReturn(provided2);
 
         // Create some derived provided products:
         Product derivedProvided1 = TestUtil.createProduct();
-        when(ownerProdCuratorMock.getProductById(owner, derivedProvided1.getId()))
+        when(ownerProdShareManager.resolveProductById(owner, derivedProvided1.getId(), true))
             .thenReturn(derivedProvided1);
         Product derivedProvided2 = TestUtil.createProduct();
-        when(ownerProdCuratorMock.getProductById(owner, derivedProvided2.getId()))
+        when(ownerProdShareManager.resolveProductById(owner, derivedProvided2.getId(), true))
             .thenReturn(derivedProvided2);
 
 

@@ -60,16 +60,18 @@ public class ProductManager {
     private OwnerContentCurator ownerContentCurator;
     private OwnerProductCurator ownerProductCurator;
     private ProductCurator productCurator;
+    private OwnerProductShareManager ownerProductShareManager;
 
     @Inject
     public ProductManager(EntitlementCertificateGenerator entitlementCertGenerator,
         OwnerContentCurator ownerContentCurator, OwnerProductCurator ownerProductCurator,
-        ProductCurator productCurator) {
+        ProductCurator productCurator, OwnerProductShareManager ownerProductShareManager) {
 
         this.entitlementCertGenerator = entitlementCertGenerator;
         this.ownerContentCurator = ownerContentCurator;
         this.ownerProductCurator = ownerProductCurator;
         this.productCurator = productCurator;
+        this.ownerProductShareManager = ownerProductShareManager;
     }
 
     /**
@@ -173,7 +175,7 @@ public class ProductManager {
 
         // Resolve the entity to ensure we're working with the merged entity, and to ensure it's
         // already been created.
-        Product entity = this.ownerProductCurator.getProductById(owner, update.getId());
+        Product entity = this.ownerProductShareManager.resolveProductById(owner, update.getId(), false);
 
         if (entity == null) {
             // If we're doing an exclusive update, this should be an error condition
@@ -454,7 +456,7 @@ public class ProductManager {
         }
 
         // This has to fetch a new instance, or we'll be unable to compare the objects
-        Product existing = this.ownerProductCurator.getProductById(owner, entity.getId());
+        Product existing = this.ownerProductShareManager.resolveProductById(owner, entity.getId(), false);
         if (existing == null) {
             // If we're doing an exclusive update, this should be an error condition
             throw new IllegalStateException("Product has not yet been created");

@@ -152,7 +152,7 @@ public class Refresher {
              */
             Pool masterPool = poolManager.convertToMasterPool(subscription);
             poolManager.refreshPoolsForMasterPool(masterPool, true, lazy,
-                Collections.<String, Product>emptyMap());
+                Collections.<String, Product>emptyMap(), false);
         }
 
         for (Owner owner : this.owners.values()) {

@@ -17,7 +17,6 @@ package org.candlepin.controller;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.AdditionalAnswers.*;
 
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
@@ -53,7 +52,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
 
         this.productManager = new ProductManager(
             this.mockEntCertGenerator, this.ownerContentCurator, this.ownerProductCurator,
-            this.productCurator
+            this.productCurator, this.productShareManager
         );
 
         this.contentManager = new ContentManager(
@@ -152,7 +151,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
         // The product should have also changed in the same way as a result of the content change
         assertNotNull(this.productCurator.find(product.getUuid()));
         assertEquals(0, this.ownerProductCurator.getOwnerCount(product));
-        assertNotNull(this.ownerProductCurator.getProductById(owner, product.getId()));
+        assertNotNull(this.productShareManager.resolveProductById(owner, product.getId(), false));
 
         if (regenCerts) {
             verify(this.mockEntCertGenerator, times(1)).regenerateCertificatesOf(

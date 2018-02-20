@@ -22,11 +22,11 @@ import static org.mockito.Mockito.when;
 
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
+import org.candlepin.controller.OwnerProductShareManager;
 import org.candlepin.controller.ProductManager;
 import org.candlepin.model.Content;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.ProductCertificate;
@@ -63,7 +63,7 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
     public void setup() {
         this.ownerProductResource = new OwnerProductResource(this.config, this.i18n, this.ownerCurator,
             this.ownerContentCurator, this.ownerProductCurator, this.productCertificateCurator,
-            this.productCurator, this.productManager
+            this.productCurator, this.productManager, this.productShareManager
         );
     }
 
@@ -94,10 +94,10 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
         Owner owner = this.createOwner("Example-Corporation");
         ProductData productData = this.buildTestProductDTO();
 
-        assertNull(this.ownerProductCurator.getProductById(owner.getKey(), productData.getId()));
+        assertNull(this.productShareManager.resolveProductById(owner, productData.getId(), false));
 
         ProductData result = this.ownerProductResource.createProduct(owner.getKey(), productData);
-        Product entity = this.ownerProductCurator.getProductById(owner, productData.getId());
+        Product entity = this.productShareManager.resolveProductById(owner, productData.getId(), false);
 
         assertNotNull(result);
         assertNotNull(entity);
@@ -112,10 +112,10 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
         ContentData contentData = content.toDTO();
         productData.addContent(contentData, true);
 
-        assertNull(this.ownerProductCurator.getProductById(owner.getKey(), productData.getId()));
+        assertNull(this.productShareManager.resolveProductById(owner, productData.getId(), false));
 
         ProductData result = this.ownerProductResource.createProduct(owner.getKey(), productData);
-        Product entity = this.ownerProductCurator.getProductById(owner, productData.getId());
+        Product entity = this.productShareManager.resolveProductById(owner, productData.getId(), false);
 
         assertNotNull(result);
         assertNotNull(entity);
@@ -153,17 +153,18 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
     @Test(expected = BadRequestException.class)
     public void testDeleteProductWithSubscriptions() {
         OwnerCurator oc = mock(OwnerCurator.class);
-        OwnerProductCurator opc = mock(OwnerProductCurator.class);
+        OwnerProductShareManager opsm = mock(OwnerProductShareManager.class);
         ProductCurator pc = mock(ProductCurator.class);
         I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
 
-        OwnerProductResource pr = new OwnerProductResource(config, i18n, oc, null, opc, null, pc, null);
+        OwnerProductResource pr = new OwnerProductResource(config, i18n, oc, null, null, null, pc, null,
+            opsm);
 
         Owner o = mock(Owner.class);
         Product p = mock(Product.class);
 
         when(oc.lookupByKey(eq("owner"))).thenReturn(o);
-        when(opc.getProductById(eq(o), eq("10"))).thenReturn(p);
+        when(opsm.resolveProductById(eq(o), eq("10"), eq(false))).thenReturn(p);
 
         Set<Subscription> subs = new HashSet<Subscription>();
         Subscription s = mock(Subscription.class);
@@ -181,13 +182,13 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
         product.setLocked(true);
         this.productCurator.merge(product);
 
-        assertNotNull(this.ownerProductCurator.getProductById(owner, productData.getId()));
+        assertNotNull(this.productShareManager.resolveProductById(owner, productData.getId(), false));
 
         try {
             this.ownerProductResource.updateProduct(owner.getKey(), productData.getId(), productData);
         }
         catch (ForbiddenException e) {
-            Product entity = this.ownerProductCurator.getProductById(owner, productData.getId());
+            Product entity = this.productShareManager.resolveProductById(owner, productData.getId(), false);
             assertNotNull(entity);
             assertTrue(entity.isChangedBy(productData));
 
@@ -202,13 +203,13 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
         product.setLocked(true);
         this.productCurator.merge(product);
 
-        assertNotNull(this.ownerProductCurator.getProductById(owner, product.getId()));
+        assertNotNull(this.productShareManager.resolveProductById(owner, product.getId(), false));
 
         try {
             this.ownerProductResource.deleteProduct(owner.getKey(), product.getId());
         }
         catch (ForbiddenException e) {
-            assertNotNull(this.ownerProductCurator.getProductById(owner, product.getId()));
+            assertNotNull(this.productShareManager.resolveProductById(owner, product.getId(), false));
 
             throw e;
         }
