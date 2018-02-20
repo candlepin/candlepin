@@ -14,6 +14,8 @@
  */
 package org.candlepin.sync;
 
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.manifest.v1.ConsumerTypeDTO;
 import org.candlepin.model.ConsumerType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,12 +29,15 @@ import java.io.Writer;
  */
 public class ConsumerTypeExporter {
 
+    private ModelTranslator translator;
+
     @Inject
-    ConsumerTypeExporter() {
+    ConsumerTypeExporter(ModelTranslator translator) {
+        this.translator = translator;
     }
 
     void export(ObjectMapper mapper, Writer writer, ConsumerType consumerType)
         throws IOException {
-        mapper.writeValue(writer, consumerType);
+        mapper.writeValue(writer, this.translator.translate(consumerType, ConsumerTypeDTO.class));
     }
 }

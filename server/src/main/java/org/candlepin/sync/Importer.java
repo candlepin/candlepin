@@ -18,6 +18,9 @@ import org.candlepin.audit.EventSink;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.Refresher;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.manifest.v1.ConsumerDTO;
+import org.candlepin.dto.manifest.v1.ConsumerTypeDTO;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerialCurator;
@@ -140,6 +143,7 @@ public class Importer {
     private SyncUtils syncUtils;
     private ImportRecordCurator importRecordCurator;
     private SubscriptionReconciler subscriptionReconciler;
+    private ModelTranslator translator;
 
     @Inject
     public Importer(ConsumerTypeCurator consumerTypeCurator, ProductCurator productCurator,
@@ -147,7 +151,8 @@ public class Importer {
         ContentCurator contentCurator, PoolManager pm, PKIUtility pki, Configuration config,
         ExporterMetadataCurator emc, CertificateSerialCurator csc, EventSink sink, I18n i18n,
         DistributorVersionCurator distVerCurator, CdnCurator cdnCurator, SyncUtils syncUtils,
-        ImportRecordCurator importRecordCurator, SubscriptionReconciler subscriptionReconciler) {
+        ImportRecordCurator importRecordCurator, SubscriptionReconciler subscriptionReconciler,
+        ModelTranslator translator) {
 
         this.config = config;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -168,6 +173,7 @@ public class Importer {
         this.cdnCurator = cdnCurator;
         this.importRecordCurator = importRecordCurator;
         this.subscriptionReconciler = subscriptionReconciler;
+        this.translator = translator;
     }
 
     public ImportRecord loadExport(Owner owner, File archive, ConflictOverrides overrides,
@@ -522,7 +528,7 @@ public class Importer {
             conflictExceptions.add(e);
         }
 
-        ConsumerDto consumer = null;
+        ConsumerDTO consumer = null;
         try {
             Meta m = mapper.readValue(metadata, Meta.class);
             File upstreamFile = importFiles.get(ImportFile.UPSTREAM_CONSUMER.fileName());
@@ -560,12 +566,13 @@ public class Importer {
             );
 
             importSubs = importEntitlements(
-                owner, productsToImport, entitlements.listFiles(), consumer, meta);
+                owner, productsToImport, entitlements.listFiles(), consumer.getUuid(), meta);
         }
         else {
             log.warn("No products found to import, skipping product import.");
             log.warn("No entitlements in manifest, removing all subscriptions for owner.");
-            importSubs = importEntitlements(owner, new HashSet<Product>(), new File[]{}, consumer, meta);
+            importSubs = importEntitlements(owner, new HashSet<Product>(), new File[]{},
+                consumer.getUuid(), meta);
         }
 
         // Setup our import subscription adapter with the subscriptions imported:
@@ -637,7 +644,7 @@ public class Importer {
         importer.store(consumerTypeObjs);
     }
 
-    protected ConsumerDto importConsumer(Owner owner, File consumerFile, File[] upstreamConsumer,
+    protected ConsumerDTO importConsumer(Owner owner, File consumerFile, File[] upstreamConsumer,
         ConflictOverrides forcedConflicts, Meta meta) throws IOException, SyncDataFormatException {
 
         IdentityCertificate idcert = null;
@@ -663,7 +670,7 @@ public class Importer {
 
         ConsumerImporter importer = new ConsumerImporter(ownerCurator, idCertCurator, i18n, csCurator);
         Reader reader = null;
-        ConsumerDto consumer = null;
+        ConsumerDTO consumer = null;
 
         try {
             reader = new FileReader(consumerFile);
@@ -673,7 +680,7 @@ public class Importer {
             // stick with the label. Hence we need to lookup the ACTUAL type
             // by label here before attempting to store the UpstreamConsumer
             ConsumerType type = consumerTypeCurator.lookupByLabel(consumer.getType().getLabel());
-            consumer.setType(type);
+            consumer.setType(this.translator.translate(type, ConsumerTypeDTO.class));
 
             // in older manifests the web app prefix will not
             // be on the consumer, we can use the one stored in
@@ -723,7 +730,7 @@ public class Importer {
     }
 
     protected List<Subscription> importEntitlements(Owner owner, Set<Product> products, File[] entitlements,
-        ConsumerDto consumer, Meta meta)
+        String consumerUuid, Meta meta)
         throws IOException, SyncDataFormatException {
 
         log.debug("Importing entitlements for owner: {}", owner);
@@ -746,7 +753,7 @@ public class Importer {
                 log.debug("Import entitlement: {}", entitlement.getName());
                 reader = new FileReader(entitlement);
                 subscriptionsToImport.add(
-                    importer.importObject(mapper, reader, owner, productsById, consumer, meta));
+                    importer.importObject(mapper, reader, owner, productsById, consumerUuid, meta));
             }
             finally {
                 if (reader != null) {

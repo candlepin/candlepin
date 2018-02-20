@@ -134,6 +134,15 @@ public class StandardTranslator extends SimpleModelTranslator {
         this.registerTranslator(
             new EventTranslator(), Event.class, EventDTO.class);
 
+        // Manifest import/export translators
+        /////////////////////////////////////////////
+        this.registerTranslator(
+            new org.candlepin.dto.manifest.v1.ConsumerTypeTranslator(),
+            ConsumerType.class, org.candlepin.dto.manifest.v1.ConsumerTypeDTO.class);
+        this.registerTranslator(
+            new org.candlepin.dto.manifest.v1.ConsumerTranslator(),
+            Consumer.class, org.candlepin.dto.manifest.v1.ConsumerDTO.class);
+
         // Shims
         /////////////////////////////////////////////
         // These are temporary translators to ease the transition from the first gen DTOs

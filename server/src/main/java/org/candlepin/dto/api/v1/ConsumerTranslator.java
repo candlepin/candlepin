@@ -71,7 +71,6 @@ public class ConsumerTranslator extends TimestampedEntityTranslator<Consumer, Co
             .setUsername(source.getUsername())
             .setEntitlementStatus(source.getEntitlementStatus())
             .setServiceLevel(source.getServiceLevel())
-            .setContentAccessMode(source.getContentAccessMode())
             .setEntitlementCount(source.getEntitlementCount())
             .setFacts(source.getFacts())
             .setLastCheckin(source.getLastCheckin())
