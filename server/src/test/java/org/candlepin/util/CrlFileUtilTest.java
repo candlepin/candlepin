@@ -14,7 +14,7 @@
  */
 package org.candlepin.util;
 
-import static org.candlepin.test.MatchesPattern.matchesPattern;
+import static org.candlepin.test.MatchesPattern.*;
 import static org.junit.Assert.*;
 
 import org.candlepin.TestingModules;
@@ -58,7 +58,7 @@ import javax.inject.Inject;
 @RunWith(MockitoJUnitRunner.class)
 public class CrlFileUtilTest {
 
-    private static final BouncyCastleProvider BC = new BouncyCastleProvider();
+    private static final BouncyCastleProvider BC_PROVIDER = new BouncyCastleProvider();
     private CrlFileUtil cfu;
 
     @Inject private PKIReader pkiReader;
@@ -225,7 +225,7 @@ public class CrlFileUtilTest {
             try {
                 in = new BufferedInputStream(new FileInputStream(f));
                 x509crl = (X509CRL) CertificateFactory.getInstance("X.509").generateCRL(in);
-                x509crl.verify(pkiReader.getCACert().getPublicKey(), BC.PROVIDER_NAME);
+                x509crl.verify(pkiReader.getCACert().getPublicKey(), BC_PROVIDER.PROVIDER_NAME);
                 Set<BigInteger> s = new HashSet<BigInteger>();
 
                 for (X509CRLEntry entry : x509crl.getRevokedCertificates()) {
