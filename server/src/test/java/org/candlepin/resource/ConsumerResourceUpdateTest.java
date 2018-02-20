@@ -120,7 +120,7 @@ public class ConsumerResourceUpdateTest {
 
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
 
-        testMigration = new GuestMigration(consumerCurator, eventFactory, sink);
+        testMigration = new GuestMigration(consumerCurator);
         migrationProvider = Providers.of(testMigration);
 
         this.resource = new ConsumerResource(this.consumerCurator,
@@ -376,49 +376,6 @@ public class ConsumerResourceUpdateTest {
         updated.setGuestIds(new ArrayList<GuestId>());
         this.resource.updateConsumer(existing.getUuid(), updated, principal);
         assertTrue(existing.getGuestIds().isEmpty());
-    }
-
-    @Test
-    public void ensureCreateEventIsSentWhenGuestIdIsAddedToConsumer() {
-        String uuid = "TEST_CONSUMER";
-        Consumer existing = createConsumerWithGuests(new String[0]);
-        existing.setUuid(uuid);
-
-        when(this.consumerCurator.verifyAndLookupConsumer(uuid)).thenReturn(existing);
-
-        // Create a consumer with 1 new guest.
-        Consumer updated = createConsumerWithGuests("Guest 1");
-
-        Event expectedEvent = new Event();
-        when(this.eventFactory.guestIdCreated(updated.getGuestIds().get(0)))
-            .thenReturn(expectedEvent);
-        when(this.consumerCurator.getGuestConsumersMap(any(Owner.class), any(Set.class))).
-            thenReturn(new VirtConsumerMap());
-
-        this.resource.updateConsumer(existing.getUuid(), updated, principal);
-        verify(sink).queueEvent(eq(expectedEvent));
-    }
-
-    @Test
-    public void ensureEventIsSentWhenGuestIdIsremovedFromConsumer() {
-        String uuid = "TEST_CONSUMER";
-        Consumer existing = createConsumerWithGuests("Guest 1", "Guest 2");
-        existing.setUuid(uuid);
-
-        when(this.consumerCurator.verifyAndLookupConsumer(uuid)).thenReturn(existing);
-
-        // Create a consumer with one less guest id.
-        Consumer updated = createConsumerWithGuests("Guest 2");
-
-        Event expectedEvent = new Event();
-        when(this.eventFactory.guestIdDeleted(existing.getGuestIds().get(0)))
-            .thenReturn(expectedEvent);
-
-        when(this.consumerCurator.getGuestConsumersMap(any(Owner.class), any(Set.class))).
-            thenReturn(new VirtConsumerMap());
-
-        this.resource.updateConsumer(existing.getUuid(), updated, principal);
-        verify(sink).queueEvent(eq(expectedEvent));
     }
 
     @Test

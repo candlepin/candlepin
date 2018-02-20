@@ -282,7 +282,7 @@ public class ConsumerResource {
      * @param consumer
      *  The consumer containing the facts to sanitize
      */
-    private void sanitizeConsumerFacts(Consumer consumer) {
+    public void sanitizeConsumerFacts(Consumer consumer) {
         if (consumer != null) {
             Map<String, String> facts = consumer.getFacts();
 
@@ -1229,7 +1229,7 @@ public class ConsumerResource {
      * @param incoming incoming consumer
      * @return a boolean
      */
-    private boolean checkForFactsUpdate(Consumer existing, Consumer incoming) {
+    public boolean checkForFactsUpdate(Consumer existing, Consumer incoming) {
         if (incoming.getFacts() == null) {
             log.debug("Facts not included in this consumer update, skipping update.");
             return false;

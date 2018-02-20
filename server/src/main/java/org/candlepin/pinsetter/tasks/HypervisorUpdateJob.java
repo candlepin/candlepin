@@ -14,7 +14,7 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import static org.quartz.JobBuilder.newJob;
+import static org.quartz.JobBuilder.*;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.common.exceptions.BadRequestException;
@@ -23,6 +23,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.HypervisorId;
 import org.candlepin.model.JobCurator;
@@ -30,9 +31,11 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.pinsetter.core.model.JobStatus;
+import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.resource.ConsumerResource;
-import org.candlepin.resource.dto.HypervisorUpdateResult;
+import org.candlepin.resource.dto.HypervisorUpdateResultUuids;
 import org.candlepin.resource.util.GuestMigration;
+import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
@@ -40,7 +43,6 @@ import com.google.inject.persist.Transactional;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.MDC;
-import org.hibernate.Hibernate;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -65,11 +67,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
-
-import javax.inject.Provider;
 
 /**
  * Asynchronous job for refreshing the entitlement pools for specific
@@ -83,7 +82,9 @@ public class HypervisorUpdateJob extends KingpinJob {
     private ConsumerCurator consumerCurator;
     private ConsumerResource consumerResource;
     private I18n i18n;
-    private Provider<GuestMigration> migrationProvider;
+    private ConsumerType hypervisorType;
+    private SubscriptionServiceAdapter subAdapter;
+    private ComplianceRules complianceRules;
 
     public static final String CREATE = "create";
     public static final String REPORTER_ID = "reporter_id";
@@ -93,12 +94,20 @@ public class HypervisorUpdateJob extends KingpinJob {
 
     @Inject
     public HypervisorUpdateJob(OwnerCurator ownerCurator, ConsumerCurator consumerCurator,
-        ConsumerResource consumerResource, I18n i18n, Provider<GuestMigration> migrationProvider) {
+        ConsumerTypeCurator consumerTypeCurator, ConsumerResource consumerResource, I18n i18n,
+        SubscriptionServiceAdapter subAdapter,
+        ComplianceRules complianceRules) {
         this.ownerCurator = ownerCurator;
         this.consumerCurator = consumerCurator;
         this.consumerResource = consumerResource;
         this.i18n = i18n;
-        this.migrationProvider = migrationProvider;
+        this.subAdapter = subAdapter;
+        this.complianceRules = complianceRules;
+
+        this.hypervisorType = consumerTypeCurator.lookupByLabel(ConsumerTypeEnum.HYPERVISOR.getLabel());
+        if (this.hypervisorType == null) {
+            this.hypervisorType = consumerTypeCurator.create(new ConsumerType(ConsumerTypeEnum.HYPERVISOR));
+        }
     }
 
     public static JobStatus scheduleJob(JobCurator jobCurator,
@@ -198,7 +207,7 @@ public class HypervisorUpdateJob extends KingpinJob {
             Principal principal = (Principal) map.get(PRINCIPAL);
             String jobReporterId = map.getString(REPORTER_ID);
 
-            HypervisorUpdateResult result = new HypervisorUpdateResult();
+            HypervisorUpdateResultUuids result = new HypervisorUpdateResultUuids();
 
             Owner owner = ownerCurator.lookupByKey(ownerKey);
             if (owner == null) {
@@ -225,35 +234,39 @@ public class HypervisorUpdateJob extends KingpinJob {
             Set<String> guests = new HashSet<String>();
             Map<String, Consumer> incomingHosts = new HashMap<String, Consumer>();
             parseHypervisorList(hypervisors, hosts, guests, incomingHosts);
+            // TODO Need to ensure that we retrieve existing guestIds from the DB before continuing.
 
             // Maps virt hypervisor ID to registered consumer for that hypervisor, should one exist:
             VirtConsumerMap hypervisorConsumersMap = consumerCurator.getHostConsumersMap(owner, hosts);
+            Map<String, GuestId> guestIds = consumerCurator.getGuestIdMap(guests, owner);
+
 
             for (String hypervisorId : hosts) {
                 Consumer knownHost = hypervisorConsumersMap.get(hypervisorId);
-                Consumer incoming = incomingHosts.get(hypervisorId);
+                Consumer incoming = syncGuestIds(incomingHosts.get(hypervisorId), guestIds);
                 Consumer reportedOnConsumer = null;
+
                 if (knownHost == null) {
                     if (!create) {
-                        result.failed(hypervisorId, "Unable to find hypervisor with id " +
-                            hypervisorId + " in org " + ownerKey);
+                        result.failed(hypervisorId,
+                            "Unable to find hypervisor with id " + hypervisorId + " in org " + ownerKey);
                     }
                     else {
                         log.debug("Registering new host consumer for hypervisor ID: {}", hypervisorId);
-                        Consumer newHost = createConsumerForHypervisorId(hypervisorId, owner, principal);
+                        Consumer newHost = createConsumerForHypervisorId(hypervisorId, owner, principal,
+                            incoming);
 
-                        GuestMigration guestMigration = migrationProvider.get().buildMigrationManifest(
-                            incoming, newHost);
-                        consumerResource.performConsumerUpdates(incoming, newHost, guestMigration);
-                        consumerResource.create(newHost, principal, null, owner.getKey(), null, false);
+                        // Since we just created this new consumer, we can migrate the guests immediately
+                        GuestMigration guestMigration = new GuestMigration(consumerCurator)
+                            .buildMigrationManifest(incoming, newHost);
 
                         // Now that we have the new consumer persisted, immediately migrate the guests to it
                         if (guestMigration.isMigrationPending()) {
-                            guestMigration.migrate();
+                            guestMigration.migrate(false);
                         }
 
                         hypervisorConsumersMap.add(hypervisorId, newHost);
-                        result.created(updateCheckinTime(newHost));
+                        result.created(newHost);
                         reportedOnConsumer = newHost;
                     }
                 }
@@ -267,39 +280,26 @@ public class HypervisorUpdateJob extends KingpinJob {
                             hypervisorId, ownerKey, knownHost.getHypervisorId().getReporterId(),
                             jobReporterId);
                     }
-                    /* Impl. Note (2017-10-27):
-                    Now that events no longer serialize whole Objects for the purpose of storing
-                    the oldEntity field, forcing initialization of lazy-loaded collections as a side-effect,
-                    we need to force their initialization before we get to save the result,
-                    to avoid LazyInitializationExceptions when we get to fetch it from the db later.
-                     */
-                    Hibernate.initialize(knownHost.getCapabilities());
-                    Hibernate.initialize(knownHost.getInstalledProducts());
-                    Hibernate.initialize(knownHost.getEntitlements());
 
-                    GuestMigration guestMigration = migrationProvider.get().buildMigrationManifest(incoming,
-                        knownHost);
+                    GuestMigration guestMigration = new GuestMigration(consumerCurator)
+                        .buildMigrationManifest(incoming, knownHost);
 
-                    if (consumerResource.performConsumerUpdates(incoming, knownHost, guestMigration,
-                       false)) {
-                        if (guestMigration.isMigrationPending()) {
-                            guestMigration.migrate();
-                        }
-                        else {
-                            consumerCurator.update(knownHost);
-                        }
+                    boolean factsUpdated = consumerResource.checkForFactsUpdate(knownHost, incoming);
 
-                        result.updated(updateCheckinTime(knownHost));
+                    if (factsUpdated || guestMigration.isMigrationPending()) {
+                        knownHost.setLastCheckin(new Date());
+                        guestMigration.migrate(false);
+                        result.updated(knownHost);
                     }
                     else {
-                        result.unchanged(updateCheckinTime(knownHost));
+                        result.unchanged(knownHost);
                     }
                 }
                 // update reporter id if it changed
                 if (jobReporterId != null && reportedOnConsumer != null &&
                     reportedOnConsumer.getHypervisorId() != null &&
                     (reportedOnConsumer.getHypervisorId().getReporterId() == null ||
-                    !jobReporterId.contentEquals(reportedOnConsumer.getHypervisorId().getReporterId()))) {
+                        !jobReporterId.contentEquals(reportedOnConsumer.getHypervisorId().getReporterId()))) {
                     reportedOnConsumer.getHypervisorId().setReporterId(jobReporterId);
                 }
                 else if (jobReporterId == null) {
@@ -307,6 +307,15 @@ public class HypervisorUpdateJob extends KingpinJob {
                         "for hypervisor:{} of owner:{}", hypervisorId, ownerKey);
                 }
             }
+
+            for (Consumer consumer : hypervisorConsumersMap.getConsumers()) {
+                consumer = result.wasCreated(consumer) ?
+                    consumerCurator.create(consumer, false) :
+                    consumerCurator.update(consumer, false);
+            }
+
+            consumerCurator.flush();
+
             log.info("Summary for report from {} by principal {}\n {}", jobReporterId, principal, result);
             context.setResult(result);
         }
@@ -332,6 +341,7 @@ public class HypervisorUpdateJob extends KingpinJob {
         map.put(CREATE, create);
         map.put(DATA, compress(data));
         map.put(PRINCIPAL, principal);
+
         if (reporterId != null) {
             map.put(REPORTER_ID, reporterId);
         }
@@ -382,34 +392,101 @@ public class HypervisorUpdateJob extends KingpinJob {
      * Create a new hypervisor type consumer to represent the incoming hypervisorId
      */
     private Consumer createConsumerForHypervisorId(String incHypervisorId,
-        Owner owner, Principal principal) {
+        Owner owner, Principal principal, Consumer incoming) {
         Consumer consumer = new Consumer();
-        consumer.setName(incHypervisorId);
-        consumer.setType(new ConsumerType(ConsumerTypeEnum.HYPERVISOR));
+        if (incoming.getName() != null) {
+            consumer.setName(incoming.getName());
+        }
+        else {
+            consumer.setName(sanitizeHypervisorId(incHypervisorId));
+        }
+        consumer.setType(hypervisorType);
         consumer.setFact("uname.machine", "x86_64");
         consumer.setGuestIds(new ArrayList<GuestId>());
+        consumer.setLastCheckin(new Date());
         consumer.setOwner(owner);
+        consumer.setAutoheal(true);
+        consumer.setCanActivate(subAdapter.canActivateSubscription(consumer));
+        if (owner.getDefaultServiceLevel() != null) {
+            consumer.setServiceLevel(owner.getDefaultServiceLevel());
+        }
+        else {
+            consumer.setServiceLevel("");
+        }
+        if (principal.getUsername() != null) {
+            consumer.setUsername(principal.getUsername());
+        }
+        consumer.setEntitlementCount(0L);
+        // TODO: Refactor this to not call resource methods directly
+        consumerResource.sanitizeConsumerFacts(consumer);
+
+
         // Create HypervisorId
         HypervisorId hypervisorId = new HypervisorId(consumer, incHypervisorId);
         consumer.setHypervisorId(hypervisorId);
+
+        // TODO: Refactor this to not call resource methods directly
+        consumerResource.checkForFactsUpdate(consumer, incoming);
+
         return consumer;
+    }
+
+    /*
+     * Make sure the HypervisorId is a valid consumer name.
+     */
+    private String sanitizeHypervisorId(String incHypervisorId) {
+        // Same validation as consumerResource.checkConsumerName
+        if (incHypervisorId.indexOf('#') == 0) {
+            log.debug("Hypervisor id cannot begin with # character");
+            incHypervisorId = incHypervisorId.substring(1);
+        }
+
+        int max = Consumer.MAX_LENGTH_OF_CONSUMER_NAME;
+        if (incHypervisorId.length() > max) {
+            log.debug("Hypervisor id too long, truncating");
+            incHypervisorId = incHypervisorId.substring(0, max);
+        }
+        return incHypervisorId;
+    }
+
+    /**
+     * Updates the GuestId objects on the incoming consumer with those found in the DB by the same guest id.
+     * This allows us to update the existing guestIds directly, and avoid duplicates.
+     * @param incoming
+     * @param guestIdMap
+     * @return
+     */
+    private Consumer syncGuestIds(Consumer incoming, Map<String, GuestId> guestIdMap) {
+        List<GuestId> current = incoming.getGuestIds();
+        List<GuestId> updated = new ArrayList<GuestId>(current.size());
+
+        for (GuestId gid : current) {
+            GuestId persisted = guestIdMap.get(gid.getGuestId());
+
+            if (persisted != null) {
+                updated.add(persisted);
+            }
+            else {
+                updated.add(gid);
+            }
+        }
+
+        incoming.setGuestIds(updated);
+        return incoming;
     }
 
     /**
      * Class for holding the list of consumers in the stored json text
      *
      * @author wpoteat
-     *
      */
-    public static class HypervisorList{
+    public static class HypervisorList {
         private List<Consumer> hypervisors;
-
-        public HypervisorList() {
-        }
 
         public List<Consumer> getHypervisors() {
             return this.hypervisors;
         }
+
         public void setConsumers(List<Consumer> hypervisors) {
             this.hypervisors = hypervisors;
         }

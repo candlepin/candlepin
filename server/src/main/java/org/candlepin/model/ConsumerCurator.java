@@ -27,6 +27,7 @@ import com.google.inject.persist.Transactional;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.Criteria;
+import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
 import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
@@ -42,6 +43,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -52,6 +54,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.persistence.LockModeType;
+import javax.persistence.TypedQuery;
 
 
 
@@ -75,11 +78,10 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
     @Transactional
     @Override
-    public Consumer create(Consumer entity) {
+    public Consumer create(Consumer entity, boolean flush) {
         entity.ensureUUID();
         this.validateFacts(entity);
-
-        return super.create(entity);
+        return super.create(entity, flush);
     }
 
     @Override
@@ -402,7 +404,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         Consumer existingConsumer = find(updatedConsumer.getId());
 
         if (existingConsumer == null) {
-            return this.create(updatedConsumer);
+            return this.create(updatedConsumer, flush);
         }
 
         // TODO: Are any of these read-only?
@@ -475,9 +477,19 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      */
     @Transactional
     public Set<Consumer> bulkUpdate(Set<Consumer> consumers) {
+        return bulkUpdate(consumers, true);
+    }
+
+    /**
+     * @param consumers consumers to update
+     * @param flush whether to flush or not
+     * @return updated consumers
+     */
+    @Transactional
+    public Set<Consumer> bulkUpdate(Set<Consumer> consumers, boolean flush) {
         Set<Consumer> toReturn = new HashSet<Consumer>();
         for (Consumer toUpdate : consumers) {
-            toReturn.add(update(toUpdate));
+            toReturn.add(update(toUpdate, flush));
         }
 
         return toReturn;
@@ -550,6 +562,66 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     /**
+     * Creates a mapping of input guest IDs to GuestID objects currently tracked and stored in the
+     * backing database. If a given guest ID is not present in the database, it will be mapped to
+     * a null value.
+     *
+     * @param guestIds
+     *  A collection of guest IDs to map to existing GuestID objects
+     *
+     * @param owner
+     *  The owner to which the mapping lookup should be scoped
+     *
+     * @return
+     *  a mapping of guest IDs to GuestID objects
+     */
+    public Map<String, GuestId> getGuestIdMap(Iterable<String> guestIds, Owner owner) {
+        if (guestIds == null || owner == null) {
+            return Collections.<String, GuestId>emptyMap();
+        }
+
+        String hql = "SELECT gid FROM GuestId gid " +
+            "WHERE gid.consumer.owner = :owner AND gid.guestIdLower IN (:guest_ids)" +
+            "ORDER BY gid.updated DESC";
+
+        TypedQuery<GuestId> query = this.getEntityManager().createQuery(hql, GuestId.class);
+        Map<String, GuestId> output = new HashMap<String, GuestId>();
+
+        for (List<String> block : this.partition(guestIds)) {
+            List<String> sanitized = new ArrayList<String>(block.size());
+
+            for (String guestId : block) {
+                if (guestId != null && !guestId.isEmpty() && !output.containsKey(guestId)) {
+                    sanitized.add(guestId.toLowerCase());
+                    output.put(guestId, null);
+                }
+            }
+
+            List<GuestId> guests = query
+                .setParameter("owner", owner)
+                .setParameter("guest_ids", sanitized)
+                .getResultList();
+
+            if (guests != null) {
+                for (GuestId fetched : guests) {
+                    GuestId existing = output.get(fetched.getGuestId());
+
+                    if (existing == null || this.safeDateAfter(fetched.getUpdated(), existing.getUpdated())) {
+                        output.put(fetched.getGuestId(), fetched);
+                    }
+                }
+            }
+        }
+
+        return output;
+    }
+
+    private boolean safeDateAfter(Date d1, Date d2) {
+        return d1 != null && (d2 == null || d1.after(d2));
+    }
+
+
+    /**
      * Get guest consumers for a host consumer.
      *
      * @param consumer host consumer to find the guests for
@@ -620,7 +692,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     public VirtConsumerMap getHostConsumersMap(Owner owner, Iterable<String> hypervisorIds) {
         VirtConsumerMap hypervisorMap = new VirtConsumerMap();
 
-        for (Consumer consumer : this.getHypervisorsBulk(hypervisorIds, owner.getKey())) {
+        for (Consumer consumer : this.getHypervisorsBulk(hypervisorIds, owner.getId())) {
             hypervisorMap.add(consumer.getHypervisorId().getHypervisorId(), consumer);
         }
 
@@ -629,12 +701,12 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
     /**
      * @param hypervisorIds list of unique hypervisor identifiers
-     * @param ownerKey Org namespace to search
+     * @param ownerId Org namespace to search
      * @return Consumer that matches the given
      */
     @SuppressWarnings("unchecked")
     @Transactional
-    public CandlepinQuery<Consumer> getHypervisorsBulk(Iterable<String> hypervisorIds, String ownerKey) {
+    public CandlepinQuery<Consumer> getHypervisorsBulk(Iterable<String> hypervisorIds, String ownerId) {
         if (hypervisorIds == null || !hypervisorIds.iterator().hasNext()) {
             return this.cpQueryFactory.<Consumer>buildQuery();
         }
@@ -642,9 +714,10 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         DetachedCriteria criteria = DetachedCriteria.forClass(Consumer.class)
             .createAlias("owner", "o")
             .createAlias("hypervisorId", "hvsr")
-            .add(Restrictions.eq("o.key", ownerKey))
+            .add(Restrictions.eq("o.id", ownerId))
             .add(this.getHypervisorIdRestriction(hypervisorIds))
-            .addOrder(Order.asc("hvsr.hypervisorId"));
+            .addOrder(Order.asc("hvsr.hypervisorId"))
+            .setFetchMode("type", FetchMode.SELECT);
 
         return this.cpQueryFactory.<Consumer>buildQuery(this.currentSession(), criteria)
             .setLockMode(LockModeType.PESSIMISTIC_WRITE);
@@ -661,11 +734,11 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
     @SuppressWarnings("unchecked")
     @Transactional
-    public CandlepinQuery<Consumer> getHypervisorsForOwner(String ownerKey) {
+    public CandlepinQuery<Consumer> getHypervisorsForOwner(String ownerId) {
         DetachedCriteria criteria = this.createSecureDetachedCriteria()
             .createAlias("owner", "o")
             .createAlias("hypervisorId", "hvsr")
-            .add(Restrictions.eq("o.key", ownerKey))
+            .add(Restrictions.eq("o.id", ownerId))
             .add(Restrictions.isNotNull("hvsr.hypervisorId"));
 
         return this.cpQueryFactory.<Consumer>buildQuery(this.currentSession(), criteria);

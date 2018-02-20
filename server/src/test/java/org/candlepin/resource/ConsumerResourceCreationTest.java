@@ -133,7 +133,7 @@ public class ConsumerResourceCreationTest {
     public void init() throws Exception {
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
 
-        testMigration = new GuestMigration(consumerCurator, factory, sink);
+        testMigration = new GuestMigration(consumerCurator);
         migrationProvider = Providers.of(testMigration);
 
         this.config = initConfig();
@@ -160,6 +160,14 @@ public class ConsumerResourceCreationTest {
                 return invocation.getArguments()[0];
             }
         });
+
+        when(consumerCurator.create(any(Consumer.class), any(Boolean.class))).thenAnswer(new Answer() {
+            @Override
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                return invocation.getArguments()[0];
+            }
+        });
+
         when(consumerTypeCurator.lookupByLabel(system.getLabel())).thenReturn(system);
         when(userService.findByLogin(USER)).thenReturn(user);
         when(idCertService.generateIdentityCert(any(Consumer.class)))

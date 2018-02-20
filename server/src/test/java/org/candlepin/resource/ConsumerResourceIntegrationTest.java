@@ -17,8 +17,6 @@ package org.candlepin.resource;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-import org.candlepin.audit.EventFactory;
-import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
@@ -557,8 +555,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @SuppressWarnings("unchecked")
     @Test
     public void testRegenerateEntitlementCertificateWithValidConsumerByEntitlement() {
-        GuestMigration testMigration = new GuestMigration(consumerCurator, mock(EventFactory.class), mock
-            (EventSink.class));
+        GuestMigration testMigration = new GuestMigration(consumerCurator);
         Provider<GuestMigration> migrationProvider = Providers.of(testMigration);
 
         ConsumerResource cr = new ConsumerResource(

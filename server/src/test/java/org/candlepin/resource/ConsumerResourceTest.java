@@ -159,7 +159,7 @@ public class ConsumerResourceTest {
 
         this.factValidator = new FactValidator(this.config, this.i18n);
 
-        testMigration = new GuestMigration(mockedConsumerCurator, eventFactory, sink);
+        testMigration = new GuestMigration(mockedConsumerCurator);
         migrationProvider = Providers.of(testMigration);
     }
 

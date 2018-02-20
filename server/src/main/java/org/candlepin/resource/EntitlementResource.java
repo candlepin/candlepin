@@ -110,8 +110,7 @@ public class EntitlementResource {
 
     private void verifyExistence(Object o, String id) {
         if (o == null) {
-            throw new RuntimeException(
-                i18n.tr("Object with ID ''{0}'' could not found.", id));
+            throw new RuntimeException(i18n.tr("Object with ID ''{0}'' could not found.", id));
         }
     }
 

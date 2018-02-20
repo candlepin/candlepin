@@ -82,7 +82,7 @@ public class GuestIdResourceTest {
 
     @Before
     public void setUp() {
-        testMigration = Mockito.spy(new GuestMigration(consumerCurator, eventFactory, sink));
+        testMigration = Mockito.spy(new GuestMigration(consumerCurator));
         migrationProvider = Providers.of(testMigration);
 
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
