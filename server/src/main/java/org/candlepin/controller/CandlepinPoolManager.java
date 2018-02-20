@@ -400,7 +400,19 @@ public class CandlepinPoolManager implements PoolManager {
         Map<String, Product> changedProducts) {
 
         // These don't all necessarily belong to this owner
-        List<Pool> subscriptionPools = poolCurator.getPoolsBySubscriptionId(pool.getSubscriptionId()).list();
+        List<Pool> subscriptionPools;
+
+        if (pool.getSubscriptionId() != null) {
+            subscriptionPools = this.poolCurator.getPoolsBySubscriptionId(pool.getSubscriptionId()).list();
+        }
+        else {
+            // If we don't have a subscription ID, this *is* the master pool, but we need to use
+            // the original, hopefully unmodified pool
+            subscriptionPools = pool.getId() != null ?
+                Collections.<Pool>singletonList(this.poolCurator.find(pool.getId())) :
+                Collections.<Pool>singletonList(pool);
+        }
+
         log.debug("Found {} pools for subscription {}", subscriptionPools.size(), pool.getSubscriptionId());
         if (log.isDebugEnabled()) {
             for (Pool p : subscriptionPools) {
@@ -543,6 +555,7 @@ public class CandlepinPoolManager implements PoolManager {
             EventBuilder eventBuilder = eventFactory
                 .getEventBuilder(Target.POOL, Type.MODIFIED)
                 .setEventData(existing);
+
             poolEvents.put(existing.getId(), eventBuilder);
         }
 
@@ -554,8 +567,7 @@ public class CandlepinPoolManager implements PoolManager {
         boolean createsSubPools = !StringUtils.isBlank(virtLimit) && !"0".equals(virtLimit);
 
         // Update subpools if necessary
-        if (updateStackDerived && !updatedPools.isEmpty() &&
-            createsSubPools && pool.isStacked()) {
+        if (updateStackDerived && !updatedPools.isEmpty() && createsSubPools && pool.isStacked()) {
             // Get all pools for the master pool owner derived from the pool's
             // stack id, because we cannot look it up by subscriptionId
             List<Pool> subPools = getOwnerSubPoolsForStackId(pool.getOwner(), pool.getStackId());
@@ -725,29 +737,50 @@ public class CandlepinPoolManager implements PoolManager {
 
     @Override
     public Pool createPool(Pool pool) {
-        Pool created = poolCurator.create(pool);
-        log.debug("   new pool: {}", pool);
-
-        if (created != null) {
-            sink.emitPoolCreated(created);
-        }
-
-        return created;
-    }
-
-    @Override
-    public List<Pool> createPools(List<Pool> pools) {
-        if (CollectionUtils.isNotEmpty(pools)) {
-            poolCurator.saveOrUpdateAll(pools, false, false);
-
-            for (Pool pool : pools) {
-                log.debug("   new pool: {}", pool);
+        if (pool != null) {
+            // We're assuming that net-new pools will not yet have an ID
+            if (pool.getId() == null) {
+                pool = this.poolCurator.create(pool);
+                log.debug("  created pool: {}", pool);
 
                 if (pool != null) {
                     sink.emitPoolCreated(pool);
                 }
             }
+            else {
+                pool = this.poolCurator.merge(pool);
+                log.debug("  updated pool: {}", pool);
+            }
         }
+
+        return pool;
+    }
+
+    @Override
+    public List<Pool> createPools(List<Pool> pools) {
+        if (CollectionUtils.isNotEmpty(pools)) {
+            Set<String> updatedPoolIds = new HashSet<String>();
+
+            for (Pool pool : pools) {
+                // We're assuming that net-new pools will not yet have an ID here.
+                if (pool.getId() != null) {
+                    updatedPoolIds.add(pool.getId());
+                }
+            }
+
+            poolCurator.saveOrUpdateAll(pools, false, false);
+
+            for (Pool pool : pools) {
+                if (pool != null && !updatedPoolIds.contains(pool.getId())) {
+                    log.debug("  created pool: {}", pool);
+                    sink.emitPoolCreated(pool);
+                }
+                else {
+                    log.debug("  updated pool: {}", pool);
+                }
+            }
+        }
+
         return pools;
     }
 
@@ -759,9 +792,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         // Ensure the subscription is not expired
         if (pool.getEndDate() != null && pool.getEndDate().before(new Date())) {
-            List<String> subscriptions = new ArrayList<String>();
-            subscriptions.add(pool.getSubscriptionId());
-            this.deletePoolsForSubscriptions(subscriptions);
+            this.deletePoolsForSubscriptions(Collections.<String>singletonList(pool.getSubscriptionId()));
         }
         else {
             this.refreshPoolsForMasterPool(pool, false, true, Collections.<String, Product>emptyMap());

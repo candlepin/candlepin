@@ -860,7 +860,6 @@ public class PoolManagerTest {
 
         List<Pool> newPools = new LinkedList<Pool>();
         Pool p = TestUtil.createPool(product);
-        p.setId("test");
         p.setSourceSubscription(new SourceSubscription(s.getId(), "master"));
         newPools.add(p);
         ArgumentCaptor<Pool> argPool = ArgumentCaptor.forClass(Pool.class);

@@ -683,8 +683,10 @@ public class EntitlementRules implements Enforcer {
                entitlement derived pools, it makes sense to do the same for share pools,
                as share pools are also entitlement derived, sort of.
              */
-            sharedPool.setSourceSubscription(
-                new SourceSubscription(sourcePool.getSubscriptionId(), entitlement.getId()));
+            String subscriptionId = sourcePool.getSubscriptionId();
+            if (subscriptionId != null && !subscriptionId.isEmpty()) {
+                sharedPool.setSourceSubscription(new SourceSubscription(subscriptionId, entitlement.getId()));
+            }
 
             // Copy the pool's attributes
             for (Entry<String, String> entry : sourcePool.getAttributes().entrySet()) {

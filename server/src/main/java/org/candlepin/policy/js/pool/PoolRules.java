@@ -134,16 +134,25 @@ public class PoolRules {
         }
 
         log.info("Checking if pools need to be created for: {}", masterPool);
-        if (!hasMasterPool(existingPools)) {
-            if (masterPool.getSourceSubscription() != null &&
-                masterPool.getSourceSubscription().getSubscriptionSubKey().contentEquals("derived")) {
-                // while we can create bonus pool from master pool, the reverse
-                // is not possible without the subscription itself
-                throw new IllegalStateException("Cannot create master pool from bonus pool");
-            }
+        if (masterPool.getSubscriptionId() != null) {
+            if (!hasMasterPool(existingPools)) {
+                if (masterPool.getSubscriptionSubKey() != null &&
+                    masterPool.getSubscriptionSubKey().contentEquals("derived")) {
 
+                    // while we can create bonus pool from master pool, the reverse
+                    // is not possible without the subscription itself
+                    throw new IllegalStateException("Cannot create master pool from bonus pool");
+                }
+
+                pools.add(masterPool);
+                log.info("Creating new master pool: {}", masterPool);
+            }
+        }
+        else if (masterPool.getId() == null) {
+            // This is a bit of a hack to ensure we still add net-new pools to the list of pools
+            // to be created. When we get around to refactoring all of this for the pool hierarchy
+            // stuff, this should be removed.
             pools.add(masterPool);
-            log.info("Creating new master pool: {}", masterPool);
         }
 
         Pool bonusPool = createBonusPool(masterPool, existingPools);
