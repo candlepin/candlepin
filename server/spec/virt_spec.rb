@@ -212,12 +212,12 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     @guest1_client.consume_pool(@guest_pool['id'], {:quantity => 1})
     @guest1_client.list_entitlements.length.should == 1
 
+    sleep 3
     #Guest changes the hypervisor. This will trigger revocation of
     #the entitlement to guest_pool (because it requires_host) and
     #it will also trigger unsuccessfull autobind (because the
     #someNonExistentProduct cannot be covered)
     host3_client.update_consumer({:guestIds => [{'guestId' => @uuid1}]})
-
     @guest1_client.list_entitlements.length.should == 0
   end
 
