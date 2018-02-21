@@ -562,13 +562,11 @@ public class ConsumerResource {
         }
 
         if (dto.getInstalledProducts() != null) {
-
-            Set<ConsumerInstalledProduct> installedProducts =
-                new HashSet<ConsumerInstalledProduct>();
+            Set<ConsumerInstalledProduct> installedProducts = new HashSet<ConsumerInstalledProduct>();
             for (ConsumerInstalledProductDTO installedProductDTO : dto.getInstalledProducts()) {
                 if (installedProductDTO != null) {
-                    ConsumerInstalledProduct installedProduct =
-                        new ConsumerInstalledProduct(installedProductDTO.getProductId(),
+                    ConsumerInstalledProduct installedProduct = new ConsumerInstalledProduct(
+                        installedProductDTO.getProductId(),
                         installedProductDTO.getProductName(),
                         entity,
                         installedProductDTO.getVersion(),
@@ -576,9 +574,11 @@ public class ConsumerResource {
                         installedProductDTO.getStatus(),
                         installedProductDTO.getStartDate(),
                         installedProductDTO.getEndDate());
+
                     installedProducts.add(installedProduct);
                 }
             }
+
             entity.setInstalledProducts(installedProducts);
         }
     }
@@ -1440,14 +1440,25 @@ public class ConsumerResource {
             log.debug("Installed packages not included in this consumer update, skipping update.");
             return false;
         }
-        else if (!existing.getInstalledProducts().equals(incoming.getInstalledProducts())) {
+        else if (existing.getInstalledProducts() == null ||
+            !existing.getInstalledProducts().equals(incoming.getInstalledProducts())) {
+
             log.info("Updating installed products.");
-            existing.getInstalledProducts().clear();
+
+            // Due to how our encapsulation works here combined with how Hibernate handles collections,
+            // we need to be careful how we manipulate this collection. We cannot just safely assign a
+            // new collection here without breaking things.
+            if (existing.getInstalledProducts() != null) {
+                existing.getInstalledProducts().clear();
+            }
+
             for (ConsumerInstalledProduct cip : incoming.getInstalledProducts()) {
                 existing.addInstalledProduct(cip);
             }
+
             return true;
         }
+
         log.debug("No change to installed products.");
         return false;
     }

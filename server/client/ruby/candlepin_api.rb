@@ -179,6 +179,7 @@ class Candlepin
     consumer = {
       :uuid => uuid
     }
+
     consumer[:facts] = params[:facts] if params[:facts]
     consumer[:installedProducts] = params[:installedProducts] if params[:installedProducts]
     consumer[:guestIds] = params[:guestIds] if params[:guestIds]

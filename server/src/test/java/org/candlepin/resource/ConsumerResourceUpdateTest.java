@@ -361,21 +361,21 @@ public class ConsumerResourceUpdateTest {
 
         when(this.consumerCurator.verifyAndLookupConsumer(uuid)).thenReturn(existing);
 
-        // Create a consumer with 1 new guest.
-        ConsumerDTO updated = createConsumerDTOWithGuests("Guest 2");
+        ConsumerDTO updated = new ConsumerDTO();
+        updated.setUuid(uuid);
+
+        GuestIdDTO expectedGuestId = new GuestIdDTO("Guest 2");
+        updated.addGuestId(expectedGuestId);
 
         when(this.consumerCurator.getGuestConsumersMap(any(Owner.class), any(Set.class))).
             thenReturn(new VirtConsumerMap());
-
         this.resource.updateConsumer(existing.getUuid(), updated, principal);
-        Class<Set<Consumer>> setClass = (Class<Set<Consumer>>) (Class) HashSet.class;
-        ArgumentCaptor<Set<Consumer>> consumerArgumentCaptor = ArgumentCaptor.forClass(setClass);
-        verify(consumerCurator, times(1)).bulkUpdate(consumerArgumentCaptor.capture());
-        Set<Consumer> consumers = consumerArgumentCaptor.getValue();
-        assertEquals(1, consumers.size());
-        Consumer mergedConsumer = consumers.iterator().next();
-        assertEquals(1, mergedConsumer.getGuestIds().size());
-        assertEquals("Guest 2", mergedConsumer.getGuestIds().get(0).getGuestId());
+
+        assertEquals(1, existing.getGuestIds().size());
+        GuestId actualGID = existing.getGuestIds().iterator().next();
+        assertNotNull(actualGID);
+        assertEquals(actualGID.getGuestId(), expectedGuestId.getGuestId());
+        assertEquals(actualGID.getAttributes(), expectedGuestId.getAttributes());
     }
 
     @Test
@@ -670,9 +670,9 @@ public class ConsumerResourceUpdateTest {
         String expectedFactValue = "F1";
         GuestIdDTO expectedGuestId = new GuestIdDTO("GUEST_ID_1");
 
-        ConsumerDTO existing = getFakeConsumerDTO();
+        Consumer existing = getFakeConsumer();
         existing.setFacts(new HashMap<String, String>());
-        existing.setInstalledProducts(new HashSet<ConsumerInstalledProductDTO>());
+        existing.setInstalledProducts(new HashSet<ConsumerInstalledProduct>());
 
         ConsumerDTO updated = new ConsumerDTO();
         updated.setUuid(uuid);
@@ -687,12 +687,26 @@ public class ConsumerResourceUpdateTest {
         when(this.consumerCurator.getGuestConsumersMap(any(Owner.class), any(Set.class))).
             thenReturn(new VirtConsumerMap());
         this.resource.updateConsumer(existing.getUuid(), updated, principal);
+
         assertEquals(1, existing.getFacts().size());
         assertEquals(expectedFactValue, existing.getFact(expectedFactName));
+
         assertEquals(1, existing.getInstalledProducts().size());
-        assertTrue(existing.getInstalledProducts().contains(expectedInstalledProduct));
+        ConsumerInstalledProduct actualCIP = existing.getInstalledProducts().iterator().next();
+        assertNotNull(actualCIP);
+        assertEquals(actualCIP.getProductId(), expectedInstalledProduct.getProductId());
+        assertEquals(actualCIP.getProductName(), expectedInstalledProduct.getProductName());
+        assertEquals(actualCIP.getVersion(), expectedInstalledProduct.getVersion());
+        assertEquals(actualCIP.getArch(), expectedInstalledProduct.getArch());
+        assertEquals(actualCIP.getStatus(), expectedInstalledProduct.getStatus());
+        assertEquals(actualCIP.getStartDate(), expectedInstalledProduct.getStartDate());
+        assertEquals(actualCIP.getEndDate(), expectedInstalledProduct.getEndDate());
+
         assertEquals(1, existing.getGuestIds().size());
-        assertTrue(existing.getGuestIds().contains(expectedGuestId));
+        GuestId actualGID = existing.getGuestIds().iterator().next();
+        assertNotNull(actualGID);
+        assertEquals(actualGID.getGuestId(), expectedGuestId.getGuestId());
+        assertEquals(actualGID.getAttributes(), expectedGuestId.getAttributes());
     }
 
     @Test

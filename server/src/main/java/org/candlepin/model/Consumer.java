@@ -571,6 +571,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         if (installedProducts == null) {
             installedProducts = new HashSet<ConsumerInstalledProduct>();
         }
+
         installed.setConsumer(this);
         installedProducts.add(installed);
     }

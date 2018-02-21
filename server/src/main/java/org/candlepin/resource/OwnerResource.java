@@ -293,7 +293,7 @@ public class OwnerResource {
         }
 
         if (owner == null) {
-            throw new NotFoundException(i18n.tr("owner with key: {0} was not found.", key));
+            throw new NotFoundException(i18n.tr("Owner with key \"{0}\" was not found", key));
         }
 
         return owner;
@@ -323,7 +323,7 @@ public class OwnerResource {
         }
 
         if (owner == null) {
-            throw new NotFoundException(i18n.tr("owner with id: {0} was not found.", id));
+            throw new NotFoundException(i18n.tr("Owner with id \"{0}\" was not found", id));
         }
 
         return owner;
@@ -1426,7 +1426,7 @@ public class OwnerResource {
         @QueryParam("subscription_id") List<String> subscriptionIds,
         @QueryParam("contract") List<String> contracts) {
 
-        findOwnerByKey(ownerKey);
+        this.findOwnerByKey(ownerKey);
         consumerTypeValidator.findAndValidateTypeLabels(typeLabels);
 
         return consumerCurator.countConsumers(ownerKey, typeLabels, skus, subscriptionIds, contracts);
