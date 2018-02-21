@@ -1277,11 +1277,8 @@ public class ConsumerResource {
      * from the old host are still removed, but no auto-bind occurs.
      */
     protected void revokeOnGuestMigration(Consumer guest) {
-        if (!guest.isGuest()) {
-            // This isn't a guest, skip this entire step.
-            return;
-        }
-        else if (!guest.hasFact("virt.uuid")) {
+        if (guest == null || !guest.isGuest() || !guest.hasFact("virt.uuid")) {
+            // No consumer provided, it's not a guest or it doesn't have a virt UUID
             return;
         }
 
@@ -1291,6 +1288,7 @@ public class ConsumerResource {
         // deleting, otherwise we are tampering with the loop iterator (BZ #786730)
         Set<Entitlement> deletableGuestEntitlements = new HashSet<Entitlement>();
         log.debug("Revoking {} entitlements not matching host: {}", guest, host);
+
         for (Entitlement entitlement : guest.getEntitlements()) {
             Pool pool = entitlement.getPool();
 
@@ -1314,6 +1312,7 @@ public class ConsumerResource {
                 deletableGuestEntitlements.add(entitlement);
             }
         }
+
         // perform the entitlement revocation
         for (Entitlement entitlement : deletableGuestEntitlements) {
             poolManager.revokeEntitlement(entitlement);

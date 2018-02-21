@@ -42,7 +42,7 @@ public class ResourceDateParser {
 
         Date daysDate = null;
         if (days != null && !days.trim().equals("")) {
-            long mills = 1000 * 60 * 60 * 24;
+            long mills = 1000L * 60 * 60 * 24;
             int number = Integer.parseInt(days);
             daysDate = new Date(new Date().getTime() - (number * mills));
         }

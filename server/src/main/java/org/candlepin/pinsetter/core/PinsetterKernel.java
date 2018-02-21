@@ -59,6 +59,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -67,6 +68,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+
+
 
 /**
  * Pinsetter Kernel.
@@ -77,10 +80,14 @@ public class PinsetterKernel implements ModeChangeListener {
 
     public static final String CRON_GROUP = "cron group";
     public static final String SINGLE_JOB_GROUP = "async group";
-    public static final String[] DELETED_JOBS = new String[] {
-        "StatisticHistoryTask",
-        "ExportCleaner"
-    };
+
+    @SuppressWarnings("checkstyle:indentation")
+    public static final List<String> DELETED_JOBS = Collections.<String>unmodifiableList(
+        Arrays.<String>asList(
+            "StatisticHistoryTask",
+            "ExportCleaner"
+        )
+    );
 
     private static Logger log = LoggerFactory.getLogger(PinsetterKernel.class);
     private Scheduler scheduler;
@@ -169,9 +176,7 @@ public class PinsetterKernel implements ModeChangeListener {
      * @param conf Configuration object containing config values.
      */
     private void configure() {
-        if (log.isDebugEnabled()) {
-            log.debug("Scheduling tasks");
-        }
+        log.debug("Scheduling tasks");
 
         List<JobEntry> pendingJobs = new ArrayList<JobEntry>();
         // use a set to remove potential duplicate jobs from config
@@ -196,7 +201,8 @@ public class PinsetterKernel implements ModeChangeListener {
                 log.warn("No tasks to schedule");
                 return;
             }
-            log.debug("Jobs implemented:" + jobFQNames);
+
+            log.debug("Jobs implemented: {}", jobFQNames);
             Set<JobKey> jobKeys = scheduler.getJobKeys(jobGroupEquals(CRON_GROUP));
 
             /*
@@ -216,28 +222,27 @@ public class PinsetterKernel implements ModeChangeListener {
             }
 
             for (String jobFQName : jobFQNames) {
-                if (log.isDebugEnabled()) {
-                    log.debug("Scheduling " + jobFQName);
-                }
+                log.debug("Scheduling {}", jobFQName);
 
                 // Find all existing cron triggers matching this job impl
                 List<CronTrigger> existingCronTriggers = new LinkedList<CronTrigger>();
                 if (jobKeys != null) {
                     for (JobKey key : jobKeys) {
                         JobDetail jd = scheduler.getJobDetail(key);
-                        if (jd != null &&
-                            jd.getJobClass().getName().equals(jobFQName)) {
+                        if (jd != null && jd.getJobClass().getName().equals(jobFQName)) {
                             CronTrigger trigger = (CronTrigger) scheduler.getTrigger(
                                 triggerKey(key.getName(), CRON_GROUP));
+
                             if (trigger != null) {
                                 existingCronTriggers.add(trigger);
                             }
                             else {
-                                log.warn("JobKey " + key + " returned null cron trigger.");
+                                log.warn("JobKey {} returned null cron trigger.", key);
                             }
                         }
                     }
                 }
+
                 String schedule = getSchedule(jobFQName);
                 if (schedule != null) {
                     addUniqueJob(pendingJobs, jobFQName, existingCronTriggers, schedule);

@@ -57,15 +57,12 @@ public class RuntimeExceptionMapper extends CandlepinExceptionMapper
         return bldr.build();
     }
 
-    protected ResponseBuilder getBuilder(CandlepinException exception,
-        MediaType responseMediaType) {
-
+    protected ResponseBuilder getBuilder(CandlepinException exception, MediaType responseMediaType) {
         ResponseBuilder bldr = Response.status(exception.httpReturnCode())
             .entity(exception.message()).type(responseMediaType);
-        Map<String, String> map = VersionUtil.getVersionMap();
 
-        bldr.header(VersionUtil.VERSION_HEADER,
-            map.get("version") + "-" + map.get("release"));
+        Map<String, String> map = VersionUtil.getVersionMap();
+        bldr.header(VersionUtil.VERSION_HEADER, map.get("version") + "-" + map.get("release"));
 
         for (Map.Entry<String, String> hdr : exception.headers().entrySet()) {
             bldr.header(hdr.getKey(), hdr.getValue());

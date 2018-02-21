@@ -156,14 +156,16 @@ public class FixDuplicatePools {
             }
             else if (!subOwners.get(current).equals(rs.getString(4))) {
                 // Make sure owners are the same
-                log.error("Owners '" + rs.getString(4) + "' and '" +
-                    subOwners.get(current) + "' both have pools from subscription " +
-                    current);
-                throw new Exception("Pools exist for subscription " + current + " within " +
-                    "multiple owners.");
+                log.error("Owners '{}' and '{}' both have pools from subscription: {}",
+                    rs.getString(4), subOwners.get(current), current);
+
+                throw new Exception("Pools exist for subscription " + current + " within multiple owners.");
             }
+
             subPoolsMap.get(current).add(rs.getString(1));
         }
+        rs.close();
+
         return subPoolsMap;
     }
 

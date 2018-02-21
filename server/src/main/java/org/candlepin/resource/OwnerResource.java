@@ -902,7 +902,7 @@ public class OwnerResource {
         Owner owner = ownerCurator.lookupByKey(key);
 
         if (owner == null) {
-            throw new NotFoundException(i18n.tr("owner with key: {0} was not found.", key));
+            throw new NotFoundException(i18n.tr("Owner with key: {0} was not found", key));
         }
 
         return owner;
@@ -912,9 +912,9 @@ public class OwnerResource {
         Consumer consumer = consumerCurator.findByUuid(consumerUuid);
 
         if (consumer == null) {
-            throw new NotFoundException(i18n.tr("No such unit: {0}",
-                consumerUuid));
+            throw new NotFoundException(i18n.tr("No such unit: {0}", consumerUuid));
         }
+
         return consumer;
     }
 
@@ -1523,16 +1523,12 @@ public class OwnerResource {
     public UeberCertificate getUeberCertificate(@Context Principal principal,
         @Verify(Owner.class) @PathParam("owner_key") String ownerKey) {
 
-        Owner o = findOwner(ownerKey);
-        if (o == null) {
-            throw new NotFoundException(i18n.tr("Owner with key: {0} was not found.", ownerKey));
-        }
+        Owner o = this.findOwner(ownerKey);
 
         UeberCertificate ueberCert = ueberCertCurator.findForOwner(o);
         if (ueberCert == null) {
             throw new NotFoundException(
-                i18n.tr("uber certificate for owner {0} was not found. Please generate one.",
-                    o.getKey()));
+                i18n.tr("uber certificate for owner {0} was not found. Please generate one.", o.getKey()));
         }
         return ueberCert;
     }
@@ -1552,10 +1548,7 @@ public class OwnerResource {
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
     public List<UpstreamConsumer> getUpstreamConsumers(@Context Principal principal,
         @Verify(Owner.class) @PathParam("owner_key") String ownerKey) {
-        Owner o = findOwner(ownerKey);
-        if (o == null) {
-            throw new NotFoundException(i18n.tr("owner with key: {0} was not found.", ownerKey));
-        }
+        Owner o = this.findOwner(ownerKey);
 
         // returning as a list for future proofing. today we support one, but
         // users of this api want to protect against having to change their code

@@ -31,20 +31,18 @@ import java.util.TimeZone;
  * The format used is ISO 8601
  */
 public class DateSerializer extends JsonSerializer<Date> {
+    private final SimpleDateFormat dateFormat;
 
-    // This SimpleDateFormat is iso 8601 without milliseconds
-    public static final SimpleDateFormat ISO_8601_WITHOUT_MILLISECONDS;
-
-    static {
-        ISO_8601_WITHOUT_MILLISECONDS = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
-        ISO_8601_WITHOUT_MILLISECONDS.setTimeZone(TimeZone.getTimeZone("UTC"));
+    public DateSerializer() {
+        // This SimpleDateFormat is ISO 8601 without milliseconds
+        this.dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
+        this.dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
     }
 
     @Override
-    public void serialize(Date date, JsonGenerator jgen,
-        SerializerProvider serializerProvider)
+    public void serialize(Date date, JsonGenerator jgen, SerializerProvider serializerProvider)
         throws IOException, JsonProcessingException {
 
-        jgen.writeString(ISO_8601_WITHOUT_MILLISECONDS.format(date));
+        jgen.writeString(this.dateFormat.format(date));
     }
 }

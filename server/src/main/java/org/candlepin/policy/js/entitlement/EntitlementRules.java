@@ -939,7 +939,7 @@ public class EntitlementRules implements Enforcer {
                         for (int idex = 0; idex < pools.size(); idex++) {
                             Pool derivedPool = pools.get(idex);
                             if (derivedPool.getAttributeValue(Pool.Attributes.DERIVED_POOL) != null) {
-                                poolManager.updatePoolQuantity(derivedPool, -1 * virtQuantity);
+                                poolManager.updatePoolQuantity(derivedPool, -1L * virtQuantity);
                             }
                         }
                     }

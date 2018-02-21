@@ -153,7 +153,7 @@ public class RoleResource {
 
         Role existingRole = lookupRole(roleId);
         Set<PermissionBlueprint> picks = new HashSet<PermissionBlueprint>();
-        boolean found = true;
+        boolean found = false;
         PermissionBlueprint toRemove = null;
         for (PermissionBlueprint op : existingRole.getPermissions()) {
             if (!op.getId().equals(permissionId)) {
@@ -163,8 +163,8 @@ public class RoleResource {
                 found = true;
                 toRemove = op;
             }
-
         }
+
         if (!found) {
             throw new NotFoundException(i18n.tr("No such permission: {0} in role: {1}",
                 permissionId, roleId));

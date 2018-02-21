@@ -20,6 +20,7 @@ import java.util.Map;
 import javax.ws.rs.core.Response.Status;
 
 
+
 /**
  * Represents an Unauthorized (HTTP 401) error.
  */
@@ -35,8 +36,8 @@ public class NotAuthorizedException extends CandlepinException {
     @Override
     public Map<String, String> headers() {
         HashMap<String, String> negHeaders = new HashMap<String, String>();
-        negHeaders.put("WWW-Authenticate", "Negotiate");
         negHeaders.put("WWW-Authenticate", "Basic Realm=candlepin");
-        return  negHeaders;
+
+        return negHeaders;
     }
 }

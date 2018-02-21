@@ -30,8 +30,7 @@ public class NotAuthorizedExceptionMapper extends CandlepinExceptionMapper
 
     @Override
     public Response toResponse(NotAuthorizedException exception) {
-        return getDefaultBuilder(exception, Response.Status.UNAUTHORIZED,
-            determineBestMediaType()).build();
+        return getDefaultBuilder(exception, Response.Status.UNAUTHORIZED, determineBestMediaType()).build();
     }
 
 }

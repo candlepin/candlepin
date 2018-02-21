@@ -161,13 +161,10 @@ public class BouncyCastlePKIReader implements PKIReader {
      */
     private PrivateKey loadPrivateKey() {
         try {
-            InputStreamReader inStream = new InputStreamReader(
-                new FileInputStream(this.caKeyPath));
-            PEMParser reader = null;
+            // This will be closed by closing the PEMParser that uses it.
+            InputStreamReader inStream = new InputStreamReader(new FileInputStream(this.caKeyPath));
 
-            try {
-                reader = new PEMParser(inStream);
-
+            try (PEMParser reader = new PEMParser(inStream)) {
                 Object pemObj = reader.readObject();
                 if (pemObj == null) {
                     throw new GeneralSecurityException("Reading CA private key failed");
@@ -180,8 +177,8 @@ public class BouncyCastlePKIReader implements PKIReader {
 
                 if (pemObj instanceof PEMEncryptedKeyPair) {
                     PEMEncryptedKeyPair encryptedInfo = (PEMEncryptedKeyPair) pemObj;
-                    PEMDecryptorProvider provider = new JcePEMDecryptorProviderBuilder().setProvider(
-                        BC_PROVIDER)
+                    PEMDecryptorProvider provider = new JcePEMDecryptorProviderBuilder()
+                        .setProvider(BC_PROVIDER)
                         .build(getPassword());
                     PEMKeyPair decryptedInfo =  encryptedInfo.decryptKeyPair(provider);
                     return new JcaPEMKeyConverter().setProvider(BC_PROVIDER).getPrivateKey(decryptedInfo
@@ -190,9 +187,6 @@ public class BouncyCastlePKIReader implements PKIReader {
 
                 throw new GeneralSecurityException("Unexepected CA key object: " +
                         pemObj.getClass().getName());
-            }
-            finally {
-                reader.close();
             }
         }
         catch (Exception e) {

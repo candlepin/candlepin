@@ -28,7 +28,6 @@ import org.hibernate.annotations.GenericGenerator;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-import java.util.Formatter;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -298,7 +297,7 @@ public class User extends AbstractHibernateObject {
      */
     @Override
     public String toString() {
-        return new Formatter().format("User :{login: %s, password: %s}", username, hashedPassword).toString();
+        return String.format("User [login: %s, password: %s]", username, hashedPassword);
     }
 
 }

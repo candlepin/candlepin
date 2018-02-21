@@ -63,8 +63,7 @@ public class EventSource {
      */
     protected ClientSessionFactory createSessionFactory() throws Exception {
         return ActiveMQClient.createServerLocatorWithoutHA(
-            new TransportConfiguration(
-                InVMConnectorFactory.class.getName())).createSessionFactory();
+            new TransportConfiguration(InVMConnectorFactory.class.getName())).createSessionFactory();
     }
 
     protected void shutDown() {
@@ -80,7 +79,8 @@ public class EventSource {
 
     void registerListener(EventListener listener) {
         String queueName = QUEUE_ADDRESS + "." + listener.getClass().getCanonicalName();
-        log.debug("registering listener for " + queueName);
+        log.debug("registering listener for {}", queueName);
+
         try {
             try {
                 // Create a durable queue that will be persisted to disk:

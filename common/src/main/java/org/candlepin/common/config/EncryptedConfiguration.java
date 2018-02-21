@@ -48,8 +48,7 @@ public class EncryptedConfiguration extends PropertiesFileConfiguration {
         super(fileName);
     }
 
-    public EncryptedConfiguration(String fileName, Charset encoding)
-        throws ConfigurationException {
+    public EncryptedConfiguration(String fileName, Charset encoding) throws ConfigurationException {
         super(fileName, encoding);
     }
 
@@ -57,8 +56,7 @@ public class EncryptedConfiguration extends PropertiesFileConfiguration {
         super(file);
     }
 
-    public EncryptedConfiguration(File file, Charset encoding)
-        throws ConfigurationException {
+    public EncryptedConfiguration(File file, Charset encoding) throws ConfigurationException {
         super(file, encoding);
     }
 
@@ -80,7 +78,7 @@ public class EncryptedConfiguration extends PropertiesFileConfiguration {
         return this;
     }
 
-    public void toDecrypt(String ... encryptedProperties) throws ConfigurationException {
+    public void toDecrypt(String... encryptedProperties) throws ConfigurationException {
         for (String p : encryptedProperties) {
             toDecrypt(p);
         }
@@ -118,11 +116,10 @@ public class EncryptedConfiguration extends PropertiesFileConfiguration {
 
             // FIXME: katello-password creates a 64 byte key, but somewhere
             // it gets truncated to 32 bytes, so we have to do that here.
-            SecretKeySpec spec = new SecretKeySpec(Arrays.copyOfRange(
-                passphraseDigest.getBytes(), 0, 32), "AES");
+            SecretKeySpec spec = new SecretKeySpec(
+                Arrays.copyOfRange(passphraseDigest.getBytes(), 0, 32), "AES");
 
-            cipher.init(Cipher.DECRYPT_MODE, spec,
-                new IvParameterSpec(iv.getBytes(), 0, 16));
+            cipher.init(Cipher.DECRYPT_MODE, spec, new IvParameterSpec(iv.getBytes(), 0, 16));
 
             // NOTE: the encrypted password is stored hex base64
             byte[] b64bytes = Base64.decodeBase64(toDecrypt);
@@ -151,15 +148,15 @@ public class EncryptedConfiguration extends PropertiesFileConfiguration {
 
         log.debug("reading secret file: {}", secretFile);
 
-        try {
+        try (InputStream bs = new FileInputStream(secretFile)) {
             /* XXX Maybe it'd be better to use the charset the caller specifies during
              * construction?  But just because the config is in that charset doesn't mean
              * the password file is.  Stick with system default for now. */
-            InputStream bs = new FileInputStream(secretFile);
             return IOUtils.toString(bs, Charset.defaultCharset().name());
         }
         catch (Exception e) {
             String msg = String.format("Could not read: %s", secretFile);
+
             log.error(msg);
             throw new ConfigurationException(msg, e);
         }
