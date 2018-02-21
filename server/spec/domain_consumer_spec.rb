@@ -12,9 +12,8 @@ describe 'Domain Consumer' do
         :attributes => { :requires_consumer_type => :domain }
     })
 
-    create_pool_and_subscription(@owner['key'], @monitoring.id, 4,
-				[], '', '', '', nil, nil, true)
-    create_pool_and_subscription(@owner['key'], @domain_product.id, 4)
+    @cp.create_pool(@owner['key'], @monitoring.id, {:quantity => 4})
+    @cp.create_pool(@owner['key'], @domain_product.id, {:quantity => 4})
   end
 
   it 'should not be able to consume non domain specific products' do

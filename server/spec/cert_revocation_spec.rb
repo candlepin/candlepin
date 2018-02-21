@@ -16,9 +16,8 @@ describe 'Certificate Revocation List', :serial => true do
     @monitoring_prod = create_product random_string('monitoring')
 
     #entitle owner for the virt and monitoring products.
-    @monitoring_pool = create_pool_and_subscription(@owner['key'], @monitoring_prod.id, 6,
-				[], '', '', '', nil, nil, true)
-    create_pool_and_subscription(@owner['key'], @virt_prod.id, 3)
+    @monitoring_pool = @cp.create_pool(@owner['key'], @monitoring_prod.id, {:quantity => 6})
+    @cp.create_pool(@owner['key'], @virt_prod.id, {:quantity => 3})
 
     #create consumer
     username = random_string('billy')

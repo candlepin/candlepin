@@ -98,7 +98,7 @@ describe 'Consumer Resource' do
     id_list = []
     (1..4).each do |i|
       prod = create_product(nil, nil, { :owner => @owner1['key'] })
-      create_pool_and_subscription(@owner1['key'], prod.id, 6)
+      @cp.create_pool(@owner1['key'], prod.id, {:quantity => 6})
       id_list.push(prod.id)
     end
     id_list.each do |id|
@@ -127,7 +127,7 @@ describe 'Consumer Resource' do
   it 'should not re-calculate quantity attributes when fetching entitlements' do
     # should allow compliance type but not quantity
     prod = create_product(nil, nil, { :owner => @owner1['key'] })
-    create_pool_and_subscription(@owner1['key'], prod.id, 6)
+    @cp.create_pool(@owner1['key'], prod.id, {:quantity => 6})
     @consumer1.consume_product(prod.id)
 
     entitlements = @consumer1.list_entitlements()
@@ -140,7 +140,7 @@ describe 'Consumer Resource' do
   it "should block consumers from using other org's pools" do
     product_id = random_string('prod')
     product = create_product(product_id, product_id, {:owner => @owner1['key']})
-    pool = create_pool_and_subscription(@owner1['key'], product.id)
+    pool = @cp.create_pool(@owner1['key'], product.id, {:quantity => 10})
     lambda {
       @consumer2.consume_pool(pool.id, {:quantity => 1}).size.should == 1
     }.should raise_exception(RestClient::ResourceNotFound)
@@ -191,7 +191,7 @@ describe 'Consumer Resource' do
     @consumer1.update_consumer({:installedProducts => installed})
     @consumer1.get_consumer()['entitlementStatus'].should == "invalid"
 
-    pool = create_pool_and_subscription(@owner1['key'], product1.id)
+    pool = @cp.create_pool(@owner1['key'], product1.id)
 
     @consumer1.consume_pool(pool.id, {:quantity => 1}).size.should == 1
     @consumer1.get_consumer()['entitlementStatus'].should == "valid"
@@ -435,12 +435,15 @@ describe 'Consumer Resource' do
   it 'should allow consumer to bind to products supporting multiple architectures' do
     owner = create_owner random_string('owner')
     owner_client = user_client(owner, random_string('testowner'))
-    cp_client = consumer_client(owner_client, random_string('consumer123'), :system,
-                                nil, 'uname.machine' => 'x86_64')
-    prod = create_product(random_string('product'),
-      random_string('product-multiple-arch'),
-          {:attributes => { :arch => 'i386, x86_64'}, :owner => owner['key']})
-    pool = create_pool_and_subscription(owner['key'], prod.id)
+    cp_client = consumer_client(owner_client, random_string('consumer123'), :system, nil, 'uname.machine' => 'x86_64')
+    prod = create_product(random_string('product'), random_string('product-multiple-arch'), {
+      :attributes => {
+        :arch => 'i386, x86_64'
+      },
+      :owner => owner['key']
+    })
+
+    pool = @cp.create_pool(owner['key'], prod.id)
 
     cp_client.consume_pool(pool.id, {:quantity => 1}).size.should == 1
   end
@@ -449,7 +452,7 @@ describe 'Consumer Resource' do
     consumer = @user1.register(random_string("meow"))
     consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
     prod = create_product(nil, nil, {:owner => @owner1['key']})
-    pool = create_pool_and_subscription(@owner1['key'], prod.id)
+    pool = @cp.create_pool(@owner1['key'], prod.id)
 
     # Do a bind and make sure the updated timestamp changed:
     old_updated = @cp.get_consumer(consumer['uuid'])['updated']
@@ -465,7 +468,7 @@ describe 'Consumer Resource' do
   it 'consumer can async bind by product id' do
     product_id = random_string('prod')
     product = create_product(product_id, product_id, {:owner => @owner1['key']})
-    pool = create_pool_and_subscription(@owner1['key'], product.id)
+    pool = @cp.create_pool(@owner1['key'], product.id)
 
     status = @consumer1.consume_product(product.id, { :async => true })
 
@@ -485,13 +488,28 @@ describe 'Consumer Resource' do
     owner = create_owner random_string('owner')
     owner_client = user_client(owner, random_string('testowner'))
     cp_client = consumer_client(owner_client, random_string('consumer123'), :system, nil, 'cpu.cpu_socket(s)' => '4')
-    prod1 = create_product(random_string('product'), random_string('product-stackable'),
-      {:attributes => { :sockets => '2', :'multi-entitlement' => 'yes', :stacking_id => '8888'}, :owner => owner['key']})
-    prod2 = create_product(random_string('product'), random_string('product-stackable'),
-      {:attributes => { :sockets => '2', :'multi-entitlement' => 'yes', :stacking_id => '8888'}, :owner => owner['key']})
-    create_pool_and_subscription(owner['key'], prod1.id, 1, [], '', '', '', nil, nil, true)
-    create_pool_and_subscription(owner['key'], prod1.id, 1, [], '', '', '', nil, nil, true)
-    create_pool_and_subscription(owner['key'], prod2.id, 1)
+
+    prod1 = create_product(random_string('product'), random_string('product-stackable'), {
+      :attributes => {
+        :sockets => '2',
+        :'multi-entitlement' => 'yes',
+        :stacking_id => '8888'
+      },
+      :owner => owner['key']
+    })
+
+    prod2 = create_product(random_string('product'), random_string('product-stackable'), {
+      :attributes => {
+        :sockets => '2',
+        :'multi-entitlement' => 'yes',
+        :stacking_id => '8888'
+      },
+      :owner => owner['key']
+    })
+
+    @cp.create_pool(owner['key'], prod1.id)
+    @cp.create_pool(owner['key'], prod1.id)
+    @cp.create_pool(owner['key'], prod2.id)
 
     total = 0
     cp_client.consume_product(prod1.id).each {|ent|  total += ent.quantity}
@@ -572,7 +590,7 @@ describe 'Consumer Resource' do
     cp_client.update_consumer({:installedProducts => installed})
 
     now = DateTime.now
-    create_pool_and_subscription(owner['key'], product1.id, 1, [], '', '', '', now, now + 365)
+    @cp.create_pool(owner['key'], product1.id, {:start_date => now, :end_date => now + 365})
 
     for pool in @cp.list_owner_pools(owner['key']) do
         cp_client.consume_pool(pool.id, {:quantity => 1})
@@ -666,21 +684,24 @@ describe 'Consumer Resource' do
   end
 
   it 'should allow a consumer to update their service level' do
-    product1 = create_product(random_string('product'),
-      random_string('product'),
-      {:attributes => {:support_level => 'VIP'},
-      :owner => @owner1['key']})
-    product2 = create_product(random_string('product'),
-      random_string('product'),
-      {:attributes => {:support_level => 'Layered',
-      :support_level_exempt => 'true'},
-      :owner => @owner1['key']})
-    create_pool_and_subscription(@owner1['key'], product1.id, 1, [], '', '', '', nil, nil, true)
-    create_pool_and_subscription(@owner1['key'], product2.id)
+    product1 = create_product(random_string('product'), random_string('product'), {
+      :attributes => {:support_level => 'VIP'},
+      :owner => @owner1['key']
+    })
+
+    product2 = create_product(random_string('product'), random_string('product'), {
+      :attributes => {
+        :support_level => 'Layered',
+        :support_level_exempt => 'true'
+      },
+      :owner => @owner1['key']
+    })
+
+    @cp.create_pool(@owner1['key'], product1.id)
+    @cp.create_pool(@owner1['key'], product2.id)
 
     user_cp = user_client(@owner1, random_string('billy'))
-    consumer = user_cp.register(random_string('system'), :system, nil,
-      {}, nil, nil, [], [])
+    consumer = user_cp.register(random_string('system'), :system, nil, {}, nil, nil, [], [])
     consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
     consumer = @cp.get_consumer(consumer['uuid'])
     consumer['serviceLevel'].should == ''
@@ -733,7 +754,7 @@ describe 'Consumer Resource' do
     })
 
     now = DateTime.now
-    create_pool_and_subscription(@owner1['key'], product.id, 1, [], '', '', '', now - 2, now - 1)
+    @cp.create_pool(@owner1['key'], product.id, {:start_date => now - 2, :end_date => now - 1})
 
     user_cp = user_client(@owner1, random_string('billy'))
     consumer = user_cp.register(random_string('system'), :system, nil, {}, nil, nil, [], [])
@@ -745,27 +766,28 @@ describe 'Consumer Resource' do
   end
 
   it 'should allow a consumer dry run an autosubscribe based on service level' do
-    product1 = create_product(random_string('product'),
-      random_string('product'),
-      {:attributes => {:support_level => 'VIP'},
-      :owner => @owner1['key']})
-    product2 = create_product(random_string('product'),
-      random_string('product'),
-      {:attributes => {:support_level => 'Ultra-VIP'},
-      :owner => @owner1['key']})
-    pool1 = create_pool_and_subscription(@owner1['key'], product1.id)
-    pool2 = create_pool_and_subscription(@owner1['key'], product2.id)
+    product1 = create_product(random_string('product'), random_string('product'), {
+      :attributes => {:support_level => 'VIP'},
+      :owner => @owner1['key']
+    })
+
+    product2 = create_product(random_string('product'), random_string('product'), {
+      :attributes => {:support_level => 'Ultra-VIP'},
+      :owner => @owner1['key']
+    })
+
+    pool1 = @cp.create_pool(@owner1['key'], product1.id)
+    pool2 = @cp.create_pool(@owner1['key'], product2.id)
 
     user_cp = user_client(@owner1, random_string('billy'))
-    consumer = user_cp.register(random_string('system'), :system, nil,
-      {}, nil, nil, [], [])
+    consumer = user_cp.register(random_string('system'), :system, nil, {}, nil, nil, [], [])
     consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
     installed = [
-        {'productId' => product1.id, 'productName' => product1.name},
-        {'productId' => product2.id, 'productName' => product2.name}]
+      {'productId' => product1.id, 'productName' => product1.name},
+      {'productId' => product2.id, 'productName' => product2.name}
+    ]
 
-    consumer_client.update_consumer({:serviceLevel => 'VIP',
-                                     :installedProducts => installed})
+    consumer_client.update_consumer({:serviceLevel => 'VIP', :installedProducts => installed})
     consumer = @cp.get_consumer(consumer['uuid'])
     consumer['serviceLevel'].should == 'VIP'
 
@@ -801,39 +823,44 @@ describe 'Consumer Resource' do
   end
 
   it 'should recognize support level exempt attribute' do
-    product1 = create_product(random_string('product'),
-      random_string('product'),
-      {:attributes => {:support_level => 'Layered',
-      :support_level_exempt => 'true'},
-      :owner => @owner1['key']})
-    product2 = create_product(random_string('product'),
-      random_string('product'),
-      {:attributes => {:support_level => 'VIP'},
-      :owner => @owner1['key']})
-    product3 = create_product(random_string('product'),
-      random_string('product'),
-      {:attributes => {:support_level => 'Ultra-VIP'},
-      :owner => @owner1['key']})
-    product4 = create_product(random_string('product'),
-      random_string('product'),
-      {:attributes => {:support_level => 'LAYered'},
-      :owner => @owner1['key']})
-    pool1 = create_pool_and_subscription(@owner1['key'], product1.id)
-    create_pool_and_subscription(@owner1['key'], product2.id, 1, [], '', '', '', nil, nil, true)
-    create_pool_and_subscription(@owner1['key'], product3.id)
+    product1 = create_product(random_string('product'), random_string('product'), {
+      :attributes => {
+        :support_level => 'Layered',
+        :support_level_exempt => 'true'
+      },
+      :owner => @owner1['key']
+    })
+
+    product2 = create_product(random_string('product'), random_string('product'), {
+      :attributes => {:support_level => 'VIP'},
+      :owner => @owner1['key']
+    })
+
+    product3 = create_product(random_string('product'), random_string('product'), {
+      :attributes => {:support_level => 'Ultra-VIP'},
+      :owner => @owner1['key']
+    })
+
+    product4 = create_product(random_string('product'), random_string('product'), {
+      :attributes => {:support_level => 'LAYered'},
+      :owner => @owner1['key']
+    })
+
+    pool1 = @cp.create_pool(@owner1['key'], product1.id)
+    @cp.create_pool(@owner1['key'], product2.id)
+    @cp.create_pool(@owner1['key'], product3.id)
 
     user_cp = user_client(@owner1, random_string('billy'))
-    consumer = user_cp.register(random_string('system'), :system, nil,
-      {}, nil, nil, [], [])
+    consumer = user_cp.register(random_string('system'), :system, nil, {}, nil, nil, [], [])
     consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
 
     installed = [
         {'productId' => product1.id, 'productName' => product1.name},
         {'productId' => product2.id, 'productName' => product2.name},
-        {'productId' => product4.id, 'productName' => product4.name}]
+        {'productId' => product4.id, 'productName' => product4.name}
+    ]
 
-    consumer_client.update_consumer({:serviceLevel => 'Ultra-VIP',
-                                     :installedProducts => installed})
+    consumer_client.update_consumer({:serviceLevel => 'Ultra-VIP', :installedProducts => installed})
     consumer = @cp.get_consumer(consumer['uuid'])
     consumer['serviceLevel'].should == 'Ultra-VIP'
 
@@ -847,7 +874,7 @@ describe 'Consumer Resource' do
 
     # this product should also get pulled, exempt overrides
     # based on name match
-    create_pool_and_subscription(@owner1['key'], product4.id)
+    @cp.create_pool(@owner1['key'], product4.id)
     pools = @cp.autobind_dryrun(consumer['uuid'])
     pools.length.should == 2
 
@@ -859,24 +886,26 @@ describe 'Consumer Resource' do
   end
 
   it 'should return empty list for dry run where all pools are blocked because of consumer type' do
-    product1 = create_product(random_string('product'),
-      random_string('product'),
-      {:attributes => {:requires_consumer_type => :person},
-      :owner => @owner1['key']})
-    product2 = create_product(random_string('product'),
-      random_string('product'),
-      {:attributes => {:requires_consumer_type => :person},
-      :owner => @owner1['key']})
-    create_pool_and_subscription(@owner1['key'], product1.id, 1, [], '', '', '', nil, nil, true)
-    create_pool_and_subscription(@owner1['key'], product2.id)
+    product1 = create_product(random_string('product'), random_string('product'), {
+      :attributes => {:requires_consumer_type => :person},
+      :owner => @owner1['key']
+    })
+
+    product2 = create_product(random_string('product'), random_string('product'), {
+      :attributes => {:requires_consumer_type => :person},
+      :owner => @owner1['key']
+    })
+
+    @cp.create_pool(@owner1['key'], product1.id)
+    @cp.create_pool(@owner1['key'], product2.id)
 
     user_cp = user_client(@owner1, random_string('billy'))
-    consumer = user_cp.register(random_string('system'), :system, nil,
-      {}, nil, nil, [], [])
+    consumer = user_cp.register(random_string('system'), :system, nil, {}, nil, nil, [], [])
     consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
     installed = [
-        {'productId' => product1.id, 'productName' => product1.name},
-        {'productId' => product2.id, 'productName' => product2.name}]
+      {'productId' => product1.id, 'productName' => product1.name},
+      {'productId' => product2.id, 'productName' => product2.name}
+    ]
 
     consumer_client.update_consumer({:installedProducts => installed})
 
@@ -904,7 +933,7 @@ describe 'Consumer Resource' do
     # performs the register for us
     consumer = consumer_client(user, random_string('machine1'))
     product = create_product(nil, nil, {:owner => owner['key']})
-    create_pool_and_subscription(owner['key'], product.id, 2)
+    @cp.create_pool(owner['key'], product.id, {:quantity => 2})
     pool = consumer.list_pools(:consumer => consumer.uuid)[0]
     pool.consumed.should == 0
     consumer.consume_pool(pool.id, {:quantity => 1})
@@ -919,7 +948,7 @@ describe 'Consumer Resource' do
     # performs the register for us
     consumer = consumer_client(user, random_string('machine1'))
     product = create_product(nil, nil, {:owner => owner['key']})
-    create_pool_and_subscription(owner['key'], product.id, 2)
+    @cp.create_pool(owner['key'], product.id, {:quantity => 2})
     pool = consumer.list_pools(:consumer => consumer.uuid)[0]
     pool.consumed.should == 0
     consumer.consume_pool_empty_body(pool.id)
@@ -932,9 +961,9 @@ describe 'Consumer Resource' do
     # performs the register for us
     consumer = consumer_client(user, random_string('machine1'))
     product = create_product(nil, nil, {:owner => owner['key']})
-    create_pool_and_subscription(owner['key'], product.id, 2)
-    create_pool_and_subscription(owner['key'], product.id, 2)
-    create_pool_and_subscription(owner['key'], product.id, 2)
+    @cp.create_pool(owner['key'], product.id, {:quantity => 2})
+    @cp.create_pool(owner['key'], product.id, {:quantity => 2})
+    @cp.create_pool(owner['key'], product.id, {:quantity => 2})
     pools = consumer.list_pools(:consumer => consumer.uuid)
     pools.length.should == 3
     poolAndQuantities = []
@@ -1003,12 +1032,20 @@ describe 'Consumer Resource' do
     facts = {
         'cpu.cpu_socket(s)' => '4',
     }
-    product1 = create_product(random_string('product'), random_string('product-multiple-arch'),
-      {:attributes => { :sockets => '1', :'multi-entitlement' => 'yes', :stacking_id => 'consumer-bind-test'}, :owner => @owner1['key']})
-    pool = create_pool_and_subscription(@owner1['key'], product1.id, 10)
-    installed = [
-        {'productId' => product1.id, 'productName' => product1.name}
-    ]
+
+    product1 = create_product(random_string('product'), random_string('product-multiple-arch'), {
+      :attributes => {
+        :sockets => '1',
+        :'multi-entitlement' => 'yes',
+        :stacking_id => 'consumer-bind-test'
+      },
+      :owner => @owner1['key']
+    })
+
+    pool = @cp.create_pool(@owner1['key'], product1.id, {:quantity => 10})
+
+    installed = [{'productId' => product1.id, 'productName' => product1.name}]
+
     @consumer1.update_consumer({:installedProducts => installed, :facts => facts})
     ent = @consumer1.consume_pool(pool.id)
     ent[0]["quantity"].should == 4
@@ -1018,12 +1055,19 @@ describe 'Consumer Resource' do
     facts = {
       'cpu.cpu_socket(s)' => '4',
     }
-    product1 = create_product(random_string('product'), random_string('product-multiple-arch'),
-      {:attributes => { :sockets => '2', :'multi-entitlement' => 'yes', :stacking_id => 'consumer-bind-test'}, :owner => @owner1['key']})
-    pool = create_pool_and_subscription(@owner1['key'], product1.id, 10)
-    installed = [
-        {'productId' => product1.id, 'productName' => product1.name}
-    ]
+
+    product1 = create_product(random_string('product'), random_string('product-multiple-arch'), {
+      :attributes => {
+        :sockets => '2',
+        :'multi-entitlement' => 'yes',
+        :stacking_id => 'consumer-bind-test'
+      },
+      :owner => @owner1['key']
+    })
+
+    pool = @cp.create_pool(@owner1['key'], product1.id, {:quantity => 10})
+
+    installed = [{'productId' => product1.id, 'productName' => product1.name}]
     @consumer1.update_consumer({:installedProducts => installed, :facts => facts})
     # Cover product with 2 2 socket ents, then suggested will be 0
     ent = @consumer1.consume_pool(pool.id, {:quantity => 2})
@@ -1035,14 +1079,21 @@ describe 'Consumer Resource' do
     facts = {
       'cpu.cpu_socket(s)' => '4',
     }
-    product1 = create_product(random_string('product'), random_string('product-multiple-arch'),
-      {:attributes => { :sockets => '2', :'multi-entitlement' => 'yes', :stacking_id => 'consumer-bind-test'}, :owner => @owner1['key']})
-    current_pool = create_pool_and_subscription(@owner1['key'], product1.id, 10)
+
+    product1 = create_product(random_string('product'), random_string('product-multiple-arch'), {
+      :attributes => {
+        :sockets => '2',
+        :'multi-entitlement' => 'yes',
+        :stacking_id => 'consumer-bind-test'
+      },
+      :owner => @owner1['key']
+    })
+
+    current_pool = @cp.create_pool(@owner1['key'], product1.id, {:quantity => 10})
     start = DateTime.now + 400
-    future_pool = create_pool_and_subscription(@owner1['key'], product1.id, 10, [], '', '', '', start)
-    installed = [
-        {'productId' => product1.id, 'productName' => product1.name}
-    ]
+    future_pool = @cp.create_pool(@owner1['key'], product1.id, {:quantity => 10, :start_date => start})
+
+    installed = [{'productId' => product1.id, 'productName' => product1.name}]
     @consumer1.update_consumer({:installedProducts => installed, :facts => facts})
     # Fully cover the product1 for a year
     @consumer1.consume_pool(current_pool.id, {:quantity => 2})
@@ -1092,15 +1143,15 @@ describe 'Consumer Resource' do
     prod1 = create_product(random_string("product"), random_string("product"), {:owner => @owner1['key']})
     prod2 = create_product(random_string("product"), random_string("product"), {:owner => @owner1['key']})
 
-    pool = create_pool_and_subscription(@owner1['key'], prod.id)
+    pool = @cp.create_pool(@owner1['key'], prod.id)
     ent = consumer_client.consume_pool(pool['id'], {:quantity => 1}).first
     @cp.get_consumer(consumer['uuid'])['entitlementCount'].should == 1
 
-    pool1 = create_pool_and_subscription(@owner1['key'], prod1.id)
+    pool1 = @cp.create_pool(@owner1['key'], prod1.id)
     ent1 = consumer_client.consume_pool(pool1['id'], {:quantity => 1}).first
     @cp.get_consumer(consumer['uuid'])['entitlementCount'].should == 2
 
-    pool2 = create_pool_and_subscription(@owner1['key'], prod2.id)
+    pool2 = @cp.create_pool(@owner1['key'], prod2.id)
     ent2 = consumer_client.consume_pool(pool2['id'], {:quantity => 1}).first
     @cp.get_consumer(consumer['uuid'])['entitlementCount'].should == 3
 

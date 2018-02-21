@@ -201,28 +201,43 @@ describe 'Consumer Resource Host/Guest' do
     uuid3 = random_string('system.uuid')
     guests = [{'guestId' => uuid1}, {'guestId' => uuid2}, {'guestId' => uuid3}]
 
-    vip_product = create_product(random_string('product'),
-      random_string('product'),
-      {:attributes => {:support_level => 'VIP',
-                       :virt_limit => "5",
-                       :host_limited => 'true'},
-      :owner => @owner1['key']})
-    std_product = create_product(random_string('product'),
-      random_string('product'),
-      {:attributes => {:support_level => 'Standard',
-                       :virt_limit => "5",
-                       :host_limited => 'true'},
-      :owner => @owner1['key']})
-    provided_product = create_product(random_string('product'),
-      random_string('product'),
-      {:owner => @owner1['key']})
+    vip_product = create_product(random_string('product'), random_string('product'), {
+      :attributes => {
+        :support_level => 'VIP',
+        :virt_limit => "5",
+        :host_limited => 'true'
+      },
+      :owner => @owner1['key']
+    })
 
-    create_pool_and_subscription(@owner1['key'], vip_product.id, 10, [provided_product.id],
-				'', '', '', nil, nil, true)
-    create_pool_and_subscription(@owner1['key'], std_product.id, 10, [provided_product.id])
+    std_product = create_product(random_string('product'), random_string('product'), {
+      :attributes => {
+        :support_level => 'Standard',
+        :virt_limit => "5",
+        :host_limited => 'true'
+      },
+      :owner => @owner1['key']
+    })
 
-    installed = [
-        {'productId' => provided_product.id, 'productName' => provided_product.name}]
+    provided_product = create_product(random_string('product'), random_string('product'), {
+      :owner => @owner1['key']
+    })
+
+    @cp.create_pool(@owner1['key'], vip_product.id, {
+      :quantity => 10,
+      :provided_products => [provided_product.id],
+      :subscription_id => random_string('source_sub'),
+      :upstream_pool_id => random_string('upstream')
+    })
+
+    @cp.create_pool(@owner1['key'], std_product.id, {
+      :quantity => 10,
+      :provided_products => [provided_product.id],
+      :subscription_id => random_string('source_sub'),
+      :upstream_pool_id => random_string('upstream')
+    })
+
+    installed = [{'productId' => provided_product.id, 'productName' => provided_product.name}]
 
     user_cp = user_client(@owner1, random_string('test-user'))
     host_consumer = user_cp.register(random_string('host'), :system, nil, {}, nil, nil, [], [])

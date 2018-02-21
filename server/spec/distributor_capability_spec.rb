@@ -137,18 +137,20 @@ describe 'Distributor Capability' do
   # shows blocking for capability deficiency as well as showing
   # distributor consumers not needing cert version validation
   it 'can stop bind based on consumer capabilities' do
-    @product = create_product(nil, nil, :attributes =>
-                {:cores => 8})
-    create_pool_and_subscription(@owner['key'], @product.id, 10, [], '12345', '6789', 'order1')
+    @product = create_product(nil, nil, :attributes => {:cores => 8})
+    @cp.create_pool(@owner['key'], @product.id, {
+      :quantity => 10,
+      :contract_number => '12345',
+      :account_number => '6789',
+      :order_number => 'order1'
+    })
 
     consumer = @user.register(random_string("consumer"), :candlepin, nil, {})
     entitlements = @cp.consume_product(@product.id, {:uuid => consumer.uuid})
     entitlements.should == []
 
     name = random_string("WidgetvBillion")
-    create_distributor_version(name,
-                                "Widget Billion",
-                               ["cores"])
+    create_distributor_version(name, "Widget Billion", ["cores"])
     facts = {
       'distributor_version' => name
     }

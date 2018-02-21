@@ -15,14 +15,18 @@ describe 'Conditional Content and Dependent Entitlements' do
 
     # This bundled product contains all of the provided products our conditional content will require
     @bundled_product_1 = create_product()
-    @bundled_pool_1 = create_pool_and_subscription(@owner['key'], @bundled_product_1.id, 10,
-      [@required_product_1.id, @required_product_2.id, @required_product_3.id])
+    @bundled_pool_1 = @cp.create_pool(@owner['key'], @bundled_product_1.id, {
+      :quantity => 10,
+      :provided_products => [@required_product_1.id, @required_product_2.id, @required_product_3.id]
+    })
 
     # This bundled product only contains two of the provided products our conditional content
     # will require
     @bundled_product_2 = create_product()
-    @bundled_pool_2 = create_pool_and_subscription(@owner['key'], @bundled_product_2.id, 10,
-      [@required_product_1.id, @required_product_2.id])
+    @bundled_pool_2 = @cp.create_pool(@owner['key'], @bundled_product_2.id, {
+      :quantity => 10,
+      :provided_products => [@required_product_1.id, @required_product_2.id]
+    })
 
     # Create our dependent provided product, which carries content sets -- each of which of which
     # requires one of the provided products above
@@ -36,7 +40,10 @@ describe 'Conditional Content and Dependent Entitlements' do
 
     # Create a dependent pool, providing only the product containing our conditional content
     @dependent_product = create_product()
-    @dependent_pool = create_pool_and_subscription(@owner['key'], @dependent_product.id, 10, [@dependent_provided_product.id])
+    @dependent_pool = @cp.create_pool(@owner['key'], @dependent_product.id, {
+      :quantity => 10,
+      :provided_products => [@dependent_provided_product.id]
+    })
 
     owner_client = user_client(@owner, random_string('testowner'))
     @consumer_cp = consumer_client(owner_client, random_string('consumer123'))
@@ -225,8 +232,8 @@ describe 'Conditional Content and Dependent Entitlements' do
     expect(content_repo_type(dependent_cert, @conditional_content_3.id)).to eq('yum')
 
     # Unbind the pools to revoke our entitlements...
-    delete_pool_and_subscription(@bundled_pool_1)
-    delete_pool_and_subscription(@bundled_pool_2)
+    @cp.delete_pool(@bundled_pool_1['id'])
+    @cp.delete_pool(@bundled_pool_2['id'])
     @cp.refresh_pools(@owner['key'])
 
     # Re-fetch the modifier entitlement...

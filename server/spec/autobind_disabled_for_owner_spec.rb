@@ -35,8 +35,8 @@ describe 'Autobind Disabled On Owner' do
     skip("candlepin running in standalone mode") if not is_hosted?
 
     # active subscription to allow this all to work
-    active_prod = create_product()
-    active_sub = create_pool_and_subscription(@owner['key'], active_prod.id, 10)
+    upstream_prod = create_upstream_product(random_string("test_prod"))
+    upstream_sub = create_upstream_subscription(random_string("test_sub"), @owner['key'], upstream_prod.id, {:quantity => 10})
     @cp.refresh_pools(@owner['key'])
 
     dev_product = create_product("dev_product", "Dev Product", {:attributes => { :expires_after => "60"}})

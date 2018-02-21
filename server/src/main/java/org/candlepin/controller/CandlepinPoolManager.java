@@ -210,7 +210,7 @@ public class CandlepinPoolManager implements PoolManager {
         log.debug("Fetching subscriptions from adapter...");
         List<Subscription> subscriptions = subAdapter.getSubscriptions(owner);
 
-        log.debug("Done. Processing subscriptions...");
+        log.debug("Done. Processing {} subscriptions...", subscriptions.size());
         for (Subscription subscription : subscriptions) {
             if (subscription == null) {
                 continue;
@@ -827,7 +827,6 @@ public class CandlepinPoolManager implements PoolManager {
      *  The owner the pool will be assigned to
      */
     private Pool convertToMasterPoolImpl(Subscription sub, Owner owner, Map<String, Product> productMap) {
-
         if (sub == null) {
             throw new IllegalArgumentException("subscription is null");
         }

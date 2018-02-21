@@ -8,42 +8,54 @@ describe 'vCPU Limiting' do
     @owner = create_owner random_string('test_owner')
 
     # Create a product limiting by core only.
-    @vcpu_product = create_product(nil, random_string("Product1"), :attributes =>
-                {:version => '6.4',
-                 :vcpu => 8,
-                 :cores => 2,
-                 :sockets => 1,
-                 :warning_period => 15,
-                 :management_enabled => true,
-                 :support_level => 'standard',
-                 :support_type => 'excellent',})
-    @vcpu_pool = create_pool_and_subscription(@owner['key'], @vcpu_product.id, 10, [], '1888', '1234')
+    @vcpu_product = create_product(nil, random_string("Product1"), :attributes => {
+      :version => '6.4',
+      :vcpu => 8,
+      :cores => 2,
+      :sockets => 1,
+      :warning_period => 15,
+      :management_enabled => true,
+      :support_level => 'standard',
+      :support_type => 'excellent',
+    })
 
-    @vcpu_stackable_prod = create_product(nil, random_string("Product2"), :attributes =>
-                {:version => '6.4',
-                 :vcpu => 8,
-                 :cores => 2,
-                 :sockets => 1,
-                 :warning_period => 15,
-                 :management_enabled => true,
-                 :support_level => 'standard',
-                 :support_type => 'excellent',
-                 :'multi-entitlement' => 'yes',
-                 :stacking_id => '12344321'})
-    @vcpu_stackable_pool = create_pool_and_subscription(@owner['key'], @vcpu_stackable_prod.id, 10, [], '1888', '1234')
+    @vcpu_pool = @cp.create_pool(@owner['key'], @vcpu_product.id, {
+      :quantity => 10,
+      :contract_number => '1888',
+      :account_number => '1234'
+    })
+
+    @vcpu_stackable_prod = create_product(nil, random_string("Product2"), :attributes => {
+      :version => '6.4',
+      :vcpu => 8,
+      :cores => 2,
+      :sockets => 1,
+      :warning_period => 15,
+      :management_enabled => true,
+      :support_level => 'standard',
+      :support_type => 'excellent',
+      :'multi-entitlement' => 'yes',
+      :stacking_id => '12344321'
+    })
+
+    @vcpu_stackable_pool = @cp.create_pool(@owner['key'], @vcpu_stackable_prod.id, {
+      :quantity => 10,
+      :contract_number => '1888',
+      :account_number => '1234'
+    })
 
     @user = user_client(@owner, random_string('test-user'))
   end
 
   it 'consumer status should be valid when consumer vCPUs are covered' do
-    system = consumer_client(@user, random_string('system1'), :system, nil,
-                {'system.certificate_version' => '3.2',
-                 # Simulate 8 cores as would be returned from system fact
-                 'cpu.core(s)_per_socket' => '8',
-                 'virt.is_guest' => 'true'})
-    installed = [
-        {'productId' => @vcpu_product.id, 'productName' => @vcpu_product.name}
-    ]
+    system = consumer_client(@user, random_string('system1'), :system, nil, {
+      'system.certificate_version' => '3.2',
+      # Simulate 8 cores as would be returned from system fact
+      'cpu.core(s)_per_socket' => '8',
+      'virt.is_guest' => 'true'
+    })
+
+    installed = [{'productId' => @vcpu_product.id, 'productName' => @vcpu_product.name}]
     system.update_consumer({:installedProducts => installed})
 
     entitlement = system.consume_product(@vcpu_product.id)[0]

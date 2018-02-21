@@ -83,32 +83,57 @@ describe 'One Sub Pool Per Stack' do
 
     @stacked_provided_product2 =  create_product()
 
-    create_pool_and_subscription(@owner['key'],
-      @virt_limit_product.id, 10, [@virt_limit_provided_product.id], "123", "321", "333",
-      nil, nil, true)
-    create_pool_and_subscription(@owner['key'],
-      @virt_limit_product.id, 10, [], "456", '', '', nil, @now + 380, true)
-    create_pool_and_subscription(@owner['key'],
-      @virt_limit_product2.id, 10, [], "444", '', '', nil, @now + 380, true)
-    create_pool_and_subscription(@owner['key'],
-      @regular_stacked_product.id, 4, [@regular_stacked_provided_product.id], "789",
-      "","", nil, nil, true)
-    create_pool_and_subscription(@owner['key'],
-      @non_stacked_product.id, 2, [], "234", "", "", nil, nil, true)
-    create_pool_and_subscription(@owner['key'], @stacked_datacenter_product.id,
-      10, [], '222', '', '', nil, nil, true,
-      {
-        :derived_product_id => @derived_product.id,
-        :derived_provided_products => [@derived_provided_product.id]
-      })
-    create_pool_and_subscription(@owner['key'],
-      @stacked_product_diff_id.id, 2, [], "888", '', '', @now - 3, @now + 6)
+    @cp.create_pool(@owner['key'], @virt_limit_product.id, {
+      :quantity => 10,
+      :provided_products => [@virt_limit_provided_product.id],
+      :contract_number => "123",
+      :account_number => "321",
+      :order_number => "333",
+    })
+
+    @cp.create_pool(@owner['key'], @virt_limit_product.id, {
+      :quantity => 10,
+      :contract_number => "456",
+      :end_date => @now + 380,
+    })
+
+    @cp.create_pool(@owner['key'], @virt_limit_product2.id, {
+      :quantity => 10,
+      :contract_number => "444",
+      :end_date => @now + 380,
+    })
+
+    @cp.create_pool(@owner['key'], @regular_stacked_product.id, {
+      :quantity => 4,
+      :provided_products => [@regular_stacked_provided_product.id],
+      :contract_number => "789",
+    })
+
+    @cp.create_pool(@owner['key'], @non_stacked_product.id, {
+      :quantity => 2,
+      :contract_number => "234",
+    })
+
+    @cp.create_pool(@owner['key'], @stacked_datacenter_product.id, {
+      :quantity => 10,
+      :contract_number => '222',
+      :derived_product_id => @derived_product.id,
+      :derived_provided_products => [@derived_provided_product.id],
+    })
+
+    @cp.create_pool(@owner['key'], @stacked_product_diff_id.id, {
+      :quantity => 2,
+      :contract_number => "888",
+      :start_date => @now - 3,
+      :end_date => @now + 6,
+    })
 
     # Determine our pools by matching on contract number.
     pools = @user.list_pools :owner => @owner.id
 
     # test does not use unmapped guest pools
     filter_unmapped_guest_pools(pools)
+
 
     @initial_pool_count = pools.size
     @initial_pool_count.should == 7

@@ -8,32 +8,42 @@ describe 'Core and RAM Limiting' do
     @owner = create_owner random_string('test_owner')
 
     # Create a product limiting by core and sockets and ram.
-    @core_and_socket_product = create_product(nil, random_string("Product1"), :attributes =>
-                {:version => '1.2',
-                 :cores => 16,
-                 :ram => 8,
-                 :sockets => 4,
-                 :warning_period => 15,
-                 :management_enabled => true,
-                 :support_level => 'standard',
-                 :support_type => 'excellent',})
-    @core_socket_pool = create_pool_and_subscription(@owner['key'], @core_and_socket_product.id, 10,
-                                              [], '18881', '1222')
+    @core_and_socket_product = create_product(nil, random_string("Product1"), :attributes => {
+      :version => '1.2',
+      :cores => 16,
+      :ram => 8,
+      :sockets => 4,
+      :warning_period => 15,
+      :management_enabled => true,
+      :support_level => 'standard',
+      :support_type => 'excellent',
+    })
+
+    @core_socket_pool = @cp.create_pool(@owner['key'], @core_and_socket_product.id, {
+      :quantity => 10,
+      :contract_number => '18881',
+      :account_number => '1222'
+    })
 
     # Create a product limiting by core and sockets and ram for multi-entitlement.
-    @core_and_socket_product_2 = create_product(nil, random_string("Product1"), :attributes =>
-                {:version => '1.2',
-                 :cores => 16,
-                 :ram => 8,
-                 :sockets => 4,
-                 :warning_period => 15,
-                 :management_enabled => true,
-                 :support_level => 'standard',
-                 :support_type => 'excellent',
-                 :'multi-entitlement' => 'yes',
-                 :stacking_id => '88888888'})
-    @core_socket_pool_2 = create_pool_and_subscription(@owner['key'], @core_and_socket_product_2.id, 100,
-                                              [], '18882', '1223')
+    @core_and_socket_product_2 = create_product(nil, random_string("Product1"), :attributes => {
+      :version => '1.2',
+      :cores => 16,
+      :ram => 8,
+      :sockets => 4,
+      :warning_period => 15,
+      :management_enabled => true,
+      :support_level => 'standard',
+      :support_type => 'excellent',
+      :'multi-entitlement' => 'yes',
+      :stacking_id => '88888888'
+    })
+
+    @core_socket_pool_2 = @cp.create_pool(@owner['key'], @core_and_socket_product_2.id, {
+      :quantity => 100,
+      :contract_number => '18882',
+      :account_number => '1223'
+    })
 
     @user = user_client(@owner, random_string('test-user'))
   end
@@ -239,14 +249,11 @@ describe 'Core and RAM Limiting' do
       :owner => owner['key']
     )
 
-    installed = [
-        {'productId' => prod1.id, 'productName' => prod1.name},
-    ]
+    installed = [{'productId' => prod1.id, 'productName' => prod1.name}]
     system.update_consumer({:installedProducts => installed})
 
-    create_pool_and_subscription(owner['key'], prod1.id, 2,
-				[], '', '', '', nil, nil, true)
-    create_pool_and_subscription(owner['key'], prod2.id, 3)
+    @cp.create_pool(owner['key'], prod1.id, {:quantity => 2})
+    @cp.create_pool(owner['key'], prod2.id, {:quantity => 3})
 
     entitlements=[]
     for pool in system.list_owner_pools(owner['key']) do

@@ -43,17 +43,20 @@ describe 'Import', :serial => true do
         'multi-entitlement' => "yes"
       }
     })
+
     derived_product = create_product(nil, nil, {
       :attributes => {
           :cores => '6',
           :sockets=>'8'
       }
     })
-    datacenter_pool = create_pool_and_subscription(@owner['key'], stacked_datacenter_product.id,
-      10, [], '222', '', '', nil, nil, false,
-      {
-        :derived_product_id => derived_product.id
-      })
+
+    datacenter_pool = @cp.create_pool(@owner['key'], stacked_datacenter_product.id, {
+      :quantity => 10,
+      :contract_number => '222',
+      :derived_product_id => derived_product.id
+    })
+
     pool = @cp.list_owner_pools(@owner['key'], {:product => stacked_datacenter_product.id})[0]
 
     # create the distributor consumer
@@ -70,7 +73,7 @@ describe 'Import', :serial => true do
 
     # remove client at 'host'
     consumer_client.unregister consumer_client.uuid
-    delete_pool_and_subscription(datacenter_pool)
+    @cp.delete_pool(datacenter_pool['id'])
 
     # import to make org at 'distributor'
     import_user_client = user_client(@dist_owner, random_string("user"))
@@ -117,7 +120,7 @@ describe 'Import', :serial => true do
     # remove created subs
     @cp.list_owner_pools(@dist_owner['key']).each do |p|
         if p.type == 'NORMAL' then
-          delete_pool_and_subscription(p)
+          @cp.delete_pool(p['id'])
         end
     end
   end

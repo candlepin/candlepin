@@ -14,36 +14,22 @@
  */
 package org.candlepin.hostedtest;
 
-import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.util.SuppressSwaggerCheck;
-import org.candlepin.controller.ProductManager;
-import org.candlepin.model.Content;
-import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerContentCurator;
-import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.OwnerProductCurator;
-import org.candlepin.model.Product;
-import org.candlepin.model.ProductContent;
-import org.candlepin.model.ProductCurator;
+import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
-import org.candlepin.resource.util.ResolverUtil;
 import org.candlepin.service.UniqueIdGenerator;
-
-import com.google.inject.persist.Transactional;
 
 import org.xnap.commons.i18n.I18n;
 
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.LinkedList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import javax.inject.Inject;
-import javax.persistence.LockModeType;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -61,7 +47,7 @@ import javax.ws.rs.core.MediaType;
  * as the only purpose of this class is to support spec tests.
  */
 @SuppressSwaggerCheck
-@Path("/hostedtest/subscriptions")
+@Path("/hostedtest/")
 public class HostedTestSubscriptionResource {
 
     @Inject
@@ -69,24 +55,6 @@ public class HostedTestSubscriptionResource {
 
     @Inject
     private UniqueIdGenerator idGenerator;
-
-    @Inject
-    private ResolverUtil resolverUtil;
-
-    @Inject
-    private ProductManager productManager;
-
-    @Inject
-    private ProductCurator productCurator;
-
-    @Inject
-    private OwnerContentCurator ownerContentCurator;
-
-    @Inject
-    private OwnerCurator ownerCurator;
-
-    @Inject
-    private OwnerProductCurator ownerProductCurator;
 
     @Inject
     private I18n i18n;
@@ -104,6 +72,14 @@ public class HostedTestSubscriptionResource {
     }
 
     /**
+     * Deletes all subscriptions, products and content.
+     */
+    @DELETE
+    public void clearUpstreamData() {
+        adapter.clearData();
+    }
+
+    /**
      * Creates a new subscription from the subscription JSON provided. Any UUID
      * provided in the JSON will be ignored when creating the new subscription.
      *
@@ -113,13 +89,15 @@ public class HostedTestSubscriptionResource {
      *         The newly created Subscription object
      */
     @POST
+    @Path("/subscriptions")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Subscription createSubscription(Subscription subscription) {
         if (subscription.getId() == null || subscription.getId().trim().length() == 0) {
             subscription.setId(this.idGenerator.generateId());
         }
-        return adapter.createSubscription(resolverUtil.resolveSubscriptionAndProduct(subscription));
+
+        return this.adapter.createSubscription(subscription);
     }
 
     /**
@@ -129,9 +107,10 @@ public class HostedTestSubscriptionResource {
      *  A collection of subscriptions maintained by the subscription service
      */
     @GET
+    @Path("/subscriptions")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Subscription> listSubscriptions() {
-        return adapter.getSubscriptions();
+    public Collection<Subscription> listSubscriptions() {
+        return this.adapter.getSubscriptions();
     }
 
     /**
@@ -145,165 +124,155 @@ public class HostedTestSubscriptionResource {
      *         could not be found
      */
     @GET
-    @Path("/{subscription_id}")
+    @Path("/subscriptions/{subscription_id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Subscription getSubscription(@PathParam("subscription_id") String subscriptionId) {
-        return adapter.getSubscription(subscriptionId);
+        return this.adapter.getSubscription(subscriptionId);
     }
 
     /**
      * Updates the specified subscription with the provided subscription data.
      *
-     * @param subscriptionNew
-     *        A Subscription object built from the JSON provided in the request;
-     *        contains the data to use
-     *        to update the specified subscription
+     * @param subId
+     *  The ID of the subscription to update
+     *
+     * @param dto
+     *  A subscription DTO containing the changes to apply
+     *
      * @return
-     *         The updated Subscription object
+     *  The updated subscription
      */
     @PUT
+    @Path("/subscriptions/{subscription_id}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Subscription updateSubscription(Subscription subscriptionNew) {
-        return adapter.updateSubscription(resolverUtil.resolveSubscription(subscriptionNew));
+    public Subscription updateSubscription(@PathParam("subscription_id") String subId, Subscription dto) {
+        return this.adapter.updateSubscription(subId, dto);
     }
 
     /**
      * Deletes the specified subscription.
      *
      * @param subscriptionId
-     *        The id of the subscription to delete
-     * @return
-     *         True if the subscription was deleted successfully; false
-     *         otherwise
+     *  The id of the subscription to delete
      */
     @DELETE
-    @Path("/{subscription_id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public boolean deleteSubscription(@PathParam("subscription_id") String subscriptionId) {
-        return adapter.deleteSubscription(subscriptionId);
+    @Path("/subscriptions/{subscription_id}")
+    public void deleteSubscription(@PathParam("subscription_id") String subscriptionId) {
+        this.adapter.deleteSubscription(subscriptionId);
     }
-
-    /**
-     * Deletes all subscriptions.
-     */
-    @DELETE
-    @Produces(MediaType.APPLICATION_JSON)
-    public void deleteAllSubscriptions() {
-        adapter.deleteAllSubscriptions();
-    }
-
 
     @POST
+    @Path("/products")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/owners/{owner_key}/products/{product_id}/batch_content")
-    @Transactional
-    public Product addBatchContent(
-        @PathParam("owner_key") String ownerKey,
-        @PathParam("product_id") String productId,
-        Map<String, Boolean> contentMap) {
-
-        Owner owner = this.getOwnerByKey(ownerKey);
-        Product product = this.fetchProduct(owner, productId);
-        Collection<ProductContent> productContent = new LinkedList<ProductContent>();
-
-        this.productCurator.lock(product, LockModeType.PESSIMISTIC_WRITE);
-
-        for (Entry<String, Boolean> entry : contentMap.entrySet()) {
-            Content content = this.fetchContent(owner, entry.getKey());
-            productContent.add(new ProductContent(product, content, entry.getValue()));
-            addContentToUpstreamSubscriptions(product, content, entry.getValue());
-        }
-
-        return this.productManager.addContentToProduct(product, productContent, owner, true);
+    public ProductData createUpstreamProduct(ProductData dto) {
+        return this.adapter.createProduct(dto);
     }
 
-    @POST
+    @GET
+    @Path("/products")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.WILDCARD)
-    @Path("/owners/{owner_key}/products/{product_id}/content/{content_id}")
-    @Transactional
-    public ProductData addContent(
-        @PathParam("owner_key") String ownerKey,
-        @PathParam("product_id") String productId,
-        @PathParam("content_id") String contentId,
-        @QueryParam("enabled") Boolean enabled) {
-
-
-        Owner owner = this.getOwnerByKey(ownerKey);
-        Product product = this.fetchProduct(owner, productId);
-        Content content = this.fetchContent(owner, contentId);
-
-        this.productCurator.lock(product, LockModeType.PESSIMISTIC_WRITE);
-
-        product = this.productManager.addContentToProduct(
-            product, Arrays.asList(new ProductContent(product, content, enabled)), owner, true
-        );
-
-        addContentToUpstreamSubscriptions(product, content, enabled);
-        return product.toDTO();
+    public Collection<ProductData> listUpstreamProducts() {
+        return this.adapter.getProducts();
     }
 
-    private void addContentToUpstreamSubscriptions(Product product, Content content, boolean enabled) {
-        List<Subscription> subs = adapter.getSubscriptions(product.toDTO());
-        for (Subscription sub: subs) {
-            if (sub.getProduct().getId().contentEquals(product.getId())) {
-                sub.getProduct().addContent(content, enabled);
-            }
-        }
+    @GET
+    @Path("/products/{product_id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public ProductData getUpstreamProduct(@PathParam("product_id") String productId) {
+        return this.adapter.getProduct(productId);
     }
 
     @PUT
-    @Path("/owners/{owner_key}/products/{product_id}")
-    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/products/{product_id}")
     @Consumes(MediaType.APPLICATION_JSON)
-    @Transactional
-    public ProductData updateProduct(
-        @PathParam("owner_key") String ownerKey,
-        @PathParam("product_id") String productId,
-        ProductData update) {
-
-        Owner owner = this.getOwnerByKey(ownerKey);
-        Product existing = this.fetchProduct(owner, productId);
-
-        Product updated = this.productManager.updateProduct(update, owner, true);
-
-        return updated.toDTO();
-
+    @Produces(MediaType.APPLICATION_JSON)
+    public ProductData updateUpstreamProduct(@PathParam("product_id") String productId, ProductData dto) {
+        return this.adapter.updateProduct(productId, dto);
     }
 
-    protected Product fetchProduct(Owner owner, String productId) {
-        Product product = this.ownerProductCurator.getProductById(owner, productId);
-
-        if (product == null) {
-            throw new NotFoundException(
-                i18n.tr("Product with ID ''{0}'' could not be found.", productId)
-            );
-        }
-
-        return product;
+    @DELETE
+    @Path("/products/{product_id}")
+    public void deleteUpstreamProduct(@PathParam("product_id") String productId) {
+        this.adapter.deleteProduct(productId);
     }
 
-    protected Owner getOwnerByKey(String key) {
-        Owner owner = this.ownerCurator.lookupByKey(key);
-
-        if (owner == null) {
-            throw new NotFoundException(i18n.tr("Owner with key \"{0}\" was not found.", key));
-        }
-
-        return owner;
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/content")
+    public ContentData createUpstreamContent(ContentData dto) {
+        return this.adapter.createContent(dto);
     }
 
-    protected Content fetchContent(Owner owner, String contentId) {
-        Content content = this.ownerContentCurator.getContentById(owner, contentId);
-
-        if (content == null) {
-            throw new NotFoundException(
-                i18n.tr("Content with ID \"{0}\" could not be found.", contentId)
-            );
-        }
-
-        return content;
+    @GET
+    @Path("/content")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Collection<ContentData> listUpstreamContent() {
+        return this.adapter.getContent();
     }
+
+    @GET
+    @Path("/content/{content_id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public ContentData getUpstreamContent(@PathParam("content_id") String contentId) {
+        return this.adapter.getContent(contentId);
+    }
+
+    @PUT
+    @Path("/content/{content_id}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public ContentData updateUpstreamContent(@PathParam("content_id") String contentId, ContentData dto) {
+        return this.adapter.updateContent(contentId, dto);
+    }
+
+    @DELETE
+    @Path("/content/{content_id}")
+    public void deleteUpstreamContent(@PathParam("content_id") String contentId) {
+        this.adapter.deleteContent(contentId);
+    }
+
+    @POST
+    @Path("/products/{product_id}/content")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public ProductData addMultipleContentToProductUpstream(@PathParam("product_id") String productId,
+        Map<String, Boolean> contentIdMap) {
+
+        return this.adapter.addContentToProduct(productId, contentIdMap);
+    }
+
+    @POST
+    @Path("/products/{product_id}/content/{content_id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public ProductData addContentToProductUpstream(@PathParam("product_id") String productId,
+        @PathParam("content_id") String contentId,
+        @QueryParam("enabled") @DefaultValue("true") boolean enabled) {
+
+        Map<String, Boolean> contentIdMap = Collections.<String, Boolean>singletonMap(contentId, enabled);
+        return this.addMultipleContentToProductUpstream(productId, contentIdMap);
+    }
+
+    @DELETE
+    @Path("/products/{product_id}/content")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public ProductData removeMultipleContentFromProductUpstream(@PathParam("product_id") String productId,
+        Collection<String> contentIds) {
+
+        return this.adapter.removeContentFromProduct(productId, contentIds);
+    }
+
+    @DELETE
+    @Path("/products/{product_id}/content/{content_id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public ProductData removeContentToProductUpstream(@PathParam("product_id") String productId,
+        @PathParam("content_id") String contentId) {
+
+        List<String> contentIds = Collections.<String>singletonList(contentId);
+        return this.removeMultipleContentFromProductUpstream(productId, contentIds);
+    }
+
 }

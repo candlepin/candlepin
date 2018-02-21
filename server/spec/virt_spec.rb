@@ -163,15 +163,21 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     # Make sure that guest_limit and arch are still imposed
     # upon host restricted subpools
     stack_id = random_string('test-stack-id')
-    arch_virt_product = create_product(nil, nil,
-      :attributes => {
-        :virt_limit => 3,
-        :guest_limit => 1,
-        :arch => 'ppc64',
-        :'multi-entitlement' => 'yes',
-        :stacking_id => stack_id,
-      })
-    create_pool_and_subscription(@owner['key'], arch_virt_product.id, 10)
+    arch_virt_product = create_product(nil, nil, {
+        :attributes => {
+            :virt_limit => 3,
+            :guest_limit => 1,
+            :arch => 'ppc64',
+            :'multi-entitlement' => 'yes',
+            :stacking_id => stack_id,
+        }
+    })
+
+    @cp.create_pool(@owner['key'], arch_virt_product.id, {
+        :quantity => 10,
+        :subscription_id => random_string('source_sub'),
+        :upstream_pool_id => random_string('upstream')
+    })
     arch_virt_pools = @user.list_pools(:owner => @owner.id, :product => arch_virt_product.id)
     #unmapped guest pool not part of test
     arch_virt_pool = filter_unmapped_guest_pools(arch_virt_pools)[0]
@@ -298,7 +304,7 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     # create a second product in order to test bz #786730
 
     @second_product = create_product()
-    create_pool_and_subscription(@owner['key'], @second_product.id, 1)
+    @cp.create_pool(@owner['key'], @second_product.id, {:quantity => 1})
 
     @installed_product_list = [
     {'productId' => @virt_limit_product.id, 'productName' => @virt_limit_product.name},
@@ -507,7 +513,13 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
         :virt_limit => 8
       }
     })
-    @virt_limit_sub = create_pool_and_subscription(@owner['key'], @not_so_virt_limit_product.id, 10)
+
+    @virt_limit_sub = @cp.create_pool(@owner['key'], @not_so_virt_limit_product.id, {
+        :quantity => 10,
+        :subscription_id => random_string('source_sub'),
+        :upstream_pool_id => random_string('upstream')
+    })
+
     @cp.refresh_pools(@owner['key'])
     @host1_client.update_consumer({:installedProducts => [{'productId' => @not_so_virt_limit_product.id,
       'productName' => @not_so_virt_limit_product.name}]})
@@ -522,9 +534,16 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
 
   it 'should not change the quantity on sub-pool when the source entitlement quantity changes' do
     # Create a sub for a virt limited product:
-    product = create_product(random_string('product'), random_string('product'),
-                      :attributes => { :virt_limit => 3, :'multi-entitlement' => 'yes'})
-    create_pool_and_subscription(@owner['key'], product.id, 10)
+    product = create_product(random_string('product'), random_string('product'), {
+        :attributes => { :virt_limit => 3, :'multi-entitlement' => 'yes'}
+    })
+
+    @cp.create_pool(@owner['key'], product.id, {
+        :quantity => 10,
+        :subscription_id => random_string('source_sub'),
+        :upstream_pool_id => random_string('upstream')
+    })
+
     @cp.refresh_pools(@owner['key'])
 
     pools = @user.list_pools :owner => @owner.id, \

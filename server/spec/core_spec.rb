@@ -8,26 +8,37 @@ describe 'Core Limiting' do
     @owner = create_owner random_string('test_owner')
 
     # Create a product limiting by core only.
-    @core_product = create_product(nil, random_string("Product1"), :attributes =>
-                {:version => '6.4',
-                 :cores => 8,
-                 :warning_period => 15,
-                 :management_enabled => true,
-                 :support_level => 'standard',
-                 :support_type => 'excellent',})
-    @core_pool = create_pool_and_subscription(@owner['key'], @core_product.id, 10, [], '1888', '1234')
+    @core_product = create_product(nil, random_string("Product1"), :attributes => {
+      :version => '6.4',
+      :cores => 8,
+      :warning_period => 15,
+      :management_enabled => true,
+      :support_level => 'standard',
+      :support_type => 'excellent',
+    })
+
+    @core_pool = @cp.create_pool(@owner['key'], @core_product.id, {
+      :quantity => 10,
+      :contract_number => '1888',
+      :account_number => '1234'
+    })
 
     # Create a product limiting by core and sockets.
-    @core_and_socket_product = create_product(nil, random_string("Product2"), :attributes =>
-                {:version => '1.2',
-                 :cores => 16,
-                 :sockets => 4,
-                 :warning_period => 15,
-                 :management_enabled => true,
-                 :support_level => 'standard',
-                 :support_type => 'excellent',})
-    @core_socket_pool = create_pool_and_subscription(@owner['key'], @core_and_socket_product.id, 10,
-                                              [], '18881', '1222')
+    @core_and_socket_product = create_product(nil, random_string("Product2"), :attributes => {
+      :version => '1.2',
+      :cores => 16,
+      :sockets => 4,
+      :warning_period => 15,
+      :management_enabled => true,
+      :support_level => 'standard',
+      :support_type => 'excellent',
+    })
+
+    @core_socket_pool = @cp.create_pool(@owner['key'], @core_and_socket_product.id, {
+      :quantity => 10,
+      :contract_number => '18881',
+      :account_number => '1222'
+    })
 
     @user = user_client(@owner, random_string('test-user'))
   end

@@ -8,8 +8,7 @@ describe 'Consumer serialization' do
   before(:each) do
     @owner = create_owner(random_string("test_owner"))
     @owner_client = user_client(@owner, random_string('testuser'))
-    @consumer_client = consumer_client(@owner_client, random_string(),
-        "candlepin")
+    @consumer_client = consumer_client(@owner_client, random_string(), "candlepin")
     @consumer = @cp.get_consumer(@consumer_client.uuid)
   end
 
@@ -29,7 +28,7 @@ describe 'Pool serialization' do
     @owner_client = user_client(@owner, random_string('testuser'))
     product1 = create_product()
 
-    @pool = create_pool_and_subscription(@owner['key'], product1.id, 2)
+    @pool = @cp.create_pool(@owner['key'], product1.id, {:quantity => 2})
   end
 
   it 'references owner as a link' do
@@ -48,10 +47,9 @@ describe 'Entitlement Serialization' do
     @owner_client = user_client(@owner, random_string('testuser'))
     product1 = create_product()
 
-    @pool = create_pool_and_subscription(@owner['key'], product1.id, 2)
+    @pool = @cp.create_pool(@owner['key'], product1.id, {:quantity => 2})
 
-    consumer_client = consumer_client(@owner_client, random_string(),
-        "candlepin")
+    consumer_client = consumer_client(@owner_client, random_string(), "candlepin")
     ent_id = consumer_client.consume_pool(@pool.id, {:quantity => 1})[0]['id']
     @ent = @cp.get_entitlement(ent_id)
   end

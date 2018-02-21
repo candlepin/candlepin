@@ -12,12 +12,13 @@ describe 'Owner Product Resource' do
     @derived_product = create_product random_string('derived_product')
     @derived_prov_product = create_product random_string('derived_provided_product')
 
-    create_pool_and_subscription(@owner['key'], @product.id,
-      10, [@prov_product.id], '222', '', '', nil, nil, false,
-      {
-        :derived_product_id => @derived_product.id,
-        :derived_provided_products => [@derived_prov_product.id]
-      })
+    @cp.create_pool(@owner['key'], @product.id, {
+      :quantity => 10,
+      :provided_products => [@prov_product.id],
+      :contract_number => '222',
+      :derived_product_id => @derived_product.id,
+      :derived_provided_products => [@derived_prov_product.id]
+    })
   end
 
   it 'should fail when fetching non-existing products' do
@@ -104,7 +105,7 @@ describe 'Owner Product Resource' do
     owner = create_owner(random_string('owner'), nil)
     product = create_product(random_string("test_id"), random_string("test_name"), {:owner => owner['key']})
     provided_product = create_product(nil, nil, {:owner => owner['key']})
-    create_pool_and_subscription(owner['key'], product.id, 10, [provided_product.id])
+    @cp.create_pool(owner['key'], product.id, {:quantity => 10, :provided_products => [provided_product.id]})
     user = user_client(owner, random_string('billy'))
     system = consumer_client(user, 'system6')
     system.consume_product(product.id)
@@ -128,7 +129,7 @@ describe 'Owner Product Resource' do
 
     provided_product = create_product(nil, nil, {:owner => owner['key']})
 
-    create_pool_and_subscription(owner['key'], product.id, 10, [provided_product.id])
+    @cp.create_pool(owner['key'], product.id, {:quantity => 10, :provided_products => [provided_product.id]})
 
     pool = owner_client.list_pools(:owner => owner.id)
     pool.length.should eq(1)
@@ -318,51 +319,27 @@ describe 'Owner Product Resource' do
   end
 
   it 'bad request on attempt to delete product attached to sub' do
-    if is_hosted? then
-      lambda do
-        @cp.delete_product(@owner['key'], @product.id)
-      end.should raise_exception(RestClient::Forbidden)
-    else
-      lambda do
-        @cp.delete_product(@owner['key'], @product.id)
-      end.should raise_exception(RestClient::BadRequest)
-    end
+    lambda do
+      @cp.delete_product(@owner['key'], @product.id)
+    end.should raise_exception(RestClient::BadRequest)
   end
 
   it 'bad request on attempt to delete provided product attached to sub' do
-    if is_hosted? then
-      lambda do
-        @cp.delete_product(@owner['key'], @prov_product.id)
-      end.should raise_exception(RestClient::Forbidden)
-    else
-      lambda do
-        @cp.delete_product(@owner['key'], @prov_product.id)
-      end.should raise_exception(RestClient::BadRequest)
-    end
+    lambda do
+      @cp.delete_product(@owner['key'], @prov_product.id)
+    end.should raise_exception(RestClient::BadRequest)
   end
 
   it 'bad request on attempt to delete derived product attached to sub' do
-    if is_hosted? then
-      lambda do
-        @cp.delete_product(@owner['key'], @derived_product.id)
-      end.should raise_exception(RestClient::Forbidden)
-    else
-      lambda do
-        @cp.delete_product(@owner['key'], @derived_product.id)
-      end.should raise_exception(RestClient::BadRequest)
-    end
+    lambda do
+      @cp.delete_product(@owner['key'], @derived_product.id)
+    end.should raise_exception(RestClient::BadRequest)
   end
 
   it 'bad request on attempt to delete derived provided product attached to sub' do
-    if is_hosted? then
-      lambda do
-        @cp.delete_product(@owner['key'], @derived_prov_product.id)
-      end.should raise_exception(RestClient::Forbidden)
-    else
-      lambda do
-        @cp.delete_product(@owner['key'], @derived_prov_product.id)
-      end.should raise_exception(RestClient::BadRequest)
-    end
+    lambda do
+      @cp.delete_product(@owner['key'], @derived_prov_product.id)
+    end.should raise_exception(RestClient::BadRequest)
   end
 end
 

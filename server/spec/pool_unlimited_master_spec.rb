@@ -51,10 +51,29 @@ describe 'Unlimited Master Pools' do
       }
     })
 
-    @pool_no_virt = create_pool_and_subscription(@owner['key'], @product_no_virt.id, -1, [], '', '', '', nil, nil, false)
-    @pool_unlimited_virt = create_pool_and_subscription(@owner['key'], @product_unlimited_virt.id, -1, [], '', '', '', nil, nil, false)
-    @pool_virt = create_pool_and_subscription(@owner['key'], @product_virt.id, -1, [], '', '', '', nil, nil, false)
-    @pool_virt_host_dep = create_pool_and_subscription(@owner['key'], @product_virt_host_dep.id, -1, [], '', '', '', nil, nil, false)
+    @pool_no_virt = @cp.create_pool(@owner['key'], @product_no_virt.id, {
+      :quantity => -1,
+      :subscription_id => random_string('source_sub'),
+      :upstream_pool_id => random_string('upstream')
+    })
+
+    @pool_unlimited_virt = @cp.create_pool(@owner['key'], @product_unlimited_virt.id, {
+      :quantity => -1,
+      :subscription_id => random_string('source_sub'),
+      :upstream_pool_id => random_string('upstream')
+    })
+
+    @pool_virt = @cp.create_pool(@owner['key'], @product_virt.id, {
+      :quantity => -1,
+      :subscription_id => random_string('source_sub'),
+      :upstream_pool_id => random_string('upstream')
+    })
+
+    @pool_virt_host_dep = @cp.create_pool(@owner['key'], @product_virt_host_dep.id, {
+      :quantity => -1,
+      :subscription_id => random_string('source_sub'),
+      :upstream_pool_id => random_string('upstream')
+    })
 
     @pools = @cp.list_pools :owner => @owner.id, :product => @product_unlimited_virt.id
     @pools.size.should == 2

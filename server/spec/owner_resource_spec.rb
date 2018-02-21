@@ -45,7 +45,7 @@ describe 'Owner Resource' do
         :owner => owner['key']
       }
     )
-    create_pool_and_subscription(owner['key'], product1.id, 10)
+    @cp.create_pool(owner['key'], product1.id, {:quantity => 10})
 
     levels = consumer_client.list_owner_service_levels(owner['key'])
     levels.size.should == 1
@@ -78,7 +78,7 @@ describe 'Owner Resource' do
   it "lets owners list pools" do
     owner = create_owner random_string("test_owner1")
     product = create_product(nil, nil, :owner => owner['key'])
-    create_pool_and_subscription(owner['key'], product.id, 10)
+    @cp.create_pool(owner['key'], product.id, {:quantity => 10})
     pools = @cp.list_owner_pools(owner['key'])
     pools.length.should == 1
   end
@@ -87,22 +87,24 @@ describe 'Owner Resource' do
     owner = create_owner random_string("test_owner1")
     product = create_product(nil, nil, :owner => owner['key'])
     (1..4).each do |i|
-      create_pool_and_subscription(owner['key'], product.id, 10)
+      @cp.create_pool(owner['key'], product.id, {:quantity => 10})
     end
     pools = @cp.list_owner_pools(owner['key'], {:page => 1, :per_page => 2, :sort_by => "id", :order => "asc"})
     pools.length.should == 2
     (pools[0].id <=> pools[1].id).should == -1
   end
 
-  it "lets owners update subscription" do
+  it "lets owners update pools" do
     owner = create_owner random_string("test_owner1")
     product = create_product(nil, nil, :owner => owner['key'])
-    pool = create_pool_and_subscription(owner['key'], product.id, 10)
-    poolOrSub = get_pool_or_subscription(pool)
+
+    pool = @cp.create_pool(owner['key'], product.id, {:quantity => 10})
+
     tomorrow = (DateTime.now + 1)
-    poolOrSub.startDate = tomorrow
-    update_pool_or_subscription(poolOrSub)
-    updatedPool = @cp.get_pool(pool.id)
+    pool.startDate = tomorrow
+
+    @cp.update_pool(owner['key'], pool)
+    updatedPool = @cp.get_pool(pool['id']);
 
     # parse the received start date and convert it back to our local time zone
     startDate = DateTime.strptime(updatedPool.startDate).new_offset(tomorrow.offset)
@@ -116,7 +118,7 @@ describe 'Owner Resource' do
     system = consumer_client(user, "system")
     product = create_product(nil, nil, :owner => owner['key'])
     (1..4).each do |i|
-      create_pool_and_subscription(owner['key'], product.id, 10)
+      @cp.create_pool(owner['key'], product.id, {:quantity => 10})
     end
     # Make sure there are 4 available pools
     @cp.list_owner_pools(owner['key'], {:consumer => system.uuid}).length.should == 4
@@ -157,7 +159,7 @@ describe 'Owner Resource' do
     rw_owner_client = user_client(owner, random_string('testuser'), false)
     super_admin_client = user_client(owner, random_string('testuser'), false, true)
     product = create_product(nil, nil, :owner => owner['key'])
-    create_pool_and_subscription(owner['key'], product.id, 10)
+    @cp.create_pool(owner['key'], product.id, {:quantity => 10})
 
     lambda do
       ro_owner_client.refresh_pools(owner['key'])
@@ -220,7 +222,7 @@ describe 'Owner Resource' do
         :owner => owner['key']
       }
     )
-    create_pool_and_subscription(owner['key'], product1.id, 10)
+    @cp.create_pool(owner['key'], product1.id, {:quantity => 10})
     owner = @cp.get_owner(owner['key'])
     owner['defaultServiceLevel'].should be_nil
 
@@ -255,9 +257,8 @@ describe 'Owner Resource' do
         :owner => owner['key']
       }
     )
-    create_pool_and_subscription(owner['key'], product1.id, 10,
-      [], '', '', '', nil, nil, true)
-    create_pool_and_subscription(owner['key'], product2.id, 10)
+    @cp.create_pool(owner['key'], product1.id, {:quantity => 10})
+    @cp.create_pool(owner['key'], product2.id, {:quantity => 10})
 
     # Set an initial service level:
     owner['defaultServiceLevel'] = 'VIP'
@@ -313,7 +314,7 @@ describe 'Owner Resource' do
         :owner => owner['key']
       }
     )
-    create_pool_and_subscription(owner['key'], product1.id, 10)
+    @cp.create_pool(owner['key'], product1.id, {:quantity => 10})
     product2 = create_product(
       random_string("test_id"),
       random_string("test_name"),
@@ -324,7 +325,7 @@ describe 'Owner Resource' do
         :owner => owner['key']
       }
     )
-    create_pool_and_subscription(owner['key'], product2.id, 10)
+    @cp.create_pool(owner['key'], product2.id, {:quantity => 10})
     product3 = create_product(
       random_string("test_id"),
       random_string("test_name"),
@@ -335,7 +336,7 @@ describe 'Owner Resource' do
         :owner => owner['key']
       }
     )
-    create_pool_and_subscription(owner['key'], product3.id, 10)
+    @cp.create_pool(owner['key'], product3.id, {:quantity => 10})
     levels = @cp.list_owner_service_levels(owner['key'])
     levels.length.should == 2
   end
@@ -377,11 +378,9 @@ describe 'Owner Resource' do
       }
     )
 
-    create_pool_and_subscription(owner['key'], product1.id, 10,
-      [], '', '', '', nil, nil, true)
-    create_pool_and_subscription(owner['key'], product2.id, 10,
-      [], '', '', '', nil, nil, true)
-    create_pool_and_subscription(owner['key'], product3.id, 10)
+    @cp.create_pool(owner['key'], product1.id, {:quantity => 10})
+    @cp.create_pool(owner['key'], product2.id, {:quantity => 10})
+    @cp.create_pool(owner['key'], product3.id, {:quantity => 10})
 
     levels = consumer_client.list_owner_service_levels(owner['key'])
     levels.size.should == 1
@@ -399,7 +398,7 @@ describe 'Owner Resource' do
       random_string("test_name"),
       :owner => owner['key']
     )
-    create_pool_and_subscription(owner['key'], product.id, 10)
+    @cp.create_pool(owner['key'], product.id, {:quantity => 10})
 
     user = user_client(owner, random_string("billy"))
     system = consumer_client(user, "system")
@@ -446,7 +445,7 @@ describe 'Owner Resource' do
       random_string("test_name"),
       :owner => owner['key']
     )
-    create_pool_and_subscription(owner['key'], product.id, 10)
+    @cp.create_pool(owner['key'], product.id, {:quantity => 10})
 
     user = user_client(owner, "robot ninja")
     system = consumer_client(user, "system")
@@ -458,7 +457,7 @@ describe 'Owner Resource' do
     c = @cp.get_consumer(system.uuid)
     c['entitlementCount'].should == 1
 
-    create_pool_and_subscription(owner['key'], product.id, 10)
+    @cp.create_pool(owner['key'], product.id, {:quantity => 10})
 
     job = user.autoheal_org(owner['key'])
     wait_for_job(job['id'], 30)
@@ -611,8 +610,8 @@ describe 'Owner Resource Pool Filter Tests' do
       }
     )
 
-    create_pool_and_subscription(@owner['key'], @product1.id, 10, [], '', '', '', nil, nil, true)
-    create_pool_and_subscription(@owner['key'], @product2.id, 10)
+    @cp.create_pool(@owner['key'], @product1.id, {:quantity => 10})
+    @cp.create_pool(@owner['key'], @product2.id, {:quantity => 10})
 
     pools = @cp.list_owner_pools(@owner['key'])
     pools.length.should == 2
@@ -658,7 +657,10 @@ describe 'Owner Resource Pool Filter Tests' do
     provided_product2 = create_product(random_string("prod2"), random_string("product2"), {:owner => owner['key']})
     provided_product3 = create_product(random_string("prod3"), random_string("product3"), {:owner => owner['key']})
 
-    create_pool_and_subscription(owner['key'], product.id, 10, [provided_product.id, provided_product2.id, provided_product3.id])
+    @cp.create_pool(owner['key'], product.id, {
+      :quantity => 10,
+      :provided_products => [provided_product.id, provided_product2.id, provided_product3.id]
+    })
 
     pools = @cp.list_owner_pools(owner['key'], { :consumer => consumer.uuid, :matches => target_prod_name })
     pools.length.should eq(1)
@@ -671,7 +673,12 @@ describe 'Owner Resource Pool Filter Tests' do
 
   it 'should allow user to list standard pool by subscription id' do
       product = create_product(nil, nil)
-      pool = create_pool_and_subscription(@owner['key'], product.id, 5)
+      pool = @cp.create_pool(@owner['key'], product.id, {
+        :quantity => 5,
+        :subscription_id => random_string('source_sub'),
+        :upstream_pool_id => random_string('upstream')
+      })
+
       user = user_client(@owner, random_string('user'))
       # needs to be an owner level user
       user.get_pools_for_subscription(@owner['key'], pool.subscriptionId).size.should == 1
@@ -679,7 +686,12 @@ describe 'Owner Resource Pool Filter Tests' do
 
   it 'should allow user to list bonus pool also by subscription id' do
       product = create_product(nil, nil, {:attributes => {"virt_limit" => "unlimited"}})
-      pool = create_pool_and_subscription(@owner['key'], product.id, 5)
+      pool = @cp.create_pool(@owner['key'], product.id, {
+        :quantity => 5,
+        :subscription_id => random_string('source_sub'),
+        :upstream_pool_id => random_string('upstream')
+      })
+
       user = user_client(@owner, random_string('user'))
       # needs to be an owner level user
       user.get_pools_for_subscription(@owner['key'], pool.subscriptionId).size.should == 2
@@ -738,9 +750,17 @@ describe 'Owner Resource Owner Info Tests' do
     @owner = create_owner(random_string("an_owner"))
 
     # Create a product limiting by all of our attributes.
-    @product = create_product(nil, random_string("Product1"), :attributes =>
-                {"version" => '6.4', "sockets" => 2, "multi-entitlement" => "true"})
-    create_pool_and_subscription(@owner['key'], @product.id, 100, [], '1888', '1234')
+    @product = create_product(nil, random_string("Product1"), :attributes => {
+      "version" => '6.4',
+      "sockets" => 2,
+      "multi-entitlement" => "true"
+    })
+
+    @cp.create_pool(@owner['key'], @product.id, {
+      :quantity => 100,
+      :contract_number => '1888',
+      :account_number => '1234'
+    })
 
     @owner_client = user_client(@owner, random_string('owner_admin_user'))
     @owner_client.register(random_string('system_consumer'), :system, nil, {})
@@ -803,9 +823,8 @@ describe 'Owner Resource Entitlement List Tests' do
     @virt_prod= create_product(nil, 'virtualization')
 
     #entitle owner for the virt and monitoring products.
-    create_pool_and_subscription(@owner['key'], @monitoring_prod.id, 6,
-      [], '', '', '', nil, nil, true)
-    create_pool_and_subscription(@owner['key'], @virt_prod.id, 6)
+    @cp.create_pool(@owner['key'], @monitoring_prod.id, {:quantity => 6})
+    @cp.create_pool(@owner['key'], @virt_prod.id, {:quantity => 6})
 
     #create consumer
     user = user_client(@owner, random_string('billy'))
@@ -845,11 +864,11 @@ describe 'Owner Resource Future Pool Tests' do
     @owner = create_owner random_string 'test_owner'
     @product1 = create_product(random_string('product'), random_string('product'),{:owner => @owner['key']})
     @product2 = create_product(random_string('product'), random_string('product'),{:owner => @owner['key']})
-    @current_pool = create_pool_and_subscription(@owner['key'], @product1.id, 10, [], '', '', '', @now - 1)
+    @current_pool = @cp.create_pool(@owner['key'], @product1.id, {:quantity => 10, :start_date => @now - 1})
     start1 = @now + 400
     start2 = @now + 800
-    @future_pool1 = create_pool_and_subscription(@owner['key'], @product2.id, 10, [], '', '', '', start1)
-    @future_pool2 = create_pool_and_subscription(@owner['key'], @product2.id, 10, [], '', '', '', start2)
+    @future_pool1 = @cp.create_pool(@owner['key'], @product2.id, {:quantity => 10, :start_date => start1})
+    @future_pool2 = @cp.create_pool(@owner['key'], @product2.id, {:quantity => 10, :start_date => start2})
   end
 
   it 'can fetch current pools' do
@@ -1014,7 +1033,7 @@ describe 'Owner Resource counting feature' do
     params = {:attributes => {'type' => product_type}}
     p = create_product(@owner['key'], params)
 
-    pool = create_pool_and_subscription(@owner['key'], p.id, 1)
+    pool = @cp.create_pool(@owner['key'], p.id, {:quantity => 1})
     @owner_cp.consume_pool(pool.id, params={:uuid => consumer.uuid, :quantity => 1})
     p.id #sku
   end
@@ -1027,7 +1046,12 @@ describe 'Owner Resource counting feature' do
 
   def create_product_and_bint_it_to_consumer_return_subId(consumer)
     p = create_product(@owner['key'])
-    pool = create_pool_and_subscription(@owner['key'], p.id, 1)
+    pool = @cp.create_pool(@owner['key'], p.id, {
+      :quantity => 1,
+      :subscription_id => random_string('source_sub'),
+      :upstream_pool_id => random_string('upstream')
+    })
+
     @owner_cp.consume_pool(pool.id, params={:uuid => consumer.uuid, :quantity => 1})
     pool.subscriptionId
   end
@@ -1041,7 +1065,13 @@ describe 'Owner Resource counting feature' do
   def create_product_and_bint_it_to_consumer_return_contractNr(consumer)
     p = create_product(@owner['key'])
     cn = random_string('contract_nr')
-    pool = create_pool_and_subscription(@owner['key'], p.id, 1, [], cn)
+    pool = @cp.create_pool(@owner['key'], p.id, {
+      :quantity => 1,
+      :contract_number => cn,
+      :subscription_id => random_string('source_sub'),
+      :upstream_pool_id => random_string('upstream')
+    })
+
     @owner_cp.consume_pool(pool.id, params={:uuid => consumer.uuid, :quantity => 1})
     pool.contractNumber
   end

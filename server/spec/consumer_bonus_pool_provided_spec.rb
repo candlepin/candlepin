@@ -17,21 +17,28 @@ describe 'Consumer Resource Host/Guest' do
     uuid1 = random_string('system.uuid')
     guests = [{'guestId' => uuid1}]
 
-    std_product = create_product(random_string('product'),
-      random_string('product'),
-      {:attributes => {:virt_limit => "5",
-                       :host_limited => 'true'},
-      :owner => @owner1['key']})
-    provided_product = create_product(random_string('product'),
-      random_string('product'),
-      {:owner => @owner1['key']})
+    std_product = create_product(random_string('product'), random_string('product'), {
+      :attributes => {
+        :virt_limit => "5",
+        :host_limited => 'true'
+      },
+      :owner => @owner1['key']
+    })
 
-    create_pool_and_subscription(@owner1['key'], std_product.id, 10, [provided_product.id])
+    provided_product = create_product(random_string('product'), random_string('product'), {:owner => @owner1['key']})
+
+    @cp.create_pool(@owner1['key'], std_product.id, {
+      :quantity => 10,
+      :provided_products => [provided_product.id],
+      :subscription_id => random_string('source_sub'),
+      :upstream_pool_id => random_string('upstream')
+    })
+
     all_pools =  @user1.list_owner_pools(@owner1['key'])
     all_pools.size.should == 2
-    unmapped_pool = all_pools.find {|p| p['type'] == 'UNMAPPED_GUEST'} 
-    normal_pool = all_pools.find {|p| p['type'] == 'NORMAL'} 
-    
+    unmapped_pool = all_pools.find {|p| p['type'] == 'UNMAPPED_GUEST'}
+    normal_pool = all_pools.find {|p| p['type'] == 'NORMAL'}
+
     normal_pool['providedProducts'].size.should == 1
     unmapped_pool['providedProducts'].size.should == 1
   end
