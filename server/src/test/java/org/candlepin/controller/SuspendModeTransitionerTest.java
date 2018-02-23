@@ -14,6 +14,8 @@
  */
 package org.candlepin.controller;
 
+import static org.mockito.Mockito.*;
+
 import org.candlepin.audit.QpidConnection;
 import org.candlepin.audit.QpidConnection.STATUS;
 import org.candlepin.audit.QpidQmf;
@@ -29,7 +31,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.Date;
@@ -39,171 +40,106 @@ import java.util.concurrent.TimeUnit;
 
 @RunWith(MockitoJUnitRunner.class)
 public class SuspendModeTransitionerTest {
+    @Mock private ModeManager modeManager;
+    @Mock private QpidQmf qmf;
+    @Mock private QpidConnection qpidConnection;
+    @Mock private ScheduledExecutorService execService;
+    @Mock private CandlepinCache candlepinCache;
+    @Mock private StatusCache cache;
+
     private SuspendModeTransitioner transitioner;
-    @Mock
-    private ModeManager modeManager;
-    @Mock
-    private QpidQmf qmf;
-    @Mock
-    private QpidConnection qpidConnection;
-    @Mock
-    private ScheduledExecutorService execService;
     private CandlepinModeChange startupModeChange;
     private CandlepinModeChange downModeChange;
     private CandlepinModeChange normalModeChange;
-    @Mock
-    private CandlepinCache candlepinCache;
-    @Mock
-    private StatusCache cache;
 
     @Before
     public void setUp() {
-        Mockito.when(candlepinCache.getStatusCache())
-            .thenReturn(cache);
-        CandlepinCommonTestConfig testConfig =
-            new CandlepinCommonTestConfig();
-        transitioner = new SuspendModeTransitioner(testConfig, execService,
-            candlepinCache);
+        when(candlepinCache.getStatusCache()).thenReturn(cache);
+        CandlepinCommonTestConfig testConfig = new CandlepinCommonTestConfig();
+        transitioner = new SuspendModeTransitioner(testConfig, execService, candlepinCache);
         transitioner.setModeManager(modeManager);
         transitioner.setQmf(qmf);
         transitioner.setQpidConnection(qpidConnection);
-        startupModeChange = new CandlepinModeChange(new Date(),
-            Mode.NORMAL, Reason.STARTUP);
-
-        downModeChange = new CandlepinModeChange(new Date(),
-            Mode.SUSPEND, Reason.QPID_DOWN);
-
-        normalModeChange = new CandlepinModeChange(new Date(),
-            Mode.NORMAL, Reason.QPID_UP);
+        startupModeChange = new CandlepinModeChange(new Date(), Mode.NORMAL, Reason.STARTUP);
+        downModeChange = new CandlepinModeChange(new Date(), Mode.SUSPEND, Reason.QPID_DOWN);
+        normalModeChange = new CandlepinModeChange(new Date(), Mode.NORMAL, Reason.QPID_UP);
     }
 
     @Test
     public void normalConnected() {
-        Mockito.when(qmf.getStatus()).thenReturn(QpidStatus.CONNECTED);
-        Mockito.when(modeManager.getLastCandlepinModeChange())
-            .thenReturn(startupModeChange);
+        when(qmf.getStatus()).thenReturn(QpidStatus.CONNECTED);
+        when(modeManager.getLastCandlepinModeChange()).thenReturn(startupModeChange);
 
         transitioner.transitionAppropriately();
 
-        Mockito.verify(qmf, Mockito.times(1)).getStatus();
-        Mockito.verify(modeManager, Mockito.times(1)).getLastCandlepinModeChange();
-        Mockito.verifyNoMoreInteractions(execService, modeManager, qmf);
+        verify(qmf, times(1)).getStatus();
+        verify(modeManager, times(1)).getLastCandlepinModeChange();
+        verifyNoMoreInteractions(execService, modeManager, qmf);
     }
 
     @Test
     public void stillDisconnected() {
-        Mockito.when(qmf.getStatus()).thenReturn(QpidStatus.DOWN);
-        Mockito.when(modeManager.getLastCandlepinModeChange())
-            .thenReturn(downModeChange);
+        when(qmf.getStatus()).thenReturn(QpidStatus.DOWN);
+        when(modeManager.getLastCandlepinModeChange()).thenReturn(downModeChange);
 
         transitioner.transitionAppropriately();
 
-        Mockito.verify(qpidConnection, Mockito.times(1))
-            .setConnectionStatus(STATUS.JMS_OBJECTS_STALE);
-        Mockito.verify(qmf, Mockito.times(1)).getStatus();
-        Mockito.verify(modeManager, Mockito.times(1)).getLastCandlepinModeChange();
-        Mockito.verifyNoMoreInteractions(execService, qpidConnection, modeManager, qmf);
+        verify(qpidConnection, times(1)).setConnectionStatus(STATUS.JMS_OBJECTS_STALE);
+        verify(qmf, times(1)).getStatus();
+        verify(modeManager, times(1)).getLastCandlepinModeChange();
+        verifyNoMoreInteractions(execService, qpidConnection, modeManager, qmf);
     }
 
 
     @Test
     public void transitionFromDownToConnected() throws Exception {
-        Mockito.when(qmf.getStatus()).thenReturn(QpidStatus.CONNECTED);
-        Mockito.when(modeManager.getLastCandlepinModeChange())
-            .thenReturn(downModeChange);
+        when(qmf.getStatus()).thenReturn(QpidStatus.CONNECTED);
+        when(modeManager.getLastCandlepinModeChange()).thenReturn(downModeChange);
 
         transitioner.transitionAppropriately();
 
-        Mockito.verify(qmf, Mockito.times(1)).getStatus();
-        Mockito.verify(modeManager, Mockito.times(1)).getLastCandlepinModeChange();
-        Mockito.verify(modeManager, Mockito.times(1)).enterMode(Mode.NORMAL, Reason.QPID_UP);
-        Mockito.verifyNoMoreInteractions(execService, qpidConnection, qmf, modeManager);
+        verify(qmf, times(1)).getStatus();
+        verify(modeManager, times(1)).getLastCandlepinModeChange();
+        verify(modeManager, times(1)).enterMode(Mode.NORMAL, Reason.QPID_UP);
+        verifyNoMoreInteractions(execService, qpidConnection, qmf, modeManager);
     }
 
     @Test
     public void transitionFromConnectedToDown()
         throws Exception {
-        Mockito.when(qmf.getStatus()).thenReturn(QpidStatus.DOWN);
-        Mockito.when(modeManager.getLastCandlepinModeChange())
-            .thenReturn(normalModeChange);
+        when(qmf.getStatus()).thenReturn(QpidStatus.DOWN);
+        when(modeManager.getLastCandlepinModeChange()).thenReturn(normalModeChange);
 
         transitioner.transitionAppropriately();
 
-        Mockito.verify(qpidConnection, Mockito.times(1))
-            .setConnectionStatus(STATUS.JMS_OBJECTS_STALE);
-        Mockito.verify(qmf, Mockito.times(1)).getStatus();
-        Mockito.verify(modeManager, Mockito.times(1)).getLastCandlepinModeChange();
-        Mockito.verify(modeManager, Mockito.times(1))
-            .enterMode(Mode.SUSPEND, Reason.QPID_DOWN);
-        Mockito.verifyNoMoreInteractions(execService, qpidConnection, qmf, modeManager);
+        verify(qpidConnection, times(1)).setConnectionStatus(STATUS.JMS_OBJECTS_STALE);
+        verify(qmf, times(1)).getStatus();
+        verify(modeManager, times(1)).getLastCandlepinModeChange();
+        verify(modeManager, times(1)).enterMode(Mode.SUSPEND, Reason.QPID_DOWN);
+        verifyNoMoreInteractions(execService, qpidConnection, qmf, modeManager);
     }
 
     @Test
     public void transitionFromConnectedToFlowStopped()
         throws Exception {
-        Mockito.when(qmf.getStatus()).thenReturn(QpidStatus.FLOW_STOPPED);
-        Mockito.when(modeManager.getLastCandlepinModeChange())
-            .thenReturn(normalModeChange);
+        when(qmf.getStatus()).thenReturn(QpidStatus.FLOW_STOPPED);
+        when(modeManager.getLastCandlepinModeChange()).thenReturn(normalModeChange);
 
         transitioner.transitionAppropriately();
 
-        Mockito.verify(qpidConnection, Mockito.times(1))
-            .setConnectionStatus(STATUS.JMS_OBJECTS_STALE);
-        Mockito.verify(qmf, Mockito.times(1)).getStatus();
-        Mockito.verify(modeManager, Mockito.times(1)).getLastCandlepinModeChange();
-        Mockito.verify(modeManager, Mockito.times(1))
-            .enterMode(Mode.SUSPEND, Reason.QPID_FLOW_STOPPED);
-        Mockito.verifyNoMoreInteractions(execService, qpidConnection, qmf, modeManager);
+        verify(qpidConnection, times(1)).setConnectionStatus(STATUS.JMS_OBJECTS_STALE);
+        verify(qmf, times(1)).getStatus();
+        verify(modeManager, times(1)).getLastCandlepinModeChange();
+        verify(modeManager, times(1)).enterMode(Mode.SUSPEND, Reason.QPID_FLOW_STOPPED);
+        verifyNoMoreInteractions(execService, qpidConnection, qmf, modeManager);
     }
 
     @Test
-    public void backOff()
-        throws Exception {
-        Mockito.when(qmf.getStatus())
-            .thenReturn(QpidStatus.CONNECTED)
-            .thenReturn(QpidStatus.DOWN)
-            .thenReturn(QpidStatus.DOWN)
-            .thenReturn(QpidStatus.CONNECTED);
-        Mockito.when(modeManager.getLastCandlepinModeChange())
-            .thenReturn(downModeChange)
-            .thenReturn(normalModeChange)
-            .thenReturn(downModeChange)
-            .thenReturn(downModeChange);
-
-        transitioner.run();
-
-        Mockito.verify(execService, Mockito.times(1))
-            .schedule(transitioner, 10L, TimeUnit.SECONDS);
-        Mockito.verifyNoMoreInteractions(execService);
-        Mockito.reset(execService);
-
-        transitioner.run();
-
-        Mockito.verify(execService, Mockito.times(1))
-            .schedule(transitioner, 10L, TimeUnit.SECONDS);
-        Mockito.verifyNoMoreInteractions(execService);
-
-        Mockito.reset(execService);
-        transitioner.run();
-        Mockito.verify(execService, Mockito.times(1))
-            .schedule(transitioner, 20L, TimeUnit.SECONDS);
-        Mockito.verifyNoMoreInteractions(execService);
-
-        Mockito.reset(execService);
-        transitioner.run();
-        Mockito.verify(execService, Mockito.times(1))
-            .schedule(transitioner, 10L, TimeUnit.SECONDS);
-        Mockito.verifyNoMoreInteractions(execService);
-    }
-
-
-    @Test
-    public void backOffMaximum()
-        throws Exception {
-        Mockito.when(qmf.getStatus())
+    public void constantPolling() throws Exception {
+        when(qmf.getStatus())
             .thenReturn(QpidStatus.CONNECTED)
             .thenReturn(QpidStatus.DOWN);
-        Mockito.when(modeManager.getLastCandlepinModeChange())
+        when(modeManager.getLastCandlepinModeChange())
             .thenReturn(downModeChange)
             .thenReturn(normalModeChange)
             .thenReturn(downModeChange);
@@ -212,10 +148,7 @@ public class SuspendModeTransitionerTest {
             transitioner.run();
         }
 
-        Mockito.reset(execService);
-        transitioner.run();
-        Mockito.verify(execService, Mockito.times(1))
-            .schedule(transitioner, 100L, TimeUnit.SECONDS);
-        Mockito.verifyNoMoreInteractions(execService);
+        verify(execService, times(10)).schedule(transitioner, 10, TimeUnit.SECONDS);
+        verifyNoMoreInteractions(execService);
     }
 }

@@ -47,28 +47,8 @@ import java.util.concurrent.TimeUnit;
  */
 public class SuspendModeTransitioner implements Runnable {
     private static Logger log = LoggerFactory.getLogger(SuspendModeTransitioner.class);
-    /**
-     * Factor by which the delay is going to be increased with each failed attempt to
-     * reconnect to the Qpid Broker. For example if set to 3 and initialDelay set to
-     * 5. The following will be the delay interval between the executions of this
-     * transitioner:
-     *
-     * When failedAttempts = 0, then delay will be 5
-     * When failedAttempts = 1, then the delay will be 10
-     * When failedAttempts = 2, then the delay will be 15
-     * etc.
-     *
-     */
-    private int delayGrowth;
-    /**
-     * Delay in seconds. SuspendModeTransitioner will wait this amount
-     * of seconds between periodic checks for Qpid connectivity.
-     */
-    private int initialDelay;
-    /**
-     * Maximum delay that this transitioner can wait between executions
-     */
-    private int maxDelay = 0;
+
+    private int delay;
     private BigInteger failedAttempts = BigInteger.ZERO;
     /**
      * Single threaded periodic task.
@@ -83,10 +63,16 @@ public class SuspendModeTransitioner implements Runnable {
     public SuspendModeTransitioner(Configuration config, ScheduledExecutorService execService,
         CandlepinCache cache) {
         this.execService = execService;
-        delayGrowth = config.getInt(ConfigProperties.QPID_MODE_TANSITIONER_DELAY_GROWTH);
-        initialDelay = config.getInt(ConfigProperties.QPID_MODE_TRANSITIONER_INITIAL_DELAY);
-        maxDelay = config.getInt(ConfigProperties.QPID_MODE_TRANSITIONER_MAX_DELAY);
         this.candlepinCache = cache;
+
+        delay = config.getInt(ConfigProperties.QPID_MODE_TRANSITIONER_DELAY);
+        if (delay < 1) {
+            int defaultDelay = Integer.parseInt(
+                ConfigProperties.DEFAULT_PROPERTIES.get(ConfigProperties.QPID_MODE_TRANSITIONER_DELAY));
+            log.warn("{} is an invalid delay setting. Must be greater than 0. Defaulting to {}", delay,
+                defaultDelay);
+            delay = defaultDelay;
+        }
     }
 
     /**
@@ -113,40 +99,21 @@ public class SuspendModeTransitioner implements Runnable {
      * Enables to run the transitioning logic periodically.
      */
     public void startPeriodicExecutions() {
-        log.info("Starting Periodic Suspend Mode Transitioner " +
-            "with delay grow factor of {}s and initial delay {}s ",
-            delayGrowth, initialDelay);
+        log.info("Starting Suspend Mode Transitioner");
         schedule();
     }
 
     /**
-     * Schedules next execution of the Suspend Mode check. The delay, in seconds,
-     * grows as the failedAttempts grow. The formula is:
-     *
-     *  delay = initialDelay + (delayGrowth * failedAttempts)
-     *
-     *  Maximal delay is configurable, -1 means there is no bound
-     *
+     * Schedules execution of the Suspend Mode check run every N seconds (where N is
+     * configurable).
      */
     private void schedule() {
-        BigInteger delay =
-            BigInteger.valueOf(initialDelay)
-            .add(BigInteger.valueOf(delayGrowth)
-            .multiply(failedAttempts));
-
-        if (maxDelay != -1 &&
-            delay.compareTo(BigInteger.valueOf(maxDelay)) > 0) {
-            log.debug("Maximum delay {} reached", maxDelay);
-            delay = BigInteger.valueOf(maxDelay);
-        }
-
         log.debug("Next Transitioner check will run after {} seconds", delay);
         if (failedAttempts.compareTo(BigInteger.ZERO) > 0) {
             log.info("SuspendModeTransitioner failed to reconnect to the Qpid Broker " +
-                "{} times, backing off with next reconnect {} seconds", failedAttempts,
-                delay);
+                "{} times. Next attempt in {} seconds", failedAttempts, delay);
         }
-        execService.schedule(this, delay.longValue(), TimeUnit.SECONDS);
+        execService.schedule(this, delay, TimeUnit.SECONDS);
     }
 
     @Override
@@ -156,12 +123,6 @@ public class SuspendModeTransitioner implements Runnable {
             transitionAppropriately();
         }
         finally {
-            /**
-             * The Transitioner is periodic task. But we want to have flexibility of setting
-             * different delays between executions. As the amount of failed atttempts to connect
-             * rise, we want to also increase the delay. Scheduling in finally seems to be the
-             * easiest way to achieve that.
-             */
             schedule();
         }
     }
@@ -176,7 +137,7 @@ public class SuspendModeTransitioner implements Runnable {
      * During that transition, there is a small time window between checking the
      * Qpid status and attempt to reconnect. If the Qpid status is reported as
      * Qpid up, the transitioner will try to reconnect to the broker. This reconnect
-     * may fail. In that case the transition to NORMAL mode shouldn't go through
+     * may fail. In that case the transition to NORMAL mode shouldn't go through.
      */
     public synchronized void transitionAppropriately() {
         log.debug("Attempting to transition to appropriate Mode");
@@ -194,7 +155,7 @@ public class SuspendModeTransitioner implements Runnable {
                 switch (status) {
                     case CONNECTED:
                         log.info("Connection to qpid is restored! Reconnecting Qpid and" +
-                            " Entering NORMAL mode");
+                            " entering NORMAL mode");
                         failedAttempts = BigInteger.ZERO;
                         modeManager.enterMode(Mode.NORMAL, Reason.QPID_UP);
                         cleanStatusCache();
@@ -202,9 +163,7 @@ public class SuspendModeTransitioner implements Runnable {
                     case FLOW_STOPPED:
                     case DOWN:
                         failedAttempts = failedAttempts.add(BigInteger.ONE);
-                        log.debug("Staying in {} mode. So far {} failed attempts",
-                            status,
-                            failedAttempts);
+                        log.debug("Staying in {} mode. So far {} failed attempts", status, failedAttempts);
                         break;
                     default:
                         throw new RuntimeException("Unknown status: " + status);
@@ -234,7 +193,7 @@ public class SuspendModeTransitioner implements Runnable {
         }
         catch (Throwable t) {
             log.error("Error while executing period Suspend Transitioner check", t);
-            /**
+            /*
              * Nothing more we can do here, since this is scheduled thread. We must
              * hope that this error won't infinitely recur with each scheduled execution
              */
