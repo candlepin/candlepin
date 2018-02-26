@@ -184,8 +184,6 @@ public class CandlepinContextListenerTest {
         when(config.getBoolean(
                 eq(ConfigProperties.AMQP_INTEGRATION_ENABLED))).thenReturn(true);
         when(config.getBoolean(eq(ConfigProperties.SUSPEND_MODE_ENABLED))).thenReturn(true);
-        when(config.getLong(ConfigProperties.QPID_MODE_TANSITIONER_DELAY_GROWTH)).thenReturn(100L);
-        when(config.getLong(ConfigProperties.QPID_MODE_TRANSITIONER_INITIAL_DELAY)).thenReturn(100L);
         prepareForInitialization();
         // we actually have to call contextInitialized before we
         // can call contextDestroyed, otherwise the listener's
