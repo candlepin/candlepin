@@ -14,15 +14,10 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.common.paging.Page;
-import org.candlepin.common.paging.PageRequest;
-
-import org.hibernate.Criteria;
+import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.List;
 
 /**
  * GuestIdCurator
@@ -35,14 +30,11 @@ public class GuestIdCurator extends AbstractHibernateCurator<GuestId> {
         super(GuestId.class);
     }
 
-    public Page<List<GuestId>> listByConsumer(Consumer consumer, PageRequest pageRequest) {
-        Criteria criteria = this.currentSession().createCriteria(GuestId.class)
+    public CandlepinQuery<GuestId> listByConsumer(Consumer consumer) {
+        DetachedCriteria criteria = this.createSecureDetachedCriteria()
             .add(Restrictions.eq("consumer", consumer));
-        return listByCriteria(criteria, pageRequest);
-    }
 
-    public List<GuestId> listByConsumer(Consumer consumer) {
-        return listByConsumer(consumer, null).getPageData();
+        return this.cpQueryFactory.<GuestId>buildQuery(this.currentSession(), criteria);
     }
 
     public GuestId findByConsumerAndId(Consumer consumer, String guestId) {

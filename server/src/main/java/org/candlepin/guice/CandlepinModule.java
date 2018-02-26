@@ -61,6 +61,8 @@ import org.candlepin.controller.OwnerManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.ScheduledExecutorServiceProvider;
 import org.candlepin.controller.SuspendModeTransitioner;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.StandardTranslator;
 import org.candlepin.model.CPRestrictions;
 import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.pinsetter.core.GuiceJobFactory;
@@ -300,6 +302,8 @@ public class CandlepinModule extends AbstractModule {
 
         bind(CacheManager.class).toProvider(JCacheManagerProvider.class).in(Singleton.class);
 
+        // Configure model translators
+        this.configureModelTranslator();
     }
 
     private void miscConfigurations() {
@@ -419,5 +423,11 @@ public class CandlepinModule extends AbstractModule {
         else {
             bind(EventSink.class).to(NoopEventSinkImpl.class);
         }
+    }
+
+    protected void configureModelTranslator() {
+        ModelTranslator modelTranslator = new StandardTranslator();
+
+        bind(ModelTranslator.class).toInstance(modelTranslator);
     }
 }

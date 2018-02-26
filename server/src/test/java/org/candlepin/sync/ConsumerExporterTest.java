@@ -18,6 +18,8 @@ import static org.junit.Assert.assertTrue;
 
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.StandardTranslator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.test.TestUtil;
@@ -35,6 +37,8 @@ import java.util.HashMap;
  */
 public class ConsumerExporterTest {
 
+    private ModelTranslator translator;
+
     @Test
     public void testConsumerExport() throws IOException {
         ObjectMapper mapper = TestSyncUtils
@@ -44,7 +48,8 @@ public class ConsumerExporterTest {
                 }
             }));
 
-        ConsumerExporter exporter = new ConsumerExporter();
+        translator = new StandardTranslator();
+        ConsumerExporter exporter = new ConsumerExporter(translator);
         ConsumerType ctype = new ConsumerType("candlepin");
         ctype.setId("8888");
         ctype.setManifest(true);

@@ -216,7 +216,7 @@ public class HypervisorUpdateJob extends KingpinJob {
                 return;
             }
 
-            if (owner.autobindDisabled()) {
+            if (owner.isAutobindDisabled()) {
                 log.debug("Could not update host/guest mapping. Auto-Attach is disabled for owner {}",
                     owner.getKey());
                 throw new BadRequestException(
@@ -323,6 +323,18 @@ public class HypervisorUpdateJob extends KingpinJob {
             log.error("HypervisorUpdateJob encountered a problem.", e);
             context.setResult(e.getMessage());
             throw new JobExecutionException(e.getMessage(), e, false);
+        }
+    }
+
+    private void logReporterWarning(String jobReporterId, Consumer knownHost, String hypervisorId,
+        String ownerKey) {
+        if (jobReporterId != null && knownHost.getHypervisorId() != null &&
+            hypervisorId.equalsIgnoreCase(knownHost.getHypervisorId().getHypervisorId()) &&
+            knownHost.getHypervisorId().getReporterId() != null &&
+            !jobReporterId.equalsIgnoreCase(knownHost.getHypervisorId().getReporterId())) {
+            log.debug("Reporter changed for Hypervisor {} of Owner {} from {} to {}",
+                hypervisorId, ownerKey, knownHost.getHypervisorId().getReporterId(),
+                jobReporterId);
         }
     }
 

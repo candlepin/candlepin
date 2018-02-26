@@ -76,11 +76,6 @@ public class JobStatusTest {
     }
 
     @Test
-    public void statusPath() {
-        assertEquals("/jobs/name", status.getStatusPath());
-    }
-
-    @Test
     public void group() {
         assertEquals("group", status.getGroup());
     }

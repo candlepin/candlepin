@@ -295,7 +295,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         largeContentPool.setProduct(largeContentProduct);
 
         consumer = new Consumer("Test Consumer", "bob", owner,
-                new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM));
+            new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM));
         consumer.setUuid("test-consumer");
         entitlement = new Entitlement();
         entitlement.setQuantity(new Integer(ENTITLEMENT_QUANTITY));
@@ -326,6 +326,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Owner owner = TestUtil.createOwner("Example-Corporation");
         Content content = TestUtil.createContent(id, name);
 
+        content.setUuid(id + "_uuid");
         content.setLabel(label);
         content.setType(type);
         content.setVendor(vendor);
@@ -392,8 +393,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         pool.setStartDate(cal.getTime());
         result = certServiceAdapter.createX509Certificate(consumer, pool, entitlement,
             product, new HashSet<Product>(), getProductModels(product,
-            new HashSet<Product>(), "prefix", entitlement), new BigInteger("1234"), keyPair,
-            true);
+            new HashSet<Product>(), "prefix", entitlement), new BigInteger("1234"), keyPair, true);
         assertTrue(result.getNotBefore().getTime() < pool.getStartDate().getTime() / 1000 * 1000);
     }
 
@@ -482,8 +482,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         e.getEnvironmentContent().add(new EnvironmentContent(e, content, true));
         this.consumer.setEnvironment(e);
 
-        Map<String, EnvironmentContent> promotedContent =
-            new HashMap<String, EnvironmentContent>();
+        Map<String, EnvironmentContent> promotedContent = new HashMap<String, EnvironmentContent>();
         promotedContent.put(content.getId(), e.getEnvironmentContent().iterator().next());
         Set<X509ExtensionWrapper> contentExtensions = extensionUtil.contentExtensions(
             product.getProductContent(), null, promotedContent, entitlement.getConsumer(), product);
@@ -552,10 +551,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
             getProductModels(product, new HashSet<Product>(), "prefix", entitlement),
             new BigInteger("1234"), keyPair, true);
 
-        verify(mockedPKI).createX509Certificate(any(String.class),
-            argThat(
-                new ListContainsContentUrl("/someorg/Awesome+Environment+%231" + CONTENT_URL, CONTENT_ID)
-            ),
+        verify(mockedPKI).createX509Certificate(any(String.class), argThat(
+            new ListContainsContentUrl("/someorg/Awesome+Environment+%231" + CONTENT_URL, CONTENT_ID)),
             any(Set.class), any(Date.class), any(Date.class), any(KeyPair.class),
             any(BigInteger.class), any(String.class));
     }
@@ -575,10 +572,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
             getProductModels(product, new HashSet<Product>(), "prefix", entitlement),
             new BigInteger("1234"), keyPair, true);
 
-        verify(mockedPKI).createX509Certificate(any(String.class),
-            argThat(
-                new ListContainsContentUrl("/some+org/Awesome+Environment+%231" + CONTENT_URL, CONTENT_ID)
-            ),
+        verify(mockedPKI).createX509Certificate(any(String.class), argThat(
+            new ListContainsContentUrl("/some+org/Awesome+Environment+%231" + CONTENT_URL, CONTENT_ID)),
             any(Set.class), any(Date.class), any(Date.class),
             any(KeyPair.class), any(BigInteger.class), any(String.class));
     }
@@ -812,6 +807,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             argThat(new ListContainsSupportLevel("Premium")), any(Set.class),
             any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
             any(String.class));
+
         verify(mockedPKI).createX509Certificate(any(String.class),
             argThat(new ListContainsSupportType("Level 3")), any(Set.class),
             any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
@@ -855,6 +851,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             argThat(new ListDoesNotContainSupportLevel()), any(Set.class), any(Date.class),
             any(Date.class), any(KeyPair.class), any(BigInteger.class),
             any(String.class));
+
         verify(mockedPKI).createX509Certificate(any(String.class),
             argThat(new ListDoesNotContainSupportType()), any(Set.class), any(Date.class),
             any(Date.class), any(KeyPair.class), any(BigInteger.class),
@@ -938,6 +935,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             product, new HashSet<Product>(),
             getProductModels(product, new HashSet<Product>(), "prefix", entitlement),
             new BigInteger("1234"), keyPair, true);
+
         // Verify v1
         verify(mockExtensionUtil).consumerExtensions(eq(consumer));
         verifyZeroInteractions(mockV3extensionUtil);
@@ -1017,8 +1015,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Map<String, String> extMap = getEncodedContentMap(extensions);
 
         assertTrue(isEncodedContentValid(map));
-
         assertTrue(map.containsKey(CONTENT_URL));
+
         // do we have a yum content type oid
         assertTrue(extMapHasContentType(content, extMap, "1"));
         assertFalse(extMapHasContentType(content, extMap, "2"));
@@ -1042,7 +1040,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
         assertTrue(isEncodedContentValid(map));
         assertTrue(extMapHasProductBrandType(product, extMap));
         assertTrue(extMapProductBrandTypeMatches(product, extMap, "os"));
-
     }
 
     @Test
@@ -1350,8 +1347,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
                 String rTags = content.getRequiredTags();
                 st = new StringTokenizer(rTags, ",");
                 while (st.hasMoreElements()) {
-                    assertTrue(((List) cont.get("required_tags"))
-                        .contains(st.nextElement()));
+                    assertTrue(((List) cont.get("required_tags")).contains(st.nextElement()));
                 }
             }
         }
@@ -1393,10 +1389,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         setupEntitlements(null, "3.3");
 
-        Set<X509ExtensionWrapper> extensions =
-            certServiceAdapter.prepareV3Extensions();
-        Map<String, X509ExtensionWrapper> map =
-            new HashMap<String, X509ExtensionWrapper>();
+        Set<X509ExtensionWrapper> extensions = certServiceAdapter.prepareV3Extensions();
+        Map<String, X509ExtensionWrapper> map = new HashMap<String, X509ExtensionWrapper>();
         for (X509ExtensionWrapper ext : extensions) {
             map.put(ext.getOid(), ext);
         }
@@ -1411,8 +1405,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         catch (Exception e) {
             throw new RuntimeException(e);
         }
-        Map<String, Object> data = (Map<String, Object>)
-            Util.fromJson(stringValue , Map.class);
+        Map<String, Object> data = (Map<String, Object>) Util.fromJson(stringValue , Map.class);
 
         List<Map<String, Object>> prods = (List<Map<String, Object>>) data.get("products");
         List<Map<String, Object>> contents = null;
@@ -1435,7 +1428,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
                 List<String> arches = new ArrayList<String>();
                 arches.add(ARCH_LABEL);
                 assertEquals(cont.get("arches"), arches);
-
             }
         }
     }
@@ -1456,10 +1448,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         setupEntitlements(ARCH_LABEL, "3.3");
 
-        Set<X509ExtensionWrapper> extensions =
-            certServiceAdapter.prepareV3Extensions();
-        Map<String, X509ExtensionWrapper> map =
-            new HashMap<String, X509ExtensionWrapper>();
+        Set<X509ExtensionWrapper> extensions = certServiceAdapter.prepareV3Extensions();
+        Map<String, X509ExtensionWrapper> map = new HashMap<String, X509ExtensionWrapper>();
         for (X509ExtensionWrapper ext : extensions) {
             map.put(ext.getOid(), ext);
         }
@@ -1527,10 +1517,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         products.add(wrongArchProduct);
         setupEntitlements(ARCH_LABEL, "3.3");
 
-        Set<X509ExtensionWrapper> extensions =
-            certServiceAdapter.prepareV3Extensions();
-        Map<String, X509ExtensionWrapper> map =
-            new HashMap<String, X509ExtensionWrapper>();
+        Set<X509ExtensionWrapper> extensions = certServiceAdapter.prepareV3Extensions();
+        Map<String, X509ExtensionWrapper> map = new HashMap<String, X509ExtensionWrapper>();
         for (X509ExtensionWrapper ext : extensions) {
             map.put(ext.getOid(), ext);
         }
@@ -1583,10 +1571,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
             pc.setEnabled(true);
         }
 
-        Set<X509ExtensionWrapper> extensions =
-            certServiceAdapter.prepareV3Extensions();
-        Map<String, X509ExtensionWrapper> map =
-            new HashMap<String, X509ExtensionWrapper>();
+        Set<X509ExtensionWrapper> extensions = certServiceAdapter.prepareV3Extensions();
+        Map<String, X509ExtensionWrapper> map = new HashMap<String, X509ExtensionWrapper>();
         for (X509ExtensionWrapper ext : extensions) {
             map.put(ext.getOid(), ext);
         }
@@ -1603,8 +1589,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         catch (Exception e) {
             throw new RuntimeException(e);
         }
-        Map<String, Object> data = (Map<String, Object>)
-            Util.fromJson(stringValue , Map.class);
+        Map<String, Object> data = (Map<String, Object>) Util.fromJson(stringValue , Map.class);
         assertEquals(data.get("consumer"), "test-consumer");
 
         // each has been set to the default and should not be populated in the cert
@@ -1615,8 +1600,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         List<Map<String, Object>> prods = (List<Map<String, Object>>) data.get("products");
         for (Map<String, Object> prod : prods) {
-            List<Map<String, Object>> contents =
-                (List<Map<String, Object>>) prod.get("content");
+            List<Map<String, Object>> contents = (List<Map<String, Object>>) prod.get("content");
             for (Map<String, Object> cont : contents) {
                 assertNull(cont.get("enabled"));
             }
@@ -1655,8 +1639,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         catch (Exception e) {
             throw new RuntimeException(e);
         }
-        Map<String, Object> data = (Map<String, Object>)
-            Util.fromJson(stringValue , Map.class);
+        Map<String, Object> data = (Map<String, Object>) Util.fromJson(stringValue , Map.class);
         assertEquals(data.get("consumer"), "test-consumer");
 
         // each has been set to the default and should not be populated in the cert
@@ -1687,8 +1670,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             }
         }).when(serialCurator).saveOrUpdateAll(anyMap());
 
-        EntitlementCertificate cert =
-            certServiceAdapter.generateEntitlementCert(entitlement, product);
+        EntitlementCertificate cert = certServiceAdapter.generateEntitlementCert(entitlement, product);
 
         assertTrue(!cert.getCert().contains("ENTITLEMENT DATA"));
     }
@@ -1753,8 +1735,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<X509ByteExtensionWrapper> byteExtensions = certServiceAdapter.prepareV3ByteExtensions(
             product, getProductModels(product, products, "prefix", entitlement),
             "prefix", null);
-        Map<String, X509ByteExtensionWrapper> byteMap =
-            new HashMap<String, X509ByteExtensionWrapper>();
+        Map<String, X509ByteExtensionWrapper> byteMap = new HashMap<String, X509ByteExtensionWrapper>();
         for (X509ByteExtensionWrapper ext : byteExtensions) {
             byteMap.put(ext.getOid(), ext);
         }
@@ -1763,8 +1744,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         List<String> contentSetList = new ArrayList<String>();
         try {
             contentSetList = v3extensionUtil.hydrateContentPackage(
-                byteMap.get("1.3.6.1.4.1.2312.9.7").getValue()
-            );
+                byteMap.get("1.3.6.1.4.1.2312.9.7").getValue());
         }
         catch (Exception e) {
             throw new RuntimeException(e);
@@ -1777,7 +1757,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
         // verify our new wrong arch url is in there
         assertTrue(contentSetList.contains("/prefix" + noArchUrl));
     }
-
 
     @Test
     public void testSpecificLargeContent() throws IOException {
@@ -1904,14 +1883,11 @@ public class DefaultEntitlementCertServiceAdapterTest {
         List<org.candlepin.model.dto.Content> contentList =
             new ArrayList<org.candlepin.model.dto.Content>();
         for (int i = 0; i < 20; i++) {
-            org.candlepin.model.dto.Content cont =
-                new org.candlepin.model.dto.Content();
-            cont.setPath("/head/neck/shoulders/heart" + i + "/waist" +
-                i + "/leg/foot/heel");
+            org.candlepin.model.dto.Content cont = new org.candlepin.model.dto.Content();
+            cont.setPath("/head/neck/shoulders/heart" + i + "/waist" + i + "/leg/foot/heel");
             contentList.add(cont);
         }
-        PathNode location = v3extensionUtil.makePathTree(contentList,
-            v3extensionUtil.new PathNode());
+        PathNode location = v3extensionUtil.makePathTree(contentList, v3extensionUtil.new PathNode());
         v3extensionUtil.printTree(location, 0);
         assertEquals(location.getChildren().size(), 1);
         assertEquals(location.getChildren().get(0).getName(), "head");
@@ -1988,8 +1964,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         contentList.add(contentC);
         contentList.add(contentA);
 
-        PathNode location = v3extensionUtil.makePathTree(contentList,
-            v3extensionUtil.new PathNode());
+        PathNode location = v3extensionUtil.makePathTree(contentList, v3extensionUtil.new PathNode());
 
         assertEquals(3, location.getChildren().size(), 3);
         assertEquals("AAA", location.getChildren().get(0).getName());
@@ -1999,15 +1974,15 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     @Test
     public void testPathDictionary() throws IOException {
-        List<org.candlepin.model.dto.Content> contentList =
-            new ArrayList<org.candlepin.model.dto.Content>();
+        List<org.candlepin.model.dto.Content> contentList = new ArrayList<org.candlepin.model.dto.Content>();
         org.candlepin.model.dto.Content cont = null;
+
         for (int i = 0; i < 20; i++) {
             cont = new org.candlepin.model.dto.Content();
-            cont.setPath("/head/neck/shoulders/heart" + i + "/waist" +
-                i + "/leg/foot/heel");
+            cont.setPath("/head/neck/shoulders/heart" + i + "/waist" + i + "/leg/foot/heel");
             contentList.add(cont);
         }
+
         cont = new org.candlepin.model.dto.Content();
         cont.setPath("/head/neck/shoulders/chest/leg");
         contentList.add(cont);
@@ -2018,10 +1993,10 @@ public class DefaultEntitlementCertServiceAdapterTest {
         cont.setPath("/head/neck/shoulders/chest/torso/leg");
         contentList.add(cont);
 
-        PathNode location = v3extensionUtil.makePathTree(contentList,
-            v3extensionUtil.new PathNode());
+        PathNode location = v3extensionUtil.makePathTree(contentList, v3extensionUtil.new PathNode());
         List<String> nodeStrings = v3extensionUtil.orderStrings(location);
         assertEquals(nodeStrings.size(), 48);
+
         // frequency sorted
         assertEquals(nodeStrings.get(46), "foot");
         assertEquals(nodeStrings.get(47), "leg");
@@ -2029,8 +2004,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     @Test
     public void testHuffNodeTrieCreationAndTreeSearch() {
-        String[] paths = {"01110", "01111", "0110", "1110",
-            "1111", "010", "100", "101", "110", "00"};
+        String[] paths = {"01110", "01111", "0110", "1110", "1111", "010", "100", "101", "110", "00"};
         List<HuffNode> huffNodes = new ArrayList<HuffNode>();
         List<Object> members = new ArrayList<Object>();
         for (int i = 1; i <= 10; i++) {
@@ -2047,8 +2021,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         int idx = 0;
         for (Object o : members) {
             assertEquals(paths[idx], v3extensionUtil.findHuffPath(trieParent, o));
-            Object found = v3extensionUtil.findHuffNodeValueByBits(trieParent,
-                paths[idx++]);
+            Object found = v3extensionUtil.findHuffNodeValueByBits(trieParent, paths[idx++]);
             assertEquals(o, found);
         }
     }
@@ -2064,12 +2037,12 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     private Map<String, X509ExtensionWrapper> getEncodedContent(
         Set<X509ExtensionWrapper> contentExtensions) {
-        Map<String, X509ExtensionWrapper> encodedContent =
-            new HashMap<String, X509ExtensionWrapper>();
+        Map<String, X509ExtensionWrapper> encodedContent = new HashMap<String, X509ExtensionWrapper>();
 
         for (X509ExtensionWrapper ext : contentExtensions) {
             encodedContent.put(ext.getValue(), ext);
         }
+
         return encodedContent;
     }
 
@@ -2086,8 +2059,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     }
 
     private boolean isEncodedContentValid(Set<X509ExtensionWrapper> contentExtensions) {
-        Map<String, X509ExtensionWrapper> encodedContent =
-            getEncodedContent(contentExtensions);
+        Map<String, X509ExtensionWrapper> encodedContent = getEncodedContent(contentExtensions);
 
         return isEncodedContentValid(encodedContent);
     }
@@ -2114,8 +2086,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         ArgumentMatcher<Set<X509ExtensionWrapper>> {
 
         public boolean matches(Object list) {
-            Map<String, X509ExtensionWrapper> encodedContent =
-                new HashMap<String, X509ExtensionWrapper>();
+            Map<String, X509ExtensionWrapper> encodedContent = new HashMap<String, X509ExtensionWrapper>();
 
             for (X509ExtensionWrapper ext : (Set<X509ExtensionWrapper>) list) {
                 encodedContent.put(ext.getOid(), ext);
@@ -2147,8 +2118,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
                 encodedContent.put(ext.getOid(), ext);
             }
 
-            return encodedContent.containsKey(oid) &&
-                encodedContent.get(oid).getValue().equals(value);
+            return encodedContent.containsKey(oid) && encodedContent.get(oid).getValue().equals(value);
         }
     }
 
@@ -2231,8 +2201,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         }
 
         public boolean matches(Object list) {
-            Map<String, X509ExtensionWrapper> encodedContent =
-                new HashMap<String, X509ExtensionWrapper>();
+            Map<String, X509ExtensionWrapper> encodedContent = new HashMap<String, X509ExtensionWrapper>();
 
             for (X509ExtensionWrapper ext : (Set<X509ExtensionWrapper>) list) {
                 encodedContent.put(ext.getOid(), ext);
@@ -2292,19 +2261,16 @@ public class DefaultEntitlementCertServiceAdapterTest {
         "/content/beta/rhel/server/5/$releasever/$basearch/supplementary/debug",
         "/content/dist/rhel/server/6/$releasever/$basearch/supplementary/iso",
         "/content/beta/rhel/server/5/$releasever/$basearch/debug",
-        "/content/beta/rhel/server/6/$releasever/$basearch/subscription-asset-manager/" +
-            "debug",
+        "/content/beta/rhel/server/6/$releasever/$basearch/subscription-asset-manager/debug",
         "/content/dist/rhel/server/5/$releasever/$basearch/rhev-agent/3.0/source/SRPMS",
-        "/content/beta/rhel/server/6/$releasever/$basearch/subscription-asset-manager/" +
-            "source/SRPMS",
+        "/content/beta/rhel/server/6/$releasever/$basearch/subscription-asset-manager/source/SRPMS",
         "/content/beta/rhel/server/6/$releasever/$basearch/os",
         "/content/dist/rhel/server/6/$releasever/$basearch/rhev-agent/3.0/source/SRPMS",
         "/content/beta/rhel/server/5/$releasever/$basearch/supplementary/source/SRPMS",
         "/content/beta/rhel/server/5/$releasever/$basearch/supplementary/os",
         "/content/dist/rhel/server/5/$releasever/$basearch/source/iso",
         "/content/beta/rhel/server/5/$releasever/$basearch/vt/source/SRPMS",
-        "/content/dist/rhel/server/6/$releasever/$basearch/subscription-asset-manager/1/" +
-            "debug",
+        "/content/dist/rhel/server/6/$releasever/$basearch/subscription-asset-manager/1/debug",
         "/content/beta/rhel/server/5/$releasever/$basearch/supplementary/iso",
         "/content/dist/rhel/server/5/$releasever/$basearch/productivity/debug",
         "/content/beta/rhel/server/6/$releasever/$basearch/cf-tools/1.0/source/SRPMS",
@@ -2341,8 +2307,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         "/content/dist/rhel/server/5/$releasever/$basearch/vt/source/SRPMS",
         "/content/dist/rhel/server/6/$releasever/$basearch/rhev-agent/3.0/os",
         "/content/beta/rhel/server/5/$releasever/$basearch/rhev-agent/3.0/source/SRPMS",
-        "/content/dist/rhel/server/6/$releasever/$basearch/subscription-asset-manager/1/" +
-            "source/SRPMS",
+        "/content/dist/rhel/server/6/$releasever/$basearch/subscription-asset-manager/1/source/SRPMS",
         "/content/beta/rhel/server/5/$releasever/$basearch/os",
         "/content/dist/rhel/server/6/$releasever/$basearch/supplementary/source/SRPMS",
         "/content/beta/rhel/server/5/$releasever/$basearch/vt/os",
@@ -2372,5 +2337,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
         "/content/rhb/rhel/client/6/$releasever/$basearch/devtoolset/source/SRPMS",
         "/content/rhb/rhel/server/5/$releasever/$basearch/devtoolset/debug",
         "/content/rhb/rhel/server/5/$releasever/$basearch/devtoolset/os",
-        "/content/rhb/rhel/server/5/$releasever/$basearch/devtoolset/source/SRPMS"};
+        "/content/rhb/rhel/server/5/$releasever/$basearch/devtoolset/source/SRPMS"
+    };
 }

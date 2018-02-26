@@ -571,6 +571,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         if (installedProducts == null) {
             installedProducts = new HashSet<ConsumerInstalledProduct>();
         }
+
         installed.setConsumer(this);
         installedProducts.add(installed);
     }
@@ -784,16 +785,6 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     public void setRecipientOwnerKey(String recipientOwnerKey) {
         this.recipientOwnerKey = recipientOwnerKey;
-    }
-
-    /**
-     * This will put in the property so that the virtWho instances won't error
-     *
-     * @return List always empty
-     */
-    @JsonProperty("guestIds")
-    public List getEmptyGuestIdArray() {
-        return new ArrayList<String>();
     }
 
 }

@@ -14,6 +14,8 @@
  */
 package org.candlepin.resource;
 
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.CertificateSerialDTO;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
@@ -30,6 +32,8 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
 
+
+
 /**
  * CertificateSerialResource
  */
@@ -37,25 +41,31 @@ import io.swagger.annotations.Authorization;
 @Api(value = "serials", authorizations = { @Authorization("basic") })
 public class CertificateSerialResource {
     private CertificateSerialCurator certificateSerialCurator;
+    private ModelTranslator translator;
 
     @Inject
-    public CertificateSerialResource(CertificateSerialCurator certificateSerialCurator) {
+    public CertificateSerialResource(CertificateSerialCurator certificateSerialCurator,
+        ModelTranslator translator) {
+
         this.certificateSerialCurator = certificateSerialCurator;
+        this.translator = translator;
     }
 
     @ApiOperation(notes = "Retrieves a list of Certificate Serials", value = "getCertificateSerials",
         response = CertificateSerial.class, responseContainer = "list")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public CandlepinQuery<CertificateSerial> getCertificateSerials() {
-        return this.certificateSerialCurator.listAll();
+    public CandlepinQuery<CertificateSerialDTO> getCertificateSerials() {
+        CandlepinQuery<CertificateSerial> query = this.certificateSerialCurator.listAll();
+        return this.translator.translateQuery(query, CertificateSerialDTO.class);
     }
 
     @ApiOperation(notes = "Retrieves single Certificate Serial", value = "getCertificateSerial")
     @GET
     @Path("/{serial_id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public CertificateSerial getCertificateSerial(@PathParam("serial_id") Long serialId) {
-        return this.certificateSerialCurator.find(serialId);
+    public CertificateSerialDTO getCertificateSerial(@PathParam("serial_id") Long serialId) {
+        CertificateSerial serial = this.certificateSerialCurator.find(serialId);
+        return this.translator.translate(serial, CertificateSerialDTO.class);
     }
 }

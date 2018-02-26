@@ -24,6 +24,8 @@ import static org.mockito.Mockito.when;
 
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.dto.manifest.v1.ConsumerDTO;
+import org.candlepin.dto.manifest.v1.ConsumerTypeDTO;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.IdentityCertificate;
@@ -77,7 +79,7 @@ public class ConsumerImporterTest {
 
     @Test
     public void importShouldCreateAValidConsumer() throws IOException {
-        ConsumerDto consumer =
+        ConsumerDTO consumer =
             importer.createObject(mapper, new StringReader("{\"uuid\":\"test-uuid\",\"name\":\"test-name\"}"));
 
         assertEquals("test-uuid", consumer.getUuid());
@@ -92,7 +94,7 @@ public class ConsumerImporterTest {
         configProps.put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
         mapper = TestSyncUtils.getTestSyncUtils(new MapConfiguration(configProps));
 
-        ConsumerDto consumer = importer.createObject(
+        ConsumerDTO consumer = importer.createObject(
             mapper, new StringReader("{\"uuid\":\"test-uuid\", \"unknown\":\"notreal\"}"));
         assertEquals("test-uuid", consumer.getUuid());
     }
@@ -111,11 +113,13 @@ public class ConsumerImporterTest {
     @Test
     public void importConsumerWithNullUuidOnOwnerShouldSetUuid() throws ImporterException {
         Owner owner = mock(Owner.class);
-        ConsumerDto consumer = mock(ConsumerDto.class);
+        ConsumerDTO consumer = mock(ConsumerDTO.class);
+        ConsumerTypeDTO type = mock(ConsumerTypeDTO.class);
 
         when(owner.getId()).thenReturn("test-owner-id");
         when(consumer.getUuid()).thenReturn("test-uuid");
-        when(consumer.getOwner()).thenReturn(owner);
+        when(consumer.getOwner()).thenReturn("owner-id");
+        when(consumer.getType()).thenReturn(type);
 
         IdentityCertificate idCert = new IdentityCertificate();
         idCert.setSerial(new CertificateSerial());
@@ -134,10 +138,12 @@ public class ConsumerImporterTest {
     @Test
     public void importConsumerWithSameUuidOnOwnerShouldDoNothing() throws ImporterException {
         Owner owner = mock(Owner.class);
-        ConsumerDto consumer = mock(ConsumerDto.class);
+        ConsumerDTO consumer = mock(ConsumerDTO.class);
+        ConsumerTypeDTO type = mock(ConsumerTypeDTO.class);
         when(owner.getUpstreamUuid()).thenReturn("test-uuid");
         when(consumer.getUuid()).thenReturn("test-uuid");
-        when(consumer.getOwner()).thenReturn(owner);
+        when(consumer.getOwner()).thenReturn("owner-id");
+        when(consumer.getType()).thenReturn(type);
 
         IdentityCertificate idCert = new IdentityCertificate();
         idCert.setSerial(new CertificateSerial());
@@ -158,7 +164,7 @@ public class ConsumerImporterTest {
         Owner owner = new Owner();
         UpstreamConsumer uc = new UpstreamConsumer("test-uuid");
         owner.setUpstreamConsumer(uc);
-        ConsumerDto consumer = new ConsumerDto();
+        ConsumerDTO consumer = new ConsumerDTO();
         consumer.setUuid("test-uuid");
 
         Owner anotherOwner = new Owner("other", "Other");
@@ -172,10 +178,10 @@ public class ConsumerImporterTest {
     @Test
     public void importConsumerWithMismatchedUuidShouldThrowException() throws ImporterException {
         Owner owner = mock(Owner.class);
-        ConsumerDto consumer = mock(ConsumerDto.class);
+        ConsumerDTO consumer = mock(ConsumerDTO.class);
         when(owner.getUpstreamUuid()).thenReturn("another-test-uuid");
         when(consumer.getUuid()).thenReturn("test-uuid");
-        when(consumer.getOwner()).thenReturn(owner);
+        when(consumer.getOwner()).thenReturn("owner-id");
 
         try {
             importer.store(owner, consumer, new ConflictOverrides(), null);
@@ -191,10 +197,12 @@ public class ConsumerImporterTest {
     @Test
     public void importConsumerWithMismatchedUuidShouldNotThrowExceptionIfForced() throws ImporterException {
         Owner owner = mock(Owner.class);
-        ConsumerDto consumer = mock(ConsumerDto.class);
+        ConsumerDTO consumer = mock(ConsumerDTO.class);
+        ConsumerTypeDTO type = mock(ConsumerTypeDTO.class);
         when(owner.getUpstreamUuid()).thenReturn("another-test-uuid");
         when(consumer.getUuid()).thenReturn("test-uuid");
-        when(consumer.getOwner()).thenReturn(owner);
+        when(consumer.getOwner()).thenReturn("owner-id");
+        when(consumer.getType()).thenReturn(type);
 
         IdentityCertificate idCert = new IdentityCertificate();
         idCert.setSerial(new CertificateSerial());
@@ -214,7 +222,7 @@ public class ConsumerImporterTest {
     @Test(expected = ImporterException.class)
     public void importConsumerWithNullUuidOnConsumerShouldThrowException() throws ImporterException {
         Owner owner = new Owner();
-        ConsumerDto consumer = new ConsumerDto();
+        ConsumerDTO consumer = new ConsumerDTO();
         consumer.setUuid(null);
 
         importer.store(owner, consumer, new ConflictOverrides(), null);
@@ -226,10 +234,12 @@ public class ConsumerImporterTest {
     @Test
     public void importConsumerWithNullIdCertShouldNotFail() throws ImporterException {
         Owner owner = mock(Owner.class);
-        ConsumerDto consumer = mock(ConsumerDto.class);
+        ConsumerDTO consumer = mock(ConsumerDTO.class);
+        ConsumerTypeDTO type = mock(ConsumerTypeDTO.class);
         when(owner.getUpstreamUuid()).thenReturn("test-uuid");
         when(consumer.getUuid()).thenReturn("test-uuid");
-        when(consumer.getOwner()).thenReturn(owner);
+        when(consumer.getOwner()).thenReturn("owner-id");
+        when(consumer.getType()).thenReturn(type);
 
         importer.store(owner, consumer, new ConflictOverrides(), null);
 

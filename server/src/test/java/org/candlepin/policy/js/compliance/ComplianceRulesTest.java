@@ -27,6 +27,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.audit.EventSink;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.StandardTranslator;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Consumer;
@@ -96,6 +98,7 @@ public class ComplianceRulesTest {
     @Mock private JsRunnerRequestCache cache;
     @Mock private ProductCurator productCurator;
 
+    private ModelTranslator translator;
     private I18n i18n;
     private JsRunnerProvider provider;
 
@@ -103,6 +106,8 @@ public class ComplianceRulesTest {
 
     @Before
     public void setUp() {
+        translator = new StandardTranslator();
+
         MockitoAnnotations.initMocks(this);
         Locale locale = new Locale("en_US");
         i18n = I18nFactory.getI18n(getClass(), "org.candlepin.i18n.Messages", locale, I18nFactory.FALLBACK);
@@ -115,7 +120,7 @@ public class ComplianceRulesTest {
         provider = new JsRunnerProvider(rulesCuratorMock, cacheProvider);
         compliance = new ComplianceRules(provider.get(), entCurator, new StatusReasonMessageGenerator(i18n),
             eventSink, consumerCurator,
-            new RulesObjectMapper(new ProductCachedSerializationModule(productCurator)));
+            new RulesObjectMapper(new ProductCachedSerializationModule(productCurator)), translator);
 
         owner = new Owner("test");
         activeGuestAttrs = new HashMap<String, String>();
@@ -132,7 +137,7 @@ public class ComplianceRulesTest {
         JsRunner mockRunner = mock(JsRunner.class);
         compliance = new ComplianceRules(mockRunner, entCurator, new StatusReasonMessageGenerator(i18n),
             eventSink, consumerCurator,
-            new RulesObjectMapper(new ProductCachedSerializationModule(productCurator)));
+            new RulesObjectMapper(new ProductCachedSerializationModule(productCurator)), translator);
 
         when(mockRunner.runJsFunction(any(Class.class), eq("get_status"),
             any(JsContext.class))).thenReturn("{\"unknown\": \"thing\"}");

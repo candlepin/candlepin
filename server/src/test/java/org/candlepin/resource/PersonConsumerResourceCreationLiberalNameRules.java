@@ -19,6 +19,7 @@ import static org.mockito.Mockito.when;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
 import org.candlepin.common.exceptions.BadRequestException;
+import org.candlepin.dto.api.v1.ConsumerTypeDTO;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Owner;
 import org.candlepin.model.PermissionBlueprint;
@@ -51,6 +52,11 @@ public class PersonConsumerResourceCreationLiberalNameRules extends
 
         return systemtype;
 
+    }
+
+    @Override
+    public ConsumerTypeDTO initSystemDto() {
+        return this.modelTranslator.translate(initSystem(), ConsumerTypeDTO.class);
     }
 
     @Test

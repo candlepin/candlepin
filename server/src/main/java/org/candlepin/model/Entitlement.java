@@ -19,8 +19,6 @@ import org.candlepin.common.jackson.HateoasInclude;
 import com.fasterxml.jackson.annotation.JsonFilter;
 
 import org.hibernate.annotations.BatchSize;
-import org.hibernate.annotations.ForeignKey;
-import org.hibernate.annotations.Index;
 
 import java.util.Date;
 import java.util.HashSet;
@@ -62,7 +60,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @Entity
 @Table(name = Entitlement.DB_TABLE)
 @JsonFilter("EntitlementFilter")
-public class Entitlement extends AbstractHibernateObject
+public class Entitlement extends AbstractHibernateObject<Entitlement>
     implements Linkable, Owned, Named, ConsumerProperty, Comparable<Entitlement>, Eventful {
 
     /** Name of the table backing this object in the database */
@@ -76,23 +74,17 @@ public class Entitlement extends AbstractHibernateObject
     private String id;
 
     @ManyToOne
-    @ForeignKey(name = "fk_entitlement_owner")
     @JoinColumn(nullable = false)
-    @Index(name = "cp_entitlement_owner_fk_idx")
     @NotNull
     private Owner owner;
 
     @ManyToOne
-    @ForeignKey(name = "fk_entitlement_consumer")
     @JoinColumn(nullable = false)
-    @Index(name = "cp_entitlement_consumer_fk_idx")
     @NotNull
     private Consumer consumer;
 
     @ManyToOne
-    @ForeignKey(name = "fk_entitlement_pool")
     @JoinColumn(nullable = true)
-    @Index(name = "cp_entitlement_pool_fk_idx")
     @NotNull
     private Pool pool;
 

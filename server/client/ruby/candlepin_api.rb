@@ -179,6 +179,7 @@ class Candlepin
     consumer = {
       :uuid => uuid
     }
+
     consumer[:facts] = params[:facts] if params[:facts]
     consumer[:installedProducts] = params[:installedProducts] if params[:installedProducts]
     consumer[:guestIds] = params[:guestIds] if params[:guestIds]
@@ -1039,7 +1040,7 @@ class Candlepin
       'startDate' => start_date,
       'endDate'   => end_date,
       'quantity'  =>  quantity,
-      'product' => { 'id' => product_id },
+      'productId' => product_id,
       'providedProducts' => provided_products.collect { |pid| {'productId' => pid} }
     }
 
@@ -1060,7 +1061,7 @@ class Candlepin
     end
 
     if params[:derived_product_id]
-      pool['derivedProduct'] = { 'id' => params[:derived_product_id] }
+      pool['derivedProductId'] = params[:derived_product_id]
     end
 
     if params[:source_subscription]

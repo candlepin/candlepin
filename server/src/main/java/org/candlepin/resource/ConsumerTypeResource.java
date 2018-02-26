@@ -14,6 +14,8 @@
  */
 package org.candlepin.resource;
 
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.ConsumerTypeDTO;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.model.CandlepinQuery;
@@ -44,6 +46,8 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Authorization;
 
+
+
 /**
  * Access Path for consumer types
  */
@@ -51,23 +55,58 @@ import io.swagger.annotations.Authorization;
 @Api(value = "consumertypes", authorizations = { @Authorization("basic") })
 public class ConsumerTypeResource {
     private static Logger log = LoggerFactory.getLogger(ConsumerTypeResource.class);
+
     private ConsumerTypeCurator consumerTypeCurator;
     private I18n i18n;
+    private ModelTranslator translator;
 
     @Inject
-    public ConsumerTypeResource(ConsumerTypeCurator consumerTypeCurator, I18n i18n) {
+    public ConsumerTypeResource(ConsumerTypeCurator consumerTypeCurator, I18n i18n,
+        ModelTranslator translator) {
 
         this.consumerTypeCurator = consumerTypeCurator;
         this.i18n = i18n;
+        this.translator = translator;
+    }
+
+    /**
+     * Populates the specified entity with data from the provided DTO.
+     *
+     * @param entity
+     *  The entity instance to populate
+     *
+     * @param dto
+     *  The DTO containing the data with which to populate the entity
+     *
+     * @throws IllegalArgumentException
+     *  if either entity or dto are null
+     */
+    protected void populateEntity(ConsumerType entity, ConsumerTypeDTO dto) {
+        if (entity == null) {
+            throw new IllegalArgumentException("entity is null");
+        }
+
+        if (dto == null) {
+            throw new IllegalArgumentException("dto is null");
+        }
+
+        if (dto.getLabel() != null) {
+            entity.setLabel(dto.getLabel());
+        }
+
+        if (dto.isManifest() != null) {
+            entity.setManifest(dto.isManifest());
+        }
     }
 
     @ApiOperation(notes = "Retrieves a list of Consumer Types", value = "list",
-        response = ConsumerType.class, responseContainer = "list")
+        response = ConsumerTypeDTO.class, responseContainer = "list")
     @GET
-    @Produces({MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON })
     @Wrapped(element = "consumertypes")
-    public CandlepinQuery<ConsumerType> list() {
-        return this.consumerTypeCurator.listAll();
+    public CandlepinQuery<ConsumerTypeDTO> list() {
+        CandlepinQuery<ConsumerType> query = this.consumerTypeCurator.listAll();
+        return this.translator.translateQuery(query, ConsumerTypeDTO.class);
     }
 
     @ApiOperation(notes = "Retrieves a single Consumer Type", value = "getConsumerType")
@@ -75,16 +114,14 @@ public class ConsumerTypeResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{id}")
-    public ConsumerType getConsumerType(@PathParam("id") String id) {
-        ConsumerType toReturn = consumerTypeCurator.find(id);
+    public ConsumerTypeDTO getConsumerType(@PathParam("id") String id) {
+        ConsumerType type = consumerTypeCurator.find(id);
 
-        if (toReturn != null) {
-            return toReturn;
+        if (type == null) {
+            throw new NotFoundException(i18n.tr("Unit type with id ''{0}'' could not be found.", id));
         }
 
-        throw new NotFoundException(
-            i18n.tr("Unit type with id ''{0}'' could not be found.", id)
-        );
+        return this.translator.translate(type, ConsumerTypeDTO.class);
     }
 
     @ApiOperation(notes = "Creates a Consumer Type", value = "create")
@@ -92,16 +129,18 @@ public class ConsumerTypeResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public ConsumerType create(
-        @ApiParam(name = "consumerType", required = true) ConsumerType in) throws BadRequestException {
+    public ConsumerTypeDTO create(
+        @ApiParam(name = "consumerType", required = true) ConsumerTypeDTO dto) throws BadRequestException {
         try {
-            ConsumerType toReturn = consumerTypeCurator.create(in);
-            return toReturn;
+            ConsumerType type = new ConsumerType();
+
+            this.populateEntity(type, dto);
+            type = consumerTypeCurator.create(type);
+            return this.translator.translate(type, ConsumerTypeDTO.class);
         }
         catch (Exception e) {
-            log.error("Problem creating unit type:", e);
-            throw new BadRequestException(
-                i18n.tr("Problem creating unit type: {0}", in));
+            log.error("Problem creating unit type: ", e);
+            throw new BadRequestException(i18n.tr("Problem creating unit type: {0}", dto));
         }
     }
 
@@ -111,17 +150,17 @@ public class ConsumerTypeResource {
     @Path("/{id}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public ConsumerType update(
-        @ApiParam(name = "consumerType", required = true) ConsumerType in) throws BadRequestException {
-        ConsumerType type = consumerTypeCurator.find(in.getId());
+    public ConsumerTypeDTO update(
+        @ApiParam(name = "consumerType", required = true) ConsumerTypeDTO dto) throws BadRequestException {
+        ConsumerType type = consumerTypeCurator.find(dto.getId());
 
         if (type == null) {
-            throw new BadRequestException(
-                i18n.tr("Unit type with label {0} could not be found.", in.getId()));
+            throw new NotFoundException(i18n.tr("Unit type with label {0} could not be found.", dto.getId()));
         }
 
-        consumerTypeCurator.merge(in);
-        return in;
+        this.populateEntity(type, dto);
+        type = consumerTypeCurator.merge(type);
+        return this.translator.translate(type, ConsumerTypeDTO.class);
     }
 
     @ApiOperation(notes = "Removes a Consumer Type", value = "deleteConsumerType")
@@ -132,8 +171,7 @@ public class ConsumerTypeResource {
         ConsumerType type = consumerTypeCurator.find(id);
 
         if (type == null) {
-            throw new BadRequestException(
-                i18n.tr("Unit type with id {0} could not be found.", id));
+            throw new NotFoundException(i18n.tr("Unit type with id {0} could not be found.", id));
         }
 
         consumerTypeCurator.delete(type);

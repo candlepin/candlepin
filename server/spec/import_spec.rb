@@ -104,8 +104,8 @@ describe 'Import Test Group:', :serial => true do
     end
 
     it 'modifies owner to reference upstream consumer' do
-      o = @cp.get_owner(@import_owner['key'])
-      o.upstreamConsumer.uuid.should == @cp_export.candlepin_client.uuid
+      owner = @cp.get_owner(@import_owner['key'])
+      owner.upstreamConsumer.uuid.should == @cp_export.candlepin_client.uuid
     end
 
     it "originating information should be populated in the import record" do
@@ -414,6 +414,7 @@ describe 'Import Test Group:', :serial => true do
       # this information used to be on /imports but now exists on Owner
       # checking for api and webapp overrides
       consumer = @candlepin_consumer
+
       upstream = @cp.get_owner(@import_owner['key'])['upstreamConsumer']
       upstream.uuid.should == consumer['uuid']
       upstream.apiUrl.should == "api1"
@@ -421,6 +422,13 @@ describe 'Import Test Group:', :serial => true do
       upstream.id.should_not be_nil
       upstream.idCert.should_not be_nil
       upstream.name.should == consumer['name']
+
+      # Delete the created and updated fields, as the DTO does not contain these fields
+      upstream['type'].delete('created');
+      upstream['type'].delete('updated');
+      consumer['type'].delete('created');
+      consumer['type'].delete('updated');
+
       # upstream.type caused a failure on some machines
       upstream['type'].should == consumer['type']
     end

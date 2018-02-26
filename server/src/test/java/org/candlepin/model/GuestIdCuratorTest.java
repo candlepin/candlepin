@@ -59,7 +59,7 @@ public class GuestIdCuratorTest extends DatabaseTestFixture {
         }
         consumerCurator.create(consumer);
 
-        List<GuestId> result = curator.listByConsumer(consumer);
+        List<GuestId> result = curator.listByConsumer(consumer).list();
         assertEquals(5, result.size());
         for (int i = 0; i < 5; i++) {
             assertTrue(result.contains(new GuestId("" + i)));
@@ -71,7 +71,7 @@ public class GuestIdCuratorTest extends DatabaseTestFixture {
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
         consumerCurator.create(consumer);
 
-        List<GuestId> result = curator.listByConsumer(consumer);
+        List<GuestId> result = curator.listByConsumer(consumer).list();
         assertEquals(0, result.size());
     }
 

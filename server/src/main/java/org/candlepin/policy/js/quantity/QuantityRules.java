@@ -14,6 +14,9 @@
  */
 package org.candlepin.policy.js.quantity;
 
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.rules.v1.ConsumerDTO;
+import org.candlepin.dto.rules.v1.PoolDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
@@ -28,6 +31,7 @@ import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -42,12 +46,14 @@ public class QuantityRules {
     private JsRunner jsRules;
     private RulesObjectMapper mapper;
     private static Logger log = LoggerFactory.getLogger(QuantityRules.class);
+    private ModelTranslator translator;
 
     @Inject
-    public QuantityRules(JsRunner jsRules, RulesObjectMapper mapper) {
+    public QuantityRules(JsRunner jsRules, RulesObjectMapper mapper, ModelTranslator translator) {
         this.jsRules = jsRules;
-
         this.mapper = mapper;
+        this.translator = translator;
+
         jsRules.init("quantity_name_space");
     }
 
@@ -61,8 +67,8 @@ public class QuantityRules {
             }
         }
 
-        args.put("pool", p);
-        args.put("consumer", c);
+        args.put("consumer", this.translator.translate(c, ConsumerDTO.class));
+        args.put("pool", this.translator.translate(p, PoolDTO.class));
         args.put("validEntitlements", validEntitlements);
         args.put("log", log, false);
         args.put("guestIds", c.getGuestIds());
@@ -98,8 +104,13 @@ public class QuantityRules {
             }
         }
 
-        args.put("pools", pools);
-        args.put("consumer", c);
+        List<PoolDTO> poolDTOs = new ArrayList<PoolDTO>();
+        for (Pool pool : pools) {
+            poolDTOs.add(this.translator.translate(pool, PoolDTO.class));
+        }
+
+        args.put("pools", poolDTOs);
+        args.put("consumer", this.translator.translate(c, ConsumerDTO.class));
         args.put("validEntitlements", validEntitlements);
         args.put("log", log, false);
         args.put("guestIds", c.getGuestIds());

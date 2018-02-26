@@ -529,7 +529,7 @@ public class PinsetterKernel implements ModeChangeListener {
         log.debug("looking for canceled jobs since scheduler was paused");
         CancelJobJob cjj = new CancelJobJob(jobCurator, this);
         try {
-            //Not sure why we don't want to use a UnitOfWork here
+            // Not sure why we don't want to use a UnitOfWork here
             cjj.toExecute(null);
         }
         catch (JobExecutionException e1) {
