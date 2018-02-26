@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.3.0
+Version: 2.3.1
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,83 @@ fi
 
 #raw
 %changelog
+* Mon Feb 26 2018 Kevin Howell <khowell@redhat.com> 2.3.1-1
+- Qpid reconnect attempts now have a constant interval. (awood@redhat.com)
+- Fixed rebase errors and artifacts (crog@redhat.com)
+- Pool Quantity DTO (wpoteat@redhat.com)
+- Implemented ConsumerDTO & ConsumerTypeDTO APIs for import/export.
+  (nmoumoul@redhat.com)
+- Product certificate (wpoteat@redhat.com)
+- Implemented the PoolDTO API for the Rules framework. (nmoumoul@redhat.com)
+- Implemented ConsumerDTO/ConsumerTypeDTO/OwnerDTO for the Rules API.
+  (nmoumoul@redhat.com)
+- DTO equals/hashcode/populate fixes, and DTO unit tests no longer ignored.
+  (nmoumoul@redhat.com)
+- Updated EntitlementDTO to use ConsumerDTOs instead of Consumer entities
+  (crog@redhat.com)
+- Added ConsumerDTO and dependent DTOs (adarshvritant@gmail.com)
+- Implemented JobStatusDTO/JobStatusTranslator (nmoumoul@redhat.com)
+- Update method accepts DTO now, and populateEntity does validation on update
+  method. (nmoumoul@redhat.com)
+- Implemented CdnDTO/CdnTranslator (nmoumoul@redhat.com)
+- Implemented PoolDTO, EntitlementDTO and BrandingDTO (nmoumoul@redhat.com)
+- Implemented EventDTO (nmoumoul@redhat.com)
+- Fixed content detection in products (adarshvritant@gmail.com)
+- Added the lastRefreshed field to the OwnerDTO (crog@redhat.com)
+- Fixed an issue with the Owner.autobindDisabled not allowing nulls
+  (crog@redhat.com)
+- Implemented ActivationKeyDTO (nmoumoul@redhat.com)
+- Updated UpstreamConsumerDTO to use content access mode (crog@redhat.com)
+- Converted usage of old product and content DTOs to the new DTOs
+  (crog@redhat.com)
+- Converted ProductData and ContentData to the new DTO framework
+  (crog@redhat.com)
+- Lifted the I/O restrictions on the model translators (crog@redhat.com)
+- Added the new org.candlepin.dto package (crog@redhat.com)
+- Several corrections to fix issues found during static analysis
+  (crog@redhat.com)
+- 1531627: Reduce possibility of lock waits on Async Hypervisor Check in
+  (csnyder@redhat.com)
+- Fixed non deterministic test failure (adarshvritant@gmail.com)
+- Switch to SHA256WithRSA from SHA1WithRSA. (awood@redhat.com)
+- Allow user to change signing algorithms. (awood@redhat.com)
+- 1545363: Convert Candlepin to use Bouncy Castle 1.59. (awood@redhat.com)
+- Update to latest version of Hibernate Validator. (awood@redhat.com)
+- Correct typos, unnecessary throws, other warnings. (awood@redhat.com)
+- 1545359: Move from HornetQ to ActiveMQ Artemis (awood@redhat.com)
+- Update Logback to latest version. (awood@redhat.com)
+- Removed redundant arg when emitting compliance created events.
+  (nmoumoul@redhat.com)
+- Fixed several issues surrounding custom pools (crog@redhat.com)
+- Updated Jackson version to 2.9.4 (crog@redhat.com)
+- Add a unit test to ensure all changelogs are version 3.1 (awood@redhat.com)
+- Convert all changelogs to use schema version 3.1 for consistency
+  (awood@redhat.com)
+- Added preConditions into two liquibase files to fix perf tests.
+  (jhnidek@redhat.com)
+- POM files modified to run tests. (awood@redhat.com)
+- Changed Java version requirement from 1.6 to 1.8 (crog@redhat.com)
+- Ensure unique share consumer between two owners (adarshvritant@gmail.com)
+- Added the request scanner tool (crog@redhat.com)
+- Skip tests gracefully if qpid_proton is not available. (awood@redhat.com)
+- Do not use the rubygems provide proton bindings on Vagrant.
+  (awood@redhat.com)
+- Clear uuids in HostedTestSubscriptionServiceAdapter (adarshvritant@gmail.com)
+- 1514517: Correctly update distributor's modified product content
+  (mstead@redhat.com)
+- 1531106: Round 4 of ueber data cleanup. (adarshvritant@gmail.com)
+- 1533212: Set the default enabled value for Environment Content to Null
+  (bcourt@redhat.com)
+- Fixed several Oracle-related SQL errors in Liquibase tasks (crog@redhat.com)
+- 1525627: Environment content changes in Golden Ticket (wpoteat@redhat.com)
+- Add timestamp to indicate last refresh time on an owner. (awood@redhat.com)
+- Misc. validations on consumer registration. (adarshvritant@gmail.com)
+- mark changesMade on name change in performConsumerUpdates
+  (adarshvritant@gmail.com)
+- Make guest migrations atomic between old and new hosts. (awood@redhat.com)
+- 1479353: Add 'after' flag to pool listing call to better find future pools
+  (wpoteat@redhat.com)
+
 * Thu Jan 04 2018 Kevin Howell <khowell@redhat.com> 2.3.0-1
 - Optimized the delete orphaned pools Liquibase task (crog@redhat.com)
 - Refactor KeyValueParameter to remove warnings. (awood@redhat.com)
