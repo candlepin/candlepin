@@ -16,6 +16,7 @@ package org.candlepin.policy.js.quantity;
 
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.rules.v1.ConsumerDTO;
+import org.candlepin.dto.rules.v1.EntitlementDTO;
 import org.candlepin.dto.rules.v1.PoolDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
@@ -31,12 +32,13 @@ import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+
 
 /**
  * QuantityRules
@@ -57,19 +59,18 @@ public class QuantityRules {
         jsRules.init("quantity_name_space");
     }
 
+    @SuppressWarnings("checkstyle:indentation")
     public SuggestedQuantity getSuggestedQuantity(Pool p, Consumer c, Date date) {
         JsonJsContext args = new JsonJsContext(mapper);
 
-        Set<Entitlement> validEntitlements = new HashSet<Entitlement>();
-        for (Entitlement e : c.getEntitlements()) {
-            if (e.isValidOnDate(date)) {
-                validEntitlements.add(e);
-            }
-        }
+        Stream<EntitlementDTO> entStream = c.getEntitlements() == null ? Stream.empty() :
+            c.getEntitlements().stream()
+                .filter(ent -> ent.isValidOnDate(date))
+                .map(this.translator.getStreamMapper(Entitlement.class, EntitlementDTO.class));
 
         args.put("consumer", this.translator.translate(c, ConsumerDTO.class));
         args.put("pool", this.translator.translate(p, PoolDTO.class));
-        args.put("validEntitlements", validEntitlements);
+        args.put("validEntitlements", entStream.collect(Collectors.toSet()));
         args.put("log", log, false);
         args.put("guestIds", c.getGuestIds());
 
@@ -92,26 +93,21 @@ public class QuantityRules {
      * @param date
      * @return suggested quantities for all pools requested
      */
-    public Map<String, SuggestedQuantity> getSuggestedQuantities(List<Pool> pools,
-        Consumer c, Date date) {
-
+    @SuppressWarnings("checkstyle:indentation")
+    public Map<String, SuggestedQuantity> getSuggestedQuantities(List<Pool> pools, Consumer c, Date date) {
         JsonJsContext args = new JsonJsContext(mapper);
 
-        Set<Entitlement> validEntitlements = new HashSet<Entitlement>();
-        for (Entitlement e : c.getEntitlements()) {
-            if (e.isValidOnDate(date)) {
-                validEntitlements.add(e);
-            }
-        }
+        Stream<PoolDTO> poolStream = pools == null ? Stream.empty() :
+            pools.stream().map(this.translator.getStreamMapper(Pool.class, PoolDTO.class));
 
-        List<PoolDTO> poolDTOs = new ArrayList<PoolDTO>();
-        for (Pool pool : pools) {
-            poolDTOs.add(this.translator.translate(pool, PoolDTO.class));
-        }
+        Stream<EntitlementDTO> entStream = c.getEntitlements() == null ? Stream.empty() :
+            c.getEntitlements().stream()
+                .filter(ent -> ent.isValidOnDate(date))
+                .map(this.translator.getStreamMapper(Entitlement.class, EntitlementDTO.class));
 
-        args.put("pools", poolDTOs);
+        args.put("pools", poolStream.collect(Collectors.toSet()));
         args.put("consumer", this.translator.translate(c, ConsumerDTO.class));
-        args.put("validEntitlements", validEntitlements);
+        args.put("validEntitlements", entStream.collect(Collectors.toSet()));
         args.put("log", log, false);
         args.put("guestIds", c.getGuestIds());
 
@@ -119,12 +115,14 @@ public class QuantityRules {
         Map<String, SuggestedQuantity> resultMap;
         TypeReference<Map<String, SuggestedQuantity>> typeref =
             new TypeReference<Map<String, SuggestedQuantity>>() {};
+
         try {
             resultMap = mapper.toObject(json, typeref);
         }
         catch (Exception e) {
             throw new RuleExecutionException(e);
         }
+
         return resultMap;
     }
 }
