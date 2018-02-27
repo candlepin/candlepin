@@ -24,6 +24,7 @@ import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.ProductManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.rules.v1.ConsumerDTO;
+import org.candlepin.dto.rules.v1.EntitlementDTO;
 import org.candlepin.dto.rules.v1.PoolDTO;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
@@ -71,6 +72,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+
 
 /**
  * Enforces entitlement rules for normal (non-manifest) consumers.
@@ -166,6 +171,7 @@ public class EntitlementRules implements Enforcer {
     }
 
     @Override
+    @SuppressWarnings("checkstyle:indentation")
     public Map<String, ValidationResult> preEntitlement(Consumer consumer, Consumer host,
         Collection<PoolQuantity> entitlementPoolQuantities, CallerType caller) {
 
@@ -177,10 +183,14 @@ public class EntitlementRules implements Enforcer {
          * skip that step for share consumers.
          */
         if (!consumer.isShare()) {
+            Stream<EntitlementDTO> entStream = consumer.getEntitlements() == null ? Stream.empty() :
+                consumer.getEntitlements().stream()
+                    .map(this.translator.getStreamMapper(Entitlement.class, EntitlementDTO.class));
+
             JsonJsContext args = new JsonJsContext(objectMapper);
             args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
             args.put("hostConsumer", this.translator.translate(host, ConsumerDTO.class));
-            args.put("consumerEntitlements", consumer.getEntitlements());
+            args.put("consumerEntitlements", entStream.collect(Collectors.toSet()));
             args.put("standalone", config.getBoolean(ConfigProperties.STANDALONE));
             args.put("poolQuantities", entitlementPoolQuantities);
             args.put("caller", caller.getLabel());
@@ -219,22 +229,24 @@ public class EntitlementRules implements Enforcer {
     }
 
     @Override
+    @SuppressWarnings("checkstyle:indentation")
     public List<Pool> filterPools(Consumer consumer, List<Pool> pools, boolean showAll) {
         JsonJsContext args = new JsonJsContext(objectMapper);
         Map<String, ValidationResult> resultMap = new HashMap<String, ValidationResult>();
 
         if (!consumer.isShare()) {
-            List<PoolDTO> poolDTOs = new ArrayList<PoolDTO>();
-            for (Pool pool : pools) {
-                poolDTOs.add(this.translator.translate(pool, PoolDTO.class));
-            }
+            Stream<PoolDTO> poolStream = pools == null ? Stream.empty() :
+                pools.stream().map(this.translator.getStreamMapper(Pool.class, PoolDTO.class));
+
+            Stream<EntitlementDTO> entStream = consumer.getEntitlements() == null ? Stream.empty() :
+                consumer.getEntitlements().stream()
+                    .map(this.translator.getStreamMapper(Entitlement.class, EntitlementDTO.class));
 
             args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
-            args.put("hostConsumer",
-                this.translator.translate(getHost(consumer, pools), ConsumerDTO.class));
-            args.put("consumerEntitlements", consumer.getEntitlements());
+            args.put("hostConsumer", this.translator.translate(getHost(consumer, pools), ConsumerDTO.class));
+            args.put("consumerEntitlements", entStream.collect(Collectors.toSet()));
             args.put("standalone", config.getBoolean(ConfigProperties.STANDALONE));
-            args.put("pools", poolDTOs);
+            args.put("pools", poolStream.collect(Collectors.toSet()));
             args.put("caller", CallerType.LIST_POOLS.getLabel());
             args.put("log", log, false);
 

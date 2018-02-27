@@ -20,6 +20,7 @@ import org.candlepin.util.ElementTransformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.function.Function;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -123,6 +124,7 @@ public class SimpleModelTranslator implements ModelTranslator {
     /**
      * {@inheritDoc}
      */
+    @Override
     public <I, O> ObjectTranslator<I, O> getTranslator(Class<I> inputClass, Class<O> outputClass) {
         if (inputClass == null) {
             throw new IllegalArgumentException("inputClass is null");
@@ -228,6 +230,7 @@ public class SimpleModelTranslator implements ModelTranslator {
      * @return
      *  a translator for the given source object
      */
+    @Override
     public <I, O> ObjectTranslator<I, O> findTranslatorByClass(Class<I> inputClass, Class<O> outputClass) {
         if (inputClass == null) {
             throw new IllegalArgumentException("inputClass is null");
@@ -278,6 +281,7 @@ public class SimpleModelTranslator implements ModelTranslator {
      * @return
      *  a translator for the given object instance, or null if a translator could not be found
      */
+    @Override
     public <I, O> ObjectTranslator<I, O> findTranslatorByInstance(I instance, Class<O> outputClass) {
         if (instance == null) {
             throw new IllegalArgumentException("instance is null");
@@ -293,6 +297,7 @@ public class SimpleModelTranslator implements ModelTranslator {
     /**
      * {@inheritDoc}
      */
+    @Override
     public <I, O> O translate(I input, Class<O> outputClass) {
         if (outputClass == null) {
             throw new IllegalArgumentException("outputClass is null");
@@ -308,6 +313,23 @@ public class SimpleModelTranslator implements ModelTranslator {
         }
 
         return output;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public <I, O> Function<I, O> getStreamMapper(Class<I> inputClass, Class<O> outputClass) {
+        if (inputClass == null) {
+            throw new IllegalArgumentException("inputClass is null");
+        }
+
+        if (outputClass == null) {
+            throw new IllegalArgumentException("outputClass is null");
+        }
+
+        ObjectTranslator<I, O> translator = this.findTranslatorByClass(inputClass, outputClass);
+        return (input) -> translator.translate(this, input);
     }
 
     /**
