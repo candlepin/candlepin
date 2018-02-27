@@ -56,26 +56,6 @@ public class QpidQmf {
     private String lastFlowStoppedQueue = "";
     private Configuration config;
 
-    /**
-     * Status of the connection to Qpid Broker
-     * @author fnguyen
-     */
-    public enum QpidStatus {
-        /**
-         * Qpid is up and running
-         */
-        CONNECTED,
-
-        /**
-         * Qpid is up but the exchange is flow stopped
-         */
-        FLOW_STOPPED,
-        /**
-         * Qpid is down
-         */
-        DOWN
-    }
-
     @Inject
     public QpidQmf(QpidConnection qpidConnection, Configuration config) throws URISyntaxException {
         this.qpidConnection = qpidConnection;
