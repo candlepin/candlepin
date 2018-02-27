@@ -103,7 +103,7 @@ public class ProductResource {
 
         if (product == null) {
             throw new NotFoundException(
-                i18n.tr("Product with UUID ''{0}'' could not be found.", productUuid)
+                i18n.tr("Product with UUID \"{0}\" could not be found.", productUuid)
             );
         }
 

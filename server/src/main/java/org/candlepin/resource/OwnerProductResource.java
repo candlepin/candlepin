@@ -153,9 +153,7 @@ public class OwnerProductResource {
         Product product = this.ownerProductCurator.getProductById(owner, productId);
 
         if (product == null) {
-            throw new NotFoundException(
-                i18n.tr("Product with ID ''{0}'' could not be found.", productId)
-            );
+            throw new NotFoundException(i18n.tr("Product with ID \"{0}\" could not be found.", productId));
         }
 
         return product;
@@ -395,11 +393,7 @@ public class OwnerProductResource {
 
         if (this.productCurator.productHasSubscriptions(owner, product)) {
             throw new BadRequestException(
-                i18n.tr(
-                    "Product with ID ''{0}'' cannot be deleted while subscriptions exist.",
-                    productId
-                )
-            );
+                i18n.tr("Product with ID \"{0}\" cannot be deleted while subscriptions exist.", productId));
         }
 
         this.productManager.removeProduct(owner, product);

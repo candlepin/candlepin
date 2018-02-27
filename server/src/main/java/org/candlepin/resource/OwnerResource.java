@@ -380,8 +380,8 @@ public class OwnerResource {
 
         if (!force && consumerCurator.doesShareConsumerExist(owner)) {
             throw new BadRequestException(
-                i18n.tr("owner ''{0}'' cannot be deleted while there is a share consumer. " +
-                    "You may use 'force' to bypass.", owner.getKey()));
+                i18n.tr("owner \"{0}\" cannot be deleted while there is a share consumer. " +
+                    "You may use \"force\" to bypass.", owner.getKey()));
         }
 
         try {
@@ -551,13 +551,13 @@ public class OwnerResource {
 
         if (!testName.matches("[a-zA-Z0-9]*")) {
             throw new BadRequestException(
-                i18n.tr("The activation key name ''{0}'' must be alphanumeric or " +
-                    "include the characters ''-'' or ''_''", activationKey.getName()));
+                i18n.tr("The activation key name \"{0}\" must be alphanumeric or " +
+                    "include the characters \"-\" or \"_\"", activationKey.getName()));
         }
 
         if (activationKeyCurator.lookupForOwner(activationKey.getName(), owner) != null) {
             throw new BadRequestException(
-                i18n.tr("The activation key name ''{0}'' is already in use for owner {1}",
+                i18n.tr("The activation key name \"{0}\" is already in use for owner {1}",
                     activationKey.getName(), ownerKey));
         }
 

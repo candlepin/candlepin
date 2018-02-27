@@ -64,10 +64,11 @@ public class ServiceLevelValidator {
                 }
             }
         }
+
         if (!invalidServiceLevels.isEmpty()) {
-            String error = i18n.tr("Service level ''{0}'' is not available " +
-                "to units of organization {1}.",
+            String error = i18n.tr("Service level \"{0}\" is not available to units of organization {1}.",
                 StringUtils.join(invalidServiceLevels, ", "), owner.getKey());
+
             throw new BadRequestException(error);
         }
     }

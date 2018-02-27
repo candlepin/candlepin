@@ -206,7 +206,7 @@ public class EntitlerJobTest extends BaseJobTest{
         assertEquals(1, resultErrors.size());
         assertEquals("hello", resultErrors.get(0).getPoolId());
         assertEquals(1, resultErrors.get(0).getErrors().size());
-        assertEquals("No subscriptions are available from the pool with ID 'hello'.", resultErrors.get(0)
+        assertEquals("No subscriptions are available from the pool with ID \"hello\".", resultErrors.get(0)
             .getErrors().get(0));
     }
 

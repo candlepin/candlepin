@@ -104,7 +104,7 @@ public class PageRequestFilter implements ContainerRequestFilter {
 
         I18n i18n = this.i18nProvider.get();
         throw new BadRequestException(i18n.tr("the order parameter must be either" +
-                " ''ascending'' or ''descending''"));
+                " \"ascending\" or \"descending\""));
     }
 
     private Integer readInteger(String value) {

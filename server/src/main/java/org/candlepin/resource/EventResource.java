@@ -86,6 +86,6 @@ public class EventResource {
             return toReturn;
         }
 
-        throw new NotFoundException(i18n.tr("Event with ID ''{0}'' could not be found.", uuid));
+        throw new NotFoundException(i18n.tr("Event with ID \"{0}\" could not be found.", uuid));
     }
 }

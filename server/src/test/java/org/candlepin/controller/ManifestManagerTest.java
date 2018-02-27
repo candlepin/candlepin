@@ -416,7 +416,7 @@ public class ManifestManagerTest {
         catch (Exception e) {
             assertTrue(e instanceof ForbiddenException);
             String expectedMsg = String.format("Unit %s cannot be exported. A manifest cannot be made for " +
-                "units of type '%s'.", consumer.getUuid(), consumer.getType().getLabel());
+                "units of type \"%s\".", consumer.getUuid(), consumer.getType().getLabel());
             assertEquals(e.getMessage(), expectedMsg);
         }
     }
@@ -439,7 +439,7 @@ public class ManifestManagerTest {
         catch (Exception e) {
             assertTrue(e instanceof ForbiddenException);
             String expectedMsg = String.format("Unit %s cannot be exported. A manifest cannot be made for " +
-                "units of type '%s'.", consumer.getUuid(), consumer.getType().getLabel());
+                "units of type \"%s\".", consumer.getUuid(), consumer.getType().getLabel());
             assertEquals(e.getMessage(), expectedMsg);
         }
     }
