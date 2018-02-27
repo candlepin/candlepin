@@ -503,7 +503,7 @@ public class ConsumerResource {
         if (dto.getEnvironment() != null) {
             Environment env = environmentCurator.find(dto.getEnvironment().getId());
             if (env == null) {
-                throw new NotFoundException(i18n.tr("Environment ''{0}'' could not be found.",
+                throw new NotFoundException(i18n.tr("Environment \"{0}\" could not be found.",
                     dto.getEnvironment().getId()));
             }
             entity.setEnvironment(env);
@@ -882,7 +882,7 @@ public class ConsumerResource {
         if (type.isType(ConsumerTypeEnum.PERSON)) {
             if (keys.size() > 0) {
                 throw new BadRequestException(
-                        i18n.tr("A unit type of ''person'' cannot be used with activation keys"));
+                        i18n.tr("A unit type of \"person\" cannot be used with activation keys"));
             }
 
             if (!isConsumerPersonNameValid(consumer.getName())) {
@@ -1045,7 +1045,7 @@ public class ConsumerResource {
         ActivationKey key = activationKeyCurator.lookupForOwner(keyName, owner);
 
         if (key == null) {
-            throw new NotFoundException(i18n.tr("Activation key ''{0}'' not found for organization ''{1}''.",
+            throw new NotFoundException(i18n.tr("Activation key \"{0}\" not found for organization \"{1}\".",
                 keyName, owner.getKey()));
         }
 
@@ -1064,13 +1064,13 @@ public class ConsumerResource {
         }
 
         if (user == null) {
-            throw new NotFoundException(i18n.tr("User with ID ''{0}'' could not be found."));
+            throw new NotFoundException(i18n.tr("User with ID \"{0}\" could not be found."));
         }
 
         // When registering person consumers we need to be sure the username
         // has some association with the owner the consumer is destined for:
         if (!principal.canAccess(owner, SubResource.NONE, Access.ALL) && !principal.hasFullAccess()) {
-            throw new ForbiddenException(i18n.tr("User ''{0}'' has no roles for organization ''{1}''",
+            throw new ForbiddenException(i18n.tr("User \"{0}\" has no roles for organization \"{1}\"",
                 user.getUsername(), owner.getKey()));
         }
 
@@ -1081,7 +1081,7 @@ public class ConsumerResource {
             if (existing != null && existing.getType().isType(ConsumerTypeEnum.PERSON)) {
                 // TODO: This is not the correct error code for this situation!
                 throw new BadRequestException(
-                    i18n.tr("User ''{0}'' has already registered a personal consumer", user.getUsername()));
+                    i18n.tr("User \"{0}\" has already registered a personal consumer", user.getUsername()));
             }
 
             consumer.setName(user.getUsername());
@@ -1181,7 +1181,7 @@ public class ConsumerResource {
         ConsumerType type = consumerTypeCurator.lookupByLabel(label);
 
         if (type == null) {
-            throw new BadRequestException(i18n.tr("Unit type ''{0}'' could not be found.", label));
+            throw new BadRequestException(i18n.tr("Unit type \"{0}\" could not be found.", label));
         }
 
         return type;
@@ -1313,7 +1313,7 @@ public class ConsumerResource {
             Environment e = environmentCurator.find(environmentId);
             if (e == null) {
                 throw new NotFoundException(i18n.tr(
-                    "Environment with ID ''{0}'' could not be found.", environmentId));
+                    "Environment with ID \"{0}\" could not be found.", environmentId));
             }
             log.info("Updating environment to: {}", environmentId);
             toUpdate.setEnvironment(e);
@@ -1929,7 +1929,7 @@ public class ConsumerResource {
             }
             catch (AutobindDisabledForOwnerException e) {
                 throw new BadRequestException(i18n.tr("Ignoring request to auto-attach. " +
-                    "It is disabled for org ''{0}''.", consumer.getOwner().getKey()));
+                    "It is disabled for org \"{0}\".", consumer.getOwner().getKey()));
             }
         }
 
@@ -2009,7 +2009,7 @@ public class ConsumerResource {
 
         if (entitlement == null) {
             throw new NotFoundException(i18n.tr(
-                "Entitlement with ID ''{0}'' could not be found.", entitlementId));
+                "Entitlement with ID \"{0}\" could not be found.", entitlementId));
         }
         return entitlement;
     }
@@ -2119,7 +2119,7 @@ public class ConsumerResource {
         }
 
         throw new NotFoundException(i18n.tr(
-            "Entitlement with ID ''{0}'' could not be found.", dbid
+            "Entitlement with ID \"{0}\" could not be found.", dbid
         ));
     }
 
@@ -2142,7 +2142,7 @@ public class ConsumerResource {
             return;
         }
         throw new NotFoundException(i18n.tr(
-            "Entitlement Certificate with serial number ''{0}'' could not be found.",
+            "Entitlement Certificate with serial number \"{0}\" could not be found.",
             serial.toString())); // prevent serial number formatting.
     }
 
@@ -2164,7 +2164,7 @@ public class ConsumerResource {
         }
         else {
             throw new NotFoundException(i18n.tr(
-                "No entitlements for consumer ''{0}'' with pool id ''{1}''", consumerUuid, poolId));
+                "No entitlements for consumer \"{0}\" with pool id \"{1}\"", consumerUuid, poolId));
         }
     }
 
@@ -2625,7 +2625,7 @@ public class ConsumerResource {
     public void removeDeletionRecord(@PathParam("consumer_uuid") String uuid) {
         DeletedConsumer dc = deletedConsumerCurator.findByConsumerUuid(uuid);
         if (dc == null) {
-            throw new NotFoundException(i18n.tr("Deletion record for hypervisor ''{0}'' not found.", uuid));
+            throw new NotFoundException(i18n.tr("Deletion record for hypervisor \"{0}\" not found.", uuid));
         }
 
         deletedConsumerCurator.delete(dc);

@@ -98,6 +98,6 @@ public class EventResource {
             return this.translator.translate(toReturn, EventDTO.class);
         }
 
-        throw new NotFoundException(i18n.tr("Event with ID ''{0}'' could not be found.", uuid));
+        throw new NotFoundException(i18n.tr("Event with ID \"{0}\" could not be found.", uuid));
     }
 }

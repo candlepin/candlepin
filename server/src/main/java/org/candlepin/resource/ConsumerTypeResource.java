@@ -118,7 +118,7 @@ public class ConsumerTypeResource {
         ConsumerType type = consumerTypeCurator.find(id);
 
         if (type == null) {
-            throw new NotFoundException(i18n.tr("Unit type with id ''{0}'' could not be found.", id));
+            throw new NotFoundException(i18n.tr("Unit type with id \"{0}\" could not be found.", id));
         }
 
         return this.translator.translate(type, ConsumerTypeDTO.class);

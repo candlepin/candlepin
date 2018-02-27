@@ -204,7 +204,7 @@ public class HypervisorResource {
                     if (!createMissing) {
                         log.info("Unable to find hypervisor with id {} in org {}", hypervisorId, ownerKey);
                         result.failed(hypervisorId, i18n.tr(
-                            "Unable to find hypervisor in org ''{0}''", ownerKey));
+                            "Unable to find hypervisor in org \"{0}\"", ownerKey));
                         continue;
                     }
                     log.debug("Registering new host consumer for hypervisor ID: {}", hypervisorId);
