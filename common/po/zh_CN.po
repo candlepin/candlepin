@@ -1,5 +1,6 @@
 # ljanda <ljanda@redhat.com>, 2017. #zanata
 # tfu <tfu@redhat.com>, 2017. #zanata
+# awood <awood@redhat.com>, 2018. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
@@ -8,8 +9,8 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2017-11-15 07:34+0000\n"
-"Last-Translator: tfu <tfu@redhat.com>\n"
+"PO-Revision-Date: 2018-02-27 04:43+0000\n"
+"Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
 "Language-Team: Chinese (Simplified, China)\n"
 "Language: zh_Hans\n"
 "Plural-Forms: nplurals=1; plural=0\n"
@@ -408,7 +409,7 @@ msgstr "未映射的虚拟机权限尚未建立主机/虚拟机映射就已过�
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:210
 msgid "Auto-attach is disabled for owner '{0}'."
-msgstr "所有者 '{0}' 的自动附加功能已被禁用。"
+msgstr "所有者 ''{0}'' 的自动附加功能已被禁用。"
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:260
 #: server/src/main/java/org/candlepin/controller/Entitler.java:500
@@ -1440,7 +1441,7 @@ msgstr "所有者内容访问模式无法在独立模式中直接设置。"
 msgid ""
 "owner ''{0}'' cannot be deleted while there is a share consumer. You may use "
 "'force' to bypass."
-msgstr "当有共享消费者时，所有者 ''{0}'' 不能被删除。您需要使用 'force' 来跳过这个限制。"
+msgstr "当有共享消费者时，所有者 ''{0}'' 不能被删除。您需要使用 ''force'' 来跳过这个限制。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author xhuang
