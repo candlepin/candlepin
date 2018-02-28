@@ -17,6 +17,8 @@ package org.candlepin.sync;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.util.VersionUtil;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.manifest.v1.CertificateDTO;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCurator;
@@ -96,6 +98,7 @@ public class Exporter {
     private PrincipalProvider principalProvider;
     private ProductCurator productCurator;
     private ExportExtensionAdapter exportExtensionAdapter;
+    private ModelTranslator translator;
 
     private static final String LEGACY_RULES_FILE = "/rules/default-rules.js";
     private SyncUtils syncUtils;
@@ -113,7 +116,8 @@ public class Exporter {
         CdnCurator cdnCurator,
         CdnExporter cdnExporter,
         ProductCurator productCurator,
-        SyncUtils syncUtils, ExportExtensionAdapter extensionAdapter) {
+        SyncUtils syncUtils, ExportExtensionAdapter extensionAdapter,
+        ModelTranslator translator) {
 
         this.consumerTypeCurator = consumerTypeCurator;
 
@@ -140,6 +144,7 @@ public class Exporter {
         this.syncUtils = syncUtils;
         mapper = syncUtils.getObjectMapper();
         this.exportExtensionAdapter = extensionAdapter;
+        this.translator = translator;
     }
 
     public File getFullExport(Consumer consumer) throws ExportCreationException {
@@ -437,16 +442,8 @@ public class Exporter {
             cert.getSerial().getId() + ".json");
 
         // paradigm dictates this should go in an exporter.export method
-        FileWriter writer = null;
-
-        try {
-            writer = new FileWriter(file);
-            mapper.writeValue(writer, cert);
-        }
-        finally {
-            if (writer != null) {
-                writer.close();
-            }
+        try (FileWriter writer = new FileWriter(file)) {
+            mapper.writeValue(writer, this.translator.translate(cert, CertificateDTO.class));
         }
     }
 

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2017 Red Hat, Inc.
+ * Copyright (c) 2009 - 2018 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -12,28 +12,24 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.dto.api.v1;
-
-import io.swagger.annotations.ApiModel;
+package org.candlepin.dto.manifest.v1;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.candlepin.dto.TimestampedCandlepinDTO;
+import org.candlepin.dto.CandlepinDTO;
 
 
 /**
- * The CertificateDTO is a DTO representing most Candlepin certificates presented to the API.
- * (exceptions include ProductCertificate which has its own DTO).
+ * The CertificateDTO is a DTO representing most Candlepin certificates
+ * as used by the manifest import/export framework.
  */
-@ApiModel(parent = TimestampedCandlepinDTO.class, description = "DTO representing a certificate")
-public class CertificateDTO extends TimestampedCandlepinDTO<CertificateDTO> {
+public class CertificateDTO extends CandlepinDTO<CertificateDTO> {
     public static final long serialVersionUID = 1L;
 
     protected String id;
     protected String key;
     protected String cert;
     protected CertificateSerialDTO serial;
-
 
     /**
      * Initializes a new CertificateDTO instance with null values.
@@ -97,7 +93,7 @@ public class CertificateDTO extends TimestampedCandlepinDTO<CertificateDTO> {
         CertificateSerialDTO serial = this.getSerial();
 
         return String.format("CertificateDTO [id: %s, key: %s, serial id: %s]",
-            this.getId(), this.getKey(), serial != null ? serial.getId() : null);
+                this.getId(), this.getKey(), serial != null ? serial.getId() : null);
     }
 
     /**
@@ -109,7 +105,7 @@ public class CertificateDTO extends TimestampedCandlepinDTO<CertificateDTO> {
             return true;
         }
 
-        if (obj instanceof CertificateDTO && super.equals(obj)) {
+        if (obj instanceof CertificateDTO) {
             CertificateDTO that = (CertificateDTO) obj;
 
             EqualsBuilder builder = new EqualsBuilder()
@@ -130,7 +126,6 @@ public class CertificateDTO extends TimestampedCandlepinDTO<CertificateDTO> {
     @Override
     public int hashCode() {
         HashCodeBuilder builder = new HashCodeBuilder(37, 7)
-            .append(super.hashCode())
             .append(this.getId())
             .append(this.getKey())
             .append(this.getCert())
@@ -147,7 +142,7 @@ public class CertificateDTO extends TimestampedCandlepinDTO<CertificateDTO> {
         CertificateDTO copy = super.clone();
 
         CertificateSerialDTO serial = this.getSerial();
-        copy.serial = serial != null ? (CertificateSerialDTO) serial.clone() : null;
+        copy.serial = serial != null ? serial.clone() : null;
 
         return copy;
     }

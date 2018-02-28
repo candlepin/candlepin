@@ -14,6 +14,9 @@
  */
 package org.candlepin.sync;
 
+import com.google.inject.Inject;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.manifest.v1.EntitlementDTO;
 import org.candlepin.model.Entitlement;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,9 +28,15 @@ import java.io.Writer;
  * EntitlementExporter
  */
 public class EntitlementExporter {
-    void export(ObjectMapper mapper, Writer writer, Entitlement entitlement)
-        throws IOException {
 
-        mapper.writeValue(writer, entitlement);
+    private ModelTranslator translator;
+
+    @Inject
+    public EntitlementExporter(ModelTranslator translator) {
+        this.translator = translator;
+    }
+
+    void export(ObjectMapper mapper, Writer writer, Entitlement entitlement) throws IOException {
+        mapper.writeValue(writer, this.translator.translate(entitlement, EntitlementDTO.class));
     }
 }

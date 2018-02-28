@@ -12,35 +12,28 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.dto.rules.v1;
+package org.candlepin.dto.manifest.v1;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.candlepin.common.jackson.HateoasInclude;
 import org.candlepin.dto.CandlepinDTO;
-import org.candlepin.jackson.CandlepinAttributeDeserializer;
-import org.candlepin.jackson.CandlepinLegacyAttributeSerializer;
-import org.candlepin.util.MapView;
 import org.candlepin.util.SetView;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 /**
- * A DTO representation of the Pool entity as used by the Rules framework.
+ * A DTO representation of the Pool entity as used by the manifest import/export framework.
  */
 @XmlRootElement(name = "pool")
 @XmlAccessorType(XmlAccessType.PROPERTY)
@@ -106,22 +99,21 @@ public class PoolDTO extends CandlepinDTO<PoolDTO> {
     }
 
     private String id;
-    private Boolean hasSharedAncestor;
-    private Long quantity;
-    private Date startDate;
-    private Date endDate;
 
-    private Map<String, String> attributes;
-    private String restrictedToUsername;
-    private Long consumed;
+    private String contractNumber;
+    private String accountNumber;
+    private String orderNumber;
+
+    private Set<BrandingDTO> branding;
 
     private String productId;
-
-    private Map<String, String> productAttributes;
-
     private String derivedProductId;
+
     private Set<ProvidedProductDTO> providedProducts;
     private Set<ProvidedProductDTO> derivedProvidedProducts;
+
+    private Date startDate;
+    private Date endDate;
 
     /**
      * Initializes a new PoolDTO instance with null values.
@@ -164,223 +156,146 @@ public class PoolDTO extends CandlepinDTO<PoolDTO> {
     }
 
     /**
-     * Checks if this pool or its ancestors were created as a result of a share.
+     * Return the contract number for this pool's subscription.
      *
-     * @return true if this pool or its parent was created because of a share.
+     * @return the contract number.
      */
-    @JsonProperty
-    public Boolean hasSharedAncestor() {
-        return hasSharedAncestor;
+    public String getContractNumber() {
+        return contractNumber;
     }
 
     /**
-     * Sets whether or not this pool or any of its ancestors were created as
-     * a result of a share.
+     * Sets the contract number for this pool's subscription.
      *
-     * @param hasSharedAncestor
-     *  true if this pool or any of its ancestors were created as a result of a share.
+     * @param contractNumber set the contract number of this subscription
      *
      * @return a reference to this PoolDTO object.
      */
-    public PoolDTO setHasSharedAncestor(Boolean hasSharedAncestor) {
-        this.hasSharedAncestor = hasSharedAncestor;
+    public PoolDTO setContractNumber(String contractNumber) {
+        this.contractNumber = contractNumber;
         return this;
     }
 
     /**
-     * Return this pool's quantity.
+     * Returns this pool's account number.
      *
-     * @return this pool's quantity.
+     * @return this pool's account number.
      */
-    public Long getQuantity() {
-        return quantity;
+    public String getAccountNumber() {
+        return accountNumber;
     }
 
     /**
-     * Sets this pool's quantity.
+     * Sets this pool's account number.
      *
-     * @param quantity set this pool's quantity.
+     * @param accountNumber the account number to set on this pool.
      *
      * @return a reference to this PoolDTO object.
      */
-    public PoolDTO setQuantity(Long quantity) {
-        this.quantity = quantity;
+    public PoolDTO setAccountNumber(String accountNumber) {
+        this.accountNumber = accountNumber;
         return this;
     }
 
     /**
-     * Return the date the pool became active.
+     * Returns this pool's order number.
      *
-     * @return when the pool became active.
+     * @return this pool's order number.
      */
-    public Date getStartDate() {
-        return startDate;
+    public String getOrderNumber() {
+        return orderNumber;
     }
 
     /**
-     * Sets the date the pool became active.
+     * Sets this pool's order number.
      *
-     * @param startDate set the date that the pool became active.
+     * @param orderNumber the order number to set on this pool.
      *
      * @return a reference to this PoolDTO object.
      */
-    public PoolDTO setStartDate(Date startDate) {
-        this.startDate = startDate;
+    public PoolDTO setOrderNumber(String orderNumber) {
+        this.orderNumber = orderNumber;
         return this;
     }
 
     /**
-     * Return the date the pool expires.
-     *
-     * @return when the pool expires.
-     */
-    public Date getEndDate() {
-        return endDate;
-    }
-
-    /**
-     * Set the date the pool expires.
-     *
-     * @param endDate set the date that the pool expires.
-     *
-     * @return a reference to this PoolDTO object.
-     */
-    public PoolDTO setEndDate(Date endDate) {
-        this.endDate = endDate;
-        return this;
-    }
-
-    /**
-     * Retrieves a view of the attributes for the pool represented by this DTO. If the attributes
+     * Retrieves a view of the branding for the pool represented by this DTO. If the branding items
      * have not yet been defined, this method returns null.
      * <p></p>
      * Note that the collection returned by this method is a view of the collection backing this
-     * set of attributes. Elements cannot be added to the collection, but elements may be removed.
+     * set of branding items. Elements cannot be added to the collection, but elements may be removed.
      * Changes made to the collection will be reflected by this pool DTO instance.
      *
-     * @return the attributes associated with this pool, or null if they have not yet been defined.
+     * @return
+     *  the branding items associated with this key, or null if they have not yet been defined
      */
-    @JsonSerialize(using = CandlepinLegacyAttributeSerializer.class)
-    public Map<String, String> getAttributes() {
-        return this.attributes != null ? new MapView<String, String>(this.attributes) : null;
+    public Set<BrandingDTO> getBranding() {
+        return this.branding != null ? new SetView<>(this.branding) : null;
     }
 
     /**
-     * Sets the attributes for this pool DTO.
+     * Adds the collection of branding items to this Pool DTO.
      *
-     * @param attributes
-     *  A map of attribute key, value pairs to assign to this pool DTO, or null to clear the
-     *  existing ones
+     * @param branding
+     *  A set of branding items to attach to this DTO, or null to clear the existing ones
      *
-     * @return a reference to this PoolDTO object.
+     * @return
+     *  A reference to this DTO
      */
-    @JsonDeserialize(using = CandlepinAttributeDeserializer.class)
-    public PoolDTO setAttributes(Map<String, String> attributes) {
-        if (attributes != null) {
-            if (this.attributes == null) {
-                this.attributes = new HashMap<String, String>();
+    public PoolDTO setBranding(Set<BrandingDTO> branding) {
+        if (branding != null) {
+            if (this.branding == null) {
+                this.branding = new HashSet<>();
             }
             else {
-                this.attributes.clear();
+                this.branding.clear();
             }
-            this.attributes.putAll(attributes);
+
+            for (BrandingDTO dto : branding) {
+                if (isNullOrIncomplete(dto)) {
+                    throw new IllegalArgumentException(
+                        "collection contains null or incomplete branding objects");
+                }
+            }
+
+            this.branding.addAll(branding);
         }
         else {
-            this.attributes = null;
+            this.branding = null;
         }
         return this;
     }
 
     /**
-     * Checks if the given attribute has been defined on this poolDTO.
+     * Adds the given branding to this pool DTO.
      *
-     * @param key
-     *  The key (name) of the attribute to lookup
-     *
-     * @throws IllegalArgumentException
-     *  if key is null
+     * @param branding
+     *  The branding to add to this pool DTO.
      *
      * @return
-     *  true if the attribute is defined for this pool; false otherwise
+     *  true if this branding was not already contained in this pool DTO.
      */
     @JsonIgnore
-    public boolean hasAttribute(String key) {
-        if (key == null) {
-            throw new IllegalArgumentException("key is null");
+    public boolean addBranding(BrandingDTO branding) {
+        if (isNullOrIncomplete(branding)) {
+            throw new IllegalArgumentException("branding is null or incomplete");
         }
 
-        if (this.attributes == null) {
-            return false;
+        if (this.branding == null) {
+            this.branding = new HashSet<>();
         }
 
-        return this.attributes.containsKey(key);
+        return this.branding.add(branding);
     }
 
     /**
-     * Removes the given attribute from this pool DTO.
-     *
-     * @param key
-     *  The key (name) of the attribute to remove
-     *
-     * @return
-     *  True if the attribute was removed; false otherwise.
+     * Utility method to validate BrandingDTO input
      */
-    @JsonIgnore
-    public boolean removeAttribute(String key) {
-        if (key == null) {
-            throw new IllegalArgumentException("key is null");
-        }
-
-        if (this.attributes == null) {
-            return false;
-        }
-
-        boolean present = this.attributes.containsKey(key);
-        this.attributes.remove(key);
-
-        return present;
-    }
-
-    /**
-     * Returns the username of the user to which this pool is restricted.
-     *
-     * @return the username of the user to which this pool is restricted.
-     */
-    public String getRestrictedToUsername() {
-        return restrictedToUsername;
-    }
-
-    /**
-     * Sets the username of the user to which this pool is restricted.
-     *
-     * @param restrictedToUsername the username of the user to which this pool is restricted.
-     *
-     * @return a reference to this PoolDTO object.
-     */
-    public PoolDTO setRestrictedToUsername(String restrictedToUsername) {
-        this.restrictedToUsername = restrictedToUsername;
-        return this;
-    }
-
-    /**
-     * Returns the quantity of the pool that is currently consumed.
-     *
-     * @return the quantity currently consumed.
-     */
-    public Long getConsumed() {
-        return consumed;
-    }
-
-    /**
-     * Sets the quantity of the pool that is currently consumed.
-     *
-     * @param consumed set the activated uses.
-     *
-     * @return a reference to this PoolDTO object.
-     */
-    public PoolDTO setConsumed(Long consumed) {
-        this.consumed = consumed;
-        return this;
+    private boolean isNullOrIncomplete(BrandingDTO branding) {
+        return branding == null ||
+            branding.getProductId() == null || branding.getProductId().isEmpty() ||
+            branding.getName() == null || branding.getName().isEmpty() ||
+            branding.getType() == null || branding.getType().isEmpty();
     }
 
     /**
@@ -407,73 +322,6 @@ public class PoolDTO extends CandlepinDTO<PoolDTO> {
     public PoolDTO setProductId(String productId) {
         this.productId = productId;
         return this;
-    }
-
-    /**
-     * Retrieves a view of the product attributes for the pool represented by this DTO. If the product
-     * attributes have not yet been defined, this method returns null.
-     * <p></p>
-     * Note that the collection returned by this method is a view of the collection backing this
-     * set of product attributes. Elements cannot be added to the collection, but elements may be removed.
-     * Changes made to the collection will be reflected by this pool DTO instance.
-     *
-     * @return the product attributes associated with this pool,
-     * or null if they have not yet been defined.
-     */
-    @JsonSerialize(using = CandlepinLegacyAttributeSerializer.class)
-    public Map<String, String> getProductAttributes() {
-        return this.productAttributes != null ? new MapView<String, String>(this.productAttributes) : null;
-    }
-
-    /**
-     * Sets the product attributes for this pool DTO.
-     *
-     * @param productAttributes
-     *  A map of product attribute key, value pairs to assign to this pool DTO, or null to clear the
-     *  existing ones
-     *
-     * @return a reference to this PoolDTO object.
-     */
-    @JsonDeserialize(using = CandlepinAttributeDeserializer.class)
-    public PoolDTO setProductAttributes(Map<String, String> productAttributes) {
-        if (productAttributes != null) {
-            if (this.productAttributes == null) {
-                this.productAttributes = new HashMap<String, String>();
-            }
-            else {
-                this.productAttributes.clear();
-            }
-            this.productAttributes.putAll(productAttributes);
-        }
-        else {
-            this.productAttributes = null;
-        }
-        return this;
-    }
-
-    /**
-     * Checks if the given product attribute has been defined on this poolDTO.
-     *
-     * @param key
-     *  The key (name) of the product attribute to lookup
-     *
-     * @throws IllegalArgumentException
-     *  if key is null
-     *
-     * @return
-     *  true if the product attribute is defined for this pool; false otherwise
-     */
-    @JsonIgnore
-    public boolean hasProductAttribute(String key) {
-        if (key == null) {
-            throw new IllegalArgumentException("key is null");
-        }
-
-        if (this.productAttributes == null) {
-            return false;
-        }
-
-        return this.productAttributes.containsKey(key);
     }
 
     /**
@@ -509,7 +357,7 @@ public class PoolDTO extends CandlepinDTO<PoolDTO> {
      *  the provided products associated with this key, or null if they have not yet been defined
      */
     public Set<ProvidedProductDTO> getProvidedProducts() {
-        return this.providedProducts != null ? new SetView<ProvidedProductDTO>(this.providedProducts) : null;
+        return this.providedProducts != null ? new SetView<>(this.providedProducts) : null;
     }
 
     /**
@@ -524,7 +372,7 @@ public class PoolDTO extends CandlepinDTO<PoolDTO> {
     public PoolDTO setProvidedProducts(Set<ProvidedProductDTO> providedProducts) {
         if (providedProducts != null) {
             if (this.providedProducts == null) {
-                this.providedProducts = new HashSet<ProvidedProductDTO>();
+                this.providedProducts = new HashSet<>();
             }
             else {
                 this.providedProducts.clear();
@@ -533,7 +381,7 @@ public class PoolDTO extends CandlepinDTO<PoolDTO> {
             for (ProvidedProductDTO dto : providedProducts) {
                 if (isNullOrIncomplete(dto)) {
                     throw new IllegalArgumentException(
-                            "collection contains null or incomplete provided products");
+                        "collection contains null or incomplete provided products");
                 }
             }
 
@@ -561,7 +409,7 @@ public class PoolDTO extends CandlepinDTO<PoolDTO> {
         }
 
         if (this.providedProducts == null) {
-            this.providedProducts = new HashSet<ProvidedProductDTO>();
+            this.providedProducts = new HashSet<>();
         }
 
         return this.providedProducts.add(providedProduct);
@@ -581,7 +429,7 @@ public class PoolDTO extends CandlepinDTO<PoolDTO> {
      */
     public Set<ProvidedProductDTO> getDerivedProvidedProducts() {
         return this.derivedProvidedProducts != null ?
-                new SetView<ProvidedProductDTO>(this.derivedProvidedProducts) : null;
+            new SetView<>(this.derivedProvidedProducts) : null;
     }
 
     /**
@@ -596,7 +444,7 @@ public class PoolDTO extends CandlepinDTO<PoolDTO> {
     public PoolDTO setDerivedProvidedProducts(Set<ProvidedProductDTO> derivedProvidedProducts) {
         if (derivedProvidedProducts != null) {
             if (this.derivedProvidedProducts == null) {
-                this.derivedProvidedProducts = new HashSet<ProvidedProductDTO>();
+                this.derivedProvidedProducts = new HashSet<>();
             }
             else {
                 this.derivedProvidedProducts.clear();
@@ -605,7 +453,7 @@ public class PoolDTO extends CandlepinDTO<PoolDTO> {
             for (ProvidedProductDTO dto : derivedProvidedProducts) {
                 if (isNullOrIncomplete(dto)) {
                     throw new IllegalArgumentException(
-                            "collection contains null or incomplete derived provided products");
+                        "collection contains null or incomplete derived provided products");
                 }
             }
 
@@ -633,7 +481,7 @@ public class PoolDTO extends CandlepinDTO<PoolDTO> {
         }
 
         if (this.derivedProvidedProducts == null) {
-            this.derivedProvidedProducts = new HashSet<ProvidedProductDTO>();
+            this.derivedProvidedProducts = new HashSet<>();
         }
 
         return this.derivedProvidedProducts.add(derivedProvidedProduct);
@@ -644,8 +492,51 @@ public class PoolDTO extends CandlepinDTO<PoolDTO> {
      */
     private boolean isNullOrIncomplete(ProvidedProductDTO derivedProvidedProduct) {
         return derivedProvidedProduct == null ||
-                derivedProvidedProduct.getProductId() == null ||
-                derivedProvidedProduct.getProductId().isEmpty();
+            derivedProvidedProduct.getProductId() == null ||
+            derivedProvidedProduct.getProductId().isEmpty();
+    }
+
+
+    /**
+     * Returns the start date of this pool.
+     *
+     * @return Returns the startDate of this pool.
+     */
+    public Date getStartDate() {
+        return startDate;
+    }
+
+    /**
+     * Sets the start date of this pool.
+     *
+     * @param startDate the startDate of this pool.
+     *
+     * @return a reference to this PoolDTO object.
+     */
+    public PoolDTO setStartDate(Date startDate) {
+        this.startDate = startDate;
+        return this;
+    }
+
+    /**
+     * Returns the end date of this pool.
+     *
+     * @return Returns the endDate of this pool.
+     */
+    public Date getEndDate() {
+        return endDate;
+    }
+
+    /**
+     * Sets the end date of this pool.
+     *
+     * @param endDate the endDate of this pool.
+     *
+     * @return a reference to this PoolDTO object.
+     */
+    public PoolDTO setEndDate(Date endDate) {
+        this.endDate = endDate;
+        return this;
     }
 
     /**
@@ -653,8 +544,8 @@ public class PoolDTO extends CandlepinDTO<PoolDTO> {
      */
     @Override
     public String toString() {
-        return String.format("PoolDTO [id: %s, product id: %s, quantity: %s]",
-                this.getId(), this.getProductId(), this.getQuantity());
+        return String.format("PoolDTO [id: %s, product id: %s, derived product id: %s, end date: %s]",
+            this.getId(), this.getProductId(), this.getDerivedProductId(), this.getEndDate());
     }
 
     /**
@@ -671,18 +562,16 @@ public class PoolDTO extends CandlepinDTO<PoolDTO> {
 
             EqualsBuilder builder = new EqualsBuilder()
                 .append(this.getId(), that.getId())
-                .append(this.hasSharedAncestor(), that.hasSharedAncestor())
-                .append(this.getQuantity(), that.getQuantity())
-                .append(this.getStartDate(), that.getStartDate())
-                .append(this.getEndDate(), that.getEndDate())
-                .append(this.getAttributes(), that.getAttributes())
-                .append(this.getRestrictedToUsername(), that.getRestrictedToUsername())
-                .append(this.getConsumed(), that.getConsumed())
+                .append(this.getContractNumber(), that.getContractNumber())
+                .append(this.getAccountNumber(), that.getAccountNumber())
+                .append(this.getOrderNumber(), that.getOrderNumber())
+                .append(this.getBranding(), that.getBranding())
                 .append(this.getProductId(), that.getProductId())
-                .append(this.getProductAttributes(), that.getProductAttributes())
                 .append(this.getDerivedProductId(), that.getDerivedProductId())
                 .append(this.getProvidedProducts(), that.getProvidedProducts())
-                .append(this.getDerivedProvidedProducts(), that.getDerivedProvidedProducts());
+                .append(this.getDerivedProvidedProducts(), that.getDerivedProvidedProducts())
+                .append(this.getStartDate(), that.getStartDate())
+                .append(this.getEndDate(), that.getEndDate());
 
             return builder.isEquals();
         }
@@ -695,23 +584,18 @@ public class PoolDTO extends CandlepinDTO<PoolDTO> {
      */
     @Override
     public int hashCode() {
-        // Like with the equals method, we are not interested in hashing nested objects; we're only
-        // concerned with the reference to such an object.
-
         HashCodeBuilder builder = new HashCodeBuilder(37, 7)
             .append(this.getId())
-            .append(this.hasSharedAncestor())
-            .append(this.getQuantity())
-            .append(this.getStartDate())
-            .append(this.getEndDate())
-            .append(this.getAttributes())
-            .append(this.getRestrictedToUsername())
-            .append(this.getConsumed())
+            .append(this.getContractNumber())
+            .append(this.getAccountNumber())
+            .append(this.getOrderNumber())
+            .append(this.getBranding())
             .append(this.getProductId())
-            .append(this.getProductAttributes())
             .append(this.getDerivedProductId())
             .append(this.getProvidedProducts())
-            .append(this.getDerivedProvidedProducts());
+            .append(this.getDerivedProvidedProducts())
+            .append(this.getEndDate())
+            .append(this.getStartDate());
 
         return builder.toHashCode();
     }
@@ -723,8 +607,7 @@ public class PoolDTO extends CandlepinDTO<PoolDTO> {
     public PoolDTO clone() {
         PoolDTO copy = super.clone();
 
-        copy.setAttributes(this.getAttributes());
-        copy.setProductAttributes(this.getProductAttributes());
+        copy.setBranding(this.getBranding());
         copy.setProvidedProducts(this.getProvidedProducts());
         copy.setDerivedProvidedProducts(this.getDerivedProvidedProducts());
 
@@ -742,18 +625,16 @@ public class PoolDTO extends CandlepinDTO<PoolDTO> {
         super.populate(source);
 
         this.setId(source.getId());
-        this.setHasSharedAncestor(source.hasSharedAncestor());
-        this.setQuantity(source.getQuantity());
-        this.setStartDate(source.getStartDate());
-        this.setEndDate(source.getEndDate());
-        this.setAttributes(source.getAttributes());
-        this.setRestrictedToUsername(source.getRestrictedToUsername());
-        this.setConsumed(source.getConsumed());
+        this.setContractNumber(source.getContractNumber());
+        this.setAccountNumber(source.getAccountNumber());
+        this.setOrderNumber(source.getOrderNumber());
+        this.setBranding(source.getBranding());
         this.setProductId(source.getProductId());
-        this.setProductAttributes(source.getProductAttributes());
         this.setDerivedProductId(source.getDerivedProductId());
         this.setProvidedProducts(source.getProvidedProducts());
         this.setDerivedProvidedProducts(source.getDerivedProvidedProducts());
+        this.setEndDate(source.getEndDate());
+        this.setStartDate(source.getStartDate());
 
         return this;
     }

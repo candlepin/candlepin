@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2017 Red Hat, Inc.
+ * Copyright (c) 2009 - 2018 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -12,17 +12,15 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.dto.api.v1;
+package org.candlepin.dto.manifest.v1;
 
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.Certificate;
 import org.candlepin.model.CertificateSerial;
-import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 
-import java.util.Date;
 import java.util.HashSet;
 
 import static org.junit.Assert.assertEquals;
@@ -30,24 +28,20 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 /**
- * Test suite for the EntitlementTranslator class.
+ * Test suite for the EntitlementTranslator (manifest import/export) class.
  */
 public class EntitlementTranslatorTest extends
     AbstractTranslatorTest<Entitlement, EntitlementDTO, EntitlementTranslator> {
 
     protected EntitlementTranslator translator = new EntitlementTranslator();
 
-    private OwnerTranslatorTest ownerTranslatorTest = new OwnerTranslatorTest();
     private CertificateTranslatorTest certificateTranslatorTest = new CertificateTranslatorTest();
     private PoolTranslatorTest poolTranslatorTest = new PoolTranslatorTest();
-    private ConsumerTranslatorTest consumerTranslatorTest = new ConsumerTranslatorTest();
 
     @Override
     protected void initModelTranslator(ModelTranslator modelTranslator) {
-        this.ownerTranslatorTest.initModelTranslator(modelTranslator);
         this.certificateTranslatorTest.initModelTranslator(modelTranslator);
         this.poolTranslatorTest.initModelTranslator(modelTranslator);
-        this.consumerTranslatorTest.initModelTranslator(modelTranslator);
 
         modelTranslator.registerTranslator(this.translator, Entitlement.class, EntitlementDTO.class);
     }
@@ -62,12 +56,10 @@ public class EntitlementTranslatorTest extends
         Entitlement source = new Entitlement();
         source.setId("ent-id");
         source.setQuantity(1);
-        source.setDeletedFromPool(false);
 
-        source.setOwner(this.ownerTranslatorTest.initSourceObject());
         source.setPool(this.poolTranslatorTest.initSourceObject());
 
-        HashSet<EntitlementCertificate> certs = new HashSet<EntitlementCertificate>();
+        HashSet<EntitlementCertificate> certs = new HashSet<>();
         EntitlementCertificate entCert = new EntitlementCertificate();
         entCert.setId("ent-cert-id");
         entCert.setEntitlement(source);
@@ -76,13 +68,6 @@ public class EntitlementTranslatorTest extends
         entCert.setSerial(new CertificateSerial());
         certs.add(entCert);
         source.setCertificates(certs);
-
-        Consumer consumer = new Consumer();
-        consumer.setUuid("consumer-uuid");
-        source.setConsumer(consumer);
-
-        source.setEndDate(new Date());
-        source.setStartDate(new Date());
 
         return source;
     }
@@ -98,14 +83,9 @@ public class EntitlementTranslatorTest extends
 
             assertEquals(source.getId(), dest.getId());
             assertEquals(source.getQuantity(), dest.getQuantity());
-            assertEquals(source.deletedFromPool(), dest.isDeletedFromPool());
-            assertEquals(source.getStartDate(), dest.getStartDate());
-            assertEquals(source.getEndDate(), dest.getEndDate());
 
             if (childrenGenerated) {
-                this.ownerTranslatorTest.verifyOutput(source.getOwner(), dest.getOwner(), true);
                 this.poolTranslatorTest.verifyOutput(source.getPool(), dest.getPool(), true);
-                this.consumerTranslatorTest.verifyOutput(source.getConsumer(), dest.getConsumer(), true);
 
                 for (Certificate sourceCertificate : source.getCertificates()) {
                     for (CertificateDTO certDTO : dest.getCertificates()) {
@@ -120,10 +100,8 @@ public class EntitlementTranslatorTest extends
                 }
             }
             else {
-                assertNull(dest.getOwner());
                 assertNull(dest.getPool());
                 assertNull(dest.getCertificates());
-                assertNull(dest.getConsumer());
             }
         }
         else {

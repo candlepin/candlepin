@@ -23,6 +23,7 @@ import org.candlepin.audit.EventSink;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.manifest.v1.ConsumerDTO;
+import org.candlepin.dto.manifest.v1.EntitlementDTO;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerial;
@@ -34,7 +35,6 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.test.TestUtil;
 
@@ -96,6 +96,8 @@ public class EntitlementImporterTest {
         consumerDTO.setUrlApi("");
 
         cert = createEntitlementCertificate("my-test-key", "my-cert");
+        cert.setId("test-id");
+
         reader = mock(Reader.class);
 
         meta = new Meta();
@@ -108,25 +110,28 @@ public class EntitlementImporterTest {
     public void fullImport() throws Exception {
         Product parentProduct = TestUtil.createProduct();
         Product derivedProduct = TestUtil.createProduct();
+
         Product provided1 = TestUtil.createProduct();
-        Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
-        providedProducts.add(new ProvidedProduct(provided1));
+        Set<Product> providedProducts = new HashSet<>();
+        providedProducts.add(new Product(provided1));
 
         Product derivedProvided1 = TestUtil.createProduct();
-        Set<ProvidedProduct> derivedProvidedProducts = new HashSet<ProvidedProduct>();
-        derivedProvidedProducts.add(new ProvidedProduct(derivedProvided1));
+        Set<Product> derivedProvidedProducts = new HashSet<>();
+        derivedProvidedProducts.add(new Product(derivedProvided1));
 
         Pool pool = TestUtil.createPool(
-            owner, parentProduct, new HashSet<Product>(), derivedProduct, new HashSet<Product>(), 3
+            owner, parentProduct, new HashSet<>(), derivedProduct, new HashSet<>(), 3
         );
-        // Add the provided products as DTOs:
-        pool.setProvidedProductDtos(providedProducts);
-        pool.setDerivedProvidedProductDtos(derivedProvidedProducts);
+
+        pool.setProvidedProducts(providedProducts);
+        pool.setDerivedProvidedProducts(derivedProvidedProducts);
 
 
         Entitlement ent = TestUtil.createEntitlement(owner, consumer, pool, cert);
         ent.setQuantity(3);
-        when(om.readValue(reader, Entitlement.class)).thenReturn(ent);
+        EntitlementDTO dtoEnt = this.translator.translate(ent, EntitlementDTO.class);
+
+        when(om.readValue(reader, EntitlementDTO.class)).thenReturn(dtoEnt);
 
         // Create our expected products
         Map<String, Product> productsById = buildProductCache(

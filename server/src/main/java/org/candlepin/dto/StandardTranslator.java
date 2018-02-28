@@ -142,11 +142,26 @@ public class StandardTranslator extends SimpleModelTranslator {
         // Manifest import/export translators
         /////////////////////////////////////////////
         this.registerTranslator(
-            new org.candlepin.dto.manifest.v1.ConsumerTypeTranslator(),
-            ConsumerType.class, org.candlepin.dto.manifest.v1.ConsumerTypeDTO.class);
+            new org.candlepin.dto.manifest.v1.BrandingTranslator(),
+            Branding.class, org.candlepin.dto.manifest.v1.BrandingDTO.class);
+        this.registerTranslator(
+            new org.candlepin.dto.manifest.v1.CertificateTranslator(),
+            Certificate.class, org.candlepin.dto.manifest.v1.CertificateDTO.class);
+        this.registerTranslator(
+            new org.candlepin.dto.manifest.v1.CertificateSerialTranslator(),
+            CertificateSerial.class, org.candlepin.dto.manifest.v1.CertificateSerialDTO.class);
         this.registerTranslator(
             new org.candlepin.dto.manifest.v1.ConsumerTranslator(),
             Consumer.class, org.candlepin.dto.manifest.v1.ConsumerDTO.class);
+        this.registerTranslator(
+            new org.candlepin.dto.manifest.v1.ConsumerTypeTranslator(),
+            ConsumerType.class, org.candlepin.dto.manifest.v1.ConsumerTypeDTO.class);
+        this.registerTranslator(
+            new org.candlepin.dto.manifest.v1.EntitlementTranslator(),
+            Entitlement.class, org.candlepin.dto.manifest.v1.EntitlementDTO.class);
+        this.registerTranslator(
+            new org.candlepin.dto.manifest.v1.PoolTranslator(),
+            Pool.class, org.candlepin.dto.manifest.v1.PoolDTO.class);
 
         // Shims
         /////////////////////////////////////////////

@@ -133,7 +133,7 @@ public class ExporterTest {
         psa = mock(ProductServiceAdapter.class);
         pce = new ProductCertExporter();
         ec = mock(EntitlementCurator.class);
-        ee = new EntitlementExporter();
+        ee = new EntitlementExporter(translator);
         pki = mock(PKIUtility.class);
         config = new CandlepinCommonTestConfig();
         exportRules = mock(ExportRules.class);
@@ -260,7 +260,7 @@ public class ExporterTest {
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
             pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
-            exportExtensionAdapter);
+            exportExtensionAdapter, translator);
 
         File export = e.getFullExport(consumer);
 
@@ -316,7 +316,7 @@ public class ExporterTest {
 
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
             pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
-            exportExtensionAdapter);
+            exportExtensionAdapter, translator);
 
         e.getFullExport(consumer);
     }
@@ -359,7 +359,7 @@ public class ExporterTest {
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
             pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
-            exportExtensionAdapter);
+            exportExtensionAdapter, translator);
         File export = e.getFullExport(consumer);
 
         // VERIFY
@@ -412,7 +412,7 @@ public class ExporterTest {
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
             pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
-            exportExtensionAdapter);
+            exportExtensionAdapter, translator);
         File export = e.getFullExport(consumer);
 
         // VERIFY
@@ -465,7 +465,7 @@ public class ExporterTest {
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
             pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
-            exportExtensionAdapter);
+            exportExtensionAdapter, translator);
         File export = e.getFullExport(consumer);
 
         verifyContent(export, "export/consumer.json", new VerifyConsumer("consumer.json"));
@@ -525,7 +525,7 @@ public class ExporterTest {
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
             pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
-            exportExtensionAdapter);
+            exportExtensionAdapter, translator);
         File export = e.getFullExport(consumer);
 
         verifyContent(export, "export/distributor_version/test-dist-ver.json",
@@ -543,7 +543,7 @@ public class ExporterTest {
         Map<String, String> extensionData = new HashMap<String, String>();
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
             pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
-            exportExtensionAdapter);
+            exportExtensionAdapter, translator);
 
         Principal principal = mock(Principal.class);
         when(pprov.get()).thenReturn(principal);

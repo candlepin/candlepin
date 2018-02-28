@@ -16,8 +16,6 @@ package org.candlepin.dto.manifest.v1;
 
 import org.candlepin.dto.CandlepinDTO;
 
-import io.swagger.annotations.ApiModel;
-
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
@@ -26,8 +24,6 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 /**
  * A DTO representation of the ConsumerType entity as used by the manifest import/export API.
  */
-@ApiModel(parent = CandlepinDTO.class,
-    description = "DTO representing a consumer type as used by the manifest import/export API.")
 public class ConsumerTypeDTO extends CandlepinDTO<ConsumerTypeDTO> {
     public static final long serialVersionUID = 1L;
 
