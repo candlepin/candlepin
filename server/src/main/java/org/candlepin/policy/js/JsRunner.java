@@ -93,8 +93,7 @@ public class JsRunner {
         Scriptable localScope = Context.toObject(this.rulesNameSpace, scope);
         Object func = ScriptableObject.getProperty(localScope, method);
         if (!(func instanceof Function)) {
-            throw new NoSuchMethodException(
-                "no such javascript method: " + method);
+            throw new NoSuchMethodException("no such javascript method: " + method);
         }
         Context context = Context.enter();
         try {

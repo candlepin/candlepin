@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.3.1
+Version: 2.3.2
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,10 @@ fi
 
 #raw
 %changelog
+* Tue Feb 27 2018 Kevin Howell <khowell@redhat.com> 2.3.2-1
+- Added the EntitlementDTO for the JavaScript rules (crog@redhat.com)
+- Add Java 8 to mead packages argument (khowell@redhat.com)
+
 * Mon Feb 26 2018 Kevin Howell <khowell@redhat.com> 2.3.1-1
 - Qpid reconnect attempts now have a constant interval. (awood@redhat.com)
 - Fixed rebase errors and artifacts (crog@redhat.com)
