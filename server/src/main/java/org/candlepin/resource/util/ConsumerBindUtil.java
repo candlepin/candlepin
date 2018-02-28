@@ -129,7 +129,7 @@ public class ConsumerBindUtil {
                 onePassed = true;
             }
             catch (ForbiddenException e) {
-                log.warn(i18n.tr("Cannot bind to pool ''{0}'' in activation key ''{1}'': {2}",
+                log.warn(i18n.tr("Cannot bind to pool \"{0}\" in activation key \"{1}\": {2}",
                     akp.getPool().getId(), akp.getKey().getName(), e.getMessage()));
             }
         }

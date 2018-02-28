@@ -419,7 +419,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             Product p = this.ownerProductCurator.getProductById(owner, productId);
             if (p == null) {
                 throw new BadRequestException(i18n.tr(
-                    "Product with ID ''{0}'' could not be found.", productId));
+                    "Product with ID \"{0}\" could not be found.", productId));
             }
             entitlementsPage = listByProduct(object, objectType, productId, pageRequest);
         }

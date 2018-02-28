@@ -88,7 +88,7 @@ it 'should not allow entitlement for consumer past expiration' do
     consumer = @user.register(random_string('system'), type=:system, nil, facts = {:dev_sku => "dev_product"}, @username,
               @owner['key'], [], [], nil, [], nil, [], created_date)
     consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
-    expected_error = "Unable to attach subscription for the product 'dev_product': Subscriptions for dev_product expired on:"
+    expected_error = "Unable to attach subscription for the product \"dev_product\": Subscriptions for dev_product expired on:"
     begin
         consumer_client.consume_product()
         fail("Expected Forbidden since consumer is older than product expiry")

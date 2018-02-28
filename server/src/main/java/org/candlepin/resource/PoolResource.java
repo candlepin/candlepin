@@ -241,7 +241,7 @@ public class PoolResource {
         }
 
         throw new NotFoundException(i18n.tr(
-            "Subscription Pool with ID ''{0}'' could not be found.", id));
+            "Subscription Pool with ID \"{0}\" could not be found.", id));
     }
 
     @ApiOperation(notes = "Remove a Pool", value = "deletePool")
@@ -253,7 +253,7 @@ public class PoolResource {
         Pool pool = poolManager.find(id);
         if (pool == null) {
             throw new NotFoundException(i18n.tr(
-                "Entitlement Pool with ID ''{0}'' could not be found.", id));
+                "Entitlement Pool with ID \"{0}\" could not be found.", id));
         }
         if (pool.getType() != PoolType.NORMAL) {
             throw new BadRequestException(i18n.tr("Cannot delete bonus pools, as they are auto generated"));
@@ -277,7 +277,7 @@ public class PoolResource {
 
         if (pool == null) {
             throw new NotFoundException(i18n.tr(
-                "Subscription Pool with ID ''{0}'' could not be found.", id));
+                "Subscription Pool with ID \"{0}\" could not be found.", id));
         }
 
         return this.translator.translate(pool.getCdn(), CdnDTO.class);
@@ -296,7 +296,7 @@ public class PoolResource {
 
         if (pool == null) {
             throw new NotFoundException(i18n.tr(
-                "Subscription Pool with ID ''{0}'' could not be found.", id));
+                "Subscription Pool with ID \"{0}\" could not be found.", id));
         }
 
         List<EntitlementDTO> entitlementDTOs = new ArrayList<EntitlementDTO>();
@@ -324,7 +324,7 @@ public class PoolResource {
 
         if (pool == null) {
             throw new NotFoundException(i18n.tr(
-                "Pool with ID ''{0}'' could not be found.", poolId));
+                "Pool with ID \"{0}\" could not be found.", poolId));
         }
 
         if (pool.getCertificate() == null) {

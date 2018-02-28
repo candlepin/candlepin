@@ -115,7 +115,7 @@ public class EntitlementResource {
 
     private void verifyExistence(Object o, String id) {
         if (o == null) {
-            throw new RuntimeException(i18n.tr("Object with ID ''{0}'' could not found.", id));
+            throw new RuntimeException(i18n.tr("Object with ID \"{0}\" could not found.", id));
         }
     }
 
@@ -137,7 +137,7 @@ public class EntitlementResource {
         }
 
         throw new NotFoundException(i18n.tr(
-            "Unit ''{0}'' has no subscription for product ''{1}''.",
+            "Unit \"{0}\" has no subscription for product \"{1}\".",
                 consumerUuid, productId));
     }
 
@@ -158,7 +158,7 @@ public class EntitlementResource {
             Consumer consumer = consumerCurator.findByUuid(consumerUuid);
             if (consumer == null) {
                 throw new BadRequestException(
-                    i18n.tr("Unit with ID ''{0}'' could not be found.", consumerUuid));
+                    i18n.tr("Unit with ID \"{0}\" could not be found.", consumerUuid));
             }
             p = entitlementCurator.listByConsumer(consumer, null, filters, pageRequest);
         }
@@ -188,7 +188,7 @@ public class EntitlementResource {
 
         if (entitlement == null) {
             throw new NotFoundException(
-                i18n.tr("Entitlement with ID ''{0}'' could not be found.", entitlementId)
+                i18n.tr("Entitlement with ID \"{0}\" could not be found.", entitlementId)
             );
         }
 
@@ -227,7 +227,7 @@ public class EntitlementResource {
             }
         }
         else {
-            throw new NotFoundException(i18n.tr("Entitlement with ID ''{0}'' could not be found.", id));
+            throw new NotFoundException(i18n.tr("Entitlement with ID \"{0}\" could not be found.", id));
         }
     }
 
@@ -246,7 +246,7 @@ public class EntitlementResource {
         Entitlement ent = entitlementCurator.find(entitlementId);
         if (ent == null) {
             throw new NotFoundException(i18n.tr(
-                "Entitlement with ID ''{0}'' could not be found.", entitlementId));
+                "Entitlement with ID \"{0}\" could not be found.", entitlementId));
         }
 
         Pool entPool = ent.getPool();
@@ -287,7 +287,7 @@ public class EntitlementResource {
             return;
         }
         throw new NotFoundException(
-            i18n.tr("Entitlement with ID ''{0}'' could not be found.", dbid));
+            i18n.tr("Entitlement with ID \"{0}\" could not be found.", dbid));
     }
 
     @ApiOperation(notes = "Regenerates the Entitlement Certificates for a Product",
@@ -338,12 +338,12 @@ public class EntitlementResource {
                 Consumer destinationConsumer = consumerCurator.verifyAndLookupConsumer(uuid);
                 if (!sourceConsumer.isManifestDistributor()) {
                     throw new BadRequestException(i18n.tr(
-                        "Entitlement migration is not permissible for units of type ''{0}''",
+                        "Entitlement migration is not permissible for units of type \"{0}\"",
                         sourceConsumer.getType().getLabel()));
                 }
                 if (!destinationConsumer.isManifestDistributor()) {
                     throw new BadRequestException(i18n.tr(
-                        "Entitlement migration is not permissible for units of type ''{0}''",
+                        "Entitlement migration is not permissible for units of type \"{0}\"",
                         destinationConsumer.getType().getLabel()));
                 }
                 if (!sourceConsumer.getOwner().getKey().equals(destinationConsumer.getOwner().getKey())) {
@@ -382,7 +382,7 @@ public class EntitlementResource {
         }
         else {
             throw new NotFoundException(
-                i18n.tr("Entitlement with ID ''{0}'' could not be found.", id));
+                i18n.tr("Entitlement with ID \"{0}\" could not be found.", id));
         }
 
         List<EntitlementDTO> entitlementDTOs = new ArrayList<EntitlementDTO>();

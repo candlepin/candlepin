@@ -212,7 +212,7 @@ public class HypervisorUpdateJob extends KingpinJob {
             Owner owner = ownerCurator.lookupByKey(ownerKey);
             if (owner == null) {
                 context.setResult("Nothing to do. Owner does not exist");
-                log.warn("Hypervisor update attempted against non-existent org id ''{0}''", ownerKey);
+                log.warn("Hypervisor update attempted against non-existent org id \"{0}\"", ownerKey);
                 return;
             }
 

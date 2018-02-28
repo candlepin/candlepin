@@ -297,7 +297,7 @@ public class ManifestManager {
         if (consumer.getType() == null ||
             !consumer.isManifestDistributor()) {
             throw new ForbiddenException(
-                i18n.tr("Unit {0} cannot be exported. A manifest cannot be made for units of type ''{1}''.",
+                i18n.tr("Unit {0} cannot be exported. A manifest cannot be made for units of type \"{1}\".",
                     consumerUuid, consumer.getType().getLabel()));
         }
 

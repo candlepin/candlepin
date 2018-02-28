@@ -66,7 +66,7 @@ public class CandlepinMessageInterpolator implements MessageInterpolator {
         msgs.put("{javax.validation.constraints.Past.message}",
             new ValidationMessage(I18n.marktr("must be in the past")));
         msgs.put("{javax.validation.constraints.Pattern.message}",
-            new ValidationMessage(I18n.marktr("must match ''{regexp}''"), "regexp"));
+            new ValidationMessage(I18n.marktr("must match \"{regexp}\""), "regexp"));
         msgs.put("{javax.validation.constraints.Size.message}",
             new ValidationMessage(I18n.marktr("size must be between {0} and {1}"), "min", "max"));
         msgs.put("{org.hibernate.validator.constraints.CreditCardNumber.message}",
@@ -84,7 +84,7 @@ public class CandlepinMessageInterpolator implements MessageInterpolator {
         msgs.put("{org.hibernate.validator.constraints.SafeHtml.message}",
             new ValidationMessage(I18n.marktr("may have unsafe HTML content")));
         msgs.put("{org.hibernate.validator.constraints.ScriptAssert.message}",
-            new ValidationMessage(I18n.marktr("script expression ''{0}'' didn't evaluate to true"),
+            new ValidationMessage(I18n.marktr("script expression \"{0}\" didn't evaluate to true"),
                 "script"));
         msgs.put("{org.hibernate.validator.constraints.URL.message}",
             new ValidationMessage(I18n.marktr("must be a valid URL")));

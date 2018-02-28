@@ -757,7 +757,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         Consumer consumer = this.findByUuid(consumerUuid);
 
         if (consumer == null) {
-            throw new NotFoundException(i18n.tr("Unit with ID ''{0}'' could not be found.", consumerUuid));
+            throw new NotFoundException(i18n.tr("Unit with ID \"{0}\" could not be found.", consumerUuid));
         }
 
         return consumer;
@@ -766,7 +766,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     public Consumer verifyAndLookupConsumerWithEntitlements(String consumerUuid) {
         Consumer consumer = this.findByUuid(consumerUuid);
         if (consumer == null) {
-            throw new NotFoundException(i18n.tr("Unit with ID ''{0}'' could not be found.", consumerUuid));
+            throw new NotFoundException(i18n.tr("Unit with ID \"{0}\" could not be found.", consumerUuid));
         }
 
         for (Entitlement e : consumer.getEntitlements()) {
