@@ -30,8 +30,6 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang3.StringUtils;
 
-import io.swagger.annotations.ApiModel;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -44,8 +42,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 /**
  * A DTO representation of the Consumer entity, as used by the Rules framework.
  */
-@ApiModel(parent = TimestampedCandlepinDTO.class,
-    description = "DTO representing an upstream consumer, as used by the Rules framework")
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @JsonFilter("ConsumerFilter")

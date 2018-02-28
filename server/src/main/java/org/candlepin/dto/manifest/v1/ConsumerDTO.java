@@ -22,15 +22,12 @@ import org.candlepin.dto.CandlepinDTO;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
-import io.swagger.annotations.ApiModel;
 import org.candlepin.jackson.SingleValueWrapDeserializer;
 import org.candlepin.jackson.SingleValueWrapSerializer;
 
 /**
  * A DTO representation of the Consumer entity as used by the manifest import/export API.
  */
-@ApiModel(parent = CandlepinDTO.class,
-    description = "DTO representing an upstream consumer as used by the manifest import/export API")
 @JsonIgnoreProperties(ignoreUnknown = false)
 public class ConsumerDTO extends CandlepinDTO<ConsumerDTO> {
     public static final long serialVersionUID = 1L;

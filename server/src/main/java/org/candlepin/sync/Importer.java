@@ -19,10 +19,13 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.Refresher;
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.manifest.v1.CertificateDTO;
+import org.candlepin.dto.manifest.v1.CertificateSerialDTO;
 import org.candlepin.dto.manifest.v1.ConsumerDTO;
 import org.candlepin.dto.manifest.v1.ConsumerTypeDTO;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCurator;
+import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
@@ -656,15 +659,10 @@ public class Importer {
             if (uc.getName().endsWith(".json")) {
                 log.debug("Import upstream consumeridentity certificate: {}", uc.getName());
 
-                Reader reader = null;
-                try {
-                    reader = new FileReader(uc);
-                    idcert = mapper.readValue(reader, IdentityCertificate.class);
-                }
-                finally {
-                    if (reader != null) {
-                        reader.close();
-                    }
+                try (Reader reader = new FileReader(uc)) {
+                    CertificateDTO dtoCert = mapper.readValue(reader, CertificateDTO.class);
+                    idcert = new IdentityCertificate();
+                    populateEntity(idcert, dtoCert);
                 }
             }
             else {
@@ -702,6 +700,42 @@ public class Importer {
         }
 
         return consumer;
+    }
+
+    /**
+     * Populates the specified entity with data from the provided DTO.
+     *
+     * @param entity
+     *  The entity instance to populate
+     *
+     * @param dto
+     *  The DTO containing the data with which to populate the entity
+     *
+     * @throws IllegalArgumentException
+     *  if either entity or dto are null
+     */
+    private void populateEntity(IdentityCertificate entity, CertificateDTO dto) {
+        if (entity == null) {
+            throw new IllegalArgumentException("the certificate model entity is null");
+        }
+
+        if (dto == null) {
+            throw new IllegalArgumentException("the certificate dto is null");
+        }
+
+        entity.setId(dto.getId());
+        entity.setKey(dto.getKey());
+        entity.setCert(dto.getCert());
+
+        if (dto.getSerial() != null) {
+            CertificateSerialDTO dtoSerial = dto.getSerial();
+            CertificateSerial entitySerial = new CertificateSerial();
+            entitySerial.setId(dtoSerial.getId());
+            entitySerial.setCollected(dtoSerial.isCollected());
+            entitySerial.setExpiration(dtoSerial.getExpiration());
+
+            entity.setSerial(entitySerial);
+        }
     }
 
     protected Set<Product> importProducts(File[] products, ProductImporter importer, Owner owner)

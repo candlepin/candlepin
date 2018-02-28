@@ -14,6 +14,11 @@
  */
 package org.candlepin.sync;
 
+import org.candlepin.dto.manifest.v1.BrandingDTO;
+import org.candlepin.dto.manifest.v1.CertificateDTO;
+import org.candlepin.dto.manifest.v1.CertificateSerialDTO;
+import org.candlepin.dto.manifest.v1.EntitlementDTO;
+import org.candlepin.dto.manifest.v1.PoolDTO;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCurator;
@@ -22,6 +27,7 @@ import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.Owner;
+import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.ProvidedProduct;
@@ -39,6 +45,7 @@ import org.xnap.commons.i18n.I18n;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -67,7 +74,10 @@ public class EntitlementImporter {
         Map<String, Product> productsById, String consumerUuid, Meta meta)
         throws IOException, SyncDataFormatException {
 
-        Entitlement entitlement = mapper.readValue(reader, Entitlement.class);
+        EntitlementDTO entitlementDTO = mapper.readValue(reader, EntitlementDTO.class);
+        Entitlement entitlement = new Entitlement();
+        populateEntity(entitlement, entitlementDTO);
+
         Subscription subscription = new Subscription();
 
         log.debug("Building subscription for owner: {}", owner);
@@ -143,6 +153,162 @@ public class EntitlementImporter {
         }
 
         return subscription;
+    }
+
+
+    /**
+     * Populates the specified entity with data from the provided DTO.
+     *
+     * @param entity
+     *  The entity instance to populate
+     *
+     * @param dto
+     *  The DTO containing the data with which to populate the entity
+     *
+     * @throws IllegalArgumentException
+     *  if either entity or dto are null
+     */
+    @SuppressWarnings("checkstyle:methodlength")
+    private void populateEntity(Entitlement entity, EntitlementDTO dto) {
+        if (entity == null) {
+            throw new IllegalArgumentException("the entitlement model entity is null");
+        }
+
+        if (dto == null) {
+            throw new IllegalArgumentException("the entitlement dto is null");
+        }
+
+        if (dto.getId() != null) {
+            entity.setId(dto.getId());
+        }
+
+        if (dto.getQuantity() != null) {
+            entity.setQuantity(dto.getQuantity());
+        }
+
+        if (dto.getPool() != null) {
+            PoolDTO poolDTO = dto.getPool();
+            Pool poolEntity = new Pool();
+
+            if (poolDTO.getId() != null) {
+                poolEntity.setId(poolDTO.getId());
+            }
+
+            if (poolDTO.getProductId() != null) {
+                poolEntity.setProductId(poolDTO.getProductId());
+            }
+
+            if (poolDTO.getDerivedProductId() != null) {
+                poolEntity.setDerivedProductId(poolDTO.getDerivedProductId());
+            }
+
+            if (poolDTO.getStartDate() != null) {
+                poolEntity.setStartDate(poolDTO.getStartDate());
+            }
+
+            if (poolDTO.getEndDate() != null) {
+                poolEntity.setEndDate(poolDTO.getEndDate());
+            }
+
+            if (poolDTO.getAccountNumber() != null) {
+                poolEntity.setAccountNumber(poolDTO.getAccountNumber());
+            }
+
+            if (poolDTO.getOrderNumber() != null) {
+                poolEntity.setOrderNumber(poolDTO.getOrderNumber());
+            }
+
+            if (poolDTO.getContractNumber() != null) {
+                poolEntity.setContractNumber(poolDTO.getContractNumber());
+            }
+
+            if (poolDTO.getBranding() != null) {
+                if (poolDTO.getBranding().isEmpty()) {
+                    poolEntity.setBranding(Collections.emptySet());
+                }
+                else {
+                    Set<Branding> branding = new HashSet<>();
+                    for (BrandingDTO brandingDTO : poolDTO.getBranding()) {
+                        if (brandingDTO != null) {
+                            branding.add(new Branding(
+                                brandingDTO.getProductId(),
+                                brandingDTO.getType(),
+                                brandingDTO.getName()));
+                        }
+                    }
+                    poolEntity.setBranding(branding);
+                }
+            }
+
+            if (poolDTO.getProvidedProducts() != null) {
+                if (poolDTO.getProvidedProducts().isEmpty()) {
+                    poolEntity.setProvidedProductDtos(Collections.emptySet());
+                }
+                else {
+                    Set<ProvidedProduct> providedProducts = new HashSet<>();
+                    for (PoolDTO.ProvidedProductDTO ppDTO : poolDTO.getProvidedProducts()) {
+                        if (ppDTO != null) {
+                            ProvidedProduct providedProduct = new ProvidedProduct();
+                            providedProduct.setProductId(ppDTO.getProductId());
+                            providedProduct.setProductName(ppDTO.getProductName());
+                            providedProducts.add(providedProduct);
+                        }
+                    }
+                    poolEntity.setProvidedProductDtos(providedProducts);
+                }
+            }
+
+            if (poolDTO.getDerivedProvidedProducts() != null) {
+                if (poolDTO.getDerivedProvidedProducts().isEmpty()) {
+                    poolEntity.setDerivedProvidedProductDtos(Collections.emptySet());
+                }
+                else {
+                    Set<ProvidedProduct> derivedProvidedProducts = new HashSet<>();
+                    for (PoolDTO.ProvidedProductDTO dppDTO : poolDTO.getDerivedProvidedProducts()) {
+                        if (dppDTO != null) {
+                            ProvidedProduct derivedProvidedProduct = new ProvidedProduct();
+                            derivedProvidedProduct.setProductId(dppDTO.getProductId());
+                            derivedProvidedProduct.setProductName(dppDTO.getProductName());
+                            derivedProvidedProducts.add(derivedProvidedProduct);
+                        }
+                    }
+                    poolEntity.setDerivedProvidedProductDtos(derivedProvidedProducts);
+                }
+            }
+
+            entity.setPool(poolEntity);
+        }
+
+        if (dto.getCertificates() != null) {
+            if (dto.getCertificates().isEmpty()) {
+                entity.setCertificates(Collections.emptySet());
+            }
+            else {
+                Set<EntitlementCertificate> entityCerts = new HashSet<>();
+                for (CertificateDTO dtoCert : dto.getCertificates()) {
+                    if (dtoCert != null) {
+                        EntitlementCertificate entityCert = new EntitlementCertificate();
+                        entityCert.setId(dtoCert.getId());
+                        entityCert.setKey(dtoCert.getKey());
+                        entityCert.setCert(dtoCert.getCert());
+
+                        if (dtoCert.getSerial() != null) {
+                            CertificateSerialDTO dtoSerial = dtoCert.getSerial();
+                            CertificateSerial entitySerial = new CertificateSerial();
+                            entitySerial.setId(dtoSerial.getId());
+                            entitySerial.setCollected(dtoSerial.isCollected());
+                            entitySerial.setExpiration(dtoSerial.getExpiration());
+                            entitySerial.setCreated(dtoSerial.getCreated());
+                            entitySerial.setUpdated(dtoSerial.getUpdated());
+
+                            entityCert.setSerial(entitySerial);
+                        }
+                        entityCerts.add(entityCert);
+                    }
+                }
+                entity.setCertificates(entityCerts);
+            }
+        }
     }
 
     /*
