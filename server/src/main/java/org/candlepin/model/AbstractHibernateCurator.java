@@ -978,6 +978,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * @return
      *  A locked entity instance, or null if a matching entity could not be found
      */
+    @SuppressWarnings("unchecked")
     protected E lockAndLoadById(Class<E> entityClass, Serializable id) {
         EntityManager entityManager = this.getEntityManager();
         SessionImpl session = (SessionImpl) this.currentSession();

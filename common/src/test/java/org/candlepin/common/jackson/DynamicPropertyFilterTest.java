@@ -66,6 +66,7 @@ public class DynamicPropertyFilterTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void nonEmptyIsSerializable() {
         //Implicitly return true
         when(dynamicFilterData.isAttributeExcluded(anyList()))

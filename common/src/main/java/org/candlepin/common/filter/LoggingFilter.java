@@ -60,6 +60,7 @@ public class LoggingFilter implements Filter {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void doFilter(ServletRequest request, ServletResponse response,
         FilterChain chain) throws IOException, ServletException {
 

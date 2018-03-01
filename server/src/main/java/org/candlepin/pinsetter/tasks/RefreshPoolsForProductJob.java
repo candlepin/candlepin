@@ -19,7 +19,6 @@ import static org.quartz.JobBuilder.*;
 import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.Refresher;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
@@ -42,7 +41,6 @@ import org.quartz.JobExecutionException;
  */
 public class RefreshPoolsForProductJob extends KingpinJob {
 
-    private OwnerProductCurator ownerProductCurator;
     private PoolManager poolManager;
     private ProductCurator productCurator;
     private SubscriptionServiceAdapter subAdapter;
@@ -51,10 +49,8 @@ public class RefreshPoolsForProductJob extends KingpinJob {
     public static final String LAZY_REGEN = "lazy_regen";
 
     @Inject
-    public RefreshPoolsForProductJob(OwnerProductCurator ownerProductCurator, ProductCurator productCurator,
-        PoolManager poolManager, SubscriptionServiceAdapter subAdapter, OwnerServiceAdapter ownerAdapter) {
-
-        this.ownerProductCurator = ownerProductCurator;
+    public RefreshPoolsForProductJob(ProductCurator productCurator, PoolManager poolManager,
+        SubscriptionServiceAdapter subAdapter, OwnerServiceAdapter ownerAdapter) {
         this.poolManager = poolManager;
         this.productCurator = productCurator;
         this.subAdapter = subAdapter;

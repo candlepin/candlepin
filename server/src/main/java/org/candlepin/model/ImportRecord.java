@@ -88,7 +88,7 @@ public class ImportRecord extends AbstractHibernateObject {
     private ImportUpstreamConsumer upstreamConsumer;
 
     @SuppressWarnings("unused")
-    private ImportRecord() {
+    protected ImportRecord() {
         // JPA
     }
 
