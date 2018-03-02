@@ -23,7 +23,6 @@ import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -64,7 +63,6 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
-import org.candlepin.model.EntitlementFilterBuilder;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
@@ -487,11 +485,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testUnmappedGuestConsumerCanListPoolsForFuture() {
-        Consumer c = TestUtil.createConsumer(owner);
-        consumerTypeCurator.create(c.getType());
+        Consumer c = this.createConsumer(owner);
         c.setFact("virt.is_guest", "true");
         c.setFact("virt.uuid", "system_uuid");
-        consumerCurator.create(c);
+        consumerCurator.merge(c);
         Principal principal = setupPrincipal(new ConsumerPrincipal(c));
 
         securityInterceptor.enable();
@@ -855,9 +852,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Pool pool1 = TestUtil.createPool(owner, p);
         poolCurator.create(pool1);
 
-        Consumer c = TestUtil.createConsumer(owner);
-        consumerTypeCurator.create(c.getType());
-        consumerCurator.create(c);
+        Consumer c = this.createConsumer(owner);
 
         Principal principal = setupPrincipal(new ConsumerPrincipal(c));
         securityInterceptor.enable();
@@ -1617,35 +1612,26 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         req.setPage(1);
         req.setPerPage(10);
 
-        Owner owner = TestUtil.createOwner();
-        Consumer consumer = TestUtil.createConsumer(owner);
-        Pool pool = TestUtil.createPool(owner, TestUtil.createProduct());
+        Owner owner = this.createOwner();
+        Consumer consumer = this.createConsumer(owner);
+        Pool pool = this.createPool(owner, this.createProduct());
+        Entitlement e = this.createEntitlement(owner, consumer, pool, null);
 
-        Entitlement e = TestUtil.createEntitlement(owner, consumer, pool, null);
-        e.setId("getAllEntitlementsForOwner");
         List<Entitlement> entitlements = new ArrayList<>();
         entitlements.add(e);
         Page<List<Entitlement>> page = new Page<>();
         page.setPageData(entitlements);
 
-        OwnerCurator oc = mock(OwnerCurator.class);
-        ProductCurator pc = mock(ProductCurator.class);
-
-        EntitlementCurator ec = mock(EntitlementCurator.class);
         OwnerResource ownerres = new OwnerResource(
-            oc, pc, null, null, i18n, null, null, null,
-            null, null, null, null, null, null, null, null, null, ec,
+            this.ownerCurator, this.productCurator, null, null, i18n, null, null, null,
+            null, null, null, null, null, null, null, null, null, this.entitlementCurator,
             null, null, null, null, null, null, null, null, null, null,
             null, this.modelTranslator);
-
-        when(oc.lookupByKey(owner.getKey())).thenReturn(owner);
-        when(ec.listByOwner(isA(Owner.class), anyString(), isA(EntitlementFilterBuilder.class),
-            isA(PageRequest.class))).thenReturn(page);
 
         List<EntitlementDTO> result = ownerres.ownerEntitlements(owner.getKey(), null, null, null, req);
 
         assertEquals(1, result.size());
-        assertEquals("getAllEntitlementsForOwner", result.get(0).getId());
+        assertEquals(e.getId(), result.get(0).getId());
     }
 
     @Test(expected = NotFoundException.class)

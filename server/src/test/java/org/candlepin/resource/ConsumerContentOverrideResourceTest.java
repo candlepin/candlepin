@@ -78,17 +78,19 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
 
     @Before
     public void setUp() {
-        consumer = new Consumer("test-consumer", "test-user", new Owner(
-            "Test Owner"), new ConsumerType("test-consumer-type-"));
+        ConsumerType ctype = new ConsumerType("test-consumer-type");
+        ctype.setId("test-ctype");
+
+        consumer = new Consumer("test-consumer", "test-user", new Owner("Test Owner"), ctype);
+
         MultivaluedMap<String, String> mvm = new MultivaluedMapImpl<>();
         mvm.add("consumer_uuid", consumer.getUuid());
         context = mock(UriInfo.class);
         when(context.getPathParameters()).thenReturn(mvm);
 
-        when(consumerCurator.verifyAndLookupConsumer(
-            eq(consumer.getUuid()))).thenReturn(consumer);
-        when(overrideRules.canOverrideForConsumer(
-            any(String.class))).thenReturn(true);
+        when(consumerCurator.verifyAndLookupConsumer(eq(consumer.getUuid()))).thenReturn(consumer);
+        when(overrideRules.canOverrideForConsumer(any(String.class))).thenReturn(true);
+
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         contentOverrideValidator = new ContentOverrideValidator(i18n, overrideRules);
         resource = new ConsumerContentOverrideResource(consumerContentOverrideCurator,

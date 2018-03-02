@@ -19,6 +19,10 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCapability;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
@@ -68,10 +72,13 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+
+
 /**
  * DefaultEntitlementCertServiceAdapter
  */
 public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertServiceAdapter {
+    private static Logger log = LoggerFactory.getLogger(DefaultEntitlementCertServiceAdapter.class);
 
     private PKIUtility pki;
     private X509ExtensionUtil extensionUtil;
@@ -82,8 +89,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
     private I18n i18n;
     private Configuration config;
     private ProductCurator productCurator;
-    private static Logger log =
-        LoggerFactory.getLogger(DefaultEntitlementCertServiceAdapter.class);
+    private ConsumerTypeCurator consumerTypeCurator;
 
     @Inject
     public DefaultEntitlementCertServiceAdapter(PKIUtility pki,
@@ -94,7 +100,8 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         CertificateSerialCurator serialCurator,
         EntitlementCurator entCurator, I18n i18n,
         Configuration config,
-        ProductCurator productCurator) {
+        ProductCurator productCurator,
+        ConsumerTypeCurator consumerTypeCurator) {
 
         this.pki = pki;
         this.extensionUtil = extensionUtil;
@@ -106,6 +113,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         this.i18n = i18n;
         this.config = config;
         this.productCurator = productCurator;
+        this.consumerTypeCurator = consumerTypeCurator;
     }
 
 
@@ -140,11 +148,9 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
     private Set<Product> getDerivedProductsForDistributor(Pool pool, Consumer consumer) {
         Set<Product> derivedProducts = new HashSet<>();
         boolean derived = pool.hasAttribute(Pool.Attributes.DERIVED_POOL);
-        if (!derived && consumer.isManifestDistributor() &&
-            pool.getDerivedProduct() != null) {
+        if (!derived && this.isManifestDistributor(consumer) && pool.getDerivedProduct() != null) {
             derivedProducts.add(pool.getDerivedProduct());
-            derivedProducts
-                .addAll(productCurator.getPoolDerivedProvidedProductsCached(pool));
+            derivedProducts.addAll(productCurator.getPoolDerivedProvidedProductsCached(pool));
         }
         return derivedProducts;
     }
@@ -168,13 +174,13 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
 
         if (shouldGenerateV3(consumer)) {
             extensions = prepareV3Extensions();
-            byteExtensions = prepareV3ByteExtensions(product, productModels,
-                contentPrefix, promotedContent);
+            byteExtensions = prepareV3ByteExtensions(product, productModels, contentPrefix, promotedContent);
         }
         else {
             extensions = prepareV1Extensions(products, pool, consumer, ent.getQuantity(), contentPrefix,
                 promotedContent);
         }
+
         Date endDate = setupEntitlementEndDate(pool, consumer);
         ent.setEndDateOverride(endDate);
         Calendar calNow = Calendar.getInstance();
@@ -189,6 +195,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         X509Certificate x509Cert =  this.pki.createX509Certificate(
             createDN(ent, consumer.getOwner()), extensions, byteExtensions, startDate,
             endDate, keyPair, serialNumber, null);
+
         return x509Cert;
     }
 
@@ -198,7 +205,6 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
      * @param consumer
      */
     private Date setupEntitlementEndDate(Pool pool, Consumer consumer) {
-
         Date startDate = new Date();
         if (consumer.getCreated() != null) {
             startDate = consumer.getCreated();
@@ -213,11 +219,61 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
                 sevenDaysFromRegistration);
             return sevenDaysFromRegistration;
         }
+
         return pool.getEndDate();
     }
 
+    /**
+     * Checks if the specified consumer is capable of using v3 certificates
+     *
+     * @param consumer
+     *  The consumer to check
+     *
+     * @return
+     *  true if the consumer should use v3 certificates; false otherwise
+     */
     private boolean shouldGenerateV3(Consumer consumer) {
-        return consumer != null && consumer.isCertV3Capable();
+        if (consumer != null) {
+            ConsumerType type = this.consumerTypeCurator.getConsumerType(consumer);
+
+            if (type.isManifest()) {
+                for (ConsumerCapability capability : consumer.getCapabilities()) {
+                    if ("cert_v3".equals(capability.getName())) {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+            else if (type.isType(ConsumerTypeEnum.HYPERVISOR)) {
+                // Hypervisors in this context don't use content, so V3 is allowed
+                return true;
+            }
+
+            // Consumer isn't a special type, check their certificate_version fact
+            String entitlementVersion = consumer.getFact("system.certificate_version");
+            return entitlementVersion != null && entitlementVersion.startsWith("3.");
+        }
+
+        return false;
+    }
+
+    /**
+     * Checks if the specified consumer is a manifest distributor
+     *
+     * @param consumer
+     *  The consumer to check
+     *
+     * @return
+     *  true if the consumer is a manifest distributor; false otherwise
+     */
+    private boolean isManifestDistributor(Consumer consumer) {
+        if (consumer != null) {
+            ConsumerType type = this.consumerTypeCurator.getConsumerType(consumer);
+            return type.isManifest();
+        }
+
+        return false;
     }
 
     /**

@@ -27,6 +27,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.HypervisorId;
 import org.candlepin.model.Owner;
@@ -80,7 +81,9 @@ import io.swagger.annotations.Authorization;
 @Api(value = "hypervisors", authorizations = { @Authorization("basic") })
 public class HypervisorResource {
     private static Logger log = LoggerFactory.getLogger(HypervisorResource.class);
+
     private ConsumerCurator consumerCurator;
+    private ConsumerTypeCurator consumerTypeCurator;
     private ConsumerResource consumerResource;
     private I18n i18n;
     private OwnerCurator ownerCurator;
@@ -88,18 +91,27 @@ public class HypervisorResource {
     private ModelTranslator translator;
     private GuestIdResource guestIdResource;
 
+    private ConsumerType hypervisorType;
+
     @Inject
-    public HypervisorResource(ConsumerResource consumerResource,
-        ConsumerCurator consumerCurator, I18n i18n, OwnerCurator ownerCurator,
+    public HypervisorResource(ConsumerResource consumerResource, ConsumerCurator consumerCurator,
+        ConsumerTypeCurator consumerTypeCurator, I18n i18n, OwnerCurator ownerCurator,
         Provider<GuestMigration> migrationProvider, ModelTranslator translator,
         GuestIdResource guestIdResource) {
+
         this.consumerResource = consumerResource;
         this.consumerCurator = consumerCurator;
+        this.consumerTypeCurator = consumerTypeCurator;
         this.i18n = i18n;
         this.ownerCurator = ownerCurator;
         this.migrationProvider = migrationProvider;
         this.translator = translator;
         this.guestIdResource = guestIdResource;
+
+        this.hypervisorType = consumerTypeCurator.lookupByLabel(ConsumerTypeEnum.HYPERVISOR.getLabel());
+        if (this.hypervisorType == null) {
+            this.hypervisorType = consumerTypeCurator.create(new ConsumerType(ConsumerTypeEnum.HYPERVISOR));
+        }
     }
 
     /**
@@ -302,8 +314,7 @@ public class HypervisorResource {
         withIds.setGuestIds(guestIds);
 
         GuestMigration guestMigration = migrationProvider.get().buildMigrationManifest(withIds, consumer);
-        boolean guestIdsUpdated =
-            consumerResource.performConsumerUpdates(withIds, consumer, guestMigration);
+        boolean guestIdsUpdated = consumerResource.performConsumerUpdates(withIds, consumer, guestMigration);
         if (guestIdsUpdated) {
             if (guestMigration.isMigrationPending()) {
                 guestMigration.migrate();
@@ -318,17 +329,18 @@ public class HypervisorResource {
     /*
      * Create a new hypervisor type consumer to represent the incoming hypervisorId
      */
-    private Consumer createConsumerForHypervisorId(String incHypervisorId,
-        Owner owner, Principal principal) {
+    private Consumer createConsumerForHypervisorId(String incHypervisorId, Owner owner, Principal principal) {
         Consumer consumer = new Consumer();
         consumer.setName(incHypervisorId);
-        consumer.setType(new ConsumerType(ConsumerTypeEnum.HYPERVISOR));
+        consumer.setType(this.hypervisorType);
         consumer.setFact("uname.machine", "x86_64");
         consumer.setGuestIds(new ArrayList<>());
         consumer.setOwner(owner);
+
         // Create HypervisorId
         HypervisorId hypervisorId = new HypervisorId(consumer, incHypervisorId);
         consumer.setHypervisorId(hypervisorId);
+
         // Create Consumer
         return consumerResource.createConsumerFromEntity(consumer,
             principal,

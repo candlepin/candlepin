@@ -34,10 +34,6 @@ import javax.inject.Inject;
 
 
 public class EventCuratorTest extends DatabaseTestFixture {
-    @Inject private OwnerCurator ownerCurator;
-    @Inject private ConsumerCurator consumerCurator;
-    @Inject private ConsumerTypeCurator consumerTypeCurator;
-    @Inject private EventCurator eventCurator;
     @Inject private EventFactory eventFactory;
 
     private Owner owner;
@@ -50,10 +46,10 @@ public class EventCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testCreate() {
-        Consumer newConsumer = new Consumer("consumername", "user", owner,
-            new ConsumerType("system"));
-        consumerTypeCurator.create(newConsumer.getType());
-        consumerCurator.create(newConsumer);
+        ConsumerType consumerType = this.consumerTypeCurator.create(new ConsumerType("system"));
+
+        Consumer newConsumer = new Consumer("consumername", "user", owner, consumerType);
+        newConsumer = consumerCurator.create(newConsumer);
 
         setupPrincipal(owner, Access.ALL);
         Event event = eventFactory.consumerCreated(newConsumer);
@@ -66,29 +62,25 @@ public class EventCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testSecondarySorting() {
+        ConsumerType consumerType = this.consumerTypeCurator.create(new ConsumerType("system"));
 
-        Consumer newConsumer = new Consumer("consumername", "user", owner,
-            new ConsumerType("system"));
-        consumerTypeCurator.create(newConsumer.getType());
-        consumerCurator.create(newConsumer);
+        Consumer newConsumer = new Consumer("consumername", "user", owner, consumerType);
+        newConsumer = consumerCurator.create(newConsumer);
 
         setupPrincipal(owner, Access.ALL);
 
         // Force all events to have exact same timestamp:
         Date forcedDate = new Date();
 
-        EventBuilder builder = eventFactory.getEventBuilder(Event.Target.RULES,
-            Event.Type.DELETED);
+        EventBuilder builder = eventFactory.getEventBuilder(Event.Target.RULES, Event.Type.DELETED);
         Event rulesDeletedEvent = builder.setEventData(new Rules()).buildEvent();
         rulesDeletedEvent.setTimestamp(forcedDate);
 
-        builder = eventFactory.getEventBuilder(Event.Target.CONSUMER,
-                Event.Type.CREATED);
+        builder = eventFactory.getEventBuilder(Event.Target.CONSUMER, Event.Type.CREATED);
         Event consumerCreatedEvent = builder.setEventData(newConsumer).buildEvent();
         consumerCreatedEvent.setTimestamp(forcedDate);
 
-        builder = eventFactory.getEventBuilder(Event.Target.CONSUMER,
-                Event.Type.MODIFIED);
+        builder = eventFactory.getEventBuilder(Event.Target.CONSUMER, Event.Type.MODIFIED);
         Event consumerModifiedEvent = builder.setEventData(newConsumer).buildEvent();
         consumerModifiedEvent.setTimestamp(forcedDate);
 

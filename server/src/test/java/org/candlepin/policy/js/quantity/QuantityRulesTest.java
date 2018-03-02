@@ -16,12 +16,15 @@ package org.candlepin.policy.js.quantity;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.GuestId;
@@ -69,6 +72,7 @@ public class QuantityRulesTest {
     private static final String GUEST_LIMIT_ATTRIBUTE = "guest_limit";
 
     private Consumer consumer;
+    private ConsumerType ctype;
     private Pool pool;
     private Product product;
     private Owner owner;
@@ -80,32 +84,35 @@ public class QuantityRulesTest {
     @Mock private Provider<JsRunnerRequestCache> cacheProvider;
     @Mock private JsRunnerRequestCache cache;
     @Mock private ProductCurator productCurator;
+    @Mock private ConsumerTypeCurator consumerTypeCurator;
 
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
 
         // Load the default production rules:
-        InputStream is = this.getClass().getResourceAsStream(
-            RulesCurator.DEFAULT_RULES_FILE);
+        InputStream is = this.getClass().getResourceAsStream(RulesCurator.DEFAULT_RULES_FILE);
         Rules rules = new Rules(Util.readFile(is));
         when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
         when(rulesCuratorMock.getRules()).thenReturn(rules);
         when(cacheProvider.get()).thenReturn(cache);
         provider = new JsRunnerProvider(rulesCuratorMock, cacheProvider);
 
-        translator = new StandardTranslator();
-        quantityRules = new QuantityRules(provider.get(),
-                new RulesObjectMapper(new ProductCachedSerializationModule(productCurator)), translator);
+        translator = new StandardTranslator(consumerTypeCurator);
+        quantityRules = new QuantityRules(provider.get(), new RulesObjectMapper(
+            new ProductCachedSerializationModule(productCurator)), translator);
 
         owner = new Owner("Test Owner " + TestUtil.randomInt());
         product = TestUtil.createProduct();
         pool = TestUtil.createPool(owner, product);
         pool.setId("fakepoolid");
 
+        ctype = TestUtil.createConsumerType();
         consumer = TestUtil.createConsumer(owner);
-        Entitlement e = TestUtil.createEntitlement(owner, consumer, pool,
-            new EntitlementCertificate());
+        when(consumerTypeCurator.find(eq(ctype.getId()))).thenReturn(ctype);
+        when(consumerTypeCurator.getConsumerType(eq(consumer))).thenReturn(ctype);
+
+        Entitlement e = TestUtil.createEntitlement(owner, consumer, pool, new EntitlementCertificate());
 
         Set<Entitlement> entSet = new HashSet<>();
         entSet.add(e);
@@ -514,8 +521,7 @@ public class QuantityRulesTest {
         Calendar c = Calendar.getInstance();
         c.setTime(pool.getEndDate());
         Date futureDate = TestUtil.createDate(c.get(Calendar.YEAR) + 1, 1, 1);
-        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(pool, consumer,
-            futureDate);
+        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(pool, consumer, futureDate);
         assertEquals(new Long(4), suggested.getSuggested());
     }
 
@@ -544,8 +550,7 @@ public class QuantityRulesTest {
         consumer.addEntitlement(toAdd);
 
         // Ensure the 2 attached entitlements do not cause the suggested quantity to change
-        SuggestedQuantity suggested =
-            quantityRules.getSuggestedQuantity(pool, consumer, new Date());
+        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(new Long(4), suggested.getSuggested());
     }
 
@@ -561,11 +566,11 @@ public class QuantityRulesTest {
         for (int i = 0; i < 5; i++) {
             consumer.addGuestId(new GuestId("" + i, consumer, guestAttrs));
         }
+
         pool.getProduct().setAttribute(GUEST_LIMIT_ATTRIBUTE, "4");
         pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
         pool.setQuantity(new Long(-1));
-        SuggestedQuantity suggested =
-            quantityRules.getSuggestedQuantity(pool, consumer, new Date());
+        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(new Long(4), suggested.getSuggested());
     }
 
@@ -575,14 +580,15 @@ public class QuantityRulesTest {
     @Test
     public void testInstanceBasedOnDistributor() {
         Consumer dist = TestUtil.createConsumer(owner);
-        dist.getType().setManifest(true);
         dist.setFact(IS_VIRT, "false");
         dist.setFact(SOCKET_FACT, "4");
         pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
         pool.getProduct().setAttribute(INSTANCE_ATTRIBUTE, "2");
 
-        SuggestedQuantity suggested =
-            quantityRules.getSuggestedQuantity(pool, dist, new Date());
+        ctype.setManifest(true);
+        when(consumerTypeCurator.getConsumerType(eq(dist))).thenReturn(ctype);
+
+        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(pool, dist, new Date());
         assertEquals(new Long(1), suggested.getSuggested());
         assertEquals(new Long(1), suggested.getIncrement());
     }

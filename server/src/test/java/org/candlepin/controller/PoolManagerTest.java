@@ -46,6 +46,8 @@ import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
@@ -142,6 +144,7 @@ public class PoolManagerTest {
     @Mock private AutobindRules autobindRules;
     @Mock private PoolRules poolRulesMock;
     @Mock private ConsumerCurator consumerCuratorMock;
+    @Mock private ConsumerTypeCurator consumerTypeCuratorMock;
     @Mock private EventFactory eventFactory;
     @Mock private EventBuilder eventBuilder;
     @Mock private ComplianceRules complianceRules;
@@ -187,10 +190,10 @@ public class PoolManagerTest {
 
         this.manager = spy(new CandlepinPoolManager(
             mockPoolCurator, mockEventSink, eventFactory, mockConfig, enforcerMock, poolRulesMock,
-            entitlementCurator, consumerCuratorMock, certCuratorMock, mockECGenerator,
-            complianceRules, autobindRules, activationKeyRules, mockProductCurator, mockProductManager,
-            mockContentManager, mockOwnerContentCurator, mockOwnerCurator, mockOwnerProductCurator,
-            mockOwnerManager, pinsetterKernel, i18n, mockBindChainFactory
+            entitlementCurator, consumerCuratorMock, consumerTypeCuratorMock, certCuratorMock,
+            mockECGenerator, complianceRules, autobindRules, activationKeyRules, mockProductCurator,
+            mockProductManager, mockContentManager, mockOwnerContentCurator, mockOwnerCurator,
+            mockOwnerProductCurator, mockOwnerManager, pinsetterKernel, i18n, mockBindChainFactory
         ));
 
         setupBindChain();
@@ -210,6 +213,41 @@ public class PoolManagerTest {
                 return (Consumer) args[0];
             }
         });
+    }
+
+    protected ConsumerType mockConsumerType(ConsumerType ctype) {
+        // Ensure the type has an ID
+        if (ctype != null) {
+            if (ctype.getId() == null) {
+                ctype.setId("test-ctype-" + ctype.getLabel() + "-" + TestUtil.randomInt());
+            }
+
+            when(consumerTypeCuratorMock.lookupByLabel(eq(ctype.getLabel()))).thenReturn(ctype);
+            when(consumerTypeCuratorMock.find(eq(ctype.getId()))).thenReturn(ctype);
+
+            doAnswer(new Answer<ConsumerType>() {
+                @Override
+                public ConsumerType answer(InvocationOnMock invocation) throws Throwable {
+                    Object[] args = invocation.getArguments();
+                    Consumer consumer = (Consumer) args[0];
+                    ConsumerTypeCurator curator = (ConsumerTypeCurator) invocation.getMock();
+
+                    ConsumerType ctype = null;
+
+                    if (consumer != null && consumer.getTypeId() != null) {
+                        ctype = curator.find(consumer.getTypeId());
+
+                        if (ctype == null) {
+                            throw new IllegalStateException("No such consumer type: " + consumer.getTypeId());
+                        }
+                    }
+
+                    return ctype;
+                }
+            }).when(consumerTypeCuratorMock).getConsumerType(any(Consumer.class));
+        }
+
+        return ctype;
     }
 
     private void setupBindChain() {
@@ -242,6 +280,7 @@ public class PoolManagerTest {
                     Map<String, Integer> pQ = (Map<String, Integer>) args[1];
                     return new BindContext(mockPoolCurator,
                         consumerCuratorMock,
+                        consumerTypeCuratorMock,
                         i18n,
                         consumer,
                         pQ);
@@ -1083,7 +1122,10 @@ public class PoolManagerTest {
             any(Set.class), eq(false)))
             .thenReturn(bestPools);
 
-        AutobindData data = AutobindData.create(TestUtil.createConsumer(owner))
+        ConsumerType ctype = this.mockConsumerType(TestUtil.createConsumerType());
+        Consumer consumer = TestUtil.createConsumer(ctype, owner);
+
+        AutobindData data = AutobindData.create(consumer)
             .forProducts(new String[] { product.getUuid() }).on(now);
 
         doNothing().when(mockPoolCurator).flush();
@@ -1363,7 +1405,10 @@ public class PoolManagerTest {
             .thenReturn(bestPools);
 
         // Make the call but provide a null array of product IDs (simulates healing):
-        AutobindData data = AutobindData.create(TestUtil.createConsumer(owner)).on(now);
+        ConsumerType ctype = this.mockConsumerType(TestUtil.createConsumerType());
+        Consumer consumer = TestUtil.createConsumer(ctype, owner);
+
+        AutobindData data = AutobindData.create(consumer).on(now);
         manager.entitleByProducts(data);
 
         verify(autobindRules).selectBestPools(any(Consumer.class), eq(installedPids),
@@ -1809,7 +1854,8 @@ public class PoolManagerTest {
 
     @Test
     public void testDeleteExcessEntitlements() throws EntitlementRefusedException {
-        Consumer consumer = TestUtil.createConsumer(owner);
+        ConsumerType ctype = this.mockConsumerType(TestUtil.createConsumerType());
+        Consumer consumer = TestUtil.createConsumer(ctype, owner);
         Subscription sub = TestUtil.createSubscription(owner, product);
         sub.setId("testing-subid");
         pool.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
@@ -1856,7 +1902,8 @@ public class PoolManagerTest {
 
     @Test
     public void testDeleteExcessEntitlementsBatch() throws EntitlementRefusedException {
-        Consumer consumer = TestUtil.createConsumer(owner);
+        ConsumerType ctype = this.mockConsumerType(TestUtil.createConsumerType());
+        Consumer consumer = TestUtil.createConsumer(ctype, owner);
         Subscription sub = TestUtil.createSubscription(owner, product);
         sub.setId("testing-subid");
         pool.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));

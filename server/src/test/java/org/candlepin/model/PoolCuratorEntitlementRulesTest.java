@@ -54,11 +54,14 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
 
         product = this.createProduct(owner);
 
-        consumer = TestUtil.createConsumer(owner);
+
+        ConsumerType ctype = new ConsumerType("system");
+        ctype = this.consumerTypeCurator.create(ctype);
+
+        consumer = this.createConsumer(owner);
         consumer.setFact("cpu_cores", "4");
-        consumer.setType(new ConsumerType("system"));
-        consumerTypeCurator.create(consumer.getType());
-        consumerCurator.create(consumer);
+        consumer.setType(ctype);
+        consumer = consumerCurator.merge(consumer);
     }
 
     @Test

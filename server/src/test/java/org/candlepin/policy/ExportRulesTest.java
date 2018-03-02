@@ -16,11 +16,13 @@ package org.candlepin.policy;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
@@ -51,6 +53,7 @@ public class ExportRulesTest {
 
     private ExportRules exportRules;
 
+    @Mock private ConsumerTypeCurator consumerTypeCuratorMock;
     @Mock private RulesCurator rulesCuratorMock;
 
     @Before
@@ -63,21 +66,28 @@ public class ExportRulesTest {
         when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
         when(rulesCuratorMock.getRules()).thenReturn(rules);
 
-        exportRules = new ExportRules();
+        exportRules = new ExportRules(consumerTypeCuratorMock);
     }
 
     @Test
     public void cannotExportProduct() throws NoSuchMethodException {
         Entitlement entitlement = mock(Entitlement.class);
+
         Consumer consumer = mock(Consumer.class);
-        ConsumerType type = mock(ConsumerType.class);
+        ConsumerType consumerType = new ConsumerType("system");
+        consumerType.setId("consumer_type");
+        consumerType.setManifest(true);
+
         Product p = TestUtil.createProduct("12345");
         Pool pool = new Pool();
         pool.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
 
         when(entitlement.getPool()).thenReturn(pool);
         when(entitlement.getConsumer()).thenReturn(consumer);
-        when(consumer.isManifestDistributor()).thenReturn(true);
+
+        when(consumer.getTypeId()).thenReturn(consumerType.getId());
+        when(consumerTypeCuratorMock.find(eq(consumerType.getId()))).thenReturn(consumerType);
+        when(consumerTypeCuratorMock.getConsumerType(eq(consumer))).thenReturn(consumerType);
 
         assertFalse(exportRules.canExport(entitlement));
     }
@@ -85,8 +95,11 @@ public class ExportRulesTest {
     @Test
     public void canExportProductConsumer() throws NoSuchMethodException {
         Entitlement entitlement = mock(Entitlement.class);
+
         Consumer consumer = mock(Consumer.class);
-        ConsumerType consumerType = mock(ConsumerType.class);
+        ConsumerType consumerType = new ConsumerType("system");
+        consumerType.setId("consumer_type");
+
         Pool pool = mock(Pool.class);
         Product product = mock(Product.class);
 
@@ -98,8 +111,10 @@ public class ExportRulesTest {
         when(pool.getProductId()).thenReturn("12345");
         when(product.getAttributes()).thenReturn(new HashMap<>());
         when(pool.getAttributes()).thenReturn(attributes);
-        when(consumer.getType()).thenReturn(consumerType);
-        when(consumerType.getLabel()).thenReturn("system");
+
+        when(consumer.getTypeId()).thenReturn(consumerType.getId());
+        when(consumerTypeCuratorMock.find(eq(consumerType.getId()))).thenReturn(consumerType);
+        when(consumerTypeCuratorMock.getConsumerType(eq(consumer))).thenReturn(consumerType);
 
         assertTrue(exportRules.canExport(entitlement));
     }
@@ -107,8 +122,11 @@ public class ExportRulesTest {
     @Test
     public void canExportProductVirt() throws NoSuchMethodException {
         Entitlement entitlement = mock(Entitlement.class);
+
         Consumer consumer = mock(Consumer.class);
-        ConsumerType consumerType = mock(ConsumerType.class);
+        ConsumerType consumerType = new ConsumerType("candlepin");
+        consumerType.setId("consumer_type");
+
         Pool pool = mock(Pool.class);
         Product product = mock(Product.class);
 
@@ -117,8 +135,10 @@ public class ExportRulesTest {
         when(pool.getProductId()).thenReturn("12345");
         when(product.getAttributes()).thenReturn(new HashMap<>());
         when(pool.getAttributes()).thenReturn(new HashMap<>());
-        when(consumer.getType()).thenReturn(consumerType);
-        when(consumerType.getLabel()).thenReturn("candlepin");
+
+        when(consumer.getTypeId()).thenReturn(consumerType.getId());
+        when(consumerTypeCuratorMock.find(eq(consumerType.getId()))).thenReturn(consumerType);
+        when(consumerTypeCuratorMock.getConsumerType(eq(consumer))).thenReturn(consumerType);
 
         assertTrue(exportRules.canExport(entitlement));
     }

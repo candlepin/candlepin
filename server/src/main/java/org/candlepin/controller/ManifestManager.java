@@ -35,6 +35,8 @@ import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.pinsetter.tasks.ExportJob;
@@ -74,6 +76,7 @@ public class ManifestManager {
     private EntitlementCurator entitlementCurator;
     private PoolManager poolManager;
     private ConsumerCurator consumerCurator;
+    private ConsumerTypeCurator consumerTypeCurator;
     private CdnCurator cdnCurator;
     private PrincipalProvider principalProvider;
     private I18n i18n;
@@ -82,13 +85,15 @@ public class ManifestManager {
 
     @Inject
     public ManifestManager(ManifestFileService manifestFileService, Exporter exporter, Importer importer,
-        ConsumerCurator consumerCurator, EntitlementCurator entitlementCurator, CdnCurator cdnCurator,
-        PoolManager poolManager, PrincipalProvider principalProvider, I18n i18n, EventSink eventSink,
-        EventFactory eventFactory) {
+        ConsumerCurator consumerCurator, ConsumerTypeCurator consumerTypeCurator,
+        EntitlementCurator entitlementCurator, CdnCurator cdnCurator, PoolManager poolManager,
+        PrincipalProvider principalProvider, I18n i18n, EventSink eventSink, EventFactory eventFactory) {
+
         this.manifestFileService = manifestFileService;
         this.exporter = exporter;
         this.importer = importer;
         this.consumerCurator = consumerCurator;
+        this.consumerTypeCurator = consumerTypeCurator;
         this.cdnCurator = cdnCurator;
         this.entitlementCurator = entitlementCurator;
         this.poolManager = poolManager;
@@ -294,15 +299,15 @@ public class ManifestManager {
     private Consumer validateConsumerForExport(String consumerUuid, String cdnLabel) {
         // FIXME Should this be testing the CdnLabel as well?
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        if (consumer.getType() == null ||
-            !consumer.isManifestDistributor()) {
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
+
+        if (ctype == null || !ctype.isManifest()) {
             throw new ForbiddenException(
                 i18n.tr("Unit {0} cannot be exported. A manifest cannot be made for units of type \"{1}\".",
-                    consumerUuid, consumer.getType().getLabel()));
+                    consumerUuid, ctype != null ? ctype.getLabel() : "unknown type"));
         }
 
-        if (!StringUtils.isBlank(cdnLabel) &&
-            cdnCurator.lookupByLabel(cdnLabel) == null) {
+        if (!StringUtils.isBlank(cdnLabel) && cdnCurator.lookupByLabel(cdnLabel) == null) {
             throw new ForbiddenException(
                 i18n.tr("A CDN with label {0} does not exist on this system.", cdnLabel));
         }

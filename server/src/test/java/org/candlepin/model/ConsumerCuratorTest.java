@@ -1032,8 +1032,11 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     public void shouldCountOwnerConsumersOnlyWithTypeLabels() {
         Consumer c1 = createConsumer(owner);
         Consumer c2 = createConsumer(owner);
-        String l1 = c1.getType().getLabel();
-        String l2 = c2.getType().getLabel();
+        ConsumerType c1t = consumerTypeCurator.getConsumerType(c1);
+        ConsumerType c2t = consumerTypeCurator.getConsumerType(c2);
+        String l1 = c1t.getLabel();
+        String l2 = c2t.getLabel();
+
         assertNotEquals(l1, l2);
         HashSet<String> typeLabels = new HashSet<>(1);
         typeLabels.add(l1);
@@ -1048,8 +1051,10 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     public void testDisjunctionInCountingWithTypeLabels() {
         Consumer c1 = createConsumer(owner);
         Consumer c2 = createConsumer(owner);
-        String l1 = c1.getType().getLabel();
-        String l2 = c2.getType().getLabel();
+        ConsumerType c1t = consumerTypeCurator.getConsumerType(c1);
+        ConsumerType c2t = consumerTypeCurator.getConsumerType(c2);
+        String l1 = c1t.getLabel();
+        String l2 = c2t.getLabel();
 
         assertNotEquals(l1, l2);
         HashSet<String> typeLabels = new HashSet<>(1);
@@ -1273,8 +1278,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         List<String> c = new ArrayList<>();
         c.add("unknown-contract");
 
-        int count = consumerCurator.countConsumers(owner.getKey(), typeLabels,
-            skus, subscriptionIds, c);
+        int count = consumerCurator.countConsumers(owner.getKey(), typeLabels, skus, subscriptionIds, c);
 
         assertEquals(0, count);
     }
@@ -1292,21 +1296,24 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         Consumer c2 = createConsumerAndBindItToProduct(owner, skuProduct);
         Consumer c3 = createConsumerAndBindItToProduct(owner, skuProduct, subscriptionId);
         Consumer c4 = createConsumerAndBindItToProduct(owner, skuProduct, subscriptionId, poolContract);
+        ConsumerType c1t = consumerTypeCurator.getConsumerType(c1);
+        ConsumerType c2t = consumerTypeCurator.getConsumerType(c2);
+        ConsumerType c3t = consumerTypeCurator.getConsumerType(c3);
+        ConsumerType c4t = consumerTypeCurator.getConsumerType(c4);
 
         Set<String> labels = new HashSet<>();
         List<String> skus = new ArrayList<>();
         List<String> subIds = new ArrayList<>();
         List<String> contracts = new ArrayList<>();
-        labels.add(c1.getType().getLabel());
-        labels.add(c2.getType().getLabel());
-        labels.add(c3.getType().getLabel());
-        labels.add(c4.getType().getLabel());
+        labels.add(c1t.getLabel());
+        labels.add(c2t.getLabel());
+        labels.add(c3t.getLabel());
+        labels.add(c4t.getLabel());
         skus.add(sku);
         subIds.add(subscriptionId);
         contracts.add(poolContract);
 
-        int count = consumerCurator.countConsumers(owner.getKey(), typeLabels, skus,
-            subIds, contracts);
+        int count = consumerCurator.countConsumers(owner.getKey(), typeLabels, skus, subIds, contracts);
 
         assertEquals(1, count);
     }

@@ -143,7 +143,6 @@ public class OwnerInfoCurator {
     @SuppressWarnings("checkstyle:indentation")
     private void setConsumerCountsByComplianceStatus(Owner owner, OwnerInfo info) {
         Criteria countCriteria = consumerCurator.createSecureCriteria()
-            .createAlias("type", "t")
             .add(Restrictions.eq("owner", owner))
             .add(Restrictions.isNotNull("entitlementStatus"))
             .setProjection(Projections.projectionList()

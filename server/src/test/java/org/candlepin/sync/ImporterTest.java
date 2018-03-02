@@ -115,6 +115,7 @@ public class ImporterTest {
     private ProductCurator pc;
     private EntitlementCurator ec;
     private SubscriptionReconciler mockSubReconciler;
+    private ConsumerTypeCurator consumerTypeCurator;
     private ModelTranslator translator;
 
     static {
@@ -145,8 +146,9 @@ public class ImporterTest {
         mockJsPath = new File(folder.getRoot(), "empty.js").getPath();
 
         this.mockSubReconciler = Mockito.mock(SubscriptionReconciler.class);
+        this.consumerTypeCurator = Mockito.mock(ConsumerTypeCurator.class);
 
-        this.translator = new StandardTranslator();
+        this.translator = new StandardTranslator(this.consumerTypeCurator);
     }
 
     @After
@@ -529,8 +531,7 @@ public class ImporterTest {
 
         importFiles.put(ImportFile.CONSUMER.fileName(), null);
 
-        String m = i18n.tr("The archive does not contain the " +
-            "required consumer.json file");
+        String m = i18n.tr("The archive does not contain the required consumer.json file");
         ee.expect(ImporterException.class);
         ee.expectMessage(m);
         i.importObjects(owner, importFiles, co);
@@ -550,8 +551,7 @@ public class ImporterTest {
         File ruleDir = mock(File.class);
         File[] rulesFiles = createMockJsFile(mockJsPath);
         when(ruleDir.listFiles()).thenReturn(rulesFiles);
-        File actualmeta = createFile("meta.json", "0.0.3", new Date(),
-            "test_user", "prefix");
+        File actualmeta = createFile("meta.json", "0.0.3", new Date(), "test_user", "prefix");
         // this is the hook to stop testing. we confirm that the archive component tests
         //  are passed and then jump out instead of trying to fake the actual file
         //  processing.
@@ -577,9 +577,10 @@ public class ImporterTest {
         ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
         when(emc.lookupByTypeAndOwner("per_user", owner)).thenReturn(null);
 
-        ConsumerType type = new ConsumerType(ConsumerTypeEnum.SYSTEM);
-        ConsumerTypeCurator ctc = mock(ConsumerTypeCurator.class);
-        when(ctc.lookupByLabel(eq("system"))).thenReturn(type);
+        ConsumerType stype = new ConsumerType(ConsumerTypeEnum.SYSTEM);
+        stype.setId("test-ctype");
+        when(consumerTypeCurator.lookupByLabel(eq("system"))).thenReturn(stype);
+        when(consumerTypeCurator.find(eq(stype.getId()))).thenReturn(stype);
 
         OwnerCurator oc = mock(OwnerCurator.class);
         when(oc.lookupWithUpstreamUuid(any(String.class))).thenReturn(null);
@@ -612,8 +613,10 @@ public class ImporterTest {
         ownerDTO.setDisplayName("Admin Owner");
         consumerDTO.setOwner(ownerDTO);
 
-        ConsumerType cpConsumerType = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
-        when(ctc.lookupByLabel(eq("candlepin"))).thenReturn(cpConsumerType);
+        ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
+        ctype.setId("test-ctype");
+        when(consumerTypeCurator.lookupByLabel(eq("candlepin"))).thenReturn(ctype);
+        when(consumerTypeCurator.find(eq(ctype.getId()))).thenReturn(ctype);
 
         File consumerFile = new File(folder.getRoot(), "consumer.json");
         mapper.writeValue(consumerFile, consumerDTO);
@@ -647,7 +650,7 @@ public class ImporterTest {
 
         ConflictOverrides co = mock(ConflictOverrides.class);
 
-        Importer i = new Importer(ctc, pc, ri, oc, null, null, pm,
+        Importer i = new Importer(consumerTypeCurator, pc, ri, oc, null, null, pm,
             null, config, emc, null, null, i18n,
             null, null, su, null, this.mockSubReconciler, this.ec, this.translator);
         List<Subscription> subscriptions = i.importObjects(owner, importFiles, co);
@@ -726,10 +729,11 @@ public class ImporterTest {
 
         OwnerCurator oc = mock(OwnerCurator.class);
         ConsumerType type = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
-        ConsumerTypeCurator ctc = mock(ConsumerTypeCurator.class);
-        when(ctc.lookupByLabel(eq("candlepin"))).thenReturn(type);
+        type.setId("test-ctype");
+        when(consumerTypeCurator.lookupByLabel(eq("candlepin"))).thenReturn(type);
+        when(consumerTypeCurator.find(eq(type.getId()))).thenReturn(type);
 
-        Importer i = new Importer(ctc, null, null, oc,
+        Importer i = new Importer(consumerTypeCurator, null, null, oc,
             mock(IdentityCertificateCurator.class), null, null,
             pki, null, null, mock(CertificateSerialCurator.class), null, i18n,
             null, null, su, null, this.mockSubReconciler, this.ec, this.translator);
@@ -846,8 +850,7 @@ public class ImporterTest {
         File[] rulesFiles = createMockJsFile(mockJsPath);
         File ruleDir = mock(File.class);
         when(ruleDir.listFiles()).thenReturn(rulesFiles);
-        File actualmeta = createFile("meta.json", "0.0.3", new Date(),
-            "test_user", "prefix");
+        File actualmeta = createFile("meta.json", "0.0.3", new Date(), "test_user", "prefix");
         Map<String, File> importFiles = getTestImportFiles();
         importFiles.put(ImportFile.META.fileName(), actualmeta);
         importFiles.put(ImportFile.RULES_FILE.fileName(), rulesFiles[0]);

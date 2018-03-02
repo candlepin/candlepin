@@ -28,6 +28,9 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Branding;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
@@ -114,6 +117,7 @@ public class CandlepinPoolManager implements PoolManager {
     private PoolRules poolRules;
     private EntitlementCurator entitlementCurator;
     private ConsumerCurator consumerCurator;
+    private ConsumerTypeCurator consumerTypeCurator;
     private EntitlementCertificateCurator entitlementCertificateCurator;
     private EntitlementCertificateGenerator ecGenerator;
     private ComplianceRules complianceRules;
@@ -145,6 +149,7 @@ public class CandlepinPoolManager implements PoolManager {
         PoolRules poolRules,
         EntitlementCurator entitlementCurator,
         ConsumerCurator consumerCurator,
+        ConsumerTypeCurator consumerTypeCurator,
         EntitlementCertificateCurator entitlementCertCurator,
         EntitlementCertificateGenerator ecGenerator,
         ComplianceRules complianceRules,
@@ -167,6 +172,7 @@ public class CandlepinPoolManager implements PoolManager {
         this.config = config;
         this.entitlementCurator = entitlementCurator;
         this.consumerCurator = consumerCurator;
+        this.consumerTypeCurator = consumerTypeCurator;
         this.enforcer = enforcer;
         this.poolRules = poolRules;
         this.entitlementCertificateCurator = entitlementCertCurator;
@@ -632,7 +638,9 @@ public class CandlepinPoolManager implements PoolManager {
             // quantity has changed. delete any excess entitlements from pool
             // the quantity has not yet been expressed on the pool itself
             if (updatedPool.getQuantityChanged()) {
-                RevocationOp revPlan = new RevocationOp(poolCurator, Collections.singletonList(existingPool));
+                RevocationOp revPlan = new RevocationOp(this.poolCurator, this.consumerTypeCurator,
+                    Collections.singletonList(existingPool));
+
                 revPlan.execute(this);
             }
 
@@ -1567,6 +1575,7 @@ public class CandlepinPoolManager implements PoolManager {
          * Grab an exclusive lock on the consumer to prevent deadlock.
          */
         consumer = consumerCurator.lockAndLoad(consumer);
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
 
         // Persist the entitlement after it has been updated.
         log.info("Processing entitlement and persisting.");
@@ -1574,7 +1583,7 @@ public class CandlepinPoolManager implements PoolManager {
         entitlementCurator.merge(entitlement);
 
         pool.setConsumed(pool.getConsumed() + change);
-        if (consumer.isManifestDistributor()) {
+        if (ctype != null && ctype.isManifest()) {
             pool.setExported(pool.getExported() + change);
         }
         poolCurator.merge(pool);
@@ -1592,7 +1601,7 @@ public class CandlepinPoolManager implements PoolManager {
         checkBonusPoolQuantities(consumer.getOwner(), entMap);
 
         // if shared ents, update shared pool quantity
-        if (consumer.isShare()) {
+        if (ctype != null && ctype.isType(ConsumerTypeEnum.SHARE)) {
             pool.setShared(pool.getShared() + change);
             List<Pool> sharedPools = poolCurator.listBySourceEntitlement(entitlement).list();
 
@@ -1682,7 +1691,7 @@ public class CandlepinPoolManager implements PoolManager {
             }
         }
 
-        RevocationOp rp = new RevocationOp(poolCurator, derivedPools);
+        RevocationOp rp = new RevocationOp(this.poolCurator, this.consumerTypeCurator, derivedPools);
         rp.execute(this);
     }
 
@@ -1810,12 +1819,15 @@ public class CandlepinPoolManager implements PoolManager {
 
             pool.setConsumed(pool.getConsumed() - entQuantity);
             Consumer consumer = ent.getConsumer();
+            ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
 
-            if (consumer.isManifestDistributor()) {
-                pool.setExported(pool.getExported() - entQuantity);
-            }
-            else if (consumer.isShare()) {
-                pool.setShared(pool.getShared() - entQuantity);
+            if (ctype != null) {
+                if (ctype.isManifest()) {
+                    pool.setExported(pool.getExported() - entQuantity);
+                }
+                else if (ctype.isType(ConsumerTypeEnum.SHARE)) {
+                    pool.setShared(pool.getShared() - entQuantity);
+                }
             }
 
             consumer.setEntitlementCount(consumer.getEntitlementCount() - entQuantity);
@@ -2185,7 +2197,10 @@ public class CandlepinPoolManager implements PoolManager {
 
                         // Update entitlement counts for affected consumers...
                         consumer.setEntitlementCount(consumer.getEntitlementCount() - quantity);
-                        if (consumer.getType().isManifest()) {
+
+                        // Set the number exported if we're working with a manifest distributor
+                        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
+                        if (ctype != null && ctype.isManifest()) {
                             pool.setExported(pool.getExported() - quantity);
                         }
                     }
@@ -2375,16 +2390,20 @@ public class CandlepinPoolManager implements PoolManager {
     public void handlePostEntitlement(PoolManager manager, Consumer consumer,
         Map<String, Entitlement> entitlements, Map<String, PoolQuantity> poolQuantityMap) {
         Set<String> stackIds = new HashSet<>();
+
         for (Entitlement entitlement : entitlements.values()) {
             if (entitlement.getPool().isStacked()) {
                 stackIds.add(entitlement.getPool().getStackId());
             }
         }
+
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
+
         List<Pool> subPoolsForStackIds = null;
         // Manifest and Share consumers should not contribute to the sharing org's stack,
         // as these consumer types should not have created a stack derived pool in the first place.
         // Therefore, we do not need to check if any stack derived pools need updating
-        if (!stackIds.isEmpty() && !consumer.isShare() && !consumer.isManifestDistributor()) {
+        if (!stackIds.isEmpty() && !ctype.isType(ConsumerTypeEnum.SHARE) && !ctype.isManifest()) {
             subPoolsForStackIds = poolCurator.getSubPoolForStackIds(consumer, stackIds);
             if (CollectionUtils.isNotEmpty(subPoolsForStackIds)) {
                 poolRules.updatePoolsFromStack(consumer, subPoolsForStackIds, false);

@@ -14,7 +14,7 @@
  */
 package org.candlepin.resteasy.filter;
 
-import static org.mockito.Matchers.eq;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.auth.Principal;
@@ -24,7 +24,6 @@ import org.candlepin.auth.permissions.PermissionFactory;
 import org.candlepin.common.util.SuppressSwaggerCheck;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerCurator;
 import org.candlepin.resteasy.ResourceLocatorMap;
 import org.candlepin.test.DatabaseTestFixture;
 
@@ -68,7 +67,6 @@ import javax.ws.rs.core.UriInfo;
 
 @RunWith(MockitoJUnitRunner.class)
 public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
-    @Inject private ConsumerCurator consumerCurator;
     @Inject private Provider<I18n> i18nProvider;
     @Inject private StoreFactory storeFactory;
     @Inject private SSLAuth sslAuth;
@@ -169,15 +167,12 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
 
     @Test
     public void testAccessToConsumer() throws Exception {
-        mockReq = MockHttpRequest.create("POST",
-            "http://localhost/candlepin/fake/123");
+        mockReq = MockHttpRequest.create("POST", "http://localhost/candlepin/fake/123");
         ResteasyProviderFactory.pushContext(HttpRequest.class, mockReq);
         mockReq.setAttribute(ResteasyProviderFactory.class.getName(), ResteasyProviderFactory.getInstance());
 
         Consumer c = createConsumer(createOwner());
         methodInjector.setArguments(new Object[] {c.getUuid()});
-        when(consumerCurator.getConsumer(eq(c.getUuid()))).thenReturn(c);
-        when(consumerCurator.findByUuid(eq(c.getUuid()))).thenReturn(c);
 
         X500Principal dn = new X500Principal("CN=" + c.getUuid() + ", C=US, L=Raleigh");
 
@@ -197,16 +192,13 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
 
     @Test(expected = ForbiddenException.class)
     public void noAccessToOtherConsumer() throws Exception {
-        mockReq = MockHttpRequest.create("POST",
-            "http://localhost/candlepin/fake/123");
+        mockReq = MockHttpRequest.create("POST", "http://localhost/candlepin/fake/123");
         ResteasyProviderFactory.pushContext(HttpRequest.class, mockReq);
         mockReq.setAttribute(ResteasyProviderFactory.class.getName(), ResteasyProviderFactory.getInstance());
 
         Consumer c = createConsumer(createOwner());
         Consumer c2 = createConsumer(createOwner());
         methodInjector.setArguments(new Object[] {c2.getUuid()});
-        when(consumerCurator.getConsumer(eq(c.getUuid()))).thenReturn(c);
-        when(consumerCurator.findByUuid(eq(c2.getUuid()))).thenReturn(c2);
 
         X500Principal dn = new X500Principal("CN=" + c.getUuid() + ", C=US, L=Raleigh");
 
@@ -246,8 +238,6 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
         protected void configure() {
             PermissionFactory factory = mock(PermissionFactory.class);
             bind(PermissionFactory.class).toInstance(factory);
-            ConsumerCurator mockCc = mock(ConsumerCurator.class);
-            bind(ConsumerCurator.class).toInstance(mockCc);
             bind(StoreFactory.class);
             bind(FakeResource.class);
         }

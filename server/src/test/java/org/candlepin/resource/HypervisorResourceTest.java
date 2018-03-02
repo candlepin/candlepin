@@ -58,6 +58,7 @@ import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.util.FactValidator;
+import org.candlepin.test.TestUtil;
 
 import com.google.inject.util.Providers;
 
@@ -124,8 +125,13 @@ public class HypervisorResourceTest {
         migrationProvider = Providers.of(testMigration);
 
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
+
         this.hypervisorType = new ConsumerType(ConsumerTypeEnum.HYPERVISOR);
-        this.translator = new StandardTranslator();
+        this.hypervisorType.setId("test-hypervisor-ctype");
+
+        this.mockConsumerType(this.hypervisorType);
+
+        this.translator = new StandardTranslator(this.consumerTypeCurator);
 
         this.consumerResource = new ConsumerResource(this.consumerCurator,
             this.consumerTypeCurator, null, this.subscriptionService, this.ownerService, null,
@@ -136,11 +142,12 @@ public class HypervisorResourceTest {
             null, null, null, this.consumerBindUtil, null, null,
             new FactValidator(config, this.i18n), null, consumerEnricher, migrationProvider, modelTranslator);
 
-        this.guestIdResource = new GuestIdResource(this.guestIdCurator, this.consumerCurator, this
-            .consumerResource, this.i18n, this.eventFactory, this.sink, migrationProvider, translator);
-        hypervisorResource = new HypervisorResource(consumerResource,
-            consumerCurator, i18n, ownerCurator, migrationProvider, translator, guestIdResource);
+        this.guestIdResource = new GuestIdResource(this.guestIdCurator, this.consumerCurator,
+            this.consumerTypeCurator, this.consumerResource, this.i18n, this.eventFactory, this.sink,
+            migrationProvider, translator);
 
+        hypervisorResource = new HypervisorResource(consumerResource, consumerCurator, consumerTypeCurator,
+            i18n, ownerCurator, migrationProvider, translator, guestIdResource);
 
         // Ensure that we get the consumer that was passed in back from the create call.
         when(consumerCurator.create(any(Consumer.class))).thenAnswer(new Answer<Object>() {
@@ -157,6 +164,7 @@ public class HypervisorResourceTest {
                     return invocation.getArguments()[0];
                 }
             });
+
         when(complianceRules.getStatus(any(Consumer.class), any(Date.class), any(Boolean.class)))
             .thenReturn(new ComplianceStatus(new Date()));
 
@@ -165,6 +173,41 @@ public class HypervisorResourceTest {
             .thenReturn(consumerEventBuilder);
         when(consumerEventBuilder.setEventData(any(Consumer.class)))
             .thenReturn(consumerEventBuilder);
+    }
+
+    protected ConsumerType mockConsumerType(ConsumerType ctype) {
+        // Ensure the type has an ID
+        if (ctype != null) {
+            if (ctype.getId() == null) {
+                ctype.setId("test-ctype-" + ctype.getLabel() + "-" + TestUtil.randomInt());
+            }
+
+            when(consumerTypeCurator.lookupByLabel(eq(ctype.getLabel()))).thenReturn(ctype);
+            when(consumerTypeCurator.find(eq(ctype.getId()))).thenReturn(ctype);
+
+            doAnswer(new Answer<ConsumerType>() {
+                @Override
+                public ConsumerType answer(InvocationOnMock invocation) throws Throwable {
+                    Object[] args = invocation.getArguments();
+                    Consumer consumer = (Consumer) args[0];
+                    ConsumerTypeCurator curator = (ConsumerTypeCurator) invocation.getMock();
+
+                    ConsumerType ctype = null;
+
+                    if (consumer != null && consumer.getTypeId() != null) {
+                        ctype = curator.find(consumer.getTypeId());
+
+                        if (ctype == null) {
+                            throw new IllegalStateException("No such consumer type: " + consumer.getTypeId());
+                        }
+                    }
+
+                    return ctype;
+                }
+            }).when(consumerTypeCurator).getConsumerType(any(Consumer.class));
+        }
+
+        return ctype;
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked", "deprecation" })
@@ -185,8 +228,6 @@ public class HypervisorResourceTest {
         when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
         when(principal.canAccess(eq(owner), eq(SubResource.CONSUMERS), eq(Access.CREATE)))
             .thenReturn(true);
-        when(consumerTypeCurator.lookupByLabel(eq(ConsumerTypeEnum.HYPERVISOR.getLabel())))
-            .thenReturn(hypervisorType);
         when(idCertService.generateIdentityCert(any(Consumer.class)))
             .thenReturn(new IdentityCertificate());
 
@@ -202,7 +243,7 @@ public class HypervisorResourceTest {
         assertEquals("GUEST_A", c1.getGuestIds().get(0).getGuestId());
         assertEquals("GUEST_B", c1.getGuestIds().get(1).getGuestId());
         assertEquals("x86_64", c1.getFact("uname.machine"));
-        assertEquals("hypervisor", c1.getType().getLabel());
+        assertEquals(this.hypervisorType.getId(), c1.getTypeId());
     }
 
     private VirtConsumerMap mockHypervisorConsumerMap(String hypervisorId, Consumer c) {
@@ -261,8 +302,6 @@ public class HypervisorResourceTest {
         when(consumerCurator.getGuestConsumersMap(any(Owner.class), any(Set.class)))
             .thenReturn(new VirtConsumerMap());
 
-        when(consumerTypeCurator.lookupByLabel(eq(ConsumerTypeEnum.HYPERVISOR.getLabel())))
-            .thenReturn(hypervisorType);
         when(idCertService.generateIdentityCert(any(Consumer.class)))
             .thenReturn(new IdentityCertificate());
 
@@ -303,8 +342,6 @@ public class HypervisorResourceTest {
         when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
         when(principal.canAccess(eq(owner), eq(SubResource.CONSUMERS), eq(Access.CREATE)))
             .thenReturn(true);
-        when(consumerTypeCurator.lookupByLabel(eq(ConsumerTypeEnum.HYPERVISOR.getLabel())))
-            .thenReturn(hypervisorType);
         when(idCertService.generateIdentityCert(any(Consumer.class)))
             .thenReturn(new IdentityCertificate());
 
@@ -346,8 +383,6 @@ public class HypervisorResourceTest {
         when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
         when(principal.canAccess(eq(owner), eq(SubResource.CONSUMERS), eq(Access.CREATE)))
             .thenReturn(true);
-        when(consumerTypeCurator.lookupByLabel(eq(ConsumerTypeEnum.HYPERVISOR.getLabel())))
-            .thenReturn(hypervisorType);
         when(idCertService.generateIdentityCert(any(Consumer.class)))
             .thenReturn(new IdentityCertificate());
 
@@ -378,8 +413,6 @@ public class HypervisorResourceTest {
         when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
         when(principal.canAccess(eq(owner), eq(SubResource.CONSUMERS), eq(Access.CREATE)))
             .thenReturn(true);
-        when(consumerTypeCurator.lookupByLabel(eq(ConsumerTypeEnum.HYPERVISOR.getLabel())))
-            .thenReturn(hypervisorType);
         when(idCertService.generateIdentityCert(any(Consumer.class)))
             .thenReturn(new IdentityCertificate());
 
@@ -410,8 +443,6 @@ public class HypervisorResourceTest {
 
         when(principal.canAccess(eq(owner), eq(SubResource.CONSUMERS), eq(Access.CREATE)))
             .thenReturn(true);
-        when(consumerTypeCurator.lookupByLabel(eq(ConsumerTypeEnum.HYPERVISOR.getLabel())))
-            .thenReturn(hypervisorType);
         when(idCertService.generateIdentityCert(any(Consumer.class)))
             .thenReturn(new IdentityCertificate());
 

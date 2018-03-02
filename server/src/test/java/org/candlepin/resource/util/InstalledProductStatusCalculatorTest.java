@@ -27,6 +27,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.GuestId;
@@ -87,6 +88,7 @@ public class InstalledProductStatusCalculatorTest {
     private ComplianceRules complianceRules;
 
     @Mock private ConsumerCurator consumerCurator;
+    @Mock private ConsumerTypeCurator consumerTypeCurator;
     @Mock private EntitlementCurator entCurator;
     @Mock private RulesCurator rulesCuratorMock;
     @Mock private EventSink eventSink;
@@ -103,9 +105,9 @@ public class InstalledProductStatusCalculatorTest {
 
     @Before
     public void setUp() {
-        translator = new StandardTranslator();
-
         MockitoAnnotations.initMocks(this);
+
+        translator = new StandardTranslator(this.consumerTypeCurator);
 
         // Load the default production rules:
         InputStream is = this.getClass().getResourceAsStream(RulesCurator.DEFAULT_RULES_FILE);
@@ -123,7 +125,7 @@ public class InstalledProductStatusCalculatorTest {
             new RulesObjectMapper(new ProductCachedSerializationModule(productCurator));
 
         this.complianceRules = new ComplianceRules(provider.get(), this.entCurator,
-            new StatusReasonMessageGenerator(i18n), eventSink, this.consumerCurator,
+            new StatusReasonMessageGenerator(i18n), eventSink, this.consumerCurator, this.consumerTypeCurator,
             objectMapper, translator);
 
         this.consumerEnricher = new ConsumerEnricher(this.complianceRules, this.ownerProductCurator);
@@ -850,9 +852,11 @@ public class InstalledProductStatusCalculatorTest {
     }
 
     private Consumer mockConsumer(Owner owner, Product... installedProducts) {
-        Consumer consumer = new Consumer();
+        ConsumerType ctype = new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM);
+        ctype.setId("test-ctype-" + TestUtil.randomInt());
 
-        consumer.setType(new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM));
+        Consumer consumer = new Consumer();
+        consumer.setType(ctype);
         consumer.setOwner(owner);
 
         for (Product product : installedProducts) {
@@ -860,6 +864,9 @@ public class InstalledProductStatusCalculatorTest {
         }
 
         consumer.setFact("cpu.cpu_socket(s)", "4");
+
+        when(this.consumerTypeCurator.find(eq(ctype.getId()))).thenReturn(ctype);
+        when(this.consumerTypeCurator.getConsumerType(eq(consumer))).thenReturn(ctype);
 
         return consumer;
     }

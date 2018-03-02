@@ -1220,7 +1220,10 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         assertTrue(poolIds.contains(dependentEnt.getId()));
 
         // Bind the ents for the distributor consumer
-        assertTrue(distributor.isManifestDistributor());
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(distributor);
+        assertNotNull(ctype);
+        assertTrue(ctype.isManifest());
+
         assertNotNull(this.bind(distributor, requiredPool));
         Entitlement distributorDependentEnt = this.bind(distributor, dependentPool);
         assertNotNull(distributorDependentEnt);
@@ -1262,7 +1265,10 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         assertEquals(0, poolIds.size());
 
         // Bind the ents for the distributor consumer
-        assertTrue(distributor.isManifestDistributor());
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(distributor);
+        assertNotNull(ctype);
+        assertTrue(ctype.isManifest());
+
         assertNotNull(this.bind(distributor, requiredPool));
         Entitlement distributorDependentEnt = this.bind(distributor, dependentPool);
         assertNotNull(distributorDependentEnt);

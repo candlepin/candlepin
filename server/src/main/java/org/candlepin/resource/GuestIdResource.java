@@ -27,7 +27,9 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.GuestIdDTO;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.GuestIdCurator;
 import org.candlepin.model.VirtConsumerMap;
@@ -75,6 +77,7 @@ public class GuestIdResource {
 
     private GuestIdCurator guestIdCurator;
     private ConsumerCurator consumerCurator;
+    private ConsumerTypeCurator consumerTypeCurator;
     private ConsumerResource consumerResource;
     private I18n i18n;
     private EventSink sink;
@@ -84,10 +87,13 @@ public class GuestIdResource {
 
     @Inject
     public GuestIdResource(GuestIdCurator guestIdCurator, ConsumerCurator consumerCurator,
-        ConsumerResource consumerResource, I18n i18n, EventFactory eventFactory, EventSink sink,
-        Provider<GuestMigration> migrationProvider, ModelTranslator translator) {
+        ConsumerTypeCurator consumerTypeCurator, ConsumerResource consumerResource, I18n i18n,
+        EventFactory eventFactory, EventSink sink, Provider<GuestMigration> migrationProvider,
+        ModelTranslator translator) {
+
         this.guestIdCurator = guestIdCurator;
         this.consumerCurator = consumerCurator;
+        this.consumerTypeCurator = consumerTypeCurator;
         this.consumerResource = consumerResource;
         this.i18n = i18n;
         this.eventFactory = eventFactory;
@@ -297,16 +303,16 @@ public class GuestIdResource {
     private void unregisterConsumer(GuestId guest, Principal principal) {
         Consumer guestConsumer = consumerCurator.findByVirtUuid(guest.getGuestId(),
             guest.getConsumer().getOwner().getId());
+
         if (guestConsumer != null) {
-            if ((principal == null) ||
-                principal.canAccess(guestConsumer, SubResource.NONE, Access.ALL)) {
+            if ((principal == null) || principal.canAccess(guestConsumer, SubResource.NONE, Access.ALL)) {
                 consumerResource.deleteConsumer(guestConsumer.getUuid(), principal);
             }
             else {
-                throw new ForbiddenException(i18n.tr(
-                    "Cannot unregister {0} {1} because: {2}",
-                    guestConsumer.getType().getLabel(), guestConsumer.getName(),
-                    i18n.tr("Invalid Credentials")));
+                ConsumerType type = this.consumerTypeCurator.find(guestConsumer.getTypeId());
+
+                throw new ForbiddenException(i18n.tr("Cannot unregister {0} {1} because: {2}",
+                    type, guestConsumer.getName(), i18n.tr("Invalid Credentials")));
             }
         }
     }

@@ -14,18 +14,25 @@
  */
 package org.candlepin.policy.js.export;
 
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 
 import com.google.inject.Inject;
+
+
 
 /**
  *
  */
 public class ExportRules {
 
+    private ConsumerTypeCurator consumerTypeCurator;
+
     @Inject
-    public ExportRules() {
+    public ExportRules(ConsumerTypeCurator consumerTypeCurator) {
+        this.consumerTypeCurator = consumerTypeCurator;
     }
 
     public boolean canExport(Entitlement entitlement) {
@@ -35,7 +42,9 @@ public class ExportRules {
         // applied to pools internally by candlepin, but some tests were doing this so
         // we will continue doing the same.
         Boolean poolDerived = pool.hasAttribute(Pool.Attributes.DERIVED_POOL);
-        return !entitlement.getConsumer().isManifestDistributor() || !poolDerived;
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(entitlement.getConsumer());
+
+        return !ctype.isManifest() || !poolDerived;
     }
 
 }

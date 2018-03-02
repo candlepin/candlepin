@@ -122,7 +122,7 @@ public class ExporterTest {
     public void setUp() {
         ctc = mock(ConsumerTypeCurator.class);
         me = new MetaExporter();
-        translator = new StandardTranslator();
+        translator = new StandardTranslator(ctc);
         ce = new ConsumerExporter(translator);
         cte = new ConsumerTypeExporter(translator);
         rc = mock(RulesCurator.class);
@@ -445,6 +445,9 @@ public class ExporterTest {
         idcert.setUpdated(new Date());
         when(consumer.getIdCert()).thenReturn(idcert);
 
+        ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
+        ctype.setId("test-ctype");
+
         KeyPair keyPair = createKeyPair();
         when(consumer.getKeyPair()).thenReturn(keyPair);
         when(pki.getPemEncoded(keyPair.getPrivateKey())).thenReturn("privateKey".getBytes());
@@ -452,7 +455,10 @@ public class ExporterTest {
         when(consumer.getUuid()).thenReturn("8auuid");
         when(consumer.getName()).thenReturn("consumer_name");
         when(consumer.getContentAccessMode()).thenReturn("access_mode");
-        when(consumer.getType()).thenReturn(new ConsumerType(ConsumerTypeEnum.CANDLEPIN));
+        when(consumer.getTypeId()).thenReturn(ctype.getId());
+
+        when(ctc.getConsumerType(eq(consumer))).thenReturn(ctype);
+        when(ctc.find(eq(ctype.getId()))).thenReturn(ctype);
 
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
         when(cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
@@ -494,13 +500,18 @@ public class ExporterTest {
         idcert.setUpdated(new Date());
         when(consumer.getIdCert()).thenReturn(idcert);
 
+        ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
+        ctype.setId("test-ctype");
+
         KeyPair keyPair = createKeyPair();
         when(consumer.getKeyPair()).thenReturn(keyPair);
         when(pki.getPemEncoded(keyPair.getPrivateKey())).thenReturn("privateKey".getBytes());
         when(pki.getPemEncoded(keyPair.getPublicKey())).thenReturn("publicKey".getBytes());
         when(consumer.getUuid()).thenReturn("8auuid");
         when(consumer.getName()).thenReturn("consumer_name");
-        when(consumer.getType()).thenReturn(new ConsumerType(ConsumerTypeEnum.CANDLEPIN));
+        when(consumer.getTypeId()).thenReturn(ctype.getId());
+        when(ctc.getConsumerType(eq(consumer))).thenReturn(ctype);
+        when(ctc.find(eq(ctype.getId()))).thenReturn(ctype);
 
         DistributorVersion dv = new DistributorVersion("test-dist-ver");
         Set<DistributorVersionCapability> dvcSet = new HashSet<>();
@@ -802,9 +813,10 @@ public class ExporterTest {
             assertEquals("8auuid", c.getUuid());
             assertEquals("consumer_name", c.getName());
             assertEquals("access_mode", c.getContentAccessMode());
+
             ConsumerType type = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
             assertEquals(type.getLabel(), c.getType().getLabel());
-            assertEquals(type.getId(), c.getType().getId());
+            assertEquals(type.isManifest(), c.getType().isManifest());
         }
     }
 

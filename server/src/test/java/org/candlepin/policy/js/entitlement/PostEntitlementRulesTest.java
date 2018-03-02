@@ -157,7 +157,8 @@ public class PostEntitlementRulesTest extends EntitlementRulesTestFixture {
     @Test
     public void noSubPoolsForDistributorBinds() {
         when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
-        consumer.setType(new ConsumerType(ConsumerTypeEnum.CANDLEPIN));
+        ConsumerType ctype = this.mockConsumerType(new ConsumerType(ConsumerTypeEnum.CANDLEPIN));
+        consumer.setType(ctype);
         Pool pool = setupVirtLimitPool();
         Entitlement e = new Entitlement(pool, consumer, 1);
 

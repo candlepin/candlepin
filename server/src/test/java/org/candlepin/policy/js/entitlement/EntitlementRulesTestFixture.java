@@ -15,7 +15,9 @@
 package org.candlepin.policy.js.entitlement;
 
 import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doAnswer;
 
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
@@ -30,6 +32,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
@@ -58,6 +61,8 @@ import com.google.inject.Provider;
 import org.junit.Before;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.xnap.commons.i18n.I18nFactory;
 
 import java.io.InputStream;
@@ -74,6 +79,8 @@ public class EntitlementRulesTestFixture {
     protected Configuration config;
     @Mock
     protected ConsumerCurator consumerCurator;
+    @Mock
+    protected ConsumerTypeCurator consumerTypeCurator;
     @Mock
     protected ComplianceStatus compliance;
     @Mock
@@ -100,6 +107,7 @@ public class EntitlementRulesTestFixture {
     protected EventFactory eventFactory;
 
     protected Owner owner;
+    protected ConsumerType consumerType;
     protected Consumer consumer;
     protected String productId = "a-product";
     protected PoolRules poolRules;
@@ -122,13 +130,14 @@ public class EntitlementRulesTestFixture {
 
         JsRunner jsRules = new JsRunnerProvider(rulesCurator, cacheProvider).get();
 
-        translator = new StandardTranslator();
+        translator = new StandardTranslator(consumerTypeCurator);
         enforcer = new EntitlementRules(
             new DateSourceImpl(),
             jsRules,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
             config,
             consumerCurator,
+            consumerTypeCurator,
             productCurator,
             new RulesObjectMapper(new ProductCachedSerializationModule(productCurator)),
             ownerCurator,
@@ -141,15 +150,50 @@ public class EntitlementRulesTestFixture {
         );
 
         owner = new Owner();
-        consumer = new Consumer("test consumer", "test user", owner,
-            new ConsumerType(ConsumerTypeEnum.SYSTEM));
+
+        consumerType = this.mockConsumerType(new ConsumerType(ConsumerTypeEnum.SYSTEM));
+        consumer = new Consumer("test consumer", "test user", owner, consumerType);
 
         poolRules = new PoolRules(poolManagerMock, config, entCurMock, ownerProductCuratorMock,
                 productCurator);
     }
 
-    protected Subscription createVirtLimitSub(String productId, int quantity,
-        String virtLimit) {
+    protected ConsumerType mockConsumerType(ConsumerType ctype) {
+        // Ensure the type has an ID
+        if (ctype != null) {
+            if (ctype.getId() == null) {
+                ctype.setId("test-ctype-" + ctype.getLabel() + "-" + TestUtil.randomInt());
+            }
+
+            when(consumerTypeCurator.lookupByLabel(eq(ctype.getLabel()))).thenReturn(ctype);
+            when(consumerTypeCurator.find(eq(ctype.getId()))).thenReturn(ctype);
+
+            doAnswer(new Answer<ConsumerType>() {
+                @Override
+                public ConsumerType answer(InvocationOnMock invocation) throws Throwable {
+                    Object[] args = invocation.getArguments();
+                    Consumer consumer = (Consumer) args[0];
+                    ConsumerTypeCurator curator = (ConsumerTypeCurator) invocation.getMock();
+
+                    ConsumerType ctype = null;
+
+                    if (consumer != null && consumer.getTypeId() != null) {
+                        ctype = curator.find(consumer.getTypeId());
+
+                        if (ctype == null) {
+                            throw new IllegalStateException("No such consumer type: " + consumer.getTypeId());
+                        }
+                    }
+
+                    return ctype;
+                }
+            }).when(consumerTypeCurator).getConsumerType(any(Consumer.class));
+        }
+
+        return ctype;
+    }
+
+    protected Subscription createVirtLimitSub(String productId, int quantity, String virtLimit) {
         Product product = TestUtil.createProduct(productId, productId);
         product.setAttribute(Product.Attributes.VIRT_LIMIT, virtLimit);
         when(ownerProductCuratorMock.getProductById(owner, productId)).thenReturn(product);

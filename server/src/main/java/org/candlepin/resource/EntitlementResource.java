@@ -28,7 +28,9 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.EntitlementDTO;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EntitlementFilterBuilder;
@@ -86,9 +88,11 @@ import io.swagger.annotations.Authorization;
 @Api(value = "entitlements", authorizations = { @Authorization("basic") })
 public class EntitlementResource {
     private static Logger log = LoggerFactory.getLogger(EntitlementResource.class);
-    private final ConsumerCurator consumerCurator;
+
+    private ConsumerCurator consumerCurator;
+    private ConsumerTypeCurator consumerTypeCurator;
     private PoolManager poolManager;
-    private final EntitlementCurator entitlementCurator;
+    private EntitlementCurator entitlementCurator;
     private I18n i18n;
     private Entitler entitler;
     private Enforcer enforcer;
@@ -98,13 +102,17 @@ public class EntitlementResource {
     @Inject
     public EntitlementResource(EntitlementCurator entitlementCurator,
         ConsumerCurator consumerCurator,
+        ConsumerTypeCurator consumerTypeCurator,
         PoolManager poolManager,
         I18n i18n,
-        Entitler entitler, Enforcer enforcer, EntitlementRulesTranslator messageTranslator,
+        Entitler entitler,
+        Enforcer enforcer,
+        EntitlementRulesTranslator messageTranslator,
         ModelTranslator translator) {
 
         this.entitlementCurator = entitlementCurator;
         this.consumerCurator = consumerCurator;
+        this.consumerTypeCurator = consumerTypeCurator;
         this.i18n = i18n;
         this.poolManager = poolManager;
         this.entitler = entitler;
@@ -336,29 +344,38 @@ public class EntitlementResource {
             if (quantity > 0 && quantity <= entitlement.getQuantity()) {
                 Consumer sourceConsumer = entitlement.getConsumer();
                 Consumer destinationConsumer = consumerCurator.verifyAndLookupConsumer(uuid);
-                if (!sourceConsumer.isManifestDistributor()) {
+
+                ConsumerType scType = this.consumerTypeCurator.getConsumerType(sourceConsumer);
+                ConsumerType dcType = this.consumerTypeCurator.getConsumerType(destinationConsumer);
+
+                if (!scType.isManifest()) {
                     throw new BadRequestException(i18n.tr(
                         "Entitlement migration is not permissible for units of type \"{0}\"",
-                        sourceConsumer.getType().getLabel()));
+                        scType.getLabel()));
                 }
-                if (!destinationConsumer.isManifestDistributor()) {
+
+                if (!dcType.isManifest()) {
                     throw new BadRequestException(i18n.tr(
                         "Entitlement migration is not permissible for units of type \"{0}\"",
-                        destinationConsumer.getType().getLabel()));
+                        dcType.getLabel()));
                 }
+
                 if (!sourceConsumer.getOwner().getKey().equals(destinationConsumer.getOwner().getKey())) {
                     throw new BadRequestException(i18n.tr(
                         "Source and destination units must belong to the same organization"));
                 }
+
                 // test to ensure destination can use the pool
                 ValidationResult result = enforcer.preEntitlement(destinationConsumer,
                     entitlement.getPool(), 0, CallerType.BIND);
+
                 if (!result.isSuccessful()) {
                     throw new BadRequestException(i18n.tr(
                         "The entitlement cannot be utilized by the destination unit: ") +
                         messageTranslator.poolErrorToMessage(entitlement.getPool(),
                             result.getErrors().get(0)));
                 }
+
                 if (quantity.intValue() == entitlement.getQuantity()) {
                     unbind(id);
                 }
@@ -366,13 +383,12 @@ public class EntitlementResource {
                     entitler.adjustEntitlementQuantity(sourceConsumer, entitlement,
                         entitlement.getQuantity() - quantity);
                 }
+
                 Pool pool = entitlement.getPool();
-                entitlements.addAll(entitler.bindByPoolQuantity(destinationConsumer, pool.getId(),
-                    quantity));
+                entitlements.addAll(entitler.bindByPoolQuantity(destinationConsumer, pool.getId(), quantity));
 
                 // Trigger events:
                 entitler.sendEvents(entitlements);
-
             }
             else {
                 throw new BadRequestException(i18n.tr(

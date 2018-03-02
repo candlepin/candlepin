@@ -77,7 +77,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.stubbing.Answer;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -91,8 +93,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-import javax.inject.Inject;
 import javax.inject.Provider;
+
+
 
 @RunWith(MockitoJUnitRunner.class)
 public class ConsumerResourceUpdateTest {
@@ -123,7 +126,6 @@ public class ConsumerResourceUpdateTest {
     private ConsumerResource resource;
     private Provider<GuestMigration> migrationProvider;
     private GuestMigration testMigration;
-    @Inject protected ModelTranslator modelTranslator;
 
     @Before
     public void init() throws Exception {
@@ -133,7 +135,7 @@ public class ConsumerResourceUpdateTest {
         testMigration = new GuestMigration(consumerCurator);
 
         migrationProvider = Providers.of(testMigration);
-        this.translator = new StandardTranslator();
+        this.translator = new StandardTranslator(this.consumerTypeCurator);
         this.resource = new ConsumerResource(this.consumerCurator,
             this.consumerTypeCurator, null, this.subscriptionService, this.ownerService, null,
             this.idCertService, null, this.i18n, this.sink, this.eventFactory, null, null,
@@ -142,7 +144,7 @@ public class ConsumerResourceUpdateTest {
             this.deletedConsumerCurator, this.environmentCurator, null,
             config, null, null, null, this.consumerBindUtil,
             null, null, new FactValidator(config, this.i18n),
-            null, consumerEnricher, migrationProvider, modelTranslator);
+            null, consumerEnricher, migrationProvider, this.translator);
 
         when(complianceRules.getStatus(any(Consumer.class), any(Date.class), any(Boolean.class),
             any(Boolean.class))).thenReturn(new ComplianceStatus(new Date()));
@@ -156,6 +158,41 @@ public class ConsumerResourceUpdateTest {
             .thenReturn(consumerEventBuilder);
     }
 
+    protected ConsumerType mockConsumerType(ConsumerType ctype) {
+        // Ensure the type has an ID
+        if (ctype != null) {
+            if (ctype.getId() == null) {
+                ctype.setId("test-ctype-" + ctype.getLabel() + "-" + TestUtil.randomInt());
+            }
+
+            when(consumerTypeCurator.lookupByLabel(eq(ctype.getLabel()))).thenReturn(ctype);
+            when(consumerTypeCurator.find(eq(ctype.getId()))).thenReturn(ctype);
+
+            doAnswer(new Answer<ConsumerType>() {
+                @Override
+                public ConsumerType answer(InvocationOnMock invocation) throws Throwable {
+                    Object[] args = invocation.getArguments();
+                    Consumer consumer = (Consumer) args[0];
+                    ConsumerTypeCurator curator = (ConsumerTypeCurator) invocation.getMock();
+
+                    ConsumerType ctype = null;
+
+                    if (consumer != null && consumer.getTypeId() != null) {
+                        ctype = curator.find(consumer.getTypeId());
+
+                        if (ctype == null) {
+                            throw new IllegalStateException("No such consumer type: " + consumer.getTypeId());
+                        }
+                    }
+
+                    return ctype;
+                }
+            }).when(consumerTypeCurator).getConsumerType(any(Consumer.class));
+        }
+
+        return ctype;
+    }
+
     @Test
     public void nothingChanged() throws Exception {
         ConsumerDTO consumer = getFakeConsumerDTO();
@@ -164,6 +201,9 @@ public class ConsumerResourceUpdateTest {
     }
 
     private Consumer getFakeConsumer() {
+        ConsumerType ctype = new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM);
+        this.mockConsumerType(ctype);
+
         Consumer consumer = new Consumer();
         Owner owner = new Owner();
         owner.setId("FAKEOWNERID");
@@ -171,10 +211,12 @@ public class ConsumerResourceUpdateTest {
         consumer.setUuid(uuid);
         consumer.setOwner(owner);
         consumer.setName("FAKENAME");
-        consumer.setType(new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM));
+        consumer.setType(ctype);
+
         // go ahead and patch the curator to match it
         when(this.consumerCurator.findByUuid(uuid)).thenReturn(consumer);
         when(this.consumerCurator.verifyAndLookupConsumer(uuid)).thenReturn(consumer);
+
         return consumer;
     }
 
@@ -215,7 +257,6 @@ public class ConsumerResourceUpdateTest {
         ConsumerDTO incoming2 = new ConsumerDTO();
         incoming2.setReleaseVersion(null);
         this.resource.updateConsumer(consumer2.getUuid(), incoming2, principal);
-
     }
 
     private void compareConsumerRelease(String release1, String release2, Boolean verify) {
@@ -809,6 +850,9 @@ public class ConsumerResourceUpdateTest {
 
     @Test
     public void consumerCapabilityUpdate() {
+        ConsumerType ct = new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN);
+        this.mockConsumerType(ct);
+
         Consumer c = getFakeConsumer();
         Set<ConsumerCapability> caps = new HashSet<>();
         ConsumerCapability cca = new ConsumerCapability(c, "capability_a");
@@ -818,7 +862,6 @@ public class ConsumerResourceUpdateTest {
         caps.add(ccb);
         caps.add(ccc);
         c.setCapabilities(caps);
-        ConsumerType ct = new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN);
         c.setType(ct);
         assertEquals(3, c.getCapabilities().size());
 
@@ -866,10 +909,12 @@ public class ConsumerResourceUpdateTest {
 
     @Test
     public void consumerLastCheckin() {
+        ConsumerType ct = new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN);
+        this.mockConsumerType(ct);
+
         Consumer c = getFakeConsumer();
         Date now = new Date();
         c.setLastCheckin(now);
-        ConsumerType ct = new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN);
         c.setType(ct);
 
         when(this.consumerCurator.verifyAndLookupConsumer(c.getUuid())).thenReturn(c);
@@ -881,8 +926,11 @@ public class ConsumerResourceUpdateTest {
     }
 
     private Consumer createConsumerWithGuests(String ... guestIds) {
+        ConsumerType ctype = new ConsumerType(ConsumerType.ConsumerTypeEnum.HYPERVISOR);
+        this.mockConsumerType(ctype);
+
         Consumer a = new Consumer();
-        a.setType(new ConsumerType(ConsumerType.ConsumerTypeEnum.HYPERVISOR));
+        a.setType(ctype);
         Owner owner = new Owner();
         owner.setId("FAKEOWNERID");
         a.setOwner(owner);

@@ -29,6 +29,33 @@ public class ConsumerTypeCurator extends AbstractHibernateCurator<ConsumerType> 
     }
 
     /**
+     * Fetches the ConsumerType for the specified consumer. If the consumer does not have a defined
+     * type ID, or the type ID is invalid, this method throws an exception.
+     *
+     * @param consumer
+     *  The consumer for which to fetch the ConsumerType object
+     *
+     * @throws IllegalStateException
+     *  if the consumer has no defined type ID or the type ID is invalid
+     *
+     * @return
+     *  A ConsumerType instance for the specified consumer
+     */
+    public ConsumerType getConsumerType(Consumer consumer) {
+        ConsumerType type = null;
+
+        if (consumer != null && consumer.getTypeId() != null) {
+            type = this.find(consumer.getTypeId());
+
+            if (type == null) {
+                throw new IllegalStateException("consumer is not associated with a valid type: " + consumer);
+            }
+        }
+
+        return type;
+    }
+
+    /**
      * lookup the ConsumerType by its label.
      *
      * @param label type to lookup

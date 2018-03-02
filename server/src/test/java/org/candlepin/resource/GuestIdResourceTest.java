@@ -34,6 +34,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.GuestIdCurator;
 import org.candlepin.model.Owner;
@@ -70,6 +71,7 @@ public class GuestIdResourceTest {
     private I18n i18n;
 
     @Mock private ConsumerCurator consumerCurator;
+    @Mock private ConsumerTypeCurator consumerTypeCurator;
     @Mock private GuestIdCurator guestIdCurator;
     @Mock private ConsumerResourceForTesting consumerResource;
     @Mock private EventFactory eventFactory;
@@ -96,21 +98,22 @@ public class GuestIdResourceTest {
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         owner = new Owner("test-owner", "Test Owner");
         ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
+        ct.setId("test-system-ctype");
+
         consumer = new Consumer("consumer", "test", owner, ct);
-        translator = new StandardTranslator();
-        guestIdResource = new GuestIdResource(guestIdCurator,
-            consumerCurator, consumerResource, i18n, eventFactory, sink, migrationProvider, translator);
+        translator = new StandardTranslator(consumerTypeCurator);
+        guestIdResource = new GuestIdResource(guestIdCurator, consumerCurator, consumerTypeCurator,
+            consumerResource, i18n, eventFactory, sink, migrationProvider, translator);
+
         when(consumerCurator.findByUuid(consumer.getUuid())).thenReturn(consumer);
-        when(consumerCurator.verifyAndLookupConsumer(
-            consumer.getUuid())).thenReturn(consumer);
+        when(consumerCurator.verifyAndLookupConsumer(consumer.getUuid())).thenReturn(consumer);
     }
 
     @Test
     public void getGuestIdsEmpty() {
         CandlepinQuery<GuestId> query = mock(CandlepinQuery.class);
         CandlepinQuery<GuestIdDTO> dtoQuery = mock(CandlepinQuery.class);
-        when(guestIdCurator.listByConsumer(eq(consumer)))
-            .thenReturn(query);
+        when(guestIdCurator.listByConsumer(eq(consumer))).thenReturn(query);
         when(query.transform((any(ElementTransformer.class)))).thenReturn(dtoQuery);
         CandlepinQuery<GuestIdDTO> result = guestIdResource.getGuestIds(consumer.getUuid());
         verify(query, times(1)).transform(any(ElementTransformer.class));
@@ -119,8 +122,7 @@ public class GuestIdResourceTest {
 
     @Test(expected = NotFoundException.class)
     public void getGuestIdNoGuests() {
-        when(guestIdCurator.findByConsumerAndId(eq(consumer), any(String.class)))
-            .thenReturn(null);
+        when(guestIdCurator.findByConsumerAndId(eq(consumer), any(String.class))).thenReturn(null);
         GuestIdDTO result = guestIdResource.getGuestId(consumer.getUuid(), "some-id");
     }
 

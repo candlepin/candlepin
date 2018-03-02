@@ -16,12 +16,17 @@ package org.candlepin.policy.js.consumer;
 
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 
 import com.google.inject.Inject;
 
 import java.util.List;
+
+
 
 /**
  * ConsumerRules
@@ -30,24 +35,28 @@ public class ConsumerRules {
 
     private PoolCurator poolCurator;
     private PoolManager poolManager;
+    private ConsumerTypeCurator consumerTypeCurator;
 
     @Inject
-    public ConsumerRules(PoolManager poolManager, PoolCurator poolCurator) {
+    public ConsumerRules(PoolManager poolManager, PoolCurator poolCurator,
+        ConsumerTypeCurator consumerTypeCurator) {
+
         this.poolManager = poolManager;
         this.poolCurator = poolCurator;
+        this.consumerTypeCurator = consumerTypeCurator;
     }
 
     public void onConsumerDelete(Consumer consumer) {
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
 
         // Cleanup user restricted pools:
-        if (consumer.getType().getLabel().equals("person")) {
+        if (ctype.isType(ConsumerTypeEnum.PERSON)) {
             List<Pool> userRestrictedPools = poolCurator
                 .listPoolsRestrictedToUser(consumer.getUsername());
 
             for (Pool pool : userRestrictedPools) {
                 poolManager.deletePool(pool);
             }
-
         }
     }
 }

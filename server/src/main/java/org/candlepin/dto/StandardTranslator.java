@@ -59,6 +59,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCapability;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Environment;
@@ -75,6 +76,8 @@ import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.pinsetter.core.model.JobStatus;
 
+import com.google.inject.Inject;
+
 
 
 /**
@@ -83,7 +86,9 @@ import org.candlepin.pinsetter.core.model.JobStatus;
  */
 public class StandardTranslator extends SimpleModelTranslator {
 
-    public StandardTranslator() {
+    @Inject
+    public StandardTranslator(ConsumerTypeCurator consumerTypeCurator) {
+
         // API translators
         /////////////////////////////////////////////
         this.registerTranslator(
@@ -99,11 +104,11 @@ public class StandardTranslator extends SimpleModelTranslator {
         this.registerTranslator(
             new CertificateTranslator(), Certificate.class, CertificateDTO.class);
         this.registerTranslator(
+            new org.candlepin.dto.api.v1.ConsumerTranslator(consumerTypeCurator),
+            Consumer.class, org.candlepin.dto.api.v1.ConsumerDTO.class);
+        this.registerTranslator(
             new ConsumerInstalledProductTranslator(), ConsumerInstalledProduct.class,
             ConsumerInstalledProductDTO.class);
-        this.registerTranslator(
-            new org.candlepin.dto.api.v1.ConsumerTranslator(),
-            Consumer.class, org.candlepin.dto.api.v1.ConsumerDTO.class);
         this.registerTranslator(
             new org.candlepin.dto.api.v1.ConsumerTypeTranslator(),
             ConsumerType.class, org.candlepin.dto.api.v1.ConsumerTypeDTO.class);
@@ -152,7 +157,7 @@ public class StandardTranslator extends SimpleModelTranslator {
             new org.candlepin.dto.manifest.v1.CertificateSerialTranslator(),
             CertificateSerial.class, org.candlepin.dto.manifest.v1.CertificateSerialDTO.class);
         this.registerTranslator(
-            new org.candlepin.dto.manifest.v1.ConsumerTranslator(),
+            new org.candlepin.dto.manifest.v1.ConsumerTranslator(consumerTypeCurator),
             Consumer.class, org.candlepin.dto.manifest.v1.ConsumerDTO.class);
         this.registerTranslator(
             new org.candlepin.dto.manifest.v1.ConsumerTypeTranslator(),
@@ -188,7 +193,7 @@ public class StandardTranslator extends SimpleModelTranslator {
         // Rules framework translators
         /////////////////////////////////////////////
         this.registerTranslator(
-            new org.candlepin.dto.rules.v1.ConsumerTranslator(),
+            new org.candlepin.dto.rules.v1.ConsumerTranslator(consumerTypeCurator),
             Consumer.class, org.candlepin.dto.rules.v1.ConsumerDTO.class);
         this.registerTranslator(
             new org.candlepin.dto.rules.v1.ConsumerTypeTranslator(),

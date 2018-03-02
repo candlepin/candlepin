@@ -19,6 +19,9 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.rules.v1.ConsumerDTO;
 import org.candlepin.dto.rules.v1.EntitlementDTO;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
@@ -54,19 +57,21 @@ public class ComplianceRules {
     private StatusReasonMessageGenerator generator;
     private EventSink eventSink;
     private ConsumerCurator consumerCurator;
+    private ConsumerTypeCurator consumerTypeCurator;
     private RulesObjectMapper mapper;
     private ModelTranslator translator;
 
     @Inject
     public ComplianceRules(JsRunner jsRules, EntitlementCurator entCurator,
         StatusReasonMessageGenerator generator, EventSink eventSink, ConsumerCurator consumerCurator,
-        RulesObjectMapper mapper, ModelTranslator translator) {
+        ConsumerTypeCurator consumerTypeCurator, RulesObjectMapper mapper, ModelTranslator translator) {
 
         this.jsRules = jsRules;
         this.entCurator = entCurator;
         this.generator = generator;
         this.eventSink = eventSink;
         this.consumerCurator = consumerCurator;
+        this.consumerTypeCurator = consumerTypeCurator;
         this.mapper = mapper;
         this.translator = translator;
 
@@ -129,7 +134,7 @@ public class ComplianceRules {
     /**
      * Check compliance status for a consumer on a specific date.
      *
-     * @param c Consumer to check.
+     * @param consumer Consumer to check.
      * @param date Date to check compliance status for.
      * @param calculateCompliantUntil calculate how long the system will remain compliant (expensive)
      * @param updateConsumer whether or not to use consumerCurator.update
@@ -138,8 +143,8 @@ public class ComplianceRules {
      * @return Compliance status.
      */
     @SuppressWarnings("checkstyle:indentation")
-    public ComplianceStatus getStatus(Consumer c, Collection<Entitlement> newEntitlements, Date date, boolean
-        calculateCompliantUntil, boolean updateConsumer, boolean calculateProductComplianceDateRanges,
+    public ComplianceStatus getStatus(Consumer consumer, Collection<Entitlement> newEntitlements, Date date,
+        boolean calculateCompliantUntil, boolean updateConsumer, boolean calculateProductComplianceDateRanges,
         boolean currentCompliance) {
 
         if (date == null) {
@@ -147,28 +152,29 @@ public class ComplianceRules {
         }
 
         if (currentCompliance) {
-            updateEntsOnStart(c);
+            updateEntsOnStart(consumer);
         }
 
         Stream<EntitlementDTO> entStream = Stream.concat(
             newEntitlements != null ? newEntitlements.stream() : Stream.empty(),
-            c.getEntitlements() != null ? c.getEntitlements().stream() : Stream.empty())
+            consumer.getEntitlements() != null ? consumer.getEntitlements().stream() : Stream.empty())
                 .map(this.translator.getStreamMapper(Entitlement.class, EntitlementDTO.class));
 
         // Do not calculate compliance status for distributors and shares. It is prohibitively
         // expensive and meaningless
-        if (c.isManifestDistributor() || c.isShare()) {
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
+        if (ctype != null && (ctype.isManifest() || ctype.isType(ConsumerTypeEnum.SHARE))) {
             return new ComplianceStatus(new Date());
         }
 
         JsonJsContext args = new JsonJsContext(mapper);
-        args.put("consumer", this.translator.translate(c, ConsumerDTO.class));
+        args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
         args.put("entitlements", entStream.collect(Collectors.toSet()));
         args.put("ondate", date);
         args.put("calculateCompliantUntil", calculateCompliantUntil);
         args.put("calculateProductComplianceDateRanges", calculateProductComplianceDateRanges);
         args.put("log", log, false);
-        args.put("guestIds", c.getGuestIds());
+        args.put("guestIds", consumer.getGuestIds());
 
         // Convert the JSON returned into a ComplianceStatus object:
         String json = jsRules.runJsFunction(String.class, "get_status", args);
@@ -176,11 +182,11 @@ public class ComplianceRules {
             ComplianceStatus status = mapper.toObject(json, ComplianceStatus.class);
 
             for (ComplianceReason reason : status.getReasons()) {
-                generator.setMessage(c, reason, status.getDate());
+                generator.setMessage(consumer, reason, status.getDate());
             }
 
             if (currentCompliance) {
-                applyStatus(c, status, updateConsumer);
+                applyStatus(consumer, status, updateConsumer);
             }
 
             return status;

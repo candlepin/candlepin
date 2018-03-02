@@ -24,6 +24,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
@@ -75,6 +76,9 @@ public class ConsumerBindUtilTest {
     @Before
     public void init() throws Exception {
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
+
+        this.system = new ConsumerType(ConsumerTypeEnum.SYSTEM);
+        this.system.setId("test-ctype-" + TestUtil.randomInt());
 
         consumerBindUtil = new ConsumerBindUtil(
             this.entitler,

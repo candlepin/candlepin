@@ -52,6 +52,7 @@ public class QuantityRules {
 
     @Inject
     public QuantityRules(JsRunner jsRules, RulesObjectMapper mapper, ModelTranslator translator) {
+
         this.jsRules = jsRules;
         this.mapper = mapper;
         this.translator = translator;

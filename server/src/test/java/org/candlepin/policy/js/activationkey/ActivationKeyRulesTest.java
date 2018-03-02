@@ -22,6 +22,7 @@ import static org.mockito.Mockito.when;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.jackson.ProductCachedSerializationModule;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
@@ -60,6 +61,8 @@ public class ActivationKeyRulesTest {
     @Mock private RulesCurator rulesCuratorMock;
     @Mock private Provider<JsRunnerRequestCache> cacheProvider;
     @Mock private JsRunnerRequestCache cache;
+    @Mock private ConsumerTypeCurator mockConsumerTypeCurator;
+
     private I18n i18n;
     private JsRunnerProvider provider;
     private Owner owner = TestUtil.createOwner();
@@ -72,8 +75,7 @@ public class ActivationKeyRulesTest {
         i18n = I18nFactory.getI18n(getClass(), "org.candlepin.i18n.Messages", locale,
             I18nFactory.FALLBACK);
         // Load the default production rules:
-        InputStream is = this.getClass().getResourceAsStream(
-            RulesCurator.DEFAULT_RULES_FILE);
+        InputStream is = this.getClass().getResourceAsStream(RulesCurator.DEFAULT_RULES_FILE);
         Rules rules = new Rules(Util.readFile(is));
         when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
         when(rulesCuratorMock.getRules()).thenReturn(rules);
@@ -81,7 +83,7 @@ public class ActivationKeyRulesTest {
 
         provider = new JsRunnerProvider(rulesCuratorMock, cacheProvider);
         ProductCurator productCurator = mock(ProductCurator.class);
-        translator = new StandardTranslator();
+        translator = new StandardTranslator(mockConsumerTypeCurator);
         actKeyRules = new ActivationKeyRules(provider.get(), i18n,
                 new RulesObjectMapper(new ProductCachedSerializationModule(productCurator)), translator);
     }

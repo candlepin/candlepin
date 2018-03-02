@@ -60,7 +60,7 @@ import javax.inject.Provider;
 /**
  * HypervisorUpdateJobTest
  */
-public class HypervisorUpdateJobTest extends BaseJobTest{
+public class HypervisorUpdateJobTest extends BaseJobTest {
 
     private Owner owner;
     private Principal principal;
@@ -94,8 +94,11 @@ public class HypervisorUpdateJobTest extends BaseJobTest{
         subAdapter = mock(SubscriptionServiceAdapter.class);
         complianceRules = mock(ComplianceRules.class);
         when(owner.getId()).thenReturn("joe");
-        when(consumerTypeCurator.create(any(ConsumerType.class))).thenReturn(new ConsumerType(ConsumerTypeEnum
-            .HYPERVISOR));
+
+        ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.HYPERVISOR);
+        ctype.setId("test-ctype");
+
+        when(consumerTypeCurator.create(any(ConsumerType.class))).thenReturn(ctype);
         when(owner.getKey()).thenReturn("joe");
         when(principal.getUsername()).thenReturn("joe user");
 

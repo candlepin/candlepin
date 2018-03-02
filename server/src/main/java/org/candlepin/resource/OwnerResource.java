@@ -1127,6 +1127,7 @@ public class OwnerResource {
         for (Entitlement entitlement : entitlementsPage.getPageData()) {
             entitlementDTOs.add(this.translator.translate(entitlement, EntitlementDTO.class));
         }
+
         return entitlementDTOs;
     }
 
@@ -1760,7 +1761,7 @@ public class OwnerResource {
     public PoolDTO createPool(@PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @ApiParam(name = "pool", required = true) PoolDTO inputPoolDTO) {
 
-        log.info("Creating custom pool for owner {}: {}" + ownerKey, inputPoolDTO);
+        log.info("Creating custom pool for owner {}: {}", ownerKey, inputPoolDTO);
 
         Pool pool = new Pool();
 

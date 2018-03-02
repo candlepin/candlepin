@@ -19,7 +19,6 @@ import static org.mockito.Mockito.when;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
 import org.candlepin.common.exceptions.BadRequestException;
-import org.candlepin.dto.api.v1.ConsumerTypeDTO;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Owner;
 import org.candlepin.model.PermissionBlueprint;
@@ -28,6 +27,8 @@ import org.candlepin.model.User;
 
 import org.junit.Test;
 
+
+
 /**
  * PersonConsumerResourceCreationLiberalNameRules
  */
@@ -35,9 +36,8 @@ public class PersonConsumerResourceCreationLiberalNameRules extends
     ConsumerResourceCreationLiberalNameRules {
 
     @Override
-    public ConsumerType initSystem() {
-        ConsumerType systemtype = new ConsumerType(
-            ConsumerType.ConsumerTypeEnum.PERSON);
+    public ConsumerType initConsumerType() {
+        ConsumerType systemtype = new ConsumerType(ConsumerType.ConsumerTypeEnum.PERSON);
 
         // create an owner, an ownerperm, and roles for the user we provide
         // as coming from userService
@@ -52,11 +52,6 @@ public class PersonConsumerResourceCreationLiberalNameRules extends
 
         return systemtype;
 
-    }
-
-    @Override
-    public ConsumerTypeDTO initSystemDto() {
-        return this.modelTranslator.translate(initSystem(), ConsumerTypeDTO.class);
     }
 
     @Test

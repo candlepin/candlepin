@@ -333,7 +333,7 @@ public class TestingModules {
             install(new FactoryModuleBuilder().build(PreEntitlementRulesCheckOpFactory.class));
 
             // Bind model translator
-            bind(ModelTranslator.class).toInstance(new StandardTranslator());
+            bind(ModelTranslator.class).to(StandardTranslator.class).asEagerSingleton();
         }
     }
 }

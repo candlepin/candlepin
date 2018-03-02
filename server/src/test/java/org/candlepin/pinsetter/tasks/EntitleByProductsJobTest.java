@@ -52,8 +52,11 @@ public class EntitleByProductsJobTest extends BaseJobTest {
     public void init() {
         super.init();
         consumerUuid = "49bd6a8f-e9f8-40cc-b8d7-86cafd687a0e";
-        consumer = new Consumer("Test Consumer", "test-consumer", new Owner("test-owner"),
-                new ConsumerType("system"));
+
+        ConsumerType ctype = new ConsumerType("system");
+        ctype.setId("test-ctype");
+
+        consumer = new Consumer("Test Consumer", "test-consumer", new Owner("test-owner"), ctype);
         consumer.setUuid(consumerUuid);
         e = mock(Entitler.class);
     }

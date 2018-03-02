@@ -396,24 +396,42 @@ public class DatabaseTestFixture {
         return content;
     }
 
+    protected Consumer createConsumer(Owner owner, ConsumerType ctype) {
+        if (ctype == null) {
+            ctype = this.createConsumerType();
+        }
+
+        Consumer consumer = new Consumer("test-consumer", "test-user", owner, ctype);
+
+        return this.consumerCurator.create(consumer);
+    }
+
     protected Consumer createConsumer(Owner owner) {
-        ConsumerType type = new ConsumerType("test-consumer-type-" + TestUtil.randomInt());
-        Consumer c = new Consumer("test-consumer", "test-user", owner, type);
-        return persistConsumer(type, c);
+        return this.createConsumer(owner, null);
     }
 
     protected Consumer createDistributor(Owner owner) {
-        ConsumerType type = new ConsumerType("test-distributor-type-" + TestUtil.randomInt());
-        type.setManifest(true);
-        Consumer c = new Consumer("test-distributor", "test-user", owner, type);
-        return persistConsumer(type, c);
+        ConsumerType type = this.createConsumerType(true);
+        Consumer consumer = new Consumer("test-distributor", "test-user", owner, type);
+
+        return this.consumerCurator.create(consumer);
     }
 
-    private Consumer persistConsumer(ConsumerType type, Consumer consumer) {
-        consumerTypeCurator.create(type);
-        consumer.setType(type);
-        consumerCurator.create(consumer);
-        return consumer;
+    protected ConsumerType createConsumerType() {
+        return this.createConsumerType(false);
+    }
+
+    protected ConsumerType createConsumerType(boolean manifest) {
+        String label = "test-distributor-type-" + TestUtil.randomInt();
+
+        return this.createConsumerType(label, manifest);
+    }
+
+    protected ConsumerType createConsumerType(String label, boolean manifest) {
+        ConsumerType ctype = new ConsumerType(label);
+        ctype.setManifest(manifest);
+
+        return this.consumerTypeCurator.create(ctype);
     }
 
     protected Entitlement createEntitlement(Owner owner, Consumer consumer, Pool pool,

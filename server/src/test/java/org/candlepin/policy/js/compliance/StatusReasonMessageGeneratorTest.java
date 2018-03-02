@@ -55,8 +55,10 @@ public class StatusReasonMessageGeneratorTest {
             I18nFactory.FALLBACK);
         generator = new StatusReasonMessageGenerator(i18n);
         owner = new Owner("test");
+        ConsumerType ctype = new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM);
+        ctype.setId("test-ctype");
         consumer = new Consumer();
-        consumer.setType(new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM));
+        consumer.setType(ctype);
         ent1 = mockEntitlement(consumer, TestUtil.createProduct("id1", "Nonstacked Product"));
         ent1.setId("ent1");
         entStacked1 = mockBaseStackedEntitlement(consumer, "stack",
@@ -72,9 +74,7 @@ public class StatusReasonMessageGeneratorTest {
     public void testSocketsMessage() {
         ComplianceReason reason = buildReason("SOCKETS", buildGeneralAttributes("8", "4"));
         generator.setMessage(consumer, reason, new Date());
-        assertEquals(
-            "Only supports 4 of 8 sockets.",
-            reason.getMessage());
+        assertEquals("Only supports 4 of 8 sockets.", reason.getMessage());
     }
 
     @Test
