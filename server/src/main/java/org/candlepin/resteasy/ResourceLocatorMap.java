@@ -69,7 +69,7 @@ public class ResourceLocatorMap implements Map<Method, ResourceLocator> {
     @Inject
     public ResourceLocatorMap(Injector injector) {
         // Maintain the insertion order for nice output in debug statement
-        internalMap = new LinkedHashMap<Method, ResourceLocator>();
+        internalMap = new LinkedHashMap<>();
         this.injector = injector;
     }
 
@@ -139,7 +139,7 @@ public class ResourceLocatorMap implements Map<Method, ResourceLocator> {
             throw new IllegalStateException("This map has already been initialized.");
         }
 
-        List<Binding<?>> rootResourceBindings = new ArrayList<Binding<?>>();
+        List<Binding<?>> rootResourceBindings = new ArrayList<>();
         for (final Binding<?> binding : injector.getBindings().values()) {
             final Type type = binding.getKey().getTypeLiteral().getType();
             if (type instanceof Class) {

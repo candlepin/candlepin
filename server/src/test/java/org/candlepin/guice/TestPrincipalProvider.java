@@ -42,7 +42,7 @@ public class TestPrincipalProvider extends PrincipalProvider {
         TestPrincipalProviderSetter principalSingleton = TestPrincipalProviderSetter.get();
         Principal principal = principalSingleton.getPrincipal();
         if (principal == null) {
-            List<Permission> permissions = new ArrayList<Permission>();
+            List<Permission> permissions = new ArrayList<>();
             permissions.add(new OwnerPermission(new Owner(OWNER_NAME), Access.ALL));
 
             principal = new UserPrincipal("Default User", permissions, true);

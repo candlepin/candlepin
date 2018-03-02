@@ -71,7 +71,7 @@ public class SSLAuth extends ConsumerAuth {
     private String parseUuid(X509Certificate cert) {
         X500Principal x500 = cert.getSubjectX500Principal();
         String dn = x500.getName();
-        Map<String, String> dnAttributes = new HashMap<String, String>();
+        Map<String, String> dnAttributes = new HashMap<>();
 
         for (String attribute : dn.split(",")) {
             attribute = attribute.trim();

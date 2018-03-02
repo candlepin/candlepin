@@ -256,7 +256,7 @@ public class JobResource {
     }
 
     private String prettyPrintJobs(String... jobs) {
-        List<String> jobNames = new ArrayList<String>();
+        List<String> jobNames = new ArrayList<>();
         for (String job : jobs) {
             jobNames.add(StringUtils.substringAfterLast(job, "."));
         }

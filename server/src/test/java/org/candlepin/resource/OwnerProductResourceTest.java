@@ -169,7 +169,7 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
         when(oc.lookupByKey(eq("owner"))).thenReturn(o);
         when(opc.getProductById(eq(o), eq("10"))).thenReturn(p);
 
-        Set<Subscription> subs = new HashSet<Subscription>();
+        Set<Subscription> subs = new HashSet<>();
         Subscription s = mock(Subscription.class);
         subs.add(s);
         when(pc.productHasSubscriptions(eq(o), eq(p))).thenReturn(true);

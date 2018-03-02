@@ -148,7 +148,7 @@ public class Exporter {
     }
 
     public File getFullExport(Consumer consumer) throws ExportCreationException {
-        return getFullExport(consumer, null, null, null, new HashMap<String, String>());
+        return getFullExport(consumer, null, null, null, new HashMap<>());
     }
 
     /**
@@ -488,7 +488,7 @@ public class Exporter {
         File productDir = new File(baseDir.getCanonicalPath(), "products");
         productDir.mkdir();
 
-        Map<String, Product> products = new HashMap<String, Product>();
+        Map<String, Product> products = new HashMap<>();
         for (Entitlement entitlement : consumer.getEntitlements()) {
             Pool pool = entitlement.getPool();
 

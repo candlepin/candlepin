@@ -70,7 +70,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @Inject private Configuration config;
     @Inject private FactValidator factValidator;
 
-    private Map<String, Consumer> cachedHosts = new HashMap<String, Consumer>();
+    private Map<String, Consumer> cachedHosts = new HashMap<>();
 
     public ConsumerCurator() {
         super(Consumer.class);
@@ -210,7 +210,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         // We need to filter down to only the most recently registered consumer with
         // each guest ID.
 
-        List<String> consumerUuids = new LinkedList<String>();
+        List<String> consumerUuids = new LinkedList<>();
 
         Iterable<List<String>> blocks = Iterables.partition(possibleGuestIds, getInBlockSize());
 
@@ -487,7 +487,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      */
     @Transactional
     public Set<Consumer> bulkUpdate(Set<Consumer> consumers, boolean flush) {
-        Set<Consumer> toReturn = new HashSet<Consumer>();
+        Set<Consumer> toReturn = new HashSet<>();
         for (Consumer toUpdate : consumers) {
             toReturn.add(update(toUpdate, flush));
         }
@@ -585,10 +585,10 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             "ORDER BY gid.updated DESC";
 
         TypedQuery<GuestId> query = this.getEntityManager().createQuery(hql, GuestId.class);
-        Map<String, GuestId> output = new HashMap<String, GuestId>();
+        Map<String, GuestId> output = new HashMap<>();
 
         for (List<String> block : this.partition(guestIds)) {
-            List<String> sanitized = new ArrayList<String>(block.size());
+            List<String> sanitized = new ArrayList<>(block.size());
 
             for (String guestId : block) {
                 if (guestId != null && !guestId.isEmpty() && !output.containsKey(guestId)) {
@@ -635,7 +635,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
                 "The system with UUID {0} is a virtual guest. It does not have guests.",
                 consumer.getUuid()));
         }
-        List<Consumer> guests = new ArrayList<Consumer>();
+        List<Consumer> guests = new ArrayList<>();
         List<GuestId> consumerGuests = consumer.getGuestIds();
         if (consumerGuests != null) {
             for (GuestId cg : consumerGuests) {
@@ -804,7 +804,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         }
         if (hypervisorIds != null && !hypervisorIds.isEmpty()) {
             // Cannot use Restrictions.in here because hypervisorId is case insensitive
-            Set<Criterion> ors = new HashSet<Criterion>();
+            Set<Criterion> ors = new HashSet<>();
             for (String hypervisorId : hypervisorIds) {
                 ors.add(Restrictions.eq("hvsr.hypervisorId", hypervisorId.toLowerCase()));
             }

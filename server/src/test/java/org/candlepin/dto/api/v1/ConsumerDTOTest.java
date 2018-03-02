@@ -58,35 +58,35 @@ public class ConsumerDTOTest extends AbstractDTOTest<ConsumerDTO> {
         cert.setCert("cert_cert");
         cert.setSerial(new CertificateSerialDTO());
 
-        Map<String, String> facts = new HashMap<String, String>();
+        Map<String, String> facts = new HashMap<>();
         for (int i = 0; i < 5; ++i) {
             facts.put("fact-" + i, "value-" + i);
         }
 
-        Set<ConsumerInstalledProductDTO> installedProducts = new HashSet<ConsumerInstalledProductDTO>();
+        Set<ConsumerInstalledProductDTO> installedProducts = new HashSet<>();
         for (int i = 0; i < 5; ++i) {
             ConsumerInstalledProductDTO installedProductDTO = cipDTOTest.getPopulatedDTOInstance();
             installedProducts.add(installedProductDTO.setId("cip-" + i));
         }
 
-        Set<CapabilityDTO> capabilityDTOS = new HashSet<CapabilityDTO>();
+        Set<CapabilityDTO> capabilityDTOS = new HashSet<>();
         for (int i = 0; i < 5; ++i) {
             CapabilityDTO capabilityDTO = capabilityDTOTest.getPopulatedDTOInstance();
             capabilityDTOS.add(capabilityDTO.setId("capability-" + i));
         }
 
-        Set<String> contentTags = new HashSet<String>();
+        Set<String> contentTags = new HashSet<>();
         for (int i = 0; i < 5; ++i) {
             contentTags.add("content-tag-" + i);
         }
 
-        List<GuestIdDTO> guestIdDTOS = new ArrayList<GuestIdDTO>();
+        List<GuestIdDTO> guestIdDTOS = new ArrayList<>();
         for (int i = 0; i < 5; ++i) {
             GuestIdDTO guestIdDTO = guestIdDTOTest.getPopulatedDTOInstance();
             guestIdDTOS.add(guestIdDTO.setId("guest-Id-" + i));
         }
 
-        this.values = new HashMap<String, Object>();
+        this.values = new HashMap<>();
         this.values.put("Id", "test-id");
         this.values.put("Uuid", "test-uuid");
         this.values.put("Name", "test-name");

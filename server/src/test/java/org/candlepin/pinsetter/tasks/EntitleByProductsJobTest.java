@@ -78,7 +78,7 @@ public class EntitleByProductsJobTest extends BaseJobTest {
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
 
-        List<Entitlement> ents = new ArrayList<Entitlement>();
+        List<Entitlement> ents = new ArrayList<>();
         when(e.bindByProducts(eq(pids), eq(consumerUuid),
             eq((Date) null), eq((Collection<String>) null))).thenReturn(ents);
 

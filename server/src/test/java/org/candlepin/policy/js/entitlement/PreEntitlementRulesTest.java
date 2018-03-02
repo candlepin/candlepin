@@ -62,7 +62,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         product.setAttribute(Product.Attributes.CORES, "10");
         Pool pool = createPool(owner, product);
 
-        consumer.setFacts(new HashMap<String, String>());
+        consumer.setFacts(new HashMap<>());
         consumer.setFact("cpu.cpu_socket(s)", "1");
         consumer.setFact("cpu.core(s)_per_socket", "10");
 
@@ -79,7 +79,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         product.setAttribute(Product.Attributes.CORES, "10");
         Pool pool = createPool(owner, product);
 
-        consumer.setFacts(new HashMap<String, String>());
+        consumer.setFacts(new HashMap<>());
         consumer.setFact("cpu.cpu_socket(s)", "2");
         consumer.setFact("cpu.core(s)_per_socket", "10");
 
@@ -98,7 +98,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         product.setAttribute(Product.Attributes.RAM, "16");
         Pool pool = createPool(owner, product);
 
-        consumer.setFacts(new HashMap<String, String>());
+        consumer.setFacts(new HashMap<>());
         consumer.setFact("memory.memtotal", "16777216");
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
@@ -114,7 +114,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         product.setAttribute(Product.Attributes.RAM, "10");
         Pool pool = createPool(owner, product);
 
-        consumer.setFacts(new HashMap<String, String>());
+        consumer.setFacts(new HashMap<>());
         consumer.setFact("memory.memtotal", "16777216");
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
@@ -132,7 +132,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         product.setAttribute(Product.Attributes.SOCKETS, "2");
         Pool pool = createPool(owner, product);
 
-        consumer.setFacts(new HashMap<String, String>());
+        consumer.setFacts(new HashMap<>());
         consumer.setFact("cpu.cpu_socket(s)", "1");
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
@@ -148,7 +148,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         product.setAttribute(Product.Attributes.SOCKETS, "2");
         Pool pool = createPool(owner, product);
 
-        consumer.setFacts(new HashMap<String, String>());
+        consumer.setFacts(new HashMap<>());
         consumer.setFact("cpu.cpu_socket(s)", "4");
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
@@ -252,7 +252,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         Pool pool = setupArchTest("arch", "x86_64", "uname.machine", "x86_64");
 
         // Get rid of the facts that setupTest set.
-        consumer.setFacts(new HashMap<String, String>());
+        consumer.setFacts(new HashMap<>());
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
@@ -412,7 +412,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
     }
 
     private List<PoolQuantity> createPoolQuantities(Integer quantity, Pool... pools) {
-        List<PoolQuantity> poolQuantities = new ArrayList<PoolQuantity>();
+        List<PoolQuantity> poolQuantities = new ArrayList<>();
         for (Pool pool : pools) {
             poolQuantities.add(new PoolQuantity(pool, quantity));
         }
@@ -425,7 +425,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         Pool pool = setupArchTest("sockets", "2", "cpu.cpu_socket(s)", "2");
 
         // Get rid of the facts that setupTest set.
-        consumer.setFacts(new HashMap<String, String>());
+        consumer.setFacts(new HashMap<>());
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
@@ -440,7 +440,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         Pool pool = setupArchTest("sockets", "0", "cpu.cpu_socket(s)", "2");
 
         // Get rid of the facts that setupTest set.
-        consumer.setFacts(new HashMap<String, String>());
+        consumer.setFacts(new HashMap<>());
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
@@ -800,7 +800,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
     public void testBindForSameProductNotAllowedList() {
         Product product = TestUtil.createProduct(productId, "A product for testing");
         Pool pool = createPool(owner, product);
-        List<Pool> pools = new LinkedList<Pool>();
+        List<Pool> pools = new LinkedList<>();
         pools.add(pool);
 
         Entitlement e = new Entitlement(pool, consumer, 1);
@@ -816,11 +816,11 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         product.setAttribute(Product.Attributes.CORES, "10");
         Pool pool = createPool(owner, product);
 
-        consumer.setFacts(new HashMap<String, String>());
+        consumer.setFacts(new HashMap<>());
         consumer.setFact("cpu.cpu_socket(s)", "1");
         consumer.setFact("cpu.core(s)_per_socket", "10");
 
-        List<Pool> pools = new LinkedList<Pool>();
+        List<Pool> pools = new LinkedList<>();
         pools.add(pool);
         List<Pool> filtered = enforcer.filterPools(consumer, pools, false);
 

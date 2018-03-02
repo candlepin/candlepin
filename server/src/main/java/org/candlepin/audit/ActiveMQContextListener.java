@@ -77,7 +77,7 @@ public class ActiveMQContextListener {
             Configuration config = new ConfigurationImpl();
 
             HashSet<TransportConfiguration> transports =
-                new HashSet<TransportConfiguration>();
+                new HashSet<>();
             transports.add(new TransportConfiguration(InVMAcceptorFactory.class
                 .getName()));
             config.setAcceptorConfigurations(transports);
@@ -101,7 +101,7 @@ public class ActiveMQContextListener {
             config.setLargeMessagesDirectory(new File(baseDir, "largemsgs").toString());
             config.setPagingDirectory(new File(baseDir, "paging").toString());
 
-            Map<String, AddressSettings> settings = new HashMap<String, AddressSettings>();
+            Map<String, AddressSettings> settings = new HashMap<>();
             AddressSettings pagingConfig = new AddressSettings();
 
             String addressPolicyString =

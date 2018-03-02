@@ -74,7 +74,7 @@ public class ResourceSwaggerCheck extends AbstractCheck {
                 }
                 else if (insideResourceClass &&
                     (ast.getText().equals(restGetAnnotationName) ||
-                        ast.getText().equals(restPutAnnotationName))) {
+                    ast.getText().equals(restPutAnnotationName))) {
                     insideResourceMethod = true;
                 }
             }

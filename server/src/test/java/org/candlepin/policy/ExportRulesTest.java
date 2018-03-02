@@ -90,13 +90,13 @@ public class ExportRulesTest {
         Pool pool = mock(Pool.class);
         Product product = mock(Product.class);
 
-        Map<String, String> attributes = new HashMap<String, String>();
+        Map<String, String> attributes = new HashMap<>();
         attributes.put(Pool.Attributes.DERIVED_POOL, "true");
 
         when(entitlement.getPool()).thenReturn(pool);
         when(entitlement.getConsumer()).thenReturn(consumer);
         when(pool.getProductId()).thenReturn("12345");
-        when(product.getAttributes()).thenReturn(new HashMap<String, String>());
+        when(product.getAttributes()).thenReturn(new HashMap<>());
         when(pool.getAttributes()).thenReturn(attributes);
         when(consumer.getType()).thenReturn(consumerType);
         when(consumerType.getLabel()).thenReturn("system");
@@ -115,8 +115,8 @@ public class ExportRulesTest {
         when(entitlement.getPool()).thenReturn(pool);
         when(entitlement.getConsumer()).thenReturn(consumer);
         when(pool.getProductId()).thenReturn("12345");
-        when(product.getAttributes()).thenReturn(new HashMap<String, String>());
-        when(pool.getAttributes()).thenReturn(new HashMap<String, String>());
+        when(product.getAttributes()).thenReturn(new HashMap<>());
+        when(pool.getAttributes()).thenReturn(new HashMap<>());
         when(consumer.getType()).thenReturn(consumerType);
         when(consumerType.getLabel()).thenReturn("candlepin");
 

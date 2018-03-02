@@ -38,7 +38,7 @@ public class DynamicPropertyFilter extends CheckableBeanPropertyFilter {
         DynamicFilterData filterData = ResteasyProviderFactory.getContextData(DynamicFilterData.class);
 
         if (filterData != null) {
-            List<String> path = new ArrayList<String>(10);
+            List<String> path = new ArrayList<>(10);
             path.clear();
             path.add(0, writer.getName());
 

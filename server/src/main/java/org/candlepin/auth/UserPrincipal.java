@@ -97,7 +97,7 @@ public class UserPrincipal extends Principal {
     }
 
     public List<String> getOwnerIds() {
-        List<String> ownerIds = new LinkedList<String>();
+        List<String> ownerIds = new LinkedList<>();
 
         for (Owner owner : getOwners()) {
             ownerIds.add(owner.getId());
@@ -107,7 +107,7 @@ public class UserPrincipal extends Principal {
     }
 
     public List<String> getOwnerKeys() {
-        List<String> ownerKeys = new LinkedList<String>();
+        List<String> ownerKeys = new LinkedList<>();
 
         for (Owner owner : getOwners()) {
             ownerKeys.add(owner.getKey());
@@ -120,7 +120,7 @@ public class UserPrincipal extends Principal {
      * @return list of owners this principal has some level of access to.
      */
     public List<Owner> getOwners() {
-        List<Owner> owners = new LinkedList<Owner>();
+        List<Owner> owners = new LinkedList<>();
 
         for (Permission permission : permissions) {
             Owner o = permission.getOwner();

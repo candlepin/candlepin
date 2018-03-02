@@ -36,7 +36,7 @@ import java.util.Map;
  */
 public class BindChain {
     private BindContext context;
-    private List<BindOperation> operations = new ArrayList<BindOperation>();
+    private List<BindOperation> operations = new ArrayList<>();
     private static Logger log = LoggerFactory.getLogger(BindChain.class);
 
     @Inject

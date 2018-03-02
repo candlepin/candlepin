@@ -30,7 +30,7 @@ public class HypervisorIdDTOTest extends AbstractDTOTest<HypervisorIdDTO> {
     public HypervisorIdDTOTest() {
         super(HypervisorIdDTO.class);
 
-        this.values = new HashMap<String, Object>();
+        this.values = new HashMap<>();
         this.values.put("Id", "test_value");
         this.values.put("HypervisorId", "test_value");
         this.values.put("ReporterId", "test_value");

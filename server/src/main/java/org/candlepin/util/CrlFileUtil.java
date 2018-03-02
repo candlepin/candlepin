@@ -98,7 +98,7 @@ public class CrlFileUtil {
     public void initializeCRLFile(File file, Collection<BigInteger> revoke) throws IOException {
         FileOutputStream output = null;
 
-        List<X509CRLEntryWrapper> entries = new LinkedList<X509CRLEntryWrapper>();
+        List<X509CRLEntryWrapper> entries = new LinkedList<>();
 
         for (BigInteger serial : revoke) {
             entries.add(new X509CRLEntryWrapper(serial, new Date()));
@@ -301,7 +301,7 @@ public class CrlFileUtil {
 
     @Transactional
     public boolean syncCRLWithDB(File file) throws IOException {
-        List<BigInteger> revoke = new LinkedList<BigInteger>();
+        List<BigInteger> revoke = new LinkedList<>();
         List<CertificateSerial> serials = this.certificateSerialCurator
             .retrieveTobeCollectedSerials()
             .list();
@@ -311,7 +311,7 @@ public class CrlFileUtil {
             serial.setCollected(true);
         }
 
-        List<BigInteger> unrevoke = new LinkedList<BigInteger>();
+        List<BigInteger> unrevoke = new LinkedList<>();
         for (CertificateSerial serial : this.certificateSerialCurator.getExpiredSerials()) {
             unrevoke.add(serial.getSerial());
         }

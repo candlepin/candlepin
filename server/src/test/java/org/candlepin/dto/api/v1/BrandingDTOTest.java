@@ -30,7 +30,7 @@ public class BrandingDTOTest extends AbstractDTOTest<BrandingDTO> {
     public BrandingDTOTest() {
         super(BrandingDTO.class);
 
-        this.values = new HashMap<String, Object>();
+        this.values = new HashMap<>();
         this.values.put("ProductId", "test-product-id");
         this.values.put("Name", "test-name");
         this.values.put("Type", "test-type");

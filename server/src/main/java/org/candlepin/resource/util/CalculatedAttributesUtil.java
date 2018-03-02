@@ -47,7 +47,7 @@ public class CalculatedAttributesUtil {
     }
 
     public Map<String, String> buildCalculatedAttributes(Pool pool, Date date) {
-        Map<String, String> attrMap = new HashMap<String, String>();
+        Map<String, String> attrMap = new HashMap<>();
         PoolComplianceType type = pool.getComplianceType();
 
         // TODO: Check that this doesn't break our translation stuff. We may need to have the
@@ -63,7 +63,7 @@ public class CalculatedAttributesUtil {
         for (Pool pool : poolList) {
             Map<String, String> attrMap = pool.getCalculatedAttributes();
             if (attrMap == null) {
-                attrMap = new HashMap<String, String>();
+                attrMap = new HashMap<>();
                 pool.setCalculatedAttributes(attrMap);
             }
             attrMap.putAll(this.buildCalculatedAttributes(pool, date));
@@ -71,7 +71,7 @@ public class CalculatedAttributesUtil {
     }
 
     public void setQuantityAttributes(Pool pool, Consumer c, Date date) {
-        List<Pool> poolList = new ArrayList<Pool>();
+        List<Pool> poolList = new ArrayList<>();
         poolList.add(pool);
         setQuantityAttributes(poolList, c, date);
     }
@@ -88,7 +88,7 @@ public class CalculatedAttributesUtil {
 
             Map<String, String> attrMap = p.getCalculatedAttributes();
             if (attrMap == null) {
-                attrMap = new HashMap<String, String>();
+                attrMap = new HashMap<>();
                 p.setCalculatedAttributes(attrMap);
             }
 

@@ -104,7 +104,7 @@ public class EntitlerJobTest extends BaseJobTest{
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
 
-        List<Entitlement> ents = new ArrayList<Entitlement>();
+        List<Entitlement> ents = new ArrayList<>();
         Pool p = new Pool();
         p.setId(pool);
         Entitlement ent = new Entitlement();
@@ -183,7 +183,7 @@ public class EntitlerJobTest extends BaseJobTest{
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
 
-        HashMap<String, ValidationResult> mapResult = new HashMap<String, ValidationResult>();
+        HashMap<String, ValidationResult> mapResult = new HashMap<>();
         ValidationResult result = new ValidationResult();
         result.addError("rulefailed.no.entitlements.available");
         mapResult.put("hello", result);

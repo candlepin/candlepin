@@ -42,7 +42,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 
@@ -121,27 +120,6 @@ public class UtilTest {
         List<String> sub = Util.subList(strings, -3);
         assertNotNull(sub);
         assertEquals(0, sub.size());
-    }
-
-    @Test
-    public void newMap() {
-        Map<String, Object> map = Util.newMap();
-        assertNotNull(map);
-        assertEquals(0, map.size());
-    }
-
-    @Test
-    public void newList() {
-        List<String> strings = Util.newList();
-        assertNotNull(strings);
-        assertEquals(0, strings.size());
-    }
-
-    @Test
-    public void newSet() {
-        Set<String> set = Util.newSet();
-        assertNotNull(set);
-        assertEquals(0, set.size());
     }
 
     @Test
@@ -391,7 +369,7 @@ public class UtilTest {
             unique[i] = Util.generateUniqueLong();
         }
 
-        Set<Long> nodupes = new HashSet<Long>();
+        Set<Long> nodupes = new HashSet<>();
         for (int i = 0; i < unique.length; i++) {
             nodupes.add(unique[i]);
         }

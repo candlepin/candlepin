@@ -33,7 +33,7 @@ public class CdnDTOTest extends AbstractDTOTest<CdnDTO> {
         CertificateDTO cdnCertificate = new CertificateDTO();
         cdnCertificate.setId("test_id");
 
-        this.values = new HashMap<String, Object>();
+        this.values = new HashMap<>();
         this.values.put("Id", "test_id");
         this.values.put("Label", "test_label");
         this.values.put("Name", "test_value");

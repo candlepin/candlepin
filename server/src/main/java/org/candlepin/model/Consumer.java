@@ -237,9 +237,9 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         this.username = userName;
         this.owner = owner;
         this.type = type;
-        this.facts = new HashMap<String, String>();
-        this.installedProducts = new HashSet<ConsumerInstalledProduct>();
-        this.guestIds = new ArrayList<GuestId>();
+        this.facts = new HashMap<>();
+        this.installedProducts = new HashSet<>();
+        this.guestIds = new ArrayList<>();
         this.autoheal = true;
         this.serviceLevel = "";
         this.entitlementCount = 0L;
@@ -249,7 +249,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         // This constructor is for creating a new Consumer in the DB, so we'll
         // generate a UUID at this point.
         this.ensureUUID();
-        this.entitlements = new HashSet<Entitlement>();
+        this.entitlements = new HashSet<>();
         this.setEntitlementCount(0L);
     }
 
@@ -454,7 +454,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
      */
     public void setFact(String name, String value) {
         if (facts == null) {
-            facts = new HashMap<String, String>();
+            facts = new HashMap<>();
         }
         this.facts.put(name, value);
     }
@@ -569,7 +569,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     public void addInstalledProduct(ConsumerInstalledProduct installed) {
         if (installedProducts == null) {
-            installedProducts = new HashSet<ConsumerInstalledProduct>();
+            installedProducts = new HashSet<>();
         }
 
         installed.setConsumer(this);
@@ -602,7 +602,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     public void addGuestId(GuestId guestId) {
         if (guestIds == null) {
-            guestIds = new ArrayList<GuestId>();
+            guestIds = new ArrayList<>();
         }
         guestId.setConsumer(this);
         guestIds.add(guestId);
@@ -664,7 +664,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
             return;
         }
         if (this.capabilities == null) {
-            this.capabilities = new HashSet<ConsumerCapability>();
+            this.capabilities = new HashSet<>();
         }
         if (!this.capabilities.equals(capabilities)) {
             this.capabilities.clear();

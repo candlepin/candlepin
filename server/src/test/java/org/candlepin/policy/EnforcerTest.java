@@ -247,7 +247,7 @@ public class EnforcerTest extends DatabaseTestFixture {
     }
 
     private EntitlementRules.Rule rule(String name, int priority, String... attrs) {
-        Set<String> attributes = new HashSet<String>();
+        Set<String> attributes = new HashSet<>();
         for (String attr : attrs) {
             attributes.add(attr);
         }
@@ -255,7 +255,7 @@ public class EnforcerTest extends DatabaseTestFixture {
     }
 
     private Set<EntitlementRules.Rule> rules(EntitlementRules.Rule... rules) {
-        return new HashSet<EntitlementRules.Rule>(Arrays.asList(rules));
+        return new HashSet<>(Arrays.asList(rules));
     }
 
     private Date expiryDate(int year, int month, int day) {

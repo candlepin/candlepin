@@ -227,7 +227,7 @@ public class EntitlementDTO extends TimestampedCandlepinDTO<EntitlementDTO> impl
      *  the certificates associated with this key, or null if the certificates have not yet been defined
      */
     public Set<CertificateDTO> getCertificates() {
-        return this.certificates != null ? new SetView<CertificateDTO>(this.certificates) : null;
+        return this.certificates != null ? new SetView<>(this.certificates) : null;
     }
 
     /**
@@ -245,7 +245,7 @@ public class EntitlementDTO extends TimestampedCandlepinDTO<EntitlementDTO> impl
     public EntitlementDTO setCertificates(Set<CertificateDTO> certificates) {
         if (certificates != null) {
             if (this.certificates == null) {
-                this.certificates = new HashSet<CertificateDTO>();
+                this.certificates = new HashSet<>();
             }
             else {
                 this.certificates.clear();
@@ -282,7 +282,7 @@ public class EntitlementDTO extends TimestampedCandlepinDTO<EntitlementDTO> impl
         }
 
         if (this.certificates == null) {
-            this.certificates = new HashSet<CertificateDTO>();
+            this.certificates = new HashSet<>();
         }
 
         return this.certificates.add(certificate);

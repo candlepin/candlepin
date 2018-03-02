@@ -241,14 +241,14 @@ public class ConsumerResourceTest {
     public void testGetCertSerials() {
         Consumer consumer = createConsumer();
         List<EntitlementCertificate> certificates = createEntitlementCertificates();
-        List<Long> serialIds = new ArrayList<Long>();
+        List<Long> serialIds = new ArrayList<>();
         for (EntitlementCertificate ec : certificates) {
             serialIds.add(ec.getSerial().getId());
         }
 
         when(mockedEntitlementCertServiceAdapter.listEntitlementSerialIds(consumer)).thenReturn(serialIds);
         when(mockedConsumerCurator.verifyAndLookupConsumer(consumer.getUuid())).thenReturn(consumer);
-        when(mockedEntitlementCurator.listByConsumer(consumer)).thenReturn(new ArrayList<Entitlement>());
+        when(mockedEntitlementCurator.listByConsumer(consumer)).thenReturn(new ArrayList<>());
 
         ConsumerResource consumerResource = new ConsumerResource(
             mockedConsumerCurator, null, null, null, null, mockedEntitlementCurator, null,
@@ -482,7 +482,7 @@ public class ConsumerResourceTest {
         Entitler e = mock(Entitler.class);
         ConsumerCurator cc = mock(ConsumerCurator.class);
         ConsumerInstalledProduct cip = mock(ConsumerInstalledProduct.class);
-        Set<ConsumerInstalledProduct> products = new HashSet<ConsumerInstalledProduct>();
+        Set<ConsumerInstalledProduct> products = new HashSet<>();
         products.add(cip);
 
         when(cip.getProductId()).thenReturn("product-foo");
@@ -534,7 +534,7 @@ public class ConsumerResourceTest {
         EntitlementCurator entitlementCurator = mock(EntitlementCurator.class);
 
         when(entitlementCurator.listByConsumerAndPoolId(eq(consumer), any(String.class)))
-            .thenReturn(new ArrayList<Entitlement>());
+            .thenReturn(new ArrayList<>());
 
         ConsumerResource consumerResource = new ConsumerResource(consumerCurator, null,
             null, null, null, entitlementCurator, null, null, i18n, null, null, null,
@@ -680,7 +680,7 @@ public class ConsumerResourceTest {
         when(c.getUuid()).thenReturn("1");
         when(c2.getUuid()).thenReturn("2");
 
-        List<Consumer> consumers = new ArrayList<Consumer>();
+        List<Consumer> consumers = new ArrayList<>();
         consumers.add(c);
         consumers.add(c2);
 
@@ -688,7 +688,7 @@ public class ConsumerResourceTest {
         when(cqmock.list()).thenReturn(consumers);
         when(cqmock.iterator()).thenReturn(consumers.iterator());
 
-        List<String> uuids = new ArrayList<String>();
+        List<String> uuids = new ArrayList<>();
         uuids.add("1");
         uuids.add("2");
         when(mockedConsumerCurator.findByUuids(eq(uuids))).thenReturn(cqmock);
@@ -750,7 +750,7 @@ public class ConsumerResourceTest {
             null, null, this.factValidator, new ConsumerTypeValidator(null, null),
             consumerEnricher, migrationProvider, mockTranslator);
 
-        ArrayList<Consumer> consumers = new ArrayList<Consumer>();
+        ArrayList<Consumer> consumers = new ArrayList<>();
 
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
         when(cqmock.list()).thenReturn(consumers);
@@ -772,7 +772,7 @@ public class ConsumerResourceTest {
             null, null, null, null, this.factValidator,
             null, consumerEnricher, migrationProvider, translator);
 
-        ArrayList<Consumer> consumers = new ArrayList<Consumer>();
+        ArrayList<Consumer> consumers = new ArrayList<>();
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
         when(cqmock.list()).thenReturn(consumers);
         when(cqmock.iterator()).thenReturn(consumers.iterator());
@@ -794,7 +794,7 @@ public class ConsumerResourceTest {
             null, null, null, null, null, null, null, null, null, null, this.config, null, null, null, null,
             null, null, this.factValidator, null, consumerEnricher, migrationProvider, translator);
 
-        cr.list(null, null, null, new ArrayList<String>(), null, null, null);
+        cr.list(null, null, null, new ArrayList<>(), null, null, null);
     }
 
     @Test
@@ -806,7 +806,7 @@ public class ConsumerResourceTest {
             null, null, this.factValidator, new ConsumerTypeValidator(null, null),
             consumerEnricher, migrationProvider, mockTranslator);
 
-        ArrayList<Consumer> consumers = new ArrayList<Consumer>();
+        ArrayList<Consumer> consumers = new ArrayList<>();
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
         when(cqmock.list()).thenReturn(consumers);
         when(cqmock.iterator()).thenReturn(consumers.iterator());
@@ -817,7 +817,7 @@ public class ConsumerResourceTest {
             any(List.class), any(List.class), any(List.class))).thenReturn(cqmock);
         when(mockTranslator.translateQuery(eq(cqmock), eq(ConsumerDTO.class))).thenReturn(cqmock);
 
-        List<String> uuids = new ArrayList<String>();
+        List<String> uuids = new ArrayList<>();
         uuids.add("swiftuuid");
         List<ConsumerDTO> result = cr.list(null, null, null, uuids, null, null, null).list();
         assertEquals(consumers, result);
@@ -830,7 +830,7 @@ public class ConsumerResourceTest {
 
         when(mockedEntitlementCertServiceAdapter.listForConsumer(consumer)) .thenReturn(certificates);
         when(mockedConsumerCurator.verifyAndLookupConsumer(consumer.getUuid())).thenReturn(consumer);
-        when(mockedEntitlementCurator.listByConsumer(consumer)).thenReturn(new ArrayList<Entitlement>());
+        when(mockedEntitlementCurator.listByConsumer(consumer)).thenReturn(new ArrayList<>());
 
         ConsumerResource consumerResource = Mockito.spy(new ConsumerResource(
             mockedConsumerCurator, null, null, null, null, mockedEntitlementCurator, null,
@@ -851,7 +851,7 @@ public class ConsumerResourceTest {
 
         when(mockedEntitlementCertServiceAdapter.listForConsumer(consumer)) .thenReturn(certificates);
         when(mockedConsumerCurator.verifyAndLookupConsumer(consumer.getUuid())).thenReturn(consumer);
-        when(mockedEntitlementCurator.listByConsumer(consumer)).thenReturn(new ArrayList<Entitlement>());
+        when(mockedEntitlementCurator.listByConsumer(consumer)).thenReturn(new ArrayList<>());
 
         GuestMigration migrationSpy = Mockito.spy(testMigration);
         migrationProvider = Providers.of(migrationSpy);
@@ -864,7 +864,7 @@ public class ConsumerResourceTest {
             migrationProvider, translator));
 
 
-        Set<Long> serials = new HashSet<Long>();
+        Set<Long> serials = new HashSet<>();
         List<CertificateDTO> certs = consumerResource
             .getEntitlementCertificates(consumer.getUuid(), "123");
         verify(consumerResource).revokeOnGuestMigration(consumer);
@@ -901,7 +901,7 @@ public class ConsumerResourceTest {
             mockedCdnCurator, null, null, manifestManager, null, this.factValidator, null,
             consumerEnricher, migrationProvider, translator);
 
-        List<KeyValueParameter> extParams = new ArrayList<KeyValueParameter>();
+        List<KeyValueParameter> extParams = new ArrayList<>();
         Owner owner = TestUtil.createOwner();
         Consumer consumer = TestUtil.createConsumer(
             new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN), owner);

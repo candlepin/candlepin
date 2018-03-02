@@ -81,7 +81,7 @@ public class EntitlerJob extends KingpinJob {
             JobDataMap map = ctx.getMergedJobDataMap();
             String uuid = (String) map.get(JobStatus.TARGET_ID);
             PoolIdAndQuantity[] poolQuantities = (PoolIdAndQuantity[]) map.get("pool_and_quantities");
-            Map<String, Integer> poolMap = new HashMap<String, Integer>();
+            Map<String, Integer> poolMap = new HashMap<>();
             for (PoolIdAndQuantity poolIdAndQuantity : poolQuantities) {
                 poolMap.put(poolIdAndQuantity.getPoolId(), poolIdAndQuantity.getQuantity());
             }
@@ -101,10 +101,10 @@ public class EntitlerJob extends KingpinJob {
             Map<String, ValidationResult> validationResults = e.getResults();
 
             EntitlementRulesTranslator translator = new EntitlementRulesTranslator(i18n);
-            List<PoolIdAndErrors> poolErrors = new ArrayList<PoolIdAndErrors>();
+            List<PoolIdAndErrors> poolErrors = new ArrayList<>();
 
             for (Pool pool : poolCurator.listAllByIds(validationResults.keySet())) {
-                List<String> errorMessages = new ArrayList<String>();
+                List<String> errorMessages = new ArrayList<>();
                 for (ValidationError error : validationResults.get(pool.getId()).getErrors()) {
                     errorMessages.add(translator.poolErrorToMessage(pool, error));
                 }

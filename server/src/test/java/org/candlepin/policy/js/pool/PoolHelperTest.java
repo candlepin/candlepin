@@ -161,14 +161,14 @@ public class PoolHelperTest {
         // when(psa.getProductById(targetProduct.getUuid())).thenReturn(targetProduct);
         when(ent.getConsumer()).thenReturn(cons);
 
-        List<Pool> targetPools = new ArrayList<Pool>();
+        List<Pool> targetPools = new ArrayList<>();
         targetPools.add(targetPool);
         targetPools.add(targetPool2);
-        Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
+        Map<String, Entitlement> entitlements = new HashMap<>();
         entitlements.put(targetPool.getId(), ent);
         entitlements.put(targetPool2.getId(), ent);
 
-        Map<String, Map<String, String>> attributes = new HashMap<String, Map<String, String>>();
+        Map<String, Map<String, String>> attributes = new HashMap<>();
         attributes.put(targetPool.getId(), PoolHelper.getFlattenedAttributes(targetPool));
         attributes.put(targetPool2.getId(), PoolHelper.getFlattenedAttributes(targetPool2));
 
@@ -207,7 +207,7 @@ public class PoolHelperTest {
         Product derivedProduct1 = TestUtil.createProduct("sub-pp-1", "Sub Provided 1");
         Product derivedProduct2 = TestUtil.createProduct("sub-pp-2", "Sub Provided 2");
 
-        Set<Product> derivedProducts = new HashSet<Product>();
+        Set<Product> derivedProducts = new HashSet<>();
         derivedProducts.add(derivedProduct1);
         derivedProducts.add(derivedProduct2);
 
@@ -226,13 +226,13 @@ public class PoolHelperTest {
         // when(psa.getProductById(subProduct.getUuid())).thenReturn(subProduct);
         when(ent.getConsumer()).thenReturn(cons);
 
-        List<Pool> targetPools = new ArrayList<Pool>();
+        List<Pool> targetPools = new ArrayList<>();
         targetPools.add(targetPool);
 
-        Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
+        Map<String, Entitlement> entitlements = new HashMap<>();
         entitlements.put(targetPool.getId(), ent);
 
-        Map<String, Map<String, String>> attributes = new HashMap<String, Map<String, String>>();
+        Map<String, Map<String, String>> attributes = new HashMap<>();
         attributes.put(targetPool.getId(), PoolHelper.getFlattenedAttributes(targetPool));
         when(pm.createPools(anyListOf(Pool.class))).then(returnsFirstArg());
         List<Pool> hostRestrictedPools = PoolHelper.createHostRestrictedPools(pm, cons, targetPools,
@@ -260,7 +260,7 @@ public class PoolHelperTest {
     public void clonePoolTest() {
         Product product = TestUtil.createProduct();
         Product product2 = TestUtil.createProduct();
-        Map<String, String> attributes = new HashMap<String, String>();
+        Map<String, String> attributes = new HashMap<>();
         for (int i = 0; i < 3; i++) {
             attributes.put("a" + i, "b" + i);
         }

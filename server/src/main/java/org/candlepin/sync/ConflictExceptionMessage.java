@@ -42,13 +42,13 @@ public class ConflictExceptionMessage extends ExceptionMessage {
     public ConflictExceptionMessage(String displayMessage,
         Importer.Conflict conflict) {
         super(displayMessage);
-        this.conflicts = new HashSet<Importer.Conflict>();
+        this.conflicts = new HashSet<>();
         this.conflicts.add(conflict);
     }
 
     public ConflictExceptionMessage() {
         super("");
-        this.conflicts = new HashSet<Importer.Conflict>();
+        this.conflicts = new HashSet<>();
     }
 
     public Set<Importer.Conflict> getConflicts() {

@@ -471,7 +471,7 @@ public class ContentDTO extends TimestampedCandlepinDTO<ContentDTO> {
         }
 
         if (this.modifiedProductIds == null) {
-            this.modifiedProductIds = new HashSet<String>();
+            this.modifiedProductIds = new HashSet<>();
         }
 
         return this.modifiedProductIds.add(productId);
@@ -513,7 +513,7 @@ public class ContentDTO extends TimestampedCandlepinDTO<ContentDTO> {
     public ContentDTO setModifiedProductIds(Collection<String> modifiedProductIds) {
         if (modifiedProductIds != null) {
             if (this.modifiedProductIds == null) {
-                this.modifiedProductIds = new HashSet<String>();
+                this.modifiedProductIds = new HashSet<>();
             }
             else {
                 this.modifiedProductIds.clear();

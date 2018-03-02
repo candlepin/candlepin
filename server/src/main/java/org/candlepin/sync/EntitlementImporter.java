@@ -333,7 +333,7 @@ public class EntitlementImporter {
         throws SyncDataFormatException {
 
         // Associate main provided products:
-        Set<ProductData> providedProducts = new HashSet<ProductData>();
+        Set<ProductData> providedProducts = new HashSet<>();
         entitlement.getPool().populateAllTransientProvidedProducts(productCurator);
         for (ProvidedProduct providedProduct : entitlement.getPool().getProvidedProductDtos()) {
             Product product = this.findProduct(productsById, providedProduct.getProductId());
@@ -342,7 +342,7 @@ public class EntitlementImporter {
         subscription.setProvidedProducts(providedProducts);
 
         // Associate derived provided products:
-        Set<ProductData> derivedProvidedProducts = new HashSet<ProductData>();
+        Set<ProductData> derivedProvidedProducts = new HashSet<>();
         for (ProvidedProduct pp : entitlement.getPool().getDerivedProvidedProductDtos()) {
             Product product = this.findProduct(productsById, pp.getProductId());
             derivedProvidedProducts.add(product.toDTO());

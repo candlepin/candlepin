@@ -49,7 +49,7 @@ public abstract class AbstractConfiguration implements Configuration {
 
     @Override
     public Map<String, String> toMap(Map<String, String> defaults) {
-        Map<String, String> m = new ConcurrentHashMap<String, String>();
+        Map<String, String> m = new ConcurrentHashMap<>();
         m.putAll(defaults);
         for (String key : getKeys()) {
             m.put(key, getString(key));

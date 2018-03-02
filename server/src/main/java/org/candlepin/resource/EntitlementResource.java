@@ -169,7 +169,7 @@ public class EntitlementResource {
         // Store the page for the LinkHeaderResponseFilter
         ResteasyProviderFactory.pushContext(Page.class, p);
 
-        List<EntitlementDTO> entitlementDTOs = new ArrayList<EntitlementDTO>();
+        List<EntitlementDTO> entitlementDTOs = new ArrayList<>();
         for (Entitlement entitlement : p.getPageData()) {
             entitlementDTOs.add(this.translator.translate(entitlement, EntitlementDTO.class));
         }
@@ -327,7 +327,7 @@ public class EntitlementResource {
         @QueryParam("quantity") Integer quantity) {
         // confirm entitlement
         Entitlement entitlement = entitlementCurator.find(id);
-        List<Entitlement> entitlements = new ArrayList<Entitlement>();
+        List<Entitlement> entitlements = new ArrayList<>();
 
         if (entitlement != null) {
             if (quantity == null) {
@@ -385,7 +385,7 @@ public class EntitlementResource {
                 i18n.tr("Entitlement with ID \"{0}\" could not be found.", id));
         }
 
-        List<EntitlementDTO> entitlementDTOs = new ArrayList<EntitlementDTO>();
+        List<EntitlementDTO> entitlementDTOs = new ArrayList<>();
         for (Entitlement entitlementModel : entitlements) {
             entitlementDTOs.add(this.translator.translate(entitlementModel, EntitlementDTO.class));
         }

@@ -85,18 +85,18 @@ public class ActivationKey extends AbstractHibernateObject<ActivationKey> implem
 
     @OneToMany(mappedBy = "key")
     @Cascade({CascadeType.ALL, CascadeType.DELETE_ORPHAN})
-    private Set<ActivationKeyPool> pools = new HashSet<ActivationKeyPool>();
+    private Set<ActivationKeyPool> pools = new HashSet<>();
 
     @ManyToMany
     @JoinTable(
         name = "cp2_activation_key_products",
         joinColumns = {@JoinColumn(name = "key_id")},
         inverseJoinColumns = {@JoinColumn(name = "product_uuid")})
-    private Set<Product> products = new HashSet<Product>();
+    private Set<Product> products = new HashSet<>();
 
     @OneToMany(targetEntity = ActivationKeyContentOverride.class, mappedBy = "key")
     @Cascade({CascadeType.ALL, CascadeType.DELETE_ORPHAN})
-    private Set<ActivationKeyContentOverride> contentOverrides = new HashSet<ActivationKeyContentOverride>();
+    private Set<ActivationKeyContentOverride> contentOverrides = new HashSet<>();
 
     @Column(length = RELEASE_VERSION_LENGTH, nullable =  true)
     @Size(max = RELEASE_VERSION_LENGTH)

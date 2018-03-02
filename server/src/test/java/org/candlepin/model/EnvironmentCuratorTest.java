@@ -80,7 +80,7 @@ public class EnvironmentCuratorTest extends DatabaseTestFixture {
 
         envContentCurator.create(new EnvironmentContent(environment, content, true));
 
-        Set<String> ids = new HashSet<String>();
+        Set<String> ids = new HashSet<>();
         ids.add(contentId);
 
         List<Environment> envs = envCurator.listWithContent(ids);

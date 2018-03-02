@@ -224,7 +224,7 @@ public class EventSinkImplTest {
     @Test
     public void keyWithPoolsShouldEmitSuccessfully()
         throws Exception {
-        ArrayList<Pool> pools = new ArrayList<Pool>();
+        ArrayList<Pool> pools = new ArrayList<>();
         pools.add(TestUtil.createPool(o, TestUtil.createProduct()));
         pools.add(TestUtil.createPool(o, TestUtil.createProduct()));
         ActivationKey key = TestUtil.createActivationKey(new Owner("deadbeef"), pools);

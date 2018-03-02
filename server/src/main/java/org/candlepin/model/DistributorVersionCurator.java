@@ -54,7 +54,7 @@ public class DistributorVersionCurator
             .createCriteria(DistributorVersionCapability.class)
             .add(Restrictions.eq("name", capability)).list();
 
-        List<DistributorVersion> distVers = new ArrayList<DistributorVersion>();
+        List<DistributorVersion> distVers = new ArrayList<>();
 
         for (DistributorVersionCapability dvc : caps) {
             distVers.add(dvc.getDistributorVersion());

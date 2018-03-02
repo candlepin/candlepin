@@ -250,7 +250,7 @@ public class OwnerContentResource {
     public Collection<ContentDTO> createBatchContent(@PathParam("owner_key") String ownerKey,
         @ApiParam(name = "contents", required = true) List<ContentDTO> contents) {
 
-        Collection<ContentDTO> result = new LinkedList<ContentDTO>();
+        Collection<ContentDTO> result = new LinkedList<>();
         Owner owner = this.getOwnerByKey(ownerKey);
 
         for (ContentDTO content : contents) {

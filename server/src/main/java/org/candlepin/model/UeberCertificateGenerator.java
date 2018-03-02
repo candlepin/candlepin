@@ -130,11 +130,11 @@ public class UeberCertificateGenerator {
 
     private X509Certificate createX509Certificate(UeberCertData data, BigInteger serialNumber,
         KeyPair keyPair) throws GeneralSecurityException, IOException {
-        Set<X509ByteExtensionWrapper> byteExtensions = new LinkedHashSet<X509ByteExtensionWrapper>();
-        Set<X509ExtensionWrapper> extensions = new LinkedHashSet<X509ExtensionWrapper>();
+        Set<X509ByteExtensionWrapper> byteExtensions = new LinkedHashSet<>();
+        Set<X509ExtensionWrapper> extensions = new LinkedHashSet<>();
         extensions.addAll(extensionUtil.productExtensions(data.getProduct()));
         extensions.addAll(extensionUtil.contentExtensions(data.getProduct().getProductContent(), null,
-            new HashMap<String, EnvironmentContent>(), new Consumer(), data.getProduct()));
+            new HashMap<>(), new Consumer(), data.getProduct()));
         extensions.addAll(extensionUtil.subscriptionExtensions(data.getEntitlement().getPool()));
         extensions.addAll(extensionUtil.entitlementExtensions(data.getEntitlement().getQuantity()));
         extensions.addAll(extensionUtil.consumerExtensions(data.getConsumer()));
@@ -178,7 +178,7 @@ public class UeberCertificateGenerator {
             this.content = createUeberContent(idGenerator, owner, product);
             this.product.addContent(this.content, true);
 
-            this.pool = new Pool(this.owner, this.product, new LinkedList<Product>(), 1L, this.startDate,
+            this.pool = new Pool(this.owner, this.product, new LinkedList<>(), 1L, this.startDate,
                 this.endDate, "", "", "");
             this.entitlement = new Entitlement(this.pool, this.consumer, 1);
         }

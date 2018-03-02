@@ -100,7 +100,7 @@ public class X509CRLEntryStreamTest {
         CertificateFactory cf = CertificateFactory.getInstance("X.509");
         X509CRL referenceCrl = (X509CRL) cf.generateCRL(referenceStream);
 
-        Set<BigInteger> referenceSerials = new HashSet<BigInteger>();
+        Set<BigInteger> referenceSerials = new HashSet<>();
 
         for (X509CRLEntry entry : referenceCrl.getRevokedCertificates()) {
             referenceSerials.add(entry.getSerialNumber());
@@ -108,7 +108,7 @@ public class X509CRLEntryStreamTest {
 
         X509CRLEntryStream stream = new X509CRLEntryStream(derFile);
         try {
-            Set<BigInteger> streamedSerials = new HashSet<BigInteger>();
+            Set<BigInteger> streamedSerials = new HashSet<>();
             while (stream.hasNext()) {
                 streamedSerials.add(getSerial(stream.next()));
             }
@@ -137,7 +137,7 @@ public class X509CRLEntryStreamTest {
 
         X509CRLEntryStream stream = new X509CRLEntryStream(noUpdateTimeCrl);
         try {
-            Set<BigInteger> streamedSerials = new HashSet<BigInteger>();
+            Set<BigInteger> streamedSerials = new HashSet<>();
             while (stream.hasNext()) {
                 streamedSerials.add(getSerial(stream.next()));
             }
@@ -190,7 +190,7 @@ public class X509CRLEntryStreamTest {
 
         X509CRLEntryStream stream = new X509CRLEntryStream(noUpdateTimeCrl);
         try {
-            Set<BigInteger> streamedSerials = new HashSet<BigInteger>();
+            Set<BigInteger> streamedSerials = new HashSet<>();
             while (stream.hasNext()) {
                 streamedSerials.add(getSerial(stream.next()));
             }
@@ -220,7 +220,7 @@ public class X509CRLEntryStreamTest {
         CertificateFactory cf = CertificateFactory.getInstance("X.509");
         X509CRL referenceCrl = (X509CRL) cf.generateCRL(referenceStream);
 
-        Set<BigInteger> referenceSerials = new HashSet<BigInteger>();
+        Set<BigInteger> referenceSerials = new HashSet<>();
 
         for (X509CRLEntry entry : referenceCrl.getRevokedCertificates()) {
             referenceSerials.add(entry.getSerialNumber());
@@ -228,7 +228,7 @@ public class X509CRLEntryStreamTest {
 
         X509CRLEntryStream stream = new X509CRLEntryStream(derFile);
         try {
-            Set<BigInteger> streamedSerials = new HashSet<BigInteger>();
+            Set<BigInteger> streamedSerials = new HashSet<>();
             while (stream.hasNext()) {
                 streamedSerials.add(getSerial(stream.next()));
             }

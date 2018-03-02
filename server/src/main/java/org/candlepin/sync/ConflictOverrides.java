@@ -25,8 +25,7 @@ import java.util.Set;
  */
 public class ConflictOverrides {
 
-    private Set<Importer.Conflict> conflictsToForce =
-        new HashSet<Importer.Conflict>();
+    private Set<Importer.Conflict> conflictsToForce = new HashSet<>();
 
     public ConflictOverrides(String [] conflictStrings) {
         for (String c : conflictStrings) {
@@ -49,7 +48,7 @@ public class ConflictOverrides {
     }
 
     public String[] asStringArray() {
-        List<String> all = new ArrayList<String>();
+        List<String> all = new ArrayList<>();
         for (Importer.Conflict conflict : conflictsToForce) {
             all.add(conflict.name());
         }

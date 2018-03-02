@@ -63,8 +63,8 @@ public class HandleCertificatesOp implements BindOperation {
     public boolean preProcess(BindContext context) {
 
         if (!context.getConsumer().isShare()) {
-            List<String> poolIds = new LinkedList<String>();
-            Map<String, Product> products = new HashMap<String, Product>();
+            List<String> poolIds = new LinkedList<>();
+            Map<String, Product> products = new HashMap<>();
             Map<String, PoolQuantity> poolQuantities = context.getPoolQuantities();
 
             for (PoolQuantity poolQuantity : poolQuantities.values()) {

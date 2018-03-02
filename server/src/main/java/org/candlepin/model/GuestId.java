@@ -97,7 +97,7 @@ public class GuestId extends AbstractHibernateObject implements Owned, Named, Co
     private Map<String, String> attributes;
 
     public GuestId() {
-        attributes = new HashMap<String, String>();
+        attributes = new HashMap<>();
     }
 
     public GuestId(String guestId) {

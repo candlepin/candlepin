@@ -39,11 +39,11 @@ import java.util.Map;
 public class ImportSubscriptionServiceAdapter implements SubscriptionServiceAdapter {
 
     private List<Subscription> subscriptions;
-    private Map<String, Subscription> subsBySubId = new HashMap<String, Subscription>();
+    private Map<String, Subscription> subsBySubId = new HashMap<>();
     @Inject private I18n i18n;
 
     public ImportSubscriptionServiceAdapter() {
-        this(new LinkedList<Subscription>());
+        this(new LinkedList<>());
     }
 
     public ImportSubscriptionServiceAdapter(List<Subscription> subs) {
@@ -60,7 +60,7 @@ public class ImportSubscriptionServiceAdapter implements SubscriptionServiceAdap
 
     @Override
     public List<String> getSubscriptionIds(Owner owner) {
-        return new ArrayList<String>(subsBySubId.keySet());
+        return new ArrayList<>(subsBySubId.keySet());
     }
 
     @Override
@@ -112,7 +112,7 @@ public class ImportSubscriptionServiceAdapter implements SubscriptionServiceAdap
     @Override
     public List<Subscription> getSubscriptions(ProductData product) {
 
-        List<Subscription> subs = new LinkedList<Subscription>();
+        List<Subscription> subs = new LinkedList<>();
 
         for (Subscription sub : this.subscriptions) {
             if (product.getUuid().equals(sub.getProduct().getUuid())) {

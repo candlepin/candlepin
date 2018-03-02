@@ -78,7 +78,7 @@ public class CandlepinException extends RuntimeException {
      * @return headers
      */
     public Map<String, String> headers() {
-        return new HashMap<String, String>();
+        return new HashMap<>();
     }
 
     public boolean isLogException() {

@@ -38,7 +38,7 @@ public class TeeHttpServletResponse extends HttpServletResponseWrapper
 
     protected TeeServletOutputStream teeServletOutputStream;
     protected PrintWriter teeWriter;
-    protected Map<String, List<String>> headers = new HashMap<String, List<String>>();
+    protected Map<String, List<String>> headers = new HashMap<>();
     protected int status;
 
     public TeeHttpServletResponse(HttpServletResponse httpServletResponse) {
@@ -106,7 +106,7 @@ public class TeeHttpServletResponse extends HttpServletResponseWrapper
 
     @Override
     public void setHeader(String name, String value) {
-        List<String> values = new ArrayList<String>(1);
+        List<String> values = new ArrayList<>(1);
         values.add(value);
         headers.put(name, values);
         super.setHeader(name, value);
@@ -116,7 +116,7 @@ public class TeeHttpServletResponse extends HttpServletResponseWrapper
     public void addHeader(String name, String value) {
         List<String> values = headers.get(name);
         if (values == null) {
-            values = new ArrayList<String>();
+            values = new ArrayList<>();
             headers.put(name, values);
         }
         values.add(value);

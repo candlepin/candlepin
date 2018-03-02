@@ -56,7 +56,7 @@ public class X509ExtensionUtil  extends X509Util{
     }
 
     public Set<X509ExtensionWrapper> consumerExtensions(Consumer consumer) {
-        Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<X509ExtensionWrapper>();
+        Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<>();
 
         // 1.3.6.1.4.1.2312.9.5.1
         // REDHAT_OID here seems wrong...
@@ -71,7 +71,7 @@ public class X509ExtensionUtil  extends X509Util{
 
     public Set<X509ExtensionWrapper> subscriptionExtensions(Pool pool) {
         SimpleDateFormat iso8601DateFormat = Util.getUTCDateFormat();
-        Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<X509ExtensionWrapper>();
+        Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<>();
         // Subscription/order info
         // need the sub product name, not id here
         // NOTE: order ~= subscription
@@ -170,7 +170,7 @@ public class X509ExtensionUtil  extends X509Util{
     }
 
     public Set<X509ExtensionWrapper> productExtensions(Product product) {
-        Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<X509ExtensionWrapper>();
+        Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<>();
 
         String productCertOid = OIDUtil.REDHAT_OID + "." +
             OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.PRODUCT_CERT_NAMESPACE_KEY);
@@ -202,8 +202,8 @@ public class X509ExtensionUtil  extends X509Util{
         Collection<ProductContent> productContentList, String contentPrefix,
         Map<String, EnvironmentContent> promotedContent, Consumer consumer, Product skuProduct) {
 
-        Set<ProductContent> productContent = new HashSet<ProductContent>(productContentList);
-        Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<X509ExtensionWrapper>();
+        Set<ProductContent> productContent = new HashSet<>(productContentList);
+        Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<>();
 
         boolean enableEnvironmentFiltering = config.getBoolean(ConfigProperties.ENV_CONTENT_FILTERING);
 

@@ -130,7 +130,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
         Owner o = mock(Owner.class);
         Product p = mock(Product.class);
         // when(pc.lookupById(eq(o), eq("10"))).thenReturn(p);
-        Set<Subscription> subs = new HashSet<Subscription>();
+        Set<Subscription> subs = new HashSet<>();
         Subscription s = mock(Subscription.class);
         subs.add(s);
         when(pc.productHasSubscriptions(eq(o), eq(p))).thenReturn(true);
@@ -227,7 +227,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
 
     @Test(expected = BadRequestException.class)
     public void testGetOwnersForProductsInputValidation() {
-        productResource.getProductOwners(new LinkedList<String>());
+        productResource.getProductOwners(new LinkedList<>());
     }
 
     private void verifyRefreshPoolsJobs(JobDetail[] jobs, List<Owner> owners, boolean lazyRegen) {
@@ -349,6 +349,6 @@ public class ProductResourceTest extends DatabaseTestFixture {
 
     @Test(expected = BadRequestException.class)
     public void testRefreshPoolsByProductInputValidation() {
-        productResource.refreshPoolsForProduct(new LinkedList<String>(), true);
+        productResource.refreshPoolsForProduct(new LinkedList<>(), true);
     }
 }

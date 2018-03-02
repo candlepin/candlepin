@@ -61,7 +61,7 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
     @Override
     @Transactional
     public Collection<ProductData> getProductsByIds(Owner owner, Collection<String> ids) {
-        Collection<ProductData> productData = new LinkedList<ProductData>();
+        Collection<ProductData> productData = new LinkedList<>();
 
         ResultIterator<Product> iterator = this.ownerProductCurator
             .getProductsByIds(owner, ids)

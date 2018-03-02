@@ -21,10 +21,8 @@ import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.OwnerPermission;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.dto.api.v1.ConsumerDTO;
-import org.candlepin.dto.api.v1.ConsumerInstalledProductDTO;
 import org.candlepin.dto.api.v1.ConsumerTypeDTO;
 import org.candlepin.dto.api.v1.ContentDTO;
-import org.candlepin.dto.api.v1.GuestIdDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.dto.api.v1.ProductDTO.ProductContentDTO;
@@ -112,9 +110,9 @@ public class TestUtil {
             .setAutoheal(true)
             .setServiceLevel("")
             .setEntitlementCount(0L)
-            .setFacts(new HashMap<String, String>())
-            .setInstalledProducts(new HashSet<ConsumerInstalledProductDTO>())
-            .setGuestIds(new ArrayList<GuestIdDTO>());
+            .setFacts(new HashMap<>())
+            .setInstalledProducts(new HashSet<>())
+            .setGuestIds(new ArrayList<>());
     }
 
     public static Consumer createConsumer(ConsumerType type, Owner owner, String username) {
@@ -368,7 +366,7 @@ public class TestUtil {
     public static Subscription createSubscription(Owner owner, Product product,
         Collection<Product> providedProducts) {
 
-        Collection<ProductData> providedProductsDTOs = new LinkedList<ProductData>();
+        Collection<ProductData> providedProductsDTOs = new LinkedList<>();
 
         if (providedProducts != null) {
             for (Product providedProduct : providedProducts) {
@@ -386,7 +384,7 @@ public class TestUtil {
     public static Subscription createSubscription(Owner owner, ProductData dto,
         Collection<ProductData> providedProductsData) {
 
-        Set<ProductData> providedProductsSet = new HashSet<ProductData>();
+        Set<ProductData> providedProductsSet = new HashSet<>();
         providedProductsSet.addAll(providedProductsData);
 
         Subscription sub = new Subscription(
@@ -425,7 +423,7 @@ public class TestUtil {
 
         String random = String.valueOf(randomInt());
 
-        Set<Product> provided = new HashSet<Product>();
+        Set<Product> provided = new HashSet<>();
         if (providedProducts != null) {
             provided.addAll(providedProducts);
         }
@@ -451,7 +449,7 @@ public class TestUtil {
         Product derivedProduct, Collection<Product> subProvidedProducts, int quantity) {
 
         Pool pool = createPool(owner, product, providedProducts, quantity);
-        Set<Product> subProvided = new HashSet<Product>();
+        Set<Product> subProvided = new HashSet<>();
         if (subProvidedProducts != null) {
             subProvided.addAll(subProvidedProducts);
         }
@@ -519,7 +517,7 @@ public class TestUtil {
 
 
     public static Set<String> createSet(String productId) {
-        Set<String> results = new HashSet<String>();
+        Set<String> results = new HashSet<>();
         results.add(productId);
         return results;
     }
@@ -585,7 +583,7 @@ public class TestUtil {
         Product product = createProduct((ProductData) sub.getProduct());
         Product derivedProduct = createProduct((ProductData) sub.getDerivedProduct());
 
-        List<Product> providedProducts = new LinkedList<Product>();
+        List<Product> providedProducts = new LinkedList<>();
         if (sub.getProvidedProducts() != null) {
             for (ProductData pdata : sub.getProvidedProducts()) {
                 if (pdata != null) {
@@ -594,7 +592,7 @@ public class TestUtil {
             }
         }
 
-        List<Product> derivedProvidedProducts = new LinkedList<Product>();
+        List<Product> derivedProvidedProducts = new LinkedList<>();
         if (sub.getDerivedProvidedProducts() != null) {
             for (ProductData pdata : sub.getDerivedProvidedProducts()) {
                 if (pdata != null) {
@@ -634,8 +632,7 @@ public class TestUtil {
      */
     public static Pool clone(Pool pool) {
         Pool p = new Pool(pool.getOwner(),
-            pool.getProduct(),
-            new HashSet<Product>(pool.getProvidedProducts()),
+            pool.getProduct(), new HashSet<>(pool.getProvidedProducts()),
             pool.getQuantity(),
             pool.getStartDate(),
             pool.getEndDate(),
@@ -664,7 +661,7 @@ public class TestUtil {
         key.setServiceLevel("TestLevel");
         key.setDescription("A test description for the test key.");
         if (pools != null) {
-            Set<ActivationKeyPool> akPools = new HashSet<ActivationKeyPool>();
+            Set<ActivationKeyPool> akPools = new HashSet<>();
             for (Pool p : pools) {
                 akPools.add(new ActivationKeyPool(key, p, (long) 1));
             }
@@ -712,7 +709,7 @@ public class TestUtil {
     }
 
     public static Map<String, Product> stubChangedProducts(Product ... products) {
-        Map<String, Product> result = new HashMap<String, Product>();
+        Map<String, Product> result = new HashMap<>();
         for (Product p : products) {
             result.put(p.getId(), p);
         }

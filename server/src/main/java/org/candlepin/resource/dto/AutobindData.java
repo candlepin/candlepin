@@ -37,7 +37,7 @@ public class AutobindData {
     public AutobindData(Consumer consumer) {
         // Consumer is always required
         this.consumer = consumer;
-        possiblePools = new LinkedList<String>();
+        possiblePools = new LinkedList<>();
     }
 
     public static AutobindData create(Consumer consumer) {

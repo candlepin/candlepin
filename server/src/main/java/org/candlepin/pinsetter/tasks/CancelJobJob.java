@@ -55,7 +55,7 @@ public class CancelJobJob extends KingpinJob {
     public void toExecute(JobExecutionContext ctx) throws JobExecutionException {
         try {
             Set<JobKey> keys = pinsetterKernel.getSingleJobKeys();
-            Set<String> statusIds = new HashSet<String>();
+            Set<String> statusIds = new HashSet<>();
 
             for (JobKey key : keys) {
                 statusIds.add(key.getName());

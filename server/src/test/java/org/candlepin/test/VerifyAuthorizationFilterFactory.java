@@ -107,7 +107,7 @@ public class VerifyAuthorizationFilterFactory implements MethodInterceptor {
 
             Annotation[][] allAnnotations = invocation.getMethod().getParameterAnnotations();
 
-            Map<Verify, Object> argMap = new LinkedHashMap<Verify, Object>();
+            Map<Verify, Object> argMap = new LinkedHashMap<>();
 
             // Any occurrence of the Verify annotation means the method is not superadmin exclusive.
             for (int i = 0; i < allAnnotations.length; i++) {

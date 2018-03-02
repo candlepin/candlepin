@@ -119,12 +119,10 @@ public class GuestMigration {
     }
 
     private List<GuestId> getDifferenceInGuestIds(Consumer c1, Consumer c2) {
-        List<GuestId> ids1 = c1.getGuestIds() == null ?
-            new ArrayList<GuestId>() : new ArrayList<GuestId>(c1.getGuestIds());
-        List<GuestId> ids2 = c2.getGuestIds() == null ?
-            new ArrayList<GuestId>() : new ArrayList<GuestId>(c2.getGuestIds());
+        List<GuestId> ids1 = c1.getGuestIds() == null ? new ArrayList<>() : new ArrayList<>(c1.getGuestIds());
+        List<GuestId> ids2 = c2.getGuestIds() == null ? new ArrayList<>() : new ArrayList<>(c2.getGuestIds());
 
-        List<GuestId> removedGuests = new ArrayList<GuestId>(ids1);
+        List<GuestId> removedGuests = new ArrayList<>(ids1);
         removedGuests.removeAll(ids2);
         return removedGuests;
     }
@@ -138,8 +136,8 @@ public class GuestMigration {
      */
     public static class MigrationManifest {
         private Consumer newHost;
-        private List<GuestId> newGuests = new ArrayList<GuestId>();
-        private Map<Consumer, List<GuestId>> oldMappings = new HashMap<Consumer, List<GuestId>>();
+        private List<GuestId> newGuests = new ArrayList<>();
+        private Map<Consumer, List<GuestId>> oldMappings = new HashMap<>();
 
         public MigrationManifest(Consumer newHost) {
             this.newHost = newHost;
@@ -151,7 +149,7 @@ public class GuestMigration {
 
         public void addOldMapping(Consumer host, GuestId guest) {
             if (!oldMappings.containsKey(host)) {
-                oldMappings.put(host, new ArrayList<GuestId>());
+                oldMappings.put(host, new ArrayList<>());
             }
 
             oldMappings.get(host).add(guest);
@@ -162,7 +160,7 @@ public class GuestMigration {
          * @return A set containing all consumers in the migration manifest
          */
         public Set<Consumer> asSet() {
-            Set<Consumer> modifiedConsumers = new HashSet<Consumer>();
+            Set<Consumer> modifiedConsumers = new HashSet<>();
             modifiedConsumers.add(newHost);
             modifiedConsumers.addAll(oldMappings.keySet());
             return modifiedConsumers;

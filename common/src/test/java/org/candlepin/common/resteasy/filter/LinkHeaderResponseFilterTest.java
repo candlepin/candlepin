@@ -154,7 +154,7 @@ public class LinkHeaderResponseFilterTest {
 
     @Test
     public void testAddsUnchangingQueryParameters() {
-        MultivaluedMap<String, String> map = new MultivaluedMapImpl<String, String>();
+        MultivaluedMap<String, String> map = new MultivaluedMapImpl<>();
         map.add("baz", "qu=ux");
         UriBuilder bu = UriBuilder.fromUri("https://localhost:8443/candlepin/resource");
         URI returned = interceptor.addUnchangingQueryParams(bu, map).build();
@@ -163,7 +163,7 @@ public class LinkHeaderResponseFilterTest {
 
     @Test
     public void testDoesNotAddChangingQueryParameters() {
-        MultivaluedMap<String, String> map = new MultivaluedMapImpl<String, String>();
+        MultivaluedMap<String, String> map = new MultivaluedMapImpl<>();
         map.add("page", "10");
         UriBuilder bu = UriBuilder.fromUri("https://localhost:8443/candlepin/resource");
         URI returned = interceptor.addUnchangingQueryParams(bu, map).build();
@@ -186,7 +186,7 @@ public class LinkHeaderResponseFilterTest {
 
     @Test
     public void testGetPrevPage() {
-        Page<Object> p = new Page<Object>();
+        Page<Object> p = new Page<>();
         p.setMaxRecords(55);
 
         PageRequest pr = new PageRequest();
@@ -200,7 +200,7 @@ public class LinkHeaderResponseFilterTest {
 
     @Test
     public void testGetPrevPageWhenOnFirstPage() {
-        Page<Object> p = new Page<Object>();
+        Page<Object> p = new Page<>();
         p.setMaxRecords(55);
 
         PageRequest pr = new PageRequest();
@@ -214,7 +214,7 @@ public class LinkHeaderResponseFilterTest {
 
     @Test
     public void testGetNextPage() {
-        Page<Object> p = new Page<Object>();
+        Page<Object> p = new Page<>();
         p.setMaxRecords(55);
 
         PageRequest pr = new PageRequest();
@@ -228,7 +228,7 @@ public class LinkHeaderResponseFilterTest {
 
     @Test
     public void testGetNextPageWhenNoNextAvailable() {
-        Page<Object> p = new Page<Object>();
+        Page<Object> p = new Page<>();
         p.setMaxRecords(55);
 
         PageRequest pr = new PageRequest();
@@ -242,7 +242,7 @@ public class LinkHeaderResponseFilterTest {
 
     @Test
     public void testGetLastPage() {
-        Page<Object> p = new Page<Object>();
+        Page<Object> p = new Page<>();
         p.setMaxRecords(55);
 
         PageRequest pr = new PageRequest();
@@ -256,7 +256,7 @@ public class LinkHeaderResponseFilterTest {
 
     @Test
     public void testGetLastPageWhenMaxRecordsLessThanLimit() {
-        Page<Object> p = new Page<Object>();
+        Page<Object> p = new Page<>();
         p.setMaxRecords(8);
 
         PageRequest pr = new PageRequest();
@@ -270,7 +270,7 @@ public class LinkHeaderResponseFilterTest {
 
     @Test
     public void testGetLastPageWhenEvenlyDivisible() {
-        Page<Object> p = new Page<Object>();
+        Page<Object> p = new Page<>();
         p.setMaxRecords(10);
 
         PageRequest pr = new PageRequest();
@@ -284,7 +284,7 @@ public class LinkHeaderResponseFilterTest {
 
     @Test
     public void testPagesWithOutOfBoundsInitialPage() {
-        Page<Object> p = new Page<Object>();
+        Page<Object> p = new Page<>();
         p.setMaxRecords(8);
 
         PageRequest pr = new PageRequest();
@@ -333,7 +333,7 @@ public class LinkHeaderResponseFilterTest {
         // We're going to take the quick path through buildBaseUrl.
         when(config.containsKey(eq(this.apiUrlPrefixKey))).thenReturn(false);
 
-        MultivaluedMap<String, Object> map = new MultivaluedMapImpl<String, Object>();
+        MultivaluedMap<String, Object> map = new MultivaluedMapImpl<>();
         when(response.getMetadata()).thenReturn(map);
 
         ResteasyProviderFactory.pushContext(Page.class, page);

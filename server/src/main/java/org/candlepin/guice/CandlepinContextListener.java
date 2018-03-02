@@ -218,7 +218,7 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
     protected void setCapabilities(Configuration config) {
         Set<String> blacklistedSet = config.getSet(ConfigProperties.HIDDEN_CAPABILITIES,
             Collections.<String>emptySet());
-        Set<String> exposedSet = new HashSet<String>(Arrays.asList(Status.DEFAULT_CAPABILITIES));
+        Set<String> exposedSet = new HashSet<>(Arrays.asList(Status.DEFAULT_CAPABILITIES));
         exposedSet.removeAll(blacklistedSet);
 
         Status.setAvailableCapabilities(exposedSet.toArray(new String[exposedSet.size()]));
@@ -283,7 +283,7 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
      */
     @Override
     protected List<Module> getModules(ServletContext context) {
-        List<Module> modules = new LinkedList<Module>();
+        List<Module> modules = new LinkedList<>();
 
         modules.add(Modules.override(new DefaultConfig()).with(new CustomizableModules().load(config)));
 

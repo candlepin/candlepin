@@ -132,7 +132,7 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
     @Test
     @Ignore("Find a way to do this with permissions")
     public void superAdminRole() {
-        Set<Owner> owners = new HashSet<Owner>();
+        Set<Owner> owners = new HashSet<>();
         owners.add(owner);
         User user = new User("super_admin", "password", true);
         this.service.createUser(user);

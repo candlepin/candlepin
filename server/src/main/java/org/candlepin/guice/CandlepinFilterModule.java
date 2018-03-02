@@ -41,7 +41,7 @@ public class CandlepinFilterModule extends ServletModule {
 
     @Override
     protected void configureServlets() {
-        Map<String, String> loggingFilterConfig = new HashMap<String, String>();
+        Map<String, String> loggingFilterConfig = new HashMap<>();
         loggingFilterConfig.put("header.name", "x-candlepin-request-uuid");
 
 

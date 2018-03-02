@@ -177,7 +177,7 @@ public class ExporterTest {
         Principal principal = mock(Principal.class);
         IdentityCertificate idcert = new IdentityCertificate();
 
-        Set<Entitlement> entitlements = new HashSet<Entitlement>();
+        Set<Entitlement> entitlements = new HashSet<>();
         entitlements.add(ent);
 
         Owner owner = TestUtil.createOwner("Example-Corporation");
@@ -212,10 +212,10 @@ public class ExporterTest {
         pcert.setCreated(new Date());
         pcert.setUpdated(new Date());
 
-        Set<Product> ppset = new HashSet<Product>();
+        Set<Product> ppset = new HashSet<>();
         ppset.add(prod);
 
-        Set<Product> sppSet = new HashSet<Product>();
+        Set<Product> sppSet = new HashSet<>();
         sppSet.add(subProvidedProduct);
 
         when(pool.getId()).thenReturn("MockedPoolId");
@@ -288,7 +288,7 @@ public class ExporterTest {
         Principal principal = mock(Principal.class);
         IdentityCertificate idcert = new IdentityCertificate();
 
-        List<Entitlement> entitlements = new ArrayList<Entitlement>();
+        List<Entitlement> entitlements = new ArrayList<>();
         entitlements.add(ent);
 
         when(pki.getSHA256WithRSAHash(any(InputStream.class))).thenReturn(
@@ -503,12 +503,12 @@ public class ExporterTest {
         when(consumer.getType()).thenReturn(new ConsumerType(ConsumerTypeEnum.CANDLEPIN));
 
         DistributorVersion dv = new DistributorVersion("test-dist-ver");
-        Set<DistributorVersionCapability> dvcSet = new HashSet<DistributorVersionCapability>();
+        Set<DistributorVersionCapability> dvcSet = new HashSet<>();
         dvcSet.add(new DistributorVersionCapability(dv, "capability-1"));
         dvcSet.add(new DistributorVersionCapability(dv, "capability-2"));
         dvcSet.add(new DistributorVersionCapability(dv, "capability-3"));
         dv.setCapabilities(dvcSet);
-        List<DistributorVersion> dvList = new ArrayList<DistributorVersion>();
+        List<DistributorVersion> dvList = new ArrayList<>();
         dvList.add(dv);
         when(dvc.findAll()).thenReturn(dvList);
 
@@ -540,7 +540,7 @@ public class ExporterTest {
         when(cdnc.listAll()).thenReturn(emptyIteratorMock);
         when(ctc.listAll()).thenReturn(emptyIteratorMock);
 
-        Map<String, String> extensionData = new HashMap<String, String>();
+        Map<String, String> extensionData = new HashMap<>();
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
             pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
             exportExtensionAdapter, translator);

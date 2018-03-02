@@ -34,8 +34,8 @@ import java.util.Set;
 public class PoolFilterBuilder extends FilterBuilder {
 
     private String alias = "";
-    private List<String> matchFilters = new ArrayList<String>();
-    private Set<String> productIds = new HashSet<String>();
+    private List<String> matchFilters = new ArrayList<>();
+    private Set<String> productIds = new HashSet<>();
     private String subscriptionIdFilter;
 
     public PoolFilterBuilder() {

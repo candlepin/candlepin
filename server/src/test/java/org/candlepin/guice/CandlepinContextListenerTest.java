@@ -92,7 +92,7 @@ public class CandlepinContextListenerTest {
         listener = new CandlepinContextListener() {
             @Override
             protected List<Module> getModules(ServletContext context) {
-                List<Module> modules = new LinkedList<Module>();
+                List<Module> modules = new LinkedList<>();
                 // tried simply overriding CandlepinModule
                 // but that caused it to read the local config
                 // which means the test becomes non-deterministic.
@@ -125,15 +125,14 @@ public class CandlepinContextListenerTest {
             eq(CandlepinContextListener.CONFIGURATION_NAME), eq(config));
         verify(configRead).verify(eq(ctx));
 
-        Set<String> displayedCapabilities = new HashSet<String>(
-            Arrays.asList(Status.getAvailableCapabilities()));
-        Set<String> expectedCapabilities = new HashSet<String>(Arrays.asList(Status.DEFAULT_CAPABILITIES));
+        Set<String> displayedCapabilities = new HashSet<>(Arrays.asList(Status.getAvailableCapabilities()));
+        Set<String> expectedCapabilities = new HashSet<>(Arrays.asList(Status.DEFAULT_CAPABILITIES));
         assertEquals(expectedCapabilities, displayedCapabilities);
     }
 
     @Test
     public void blackListsCapabilities() {
-        Set<String> testSet = new HashSet<String>();
+        Set<String> testSet = new HashSet<>();
         testSet.add("cores");
         testSet.add("ram");
 
@@ -141,12 +140,11 @@ public class CandlepinContextListenerTest {
         prepareForInitialization();
         listener.contextInitialized(evt);
 
-        Set<String> expectedCapabilities = new HashSet<String>(Arrays.asList(Status.DEFAULT_CAPABILITIES));
+        Set<String> expectedCapabilities = new HashSet<>(Arrays.asList(Status.DEFAULT_CAPABILITIES));
         expectedCapabilities.remove("cores");
         expectedCapabilities.remove("ram");
 
-        Set<String> displayedCapabilities = new HashSet<String>(
-            Arrays.asList(Status.getAvailableCapabilities()));
+        Set<String> displayedCapabilities = new HashSet<>(Arrays.asList(Status.getAvailableCapabilities()));
         assertEquals(expectedCapabilities, displayedCapabilities);
     }
 
@@ -199,7 +197,7 @@ public class CandlepinContextListenerTest {
     public void tharSheBlows() {
         listener = new CandlepinContextListener() {
             protected List<Module> getModules(ServletContext context) {
-                return new LinkedList<Module>();
+                return new LinkedList<>();
             }
 
             protected Configuration readConfiguration(ServletContext context)

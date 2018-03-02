@@ -167,12 +167,12 @@ public class ProductDataTest {
     public void testGetSetAttributes() {
         ProductData dto = new ProductData();
 
-        Map<String, String> input = new HashMap<String, String>();
+        Map<String, String> input = new HashMap<>();
         input.put("a1", "v1");
         input.put("a2", "v2");
         input.put("a3", "v3");
 
-        Map<String, String> input2 = new HashMap<String, String>();
+        Map<String, String> input2 = new HashMap<>();
         input2.put("a1", "old_value");
         input2.put("a1", "v1");
         input2.put("a2", "old_value");
@@ -208,7 +208,7 @@ public class ProductDataTest {
     @Test
     public void testgetAttributeValue() {
         ProductData dto = new ProductData();
-        Map<String, String> input = new HashMap<String, String>();
+        Map<String, String> input = new HashMap<>();
         input.put("a1", "v1");
         input.put("a2", "v2");
         input.put("a3", "v3");
@@ -230,7 +230,7 @@ public class ProductDataTest {
     @Test
     public void testHasAttribute() {
         ProductData dto = new ProductData();
-        Map<String, String> input = new HashMap<String, String>();
+        Map<String, String> input = new HashMap<>();
         input.put("a1", "v1");
         input.put("a2", "v2");
         input.put("a3", "v3");
@@ -252,14 +252,14 @@ public class ProductDataTest {
     @Test
     public void testSetAttributeByValue() {
         ProductData dto = new ProductData();
-        Map<String, String> input1 = new HashMap<String, String>();
+        Map<String, String> input1 = new HashMap<>();
         input1.put("a1", "v1");
 
-        Map<String, String> input2 = new HashMap<String, String>();
+        Map<String, String> input2 = new HashMap<>();
         input2.put("a1", "v1");
         input2.put("a2", "v2");
 
-        Map<String, String> input3 = new HashMap<String, String>();
+        Map<String, String> input3 = new HashMap<>();
         input3.put("a1", "v1");
         input3.put("a2", "v2");
         input3.put("a3", "v3");
@@ -290,11 +290,11 @@ public class ProductDataTest {
     @Test
     public void testRemoveAttribute() {
         ProductData dto = new ProductData();
-        Map<String, String> input = new HashMap<String, String>();
+        Map<String, String> input = new HashMap<>();
         input.put("a1", "v1");
         input.put("a2", "v2");
 
-        Map<String, String> input2 = new HashMap<String, String>();
+        Map<String, String> input2 = new HashMap<>();
         input2.put("a2", "v2");
 
         assertNull(dto.getAttributes());
@@ -900,12 +900,12 @@ public class ProductDataTest {
     }
 
     protected Object[][] getValuesForEqualityAndReplication() {
-        Map<String, String> attributes1 = new HashMap<String, String>();
+        Map<String, String> attributes1 = new HashMap<>();
         attributes1.put("a1", "v1");
         attributes1.put("a2", "v2");
         attributes1.put("a3", "v3");
 
-        Map<String, String> attributes2 = new HashMap<String, String>();
+        Map<String, String> attributes2 = new HashMap<>();
         attributes2.put("a4", "v4");
         attributes2.put("a5", "v5");
         attributes2.put("a6", "v6");
@@ -1093,7 +1093,7 @@ public class ProductDataTest {
     }
 
     protected Object[][] getValuesPopulationByEntity() {
-        Map<String, String> attributes = new HashMap<String, String>();
+        Map<String, String> attributes = new HashMap<>();
         attributes.put("a1", "v1");
         attributes.put("a2", "v2");
         attributes.put("a3", "v3");
@@ -1188,7 +1188,7 @@ public class ProductDataTest {
         ProductData base = new ProductData();
         Product source = new Product();
 
-        Map<String, String> attributes1 = new HashMap<String, String>();
+        Map<String, String> attributes1 = new HashMap<>();
         attributes1.put("a1", "v1");
         attributes1.put("a2", "v2");
         attributes1.put("a3", "v3");
@@ -1356,7 +1356,7 @@ public class ProductDataTest {
             "    \"updated\" : \"2016-09-07T15:08:14+0000\"" +
             "  }]";
 
-        Map<String, String> expectedAttrib = new HashMap<String, String>();
+        Map<String, String> expectedAttrib = new HashMap<>();
         expectedAttrib.put("attrib-1", "value-1");
         expectedAttrib.put("attrib-2", "value-2");
         expectedAttrib.put("3", "3");
@@ -1375,7 +1375,7 @@ public class ProductDataTest {
             "  \"attrib-3\": 3" +
             "}";
 
-        Map<String, String> expectedAttrib = new HashMap<String, String>();
+        Map<String, String> expectedAttrib = new HashMap<>();
         expectedAttrib.put("attrib-1", "value-1");
         expectedAttrib.put("attrib-2", "value-2");
         expectedAttrib.put("attrib-3", "3");
@@ -1393,7 +1393,7 @@ public class ProductDataTest {
         String expectedValue2 = "\"name\":\"attrib-2\",\"value\":\"value-2\"";
         String expectedValue3 = "\"name\":\"attrib-3\",\"value\":\"3\"";
 
-        Map<String, String> attributes = new HashMap<String, String>();
+        Map<String, String> attributes = new HashMap<>();
         attributes.put("attrib-1", "value-1");
         attributes.put("attrib-2", "value-2");
         attributes.put("attrib-3", "3");

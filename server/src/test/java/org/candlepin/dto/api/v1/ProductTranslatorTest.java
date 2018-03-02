@@ -62,12 +62,12 @@ public class ProductTranslatorTest extends
     protected Product initSourceObject() {
         Product source = new Product();
 
-        Map<String, String> attributes = new HashMap<String, String>();
+        Map<String, String> attributes = new HashMap<>();
         attributes.put("attrib_1", "attrib_value_1");
         attributes.put("attrib_2", "attrib_value_2");
         attributes.put("attrib_3", "attrib_value_3");
 
-        Collection<String> depProdIds = new LinkedList<String>();
+        Collection<String> depProdIds = new LinkedList<>();
         depProdIds.add("dep_prod_1");
         depProdIds.add("dep_prod_2");
         depProdIds.add("dep_prod_3");

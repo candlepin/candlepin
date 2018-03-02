@@ -493,7 +493,7 @@ public class ContentData extends CandlepinDTO {
         }
 
         if (this.modifiedProductIds == null) {
-            this.modifiedProductIds = new HashSet<String>();
+            this.modifiedProductIds = new HashSet<>();
         }
 
         return this.modifiedProductIds.add(productId);
@@ -535,7 +535,7 @@ public class ContentData extends CandlepinDTO {
     public ContentData setModifiedProductIds(Collection<String> modifiedProductIds) {
         if (modifiedProductIds != null) {
             if (this.modifiedProductIds == null) {
-                this.modifiedProductIds = new HashSet<String>();
+                this.modifiedProductIds = new HashSet<>();
             }
             else {
                 this.modifiedProductIds.clear();

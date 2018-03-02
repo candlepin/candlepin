@@ -72,7 +72,7 @@ public class ConsumerTranslator extends TimestampedEntityTranslator<Consumer, Co
 
             Set<ConsumerInstalledProduct> installedProducts = source.getInstalledProducts();
             if (installedProducts != null) {
-                Set<String> ips = new HashSet<String>();
+                Set<String> ips = new HashSet<>();
                 for (ConsumerInstalledProduct cip : installedProducts) {
                     if (cip != null && cip.getProductId() != null) {
                         ips.add(cip.getProductId());
@@ -83,7 +83,7 @@ public class ConsumerTranslator extends TimestampedEntityTranslator<Consumer, Co
 
             Set<ConsumerCapability> capabilities = source.getCapabilities();
             if (capabilities != null) {
-                Set<String> capabilitiesDTO = new HashSet<String>();
+                Set<String> capabilitiesDTO = new HashSet<>();
                 for (ConsumerCapability capability : capabilities) {
                     if (capability != null && capability.getName() != null) {
                         capabilitiesDTO.add(capability.getName());

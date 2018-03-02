@@ -56,7 +56,7 @@ public abstract class AbstractDTOTest<T extends CandlepinDTO<T>> {
         }
 
         this.dtoClass = dtoClass;
-        this.fields = new HashMap<String, Method[]>();
+        this.fields = new HashMap<>();
 
         // Scan for accessor/mutator pairs to test
         for (Method method : this.dtoClass.getMethods()) {

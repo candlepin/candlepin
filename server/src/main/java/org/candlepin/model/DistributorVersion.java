@@ -135,7 +135,7 @@ public class DistributorVersion extends AbstractHibernateObject {
      */
     public void setCapabilities(Set<DistributorVersionCapability> capabilities) {
         if (this.capabilities == null) {
-            this.capabilities = new HashSet<DistributorVersionCapability>();
+            this.capabilities = new HashSet<>();
         }
         if (!this.capabilities.equals(capabilities)) {
             this.capabilities.clear();

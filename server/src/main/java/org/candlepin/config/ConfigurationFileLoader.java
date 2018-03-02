@@ -46,7 +46,7 @@ public class ConfigurationFileLoader {
                 bis.close();
             }
         }
-        return new HashMap<String, String>();
+        return new HashMap<>();
     }
 
     @SuppressWarnings("unchecked")

@@ -61,7 +61,7 @@ public class RestEasyOAuthMessage extends OAuthMessage{
     }
 
     public static List<OAuth.Parameter> getParameters(HttpRequest request) {
-        List<OAuth.Parameter> list = new ArrayList<OAuth.Parameter>();
+        List<OAuth.Parameter> list = new ArrayList<>();
         java.util.List<java.lang.String> headers =
             request.getHttpHeaders().getRequestHeader("Authorization");
         if (headers != null) {

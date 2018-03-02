@@ -201,9 +201,9 @@ public class CandlepinPoolManager implements PoolManager {
         owner = this.resolveOwner(owner);
         log.info("Refreshing pools for owner: {}", owner);
 
-        Map<String, Subscription> subscriptionMap = new HashMap<String, Subscription>();
-        Map<String, ProductData> productMap = new HashMap<String, ProductData>();
-        Map<String, ContentData> contentMap = new HashMap<String, ContentData>();
+        Map<String, Subscription> subscriptionMap = new HashMap<>();
+        Map<String, ProductData> productMap = new HashMap<>();
+        Map<String, ContentData> contentMap = new HashMap<>();
 
         // Resolve all our subscriptions, products and content to ensure we don't have bad or
         // duplicate inbound data
@@ -232,7 +232,7 @@ public class CandlepinPoolManager implements PoolManager {
 
             subscriptionMap.put(subscription.getId(), subscription);
 
-            List<ProductData> products = new LinkedList<ProductData>();
+            List<ProductData> products = new LinkedList<>();
             products.add(subscription.getProduct());
             products.add(subscription.getDerivedProduct());
             products.addAll(subscription.getProvidedProducts());
@@ -349,7 +349,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         // delete pools whose subscription disappeared:
         log.debug("Deleting pools for absent subscriptions...");
-        List<Pool> poolsToDelete = new ArrayList<Pool>();
+        List<Pool> poolsToDelete = new ArrayList<>();
 
         for (Pool pool : poolCurator.getPoolsFromBadSubs(owner, subscriptionMap.keySet())) {
             if (this.isManaged(pool)) {
@@ -460,7 +460,7 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     private void removeAndDeletePoolsOnOtherOwners(List<Pool> existingPools, Pool pool) {
-        List<Pool> toRemove = new LinkedList<Pool>();
+        List<Pool> toRemove = new LinkedList<>();
 
         for (Pool existing : existingPools) {
             if (!existing.getOwner().equals(pool.getOwner())) {
@@ -545,12 +545,12 @@ public class CandlepinPoolManager implements PoolManager {
          * even if we won't use them all.
          */
         if (CollectionUtils.isEmpty(existingPools)) {
-            return new HashSet<String>(0);
+            return new HashSet<>(0);
         }
 
         log.debug("Updating {} pools for existing master pool: {}", existingPools.size(), pool);
 
-        Map<String, EventBuilder> poolEvents = new HashMap<String, EventBuilder>();
+        Map<String, EventBuilder> poolEvents = new HashMap<>();
         for (Pool existing : existingPools) {
             EventBuilder eventBuilder = eventFactory
                 .getEventBuilder(Target.POOL, Type.MODIFIED)
@@ -594,10 +594,10 @@ public class CandlepinPoolManager implements PoolManager {
         List<PoolUpdate> updatedPools) {
 
         boolean flush = false;
-        Set<String> existingPoolIds = new HashSet<String>();
-        Set<Pool> poolsToDelete = new HashSet<Pool>();
-        Set<Pool> poolsToRegenEnts = new HashSet<Pool>();
-        Set<String> entitlementsToRegen = new HashSet<String>();
+        Set<String> existingPoolIds = new HashSet<>();
+        Set<Pool> poolsToDelete = new HashSet<>();
+        Set<Pool> poolsToRegenEnts = new HashSet<>();
+        Set<String> entitlementsToRegen = new HashSet<>();
 
         // Get our list of pool IDs so we can check which of them still exist in the DB...
         for (PoolUpdate update : updatedPools) {
@@ -686,7 +686,7 @@ public class CandlepinPoolManager implements PoolManager {
          * send out the events. Create an event for each pool that could change,
          * even if we won't use them all.
          */
-        Map<String, EventBuilder> poolEvents = new HashMap<String, EventBuilder>();
+        Map<String, EventBuilder> poolEvents = new HashMap<>();
         for (Pool existing : floatingPools) {
             EventBuilder eventBuilder = eventFactory.getEventBuilder(Target.POOL, Type.MODIFIED)
                 .setEventData(existing);
@@ -759,7 +759,7 @@ public class CandlepinPoolManager implements PoolManager {
     @Override
     public List<Pool> createPools(List<Pool> pools) {
         if (CollectionUtils.isNotEmpty(pools)) {
-            Set<String> updatedPoolIds = new HashSet<String>();
+            Set<String> updatedPoolIds = new HashSet<>();
 
             for (Pool pool : pools) {
                 // We're assuming that net-new pools will not yet have an ID here.
@@ -870,7 +870,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         // Add in branding
         if (sub.getBranding() != null) {
-            Set<Branding> branding = new HashSet<Branding>();
+            Set<Branding> branding = new HashSet<>();
 
             for (Branding brand : sub.getBranding()) {
                 // Impl note:
@@ -908,7 +908,7 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         if (sub.getProvidedProducts() != null) {
-            Set<Product> products = new HashSet<Product>();
+            Set<Product> products = new HashSet<>();
 
             for (ProductData pdata : sub.getProvidedProducts()) {
                 if (pdata != null) {
@@ -927,7 +927,7 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         if (sub.getDerivedProvidedProducts() != null) {
-            Set<Product> products = new HashSet<Product>();
+            Set<Product> products = new HashSet<>();
 
             for (ProductData pdata : sub.getDerivedProvidedProducts()) {
                 if (pdata != null) {
@@ -973,9 +973,9 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         // Gather the product IDs referenced by this subscription...
-        Set<ProductData> productData = new HashSet<ProductData>();
-        Set<String> productIds = new HashSet<String>();
-        Map<String, Product> productMap = new HashMap<String, Product>();
+        Set<ProductData> productData = new HashSet<>();
+        Set<String> productIds = new HashSet<>();
+        Map<String, Product> productMap = new HashMap<>();
 
         productData.add(sub.getProduct());
         productData.add(sub.getDerivedProduct());
@@ -1021,7 +1021,7 @@ public class CandlepinPoolManager implements PoolManager {
             return this.poolCurator.listAllByIds(poolIds).list();
         }
 
-        return new ArrayList<Pool>();
+        return new ArrayList<>();
     }
 
     @Override
@@ -1035,7 +1035,7 @@ public class CandlepinPoolManager implements PoolManager {
             return this.poolCurator.lookupBySubscriptionIds(owner, subscriptionIds);
         }
 
-        return new ArrayList<Pool>();
+        return new ArrayList<>();
     }
 
     /**
@@ -1107,7 +1107,7 @@ public class CandlepinPoolManager implements PoolManager {
         Date entitleDate = data.getOnDate();
         Owner owner = consumer.getOwner();
 
-        List<PoolQuantity> bestPools = new ArrayList<PoolQuantity>();
+        List<PoolQuantity> bestPools = new ArrayList<>();
         // fromPools will be empty if the dev pool was already created.
         if (consumer != null && consumer.isDev() && !fromPools.isEmpty()) {
             String poolId = fromPools.iterator().next();
@@ -1145,7 +1145,7 @@ public class CandlepinPoolManager implements PoolManager {
         Collection<String> possiblePools) throws EntitlementRefusedException {
 
         host = consumerCurator.lockAndLoad(host);
-        List<Entitlement> entitlements = new LinkedList<Entitlement>();
+        List<Entitlement> entitlements = new LinkedList<>();
         if (!host.getOwner().equals(guest.getOwner())) {
             log.debug("Host {} and guest {} have different owners", host.getUuid(), guest.getUuid());
             return entitlements;
@@ -1188,7 +1188,7 @@ public class CandlepinPoolManager implements PoolManager {
         Owner owner, String serviceLevelOverride, Collection<String> fromPools)
         throws EntitlementRefusedException {
 
-        Map<String, ValidationResult> failedResults = new HashMap<String, ValidationResult>();
+        Map<String, ValidationResult> failedResults = new HashMap<>();
         log.debug("Looking up best pools for host: {}", host);
 
         boolean tempLevel = false;
@@ -1223,10 +1223,10 @@ public class CandlepinPoolManager implements PoolManager {
             log.debug("Removing pool host is already entitled to: {}", ent.getPool());
             allOwnerPools.remove(ent.getPool());
         }
-        List<Pool> filteredPools = new LinkedList<Pool>();
+        List<Pool> filteredPools = new LinkedList<>();
 
         ComplianceStatus guestCompliance = complianceRules.getStatus(guest, entitleDate, false);
-        Set<String> tmpSet = new HashSet<String>();
+        Set<String> tmpSet = new HashSet<>();
         //we only want to heal red products, not yellow
         tmpSet.addAll(guestCompliance.getNonCompliantProducts());
         log.debug("Guest's non-compliant products: {}", Util.collectionToString(tmpSet));
@@ -1349,7 +1349,7 @@ public class CandlepinPoolManager implements PoolManager {
      * already have virt_only pools available to the guest
      */
     private Set<String> getProductsToRemove(List<Pool> allOwnerPoolsForGuest, Set<String> tmpSet) {
-        Set<String> productsToRemove = new HashSet<String>();
+        Set<String> productsToRemove = new HashSet<>();
 
         // Bulk fetch our provided product IDs so we're not hitting the DB several times
         // for this lookup.
@@ -1400,7 +1400,7 @@ public class CandlepinPoolManager implements PoolManager {
         String serviceLevelOverride, Collection<String> fromPools)
         throws EntitlementRefusedException {
 
-        Map<String, ValidationResult> failedResults = new HashMap<String, ValidationResult>();
+        Map<String, ValidationResult> failedResults = new HashMap<>();
 
         Date activePoolDate = entitleDate;
         if (entitleDate == null) {
@@ -1412,7 +1412,7 @@ public class CandlepinPoolManager implements PoolManager {
         List<Pool> allOwnerPools = this.listAvailableEntitlementPools(
             consumer, null, owner, null, null, activePoolDate, false,
             poolFilter, null, false, false, null).getPageData();
-        List<Pool> filteredPools = new LinkedList<Pool>();
+        List<Pool> filteredPools = new LinkedList<>();
 
         // We have to check compliance status here so we can replace an empty
         // array of product IDs with the array the consumer actually needs. (i.e. during
@@ -1420,7 +1420,7 @@ public class CandlepinPoolManager implements PoolManager {
         ComplianceStatus compliance = complianceRules.getStatus(consumer, entitleDate, false);
         if (productIds == null || productIds.length == 0) {
             log.debug("No products specified for bind, checking compliance to see what is needed.");
-            Set<String> tmpSet = new HashSet<String>();
+            Set<String> tmpSet = new HashSet<>();
             tmpSet.addAll(compliance.getNonCompliantProducts());
             tmpSet.addAll(compliance.getPartiallyCompliantProducts().keySet());
             productIds = tmpSet.toArray(new String [] {});
@@ -1497,7 +1497,7 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     private Map<String, Integer> convertToMap(List<PoolQuantity> poolQuantities) {
-        Map<String, Integer> result = new HashMap<String, Integer>();
+        Map<String, Integer> result = new HashMap<>();
         for (PoolQuantity poolQuantity : poolQuantities) {
             result.put(poolQuantity.getPool().getId(), poolQuantity.getQuantity());
         }
@@ -1524,7 +1524,7 @@ public class CandlepinPoolManager implements PoolManager {
             return createEntitlements(consumer, poolQuantities, CallerType.BIND);
         }
 
-        return new ArrayList<Entitlement>();
+        return new ArrayList<>();
     }
 
     @Override
@@ -1557,7 +1557,7 @@ public class CandlepinPoolManager implements PoolManager {
         if (!result.isSuccessful()) {
             log.warn("Entitlement not updated: {} for pool: {}", result.getErrors().toString(), pool.getId());
 
-            Map<String, ValidationResult> errorMap = new HashMap<String, ValidationResult>();
+            Map<String, ValidationResult> errorMap = new HashMap<>();
             errorMap.put(pool.getId(), result);
 
             throw new EntitlementRefusedException(errorMap);
@@ -1580,13 +1580,13 @@ public class CandlepinPoolManager implements PoolManager {
         poolCurator.merge(pool);
         consumer.setEntitlementCount(consumer.getEntitlementCount() + change);
 
-        Map<String, Entitlement> entMap = new HashMap<String, Entitlement>();
+        Map<String, Entitlement> entMap = new HashMap<>();
         entMap.put(pool.getId(), entitlement);
-        Map<String, PoolQuantity> poolQuantityMap = new HashMap<String, PoolQuantity>();
+        Map<String, PoolQuantity> poolQuantityMap = new HashMap<>();
         poolQuantityMap.put(pool.getId(), new PoolQuantity(pool, change));
 
         // the only thing we do here is decrement bonus pool quantity
-        enforcer.postEntitlement(this, consumer, entMap, new ArrayList<Pool>(), true, poolQuantityMap);
+        enforcer.postEntitlement(this, consumer, entMap, new ArrayList<>(), true, poolQuantityMap);
 
         // we might have changed the bonus pool quantities, revoke ents if needed.
         checkBonusPoolQuantities(consumer.getOwner(), entMap);
@@ -1651,7 +1651,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         poolCurator.flush();
 
-        return new ArrayList<Entitlement>(ents);
+        return new ArrayList<>(ents);
     }
 
     /**
@@ -1664,8 +1664,8 @@ public class CandlepinPoolManager implements PoolManager {
     public void checkBonusPoolQuantities(Owner owner,
         Map<String, Entitlement> entitlements) {
 
-        Set<String> excludePoolIds = new HashSet<String>();
-        Map<String, Entitlement> subEntitlementMap = new HashMap<String, Entitlement>();
+        Set<String> excludePoolIds = new HashSet<>();
+        Map<String, Entitlement> subEntitlementMap = new HashMap<>();
         for (Entry<String, Entitlement> entry : entitlements.entrySet()) {
             Pool pool = entry.getValue().getPool();
             subEntitlementMap.put(pool.getSubscriptionId(), entitlements.get(entry.getKey()));
@@ -1675,7 +1675,7 @@ public class CandlepinPoolManager implements PoolManager {
         List<Pool> overConsumedPools = poolCurator.lookupOversubscribedBySubscriptionIds(owner,
             subEntitlementMap);
 
-        List<Pool> derivedPools = new ArrayList<Pool>();
+        List<Pool> derivedPools = new ArrayList<>();
         for (Pool pool : overConsumedPools) {
             if (pool.getQuantity() != -1 && !excludePoolIds.contains(pool.getId())) {
                 derivedPools.add(pool);
@@ -1766,7 +1766,7 @@ public class CandlepinPoolManager implements PoolManager {
             log.trace("Additional pool IDs: {}", getPoolIds(poolsToDelete));
         }
 
-        List<Pool> poolsToLock = new ArrayList<Pool>();
+        List<Pool> poolsToLock = new ArrayList<>();
         poolsToLock.addAll(poolsToDelete);
 
         for (Entitlement ent: entsToRevoke) {
@@ -1781,7 +1781,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         poolCurator.lockAndLoad(poolsToLock);
         log.info("Batch revoking {} entitlements", entsToRevoke.size());
-        entsToRevoke = new ArrayList<Entitlement>(entsToRevoke);
+        entsToRevoke = new ArrayList<>(entsToRevoke);
 
         for (Pool pool : poolsToDelete) {
             for (Entitlement ent : pool.getEntitlements()) {
@@ -1791,8 +1791,8 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         log.debug("Adjusting consumed quantities on pools");
-        List<Pool> poolsToSave = new ArrayList<Pool>();
-        Set<String> entIdsToRevoke = new HashSet<String>();
+        List<Pool> poolsToSave = new ArrayList<>();
+        Set<String> entIdsToRevoke = new HashSet<>();
         for (Entitlement ent : entsToRevoke) {
             // TODO: Should we throw an exception if we find a malformed/incomplete entitlement
             // or just continue silently ignoring them?
@@ -1904,7 +1904,7 @@ public class CandlepinPoolManager implements PoolManager {
      * @return
      */
     private List<String> getEntIds(Collection<Entitlement> entitlements) {
-        List<String> ids = new ArrayList<String>();
+        List<String> ids = new ArrayList<>();
 
         for (Entitlement e : entitlements) {
             ids.add(e.getId());
@@ -1919,7 +1919,7 @@ public class CandlepinPoolManager implements PoolManager {
      * @return List pool ID list
      */
     private List<String> getPoolIds(Collection<Pool> pools) {
-        List<String> ids = new ArrayList<String>();
+        List<String> ids = new ArrayList<>();
 
         for (Pool e : pools) {
             ids.add(e.getId());
@@ -1939,7 +1939,7 @@ public class CandlepinPoolManager implements PoolManager {
      */
     private void filterAndUpdateStackingEntitlements(
         Map<Consumer, List<Entitlement>> consumerSortedEntitlements, Set<String> alreadyDeletedPools) {
-        Map<Consumer, List<Entitlement>> stackingEntitlements = new HashMap<Consumer, List<Entitlement>>();
+        Map<Consumer, List<Entitlement>> stackingEntitlements = new HashMap<>();
 
         for (Consumer consumer : consumerSortedEntitlements.keySet()) {
             List<Entitlement> ents = consumerSortedEntitlements.get(consumer);
@@ -1951,7 +1951,7 @@ public class CandlepinPoolManager implements PoolManager {
                         pool.getProduct().hasAttribute(Product.Attributes.STACKING_ID)) {
                         List<Entitlement> entList = stackingEntitlements.get(consumer);
                         if (entList == null) {
-                            entList = new ArrayList<Entitlement>();
+                            entList = new ArrayList<>();
                             stackingEntitlements.put(consumer, entList);
                         }
                         entList.add(ent);
@@ -1966,7 +1966,7 @@ public class CandlepinPoolManager implements PoolManager {
                     entry.getValue().size(), entry.getKey());
             }
 
-            Set<String> stackIds = new HashSet<String>();
+            Set<String> stackIds = new HashSet<>();
             for (Entitlement ent : entry.getValue()) {
                 stackIds.add(ent.getPool().getStackId());
             }
@@ -2038,11 +2038,11 @@ public class CandlepinPoolManager implements PoolManager {
         // passing state through the various codepaths like this. It makes things far messier
         // than they need to be and is resulting in running slow calculations multiple times.
         if (alreadyDeletedPoolIds == null) {
-            alreadyDeletedPoolIds = new HashSet<String>();
+            alreadyDeletedPoolIds = new HashSet<>();
         }
 
-        Set<String> poolIds = new HashSet<String>();
-        Set<String> entitlementIds = new HashSet<String>();
+        Set<String> poolIds = new HashSet<>();
+        Set<String> entitlementIds = new HashSet<>();
         Owner owner = null;
 
         // Convert pools to pool IDs.
@@ -2151,10 +2151,9 @@ public class CandlepinPoolManager implements PoolManager {
             if (!entitlements.isEmpty()) {
                 // Update entitlement counts on affected, non-deleted pools
                 log.info("Updating entitlement counts on remaining, affected pools...");
-                Map<Consumer, List<Entitlement>> consumerStackedEnts =
-                    new HashMap<Consumer, List<Entitlement>>();
-                List<Pool> poolsToSave = new LinkedList<Pool>();
-                Set<String> stackIds = new HashSet<String>();
+                Map<Consumer, List<Entitlement>> consumerStackedEnts = new HashMap<>();
+                List<Pool> poolsToSave = new LinkedList<>();
+                Set<String> stackIds = new HashSet<>();
 
                 for (Entitlement entitlement : entitlements) {
                     // Since we're sifting through these already, let's also sort them into consumer lists
@@ -2164,7 +2163,7 @@ public class CandlepinPoolManager implements PoolManager {
 
                     List<Entitlement> stackedEntitlements = consumerStackedEnts.get(consumer);
                     if (stackedEntitlements == null) {
-                        stackedEntitlements = new LinkedList<Entitlement>();
+                        stackedEntitlements = new LinkedList<>();
                         consumerStackedEnts.put(consumer, stackedEntitlements);
                     }
 
@@ -2231,7 +2230,7 @@ public class CandlepinPoolManager implements PoolManager {
                 this.consumerCurator.flush();
 
                 // Hydrate remaining consumer pools so we can skip some extra work during serialization
-                Set<Pool> poolsToHydrate = new HashSet<Pool>();
+                Set<Pool> poolsToHydrate = new HashSet<>();
 
                 for (Consumer consumer : consumerStackedEnts.keySet()) {
                     for (Entitlement entitlement : consumer.getEntitlements()) {
@@ -2346,8 +2345,8 @@ public class CandlepinPoolManager implements PoolManager {
     public Map<String, Entitlement> handleEntitlement(Consumer consumer,
         Map<String, PoolQuantity> poolQuantities) {
 
-        List<Entitlement> entsToPersist = new ArrayList<Entitlement>();
-        Map<String, Entitlement> result = new HashMap<String, Entitlement>();
+        List<Entitlement> entsToPersist = new ArrayList<>();
+        Map<String, Entitlement> result = new HashMap<>();
 
         for (Entry<String, PoolQuantity> entry : poolQuantities.entrySet()) {
             Entitlement newEntitlement = new Entitlement(
@@ -2375,7 +2374,7 @@ public class CandlepinPoolManager implements PoolManager {
 
     public void handlePostEntitlement(PoolManager manager, Consumer consumer,
         Map<String, Entitlement> entitlements, Map<String, PoolQuantity> poolQuantityMap) {
-        Set<String> stackIds = new HashSet<String>();
+        Set<String> stackIds = new HashSet<>();
         for (Entitlement entitlement : entitlements.values()) {
             if (entitlement.getPool().isStacked()) {
                 stackIds.add(entitlement.getPool().getStackId());
@@ -2393,7 +2392,7 @@ public class CandlepinPoolManager implements PoolManager {
             }
         }
         else {
-            subPoolsForStackIds = new ArrayList<Pool>();
+            subPoolsForStackIds = new ArrayList<>();
         }
 
         enforcer.postEntitlement(manager,
@@ -2533,7 +2532,7 @@ public class CandlepinPoolManager implements PoolManager {
 
     private List<Pool> filterPoolsForActKey(ActivationKey key,
         List<Pool> pools, boolean includeWarnings) {
-        List<Pool> filteredPools = new LinkedList<Pool>();
+        List<Pool> filteredPools = new LinkedList<>();
         for (Pool p : pools) {
             ValidationResult result = activationKeyRules.runPreActKey(key, p, null);
             if (result.isSuccessful() && (!result.hasWarnings() || includeWarnings)) {

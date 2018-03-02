@@ -98,7 +98,7 @@ public class UserResourceTest extends DatabaseTestFixture {
         roleCurator.create(owner1Role);
         roleCurator.create(owner2Role);
 
-        Set<Permission> perms = new HashSet<Permission>();
+        Set<Permission> perms = new HashSet<>();
         perms.add(new OwnerPermission(owner1, Access.ALL));
         perms.add(new OwnerPermission(owner2, Access.READ_ONLY));
         Principal userPrincipal = new UserPrincipal(user.getUsername(), perms, false);
@@ -106,7 +106,7 @@ public class UserResourceTest extends DatabaseTestFixture {
         // Requesting the list of owners for this user should assume ALL, and not
         // return owner2:
         Iterable<Owner> response = userResource.listUsersOwners(user.getUsername(), userPrincipal);
-        List<Owner> owners = new LinkedList<Owner>();
+        List<Owner> owners = new LinkedList<>();
         for (Object entity : response) {
             owners.add((Owner) entity);
         }
@@ -130,12 +130,12 @@ public class UserResourceTest extends DatabaseTestFixture {
         owner1Role.addUser(user);
         roleCurator.create(owner1Role);
 
-        Set<Permission> perms = new HashSet<Permission>();
+        Set<Permission> perms = new HashSet<>();
         perms.add(new UsernameConsumersPermission(user, owner1));
         Principal userPrincipal = new UserPrincipal(user.getUsername(), perms, false);
 
         Iterable<Owner> response = userResource.listUsersOwners(user.getUsername(), userPrincipal);
-        List<Owner> owners = new LinkedList<Owner>();
+        List<Owner> owners = new LinkedList<>();
         for (Object entity : response) {
             owners.add((Owner) entity);
         }

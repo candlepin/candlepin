@@ -61,8 +61,8 @@ public class DynamicFilterData {
     }
 
     public DynamicFilterData(boolean whitelist) {
-        this.includeFilters = new HashMap<String, List<String>>();
-        this.excludeFilters = new HashMap<String, List<String>>();
+        this.includeFilters = new HashMap<>();
+        this.excludeFilters = new HashMap<>();
         this.whitelist = whitelist;
     }
 

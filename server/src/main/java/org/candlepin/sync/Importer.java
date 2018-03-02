@@ -374,7 +374,7 @@ public class Importer {
     private ImportRecord doExport(Owner owner, File exportDir, ConflictOverrides overrides,
         String uploadedFileName) throws ImporterException {
 
-        Map<String, Object> result = new HashMap<String, Object>();
+        Map<String, Object> result = new HashMap<>();
         try {
             File signature = new File(exportDir, "signature");
             if (signature.length() == 0) {
@@ -408,7 +408,7 @@ public class Importer {
             File consumerExportDir = extractArchive(exportDir, consumerExport.getName(),
                 new FileInputStream(consumerExport));
 
-            Map<String, File> importFiles = new HashMap<String, File>();
+            Map<String, File> importFiles = new HashMap<>();
             File[] listFiles = consumerExportDir.listFiles();
             if (listFiles == null || listFiles.length == 0) {
                 throw new ImportExtractionException(i18n.tr("The consumer_export archive has no contents"));
@@ -506,7 +506,7 @@ public class Importer {
         // If any calls find conflicts we'll assemble them into one exception detailing all
         // the conflicts which occurred, so the caller can override them all at once
         // if desired:
-        List<ImportConflictException> conflictExceptions = new LinkedList<ImportConflictException>();
+        List<ImportConflictException> conflictExceptions = new LinkedList<>();
 
         File rules = importFiles.get(ImportFile.RULES_FILE.fileName());
         importRules(rules, metadata);
@@ -578,7 +578,7 @@ public class Importer {
         else {
             log.warn("No products found to import, skipping product import.");
             log.warn("No entitlements in manifest, removing all subscriptions for owner.");
-            importSubs = importEntitlements(owner, new HashSet<Product>(), new File[]{},
+            importSubs = importEntitlements(owner, new HashSet<>(), new File[]{},
                 consumer.getUuid(), meta);
         }
 
@@ -633,7 +633,7 @@ public class Importer {
 
     protected void importConsumerTypes(File[] consumerTypes) throws IOException {
         ConsumerTypeImporter importer = new ConsumerTypeImporter(consumerTypeCurator);
-        Set<ConsumerType> consumerTypeObjs = new HashSet<ConsumerType>();
+        Set<ConsumerType> consumerTypeObjs = new HashSet<>();
 
         for (File consumerType : consumerTypes) {
             Reader reader = null;
@@ -741,7 +741,7 @@ public class Importer {
     protected Set<Product> importProducts(File[] products, ProductImporter importer, Owner owner)
         throws IOException {
 
-        Set<Product> productsToImport = new HashSet<Product>();
+        Set<Product> productsToImport = new HashSet<>();
         for (File product : products) {
             // Skip product.pem's, we just need the json to import:
             if (product.getName().endsWith(".json")) {
@@ -774,7 +774,7 @@ public class Importer {
         log.debug("Importing entitlements for owner: {}", owner);
 
         EntitlementImporter importer = new EntitlementImporter(csCurator, cdnCurator, i18n, productCurator);
-        Map<String, Product> productsById = new HashMap<String, Product>();
+        Map<String, Product> productsById = new HashMap<>();
 
         for (Product product : products) {
             log.debug("Adding product owned by {} to ID map", owner.getKey());
@@ -784,7 +784,7 @@ public class Importer {
             productsById.put(product.getId(), product);
         }
 
-        List<Subscription> subscriptionsToImport = new ArrayList<Subscription>();
+        List<Subscription> subscriptionsToImport = new ArrayList<>();
         for (File entitlement : entitlements) {
             Reader reader = null;
             try {
@@ -898,7 +898,7 @@ public class Importer {
 
     protected void importDistributorVersions(File[] versionFiles) throws IOException {
         DistributorVersionImporter importer = new DistributorVersionImporter(distVerCurator);
-        Set<DistributorVersion> distVers = new HashSet<DistributorVersion>();
+        Set<DistributorVersion> distVers = new HashSet<>();
 
         for (File verFile : versionFiles) {
             Reader reader = null;
@@ -917,7 +917,7 @@ public class Importer {
 
     protected void importContentDeliveryNetworks(File[] cdnFiles) throws IOException {
         CdnImporter importer = new CdnImporter(cdnCurator);
-        Set<Cdn> cdns = new HashSet<Cdn>();
+        Set<Cdn> cdns = new HashSet<>();
 
         for (File cdnFile : cdnFiles) {
             Reader reader = null;

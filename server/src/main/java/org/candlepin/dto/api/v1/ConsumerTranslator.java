@@ -96,7 +96,7 @@ public class ConsumerTranslator extends TimestampedEntityTranslator<Consumer, Co
                 ObjectTranslator<ConsumerInstalledProduct, ConsumerInstalledProductDTO> cipTranslator =
                     translator.findTranslatorByClass(ConsumerInstalledProduct.class,
                     ConsumerInstalledProductDTO.class);
-                Set<ConsumerInstalledProductDTO> ips = new HashSet<ConsumerInstalledProductDTO>();
+                Set<ConsumerInstalledProductDTO> ips = new HashSet<>();
                 for (ConsumerInstalledProduct cip : installedProducts) {
                     if (cip != null) {
                         ConsumerInstalledProductDTO dto = cipTranslator.translate(translator, cip);
@@ -110,7 +110,7 @@ public class ConsumerTranslator extends TimestampedEntityTranslator<Consumer, Co
 
             Set<ConsumerCapability> capabilities = source.getCapabilities();
             if (capabilities != null) {
-                Set<CapabilityDTO> capabilitiesDTO = new HashSet<CapabilityDTO>();
+                Set<CapabilityDTO> capabilitiesDTO = new HashSet<>();
                 ObjectTranslator<ConsumerCapability, CapabilityDTO> capabilityTranslator =
                     translator.findTranslatorByClass(ConsumerCapability.class, CapabilityDTO.class);
 
@@ -126,7 +126,7 @@ public class ConsumerTranslator extends TimestampedEntityTranslator<Consumer, Co
             }
 
             //This will put in the property so that the virtWho instances won't error
-            dest.setGuestIds(new ArrayList<GuestIdDTO>());
+            dest.setGuestIds(new ArrayList<>());
 
             dest.setHypervisorId(translator.translate(source.getHypervisorId(), HypervisorIdDTO.class));
             dest.setType(translator.translate(source.getType(), ConsumerTypeDTO.class));

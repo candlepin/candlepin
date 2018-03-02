@@ -269,7 +269,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
 
         akr.addPoolToKey("testKey", "testPool1", 1L);
         assertEquals(1, ak.getPools().size());
-        Set<ActivationKeyPool> akPools = new HashSet<ActivationKeyPool>();
+        Set<ActivationKeyPool> akPools = new HashSet<>();
         akPools.add(new ActivationKeyPool(ak, p1, 1L));
         ak.setPools(akPools);
         akr.addPoolToKey("testKey", "testPool2", 1L);

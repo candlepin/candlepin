@@ -137,7 +137,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             "SELECT product.uuid FROM Pool p INNER JOIN p.providedProducts product where p.id = :poolid",
             String.class);
         query.setParameter("poolid", poolId);
-        return new HashSet<String>(query.getResultList());
+        return new HashSet<>(query.getResultList());
     }
 
     /**
@@ -152,7 +152,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             "WHERE p.id = :poolid",
             String.class);
         query.setParameter("poolid", poolId);
-        return new HashSet<String>(query.getResultList());
+        return new HashSet<>(query.getResultList());
     }
 
     /**
@@ -166,11 +166,11 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      */
     public Set<Product> getProductsByUuidCached(Set<String> productUuids) {
         if (productUuids.size() == 0) {
-            return new HashSet<Product>();
+            return new HashSet<>();
         }
 
-        Set<Product> products = new HashSet<Product>();
-        Set<String> notInCache = new HashSet<String>();
+        Set<Product> products = new HashSet<>();
+        Set<String> notInCache = new HashSet<>();
         Cache<String, Product> productCache = candlepinCache.getProductCache();
 
         //First find all products that are in cache. Those keys that
@@ -197,7 +197,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      * @return Map of UUID to Product instance
      */
     public Map<String, Product> getHydratedProductsByUuid(Set<String> uuids) {
-        Map<String, Product> productsByUuid = new HashMap<String, Product>();
+        Map<String, Product> productsByUuid = new HashMap<>();
 
         if (uuids != null && !uuids.isEmpty()) {
             for (Product product : this.listAllByUuids(uuids)) {
@@ -235,11 +235,11 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             Cache<String, Product> productCache = this.candlepinCache.getProductCache();
 
             // We use these set for both product UUIDs and product instances, once populated
-            Map<String, Set> poolProvidedProducts = new HashMap<String, Set>();
-            Map<String, Set> poolDerivedProvidedProducts = new HashMap<String, Set>();
+            Map<String, Set> poolProvidedProducts = new HashMap<>();
+            Map<String, Set> poolDerivedProvidedProducts = new HashMap<>();
 
-            Set<String> poolIds = new HashSet<String>();
-            Set<String> productUuids = new HashSet<String>();
+            Set<String> poolIds = new HashSet<>();
+            Set<String> productUuids = new HashSet<>();
 
             for (Pool pool : pools) {
                 poolIds.add(pool.getId());
@@ -264,7 +264,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
 
                     Set<Object> ppSet = poolProvidedProducts.get(poolId);
                     if (ppSet == null) {
-                        ppSet = new HashSet<Object>();
+                        ppSet = new HashSet<>();
                         poolProvidedProducts.put(poolId, ppSet);
                     }
 
@@ -286,7 +286,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
 
                     Set<Object> dpSet = poolDerivedProvidedProducts.get(poolId);
                     if (dpSet == null) {
-                        dpSet = new HashSet<Object>();
+                        dpSet = new HashSet<>();
                         poolDerivedProvidedProducts.put(poolId, dpSet);
                     }
 

@@ -193,11 +193,11 @@ public class GuestIdResource {
 
         // Create a skeleton consumer for consumerResource.performConsumerUpdates
         Consumer consumer = new Consumer();
-        List<GuestId> guestIds = new ArrayList<GuestId>();
+        List<GuestId> guestIds = new ArrayList<>();
         populateEntities(guestIds, guestIdDTOs);
         consumer.setGuestIds(guestIds);
 
-        Set<String> allGuestIds = new HashSet<String>();
+        Set<String> allGuestIds = new HashSet<>();
         for (GuestId gid : consumer.getGuestIds()) {
             allGuestIds.add(gid.getGuestId());
         }

@@ -75,7 +75,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
 
     @Before
     public void setUp() {
-        List<Subscription> subscriptions = new ArrayList<Subscription>();
+        List<Subscription> subscriptions = new ArrayList<>();
         subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
 
         manifestType = consumerTypeCurator.create(
@@ -97,7 +97,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
         productLimit.setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes");
         productLimit = this.createProduct(productLimit, owner);
 
-        Subscription limitSub = TestUtil.createSubscription(owner, productLimit, new HashSet<Product>());
+        Subscription limitSub = TestUtil.createSubscription(owner, productLimit, new HashSet<>());
         limitSub.setId(Util.generateDbUUID());
         limitSub.setQuantity(10L);
         limitSub.setStartDate(TestUtil.createDate(2010, 1, 1));
@@ -113,7 +113,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
         productUnlimit.setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes");
         productUnlimit = this.createProduct(productUnlimit, owner);
 
-        Subscription unlimitSub = TestUtil.createSubscription(owner, productUnlimit, new HashSet<Product>());
+        Subscription unlimitSub = TestUtil.createSubscription(owner, productUnlimit, new HashSet<>());
         unlimitSub.setId(Util.generateDbUUID());
         unlimitSub.setQuantity(10L);
         unlimitSub.setStartDate(TestUtil.createDate(2010, 1, 1));
@@ -129,7 +129,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
      */
     @Test
     public void testLimitPool() {
-        List<Pool> subscribedTo = new ArrayList<Pool>();
+        List<Pool> subscribedTo = new ArrayList<>();
         Consumer guestConsumer = TestUtil.createConsumer(systemType, owner);
         guestConsumer.setFact("virt.is_guest", "true");
 
@@ -186,7 +186,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
 
     @Test
     public void testUnlimitPool() {
-        List<Pool> subscribedTo = new ArrayList<Pool>();
+        List<Pool> subscribedTo = new ArrayList<>();
         Consumer guestConsumer = TestUtil.createConsumer(systemType, owner);
         guestConsumer.setFact("virt.is_guest", "true");
 

@@ -56,7 +56,7 @@ public class ImportConflictException extends CandlepinException {
         List<ImportConflictException> conflictExceptions) {
 
         StringBuffer newMessage = new StringBuffer();
-        Set<Importer.Conflict> conflicts = new HashSet<Importer.Conflict>();
+        Set<Importer.Conflict> conflicts = new HashSet<>();
         for (ImportConflictException e : conflictExceptions) {
             if (newMessage.length() > 0) {
                 newMessage.append("\n");

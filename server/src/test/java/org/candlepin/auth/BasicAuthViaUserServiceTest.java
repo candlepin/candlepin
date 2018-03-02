@@ -19,7 +19,6 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.auth.permissions.OwnerPermission;
-import org.candlepin.auth.permissions.Permission;
 import org.candlepin.common.exceptions.NotAuthorizedException;
 import org.candlepin.model.Owner;
 import org.candlepin.model.User;
@@ -61,7 +60,7 @@ public class BasicAuthViaUserServiceTest {
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        headerMap = new MultivaluedMapImpl<String, String>();
+        headerMap = new MultivaluedMapImpl<>();
         when(mockHeaders.getRequestHeaders()).thenReturn(headerMap);
         when(request.getHttpHeaders()).thenReturn(mockHeaders);
         when(mockHeaders.getRequestHeader(anyString())).then(new Answer<List<String>>() {
@@ -122,13 +121,12 @@ public class BasicAuthViaUserServiceTest {
         when(userService.validateUser("user", "redhat")).thenReturn(true);
         // TODO: test will fail, need to mock the permissions setup
 
-        Set<OwnerPermission> permissions = new HashSet<OwnerPermission>();
+        Set<OwnerPermission> permissions = new HashSet<>();
         permissions.add(new OwnerPermission(owner, Access.ALL));
 
         when(userService.findByLogin("user")).thenReturn(new User());
 
-        UserPrincipal expected = new UserPrincipal("user",
-            new ArrayList<Permission>(permissions), false);
+        UserPrincipal expected = new UserPrincipal("user", new ArrayList<>(permissions), false);
         assertEquals(expected, this.auth.getPrincipal(request));
     }
 
@@ -139,13 +137,12 @@ public class BasicAuthViaUserServiceTest {
         setUserAndPassword("user", "1:2");
         when(userService.validateUser("user", "1:2")).thenReturn(true);
 
-        Set<OwnerPermission> permissions = new HashSet<OwnerPermission>();
+        Set<OwnerPermission> permissions = new HashSet<>();
         permissions.add(new OwnerPermission(owner, Access.ALL));
 
         when(userService.findByLogin("user")).thenReturn(new User());
 
-        UserPrincipal expected = new UserPrincipal("user",
-            new ArrayList<Permission>(permissions), false);
+        UserPrincipal expected = new UserPrincipal("user", new ArrayList<>(permissions), false);
         assertEquals(expected, this.auth.getPrincipal(request));
     }
     @Test
@@ -156,13 +153,12 @@ public class BasicAuthViaUserServiceTest {
         when(userService.validateUser("user", null)).thenReturn(true);
 
 
-        Set<OwnerPermission> permissions = new HashSet<OwnerPermission>();
+        Set<OwnerPermission> permissions = new HashSet<>();
         permissions.add(new OwnerPermission(owner, Access.ALL));
 
         when(userService.findByLogin("user")).thenReturn(new User());
 
-        UserPrincipal expected = new UserPrincipal("user",
-            new ArrayList<Permission>(permissions), false);
+        UserPrincipal expected = new UserPrincipal("user", new ArrayList<>(permissions), false);
         assertEquals(expected, this.auth.getPrincipal(request));
     }
 

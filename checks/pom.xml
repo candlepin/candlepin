@@ -11,7 +11,7 @@
   </parent>
   <groupId>org.candlepin</groupId>
   <artifactId>candlepin-checks</artifactId>
-  <version>0.2</version>
+  <version>0.3</version>
   <packaging>jar</packaging>
   <name>Candlepin Style Checks</name>
   <description>Custom Checkstyle checks for Candlepin</description>

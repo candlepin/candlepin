@@ -178,9 +178,8 @@ public abstract class PropertyValidator {
      * Validator providing validation for Boolean properties
      */
     protected static class BooleanValidator extends Validator {
-        private static final Set<String> BOOLEAN_VALUES = Collections.unmodifiableSet(new HashSet<String>(
-            Arrays.asList("true", "false", "1", "0")
-        ));
+        private static final Set<String> BOOLEAN_VALUES = Collections.unmodifiableSet(
+            new HashSet<>(Arrays.asList("true", "false", "1", "0")));
 
         public BooleanValidator(I18n i18n, String propertyType) {
             super(i18n, propertyType);
@@ -202,8 +201,8 @@ public abstract class PropertyValidator {
      * Creates a new PropertyValidator instance.
      */
     public PropertyValidator() {
-        this.validators = new HashMap<String, Validator>();
-        this.globalValidators = new HashSet<Validator>();
+        this.validators = new HashMap<>();
+        this.globalValidators = new HashSet<>();
 
         // Validators will be added by subclasses as necessary
     }

@@ -57,7 +57,7 @@ public class EventAdapterTest {
     @Test
     public void toFeed() {
         EventAdapter ea = new EventAdapterImpl(new ConfigForTesting(), i18n);
-        List<Event> events = new LinkedList<Event>();
+        List<Event> events = new LinkedList<>();
         events.add(mockEvent(Event.Target.CONSUMER, Event.Type.CREATED));
         events.add(mockEvent(Event.Target.ENTITLEMENT, Event.Type.DELETED));
         Feed f = ea.toFeed(events, "/test/path");
@@ -96,7 +96,7 @@ public class EventAdapterTest {
     @Test
     public void emptyList() {
         EventAdapter ea = new EventAdapterImpl(new ConfigForTesting(), i18n);
-        Feed f = ea.toFeed(new LinkedList<Event>(), "/some/path");
+        Feed f = ea.toFeed(new LinkedList<>(), "/some/path");
         assertNotNull(f);
         assertNotNull(f.getEntries());
         assertTrue(f.getEntries().isEmpty());

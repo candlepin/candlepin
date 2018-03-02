@@ -38,7 +38,7 @@ public class StackedSubPoolValueAccumulator {
     private Entitlement eldestWithVirtLimit;
     private Date startDate;
     private Date endDate;
-    private Set<Product> expectedProvidedProds = new HashSet<Product>();
+    private Set<Product> expectedProvidedProds = new HashSet<>();
     private ProductCurator productCurator;
 
     public StackedSubPoolValueAccumulator(Pool stackedSubPool, Collection<Entitlement> stackedEnts,

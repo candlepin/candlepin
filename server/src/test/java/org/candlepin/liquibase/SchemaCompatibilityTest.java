@@ -59,7 +59,7 @@ public class SchemaCompatibilityTest {
         Pattern xsdPattern = Pattern.compile("http://www.liquibase" +
             ".org/xml/ns/dbchangelog/dbchangelog-(\\d.\\d).xsd");
 
-        List<String> warnings = new ArrayList<String>();
+        List<String> warnings = new ArrayList<>();
         for (File f : changesets) {
             DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder builder = builderFactory.newDocumentBuilder();
@@ -96,7 +96,7 @@ public class SchemaCompatibilityTest {
         final PathMatcher xmlMatcher = FileSystems.getDefault().getPathMatcher("glob:*.xml");
         Path resources = Paths.get("src", "main", "resources", "db", "changelog");
 
-        final List<File> matches = new ArrayList<File>();
+        final List<File> matches = new ArrayList<>();
         Files.walkFileTree(resources, new FileVisitor<Path>() {
             @Override
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {

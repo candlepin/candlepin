@@ -52,7 +52,7 @@ public class TrustedUserAuthTest {
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        headerMap = new MultivaluedMapImpl<String, String>();
+        headerMap = new MultivaluedMapImpl<>();
         when(mockHeaders.getRequestHeaders()).thenReturn(headerMap);
         when(mockHeaders.getRequestHeader(anyString())).then(new Answer<List<String>>() {
             public List<String> answer(InvocationOnMock invocation) {

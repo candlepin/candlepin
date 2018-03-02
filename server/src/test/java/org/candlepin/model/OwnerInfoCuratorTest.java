@@ -404,7 +404,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
 
         OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
 
-        Map<String, Integer> expectedPoolCount = new HashMap<String, Integer>();
+        Map<String, Integer> expectedPoolCount = new HashMap<>();
 
         assertEquals(expectedPoolCount, info.getEnabledConsumerTypeCountByPool());
     }
@@ -418,7 +418,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
 
         OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
 
-        Map<String, Integer> expectedPoolCount = new HashMap<String, Integer>();
+        Map<String, Integer> expectedPoolCount = new HashMap<>();
 
         assertEquals(expectedPoolCount, info.getEnabledConsumerTypeCountByPool());
     }
@@ -450,7 +450,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
 
         OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
 
-        Map<String, Integer> expectedPoolCount = new HashMap<String, Integer>();
+        Map<String, Integer> expectedPoolCount = new HashMap<>();
 
         assertEquals(expectedPoolCount, info.getEnabledConsumerTypeCountByPool());
     }
@@ -752,7 +752,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
     }
 
     private User setupOnlyMyConsumersPrincipal() {
-        Set<Permission> perms = new HashSet<Permission>();
+        Set<Permission> perms = new HashSet<>();
         User u = new User("MySystemsAdmin", "passwd");
         perms.add(new UsernameConsumersPermission(u, owner));
         Principal p = new UserPrincipal(u.getUsername(), perms, false);

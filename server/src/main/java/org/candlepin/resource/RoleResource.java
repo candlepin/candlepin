@@ -152,7 +152,7 @@ public class RoleResource {
         @PathParam("perm_id") String permissionId) {
 
         Role existingRole = lookupRole(roleId);
-        Set<PermissionBlueprint> picks = new HashSet<PermissionBlueprint>();
+        Set<PermissionBlueprint> picks = new HashSet<>();
         boolean found = false;
         PermissionBlueprint toRemove = null;
         for (PermissionBlueprint op : existingRole.getPermissions()) {

@@ -209,7 +209,7 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         // fake a product dto as a container for the org content
         org.candlepin.model.dto.Product container = new org.candlepin.model.dto.Product();
         org.candlepin.model.dto.Content dContent = new org.candlepin.model.dto.Content();
-        List<org.candlepin.model.dto.Content> dtoContents = new ArrayList<org.candlepin.model.dto.Content>();
+        List<org.candlepin.model.dto.Content> dtoContents = new ArrayList<>();
         dtoContents.add(dContent);
         dContent.setPath(getContentPrefix(consumer.getOwner(), consumer.getEnvironment()));
         container.setContent(dtoContents);
@@ -226,7 +226,7 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
     private Map<String, EnvironmentContent> getPromotedContent(Environment environment) {
         // Build a set of all content IDs promoted to the consumer's environment so
         // we can determine if anything needs to be skipped:
-        Map<String, EnvironmentContent> promotedContent = new HashMap<String, EnvironmentContent>();
+        Map<String, EnvironmentContent> promotedContent = new HashMap<>();
         if (environment != null) {
             log.debug("Consumer has environment, checking for promoted content in: " +
                 environment);
@@ -274,7 +274,7 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
 
     public Set<X509ByteExtensionWrapper> prepareV3ByteExtensions(org.candlepin.model.dto.Product container)
         throws IOException {
-        List<org.candlepin.model.dto.Product> products = new ArrayList<org.candlepin.model.dto.Product>();
+        List<org.candlepin.model.dto.Product> products = new ArrayList<>();
         products.add(container);
         Set<X509ByteExtensionWrapper> result = v3extensionUtil.getByteExtensions(null, products,
             null,  null);
@@ -283,11 +283,10 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
 
     private byte[] createContentAccessDataPayload(Owner owner, Environment environment) throws IOException {
         // fake a product dto as a container for the org content
-        Set<Product> containerSet = new HashSet<Product>();
+        Set<Product> containerSet = new HashSet<>();
         CandlepinQuery<Content> ownerContent = ownerContentCurator.getContentByOwner(owner);
-        Set<String> entitledProductIds = new HashSet<String>();
-        List<org.candlepin.model.dto.Product> productModels =
-            new ArrayList<org.candlepin.model.dto.Product>();
+        Set<String> entitledProductIds = new HashSet<>();
+        List<org.candlepin.model.dto.Product> productModels = new ArrayList<>();
         Map<String, EnvironmentContent> promotedContent = getPromotedContent(environment);
         String contentPrefix = getContentPrefix(owner, environment);
         Product container = new Product();

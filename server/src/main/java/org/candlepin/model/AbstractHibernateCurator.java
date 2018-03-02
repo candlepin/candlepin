@@ -241,7 +241,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     @SuppressWarnings("unchecked")
     @Transactional
     public Page<List<E>> listAll(PageRequest pageRequest) {
-        Page<List<E>> page = new Page<List<E>>();
+        Page<List<E>> page = new Page<>();
 
         if (pageRequest != null) {
             Criteria count = createSecureCriteria();
@@ -293,7 +293,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
     @SuppressWarnings("unchecked")
     public Page<ResultIterator<E>> paginateResults(CandlepinQuery<E> query, PageRequest pageRequest) {
-        Page<ResultIterator<E>> page = new Page<ResultIterator<E>>();
+        Page<ResultIterator<E>> page = new Page<>();
 
         if (pageRequest != null) {
             page.setMaxRecords(query.getRowCount());
@@ -488,7 +488,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     @SuppressWarnings("unchecked")
     @Transactional
     public Page<List<E>> listByCriteria(Criteria c, PageRequest pageRequest) {
-        Page<List<E>> page = new Page<List<E>>();
+        Page<List<E>> page = new Page<>();
 
         if (pageRequest != null) {
             // see https://forum.hibernate.org/viewtopic.php?t=974802
@@ -754,7 +754,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     public List<E> takeSubList(PageRequest pageRequest, List<E> results) {
         int fromIndex = (pageRequest.getPage() - 1) * pageRequest.getPerPage();
         if (fromIndex >= results.size()) {
-            return new ArrayList<E>();
+            return new ArrayList<>();
         }
 
         int toIndex = fromIndex + pageRequest.getPerPage();
@@ -1098,7 +1098,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         // has an entity associated with a given entity key, which we generate using the session
         // and entity persister. It's convoluted, but necessary to get consistently correct
         // behavior from these methods.
-        List<E> result = new ArrayList<E>();
+        List<E> result = new ArrayList<>();
 
         if (ids != null && ids.iterator().hasNext()) {
             EntityManager entityManager = this.getEntityManager();
@@ -1113,8 +1113,8 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
             EntityPersister persister = session.getFactory().getEntityPersister(metadata.getEntityName());
             PersistenceContext context = session.getPersistenceContext();
 
-            SortedSet<Serializable> idSet = new TreeSet<Serializable>();
-            SortedMap<Serializable, E> entitySet = new TreeMap<Serializable, E>();
+            SortedSet<Serializable> idSet = new TreeSet<>();
+            SortedMap<Serializable, E> entitySet = new TreeMap<>();
 
             // Step through the collection of IDs and figure out which entities we have to refresh,
             // and which we need to lookup.

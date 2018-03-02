@@ -93,7 +93,7 @@ public class CrlResourceTest {
         String[] input = new String[] { "123", "456", "789" };
 
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        List<CertificateSerial> serials = new LinkedList<CertificateSerial>();
+        List<CertificateSerial> serials = new LinkedList<>();
         serials.add(new CertificateSerial(123L));
         serials.add(new CertificateSerial(456L));
         serials.add(new CertificateSerial(789L));
@@ -112,7 +112,7 @@ public class CrlResourceTest {
         String[] input = new String[] { };
 
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        List<CertificateSerial> serials = new LinkedList<CertificateSerial>();
+        List<CertificateSerial> serials = new LinkedList<>();
 
         when(cqmock.iterator()).thenReturn(serials.iterator());
         when(this.certSerialCurator.listBySerialIds(eq(input))).thenReturn(cqmock);

@@ -301,8 +301,8 @@ public class ConsumerResource {
 
             if (facts != null && facts.size() > 0) {
                 log.debug("Sanitizing facts for consumer {}", consumer.getName());
-                Map<String, String> sanitized = new HashMap<String, String>();
-                Set<String> lowerCaseKeys = new HashSet<String>();
+                Map<String, String> sanitized = new HashMap<>();
+                Set<String> lowerCaseKeys = new HashSet<>();
 
                 String factPattern = config.getString(ConfigProperties.CONSUMER_FACTS_MATCHER);
                 Pattern pattern = Pattern.compile(factPattern);
@@ -514,7 +514,7 @@ public class ConsumerResource {
         }
 
         if (dto.getCapabilities() != null) {
-            Set<ConsumerCapability> capabilities = new HashSet<ConsumerCapability>();
+            Set<ConsumerCapability> capabilities = new HashSet<>();
             for (CapabilityDTO capabilityDTO : dto.getCapabilities()) {
                 if (capabilityDTO != null) {
                     capabilities.add(new ConsumerCapability(entity, capabilityDTO.getName()));
@@ -524,7 +524,7 @@ public class ConsumerResource {
         }
 
         if (dto.getGuestIds() != null) {
-            List<GuestId> guestIds = new ArrayList<GuestId>();
+            List<GuestId> guestIds = new ArrayList<>();
             for (GuestIdDTO guestIdDTO : dto.getGuestIds()) {
                 if (guestIdDTO != null) {
                     guestIds.add(new GuestId(guestIdDTO.getGuestId(),
@@ -562,7 +562,7 @@ public class ConsumerResource {
         }
 
         if (dto.getInstalledProducts() != null) {
-            Set<ConsumerInstalledProduct> installedProducts = new HashSet<ConsumerInstalledProduct>();
+            Set<ConsumerInstalledProduct> installedProducts = new HashSet<>();
             for (ConsumerInstalledProductDTO installedProductDTO : dto.getInstalledProducts()) {
                 if (installedProductDTO != null) {
                     ConsumerInstalledProduct installedProduct = new ConsumerInstalledProduct(
@@ -909,7 +909,7 @@ public class ConsumerResource {
 
     private List<ActivationKey>  checkActivationKeys(Principal principal, Owner owner,
         Set<String> keyStrings) throws BadRequestException {
-        List<ActivationKey> keys = new ArrayList<ActivationKey>();
+        List<ActivationKey> keys = new ArrayList<>();
         for (String keyString : keyStrings) {
             ActivationKey key = null;
             try {
@@ -959,7 +959,7 @@ public class ConsumerResource {
                 Set<DistributorVersionCapability> capabilities = distributorVersionCurator.
                     findCapabilitiesByDistVersion(existing.getFact("distributor_version"));
                 if (capabilities != null) {
-                    Set<ConsumerCapability> ccaps = new HashSet<ConsumerCapability>();
+                    Set<ConsumerCapability> ccaps = new HashSet<>();
                     for (DistributorVersionCapability dvc : capabilities) {
                         ConsumerCapability cc = new ConsumerCapability(existing, dvc.getName());
                         ccaps.add(cc);
@@ -982,7 +982,7 @@ public class ConsumerResource {
                     update.getFact("distributor_version"));
 
                 if (dv != null) {
-                    Set<ConsumerCapability> ccaps = new HashSet<ConsumerCapability>();
+                    Set<ConsumerCapability> ccaps = new HashSet<>();
                     for (DistributorVersionCapability dvc : dv.getCapabilities()) {
                         ConsumerCapability cc = new ConsumerCapability(existing, dvc.getName());
                         ccaps.add(cc);
@@ -1210,7 +1210,7 @@ public class ConsumerResource {
         populateEntity(incoming, dto);
 
         if (incoming.getGuestIds() != null) {
-            Set<String> allGuestIds = new HashSet<String>();
+            Set<String> allGuestIds = new HashSet<>();
             for (GuestId gid : incoming.getGuestIds()) {
                 allGuestIds.add(gid.getGuestId());
             }
@@ -1480,7 +1480,7 @@ public class ConsumerResource {
 
         // we need to create a list of entitlements to delete before actually
         // deleting, otherwise we are tampering with the loop iterator (BZ #786730)
-        Set<Entitlement> deletableGuestEntitlements = new HashSet<Entitlement>();
+        Set<Entitlement> deletableGuestEntitlements = new HashSet<>();
         log.debug("Revoking {} entitlements not matching host: {}", guest, host);
 
         for (Entitlement entitlement : guest.getEntitlements()) {
@@ -1596,7 +1596,7 @@ public class ConsumerResource {
 
         if (consumer.isShare()) {
             logShareConsumerRequestWarning("cert fetch", consumer);
-            return new ArrayList<CertificateDTO>();
+            return new ArrayList<>();
         }
 
         revokeOnGuestMigration(consumer);
@@ -1604,7 +1604,7 @@ public class ConsumerResource {
 
         Set<Long> serialSet = this.extractSerials(serials);
 
-        List<CertificateDTO> returnCerts = new LinkedList<CertificateDTO>();
+        List<CertificateDTO> returnCerts = new LinkedList<>();
         List<EntitlementCertificate> allCerts = entCertService.listForConsumer(consumer);
 
         for (EntitlementCertificate cert : allCerts) {
@@ -1670,7 +1670,7 @@ public class ConsumerResource {
             String cert = cac.getCert();
             String certificate = cert.substring(0, cert.indexOf("-----BEGIN ENTITLEMENT DATA-----\n"));
             String json = cert.substring(cert.indexOf("-----BEGIN ENTITLEMENT DATA-----\n"));
-            List<String> pieces = new ArrayList<String>();
+            List<String> pieces = new ArrayList<>();
             pieces.add(certificate);
             pieces.add(json);
             result.setContentListing(cac.getSerial().getId(), pieces);
@@ -1727,7 +1727,7 @@ public class ConsumerResource {
     }
 
     private Set<Long> extractSerials(String serials) {
-        Set<Long> serialSet = new HashSet<Long>();
+        Set<Long> serialSet = new HashSet<>();
         if (serials != null && !serials.isEmpty()) {
             log.debug("Requested serials: {}", serials);
             for (String s : serials.split(",")) {
@@ -1740,7 +1740,7 @@ public class ConsumerResource {
     }
 
     private Set<String> splitKeys(String activationKeyString) {
-        Set<String> keys = new LinkedHashSet<String>();
+        Set<String> keys = new LinkedHashSet<>();
         if (activationKeyString != null) {
             for (String s : activationKeyString.split(",")) {
                 keys.add(s);
@@ -1769,13 +1769,13 @@ public class ConsumerResource {
 
         if (consumer.isShare()) {
             logShareConsumerRequestWarning("cert serial fetch", consumer);
-            return new ArrayList<CertificateSerialDto>();
+            return new ArrayList<>();
         }
 
         revokeOnGuestMigration(consumer);
         poolManager.regenerateDirtyEntitlements(consumer);
 
-        List<CertificateSerialDto> allCerts = new LinkedList<CertificateSerialDto>();
+        List<CertificateSerialDto> allCerts = new LinkedList<>();
         for (Long id : entCertService.listEntitlementSerialIds(consumer)) {
             allCerts.add(new CertificateSerialDto(id));
         }
@@ -1935,7 +1935,7 @@ public class ConsumerResource {
 
         List<EntitlementDTO> entitlementDTOs = null;
         if (entitlements != null) {
-            entitlementDTOs = new ArrayList<EntitlementDTO>();
+            entitlementDTOs = new ArrayList<>();
 
             for (Entitlement ent : entitlements) {
                 // we need to supply the compliance type for the pools
@@ -1977,7 +1977,7 @@ public class ConsumerResource {
             throw new BadRequestException(i18n.tr("Owner has autobind disabled."));
         }
 
-        List<PoolQuantity> dryRunPools = new ArrayList<PoolQuantity>();
+        List<PoolQuantity> dryRunPools = new ArrayList<>();
 
         try {
             consumerBindUtil.validateServiceLevel(consumer.getOwner(), serviceLevel);
@@ -1993,7 +1993,7 @@ public class ConsumerResource {
             return Collections.<PoolQuantityDTO>emptyList();
         }
         if (dryRunPools != null) {
-            List<PoolQuantityDTO> dryRunPoolDtos = new ArrayList<PoolQuantityDTO>();
+            List<PoolQuantityDTO> dryRunPoolDtos = new ArrayList<>();
             for (PoolQuantity pq : dryRunPools) {
                 dryRunPoolDtos.add(this.translator.translate(pq, PoolQuantityDTO.class));
             }
@@ -2055,7 +2055,7 @@ public class ConsumerResource {
             }
         }
 
-        List<EntitlementDTO> entitlementDTOs = new ArrayList<EntitlementDTO>();
+        List<EntitlementDTO> entitlementDTOs = new ArrayList<>();
         for (Entitlement entitlement : entitlementsPage.getPageData()) {
             entitlementDTOs.add(this.translator.translate(entitlement, EntitlementDTO.class));
         }
@@ -2182,7 +2182,7 @@ public class ConsumerResource {
         if (events != null) {
             eventAdapter.addMessageText(events);
 
-            eventDTOs = new ArrayList<EventDTO>();
+            eventDTOs = new ArrayList<>();
             for (Event event : events) {
                 eventDTOs.add(this.translator.translate(event, EventDTO.class));
             }
@@ -2338,7 +2338,7 @@ public class ConsumerResource {
      * @return a Map<String, String> of the key/value pairs in the specified parameters.
      */
     private Map<String, String> getExtensionParamMap(List<KeyValueParameter> params) {
-        Map<String, String> paramMap = new HashMap<String, String>();
+        Map<String, String> paramMap = new HashMap<>();
         for (KeyValueParameter param : params) {
             paramMap.put(param.key(), param.value());
         }
@@ -2513,7 +2513,7 @@ public class ConsumerResource {
 
     private List<ConsumerDTO> translate(List<Consumer> consumers) {
         if (consumers != null) {
-            List<ConsumerDTO> results = new LinkedList<ConsumerDTO>();
+            List<ConsumerDTO> results = new LinkedList<>();
             for (Consumer consumer : consumers) {
                 results.add(translator.translate(consumer, ConsumerDTO.class));
             }
@@ -2593,7 +2593,7 @@ public class ConsumerResource {
     public Map<String, ComplianceStatus> getComplianceStatusList(
         @QueryParam("uuid") @Verify(value = Consumer.class, nullable = true) List<String> uuids) {
 
-        Map<String, ComplianceStatus> results = new HashMap<String, ComplianceStatus>();
+        Map<String, ComplianceStatus> results = new HashMap<>();
 
         if (uuids != null && !uuids.isEmpty()) {
             for (Consumer consumer : consumerCurator.findByUuids(uuids)) {

@@ -126,7 +126,7 @@ public class BouncyCastlePKIReader implements PKIReader {
 
     private Set<X509Certificate> loadUpstreamCACertificates(String path) {
         InputStream inStream = null;
-        Set<X509Certificate> result = new HashSet<X509Certificate>();
+        Set<X509Certificate> result = new HashSet<>();
         File dir = new File(path);
         if (!dir.exists()) {
             return result;

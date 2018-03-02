@@ -30,7 +30,7 @@ public class EventDTOTest extends AbstractDTOTest<EventDTO> {
     public EventDTOTest() {
         super(EventDTO.class);
 
-        this.values = new HashMap<String, Object>();
+        this.values = new HashMap<>();
         EventDTO.PrincipalDataDTO principalData = new EventDTO.PrincipalDataDTO(
             "principal-type", "principal-name");
         this.values.put("Id", "id");

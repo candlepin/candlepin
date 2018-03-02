@@ -211,7 +211,7 @@ public class HostedTestSubscriptionResource {
 
         Owner owner = this.getOwnerByKey(ownerKey);
         Product product = this.fetchProduct(owner, productId);
-        Collection<ProductContent> productContent = new LinkedList<ProductContent>();
+        Collection<ProductContent> productContent = new LinkedList<>();
 
         ProductDTO pdto = this.translator.translate(product, ProductDTO.class);
 

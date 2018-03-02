@@ -31,7 +31,7 @@ public class MembershipTest extends DatabaseTestFixture {
     public void testCreate() throws Exception {
         Owner o = new Owner("testowner");
         ownerCurator.create(o);
-        Set<Owner> owners = new HashSet<Owner>();
+        Set<Owner> owners = new HashSet<>();
         owners.add(o);
 
         String username = "TESTUSER";

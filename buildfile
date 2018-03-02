@@ -240,7 +240,7 @@ define "candlepin" do
   define "checks" do
     pom.name = "Candlepin Style Checks"
     pom.description = "Custom Checkstyle checks for Candlepin"
-    project.version = '0.2'
+    project.version = '0.3'
     eclipse.natures :java
     package(:jar)
 

@@ -95,7 +95,7 @@ public class SubscriptionReconciler {
 
         // if we can match to the entitlement id do it.
         // we need a new list to hold the ones that are left
-        Set<Subscription> subscriptionsStillToImport = new HashSet<Subscription>();
+        Set<Subscription> subscriptionsStillToImport = new HashSet<>();
         for (Subscription subscription : subsToImport) {
             Pool local = null;
             Map<String, Pool> map = existingPoolsByUpstreamPool.get(subscription.getUpstreamPoolId());
@@ -126,12 +126,12 @@ public class SubscriptionReconciler {
 
         // matches will be made against the upstream pool id and quantity.
         // we need a new list to hold the ones that are left
-        List<Subscription> subscriptionsNeedQuantityMatch = new ArrayList<Subscription>();
+        List<Subscription> subscriptionsNeedQuantityMatch = new ArrayList<>();
         for (Subscription subscription : subscriptionsStillToImport) {
             Pool local = null;
             Map<String, Pool> map = existingPoolsByUpstreamPool.get(subscription.getUpstreamPoolId());
             if (map == null) {
-                map = new HashMap<String, Pool>();
+                map = new HashMap<>();
             }
 
             for (Pool localSub : map.values()) {
@@ -199,7 +199,7 @@ public class SubscriptionReconciler {
      * Maps upstream pool ID to a map of upstream entitlement ID to Subscription.
      */
     private Map<String, Map<String, Pool>> mapPoolsByUpstreamPool(Owner owner) {
-        Map<String, Map<String, Pool>> existingSubsByUpstreamPool = new HashMap<String, Map<String, Pool>>();
+        Map<String, Map<String, Pool>> existingSubsByUpstreamPool = new HashMap<>();
 
         int idx = 0;
 
@@ -223,7 +223,7 @@ public class SubscriptionReconciler {
 
             Map<String, Pool> subs = existingSubsByUpstreamPool.get(p.getUpstreamPoolId());
             if (subs == null) {
-                subs = new HashMap<String, Pool>();
+                subs = new HashMap<>();
                 existingSubsByUpstreamPool.put(p.getUpstreamPoolId(), subs);
             }
 

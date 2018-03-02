@@ -92,7 +92,7 @@ public class PoolRules {
     }
 
     public List<Pool> createAndEnrichPools(Subscription sub) {
-        return createAndEnrichPools(sub, new LinkedList<Pool>());
+        return createAndEnrichPools(sub, new LinkedList<>());
     }
 
     public List<Pool> createAndEnrichPools(Subscription sub, List<Pool> existingPools) {
@@ -114,7 +114,7 @@ public class PoolRules {
      * @return a list of pools created for the given pool
      */
     public List<Pool> createAndEnrichPools(Pool masterPool, List<Pool> existingPools) {
-        List<Pool> pools = new LinkedList<Pool>();
+        List<Pool> pools = new LinkedList<>();
 
         long calculated = this.calculateQuantity(
             masterPool.getQuantity() != null ? masterPool.getQuantity() : 1, masterPool.getProduct(),
@@ -187,7 +187,7 @@ public class PoolRules {
             !hasBonusPool(existingPools)) {
 
             boolean hostLimited = "true".equals(attributes.get(Product.Attributes.HOST_LIMITED));
-            HashMap<String, String> virtAttributes = new HashMap<String, String>();
+            HashMap<String, String> virtAttributes = new HashMap<>();
             virtAttributes.put(Pool.Attributes.VIRT_ONLY, "true");
             virtAttributes.put(Pool.Attributes.DERIVED_POOL, "true");
             virtAttributes.put(Pool.Attributes.PHYSICAL_ONLY, "false");
@@ -270,7 +270,7 @@ public class PoolRules {
      * @return pool updates
      */
     public List<PoolUpdate> updatePools(List<Pool> floatingPools, Map<String, Product> changedProducts) {
-        List<PoolUpdate> updates = new LinkedList<PoolUpdate>();
+        List<PoolUpdate> updates = new LinkedList<>();
         for (Pool p : floatingPools) {
 
             if (p.getSubscriptionId() != null) {
@@ -306,7 +306,7 @@ public class PoolRules {
         log.debug("Refreshing pools for existing master pool: {}", masterPool);
         log.debug("  existing pools: {}", existingPools.size());
 
-        List<PoolUpdate> poolsUpdated = new LinkedList<PoolUpdate>();
+        List<PoolUpdate> poolsUpdated = new LinkedList<>();
         Map<String, String> attributes = masterPool.getProductAttributes();
 
         for (Pool existingPool : existingPools) {
@@ -401,9 +401,9 @@ public class PoolRules {
     public List<PoolUpdate> updatePoolsFromStack(Consumer consumer, Collection<Pool> pools,
         Collection<String> alreadyDeletedPools, boolean deleteIfNoStackedEnts) {
 
-        Map<String, List<Entitlement>> entitlementMap = new HashMap<String, List<Entitlement>>();
-        Set<String> sourceStackIds = new HashSet<String>();
-        List<PoolUpdate> result = new ArrayList<PoolUpdate>();
+        Map<String, List<Entitlement>> entitlementMap = new HashMap<>();
+        Set<String> sourceStackIds = new HashSet<>();
+        List<PoolUpdate> result = new ArrayList<>();
 
         for (Pool pool : pools) {
             sourceStackIds.add(pool.getSourceStackId());
@@ -412,14 +412,14 @@ public class PoolRules {
         for (Entitlement entitlement : this.entCurator.findByStackIds(consumer, sourceStackIds)) {
             List<Entitlement> ents = entitlementMap.get(entitlement.getPool().getStackId());
             if (ents == null) {
-                ents = new ArrayList<Entitlement>();
+                ents = new ArrayList<>();
                 entitlementMap.put(entitlement.getPool().getStackId(), ents);
             }
 
             ents.add(entitlement);
         }
 
-        List<Pool> poolsToDelete = new ArrayList<Pool>();
+        List<Pool> poolsToDelete = new ArrayList<>();
         for (Pool pool : pools) {
             List<Entitlement> entitlements = entitlementMap.get(pool.getSourceStackId());
             if (CollectionUtils.isNotEmpty(entitlements)) {
@@ -552,7 +552,7 @@ public class PoolRules {
     }
 
     private Set<Product> getExpectedProvidedProducts(Pool pool, boolean useDerived) {
-        Set<Product> incomingProvided = new HashSet<Product>();
+        Set<Product> incomingProvided = new HashSet<>();
         /**
          * It is necessary to use getters for provided products here, because the pool
          * is fabricated from subscrfiption (using CandlepinPoolManager.convertToMasterPool
@@ -624,7 +624,7 @@ public class PoolRules {
 
         // Build expected set of ProvidedProducts and compare:
         Set<Product> currentProvided = productCurator.getPoolDerivedProvidedProductsCached(existingPool);
-        Set<Product> incomingProvided = new HashSet<Product>();
+        Set<Product> incomingProvided = new HashSet<>();
 
         /**
          * Incoming pool is not in the database yet. It has the

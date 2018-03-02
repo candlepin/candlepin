@@ -65,7 +65,7 @@ public class UserPrincipalTest {
         when(owner.getId()).thenReturn("1");
         when(owner.getKey()).thenReturn("owner1");
         when(ownerPerm.getOwner()).thenReturn(owner);
-        List<Permission> ops = new ArrayList<Permission>();
+        List<Permission> ops = new ArrayList<>();
         ops.add(ownerPerm);
 
         UserPrincipal up = new UserPrincipal("admin", ops, false);
@@ -80,7 +80,7 @@ public class UserPrincipalTest {
         when(owner.getId()).thenReturn("1");
         when(owner.getKey()).thenReturn("owner1");
         when(ownerPerm.getOwner()).thenReturn(owner);
-        List<Permission> ops = new ArrayList<Permission>();
+        List<Permission> ops = new ArrayList<>();
         ops.add(ownerPerm);
 
         UserPrincipal up = new UserPrincipal("admin", ops, false);
@@ -95,7 +95,7 @@ public class UserPrincipalTest {
         when(owner.getId()).thenReturn("1");
         when(owner.getKey()).thenReturn("owner1");
         when(ownerPerm.getOwner()).thenReturn(owner);
-        List<Permission> ops = new ArrayList<Permission>();
+        List<Permission> ops = new ArrayList<>();
         ops.add(ownerPerm);
 
         UserPrincipal up = new UserPrincipal("admin", ops, false);
@@ -107,7 +107,7 @@ public class UserPrincipalTest {
 
     @Test
     public void permsShouldNotAffectOwners() {
-        List<Permission> perms = new ArrayList<Permission>();
+        List<Permission> perms = new ArrayList<>();
         perms.add(mock(Permission.class));
         UserPrincipal up = new UserPrincipal("admin", perms, false);
         assertTrue(up.getOwners().isEmpty());

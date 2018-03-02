@@ -409,11 +409,11 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
         this.activeSubscription = Boolean.TRUE;
         this.createdByShare = Boolean.FALSE;
         this.hasSharedAncestor = Boolean.FALSE;
-        this.providedProducts = new HashSet<Product>();
-        this.derivedProvidedProducts = new HashSet<Product>();
-        this.attributes = new HashMap<String, String>();
-        this.branding = new HashSet<Branding>();
-        this.entitlements = new HashSet<Entitlement>();
+        this.providedProducts = new HashSet<>();
+        this.derivedProvidedProducts = new HashSet<>();
+        this.attributes = new HashMap<>();
+        this.branding = new HashSet<>();
+        this.entitlements = new HashSet<>();
 
         // TODO:
         // This set of properties is used entirely to deal with a strange case that occurs during
@@ -1058,7 +1058,7 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
                 this.providedProducts :
                 productCurator.getPoolProvidedProductsCached(this.getId());
 
-            this.providedProductDtos = new HashSet<ProvidedProduct>();
+            this.providedProductDtos = new HashSet<>();
 
             for (Product product : products) {
                 this.providedProductDtos.add(new ProvidedProduct(product));
@@ -1071,7 +1071,7 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
                 this.derivedProvidedProducts :
                 productCurator.getPoolDerivedProvidedProductsCached(this.getId());
 
-            this.derivedProvidedProductDtos = new HashSet<ProvidedProduct>();
+            this.derivedProvidedProductDtos = new HashSet<>();
 
             for (Product product : products) {
                 this.derivedProvidedProductDtos.add(new ProvidedProduct(product));
@@ -1232,7 +1232,7 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
     @Deprecated
     public void setProductAttributes(Map<String, String> attributes) {
         if (this.product == null && this.derivedProduct == null) {
-            this.importedProductAttributes = new HashMap<String, String>(attributes);
+            this.importedProductAttributes = new HashMap<>(attributes);
         }
     }
 
@@ -1270,7 +1270,7 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
     @Deprecated
     public void setDerivedProductAttributes(Map<String, String> attributes) {
         if (this.product == null) {
-            this.importedDerivedProductAttributes = new HashMap<String, String>(attributes);
+            this.importedDerivedProductAttributes = new HashMap<>(attributes);
         }
     }
 

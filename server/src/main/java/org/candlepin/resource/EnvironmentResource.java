@@ -247,7 +247,7 @@ public class EnvironmentResource {
             }
         }
 
-        Set<String> contentIds = new HashSet<String>();
+        Set<String> contentIds = new HashSet<>();
 
         try {
             contentIds = batchCreate(contentToPromote, env);
@@ -297,7 +297,7 @@ public class EnvironmentResource {
         @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {
 
         Environment e = lookupEnvironment(envId);
-        Map<String, EnvironmentContent> demotedContent = new HashMap<String, EnvironmentContent>();
+        Map<String, EnvironmentContent> demotedContent = new HashMap<>();
 
         // Step through and validate all given content IDs before deleting
         for (String contentId : contentIds) {
@@ -311,8 +311,7 @@ public class EnvironmentResource {
         }
 
         try {
-            envContentCurator.bulkDeleteTransactional(
-                new ArrayList<EnvironmentContent>(demotedContent.values()));
+            envContentCurator.bulkDeleteTransactional(new ArrayList<>(demotedContent.values()));
             clearContentAccessCerts(e);
         }
         catch (RollbackException hibernateException) {
@@ -329,7 +328,7 @@ public class EnvironmentResource {
 
         // Impl note: Unfortunately, we have to make an additional set here, as the keySet isn't
         // serializable. Attempting to use it causes exceptions.
-        Set<String> demotedContentIds = new HashSet<String>(demotedContent.keySet());
+        Set<String> demotedContentIds = new HashSet<>(demotedContent.keySet());
         JobDataMap map = new JobDataMap();
         map.put(RegenEnvEntitlementCertsJob.ENV, e);
         map.put(RegenEnvEntitlementCertsJob.CONTENT, demotedContentIds);
@@ -353,7 +352,7 @@ public class EnvironmentResource {
     public Set<String>  batchCreate(List<org.candlepin.model.dto.EnvironmentContent> contentToPromote,
         Environment env) {
 
-        Set<String> contentIds = new HashSet<String>();
+        Set<String> contentIds = new HashSet<>();
 
         for (org.candlepin.model.dto.EnvironmentContent promoteMe : contentToPromote) {
             // Make sure the content exists:

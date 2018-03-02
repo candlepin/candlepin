@@ -64,7 +64,7 @@ public abstract class LiquibaseCustomTask {
         this.nullType =
             this.database.getDatabaseProductName().matches(".*(?i:oracle).*") ? Types.VARCHAR : Types.NULL;
 
-        this.preparedStatements = new HashMap<String, PreparedStatement>();
+        this.preparedStatements = new HashMap<>();
     }
 
     /**

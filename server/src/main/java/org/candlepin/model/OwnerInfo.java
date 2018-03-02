@@ -37,14 +37,14 @@ public class OwnerInfo {
     public static final String PHYSICAL = "physical";
 
     public OwnerInfo() {
-        consumerCounts = new HashMap<String, Integer>();
-        entitlementsConsumedByType = new HashMap<String, Integer>();
-        consumerTypeCountByPool = new HashMap<String, Integer>();
-        enabledConsumerTypeCountByPool = new HashMap<String, Integer>();
-        consumerCountsByComplianceStatus = new HashMap<String, Integer>();
-        entitlementsConsumedByFamily = new HashMap<String, ConsumptionTypeCounts>();
+        consumerCounts = new HashMap<>();
+        entitlementsConsumedByType = new HashMap<>();
+        consumerTypeCountByPool = new HashMap<>();
+        enabledConsumerTypeCountByPool = new HashMap<>();
+        consumerCountsByComplianceStatus = new HashMap<>();
+        entitlementsConsumedByFamily = new HashMap<>();
 
-        consumerGuestCounts = new HashMap<String, Integer>();
+        consumerGuestCounts = new HashMap<>();
         consumerGuestCounts.put(GUEST, 0);
         consumerGuestCounts.put(PHYSICAL, 0);
     }

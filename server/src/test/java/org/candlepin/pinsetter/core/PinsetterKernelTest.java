@@ -187,11 +187,11 @@ public class PinsetterKernelTest {
         String crongrp = "cron group";
         String singlegrp = "async group";
 
-        Set<JobKey> cronSet = new HashSet<JobKey>();
+        Set<JobKey> cronSet = new HashSet<>();
         cronSet.add(jobKey("fakejob1", crongrp));
         cronSet.add(jobKey("fakejob2", crongrp));
 
-        Set<JobKey> asyncSet = new HashSet<JobKey>();
+        Set<JobKey> asyncSet = new HashSet<>();
         asyncSet.add(jobKey("fakejob1", singlegrp));
         asyncSet.add(jobKey("fakejob2", singlegrp));
 
@@ -211,7 +211,7 @@ public class PinsetterKernelTest {
 
     @Test
     public void noJobsDuringShutdown() throws Exception {
-        Set<JobKey> jobs = new HashSet<JobKey>();
+        Set<JobKey> jobs = new HashSet<>();
         when(sched.getJobKeys(jobGroupEquals(anyString()))).thenReturn(jobs);
         pk = new PinsetterKernel(config, jfactory, jlistener, jcurator,
                 sfactory, triggerListener, modeManager);
@@ -237,7 +237,7 @@ public class PinsetterKernelTest {
             sfactory, triggerListener, modeManager);
         String job = "CancelJobJob";
         TriggerKey key = new TriggerKey(job);
-        Set<TriggerKey> keys = new HashSet<TriggerKey>();
+        Set<TriggerKey> keys = new HashSet<>();
         keys.add(key);
         when(sched.getTriggerKeys(any(GroupMatcher.class))).thenReturn(keys);
         pk.retriggerCronJob(job, CancelJobJob.class);
@@ -263,7 +263,7 @@ public class PinsetterKernelTest {
 
     @Test
     public void updateSchedule() throws Exception {
-        Map<String, String> props = new HashMap<String, String>();
+        Map<String, String> props = new HashMap<>();
         props.put(ConfigProperties.DEFAULT_TASKS, JobCleaner.class.getName());
         props.put("org.quartz.jobStore.isClustered", "true");
         props.put("pinsetter.org.candlepin.pinsetter.tasks." +
@@ -272,7 +272,7 @@ public class PinsetterKernelTest {
         JobDetail jobDetail = mock(JobDetail.class);
 
         String crongrp = "cron group";
-        Set<JobKey> jobs = new HashSet<JobKey>();
+        Set<JobKey> jobs = new HashSet<>();
         JobKey key = jobKey("org.candlepin.pinsetter.tasks.JobCleaner");
         jobs.add(key);
 
@@ -295,7 +295,7 @@ public class PinsetterKernelTest {
 
     @Test
     public void deletedCronTask() throws Exception {
-        Map<String, String> props = new HashMap<String, String>();
+        Map<String, String> props = new HashMap<>();
         props.put(ConfigProperties.DEFAULT_TASKS, JobCleaner.class.getName());
         props.put("org.quartz.jobStore.isClustered", "true");
         props.put("pinsetter.org.candlepin.pinsetter.tasks.JobCleaner.schedule", "*/1 * * * * ?");
@@ -303,7 +303,7 @@ public class PinsetterKernelTest {
         JobDetail jobDetail = mock(JobDetail.class);
 
         String crongrp = "cron group";
-        Set<JobKey> jobs = new HashSet<JobKey>();
+        Set<JobKey> jobs = new HashSet<>();
 
         String deletedJobId = "StatisticHistoryTask-taylor-swift";
         JobKey deletedKey = jobKey(deletedJobId);
@@ -329,7 +329,7 @@ public class PinsetterKernelTest {
 
     @Test
     public void updateMultipleSchedules() throws Exception {
-        Map<String, String> props = new HashMap<String, String>();
+        Map<String, String> props = new HashMap<>();
         props.put(ConfigProperties.DEFAULT_TASKS, JobCleaner.class.getName());
         props.put("org.quartz.jobStore.isClustered", "true");
         props.put("pinsetter.org.candlepin.pinsetter.tasks." +
@@ -339,7 +339,7 @@ public class PinsetterKernelTest {
 
         // Hack multiple job schedules for same job:
         String crongrp = "cron group";
-        Set<JobKey> jobs = new HashSet<JobKey>();
+        Set<JobKey> jobs = new HashSet<>();
         JobKey key = jobKey("org.candlepin.pinsetter.tasks.JobCleaner");
         jobs.add(key);
         JobKey key2 = jobKey("org.candlepin.pinsetter.tasks.JobCleaner2");
@@ -403,7 +403,7 @@ public class PinsetterKernelTest {
     @Test
     public void cancelJob() throws Exception {
         String singlegrp = "async group";
-        Set<JobKey> jobs = new HashSet<JobKey>();
+        Set<JobKey> jobs = new HashSet<>();
         jobs.add(jobKey("fakejob1"));
         jobs.add(jobKey("fakejob2"));
 
@@ -467,7 +467,7 @@ public class PinsetterKernelTest {
         pk = new PinsetterKernel(config, jfactory, jlistener, jcurator,
             sfactory, triggerListener, modeManager);
 
-        Set<JobKey> mockJK = new HashSet<JobKey>();
+        Set<JobKey> mockJK = new HashSet<>();
         JobKey jk = new JobKey("test key");
         mockJK.add(jk);
         when(pk.getSingleJobKeys()).thenReturn(mockJK);
@@ -488,7 +488,7 @@ public class PinsetterKernelTest {
                     put("org.quartz.jobStore.isClustered", "true");
                 }
             });
-        Set<JobKey> jobs = new HashSet<JobKey>();
+        Set<JobKey> jobs = new HashSet<>();
         jobs.add(jobKey("fakejob1"));
         jobs.add(jobKey("fakejob2"));
 
@@ -520,7 +520,7 @@ public class PinsetterKernelTest {
                 }
             });
 
-        Set<JobKey> jobs = new HashSet<JobKey>();
+        Set<JobKey> jobs = new HashSet<>();
         jobs.add(jobKey(JobCleaner.class.getName()));
         jobs.add(jobKey(ImportRecordJob.class.getName()));
         when(sched.getJobKeys(eq(jobGroupEquals("cron group")))).thenReturn(jobs);
@@ -542,7 +542,7 @@ public class PinsetterKernelTest {
                     put("org.quartz.jobStore.isClustered", "true");
                 }
             });
-        Set<JobKey> jobs = new HashSet<JobKey>();
+        Set<JobKey> jobs = new HashSet<>();
         when(sched.getJobKeys(eq(jobGroupEquals("cron group")))).thenReturn(jobs);
         pk = new PinsetterKernel(config, jfactory, jlistener, jcurator,
                 sfactory, triggerListener, modeManager);

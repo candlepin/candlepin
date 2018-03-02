@@ -146,7 +146,7 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
      */
     @SuppressWarnings("unchecked")
     public Set<JobStatus> findCanceledJobs(Iterable<String> jobIds) {
-        Set<JobStatus> statuses = new HashSet<JobStatus>();
+        Set<JobStatus> statuses = new HashSet<>();
 
         if (jobIds != null && jobIds.iterator().hasNext()) {
             String jpql = "SELECT js FROM JobStatus js WHERE js.state = :state AND js.id IN (:job_ids)";

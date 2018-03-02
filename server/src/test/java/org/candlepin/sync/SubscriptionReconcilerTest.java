@@ -87,7 +87,7 @@ public class SubscriptionReconcilerTest {
      * the local pool with params.
      */
     private List<Pool> createPoolsFor(Subscription ... subs) {
-        List<Pool> pools = new LinkedList<Pool>();
+        List<Pool> pools = new LinkedList<>();
         for (Subscription sub : subs) {
             pools.add(TestUtil.copyFromSub(sub));
         }

@@ -134,7 +134,7 @@ public class GuestIdResourceTest {
 
     @Test
     public void updateGuests() {
-        List<GuestIdDTO> guestIds = new LinkedList<GuestIdDTO>();
+        List<GuestIdDTO> guestIds = new LinkedList<>();
         guestIds.add(new GuestIdDTO("1"));
         when(consumerResource.performConsumerUpdates(any(Consumer.class),
             eq(consumer), any(GuestMigration.class))).
@@ -150,7 +150,7 @@ public class GuestIdResourceTest {
 
     @Test
     public void updateGuestsNoUpdate() {
-        List<GuestIdDTO> guestIds = new LinkedList<GuestIdDTO>();
+        List<GuestIdDTO> guestIds = new LinkedList<>();
         guestIds.add(new GuestIdDTO("1"));
 
         // consumerResource tells us nothing changed
@@ -276,7 +276,7 @@ public class GuestIdResourceTest {
     }
 
     private Page<List<GuestId>> buildPaginatedGuestIdList(List<GuestId> guests) {
-        Page<List<GuestId>> page = new Page<List<GuestId>>();
+        Page<List<GuestId>> page = new Page<>();
         page.setPageData(guests);
         return page;
     }

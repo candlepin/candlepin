@@ -46,7 +46,7 @@ public class PermissionFactory {
 
     public List<Permission> createPermissions(User user,
         Collection<PermissionBlueprint> dbPerms) {
-        List<Permission> perms = new LinkedList<Permission>();
+        List<Permission> perms = new LinkedList<>();
         for (PermissionBlueprint hint : dbPerms) {
             perms.add(createPermission(user, hint));
         }

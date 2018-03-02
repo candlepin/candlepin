@@ -47,7 +47,7 @@ public class ActivationKeyDTOTest extends AbstractDTOTest<ActivationKeyDTO> {
         owner.setContentAccessMode("content_access_mode");
         owner.setContentAccessModeList("content_access_mode_list");
 
-        this.values = new HashMap<String, Object>();
+        this.values = new HashMap<>();
         this.values.put("Id", "test-id");
         this.values.put("Name", "test-name");
         this.values.put("Description", "test-description");
@@ -58,23 +58,21 @@ public class ActivationKeyDTOTest extends AbstractDTOTest<ActivationKeyDTO> {
         this.values.put("Created", new Date());
         this.values.put("Updated", new Date());
 
-        Set<ActivationKeyDTO.ActivationKeyPoolDTO> pools =
-            new HashSet<ActivationKeyDTO.ActivationKeyPoolDTO>();
+        Set<ActivationKeyDTO.ActivationKeyPoolDTO> pools = new HashSet<>();
         pools.add(new ActivationKeyDTO.ActivationKeyPoolDTO("test-id-pool", null));
         this.values.put("Pools", pools);
 
-        Set<String> prods = new HashSet<String>();
+        Set<String> prods = new HashSet<>();
         prods.add("test-id-prod");
         this.values.put("ProductIds", prods);
 
-        Set<Map<String, String>> productDTOs = new HashSet<Map<String, String>>();
-        Map<String, String> productDTO = new HashMap<String, String>();
+        Set<Map<String, String>> productDTOs = new HashSet<>();
+        Map<String, String> productDTO = new HashMap<>();
         productDTO.put("productId", "test-id-prodDto");
         productDTOs.add(productDTO);
         this.values.put("ProductDTOs", productDTOs);
 
-        Set<ActivationKeyDTO.ActivationKeyContentOverrideDTO> overrides =
-            new HashSet<ActivationKeyDTO.ActivationKeyContentOverrideDTO>();
+        Set<ActivationKeyDTO.ActivationKeyContentOverrideDTO> overrides = new HashSet<>();
         overrides.add(new ActivationKeyDTO.ActivationKeyContentOverrideDTO(
             "test-contentLabel-override",
             "test-name-override",
@@ -108,7 +106,7 @@ public class ActivationKeyDTOTest extends AbstractDTOTest<ActivationKeyDTO> {
     @Test
     public void testHasProductWithPresentProduct() {
         ActivationKeyDTO dto = new ActivationKeyDTO();
-        Set<String> products = new HashSet<String>();
+        Set<String> products = new HashSet<>();
         products.add("test-id-prod-2");
         dto.setProductIds(products);
 
@@ -127,7 +125,7 @@ public class ActivationKeyDTOTest extends AbstractDTOTest<ActivationKeyDTO> {
 
         assertFalse(dto.removeProductId("test-id-prod-3"));
 
-        dto.setProductIds(new HashSet<String>());
+        dto.setProductIds(new HashSet<>());
         assertFalse(dto.removeProductId("test-id-prod-3"));
     }
 
@@ -135,7 +133,7 @@ public class ActivationKeyDTOTest extends AbstractDTOTest<ActivationKeyDTO> {
     public void testRemoveProductWithPresentProduct() {
         ActivationKeyDTO dto = new ActivationKeyDTO();
 
-        Set<String> products = new HashSet<String>();
+        Set<String> products = new HashSet<>();
         products.add("test-id-prod-4");
         dto.setProductIds(products);
 
@@ -187,8 +185,7 @@ public class ActivationKeyDTOTest extends AbstractDTOTest<ActivationKeyDTO> {
     @Test
     public void testHasPoolWithPresentPool() {
         ActivationKeyDTO dto = new ActivationKeyDTO();
-        Set<ActivationKeyDTO.ActivationKeyPoolDTO> pools =
-            new HashSet<ActivationKeyDTO.ActivationKeyPoolDTO>();
+        Set<ActivationKeyDTO.ActivationKeyPoolDTO> pools = new HashSet<>();
         pools.add(new ActivationKeyDTO.ActivationKeyPoolDTO("test-id-pool-2", null));
         dto.setPools(pools);
 
@@ -207,7 +204,7 @@ public class ActivationKeyDTOTest extends AbstractDTOTest<ActivationKeyDTO> {
 
         assertFalse(dto.removePool("test-id-pool-3"));
 
-        dto.setPools(new HashSet<ActivationKeyDTO.ActivationKeyPoolDTO>());
+        dto.setPools(new HashSet<>());
         assertFalse(dto.removePool("test-id-pool-3"));
     }
 
@@ -215,8 +212,7 @@ public class ActivationKeyDTOTest extends AbstractDTOTest<ActivationKeyDTO> {
     public void testRemovePoolWithPresentPool() {
         ActivationKeyDTO dto = new ActivationKeyDTO();
 
-        Set<ActivationKeyDTO.ActivationKeyPoolDTO> pools =
-            new HashSet<ActivationKeyDTO.ActivationKeyPoolDTO>();
+        Set<ActivationKeyDTO.ActivationKeyPoolDTO> pools = new HashSet<>();
         pools.add(new ActivationKeyDTO.ActivationKeyPoolDTO("test-id-pool-4", null));
         dto.setPools(pools);
 
@@ -280,7 +276,7 @@ public class ActivationKeyDTOTest extends AbstractDTOTest<ActivationKeyDTO> {
             "test-value-override-3");
         assertFalse(dto.removeContentOverride(override));
 
-        dto.setContentOverrides(new HashSet<ActivationKeyDTO.ActivationKeyContentOverrideDTO>());
+        dto.setContentOverrides(new HashSet<>());
         assertFalse(dto.removeContentOverride(override));
     }
 
@@ -288,8 +284,7 @@ public class ActivationKeyDTOTest extends AbstractDTOTest<ActivationKeyDTO> {
     public void testRemoveContentOverrideWithPresentContentOverride() {
         ActivationKeyDTO dto = new ActivationKeyDTO();
 
-        Set<ActivationKeyDTO.ActivationKeyContentOverrideDTO> overrides =
-            new HashSet<ActivationKeyDTO.ActivationKeyContentOverrideDTO>();
+        Set<ActivationKeyDTO.ActivationKeyContentOverrideDTO> overrides = new HashSet<>();
         overrides.add(new ActivationKeyDTO.ActivationKeyContentOverrideDTO(
             "test-contentLabel-override-4",
             "test-name-override-4",

@@ -339,7 +339,7 @@ public class ProductData extends CandlepinDTO {
         }
 
         if (this.attributes == null) {
-            this.attributes = new HashMap<String, String>();
+            this.attributes = new HashMap<>();
         }
 
         // Impl note:
@@ -388,7 +388,7 @@ public class ProductData extends CandlepinDTO {
     public ProductData setAttributes(Map<String, String> attributes) {
         if (attributes != null) {
             if (this.attributes == null) {
-                this.attributes = new HashMap<String, String>();
+                this.attributes = new HashMap<>();
             }
             else {
                 this.attributes.clear();
@@ -489,7 +489,7 @@ public class ProductData extends CandlepinDTO {
         boolean changed = false;
 
         if (this.content == null) {
-            this.content = new HashMap<String, ProductContentData>();
+            this.content = new HashMap<>();
             changed = true;
         }
         else {
@@ -706,7 +706,7 @@ public class ProductData extends CandlepinDTO {
     public ProductData setProductContent(Collection<ProductContentData> content) {
         if (content != null) {
             if (this.content == null) {
-                this.content = new HashMap<String, ProductContentData>();
+                this.content = new HashMap<>();
             }
             else {
                 this.content.clear();
@@ -758,7 +758,7 @@ public class ProductData extends CandlepinDTO {
         }
 
         if (this.dependentProductIds == null) {
-            this.dependentProductIds = new HashSet<String>();
+            this.dependentProductIds = new HashSet<>();
         }
 
         return this.dependentProductIds.add(productId);
@@ -794,7 +794,7 @@ public class ProductData extends CandlepinDTO {
     public ProductData setDependentProductIds(Collection<String> dependentProductIds) {
         if (dependentProductIds != null) {
             if (this.dependentProductIds == null) {
-                this.dependentProductIds = new HashSet<String>();
+                this.dependentProductIds = new HashSet<>();
             }
             else {
                 this.dependentProductIds.clear();
@@ -915,12 +915,12 @@ public class ProductData extends CandlepinDTO {
         ProductData copy = (ProductData) super.clone();
 
         if (this.attributes != null) {
-            copy.attributes = new HashMap<String, String>();
+            copy.attributes = new HashMap<>();
             copy.attributes.putAll(this.attributes);
         }
 
         if (this.content != null) {
-            copy.content = new HashMap<String, ProductContentData>();
+            copy.content = new HashMap<>();
 
             for (Map.Entry<String, ProductContentData> entry : this.content.entrySet()) {
                 copy.content.put(entry.getKey(), (ProductContentData) entry.getValue().clone());
@@ -928,7 +928,7 @@ public class ProductData extends CandlepinDTO {
         }
 
         if (this.dependentProductIds != null) {
-            copy.dependentProductIds = new HashSet<String>();
+            copy.dependentProductIds = new HashSet<>();
             copy.dependentProductIds.addAll(this.dependentProductIds);
         }
 
@@ -998,7 +998,7 @@ public class ProductData extends CandlepinDTO {
 
         if (source.getProductContent() != null) {
             if (this.content == null) {
-                this.content = new HashMap<String, ProductContentData>();
+                this.content = new HashMap<>();
             }
             else {
                 this.content.clear();

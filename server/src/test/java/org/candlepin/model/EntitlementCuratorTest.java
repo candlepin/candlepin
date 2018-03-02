@@ -524,7 +524,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void findByStackIdsTest() {
-        Set<String> stackingIds = new HashSet<String>();
+        Set<String> stackingIds = new HashSet<>();
         for (Integer i = 0; i < 4; i++) {
             String stackingId = "test_stack_id" + i.toString();
             if (i > 0) {
@@ -552,7 +552,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         productCurator.create(product);
 
         int ents = 5;
-        List<Entitlement> createdEntitlements = new LinkedList<Entitlement>();
+        List<Entitlement> createdEntitlements = new LinkedList<>();
         for (int i = 0; i < ents; i++) {
             Pool pool = createPool(owner, product, 1L, dateSource.currentDate(), createDate(2020, 1, 1));
             poolCurator.create(pool);
@@ -575,7 +575,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         otherConsumer.setEnvironment(environment);
         consumerCurator.create(otherConsumer);
 
-        List<Entitlement> createdEntitlements = new LinkedList<Entitlement>();
+        List<Entitlement> createdEntitlements = new LinkedList<>();
         for (int i = 0; i < 5; i++) {
             Pool pool = createPool(owner, product, 1L, dateSource.currentDate(), createDate(2020, 1, 1));
 
@@ -739,7 +739,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     }
 
     protected List<Product> createProducts(Owner owner, int count, String prefix) {
-        List<Product> products = new LinkedList<Product>();
+        List<Product> products = new LinkedList<>();
 
         for (int i = 0; i < count; ++i) {
             String id = String.format("%s-%d-%d", prefix, (i + 1), TestUtil.randomInt());
@@ -752,7 +752,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     protected List<Product> createDependentProducts(Owner owner, int count, String prefix,
         Collection<Product> required) {
 
-        List<Product> products = new LinkedList<Product>();
+        List<Product> products = new LinkedList<>();
 
         for (int i = 0; i < count; ++i) {
             int rand = TestUtil.randomInt(10000);
@@ -1182,7 +1182,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Entitlement distributorEnt1 = bind(distributor, pool);
         Entitlement consumerEnt1 = bind(consumer, pool);
 
-        List<String> entsToFilter = new LinkedList<String>();
+        List<String> entsToFilter = new LinkedList<>();
         entsToFilter.add(distributorEnt1.getId());
         entsToFilter.add(consumerEnt1.getId());
 

@@ -99,7 +99,7 @@ public class PoolTest extends DatabaseTestFixture {
             prod1 = this.createProduct(owner);
             prod2 = this.createProduct(owner);
 
-            Set<Product> providedProducts = new HashSet<Product>();
+            Set<Product> providedProducts = new HashSet<>();
             providedProducts.add(prod2);
 
             pool = TestUtil.createPool(owner, prod1, providedProducts, 1000);
@@ -137,9 +137,9 @@ public class PoolTest extends DatabaseTestFixture {
     public void testCreateWithDerivedProvidedProducts() {
         Product derivedProd = this.createProduct(owner);
 
-        Pool p = TestUtil.createPool(owner, prod1, new HashSet<Product>(), 1000);
+        Pool p = TestUtil.createPool(owner, prod1, new HashSet<>(), 1000);
         p.addProvidedProduct(prod2);
-        Set<Product> derivedProducts = new HashSet<Product>();
+        Set<Product> derivedProducts = new HashSet<>();
         derivedProducts.add(derivedProd);
 
         p.setDerivedProvidedProducts(derivedProducts);
@@ -193,7 +193,7 @@ public class PoolTest extends DatabaseTestFixture {
 
         consumerPool = poolCurator.create(consumerPool);
 
-        Map<String, Integer> pQs = new HashMap<String, Integer>();
+        Map<String, Integer> pQs = new HashMap<>();
         pQs.put(consumerPool.getId(), 1);
         poolManager.entitleByPools(consumer, pQs);
 
@@ -219,7 +219,7 @@ public class PoolTest extends DatabaseTestFixture {
         poolCurator.create(consumerPool);
 
         assertEquals(0, consumer.getEntitlements().size());
-        Map<String, Integer> pQs = new HashMap<String, Integer>();
+        Map<String, Integer> pQs = new HashMap<>();
         pQs.put(consumerPool.getId(), 1);
         poolManager.entitleByPools(consumer, pQs);
 
@@ -233,7 +233,7 @@ public class PoolTest extends DatabaseTestFixture {
         Product parentProduct = this.createProduct("1", "product-1", owner);
         Product childProduct = this.createProduct("2", "product-2", owner);
 
-        Set<Product> providedProducts = new HashSet<Product>();
+        Set<Product> providedProducts = new HashSet<>();
         providedProducts.add(childProduct);
 
         Pool pool = TestUtil.createPool(owner, parentProduct, providedProducts, 5);
@@ -309,7 +309,7 @@ public class PoolTest extends DatabaseTestFixture {
         Product childProduct3 = this.createProduct("child3", "child3", owner);
         Product providedProduct = this.createProduct("provided", "Child 1", owner);
 
-        Set<Product> providedProducts = new HashSet<Product>();
+        Set<Product> providedProducts = new HashSet<>();
         providedProducts.add(providedProduct);
 
         Pool pool = TestUtil.createPool(owner, parentProduct, providedProducts, 5);
@@ -332,7 +332,7 @@ public class PoolTest extends DatabaseTestFixture {
     // Will use spec tests to see if quantity rules are followed in this scenario.
     @Test
     public void testEntitlementQuantityChange() throws EntitlementRefusedException {
-        Map<String, Integer> pQs = new HashMap<String, Integer>();
+        Map<String, Integer> pQs = new HashMap<>();
         pQs.put(pool.getId(), 3);
         List<Entitlement> entitlements = poolManager.entitleByPools(consumer, pQs);
 
@@ -486,12 +486,12 @@ public class PoolTest extends DatabaseTestFixture {
             "    }" +
             "]";
 
-        Map<String, String> expectedAttrib = new HashMap<String, String>();
+        Map<String, String> expectedAttrib = new HashMap<>();
         expectedAttrib.put("attrib-1", "value-1");
         expectedAttrib.put("attrib-2", "value-2");
         expectedAttrib.put("3", "3");
 
-        Map<String, String> expectedProdAttrib = new HashMap<String, String>();
+        Map<String, String> expectedProdAttrib = new HashMap<>();
         expectedProdAttrib.put("prod_attrib-1", "prod_value-1");
         expectedProdAttrib.put("prod_attrib-2", "prod_value-2");
         expectedProdAttrib.put("3", "3");
@@ -515,12 +515,12 @@ public class PoolTest extends DatabaseTestFixture {
             "    \"prod_attrib-3\": 3" +
             "}";
 
-        Map<String, String> expectedAttrib = new HashMap<String, String>();
+        Map<String, String> expectedAttrib = new HashMap<>();
         expectedAttrib.put("attrib-1", "value-1");
         expectedAttrib.put("attrib-2", "value-2");
         expectedAttrib.put("attrib-3", "3");
 
-        Map<String, String> expectedProdAttrib = new HashMap<String, String>();
+        Map<String, String> expectedProdAttrib = new HashMap<>();
         expectedProdAttrib.put("prod_attrib-1", "prod_value-1");
         expectedProdAttrib.put("prod_attrib-2", "prod_value-2");
         expectedProdAttrib.put("prod_attrib-3", "3");
@@ -538,7 +538,7 @@ public class PoolTest extends DatabaseTestFixture {
         String expectedValue2 = "\"name\":\"attrib-2\",\"value\":\"value-2\"";
         String expectedValue3 = "\"name\":\"attrib-3\",\"value\":\"3\"";
 
-        Map<String, String> attributes = new HashMap<String, String>();
+        Map<String, String> attributes = new HashMap<>();
         attributes.put("attrib-1", "value-1");
         attributes.put("attrib-2", "value-2");
         attributes.put("attrib-3", "3");

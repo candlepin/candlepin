@@ -115,12 +115,12 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
     public EntitlementCertificate generateEntitlementCert(Entitlement entitlement, Product product)
         throws GeneralSecurityException, IOException {
 
-        Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
+        Map<String, Entitlement> entitlements = new HashMap<>();
         entitlements.put(entitlement.getPool().getId(), entitlement);
-        Map<String, PoolQuantity> poolQuantities = new HashMap<String, PoolQuantity>();
+        Map<String, PoolQuantity> poolQuantities = new HashMap<>();
         poolQuantities.put(entitlement.getPool().getId(),
             new PoolQuantity(entitlement.getPool(), entitlement.getQuantity()));
-        Map<String, Product> products = new HashMap<String, Product>();
+        Map<String, Product> products = new HashMap<>();
         products.put(entitlement.getPool().getId(), product);
 
         Map<String, EntitlementCertificate> result = generateEntitlementCerts(entitlement.getConsumer(),
@@ -138,7 +138,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
     }
 
     private Set<Product> getDerivedProductsForDistributor(Pool pool, Consumer consumer) {
-        Set<Product> derivedProducts = new HashSet<Product>();
+        Set<Product> derivedProducts = new HashSet<>();
         boolean derived = pool.hasAttribute(Pool.Attributes.DERIVED_POOL);
         if (!derived && consumer.isManifestDistributor() &&
             pool.getDerivedProduct() != null) {
@@ -160,7 +160,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
 
         // oidutil is busted at the moment, so do this manually
         Set<X509ExtensionWrapper> extensions;
-        Set<X509ByteExtensionWrapper> byteExtensions = new LinkedHashSet<X509ByteExtensionWrapper>();
+        Set<X509ByteExtensionWrapper> byteExtensions = new LinkedHashSet<>();
         products.add(product);
 
         Map<String, EnvironmentContent> promotedContent = getPromotedContent(consumer);
@@ -249,8 +249,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
     private Map<String, EnvironmentContent> getPromotedContent(Consumer consumer) {
         // Build a set of all content IDs promoted to the consumer's environment so
         // we can determine if anything needs to be skipped:
-        Map<String, EnvironmentContent> promotedContent =
-            new HashMap<String, EnvironmentContent>();
+        Map<String, EnvironmentContent> promotedContent = new HashMap<>();
         if (consumer.getEnvironment() != null) {
             log.debug("Consumer has environment, checking for promoted content in: " +
                 consumer.getEnvironment());
@@ -266,7 +265,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
     public Set<X509ExtensionWrapper> prepareV1Extensions(Set<Product> products,
         Pool pool, Consumer consumer, Integer quantity, String contentPrefix,
         Map<String, EnvironmentContent> promotedContent) {
-        Set<X509ExtensionWrapper> result =  new LinkedHashSet<X509ExtensionWrapper>();
+        Set<X509ExtensionWrapper> result = new LinkedHashSet<>();
 
         Set<String> entitledProductIds = entCurator.listEntitledProductIds(
             consumer, pool);
@@ -371,13 +370,13 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         KeyPair keyPair = keyPairCurator.getConsumerKeyPair(consumer);
         byte[] pemEncodedKeyPair = pki.getPemEncoded(keyPair.getPrivate());
 
-        Map<String, CertificateSerial> serialMap = new HashMap<String, CertificateSerial>();
+        Map<String, CertificateSerial> serialMap = new HashMap<>();
         for (Entry<String, PoolQuantity> entry : poolQuantities.entrySet()) {
             // No need to persist the cert serial here as the IDs are generated on object creation.
             serialMap.put(entry.getKey(), new CertificateSerial(entry.getValue().getPool().getEndDate()));
         }
 
-        Map<String, EntitlementCertificate> entitlementCerts = new HashMap<String, EntitlementCertificate>();
+        Map<String, EntitlementCertificate> entitlementCerts = new HashMap<>();
         for (Entry<String, PoolQuantity> entry : poolQuantities.entrySet()) {
             Pool pool = entry.getValue().getPool();
             Entitlement ent = entitlements.get(entry.getKey());
@@ -389,8 +388,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
                 ent.getQuantity(),
                 ent.getId());
 
-            Set<Product> products = new HashSet<Product>(
-                productCurator.getPoolProvidedProductsCached(pool));
+            Set<Product> products = new HashSet<>(productCurator.getPoolProvidedProductsCached(pool));
 
             // If creating a certificate for a distributor, we need
             // to add any derived products as well so that their content

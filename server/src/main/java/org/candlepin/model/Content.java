@@ -140,7 +140,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
      * Default constructor
      */
     public Content() {
-        this.modifiedProductIds = new HashSet<String>();
+        this.modifiedProductIds = new HashSet<>();
     }
 
     /**
@@ -228,7 +228,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
         // In most cases, our collection setters copy the contents of the input collections to their
         // own internal collections, so we don't need to worry about our two instances sharing a
         // collection.
-        copy.modifiedProductIds = new HashSet<String>();
+        copy.modifiedProductIds = new HashSet<>();
         copy.setModifiedProductIds(this.getModifiedProductIds());
 
         copy.setCreated(this.getCreated() != null ? (Date) this.getCreated().clone() : null);

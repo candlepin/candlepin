@@ -16,7 +16,6 @@ package org.candlepin.model;
 
 import static org.candlepin.util.Util.addDaysToDt;
 import static org.candlepin.util.Util.addToFields;
-import static org.candlepin.util.Util.newSet;
 import static org.candlepin.util.Util.toDate;
 import static org.candlepin.util.Util.tomorrow;
 import static org.candlepin.util.Util.yesterday;
@@ -33,6 +32,7 @@ import java.lang.reflect.Field;
 import java.math.BigInteger;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -127,7 +127,7 @@ public class CertificateSerialCuratorTest extends DatabaseTestFixture {
      * @return
      */
     private Set<Date> extractExpiredDates(List<CertificateSerial> lcs) {
-        Set<Date> dates = newSet();
+        Set<Date> dates = new HashSet<>();
         for (Iterator<CertificateSerial> iterator = lcs.iterator(); iterator.hasNext();) {
             CertificateSerial certificateSerial = iterator.next();
             dates.add(certificateSerial.getExpiration());
@@ -246,8 +246,7 @@ public class CertificateSerialCuratorTest extends DatabaseTestFixture {
         assertEquals(2, serials.size());
 
         // verify
-        Map<BigInteger, CertificateSerial> values =
-            new HashMap<BigInteger, CertificateSerial>();
+        Map<BigInteger, CertificateSerial> values = new HashMap<>();
 
         for (CertificateSerial s : serials) {
             values.put(s.getSerial(), s);

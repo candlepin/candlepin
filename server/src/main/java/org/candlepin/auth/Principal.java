@@ -34,7 +34,7 @@ public abstract class Principal implements Serializable, java.security.Principal
     private static final long serialVersionUID = 907789978604269132L;
 
     private static Logger log = LoggerFactory.getLogger(Principal.class);
-    protected List<Permission> permissions = new ArrayList<Permission>();
+    protected List<Permission> permissions = new ArrayList<>();
 
     public abstract String getType();
 

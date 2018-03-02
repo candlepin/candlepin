@@ -156,10 +156,10 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      */
     public Set<Pool> listBySourceEntitlements(Iterable<Entitlement> ents) {
         if (ents == null || !ents.iterator().hasNext()) {
-            return new HashSet<Pool>();
+            return new HashSet<>();
         }
 
-        Set<Pool> output = new HashSet<Pool>();
+        Set<Pool> output = new HashSet<>();
 
         // Impl note:
         // We're using the partitioning here as it's slightly faster to do individual queries,
@@ -185,7 +185,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
 
     private Set<Entitlement> convertPoolsToEntitlements(Collection<Pool> pools) {
-        Set<Entitlement> output = new HashSet<Entitlement>();
+        Set<Entitlement> output = new HashSet<>();
 
         for (Pool p : pools) {
             output.addAll(p.getEntitlements());
@@ -263,7 +263,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         }
 
         List<Pool> results = (List<Pool>) criteria.list();
-        return results != null ? results : new LinkedList<Pool>();
+        return results != null ? results : new LinkedList<>();
     }
 
     @SuppressWarnings("unchecked")
@@ -349,7 +349,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 log.warn("Attempting to filter entitlement pools by owner and a consumer belonging to a " +
                     "different owner: {}, {}", owner, consumer);
 
-                Page<List<Pool>> output = new Page<List<Pool>>();
+                Page<List<Pool>> output = new Page<>();
                 output.setPageData(Collections.<Pool>emptyList());
                 output.setMaxRecords(0);
 
@@ -504,8 +504,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                     // adjusted to account for one having priority over the other.
 
                     if (values != null && !values.isEmpty()) {
-                        List<String> positives = new LinkedList<String>();
-                        List<String> negatives = new LinkedList<String>();
+                        List<String> positives = new LinkedList<>();
+                        List<String> negatives = new LinkedList<>();
 
                         for (String attrValue : values) {
                             if (attrValue.startsWith("!")) {
@@ -549,7 +549,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             return this.listByCriteria(criteria, pageRequest, postFilter);
         }
 
-        Page<List<Pool>> output = new Page<List<Pool>>();
+        Page<List<Pool>> output = new Page<>();
         output.setPageData(Collections.<Pool>emptyList());
         output.setMaxRecords(0);
 
@@ -832,7 +832,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      */
     @SuppressWarnings("unchecked")
     public List<Pool> lookupOversubscribedBySubscriptionIds(Owner owner, Map<String, Entitlement> subIdMap) {
-        List<Criterion> subIdMapCriteria = new ArrayList<Criterion>();
+        List<Criterion> subIdMapCriteria = new ArrayList<>();
         Criterion[] exampleCriteria = new Criterion[0];
         for (Entry<String, Entitlement> entry : subIdMap.entrySet()) {
             SimpleExpression subscriptionExpr = Restrictions.eq("sourceSub.subscriptionId", entry.getKey());
@@ -912,7 +912,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
 
     public List<ActivationKey> getActivationKeysForPool(Pool p) {
-        List<ActivationKey> activationKeys = new ArrayList<ActivationKey>();
+        List<ActivationKey> activationKeys = new ArrayList<>();
         List<ActivationKeyPool> activationKeyPools = currentSession().createCriteria(
             ActivationKeyPool.class).add(Restrictions.eq("pool", p)).list();
 
@@ -958,10 +958,10 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         // Premium the same as PREMIUM or premium, to make it easier for users to specify
         // a level on the CLI. However, use the original case, since Premium is more
         // attractive than PREMIUM.
-        Set<String> slaSet = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
-        Set<String> exemptSlaSet = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
+        Set<String> slaSet = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+        Set<String> exemptSlaSet = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
 
-        Set<String> exemptProductIds = new HashSet<String>();
+        Set<String> exemptProductIds = new HashSet<>();
 
         for (Object[] result : results) {
             String name = (String) result[0];
@@ -1057,7 +1057,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      */
     public void batchDelete(Collection<Pool> pools, Collection<String> alreadyDeletedPools) {
         if (alreadyDeletedPools == null) {
-            alreadyDeletedPools = new HashSet<String>();
+            alreadyDeletedPools = new HashSet<>();
         }
 
         for (Pool pool : pools) {
@@ -1138,7 +1138,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      */
     @SuppressWarnings("unchecked")
     public Set<String> getDerivedPoolIdsForPools(Iterable<String> poolIds) {
-        Set<String> output = new HashSet<String>();
+        Set<String> output = new HashSet<>();
 
         if (poolIds != null && poolIds.iterator().hasNext()) {
             // TODO: Update this method to use the pool hierarchy columns when they're available
@@ -1180,7 +1180,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 .list();
         }
 
-        return new LinkedList<String>();
+        return new LinkedList<>();
     }
 
     /**
@@ -1204,7 +1204,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 .list();
         }
 
-        return new LinkedList<String>();
+        return new LinkedList<>();
     }
 
     /**
@@ -1226,7 +1226,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 .list();
         }
 
-        return new LinkedList<String>();
+        return new LinkedList<>();
     }
 
     @SuppressWarnings("unchecked")
@@ -1356,7 +1356,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     public Set<String> getAllKnownProductIds() {
         // Impl note:
         // HQL does not (properly) support unions, so we have to do this query multiple times.
-        Set<String> result = new HashSet<String>();
+        Set<String> result = new HashSet<>();
 
         Query query = this.currentSession().createQuery(
             "SELECT DISTINCT P.product.id " +
@@ -1405,7 +1405,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     public Set<String> getAllKnownProductIdsForOwner(Owner owner) {
         // Impl note:
         // HQL does not (properly) support unions, so we have to do this query multiple times.
-        Set<String> result = new HashSet<String>();
+        Set<String> result = new HashSet<>();
 
         Query query = this.currentSession().createQuery(
             "SELECT DISTINCT P.product.id " +
@@ -1611,7 +1611,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      *  A mapping of pool IDs to provided product IDs
      */
     public Map<String, Set<String>> getProvidedProductIds(Collection<Pool> pools) {
-        Set<String> poolIds = new HashSet<String>();
+        Set<String> poolIds = new HashSet<>();
 
         if (pools != null && !pools.isEmpty()) {
             for (Pool pool : pools) {
@@ -1636,7 +1636,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      *  A mapping of pool IDs to provided product IDs
      */
     public Map<String, Set<String>> getProvidedProductIdsByPoolIds(Collection<String> poolIds) {
-        Map<String, Set<String>> providedProductMap = new HashMap<String, Set<String>>();
+        Map<String, Set<String>> providedProductMap = new HashMap<>();
 
         if (poolIds != null && !poolIds.isEmpty()) {
             StringBuilder builder =
@@ -1675,7 +1675,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 Set<String> providedProducts = providedProductMap.get((String) cols[0]);
 
                 if (providedProducts == null) {
-                    providedProducts = new HashSet<String>();
+                    providedProducts = new HashSet<>();
                     providedProductMap.put((String) cols[0], providedProducts);
                 }
 
@@ -1699,7 +1699,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      *  A mapping of pool IDs to provided product IDs
      */
     public Map<String, Set<String>> getDerivedProvidedProductIds(Collection<Pool> pools) {
-        Set<String> poolIds = new HashSet<String>();
+        Set<String> poolIds = new HashSet<>();
 
         if (pools != null && !pools.isEmpty()) {
             for (Pool pool : pools) {
@@ -1724,7 +1724,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      *  A mapping of pool IDs to provided product IDs
      */
     public Map<String, Set<String>> getDerivedProvidedProductIdsByPoolIds(Collection<String> poolIds) {
-        Map<String, Set<String>> providedProductMap = new HashMap<String, Set<String>>();
+        Map<String, Set<String>> providedProductMap = new HashMap<>();
 
         if (poolIds != null && !poolIds.isEmpty()) {
             StringBuilder builder =
@@ -1764,7 +1764,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 Set<String> providedProducts = providedProductMap.get((String) cols[0]);
 
                 if (providedProducts == null) {
-                    providedProducts = new HashSet<String>();
+                    providedProducts = new HashSet<>();
                     providedProductMap.put((String) cols[0], providedProducts);
                 }
 
@@ -1844,7 +1844,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      *  a set of pool IDs representing existing pools in the given collection of pool IDs
      */
     public Set<String> getExistingPoolIdsByIds(Iterable<String> poolIds) {
-        Set<String> existing = new HashSet<String>();
+        Set<String> existing = new HashSet<>();
 
         if (poolIds != null && poolIds.iterator().hasNext()) {
             String jpql = "SELECT DISTINCT p.id FROM Pool p WHERE p.id IN (:pids)";
@@ -1871,7 +1871,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      *  a map of consumer IDs to pool IDs of stack derived pools fro the given stack IDs
      */
     public Map<String, Set<String>> getConsumerStackDerivedPoolIdMap(Iterable<String> stackIds) {
-        Map<String, Set<String>> consumerPoolMap = new HashMap<String, Set<String>>();
+        Map<String, Set<String>> consumerPoolMap = new HashMap<>();
 
         if (stackIds != null && stackIds.iterator().hasNext()) {
             // We do this in native SQL to avoid some unnecessary joins
@@ -1889,7 +1889,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
                     Set<String> poolIds = consumerPoolMap.get(consumerId);
                     if (poolIds == null) {
-                        poolIds = new HashSet<String>();
+                        poolIds = new HashSet<>();
                         consumerPoolMap.put(consumerId, poolIds);
                     }
 
@@ -1921,7 +1921,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      *  the specified entitlements
      */
     public Set<String> getUnentitledStackDerivedPoolIds(Iterable<String> entitlementIds) {
-        Set<String> output = new HashSet<String>();
+        Set<String> output = new HashSet<>();
 
         String sql = "SELECT ss.derivedpool_id " +
             "FROM cp_pool_source_stack ss " +

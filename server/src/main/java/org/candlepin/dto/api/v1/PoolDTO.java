@@ -402,7 +402,7 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> implements Linkabl
      */
     @JsonSerialize(using = CandlepinLegacyAttributeSerializer.class)
     public Map<String, String> getAttributes() {
-        return this.attributes != null ? new MapView<String, String>(this.attributes) : null;
+        return this.attributes != null ? new MapView<>(this.attributes) : null;
     }
 
     /**
@@ -418,7 +418,7 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> implements Linkabl
     public PoolDTO setAttributes(Map<String, String> attributes) {
         if (attributes != null) {
             if (this.attributes == null) {
-                this.attributes = new HashMap<String, String>();
+                this.attributes = new HashMap<>();
             }
             else {
                 this.attributes.clear();
@@ -640,7 +640,7 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> implements Linkabl
      *  the branding items associated with this key, or null if they have not yet been defined
      */
     public Set<BrandingDTO> getBranding() {
-        return this.branding != null ? new SetView<BrandingDTO>(this.branding) : null;
+        return this.branding != null ? new SetView<>(this.branding) : null;
     }
 
     /**
@@ -655,7 +655,7 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> implements Linkabl
     public PoolDTO setBranding(Set<BrandingDTO> branding) {
         if (branding != null) {
             if (this.branding == null) {
-                this.branding = new HashSet<BrandingDTO>();
+                this.branding = new HashSet<>();
             }
             else {
                 this.branding.clear();
@@ -692,7 +692,7 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> implements Linkabl
         }
 
         if (this.branding == null) {
-            this.branding = new HashSet<BrandingDTO>();
+            this.branding = new HashSet<>();
         }
 
         return this.branding.add(branding);
@@ -720,8 +720,7 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> implements Linkabl
      * or null if the they have not yet been defined.
      */
     public Map<String, String> getCalculatedAttributes() {
-        return this.calculatedAttributes != null ?
-            new MapView<String, String>(this.calculatedAttributes) : null;
+        return this.calculatedAttributes != null ? new MapView<>(this.calculatedAttributes) : null;
     }
 
     /**
@@ -736,7 +735,7 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> implements Linkabl
     public PoolDTO setCalculatedAttributes(Map<String, String> calculatedAttributes) {
         if (calculatedAttributes != null) {
             if (this.calculatedAttributes == null) {
-                this.calculatedAttributes = new HashMap<String, String>();
+                this.calculatedAttributes = new HashMap<>();
             }
             else {
                 this.calculatedAttributes.clear();
@@ -877,7 +876,7 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> implements Linkabl
      */
     @JsonSerialize(using = CandlepinLegacyAttributeSerializer.class)
     public Map<String, String> getProductAttributes() {
-        return this.productAttributes != null ? new MapView<String, String>(this.productAttributes) : null;
+        return this.productAttributes != null ? new MapView<>(this.productAttributes) : null;
     }
 
     /**
@@ -893,7 +892,7 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> implements Linkabl
     public PoolDTO setProductAttributes(Map<String, String> productAttributes) {
         if (productAttributes != null) {
             if (this.productAttributes == null) {
-                this.productAttributes = new HashMap<String, String>();
+                this.productAttributes = new HashMap<>();
             }
             else {
                 this.productAttributes.clear();
@@ -1023,8 +1022,7 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> implements Linkabl
      */
     @JsonSerialize(using = CandlepinLegacyAttributeSerializer.class)
     public Map<String, String> getDerivedProductAttributes() {
-        return this.derivedProductAttributes != null ?
-            new MapView<String, String>(this.derivedProductAttributes) : null;
+        return this.derivedProductAttributes != null ? new MapView<>(this.derivedProductAttributes) : null;
     }
 
     /**
@@ -1040,7 +1038,7 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> implements Linkabl
     public PoolDTO setDerivedProductAttributes(Map<String, String> derivedProductAttributes) {
         if (derivedProductAttributes != null) {
             if (this.derivedProductAttributes == null) {
-                this.derivedProductAttributes = new HashMap<String, String>();
+                this.derivedProductAttributes = new HashMap<>();
             }
             else {
                 this.derivedProductAttributes.clear();
@@ -1109,7 +1107,7 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> implements Linkabl
      *  the provided products associated with this key, or null if they have not yet been defined
      */
     public Set<ProvidedProductDTO> getProvidedProducts() {
-        return this.providedProducts != null ? new SetView<ProvidedProductDTO>(this.providedProducts) : null;
+        return this.providedProducts != null ? new SetView<>(this.providedProducts) : null;
     }
 
     /**
@@ -1124,7 +1122,7 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> implements Linkabl
     public PoolDTO setProvidedProducts(Set<ProvidedProductDTO> providedProducts) {
         if (providedProducts != null) {
             if (this.providedProducts == null) {
-                this.providedProducts = new HashSet<ProvidedProductDTO>();
+                this.providedProducts = new HashSet<>();
             }
             else {
                 this.providedProducts.clear();
@@ -1161,7 +1159,7 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> implements Linkabl
         }
 
         if (this.providedProducts == null) {
-            this.providedProducts = new HashSet<ProvidedProductDTO>();
+            this.providedProducts = new HashSet<>();
         }
 
         return this.providedProducts.add(providedProduct);
@@ -1180,8 +1178,7 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> implements Linkabl
      *  the derived provided products associated with this key, or null if they have not yet been defined
      */
     public Set<ProvidedProductDTO> getDerivedProvidedProducts() {
-        return this.derivedProvidedProducts != null ?
-            new SetView<ProvidedProductDTO>(this.derivedProvidedProducts) : null;
+        return this.derivedProvidedProducts != null ? new SetView<>(this.derivedProvidedProducts) : null;
     }
 
     /**
@@ -1196,7 +1193,7 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> implements Linkabl
     public PoolDTO setDerivedProvidedProducts(Set<ProvidedProductDTO> derivedProvidedProducts) {
         if (derivedProvidedProducts != null) {
             if (this.derivedProvidedProducts == null) {
-                this.derivedProvidedProducts = new HashSet<ProvidedProductDTO>();
+                this.derivedProvidedProducts = new HashSet<>();
             }
             else {
                 this.derivedProvidedProducts.clear();
@@ -1233,7 +1230,7 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> implements Linkabl
         }
 
         if (this.derivedProvidedProducts == null) {
-            this.derivedProvidedProducts = new HashSet<ProvidedProductDTO>();
+            this.derivedProvidedProducts = new HashSet<>();
         }
 
         return this.derivedProvidedProducts.add(derivedProvidedProduct);

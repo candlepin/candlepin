@@ -97,7 +97,7 @@ public class ConsumerCuratorPermissionsTest extends DatabaseTestFixture {
     }
 
     private User setupOnlyMyConsumersPrincipal() {
-        Set<Permission> perms = new HashSet<Permission>();
+        Set<Permission> perms = new HashSet<>();
         User u = new User("fakeuser", "dontcare");
         perms.add(new UsernameConsumersPermission(u, owner));
         Principal p = new UserPrincipal(u.getUsername(), perms, false);
@@ -106,7 +106,7 @@ public class ConsumerCuratorPermissionsTest extends DatabaseTestFixture {
     }
 
     private User setupEditMyConsumersViewAllPrincipal() {
-        Set<Permission> perms = new HashSet<Permission>();
+        Set<Permission> perms = new HashSet<>();
         User u = new User("fakeuser", "dontcare");
         perms.add(new UsernameConsumersPermission(u, owner));
         perms.add(new OwnerPermission(owner, Access.READ_ONLY));

@@ -63,7 +63,7 @@ public class ConsumerTypeValidator {
 
     private List<String> findInvalidLabels(Set<String> labels,
         List<ConsumerType> types) {
-        List<String> invalidLabels = new ArrayList<String>(labels);
+        List<String> invalidLabels = new ArrayList<>(labels);
         for (ConsumerType type : types) {
             String label = type.getLabel();
             if (labels.contains(label)) {

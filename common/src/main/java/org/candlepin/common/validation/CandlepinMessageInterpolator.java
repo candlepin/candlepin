@@ -39,7 +39,7 @@ public class CandlepinMessageInterpolator implements MessageInterpolator {
     public static final Map<String, ValidationMessage> MESSAGES;
 
     static {
-        HashMap<String, ValidationMessage> msgs = new HashMap<String, ValidationMessage>();
+        HashMap<String, ValidationMessage> msgs = new HashMap<>();
 
         msgs.put("{javax.validation.constraints.AssertFalse.message}",
             new ValidationMessage(I18n.marktr("must be false")));
@@ -142,7 +142,7 @@ public class CandlepinMessageInterpolator implements MessageInterpolator {
     public String interpolate(String messageTemplate, Context context, Locale locale) {
         Map<String, Object> attrs = context.getConstraintDescriptor().getAttributes();
         ValidationMessage validationMessage = MESSAGES.get(messageTemplate);
-        List<Object> paramList = new ArrayList<Object>();
+        List<Object> paramList = new ArrayList<>();
 
         for (String param : validationMessage.getParamNames()) {
             paramList.add(attrs.containsKey(param) ? attrs.get(param) : param);

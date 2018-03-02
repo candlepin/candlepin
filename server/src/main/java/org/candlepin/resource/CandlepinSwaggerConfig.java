@@ -51,7 +51,7 @@ public class CandlepinSwaggerConfig implements ReaderListener {
             "Candlepin requires HTTP Basic authentication of an owner");
         swagger.addSecurityDefinition(BASIC_AUTH, basic);
         SecurityRequirement req = new SecurityRequirement();
-        req.setRequirements(BASIC_AUTH, new ArrayList<String>());
+        req.setRequirements(BASIC_AUTH, new ArrayList<>());
         swagger.addSecurity(req);
     }
 }

@@ -67,7 +67,7 @@ public class EntitlementTranslatorTest extends
         source.setOwner(this.ownerTranslatorTest.initSourceObject());
         source.setPool(this.poolTranslatorTest.initSourceObject());
 
-        HashSet<EntitlementCertificate> certs = new HashSet<EntitlementCertificate>();
+        HashSet<EntitlementCertificate> certs = new HashSet<>();
         EntitlementCertificate entCert = new EntitlementCertificate();
         entCert.setId("ent-cert-id");
         entCert.setEntitlement(source);

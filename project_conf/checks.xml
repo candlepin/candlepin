@@ -118,6 +118,9 @@
 
     <module name="MissingDeprecated" />
 
+    <!-- Force usage of the Java 7 diamond operator -->
+    <module name="org.candlepin.checks.DiamondOperatorForVariableDefinitionCheck" />
+
     <!--
        #######################################################################
        BLOCK CHECKS

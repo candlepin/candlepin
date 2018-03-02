@@ -40,7 +40,7 @@ public class LoggingConfiguratorTest {
         assertNotNull(l);
         assertNull(l.getLevel());
 
-        Map<String, String> logLevels = new HashMap<String, String>();
+        Map<String, String> logLevels = new HashMap<>();
         String key = ConfigurationPrefixes.LOGGING_CONFIG_PREFIX + LoggingConfiguratorTest.class.getName();
         logLevels.put(key, "DEBUG");
         LoggingConfigurator.init(new MapConfiguration(logLevels));

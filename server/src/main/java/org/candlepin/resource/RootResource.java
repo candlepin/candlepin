@@ -55,7 +55,7 @@ public class RootResource {
     private static List<Link> links = null;
 
     static {
-        RESOURCE_CLASSES = new HashMap<Object, String>();
+        RESOURCE_CLASSES = new HashMap<>();
         addResource(AdminResource.class);
         addResource(UserResource.class);
         addResource(AtomFeedResource.class);
@@ -96,7 +96,7 @@ public class RootResource {
         List<String> hideResources = Arrays.asList(
             config.getString(ConfigProperties.HIDDEN_RESOURCES).split(" "));
 
-        List<Link> newLinks = new LinkedList<Link>();
+        List<Link> newLinks = new LinkedList<>();
         for (Map.Entry<Object, String> entry : RESOURCE_CLASSES.entrySet()) {
             add(resourceLink(entry.getKey(), entry.getValue()), hideResources,
                 newLinks);

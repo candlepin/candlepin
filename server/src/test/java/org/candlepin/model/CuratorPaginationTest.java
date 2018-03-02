@@ -189,7 +189,7 @@ public class CuratorPaginationTest extends DatabaseTestFixture {
     }
 
     private List<Owner> createOwners(int owners) {
-        List<Owner> ownerList = new ArrayList<Owner>();
+        List<Owner> ownerList = new ArrayList<>();
         for (int i = 0; i < owners; i++) {
             Owner o = new Owner();
             o.setDisplayName(String.valueOf(i));

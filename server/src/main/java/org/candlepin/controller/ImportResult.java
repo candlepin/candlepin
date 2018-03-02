@@ -39,9 +39,9 @@ public class ImportResult<E extends Persisted> {
      * Instantiates a new, empty ImportResult instance.
      */
     public ImportResult() {
-        this.skippedEntities = new HashMap<String, E>();
-        this.createdEntities = new HashMap<String, E>();
-        this.updatedEntities = new HashMap<String, E>();
+        this.skippedEntities = new HashMap<>();
+        this.createdEntities = new HashMap<>();
+        this.updatedEntities = new HashMap<>();
         this.importedEntities = null;
     }
 
@@ -87,7 +87,7 @@ public class ImportResult<E extends Persisted> {
      */
     public Map<String, E> getImportedEntities() {
         if (this.importedEntities == null) {
-            this.importedEntities = new HashMap<String, E>();
+            this.importedEntities = new HashMap<>();
 
             this.importedEntities.putAll(this.skippedEntities);
             this.importedEntities.putAll(this.createdEntities);

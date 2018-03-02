@@ -127,7 +127,7 @@ public class ResolverUtil {
             pool.setDerivedProduct(this.resolveProduct(owner, pool.getDerivedProduct()));
         }
 
-        HashSet<Product> presolved = new HashSet<Product>();
+        HashSet<Product> presolved = new HashSet<>();
 
         pool.populateAllTransientProvidedProducts(productCurator);
         for (ProvidedProduct product : pool.getProvidedProductDtos()) {
@@ -239,14 +239,14 @@ public class ResolverUtil {
             subscription.setDerivedProduct(p);
         }
 
-        HashSet<ProductData> providedProducts = new HashSet<ProductData>();
+        HashSet<ProductData> providedProducts = new HashSet<>();
         for (ProductData product : subscription.getProvidedProducts()) {
             if (product != null) {
                 providedProducts.add(new ProductData(this.resolveProduct(owner, product.getId())));
             }
         }
         subscription.setProvidedProducts(providedProducts);
-        HashSet<ProductData> derivedProvidedProducts = new HashSet<ProductData>();
+        HashSet<ProductData> derivedProvidedProducts = new HashSet<>();
         for (ProductData product : subscription.getDerivedProvidedProducts()) {
             if (product != null) {
                 derivedProvidedProducts.add(new ProductData(this.resolveProduct(owner, product.getId())));

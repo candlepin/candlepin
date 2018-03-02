@@ -93,7 +93,7 @@ public class AtomFeedResourceTest {
     }
 
     private List<Event> getEvents(int count) {
-        List<Event> list = new ArrayList<Event>(count);
+        List<Event> list = new ArrayList<>(count);
         Target[] targets = Target.values();
         Type[] types = Type.values();
         for (int i = 0; i < count; i++) {

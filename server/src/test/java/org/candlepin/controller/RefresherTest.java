@@ -25,7 +25,6 @@ import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
-import org.candlepin.util.Util;
 import org.candlepin.test.TestUtil;
 
 import org.junit.Before;
@@ -33,6 +32,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -111,9 +111,9 @@ public class RefresherTest {
         subscription.setId("subId");
         subscription.setOwner(owner);
 
-        List<Pool> pools = Util.newList();
+        List<Pool> pools = new ArrayList<>();
         pools.add(pool);
-        List<Subscription> subscriptions = Util.newList();
+        List<Subscription> subscriptions = new ArrayList<>();
         subscriptions.add(subscription);
 
         when(subAdapter.getSubscriptions(eq(productData))).thenReturn(subscriptions);
@@ -150,9 +150,9 @@ public class RefresherTest {
         Owner owner = TestUtil.createOwner();
         subscription.setOwner(owner);
 
-        List<Pool> pools = Util.newList();
+        List<Pool> pools = new ArrayList<>();
         pools.add(pool);
-        List<Subscription> subscriptions = Util.newList();
+        List<Subscription> subscriptions = new ArrayList<>();
         subscriptions.add(subscription);
 
         when(subAdapter.getSubscriptions(eq(productData))).thenReturn(subscriptions);

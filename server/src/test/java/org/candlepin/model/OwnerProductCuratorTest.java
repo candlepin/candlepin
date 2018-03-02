@@ -536,7 +536,7 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         assertTrue(this.isProductMappedToOwner(original, owner));
         assertFalse(this.isProductMappedToOwner(updated, owner));
 
-        Map<String, String> uuidMap = new HashMap<String, String>();
+        Map<String, String> uuidMap = new HashMap<>();
         uuidMap.put(original.getUuid(), updated.getUuid());
 
         this.ownerProductCurator.updateOwnerProductReferences(owner, uuidMap);
@@ -614,12 +614,12 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         assertEquals(2, productList1.size());
         assertEquals(2, productList2.size());
 
-        List<String> uuidList1 = new LinkedList<String>();
+        List<String> uuidList1 = new LinkedList<>();
         for (Product product : productList1) {
             uuidList1.add(product.getUuid());
         }
 
-        List<String> uuidList2 = new LinkedList<String>();
+        List<String> uuidList2 = new LinkedList<>();
         for (Product product : productList2) {
             uuidList2.add(product.getUuid());
         }
@@ -650,12 +650,12 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         assertEquals(3, productList1.size());
         assertEquals(3, productList2.size());
 
-        List<String> uuidList1 = new LinkedList<String>();
+        List<String> uuidList1 = new LinkedList<>();
         for (Product product : productList1) {
             uuidList1.add(product.getUuid());
         }
 
-        List<String> uuidList2 = new LinkedList<String>();
+        List<String> uuidList2 = new LinkedList<>();
         for (Product product : productList2) {
             uuidList2.add(product.getUuid());
         }
@@ -681,7 +681,7 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         Product p8 = this.createProduct("p3", "p3", owner2);
         Product p9 = this.createProduct("p3", "p3", owner3);
 
-        Map<String, Integer> versions = new HashMap<String, Integer>();
+        Map<String, Integer> versions = new HashMap<>();
         versions.put(p1.getId(), p1.getEntityVersion());
         versions.put(p4.getId(), p4.getEntityVersion());
         versions.put("bad_id", p7.getEntityVersion());
@@ -698,17 +698,17 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         assertEquals(4, productList2.size());
         assertEquals(6, productList3.size());
 
-        List<String> uuidList1 = new LinkedList<String>();
+        List<String> uuidList1 = new LinkedList<>();
         for (Product product : productList1) {
             uuidList1.add(product.getUuid());
         }
 
-        List<String> uuidList2 = new LinkedList<String>();
+        List<String> uuidList2 = new LinkedList<>();
         for (Product product : productList2) {
             uuidList2.add(product.getUuid());
         }
 
-        List<String> uuidList3 = new LinkedList<String>();
+        List<String> uuidList3 = new LinkedList<>();
         for (Product product : productList3) {
             uuidList3.add(product.getUuid());
         }

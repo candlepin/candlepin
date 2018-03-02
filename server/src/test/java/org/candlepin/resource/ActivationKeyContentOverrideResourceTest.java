@@ -78,7 +78,7 @@ public class ActivationKeyContentOverrideResourceTest {
     public void setUp() throws URISyntaxException {
         key = new ActivationKey("actkey", owner);
         key.setId("keyid");
-        MultivaluedMap<String, String> mvm = new MultivaluedMapImpl<String, String>();
+        MultivaluedMap<String, String> mvm = new MultivaluedMapImpl<>();
         mvm.add("activation_key_id", key.getId());
         when(context.getPathParameters()).thenReturn(mvm);
         akcor = new ActivationKeyContentOverrideResource(
@@ -90,8 +90,7 @@ public class ActivationKeyContentOverrideResourceTest {
 
     @Test
     public void testActivationKeyGetOverrides() {
-        List<ActivationKeyContentOverride> overrides =
-            new LinkedList<ActivationKeyContentOverride>();
+        List<ActivationKeyContentOverride> overrides = new LinkedList<>();
         ActivationKeyContentOverride override =
             new ActivationKeyContentOverride(key, "label", "name", "value");
         overrides.add(override);
@@ -108,7 +107,7 @@ public class ActivationKeyContentOverrideResourceTest {
         ActivationKeyContentOverride override =
             new ActivationKeyContentOverride(key, "label", "name", "test");
 
-        List<ContentOverride> toDelete = new LinkedList<ContentOverride>();
+        List<ContentOverride> toDelete = new LinkedList<>();
         toDelete.add(override);
         akcor.deleteContentOverrides(context, principal, toDelete);
         verify(activationKeyContentOverrideCurator, Mockito.times(1))
@@ -117,7 +116,7 @@ public class ActivationKeyContentOverrideResourceTest {
 
     @Test
     public void testActivationKeyRemoveAllOverrides() {
-        List<ContentOverride> toDelete = new LinkedList<ContentOverride>();
+        List<ContentOverride> toDelete = new LinkedList<>();
         akcor.deleteContentOverrides(context, principal, toDelete);
         verify(activationKeyContentOverrideCurator, Mockito.times(1))
             .removeByParent(eq(key));
@@ -130,7 +129,7 @@ public class ActivationKeyContentOverrideResourceTest {
         ActivationKeyContentOverride otherOverride =
             new ActivationKeyContentOverride(key, "somelabel1", "test", "test");
 
-        List<ContentOverride> toAdd = new LinkedList<ContentOverride>();
+        List<ContentOverride> toAdd = new LinkedList<>();
         toAdd.add(override);
         toAdd.add(otherOverride);
 
@@ -143,7 +142,7 @@ public class ActivationKeyContentOverrideResourceTest {
 
     @Test
     public void testActivationKeyOverrideValidationIsRun() {
-        List<ContentOverride> newOverrides = new LinkedList<ContentOverride>();
+        List<ContentOverride> newOverrides = new LinkedList<>();
         newOverrides.add(new ActivationKeyContentOverride(key, "x", "baseurl", "x"));
         akcor.addContentOverrides(context, principal, newOverrides);
         verify(contentOverrideValidator, Mockito.times(1)).validate(eq(newOverrides));

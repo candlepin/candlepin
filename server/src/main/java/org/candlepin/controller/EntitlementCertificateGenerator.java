@@ -138,9 +138,9 @@ public class EntitlementCertificateGenerator {
     @Transactional
     public EntitlementCertificate generateEntitlementCertificate(Pool pool, Entitlement entitlement) {
 
-        Map<String, Product> products = new HashMap<String, Product>();
-        Map<String, Entitlement> entitlements = new HashMap<String, Entitlement>();
-        Map<String, PoolQuantity> poolQuantities = new HashMap<String, PoolQuantity>();
+        Map<String, Product> products = new HashMap<>();
+        Map<String, Entitlement> entitlements = new HashMap<>();
+        Map<String, PoolQuantity> poolQuantities = new HashMap<>();
 
         products.put(pool.getId(), pool.getProduct());
         entitlements.put(pool.getId(), entitlement);
@@ -291,7 +291,7 @@ public class EntitlementCertificateGenerator {
 
         log.info("Regenerating relevant certificates in environment: {}", environment);
 
-        Set<Entitlement> entsToRegen = new HashSet<Entitlement>();
+        Set<Entitlement> entsToRegen = new HashSet<>();
 
         entLoop: for (Entitlement entitlement : this.entitlementCurator.listByEnvironment(environment)) {
             // Impl note:
@@ -382,9 +382,9 @@ public class EntitlementCertificateGenerator {
     @Transactional
     public void regenerateCertificatesOf(Collection<Owner> owners, Collection<Product> products,
         boolean lazy) {
-        List<Pool> pools = new LinkedList<Pool>();
+        List<Pool> pools = new LinkedList<>();
 
-        Set<String> productIds = new HashSet<String>();
+        Set<String> productIds = new HashSet<>();
         Date now = new Date();
 
         for (Product product : products) {

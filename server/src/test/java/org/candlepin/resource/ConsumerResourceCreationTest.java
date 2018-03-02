@@ -226,7 +226,7 @@ public class ConsumerResourceCreationTest {
 
 
     protected ConsumerDTO createConsumer(String consumerName) {
-        Collection<Permission> perms = new HashSet<Permission>();
+        Collection<Permission> perms = new HashSet<>();
         perms.add(new OwnerPermission(owner, Access.ALL));
         Principal principal = new UserPrincipal(USER, perms, false);
 
@@ -327,7 +327,7 @@ public class ConsumerResourceCreationTest {
     private List<String> mockActivationKeys() {
         ActivationKey key1 = new ActivationKey("key1", owner);
         when(activationKeyCurator.lookupForOwner("key1", owner)).thenReturn(key1);
-        List<String> keys = new LinkedList<String>();
+        List<String> keys = new LinkedList<>();
         keys.add(key1.getName());
         return keys;
     }
@@ -398,7 +398,7 @@ public class ConsumerResourceCreationTest {
     @Test(expected = BadRequestException.class)
     public void failIfOnlyActivationKeyDoesNotExistForOrg() {
         Principal p = new NoAuthPrincipal();
-        List<String> keys = new ArrayList<String>();
+        List<String> keys = new ArrayList<>();
         keys.add("NoSuchKey");
         ConsumerDTO consumer = createConsumerDTO("sys.example.com", null, null, systemDto);
         resource.create(consumer, p, null, owner.getKey(), createKeysString(keys), true);

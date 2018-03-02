@@ -67,7 +67,7 @@ public class HandleEntitlementsOp implements BindOperation {
         Consumer consumer = context.getLockedConsumer();
         Map<String, Entitlement> entitlementMap = context.getEntitlementMap();
         Map<String, PoolQuantity> lockedPools = context.getPoolQuantities();
-        List<Pool> poolsToSave = new LinkedList<Pool>();
+        List<Pool> poolsToSave = new LinkedList<>();
         for (Entry<String, PoolQuantity> entry: lockedPools.entrySet()) {
             Entitlement ent = entitlementMap.get(entry.getKey());
             Pool pool = entry.getValue().getPool();

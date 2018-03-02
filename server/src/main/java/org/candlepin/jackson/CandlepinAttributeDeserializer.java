@@ -51,7 +51,7 @@ public class CandlepinAttributeDeserializer extends StdDeserializer<Map<String, 
     public Map<String, String> deserialize(JsonParser parser, DeserializationContext context)
         throws IOException, JsonProcessingException {
 
-        Map<String, String> output = new HashMap<String, String>();
+        Map<String, String> output = new HashMap<>();
         TreeNode node = parser.readValueAsTree();
 
         if (node.isObject()) {

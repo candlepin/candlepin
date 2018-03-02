@@ -70,8 +70,8 @@ public class ContentAccessCertificateCurator extends AbstractHibernateCurator<Co
         Query query = this.getEntityManager().createQuery(hql);
         List<Object[]> rows = query.setParameter("ownerkey", owner.getKey()).getResultList();
 
-        Set<String> certsToDelete = new HashSet<String>();
-        Set<Long> certSerialsToRevoke = new HashSet<Long>();
+        Set<String> certsToDelete = new HashSet<>();
+        Set<Long> certSerialsToRevoke = new HashSet<>();
         for (Object[] row : rows) {
             if (row[0] != null) {
                 certsToDelete.add((String) row[0]);

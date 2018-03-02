@@ -86,7 +86,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
      */
     @Transactional
     public Set<Entitlement> bulkUpdate(Set<Entitlement> entitlements) {
-        Set<Entitlement> toReturn = new HashSet<Entitlement>();
+        Set<Entitlement> toReturn = new HashSet<>();
         for (Entitlement toUpdate : entitlements) {
             Entitlement found = find(toUpdate.getId());
             if (found != null) {
@@ -185,8 +185,8 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
                     // adjusted to account for one having priority over the other.
 
                     if (values != null && !values.isEmpty()) {
-                        List<String> positives = new LinkedList<String>();
-                        List<String> negatives = new LinkedList<String>();
+                        List<String> positives = new LinkedList<>();
+                        List<String> negatives = new LinkedList<>();
 
                         for (String attrValue : values) {
                             if (attrValue.startsWith("!")) {
@@ -440,7 +440,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
                 entitlementsPage = listByCriteria(criteria, pageRequest);
             }
             else {
-                entitlementsPage = new Page<List<Entitlement>>();
+                entitlementsPage = new Page<>();
                 entitlementsPage.setPageData(Collections.<Entitlement>emptyList());
                 entitlementsPage.setMaxRecords(0);
             }
@@ -525,8 +525,8 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     public Set<String> listEntitledProductIds(Consumer c, Pool pool) {
         // FIXME Either address the TODO below, or move this method out of the curator.
         // TODO: Swap this to a db query if we're worried about memory:
-        Set<String> entitledProductIds = new HashSet<String>();
-        List<Pool> pools = new LinkedList<Pool>();
+        Set<String> entitledProductIds = new HashSet<>();
+        List<Pool> pools = new LinkedList<>();
         for (Entitlement e : c.getEntitlements()) {
             pools.add(e.getPool());
         }
@@ -585,7 +585,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
      */
     public int markDependentEntitlementsDirty(Iterable<String> entitlementIds) {
         if (entitlementIds != null && entitlementIds.iterator().hasNext()) {
-            Set<String> eids = new HashSet<String>();
+            Set<String> eids = new HashSet<>();
             if (entitlementIds != null && entitlementIds.iterator().hasNext()) {
                 // Find all entitlements that are modified by any of the specified entitlements.
                 eids.addAll(findDependentEntitlementsByProvidedProduct(entitlementIds));
@@ -619,7 +619,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
      * @return all entitlement IDs that belong to a distributor.
      */
     public Set<String> filterDistributorEntitlementIds(Iterable<String> entsIdsToFilter) {
-        Set<String> filteredIds = new HashSet<String>();
+        Set<String> filteredIds = new HashSet<>();
         if (entsIdsToFilter != null && entsIdsToFilter.iterator().hasNext()) {
             String querySql = "SELECT DISTINCT e.id " +
                 "FROM Entitlement e JOIN e.consumer c JOIN c.type t " +
@@ -670,11 +670,11 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
      */
     @Deprecated
     public Map<Consumer, List<Entitlement>> getDistinctConsumers(List<Entitlement> entsToRevoke) {
-        Map<Consumer, List<Entitlement>> result = new HashMap<Consumer, List<Entitlement>>();
+        Map<Consumer, List<Entitlement>> result = new HashMap<>();
         for (Entitlement ent : entsToRevoke) {
             List<Entitlement> ents = result.get(ent.getConsumer());
             if (ents == null) {
-                ents = new ArrayList<Entitlement>();
+                ents = new ArrayList<>();
                 result.put(ent.getConsumer(), ents);
             }
             ents.add(ent);
@@ -908,7 +908,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
 
         Query query = getEntityManager().createNativeQuery(queryStr);
 
-        Set<String> result = new HashSet<String>();
+        Set<String> result = new HashSet<>();
         if (entitlementIds == null || !entitlementIds.iterator().hasNext()) {
             return result;
         }
@@ -951,7 +951,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             "  AND e2.id NOT IN (:entitlement_ids)";
         Query query = getEntityManager().createNativeQuery(queryStr);
 
-        Set<String> result = new HashSet<String>();
+        Set<String> result = new HashSet<>();
         if (entitlementIds == null || !entitlementIds.iterator().hasNext()) {
             return result;
         }
@@ -980,7 +980,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
      */
     public Collection<String> getDependentEntitlementIdsForPools(Consumer consumer,
         Iterable<String> poolIds) {
-        Set<String> entitlementIds = new HashSet<String>();
+        Set<String> entitlementIds = new HashSet<>();
 
         if (consumer != null && poolIds != null && poolIds.iterator().hasNext()) {
             // Impl note:

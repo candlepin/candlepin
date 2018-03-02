@@ -228,9 +228,9 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     private boolean locked;
 
     public Product() {
-        this.attributes = new HashMap<String, String>();
-        this.productContent = new LinkedList<ProductContent>();
-        this.dependentProductIds = new HashSet<String>();
+        this.attributes = new HashMap<>();
+        this.productContent = new LinkedList<>();
+        this.dependentProductIds = new HashSet<>();
     }
 
     /**
@@ -289,7 +289,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         this.setAttributes(source.getAttributes());
 
         // Copy content
-        List<ProductContent> content = new LinkedList<ProductContent>();
+        List<ProductContent> content = new LinkedList<>();
         for (ProductContent src : source.getProductContent()) {
             ProductContent dest = new ProductContent(this, src.getContent(), src.isEnabled());
             dest.setCreated(src.getCreated() != null ? (Date) src.getCreated().clone() : null);
@@ -333,7 +333,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         // Copy content
         if (!Util.collectionsAreEqual(source.getProductContent(), this.getProductContent())) {
 
-            List<ProductContent> content = new LinkedList<ProductContent>();
+            List<ProductContent> content = new LinkedList<>();
             for (ProductContent src : source.getProductContent()) {
                 ProductContent dest = new ProductContent(this, src.getContent(), src.isEnabled());
                 dest.setCreated(src.getCreated() != null ? (Date) src.getCreated().clone() : null);
@@ -371,11 +371,11 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         // collection.
 
         // Copy attributes
-        copy.attributes = new HashMap<String, String>();
+        copy.attributes = new HashMap<>();
         copy.attributes.putAll(this.attributes);
 
         // Copy content
-        copy.productContent = new LinkedList<ProductContent>();
+        copy.productContent = new LinkedList<>();
         for (ProductContent src : this.getProductContent()) {
             ProductContent dest = new ProductContent(copy, src.getContent(), src.isEnabled());
             dest.setCreated(src.getCreated() != null ? (Date) src.getCreated().clone() : null);
@@ -385,7 +385,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         }
 
         // Copy dependent product IDs
-        copy.dependentProductIds = new HashSet<String>();
+        copy.dependentProductIds = new HashSet<>();
         copy.dependentProductIds.addAll(this.dependentProductIds);
 
         copy.setCreated(this.getCreated() != null ? (Date) this.getCreated().clone() : null);
@@ -626,7 +626,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
 
     @XmlTransient
     public List<String> getSkuEnabledContentIds() {
-        List<String> skus = new LinkedList<String>();
+        List<String> skus = new LinkedList<>();
 
         String attrib = this.getAttributeValue(Attributes.CONTENT_OVERRIDE_ENABLED);
 
@@ -643,7 +643,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
 
     @XmlTransient
     public List<String> getSkuDisabledContentIds() {
-        List<String> skus = new LinkedList<String>();
+        List<String> skus = new LinkedList<>();
 
         String attrib = this.getAttributeValue(Attributes.CONTENT_OVERRIDE_DISABLED);
 
@@ -743,7 +743,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         boolean changed = false;
         boolean matched = false;
         String contentId = productContent.getContent().getId();
-        Collection<ProductContent> remove = new LinkedList<ProductContent>();
+        Collection<ProductContent> remove = new LinkedList<>();
 
         // We're operating under the assumption that we won't be doing janky things like
         // adding product content, then changing it. It's too bad this isn't all immutable...
@@ -810,7 +810,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             throw new IllegalArgumentException("contentId is null");
         }
 
-        Collection<ProductContent> remove = new LinkedList<ProductContent>();
+        Collection<ProductContent> remove = new LinkedList<>();
 
         for (ProductContent pcd : this.productContent) {
             Content cd = pcd.getContent();

@@ -32,7 +32,7 @@ public class ResourceMovedException extends CandlepinException {
 
     @Override
     public Map<String, String> headers() {
-        HashMap<String, String> negHeaders = new HashMap<String, String>();
+        HashMap<String, String> negHeaders = new HashMap<>();
         negHeaders.put("Location", location);
         return  negHeaders;
     }

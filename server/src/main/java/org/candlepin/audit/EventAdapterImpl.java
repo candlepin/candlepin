@@ -118,7 +118,7 @@ public class EventAdapterImpl implements EventAdapter {
 
     //TODO: Make them nicer strings if the system did it
     static {
-        MESSAGES = new HashMap<String, String>();
+        MESSAGES = new HashMap<>();
 
         MESSAGES.put("CONSUMERCREATED", I18n.marktr("{0} created new unit {1}"));
         MESSAGES.put("CONSUMERMODIFIED", I18n.marktr("{0} modified the unit {1}"));

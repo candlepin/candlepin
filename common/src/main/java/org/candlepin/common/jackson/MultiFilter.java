@@ -38,7 +38,7 @@ public class MultiFilter extends CheckableBeanPropertyFilter {
     private Set<CheckableBeanPropertyFilter> filters;
 
     public MultiFilter(CheckableBeanPropertyFilter... filters) {
-        this.filters = new HashSet<CheckableBeanPropertyFilter>();
+        this.filters = new HashSet<>();
         for (CheckableBeanPropertyFilter filter : filters) {
             this.addFilter(filter);
         }

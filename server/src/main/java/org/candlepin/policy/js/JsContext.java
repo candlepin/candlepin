@@ -31,7 +31,7 @@ public abstract class JsContext {
     protected Map<String, Object> contextArgs;
 
     public JsContext() {
-        this.contextArgs = new HashMap<String, Object>();
+        this.contextArgs = new HashMap<>();
     }
 
     public void put(String contextKey, Object contextVal) {

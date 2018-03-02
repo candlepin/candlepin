@@ -386,7 +386,7 @@ public class ProductDTO extends TimestampedCandlepinDTO<ProductDTO> {
         }
 
         if (this.attributes == null) {
-            this.attributes = new HashMap<String, String>();
+            this.attributes = new HashMap<>();
         }
 
         // Impl note:
@@ -435,7 +435,7 @@ public class ProductDTO extends TimestampedCandlepinDTO<ProductDTO> {
     public ProductDTO setAttributes(Map<String, String> attributes) {
         if (attributes != null) {
             if (this.attributes == null) {
-                this.attributes = new HashMap<String, String>();
+                this.attributes = new HashMap<>();
             }
             else {
                 this.attributes.clear();
@@ -563,7 +563,7 @@ public class ProductDTO extends TimestampedCandlepinDTO<ProductDTO> {
 
 
         if (this.content == null) {
-            this.content = new HashMap<String, ProductContentDTO>();
+            this.content = new HashMap<>();
             changed = true;
         }
         else {
@@ -691,7 +691,7 @@ public class ProductDTO extends TimestampedCandlepinDTO<ProductDTO> {
     public ProductDTO setProductContent(Collection<ProductContentDTO> productContent) {
         if (productContent != null) {
             if (this.content == null) {
-                this.content = new HashMap<String, ProductContentDTO>();
+                this.content = new HashMap<>();
             }
             else {
                 this.content.clear();
@@ -747,7 +747,7 @@ public class ProductDTO extends TimestampedCandlepinDTO<ProductDTO> {
         }
 
         if (this.dependentProductIds == null) {
-            this.dependentProductIds = new HashSet<String>();
+            this.dependentProductIds = new HashSet<>();
         }
 
         return this.dependentProductIds.add(productId);
@@ -783,7 +783,7 @@ public class ProductDTO extends TimestampedCandlepinDTO<ProductDTO> {
     public ProductDTO setDependentProductIds(Collection<String> dependentProductIds) {
         if (dependentProductIds != null) {
             if (this.dependentProductIds == null) {
-                this.dependentProductIds = new HashSet<String>();
+                this.dependentProductIds = new HashSet<>();
             }
             else {
                 this.dependentProductIds.clear();

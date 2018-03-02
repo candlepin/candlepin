@@ -21,7 +21,6 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.pki.PKIUtility;
-import org.candlepin.pki.X509CRLEntryWrapper;
 import org.candlepin.util.CrlFileUtil;
 
 import com.google.inject.Inject;
@@ -85,7 +84,7 @@ public class CrlResource {
             // Create an empty CRL if we didn't have anything to write
             if (!crlFile.exists() || crlFile.length() < 1) {
                 pkiUtility.writePemEncoded(
-                    pkiUtility.createX509CRL(new LinkedList<X509CRLEntryWrapper>(), BigInteger.ZERO),
+                    pkiUtility.createX509CRL(new LinkedList<>(), BigInteger.ZERO),
                     new FileOutputStream(crlFile)
                 );
             }
@@ -107,7 +106,7 @@ public class CrlResource {
         File crlFile = new File(filePath);
 
         try {
-            List<BigInteger> serials = new LinkedList<BigInteger>();
+            List<BigInteger> serials = new LinkedList<>();
             for (CertificateSerial serial : certificateSerialCurator.listBySerialIds(serialIds)) {
                 serials.add(serial.getSerial());
             }

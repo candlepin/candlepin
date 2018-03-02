@@ -42,11 +42,9 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
@@ -95,7 +93,7 @@ public class Util {
     }
 
     public static <T> List<T> subList(List<T> parentList, int start, int end) {
-        List<T> l = new ArrayList<T>();
+        List<T> l = new ArrayList<>();
         for (int i = start; i < end; i++) {
             l.add(parentList.get(i));
         }
@@ -106,20 +104,8 @@ public class Util {
         return subList(parentList, 0, size - 1);
     }
 
-    public static <E> List<E> newList() {
-        return new ArrayList<E>();
-    }
-
-    public static <K, V> Map<K, V> newMap() {
-        return new HashMap<K, V>();
-    }
-
-    public static <T> Set<T> newSet() {
-        return new HashSet<T>();
-    }
-
     public static <T> Set<T> asSet(T... values) {
-        Set<T> output = new HashSet<T>(values.length);
+        Set<T> output = new HashSet<>(values.length);
 
         for (T value : values) {
             output.add(value);
@@ -416,7 +402,7 @@ public class Util {
 
     public static String transformUuid(String uuid) {
         String[] partitions = uuid.split("-");
-        List<String> newPartitions = new LinkedList<String>();
+        List<String> newPartitions = new LinkedList<>();
         // We only want to revese the first three partitions
         for (int i = 0; i < partitions.length; i++) {
             newPartitions.add(i < 3 ? reverseEndian(partitions[i]) : partitions[i]);
@@ -430,7 +416,7 @@ public class Util {
      * returned should be lower case
      */
     public static List<String> getPossibleUuids(String... ids) {
-        List<String> results = new LinkedList<String>();
+        List<String> results = new LinkedList<>();
         for (String id : ids) {
             if (id != null) {
                 // We want to use lower case everywhere we can in order
@@ -490,7 +476,7 @@ public class Util {
             return false;
         }
 
-        Set<Integer> indexes = new HashSet<Integer>();
+        Set<Integer> indexes = new HashSet<>();
         for (T lhs : c1) {
             boolean found = false;
             int offset = -1;
@@ -554,7 +540,7 @@ public class Util {
             return false;
         }
 
-        Set<Integer> indexes = new HashSet<Integer>();
+        Set<Integer> indexes = new HashSet<>();
         for (T lhs : c1) {
             boolean found = false;
             int offset = -1;

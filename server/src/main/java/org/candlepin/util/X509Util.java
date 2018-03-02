@@ -80,7 +80,7 @@ public abstract class X509Util {
     public Set<ProductContent> filterProductContent(Product prod, Consumer consumer,
         Map<String, EnvironmentContent> promotedContent, boolean filterEnvironment,
         Set<String> entitledProductIds) {
-        Set<ProductContent> filtered = new HashSet<ProductContent>();
+        Set<ProductContent> filtered = new HashSet<>();
 
         for (ProductContent pc : prod.getProductContent()) {
             // Filter any content not promoted to environment.
@@ -151,7 +151,7 @@ public abstract class X509Util {
      */
     public Set<ProductContent> filterContentByContentArch(
         Set<ProductContent> pcSet, Consumer consumer, Product product) {
-        Set<ProductContent> filtered = new HashSet<ProductContent>();
+        Set<ProductContent> filtered = new HashSet<>();
 
 
         String consumerArch = consumer.getFact(ARCH_FACT);

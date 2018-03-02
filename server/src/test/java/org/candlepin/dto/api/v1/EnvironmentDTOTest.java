@@ -36,7 +36,7 @@ public class EnvironmentDTOTest extends AbstractDTOTest<EnvironmentDTO> {
     public EnvironmentDTOTest() {
         super(EnvironmentDTO.class);
 
-        Collection<EnvironmentContentDTO> environmentContent = new HashSet<EnvironmentContentDTO>();
+        Collection<EnvironmentContentDTO> environmentContent = new HashSet<>();
 
         for (int i = 0; i < 5; ++i) {
             ContentDTO content = this.contentDTOTest.getPopulatedDTOInstance();
@@ -44,7 +44,7 @@ public class EnvironmentDTOTest extends AbstractDTOTest<EnvironmentDTO> {
             environmentContent.add(new EnvironmentContentDTO(content, i % 2 != 0));
         }
 
-        this.values = new HashMap<String, Object>();
+        this.values = new HashMap<>();
         this.values.put("Id", "test_value");
         this.values.put("Name", "test_value");
         this.values.put("Description", "test_value");

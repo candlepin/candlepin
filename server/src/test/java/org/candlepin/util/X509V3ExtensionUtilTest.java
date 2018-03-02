@@ -23,7 +23,6 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
-import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
@@ -138,7 +137,7 @@ public class X509V3ExtensionUtilTest {
         Owner owner = new Owner("Test Corporation");
         Product p = new Product(engProdId, "Eng Product 1000");
         p.setAttribute(Product.Attributes.BRANDING_TYPE, "OS");
-        Set<Product> prods = new HashSet<Product>(Arrays.asList(p));
+        Set<Product> prods = new HashSet<>(Arrays.asList(p));
         Product mktProd = new Product("mkt", "MKT SKU");
         Pool pool = TestUtil.createPool(mktProd);
         pool.getBranding().add(new Branding(engProdId, "OS", brandedName));
@@ -146,7 +145,7 @@ public class X509V3ExtensionUtilTest {
         Entitlement e = new Entitlement(pool, consumer, 10);
 
         List<org.candlepin.model.dto.Product> certProds = util.createProducts(mktProd,
-            prods, "", new HashMap<String, EnvironmentContent>(),  new Consumer(), pool);
+            prods, "", new HashMap<>(),  new Consumer(), pool);
 
         assertEquals(1, certProds.size());
         assertEquals(brandedName, certProds.get(0).getBrandName());
@@ -160,19 +159,19 @@ public class X509V3ExtensionUtilTest {
         Owner owner = new Owner("Test Corporation");
         Product p = new Product(engProdId, "Eng Product 1000");
         p.setAttribute(Product.Attributes.BRANDING_TYPE, "OS");
-        Set<Product> prods = new HashSet<Product>(Arrays.asList(p));
+        Set<Product> prods = new HashSet<>(Arrays.asList(p));
         Product mktProd = new Product("mkt", "MKT SKU");
         Pool pool = TestUtil.createPool(mktProd);
         pool.getBranding().add(new Branding(engProdId, "OS", brandedName));
         pool.getBranding().add(new Branding(engProdId, "OS", "another brand name"));
         pool.getBranding().add(new Branding(engProdId, "OS", "number 3"));
-        Set<String> possibleBrandNames = new HashSet<String>();
+        Set<String> possibleBrandNames = new HashSet<>();
         for (Branding b : pool.getBranding()) {
             possibleBrandNames.add(b.getName());
         }
 
         List<org.candlepin.model.dto.Product> certProds = util.createProducts(mktProd,
-            prods, "", new HashMap<String, EnvironmentContent>(),  new Consumer(), pool);
+            prods, "", new HashMap<>(),  new Consumer(), pool);
 
         assertEquals(1, certProds.size());
         // Should get the first name we encountered

@@ -83,7 +83,7 @@ public class X509V3ExtensionUtil extends X509Util {
     }
 
     public Set<X509ExtensionWrapper> getExtensions() {
-        Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<X509ExtensionWrapper>();
+        Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<>();
 
         X509ExtensionWrapper versionExtension = new X509ExtensionWrapper(OIDUtil.REDHAT_OID + "." +
             OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ENTITLEMENT_VERSION_KEY), false, thisVersion);
@@ -95,8 +95,7 @@ public class X509V3ExtensionUtil extends X509Util {
     public Set<X509ByteExtensionWrapper> getByteExtensions(Product sku,
         List<org.candlepin.model.dto.Product> productModels,
         String contentPrefix, Map<String, EnvironmentContent> promotedContent) throws IOException {
-        Set<X509ByteExtensionWrapper> toReturn =
-            new LinkedHashSet<X509ByteExtensionWrapper>();
+        Set<X509ByteExtensionWrapper> toReturn = new LinkedHashSet<>();
 
         EntitlementBody eb = createEntitlementBodyContent(sku, productModels,
             contentPrefix, promotedContent);
@@ -259,8 +258,7 @@ public class X509V3ExtensionUtil extends X509Util {
         Set<Product> products, String contentPrefix, Map<String, EnvironmentContent> promotedContent,
         Consumer consumer, Pool pool) {
 
-        List<org.candlepin.model.dto.Product> toReturn =
-            new ArrayList<org.candlepin.model.dto.Product>();
+        List<org.candlepin.model.dto.Product> toReturn = new ArrayList<>();
 
         Set<String> entitledProductIds = entCurator.listEntitledProductIds(consumer,
             pool);
@@ -299,7 +297,7 @@ public class X509V3ExtensionUtil extends X509Util {
         Set<String> productArchSet = Arch.parseArches(productArches);
 
         // FIXME: getParsedArches might make more sense to just return a list
-        List<String> archList = new ArrayList<String>();
+        List<String> archList = new ArrayList<>();
         for (String arch : productArchSet) {
             archList.add(arch);
         }
@@ -343,7 +341,7 @@ public class X509V3ExtensionUtil extends X509Util {
     public List<Content> createContent(Set<ProductContent> productContent, Product sku, String contentPrefix,
         Map<String, EnvironmentContent> promotedContent, Consumer consumer, Product product) {
 
-        List<Content> toReturn = new ArrayList<Content>();
+        List<Content> toReturn = new ArrayList<>();
 
         boolean enableEnvironmentFiltering = config.getBoolean(ConfigProperties.ENV_CONTENT_FILTERING);
 
@@ -379,7 +377,7 @@ public class X509V3ExtensionUtil extends X509Util {
 
             // Set content model's arches here, inheriting from the product if
             // they are not set on the content.
-            List<String> archesList = new ArrayList<String>();
+            List<String> archesList = new ArrayList<>();
 
             Set<String> contentArches = Arch.parseArches(pc.getContent()
                 .getArches());
@@ -426,7 +424,7 @@ public class X509V3ExtensionUtil extends X509Util {
             String requiredTags = pc.getContent().getRequiredTags();
             if ((requiredTags != null) && !requiredTags.equals("")) {
                 StringTokenizer st = new StringTokenizer(requiredTags, ",");
-                List<String> tagList = new ArrayList<String>();
+                List<String> tagList = new ArrayList<>();
                 while (st.hasMoreElements()) {
                     tagList.add((String) st.nextElement());
                 }
@@ -447,7 +445,7 @@ public class X509V3ExtensionUtil extends X509Util {
      */
     public Set<ProductContent> filterProductContent(Product prod,
         Set<String> entitledProductIds) {
-        Set<ProductContent> filtered = new HashSet<ProductContent>();
+        Set<ProductContent> filtered = new HashSet<>();
 
         for (ProductContent pc : prod.getProductContent()) {
             boolean include = true;
@@ -478,7 +476,7 @@ public class X509V3ExtensionUtil extends X509Util {
 
     protected List<Content> getContentList(EntitlementBody eb) {
         // collect content URL's
-        List<Content> contentList = new ArrayList<Content>();
+        List<Content> contentList = new ArrayList<>();
         for (org.candlepin.model.dto.Product p : eb.getProducts()) {
             contentList.addAll(p.getContent());
         }
@@ -593,7 +591,7 @@ public class X509V3ExtensionUtil extends X509Util {
 
     private void condenseSubTreeNodes(PathNode location) {
         // "equivalent" parents are merged
-        List<PathNode> parentResult = new ArrayList<PathNode>();
+        List<PathNode> parentResult = new ArrayList<>();
         parentResult.addAll(location.getParents());
         for (PathNode parent1 : location.getParents()) {
             if (!parentResult.contains(parent1)) {
@@ -645,10 +643,10 @@ public class X509V3ExtensionUtil extends X509Util {
     }
 
     public List<String> orderStrings(PathNode parent) throws IOException {
-        List<String> parts = new ArrayList<String>();
+        List<String> parts = new ArrayList<>();
         // walk tree to make string map
-        Map<String, Integer> segments =  new HashMap<String, Integer>();
-        Set<PathNode> nodes =  new HashSet<PathNode>();
+        Map<String, Integer> segments = new HashMap<>();
+        Set<PathNode> nodes = new HashSet<>();
         buildSegments(segments, nodes, parent);
         for (Entry<String, Integer> entry : segments.entrySet()) {
             String part = entry.getKey();
@@ -691,7 +689,7 @@ public class X509V3ExtensionUtil extends X509Util {
     }
 
     private List<PathNode> orderNodes(PathNode treeRoot) {
-        List<PathNode> result = new ArrayList<PathNode>();
+        List<PathNode> result = new ArrayList<>();
 
         // walk tree to make string map
         Set<PathNode> nodes =  getPathNodes(treeRoot);
@@ -731,7 +729,7 @@ public class X509V3ExtensionUtil extends X509Util {
     }
 
     private Set<PathNode> getPathNodes(PathNode treeRoot) {
-        Set<PathNode> nodes = new HashSet<PathNode>();
+        Set<PathNode> nodes = new HashSet<>();
         nodes.add(treeRoot);
         for (NodePair np : treeRoot.getChildren()) {
             nodes.addAll(getPathNodes(np.getConnection()));
@@ -871,7 +869,7 @@ public class X509V3ExtensionUtil extends X509Util {
     }
 
     private List<HuffNode> getStringNodeList(List<String> pathStrings) {
-        List<HuffNode> nodes = new ArrayList<HuffNode>();
+        List<HuffNode> nodes = new ArrayList<>();
         int idx = 1;
         for (String part : pathStrings) {
             nodes.add(new HuffNode(part, idx++));
@@ -881,7 +879,7 @@ public class X509V3ExtensionUtil extends X509Util {
     }
 
     private List<HuffNode> getPathNodeNodeList(List<PathNode> pathNodes) {
-        List<HuffNode> nodes = new ArrayList<HuffNode>();
+        List<HuffNode> nodes = new ArrayList<>();
         int idx = 0;
         for (PathNode pn : pathNodes) {
             nodes.add(new HuffNode(pn, idx++));
@@ -930,8 +928,8 @@ public class X509V3ExtensionUtil extends X509Util {
 
     public List<String> hydrateContentPackage(byte[] payload) throws IOException {
 
-        List<HuffNode> pathDictionary = new ArrayList<HuffNode>();
-        List<HuffNode> nodeDictionary = new ArrayList<HuffNode>();
+        List<HuffNode> pathDictionary = new ArrayList<>();
+        List<HuffNode> nodeDictionary = new ArrayList<>();
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         Inflater i = new Inflater();
@@ -953,7 +951,7 @@ public class X509V3ExtensionUtil extends X509Util {
         }
 
         pathDictionary.add(new HuffNode(END_NODE, weight));
-        List<HuffNode> triePathDictionary = new ArrayList<HuffNode>();
+        List<HuffNode> triePathDictionary = new ArrayList<>();
         triePathDictionary.addAll(pathDictionary);
         HuffNode pathTrie = makeTrie(triePathDictionary);
 
@@ -1004,7 +1002,7 @@ public class X509V3ExtensionUtil extends X509Util {
             nodeDictionary.add(new HuffNode(new PathNode(), j));
         }
 
-        List<HuffNode> trieNodeDictionary = new ArrayList<HuffNode>();
+        List<HuffNode> trieNodeDictionary = new ArrayList<>();
         trieNodeDictionary.addAll(nodeDictionary);
         HuffNode nodeTrie = makeTrie(trieNodeDictionary);
 
@@ -1020,7 +1018,7 @@ public class X509V3ExtensionUtil extends X509Util {
             }
         }
         // time to make the doughnuts
-        List<String> urls = new ArrayList<String>();
+        List<String> urls = new ArrayList<>();
         StringBuffer aPath = new StringBuffer();
         makeURLs(root, urls, aPath);
         return urls;
@@ -1052,7 +1050,7 @@ public class X509V3ExtensionUtil extends X509Util {
 
     private Set<PathNode> populatePathNodes(List<HuffNode> nodeDictionary,
         HuffNode pathTrie, HuffNode nodeTrie, StringBuffer nodeBits) {
-        Set<PathNode> pathNodes = new HashSet<PathNode>();
+        Set<PathNode> pathNodes = new HashSet<>();
         for (HuffNode node : nodeDictionary) {
             pathNodes.add((PathNode) node.getValue());
             boolean stillNode = true;
@@ -1187,8 +1185,8 @@ public class X509V3ExtensionUtil extends X509Util {
 
     public class PathNode {
         private long id = 0;
-        private List<NodePair> children = new ArrayList<NodePair>();
-        private List<PathNode> parents = new ArrayList<PathNode>();
+        private List<NodePair> children = new ArrayList<>();
+        private List<PathNode> parents = new ArrayList<>();
 
         public PathNode() {
             this.id = pathNodeId++;

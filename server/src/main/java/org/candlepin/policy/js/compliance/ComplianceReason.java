@@ -83,7 +83,7 @@ public class ComplianceReason {
     private Map<String, String> attributes;
 
     public ComplianceReason() {
-        this.attributes = new HashMap<String, String>();
+        this.attributes = new HashMap<>();
     }
 
     public String getKey() {
