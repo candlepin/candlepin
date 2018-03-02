@@ -50,4 +50,8 @@ public class ExportResult implements Serializable {
         return this.href;
     }
 
+    @Override
+    public String toString() {
+        return "Export for consumer " + exportedConsumer;
+    }
 }

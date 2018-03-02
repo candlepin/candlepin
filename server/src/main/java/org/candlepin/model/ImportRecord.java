@@ -162,4 +162,8 @@ public class ImportRecord extends AbstractHibernateObject {
         this.upstreamConsumer = upstreamConsumer;
     }
 
+    @Override
+    public String toString() {
+        return "ImportRecord (owner=" + owner + ", status=" + status + ")";
+    }
 }
