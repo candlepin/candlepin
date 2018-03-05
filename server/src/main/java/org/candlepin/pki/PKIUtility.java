@@ -59,10 +59,12 @@ public abstract class PKIUtility {
     public static final String SIGNATURE_ALGO = "SHA256WithRSA";
 
     protected PKIReader reader;
+    protected SubjectKeyIdentifierWriter subjectKeyWriter;
     protected Configuration config;
 
-    public PKIUtility(PKIReader reader, Configuration config) {
+    public PKIUtility(PKIReader reader, SubjectKeyIdentifierWriter subjectKeyWriter, Configuration config) {
         this.reader = reader;
+        this.subjectKeyWriter = subjectKeyWriter;
         this.config = config;
     }
 

@@ -1643,7 +1643,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     @Test
     public void testDetachedEntitlementDataNotAddedToCertV1() throws Exception {
-        KeyPair keyPair = new BouncyCastlePKIUtility(null, null).generateNewKeyPair();
+        KeyPair keyPair = new BouncyCastlePKIUtility(null, null, null).generateNewKeyPair();
         when(keyPairCurator.getConsumerKeyPair(any(Consumer.class))).thenReturn(keyPair);
 
         when(mockedPKI.getPemEncoded(any(X509Certificate.class))).thenReturn("".getBytes());

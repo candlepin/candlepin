@@ -20,6 +20,7 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.pki.PKIReader;
 import org.candlepin.pki.PKIUtility;
+import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509CRLEntryWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
@@ -44,7 +45,6 @@ import org.bouncycastle.asn1.x509.GeneralName;
 import org.bouncycastle.asn1.x509.GeneralNames;
 import org.bouncycastle.asn1.x509.KeyPurposeId;
 import org.bouncycastle.asn1.x509.KeyUsage;
-import org.bouncycastle.asn1.x509.SubjectKeyIdentifier;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.cert.X509v2CRLBuilder;
 import org.bouncycastle.cert.X509v3CertificateBuilder;
@@ -104,8 +104,9 @@ public class BouncyCastlePKIUtility extends PKIUtility {
     private static Logger log = LoggerFactory.getLogger(BouncyCastlePKIUtility.class);
 
     @Inject
-    public BouncyCastlePKIUtility(PKIReader reader, Configuration config) {
-        super(reader, config);
+    public BouncyCastlePKIUtility(PKIReader reader, SubjectKeyIdentifierWriter subjectKeyWriter,
+        Configuration config) {
+        super(reader, subjectKeyWriter, config);
     }
 
     @Override
@@ -139,12 +140,14 @@ public class BouncyCastlePKIUtility extends PKIUtility {
         certGen.addExtension(Extension.keyUsage, false,
             keyUsage);
 
-        JcaX509ExtensionUtils extentionUtil = new JcaX509ExtensionUtils();
-        AuthorityKeyIdentifier aki = extentionUtil.createAuthorityKeyIdentifier(caCert);
+        JcaX509ExtensionUtils extensionUtil = new JcaX509ExtensionUtils();
+        AuthorityKeyIdentifier aki = extensionUtil.createAuthorityKeyIdentifier(caCert);
         certGen.addExtension(Extension.authorityKeyIdentifier, false, aki.getEncoded());
 
-        SubjectKeyIdentifier ski = extentionUtil.createSubjectKeyIdentifier(clientKeyPair.getPublic());
-        certGen.addExtension(Extension.subjectKeyIdentifier, false, ski.getEncoded());
+        certGen.addExtension(Extension.subjectKeyIdentifier,
+            false,
+            subjectKeyWriter.getSubjectKeyIdentifier(clientKeyPair, extensions)
+        );
         certGen.addExtension(Extension.extendedKeyUsage, false,
             new ExtendedKeyUsage(KeyPurposeId.id_kp_clientAuth));
 
