@@ -32,6 +32,7 @@ def process_log(filename)
   requests = {}
   proc_requests = {}
   slow_requests = {}
+  failed_requests = {}
 
   lines = 0
 
@@ -41,6 +42,12 @@ def process_log(filename)
   File.open(filename) do |fp|
     fp.each_line do |line|
       lines = lines + 1
+
+      # Output some dots to show the process is still running when processing huge logs
+      if lines % 100000 == 0
+        putc '.'
+      end
+
       sdata = status_regex.match(line)
 
       if sdata != nil
@@ -61,7 +68,11 @@ def process_log(filename)
             request[:verb] = rdata[1]
             request[:uri] = rdata[2]
 
-            requests[request[:id]] = request
+            if (@options[:uri_filter] == nil || @options[:uri_filter].match(request[:uri])) &&
+              (@options[:method_filter] == nil || @options[:method_filter].match(request[:verb]))
+
+              requests[request[:id]] = request
+            end
           else
             # Ignore doubled request lines in debug mode.
             if sdata[6] != 'DEBUG' || !/\s*[A-Z]+ .+/.match(sdata[8])
@@ -82,11 +93,17 @@ def process_log(filename)
               if request[:time].to_i >= @options[:slow_req_threshold]
                 slow_requests[request[:id]] = request
               end
+
+              if request[:status].to_i < 200 || request[:status].to_i > 299
+                failed_requests[request[:id]] = request
+              end
             else
               log(LOG_ERROR, "Unable to parse response data for request #{request[:id]}: #{sdata[8]}")
             end
           else
-            log(LOG_WARN, "Response found without matching request for ID: #{sdata[2]}")
+            if @options[:uri_filter] == nil && @options[:method_filter] == nil
+              log(LOG_WARN, "Response found without matching request for ID: #{sdata[3]}")
+            end
           end
         else
           log(LOG_ERROR, "Unexpected line type: #{sdata[7]}")
@@ -96,23 +113,81 @@ def process_log(filename)
     end
   end
 
+  puts unless @options[:silent]
   log(LOG_INFO, "Finished processing file. #{lines} lines processed, #{req_ids.size} requests processed")
 
-  #TODO: Maybe add a flag to output processed requests as well?
+  if !@options[:req_ids_only]
+    if @options[:show_all] && !proc_requests.empty?
+      log(LOG_INFO, "Request(s) processed:");
 
-  if !requests.empty?
-    log(LOG_WARN, "Found #{requests.size} incomplete request(s):");
-
-    requests.each do |req_id, request|
-      puts "  #{request[:timestamp]}: #{req_id} => #{request[:verb]} #{request[:uri]} -- thread: #{request[:thread]}"
+      proc_requests.each do |req_id, request|
+        puts "  #{request[:timestamp]}: #{req_id} => #{request[:verb]} #{request[:uri]} -- thread: #{request[:thread]}"
+      end
     end
-  end
 
-  if !slow_requests.empty?
-    log(LOG_WARN, "Found #{slow_requests.size} slow request(s):");
+    puts
+    if !requests.empty?
+      log(LOG_WARN, "Found #{requests.size} incomplete request(s):");
 
-    slow_requests.each do |req_id, request|
-      puts "  #{request[:timestamp]}: #{req_id} => #{request[:verb]} #{request[:uri]} -- time: #{request[:time]}ms"
+      requests.each do |req_id, request|
+        puts "  #{request[:timestamp]}: #{req_id} => #{request[:verb]} #{request[:uri]} -- thread: #{request[:thread]}"
+      end
+    else
+      log(LOG_INFO, "Found 0 incomplete requests");
+    end
+
+    puts
+    if !slow_requests.empty?
+      log(LOG_WARN, "Found #{slow_requests.size} slow request(s):");
+
+      slow_requests.each do |req_id, request|
+        puts "  #{request[:timestamp]}: #{req_id} => #{request[:verb]} #{request[:uri]} -- time: #{request[:time]}ms"
+      end
+    else
+      log(LOG_INFO, "Found 0 slow requests");
+    end
+
+    puts
+    if !failed_requests.empty?
+      log(LOG_WARN, "Found #{failed_requests.size} failed request(s):");
+
+      failed_requests.each do |req_id, request|
+        puts "  #{request[:timestamp]}: #{req_id} => #{request[:verb]} #{request[:uri]} -- response: #{request[:status]}"
+      end
+    else
+      log(LOG_INFO, "Found 0 failed requests");
+    end
+  else
+    if @options[:show_all]
+      if !proc_requests.empty?
+        proc_requests.each do |req_id, request|
+          puts req_id
+        end
+      end
+
+      if !requests.empty?
+        requests.each do |req_id, request|
+          puts req_id
+        end
+      end
+    else
+      if !requests.empty?
+        requests.each do |req_id, request|
+          puts req_id
+        end
+      end
+
+      if !slow_requests.empty?
+        slow_requests.each do |req_id, request|
+          puts req_id
+        end
+      end
+
+      if !failed_requests.empty?
+        failed_requests.each do |req_id, request|
+          puts req_id
+        end
+      end
     end
   end
 
@@ -140,9 +215,30 @@ optparse = OptionParser.new do |opts|
   file = File.basename(__FILE__)
   opts.banner = "Usage: #{file} [options] [file]"
 
-  @options[:slow_req_threshold] = 10000
-  opts.on('--srt [TIME]', 'Threshold to use for flagging a request as "slow," in milliseconds. Defaults to 10000') do |opt|
+  @options[:slow_req_threshold] = 5000
+  opts.on('--srt [TIME]', 'Threshold to use for flagging a request as "slow," in milliseconds; defaults to 5000') do |opt|
     @options[:slow_req_threshold] = opt.to_i
+  end
+
+  @options[:uri_filter] = nil
+  opts.on('--uri [REGEX]', 'Regular expression to filter requests by URI; defaults to nil') do |opt|
+    @options[:uri_filter] = Regexp.new(opt)
+  end
+
+  @options[:method_filter] = nil
+  opts.on('--method [REGEX]', 'Regular expression to filter requests by request method; defaults to nil') do |opt|
+    @options[:method_filter] = Regexp.new(opt)
+  end
+
+  @options[:req_ids_only] = false
+  opts.on('--idsonly', 'Only display request IDs; defaults to false') do |opt|
+    @options[:silent] = true
+    @options[:req_ids_only] = true
+  end
+
+  @options[:show_all] = false
+  opts.on('--showall', 'Displays all processed request information; defaults to false') do |opt|
+    @options[:show_all] = true
   end
 
   opts.on('-?', '--help', 'Displays command and option information') do
