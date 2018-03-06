@@ -715,7 +715,7 @@ public class ImporterTest {
 
     @Test
     public void importConsumer() throws Exception {
-        PKIUtility pki = new BouncyCastlePKIUtility(null, null);
+        PKIUtility pki = new BouncyCastlePKIUtility(null, null, null);
 
         OwnerCurator oc = mock(OwnerCurator.class);
         ConsumerType type = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
