@@ -18,15 +18,11 @@ import org.candlepin.auth.Principal;
 import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
 
+import org.hibernate.annotations.Type;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -117,7 +113,8 @@ public class JobStatus extends AbstractHibernateObject {
     @Column(length = 255)
     private String jobClass;
 
-    private byte[] resultData;
+    @Type(type = "org.candlepin.hibernate.ResultDataUserType")
+    private Object resultData;
 
     @Transient
     private boolean cloakData = false;
@@ -277,76 +274,11 @@ public class JobStatus extends AbstractHibernateObject {
     }
 
     public void setResultData(Object resultData)  {
-        if (resultData == null) {
-            return;
-        }
-
-        byte[] data = new byte[0];
-        ByteArrayOutputStream baos = null;
-        ObjectOutputStream oos = null;
-
-        try {
-            baos = new ByteArrayOutputStream();
-            oos = new ObjectOutputStream(baos);
-            oos.writeObject(resultData);
-            data = baos.toByteArray();
-        }
-        catch (IOException ioe) {
-            throw new RuntimeException(ioe);
-        }
-        finally {
-            try {
-                if (baos != null) {
-                    baos.close();
-                }
-                if (oos != null) {
-                    oos.close();
-                }
-            }
-            catch (Exception e) {
-                // unable to close streams
-            }
-        }
-        this.resultData = data;
+        this.resultData = resultData;
     }
 
     public Object getResultData() {
-        if (this.resultData == null) {
-            return null;
-        }
-
-        if (this.cloakData) {
-            return "[cloaked]";
-        }
-
-        Object result = null;
-        ByteArrayInputStream bais = null;
-        ObjectInputStream ois = null;
-
-        try {
-            bais = new ByteArrayInputStream(this.resultData);
-            ois = new ObjectInputStream(bais);
-            result = ois.readObject();
-        }
-        catch (Exception e) {
-            System.out.println(e.getMessage());
-            throw new RuntimeException(e);
-        }
-        finally {
-            try {
-                if (bais != null) {
-                    bais.close();
-                }
-                if (ois != null) {
-                    ois.close();
-                }
-            }
-            catch (Exception e) {
-                // unable to close streams
-            }
-        }
-
-        return result;
+        return (this.cloakData) ? "[cloaked]" : this.resultData;
     }
 
     public JobStatus cloakResultData(boolean cloak) {
@@ -357,7 +289,7 @@ public class JobStatus extends AbstractHibernateObject {
     public String toString() {
         return String.format("JobStatus [id: %s, type: %s, owner: %s, target: %s (%s), state: %s]",
             this.id,
-            this.jobClass != null ? this.jobClass : null,
+            this.jobClass,
             this.ownerId,
             this.targetId,
             this.targetType,

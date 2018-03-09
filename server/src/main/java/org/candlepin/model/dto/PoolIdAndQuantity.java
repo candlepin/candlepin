@@ -54,4 +54,9 @@ public class PoolIdAndQuantity implements Serializable {
     public void addQuantity(Integer quantity) {
         this.quantity += quantity;
     }
+
+    @Override
+    public String toString() {
+        return "Pool " + poolId + " with quantity " + quantity;
+    }
 }

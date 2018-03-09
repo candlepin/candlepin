@@ -53,4 +53,8 @@ public class PoolIdAndErrors implements Serializable {
         this.errors = errors;
     }
 
+    @Override
+    public String toString() {
+        return "Pool " + poolId + " had " + errors.size() + " errors";
+    }
 }

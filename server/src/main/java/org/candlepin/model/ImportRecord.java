@@ -88,7 +88,7 @@ public class ImportRecord extends AbstractHibernateObject {
     private ImportUpstreamConsumer upstreamConsumer;
 
     @SuppressWarnings("unused")
-    private ImportRecord() {
+    protected ImportRecord() {
         // JPA
     }
 
@@ -162,4 +162,8 @@ public class ImportRecord extends AbstractHibernateObject {
         this.upstreamConsumer = upstreamConsumer;
     }
 
+    @Override
+    public String toString() {
+        return "ImportRecord (owner=" + owner + ", status=" + status + ")";
+    }
 }
