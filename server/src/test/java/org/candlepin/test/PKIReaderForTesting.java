@@ -16,17 +16,21 @@ package org.candlepin.test;
 
 import static org.candlepin.pki.impl.BouncyCastleProviderLoader.BC_PROVIDER;
 
+import org.candlepin.common.config.Configuration;
+import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.pki.PKIReader;
 import org.candlepin.pki.impl.BouncyCastleProviderLoader;
+import org.candlepin.pki.impl.PrivateKeyReader;
 
 import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
+import org.junit.Assert;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.cert.CertificateException;
@@ -34,46 +38,73 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Set;
 
+import javax.inject.Inject;
+
 /**
  * PKIReaderForTesting
  */
-public class PKIReaderForTesting implements PKIReader {
+public class PKIReaderForTesting extends PKIReader {
     static {
         BouncyCastleProviderLoader.addProvider();
     }
 
-    @Override
-    public X509Certificate getCACert() throws IOException, CertificateException {
-        InputStream caStream = PKIReaderForTesting.class.getClassLoader().getResourceAsStream("test-ca.crt");
-        X509Certificate ca = (X509Certificate)
-            CertificateFactory.getInstance("X.509").generateCertificate(caStream);
-        return ca;
+    @Inject
+    public PKIReaderForTesting(Configuration config, PrivateKeyReader reader)
+        throws CertificateException, IOException {
+        super(new MapConfiguration(), new PrivateKeyReader());
     }
 
     @Override
-    public PrivateKey getCaKey() throws IOException, GeneralSecurityException {
+    protected void validateArguments() {
+        // Don't do any validation
+    }
+
+    @Override
+    protected void readConfig(Configuration config) {
+        // Do nothing
+    }
+
+    @Override
+    protected PrivateKey readPrivateKey(PrivateKeyReader reader) throws FileNotFoundException {
         InputStream keyStream = this.getClass().getClassLoader().getResourceAsStream("test-ca.key");
 
-        PEMParser reader = null;
         KeyPair keyPair = null;
-        try {
-            reader = new PEMParser(new InputStreamReader(keyStream));
+        try (
+            PEMParser parser = new PEMParser(new InputStreamReader(keyStream));
+        ) {
             keyPair = new JcaPEMKeyConverter()
                 .setProvider(BC_PROVIDER)
-                .getKeyPair((PEMKeyPair) reader.readObject());
+                .getKeyPair((PEMKeyPair) parser.readObject());
         }
-        finally {
-            if (reader != null) {
-                reader.close();
-            }
+        catch (IOException e) {
+            Assert.fail("Could not load private key");
         }
+
         return keyPair.getPrivate();
     }
 
     @Override
-    public Set<X509Certificate> getUpstreamCACerts() throws IOException,
-        CertificateException {
+    protected X509Certificate loadCACertificate(String path) {
+        X509Certificate ca = null;
+        try (
+            InputStream caStream =
+                PKIReaderForTesting.class.getClassLoader().getResourceAsStream("test-ca.crt");
+        ) {
+            ca = (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(caStream);
+        }
+        catch (IOException | CertificateException e) {
+            Assert.fail("Could not load CA certificate");
+        }
+        return ca;
+    }
+
+    @Override
+    protected Set<X509Certificate> loadUpstreamCACertificates(String path) {
         return null;
     }
 
+    @Override
+    public Set<X509Certificate> getUpstreamCACerts() {
+        return null;
+    }
 }

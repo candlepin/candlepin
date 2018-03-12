@@ -52,7 +52,6 @@ import org.candlepin.model.Product;
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
 import org.candlepin.pki.PKIReader;
-import org.candlepin.pki.impl.BouncyCastlePKIReader;
 import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resource.util.GuestMigration;
@@ -609,7 +608,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         @Override
         protected void configure() {
             bind(Configuration.class).to(CandlepinCommonTestConfig.class);
-            bind(PKIReader.class).to(BouncyCastlePKIReader.class).asEagerSingleton();
+            bind(PKIReader.class).asEagerSingleton();
         }
     }
 

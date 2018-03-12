@@ -78,8 +78,7 @@ import java.util.Set;
  * objects in PEM format (for saving to the db or sending to the client), and
  * decode raw ASN.1 DER values (as read from a Certificate/CRL).
  *
- * All code that imports bouncycastle should live either in this module,
- * or in {@link BouncyCastlePKIReader}
+ * All code that imports bouncycastle should live in this module.
  *
  * (March 24, 2011) Notes on implementing a PKIUtility with NSS/JSS:
  *
@@ -96,9 +95,6 @@ import java.util.Set;
  * The big one is CRL generation. JSS has no code to generate CRLs in any format. We'll
  * have to use the raw ASN.1 libraries to build up our own properly formatted CRL DER
  * representation, then PEM encode it.
- *
- * See also {@link BouncyCastlePKIReader} for more notes on using NSS/JSS, and a note
- * about not using bouncycastle as the JSSE provider.
  */
 public class BouncyCastlePKIUtility extends PKIUtility {
     private static Logger log = LoggerFactory.getLogger(BouncyCastlePKIUtility.class);

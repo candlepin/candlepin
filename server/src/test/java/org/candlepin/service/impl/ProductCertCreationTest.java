@@ -18,7 +18,6 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.pki.PKIReader;
-import org.candlepin.pki.impl.BouncyCastlePKIReader;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -103,7 +102,7 @@ public class ProductCertCreationTest extends DatabaseTestFixture {
     private static class ProductCertCreationModule extends AbstractModule {
         @Override
         protected void configure() {
-            bind(PKIReader.class).to(BouncyCastlePKIReader.class).asEagerSingleton();
+            bind(PKIReader.class).asEagerSingleton();
         }
     }
 

@@ -17,20 +17,20 @@ package org.candlepin.pki.impl;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.pki.PKIReader;
 
 import org.junit.Test;
 
-import java.security.cert.CertificateException;
 import java.util.HashMap;
 
 
 /**
- * BouncyCastlePKIReaderTest
+ * PKIReaderTest
  */
-public class BouncyCastlePKIReaderTest {
+public class PKIReaderTest {
 
     @Test
-    public void readkey() throws CertificateException {
+    public void readkey() throws Exception {
         Configuration config = new MapConfiguration(
             new HashMap<String, String>() {
                 {
@@ -43,6 +43,6 @@ public class BouncyCastlePKIReaderTest {
                     put(ConfigProperties.CA_KEY_PASSWORD, "dog8code");
                 }
             });
-        new BouncyCastlePKIReader(config);
+        new PKIReader(config, new PrivateKeyReader());
     }
 }
