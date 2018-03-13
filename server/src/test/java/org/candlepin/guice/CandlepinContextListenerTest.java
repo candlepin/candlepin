@@ -22,6 +22,8 @@ import static org.mockito.Mockito.*;
 import org.candlepin.TestingModules;
 import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.ActiveMQContextListener;
+import org.candlepin.audit.QpidQmf;
+import org.candlepin.audit.QpidStatus;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.ConfigurationException;
 import org.candlepin.common.config.ConfigurationPrefixes;
@@ -66,6 +68,7 @@ public class CandlepinContextListenerTest {
     private ServletContextEvent evt;
     private ServletContext ctx;
     private VerifyConfigRead configRead;
+    private QpidQmf qmf;
 
     @SuppressWarnings("checkstyle:visibilitymodifier")
     @ClassRule
@@ -85,6 +88,7 @@ public class CandlepinContextListenerTest {
         buspublisher = mock(AMQPBusPublisher.class);
         executorService = mock(ScheduledExecutorService.class);
         configRead = mock(VerifyConfigRead.class);
+        qmf = mock(QpidQmf.class);
 
         // for testing we override the getModules and readConfiguration methods
         // so we can insert our mock versions of listeners to verify
@@ -224,6 +228,7 @@ public class CandlepinContextListenerTest {
         when(ctx.getAttribute(eq(Registry.class.getName()))).thenReturn(registry);
         when(ctx.getAttribute(eq(ResteasyProviderFactory.class.getName()))).thenReturn(rpfactory);
         when(ctx.getAttribute(eq(CandlepinContextListener.CONFIGURATION_NAME))).thenReturn(config);
+        when(qmf.getStatus()).thenReturn(QpidStatus.CONNECTED);
     }
 
     public class ContextListenerTestModule extends AbstractModule {
@@ -234,6 +239,7 @@ public class CandlepinContextListenerTest {
             bind(ActiveMQContextListener.class).toInstance(hqlistener);
             bind(AMQPBusPublisher.class).toInstance(buspublisher);
             bind(ScheduledExecutorService.class).toInstance(executorService);
+            bind(QpidQmf.class).toInstance(qmf);
         }
     }
 

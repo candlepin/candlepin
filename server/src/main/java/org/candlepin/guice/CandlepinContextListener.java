@@ -20,8 +20,9 @@ import static org.candlepin.config.ConfigProperties.PASSPHRASE_SECRET_FILE;
 
 import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.ActiveMQContextListener;
+import org.candlepin.audit.QpidConnection;
 import org.candlepin.audit.QpidQmf;
-import org.candlepin.audit.QpidQmf.QpidStatus;
+import org.candlepin.audit.QpidStatus;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.ConfigurationException;
 import org.candlepin.common.config.EncryptedConfiguration;
@@ -29,6 +30,7 @@ import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.common.logging.LoggingConfigurator;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.DatabaseConfigFactory;
+import org.candlepin.controller.QpidStatusMonitor;
 import org.candlepin.controller.SuspendModeTransitioner;
 import org.candlepin.logging.LoggerContextListener;
 import org.candlepin.model.Status;
@@ -150,23 +152,28 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         ResourceLocatorMap map = injector.getInstance(ResourceLocatorMap.class);
         map.init();
 
-        if (config.getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED) &&
-            !config.getBoolean(ConfigProperties.SUSPEND_MODE_ENABLED)) {
-            QpidQmf qmf = injector.getInstance(QpidQmf.class);
-            QpidStatus status = qmf.getStatus();
-            if (status != QpidStatus.CONNECTED) {
-                log.error("Qpid is in status {}. Please fix Qpid configuration " +
-                    "and make sure Qpid is up and running. Candlepin will shutdown " +
-                    "now.", status);
-                throw new RuntimeException("Error during Startup: Qpid is in status " + status);
-            }
-        }
+        if (config.getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED)) {
 
-        if (config.getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED) &&
-            config.getBoolean(ConfigProperties.SUSPEND_MODE_ENABLED)) {
-            SuspendModeTransitioner mw = injector.getInstance(SuspendModeTransitioner.class);
-            mw.transitionAppropriately();
-            mw.startPeriodicExecutions();
+            if (!config.getBoolean(ConfigProperties.SUSPEND_MODE_ENABLED)) {
+                QpidQmf qmf = injector.getInstance(QpidQmf.class);
+                QpidStatus status = qmf.getStatus();
+                if (status != QpidStatus.CONNECTED) {
+                    log.error("Qpid is in status {}. Please fix Qpid configuration " +
+                        "and make sure Qpid is up and running. Candlepin will shutdown now.", status);
+                    throw new RuntimeException("Error during Startup: Qpid is in status " + status);
+                }
+            }
+
+            QpidStatusMonitor qpidMonitor = injector.getInstance(QpidStatusMonitor.class);
+            qpidMonitor.addStatusChangeListener(injector.getInstance(QpidConnection.class));
+
+            if (config.getBoolean(ConfigProperties.SUSPEND_MODE_ENABLED)) {
+                qpidMonitor.addStatusChangeListener(injector.getInstance(SuspendModeTransitioner.class));
+            }
+            // Run the monitor immediately so that the listeners are notified of the current status.
+            // After which we can schedule the monitor to run on the configured interval.
+            qpidMonitor.run();
+            qpidMonitor.schedule();
         }
 
         if (config.getBoolean(ACTIVEMQ_ENABLED)) {
