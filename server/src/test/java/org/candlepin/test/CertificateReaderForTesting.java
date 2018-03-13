@@ -18,9 +18,9 @@ import static org.candlepin.pki.impl.BouncyCastleProviderLoader.BC_PROVIDER;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.MapConfiguration;
-import org.candlepin.pki.PKIReader;
+import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.impl.BouncyCastleProviderLoader;
-import org.candlepin.pki.impl.PrivateKeyReader;
+import org.candlepin.pki.PrivateKeyReader;
 
 import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
@@ -41,15 +41,15 @@ import java.util.Set;
 import javax.inject.Inject;
 
 /**
- * PKIReaderForTesting
+ * CertificateReaderForTesting
  */
-public class PKIReaderForTesting extends PKIReader {
+public class CertificateReaderForTesting extends CertificateReader {
     static {
         BouncyCastleProviderLoader.addProvider();
     }
 
     @Inject
-    public PKIReaderForTesting(Configuration config, PrivateKeyReader reader)
+    public CertificateReaderForTesting(Configuration config, PrivateKeyReader reader)
         throws CertificateException, IOException {
         super(new MapConfiguration(), new PrivateKeyReader());
     }
@@ -88,7 +88,7 @@ public class PKIReaderForTesting extends PKIReader {
         X509Certificate ca = null;
         try (
             InputStream caStream =
-                PKIReaderForTesting.class.getClassLoader().getResourceAsStream("test-ca.crt");
+                CertificateReaderForTesting.class.getClassLoader().getResourceAsStream("test-ca.crt");
         ) {
             ca = (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(caStream);
         }

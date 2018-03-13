@@ -18,7 +18,7 @@ import static org.candlepin.pki.impl.BouncyCastleProviderLoader.*;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.pki.PKIReader;
+import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.X509ByteExtensionWrapper;
@@ -100,7 +100,7 @@ public class BouncyCastlePKIUtility extends PKIUtility {
     private static Logger log = LoggerFactory.getLogger(BouncyCastlePKIUtility.class);
 
     @Inject
-    public BouncyCastlePKIUtility(PKIReader reader, SubjectKeyIdentifierWriter subjectKeyWriter,
+    public BouncyCastlePKIUtility(CertificateReader reader, SubjectKeyIdentifierWriter subjectKeyWriter,
         Configuration config) {
         super(reader, subjectKeyWriter, config);
     }

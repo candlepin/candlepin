@@ -17,7 +17,8 @@ package org.candlepin.pki.impl;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.pki.PKIReader;
+import org.candlepin.pki.CertificateReader;
+import org.candlepin.pki.PrivateKeyReader;
 
 import org.junit.Test;
 
@@ -25,9 +26,9 @@ import java.util.HashMap;
 
 
 /**
- * PKIReaderTest
+ * CertificateReaderTest
  */
-public class PKIReaderTest {
+public class CertificateReaderTest {
 
     @Test
     public void readkey() throws Exception {
@@ -43,6 +44,6 @@ public class PKIReaderTest {
                     put(ConfigProperties.CA_KEY_PASSWORD, "dog8code");
                 }
             });
-        new PKIReader(config, new PrivateKeyReader());
+        new CertificateReader(config, new PrivateKeyReader());
     }
 }

@@ -16,7 +16,6 @@ package org.candlepin.pki;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.pki.impl.PrivateKeyReader;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
@@ -36,7 +35,7 @@ import java.util.Set;
 /**
  * A generic mechanism for reading CA certificates from an underlying datastore.
  */
-public class PKIReader {
+public class CertificateReader {
     private CertificateFactory certFactory;
     private String caCertPath;
     private String upstreamCaCertPath;
@@ -47,7 +46,7 @@ public class PKIReader {
     private final PrivateKey privateKey;
 
     @Inject
-    public PKIReader(Configuration config, PrivateKeyReader reader)
+    public CertificateReader(Configuration config, PrivateKeyReader reader)
         throws CertificateException, IOException {
         certFactory = CertificateFactory.getInstance("X.509");
 
