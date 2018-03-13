@@ -146,8 +146,9 @@ public class HypervisorResourceTest {
             this.consumerTypeCurator, this.consumerResource, this.i18n, this.eventFactory, this.sink,
             migrationProvider, modelTranslator);
 
-        hypervisorResource = new HypervisorResource(consumerResource, consumerCurator, consumerTypeCurator,
-            i18n, ownerCurator, migrationProvider, modelTranslator, guestIdResource);
+        this.hypervisorResource = new HypervisorResource(consumerResource,
+            consumerCurator, consumerTypeCurator, i18n, ownerCurator, migrationProvider, modelTranslator,
+            guestIdResource);
 
         // Ensure that we get the consumer that was passed in back from the create call.
         when(consumerCurator.create(any(Consumer.class))).thenAnswer(new Answer<Object>() {
@@ -215,6 +216,7 @@ public class HypervisorResourceTest {
     @Test
     public void hypervisorCheckInCreatesNewConsumer() throws Exception {
         Owner owner = new Owner("admin");
+        owner.setId("test-id");
 
         Map<String, List<GuestIdDTO>> hostGuestMap = new HashMap<>();
         hostGuestMap.put("test-host", new ArrayList(Arrays.asList(new GuestIdDTO("GUEST_A"),
@@ -368,6 +370,7 @@ public class HypervisorResourceTest {
     @Test
     public void ensureEmptyHypervisorIdsAreIgnored() throws Exception {
         Owner owner = new Owner("admin");
+        owner.setId("test-id");
 
         Map<String, List<GuestIdDTO>> hostGuestMap = new HashMap<>();
         hostGuestMap.put("", new ArrayList(Arrays.asList(new GuestIdDTO("GUEST_A"),

@@ -567,10 +567,23 @@ public class ConsumerResource {
             entity.setGuestIds(guestIds);
         }
 
-        if (dto.getHypervisorId() != null) {
-            Owner owner = ownerCurator.findOwnerById(entity.getOwnerId());
-            HypervisorId hypervisorId = new HypervisorId(entity, owner,
-                dto.getHypervisorId().getHypervisorId(), dto.getHypervisorId().getReporterId());
+        if (dto.getHypervisorId() != null && entity.getOwnerId() != null) {
+            HypervisorId hypervisorId = new HypervisorId(
+                entity,
+                ownerCurator.findOwnerById(entity.getOwnerId()),
+                dto.getHypervisorId().getHypervisorId(),
+                dto.getHypervisorId().getReporterId());
+            entity.setHypervisorId(hypervisorId);
+        }
+
+        if (dto.getHypervisorId() == null &&
+            dto.getFact("system_uuid") != null &&
+            !"true".equals(dto.getFact("virt.is_guest")) &&
+            entity.getOwnerId() != null) {
+            HypervisorId hypervisorId = new HypervisorId(
+                entity,
+                ownerCurator.findOwnerById(entity.getOwnerId()),
+                dto.getFact("system_uuid"));
             entity.setHypervisorId(hypervisorId);
         }
 
@@ -671,6 +684,30 @@ public class ConsumerResource {
         @QueryParam("activation_keys") String activationKeys,
         @QueryParam("identity_cert_creation") @DefaultValue("true") boolean identityCertCreation)
         throws BadRequestException {
+
+        // fix for duplicate hypervisor/consumer problem
+        Consumer consumer = null;
+        if (ownerKey != null && dto.getFact("system_uuid") != null &&
+            !"true".equalsIgnoreCase(dto.getFact("virt.is_guest"))) {
+            Owner owner = ownerCurator.lookupByKey(ownerKey);
+            if (owner != null) {
+                consumer = consumerCurator.getHypervisor(dto.getFact("system_uuid"), owner);
+                if (consumer != null) {
+                    consumer.setIdCert(generateIdCert(consumer, false));
+                    this.updateConsumer(consumer.getUuid(), dto, principal);
+                    return translator.translate(consumer, ConsumerDTO.class);
+                }
+            }
+        }
+        if (consumer == null) {
+            consumer = new Consumer();
+        }
+
+        if (dto.getUuid() != null) {
+            consumer.setUuid(dto.getUuid());
+        }
+        consumer.setOwner(ownerCurator.lookupByKey(ownerKey));
+        populateEntity(consumer, dto);
 
         if (dto.getType() == null) {
             throw new BadRequestException(i18n.tr("Unit type must be specified."));
