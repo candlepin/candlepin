@@ -121,10 +121,10 @@ public class EntitlerJobTest extends BaseJobTest{
         verify(e).sendEvents(eq(ents));
         ArgumentCaptor<Object> argumentCaptor = ArgumentCaptor.forClass(Object.class);
         verify(ctx).setResult(argumentCaptor.capture());
-        PoolIdAndQuantity[] result = (PoolIdAndQuantity[]) argumentCaptor.getValue();
-        assertEquals(1, result.length);
-        assertEquals(pool, result[0].getPoolId());
-        assertEquals(100, result[0].getQuantity().intValue());
+        List<PoolIdAndQuantity> result = (List<PoolIdAndQuantity>) argumentCaptor.getValue();
+        assertEquals(1, result.size());
+        assertEquals(pool, result.get(0).getPoolId());
+        assertEquals(100, result.get(0).getQuantity().intValue());
     }
 
     /**

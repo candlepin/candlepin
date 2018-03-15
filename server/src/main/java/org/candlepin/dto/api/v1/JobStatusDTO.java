@@ -45,7 +45,6 @@ public class JobStatusDTO extends TimestampedCandlepinDTO<JobStatusDTO> {
     private String ownerId;
     private String correlationId;
 
-    //TODO: this will need to be updated once HypervisorUpdateJob's resultData get simplified.
     private Object resultData;
     private Boolean done;
 
