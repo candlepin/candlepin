@@ -19,11 +19,14 @@ import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import org.candlepin.auth.Principal;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.Owner;
+import org.candlepin.policy.js.compliance.ComplianceReason;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.junit.Before;
 import org.junit.Test;
@@ -74,10 +77,29 @@ public class EventFactoryTest {
         when(consumer.getName()).thenReturn("consumer-name");
         when(consumer.getOwner()).thenReturn(owner);
         when(consumer.getUuid()).thenReturn("48b09f4e-f18c-4765-9c41-9aed6f122739");
-        when(status.getStatus()).thenReturn("valid");
+        when(status.getStatus()).thenReturn("invalid");
 
-        String expectedEventData = "{\"consumer_uuid\":\"48b09f4e-f18c-4765-9c41-9aed6f122739\"," +
-            "\"status\":\"valid\"}";
+        ComplianceReason reason1 = new ComplianceReason();
+        reason1.setKey(ComplianceReason.ReasonKeys.SOCKETS);
+        reason1.setMessage("Only supports 2 of 12 sockets.");
+        reason1.setAttributes(ImmutableMap.of(ComplianceReason.Attributes.MARKETING_NAME, "Awesome OS"));
+
+        ComplianceReason reason2 = new ComplianceReason();
+        reason2.setKey(ComplianceReason.ReasonKeys.ARCHITECTURE);
+        reason2.setMessage("Supports architecture ppc64 but the system is x86_64.");
+        reason2.setAttributes(ImmutableMap.of(
+            ComplianceReason.Attributes.MARKETING_NAME,
+            "Awesome Middleware"
+        ));
+
+        when(status.getReasons()).thenReturn(ImmutableSet.of(reason1, reason2));
+
+        String expectedEventData = "{\"reasons\":[" +
+            "{\"productName\":\"Awesome OS\"," +
+            "\"message\":\"Only supports 2 of 12 sockets.\"}," +
+            "{\"productName\":\"Awesome Middleware\"," +
+            "\"message\":\"Supports architecture ppc64 but the system is x86_64.\"}]," +
+            "\"consumer_uuid\":\"48b09f4e-f18c-4765-9c41-9aed6f122739\",\"status\":\"invalid\"}";
         Event event = eventFactory.complianceCreated(consumer, status);
         assertEquals(expectedEventData, event.getEventData());
     }
