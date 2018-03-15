@@ -747,15 +747,8 @@ public class Importer {
             if (product.getName().endsWith(".json")) {
                 log.debug("Importing product {} for owner {}", product.getName(), owner.getKey());
 
-                Reader reader = null;
-                try {
-                    reader = new FileReader(product);
+                try (Reader reader = new FileReader(product)) {
                     productsToImport.add(importer.createObject(mapper, reader, owner));
-                }
-                finally {
-                    if (reader != null) {
-                        reader.close();
-                    }
                 }
             }
         }

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2017 Red Hat, Inc.
+ * Copyright (c) 2009 - 2018 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.dto.api.v1;
+package org.candlepin.dto.manifest.v1;
 
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
@@ -29,7 +29,7 @@ import java.util.Arrays;
 
 
 /**
- * Test suite for the ContentTranslator class
+ * Test suite for the ContentTranslator (manifest import/export) class
  */
 @RunWith(JUnitParamsRunner.class)
 public class ContentTranslatorTest extends
@@ -52,6 +52,7 @@ public class ContentTranslatorTest extends
         Content source = new Content();
 
         source.setUuid("test_value");
+        source.setMetadataExpire(3L);
         source.setId("test_value");
         source.setType("test_value");
         source.setLabel("test_value");
@@ -61,10 +62,8 @@ public class ContentTranslatorTest extends
         source.setRequiredTags("test_value");
         source.setReleaseVersion("test_value");
         source.setGpgUrl("test_value");
-        source.setMetadataExpire(1234L);
         source.setModifiedProductIds(Arrays.asList("1", "2", "3"));
         source.setArches("test_value");
-        source.setLocked(Boolean.TRUE);
 
         return source;
     }
@@ -82,6 +81,7 @@ public class ContentTranslatorTest extends
             // childrenGenerated flag
 
             assertEquals(source.getUuid(), dto.getUuid());
+            assertEquals(source.getMetadataExpire(), dto.getMetadataExpire());
             assertEquals(source.getId(), dto.getId());
             assertEquals(source.getType(), dto.getType());
             assertEquals(source.getLabel(), dto.getLabel());
@@ -91,10 +91,8 @@ public class ContentTranslatorTest extends
             assertEquals(source.getRequiredTags(), dto.getRequiredTags());
             assertEquals(source.getReleaseVersion(), dto.getReleaseVersion());
             assertEquals(source.getGpgUrl(), dto.getGpgUrl());
-            assertEquals(source.getMetadataExpire(), dto.getMetadataExpiration());
             assertEquals(source.getModifiedProductIds(), dto.getModifiedProductIds());
             assertEquals(source.getArches(), dto.getArches());
-            assertEquals(source.isLocked(), dto.isLocked());
         }
         else {
             assertNull(dto);

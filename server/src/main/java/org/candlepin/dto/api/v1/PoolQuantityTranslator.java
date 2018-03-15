@@ -19,7 +19,7 @@ import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.PoolQuantity;
 
 /**
- * The BrandingTranslator provides translation from Branding model objects to BrandingDTOs
+ * The PoolQuantityTranslator provides translation from PoolQuantity model objects to PoolQuantityDTOs.
  */
 public class PoolQuantityTranslator implements ObjectTranslator<PoolQuantity, PoolQuantityDTO> {
 

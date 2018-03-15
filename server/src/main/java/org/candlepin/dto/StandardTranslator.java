@@ -158,11 +158,17 @@ public class StandardTranslator extends SimpleModelTranslator {
             new org.candlepin.dto.manifest.v1.ConsumerTypeTranslator(),
             ConsumerType.class, org.candlepin.dto.manifest.v1.ConsumerTypeDTO.class);
         this.registerTranslator(
+            new org.candlepin.dto.manifest.v1.ContentTranslator(),
+            Content.class, org.candlepin.dto.manifest.v1.ContentDTO.class);
+        this.registerTranslator(
             new org.candlepin.dto.manifest.v1.EntitlementTranslator(),
             Entitlement.class, org.candlepin.dto.manifest.v1.EntitlementDTO.class);
         this.registerTranslator(
             new org.candlepin.dto.manifest.v1.PoolTranslator(),
             Pool.class, org.candlepin.dto.manifest.v1.PoolDTO.class);
+        this.registerTranslator(
+            new org.candlepin.dto.manifest.v1.ProductTranslator(),
+            Product.class, org.candlepin.dto.manifest.v1.ProductDTO.class);
 
         // Shims
         /////////////////////////////////////////////
