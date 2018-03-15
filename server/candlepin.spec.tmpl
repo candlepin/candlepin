@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.3.2
+Version: 2.3.3
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,19 @@ fi
 
 #raw
 %changelog
+* Thu Mar 15 2018 Kevin Howell <khowell@redhat.com> 2.3.3-1
+- Add SubjectKeyIdentifierWriter extension point back into Candlepin.
+  (awood@redhat.com)
+- Create a custom UserType for job result data. (awood@redhat.com)
+- Add toString implementations for objects stored as job results.
+  (awood@redhat.com)
+- Suppress some compiler warnings and remove unused fields. (awood@redhat.com)
+- Replace explicit type in generics with diamond operator. (awood@redhat.com)
+- Correct incorrect punctuation in user messages. (awood@redhat.com)
+- Implemented EntitlementDTO & CertificateDTO for manifest import/export.
+  (nmoumoul@redhat.com)
+- Added several improvements to the request scanner (crog@redhat.com)
+
 * Tue Feb 27 2018 Kevin Howell <khowell@redhat.com> 2.3.2-1
 - Added the EntitlementDTO for the JavaScript rules (crog@redhat.com)
 - Add Java 8 to mead packages argument (khowell@redhat.com)
