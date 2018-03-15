@@ -50,6 +50,7 @@ import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -93,7 +94,7 @@ public class EntitlerJob extends KingpinJob {
                 consumed[i] = new PoolIdAndQuantity(ents.get(i).getPool().getId(), ents.get(i)
                         .getQuantity());
             }
-            ctx.setResult(consumed);
+            ctx.setResult(Arrays.asList(consumed));
             poolCurator.clear();
         }
         catch (EntitlementRefusedException e) {
