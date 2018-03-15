@@ -45,19 +45,19 @@ public class ConsumerPrincipalTest {
 
         consumer = mock(Consumer.class);
         when(consumer.getUuid()).thenReturn("consumer-uuid");
-        when(consumer.getOwner()).thenReturn(o);
+        when(consumer.getOwnerId()).thenReturn("donaldduck");
 
-        principal = new ConsumerPrincipal(consumer);
+        principal = new ConsumerPrincipal(consumer, o);
     }
     @Test
     public void noFullAccess() {
-        assertFalse(new ConsumerPrincipal(consumer).hasFullAccess());
+        assertFalse(new ConsumerPrincipal(consumer, o).hasFullAccess());
     }
 
     @Test
     public void nullAccess() {
-        assertFalse(new ConsumerPrincipal(consumer).canAccess(null, null, null));
-        assertFalse(new ConsumerPrincipal(consumer).canAccessAll(null, null, null));
+        assertFalse(new ConsumerPrincipal(consumer, o).canAccess(null, null, null));
+        assertFalse(new ConsumerPrincipal(consumer, o).canAccessAll(null, null, null));
     }
 
     @Test
@@ -84,7 +84,7 @@ public class ConsumerPrincipalTest {
     @Test
     public void equalsAnotherConsumerPrincipal() {
         // create a new one with same consumer
-        ConsumerPrincipal cp = new ConsumerPrincipal(consumer);
+        ConsumerPrincipal cp = new ConsumerPrincipal(consumer, o);
         assertTrue(principal.equals(cp));
     }
 
@@ -94,7 +94,7 @@ public class ConsumerPrincipalTest {
         ctype.setId("test-ctype");
 
         Consumer c = new Consumer("Test Consumer", "test-consumer", new Owner("o1"), ctype);
-        ConsumerPrincipal cp = new ConsumerPrincipal(c);
+        ConsumerPrincipal cp = new ConsumerPrincipal(c, o);
         assertFalse(principal.equals(cp));
     }
 
@@ -160,8 +160,6 @@ public class ConsumerPrincipalTest {
         Pool p = mock(Pool.class);
         when(p.getOwner()).thenReturn(o);
 
-        when(consumer.getOwner()).thenReturn(o);
-
         assertTrue(principal.canAccess(p, SubResource.ENTITLEMENTS, Access.CREATE));
     }
 
@@ -169,8 +167,6 @@ public class ConsumerPrincipalTest {
     public void accessToBindToPool() {
         Pool p = mock(Pool.class);
         when(p.getOwner()).thenReturn(o);
-
-        when(consumer.getOwner()).thenReturn(o);
 
         assertTrue(principal.canAccess(p, SubResource.ENTITLEMENTS, Access.CREATE));
         assertFalse(principal.canAccess(p, SubResource.ENTITLEMENTS, Access.READ_ONLY));
@@ -180,8 +176,6 @@ public class ConsumerPrincipalTest {
     public void noAaccessToListEntitlementsInPool() {
         Pool p = mock(Pool.class);
         when(p.getOwner()).thenReturn(o);
-
-        when(consumer.getOwner()).thenReturn(o);
 
         assertFalse(principal.canAccess(p, SubResource.ENTITLEMENTS, Access.READ_ONLY));
     }

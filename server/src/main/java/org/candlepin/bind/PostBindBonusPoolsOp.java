@@ -47,9 +47,10 @@ public class PostBindBonusPoolsOp implements BindOperation {
         Map<String, Entitlement> entitlements = context.getEntitlementMap();
         Map<String, PoolQuantity> poolQuantities = context.getPoolQuantities();
 
-        poolManager.handlePostEntitlement(poolManager, consumer, entitlements, poolQuantities);
+        poolManager.handlePostEntitlement(poolManager, consumer, context.getOwner(), entitlements,
+            poolQuantities);
         // we might have changed the bonus pool quantities, lets revoke ents if needed.
-        poolManager.checkBonusPoolQuantities(consumer.getOwner(), entitlements);
+        poolManager.checkBonusPoolQuantities(consumer.getOwnerId(), entitlements);
         return true;
     }
 

@@ -121,15 +121,16 @@ public class EntitlerJob extends KingpinJob {
         }
     }
 
-    public static JobDetail bindByPool(String poolId, Consumer consumer, Integer qty) {
+    public static JobDetail bindByPool(String poolId, Consumer consumer, String ownerKey, Integer qty) {
         PoolIdAndQuantity[] poolQuantities = new PoolIdAndQuantity[1];
         poolQuantities[0] = new PoolIdAndQuantity(poolId, qty);
-        return bindByPoolAndQuantities(consumer, poolQuantities);
+        return bindByPoolAndQuantities(consumer, ownerKey, poolQuantities);
     }
 
-    public static JobDetail bindByPoolAndQuantities(Consumer consumer, PoolIdAndQuantity... poolQuantities) {
+    public static JobDetail bindByPoolAndQuantities(Consumer consumer, String ownerKey,
+        PoolIdAndQuantity... poolQuantities) {
         JobDataMap map = new JobDataMap();
-        map.put(JobStatus.OWNER_ID, consumer.getOwner().getKey());
+        map.put(JobStatus.OWNER_ID, ownerKey);
         map.put("pool_and_quantities", poolQuantities);
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.CONSUMER);
         map.put(JobStatus.TARGET_ID, consumer.getUuid());

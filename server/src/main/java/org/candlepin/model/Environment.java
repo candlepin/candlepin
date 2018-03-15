@@ -111,6 +111,14 @@ public class Environment extends AbstractHibernateObject implements Serializable
         return owner;
     }
 
+    /**
+     * @return the owner Id of this Environment.
+     */
+    @Override
+    public String getOwnerId() {
+        return (owner == null) ? null : owner.getId();
+    }
+
     public void setOwner(Owner owner) {
         this.owner = owner;
     }

@@ -22,6 +22,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.User;
+import org.candlepin.test.TestUtil;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -36,6 +37,7 @@ public class UsernameConsumersPermissionTest {
     public void init() {
         User u = new User(username, "dontcare");
         owner = new Owner("ownerkey", "My Org");
+        owner.setId(TestUtil.randomString());
         perm = new UsernameConsumersPermission(u, owner);
     }
 
@@ -76,6 +78,7 @@ public class UsernameConsumersPermissionTest {
     @Test
     public void blocksConsumersInOtherOrgDespiteSameUsername() {
         Owner other = new Owner("ownerkey2", "My Org 2");
+        other.setId(TestUtil.randomString());
         Consumer c = new Consumer("consumer", username, other, null);
         assertFalse(perm.canAccess(c, SubResource.NONE, Access.READ_ONLY));
         assertFalse(perm.canAccess(c, SubResource.NONE, Access.ALL));

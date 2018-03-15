@@ -189,7 +189,7 @@ public class UeberCertificateGenerator {
 
             this.pool = new Pool(this.owner, this.product, new LinkedList<>(), 1L, this.startDate,
                 this.endDate, "", "", "");
-            this.entitlement = new Entitlement(this.pool, this.consumer, 1);
+            this.entitlement = new Entitlement(this.pool, this.consumer, owner, 1);
         }
 
         public Product getProduct() {

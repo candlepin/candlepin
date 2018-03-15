@@ -14,20 +14,19 @@
  */
 package org.candlepin.audit;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import org.candlepin.auth.Principal;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.GuestId;
-import org.candlepin.model.Owner;
 import org.candlepin.policy.js.compliance.ComplianceReason;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -55,14 +54,12 @@ public class EventFactoryTest {
         // the virt-who error does not occur
         Consumer consumer = mock(Consumer.class);
         GuestId guestId = mock(GuestId.class);
-        Owner owner = mock(Owner.class);
 
         when(guestId.getConsumer()).thenReturn(consumer);
         when(guestId.getGuestId()).thenReturn("guest-id");
         when(guestId.getId()).thenReturn("test");
-        when(consumer.getOwner()).thenReturn(owner);
+        when(consumer.getOwnerId()).thenReturn("owner-id");
         when(consumer.getId()).thenReturn("consumer-id");
-        when(owner.getId()).thenReturn("owner-id");
 
         Event event = eventFactory.guestIdCreated(guestId);
         assertNotNull(event.getEntityId());
@@ -71,11 +68,10 @@ public class EventFactoryTest {
     @Test
     public void testComplianceCreatedSetsEventData() {
         Consumer consumer = mock(Consumer.class);
-        Owner owner = mock(Owner.class);
         ComplianceStatus status = mock(ComplianceStatus.class);
 
         when(consumer.getName()).thenReturn("consumer-name");
-        when(consumer.getOwner()).thenReturn(owner);
+        when(consumer.getOwnerId()).thenReturn("owner-id");
         when(consumer.getUuid()).thenReturn("48b09f4e-f18c-4765-9c41-9aed6f122739");
         when(status.getStatus()).thenReturn("invalid");
 

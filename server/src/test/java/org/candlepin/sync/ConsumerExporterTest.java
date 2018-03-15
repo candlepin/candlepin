@@ -14,9 +14,9 @@
  */
 package org.candlepin.sync;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
@@ -26,6 +26,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.EnvironmentCurator;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.test.TestUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -47,6 +48,7 @@ public class ConsumerExporterTest {
 
     @Mock private ConsumerTypeCurator mockConsumerTypeCurator;
     @Mock private EnvironmentCurator mockEnvironmentCurator;
+    @Mock private OwnerCurator ownerCurator;
     private ModelTranslator translator;
 
     @Test
@@ -58,7 +60,7 @@ public class ConsumerExporterTest {
                 }
             }));
 
-        translator = new StandardTranslator(mockConsumerTypeCurator, mockEnvironmentCurator);
+        translator = new StandardTranslator(mockConsumerTypeCurator, mockEnvironmentCurator, ownerCurator);
         ConsumerExporter exporter = new ConsumerExporter(translator);
         ConsumerType ctype = new ConsumerType("candlepin");
         ctype.setId("8888");

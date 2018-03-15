@@ -17,6 +17,7 @@ package org.candlepin.test;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.policy.ValidationResult;
@@ -35,7 +36,8 @@ import java.util.Map;
 public class EnforcerForTesting implements Enforcer {
 
     @Override
-    public void postEntitlement(PoolManager manager, Consumer consumer, Map<String, Entitlement> ent,
+    public void postEntitlement(PoolManager manager, Consumer consumer, Owner owner, Map<String, Entitlement>
+        ent,
         List<Pool> subPoolsForStackIds, boolean isUpdate, Map<String, PoolQuantity> poolQuantityMap) {
     }
 

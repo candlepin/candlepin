@@ -411,14 +411,14 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     private Page<List<Entitlement>> listFilteredPages(AbstractHibernateObject object, String objectType,
         String productId, EntitlementFilterBuilder filters, PageRequest pageRequest) {
         Page<List<Entitlement>> entitlementsPage;
-        Owner owner = null;
+        String ownerId = null;
         if (object != null) {
-            owner = (object instanceof Owner) ? (Owner) object : ((Consumer) object).getOwner();
+            ownerId = (object instanceof Owner) ? ((Owner) object).getId() : ((Consumer) object).getOwnerId();
         }
 
         // No need to add filters when matching by product.
         if (object != null && productId != null) {
-            Product p = this.ownerProductCurator.getProductById(owner, productId);
+            Product p = this.ownerProductCurator.getProductById(ownerId, productId);
             if (p == null) {
                 throw new BadRequestException(i18n.tr(
                     "Product with ID \"{0}\" could not be found.", productId));

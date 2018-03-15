@@ -14,14 +14,14 @@
  */
 package org.candlepin.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.candlepin.common.jackson.HateoasArrayExclude;
 import org.candlepin.common.jackson.HateoasInclude;
 import org.candlepin.jackson.StringTrimmingConverter;
 import org.candlepin.util.Util;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import org.apache.commons.lang.StringUtils;
@@ -49,7 +49,6 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
@@ -150,9 +149,8 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @NotNull
     private String typeId;
 
-    @ManyToOne
-    @JoinColumn(nullable = false)
-    private Owner owner;
+    @Column(name = "owner_id")
+    private String ownerId;
 
     @Column(name = "environment_id")
     private String environmentId;
@@ -234,7 +232,9 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
         this.name = name;
         this.username = userName;
-        this.owner = owner;
+        if (owner != null) {
+            this.ownerId = owner.getId();
+        }
         this.facts = new HashMap<>();
         this.installedProducts = new HashSet<>();
         this.guestIds = new ArrayList<>();
@@ -372,11 +372,15 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     }
 
     /**
-     * @return the owner of this Consumer.
+     * @return the owner Id of this Consumer.
      */
     @Override
-    public Owner getOwner() {
-        return owner;
+    public String getOwnerId() {
+        return ownerId;
+    }
+
+    public String setOwnerId(String ownerId) {
+        return ownerId;
     }
 
     /**
@@ -384,7 +388,9 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
      * @param owner owner to associate to this Consumer.
      */
     public void setOwner(Owner owner) {
-        this.owner = owner;
+        if (owner != null) {
+            this.ownerId = owner.getId();
+        }
     }
 
     @Override

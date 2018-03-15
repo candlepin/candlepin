@@ -32,6 +32,7 @@ import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.KeyPairCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
@@ -73,8 +74,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-
-
 /**
  * DefaultEntitlementCertServiceAdapter
  */
@@ -86,6 +85,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
     private X509V3ExtensionUtil v3extensionUtil;
     private KeyPairCurator keyPairCurator;
     private CertificateSerialCurator serialCurator;
+    private OwnerCurator ownerCurator;
     private EntitlementCurator entCurator;
     private I18n i18n;
     private Configuration config;
@@ -100,6 +100,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         EntitlementCertificateCurator entCertCurator,
         KeyPairCurator keyPairCurator,
         CertificateSerialCurator serialCurator,
+        OwnerCurator ownerCurator,
         EntitlementCurator entCurator, I18n i18n,
         Configuration config,
         ProductCurator productCurator,
@@ -112,6 +113,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         this.entCertCurator = entCertCurator;
         this.keyPairCurator = keyPairCurator;
         this.serialCurator = serialCurator;
+        this.ownerCurator = ownerCurator;
         this.entCurator = entCurator;
         this.i18n = i18n;
         this.config = config;
@@ -162,7 +164,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
     // TODO: productModels not used by V1 certificates. This whole v1/v3 split needs
     // a re-org. Passing them here because it eliminates a substantial performance hit
     // recalculating this for the entitlement body in v3 certs.
-    public X509Certificate createX509Certificate(Consumer consumer, Pool pool,
+    public X509Certificate createX509Certificate(Consumer consumer, Owner owner, Pool pool,
         Entitlement ent, Product product, Set<Product> products,
         List<org.candlepin.model.dto.Product> productModels, BigInteger serialNumber,
         KeyPair keyPair, boolean useContentPrefix)
@@ -174,7 +176,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         products.add(product);
 
         Map<String, EnvironmentContent> promotedContent = getPromotedContent(consumer);
-        String contentPrefix = getContentPrefix(consumer, useContentPrefix);
+        String contentPrefix = getContentPrefix(consumer, owner, useContentPrefix);
 
         if (shouldGenerateV3(consumer)) {
             extensions = prepareV3Extensions();
@@ -197,7 +199,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         }
 
         X509Certificate x509Cert =  this.pki.createX509Certificate(
-            createDN(ent, consumer.getOwner()), extensions, byteExtensions, startDate,
+            createDN(ent, owner), extensions, byteExtensions, startDate,
             endDate, keyPair, serialNumber, null);
 
         return x509Cert;
@@ -286,11 +288,12 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
      * @return
      * @throws IOException
      */
-    private String getContentPrefix(Consumer consumer, boolean useContentPrefix) throws IOException {
+    private String getContentPrefix(Consumer consumer, Owner owner, boolean useContentPrefix)
+        throws IOException {
         String contentPrefix = null;
 
         if (useContentPrefix) {
-            contentPrefix = consumer.getOwner().getContentPrefix();
+            contentPrefix = owner.getContentPrefix();
             Environment env = this.environmentCurator.getConsumerEnvironment(consumer);
 
             if (contentPrefix != null && !contentPrefix.equals("")) {
@@ -432,6 +435,8 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         boolean save)
         throws GeneralSecurityException, IOException {
 
+        Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
+
         log.debug("Generating entitlement cert for entitlements");
         KeyPair keyPair = keyPairCurator.getConsumerKeyPair(consumer);
         byte[] pemEncodedKeyPair = pki.getPemEncoded(keyPair.getPrivate());
@@ -463,14 +468,14 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
             products.add(product);
 
             Map<String, EnvironmentContent> promotedContent = getPromotedContent(consumer);
-            String contentPrefix = getContentPrefix(consumer, true);
+            String contentPrefix = getContentPrefix(consumer, owner, true);
 
             log.info("Creating X509 cert for product: {}", product);
             log.debug("Provided products: {}", products);
             List<org.candlepin.model.dto.Product> productModels = v3extensionUtil.createProducts(product,
                 products, contentPrefix, promotedContent, consumer, pool);
 
-            X509Certificate x509Cert = createX509Certificate(consumer, pool, ent,
+            X509Certificate x509Cert = createX509Certificate(consumer, owner, pool, ent,
                 product, products, productModels,
                 BigInteger.valueOf(serial.getId()), keyPair, true);
 

@@ -44,6 +44,7 @@ import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.KeyPair;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
@@ -94,6 +95,7 @@ import java.util.zip.ZipInputStream;
 public class ExporterTest {
 
     private ConsumerTypeCurator ctc;
+    private OwnerCurator oc;
     private MetaExporter me;
     private ConsumerExporter ce;
     private ConsumerTypeExporter cte;
@@ -124,8 +126,9 @@ public class ExporterTest {
     public void setUp() {
         ctc = mock(ConsumerTypeCurator.class);
         mockEnvironmentCurator = mock(EnvironmentCurator.class);
+        oc = mock(OwnerCurator.class);
         me = new MetaExporter();
-        translator = new StandardTranslator(ctc, mockEnvironmentCurator);
+        translator = new StandardTranslator(ctc, mockEnvironmentCurator, oc);
         ce = new ConsumerExporter(translator);
         cte = new ConsumerTypeExporter(translator);
         rc = mock(RulesCurator.class);
@@ -261,7 +264,7 @@ public class ExporterTest {
         when(ctc.listAll()).thenReturn(emptyIteratorMock);
 
         // FINALLY test this badboy
-        Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
+        Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ece, ecsa, pe, psa,
             pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
             exportExtensionAdapter, translator);
 
@@ -317,7 +320,7 @@ public class ExporterTest {
         when(cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
         when(ctc.listAll()).thenReturn(cqmock);
 
-        Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
+        Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ece, ecsa, pe, psa,
             pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
             exportExtensionAdapter, translator);
 
@@ -360,7 +363,7 @@ public class ExporterTest {
         when(cdnc.listAll()).thenReturn(emptyIteratorMock);
 
         // FINALLY test this badboy
-        Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
+        Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ece, ecsa, pe, psa,
             pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
             exportExtensionAdapter, translator);
         File export = e.getFullExport(consumer);
@@ -413,7 +416,7 @@ public class ExporterTest {
         when(cdnc.listAll()).thenReturn(emptyIteratorMock);
 
         // FINALLY test this badboy
-        Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
+        Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ece, ecsa, pe, psa,
             pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
             exportExtensionAdapter, translator);
         File export = e.getFullExport(consumer);
@@ -472,7 +475,7 @@ public class ExporterTest {
         when(cdnc.listAll()).thenReturn(emptyIteratorMock);
 
         // FINALLY test this badboy
-        Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
+        Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ece, ecsa, pe, psa,
             pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
             exportExtensionAdapter, translator);
         File export = e.getFullExport(consumer);
@@ -537,7 +540,7 @@ public class ExporterTest {
         when(ctc.listAll()).thenReturn(emptyIteratorMock);
 
         // FINALLY test this badboy
-        Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
+        Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ece, ecsa, pe, psa,
             pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
             exportExtensionAdapter, translator);
         File export = e.getFullExport(consumer);
@@ -555,7 +558,7 @@ public class ExporterTest {
         when(ctc.listAll()).thenReturn(emptyIteratorMock);
 
         Map<String, String> extensionData = new HashMap<>();
-        Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
+        Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ece, ecsa, pe, psa,
             pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
             exportExtensionAdapter, translator);
 

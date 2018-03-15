@@ -24,6 +24,7 @@ import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.Release;
@@ -59,6 +60,7 @@ public class ConsumerBindUtil {
     private Entitler entitler;
     private I18n i18n;
     private ConsumerContentOverrideCurator consumerContentOverrideCurator;
+    private OwnerCurator ownerCurator;
     private QuantityRules quantityRules;
     private ServiceLevelValidator serviceLevelValidator;
     private static Logger log = LoggerFactory.getLogger(ConsumerBindUtil.class);
@@ -66,10 +68,11 @@ public class ConsumerBindUtil {
     @Inject
     public ConsumerBindUtil(Entitler entitler, I18n i18n,
         ConsumerContentOverrideCurator consumerContentOverrideCurator,
-        QuantityRules quantityRules, ServiceLevelValidator serviceLevelValidator) {
+        OwnerCurator ownerCurator, QuantityRules quantityRules, ServiceLevelValidator serviceLevelValidator) {
         this.entitler = entitler;
         this.i18n = i18n;
         this.consumerContentOverrideCurator = consumerContentOverrideCurator;
+        this.ownerCurator = ownerCurator;
         this.quantityRules = quantityRules;
         this.serviceLevelValidator = serviceLevelValidator;
     }
@@ -151,7 +154,8 @@ public class ConsumerBindUtil {
             for (ActivationKeyPool p : key.getPools()) {
                 poolIds.add(p.getPool().getId());
             }
-            AutobindData autobindData = AutobindData.create(consumer)
+            Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
+            AutobindData autobindData = AutobindData.create(consumer, owner)
                 .forProducts(productIds.toArray(new String[0]))
                 .withPools(poolIds);
             List<Entitlement> ents = entitler.bindByProducts(autobindData);
@@ -188,7 +192,7 @@ public class ConsumerBindUtil {
     private boolean handleActivationKeyServiceLevel(Consumer consumer, String level, Owner owner) {
         if (!StringUtils.isBlank(level)) {
             try {
-                serviceLevelValidator.validate(owner, level);
+                serviceLevelValidator.validate(owner.getId(), level);
                 consumer.setServiceLevel(level);
                 return true;
             }
@@ -217,8 +221,8 @@ public class ConsumerBindUtil {
         return quantity;
     }
 
-    public void validateServiceLevel(Owner owner, String serviceLevel) {
-        serviceLevelValidator.validate(owner, serviceLevel);
+    public void validateServiceLevel(String ownerId, String serviceLevel) {
+        serviceLevelValidator.validate(ownerId, serviceLevel);
     }
 
 }

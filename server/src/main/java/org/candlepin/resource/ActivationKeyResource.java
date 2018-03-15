@@ -138,7 +138,7 @@ public class ActivationKeyResource {
 
         String serviceLevel = update.getServiceLevel();
         if (serviceLevel != null) {
-            serviceLevelValidator.validate(toUpdate.getOwner(), serviceLevel);
+            serviceLevelValidator.validate(toUpdate.getOwner().getId(), serviceLevel);
             toUpdate.setServiceLevel(serviceLevel);
         }
 

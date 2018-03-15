@@ -85,7 +85,7 @@ public class HealEntireOrgJob extends UniqueByEntityJob {
                 // of looking up the non or partially compliant products to bind.
                 try {
                     Consumer consumer = consumerCurator.getConsumer(uuid);
-                    healSingleConsumer(consumer, entitleDate);
+                    healSingleConsumer(consumer, owner, entitleDate);
                 }
                 // We want to catch everything and continue.
                 // Perhaps add something to surface errors later
@@ -105,8 +105,10 @@ public class HealEntireOrgJob extends UniqueByEntityJob {
      * Each consumer heal should be a separate transaction
      */
     @Transactional
-    private void healSingleConsumer(Consumer consumer, Date date) throws AutobindDisabledForOwnerException {
-        List<Entitlement> ents = entitler.bindByProducts(AutobindData.create(consumer).on(date), true);
+    private void healSingleConsumer(Consumer consumer, Owner owner, Date date) throws
+        AutobindDisabledForOwnerException {
+        List<Entitlement> ents = entitler.bindByProducts(AutobindData.create(consumer, owner).on(date),
+            true);
         entitler.sendEvents(ents);
     }
 

@@ -83,7 +83,8 @@ public class TestUtil {
     }
 
     public static Owner createOwner(String key, String name) {
-        return new Owner(key, name);
+        Owner owner = new Owner(key, name);
+        return owner;
     }
 
     public static Owner createOwner(String key) {
@@ -129,10 +130,14 @@ public class TestUtil {
     }
 
     public static Consumer createDistributor() {
+        return createDistributor(createOwner());
+    }
+
+    public static Consumer createDistributor(Owner owner) {
         ConsumerType ctype = new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN);
         ctype.setId("test-ctype-" + randomInt());
 
-        return createConsumer(ctype, createOwner());
+        return createConsumer(ctype, owner);
     }
 
     /**

@@ -45,6 +45,7 @@ import java.util.List;
 public class EntitleByProductsJobTest extends BaseJobTest {
 
     private Consumer consumer;
+    private Owner owner;
     private String consumerUuid;
     private Entitler e;
 
@@ -55,8 +56,8 @@ public class EntitleByProductsJobTest extends BaseJobTest {
 
         ConsumerType ctype = new ConsumerType("system");
         ctype.setId("test-ctype");
-
-        consumer = new Consumer("Test Consumer", "test-consumer", new Owner("test-owner"), ctype);
+        owner = new Owner("test-owner");
+        consumer = new Consumer("Test Consumer", "test-consumer", owner, ctype);
         consumer.setUuid(consumerUuid);
         e = mock(Entitler.class);
     }
@@ -65,7 +66,7 @@ public class EntitleByProductsJobTest extends BaseJobTest {
     public void bindByProductsSetup() {
         String[] pids = {"pid1", "pid2", "pid3"};
 
-        JobDetail detail = EntitleByProductsJob.bindByProducts(pids, consumer, null, null);
+        JobDetail detail = EntitleByProductsJob.bindByProducts(pids, consumer, null, null, owner.getKey());
         assertNotNull(detail);
         String[] resultpids = (String[]) detail.getJobDataMap().get("product_ids");
         assertEquals("pid2", resultpids[1]);
@@ -77,7 +78,7 @@ public class EntitleByProductsJobTest extends BaseJobTest {
     public void bindByProductsExec() throws Exception  {
         String[] pids = {"pid1", "pid2", "pid3"};
 
-        JobDetail detail = EntitleByProductsJob.bindByProducts(pids, consumer, null, null);
+        JobDetail detail = EntitleByProductsJob.bindByProducts(pids, consumer, null, null, owner.getKey());
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
 
@@ -104,7 +105,7 @@ public class EntitleByProductsJobTest extends BaseJobTest {
     @Test
     public void serializeJobDataMapForProducts() throws IOException {
         String[] pids = {"pid1", "pid2", "pid3"};
-        JobDetail detail = EntitleByProductsJob.bindByProducts(pids, consumer, null, null);
+        JobDetail detail = EntitleByProductsJob.bindByProducts(pids, consumer, null, null, owner.getKey());
         serialize(detail.getJobDataMap());
     }
 

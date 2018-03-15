@@ -267,6 +267,8 @@ public class EntitlementResourceTest {
 
         Entitlement e = TestUtil.createEntitlement();
         Owner owner2 = new Owner("admin2");
+        owner.setId(TestUtil.randomString());
+        owner2.setId(TestUtil.randomString());
         Consumer sourceConsumer = new Consumer("source-consumer", "bill", owner, ct);
         Consumer destConsumer = new Consumer("destination-consumer", "bill", owner2, ct);
         e.setConsumer(sourceConsumer);

@@ -31,6 +31,8 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.IdentityCertificate;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
@@ -88,6 +90,7 @@ public class Exporter {
     private CdnCurator cdnCurator;
     private CdnExporter cdnExporter;
 
+    private OwnerCurator ownerCurator;
     private ConsumerTypeCurator consumerTypeCurator;
     private EntitlementCertServiceAdapter entCertAdapter;
     private ProductServiceAdapter productAdapter;
@@ -104,7 +107,7 @@ public class Exporter {
     private SyncUtils syncUtils;
 
     @Inject
-    public Exporter(ConsumerTypeCurator consumerTypeCurator, MetaExporter meta,
+    public Exporter(ConsumerTypeCurator consumerTypeCurator, OwnerCurator ownerCurator, MetaExporter meta,
         ConsumerExporter consumerExporter, ConsumerTypeExporter consumerType,
         RulesExporter rules, EntitlementCertExporter entCert,
         EntitlementCertServiceAdapter entCertAdapter, ProductExporter productExporter,
@@ -120,7 +123,7 @@ public class Exporter {
         ModelTranslator translator) {
 
         this.consumerTypeCurator = consumerTypeCurator;
-
+        this.ownerCurator = ownerCurator;
         this.meta = meta;
         this.consumerExporter = consumerExporter;
         this.consumerType = consumerType;
@@ -533,8 +536,9 @@ public class Exporter {
 
             // Real products have a numeric id.
             if (StringUtils.isNumeric(product.getId())) {
+                Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
                 ProductCertificate cert = productAdapter.getProductCertificate(
-                    consumer.getOwner(), product.getId()
+                    owner, product.getId()
                 );
 
                 // XXX: not all product adapters implement getProductCertificate,

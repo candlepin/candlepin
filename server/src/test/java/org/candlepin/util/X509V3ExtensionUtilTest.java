@@ -142,7 +142,7 @@ public class X509V3ExtensionUtilTest {
         Pool pool = TestUtil.createPool(mktProd);
         pool.getBranding().add(new Branding(engProdId, "OS", brandedName));
         Consumer consumer = new Consumer();
-        Entitlement e = new Entitlement(pool, consumer, 10);
+        Entitlement e = new Entitlement(pool, consumer, owner, 10);
 
         List<org.candlepin.model.dto.Product> certProds = util.createProducts(mktProd,
             prods, "", new HashMap<>(),  new Consumer(), pool);

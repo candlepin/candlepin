@@ -14,10 +14,8 @@
  */
 package org.candlepin.policy.js.activationkey;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
@@ -25,6 +23,7 @@ import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
@@ -64,6 +63,7 @@ public class ActivationKeyRulesTest {
     @Mock private JsRunnerRequestCache cache;
     @Mock private ConsumerTypeCurator mockConsumerTypeCurator;
     @Mock private EnvironmentCurator environmentCurator;
+    @Mock private OwnerCurator mockOwnerCurator;
 
     private I18n i18n;
     private JsRunnerProvider provider;
@@ -85,7 +85,7 @@ public class ActivationKeyRulesTest {
 
         provider = new JsRunnerProvider(rulesCuratorMock, cacheProvider);
         ProductCurator productCurator = mock(ProductCurator.class);
-        translator = new StandardTranslator(mockConsumerTypeCurator, environmentCurator);
+        translator = new StandardTranslator(mockConsumerTypeCurator, environmentCurator, mockOwnerCurator);
         actKeyRules = new ActivationKeyRules(provider.get(), i18n,
                 new RulesObjectMapper(new ProductCachedSerializationModule(productCurator)), translator);
     }

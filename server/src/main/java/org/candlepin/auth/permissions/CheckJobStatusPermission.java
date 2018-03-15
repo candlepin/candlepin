@@ -36,12 +36,12 @@ public class CheckJobStatusPermission extends TypedPermission<JobStatus> {
 
     private String principalName;
     private String principalType;
-    private List<String> allowedOrgKeys;
+    private List<String> allowedOrgIds;
 
-    public CheckJobStatusPermission(PrincipalData principalData, List<String> allowedOrgKeys) {
+    public CheckJobStatusPermission(PrincipalData principalData, List<String> allowedOrgIds) {
         this.principalName = principalData.getName();
         this.principalType = principalData.getType();
-        this.allowedOrgKeys = allowedOrgKeys;
+        this.allowedOrgIds = allowedOrgIds;
     }
 
     @Override
@@ -64,7 +64,7 @@ public class CheckJobStatusPermission extends TypedPermission<JobStatus> {
 
         Conjunction conjunction = Restrictions.conjunction();
         // Org has to match.
-        conjunction.add(Restrictions.in("ownerId", allowedOrgKeys));
+        conjunction.add(Restrictions.in("ownerId", allowedOrgIds));
 
         conjunction.add(Restrictions.or(
             Restrictions.ne("targetType", JobStatus.TargetType.OWNER),
@@ -86,7 +86,7 @@ public class CheckJobStatusPermission extends TypedPermission<JobStatus> {
         boolean principalNameMatch = principalName != null && principalName.equals(target.getPrincipalName());
 
         String ownerId = target.getOwnerId();
-        boolean ownerOk = ownerId != null && allowedOrgKeys.contains(ownerId);
+        boolean ownerOk = ownerId != null && allowedOrgIds.contains(ownerId);
 
         if (!ownerOk) {
             return false;

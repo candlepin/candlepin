@@ -21,6 +21,10 @@ import org.candlepin.model.ConsumerCapability;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
+
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -34,13 +38,18 @@ import java.util.Set;
 public class ConsumerTranslator extends TimestampedEntityTranslator<Consumer, ConsumerDTO> {
 
     private ConsumerTypeCurator consumerTypeCurator;
+    private OwnerCurator ownerCurator;
 
-    public ConsumerTranslator(ConsumerTypeCurator consumerTypeCurator) {
+    public ConsumerTranslator(ConsumerTypeCurator consumerTypeCurator, OwnerCurator ownerCurator) {
         if (consumerTypeCurator == null) {
             throw new IllegalArgumentException("ConsumerTypeCurator is null");
         }
-
         this.consumerTypeCurator = consumerTypeCurator;
+
+        if (ownerCurator == null) {
+            throw new IllegalArgumentException("OwnerCurator is null");
+        }
+        this.ownerCurator = ownerCurator;
     }
 
     /**
@@ -82,7 +91,11 @@ public class ConsumerTranslator extends TimestampedEntityTranslator<Consumer, Co
 
         // Process nested objects if we have a ModelTranslator to use to the translation...
         if (translator != null) {
-            dest.setOwner(translator.translate(source.getOwner(), OwnerDTO.class));
+
+            if (StringUtils.isNotEmpty(source.getOwnerId())) {
+                Owner owner = ownerCurator.findOwnerById(source.getOwnerId());
+                dest.setOwner(translator.translate(owner, OwnerDTO.class));
+            }
 
             Set<ConsumerInstalledProduct> installedProducts = source.getInstalledProducts();
             if (installedProducts != null) {

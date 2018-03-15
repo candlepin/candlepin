@@ -14,7 +14,7 @@
  */
 package org.candlepin.resource;
 
-import static org.quartz.JobBuilder.newJob;
+import static org.quartz.JobBuilder.*;
 
 import org.candlepin.auth.Verify;
 import org.candlepin.common.exceptions.BadRequestException;
@@ -28,8 +28,8 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.EntitlementDTO;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
@@ -56,6 +56,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Authorization;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -73,13 +80,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.annotations.Authorization;
 
 /**
  * REST api gateway for the User object.
@@ -360,7 +360,7 @@ public class EntitlementResource {
                         dcType.getLabel()));
                 }
 
-                if (!sourceConsumer.getOwner().getKey().equals(destinationConsumer.getOwner().getKey())) {
+                if (!sourceConsumer.getOwnerId().equals(destinationConsumer.getOwnerId())) {
                     throw new BadRequestException(i18n.tr(
                         "Source and destination units must belong to the same organization"));
                 }

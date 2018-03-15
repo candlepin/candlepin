@@ -15,7 +15,7 @@
 package org.candlepin.dto.api.v1;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.dto.AbstractTranslatorTest;
@@ -29,6 +29,8 @@ import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.IdentityCertificate;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Release;
 
 import org.junit.runner.RunWith;
@@ -52,7 +54,7 @@ public class ConsumerTranslatorTest extends
 
     protected ConsumerTypeCurator mockConsumerTypeCurator;
     protected EnvironmentCurator mockEnvironmentCurator;
-
+    private OwnerCurator mockOwnerCurator;
     protected ConsumerTranslator translator;
 
     protected CertificateTranslatorTest certificateTranslatorTest = new CertificateTranslatorTest();
@@ -78,7 +80,9 @@ public class ConsumerTranslatorTest extends
 
         this.mockConsumerTypeCurator = mock(ConsumerTypeCurator.class);
         this.mockEnvironmentCurator = mock(EnvironmentCurator.class);
-        this.translator = new ConsumerTranslator(this.mockConsumerTypeCurator, this.mockEnvironmentCurator);
+        this.mockOwnerCurator = mock(OwnerCurator.class);
+        this.translator = new ConsumerTranslator(this.mockConsumerTypeCurator, this.mockEnvironmentCurator,
+            this.mockOwnerCurator);
 
         modelTranslator.registerTranslator(this.translator, Consumer.class, ConsumerDTO.class);
     }
@@ -91,8 +95,9 @@ public class ConsumerTranslatorTest extends
     @Override
     protected Consumer initSourceObject() {
         ConsumerType ctype = this.consumerTypeTranslatorTest.initSourceObject();
-
         Environment environment = this.environmentTranslatorTest.initSourceObject();
+        Owner owner = this.ownerTranslatorTest.initSourceObject();
+        when(mockOwnerCurator.findOwnerById(eq(owner.getId()))).thenReturn(owner);
 
         Consumer consumer = new Consumer();
 
@@ -103,7 +108,7 @@ public class ConsumerTranslatorTest extends
         consumer.setEntitlementStatus("consumer_ent_status");
         consumer.setServiceLevel("consumer_service_level");
         consumer.setReleaseVer(new Release("releaseVer"));
-        consumer.setOwner(this.ownerTranslatorTest.initSourceObject());
+        consumer.setOwner(owner);
         consumer.setEnvironment(environment);
         consumer.setEntitlementCount(0L);
         consumer.setLastCheckin(new Date());
@@ -195,8 +200,11 @@ public class ConsumerTranslatorTest extends
                 this.environmentTranslatorTest.verifyOutput(environment, dest.getEnvironment(), true);
 
                 assertEquals(source.getReleaseVer().getReleaseVer(), dest.getReleaseVersion());
-
-                this.ownerTranslatorTest.verifyOutput(source.getOwner(), dest.getOwner(), childrenGenerated);
+                String destOwnerId = null;
+                if (dest.getOwner() != null) {
+                    destOwnerId = dest.getOwner().getId();
+                }
+                assertEquals(source.getOwnerId(), destOwnerId);
                 this.hypervisorIdTranslatorTest.verifyOutput(source.getHypervisorId(), dest.getHypervisorId(),
                     childrenGenerated);
 

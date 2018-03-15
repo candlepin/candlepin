@@ -233,7 +233,7 @@ public class EventFactory {
             // UUID for the 'consumerId' and 'entityId' fields, since Katello
             // is concerned only with the consumer UUID field.
             return new Event(Event.Type.CREATED, Event.Target.COMPLIANCE,
-                consumer.getName(), principalProvider.get(), consumer.getOwner().getId(), consumer.getUuid(),
+                consumer.getName(), principalProvider.get(), consumer.getOwnerId(), consumer.getUuid(),
                 consumer.getUuid(), eventDataJson, null, null);
         }
         catch (JsonProcessingException e) {

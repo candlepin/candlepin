@@ -301,7 +301,7 @@ public class JobCuratorTest extends DatabaseTestFixture {
         JobStatus job = newJobStatus().principalName(consumer.getUuid()).owner(owner.getKey()).create();
         newJobStatus().principalName("donald").owner(owner.getKey()).create();
 
-        setupPrincipal(new ConsumerPrincipal(consumer));
+        setupPrincipal(new ConsumerPrincipal(consumer, owner));
 
         assertTrue(this.curator.findByPrincipalName("donald").list().isEmpty());
 
@@ -351,6 +351,7 @@ public class JobCuratorTest extends DatabaseTestFixture {
     @Test
     public void findByUserFiltersByOwnerAccessAndUUIDWhenRequestedByConsumer() {
         Owner owner = new Owner("testowner");
+        owner.setId(TestUtil.randomString());
         Consumer consumer = TestUtil.createConsumer(owner);
 
         JobStatus job = newJobStatus().principalName(consumer.getUuid()).owner(owner.getKey()).create();
@@ -358,7 +359,7 @@ public class JobCuratorTest extends DatabaseTestFixture {
         newJobStatus().principalName("p2").owner("owner1").create();
         newJobStatus().principalName("p3").owner("owner2").create();
 
-        setupPrincipal(new ConsumerPrincipal(consumer));
+        setupPrincipal(new ConsumerPrincipal(consumer, owner));
 
         assertTrue(this.curator.findByOwnerKey("owner1").list().isEmpty());
         assertTrue(this.curator.findByOwnerKey("owner2").list().isEmpty());
@@ -387,14 +388,15 @@ public class JobCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void findByConsuemrUuidRestrictsByConsumerUuidEnforcesOwnerMatchWhenRequestedByConsumer() {
+    public void findByConsumerUuidRestrictsByConsumerUuidEnforcesOwnerMatchWhenRequestedByConsumer() {
         Owner owner = new Owner("testowner");
+        owner.setId(TestUtil.randomString());
         Consumer consumer = TestUtil.createConsumer(owner);
 
         JobStatus job = newJobStatus().principalName(consumer.getUuid())
-            .consumer(consumer.getUuid(), consumer.getOwner().getKey()).create();
+            .consumer(consumer.getUuid(), "testowner").create();
 
-        // Technically this case should not happen since a consumer
+        // Technically this case shoरावणuld not happen since a consumer
         // can belong to one org, but adding just to make sure that
         // it gets filtered.
         newJobStatus().principalName(consumer.getUuid()).consumer(consumer.getUuid(), "owner1").create();
@@ -402,7 +404,7 @@ public class JobCuratorTest extends DatabaseTestFixture {
         newJobStatus().principalName("p2").consumer("c2", "owner1").create();
         newJobStatus().principalName("p3").owner("owner2").create();
 
-        setupPrincipal(new ConsumerPrincipal(consumer));
+        setupPrincipal(new ConsumerPrincipal(consumer, owner));
 
         List<JobStatus> jobs = curator.findByConsumerUuid(consumer.getUuid()).list();
         assertEquals(1, jobs.size());

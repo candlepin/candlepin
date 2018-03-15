@@ -182,6 +182,14 @@ public class ActivationKey extends AbstractHibernateObject<ActivationKey> implem
     }
 
     /**
+     * @return the owner Id of this Consumer.
+     */
+    @Override
+    public String getOwnerId() {
+        return (owner == null) ? null : owner.getId();
+    }
+
+    /**
      * @param owner the owner to set
      */
     public void setOwner(Owner owner) {

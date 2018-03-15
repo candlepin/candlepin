@@ -114,11 +114,11 @@ public class ManifestManager {
      *                      a new export of the target consumer.
      * @return the details of the async export job.
      */
-    public JobDetail generateManifestAsync(String consumerUuid, String cdnLabel, String webUrl,
-        String apiUrl, Map<String, String> extensionData) {
+    public JobDetail generateManifestAsync(String consumerUuid, String ownerKey, String cdnLabel,
+        String webUrl, String apiUrl, Map<String, String> extensionData) {
         log.info("Scheduling Async Export for consumer {}", consumerUuid);
         Consumer consumer = validateConsumerForExport(consumerUuid, cdnLabel);
-        return ExportJob.scheduleExport(consumer, cdnLabel, webUrl, apiUrl, extensionData);
+        return ExportJob.scheduleExport(consumer, ownerKey, cdnLabel, webUrl, apiUrl, extensionData);
     }
 
     /**
