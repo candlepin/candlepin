@@ -52,6 +52,28 @@ public class ConsumerDTO extends CandlepinDTO<ConsumerDTO> {
         }
     }
 
+
+    /* TODO: Some fields that used to be exported, are no longer, so they are missing from this DTO.
+     * A decision needs to be made if any of them will need to be included.
+     *
+     * Fields we don't export any more (because they are not accessed during the import):
+     * - consumer.owner.parentOwner
+     * - consumer.owner.key
+     * - consumer.owner.displayName
+     * - consumer.owner.contentPrefix
+     * - consumer.owner.lastRefreshed
+     * - consumer.owner.defaultServiceLevel
+     * - consumer.owner.upstreamConsumer
+     * - consumer.owner.logLevel
+     * - consumer.owner.contentAccessMode
+     * - consumer.owner.contentAccessModeList
+     * - consumer.owner.href
+     * - consumer.owner.created
+     * - consumer.owner.updated
+     * - consumer.owner.autobindDisabled
+     *
+     */
+
     protected String uuid;
     protected String name;
     protected String owner;
