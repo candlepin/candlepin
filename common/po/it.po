@@ -4,15 +4,15 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-01-15 10:55-0500\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
 "PO-Revision-Date: 2017-11-10 09:00+0000\n"
 "Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
 "Language-Team: Italian\n"
 "Language: it\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
-"X-Generator: Zanata 4.3.2\n"
+"X-Generator: Zanata 4.4.3\n"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -81,8 +81,7 @@ msgstr "deve essere superiore o uguale a {0}"
 
 #: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:50
 msgid ""
-"numeric value out of bounds (<{integer} digits>.<{fraction} digits> "
-"expected)"
+"numeric value out of bounds (<{integer} digits>.<{fraction} digits> expected)"
 msgstr ""
 "valore numerico fuori dai limiti (<{integer} digits>.<{fraction} digits> "
 "atteso)"
@@ -411,7 +410,6 @@ msgstr ""
 #: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:1853
 msgid ""
 "Unmapped guest entitlement expired without establishing a host/guest mapping."
-""
 msgstr ""
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:207
@@ -655,7 +653,6 @@ msgstr "il secondo parametro dovrebbe essere il numero relativo alla priorità"
 #, java-format
 msgid ""
 "This unit has already had the subscription matching pool ID ''{1}'' attached."
-""
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:159
@@ -739,8 +736,7 @@ msgstr ""
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:189
 #, java-format
 msgid ""
-"Pool is restricted to virtual guests in their first day of existence: "
-"''{1}''"
+"Pool is restricted to virtual guests in their first day of existence: ''{1}''"
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:191
@@ -883,8 +879,7 @@ msgid "Problem creating unit {0}"
 msgstr "Problema nella creazione dell''unità {0}"
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:591
-msgid ""
-"A consumer cannot be converted to a share type once it has been created"
+msgid "A consumer cannot be converted to a share type once it has been created"
 msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:596
@@ -1192,8 +1187,7 @@ msgstr "Oggetto con ID ''{0}'' non trovato."
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:137
 #, java-format
 msgid "Unit ''{0}'' has no subscription for product ''{1}''."
-msgstr ""
-"L''Unità ''{0}'' non ha alcuna sottoscrizione per il prodotto ''{1}''."
+msgstr "L''Unità ''{0}'' non ha alcuna sottoscrizione per il prodotto ''{1}''."
 
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:210
 msgid "Quantity value must be greater than 0."
@@ -1220,8 +1214,7 @@ msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:353
 msgid "The entitlement cannot be utilized by the destination unit: "
-msgstr ""
-"L''entitlement non può essere utilizzato dall''unità di destinazione: "
+msgstr "L''entitlement non può essere utilizzato dall''unità di destinazione: "
 
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:374
 msgid ""
@@ -1314,7 +1307,6 @@ msgid ""
 "You must specify exactly one of owner key, unit UUID, or principal name."
 msgstr ""
 "Specifica una chiave del proprietario, UUID dell''unità o un nome principale."
-""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author fvalen
@@ -1552,8 +1544,7 @@ msgstr "Impossibile trovare il prodotto con UUID ''{0}''."
 #: server/src/main/java/org/candlepin/resource/ProductResource.java:215
 #: server/src/main/java/org/candlepin/resource/ProductResource.java:233
 #: server/src/main/java/org/candlepin/resource/ProductResource.java:250
-msgid ""
-"Organization-agnostic product write operations are no longer supported."
+msgid "Organization-agnostic product write operations are no longer supported."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/ProductResource.java:265
@@ -1654,7 +1645,6 @@ msgstr ""
 #: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:104
 msgid ""
 "None of the subscriptions on the activation key were available for attaching."
-""
 msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:132

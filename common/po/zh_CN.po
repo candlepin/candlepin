@@ -1,19 +1,20 @@
 # ljanda <ljanda@redhat.com>, 2017. #zanata
 # tfu <tfu@redhat.com>, 2017. #zanata
+# khowell <khowell@redhat.com>, 2018. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-01-15 10:55-0500\n"
+"PO-Revision-Date: 2018-03-19 05:44+0000\n"
+"Last-Translator: khowell <khowell@redhat.com>\n"
+"Language-Team: Chinese (Simplified, China)\n"
+"Language: zh_Hans\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2017-11-15 07:34+0000\n"
-"Last-Translator: tfu <tfu@redhat.com>\n"
-"Language-Team: Chinese (Simplified, China)\n"
-"Language: zh_Hans\n"
 "Plural-Forms: nplurals=1; plural=0\n"
-"X-Generator: Zanata 4.3.2\n"
+"X-Generator: Zanata 4.4.3\n"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -80,8 +81,7 @@ msgstr "必须大于或等于 {0}"
 
 #: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:50
 msgid ""
-"numeric value out of bounds (<{integer} digits>.<{fraction} digits> "
-"expected)"
+"numeric value out of bounds (<{integer} digits>.<{fraction} digits> expected)"
 msgstr "数字值超出范围（应为 <{integer} digits>.<{fraction} digits>）"
 
 #: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:53
@@ -408,12 +408,11 @@ msgstr "订阅池 {0} 不存在。"
 #: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:1853
 msgid ""
 "Unmapped guest entitlement expired without establishing a host/guest mapping."
-""
 msgstr "未映射的虚拟机权限尚未建立主机/虚拟机映射就已过期。"
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:207
 msgid "Auto-attach is disabled for owner '{0}'."
-msgstr "所有者 '{0}' 的自动附加功能已被禁用。"
+msgstr "所有者 ''{0}'' 的自动附加功能已被禁用。"
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:257
 #: server/src/main/java/org/candlepin/controller/Entitler.java:497
@@ -644,7 +643,6 @@ msgstr "第二个参数应该是优先权数。"
 #, java-format
 msgid ""
 "This unit has already had the subscription matching pool ID ''{1}'' attached."
-""
 msgstr "这个单元已有匹配池 ID ''{1}'' 的订阅被附加。"
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:159
@@ -727,8 +725,7 @@ msgstr "池限制为未映射的虚拟客户机：''{1}''"
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:189
 #, java-format
 msgid ""
-"Pool is restricted to virtual guests in their first day of existence: "
-"''{1}''"
+"Pool is restricted to virtual guests in their first day of existence: ''{1}''"
 msgstr "池限制为第一天存在的虚拟客户机：''{1}''"
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:191
@@ -871,8 +868,7 @@ msgid "Problem creating unit {0}"
 msgstr "创建单元的问题 {0}"
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:591
-msgid ""
-"A consumer cannot be converted to a share type once it has been created"
+msgid "A consumer cannot be converted to a share type once it has been created"
 msgstr "当一个消费者已被创建后，将无法转换为一个共享类型"
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:596
@@ -1360,7 +1356,9 @@ msgstr "无法创建所有者：{0}"
 msgid ""
 "owner ''{0}'' cannot be deleted while there is a share consumer. You may use "
 "'force' to bypass."
-msgstr "当有共享消费者时，所有者 ''{0}'' 不能被删除。您需要使用 'force' 来跳过这个限制。"
+msgstr ""
+"当有共享消费者时，所有者 ''{0}'' 不能被删除。您需要使用 ''force'' 来跳过这个"
+"限制。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author xhuang
@@ -1517,8 +1515,7 @@ msgstr "无法找到 UUID 为 ''{0}'' 的产品"
 #: server/src/main/java/org/candlepin/resource/ProductResource.java:215
 #: server/src/main/java/org/candlepin/resource/ProductResource.java:233
 #: server/src/main/java/org/candlepin/resource/ProductResource.java:250
-msgid ""
-"Organization-agnostic product write operations are no longer supported."
+msgid "Organization-agnostic product write operations are no longer supported."
 msgstr "与机构无关的产品写操作不再被支持。"
 
 #: server/src/main/java/org/candlepin/resource/ProductResource.java:265
@@ -1617,7 +1614,6 @@ msgstr "{0}{1}"
 #: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:104
 msgid ""
 "None of the subscriptions on the activation key were available for attaching."
-""
 msgstr "激活码中没有可用的订阅用来进行附加。"
 
 #: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:132
@@ -1676,8 +1672,8 @@ msgid ""
 "to address this problem. See knowledge database https://access.redhat.com/"
 "knowledge/node/129003 for more information."
 msgstr ""
-"证书 {0} 的内容组过多。较新的客户端可解决这个问题。详情请查看知识库 https://access.redhat.com/knowledge/"
-"node/129003。"
+"证书 {0} 的内容组过多。较新的客户端可解决这个问题。详情请查看知识库 https://"
+"access.redhat.com/knowledge/node/129003。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author xhuang
