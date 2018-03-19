@@ -14,10 +14,12 @@
  */
 package org.candlepin.liquibase;
 
-import liquibase.database.jvm.JdbcConnection;
+import liquibase.database.Database;
+import liquibase.exception.DatabaseException;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -26,28 +28,18 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 /**
- * FixDuplicatePools class to fix duplicate pool data.
+ * FixDuplicatePoolsTask class to fix duplicate pool data.
  *
  * This class is disconnected from its liquibase wrapper
  * so that it may be used more easily as a one-off script
  * in scenarios that do not use liquibase.
  */
-public class FixDuplicatePools {
-
-    private JdbcConnection conn;
-    private final CustomTaskLogger log;
-
-    public FixDuplicatePools(JdbcConnection conn) {
-        this.conn = conn;
-        this.log = new SystemOutLogger();
+public class FixDuplicatePoolsTask extends LiquibaseCustomTask {
+    public FixDuplicatePoolsTask(Database database, CustomTaskLogger logger) {
+        super(database, logger);
     }
 
-    public FixDuplicatePools(JdbcConnection conn, CustomTaskLogger log) {
-        this.conn = conn;
-        this.log = log;
-    }
-
-    /*
+    /**
      * When we delete pools, we need to reassign entitlements and mark them dirty.
      * Otherwise they will contain a bad pool id.
      *
@@ -58,11 +50,12 @@ public class FixDuplicatePools {
      * hibernate annotations don't apply
      *
      */
-    public void execute() throws Exception {
-        log.info("--- Running update script ---");
+    @Override
+    public void execute() throws DatabaseException, SQLException {
+        logger.info("--- Running update script ---");
         // Get a map of source subscription to pool ids
         Map<SubPair, List<String>> subPoolsMap = getSubPoolMap();
-        log.info("Found " + subPoolsMap.keySet().size() + " subscriptions " +
+        logger.info("Found " + subPoolsMap.keySet().size() + " subscriptions " +
             "with duplicate pools.");
         // Nothing to do if there aren't any duplicates
         if (!subPoolsMap.isEmpty()) {
@@ -77,16 +70,16 @@ public class FixDuplicatePools {
                 for (int i = 1, len = ids.size(); i < len; i++) {
                     poolsToRemove.add(ids.get(i));
                 }
-                log.info("Removing " + poolsToRemove.size() +
+                logger.info("Removing " + poolsToRemove.size() +
                     " pools for subscription " + sub);
                 updateEntsForIds(poolsToRemove, poolToKeep);
                 removePoolsWithIds(poolsToRemove);
             }
         }
-        log.info("--- Finished update script ---");
+        logger.info("--- Finished update script ---");
     }
 
-    private int removePoolsWithIds(List<String> dupeIds) throws Exception {
+    private int removePoolsWithIds(List<String> dupeIds) throws SQLException, DatabaseException {
         String sql = "DELETE FROM cp_pool " +
             "WHERE id IN (";
         for (int i = 0, len = dupeIds.size(); i < len; i++) {
@@ -96,14 +89,14 @@ public class FixDuplicatePools {
             }
         }
         sql += ")";
-        PreparedStatement stmt = conn.prepareStatement(sql);
+        PreparedStatement stmt = connection.prepareStatement(sql);
         for (int i = 0, max = dupeIds.size(); i < max; i++) {
             stmt.setString(i + 1, dupeIds.get(i));
         }
         return stmt.executeUpdate();
     }
 
-    private int updateEntsForIds(List<String> dupeIds, String goodId) throws Exception {
+    private int updateEntsForIds(List<String> dupeIds, String goodId) throws SQLException, DatabaseException {
         String sql = "UPDATE cp_entitlement " +
             "SET pool_id=?, dirty=? " +
             "WHERE pool_id IN (";
@@ -114,7 +107,7 @@ public class FixDuplicatePools {
             }
         }
         sql += ")";
-        PreparedStatement stmt = conn.prepareStatement(sql);
+        PreparedStatement stmt = connection.prepareStatement(sql);
         stmt.setString(1, goodId);
         // Different databases represent booleans differently.  Even though this
         // is a static value, we need to let the jdbc driver handle it
@@ -128,8 +121,8 @@ public class FixDuplicatePools {
     /*
      * Builds a map of subid-subkey -> [ids, with, duplicates]
      */
-    private Map<SubPair, List<String>> getSubPoolMap() throws Exception {
-        Statement stmt = conn.createStatement();
+    private Map<SubPair, List<String>> getSubPoolMap() throws SQLException, DatabaseException {
+        Statement stmt = connection.createStatement();
         Map<SubPair, List<String>> subPoolsMap = new HashMap<>();
         ResultSet rs = stmt.executeQuery(
             "SELECT cp_pool.id, cp_pool.subscriptionid, " +
@@ -156,10 +149,11 @@ public class FixDuplicatePools {
             }
             else if (!subOwners.get(current).equals(rs.getString(4))) {
                 // Make sure owners are the same
-                log.error("Owners '{}' and '{}' both have pools from subscription: {}",
-                    rs.getString(4), subOwners.get(current), current);
+                logger.error(String.format("Owners '%s' and '%s' both have pools from subscription: %s",
+                    rs.getString(4), subOwners.get(current), current));
 
-                throw new Exception("Pools exist for subscription " + current + " within multiple owners.");
+                throw new DatabaseException("Pools exist for subscription " + current + " within multiple " +
+                    "owners.");
             }
 
             subPoolsMap.get(current).add(rs.getString(1));
@@ -170,7 +164,7 @@ public class FixDuplicatePools {
     }
 
     /**
-     * Conainer for subscriptionid/subscriptionsubkey values
+     * Container for subscriptionid/subscriptionsubkey values
      *
      * I suppose concatenating the strings in our sql query would do
      * this just as well...
