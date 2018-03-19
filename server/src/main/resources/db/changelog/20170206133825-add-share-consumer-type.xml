@@ -4,9 +4,15 @@
         xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
-        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
     <changeSet id="20170206133825-1" author="awood">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(id) FROM cp_consumer_type WHERE label = 'share'
+            </sqlCheck>
+        </preConditions>
+
         <comment>Add share consumer type</comment>
         <insert tableName="cp_consumer_type">
             <column name="id" value="1008"/>
