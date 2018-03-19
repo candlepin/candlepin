@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.1.14
+Version: 2.1.15
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,10 @@ fi
 
 #raw
 %changelog
+* Mon Mar 19 2018 Kevin Howell <khowell@redhat.com> 2.1.15-1
+- 1558065: Added precondition check to add-share-consumer task
+  (crog@redhat.com)
+
 * Wed Jan 31 2018 Kevin Howell <khowell@redhat.com> 2.1.14-1
 - 1540672: Fix usage of incorrect Liquibase schema version (awood@redhat.com)
 
