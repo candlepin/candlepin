@@ -4,16 +4,16 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-01-15 10:55-0500\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
 "PO-Revision-Date: 2017-11-10 08:59+0000\n"
 "Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
 "Language-Team: Russian\n"
 "Language: ru\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
-"n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)\n"
-"X-Generator: Zanata 4.3.2\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)\n"
+"X-Generator: Zanata 4.4.3\n"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -84,8 +84,7 @@ msgstr "должно быть больше или равно {0}"
 
 #: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:50
 msgid ""
-"numeric value out of bounds (<{integer} digits>.<{fraction} digits> "
-"expected)"
+"numeric value out of bounds (<{integer} digits>.<{fraction} digits> expected)"
 msgstr ""
 "число выходит за пределы допустимого диапазона (ожидается <{integer} digits>."
 "<{fraction} digits>)"
@@ -414,7 +413,6 @@ msgstr ""
 #: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:1853
 msgid ""
 "Unmapped guest entitlement expired without establishing a host/guest mapping."
-""
 msgstr ""
 "Срок действия гостевого полномочия подошел к концу (соответствия между "
 "гостем и хостом не создавались)."
@@ -665,7 +663,6 @@ msgstr "второй параметр должен содержать приор
 #, java-format
 msgid ""
 "This unit has already had the subscription matching pool ID ''{1}'' attached."
-""
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:159
@@ -748,8 +745,7 @@ msgstr ""
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:189
 #, java-format
 msgid ""
-"Pool is restricted to virtual guests in their first day of existence: "
-"''{1}''"
+"Pool is restricted to virtual guests in their first day of existence: ''{1}''"
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:191
@@ -892,8 +888,7 @@ msgid "Problem creating unit {0}"
 msgstr "Не удалось создать {0}"
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:591
-msgid ""
-"A consumer cannot be converted to a share type once it has been created"
+msgid "A consumer cannot be converted to a share type once it has been created"
 msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:596
@@ -1223,8 +1218,7 @@ msgid ""
 "The quantity specified must be greater than zero and less than or equal to "
 "the total for this entitlement"
 msgstr ""
-"Число должно быть больше нуля, но меньше максимального значения для "
-"полномочи"
+"Число должно быть больше нуля, но меньше максимального значения для полномочи"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ypoyarko
@@ -1237,8 +1231,7 @@ msgstr "Окружение не существует: {0}"
 
 #: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:181
 msgid "No environment specified, or environment lacks owner information"
-msgstr ""
-"Окружение не задано, или в окружении отсутствуют сведения о владельце."
+msgstr "Окружение не задано, или в окружении отсутствуют сведения о владельце."
 
 #: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:187
 msgid "No content ID specified"
@@ -1403,8 +1396,7 @@ msgstr "Необходимо указать имя ключа активации
 msgid ""
 "The activation key name ''{0}'' must be alphanumeric or include the "
 "characters ''-'' or ''_''"
-msgstr ""
-"Имя ключа «{0}» может содержать буквы, цифры, а также знаки «-» и «_»."
+msgstr "Имя ключа «{0}» может содержать буквы, цифры, а также знаки «-» и «_»."
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:560
 #, java-format
@@ -1457,8 +1449,7 @@ msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:1214
 msgid "Cannot update bonus pools, as they are auto generated"
-msgstr ""
-"Не удалось обновить бонус-пулы, так как они генерируются автоматически"
+msgstr "Не удалось обновить бонус-пулы, так как они генерируются автоматически"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1550,8 +1541,7 @@ msgstr "Продукт с UUID «{0}» не найден."
 #: server/src/main/java/org/candlepin/resource/ProductResource.java:215
 #: server/src/main/java/org/candlepin/resource/ProductResource.java:233
 #: server/src/main/java/org/candlepin/resource/ProductResource.java:250
-msgid ""
-"Organization-agnostic product write operations are no longer supported."
+msgid "Organization-agnostic product write operations are no longer supported."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/ProductResource.java:265
@@ -1650,14 +1640,12 @@ msgstr "{0}{1}"
 #: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:104
 msgid ""
 "None of the subscriptions on the activation key were available for attaching."
-""
 msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:132
 #, java-format
 msgid "Cannot bind to pool ''{0}'' in activation key ''{1}'': {2}"
-msgstr ""
-"Не удалось установить связь с пулом «{0}» в ключе активации «{1}»: {2}"
+msgstr "Не удалось установить связь с пулом «{0}» в ключе активации «{1}»: {2}"
 
 #: server/src/main/java/org/candlepin/resource/util/ConsumerTypeValidator.java:59
 #, java-format
