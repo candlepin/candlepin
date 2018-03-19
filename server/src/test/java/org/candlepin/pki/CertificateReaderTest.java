@@ -40,8 +40,8 @@ public class CertificateReaderTest {
                     put(ConfigProperties.CA_CERT_UPSTREAM,
                         "target/test/resources/certs/upstream");
                     put(ConfigProperties.CA_KEY,
-                        "target/test/resources/keys/DEStestkey.pem");
-                    put(ConfigProperties.CA_KEY_PASSWORD, "dog8code");
+                        "target/test/resources/keys/pkcs1-des-encrypted.pem");
+                    put(ConfigProperties.CA_KEY_PASSWORD, "password");
                 }
             });
         new CertificateReader(config, new PrivateKeyReader());

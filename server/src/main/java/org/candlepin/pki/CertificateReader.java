@@ -106,9 +106,7 @@ public class CertificateReader {
         try (
             InputStream inStream = new FileInputStream(path);
         ) {
-            X509Certificate cert = (X509Certificate) this.certFactory.generateCertificate(inStream);
-            inStream.close();
-            return cert;
+            return (X509Certificate) this.certFactory.generateCertificate(inStream);
         }
         catch (Exception e) {
             throw new RuntimeException(e);
@@ -122,14 +120,17 @@ public class CertificateReader {
             return result;
         }
 
-        for (File file : dir.listFiles()) {
+        File[] files = dir.listFiles();
+        if (files == null) {
+            throw new RuntimeException("Could not read files in " + path);
+        }
+
+        for (File file : files) {
             try (
                 InputStream inStream = new FileInputStream(file.getAbsolutePath());
             ) {
 
-                X509Certificate cert = (X509Certificate) this.certFactory
-                    .generateCertificate(inStream);
-                inStream.close();
+                X509Certificate cert = (X509Certificate) this.certFactory.generateCertificate(inStream);
                 result.add(cert);
             }
             catch (Exception e) {

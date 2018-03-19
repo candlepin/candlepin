@@ -241,14 +241,13 @@ public class PrivateKeyReader {
             ASN1Sequence seq = ASN1Sequence.getInstance(der);
             Enumeration asn1 = seq.getObjects();
 
-            BigInteger v = ((ASN1Integer) asn1.nextElement()).getValue();
-            if (v.intValue() != 0 && v.intValue() != 1)
+            BigInteger version = ((ASN1Integer) asn1.nextElement()).getValue();
+            if (version.intValue() != 0 && version.intValue() != 1)
             {
                 throw new IllegalArgumentException("wrong version for RSA private key");
             }
 
             // See RFC 8017 A.1.2
-            BigInteger version = v;
             BigInteger modulus = ((ASN1Integer) asn1.nextElement()).getValue();
             BigInteger publicExponent = ((ASN1Integer) asn1.nextElement()).getValue();
             BigInteger privateExponent = ((ASN1Integer) asn1.nextElement()).getValue();
@@ -259,7 +258,20 @@ public class PrivateKeyReader {
             BigInteger coefficient = ((ASN1Integer) asn1.nextElement()).getValue();
 
             if (asn1.hasMoreElements()) {
-                ASN1Sequence otherPrimeInfos = (ASN1Sequence) asn1.nextElement();
+                /* Near as I can tell, multi-prime RSA keys are uncommon.  I can't even figure out how to
+                 * generate them via the OpenSSL CLI.  If we did want to support them, we'd need to do
+                 * something like:
+                 *
+                 * ASN1Sequence otherPrimeInfos = (ASN1Sequence) asn1.nextElement();
+                 * RSAOtherPrimeInfo[] otherPrimes = new RSAOtherPrimeInfo[otherPrimeInfos.size()];
+                 * for (ASN1Encodable e : otherPrimeInfos.toArray()) {
+                 * // Create RSAOtherPrimeInfo object here
+                 *  }
+                 * RSAMultiPrimePrivateCrtKeySpec spec = new RSAMultiPrimePrivateCrtKeySpec(modulus,
+                 *  publicExponent, privateExponent, primeP, primeQ, primeExponentP, primeExponentQ,
+                 *  coefficient, otherPrimeInfos.);
+                 */
+                throw new IOException("RSA multi-prime keys are not supported");
             }
 
             RSAPrivateCrtKeySpec spec = new RSAPrivateCrtKeySpec(modulus, publicExponent, privateExponent,
