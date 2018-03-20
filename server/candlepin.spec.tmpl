@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.3.3
+Version: 2.3.4
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,15 @@ fi
 
 #raw
 %changelog
+* Tue Mar 20 2018 Kevin Howell <khowell@redhat.com> 2.3.4-1
+- Add reasons back to compliance.created events (khowell@redhat.com)
+- Add back manifest fields for EntitlementDTO/ConsumerDTO/CertificateDTO
+  (nmoumoul@redhat.com)
+- 1558060: Added precondition check to add-share-consumer task
+  (crog@redhat.com)
+- 1552777: Add liquibase checksums for 2.1 upgrade (khowell@redhat.com)
+- Implemented ProductDTO for manifest import/export (nmoumoul@redhat.com)
+
 * Thu Mar 15 2018 Kevin Howell <khowell@redhat.com> 2.3.3-1
 - Add SubjectKeyIdentifierWriter extension point back into Candlepin.
   (awood@redhat.com)
