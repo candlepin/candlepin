@@ -15,6 +15,7 @@
 package org.candlepin.audit;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.common.collect.ImmutableMap;
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
 import org.candlepin.common.exceptions.IseException;
@@ -29,6 +30,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Rules;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.dto.Subscription;
+import org.candlepin.policy.js.compliance.ComplianceReason;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 
 import com.fasterxml.jackson.databind.AnnotationIntrospector;
@@ -44,7 +46,9 @@ import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -211,9 +215,18 @@ public class EventFactory {
     }
 
     public Event complianceCreated(Consumer consumer, ComplianceStatus compliance) {
-        Map<String, String> eventData = new HashMap<>();
+        Map<String, Object> eventData = new HashMap<>();
         eventData.put("consumer_uuid", consumer.getUuid());
         eventData.put("status", compliance.getStatus());
+
+        List<Map<String, String>> reasons = new ArrayList<>(compliance.getReasons().size());
+        for (ComplianceReason reason : compliance.getReasons()) {
+            reasons.add(ImmutableMap.of(
+                "productName", reason.getAttributes().get(ComplianceReason.Attributes.MARKETING_NAME),
+                "message", reason.getMessage()
+            ));
+        }
+        eventData.put("reasons", reasons);
         try {
             String eventDataJson = mapper.writeValueAsString(eventData);
             // Instead of an internal db id, compliance.created events now use
