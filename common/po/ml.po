@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-03-15 12:10-0400\n"
+"POT-Creation-Date: 2018-03-20 13:23-0400\n"
 "PO-Revision-Date: 2017-10-18 11:33-0400\n"
 "Last-Translator: John Sefler <jsefler@redhat.com>\n"
 "Language-Team: Malayalam\n"
@@ -1365,10 +1365,12 @@ msgid "Owner lookup failed because id and key were null or empty."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:378
+#: server/src/main/java/org/candlepin/sync/EntitlementImporter.java:626
 msgid "Entitlement id is null or empty."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:383
+#: server/src/main/java/org/candlepin/sync/EntitlementImporter.java:631
 #, java-format
 msgid "Entitlement with id {0} could not be found."
 msgstr ""
@@ -1396,6 +1398,7 @@ msgid "Product id is null or empty."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:528
+#: server/src/main/java/org/candlepin/sync/ConsumerImporter.java:210
 #, java-format
 msgid "Unable to find parent owner: {0}"
 msgstr ""
@@ -1761,121 +1764,121 @@ msgstr ""
 msgid "Standalone candlepin does not support redeeming a subscription."
 msgstr "ഒറ്റയ്ക്കുള്ള candlepin സബ്സ്ക്രിപ്ഷന്‍ ലഭ്യമാക്കുന്നതിനു് പിന്തുണയ്ക്കുന്നില്ല."
 
-#: server/src/main/java/org/candlepin/sync/ConsumerImporter.java:66
+#: server/src/main/java/org/candlepin/sync/ConsumerImporter.java:68
 msgid "No ID for upstream subscription management application."
 msgstr "അപ്‌സ്ട്രാം സബ്സ്ക്രിപ്ഷന്‍ മാനേജ്മെന്റ് പ്രയോഗത്തിനുള്ള ഐഡി ലഭ്യമല്ല."
 
-#: server/src/main/java/org/candlepin/sync/ConsumerImporter.java:80
+#: server/src/main/java/org/candlepin/sync/ConsumerImporter.java:82
 msgid ""
 "This subscription management application has already been imported by "
 "another owner."
 msgstr "ഈ സബ്സ്ക്രിപ്ഷന്‍ മാനേജ്മെന്റ് പ്രയോഗം നിലവില്‍ മറ്റൊരു ഉടമസ്ഥന്‍ ഇംപോര്‍ട്ട് ചെയ്തിരിയ്ക്കുന്നു."
 
-#: server/src/main/java/org/candlepin/sync/ConsumerImporter.java:87
+#: server/src/main/java/org/candlepin/sync/ConsumerImporter.java:89
 msgid ""
 "Owner has already imported from another subscription management application."
 msgstr "ഉടമസ്ഥന്‍ നിലവില്‍ മറ്റൊരു സബ്സ്ക്രിപ്ഷന്‍ മാനേജ്മെന്റ് പ്രയോഗം ഇംപോര്‍ട്ട് ചെയ്തിരിയ്ക്കുന്നു."
 
-#: server/src/main/java/org/candlepin/sync/EntitlementImporter.java:361
+#: server/src/main/java/org/candlepin/sync/EntitlementImporter.java:600
 #, java-format
 msgid "Unable to find product with ID: {0}"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:190
+#: server/src/main/java/org/candlepin/sync/Importer.java:193
 msgid "Uploaded manifest file does not exist."
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author anipeter
-#: server/src/main/java/org/candlepin/sync/Importer.java:248
+#: server/src/main/java/org/candlepin/sync/Importer.java:251
 #, java-format
 msgid "{0} file imported successfully."
 msgstr "{0} ഫയല്‍ വിജയകരമായി ഇംപോര്‍ട്ട് ചെയ്തിരിയ്ത്തുന്നു."
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:250
+#: server/src/main/java/org/candlepin/sync/Importer.java:253
 #, java-format
 msgid "{0} file imported forcibly."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:254
+#: server/src/main/java/org/candlepin/sync/Importer.java:257
 msgid "No active subscriptions found in the file."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:258
+#: server/src/main/java/org/candlepin/sync/Importer.java:261
 msgid "One or more inactive subscriptions found in the file."
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: server/src/main/java/org/candlepin/sync/Importer.java:319
+#: server/src/main/java/org/candlepin/sync/Importer.java:322
 msgid "Wrong metadata type"
 msgstr "തെറ്റായ മെറ്റാഡേറ്റാ രീതി"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: server/src/main/java/org/candlepin/sync/Importer.java:328
+#: server/src/main/java/org/candlepin/sync/Importer.java:331
 msgid "Invalid owner"
 msgstr "തെറ്റായ ഉടമസ്ഥന്‍"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: server/src/main/java/org/candlepin/sync/Importer.java:341
+#: server/src/main/java/org/candlepin/sync/Importer.java:344
 msgid "Import is older than existing data"
 msgstr "നിലവിലുള്ള ഡേറ്റയേക്കാള്‍ പഴയതാണു് ലഭ്യമാക്കിയതു്"
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:360
+#: server/src/main/java/org/candlepin/sync/Importer.java:363
 msgid "Import is the same as existing data"
 msgstr "ഇംപോര്‍ട്ട് ചെയ്തതു് നിലവിലുള്ള ഡേറ്റാ തന്നെയാകുന്നു"
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:382
+#: server/src/main/java/org/candlepin/sync/Importer.java:385
 msgid "The archive does not contain the required signature file"
 msgstr "ആര്‍ക്കൈവില്‍ ആവശ്യമുള്ള സിഗ്നേച്ചര്‍ ഫയല്‍ ലഭ്യമല്ല"
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:399
+#: server/src/main/java/org/candlepin/sync/Importer.java:402
 msgid "Archive failed signature check"
 msgstr "ആര്‍ക്കൈവില്‍ സിഗ്നേച്ചര്‍ പരിശോധന പരാജയപ്പെട്ടു"
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:414
+#: server/src/main/java/org/candlepin/sync/Importer.java:417
 msgid "The consumer_export archive has no contents"
 msgstr "consumer_export ആര്‍ക്കൈവില്‍ വിവരങ്ങള്‍ ലഭ്യമല്ല"
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:435
+#: server/src/main/java/org/candlepin/sync/Importer.java:438
 msgid "The archive does not contain the required consumer_export.zip file"
 msgstr "ആര്‍ക്കൈവില്‍ ആവശ്യമായ consumer_export.zip ഫയല്‍ ലഭ്യമല്ല"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author anipeter
-#: server/src/main/java/org/candlepin/sync/Importer.java:440
-#: server/src/main/java/org/candlepin/sync/Importer.java:444
+#: server/src/main/java/org/candlepin/sync/Importer.java:443
+#: server/src/main/java/org/candlepin/sync/Importer.java:447
 msgid "Failed to import archive"
 msgstr "ആര്‍ക്കൈവ് ഇംപോര്‍ട്ട് ചെയ്യുന്നതില്‍ പരാജയപ്പെട്ടു"
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:448
-#: server/src/main/java/org/candlepin/sync/Importer.java:962
+#: server/src/main/java/org/candlepin/sync/Importer.java:451
+#: server/src/main/java/org/candlepin/sync/Importer.java:964
 msgid "Unable to extract export archive"
 msgstr "എക്സ്പോര്‍ട്ട് ആര്‍ക്കൈവ് എക്സ്ട്രാക്റ്റ് ചെയ്യുവാന്‍ സാധ്യമല്ല"
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:453
+#: server/src/main/java/org/candlepin/sync/Importer.java:456
 msgid "Certificate exception checking archive signature"
 msgstr "സര്‍ട്ടിഫിക്കേറ്റ് എക്സപ്ഷന്‍ ആര്‍ക്കൈവ് ഒപ്പ് പരിശോധിയ്ക്കുന്നു"
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:479
+#: server/src/main/java/org/candlepin/sync/Importer.java:482
 msgid "The archive does not contain the required meta.json file"
 msgstr "ആര്‍ക്കൈവില്‍ ആവശ്യമായ meta.json‍ ഫയല്‍ ലഭ്യമല്ല"
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:484
+#: server/src/main/java/org/candlepin/sync/Importer.java:487
 msgid "The archive does not contain the required consumer_types directory"
 msgstr "ആര്‍ക്കൈവില്‍ ആവശ്യമായ consumer_types ഡയറക്ടറി ലഭ്യമല്ല"
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:489
+#: server/src/main/java/org/candlepin/sync/Importer.java:492
 msgid "The archive does not contain the required consumer.json file"
 msgstr "ആര്‍ക്കൈവില്‍ ആവശ്യമായ consumer.json‍ ഫയല്‍ ലഭ്യമല്ല"
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:495
+#: server/src/main/java/org/candlepin/sync/Importer.java:498
 msgid "The archive does not contain the required entitlements directory"
 msgstr "ആര്‍ക്കൈവില്‍ ആവശ്യമായ എന്റൈറ്റില്‍മെന്റുകളുടെ ഡയറക്ടറി ലഭ്യമല്ല"
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:829
+#: server/src/main/java/org/candlepin/sync/Importer.java:831
 #, java-format
 msgid "The archive {0} is not a properly compressed file or is empty"
 msgstr "ആര്‍ക്കൈവ് {0} ശരിയായി കമ്പ്രസ്സ് ചെയ്ത ഫയലല്ല അല്ലെങ്കില്‍ കാലിയാണു്"

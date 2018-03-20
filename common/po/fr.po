@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-03-15 12:10-0400\n"
+"POT-Creation-Date: 2018-03-20 13:23-0400\n"
 "PO-Revision-Date: 2018-02-27 04:43+0000\n"
 "Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
 "Language-Team: French\n"
@@ -1422,10 +1422,12 @@ msgid "Owner lookup failed because id and key were null or empty."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:378
+#: server/src/main/java/org/candlepin/sync/EntitlementImporter.java:626
 msgid "Entitlement id is null or empty."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:383
+#: server/src/main/java/org/candlepin/sync/EntitlementImporter.java:631
 #, java-format
 msgid "Entitlement with id {0} could not be found."
 msgstr ""
@@ -1453,6 +1455,7 @@ msgid "Product id is null or empty."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:528
+#: server/src/main/java/org/candlepin/sync/ConsumerImporter.java:210
 #, java-format
 msgid "Unable to find parent owner: {0}"
 msgstr ""
@@ -1849,11 +1852,11 @@ msgstr ""
 "L''application autonome Candlepin ne prend pas en charge l''échange "
 "d''abonnements."
 
-#: server/src/main/java/org/candlepin/sync/ConsumerImporter.java:66
+#: server/src/main/java/org/candlepin/sync/ConsumerImporter.java:68
 msgid "No ID for upstream subscription management application."
 msgstr "Pas d''ID pour l''application de gestion des abonnements en amont."
 
-#: server/src/main/java/org/candlepin/sync/ConsumerImporter.java:80
+#: server/src/main/java/org/candlepin/sync/ConsumerImporter.java:82
 msgid ""
 "This subscription management application has already been imported by "
 "another owner."
@@ -1861,113 +1864,113 @@ msgstr ""
 "Cette application de gestion d''abonnements a déjà été importée par un autre "
 "propriétaire."
 
-#: server/src/main/java/org/candlepin/sync/ConsumerImporter.java:87
+#: server/src/main/java/org/candlepin/sync/ConsumerImporter.java:89
 msgid ""
 "Owner has already imported from another subscription management application."
 msgstr ""
 "Le propriétaire a déjà importé depuis une autre application de gestion "
 "d''abonnements."
 
-#: server/src/main/java/org/candlepin/sync/EntitlementImporter.java:361
+#: server/src/main/java/org/candlepin/sync/EntitlementImporter.java:600
 #, java-format
 msgid "Unable to find product with ID: {0}"
 msgstr "Impossible de trouver le produit avec l''ID : {0}"
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:190
+#: server/src/main/java/org/candlepin/sync/Importer.java:193
 msgid "Uploaded manifest file does not exist."
 msgstr "Le fichier de manifeste chargé n''existe pas."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author samfreemanz
-#: server/src/main/java/org/candlepin/sync/Importer.java:248
+#: server/src/main/java/org/candlepin/sync/Importer.java:251
 #, java-format
 msgid "{0} file imported successfully."
 msgstr "Importation du fichier {0} réussie."
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:250
+#: server/src/main/java/org/candlepin/sync/Importer.java:253
 #, java-format
 msgid "{0} file imported forcibly."
 msgstr "Importation forcée du fichier {0}."
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:254
+#: server/src/main/java/org/candlepin/sync/Importer.java:257
 msgid "No active subscriptions found in the file."
 msgstr "Aucun abonnement actif trouvé dans le fichier."
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:258
+#: server/src/main/java/org/candlepin/sync/Importer.java:261
 msgid "One or more inactive subscriptions found in the file."
 msgstr "Un ou plusieurs abonnements inactifs trouvés dans le fichier."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: server/src/main/java/org/candlepin/sync/Importer.java:319
+#: server/src/main/java/org/candlepin/sync/Importer.java:322
 msgid "Wrong metadata type"
 msgstr "Type de métadonnées erroné"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: server/src/main/java/org/candlepin/sync/Importer.java:328
+#: server/src/main/java/org/candlepin/sync/Importer.java:331
 msgid "Invalid owner"
 msgstr "Propriétaire non valide"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: server/src/main/java/org/candlepin/sync/Importer.java:341
+#: server/src/main/java/org/candlepin/sync/Importer.java:344
 msgid "Import is older than existing data"
 msgstr "L''import est moins récent que les données existantes"
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:360
+#: server/src/main/java/org/candlepin/sync/Importer.java:363
 msgid "Import is the same as existing data"
 msgstr "L''import est le même que les données existantes"
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:382
+#: server/src/main/java/org/candlepin/sync/Importer.java:385
 msgid "The archive does not contain the required signature file"
 msgstr "L''archive ne contient pas le fichier signature requis"
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:399
+#: server/src/main/java/org/candlepin/sync/Importer.java:402
 msgid "Archive failed signature check"
 msgstr "La vérification de la signature de l''archive a échoué"
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:414
+#: server/src/main/java/org/candlepin/sync/Importer.java:417
 msgid "The consumer_export archive has no contents"
 msgstr "L''archive consumer_export ne possède pas de contenu"
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:435
+#: server/src/main/java/org/candlepin/sync/Importer.java:438
 msgid "The archive does not contain the required consumer_export.zip file"
 msgstr "L''archive ne contient pas le fichier consumer_export.zip requis"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author samfreemanz
-#: server/src/main/java/org/candlepin/sync/Importer.java:440
-#: server/src/main/java/org/candlepin/sync/Importer.java:444
+#: server/src/main/java/org/candlepin/sync/Importer.java:443
+#: server/src/main/java/org/candlepin/sync/Importer.java:447
 msgid "Failed to import archive"
 msgstr "Échec de l''import de l''archive"
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:448
-#: server/src/main/java/org/candlepin/sync/Importer.java:962
+#: server/src/main/java/org/candlepin/sync/Importer.java:451
+#: server/src/main/java/org/candlepin/sync/Importer.java:964
 msgid "Unable to extract export archive"
 msgstr "Impossible d''extraire l''archive d''export"
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:453
+#: server/src/main/java/org/candlepin/sync/Importer.java:456
 msgid "Certificate exception checking archive signature"
 msgstr "Une exception du certificat vérifie la signature de l''archive"
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:479
+#: server/src/main/java/org/candlepin/sync/Importer.java:482
 msgid "The archive does not contain the required meta.json file"
 msgstr "L''archive ne contient pas le fichier meta.json requis"
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:484
+#: server/src/main/java/org/candlepin/sync/Importer.java:487
 msgid "The archive does not contain the required consumer_types directory"
 msgstr "L''archive ne contient pas le répertoire consumer_types requis"
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:489
+#: server/src/main/java/org/candlepin/sync/Importer.java:492
 msgid "The archive does not contain the required consumer.json file"
 msgstr "L''archive ne contient pas le fichier consumer.json requis"
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:495
+#: server/src/main/java/org/candlepin/sync/Importer.java:498
 msgid "The archive does not contain the required entitlements directory"
 msgstr "L''archive ne contient pas le répertoire des droits d''accès requis"
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:829
+#: server/src/main/java/org/candlepin/sync/Importer.java:831
 #, java-format
 msgid "The archive {0} is not a properly compressed file or is empty"
 msgstr ""
