@@ -74,7 +74,7 @@ public class OwnerAccessControlTest extends DatabaseTestFixture {
     @Test(expected = ForbiddenException.class)
     public void consumerCannotCreateAnOwner() {
         Consumer consumer = createConsumer(owner);
-        setupPrincipal(new ConsumerPrincipal(consumer));
+        setupPrincipal(new ConsumerPrincipal(consumer, owner));
         securityInterceptor.enable();
 
         OwnerDTO dto = new OwnerDTO();

@@ -467,7 +467,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Test(expected = ForbiddenException.class)
     public void testConsumerRoleCannotGetOwner() {
         Consumer c = createConsumer(owner);
-        setupPrincipal(new ConsumerPrincipal(c));
+        setupPrincipal(new ConsumerPrincipal(c, owner));
 
         securityInterceptor.enable();
 
@@ -477,7 +477,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Test
     public void testConsumerCanListPools() {
         Consumer c = createConsumer(owner);
-        Principal principal = setupPrincipal(new ConsumerPrincipal(c));
+        Principal principal = setupPrincipal(new ConsumerPrincipal(c, owner));
 
         securityInterceptor.enable();
 
@@ -492,7 +492,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         c.setFact("virt.is_guest", "true");
         c.setFact("virt.uuid", "system_uuid");
         consumerCurator.create(c);
-        Principal principal = setupPrincipal(new ConsumerPrincipal(c));
+        Principal principal = setupPrincipal(new ConsumerPrincipal(c, owner));
 
         securityInterceptor.enable();
 
@@ -697,7 +697,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Test(expected = ForbiddenException.class)
     public void testConsumerRoleCannotAccessOwnerAtomFeed() {
         Consumer c = createConsumer(owner);
-        setupPrincipal(new ConsumerPrincipal(c));
+        setupPrincipal(new ConsumerPrincipal(c, owner));
 
         securityInterceptor.enable();
 
@@ -707,7 +707,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Test(expected = ForbiddenException.class)
     public void consumerCannotListAllConsumersInOwner() {
         Consumer c = createConsumer(owner);
-        setupPrincipal(new ConsumerPrincipal(c));
+        setupPrincipal(new ConsumerPrincipal(c, owner));
 
         securityInterceptor.enable();
 
@@ -819,7 +819,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Test(expected = ForbiddenException.class)
     public void consumerCannotCountAllConsumersInOwner() {
         Consumer c = createConsumer(owner);
-        setupPrincipal(new ConsumerPrincipal(c));
+        setupPrincipal(new ConsumerPrincipal(c, owner));
         securityInterceptor.enable();
 
         ownerResource.countConsumers(owner.getKey(), typeLabels,
@@ -859,7 +859,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         consumerTypeCurator.create(c.getType());
         consumerCurator.create(c);
 
-        Principal principal = setupPrincipal(new ConsumerPrincipal(c));
+        Principal principal = setupPrincipal(new ConsumerPrincipal(c, owner));
         securityInterceptor.enable();
 
         List<PoolDTO> pools = ownerResource.listPools(owner.getKey(), c.getUuid(), null,

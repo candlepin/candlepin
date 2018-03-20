@@ -22,6 +22,7 @@ import org.candlepin.auth.permissions.ConsumerPermission;
 import org.candlepin.auth.permissions.ConsumerServiceLevelsPermission;
 import org.candlepin.auth.permissions.OwnerPoolsPermission;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.Owner;
 
 import java.util.Arrays;
 
@@ -31,28 +32,28 @@ import java.util.Arrays;
 public class ConsumerPrincipal extends Principal {
     private Consumer consumer;
 
-    public ConsumerPrincipal(Consumer consumer) {
+    public ConsumerPrincipal(Consumer consumer, Owner owner) {
         this.consumer = consumer;
 
-        addPermission(new ConsumerPermission(consumer));
+        addPermission(new ConsumerPermission(consumer, owner));
 
         // Allow consumers to attach entitlements:
-        addPermission(new AttachPermission(consumer.getOwner()));
+        addPermission(new AttachPermission(owner));
 
         // Allow consumers to view and manage their entitlements:
-        addPermission(new ConsumerEntitlementPermission(consumer));
+        addPermission(new ConsumerEntitlementPermission(consumer, owner));
 
         // Allow consumers to list their owner's pools and subscriptions:
-        addPermission(new OwnerPoolsPermission(consumer.getOwner()));
+        addPermission(new OwnerPoolsPermission(owner));
 
         // Allow consumers to view their owner's service levels:
-        addPermission(new ConsumerServiceLevelsPermission(consumer));
+        addPermission(new ConsumerServiceLevelsPermission(consumer, owner));
 
         // Allow consumers to run virt-who hypervisor update
-        addPermission(new ConsumerOrgHypervisorPermission(consumer.getOwner()));
+        addPermission(new ConsumerOrgHypervisorPermission(owner));
 
         // Allow consumers to check the status of their own jobs.
-        addPermission(new CheckJobStatusPermission(getData(), Arrays.asList(consumer.getOwner().getKey())));
+        addPermission(new CheckJobStatusPermission(getData(), Arrays.asList(owner.getKey())));
     }
 
     public Consumer getConsumer() {

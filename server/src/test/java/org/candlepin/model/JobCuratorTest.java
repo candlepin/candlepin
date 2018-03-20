@@ -301,7 +301,7 @@ public class JobCuratorTest extends DatabaseTestFixture {
         JobStatus job = newJobStatus().principalName(consumer.getUuid()).owner(owner.getKey()).create();
         newJobStatus().principalName("donald").owner(owner.getKey()).create();
 
-        setupPrincipal(new ConsumerPrincipal(consumer));
+        setupPrincipal(new ConsumerPrincipal(consumer, owner));
 
         assertTrue(this.curator.findByPrincipalName("donald").list().isEmpty());
 
@@ -358,7 +358,7 @@ public class JobCuratorTest extends DatabaseTestFixture {
         newJobStatus().principalName("p2").owner("owner1").create();
         newJobStatus().principalName("p3").owner("owner2").create();
 
-        setupPrincipal(new ConsumerPrincipal(consumer));
+        setupPrincipal(new ConsumerPrincipal(consumer, owner));
 
         assertTrue(this.curator.findByOwnerKey("owner1").list().isEmpty());
         assertTrue(this.curator.findByOwnerKey("owner2").list().isEmpty());
@@ -402,7 +402,7 @@ public class JobCuratorTest extends DatabaseTestFixture {
         newJobStatus().principalName("p2").consumer("c2", "owner1").create();
         newJobStatus().principalName("p3").owner("owner2").create();
 
-        setupPrincipal(new ConsumerPrincipal(consumer));
+        setupPrincipal(new ConsumerPrincipal(consumer, owner));
 
         List<JobStatus> jobs = curator.findByConsumerUuid(consumer.getUuid()).list();
         assertEquals(1, jobs.size());
