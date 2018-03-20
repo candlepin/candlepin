@@ -18,12 +18,20 @@ package org.candlepin.dto.manifest.v1;
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.Branding;
+import org.candlepin.model.CertificateSerial;
+import org.candlepin.model.Consumer;
+import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProvidedProduct;
+import org.candlepin.model.SourceStack;
+import org.candlepin.model.SourceSubscription;
+import org.candlepin.model.SubscriptionsCertificate;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
@@ -38,13 +46,27 @@ public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, Po
 
     protected PoolTranslator translator = new PoolTranslator();
 
+    // Using EntitlementTranslator instead of EntitlementTranslatorTest to avoid StackOverflow issues
+    // caused by bidirectional reference between Pool and Entitlement.
+    private EntitlementTranslator entitlementTranslator = new EntitlementTranslator();
+
+    // TODO: Once manifest ProductDTO/ProductTranslator are introduced, use ProductTranslatorTest
+    // here instead of manually populating & validating the Product field.
+    private ProductTranslatorTest productTranslatorTest = new ProductTranslatorTest();
+    private OwnerTranslatorTest ownerTranslatorTest = new OwnerTranslatorTest();
     private BrandingTranslatorTest brandingTranslatorTest = new BrandingTranslatorTest();
+    private CertificateTranslatorTest certificateTranslatorTest = new CertificateTranslatorTest();
 
     @Override
     protected void initModelTranslator(ModelTranslator modelTranslator) {
+        this.productTranslatorTest.initModelTranslator(modelTranslator);
+        this.ownerTranslatorTest.initModelTranslator(modelTranslator);
         this.brandingTranslatorTest.initModelTranslator(modelTranslator);
+        this.certificateTranslatorTest.initModelTranslator(modelTranslator);
 
         modelTranslator.registerTranslator(this.translator, Pool.class, PoolDTO.class);
+        modelTranslator.registerTranslator(this.entitlementTranslator,
+            Entitlement.class, EntitlementDTO.class);
     }
 
     @Override
@@ -57,26 +79,62 @@ public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, Po
         Pool source = new Pool();
         source.setId("pool-id");
 
+        source.setOwner(this.ownerTranslatorTest.initSourceObject());
+
+        source.setProduct(this.productTranslatorTest.initSourceObject());
+        source.setDerivedProduct(this.productTranslatorTest.initSourceObject());
+
+        Set<Branding> brandingSet = new HashSet<>();
+        brandingSet.add(this.brandingTranslatorTest.initSourceObject());
+        source.setBranding(brandingSet);
+
+        Entitlement entitlement = new Entitlement();
+        entitlement.setId("ent-id");
+        source.setSourceEntitlement(entitlement);
+
+        SubscriptionsCertificate subCert = new SubscriptionsCertificate();
+        subCert.setId("cert-id");
+        subCert.setKey("cert-key");
+        subCert.setCert("cert-cert");
+        subCert.setSerial(new CertificateSerial());
+        source.setCertificate(subCert);
+
+        SourceSubscription sourceSubscription = new SourceSubscription();
+        sourceSubscription.setId("source-sub-id-1");
+        sourceSubscription.setSubscriptionId("source-sub-subscription-id-1");
+        sourceSubscription.setSubscriptionSubKey("source-sub-subscription-sub-key-1");
+        source.setSourceSubscription(sourceSubscription);
+
+        source.setActiveSubscription(true);
+        source.setCreatedByShare(false);
+        source.setHasSharedAncestor(true);
+
+        source.setQuantity(1L);
+        source.setStartDate(new Date());
+        source.setEndDate(new Date());
+
+        Map<String, String> attributes = new HashMap<>();
+        attributes.put(Pool.Attributes.SOURCE_POOL_ID, "true");
+        source.setAttributes(attributes);
+
+        source.setRestrictedToUsername("restricted-to-username-value");
         source.setContractNumber("333");
         source.setAccountNumber("444");
         source.setOrderNumber("555");
+        source.setConsumed(6L);
+        source.setExported(7L);
+        source.setShared(8L);
 
-        Branding branding = new Branding();
-        branding.setId("branding-id-1");
-        branding.setName("branding-name-1");
-        branding.setProductId("branding-prod-id-1");
-        branding.setType("branding-type-1");
-        Set<Branding> brandingSet = new HashSet<>();
-        brandingSet.add(branding);
-        source.setBranding(brandingSet);
+        Map<String, String> calculatedAttributes = new HashMap<>();
+        calculatedAttributes.put("calc-attribute-key-3", "calc-attribute-value-3");
+        calculatedAttributes.put("calc-attribute-key-4", "calc-attribute-value-4");
+        source.setCalculatedAttributes(calculatedAttributes);
 
-        Product product = new Product();
-        product.setId("product-id-2");
-        source.setDerivedProduct(product);
+        source.setUpstreamPoolId("upstream-pool-id-2");
+        source.setUpstreamEntitlementId("upstream-entitlement-id-2");
+        source.setUpstreamConsumerId("upstream-consumer-id-2");
 
-        Product derivedProduct = new Product();
-        derivedProduct.setId("derived-product-id-2");
-        source.setDerivedProduct(derivedProduct);
+        source.setAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true");
 
         ProvidedProduct providedProd = new ProvidedProduct();
         providedProd.setProductId("provided-product-id-1");
@@ -92,8 +150,14 @@ public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, Po
         derivedProvidedProducts.add(derivedProvidedProd);
         source.setDerivedProvidedProductDtos(derivedProvidedProducts);
 
-        source.setEndDate(new Date());
-        source.setStartDate(new Date());
+        Consumer sourceConsumer = new Consumer();
+        sourceConsumer.setUuid("source-consumer-uuid");
+
+        SourceStack sourceStack = new SourceStack();
+        sourceStack.setSourceStackId("source-stack-source-stack-id-1");
+        sourceStack.setId("source-stack-id-1");
+        sourceStack.setSourceConsumer(sourceConsumer);
+        source.setSourceStack(sourceStack);
 
         return source;
     }
@@ -107,15 +171,53 @@ public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, Po
     protected void verifyOutput(Pool source, PoolDTO dest, boolean childrenGenerated) {
         if (source != null) {
             assertEquals(source.getId(), dest.getId());
+            assertEquals(source.getType().toString(), dest.getType());
+            assertEquals(source.getActiveSubscription(), dest.isActiveSubscription());
+            assertEquals(source.isCreatedByShare(), dest.isCreatedByShare());
+            assertEquals(source.hasSharedAncestor(), dest.hasSharedAncestor());
+            assertEquals(source.getQuantity(), dest.getQuantity());
+            assertEquals(source.getStartDate(), dest.getStartDate());
+            assertEquals(source.getEndDate(), dest.getEndDate());
+            assertEquals(source.getAttributes(), dest.getAttributes());
+            assertEquals(source.getRestrictedToUsername(), dest.getRestrictedToUsername());
             assertEquals(source.getContractNumber(), dest.getContractNumber());
             assertEquals(source.getAccountNumber(), dest.getAccountNumber());
             assertEquals(source.getOrderNumber(), dest.getOrderNumber());
+            assertEquals(source.getConsumed(), dest.getConsumed());
+            assertEquals(source.getExported(), dest.getExported());
+            assertEquals(source.getShared(), dest.getShared());
+            assertEquals(source.getCalculatedAttributes(), dest.getCalculatedAttributes());
+            assertEquals(source.getUpstreamPoolId(), dest.getUpstreamPoolId());
+            assertEquals(source.getUpstreamEntitlementId(), dest.getUpstreamEntitlementId());
+            assertEquals(source.getUpstreamConsumerId(), dest.getUpstreamConsumerId());
+            assertEquals(source.getProductName(), dest.getProductName());
             assertEquals(source.getProductId(), dest.getProductId());
+            assertEquals(source.getProductAttributes(), dest.getProductAttributes());
+            assertEquals(source.getStackId(), dest.getStackId());
+            assertEquals(source.isStacked(), dest.isStacked());
+            assertEquals(source.isDevelopmentPool(), dest.isDevelopmentPool());
+            assertEquals(source.getDerivedProductAttributes(), dest.getDerivedProductAttributes());
             assertEquals(source.getDerivedProductId(), dest.getDerivedProductId());
-            assertEquals(source.getStartDate(), dest.getStartDate());
-            assertEquals(source.getEndDate(), dest.getEndDate());
+            assertEquals(source.getDerivedProductName(), dest.getDerivedProductName());
+            assertEquals(source.getSourceStackId(), dest.getSourceStackId());
+            assertEquals(source.getSubscriptionSubKey(), dest.getSubscriptionSubKey());
+            assertEquals(source.getSubscriptionId(), dest.getSubscriptionId());
 
             if (childrenGenerated) {
+                this.ownerTranslatorTest
+                    .verifyOutput(source.getOwner(), dest.getOwner(), true);
+
+                this.certificateTranslatorTest
+                    .verifyOutput(source.getCertificate(), dest.getCertificate(), true);
+
+                Entitlement sourceSourceEntitlement = source.getSourceEntitlement();
+                EntitlementDTO destSourceEntitlement = dest.getSourceEntitlement();
+                if (sourceSourceEntitlement != null) {
+                    assertEquals(sourceSourceEntitlement.getId(), destSourceEntitlement.getId());
+                }
+                else {
+                    assertNull(destSourceEntitlement);
+                }
 
                 for (Branding brandingSource : source.getBranding()) {
                     for (BrandingDTO brandingDTO : dest.getBranding()) {
@@ -138,9 +240,12 @@ public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, Po
                 verifyProductsOutput(sourceDerivedProducts, derivedProductsDTO);
             }
             else {
+                assertNull(dest.getOwner());
+                assertNull(dest.getSourceEntitlement());
                 assertNull(dest.getBranding());
                 assertNull(dest.getProvidedProducts());
                 assertNull(dest.getDerivedProvidedProducts());
+                assertNull(dest.getCertificate());
             }
         }
         else {

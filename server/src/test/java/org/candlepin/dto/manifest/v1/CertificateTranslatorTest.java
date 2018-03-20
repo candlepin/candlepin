@@ -26,6 +26,7 @@ import junitparams.JUnitParamsRunner;
 
 import org.junit.runner.RunWith;
 
+import java.util.Date;
 
 
 /**
@@ -60,6 +61,8 @@ public class CertificateTranslatorTest extends
         cert.setId("123");
         cert.setKey("cert_key");
         cert.setCert("cert_cert");
+        cert.setCreated(new Date());
+        cert.setUpdated(new Date());
         cert.setSerial(this.certificateTranslatorTest.initSourceObject());
 
         return cert;
@@ -77,6 +80,8 @@ public class CertificateTranslatorTest extends
             assertEquals(source.getId(), dest.getId());
             assertEquals(source.getKey(), dest.getKey());
             assertEquals(source.getCert(), dest.getCert());
+            assertEquals(source.getUpdated(), dest.getUpdated());
+            assertEquals(source.getCreated(), dest.getCreated());
 
             if (childrenGenerated) {
                 this.certificateTranslatorTest.verifyOutput(source.getSerial(), dest.getSerial(), true);

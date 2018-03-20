@@ -15,15 +15,11 @@
 package org.candlepin.dto.manifest.v1;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.candlepin.dto.CandlepinDTO;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
-import org.candlepin.jackson.SingleValueWrapDeserializer;
-import org.candlepin.jackson.SingleValueWrapSerializer;
 
 /**
  * A DTO representation of the Consumer entity as used by the manifest import/export API.
@@ -32,51 +28,9 @@ import org.candlepin.jackson.SingleValueWrapSerializer;
 public class ConsumerDTO extends CandlepinDTO<ConsumerDTO> {
     public static final long serialVersionUID = 1L;
 
-    /**
-     * Serialization utility class for wrapping the 'id' field in an 'owner' JSON object,
-     * since only the id of the nested owner object is needed by the manifest import/export framework.
-     */
-    private static class OwnerIdWrapSerializer extends SingleValueWrapSerializer {
-        public OwnerIdWrapSerializer() {
-            super("id");
-        }
-    }
-
-    /**
-     * Deserialization utility class for unwrapping the 'id' field from an 'owner' JSON object,
-     * since only the id of the nested owner object is needed by the manifest import/export framework.
-     */
-    private static class OwnerIdWrapDeserializer extends SingleValueWrapDeserializer {
-        public OwnerIdWrapDeserializer() {
-            super("id");
-        }
-    }
-
-
-    /* TODO: Some fields that used to be exported, are no longer, so they are missing from this DTO.
-     * A decision needs to be made if any of them will need to be included.
-     *
-     * Fields we don't export any more (because they are not accessed during the import):
-     * - consumer.owner.parentOwner
-     * - consumer.owner.key
-     * - consumer.owner.displayName
-     * - consumer.owner.contentPrefix
-     * - consumer.owner.lastRefreshed
-     * - consumer.owner.defaultServiceLevel
-     * - consumer.owner.upstreamConsumer
-     * - consumer.owner.logLevel
-     * - consumer.owner.contentAccessMode
-     * - consumer.owner.contentAccessModeList
-     * - consumer.owner.href
-     * - consumer.owner.created
-     * - consumer.owner.updated
-     * - consumer.owner.autobindDisabled
-     *
-     */
-
     protected String uuid;
     protected String name;
-    protected String owner;
+    protected OwnerDTO owner;
     protected String contentAccessMode;
     protected ConsumerTypeDTO type;
     protected String urlWeb;
@@ -147,8 +101,7 @@ public class ConsumerDTO extends CandlepinDTO<ConsumerDTO> {
      *
      * @return the owner of the consumer.
      */
-    @JsonSerialize(using = OwnerIdWrapSerializer.class)
-    public String getOwner() {
+    public OwnerDTO getOwner() {
         return this.owner;
     }
 
@@ -159,8 +112,7 @@ public class ConsumerDTO extends CandlepinDTO<ConsumerDTO> {
      *
      * @return a reference to this DTO object.
      */
-    @JsonDeserialize(using = OwnerIdWrapDeserializer.class)
-    public ConsumerDTO setOwner(String owner) {
+    public ConsumerDTO setOwner(OwnerDTO owner) {
         this.owner = owner;
         return this;
     }
@@ -255,7 +207,7 @@ public class ConsumerDTO extends CandlepinDTO<ConsumerDTO> {
     @Override
     public String toString() {
         return String.format("ConsumerDTO [uuid: %s, name: %s, owner id: %s]",
-            this.getUuid(), this.getName(), this.getOwner());
+            this.getUuid(), this.getName(), this.getOwner() != null ? this.getOwner().getId() : null);
     }
 
     /**
@@ -270,10 +222,13 @@ public class ConsumerDTO extends CandlepinDTO<ConsumerDTO> {
         if (obj instanceof ConsumerDTO) {
             ConsumerDTO that = (ConsumerDTO) obj;
 
+            String thisOid = this.getOwner() != null ? this.getOwner().getId() : null;
+            String thatOid = that.getOwner() != null ? that.getOwner().getId() : null;
+
             EqualsBuilder builder = new EqualsBuilder()
                 .append(this.getUuid(), that.getUuid())
                 .append(this.getName(), that.getName())
-                .append(this.getOwner(), that.getOwner())
+                .append(thisOid, thatOid)
                 .append(this.getContentAccessMode(), that.getContentAccessMode())
                 .append(this.getType(), that.getType())
                 .append(this.getUrlWeb(), that.getUrlWeb())
@@ -290,10 +245,12 @@ public class ConsumerDTO extends CandlepinDTO<ConsumerDTO> {
      */
     @Override
     public int hashCode() {
+        String oid = this.getOwner() != null ? this.getOwner().getId() : null;
+
         HashCodeBuilder builder = new HashCodeBuilder(37, 7)
             .append(this.getUuid())
             .append(this.getName())
-            .append(this.getOwner())
+            .append(oid)
             .append(this.getContentAccessMode())
             .append(this.getType())
             .append(this.getUrlWeb())
@@ -308,6 +265,7 @@ public class ConsumerDTO extends CandlepinDTO<ConsumerDTO> {
     @Override
     public ConsumerDTO clone() {
         ConsumerDTO copy = super.clone();
+        copy.owner = owner != null ? owner.clone() : null;
         copy.type = type != null ? type.clone() : null;
 
         return copy;

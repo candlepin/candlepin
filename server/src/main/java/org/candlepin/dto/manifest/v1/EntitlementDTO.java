@@ -16,10 +16,11 @@ package org.candlepin.dto.manifest.v1;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.candlepin.common.jackson.HateoasInclude;
-import org.candlepin.dto.CandlepinDTO;
+import org.candlepin.dto.TimestampedCandlepinDTO;
 import org.candlepin.util.SetView;
 import org.candlepin.util.Util;
 
@@ -27,6 +28,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -38,7 +40,7 @@ import java.util.Set;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @JsonFilter("EntitlementFilter")
-public class EntitlementDTO extends CandlepinDTO<EntitlementDTO> {
+public class EntitlementDTO extends TimestampedCandlepinDTO<EntitlementDTO> {
 
     private static final long serialVersionUID = 1L;
 
@@ -96,9 +98,14 @@ public class EntitlementDTO extends CandlepinDTO<EntitlementDTO> {
      */
 
     private String id;
+    private OwnerDTO owner;
+    private ConsumerDTO consumer;
     private PoolDTO pool;
     private Integer quantity;
+    private Boolean deletedFromPool;
     private Set<CertificateDTO> certificates;
+    private Date startDate;
+    private Date endDate;
 
     /**
      * Initializes a new EntitlementDTO instance with null values.
@@ -141,6 +148,50 @@ public class EntitlementDTO extends CandlepinDTO<EntitlementDTO> {
     }
 
     /**
+     * Returns the owner of this entitlement.
+     *
+     * @return the owner of this entitlement.
+     */
+    @JsonIgnore
+    public OwnerDTO getOwner() {
+        return this.owner;
+    }
+
+    /**
+     * Sets the owner of this entitlement.
+     *
+     * @param owner the owner to set.
+     *
+     * @return a reference to this EntitlementDTO object.
+     */
+    @JsonProperty
+    public EntitlementDTO setOwner(OwnerDTO owner) {
+        this.owner = owner;
+        return this;
+    }
+
+    /**
+     * Returns the consumer of this entitlement.
+     *
+     * @return return the associated Consumer.
+     */
+    public ConsumerDTO getConsumer() {
+        return consumer;
+    }
+
+    /**
+     * Associates the given consumer with this entitlement.
+     *
+     * @param consumer consumer to associate.
+     *
+     * @return a reference to this EntitlementDTO object.
+     */
+    public EntitlementDTO setConsumer(ConsumerDTO consumer) {
+        this.consumer = consumer;
+        return this;
+    }
+
+    /**
      * Returns the pool of this entitlement.
      *
      * @return the pool of this entitlement.
@@ -179,6 +230,29 @@ public class EntitlementDTO extends CandlepinDTO<EntitlementDTO> {
      */
     public EntitlementDTO setQuantity(Integer quantity) {
         this.quantity = quantity;
+        return this;
+    }
+
+    /**
+     * Returns true if this entitlement is deleted from the pool, or false otherwise.
+     *
+     * @return if this entitlement is deleted from the pool or not.
+     */
+    @JsonIgnore
+    public Boolean isDeletedFromPool() {
+        return deletedFromPool;
+    }
+
+    /**
+     * Sets if this entitlement is is deleted from the pool or not.
+     *
+     * @param deletedFromPool if this entitlement is deleted from the pool or not.
+     *
+     * @return a reference to this EntitlementDTO object.
+     */
+    @JsonProperty
+    public EntitlementDTO setDeletedFromPool(Boolean deletedFromPool) {
+        this.deletedFromPool = deletedFromPool;
         return this;
     }
 
@@ -266,14 +340,61 @@ public class EntitlementDTO extends CandlepinDTO<EntitlementDTO> {
     }
 
     /**
+     * Returns the start date of this entitlement.
+     *
+     * @return Returns the startDate from the pool of this entitlement.
+     */
+    @JsonProperty
+    public Date getStartDate() {
+        return startDate;
+    }
+
+    /**
+     * Sets the start date of this entitlement.
+     *
+     * @param startDate the startDate of this entitlement.
+     *
+     * @return a reference to this EntitlementDTO object.
+     */
+    @JsonIgnore
+    public EntitlementDTO setStartDate(Date startDate) {
+        this.startDate = startDate;
+        return this;
+    }
+
+    /**
+     * Returns the end date of this entitlement.
+     *
+     * @return Returns the endDate of this entitlement.
+     */
+    @JsonProperty
+    public Date getEndDate() {
+        return endDate;
+    }
+
+    /**
+     * Sets the end date of this entitlement.
+     *
+     * @param endDate the endDate of this entitlement.
+     *
+     * @return a reference to this EntitlementDTO object.
+     */
+    @JsonIgnore
+    public EntitlementDTO setEndDate(Date endDate) {
+        this.endDate = endDate;
+        return this;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
     public String toString() {
-        return String.format("EntitlementDTO [id: %s, product id: %s, pool id: %s]",
+        return String.format("EntitlementDTO [id: %s, product id: %s, pool id: %s, consumer uuid: %s]",
             this.id,
             this.pool != null ? pool.getProductId() : null,
-            this.pool != null ? pool.getId() : null);
+            this.pool != null ? pool.getId() : null,
+            this.consumer != null ? consumer.getUuid() : null);
     }
 
     /**
@@ -285,16 +406,29 @@ public class EntitlementDTO extends CandlepinDTO<EntitlementDTO> {
             return true;
         }
 
-        if (obj instanceof EntitlementDTO) {
+        if (obj instanceof EntitlementDTO && super.equals(obj)) {
             EntitlementDTO that = (EntitlementDTO) obj;
+
+            // Pull the nested object IDs, as we're not interested in verifying that the objects
+            // themselves are equal; just so long as they point to the same object.
+            String thisOwnerId = this.getOwner() != null ? this.getOwner().getId() : null;
+            String thatOwnerId = that.getOwner() != null ? that.getOwner().getId() : null;
 
             String thisPoolId = this.getPool() != null ? this.getPool().getId() : null;
             String thatPoolId = that.getPool() != null ? that.getPool().getId() : null;
 
+            String thisConsumerId = this.getConsumer() != null ? this.getConsumer().getUuid() : null;
+            String thatConsumerId = that.getConsumer() != null ? that.getConsumer().getUuid() : null;
+
             EqualsBuilder builder = new EqualsBuilder()
                 .append(this.getId(), that.getId())
+                .append(thisOwnerId, thatOwnerId)
                 .append(thisPoolId, thatPoolId)
-                .append(this.getQuantity(), that.getQuantity());
+                .append(thisConsumerId, thatConsumerId)
+                .append(this.getQuantity(), that.getQuantity())
+                .append(this.isDeletedFromPool(), that.isDeletedFromPool())
+                .append(this.getEndDate(), that.getEndDate())
+                .append(this.getStartDate(), that.getStartDate());
 
             // Note that we're using the boolean operator here as a shorthand way to skip checks
             // when the equality check has already failed.
@@ -335,9 +469,15 @@ public class EntitlementDTO extends CandlepinDTO<EntitlementDTO> {
         }
 
         HashCodeBuilder builder = new HashCodeBuilder(37, 7)
+            .append(super.hashCode())
             .append(this.getId())
+            .append(this.getOwner() != null ? this.getOwner().getId() : null)
             .append(this.getPool() != null ? this.getPool().getId() : null)
+            .append(this.getConsumer() != null ? this.getConsumer().getUuid() : null)
             .append(this.getQuantity())
+            .append(this.isDeletedFromPool())
+            .append(this.getEndDate())
+            .append(this.getStartDate())
             .append(certsHashCode);
 
         return builder.toHashCode();
@@ -348,12 +488,21 @@ public class EntitlementDTO extends CandlepinDTO<EntitlementDTO> {
      */
     @Override
     public EntitlementDTO clone() {
-        EntitlementDTO copy = super.clone();
+        EntitlementDTO copy = (EntitlementDTO) super.clone();
+
+        OwnerDTO owner = this.getOwner();
+        copy.owner = owner != null ? owner.clone() : null;
 
         PoolDTO pool = this.getPool();
         copy.pool = pool != null ? pool.clone() : null;
 
+        ConsumerDTO consumer = this.getConsumer();
+        copy.consumer = consumer != null ? consumer.clone() : null;
+
         copy.setCertificates(this.getCertificates());
+
+        copy.endDate = this.endDate != null ? (Date) this.endDate.clone() : null;
+        copy.startDate = this.startDate != null ? (Date) this.startDate.clone() : null;
 
         return copy;
     }
@@ -366,9 +515,14 @@ public class EntitlementDTO extends CandlepinDTO<EntitlementDTO> {
         super.populate(source);
 
         this.setId(source.getId())
+            .setOwner(source.getOwner())
             .setPool(source.getPool())
+            .setConsumer(source.getConsumer())
             .setQuantity(source.getQuantity())
-            .setCertificates(source.getCertificates());
+            .setDeletedFromPool(source.isDeletedFromPool())
+            .setCertificates(source.getCertificates())
+            .setEndDate(source.getEndDate())
+            .setStartDate(source.getStartDate());
 
         return this;
     }

@@ -16,14 +16,14 @@ package org.candlepin.dto.manifest.v1;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.candlepin.dto.CandlepinDTO;
+import org.candlepin.dto.TimestampedCandlepinDTO;
 
 
 /**
  * The CertificateDTO is a DTO representing most Candlepin certificates
  * as used by the manifest import/export framework.
  */
-public class CertificateDTO extends CandlepinDTO<CertificateDTO> {
+public class CertificateDTO extends TimestampedCandlepinDTO<CertificateDTO> {
     public static final long serialVersionUID = 1L;
 
     protected String id;
@@ -105,7 +105,7 @@ public class CertificateDTO extends CandlepinDTO<CertificateDTO> {
             return true;
         }
 
-        if (obj instanceof CertificateDTO) {
+        if (obj instanceof CertificateDTO && super.equals(obj)) {
             CertificateDTO that = (CertificateDTO) obj;
 
             EqualsBuilder builder = new EqualsBuilder()
@@ -126,6 +126,7 @@ public class CertificateDTO extends CandlepinDTO<CertificateDTO> {
     @Override
     public int hashCode() {
         HashCodeBuilder builder = new HashCodeBuilder(37, 7)
+            .append(super.hashCode())
             .append(this.getId())
             .append(this.getKey())
             .append(this.getCert())

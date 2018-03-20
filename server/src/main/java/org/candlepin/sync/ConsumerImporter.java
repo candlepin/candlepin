@@ -14,8 +14,10 @@
  */
 package org.candlepin.sync;
 
+import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.dto.manifest.v1.ConsumerDTO;
 import org.candlepin.dto.manifest.v1.ConsumerTypeDTO;
+import org.candlepin.dto.manifest.v1.OwnerDTO;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.ConsumerType;
@@ -116,11 +118,14 @@ public class ConsumerImporter {
         // create an UpstreamConsumer from the imported ConsumerDto
         ConsumerType type = new ConsumerType();
         populateEntity(type, consumer.getType());
-        Owner consumerDTOOwner = new Owner();
-        consumerDTOOwner.setId(consumer.getOwner());
+
+        Owner ownerToUse = new Owner();
+        if (consumer.getOwner() != null) {
+            populateEntity(ownerToUse, consumer.getOwner());
+        }
 
         UpstreamConsumer uc = new UpstreamConsumer(consumer.getName(),
-            consumerDTOOwner, type, consumer.getUuid());
+            ownerToUse, type, consumer.getUuid());
         uc.setWebUrl(consumer.getUrlWeb());
         uc.setApiUrl(consumer.getUrlApi());
         uc.setIdCert(idcert);
@@ -128,6 +133,101 @@ public class ConsumerImporter {
         owner.setUpstreamConsumer(uc);
 
         curator.merge(owner);
+    }
+
+    /**
+     * Populates the specified entity with data from the provided DTO.
+     * This method does not set the upstreamConsumer field.
+     *
+     * @param entity
+     *  The entity instance to populate
+     *
+     * @param dto
+     *  The DTO containing the data with which to populate the entity
+     *
+     * @throws IllegalArgumentException
+     *  if either entity or dto are null
+     */
+    protected void populateEntity(Owner entity, OwnerDTO dto) {
+        if (entity == null) {
+            throw new IllegalArgumentException("the owner model entity is null");
+        }
+
+        if (dto == null) {
+            throw new IllegalArgumentException("the owner dto is null");
+        }
+
+        if (dto.getId() != null) {
+            entity.setId(dto.getId());
+        }
+
+        if (dto.getDisplayName() != null) {
+            entity.setDisplayName(dto.getDisplayName());
+        }
+
+        if (dto.getKey() != null) {
+            entity.setKey(dto.getKey());
+        }
+
+        if (dto.getLastRefreshed() != null) {
+            entity.setLastRefreshed(dto.getLastRefreshed());
+        }
+
+        if (dto.getContentAccessMode() != null) {
+            entity.setContentAccessMode(dto.getContentAccessMode());
+        }
+
+        if (dto.getContentAccessModeList() != null) {
+            entity.setContentAccessModeList(dto.getContentAccessModeList());
+        }
+
+        if (dto.getCreated() != null) {
+            entity.setCreated(dto.getCreated());
+        }
+
+        if (dto.getUpdated() != null) {
+            entity.setUpdated(dto.getUpdated());
+        }
+
+        if (dto.getParentOwner() != null) {
+            // Impl note:
+            // We do not allow modifying a parent owner through its children, so all we'll do here
+            // is set the parent owner and ignore everything else; including further nested owners.
+
+            OwnerDTO pdto = dto.getParentOwner();
+            Owner parent = null;
+
+            if (pdto.getId() != null) {
+                // look up by ID
+                parent = this.curator.find(pdto.getId());
+            }
+            else if (pdto.getKey() != null) {
+                // look up by key
+                parent = this.curator.lookupByKey(pdto.getKey());
+            }
+
+            if (parent == null) {
+                throw new NotFoundException(i18n.tr("Unable to find parent owner: {0}", pdto));
+            }
+
+            entity.setParentOwner(parent);
+        }
+
+        if (dto.getContentPrefix() != null) {
+            entity.setContentPrefix(dto.getContentPrefix());
+        }
+
+        if (dto.getDefaultServiceLevel() != null) {
+            entity.setDefaultServiceLevel(dto.getDefaultServiceLevel());
+        }
+
+        if (dto.getLogLevel() != null) {
+            entity.setLogLevel(dto.getLogLevel());
+        }
+
+        if (dto.isAutobindDisabled() != null) {
+            entity.setAutobindDisabled(dto.isAutobindDisabled());
+        }
     }
 
     /**

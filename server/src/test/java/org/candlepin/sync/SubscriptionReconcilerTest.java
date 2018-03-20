@@ -29,6 +29,7 @@ import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.EntitlementCertificate;
+import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
@@ -60,6 +61,7 @@ public class SubscriptionReconcilerTest {
     @Mock private CdnCurator cdnCurator;
     @Mock private ObjectMapper om;
     @Mock private ProductCurator pc;
+    @Mock private EntitlementCurator ec;
 
     private Owner owner;
     private EntitlementImporter importer;
@@ -74,7 +76,7 @@ public class SubscriptionReconcilerTest {
         this.reconciler = new SubscriptionReconciler(this.poolCurator);
 
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        this.importer = new EntitlementImporter(certSerialCurator, cdnCurator, i18n, pc);
+        this.importer = new EntitlementImporter(certSerialCurator, cdnCurator, i18n, pc, ec);
     }
 
     /*

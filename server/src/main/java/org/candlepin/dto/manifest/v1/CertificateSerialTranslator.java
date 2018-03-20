@@ -60,8 +60,10 @@ public class CertificateSerialTranslator extends
         dest = super.populate(translator, source, dest);
 
         dest.setId(source.getId());
+        dest.setSerial(source.getSerial());
         dest.setExpiration(source.getExpiration());
         dest.setCollected(source.isCollected());
+        dest.setRevoked(source.isRevoked());
 
         return dest;
     }

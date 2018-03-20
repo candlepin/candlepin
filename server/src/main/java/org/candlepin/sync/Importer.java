@@ -32,6 +32,7 @@ import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.DistributorVersion;
 import org.candlepin.model.DistributorVersionCurator;
+import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
 import org.candlepin.model.IdentityCertificate;
@@ -128,6 +129,7 @@ public class Importer {
     }
 
     private ConsumerTypeCurator consumerTypeCurator;
+    private EntitlementCurator entitlementCurator;
     private ProductCurator productCurator;
     private ObjectMapper mapper;
     private RulesImporter rulesImporter;
@@ -155,7 +157,7 @@ public class Importer {
         ExporterMetadataCurator emc, CertificateSerialCurator csc, EventSink sink, I18n i18n,
         DistributorVersionCurator distVerCurator, CdnCurator cdnCurator, SyncUtils syncUtils,
         ImportRecordCurator importRecordCurator, SubscriptionReconciler subscriptionReconciler,
-        ModelTranslator translator) {
+        EntitlementCurator entitlementCurator, ModelTranslator translator) {
 
         this.config = config;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -176,6 +178,7 @@ public class Importer {
         this.cdnCurator = cdnCurator;
         this.importRecordCurator = importRecordCurator;
         this.subscriptionReconciler = subscriptionReconciler;
+        this.entitlementCurator = entitlementCurator;
         this.translator = translator;
     }
 
@@ -726,13 +729,18 @@ public class Importer {
         entity.setId(dto.getId());
         entity.setKey(dto.getKey());
         entity.setCert(dto.getCert());
+        entity.setUpdated(dto.getUpdated());
+        entity.setCreated(dto.getCreated());
 
         if (dto.getSerial() != null) {
             CertificateSerialDTO dtoSerial = dto.getSerial();
             CertificateSerial entitySerial = new CertificateSerial();
             entitySerial.setId(dtoSerial.getId());
+            entitySerial.setSerial(dtoSerial.getSerial() != null ?
+                dtoSerial.getSerial().longValueExact() : null);
             entitySerial.setCollected(dtoSerial.isCollected());
             entitySerial.setExpiration(dtoSerial.getExpiration());
+            entitySerial.setRevoked(dtoSerial.isRevoked());
 
             entity.setSerial(entitySerial);
         }
@@ -766,7 +774,8 @@ public class Importer {
 
         log.debug("Importing entitlements for owner: {}", owner);
 
-        EntitlementImporter importer = new EntitlementImporter(csCurator, cdnCurator, i18n, productCurator);
+        EntitlementImporter importer = new EntitlementImporter(csCurator, cdnCurator, i18n, productCurator,
+            entitlementCurator);
         Map<String, Product> productsById = new HashMap<>();
 
         for (Product product : products) {

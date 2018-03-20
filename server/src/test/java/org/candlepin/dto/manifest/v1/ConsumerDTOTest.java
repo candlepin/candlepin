@@ -35,10 +35,15 @@ public class ConsumerDTOTest extends AbstractDTOTest<ConsumerDTO> {
         type.setLabel("type_label");
         type.setManifest(true);
 
+        OwnerDTO owner = new OwnerDTO();
+        owner.setKey("key");
+        owner.setDisplayName("display-name");
+        owner.setId("id");
+
         this.values = new HashMap<>();
         this.values.put("Uuid", "test-uuid");
         this.values.put("Name", "test-name");
-        this.values.put("Owner", "test-owner-id");
+        this.values.put("Owner", owner);
         this.values.put("ContentAccessMode", "test-content-access-mode");
         this.values.put("Type", type);
         this.values.put("UrlWeb", "test-url-web");
