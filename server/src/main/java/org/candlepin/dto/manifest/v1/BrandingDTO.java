@@ -18,7 +18,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.candlepin.dto.CandlepinDTO;
+import org.candlepin.dto.TimestampedCandlepinDTO;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -28,10 +28,11 @@ import javax.xml.bind.annotation.XmlAccessorType;
  * for the manifest import/export framework.
  */
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class BrandingDTO extends CandlepinDTO<BrandingDTO> {
+public class BrandingDTO extends TimestampedCandlepinDTO<BrandingDTO> {
 
     public static final long serialVersionUID = 1L;
 
+    private String id;
     private String productId;
     private String name;
     private String type;
@@ -65,9 +66,14 @@ public class BrandingDTO extends CandlepinDTO<BrandingDTO> {
      */
     @JsonCreator
     public BrandingDTO(
+        @JsonProperty("id") String id,
         @JsonProperty("productId") String productId,
         @JsonProperty("name") String name,
         @JsonProperty("type") String type) {
+
+        if (id == null || id.isEmpty()) {
+            throw new IllegalArgumentException("id is null or empty");
+        }
 
         if (productId == null || productId.isEmpty()) {
             throw new IllegalArgumentException("productId is null or empty");
@@ -81,9 +87,31 @@ public class BrandingDTO extends CandlepinDTO<BrandingDTO> {
             throw new IllegalArgumentException("type is null or empty");
         }
 
+        this.id = id;
         this.productId = productId;
         this.name = name;
         this.type = type;
+    }
+
+    /**
+     * Returns this branding's internal DB id.
+     *
+     * @return this branding's internal DB id.
+     */
+    public String getId() {
+        return this.id;
+    }
+
+    /**
+     * Sets this branding's internal DB id.
+     *
+     * @param id the internal DB id to set on this branding DTO.
+     *
+     * @return a reference to this branding DTO object.
+     */
+    public BrandingDTO setId(String id) {
+        this.id = id;
+        return this;
     }
 
     /**
@@ -167,10 +195,11 @@ public class BrandingDTO extends CandlepinDTO<BrandingDTO> {
             return true;
         }
 
-        if (obj instanceof BrandingDTO) {
+        if (obj instanceof BrandingDTO && super.equals(obj)) {
             BrandingDTO that = (BrandingDTO) obj;
 
             EqualsBuilder builder = new EqualsBuilder()
+                .append(this.getId(), that.getId())
                 .append(this.getProductId(), that.getProductId())
                 .append(this.getName(), that.getName())
                 .append(this.getType(), that.getType());
@@ -186,6 +215,8 @@ public class BrandingDTO extends CandlepinDTO<BrandingDTO> {
     @Override
     public int hashCode() {
         HashCodeBuilder builder = new HashCodeBuilder(37, 7)
+            .append(super.hashCode())
+            .append(this.getId())
             .append(this.getProductId())
             .append(this.getName())
             .append(this.getType());
@@ -210,6 +241,7 @@ public class BrandingDTO extends CandlepinDTO<BrandingDTO> {
     public BrandingDTO populate(BrandingDTO source) {
         super.populate(source);
 
+        this.setId(source.getId());
         this.setProductId(source.getProductId());
         this.setName(source.getName());
         this.setType(source.getType());

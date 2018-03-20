@@ -20,7 +20,6 @@ import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.Consumer;
 
-import org.candlepin.model.Owner;
 import org.junit.runner.RunWith;
 
 import junitparams.JUnitParamsRunner;
@@ -35,10 +34,12 @@ public class ConsumerTranslatorTest extends
     protected ConsumerTranslator translator = new ConsumerTranslator();
 
     protected ConsumerTypeTranslatorTest consumerTypeTranslatorTest = new ConsumerTypeTranslatorTest();
+    protected OwnerTranslatorTest ownerTranslatorTest = new OwnerTranslatorTest();
 
     @Override
     protected void initModelTranslator(ModelTranslator modelTranslator) {
         this.consumerTypeTranslatorTest.initModelTranslator(modelTranslator);
+        this.ownerTranslatorTest.initModelTranslator(modelTranslator);
 
         modelTranslator.registerTranslator(
             this.translator, Consumer.class, ConsumerDTO.class);
@@ -55,9 +56,7 @@ public class ConsumerTranslatorTest extends
 
         consumer.setUuid("consumer_uuid");
         consumer.setName("consumer_name");
-        Owner owner = new Owner();
-        owner.setId("owner_id");
-        consumer.setOwner(owner);
+        consumer.setOwner(this.ownerTranslatorTest.initSourceObject());
         consumer.setContentAccessMode("test_content_access_mode");
         consumer.setType(this.consumerTypeTranslatorTest.initSourceObject());
 
@@ -79,11 +78,7 @@ public class ConsumerTranslatorTest extends
             assertEquals(source.getContentAccessMode(), dest.getContentAccessMode());
 
             if (childrenGenerated) {
-                Owner sourceOwner = source.getOwner();
-                if (sourceOwner != null) {
-                    assertEquals(sourceOwner.getId(), dest.getOwner());
-                }
-
+                this.ownerTranslatorTest.verifyOutput(source.getOwner(), dest.getOwner(), true);
                 this.consumerTypeTranslatorTest.verifyOutput(source.getType(), dest.getType(), true);
             }
             else {

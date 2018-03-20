@@ -16,29 +16,43 @@ package org.candlepin.dto.manifest.v1;
 
 import org.candlepin.dto.AbstractDTOTest;
 
-import java.math.BigInteger;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
 
+
 /**
- * Test suite for the CertificateSerialDTO (manifest import/export) class
+ * Test suite for the UpstreamConsumerDTO (manifest import/export) class
  */
-public class CertificateSerialDTOTest extends AbstractDTOTest<CertificateSerialDTO> {
+public class UpstreamConsumerDTOTest extends AbstractDTOTest<UpstreamConsumerDTO> {
 
     protected Map<String, Object> values;
 
-    public CertificateSerialDTOTest() {
-        super(CertificateSerialDTO.class);
+    public UpstreamConsumerDTOTest() {
+        super(UpstreamConsumerDTO.class);
+
+        ConsumerTypeDTO type = new ConsumerTypeDTO();
+        type.setId("type_id");
+        type.setLabel("type_label");
+        type.setManifest(true);
+
+        CertificateDTO cert = new CertificateDTO();
+        cert.setId("123");
+        cert.setKey("cert_key");
+        cert.setCert("cert_cert");
+        cert.setSerial(new CertificateSerialDTO());
 
         this.values = new HashMap<>();
-        this.values.put("Id", 12345L);
-        this.values.put("Serial", BigInteger.TEN);
-        this.values.put("Date", new Date());
-        this.values.put("Collected", true);
-        this.values.put("Revoked", true);
-        this.values.put("Expiration", new Date());
+        this.values.put("Id", "test-id");
+        this.values.put("Uuid", "test-uuid");
+        this.values.put("Name", "test-name");
+        this.values.put("ApiUrl", "test-api-url");
+        this.values.put("WebUrl", "test-web-url");
+        this.values.put("ConsumerType", type);
+        this.values.put("IdentityCertificate", cert);
+        this.values.put("OwnerId", "test-owner-id");
+        this.values.put("ContentAccessMode", "test-content-access-mode");
         this.values.put("Created", new Date());
         this.values.put("Updated", new Date());
     }

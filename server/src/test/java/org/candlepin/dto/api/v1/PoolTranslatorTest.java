@@ -81,6 +81,10 @@ public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, Po
         source.setProduct(this.productTranslatorTest.initSourceObject());
         source.setDerivedProduct(this.productTranslatorTest.initSourceObject());
 
+        Set<Branding> brandingSet = new HashSet<>();
+        brandingSet.add(this.brandingTranslatorTest.initSourceObject());
+        source.setBranding(brandingSet);
+
         Entitlement entitlement = new Entitlement();
         entitlement.setId("ent-id");
         source.setSourceEntitlement(entitlement);
@@ -117,15 +121,6 @@ public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, Po
         source.setConsumed(6L);
         source.setExported(7L);
         source.setShared(8L);
-
-        Branding branding = new Branding();
-        branding.setId("branding-id-1");
-        branding.setName("branding-name-1");
-        branding.setProductId("branding-prod-id-1");
-        branding.setType("branding-type-1");
-        Set<Branding> brandingSet = new HashSet<>();
-        brandingSet.add(branding);
-        source.setBranding(brandingSet);
 
         Map<String, String> calculatedAttributes = new HashMap<>();
         calculatedAttributes.put("calc-attribute-key-3", "calc-attribute-value-3");

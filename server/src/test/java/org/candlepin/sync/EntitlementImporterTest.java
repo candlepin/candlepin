@@ -31,6 +31,7 @@ import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
+import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
@@ -68,6 +69,7 @@ public class EntitlementImporterTest {
     @Mock private CdnCurator cdnCurator;
     @Mock private ObjectMapper om;
     @Mock private ProductCurator mockProductCurator;
+    @Mock private EntitlementCurator ec;
 
     private Owner owner;
     private EntitlementImporter importer;
@@ -88,7 +90,7 @@ public class EntitlementImporterTest {
 
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         this.importer = new EntitlementImporter(certSerialCurator, cdnCurator,
-            i18n, mockProductCurator);
+            i18n, mockProductCurator, ec);
 
         consumer = TestUtil.createConsumer(owner);
         consumerDTO = this.translator.translate(consumer, ConsumerDTO.class);

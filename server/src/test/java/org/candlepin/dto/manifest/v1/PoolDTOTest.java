@@ -15,6 +15,7 @@
 package org.candlepin.dto.manifest.v1;
 
 import org.candlepin.dto.AbstractDTOTest;
+import org.candlepin.model.Pool;
 import org.junit.Test;
 
 import java.util.Date;
@@ -36,6 +37,20 @@ public class PoolDTOTest extends AbstractDTOTest<PoolDTO> {
     public PoolDTOTest() {
         super(PoolDTO.class);
 
+        OwnerDTO owner = new OwnerDTO();
+        owner.setId("owner-id");
+        owner.setKey("owner-key");
+        owner.setDisplayName("owner-name");
+        owner.setContentPrefix("content-prefix");
+        owner.setDefaultServiceLevel("service-level");
+        owner.setLogLevel("log-level");
+        owner.setAutobindDisabled(true);
+        owner.setContentAccessMode("content-access-mode");
+        owner.setContentAccessModeList("content-access-mode-list");
+
+        EntitlementDTO entitlement = new EntitlementDTO();
+        entitlement.setId("entitlement-id");
+
         BrandingDTO branding = new BrandingDTO();
         branding.setName("branding-name");
         branding.setProductId("branding-prod-id");
@@ -47,19 +62,68 @@ public class PoolDTOTest extends AbstractDTOTest<PoolDTO> {
         PoolDTO.ProvidedProductDTO derivedProvidedProd =
             new PoolDTO.ProvidedProductDTO("derived-provided-product-id", "derived-provided-product-name");
 
+        CertificateDTO cert = new CertificateDTO();
+        cert.setId("cert-id");
+        cert.setKey("cert-key");
+        cert.setCert("cert-cert");
+        cert.setSerial(new CertificateSerialDTO());
+
         this.values = new HashMap<>();
         this.values.put("Id", "test-id");
+        this.values.put("Type", Pool.PoolType.NORMAL.toString());
+        this.values.put("Owner", owner);
+        this.values.put("ActiveSubscription", true);
+        this.values.put("CreatedByShare", true);
+        this.values.put("HasSharedAncestor", true);
+        this.values.put("SourceEntitlement", entitlement);
+        this.values.put("Quantity", 1L);
+        this.values.put("StartDate", new Date());
+        this.values.put("EndDate", new Date());
 
+        Map<String, String> attributes = new HashMap<>();
+        attributes.put("attribute-key-1", "attribute-value-1");
+        attributes.put("attribute-key-2", "attribute-value-2");
+        this.values.put("Attributes", attributes);
+
+        this.values.put("RestrictedToUsername", "restricted-to-username-value");
         this.values.put("ContractNumber", "2991");
         this.values.put("AccountNumber", "2992");
         this.values.put("OrderNumber", "2993");
+        this.values.put("Consumed", 5L);
+        this.values.put("Exported", 4L);
+        this.values.put("Shared", 3L);
 
         Set<BrandingDTO> brandingSet = new HashSet<>();
         brandingSet.add(branding);
         this.values.put("Branding", brandingSet);
 
+        Map<String, String> calculatedAttributes = new HashMap<>();
+        calculatedAttributes.put("calc-attribute-key-1", "calc-attribute-value-1");
+        calculatedAttributes.put("calc-attribute-key-2", "calc-attribute-value-2");
+        this.values.put("CalculatedAttributes", calculatedAttributes);
+
+        this.values.put("UpstreamPoolId", "upstream-pool-id-1");
+        this.values.put("UpstreamEntitlementId", "upstream-entitlement-id-1");
+        this.values.put("UpstreamConsumerId", "upstream-consumer-id-1");
+        this.values.put("ProductName", "product-name-1");
         this.values.put("ProductId", "product-id-1");
+
+        Map<String, String> productAttributes = new HashMap<>();
+        productAttributes.put("prod-attribute-key-1", "prod-attribute-value-1");
+        productAttributes.put("prod-attribute-key-2", "prod-attribute-value-2");
+        this.values.put("ProductAttributes", productAttributes);
+
+        this.values.put("StackId", "stack-id-1");
+        this.values.put("Stacked", true);
+        this.values.put("DevelopmentPool", true);
+
+        Map<String, String> derivedProductAttributes = new HashMap<>();
+        derivedProductAttributes.put("derived-prod-attribute-key-1", "derived-prod-attribute-value-1");
+        derivedProductAttributes.put("derived-prod-attribute-key-2", "derived-prod-attribute-value-2");
+        this.values.put("DerivedProductAttributes", derivedProductAttributes);
+
         this.values.put("DerivedProductId", "derived-prod-id-1");
+        this.values.put("DerivedProductName", "derived-prod-name-1");
 
         Set<PoolDTO.ProvidedProductDTO> providedProducts = new HashSet<>();
         providedProducts.add(providedProd);
@@ -68,9 +132,14 @@ public class PoolDTOTest extends AbstractDTOTest<PoolDTO> {
         Set<PoolDTO.ProvidedProductDTO> derivedProvidedProducts = new HashSet<>();
         derivedProvidedProducts.add(derivedProvidedProd);
         this.values.put("DerivedProvidedProducts", derivedProvidedProducts);
+        this.values.put("SourceStackId", "source-stack-id-1");
 
-        this.values.put("StartDate", new Date());
-        this.values.put("EndDate", new Date());
+        this.values.put("SubscriptionSubKey", "subscription-key-1");
+        this.values.put("SubscriptionId", "subscription-id-1");
+
+        this.values.put("Certificate", cert);
+        this.values.put("Created", new Date());
+        this.values.put("Updated", new Date());
     }
 
     /**
@@ -88,6 +157,78 @@ public class PoolDTOTest extends AbstractDTOTest<PoolDTO> {
     protected Object getOutputValueForAccessor(String field, Object input) {
         // Nothing to do here
         return input;
+    }
+
+    @Test
+    public void testHasAttributeWithAbsentAttribute() {
+        PoolDTO dto = new PoolDTO();
+        assertFalse(dto.hasAttribute("attribute-key-1"));
+    }
+
+    @Test
+    public void testHasAttributeWithPresentAttribute() {
+        PoolDTO dto = new PoolDTO();
+        Map<String, String> attributes = new HashMap<>();
+        attributes.put("attribute-key-2", "attribute-value-2");
+        dto.setAttributes(attributes);
+
+        assertTrue(dto.hasAttribute("attribute-key-2"));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testHasAttributeWithNullInput() {
+        PoolDTO dto = new PoolDTO();
+        dto.hasAttribute(null);
+    }
+
+    @Test
+    public void testRemoveAttributeWithAbsentAttribute() {
+        PoolDTO dto = new PoolDTO();
+
+        assertFalse(dto.removeAttribute("attribute-key-3"));
+
+        dto.setAttributes(new HashMap<>());
+
+        assertFalse(dto.removeAttribute("attribute-key-3"));
+    }
+
+    @Test
+    public void testRemoveAttributeWithPresentAttribute() {
+        PoolDTO dto = new PoolDTO();
+
+        Map<String, String> attributes = new HashMap<>();
+        attributes.put("attribute-key-4", "attribute-value-4");
+        dto.setAttributes(attributes);
+
+        assertTrue(dto.removeAttribute("attribute-key-4"));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testRemoveAttributeWithNullInput() {
+        PoolDTO dto = new PoolDTO();
+        dto.removeAttribute(null);
+    }
+
+    @Test
+    public void testHasProductAttributeWithAbsentProductAttribute() {
+        PoolDTO dto = new PoolDTO();
+        assertFalse(dto.hasProductAttribute("prod-attribute-key-1"));
+    }
+
+    @Test
+    public void testHasProductAttributeWithPresentProductAttribute() {
+        PoolDTO dto = new PoolDTO();
+        Map<String, String> productAttributes = new HashMap<>();
+        productAttributes.put("prod-attribute-key-2", "prod-attribute-value-2");
+        dto.setProductAttributes(productAttributes);
+
+        assertTrue(dto.hasProductAttribute("prod-attribute-key-2"));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testHasProductAttributeWithNullInput() {
+        PoolDTO dto = new PoolDTO();
+        dto.hasProductAttribute(null);
     }
 
     @Test

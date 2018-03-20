@@ -18,9 +18,11 @@ import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.Certificate;
 import org.candlepin.model.CertificateSerial;
+import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 
+import java.util.Date;
 import java.util.HashSet;
 
 import static org.junit.Assert.assertEquals;
@@ -35,13 +37,19 @@ public class EntitlementTranslatorTest extends
 
     protected EntitlementTranslator translator = new EntitlementTranslator();
 
+    private OwnerTranslatorTest ownerTranslatorTest = new OwnerTranslatorTest();
     private CertificateTranslatorTest certificateTranslatorTest = new CertificateTranslatorTest();
     private PoolTranslatorTest poolTranslatorTest = new PoolTranslatorTest();
+    private ConsumerTranslatorTest consumerTranslatorTest = new ConsumerTranslatorTest();
+
 
     @Override
     protected void initModelTranslator(ModelTranslator modelTranslator) {
+        this.ownerTranslatorTest.initModelTranslator(modelTranslator);
         this.certificateTranslatorTest.initModelTranslator(modelTranslator);
         this.poolTranslatorTest.initModelTranslator(modelTranslator);
+        this.consumerTranslatorTest.initModelTranslator(modelTranslator);
+
 
         modelTranslator.registerTranslator(this.translator, Entitlement.class, EntitlementDTO.class);
     }
@@ -56,7 +64,9 @@ public class EntitlementTranslatorTest extends
         Entitlement source = new Entitlement();
         source.setId("ent-id");
         source.setQuantity(1);
+        source.setDeletedFromPool(false);
 
+        source.setOwner(this.ownerTranslatorTest.initSourceObject());
         source.setPool(this.poolTranslatorTest.initSourceObject());
 
         HashSet<EntitlementCertificate> certs = new HashSet<>();
@@ -69,6 +79,13 @@ public class EntitlementTranslatorTest extends
         certs.add(entCert);
         source.setCertificates(certs);
 
+        Consumer consumer = new Consumer();
+        consumer.setUuid("consumer-uuid");
+        source.setConsumer(consumer);
+
+        source.setEndDate(new Date());
+        source.setStartDate(new Date());
+
         return source;
     }
 
@@ -80,12 +97,16 @@ public class EntitlementTranslatorTest extends
     @Override
     protected void verifyOutput(Entitlement source, EntitlementDTO dest, boolean childrenGenerated) {
         if (source != null) {
-
             assertEquals(source.getId(), dest.getId());
             assertEquals(source.getQuantity(), dest.getQuantity());
+            assertEquals(source.deletedFromPool(), dest.isDeletedFromPool());
+            assertEquals(source.getStartDate(), dest.getStartDate());
+            assertEquals(source.getEndDate(), dest.getEndDate());
 
             if (childrenGenerated) {
+                this.ownerTranslatorTest.verifyOutput(source.getOwner(), dest.getOwner(), true);
                 this.poolTranslatorTest.verifyOutput(source.getPool(), dest.getPool(), true);
+                this.consumerTranslatorTest.verifyOutput(source.getConsumer(), dest.getConsumer(), true);
 
                 for (Certificate sourceCertificate : source.getCertificates()) {
                     for (CertificateDTO certDTO : dest.getCertificates()) {
@@ -100,8 +121,10 @@ public class EntitlementTranslatorTest extends
                 }
             }
             else {
+                assertNull(dest.getOwner());
                 assertNull(dest.getPool());
                 assertNull(dest.getCertificates());
+                assertNull(dest.getConsumer());
             }
         }
         else {

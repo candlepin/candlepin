@@ -18,6 +18,8 @@ import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.Branding;
 
+import java.util.Date;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -43,9 +45,12 @@ public class BrandingTranslatorTest extends
     protected Branding initSourceObject() {
         Branding source = new Branding();
 
+        source.setProductId("test-id");
         source.setProductId("test-product-id");
         source.setName("test-name");
         source.setType("test-type");
+        source.setCreated(new Date());
+        source.setUpdated(new Date());
 
         return source;
     }
@@ -61,6 +66,8 @@ public class BrandingTranslatorTest extends
             assertEquals(source.getProductId(), dest.getProductId());
             assertEquals(source.getName(), dest.getName());
             assertEquals(source.getType(), dest.getType());
+            assertEquals(source.getUpdated(), dest.getUpdated());
+            assertEquals(source.getCreated(), dest.getCreated());
         }
         else {
             assertNull(dest);

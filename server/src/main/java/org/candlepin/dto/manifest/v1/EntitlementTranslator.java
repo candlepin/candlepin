@@ -15,10 +15,12 @@
 package org.candlepin.dto.manifest.v1;
 
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.ObjectTranslator;
+import org.candlepin.dto.TimestampedEntityTranslator;
 import org.candlepin.model.Certificate;
+import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
+import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 
 import java.util.Collections;
@@ -28,7 +30,7 @@ import java.util.Set;
  * The EntitlementTranslator provides translation from Entitlement model objects to EntitlementDTOs
  * as used by the manifest import/export framework.
  */
-public class EntitlementTranslator implements ObjectTranslator<Entitlement, EntitlementDTO> {
+public class EntitlementTranslator extends TimestampedEntityTranslator<Entitlement, EntitlementDTO> {
 
     /**
      * {@inheritDoc}
@@ -59,20 +61,24 @@ public class EntitlementTranslator implements ObjectTranslator<Entitlement, Enti
      */
     @Override
     public EntitlementDTO populate(ModelTranslator modelTranslator, Entitlement source, EntitlementDTO dest) {
-        if (source == null) {
-            throw new IllegalArgumentException("source is null");
-        }
-
-        if (dest == null) {
-            throw new IllegalArgumentException("destination is null");
-        }
+        dest = super.populate(modelTranslator, source, dest);
 
         dest.setId(source.getId());
         dest.setQuantity(source.getQuantity());
+        dest.setDeletedFromPool(source.deletedFromPool());
+        dest.setStartDate(source.getStartDate());
+        dest.setEndDate(source.getEndDate());
 
         if (modelTranslator != null) {
+            Owner owner = source.getOwner();
+            dest.setOwner(owner != null ? modelTranslator.translate(owner, OwnerDTO.class) : null);
+
             Pool pool = source.getPool();
             dest.setPool(pool != null ? modelTranslator.translate(pool, PoolDTO.class) : null);
+
+            Consumer consumer = source.getConsumer();
+            dest.setConsumer(consumer != null ?
+                modelTranslator.translate(consumer, ConsumerDTO.class) : null);
 
             Set<EntitlementCertificate> certs = source.getCertificates();
             if (certs != null && !certs.isEmpty()) {

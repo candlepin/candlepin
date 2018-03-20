@@ -68,8 +68,8 @@ public class ConsumerTranslator implements ObjectTranslator<Consumer, ConsumerDT
 
         // Process nested objects if we have a ModelTranslator to use to the translation...
         if (translator != null) {
-            Owner sourceOwner = source.getOwner();
-            dest.setOwner(sourceOwner != null ? sourceOwner.getId() : null);
+            Owner owner = source.getOwner();
+            dest.setOwner(owner != null ? translator.translate(owner, OwnerDTO.class) : null);
             dest.setType(translator.translate(source.getType(), ConsumerTypeDTO.class));
         }
         else {
