@@ -18,6 +18,8 @@ import org.candlepin.common.exceptions.GoneException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.DeletedConsumerCurator;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 
 import com.google.inject.Inject;
 
@@ -35,14 +37,16 @@ public abstract class ConsumerAuth implements AuthProvider {
     private static Logger log = LoggerFactory.getLogger(ConsumerAuth.class);
 
     protected ConsumerCurator consumerCurator;
+    protected OwnerCurator ownerCurator;
     protected DeletedConsumerCurator deletedConsumerCurator;
     private Provider<I18n> i18nProvider;
 
     @Inject
-    ConsumerAuth(ConsumerCurator consumerCurator,
+    ConsumerAuth(ConsumerCurator consumerCurator, OwnerCurator ownerCurator,
         DeletedConsumerCurator deletedConsumerCurator,
         Provider<I18n> i18nProvider) {
         this.consumerCurator = consumerCurator;
+        this.ownerCurator = ownerCurator;
         this.deletedConsumerCurator = deletedConsumerCurator;
         this.i18nProvider = i18nProvider;
     }
@@ -61,7 +65,8 @@ public abstract class ConsumerAuth implements AuthProvider {
             Consumer consumer = this.consumerCurator.getConsumer(consumerUuid);
 
             if (consumer != null) {
-                principal = new ConsumerPrincipal(consumer);
+                Owner owner = this.ownerCurator.find(consumer.getOwnerId());
+                principal = new ConsumerPrincipal(consumer, owner);
 
                 if (log.isDebugEnabled() && principal != null) {
                     log.debug("principal created for consumer {}", principal.getConsumer().getUuid());

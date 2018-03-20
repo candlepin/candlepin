@@ -198,7 +198,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testListConsumerFiltering() {
-        setupPrincipal(new ConsumerPrincipal(passConsumer));
+        setupPrincipal(new ConsumerPrincipal(passConsumer, owner1));
         List<PoolDTO> pools = poolResource.list(null, passConsumer.getUuid(), null, false,
             null, adminPrincipal, null);
         assertEquals(2, pools.size());
@@ -238,7 +238,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
 
     @Test(expected = NotFoundException.class)
     public void testConsumerCannotListPoolsForAnotherOwnersConsumer() {
-        Principal p = setupPrincipal(new ConsumerPrincipal(foreignConsumer));
+        Principal p = setupPrincipal(new ConsumerPrincipal(foreignConsumer, owner2));
         securityInterceptor.enable();
 
         poolResource.list(null, passConsumer.getUuid(), null, false, null, p, null);
@@ -246,7 +246,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
 
     @Test(expected = NotFoundException.class)
     public void consumerCannotListPoolsForAnotherOwner() {
-        Principal p = setupPrincipal(new ConsumerPrincipal(foreignConsumer));
+        Principal p = setupPrincipal(new ConsumerPrincipal(foreignConsumer, owner2));
         securityInterceptor.enable();
 
         poolResource.list(owner1.getId(), null, null, false, null, p, null);
@@ -254,7 +254,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
 
     @Test
     public void consumerCanListOwnersPools() {
-        Principal p = setupPrincipal(new ConsumerPrincipal(passConsumer));
+        Principal p = setupPrincipal(new ConsumerPrincipal(passConsumer, owner1));
         securityInterceptor.enable();
 
         poolResource.list(owner1.getId(), null, null, false, null, p, null);

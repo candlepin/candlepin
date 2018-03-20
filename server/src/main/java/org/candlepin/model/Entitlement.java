@@ -165,6 +165,15 @@ public class Entitlement extends AbstractHibernateObject<Entitlement>
     }
 
     /**
+     * @return the owner Id of this Entitlement.
+     */
+    @Override
+    @XmlTransient
+    public String getOwnerId() {
+        return (owner == null) ? null : owner.getId();
+    }
+
+    /**
      * @param ownerIn the owner to set
      */
     public void setOwner(Owner ownerIn) {

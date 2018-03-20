@@ -30,9 +30,11 @@ import org.hibernate.criterion.Restrictions;
 public class ConsumerServiceLevelsPermission extends TypedPermission<Owner> {
 
     private final Consumer consumer;
+    private final Owner owner;
 
-    public ConsumerServiceLevelsPermission(Consumer consumer) {
+    public ConsumerServiceLevelsPermission(Consumer consumer, Owner owner) {
         this.consumer = consumer;
+        this.owner = owner;
         this.access = Access.READ_ONLY;
     }
 
@@ -43,21 +45,21 @@ public class ConsumerServiceLevelsPermission extends TypedPermission<Owner> {
 
     @Override
     public boolean canAccessTarget(Owner target, SubResource subResource, Access required) {
-        return target.getKey().equals(consumer.getOwner().getKey()) &&
+        return target.getKey().equals(owner.getKey()) &&
             subResource.equals(SubResource.SERVICE_LEVELS) && access.provides(required);
     }
 
     @Override
     public Criterion getCriteriaRestrictions(Class entityClass) {
         if (entityClass.equals(Owner.class)) {
-            return Restrictions.eq("key", consumer.getOwner().getKey());
+            return Restrictions.eq("key", owner.getKey());
         }
         return null;
     }
 
     @Override
     public Owner getOwner() {
-        return consumer.getOwner();
+        return owner;
     }
 
     public Consumer getConsumer() {

@@ -187,9 +187,9 @@ public class GuestId extends AbstractHibernateObject implements Owned, Named, Co
 
     @Override
     @XmlTransient
-    public Owner getOwner() {
+    public String getOwnerId() {
         if (consumer != null) {
-            return consumer.getOwner();
+            return consumer.getOwnerId();
         }
         return null;
     }

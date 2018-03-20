@@ -242,7 +242,7 @@ public class ConsumerTest extends DatabaseTestFixture {
 
     @Test
     public void canDeleteSelf() {
-        setupPrincipal(new ConsumerPrincipal(consumer));
+        setupPrincipal(new ConsumerPrincipal(consumer, owner));
 
         consumerCurator.delete(consumer);
 

@@ -423,15 +423,15 @@ public class Owner extends AbstractHibernateObject<Owner>
     }
 
     /**
-     * Kind of crazy - an owner owns itself.  This is so that the OwnerPermissions
+     * Redundant method so that the OwnerPermissions
      * will work properly when Owner is the target.
      *
      * @return this
      */
     @XmlTransient
     @Override
-    public Owner getOwner() {
-        return this;
+    public String getOwnerId() {
+        return id;
     }
 
     /**

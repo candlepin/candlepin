@@ -19,5 +19,5 @@ package org.candlepin.model;
  */
 public interface Owned {
 
-    Owner getOwner();
+    String getOwnerId();
 }
