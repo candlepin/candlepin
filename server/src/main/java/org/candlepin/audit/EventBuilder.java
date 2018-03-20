@@ -86,10 +86,10 @@ public class EventBuilder {
             }
 
             if (entity instanceof Owned) {
-                Owner entityOwner = ((Owned) entity).getOwner();
+                String ownerId = ((Owned) entity).getOwnerId();
 
-                if (entityOwner != null && entityOwner.getId() != null) {
-                    event.setOwnerId(entityOwner.getId());
+                if (ownerId != null) {
+                    event.setOwnerId(ownerId);
                 }
             }
 

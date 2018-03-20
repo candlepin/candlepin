@@ -355,9 +355,16 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     /**
      * @return the owner of this Consumer.
      */
-    @Override
     public Owner getOwner() {
         return owner;
+    }
+
+    /**
+     * @return the owner Id of this Consumer.
+     */
+    @Override
+    public String getOwnerId() {
+        return (owner == null) ? null : owner.getId();
     }
 
     /**

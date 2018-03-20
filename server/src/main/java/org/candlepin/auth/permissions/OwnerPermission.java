@@ -51,7 +51,7 @@ public class OwnerPermission implements Permission, Serializable {
         Access requiredAccess) {
         if (target instanceof Owned) {
             // First make sure the owner matches:
-            if (owner.getId().equals(((Owned) target).getOwner().getId()) &&
+            if (owner.getId().equals(((Owned) target).getOwnerId()) &&
                 access.provides(requiredAccess)) {
                 return true;
             }

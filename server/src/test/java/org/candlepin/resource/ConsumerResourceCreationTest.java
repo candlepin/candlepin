@@ -64,6 +64,7 @@ import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
+import org.candlepin.test.TestUtil;
 import org.candlepin.util.FactValidator;
 import org.candlepin.util.ServiceLevelValidator;
 
@@ -158,6 +159,7 @@ public class ConsumerResourceCreationTest {
         this.systemDto = initSystemDto();
 
         owner = new Owner("test_owner");
+        owner.setId(TestUtil.randomString());
         user = new User(USER, "");
         PermissionBlueprint p = new PermissionBlueprint(PermissionType.OWNER, owner,
             Access.ALL);
