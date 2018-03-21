@@ -225,7 +225,7 @@ public class PoolResource {
         }
 
         throw new NotFoundException(i18n.tr(
-            "Subscription Pool with ID ''{0}'' could not be found.", id));
+            "Subscription Pool with ID \"{0}\" could not be found.", id));
     }
 
     @ApiOperation(notes = "Remove a Pool", value = "deletePool")
@@ -237,7 +237,7 @@ public class PoolResource {
         Pool pool = poolManager.find(id);
         if (pool == null) {
             throw new NotFoundException(i18n.tr(
-                "Entitlement Pool with ID ''{0}'' could not be found.", id));
+                "Entitlement Pool with ID \"{0}\" could not be found.", id));
         }
 
         poolManager.deletePool(pool);
@@ -255,7 +255,7 @@ public class PoolResource {
 
         if (pool == null) {
             throw new NotFoundException(i18n.tr(
-                "Subscription Pool with ID ''{0}'' could not be found.", id));
+                "Subscription Pool with ID \"{0}\" could not be found.", id));
         }
 
         return pool.getCdn();
@@ -274,12 +274,11 @@ public class PoolResource {
 
         if (pool == null) {
             throw new NotFoundException(i18n.tr(
-                "Subscription Pool with ID ''{0}'' could not be found.", id));
+                "Subscription Pool with ID \"{0}\" could not be found.", id));
         }
 
         List<Entitlement> entitlements = new ArrayList<Entitlement>();
         entitlements.addAll(pool.getEntitlements());
         return entitlements;
     }
-
 }

@@ -154,49 +154,49 @@ public class EntitlementRulesTranslator {
         POOL_ERROR_MESSAGES = new HashMap<String, String>();
 
         POOL_ERROR_MESSAGES.put(PoolErrorKeys.ALREADY_ATTACHED,
-            I18n.marktr("This unit has already had the subscription matching pool ID ''{1}'' attached."));
+            I18n.marktr("This unit has already had the subscription matching pool ID \"{1}\" attached."));
         POOL_ERROR_MESSAGES.put(PoolErrorKeys.NO_ENTITLEMENTS_AVAILABLE,
-            I18n.marktr("No subscriptions are available from the pool with ID ''{1}''."));
+            I18n.marktr("No subscriptions are available from the pool with ID \"{1}\"."));
         POOL_ERROR_MESSAGES.put(PoolErrorKeys.CONSUMER_TYPE_MISMATCH,
-            I18n.marktr("Units of this type are not allowed to attach the pool with ID ''{1}''."));
+            I18n.marktr("Units of this type are not allowed to attach the pool with ID \"{1}\"."));
         POOL_ERROR_MESSAGES.put(PoolErrorKeys.MULTI_ENTITLEMENT_UNSUPPORTED,
-            I18n.marktr("Multi-entitlement not supported for pool with ID ''{1}''."));
+            I18n.marktr("Multi-entitlement not supported for pool with ID \"{1}\"."));
         POOL_ERROR_MESSAGES.put(PoolErrorKeys.VIRT_HOST_MISMATCH,
-            I18n.marktr("Pool ''{1}'' is restricted to guests running on host: ''{4}''."));
+            I18n.marktr("Pool \"{1}\" is restricted to guests running on host: \"{4}\"."));
         POOL_ERROR_MESSAGES.put(PoolErrorKeys.CONSUMER_MISMATCH,
-            I18n.marktr("Pool ''{1}'' is restricted to a specific consumer."));
+            I18n.marktr("Pool \"{1}\" is restricted to a specific consumer."));
         POOL_ERROR_MESSAGES.put(PoolErrorKeys.RESTRICTED_POOL,
             I18n.marktr("Pool not available to subscription management applications."));
         POOL_ERROR_MESSAGES.put(PoolErrorKeys.VIRT_ONLY,
-            I18n.marktr("Pool is restricted to virtual guests: ''{1}''."));
+            I18n.marktr("Pool is restricted to virtual guests: \"{1}\"."));
         POOL_ERROR_MESSAGES.put(PoolErrorKeys.PHYSICAL_ONLY,
-            I18n.marktr("Pool is restricted to physical systems: ''{1}''."));
+            I18n.marktr("Pool is restricted to physical systems: \"{1}\"."));
         POOL_ERROR_MESSAGES.put(PoolErrorKeys.QUANTITY_MISMATCH,
-            I18n.marktr("Subscription ''{2}'' must be attached using a quantity evenly divisible by {3}"));
+            I18n.marktr("Subscription \"{2}\" must be attached using a quantity evenly divisible by {3}"));
         POOL_ERROR_MESSAGES.put(PoolErrorKeys.INSTANCE_UNSUPPORTED_BY_CONSUMER,
-            I18n.marktr("Unit does not support instance based calculation required by pool ''{1}''"));
+            I18n.marktr("Unit does not support instance based calculation required by pool \"{1}\""));
         POOL_ERROR_MESSAGES.put(PoolErrorKeys.BAND_UNSUPPORTED_BY_CONSUMER,
-            I18n.marktr("Unit does not support band calculation required by pool ''{1}''"));
+            I18n.marktr("Unit does not support band calculation required by pool \"{1}\""));
         POOL_ERROR_MESSAGES.put(PoolErrorKeys.CORES_UNSUPPORTED_BY_CONSUMER,
-            I18n.marktr("Unit does not support core calculation required by pool ''{1}''"));
+            I18n.marktr("Unit does not support core calculation required by pool \"{1}\""));
         POOL_ERROR_MESSAGES.put(PoolErrorKeys.RAM_UNSUPPORTED_BY_CONSUMER,
-            I18n.marktr("Unit does not support RAM calculation required by pool ''{1}''"));
+            I18n.marktr("Unit does not support RAM calculation required by pool \"{1}\""));
         POOL_ERROR_MESSAGES.put(PoolErrorKeys.DERIVED_PRODUCT_DATA_UNSUPPORTED,
-            I18n.marktr("Unit does not support derived products data required by pool ''{1}''"));
+            I18n.marktr("Unit does not support derived products data required by pool \"{1}\""));
         POOL_ERROR_MESSAGES.put(PoolErrorKeys.UNMAPPED_GUEST_RESTRICTED,
-            I18n.marktr("Pool is restricted to unmapped virtual guests: ''{1}''"));
+            I18n.marktr("Pool is restricted to unmapped virtual guests: \"{1}\""));
         POOL_ERROR_MESSAGES.put(PoolErrorKeys.VIRTUAL_GUEST_RESTRICTED,
-            I18n.marktr("Pool is restricted to virtual guests in their first day of existence: ''{1}''"));
+            I18n.marktr("Pool is restricted to virtual guests in their first day of existence: \"{1}\""));
         POOL_ERROR_MESSAGES.put(PoolErrorKeys.SHARING_A_SHARE,
-            I18n.marktr("Pool ''{1}'' is a shared pool and sharing a shared pool is prohibited."));
+            I18n.marktr("Pool \"{1}\" is a shared pool and sharing a shared pool is prohibited."));
         POOL_ERROR_MESSAGES.put(PoolErrorKeys.SHARING_DEVELOPMENT_POOL,
-            I18n.marktr("Pool ''{1}'' is a development pool and sharing it is prohibited."));
+            I18n.marktr("Pool \"{1}\" is a development pool and sharing it is prohibited."));
         POOL_ERROR_MESSAGES.put(PoolErrorKeys.SHARING_UNMAPPED_GUEST_POOL,
-            I18n.marktr("Pool ''{1}'' is an unmapped guest pool and sharing it is prohibited."));
+            I18n.marktr("Pool \"{1}\" is an unmapped guest pool and sharing it is prohibited."));
         POOL_ERROR_MESSAGES.put(PoolErrorKeys.TEMPORARY_FUTURE_POOL,
-            I18n.marktr("Pool is restricted when it is temporary and begins in the future: ''{1}''"));
+            I18n.marktr("Pool is restricted when it is temporary and begins in the future: \"{1}\""));
         DEFAULT_POOL_ERROR_MESSAGE =
-            I18n.marktr("Unable to attach pool with ID ''{1}''.: {0}.");
+            I18n.marktr("Unable to attach pool with ID \"{1}\".: {0}.");
 
         // Product error messages can contain the following variables
         // {0} - Error key
@@ -204,15 +204,15 @@ public class EntitlementRulesTranslator {
         PRODUCT_ERROR_MESSAGES = new HashMap<String, String>();
 
         PRODUCT_ERROR_MESSAGES.put(ProductErrorKeys.ALREADY_ATTACHED,
-            I18n.marktr("This system already has a subscription for the product ''{1}'' attached."));
+            I18n.marktr("This system already has a subscription for the product \"{1}\" attached."));
         PRODUCT_ERROR_MESSAGES.put(ProductErrorKeys.NO_ENTITLEMENTS_AVAILABLE,
-            I18n.marktr("There are not enough free subscriptions available for the product ''{1}''"));
+            I18n.marktr("There are not enough free subscriptions available for the product \"{1}\""));
         PRODUCT_ERROR_MESSAGES.put(ProductErrorKeys.CONSUMER_TYPE_MISMATCH,
-            I18n.marktr("Units of this type are not allowed for the product ''{1}''."));
+            I18n.marktr("Units of this type are not allowed for the product \"{1}\"."));
         PRODUCT_ERROR_MESSAGES.put(ProductErrorKeys.VIRT_ONLY,
-            I18n.marktr("Only virtual systems can have subscription ''{1}'' attached."));
+            I18n.marktr("Only virtual systems can have subscription \"{1}\" attached."));
         DEFAULT_PRODUCT_ERROR_MESSAGE =
-            I18n.marktr("Unable to attach subscription for the product ''{1}'': {0}.");
+            I18n.marktr("Unable to attach subscription for the product \"{1}\": {0}.");
 
         // Entitlement error messages can contain the following variables
         // {0} - Error key
@@ -220,13 +220,13 @@ public class EntitlementRulesTranslator {
         ENTITLEMENT_ERROR_MESSAGES = new HashMap<String, String>();
 
         ENTITLEMENT_ERROR_MESSAGES.put(EntitlementErrorKeys.INSUFFICIENT_QUANTITY,
-            I18n.marktr("Insufficient pool quantity available for adjustment to entitlement ''{1}''."));
+            I18n.marktr("Insufficient pool quantity available for adjustment to entitlement \"{1}\"."));
         ENTITLEMENT_ERROR_MESSAGES.put(EntitlementErrorKeys.MULTI_ENTITLEMENT_UNSUPPORTED,
-            I18n.marktr("Multi-entitlement not supported for pool connected with entitlement ''{1}''."));
+            I18n.marktr("Multi-entitlement not supported for pool connected with entitlement \"{1}\"."));
         ENTITLEMENT_ERROR_MESSAGES.put(EntitlementErrorKeys.ALREADY_ATTACHED,
-            I18n.marktr("Multi-entitlement not supported for pool connected with entitlement ''{1}''."));
+            I18n.marktr("Multi-entitlement not supported for pool connected with entitlement \"{1}\"."));
         DEFAULT_ENTITLEMENT_ERROR_MESSAGE =
-            I18n.marktr("Unable to adjust quantity for the entitlement with id ''{1}'': {0}");
+            I18n.marktr("Unable to adjust quantity for the entitlement with id \"{1}\": {0}");
     }
 
     private static String getPoolErrorMessage(String key) {

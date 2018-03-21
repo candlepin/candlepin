@@ -319,8 +319,7 @@ public class EntitlerTest {
 
     @Test
     public void consumerDoesntSupportInstanceBased() {
-        String expected = "Unit does not support instance based " +
-            "calculation required by pool 'pool10'";
+        String expected = "Unit does not support instance based calculation required by pool \"pool10\"";
         try {
             bindByPoolErrorTest("rulefailed.instance.unsupported.by.consumer");
             fail();
@@ -332,8 +331,7 @@ public class EntitlerTest {
 
     @Test
     public void consumerDoesntSupportCores() {
-        String expected = "Unit does not support core " +
-            "calculation required by pool 'pool10'";
+        String expected = "Unit does not support core calculation required by pool \"pool10\"";
         try {
             bindByPoolErrorTest("rulefailed.cores.unsupported.by.consumer");
             fail();
@@ -345,8 +343,7 @@ public class EntitlerTest {
 
     @Test
     public void consumerDoesntSupportRam() {
-        String expected = "Unit does not support RAM " +
-            "calculation required by pool 'pool10'";
+        String expected = "Unit does not support RAM calculation required by pool \"pool10\"";
         try {
             bindByPoolErrorTest("rulefailed.ram.unsupported.by.consumer");
             fail();
@@ -358,8 +355,7 @@ public class EntitlerTest {
 
     @Test
     public void consumerDoesntSupportDerived() {
-        String expected = "Unit does not support derived products " +
-            "data required by pool 'pool10'";
+        String expected = "Unit does not support derived products data required by pool \"pool10\"";
         try {
             bindByPoolErrorTest("rulefailed.derivedproduct.unsupported.by.consumer");
             fail();
@@ -406,7 +402,7 @@ public class EntitlerTest {
 
     @Test
     public void virtOnly() {
-        String expected = "Pool is restricted to virtual guests: 'pool10'.";
+        String expected = "Pool is restricted to virtual guests: \"pool10\".";
         try {
             bindByPoolErrorTest("rulefailed.virt.only");
             fail();
@@ -418,7 +414,7 @@ public class EntitlerTest {
 
     @Test
     public void physicalOnly() throws Exception {
-        String expected = "Pool is restricted to physical systems: 'pool10'.";
+        String expected = "Pool is restricted to physical systems: \"pool10\".";
         try {
             bindByPoolErrorTest("rulefailed.physical.only");
             fail();
@@ -685,7 +681,7 @@ public class EntitlerTest {
             entitler.bindByProducts(ad);
         }
         catch (ForbiddenException fe) {
-            assertEquals(i18n.tr("SKU product not available to this development unit: ''{0}''",
+            assertEquals(i18n.tr("SKU product not available to this development unit: \"{0}\"",
                 p.getId()), fe.getMessage());
         }
     }

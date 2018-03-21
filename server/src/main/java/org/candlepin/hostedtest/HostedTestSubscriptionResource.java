@@ -277,9 +277,7 @@ public class HostedTestSubscriptionResource {
         Product product = this.ownerProductCurator.getProductById(owner, productId);
 
         if (product == null) {
-            throw new NotFoundException(
-                i18n.tr("Product with ID ''{0}'' could not be found.", productId)
-            );
+            throw new NotFoundException(i18n.tr("Product with ID \"{0}\" could not be found.", productId));
         }
 
         return product;

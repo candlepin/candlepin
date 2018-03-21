@@ -204,7 +204,7 @@ public class Entitler {
         if (!consumer.isDev() && owner.autobindDisabled()) {
             log.info("Skipping auto-attach for consumer '{}'. Auto-attach is disabled for owner {}.",
                 consumer, owner.getKey());
-            throw new AutobindDisabledForOwnerException(i18n.tr("Auto-attach is disabled for owner '{0}'.",
+            throw new AutobindDisabledForOwnerException(i18n.tr("Auto-attach is disabled for owner \"{0}\".",
                 owner.getKey()));
         }
 
@@ -465,13 +465,13 @@ public class Entitler {
 
         if (!devProducts.foundSku()) {
             throw new ForbiddenException(i18n.tr("SKU product not available to this " +
-                "development unit: ''{0}''", expectedSku));
+                "development unit: \"{0}\"", expectedSku));
         }
 
         for (ConsumerInstalledProduct ip : consumer.getInstalledProducts()) {
             if (!devProducts.containsProduct(ip.getProductId())) {
                 log.warn(i18n.tr("Installed product not available to this " +
-                    "development unit: ''{0}''", ip.getProductId()));
+                    "development unit: \"{0}\"", ip.getProductId()));
             }
         }
     }

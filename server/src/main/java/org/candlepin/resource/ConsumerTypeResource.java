@@ -82,9 +82,7 @@ public class ConsumerTypeResource {
             return toReturn;
         }
 
-        throw new NotFoundException(
-            i18n.tr("Unit type with id ''{0}'' could not be found.", id)
-        );
+        throw new NotFoundException(i18n.tr("Unit type with id \"{0}\" could not be found.", id));
     }
 
     @ApiOperation(notes = "Creates a Consumer Type", value = "create")
@@ -132,8 +130,7 @@ public class ConsumerTypeResource {
         ConsumerType type = consumerTypeCurator.find(id);
 
         if (type == null) {
-            throw new BadRequestException(
-                i18n.tr("Unit type with id {0} could not be found.", id));
+            throw new BadRequestException(i18n.tr("Unit type with id {0} could not be found.", id));
         }
 
         consumerTypeCurator.delete(type);

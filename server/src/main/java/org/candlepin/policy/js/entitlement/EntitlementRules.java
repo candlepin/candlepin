@@ -373,7 +373,7 @@ public class EntitlementRules implements Enforcer {
 
         if (tokens.length < 3) {
             throw new IllegalArgumentException(
-                i18n.tr("''{0}'' Should contain name, priority and at least one attribute", toParse));
+                i18n.tr("\"{0}\" Should contain name, priority and at least one attribute", toParse));
         }
 
         Set<String> attributes = new HashSet<String>();

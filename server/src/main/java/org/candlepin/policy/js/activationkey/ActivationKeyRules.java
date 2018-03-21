@@ -76,10 +76,10 @@ public class ActivationKeyRules {
         String msg;
         if (error.equals("rulefailed.actkey.cannot.use.person.pools")) {
             msg = i18n.tr("Cannot add pools that are " +
-                "restricted to unit type ''person'' to activation keys.");
+                "restricted to unit type \"person\" to activation keys.");
         }
         else if (error.equals("rulefailed.already.exists")) {
-            msg = i18n.tr("Multi-entitlement not supported for pool ''{0}''", pool.getId());
+            msg = i18n.tr("Multi-entitlement not supported for pool \"{0}\"", pool.getId());
         }
         else if (error.equals("rulefailed.invalid.nonmultient.quantity")) {
             msg = i18n.tr("Error: Only pools with multi-entitlement product" +

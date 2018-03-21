@@ -286,7 +286,7 @@ public class HypervisorResourceTest {
         assertEquals(1, result.getFailedUpdate().size());
 
         String failed = result.getFailedUpdate().iterator().next();
-        String expected = "test-host: Unable to find hypervisor in org 'admin'";
+        String expected = "test-host: Unable to find hypervisor in org \"admin\"";
         assertEquals(expected, failed);
     }
 
