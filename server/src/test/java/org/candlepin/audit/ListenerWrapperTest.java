@@ -16,6 +16,7 @@ package org.candlepin.audit;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
+import org.apache.activemq.artemis.api.core.client.ClientSession;
 import org.candlepin.auth.PrincipalData;
 
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -43,34 +44,40 @@ import java.io.StringWriter;
 public class ListenerWrapperTest {
     @Mock private EventListener mockEventListener;
     @Mock private ClientMessage mockClientMessage;
+    @Mock private ClientSession mockClientSession;
     @Spy private ObjectMapper mapper = new ObjectMapper();
     @Spy private ActiveMQBuffer activeMQBuffer = ActiveMQBuffers.fixedBuffer(1000);
     private ListenerWrapper listenerWrapper;
 
     @Before
     public void init() {
-        this.listenerWrapper = new ListenerWrapper(mockEventListener, mapper);
+        this.listenerWrapper = new ListenerWrapper(mockEventListener, mapper, mockClientSession);
         when(mockClientMessage.getBodyBuffer())
             .thenReturn(activeMQBuffer);
     }
 
-    @Test(expected = RuntimeException.class)
-    public void whenMapperReadThrowsExceptionThenOnMessageShouldFail() throws Exception {
+    @Test
+    public void whenMapperReadThrowsExceptionThenMessageShouldBeAckedAndSessionRolledBack() throws Exception {
         doReturn("test123").when(activeMQBuffer).readString();
         doThrow(new JsonMappingException("Induced exception"))
             .when(mapper).readValue(anyString(), eq(Event.class));
         this.listenerWrapper.onMessage(mockClientMessage);
+        verify(mockClientMessage).acknowledge();
+        verifyZeroInteractions(mockEventListener);
+        verify(mockClientSession).rollback();
+        verify(mockClientSession, never()).commit();
     }
 
     @Test
-    public void whenMsgAcknowledgeThrowsExceptionThenOnMessageShouldntFail()
+    public void whenMsgAcknowledgeThrowsExceptionSessionIsRolledBack()
         throws Exception {
-        doReturn(eventJson()).when(activeMQBuffer).readString();
         doThrow(new ActiveMQException(ActiveMQExceptionType.DISCONNECTED,
             "Induced exception for junit testing"))
             .when(mockClientMessage).acknowledge();
         this.listenerWrapper.onMessage(mockClientMessage);
-        verify(this.mockEventListener).onEvent(any(Event.class));
+        verify(mockClientSession).rollback();
+        verify(mockClientSession, never()).commit();
+        verifyZeroInteractions(this.mockEventListener);
     }
 
     @Test
@@ -80,11 +87,26 @@ public class ListenerWrapperTest {
         this.listenerWrapper.onMessage(mockClientMessage);
         verify(this.mockEventListener).onEvent(any(Event.class));
         verify(this.mockClientMessage).acknowledge();
+        verify(mockClientSession).commit();
+        verify(mockClientSession, never()).rollback();
     }
 
-    @Test(expected = NullPointerException.class)
-    public void onMessageNull() {
+    @Test
+    public void onMessageNull() throws Exception {
         this.listenerWrapper.onMessage(null);
+        verify(mockClientSession).rollback();
+        verify(mockClientSession, never()).commit();
+        verifyZeroInteractions(this.mockEventListener);
+    }
+
+    @Test
+    public void sessionIsRolledBackWhenAnyExceptionIsThrownFromEventListener() throws Exception {
+        doReturn(eventJson()).when(activeMQBuffer).readString();
+        doThrow(new RuntimeException("Forced")).when(mockEventListener).onEvent(any(Event.class));
+        this.listenerWrapper.onMessage(mockClientMessage);
+        verify(this.mockClientMessage).acknowledge();
+        verify(mockClientSession).rollback();
+        verify(mockClientSession, never()).commit();
     }
 
     private String eventJson() throws Exception {
