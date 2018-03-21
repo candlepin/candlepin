@@ -102,7 +102,7 @@ public class ActiveMQContextListener {
             config.setPagingDirectory(new File(baseDir, "paging").toString());
 
             Map<String, AddressSettings> settings = new HashMap<>();
-            AddressSettings pagingConfig = new AddressSettings();
+            AddressSettings commonAddressConfig = new AddressSettings();
 
             String addressPolicyString =
                 candlepinConfig.getString(ConfigProperties.ACTIVEMQ_ADDRESS_FULL_POLICY);
@@ -122,13 +122,17 @@ public class ActiveMQContextListener {
             }
 
             // Paging sizes need to be converted to bytes
-            pagingConfig.setMaxSizeBytes(maxQueueSizeInMb * FileUtils.ONE_MB);
+            commonAddressConfig.setMaxSizeBytes(maxQueueSizeInMb * FileUtils.ONE_MB);
             if (addressPolicy == AddressFullMessagePolicy.PAGE) {
-                pagingConfig.setPageSizeBytes(maxPageSizeInMb * FileUtils.ONE_MB);
+                commonAddressConfig.setPageSizeBytes(maxPageSizeInMb * FileUtils.ONE_MB);
             }
-            pagingConfig.setAddressFullMessagePolicy(addressPolicy);
+            commonAddressConfig.setAddressFullMessagePolicy(addressPolicy);
+
+            // Set the retry settings on the common address configuration.
+            configureMessageRetry(commonAddressConfig, candlepinConfig);
+
             //Enable for all the queues
-            settings.put("#", pagingConfig);
+            settings.put("#", commonAddressConfig);
             config.setAddressesSettings(settings);
 
             int maxScheduledThreads = candlepinConfig.getInt(ConfigProperties.ACTIVEMQ_MAX_SCHEDULED_THREADS);
@@ -205,6 +209,26 @@ public class ActiveMQContextListener {
         catch (Exception e) {
             log.error("Error starting AMQP client", e);
         }
+    }
+
+    /**
+     * Configure message redelivery. We set the maximum number of times that a message should
+     * be redelivered to 0 so that messages will remain in the queue and will never get sent
+     * to the dead letter queue. Since candlepin does not currently set up, or use, a dead
+     * letter queue, any messages sent there will be lost. We need to prevent this.
+     *
+     * @param addressSettings the AddressSetting to apply the retry settings to.
+     * @param candlepinConfig the candlepin configuration to get the settings from.
+     */
+    private void configureMessageRetry(AddressSettings addressSettings,
+        org.candlepin.common.config.Configuration candlepinConfig) {
+        addressSettings.setRedeliveryDelay(
+            candlepinConfig.getLong(ConfigProperties.ACTIVEMQ_REDELIVERY_DELAY));
+        addressSettings.setMaxRedeliveryDelay(
+            candlepinConfig.getLong(ConfigProperties.ACTIVEMQ_MAX_REDELIVERY_DELAY));
+        addressSettings.setRedeliveryMultiplier(
+            candlepinConfig.getLong(ConfigProperties.ACTIVEMQ_REDELIVERY_MULTIPLIER));
+        addressSettings.setMaxDeliveryAttempts(0);
     }
 
     /**
