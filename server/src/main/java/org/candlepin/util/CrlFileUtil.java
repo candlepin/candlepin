@@ -16,7 +16,7 @@ package org.candlepin.util;
 
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
-import org.candlepin.pki.PKIReader;
+import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.X509CRLEntryWrapper;
 
@@ -73,15 +73,16 @@ public class CrlFileUtil {
     private static final Pattern CRL_FOOTER_PATTERN = Pattern.compile("^(-+)END (.+)\\1$");
     private static final Pattern WHITESPACE = Pattern.compile("^\\s.*$");
 
-    private final PKIReader pkiReader;
+    private final CertificateReader certificateReader;
     private final PKIUtility pkiUtility;
     private CertificateSerialCurator certificateSerialCurator;
 
     private final ReadWriteLock lock = new ReentrantReadWriteLock(true);
 
     @Inject
-    public CrlFileUtil(PKIReader pkiReader, PKIUtility pkiUtility, CertificateSerialCurator curator) {
-        this.pkiReader = pkiReader;
+    public CrlFileUtil(CertificateReader certificateReader, PKIUtility pkiUtility,
+        CertificateSerialCurator curator) {
+        this.certificateReader = certificateReader;
         this.pkiUtility = pkiUtility;
         this.certificateSerialCurator = curator;
     }
@@ -201,9 +202,9 @@ public class CrlFileUtil {
             reaper = new Base64InputStream(new FileInputStream(strippedFile));
 
             // Note: This will break if we ever stop using RSA keys
-            PrivateKey key = this.pkiReader.getCaKey();
+            PrivateKey key = this.certificateReader.getCaKey();
             X509CRLStreamWriter writer = new X509CRLStreamWriter(
-                input, (RSAPrivateKey) key, this.pkiReader.getCACert());
+                input, (RSAPrivateKey) key, this.certificateReader.getCACert());
 
             // Add new entries
             if (revoke != null) {
