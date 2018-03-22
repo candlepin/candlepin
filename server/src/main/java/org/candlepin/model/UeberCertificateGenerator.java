@@ -111,11 +111,7 @@ public class UeberCertificateGenerator {
     }
 
     private UeberCertificate generateUeberCert(Owner owner, String generatedByUsername) throws Exception {
-        ConsumerType ueberCertType = this.consumerTypeCurator.lookupByLabel(UEBER_CERT_CONSUMER_TYPE);
-        if (ueberCertType == null) {
-            // The ueber cert consumer type doesn't exist yet; let's create it now.
-            ueberCertType = this.consumerTypeCurator.create(new ConsumerType(UEBER_CERT_CONSUMER_TYPE));
-        }
+        ConsumerType ueberCertType = this.consumerTypeCurator.lookupByLabel(UEBER_CERT_CONSUMER_TYPE, true);
 
         UeberCertData ueberCertData = new UeberCertData(owner, generatedByUsername, ueberCertType);
 

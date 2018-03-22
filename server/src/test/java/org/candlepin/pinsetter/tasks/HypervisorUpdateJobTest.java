@@ -98,7 +98,10 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
         ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.HYPERVISOR);
         ctype.setId("test-ctype");
 
-        when(consumerTypeCurator.create(any(ConsumerType.class))).thenReturn(ctype);
+        when(consumerTypeCurator.lookupByLabel(eq(ConsumerTypeEnum.HYPERVISOR.getLabel()))).thenReturn(ctype);
+        when(consumerTypeCurator.lookupByLabel(eq(ConsumerTypeEnum.HYPERVISOR.getLabel()), anyBoolean()))
+            .thenReturn(ctype);
+
         when(owner.getKey()).thenReturn("joe");
         when(principal.getUsername()).thenReturn("joe user");
 

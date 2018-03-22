@@ -108,10 +108,7 @@ public class HypervisorResource {
         this.translator = translator;
         this.guestIdResource = guestIdResource;
 
-        this.hypervisorType = consumerTypeCurator.lookupByLabel(ConsumerTypeEnum.HYPERVISOR.getLabel());
-        if (this.hypervisorType == null) {
-            this.hypervisorType = consumerTypeCurator.create(new ConsumerType(ConsumerTypeEnum.HYPERVISOR));
-        }
+        this.hypervisorType = consumerTypeCurator.lookupByLabel(ConsumerTypeEnum.HYPERVISOR.getLabel(), true);
     }
 
     /**
