@@ -484,12 +484,12 @@ class Candlepin
     return get("/pools", params)
   end
 
-  def list_owner_pools(owner_key, params = {}, attribute_filters=[])
+  def list_owner_pools(owner_key, params = {}, attribute_filters=[], dont_parse= false)
     path = "/owners/#{owner_key}/pools"
 
     params[:attribute] = attribute_filters if !attribute_filters.empty?
 
-    return get(path, params)
+    return get(path, params, :json, dont_parse)
   end
 
   def list_owner_service_levels(owner_key, exempt=false)

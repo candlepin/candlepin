@@ -49,6 +49,7 @@ import javax.ws.rs.ext.Provider;
 public class LinkHeaderResponseFilter implements ContainerResponseFilter {
     private static Logger log = LoggerFactory.getLogger(LinkHeaderResponseFilter.class);
     public static final String LINK_HEADER = "Link";
+    public static final String TOTAL_RECORDS_COUNT = "X-total-count";
 
     private String apiUrlPrefixKey;
     private Configuration config;
@@ -102,6 +103,7 @@ public class LinkHeaderResponseFilter implements ContainerResponseFilter {
         header.addLink(null, "first", buildPageLink(builder, 1), null);
         header.addLink(null, "last", buildPageLink(builder, getLastPage(page)), null);
         respContext.getHeaders().add(LINK_HEADER, header.toString());
+        respContext.getHeaders().add(TOTAL_RECORDS_COUNT, page.getMaxRecords());
     }
 
     protected String buildPageLink(UriBuilder b, int value) {
