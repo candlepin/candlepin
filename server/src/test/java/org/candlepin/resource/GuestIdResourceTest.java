@@ -35,6 +35,7 @@ import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.GuestIdCurator;
 import org.candlepin.model.Owner;
@@ -59,8 +60,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 
-import javax.inject.Inject;
 import javax.inject.Provider;
+
+
 
 /**
  * GuestIdResourceTest
@@ -78,14 +80,14 @@ public class GuestIdResourceTest {
     @Mock private EventSink sink;
     @Mock private ServiceLevelValidator mockedServiceLevelValidator;
     @Mock private ConsumerEnricher consumerEnricher;
-    private ModelTranslator translator;
+    @Mock private EnvironmentCurator environmentCurator;
 
     private GuestIdResource guestIdResource;
 
     private Consumer consumer;
     private Owner owner;
     private ConsumerType ct;
-    @Inject protected ModelTranslator modelTranslator;
+    protected ModelTranslator modelTranslator;
 
     private GuestMigration testMigration;
     private Provider<GuestMigration> migrationProvider;
@@ -95,15 +97,16 @@ public class GuestIdResourceTest {
         testMigration = Mockito.spy(new GuestMigration(consumerCurator));
         migrationProvider = Providers.of(testMigration);
 
+        this.modelTranslator = new StandardTranslator(this.consumerTypeCurator, this.environmentCurator);
+
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         owner = new Owner("test-owner", "Test Owner");
         ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         ct.setId("test-system-ctype");
 
         consumer = new Consumer("consumer", "test", owner, ct);
-        translator = new StandardTranslator(consumerTypeCurator);
         guestIdResource = new GuestIdResource(guestIdCurator, consumerCurator, consumerTypeCurator,
-            consumerResource, i18n, eventFactory, sink, migrationProvider, translator);
+            consumerResource, i18n, eventFactory, sink, migrationProvider, this.modelTranslator);
 
         when(consumerCurator.findByUuid(consumer.getUuid())).thenReturn(consumer);
         when(consumerCurator.verifyAndLookupConsumer(consumer.getUuid())).thenReturn(consumer);

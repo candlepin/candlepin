@@ -29,6 +29,7 @@ import org.candlepin.model.ContentAccessCertificateCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContent;
+import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.KeyPairCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerContentCurator;
@@ -82,6 +83,7 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
     private OwnerEnvContentAccessCurator ownerEnvContentAccessCurator;
     private ConsumerCurator consumerCurator;
     private ConsumerTypeCurator consumerTypeCurator;
+    private EnvironmentCurator environmentCurator;
 
 
     @Inject
@@ -93,7 +95,8 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         OwnerContentCurator ownerContentCurator,
         OwnerEnvContentAccessCurator ownerEnvContentAccessCurator,
         ConsumerCurator consumerCurator,
-        ConsumerTypeCurator consumerTypeCurator) {
+        ConsumerTypeCurator consumerTypeCurator,
+        EnvironmentCurator environmentCurator) {
 
         this.pki = pki;
         this.contentAccessCertificateCurator = contentAccessCertificateCurator;
@@ -104,6 +107,7 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         this.ownerEnvContentAccessCurator = ownerEnvContentAccessCurator;
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
+        this.environmentCurator = environmentCurator;
     }
 
     @Transactional
@@ -163,7 +167,8 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         else {
             pem = existing.getCert();
         }
-        Environment env = consumer.getEnvironment();
+
+        Environment env = this.environmentCurator.getConsumerEnvironment(consumer);
         // we need to see if this is newer than the previous result
         OwnerEnvContentAccess oeca = ownerEnvContentAccessCurator.getContentAccess(owner.getId(),
             env == null ? null : env.getId());
@@ -188,7 +193,8 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         if (date == null) {
             return true;
         }
-        Environment env = consumer.getEnvironment();
+
+        Environment env = this.environmentCurator.getConsumerEnvironment(consumer);
         Owner owner = consumer.getOwner();
         OwnerEnvContentAccess oeca = ownerEnvContentAccessCurator.getContentAccess(
             owner.getId(), env == null ? null : env.getId());
@@ -221,7 +227,10 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         org.candlepin.model.dto.Content dContent = new org.candlepin.model.dto.Content();
         List<org.candlepin.model.dto.Content> dtoContents = new ArrayList<>();
         dtoContents.add(dContent);
-        dContent.setPath(getContentPrefix(consumer.getOwner(), consumer.getEnvironment()));
+
+        Environment environment = this.environmentCurator.getConsumerEnvironment(consumer);
+        dContent.setPath(getContentPrefix(consumer.getOwner(), environment));
+
         container.setContent(dtoContents);
 
         Set<X509ExtensionWrapper> extensions = prepareV3Extensions();
@@ -230,6 +239,7 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         X509Certificate x509Cert =  this.pki.createX509Certificate(
             createDN(consumer), extensions, byteExtensions, startDate,
             endDate, keyPair, serialNumber, null);
+
         return x509Cert;
     }
 
@@ -273,19 +283,18 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         // we can determine if anything needs to be skipped:
         Map<String, EnvironmentContent> promotedContent = new HashMap<>();
         if (environment != null) {
-            log.debug("Consumer has environment, checking for promoted content in: " +
-                environment);
-            for (EnvironmentContent envContent :
-                environment.getEnvironmentContent()) {
-                log.debug("  promoted content: " + envContent.getContent().getId());
+            log.debug("Consumer has an environment, checking for promoted content in: {}", environment);
+
+            for (EnvironmentContent envContent : environment.getEnvironmentContent()) {
+                log.debug("  promoted content: {}", envContent.getContent().getId());
                 promotedContent.put(envContent.getContent().getId(), envContent);
             }
         }
+
         return promotedContent;
     }
 
-    private String getContentPrefix(Owner owner, Environment environment)
-        throws IOException {
+    private String getContentPrefix(Owner owner, Environment environment) throws IOException {
         StringBuffer contentPrefix = new StringBuffer();
         contentPrefix.append("/");
         contentPrefix.append(owner.getKey());
@@ -301,10 +310,14 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         sb.append(consumer.getUuid());
         sb.append(", O=");
         sb.append(consumer.getOwner().getKey());
-        if (consumer.getEnvironment() != null) {
+
+        if (consumer.getEnvironmentId() != null) {
+            Environment environment = this.environmentCurator.getConsumerEnvironment(consumer);
+
             sb.append(", OU=");
-            sb.append(consumer.getEnvironment().getName());
+            sb.append(environment.getName());
         }
+
         return sb.toString();
     }
 

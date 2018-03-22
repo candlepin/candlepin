@@ -144,9 +144,11 @@ public class EnvironmentResource {
             throw new NotFoundException(i18n.tr("No such environment: {0}", envId));
         }
 
+        CandlepinQuery<Consumer> consumers = this.envCurator.getEnvironmentConsumers(e);
+
         // Cleanup all consumers and their entitlements:
         log.info("Deleting consumers in environment {}", e);
-        for (Consumer c : e.getConsumers()) {
+        for (Consumer c : consumers.list()) {
             log.info("Deleting consumer: {}", c);
 
             // We're about to delete these consumers; no need to regen/dirty their dependent

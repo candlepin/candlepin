@@ -261,12 +261,11 @@ public class X509ExtensionUtil  extends X509Util{
 
             // Check if we should override the enabled flag due to setting on promoted
             // content:
-            if ((consumer.getEnvironment() != null) && enableEnvironmentFiltering) {
+            if (enableEnvironmentFiltering && consumer.getEnvironmentId() != null) {
                 // we know content has been promoted at this point:
-                Boolean enabledOverride = promotedContent.get(
-                    pc.getContent().getId()).getEnabled();
+                Boolean enabledOverride = promotedContent.get(pc.getContent().getId()).getEnabled();
                 if (enabledOverride != null) {
-                    log.debug("overriding enabled flag: " + enabledOverride);
+                    log.debug("overriding enabled flag: {}", enabledOverride);
                     enabled = enabledOverride;
                 }
             }

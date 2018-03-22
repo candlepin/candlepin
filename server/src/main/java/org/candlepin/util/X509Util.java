@@ -84,12 +84,10 @@ public abstract class X509Util {
 
         for (ProductContent pc : prod.getProductContent()) {
             // Filter any content not promoted to environment.
-            if (filterEnvironment &&
-                (consumer.getEnvironment() != null &&
-                !promotedContent.containsKey(pc.getContent().getId()))) {
+            if (filterEnvironment && consumer.getEnvironmentId() != null &&
+                !promotedContent.containsKey(pc.getContent().getId())) {
 
-                log.debug("Skipping content not promoted to environment: " +
-                    pc.getContent().getId());
+                log.debug("Skipping content not promoted to environment: {}" + pc.getContent());
                 continue;
             }
 

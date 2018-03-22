@@ -30,6 +30,7 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerProductCurator;
@@ -90,6 +91,7 @@ public class InstalledProductStatusCalculatorTest {
     @Mock private ConsumerCurator consumerCurator;
     @Mock private ConsumerTypeCurator consumerTypeCurator;
     @Mock private EntitlementCurator entCurator;
+    @Mock private EnvironmentCurator environmentCurator;
     @Mock private RulesCurator rulesCuratorMock;
     @Mock private EventSink eventSink;
     @Mock private Provider<JsRunnerRequestCache> cacheProvider;
@@ -107,7 +109,7 @@ public class InstalledProductStatusCalculatorTest {
     public void setUp() {
         MockitoAnnotations.initMocks(this);
 
-        translator = new StandardTranslator(this.consumerTypeCurator);
+        translator = new StandardTranslator(this.consumerTypeCurator, this.environmentCurator);
 
         // Load the default production rules:
         InputStream is = this.getClass().getResourceAsStream(RulesCurator.DEFAULT_RULES_FILE);

@@ -63,6 +63,7 @@ import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Environment;
+import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.HypervisorId;
 import org.candlepin.model.Owner;
@@ -87,7 +88,8 @@ import com.google.inject.Inject;
 public class StandardTranslator extends SimpleModelTranslator {
 
     @Inject
-    public StandardTranslator(ConsumerTypeCurator consumerTypeCurator) {
+    public StandardTranslator(ConsumerTypeCurator consumerTypeCurator,
+        EnvironmentCurator environmentCurator) {
 
         // API translators
         /////////////////////////////////////////////
@@ -104,7 +106,7 @@ public class StandardTranslator extends SimpleModelTranslator {
         this.registerTranslator(
             new CertificateTranslator(), Certificate.class, CertificateDTO.class);
         this.registerTranslator(
-            new org.candlepin.dto.api.v1.ConsumerTranslator(consumerTypeCurator),
+            new org.candlepin.dto.api.v1.ConsumerTranslator(consumerTypeCurator, environmentCurator),
             Consumer.class, org.candlepin.dto.api.v1.ConsumerDTO.class);
         this.registerTranslator(
             new ConsumerInstalledProductTranslator(), ConsumerInstalledProduct.class,

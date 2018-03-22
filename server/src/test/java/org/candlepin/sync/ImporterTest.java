@@ -40,6 +40,7 @@ import org.candlepin.model.DistributorVersionCapability;
 import org.candlepin.model.DistributorVersionCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
 import org.candlepin.model.IdentityCertificateCurator;
@@ -114,6 +115,7 @@ public class ImporterTest {
     private SyncUtils su;
     private ProductCurator pc;
     private EntitlementCurator ec;
+    private EnvironmentCurator environmentCurator;
     private SubscriptionReconciler mockSubReconciler;
     private ConsumerTypeCurator consumerTypeCurator;
     private ModelTranslator translator;
@@ -136,6 +138,7 @@ public class ImporterTest {
         config = new CandlepinCommonTestConfig();
         pc = Mockito.mock(ProductCurator.class);
         ec = Mockito.mock(EntitlementCurator.class);
+        this.environmentCurator = Mockito.mock(EnvironmentCurator.class);
         ProductCachedSerializationModule productCachedModule = new ProductCachedSerializationModule(pc);
         su = new SyncUtils(config, productCachedModule);
         PrintStream ps = new PrintStream(
@@ -148,7 +151,7 @@ public class ImporterTest {
         this.mockSubReconciler = Mockito.mock(SubscriptionReconciler.class);
         this.consumerTypeCurator = Mockito.mock(ConsumerTypeCurator.class);
 
-        this.translator = new StandardTranslator(this.consumerTypeCurator);
+        this.translator = new StandardTranslator(this.consumerTypeCurator, this.environmentCurator);
     }
 
     @After
@@ -169,10 +172,8 @@ public class ImporterTest {
          * make sure version is > ABC
          */
         Date now = new Date();
-        File file = createFile("meta", "0.0.3", now,
-            "test_user", "prefix");
-        File actual = createFile("meta.json", "0.0.3", now,
-            "test_user", "prefix");
+        File file = createFile("meta", "0.0.3", now, "test_user", "prefix");
+        File actual = createFile("meta.json", "0.0.3", now, "test_user", "prefix");
         ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
         ExporterMetadata em = new ExporterMetadata();
         Date daybefore = getDateBeforeDays(1);

@@ -31,7 +31,6 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.api.v1.GuestIdDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -105,14 +104,13 @@ public class HypervisorResourceTest {
     @Mock private ConsumerEnricher consumerEnricher;
     @Mock private GuestIdCurator guestIdCurator;
     private GuestIdResource guestIdResource;
-    private ModelTranslator translator;
 
     private ConsumerResource consumerResource;
     private I18n i18n;
     private ConsumerType hypervisorType;
     private HypervisorResource hypervisorResource;
-    @Inject
-    protected ModelTranslator modelTranslator;
+
+    @Inject protected ModelTranslator modelTranslator;
 
     private Provider<GuestMigration> migrationProvider;
     private GuestMigration testMigration;
@@ -131,8 +129,6 @@ public class HypervisorResourceTest {
 
         this.mockConsumerType(this.hypervisorType);
 
-        this.translator = new StandardTranslator(this.consumerTypeCurator);
-
         this.consumerResource = new ConsumerResource(this.consumerCurator,
             this.consumerTypeCurator, null, this.subscriptionService, this.ownerService, null,
             this.idCertService, null, this.i18n, this.sink, this.eventFactory, null, null,
@@ -144,10 +140,10 @@ public class HypervisorResourceTest {
 
         this.guestIdResource = new GuestIdResource(this.guestIdCurator, this.consumerCurator,
             this.consumerTypeCurator, this.consumerResource, this.i18n, this.eventFactory, this.sink,
-            migrationProvider, translator);
+            migrationProvider, modelTranslator);
 
         hypervisorResource = new HypervisorResource(consumerResource, consumerCurator, consumerTypeCurator,
-            i18n, ownerCurator, migrationProvider, translator, guestIdResource);
+            i18n, ownerCurator, migrationProvider, modelTranslator, guestIdResource);
 
         // Ensure that we get the consumer that was passed in back from the create call.
         when(consumerCurator.create(any(Consumer.class))).thenAnswer(new Answer<Object>() {
@@ -176,8 +172,8 @@ public class HypervisorResourceTest {
     }
 
     protected ConsumerType mockConsumerType(ConsumerType ctype) {
-        // Ensure the type has an ID
         if (ctype != null) {
+            // Ensure the type has an ID
             if (ctype.getId() == null) {
                 ctype.setId("test-ctype-" + ctype.getLabel() + "-" + TestUtil.randomInt());
             }
@@ -192,15 +188,15 @@ public class HypervisorResourceTest {
                     Object[] args = invocation.getArguments();
                     Consumer consumer = (Consumer) args[0];
                     ConsumerTypeCurator curator = (ConsumerTypeCurator) invocation.getMock();
-
                     ConsumerType ctype = null;
 
-                    if (consumer != null && consumer.getTypeId() != null) {
-                        ctype = curator.find(consumer.getTypeId());
+                    if (consumer == null || consumer.getTypeId() == null) {
+                        throw new IllegalArgumentException("consumer is null or lacks a type ID");
+                    }
 
-                        if (ctype == null) {
-                            throw new IllegalStateException("No such consumer type: " + consumer.getTypeId());
-                        }
+                    ctype = curator.find(consumer.getTypeId());
+                    if (ctype == null) {
+                        throw new IllegalStateException("No such consumer type: " + consumer.getTypeId());
                     }
 
                     return ctype;
@@ -268,6 +264,7 @@ public class HypervisorResourceTest {
         existing.setUuid("test-host");
         existing.setOwner(o);
         existing.addGuestId(new GuestId("GUEST_A"));
+        existing.setType(this.hypervisorType);
 
         when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
         // Force update

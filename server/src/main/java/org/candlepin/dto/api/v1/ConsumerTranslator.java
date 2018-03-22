@@ -22,6 +22,8 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.ConsumerCapability;
 import org.candlepin.model.ConsumerInstalledProduct;
+import org.candlepin.model.Environment;
+import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.Release;
 
 import java.util.ArrayList;
@@ -34,14 +36,22 @@ import java.util.Set;
  */
 public class ConsumerTranslator extends TimestampedEntityTranslator<Consumer, ConsumerDTO> {
 
-    private ConsumerTypeCurator consumerTypeCurator;
+    protected ConsumerTypeCurator consumerTypeCurator;
+    protected EnvironmentCurator environmentCurator;
 
-    public ConsumerTranslator(ConsumerTypeCurator consumerTypeCurator) {
+    public ConsumerTranslator(ConsumerTypeCurator consumerTypeCurator,
+        EnvironmentCurator environmentCurator) {
+
         if (consumerTypeCurator == null) {
             throw new IllegalArgumentException("ConsumerTypeCurator is null");
         }
 
+        if (environmentCurator == null) {
+            throw new IllegalArgumentException("environmentCurator is null");
+        }
+
         this.consumerTypeCurator = consumerTypeCurator;
+        this.environmentCurator = environmentCurator;
     }
 
     /**
@@ -99,7 +109,9 @@ public class ConsumerTranslator extends TimestampedEntityTranslator<Consumer, Co
         // Process nested objects if we have a ModelTranslator to use to the translation...
         if (translator != null) {
             dest.setOwner(translator.translate(source.getOwner(), OwnerDTO.class));
-            dest.setEnvironment(translator.translate(source.getEnvironment(), EnvironmentDTO.class));
+
+            Environment environment = this.environmentCurator.getConsumerEnvironment(source);
+            dest.setEnvironment(translator.translate(environment, EnvironmentDTO.class));
 
             Set<ConsumerInstalledProduct> installedProducts = source.getInstalledProducts();
             if (installedProducts != null) {

@@ -216,13 +216,14 @@ public class PoolManagerTest {
     }
 
     protected ConsumerType mockConsumerType(ConsumerType ctype) {
-        // Ensure the type has an ID
         if (ctype != null) {
+            // Ensure the type has an ID
             if (ctype.getId() == null) {
                 ctype.setId("test-ctype-" + ctype.getLabel() + "-" + TestUtil.randomInt());
             }
 
             when(consumerTypeCuratorMock.lookupByLabel(eq(ctype.getLabel()))).thenReturn(ctype);
+            when(consumerTypeCuratorMock.lookupByLabel(eq(ctype.getLabel()), anyBoolean())).thenReturn(ctype);
             when(consumerTypeCuratorMock.find(eq(ctype.getId()))).thenReturn(ctype);
 
             doAnswer(new Answer<ConsumerType>() {
@@ -231,15 +232,15 @@ public class PoolManagerTest {
                     Object[] args = invocation.getArguments();
                     Consumer consumer = (Consumer) args[0];
                     ConsumerTypeCurator curator = (ConsumerTypeCurator) invocation.getMock();
-
                     ConsumerType ctype = null;
 
-                    if (consumer != null && consumer.getTypeId() != null) {
-                        ctype = curator.find(consumer.getTypeId());
+                    if (consumer == null || consumer.getTypeId() == null) {
+                        throw new IllegalArgumentException("consumer is null or lacks a type ID");
+                    }
 
-                        if (ctype == null) {
-                            throw new IllegalStateException("No such consumer type: " + consumer.getTypeId());
-                        }
+                    ctype = curator.find(consumer.getTypeId());
+                    if (ctype == null) {
+                        throw new IllegalStateException("No such consumer type: " + consumer.getTypeId());
                     }
 
                     return ctype;

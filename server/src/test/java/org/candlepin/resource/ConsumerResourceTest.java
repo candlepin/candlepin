@@ -62,6 +62,7 @@ import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
@@ -157,6 +158,7 @@ public class ConsumerResourceTest {
     @Mock private ConsumerTypeCurator mockConsumerTypeCurator;
     @Mock private DefaultContentAccessCertServiceAdapter mockContentAccessCertService;
     @Mock private EventSink sink;
+    @Mock private EnvironmentCurator mockEnvironmentCurator;
 
     private GuestMigration testMigration;
     private Provider<GuestMigration> migrationProvider;
@@ -166,7 +168,7 @@ public class ConsumerResourceTest {
     @Before
     public void setUp() {
         this.config = new CandlepinCommonTestConfig();
-        this.translator = new StandardTranslator(mockConsumerTypeCurator);
+        this.translator = new StandardTranslator(mockConsumerTypeCurator, mockEnvironmentCurator);
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         when(eventBuilder.setEventData(any(Consumer.class))).thenReturn(eventBuilder);
         when(eventFactory.getEventBuilder(any(Target.class), any(Type.class))).thenReturn(eventBuilder);
@@ -178,13 +180,14 @@ public class ConsumerResourceTest {
     }
 
     protected ConsumerType mockConsumerType(ConsumerType ctype) {
-        // Ensure the type has an ID
         if (ctype != null) {
+            // Ensure the type has an ID
             if (ctype.getId() == null) {
                 ctype.setId("test-ctype-" + ctype.getLabel() + "-" + TestUtil.randomInt());
             }
 
             when(mockConsumerTypeCurator.lookupByLabel(eq(ctype.getLabel()))).thenReturn(ctype);
+            when(mockConsumerTypeCurator.lookupByLabel(eq(ctype.getLabel()), anyBoolean())).thenReturn(ctype);
             when(mockConsumerTypeCurator.find(eq(ctype.getId()))).thenReturn(ctype);
 
             doAnswer(new Answer<ConsumerType>() {
@@ -193,15 +196,15 @@ public class ConsumerResourceTest {
                     Object[] args = invocation.getArguments();
                     Consumer consumer = (Consumer) args[0];
                     ConsumerTypeCurator curator = (ConsumerTypeCurator) invocation.getMock();
-
                     ConsumerType ctype = null;
 
-                    if (consumer != null && consumer.getTypeId() != null) {
-                        ctype = curator.find(consumer.getTypeId());
+                    if (consumer == null || consumer.getTypeId() == null) {
+                        throw new IllegalArgumentException("consumer is null or lacks a type ID");
+                    }
 
-                        if (ctype == null) {
-                            throw new IllegalStateException("No such consumer type: " + consumer.getTypeId());
-                        }
+                    ctype = curator.find(consumer.getTypeId());
+                    if (ctype == null) {
+                        throw new IllegalStateException("No such consumer type: " + consumer.getTypeId());
                     }
 
                     return ctype;

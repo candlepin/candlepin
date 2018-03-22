@@ -154,9 +154,8 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @JoinColumn(nullable = false)
     private Owner owner;
 
-    @ManyToOne
-    @JoinColumn(nullable = true)
-    private Environment environment;
+    @Column(name = "environment_id")
+    private String environmentId;
 
     @Column(name = "entitlement_count")
     @NotNull
@@ -642,12 +641,59 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         this.serviceLevel = level;
     }
 
-    public Environment getEnvironment() {
-        return environment;
+    /**
+     * Fetches the ID of the environment with which this consumer is associated. If the consumer is not
+     * associated with an environment, this method returns null.
+     *
+     * @return the ID of the environment for this consumer
+     */
+    public String getEnvironmentId() {
+        return this.environmentId;
     }
 
-    public void setEnvironment(Environment environment) {
-        this.environment = environment;
+    /**
+     * Sets or clears the environment ID for this consumer.
+     *
+     * It is advised to use the setEnvironment method rather than setting the ID directly, as this
+     * method does not perform any validation on the environment being set.
+     *
+     * @param environmentId
+     *  The ID of the environment to set for this consumer
+     *
+     * @return
+     *  A reference to this consumer
+     */
+    public Consumer setEnvironmentId(String environmentId) {
+        this.environmentId = environmentId != null && !environmentId.isEmpty() ? environmentId : null;
+        return this;
+    }
+
+    /**
+     * Sets or clears the environment ID for this consumer. If the environment is not null, but does not
+     * have an environment ID, this method throws an exception.
+     *
+     * @param environment
+     *  The environment to associate to this consumer, or null to clear the environment
+     *
+     * @throws IllegalStateException
+     *  if environment is not null, but does not have an environment ID
+     *
+     * @return
+     *  A reference to this consumer
+     */
+    public Consumer setEnvironment(Environment environment) {
+        if (environment != null) {
+            if (environment.getId() == null || environment.getId().isEmpty()) {
+                throw new IllegalStateException("environment has not been persisted");
+            }
+
+            this.environmentId = environment.getId();
+        }
+        else {
+            this.environmentId = null;
+        }
+
+        return this;
     }
 
     /**
