@@ -553,7 +553,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
     @Transactional
     protected <T> T get(Class<T> clazz, Serializable id) {
-        return clazz.cast(currentSession().get(clazz, id));
+        return this.currentSession().get(clazz, id);
     }
 
     @Transactional

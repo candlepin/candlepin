@@ -16,7 +16,9 @@ package org.candlepin.policy.criteria;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolFilterBuilder;
 
@@ -43,11 +45,15 @@ public class CriteriaRules  {
 
     protected Configuration config;
     protected ConsumerCurator consumerCurator;
+    protected ConsumerTypeCurator consumerTypeCurator;
 
     @Inject
-    public CriteriaRules(Configuration config, ConsumerCurator consumerCurator) {
+    public CriteriaRules(Configuration config, ConsumerCurator consumerCurator,
+        ConsumerTypeCurator consumerTypeCurator) {
+
         this.config = config;
         this.consumerCurator = consumerCurator;
+        this.consumerTypeCurator = consumerTypeCurator;
     }
 
     /**
@@ -69,10 +75,11 @@ public class CriteriaRules  {
         }
 
         List<Criterion> criteriaFilters = new LinkedList<>();
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
 
         // Don't load virt_only pools if this consumer isn't a guest
         // or a manifest consumer
-        if (consumer.isManifestDistributor()) {
+        if (ctype.isManifest()) {
             DetachedCriteria requiresHost = DetachedCriteria.forClass(Pool.class, "pool2")
                 .createAlias("pool2.attributes", "attrib")
                 .add(Restrictions.eqProperty("pool2.id", "id"))

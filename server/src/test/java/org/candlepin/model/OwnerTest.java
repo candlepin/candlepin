@@ -90,17 +90,14 @@ public class OwnerTest extends DatabaseTestFixture {
     @Test
     public void bidirectionalConsumers() throws Exception {
         beginTransaction();
-        Owner o = createOwner();
-        ConsumerType consumerType = TestUtil.createConsumerType();
-        Consumer c1 = TestUtil.createConsumer(consumerType, o);
-        Consumer c2 = TestUtil.createConsumer(consumerType, o);
+        Owner o = this.createOwner();
+        ConsumerType consumerType = this.createConsumerType();
+        Consumer c1 = this.createConsumer(o, consumerType);
+        Consumer c2 = this.createConsumer(o, consumerType);
         o.addConsumer(c1);
         o.addConsumer(c2);
 
-        ownerCurator.create(o);
-        consumerTypeCurator.create(consumerType);
-        consumerCurator.create(c1);
-        consumerCurator.create(c2);
+        ownerCurator.merge(o);
         commitTransaction();
 
         assertEquals(2, o.getConsumers().size());
@@ -112,9 +109,9 @@ public class OwnerTest extends DatabaseTestFixture {
     @Test
     public void objectMapper() {
         Owner o = createOwner();
-        ConsumerType consumerType = TestUtil.createConsumerType();
-        Consumer c1 = TestUtil.createConsumer(consumerType, o);
-        Consumer c2 = TestUtil.createConsumer(consumerType, o);
+        ConsumerType consumerType = this.createConsumerType();
+        Consumer c1 = this.createConsumer(o, consumerType);
+        Consumer c2 = this.createConsumer(o, consumerType);
         o.addConsumer(c1);
         o.addConsumer(c2);
         Set<Consumer> consumers = o.getConsumers();

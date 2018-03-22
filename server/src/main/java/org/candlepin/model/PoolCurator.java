@@ -77,13 +77,16 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     private static Logger log = LoggerFactory.getLogger(PoolCurator.class);
     private ConsumerCurator consumerCurator;
+    private ConsumerTypeCurator consumerTypeCurator;
+
     @Inject
     protected Injector injector;
 
     @Inject
-    public PoolCurator(ConsumerCurator consumerCurator) {
+    public PoolCurator(ConsumerCurator consumerCurator, ConsumerTypeCurator consumerTypeCurator) {
         super(Pool.class);
         this.consumerCurator = consumerCurator;
+        this.consumerTypeCurator = consumerTypeCurator;
     }
 
     @Override
@@ -359,7 +362,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             // We'll set the owner restriction later
             owner = consumer.getOwner();
 
-            if (consumer.isManifestDistributor()) {
+            ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
+            if (ctype.isManifest()) {
                 DetachedCriteria hostPoolSubquery = DetachedCriteria.forClass(Pool.class, "PoolI")
                     .createAlias("PoolI.attributes", "attrib")
                     .setProjection(Projections.id())
@@ -1513,7 +1517,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     public void calculateExportedForOwnersPools(Owner owner) {
         String stmt = "update Pool p set p.exported = coalesce(" +
             "(select sum(ent.quantity) FROM Entitlement ent, Consumer cons, ConsumerType ctype " +
-            "where ent.pool.id = p.id and ent.consumer.id = cons.id and cons.type.id = ctype.id " +
+            "where ent.pool.id = p.id and ent.consumer.id = cons.id and cons.typeId = ctype.id " +
             "and ctype.manifest = 'Y'),0) where p.owner = :owner";
 
         Query q = currentSession().createQuery(stmt);
@@ -1795,7 +1799,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     public void calculateSharedForOwnerPools(Owner owner) {
         String stmt = "update Pool p set p.shared = coalesce(" +
             "(select sum(ent.quantity) FROM Entitlement ent, Consumer cons, ConsumerType ctype " +
-            "where ent.pool.id = p.id and ent.consumer.id = cons.id and cons.type.id = ctype.id " +
+            "where ent.pool.id = p.id and ent.consumer.id = cons.id and cons.typeId = ctype.id " +
             "and ctype.label = 'share'), 0) where p.owner = :owner";
 
         Query q = currentSession().createQuery(stmt);

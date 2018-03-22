@@ -18,6 +18,8 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.dto.TimestampedEntityTranslator;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.ConsumerCapability;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.Release;
@@ -31,6 +33,16 @@ import java.util.Set;
  * ConsumerDTOs
  */
 public class ConsumerTranslator extends TimestampedEntityTranslator<Consumer, ConsumerDTO> {
+
+    private ConsumerTypeCurator consumerTypeCurator;
+
+    public ConsumerTranslator(ConsumerTypeCurator consumerTypeCurator) {
+        if (consumerTypeCurator == null) {
+            throw new IllegalArgumentException("ConsumerTypeCurator is null");
+        }
+
+        this.consumerTypeCurator = consumerTypeCurator;
+    }
 
     /**
      * {@inheritDoc}
@@ -60,9 +72,7 @@ public class ConsumerTranslator extends TimestampedEntityTranslator<Consumer, Co
      * {@inheritDoc}
      */
     @Override
-    public ConsumerDTO populate(ModelTranslator translator, Consumer source,
-        ConsumerDTO dest) {
-
+    public ConsumerDTO populate(ModelTranslator translator, Consumer source, ConsumerDTO dest) {
         dest = super.populate(translator, source, dest);
 
         dest.setId(source.getId())
@@ -125,11 +135,19 @@ public class ConsumerTranslator extends TimestampedEntityTranslator<Consumer, Co
                 dest.setCapabilities(capabilitiesDTO);
             }
 
+            // Temporary measure to maintain API compatibility
+            if (source.getTypeId() != null) {
+                ConsumerType ctype = this.consumerTypeCurator.getConsumerType(source);
+                dest.setType(translator.translate(ctype, ConsumerTypeDTO.class));
+            }
+            else {
+                dest.setType(null);
+            }
+
             //This will put in the property so that the virtWho instances won't error
             dest.setGuestIds(new ArrayList<>());
 
             dest.setHypervisorId(translator.translate(source.getHypervisorId(), HypervisorIdDTO.class));
-            dest.setType(translator.translate(source.getType(), ConsumerTypeDTO.class));
             dest.setIdCert(translator.translate(source.getIdCert(), CertificateDTO.class));
         }
         else {

@@ -268,7 +268,9 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         product.setAttribute(Pool.Attributes.REQUIRES_CONSUMER_TYPE, nonSystemType);
         Pool pool = TestUtil.createPool(owner, product);
         pool.setId("fakeid" + TestUtil.randomInt());
-        consumer.setType(new ConsumerType(nonSystemType));
+
+        ConsumerType ctype = this.mockConsumerType(new ConsumerType(nonSystemType));
+        consumer.setType(ctype);
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
@@ -515,8 +517,10 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
 
     @Test
     public void correctConsumerTypeShouldNotGenerateError() {
+        ConsumerType ctype = this.mockConsumerType(new ConsumerType(ConsumerTypeEnum.DOMAIN));
+
         Pool pool = setupProductWithConsumerTypeAttribute(ConsumerTypeEnum.DOMAIN);
-        consumer.setType(new ConsumerType(ConsumerTypeEnum.DOMAIN));
+        consumer.setType(ctype);
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
@@ -525,8 +529,10 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
 
     @Test
     public void mismatchingConsumerTypeShouldGenerateError() {
+        ConsumerType ctype = this.mockConsumerType(new ConsumerType(ConsumerTypeEnum.PERSON));
+
         Pool pool = setupProductWithConsumerTypeAttribute(ConsumerTypeEnum.DOMAIN);
-        consumer.setType(new ConsumerType(ConsumerTypeEnum.PERSON));
+        consumer.setType(ctype);
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertTrue(result.hasErrors());
@@ -554,8 +560,9 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
 
     @Test
     public void virtOnlyPoolGuestHostMatches() {
-        Consumer parent = new Consumer("test parent consumer", "test user", owner,
-            new ConsumerType(ConsumerTypeEnum.SYSTEM));
+        ConsumerType ctype = this.mockConsumerType(new ConsumerType(ConsumerTypeEnum.SYSTEM));
+
+        Consumer parent = new Consumer("test parent consumer", "test user", owner, ctype);
         Pool pool = setupHostRestrictedPool(parent);
 
         String guestId = "virtguestuuid";
@@ -571,14 +578,14 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
 
     @Test
     public void virtOnlyPoolGuestHostDoesNotMatch() {
+        ConsumerType ctype = this.mockConsumerType(new ConsumerType(ConsumerTypeEnum.SYSTEM));
+
         when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
         // Parent consumer of our guest:
-        Consumer parent = new Consumer("test parent consumer", "test user", owner,
-            new ConsumerType(ConsumerTypeEnum.SYSTEM));
+        Consumer parent = new Consumer("test parent consumer", "test user", owner, ctype);
 
         // Another parent we'll make a virt only pool for:
-        Consumer otherParent = new Consumer("test parent consumer", "test user", owner,
-            new ConsumerType(ConsumerTypeEnum.SYSTEM));
+        Consumer otherParent = new Consumer("test parent consumer", "test user", owner, ctype);
         Pool pool = setupHostRestrictedPool(otherParent);
 
         String guestId = "virtguestuuid";
@@ -596,11 +603,12 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
 
     @Test
     public void virtOnlyPoolGuestNoHost() {
+        ConsumerType ctype = this.mockConsumerType(new ConsumerType(ConsumerTypeEnum.SYSTEM));
+
         when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
 
         // Another parent we'll make a virt only pool for:
-        Consumer otherParent = new Consumer("test parent consumer", "test user", owner,
-            new ConsumerType(ConsumerTypeEnum.SYSTEM));
+        Consumer otherParent = new Consumer("test parent consumer", "test user", owner, ctype);
         Pool pool = setupHostRestrictedPool(otherParent);
 
         String guestId = "virtguestuuid";
@@ -660,9 +668,10 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
 
     @Test
     public void unmappedGuestGoodDate() {
+        ConsumerType ctype = this.mockConsumerType(new ConsumerType(ConsumerTypeEnum.SYSTEM));
+
         Pool pool = setupUnmappedGuestPool();
-        Consumer newborn = new Consumer("test newborn consumer", "test user", owner,
-            new ConsumerType(ConsumerTypeEnum.SYSTEM));
+        Consumer newborn = new Consumer("test newborn consumer", "test user", owner, ctype);
         newborn.setFact("virt.is_guest", "true");
         newborn.setCreated(new Date());
         ValidationResult result = enforcer.preEntitlement(newborn, pool, 1);
@@ -672,9 +681,10 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
 
     @Test
     public void unmappedGuestBadDate() {
+        ConsumerType ctype = this.mockConsumerType(new ConsumerType(ConsumerTypeEnum.SYSTEM));
+
         Pool pool = setupUnmappedGuestPool();
-        Consumer tooOld = new Consumer("test newborn consumer", "test user", owner,
-            new ConsumerType(ConsumerTypeEnum.SYSTEM));
+        Consumer tooOld = new Consumer("test newborn consumer", "test user", owner, ctype);
         tooOld.setFact("virt.is_guest", "true");
         Date twentyFiveHoursAgo = new Date(new Date().getTime() - 25L * 60L * 60L * 1000L);
         tooOld.setCreated(twentyFiveHoursAgo);
@@ -687,12 +697,13 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
 
     @Test
     public void unmappedGuestFuturePoolDate() {
+        ConsumerType ctype = this.mockConsumerType(new ConsumerType(ConsumerTypeEnum.SYSTEM));
+
         Date fourHoursFromNow = new Date(new Date().getTime() + 4L * 60L * 60L * 1000L);
         Pool pool = setupUnmappedGuestPool();
         pool.setStartDate(fourHoursFromNow);
 
-        Consumer consumer = new Consumer("test newborn consumer", "test user", owner,
-            new ConsumerType(ConsumerTypeEnum.SYSTEM));
+        Consumer consumer = new Consumer("test newborn consumer", "test user", owner, ctype);
         consumer.setFact("virt.is_guest", "true");
         consumer.setCreated(new Date());
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1, CallerType.BIND);
@@ -704,10 +715,10 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
 
     @Test
     public void mappedGuest() {
-        Consumer parent = new Consumer("test parent consumer", "test user", owner,
-            new ConsumerType(ConsumerTypeEnum.SYSTEM));
-        Consumer newborn = new Consumer("test newborn consumer", "test user", owner,
-            new ConsumerType(ConsumerTypeEnum.SYSTEM));
+        ConsumerType ctype = this.mockConsumerType(new ConsumerType(ConsumerTypeEnum.SYSTEM));
+
+        Consumer parent = new Consumer("test parent consumer", "test user", owner, ctype);
+        Consumer newborn = new Consumer("test newborn consumer", "test user", owner, ctype);
         newborn.setCreated(new java.util.Date());
         Pool pool = setupUnmappedGuestPool();
 
@@ -770,8 +781,10 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
 
     @Test
     public void hypervisorForSystemNotGenerateError() {
+        ConsumerType ctype = this.mockConsumerType(new ConsumerType(ConsumerTypeEnum.HYPERVISOR));
+
         Pool pool = setupProductWithConsumerTypeAttribute(ConsumerTypeEnum.SYSTEM);
-        consumer.setType(new ConsumerType(ConsumerTypeEnum.HYPERVISOR));
+        consumer.setType(ctype);
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
@@ -780,8 +793,10 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
 
     @Test
     public void systemForHypervisorGeneratesError() {
+        ConsumerType ctype = this.mockConsumerType(new ConsumerType(ConsumerTypeEnum.SYSTEM));
+
         Pool pool = setupProductWithConsumerTypeAttribute(ConsumerTypeEnum.HYPERVISOR);
-        consumer.setType(new ConsumerType(ConsumerTypeEnum.SYSTEM));
+        consumer.setType(ctype);
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertTrue(result.hasErrors());
@@ -839,8 +854,9 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
     @Test
     public void devPoolConsumerDoesNotMatch() {
         // Another consumer we'll make a dev pool for:
-        Consumer otherConsumer = new Consumer("test consumer", "test user", owner,
-            new ConsumerType(ConsumerTypeEnum.SYSTEM));
+        ConsumerType ctype = this.mockConsumerType(new ConsumerType(ConsumerTypeEnum.SYSTEM));
+
+        Consumer otherConsumer = new Consumer("test consumer", "test user", owner, ctype);
         Pool pool = setupDevConsumerRestrictedPool(otherConsumer);
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);

@@ -29,6 +29,7 @@ import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.GuestId;
@@ -78,6 +79,7 @@ public class AutobindRulesTest {
     @Mock private Configuration config;
     @Mock private RulesCurator rulesCurator;
     @Mock private ProductCurator mockProductCurator;
+    @Mock private ConsumerTypeCurator consumerTypeCurator;
 
     private ComplianceStatus compliance;
     private AutobindRules autobindRules; // TODO rename
@@ -103,13 +105,22 @@ public class AutobindRulesTest {
         when(cacheProvider.get()).thenReturn(cache);
         JsRunner jsRules = new JsRunnerProvider(rulesCurator, cacheProvider).get();
 
-        translator = new StandardTranslator();
-        autobindRules = new AutobindRules(jsRules, mockProductCurator,
+        translator = new StandardTranslator(consumerTypeCurator);
+        autobindRules = new AutobindRules(jsRules, mockProductCurator, consumerTypeCurator,
             new RulesObjectMapper(new ProductCachedSerializationModule(mockProductCurator)), translator);
 
         owner = new Owner();
-        consumer = new Consumer("test consumer", "test user", owner,
-            new ConsumerType(ConsumerTypeEnum.SYSTEM));
+
+
+        ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.SYSTEM);
+        ctype.setId("test-ctype");
+
+        consumer = new Consumer("test consumer", "test user", owner, ctype);
+
+        when(consumerTypeCurator.find(eq(ctype.getId()))).thenReturn(ctype);
+        when(consumerTypeCurator.lookupByLabel(eq(ctype.getLabel()))).thenReturn(ctype);
+        when(consumerTypeCurator.getConsumerType(eq(consumer))).thenReturn(ctype);
+
         compliance = new ComplianceStatus();
         activeGuestAttrs = new HashMap<>();
         activeGuestAttrs.put("virtWhoType", "libvirt");
@@ -167,8 +178,15 @@ public class AutobindRulesTest {
 
         // Create a hypervisor consumer which does *not* have a certificate version fact.
         // This replicates the real world scenario for virt-who created hypervisors.
-        consumer = new Consumer("test consumer", "test user", owner,
-                new ConsumerType(ConsumerTypeEnum.HYPERVISOR));
+
+        ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.HYPERVISOR);
+        ctype.setId("test-ctype");
+
+        consumer = new Consumer("test consumer", "test user", owner, ctype);
+
+        when(consumerTypeCurator.find(eq(ctype.getId()))).thenReturn(ctype);
+        when(consumerTypeCurator.lookupByLabel(eq(ctype.getLabel()))).thenReturn(ctype);
+        when(consumerTypeCurator.getConsumerType(eq(consumer))).thenReturn(ctype);
 
         List<PoolQuantity> results = autobindRules.selectBestPools(consumer,
             new String[]{ productId }, pools, compliance, null, new HashSet<>(), false);

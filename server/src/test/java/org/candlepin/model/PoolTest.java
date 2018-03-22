@@ -110,12 +110,10 @@ public class PoolTest extends DatabaseTestFixture {
             poolCurator.create(pool);
             owner = pool.getOwner();
 
-            consumer = TestUtil.createConsumer(owner);
+            consumer = this.createConsumer(owner);
 
             productCurator.create(prod1);
             poolCurator.create(pool);
-            consumerTypeCurator.create(consumer.getType());
-            consumerCurator.create(consumer);
 
             commitTransaction();
         }

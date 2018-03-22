@@ -90,8 +90,10 @@ public class ConsumerPrincipalTest {
 
     @Test
     public void equalsDifferentConsumer() {
-        Consumer c = new Consumer("Test Consumer", "test-consumer", new Owner("o1"),
-            new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM));
+        ConsumerType ctype = new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM);
+        ctype.setId("test-ctype");
+
+        Consumer c = new Consumer("Test Consumer", "test-consumer", new Owner("o1"), ctype);
         ConsumerPrincipal cp = new ConsumerPrincipal(c);
         assertFalse(principal.equals(cp));
     }

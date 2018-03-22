@@ -18,7 +18,11 @@ import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCapability;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentAccessCertificate;
 import org.candlepin.model.ContentAccessCertificateCurator;
@@ -61,10 +65,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+
+
 /**
  * DefaultEntitlementCertServiceAdapter
  */
 public class DefaultContentAccessCertServiceAdapter implements ContentAccessCertServiceAdapter {
+    private static Logger log = LoggerFactory.getLogger(DefaultContentAccessCertServiceAdapter.class);
 
     private PKIUtility pki;
     private KeyPairCurator keyPairCurator;
@@ -74,9 +81,8 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
     private X509V3ExtensionUtil v3extensionUtil;
     private OwnerEnvContentAccessCurator ownerEnvContentAccessCurator;
     private ConsumerCurator consumerCurator;
+    private ConsumerTypeCurator consumerTypeCurator;
 
-    private static Logger log =
-        LoggerFactory.getLogger(DefaultContentAccessCertServiceAdapter.class);
 
     @Inject
     public DefaultContentAccessCertServiceAdapter(PKIUtility pki,
@@ -86,7 +92,8 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         CertificateSerialCurator serialCurator,
         OwnerContentCurator ownerContentCurator,
         OwnerEnvContentAccessCurator ownerEnvContentAccessCurator,
-        ConsumerCurator consumerCurator) {
+        ConsumerCurator consumerCurator,
+        ConsumerTypeCurator consumerTypeCurator) {
 
         this.pki = pki;
         this.contentAccessCertificateCurator = contentAccessCertificateCurator;
@@ -96,6 +103,7 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         this.ownerContentCurator = ownerContentCurator;
         this.ownerEnvContentAccessCurator = ownerEnvContentAccessCurator;
         this.consumerCurator = consumerCurator;
+        this.consumerTypeCurator = consumerTypeCurator;
     }
 
     @Transactional
@@ -105,7 +113,9 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         Owner owner = consumer.getOwner();
         // we only know about one mode right now. If add any, we will need to add the
         // appropriate cert generation
-        if (!ORG_ENV_ACCESS_MODE.equals(owner.getContentAccessMode()) || !consumer.isCertV3Capable()) {
+        if (!ORG_ENV_ACCESS_MODE.equals(owner.getContentAccessMode()) ||
+            !this.consumerIsCertV3Capable(consumer)) {
+
             return null;
         }
 
@@ -221,6 +231,41 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
             createDN(consumer), extensions, byteExtensions, startDate,
             endDate, keyPair, serialNumber, null);
         return x509Cert;
+    }
+
+    /**
+     * Checks if the specified consumer is capable of using v3 certificates
+     *
+     * @param consumer
+     *  The consumer to check
+     *
+     * @return
+     *  true if the consumer is capable of using v3 certificates; false otherwise
+     */
+    private boolean consumerIsCertV3Capable(Consumer consumer) {
+        if (consumer == null || consumer.getTypeId() == null) {
+            throw new IllegalArgumentException("consumer is null or lacks a consumer type");
+        }
+
+        ConsumerType type = this.consumerTypeCurator.getConsumerType(consumer);
+
+        if (type.isManifest()) {
+            for (ConsumerCapability capability : consumer.getCapabilities()) {
+                if ("cert_v3".equals(capability.getName())) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+        else if (type.isType(ConsumerTypeEnum.HYPERVISOR)) {
+            // Hypervisors in this context don't use content, so V3 is allowed
+            return true;
+        }
+
+        // Consumer isn't a special type, check their certificate_version fact
+        String entitlementVersion = consumer.getFact("system.certificate_version");
+        return entitlementVersion != null && entitlementVersion.startsWith("3.");
     }
 
     private Map<String, EnvironmentContent> getPromotedContent(Environment environment) {

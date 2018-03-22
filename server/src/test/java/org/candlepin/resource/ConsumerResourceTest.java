@@ -101,7 +101,9 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.stubbing.Answer;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -137,16 +139,16 @@ public class ConsumerResourceTest {
     private Configuration config;
     private FactValidator factValidator;
 
-    @Mock private ConsumerCurator mockedConsumerCurator;
-    @Mock private OwnerCurator mockedOwnerCurator;
-    @Mock private EntitlementCertServiceAdapter mockedEntitlementCertServiceAdapter;
-    @Mock private OwnerServiceAdapter mockedOwnerServiceAdapter;
-    @Mock private SubscriptionServiceAdapter mockedSubscriptionServiceAdapter;
-    @Mock private PoolManager mockedPoolManager;
-    @Mock private EntitlementCurator mockedEntitlementCurator;
-    @Mock private ComplianceRules mockedComplianceRules;
-    @Mock private ServiceLevelValidator mockedServiceLevelValidator;
-    @Mock private ActivationKeyRules mockedActivationKeyRules;
+    @Mock private ConsumerCurator mockConsumerCurator;
+    @Mock private OwnerCurator mockOwnerCurator;
+    @Mock private EntitlementCertServiceAdapter mockEntitlementCertServiceAdapter;
+    @Mock private OwnerServiceAdapter mockOwnerServiceAdapter;
+    @Mock private SubscriptionServiceAdapter mockSubscriptionServiceAdapter;
+    @Mock private PoolManager mockPoolManager;
+    @Mock private EntitlementCurator mockEntitlementCurator;
+    @Mock private ComplianceRules mockComplianceRules;
+    @Mock private ServiceLevelValidator mockServiceLevelValidator;
+    @Mock private ActivationKeyRules mockActivationKeyRules;
     @Mock private EventFactory eventFactory;
     @Mock private EventBuilder eventBuilder;
     @Mock private ConsumerBindUtil consumerBindUtil;
@@ -160,41 +162,141 @@ public class ConsumerResourceTest {
     private Provider<GuestMigration> migrationProvider;
     private ModelTranslator translator;
 
+
     @Before
     public void setUp() {
         this.config = new CandlepinCommonTestConfig();
-        this.translator = new StandardTranslator();
+        this.translator = new StandardTranslator(mockConsumerTypeCurator);
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         when(eventBuilder.setEventData(any(Consumer.class))).thenReturn(eventBuilder);
         when(eventFactory.getEventBuilder(any(Target.class), any(Type.class))).thenReturn(eventBuilder);
 
         this.factValidator = new FactValidator(this.config, this.i18n);
 
-        testMigration = new GuestMigration(mockedConsumerCurator);
+        testMigration = new GuestMigration(mockConsumerCurator);
         migrationProvider = Providers.of(testMigration);
+    }
+
+    protected ConsumerType mockConsumerType(ConsumerType ctype) {
+        // Ensure the type has an ID
+        if (ctype != null) {
+            if (ctype.getId() == null) {
+                ctype.setId("test-ctype-" + ctype.getLabel() + "-" + TestUtil.randomInt());
+            }
+
+            when(mockConsumerTypeCurator.lookupByLabel(eq(ctype.getLabel()))).thenReturn(ctype);
+            when(mockConsumerTypeCurator.find(eq(ctype.getId()))).thenReturn(ctype);
+
+            doAnswer(new Answer<ConsumerType>() {
+                @Override
+                public ConsumerType answer(InvocationOnMock invocation) throws Throwable {
+                    Object[] args = invocation.getArguments();
+                    Consumer consumer = (Consumer) args[0];
+                    ConsumerTypeCurator curator = (ConsumerTypeCurator) invocation.getMock();
+
+                    ConsumerType ctype = null;
+
+                    if (consumer != null && consumer.getTypeId() != null) {
+                        ctype = curator.find(consumer.getTypeId());
+
+                        if (ctype == null) {
+                            throw new IllegalStateException("No such consumer type: " + consumer.getTypeId());
+                        }
+                    }
+
+                    return ctype;
+                }
+            }).when(mockConsumerTypeCurator).getConsumerType(any(Consumer.class));
+        }
+
+        return ctype;
+    }
+
+    protected Owner mockOwner(Owner owner) {
+        if (owner != null) {
+            int rand = TestUtil.randomInt();
+
+            if (owner.getId() == null) {
+                owner.setId("test-owner-" + rand);
+            }
+
+            if (owner.getKey() == null) {
+                owner.setKey("test-owner-key-" + rand);
+            }
+
+            when(mockOwnerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
+        }
+
+        return owner;
+    }
+
+    protected Owner createOwner() {
+        int rand = TestUtil.randomInt();
+        Owner owner = new Owner("test-owner-key-" + rand, "Test Owner " + rand);
+        owner.setId("test-owner-" + rand);
+
+        this.mockOwner(owner);
+
+        return owner;
+    }
+
+    protected Consumer mockConsumer(Consumer consumer) {
+        if (consumer != null) {
+            consumer.ensureUUID();
+
+            when(mockConsumerCurator.verifyAndLookupConsumer(eq(consumer.getUuid()))).thenReturn(consumer);
+
+            when(mockConsumerCurator.verifyAndLookupConsumerWithEntitlements(eq(consumer.getUuid())))
+                .thenReturn(consumer);
+        }
+
+        return consumer;
+    }
+
+    protected Consumer createConsumer(Owner owner, ConsumerType ctype) {
+        if (ctype == null) {
+            ctype = new ConsumerType("test-ctype-" + TestUtil.randomInt());
+        }
+
+        if (owner == null) {
+            owner = this.createOwner();
+        }
+
+        this.mockConsumerType(ctype);
+        Consumer consumer = this.mockConsumer(new Consumer("test-consumer", "test-user", owner, ctype));
+
+        return consumer;
+    }
+
+    protected Consumer createConsumer(Owner owner) {
+        return this.createConsumer(owner, null);
+    }
+
+    protected Consumer createConsumer() {
+        return this.createConsumer(null, null);
     }
 
     @Test
     public void testValidateShareConsumerRequiresRecipientFact() {
-        ConsumerTypeDTO shareDto = new ConsumerTypeDTO(ConsumerTypeEnum.SHARE);
-        ConsumerType share = new ConsumerType(ConsumerTypeEnum.SHARE);
-        ConsumerDTO c = createConsumerDTO("test-consumer", "test-user", new OwnerDTO("Test Owner"),
-            shareDto);
+        ConsumerType share = this.mockConsumerType(new ConsumerType(ConsumerTypeEnum.SHARE));
+        ConsumerTypeDTO shareDto = this.translator.translate(share, ConsumerTypeDTO.class);
+
+        ConsumerDTO c = createConsumerDTO("test-consumer", "test-user", new OwnerDTO("Test Owner"), shareDto);
 
         ConsumerResource consumerResource = new ConsumerResource(
-            mockedConsumerCurator, mockConsumerTypeCurator, null, null, null, mockedEntitlementCurator, null,
-            mockedEntitlementCertServiceAdapter, i18n, null, null, null, null,
-            null, mockedPoolManager, null, mockedOwnerCurator, null, null, null,
+            mockConsumerCurator, mockConsumerTypeCurator, null, null, null, mockEntitlementCurator, null,
+            mockEntitlementCertServiceAdapter, i18n, null, null, null, null,
+            null, mockPoolManager, null, mockOwnerCurator, null, null, null,
             null, null, null, new CandlepinCommonTestConfig(), null, null, null,
             consumerBindUtil, null, null, factValidator,
             null, consumerEnricher, migrationProvider, translator);
 
         UserPrincipal uap = mock(UserPrincipal.class);
-        when(uap.canAccess(any(Object.class), any(SubResource.class), any(Access.class))).
-            thenReturn(Boolean.TRUE);
+        when(uap.canAccess(any(Object.class), any(SubResource.class), any(Access.class)))
+            .thenReturn(Boolean.TRUE);
+
         Owner o = mock(Owner.class);
-        when(mockedOwnerCurator.lookupByKey(any(String.class))).thenReturn(o);
-        when(mockConsumerTypeCurator.lookupByLabel(any(String.class))).thenReturn(share);
+        when(mockOwnerCurator.lookupByKey(any(String.class))).thenReturn(o);
 
         c.setFact("foo", "bar");
 
@@ -205,33 +307,32 @@ public class ConsumerResourceTest {
 
     @Test
     public void testValidateShareConsumerRequiresRecipientPermissions() {
-        ConsumerTypeDTO shareDto = new ConsumerTypeDTO(ConsumerTypeEnum.SHARE);
-        ConsumerType share = new ConsumerType(ConsumerTypeEnum.SHARE);
-        ConsumerDTO c = createConsumerDTO("test-consumer", "test-user", new OwnerDTO(
-            "Test Owner"), shareDto);
+        ConsumerType share = this.mockConsumerType(new ConsumerType(ConsumerTypeEnum.SHARE));
+        ConsumerTypeDTO shareDto = this.translator.translate(share, ConsumerTypeDTO.class);
+        ConsumerDTO c = createConsumerDTO("test-consumer", "test-user", new OwnerDTO("Test Owner"), shareDto);
 
         ConsumerResource consumerResource = new ConsumerResource(
-            mockedConsumerCurator, mockConsumerTypeCurator, null, null, null, mockedEntitlementCurator, null,
-            mockedEntitlementCertServiceAdapter, i18n, null, null, null, null,
-            null, mockedPoolManager, null, mockedOwnerCurator, null, null, null,
+            mockConsumerCurator, mockConsumerTypeCurator, null, null, null, mockEntitlementCurator, null,
+            mockEntitlementCertServiceAdapter, i18n, null, null, null, null,
+            null, mockPoolManager, null, mockOwnerCurator, null, null, null,
             null, null, null, new CandlepinCommonTestConfig(), null, null, null,
             consumerBindUtil, null, null, factValidator,
             null, consumerEnricher, migrationProvider, translator);
 
         UserPrincipal uap = mock(UserPrincipal.class);
-        when(uap.canAccess(any(Object.class), any(SubResource.class), any(Access.class))).thenReturn
-            (Boolean.TRUE);
+        when(uap.canAccess(any(Object.class), any(SubResource.class), any(Access.class)))
+            .thenReturn(Boolean.TRUE);
 
         Owner o = mock(Owner.class);
-        when(mockedOwnerCurator.lookupByKey(any(String.class))).thenReturn(o);
-        when(mockConsumerTypeCurator.lookupByLabel(any(String.class))).thenReturn(share);
+        when(mockOwnerCurator.lookupByKey(any(String.class))).thenReturn(o);
 
         Owner o2 = mock(Owner.class);
         c.setRecipientOwnerKey("o2");
-        when(mockedOwnerCurator.lookupByKey(eq("o2"))).thenReturn(o2);
+        when(mockOwnerCurator.lookupByKey(eq("o2"))).thenReturn(o2);
 
-        when(uap.canAccess(eq(o2), eq(SubResource.ENTITLEMENTS), eq(Access.CREATE))).thenReturn(Boolean
-            .FALSE);
+        when(uap.canAccess(eq(o2), eq(SubResource.ENTITLEMENTS), eq(Access.CREATE)))
+            .thenReturn(Boolean.FALSE);
+
         thrown.expect(NotFoundException.class);
         thrown.expectMessage("owner with key");
         consumerResource.create(c, uap, "test-user", "test-owner", null, false);
@@ -240,19 +341,19 @@ public class ConsumerResourceTest {
     @Test
     public void testGetCertSerials() {
         Consumer consumer = createConsumer();
+
         List<EntitlementCertificate> certificates = createEntitlementCertificates();
         List<Long> serialIds = new ArrayList<>();
         for (EntitlementCertificate ec : certificates) {
             serialIds.add(ec.getSerial().getId());
         }
 
-        when(mockedEntitlementCertServiceAdapter.listEntitlementSerialIds(consumer)).thenReturn(serialIds);
-        when(mockedConsumerCurator.verifyAndLookupConsumer(consumer.getUuid())).thenReturn(consumer);
-        when(mockedEntitlementCurator.listByConsumer(consumer)).thenReturn(new ArrayList<>());
+        when(mockEntitlementCertServiceAdapter.listEntitlementSerialIds(consumer)).thenReturn(serialIds);
+        when(mockEntitlementCurator.listByConsumer(consumer)).thenReturn(new ArrayList<>());
 
         ConsumerResource consumerResource = new ConsumerResource(
-            mockedConsumerCurator, null, null, null, null, mockedEntitlementCurator, null,
-            mockedEntitlementCertServiceAdapter, null, null, null, null, null, null, mockedPoolManager, null,
+            mockConsumerCurator, mockConsumerTypeCurator, null, null, null, mockEntitlementCurator, null,
+            mockEntitlementCertServiceAdapter, null, null, null, null, null, null, mockPoolManager, null,
             null, null, null, null, null, null, null, this.config, null, null, null, consumerBindUtil,
             null, mockContentAccessCertService, this.factValidator, null, consumerEnricher,
             migrationProvider, translator);
@@ -273,23 +374,22 @@ public class ConsumerResourceTest {
         when(e.getPool()).thenReturn(p);
         when(p.getSubscriptionId()).thenReturn("4444");
 
-        when(mockedConsumerCurator.verifyAndLookupConsumer(consumer.getUuid())).thenReturn(consumer);
-        when(mockedEntitlementCurator.find(eq("9999"))).thenReturn(e);
-        when(mockedSubscriptionServiceAdapter.getSubscription(eq("4444"))).thenReturn(s);
+        when(mockEntitlementCurator.find(eq("9999"))).thenReturn(e);
+        when(mockSubscriptionServiceAdapter.getSubscription(eq("4444"))).thenReturn(s);
 
-        when(mockedEntitlementCertServiceAdapter.generateEntitlementCert(
+        when(mockEntitlementCertServiceAdapter.generateEntitlementCert(
             any(Entitlement.class), any(Product.class)))
             .thenThrow(new IOException());
 
         CandlepinPoolManager poolManager = new CandlepinPoolManager(
-            null, null, null, this.config, null, null, mockedEntitlementCurator,
-            mockedConsumerCurator, null, null, null, null, mockedActivationKeyRules, null, null,
-            null, null, null, null, null, null, null, null
+            null, null, null, this.config, null, null, mockEntitlementCurator,
+            mockConsumerCurator, mockConsumerTypeCurator, null, null, null, null, mockActivationKeyRules,
+            null, null, null, null, null, null, null, null, null, null
         );
 
         ConsumerResource consumerResource = new ConsumerResource(
-            mockedConsumerCurator, null, null, null, null, mockedEntitlementCurator, null,
-            mockedEntitlementCertServiceAdapter, null, null, null, null, null, null,
+            mockConsumerCurator, mockConsumerTypeCurator, null, null, null, mockEntitlementCurator, null,
+            mockEntitlementCertServiceAdapter, null, null, null, null, null, null,
             poolManager, null, null, null, null, null, null, null, null,
             this.config, null, null, null, consumerBindUtil,
             null, null, this.factValidator, null, consumerEnricher, migrationProvider, translator);
@@ -319,11 +419,9 @@ public class ConsumerResourceTest {
     public void testRegenerateEntitlementCertificateWithValidConsumer() {
         Consumer consumer = createConsumer();
 
-        when(mockedConsumerCurator.verifyAndLookupConsumer(consumer.getUuid())).thenReturn(consumer);
-
         CandlepinPoolManager mgr = mock(CandlepinPoolManager.class);
-        ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null,
-            null, mockedSubscriptionServiceAdapter, this.mockedOwnerServiceAdapter, null, null, null, null,
+        ConsumerResource cr = new ConsumerResource(mockConsumerCurator, mockConsumerTypeCurator,
+            null, mockSubscriptionServiceAdapter, this.mockOwnerServiceAdapter, null, null, null, null,
             null, null, null, null, null, mgr, null, null, null, null, null, null, null, null,
             this.config, null, null, null, consumerBindUtil, null, null, this.factValidator,
             null, consumerEnricher, migrationProvider, translator);
@@ -333,13 +431,10 @@ public class ConsumerResourceTest {
     }
 
     @Test
-    public void testRegenerateIdCerts() throws GeneralSecurityException,
-        IOException {
-
+    public void testRegenerateIdCerts() throws GeneralSecurityException, IOException {
         // using lconsumer simply to avoid hiding consumer. This should
         // get renamed once we refactor this test suite.
-        IdentityCertServiceAdapter mockedIdSvc = Mockito
-            .mock(IdentityCertServiceAdapter.class);
+        IdentityCertServiceAdapter mockIdSvc = Mockito.mock(IdentityCertServiceAdapter.class);
 
         EventSink sink = Mockito.mock(EventSinkImpl.class);
 
@@ -348,12 +443,11 @@ public class ConsumerResourceTest {
         IdentityCertificate ic = consumer.getIdCert();
         assertNotNull(ic);
 
-        when(mockedConsumerCurator.verifyAndLookupConsumer(consumer.getUuid())).thenReturn(consumer);
-        when(mockedIdSvc.regenerateIdentityCert(consumer)).thenReturn(createIdCert());
+        when(mockIdSvc.regenerateIdentityCert(consumer)).thenReturn(createIdCert());
 
-        ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null, null,
-            null, null, null, mockedIdSvc, null, null, sink, eventFactory, null, null,
-            null, null, null, mockedOwnerCurator, null, null, null, null,
+        ConsumerResource cr = new ConsumerResource(mockConsumerCurator, mockConsumerTypeCurator, null,
+            null, null, null, mockIdSvc, null, null, sink, eventFactory, null, null,
+            null, null, null, mockOwnerCurator, null, null, null, null,
             null, null, this.config, null, null, null, consumerBindUtil,
             null, null, this.factValidator, null, consumerEnricher, migrationProvider, translator);
 
@@ -369,7 +463,7 @@ public class ConsumerResourceTest {
     public void testIdCertGetsRegenerated() throws Exception {
         // using lconsumer simply to avoid hiding consumer. This should
         // get renamed once we refactor this test suite.
-        IdentityCertServiceAdapter mockedIdSvc = Mockito.mock(IdentityCertServiceAdapter.class);
+        IdentityCertServiceAdapter mockIdSvc = Mockito.mock(IdentityCertServiceAdapter.class);
 
         EventSink sink = Mockito.mock(EventSinkImpl.class);
 
@@ -383,12 +477,11 @@ public class ConsumerResourceTest {
         consumer.setIdCert(createIdCert());
         BigInteger origserial = consumer.getIdCert().getSerial().getSerial();
 
-        when(mockedConsumerCurator.verifyAndLookupConsumer(consumer.getUuid())).thenReturn(consumer);
-        when(mockedIdSvc.regenerateIdentityCert(consumer)).thenReturn(createIdCert());
+        when(mockIdSvc.regenerateIdentityCert(consumer)).thenReturn(createIdCert());
 
-        ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null,
-            null, ssa, this.mockedOwnerServiceAdapter, null, mockedIdSvc, null, null, sink, eventFactory,
-            null, null, null, null, null, mockedOwnerCurator, null, null, rules, null,
+        ConsumerResource cr = new ConsumerResource(mockConsumerCurator, mockConsumerTypeCurator,
+            null, ssa, this.mockOwnerServiceAdapter, null, mockIdSvc, null, null, sink, eventFactory,
+            null, null, null, null, null, mockOwnerCurator, null, null, rules, null,
             null, null, this.config, null, null, null, consumerBindUtil,
             null, null, this.factValidator, null, consumerEnricher, migrationProvider, translator);
 
@@ -408,11 +501,9 @@ public class ConsumerResourceTest {
         consumer.setIdCert(createIdCert(TestUtil.createDate(2025, 6, 9)));
         BigInteger origserial = consumer.getIdCert().getSerial().getSerial();
 
-        when(mockedConsumerCurator.verifyAndLookupConsumer(consumer.getUuid())).thenReturn(consumer);
-
-        ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null,
-            null, ssa, this.mockedOwnerServiceAdapter, null, null, null, null, null, null, null, null, null,
-            null, null, mockedOwnerCurator, null, null, rules, null, null, null,
+        ConsumerResource cr = new ConsumerResource(mockConsumerCurator, mockConsumerTypeCurator,
+            null, ssa, this.mockOwnerServiceAdapter, null, null, null, null, null, null, null, null, null,
+            null, null, mockOwnerCurator, null, null, rules, null, null, null,
             this.config, null, null, null, consumerBindUtil,
             null, null, this.factValidator, null, consumerEnricher, migrationProvider, translator);
 
@@ -423,32 +514,28 @@ public class ConsumerResourceTest {
 
     @Test(expected = BadRequestException.class)
     public void testCreatePersonConsumerWithActivationKey() {
-        ConsumerDTO c = mock(ConsumerDTO.class);
-        Owner o = mock(Owner.class);
+        ConsumerType ctype = this.mockConsumerType(new ConsumerType(ConsumerTypeEnum.PERSON));
+        ConsumerTypeDTO ctypeDto = this.translator.translate(ctype, ConsumerTypeDTO.class);
+
+        Owner owner = this.createOwner();
+        Consumer consumer = this.createConsumer(owner, ctype);
+        ConsumerDTO consumerDto = this.translator.translate(consumer, ConsumerDTO.class);
+
         ActivationKey ak = mock(ActivationKey.class);
         NoAuthPrincipal nap = mock(NoAuthPrincipal.class);
         ActivationKeyCurator akc = mock(ActivationKeyCurator.class);
-        OwnerCurator oc = mock(OwnerCurator.class);
-        ConsumerTypeCurator ctc = mock(ConsumerTypeCurator.class);
         ConsumerContentOverrideCurator ccoc = mock(ConsumerContentOverrideCurator.class);
 
-        ConsumerTypeDTO cTypeDto = new ConsumerTypeDTO(ConsumerTypeEnum.PERSON);
-        ConsumerType cType = new ConsumerType(ConsumerTypeEnum.PERSON);
         when(ak.getId()).thenReturn("testKey");
-        when(o.getKey()).thenReturn("testOwner");
-        when(akc.lookupForOwner(eq("testKey"), eq(o))).thenReturn(ak);
-        when(oc.lookupByKey(eq("testOwner"))).thenReturn(o);
-        when(c.getType()).thenReturn(cTypeDto);
-        when(c.getName()).thenReturn("testConsumer");
-        when(ctc.lookupByLabel(eq("person"))).thenReturn(cType);
+        when(akc.lookupForOwner(eq(owner.getKey()), eq(owner))).thenReturn(ak);
 
-        ConsumerResource cr = new ConsumerResource(null, ctc, null,
+        ConsumerResource cr = new ConsumerResource(null, mockConsumerTypeCurator, null,
             null, null, null, null, null, i18n, null, null, null, null,
-            null, null, null, oc, akc, null, null, null, null,
+            null, null, null, mockOwnerCurator, akc, null, null, null, null,
             null, this.config, null, null, null, consumerBindUtil,
             null, null, this.factValidator, null, consumerEnricher, migrationProvider, translator);
 
-        cr.create(c, nap, null, "testOwner", "testKey", true);
+        cr.create(consumerDto, nap, null, owner.getKey(), "testKey", true);
     }
 
     @Test
@@ -463,15 +550,13 @@ public class ConsumerResourceTest {
         when(cc.verifyAndLookupConsumerWithEntitlements(eq("fakeConsumer"))).thenReturn(c);
         when(e.bindByProducts(any(AutobindData.class))).thenReturn(null);
 
-        ConsumerResource cr = new ConsumerResource(cc, null,
-            null, sa, this.mockedOwnerServiceAdapter, null, null, null, i18n, null, null, null, null, null,
+        ConsumerResource cr = new ConsumerResource(cc, mockConsumerTypeCurator,
+            null, sa, this.mockOwnerServiceAdapter, null, null, null, i18n, null, null, null, null, null,
             null, null, null, null, e, null, null, null, null,
             this.config, null, null, null, consumerBindUtil,
             null, null, this.factValidator, null, consumerEnricher, migrationProvider, translator);
 
-
-        Response r = cr.bind(
-            "fakeConsumer", null, prodIds, null, null, null, false, null, null);
+        Response r = cr.bind("fakeConsumer", null, prodIds, null, null, null, false, null, null);
         assertEquals(null, r.getEntity());
     }
 
@@ -489,8 +574,8 @@ public class ConsumerResourceTest {
         when(sa.hasUnacceptedSubscriptionTerms(eq(c.getOwner()))).thenReturn(false);
         when(cc.verifyAndLookupConsumerWithEntitlements(eq(c.getUuid()))).thenReturn(c);
 
-        ConsumerResource cr = new ConsumerResource(cc, null, null, sa, this.mockedOwnerServiceAdapter,
-            null, null, null, null, null, null, null, null, null, null,
+        ConsumerResource cr = new ConsumerResource(cc, mockConsumerTypeCurator, null, sa,
+            this.mockOwnerServiceAdapter, null, null, null, null, null, null, null, null, null, null,
             null, null, null, e, null, null, null, null,
             this.config, null, null, null, consumerBindUtil,
             null, null, this.factValidator, null, consumerEnricher, migrationProvider, translator);
@@ -506,20 +591,16 @@ public class ConsumerResourceTest {
     @Test(expected = NotFoundException.class)
     public void unbindByInvalidSerialShouldFail() {
         Consumer consumer = createConsumer();
-        ConsumerCurator consumerCurator = mock(ConsumerCurator.class);
-        when(consumerCurator.verifyAndLookupConsumer(eq("fake uuid"))).thenReturn(consumer);
 
-        EntitlementCurator entitlementCurator = mock(EntitlementCurator.class);
-        when(entitlementCurator.find(any(Serializable.class))).thenReturn(null);
+        when(mockEntitlementCurator.find(any(Serializable.class))).thenReturn(null);
 
-        ConsumerResource consumerResource = new ConsumerResource(consumerCurator, null,
-            null, null, null, entitlementCurator, null, null, i18n, null, null, null,
+        ConsumerResource consumerResource = new ConsumerResource(mockConsumerCurator, mockConsumerTypeCurator,
+            null, null, null, mockEntitlementCurator, null, null, i18n, null, null, null,
             null, null, null, null, null, null, null, null, null, null,
             null, this.config, null, null, null, consumerBindUtil,
             null, null, this.factValidator, null, consumerEnricher, migrationProvider, translator);
 
-        consumerResource.unbindBySerial("fake uuid",
-            Long.valueOf(1234L));
+        consumerResource.unbindBySerial("fake uuid", Long.valueOf(1234L));
     }
 
     /**
@@ -529,15 +610,12 @@ public class ConsumerResourceTest {
     @Test(expected = NotFoundException.class)
     public void unbindByInvalidPoolIdShouldFail() {
         Consumer consumer = createConsumer();
-        ConsumerCurator consumerCurator = mock(ConsumerCurator.class);
-        when(consumerCurator.verifyAndLookupConsumer(eq("fake-uuid"))).thenReturn(consumer);
-        EntitlementCurator entitlementCurator = mock(EntitlementCurator.class);
 
-        when(entitlementCurator.listByConsumerAndPoolId(eq(consumer), any(String.class)))
+        when(mockEntitlementCurator.listByConsumerAndPoolId(eq(consumer), any(String.class)))
             .thenReturn(new ArrayList<>());
 
-        ConsumerResource consumerResource = new ConsumerResource(consumerCurator, null,
-            null, null, null, entitlementCurator, null, null, i18n, null, null, null,
+        ConsumerResource consumerResource = new ConsumerResource(mockConsumerCurator, mockConsumerTypeCurator,
+            null, null, null, mockEntitlementCurator, null, null, i18n, null, null, null,
             null, null, null, null, null, null, null, null, null, null,
             null, this.config, null, null, null, consumerBindUtil,
             null, null, this.factValidator, null, consumerEnricher, migrationProvider, translator);
@@ -547,34 +625,30 @@ public class ConsumerResourceTest {
 
     @Test(expected = BadRequestException.class)
     public void testBindMultipleParams() throws Exception {
-        ConsumerCurator consumerCurator = mock(ConsumerCurator.class);
-        ConsumerResource consumerResource = new ConsumerResource(consumerCurator, null,
+        ConsumerResource consumerResource = new ConsumerResource(mockConsumerCurator, mockConsumerTypeCurator,
             null, null, null, null, null, null, i18n, null, null, null,
             null, null, null, null, null, null, null, null, null, null,
             null, this.config, null, null, null, consumerBindUtil,
             null, null, this.factValidator, null, consumerEnricher, migrationProvider, translator);
 
         Consumer c = createConsumer();
-        when(consumerCurator.verifyAndLookupConsumerWithEntitlements(eq(c.getUuid()))).thenReturn(c);
         consumerResource.bind(c.getUuid(), "fake pool uuid",
             new String[]{"12232"}, 1, null, null, false, null, null);
     }
 
     @Test(expected = NotFoundException.class)
     public void testBindByPoolBadConsumerUuid() throws Exception {
-        ConsumerCurator consumerCurator = mock(ConsumerCurator.class);
-        when(consumerCurator.verifyAndLookupConsumerWithEntitlements(any(String.class)))
+        when(mockConsumerCurator.verifyAndLookupConsumerWithEntitlements(any(String.class)))
             .thenThrow(new NotFoundException(""));
-        ConsumerResource consumerResource = new ConsumerResource(consumerCurator, null,
+
+        ConsumerResource consumerResource = new ConsumerResource(mockConsumerCurator, mockConsumerTypeCurator,
             null, null, null, null, null, null, i18n, null, null, null,
             null, null, null, null, null, null, null, null, null, null,
             null, this.config, null, null, null, consumerBindUtil,
             null, null, this.factValidator, null, consumerEnricher, migrationProvider, translator);
 
         Consumer c = createConsumer();
-        when(consumerCurator.verifyAndLookupConsumerWithEntitlements(eq(c.getUuid()))).thenReturn(c);
-        consumerResource.bind(c.getUuid(), "fake pool uuid", null, null, null,
-            null, false, null, null);
+        consumerResource.bind(c.getUuid(), "fake pool uuid", null, null, null, null, false, null, null);
     }
 
     /**
@@ -583,10 +657,10 @@ public class ConsumerResourceTest {
      */
     @Test(expected = NotFoundException.class)
     public void testRegenerateEntitlementCertificatesWithInvalidConsumerId() {
-        ConsumerCurator consumerCurator = mock(ConsumerCurator.class);
-        when(consumerCurator.verifyAndLookupConsumer(any(String.class)))
+        when(mockConsumerCurator.verifyAndLookupConsumer(any(String.class)))
             .thenThrow(new NotFoundException(""));
-        ConsumerResource consumerResource = new ConsumerResource(consumerCurator, null,
+
+        ConsumerResource consumerResource = new ConsumerResource(mockConsumerCurator, mockConsumerTypeCurator,
             null, null, null, null, null, null, i18n, null, null, null,
             null, null, null, null, null, null, null, null, null, null,
             null, this.config, null, null, null, consumerBindUtil,
@@ -595,13 +669,7 @@ public class ConsumerResourceTest {
         consumerResource.regenerateEntitlementCertificates("xyz", null, true);
     }
 
-    private Consumer createConsumer() {
-        return new Consumer("test-consumer", "test-user", new Owner(
-            "Test Owner"), new ConsumerType("test-consumer-type-"));
-    }
-
-    protected EntitlementCertificate createEntitlementCertificate(String key,
-        String cert) {
+    protected EntitlementCertificate createEntitlementCertificate(String key, String cert) {
         EntitlementCertificate toReturn = new EntitlementCertificate();
         CertificateSerial certSerial = new CertificateSerial(1L, new Date());
         toReturn.setKeyAsBytes(key.getBytes());
@@ -612,31 +680,28 @@ public class ConsumerResourceTest {
 
     @Test(expected = NotFoundException.class)
     public void testNullPerson() {
-        ConsumerDTO c = mock(ConsumerDTO.class);
-        Owner o = mock(Owner.class);
+        Owner owner = this.createOwner();
+
+        ConsumerType ctype = this.mockConsumerType(new ConsumerType(ConsumerTypeEnum.PERSON));
+        ConsumerTypeDTO ctypeDto = this.translator.translate(ctype, ConsumerTypeDTO.class);
+
+        Consumer consumer = this.createConsumer(owner, ctype);
+        ConsumerDTO consumerDto = this.translator.translate(consumer, ConsumerDTO.class);
+
         UserServiceAdapter usa = mock(UserServiceAdapter.class);
         UserPrincipal up = mock(UserPrincipal.class);
-        OwnerCurator oc = mock(OwnerCurator.class);
-        ConsumerTypeCurator ctc = mock(ConsumerTypeCurator.class);
-        ConsumerTypeDTO cTypeDTO = new ConsumerTypeDTO(ConsumerTypeEnum.PERSON);
-        ConsumerType cType = new ConsumerType(ConsumerTypeEnum.PERSON);
 
-        when(o.getKey()).thenReturn("testOwner");
-        when(oc.lookupByKey(eq("testOwner"))).thenReturn(o);
-        when(c.getType()).thenReturn(cTypeDTO);
-        when(c.getName()).thenReturn("testConsumer");
-        when(ctc.lookupByLabel(eq("person"))).thenReturn(cType);
-        when(up.canAccess(eq(o), eq(SubResource.CONSUMERS), eq(Access.CREATE))).
-            thenReturn(true);
+        when(up.canAccess(eq(owner), eq(SubResource.CONSUMERS), eq(Access.CREATE))).thenReturn(true);
+
         // usa.findByLogin() will return null by default no need for a when
 
-        ConsumerResource cr = new ConsumerResource(null, ctc, null,
+        ConsumerResource cr = new ConsumerResource(mockConsumerCurator, mockConsumerTypeCurator, null,
             null, null, null, null, null, i18n, null, null, null, null,
-            usa, null,  null, oc, null, null, null, null, null,
+            usa, null,  null, mockOwnerCurator, null, null, null, null, null,
             null, this.config, null, null, null, consumerBindUtil,
             null, null, this.factValidator, null, consumerEnricher, migrationProvider, translator);
 
-        cr.create(c, up, null, "testOwner", null, true);
+        cr.create(consumerDto, up, null, owner.getKey(), null, true);
     }
 
     @Test
@@ -645,40 +710,39 @@ public class ConsumerResourceTest {
         thrown.expectMessage(String.format("Name of the consumer " +
             "should be shorter than %d characters.", Consumer.MAX_LENGTH_OF_CONSUMER_NAME + 1));
 
-        ConsumerDTO c = mock(ConsumerDTO.class);
-        Owner o = mock(Owner.class);
+        Owner owner = this.createOwner();
+
+        ConsumerType ctype = this.mockConsumerType(new ConsumerType(ConsumerTypeEnum.SYSTEM));
+        ConsumerTypeDTO ctypeDto = this.translator.translate(ctype, ConsumerTypeDTO.class);
+
+        Consumer consumer = this.createConsumer(owner, ctype);
+        consumer.setName(RandomStringUtils.randomAlphanumeric(Consumer.MAX_LENGTH_OF_CONSUMER_NAME + 1));
+        ConsumerDTO consumerDto = this.translator.translate(consumer, ConsumerDTO.class);
+
         UserPrincipal up = mock(UserPrincipal.class);
-        OwnerCurator oc = mock(OwnerCurator.class);
-        ConsumerTypeDTO consumerTypeDTO = new ConsumerTypeDTO(ConsumerTypeEnum.SYSTEM);
-        ConsumerResource consumerResource = createConsumerResource(oc);
 
-        String ownerKey = "testOwner";
-        when(oc.lookupByKey(eq(ownerKey))).thenReturn(o);
-        when(o.getKey()).thenReturn(ownerKey);
-        when(c.getType()).thenReturn(consumerTypeDTO);
-        String s = RandomStringUtils.randomAlphanumeric(Consumer.MAX_LENGTH_OF_CONSUMER_NAME + 1);
-        when(c.getName()).thenReturn(s);
-        when(up.canAccess(eq(o), eq(SubResource.CONSUMERS), eq(Access.CREATE))).
-            thenReturn(true);
+        ConsumerResource consumerResource = createConsumerResource(mockOwnerCurator);
 
-        consumerResource.create(c, up, null, ownerKey, null, false);
+        when(up.canAccess(eq(owner), eq(SubResource.CONSUMERS), eq(Access.CREATE))).thenReturn(true);
+
+        consumerResource.create(consumerDto, up, null, owner.getKey(), null, false);
     }
 
     ConsumerResource createConsumerResource(OwnerCurator oc) {
         ConsumerResource consumerResource = new ConsumerResource(
-            null, null, null, null, null, null, null, null, i18n, null, null, null, null, null, null, null,
-            oc, null, null, null, null, null, null, this.config, null, null, null, null, null, null,
-            this.factValidator, null, consumerEnricher, migrationProvider, translator);
+            null, mockConsumerTypeCurator, null, null, null, null, null, null, i18n, null, null, null,
+            null, null, null, null, oc, null, null, null, null, null, null, this.config, null, null, null,
+            null, null, null, this.factValidator, null, consumerEnricher, migrationProvider, translator);
 
         return consumerResource;
     }
 
     @Test
     public void testGetComplianceStatusList() {
-        Consumer c = mock(Consumer.class);
-        Consumer c2 = mock(Consumer.class);
-        when(c.getUuid()).thenReturn("1");
-        when(c2.getUuid()).thenReturn("2");
+        Owner owner = this.createOwner();
+
+        Consumer c = this.createConsumer(owner);
+        Consumer c2 = this.createConsumer(owner);
 
         List<Consumer> consumers = new ArrayList<>();
         consumers.add(c);
@@ -689,31 +753,32 @@ public class ConsumerResourceTest {
         when(cqmock.iterator()).thenReturn(consumers.iterator());
 
         List<String> uuids = new ArrayList<>();
-        uuids.add("1");
-        uuids.add("2");
-        when(mockedConsumerCurator.findByUuids(eq(uuids))).thenReturn(cqmock);
+        uuids.add(c.getUuid());
+        uuids.add(c2.getUuid());
+        when(mockConsumerCurator.findByUuids(eq(uuids))).thenReturn(cqmock);
 
         ComplianceStatus status = new ComplianceStatus();
-        when(mockedComplianceRules.getStatus(any(Consumer.class), any(Date.class)))
+        when(mockComplianceRules.getStatus(any(Consumer.class), any(Date.class)))
             .thenReturn(status);
 
-        ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null, null, null, null, null, null,
-            null, i18n, null, null, null, null, null, null, null, null, null, null, mockedComplianceRules,
+        ConsumerResource cr = new ConsumerResource(mockConsumerCurator, mockConsumerTypeCurator, null,
+            null, null, null, null,
+            null, i18n, null, null, null, null, null, null, null, null, null, null, mockComplianceRules,
             null, null, null, this.config, null, null, null, consumerBindUtil, null, null,
             this.factValidator, null, consumerEnricher, migrationProvider, translator);
 
         Map<String, ComplianceStatus> results = cr.getComplianceStatusList(uuids);
         assertEquals(2, results.size());
-        assertTrue(results.containsKey("1"));
-        assertTrue(results.containsKey("2"));
+        assertTrue(results.containsKey(c.getUuid()));
+        assertTrue(results.containsKey(c2.getUuid()));
     }
 
     @Test
     public void testConsumerExistsYes() {
-        when(mockedConsumerCurator.doesConsumerExist(any(String.class))).thenReturn(true);
-        ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null,
+        when(mockConsumerCurator.doesConsumerExist(any(String.class))).thenReturn(true);
+        ConsumerResource cr = new ConsumerResource(mockConsumerCurator, mockConsumerTypeCurator,
             null, null, null, null, null, null, i18n, null, null, null,
-            null, null, null, null, null, null, null, mockedComplianceRules,
+            null, null, null, null, null, null, null, mockComplianceRules,
             null, null, null, this.config, null, null, null, consumerBindUtil,
             null, null, this.factValidator, null, consumerEnricher, migrationProvider, translator);
 
@@ -722,9 +787,10 @@ public class ConsumerResourceTest {
 
     @Test (expected = NotFoundException.class)
     public void testConsumerExistsNo() {
-        when(mockedConsumerCurator.doesConsumerExist(any(String.class))).thenReturn(false);
-        ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null, null, null, null, null, null,
-            null, i18n, null, null, null, null, null, null, null, null, null, null, mockedComplianceRules,
+        when(mockConsumerCurator.doesConsumerExist(any(String.class))).thenReturn(false);
+        ConsumerResource cr = new ConsumerResource(mockConsumerCurator, mockConsumerTypeCurator,
+            null, null, null, null, null,
+            null, i18n, null, null, null, null, null, null, null, null, null, null, mockComplianceRules,
             null, null, null, this.config, null, null, null, consumerBindUtil, null, null,
             this.factValidator, null, consumerEnricher, migrationProvider, translator);
 
@@ -734,7 +800,8 @@ public class ConsumerResourceTest {
     @Test(expected = BadRequestException.class)
     public void testFetchAllConsumers() {
         ConsumerResource cr = new ConsumerResource(
-            null, null, null, null, null, null, null, null, i18n, null, null, null, null, null, null, null,
+            null, mockConsumerTypeCurator, null, null, null, null, null, null, i18n, null, null, null, null,
+            null, null, null,
             null, null, null, null, null, null, null, this.config, null, null, null, null, null,
             null, this.factValidator, null, consumerEnricher, migrationProvider, translator);
 
@@ -745,7 +812,8 @@ public class ConsumerResourceTest {
     public void testFetchAllConsumersForUser() {
         ModelTranslator mockTranslator = mock(ModelTranslator.class);
         ConsumerResource cr = new ConsumerResource(
-            mockedConsumerCurator, null, null, null, null, null, null, null, i18n, null, null, null, null,
+            mockConsumerCurator, mockConsumerTypeCurator, null, null, null, null, null, null, i18n, null,
+            null, null, null,
             null, null, null, null, null, null, null, null, null, null, this.config, null, null, null, null,
             null, null, this.factValidator, new ConsumerTypeValidator(null, null),
             consumerEnricher, migrationProvider, mockTranslator);
@@ -755,7 +823,7 @@ public class ConsumerResourceTest {
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
         when(cqmock.list()).thenReturn(consumers);
         when(cqmock.iterator()).thenReturn(consumers.iterator());
-        when(mockedConsumerCurator.searchOwnerConsumers(
+        when(mockConsumerCurator.searchOwnerConsumers(
             any(Owner.class), anyString(), (java.util.Collection<ConsumerType>) any(Collection.class),
             any(List.class), any(List.class), any(List.class), any(List.class), any(List.class),
             any(List.class))).thenReturn(cqmock);
@@ -767,8 +835,9 @@ public class ConsumerResourceTest {
 
     public void testFetchAllConsumersForOwner() {
         ConsumerResource cr = new ConsumerResource(
-            mockedConsumerCurator, null, null, null, null, null, null, null, i18n, null, null, null, null,
-            null, null, null, mockedOwnerCurator, null, null, null, null, null, null, this.config, null, null,
+            mockConsumerCurator, mockConsumerTypeCurator, null, null, null, null, null, null, i18n, null,
+            null, null, null,
+            null, null, null, mockOwnerCurator, null, null, null, null, null, null, this.config, null, null,
             null, null, null, null, this.factValidator,
             null, consumerEnricher, migrationProvider, translator);
 
@@ -777,8 +846,8 @@ public class ConsumerResourceTest {
         when(cqmock.list()).thenReturn(consumers);
         when(cqmock.iterator()).thenReturn(consumers.iterator());
 
-        when(mockedOwnerCurator.lookupByKey(eq("taylorOwner"))).thenReturn(new Owner());
-        when(mockedConsumerCurator.searchOwnerConsumers(
+        when(mockOwnerCurator.lookupByKey(eq("taylorOwner"))).thenReturn(new Owner());
+        when(mockConsumerCurator.searchOwnerConsumers(
             any(Owner.class), anyString(), (java.util.Collection<ConsumerType>) any(Collection.class),
             any(List.class), any(List.class), any(List.class), any(List.class), any(List.class),
             any(List.class))).thenReturn(cqmock);
@@ -790,7 +859,8 @@ public class ConsumerResourceTest {
     @Test(expected = BadRequestException.class)
     public void testFetchAllConsumersForEmptyUUIDs() {
         ConsumerResource cr = new ConsumerResource(
-            mockedConsumerCurator, null, null, null, null, null, null, null, i18n, null, null, null, null,
+            mockConsumerCurator, mockConsumerTypeCurator, null, null, null, null, null, null, i18n, null,
+            null, null, null,
             null, null, null, null, null, null, null, null, null, null, this.config, null, null, null, null,
             null, null, this.factValidator, null, consumerEnricher, migrationProvider, translator);
 
@@ -801,7 +871,8 @@ public class ConsumerResourceTest {
     public void testFetchAllConsumersForSomeUUIDs() {
         ModelTranslator mockTranslator = mock(ModelTranslator.class);
         ConsumerResource cr = new ConsumerResource(
-            mockedConsumerCurator, null, null, null, null, null, null, null, i18n, null, null, null, null,
+            mockConsumerCurator, mockConsumerTypeCurator, null, null, null, null, null, null, i18n, null,
+            null, null, null,
             null, null, null, null, null, null, null, null, null, null, this.config, null, null, null, null,
             null, null, this.factValidator, new ConsumerTypeValidator(null, null),
             consumerEnricher, migrationProvider, mockTranslator);
@@ -811,7 +882,7 @@ public class ConsumerResourceTest {
         when(cqmock.list()).thenReturn(consumers);
         when(cqmock.iterator()).thenReturn(consumers.iterator());
 
-        when(mockedConsumerCurator.searchOwnerConsumers(
+        when(mockConsumerCurator.searchOwnerConsumers(
             any(Owner.class), anyString(), (java.util.Collection<ConsumerType>) any(Collection.class),
             any(List.class), any(List.class), any(List.class),
             any(List.class), any(List.class), any(List.class))).thenReturn(cqmock);
@@ -828,13 +899,13 @@ public class ConsumerResourceTest {
         Consumer consumer = createConsumer();
         List<EntitlementCertificate> certificates = createEntitlementCertificates();
 
-        when(mockedEntitlementCertServiceAdapter.listForConsumer(consumer)) .thenReturn(certificates);
-        when(mockedConsumerCurator.verifyAndLookupConsumer(consumer.getUuid())).thenReturn(consumer);
-        when(mockedEntitlementCurator.listByConsumer(consumer)).thenReturn(new ArrayList<>());
+        when(mockEntitlementCertServiceAdapter.listForConsumer(consumer)) .thenReturn(certificates);
+        when(mockConsumerCurator.verifyAndLookupConsumer(consumer.getUuid())).thenReturn(consumer);
+        when(mockEntitlementCurator.listByConsumer(consumer)).thenReturn(new ArrayList<>());
 
         ConsumerResource consumerResource = Mockito.spy(new ConsumerResource(
-            mockedConsumerCurator, null, null, null, null, mockedEntitlementCurator, null,
-            mockedEntitlementCertServiceAdapter, null, null, null, null, null, null, mockedPoolManager, null,
+            mockConsumerCurator, mockConsumerTypeCurator, null, null, null, mockEntitlementCurator, null,
+            mockEntitlementCertServiceAdapter, null, null, null, null, null, null, mockPoolManager, null,
             null, null, null, null, null, null, null, this.config, null, null, null, consumerBindUtil,
             null, mockContentAccessCertService, this.factValidator, null, consumerEnricher,
             migrationProvider, translator));
@@ -849,24 +920,22 @@ public class ConsumerResourceTest {
         Consumer consumer = createConsumer();
         List<EntitlementCertificate> certificates = createEntitlementCertificates();
 
-        when(mockedEntitlementCertServiceAdapter.listForConsumer(consumer)) .thenReturn(certificates);
-        when(mockedConsumerCurator.verifyAndLookupConsumer(consumer.getUuid())).thenReturn(consumer);
-        when(mockedEntitlementCurator.listByConsumer(consumer)).thenReturn(new ArrayList<>());
+        when(mockEntitlementCertServiceAdapter.listForConsumer(consumer)) .thenReturn(certificates);
+        when(mockConsumerCurator.verifyAndLookupConsumer(consumer.getUuid())).thenReturn(consumer);
+        when(mockEntitlementCurator.listByConsumer(consumer)).thenReturn(new ArrayList<>());
 
         GuestMigration migrationSpy = Mockito.spy(testMigration);
         migrationProvider = Providers.of(migrationSpy);
 
         ConsumerResource consumerResource = Mockito.spy(new ConsumerResource(
-            mockedConsumerCurator, null, null, null, null, mockedEntitlementCurator, null,
-            mockedEntitlementCertServiceAdapter, null, null, null, null, null, null, mockedPoolManager, null,
+            mockConsumerCurator, mockConsumerTypeCurator, null, null, null, mockEntitlementCurator, null,
+            mockEntitlementCertServiceAdapter, null, null, null, null, null, null, mockPoolManager, null,
             null, null, null, null, null, null, null, this.config, null, null, null, consumerBindUtil,
             null, mockContentAccessCertService, this.factValidator, null, consumerEnricher,
             migrationProvider, translator));
 
-
         Set<Long> serials = new HashSet<>();
-        List<CertificateDTO> certs = consumerResource
-            .getEntitlementCertificates(consumer.getUuid(), "123");
+        List<CertificateDTO> certs = consumerResource.getEntitlementCertificates(consumer.getUuid(), "123");
         verify(consumerResource).revokeOnGuestMigration(consumer);
     }
 
@@ -874,11 +943,11 @@ public class ConsumerResourceTest {
     public void testNoDryBindWhenAutobindDisabledForOwner() throws Exception {
         Consumer consumer = createConsumer();
         consumer.getOwner().setAutobindDisabled(true);
-        when(mockedConsumerCurator.verifyAndLookupConsumer(eq(consumer.getUuid()))).thenReturn(consumer);
         ManifestManager manifestManager = mock(ManifestManager.class);
         ConsumerResource consumerResource = new ConsumerResource(
-            mockedConsumerCurator, null, null, null, null, null, null, null, i18n, null, null, null, null,
-            null, null, null, mockedOwnerCurator, null, null, null, null, null, null, this.config, null, null,
+            mockConsumerCurator, mockConsumerTypeCurator, null, null, null, null, null, null, i18n, null,
+            null, null, null,
+            null, null, null, mockOwnerCurator, null, null, null, null, null, null, this.config, null, null,
             null, null, manifestManager, null, this.factValidator, null, consumerEnricher,
             migrationProvider, translator);
 
@@ -893,22 +962,24 @@ public class ConsumerResourceTest {
 
     @Test
     public void testAsyncExport() {
-        CdnCurator mockedCdnCurator = mock(CdnCurator.class);
+        CdnCurator mockCdnCurator = mock(CdnCurator.class);
         ManifestManager manifestManager = mock(ManifestManager.class);
         ConsumerResource cr = new ConsumerResource(
-            mockedConsumerCurator, null, null, null, null, null, null, null, i18n, null, null, null, null,
-            null, null, null, mockedOwnerCurator, null, null, null, null, null, null, this.config, null,
-            mockedCdnCurator, null, null, manifestManager, null, this.factValidator, null,
+            mockConsumerCurator, mockConsumerTypeCurator, null, null, null, null, null, null, i18n, null,
+            null, null, null,
+            null, null, null, mockOwnerCurator, null, null, null, null, null, null, this.config, null,
+            mockCdnCurator, null, null, manifestManager, null, this.factValidator, null,
             consumerEnricher, migrationProvider, translator);
 
         List<KeyValueParameter> extParams = new ArrayList<>();
-        Owner owner = TestUtil.createOwner();
-        Consumer consumer = TestUtil.createConsumer(
-            new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN), owner);
+
+        Owner owner = this.createOwner();
+        ConsumerType ctype = this.mockConsumerType(new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN));
+        Consumer consumer = this.createConsumer(owner, ctype);
+
         Cdn cdn = new Cdn("cdn-label", "test", "url");
 
-        when(mockedConsumerCurator.verifyAndLookupConsumer(eq(consumer.getUuid()))).thenReturn(consumer);
-        when(mockedCdnCurator.lookupByLabel(eq(cdn.getLabel()))).thenReturn(cdn);
+        when(mockCdnCurator.lookupByLabel(eq(cdn.getLabel()))).thenReturn(cdn);
 
         cr.exportDataAsync(null, consumer.getUuid(), cdn.getLabel(), "prefix", cdn.getUrl(), extParams);
         verify(manifestManager).generateManifestAsync(eq(consumer.getUuid()), eq(cdn.getLabel()),

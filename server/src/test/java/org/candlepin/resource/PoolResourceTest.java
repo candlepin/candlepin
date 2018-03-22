@@ -41,7 +41,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.xnap.commons.i18n.I18n;
 
 import java.util.Date;
 import java.util.List;
@@ -49,11 +48,11 @@ import java.util.List;
 import javax.inject.Inject;
 
 
+
 /**
  * PoolResourceTest
  */
 public class PoolResourceTest extends DatabaseTestFixture {
-    @Inject private I18n i18n;
     @Inject private CandlepinPoolManager poolManager;
 
     private Owner owner1;
@@ -88,36 +87,29 @@ public class PoolResourceTest extends DatabaseTestFixture {
         product1Owner2 = this.createProduct(PRODUCT_CPULIMITED, PRODUCT_CPULIMITED, owner2);
         product2 = this.createProduct(owner1);
 
-        pool1 = createPool(owner1, product1, 500L,
+        pool1 = this.createPool(owner1, product1, 500L,
              TestUtil.createDate(START_YEAR, 1, 1), TestUtil.createDate(END_YEAR, 1, 1));
-        pool2 = createPool(owner1, product2, 500L,
+        pool2 = this.createPool(owner1, product2, 500L,
              TestUtil.createDate(START_YEAR, 1, 1), TestUtil.createDate(END_YEAR, 1, 1));
-        pool3 = createPool(owner2 , product1Owner2, 500L,
+        pool3 = this.createPool(owner2 , product1Owner2, 500L,
              TestUtil.createDate(START_YEAR, 1, 1), TestUtil.createDate(END_YEAR, 1, 1));
-        poolCurator.create(pool1);
-        poolCurator.create(pool2);
-        poolCurator.create(pool3);
 
         poolResource = new PoolResource(consumerCurator, ownerCurator, i18n,
             poolManager, attrUtil, this.modelTranslator);
 
         // Consumer system with too many cpu cores:
-
-        failConsumer = TestUtil.createConsumer(createOwner());
+        failConsumer = this.createConsumer(createOwner());
         failConsumer.setFact("cpu_cores", "4");
-        consumerTypeCurator.create(failConsumer.getType());
-        consumerCurator.create(failConsumer);
+        this.consumerCurator.merge(failConsumer);
 
         // Consumer system with appropriate number of cpu cores:
-        passConsumer = TestUtil.createConsumer(owner1);
+        passConsumer = this.createConsumer(owner1);
         passConsumer.setFact("cpu_cores", "2");
-        consumerTypeCurator.create(passConsumer.getType());
-        consumerCurator.create(passConsumer);
+        this.consumerCurator.merge(passConsumer);
 
-        foreignConsumer = TestUtil.createConsumer(owner2);
+        foreignConsumer = this.createConsumer(owner2);
         foreignConsumer.setFact("cpu_cores", "2");
-        consumerTypeCurator.create(foreignConsumer.getType());
-        consumerCurator.create(foreignConsumer);
+        this.consumerCurator.merge(foreignConsumer);
 
         // Run most of these tests as an owner admin:
         adminPrincipal = setupPrincipal(owner1, Access.ALL);
@@ -300,8 +292,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testEmptyEntitlementList() {
-        List<EntitlementDTO> ents =
-            poolResource.getPoolEntitlements(pool1.getId(),  adminPrincipal);
+        List<EntitlementDTO> ents = poolResource.getPoolEntitlements(pool1.getId(),  adminPrincipal);
         assertEquals(0, ents.size());
     }
 

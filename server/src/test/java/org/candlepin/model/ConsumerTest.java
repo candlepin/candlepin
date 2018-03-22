@@ -19,7 +19,6 @@ import static org.mockito.Mockito.mock;
 
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
-import org.candlepin.common.config.Configuration;
 import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.resource.ConsumerResource;
@@ -34,15 +33,13 @@ import java.util.Date;
 import java.util.Map;
 
 import javax.inject.Inject;
-import javax.persistence.PersistenceException;
+import javax.validation.ConstraintViolationException;
 
 
 
 public class ConsumerTest extends DatabaseTestFixture {
 
     @Inject private ConsumerResource consumerResource;
-    @Inject private RoleCurator roleCurator;
-    @Inject private Configuration config;
 
     private Owner owner;
     private Product rhel;
@@ -68,7 +65,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         consumerCurator.create(consumer);
     }
 
-    @Test(expected = PersistenceException.class)
+    @Test(expected = ConstraintViolationException.class)
     public void testConsumerTypeRequired() {
         Consumer newConsumer = new Consumer();
         newConsumer.setName("cname");
@@ -77,28 +74,32 @@ public class ConsumerTest extends DatabaseTestFixture {
         consumerCurator.create(newConsumer);
     }
 
-    @Test(expected = PersistenceException.class)
+    @Test(expected = ConstraintViolationException.class)
     public void testConsumerNameLengthCreate() {
         String name = "";
         for (int x = 0; x < 300; x++) {
             name += "x";
         }
+
         Consumer newConsumer = new Consumer();
         newConsumer.setName(name);
         newConsumer.setOwner(owner);
+        newConsumer.setType(consumerType);
 
         consumerCurator.create(newConsumer);
     }
 
-    @Test(expected = PersistenceException.class)
+    @Test(expected = ConstraintViolationException.class)
     public void testConsumerNameLengthUpdate() {
         String name = "";
         for (int x = 0; x < 300; x++) {
             name += "x";
         }
+
         Consumer newConsumer = new Consumer();
         newConsumer.setName(name);
         newConsumer.setOwner(owner);
+        newConsumer.setType(consumerType);
 
         consumerCurator.update(newConsumer);
     }
@@ -108,7 +109,11 @@ public class ConsumerTest extends DatabaseTestFixture {
         Consumer lookedUp = consumerCurator.find(consumer.getId());
         assertEquals(consumer.getId(), lookedUp.getId());
         assertEquals(consumer.getName(), lookedUp.getName());
-        assertEquals(consumer.getType().getLabel(), lookedUp.getType().getLabel());
+
+        ConsumerType ctypeExpected = this.consumerTypeCurator.getConsumerType(consumer);
+        ConsumerType ctypeActual = this.consumerTypeCurator.getConsumerType(lookedUp);
+
+        assertEquals(ctypeExpected.getLabel(), ctypeActual.getLabel());
         assertNotNull(consumer.getUuid());
     }
 

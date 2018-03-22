@@ -19,7 +19,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.candlepin.common.jackson.HateoasArrayExclude;
 import org.candlepin.common.jackson.HateoasInclude;
 import org.candlepin.jackson.StringTrimmingConverter;
-import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.util.Util;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
@@ -146,9 +145,10 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @JoinColumn(name = "cont_acc_cert_id")
     private ContentAccessCertificate contentAccessCert;
 
-    @ManyToOne
-    @JoinColumn(nullable = false)
-    private ConsumerType type;
+    // Reference to the ConsumerType by ID
+    @Column(name = "type_id")
+    @NotNull
+    private String typeId;
 
     @ManyToOne
     @JoinColumn(nullable = false)
@@ -236,13 +236,16 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         this.name = name;
         this.username = userName;
         this.owner = owner;
-        this.type = type;
         this.facts = new HashMap<>();
         this.installedProducts = new HashSet<>();
         this.guestIds = new ArrayList<>();
         this.autoheal = true;
         this.serviceLevel = "";
         this.entitlementCount = 0L;
+
+        if (type != null) {
+            this.setType(type);
+        }
     }
 
     public Consumer() {
@@ -341,15 +344,32 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     /**
      * @return this consumers type.
      */
-    public ConsumerType getType() {
-        return type;
+    public String getTypeId() {
+        return this.typeId;
     }
 
     /**
-     * @param typeIn consumer type
+     * Sets the ID of the consumer type to of this consumer.
+     *
+     * @param typeId
+     *  The ID of the consumer type to use for this consumer
      */
-    public void setType(ConsumerType typeIn) {
-        type = typeIn;
+    public void setTypeId(String typeId) {
+        this.typeId = typeId;
+    }
+
+    /**
+     * Sets the consumer type of this consumer.
+     *
+     * @param type
+     *  The ConsumerType instance to use as the type for this consumer
+     */
+    public void setType(ConsumerType type) {
+        if (type == null || type.getId() == null) {
+            throw new IllegalArgumentException("type is null or has not been persisted");
+        }
+
+        this.typeId = type.getId();
     }
 
     /**
@@ -370,10 +390,8 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     @Override
     public String toString() {
-        String consumerType = (this.getType() != null) ? this.getType().getLabel() : "null";
-
-        return String.format("Consumer [id: %s, uuid: %s, consumerType: %s, name: %s]",
-            this.getId(), this.getUuid(), consumerType, this.getName());
+        return String.format("Consumer [id: %s, uuid: %s, name: %s]",
+            this.getId(), this.getUuid(), this.getName());
     }
 
     /**
@@ -716,35 +734,6 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         return this;
     }
 
-    /**
-     * Logic to determine if this consumer can handle a V3 or greater certificate.
-     * Used to determine what type of certificate to generate, as well as to guard access
-     * to subscription that provide too much content to fit in a V1 certificate.
-     *
-     * @return true is the consumer can handle V3 (or greater) certificates.
-     */
-    @XmlTransient
-    public boolean isCertV3Capable() {
-        if (isManifestDistributor()) {
-            for (ConsumerCapability capability : getCapabilities()) {
-                if ("cert_v3".equals(capability.getName())) {
-                    return true;
-                }
-            }
-            return false;
-        }
-        else if (getType().getLabel().equals(
-            ConsumerTypeEnum.HYPERVISOR.getLabel())) {
-            // Hypervisors in this context don't use content, so V3 is allowed:
-            return true;
-        }
-        else {
-            // NOTE: in future this might need to change to accomodate v4 certificates.
-            String entitlementVersion = getFact("system.certificate_version");
-            return entitlementVersion != null && entitlementVersion.startsWith("3.");
-        }
-    }
-
     public String getAnnotations() {
         return this.annotations;
     }
@@ -755,16 +744,6 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     public boolean isDev() {
         return !StringUtils.isEmpty(getFact("dev_sku"));
-    }
-
-    @JsonIgnore
-    public boolean isShare() {
-        return getType() != null && getType().isType(ConsumerTypeEnum.SHARE);
-    }
-
-    @JsonIgnore
-    public boolean isManifestDistributor() {
-        return getType() != null && getType().isManifest();
     }
 
     @JsonIgnore
@@ -781,7 +760,8 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     }
 
     public String getRecipientOwnerKey() {
-        return recipientOwnerKey; }
+        return recipientOwnerKey;
+    }
 
     public void setRecipientOwnerKey(String recipientOwnerKey) {
         this.recipientOwnerKey = recipientOwnerKey;

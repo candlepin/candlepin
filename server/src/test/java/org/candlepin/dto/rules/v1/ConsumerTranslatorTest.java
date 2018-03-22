@@ -15,12 +15,16 @@
 package org.candlepin.dto.rules.v1;
 
 import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCapability;
 import org.candlepin.model.ConsumerInstalledProduct;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
 
 import org.junit.runner.RunWith;
 
@@ -31,6 +35,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+
+
 /**
  * Test suite for the ConsumerTranslator (Rules framework) class
  */
@@ -38,7 +44,9 @@ import java.util.Set;
 public class ConsumerTranslatorTest extends
     AbstractTranslatorTest<Consumer, ConsumerDTO, ConsumerTranslator> {
 
-    protected ConsumerTranslator translator = new ConsumerTranslator();
+    protected ConsumerTypeCurator mockConsumerTypeCurator;
+
+    protected ConsumerTranslator translator;
 
     protected ConsumerTypeTranslatorTest consumerTypeTranslatorTest = new ConsumerTypeTranslatorTest();
     protected OwnerTranslatorTest ownerTranslatorTest = new OwnerTranslatorTest();
@@ -47,6 +55,9 @@ public class ConsumerTranslatorTest extends
     protected void initModelTranslator(ModelTranslator modelTranslator) {
         this.consumerTypeTranslatorTest.initModelTranslator(modelTranslator);
         this.ownerTranslatorTest.initModelTranslator(modelTranslator);
+
+        this.mockConsumerTypeCurator = mock(ConsumerTypeCurator.class);
+        this.translator = new ConsumerTranslator(this.mockConsumerTypeCurator);
 
         modelTranslator.registerTranslator(this.translator, Consumer.class, ConsumerDTO.class);
     }
@@ -58,13 +69,15 @@ public class ConsumerTranslatorTest extends
 
     @Override
     protected Consumer initSourceObject() {
+        ConsumerType ctype = this.consumerTypeTranslatorTest.initSourceObject();
+
         Consumer consumer = new Consumer();
 
         consumer.setUuid("consumer_uuid");
         consumer.setUsername("consumer_user_name");
         consumer.setServiceLevel("consumer_service_level");
         consumer.setOwner(this.ownerTranslatorTest.initSourceObject());
-        consumer.setType(this.consumerTypeTranslatorTest.initSourceObject());
+        consumer.setType(ctype);
 
         Map<String, String> facts = new HashMap<>();
         for (int i = 0; i < 5; ++i) {
@@ -88,6 +101,9 @@ public class ConsumerTranslatorTest extends
         }
         consumer.setCapabilities(capabilities);
 
+        when(mockConsumerTypeCurator.find(eq(ctype.getId()))).thenReturn(ctype);
+        when(mockConsumerTypeCurator.getConsumerType(eq(consumer))).thenReturn(ctype);
+
         return consumer;
     }
 
@@ -109,9 +125,10 @@ public class ConsumerTranslatorTest extends
             assertEquals(source.getUpdated(), dest.getUpdated());
 
             if (childrenGenerated) {
+                ConsumerType ctype = this.mockConsumerTypeCurator.getConsumerType(source);
 
                 this.ownerTranslatorTest.verifyOutput(source.getOwner(), dest.getOwner(), childrenGenerated);
-                this.consumerTypeTranslatorTest.verifyOutput(source.getType(), dest.getType(), true);
+                this.consumerTypeTranslatorTest.verifyOutput(ctype, dest.getType(), true);
 
                 if (source.getInstalledProducts() != null) {
                     for (ConsumerInstalledProduct cip : source.getInstalledProducts()) {

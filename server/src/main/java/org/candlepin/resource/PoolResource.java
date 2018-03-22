@@ -295,14 +295,14 @@ public class PoolResource {
         Pool pool = poolManager.find(id);
 
         if (pool == null) {
-            throw new NotFoundException(i18n.tr(
-                "Subscription Pool with ID \"{0}\" could not be found.", id));
+            throw new NotFoundException(i18n.tr("Subscription Pool with ID \"{0}\" could not be found.", id));
         }
 
         List<EntitlementDTO> entitlementDTOs = new ArrayList<>();
         for (Entitlement entitlement : pool.getEntitlements()) {
             entitlementDTOs.add(this.translator.translate(entitlement, EntitlementDTO.class));
         }
+
         return entitlementDTOs;
     }
 

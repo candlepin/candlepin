@@ -42,6 +42,10 @@ public class ConsumerTypeDTO extends CandlepinDTO<ConsumerTypeDTO> {
         // Intentionally left empty
     }
 
+    // TODO:
+    // Remove these constructors; they're coupled to the actual entity and we need to not carry
+    // forward extraneous constructors without reason
+
     public ConsumerTypeDTO(ConsumerTypeEnum type) {
         this.label = type.getLabel();
         this.manifest = type.isManifest();

@@ -103,10 +103,17 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         pool.setDerivedProvidedProducts(derivedProvidedProducts);
         poolCurator.create(pool);
 
-        consumer = TestUtil.createConsumer(owner);
+        consumer = this.createMockConsumer(owner, false);
         consumer.setFact("cpu_cores", "4");
-        consumerTypeCurator.create(consumer.getType());
-        consumerCurator.create(consumer);
+        consumer = consumerCurator.merge(consumer);
+    }
+
+    protected Consumer createMockConsumer(Owner owner, boolean manifestType) {
+        ConsumerType ctype = this.createConsumerType(manifestType);
+        Consumer consumer = new Consumer("TestConsumer" + TestUtil.randomInt(), "User", owner, ctype);
+        consumer = this.consumerCurator.create(consumer);
+
+        return consumer;
     }
 
     @Test
@@ -125,10 +132,9 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Owner owner = this.createOwner();
         Product product = this.createProduct(owner);
 
-        Consumer consumer = TestUtil.createConsumer(owner);
+        Consumer consumer = this.createMockConsumer(owner, false);
         consumer.setFact("cpu_cores", "4");
-        consumerTypeCurator.create(consumer.getType());
-        consumerCurator.create(consumer);
+        consumer = consumerCurator.merge(consumer);
 
         Pool pool = createPool(owner, product, 100L,
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2005, 3, 2));
@@ -150,10 +156,9 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Owner owner = this.createOwner();
         Product product = this.createProduct(owner);
 
-        Consumer consumer = TestUtil.createConsumer(owner);
+        Consumer consumer = this.createMockConsumer(owner, false);
         consumer.setFact("cpu_cores", "4");
-        consumerTypeCurator.create(consumer.getType());
-        consumerCurator.create(consumer);
+        consumer = consumerCurator.merge(consumer);
 
         Pool pool = createPool(owner, product, 100L,
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2005, 3, 2));
@@ -1737,11 +1742,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testUpdateQuantityColumnsOnPool() {
-        Consumer consumer = TestUtil.createConsumer(owner);
-        ConsumerType ct = consumer.getType();
-        ct.setManifest(true);
-        consumerTypeCurator.create(ct);
-        consumerCurator.create(consumer);
+        Consumer consumer = createMockConsumer(owner, true);
 
         Pool pool = createPool(owner, product, 20L,
             TestUtil.createDate(2010, 3, 2), TestUtil.createDate(
@@ -1763,10 +1764,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testUpdateQuantityColumnsOnPoolNotManifest() {
-        Consumer consumer = TestUtil.createConsumer(owner);
-        ConsumerType ct = consumer.getType();
-        consumerTypeCurator.create(ct);
-        consumerCurator.create(consumer);
+        Consumer consumer = this.createConsumer(owner);
 
         Pool pool = createPool(owner, product, 20L,
             TestUtil.createDate(2010, 3, 2), TestUtil.createDate(
@@ -1788,10 +1786,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testMarkCertificatesDirtyForPoolsWithNormalProduct() {
-        Consumer consumer = TestUtil.createConsumer(owner);
-        ConsumerType ct = consumer.getType();
-        consumerTypeCurator.create(ct);
-        consumerCurator.create(consumer);
+        Consumer consumer = this.createConsumer(owner);
 
         Pool pool = createPool(owner, product, -1L, TestUtil.createDate(2017, 3, 27),
             TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 27));
@@ -1818,10 +1813,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         }
         productIds.add(product.getId());
 
-        Consumer consumer = TestUtil.createConsumer(owner);
-        ConsumerType ct = consumer.getType();
-        consumerTypeCurator.create(ct);
-        consumerCurator.create(consumer);
+        Consumer consumer = this.createConsumer(owner);
 
         Pool pool = createPool(owner, product, -1L, TestUtil.createDate(2017, 3, 27),
             TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 27));
@@ -1842,10 +1834,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testMarkCertificatesDirtyForPoolsWithProvidedProduct() {
-        Consumer consumer = TestUtil.createConsumer(owner);
-        ConsumerType ct = consumer.getType();
-        consumerTypeCurator.create(ct);
-        consumerCurator.create(consumer);
+        Consumer consumer = this.createConsumer(owner);
 
         Product parent = TestUtil.createProduct();
         productCurator.create(parent);
@@ -2228,10 +2217,11 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testUpdateQuantityColumnsOnSharedPool() {
-        Consumer consumer = TestUtil.createConsumer(owner);
         ConsumerType shareType = new ConsumerType("share");
-        consumer.setType(shareType);
         consumerTypeCurator.create(shareType);
+
+        Consumer consumer = TestUtil.createConsumer(owner);
+        consumer.setType(shareType);
         consumerCurator.create(consumer);
 
         Pool pool = createPool(owner, product, 20L,
@@ -2254,10 +2244,11 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testFetchSharedPoolsOf() {
-        consumer = TestUtil.createConsumer(owner);
         ConsumerType share = new ConsumerType("share");
-        consumer.setType(share);
         consumerTypeCurator.create(share);
+
+        consumer = TestUtil.createConsumer(owner);
+        consumer.setType(share);
         consumerCurator.create(consumer);
 
         Pool pool = createPool(owner, product, 1L,

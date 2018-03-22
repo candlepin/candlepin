@@ -17,13 +17,27 @@ package org.candlepin.dto.manifest.v1;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Owner;
+
+
 
 /**
  * The ConsumerTranslator provides translation from Consumer model objects to
  * ConsumerDTOs, as used by the manifest import/export API.
  */
 public class ConsumerTranslator implements ObjectTranslator<Consumer, ConsumerDTO> {
+
+    private ConsumerTypeCurator consumerTypeCurator;
+
+    public ConsumerTranslator(ConsumerTypeCurator consumerTypeCurator) {
+        if (consumerTypeCurator == null) {
+            throw new IllegalArgumentException("ConsumerTypeCurator is null");
+        }
+
+        this.consumerTypeCurator = consumerTypeCurator;
+    }
 
     /**
      * {@inheritDoc}
@@ -70,7 +84,15 @@ public class ConsumerTranslator implements ObjectTranslator<Consumer, ConsumerDT
         if (translator != null) {
             Owner owner = source.getOwner();
             dest.setOwner(owner != null ? translator.translate(owner, OwnerDTO.class) : null);
-            dest.setType(translator.translate(source.getType(), ConsumerTypeDTO.class));
+
+            // Temporary measure to maintain API compatibility
+            if (source.getTypeId() != null) {
+                ConsumerType ctype = this.consumerTypeCurator.getConsumerType(source);
+                dest.setType(translator.translate(ctype, ConsumerTypeDTO.class));
+            }
+            else {
+                dest.setType(null);
+            }
         }
         else {
             dest.setOwner(null);

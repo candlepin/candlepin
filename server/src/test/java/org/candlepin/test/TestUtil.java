@@ -129,7 +129,10 @@ public class TestUtil {
     }
 
     public static Consumer createDistributor() {
-        return createConsumer(new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN), createOwner());
+        ConsumerType ctype = new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN);
+        ctype.setId("test-ctype-" + randomInt());
+
+        return createConsumer(ctype, createOwner());
     }
 
     /**
@@ -144,6 +147,7 @@ public class TestUtil {
             owner,
             createConsumerType()
         );
+
         consumer.setCreated(new Date());
         consumer.setFact("foo", "bar");
         consumer.setFact("foo1", "bar1");
@@ -152,7 +156,10 @@ public class TestUtil {
     }
 
     public static ConsumerType createConsumerType() {
-        return new ConsumerType("test-consumer-type-" + randomInt());
+        ConsumerType ctype = new ConsumerType("test-consumer-type-" + randomInt());
+        ctype.setId("test-ctype-" + randomInt());
+
+        return ctype;
     }
 
     private static final Random RANDOM = new Random(System.currentTimeMillis());

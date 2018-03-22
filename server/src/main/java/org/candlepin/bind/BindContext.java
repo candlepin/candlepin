@@ -16,6 +16,8 @@ package org.candlepin.bind;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
@@ -53,16 +55,20 @@ public class BindContext {
     private EntitlementRefusedException exception;
     private PoolCurator poolCurator;
     private ConsumerCurator consumerCurator;
+    private ConsumerTypeCurator consumerTypeCurator;
     private I18n i18n;
 
     @Inject
     public BindContext(PoolCurator poolCurator,
         ConsumerCurator consumerCurator,
+        ConsumerTypeCurator consumerTypeCurator,
         I18n i18n,
         @Assisted Consumer consumer,
         @Assisted Map<String, Integer> quantities) {
+
         this.poolCurator = poolCurator;
         this.consumerCurator = consumerCurator;
+        this.consumerTypeCurator = consumerTypeCurator;
         this.i18n = i18n;
         this.consumer = consumer;
         this.quantities = quantities;
@@ -74,6 +80,10 @@ public class BindContext {
 
     public Consumer getConsumer() {
         return consumer;
+    }
+
+    public ConsumerType getConsumerType() {
+        return this.consumerTypeCurator.getConsumerType(this.getConsumer());
     }
 
     public Map<String, PoolQuantity> getPoolQuantities() {
@@ -112,6 +122,7 @@ public class BindContext {
         if (lockedConsumer == null) {
             lockedConsumer = consumerCurator.lockAndLoad(consumer);
         }
+
         return lockedConsumer;
     }
 

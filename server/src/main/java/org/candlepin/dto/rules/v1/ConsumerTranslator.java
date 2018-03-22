@@ -19,15 +19,29 @@ import org.candlepin.dto.TimestampedEntityTranslator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCapability;
 import org.candlepin.model.ConsumerInstalledProduct;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
 
 import java.util.HashSet;
 import java.util.Set;
+
+
 
 /**
  * The ConsumerTranslator provides translation from Consumer model objects to
  * ConsumerDTOs, as used by the Rules framework.
  */
 public class ConsumerTranslator extends TimestampedEntityTranslator<Consumer, ConsumerDTO> {
+
+    private ConsumerTypeCurator consumerTypeCurator;
+
+    public ConsumerTranslator(ConsumerTypeCurator consumerTypeCurator) {
+        if (consumerTypeCurator == null) {
+            throw new IllegalArgumentException("ConsumerTypeCurator is null");
+        }
+
+        this.consumerTypeCurator = consumerTypeCurator;
+    }
 
     /**
      * {@inheritDoc}
@@ -92,7 +106,14 @@ public class ConsumerTranslator extends TimestampedEntityTranslator<Consumer, Co
                 dest.setCapabilities(capabilitiesDTO);
             }
 
-            dest.setType(translator.translate(source.getType(), ConsumerTypeDTO.class));
+            // Temporary measure to maintain API compatibility
+            if (source.getTypeId() != null) {
+                ConsumerType ctype = this.consumerTypeCurator.getConsumerType(source);
+                dest.setType(translator.translate(ctype, ConsumerTypeDTO.class));
+            }
+            else {
+                dest.setType(null);
+            }
         }
         else {
             dest.setOwner(null);

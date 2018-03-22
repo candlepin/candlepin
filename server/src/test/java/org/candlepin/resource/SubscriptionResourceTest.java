@@ -63,9 +63,7 @@ public class SubscriptionResourceTest  {
             I18nFactory.READ_PROPERTIES | I18nFactory.FALLBACK
         );
 
-        this.subResource = new SubscriptionResource(
-            subService, consumerCurator, poolManager, i18n
-        );
+        this.subResource = new SubscriptionResource(subService, consumerCurator, poolManager, i18n);
     }
 
     @Test(expected = NotFoundException.class)

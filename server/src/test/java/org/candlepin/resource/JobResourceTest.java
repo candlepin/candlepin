@@ -24,6 +24,7 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.api.v1.JobStatusDTO;
 import org.candlepin.model.CandlepinQuery;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.JobCurator;
 import org.candlepin.model.TransformedCandlepinQuery;
 import org.candlepin.pinsetter.core.PinsetterException;
@@ -55,6 +56,8 @@ public class JobResourceTest {
     private JobResource jobResource;
     @Mock private JobCurator jobCurator;
     @Mock private PinsetterKernel pinsetterKernel;
+    @Mock private ConsumerTypeCurator consumerTypeCurator;
+
     private I18n i18n;
     private ModelTranslator translator;
 
@@ -62,7 +65,7 @@ public class JobResourceTest {
     public void init() {
         MockitoAnnotations.initMocks(this);
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        translator = new StandardTranslator();
+        translator = new StandardTranslator(this.consumerTypeCurator);
         jobResource = new JobResource(jobCurator, pinsetterKernel, i18n, translator);
     }
 

@@ -14,11 +14,11 @@
  */
 package org.candlepin.resource;
 
-import static org.candlepin.test.TestUtil.createConsumerDTO;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doAnswer;
 
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
@@ -64,6 +64,7 @@ import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
+import org.candlepin.test.TestUtil;
 import org.candlepin.util.FactValidator;
 import org.candlepin.util.ServiceLevelValidator;
 
@@ -94,6 +95,11 @@ import java.util.Locale;
 
 import javax.inject.Provider;
 
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+
 /**
  *
  */
@@ -104,24 +110,26 @@ import javax.inject.Provider;
  */
 public class ConsumerResourceCreationTest {
 
+    private static Logger log = LoggerFactory.getLogger(ConsumerResourceCreationTest.class);
+
     private static final String USER = "testuser";
 
     @Mock protected UserServiceAdapter userService;
-    @Mock private IdentityCertServiceAdapter idCertService;
-    @Mock private SubscriptionServiceAdapter subscriptionService;
-    @Mock private OwnerServiceAdapter ownerService;
-    @Mock private ConsumerCurator consumerCurator;
-    @Mock private ConsumerTypeCurator consumerTypeCurator;
-    @Mock private OwnerCurator ownerCurator;
-    @Mock private EventSink sink;
-    @Mock private EventFactory factory;
-    @Mock private ActivationKeyCurator activationKeyCurator;
-    @Mock private ComplianceRules complianceRules;
-    @Mock private DeletedConsumerCurator deletedConsumerCurator;
-    @Mock private ConsumerContentOverrideCurator consumerContentOverrideCurator;
-    @Mock private ServiceLevelValidator serviceLevelValidator;
-    @Mock private ConsumerBindUtil consumerBindUtil;
-    @Mock private ConsumerEnricher consumerEnricher;
+    @Mock protected IdentityCertServiceAdapter idCertService;
+    @Mock protected SubscriptionServiceAdapter subscriptionService;
+    @Mock protected OwnerServiceAdapter ownerService;
+    @Mock protected ConsumerCurator consumerCurator;
+    @Mock protected ConsumerTypeCurator consumerTypeCurator;
+    @Mock protected OwnerCurator ownerCurator;
+    @Mock protected EventSink sink;
+    @Mock protected EventFactory factory;
+    @Mock protected ActivationKeyCurator activationKeyCurator;
+    @Mock protected ComplianceRules complianceRules;
+    @Mock protected DeletedConsumerCurator deletedConsumerCurator;
+    @Mock protected ConsumerContentOverrideCurator consumerContentOverrideCurator;
+    @Mock protected ServiceLevelValidator serviceLevelValidator;
+    @Mock protected ConsumerBindUtil consumerBindUtil;
+    @Mock protected ConsumerEnricher consumerEnricher;
     @Inject protected ModelTranslator modelTranslator;
 
     private I18n i18n;
@@ -140,7 +148,7 @@ public class ConsumerResourceCreationTest {
     public void init() throws Exception {
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
 
-        this.modelTranslator = new StandardTranslator();
+        this.modelTranslator = new StandardTranslator(this.consumerTypeCurator);
 
         testMigration = new GuestMigration(consumerCurator);
         migrationProvider = Providers.of(testMigration);
@@ -154,13 +162,13 @@ public class ConsumerResourceCreationTest {
             null, null, new FactValidator(this.config, this.i18n),
             null, consumerEnricher, migrationProvider, modelTranslator);
 
-        this.system = initSystem();
-        this.systemDto = initSystemDto();
+        this.system = this.initConsumerType();
+        this.mockConsumerType(this.system);
+        this.systemDto = this.modelTranslator.translate(this.system, ConsumerTypeDTO.class);
 
         owner = new Owner("test_owner");
         user = new User(USER, "");
-        PermissionBlueprint p = new PermissionBlueprint(PermissionType.OWNER, owner,
-            Access.ALL);
+        PermissionBlueprint p = new PermissionBlueprint(PermissionType.OWNER, owner, Access.ALL);
         role = new Role();
         role.addPermission(p);
         role.addUser(user);
@@ -179,31 +187,57 @@ public class ConsumerResourceCreationTest {
             }
         });
 
-        when(consumerTypeCurator.lookupByLabel(system.getLabel())).thenReturn(system);
         when(userService.findByLogin(USER)).thenReturn(user);
         IdentityCertificate cert = new IdentityCertificate();
         cert.setKey("testKey");
         cert.setCert("testCert");
         cert.setId("testId");
         cert.setSerial(new CertificateSerial(new Date()));
-        when(idCertService.generateIdentityCert(any(Consumer.class)))
-                .thenReturn(cert);
+        when(idCertService.generateIdentityCert(any(Consumer.class))).thenReturn(cert);
         when(ownerCurator.lookupByKey(owner.getKey())).thenReturn(owner);
-        when(complianceRules.getStatus(any(Consumer.class),
-                any(Date.class), any(Boolean.class), any(Boolean.class)))
+        when(complianceRules.getStatus(
+            any(Consumer.class), any(Date.class), any(Boolean.class), any(Boolean.class)))
                 .thenReturn(new ComplianceStatus(new Date()));
     }
 
-    public ConsumerTypeDTO initSystemDto() {
-        ConsumerTypeDTO systemtype = new ConsumerTypeDTO(ConsumerType.ConsumerTypeEnum.SYSTEM);
-        return systemtype;
+    public ConsumerType initConsumerType() {
+        return new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM);
     }
 
-    public ConsumerType initSystem() {
-        ConsumerType system = new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM);
-        return system;
-    }
+    protected ConsumerType mockConsumerType(ConsumerType ctype) {
+        // Ensure the type has an ID
+        if (ctype != null) {
+            if (ctype.getId() == null) {
+                ctype.setId("test-ctype-" + ctype.getLabel() + "-" + TestUtil.randomInt());
+            }
 
+            when(consumerTypeCurator.lookupByLabel(eq(ctype.getLabel()))).thenReturn(ctype);
+            when(consumerTypeCurator.find(eq(ctype.getId()))).thenReturn(ctype);
+
+            doAnswer(new Answer<ConsumerType>() {
+                @Override
+                public ConsumerType answer(InvocationOnMock invocation) throws Throwable {
+                    Object[] args = invocation.getArguments();
+                    Consumer consumer = (Consumer) args[0];
+                    ConsumerTypeCurator curator = (ConsumerTypeCurator) invocation.getMock();
+
+                    ConsumerType ctype = null;
+
+                    if (consumer != null && consumer.getTypeId() != null) {
+                        ctype = curator.find(consumer.getTypeId());
+
+                        if (ctype == null) {
+                            throw new IllegalStateException("No such consumer type: " + consumer.getTypeId());
+                        }
+                    }
+
+                    return ctype;
+                }
+            }).when(consumerTypeCurator).getConsumerType(any(Consumer.class));
+        }
+
+        return ctype;
+    }
 
     private static class ConfigForTesting extends MapConfiguration {
         @SuppressWarnings("serial")
@@ -236,9 +270,9 @@ public class ConsumerResourceCreationTest {
 
     private ConsumerDTO createConsumer(String consumerName, Principal principal,
         List<String> activationKeys) {
-        ConsumerDTO consumer = createConsumerDTO(consumerName, null, null, systemDto);
-        return this.resource.create(consumer, principal, USER, owner.getKey(),
-            null, true);
+
+        ConsumerDTO consumer = TestUtil.createConsumerDTO(consumerName, null, null, systemDto);
+        return this.resource.create(consumer, principal, USER, owner.getKey(), null, true);
     }
 
     @Test
@@ -344,7 +378,7 @@ public class ConsumerResourceCreationTest {
     public void oauthRegistrationSupported() {
         // Should be able to register successfully with as a trusted user principal:
         Principal p = new TrustedUserPrincipal("anyuser");
-        ConsumerDTO consumer = createConsumerDTO("sys.example.com", null, null, systemDto);
+        ConsumerDTO consumer = TestUtil.createConsumerDTO("sys.example.com", null, null, systemDto);
         resource.create(consumer, p, null, owner.getKey(), null, true);
     }
 
@@ -353,7 +387,7 @@ public class ConsumerResourceCreationTest {
         // No auth should be required for registering with keys:
         Principal p = new NoAuthPrincipal();
         List<String> keys = mockActivationKeys();
-        ConsumerDTO consumer = createConsumerDTO("sys.example.com", null, null, systemDto);
+        ConsumerDTO consumer = TestUtil.createConsumerDTO("sys.example.com", null, null, systemDto);
         resource.create(consumer, p, null, owner.getKey(), createKeysString(keys), true);
         for (String keyName : keys) {
             verify(activationKeyCurator).lookupForOwner(keyName, owner);
@@ -362,8 +396,9 @@ public class ConsumerResourceCreationTest {
 
     @Test
     public void registerFailsWithKeyWhenAutobindOnKeyAndDisabledOnOwner() {
-        ConsumerType consumerType = new ConsumerType(ConsumerTypeEnum.SYSTEM);
-        when(consumerTypeCurator.lookupByLabel(systemDto.getLabel())).thenReturn(consumerType);
+        ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.SYSTEM);
+        ConsumerTypeDTO ctypeDTO = this.modelTranslator.translate(ctype, ConsumerTypeDTO.class);
+        this.mockConsumerType(ctype);
 
         // Disable autobind for the owner.
         owner.setAutobindDisabled(true);
@@ -375,7 +410,7 @@ public class ConsumerResourceCreationTest {
 
         // No auth should be required for registering with keys:
         Principal p = new NoAuthPrincipal();
-        ConsumerDTO consumer = createConsumerDTO("sys.example.com", null, null, systemDto);
+        ConsumerDTO consumer = TestUtil.createConsumerDTO("sys.example.com", null, null, ctypeDTO);
         resource.create(consumer, p, null, owner.getKey(), key.getName(), true);
     }
 
@@ -383,7 +418,7 @@ public class ConsumerResourceCreationTest {
     public void orgRequiredWithActivationKeys() {
         Principal p = new NoAuthPrincipal();
         List<String> keys = mockActivationKeys();
-        ConsumerDTO consumer = createConsumerDTO("sys.example.com", null, null, systemDto);
+        ConsumerDTO consumer = TestUtil.createConsumerDTO("sys.example.com", null, null, systemDto);
         resource.create(consumer, p, null, null, createKeysString(keys), true);
     }
 
@@ -391,7 +426,7 @@ public class ConsumerResourceCreationTest {
     public void cannotMixUsernameWithActivationKeys() {
         Principal p = new NoAuthPrincipal();
         List<String> keys = mockActivationKeys();
-        ConsumerDTO consumer = createConsumerDTO("sys.example.com", null, null, systemDto);
+        ConsumerDTO consumer = TestUtil.createConsumerDTO("sys.example.com", null, null, systemDto);
         resource.create(consumer, p, USER, owner.getKey(), createKeysString(keys), true);
     }
 
@@ -400,7 +435,7 @@ public class ConsumerResourceCreationTest {
         Principal p = new NoAuthPrincipal();
         List<String> keys = new ArrayList<>();
         keys.add("NoSuchKey");
-        ConsumerDTO consumer = createConsumerDTO("sys.example.com", null, null, systemDto);
+        ConsumerDTO consumer = TestUtil.createConsumerDTO("sys.example.com", null, null, systemDto);
         resource.create(consumer, p, null, owner.getKey(), createKeysString(keys), true);
     }
 
@@ -409,21 +444,21 @@ public class ConsumerResourceCreationTest {
         Principal p = new NoAuthPrincipal();
         List<String> keys = mockActivationKeys();
         keys.add("NoSuchKey");
-        ConsumerDTO consumer = createConsumerDTO("sys.example.com", null, null, systemDto);
+        ConsumerDTO consumer = TestUtil.createConsumerDTO("sys.example.com", null, null, systemDto);
         resource.create(consumer, p, null, owner.getKey(), createKeysString(keys), true);
     }
 
     @Test
     public void registerWithNoInstalledProducts() {
         Principal p = new TrustedUserPrincipal("anyuser");
-        ConsumerDTO consumer = createConsumerDTO("consumerName", null, null, systemDto);
+        ConsumerDTO consumer = TestUtil.createConsumerDTO("consumerName", null, null, systemDto);
         resource.create(consumer, p, USER, owner.getKey(), null, true);
     }
 
     @Test
     public void registerWithNullReleaseVer() {
         Principal p = new TrustedUserPrincipal("anyuser");
-        ConsumerDTO consumer = createConsumerDTO("consumername", null, null, systemDto);
+        ConsumerDTO consumer = TestUtil.createConsumerDTO("consumername", null, null, systemDto);
         consumer.setReleaseVersion(null);
         resource.create(consumer, p, USER, owner.getKey(), null, true);
 
@@ -432,7 +467,7 @@ public class ConsumerResourceCreationTest {
     @Test
     public void registerWithEmptyReleaseVer() {
         Principal p = new TrustedUserPrincipal("anyuser");
-        ConsumerDTO consumer = createConsumerDTO("consumername", null, null, systemDto);
+        ConsumerDTO consumer = TestUtil.createConsumerDTO("consumername", null, null, systemDto);
         consumer.setReleaseVersion("");
         resource.create(consumer, p, USER, owner.getKey(), null, true);
     }
@@ -440,14 +475,14 @@ public class ConsumerResourceCreationTest {
     @Test
     public void registerWithNoReleaseVer() {
         Principal p = new TrustedUserPrincipal("anyuser");
-        ConsumerDTO consumer = createConsumerDTO("consumername", null, null, systemDto);
+        ConsumerDTO consumer = TestUtil.createConsumerDTO("consumername", null, null, systemDto);
         resource.create(consumer, p, USER, owner.getKey(), null, true);
     }
 
     @Test
     public void setStatusOnCreate() {
         Principal p = new TrustedUserPrincipal("anyuser");
-        ConsumerDTO consumer = createConsumerDTO("consumername", null, null, systemDto);
+        ConsumerDTO consumer = TestUtil.createConsumerDTO("consumername", null, null, systemDto);
         resource.create(consumer, p, USER, owner.getKey(), null, true);
         // Should be called with the consumer, null date (now),
         // no compliantUntil, and not update the consumer record

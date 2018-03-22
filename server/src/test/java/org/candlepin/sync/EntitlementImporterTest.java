@@ -16,6 +16,7 @@ package org.candlepin.sync;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -29,6 +30,8 @@ import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCurator;
@@ -70,6 +73,7 @@ public class EntitlementImporterTest {
     @Mock private ObjectMapper om;
     @Mock private ProductCurator mockProductCurator;
     @Mock private EntitlementCurator ec;
+    @Mock private ConsumerTypeCurator mockConsumerTypeCurator;
 
     private Owner owner;
     private EntitlementImporter importer;
@@ -86,16 +90,22 @@ public class EntitlementImporterTest {
     @Before
     public void init() {
         this.owner = new Owner();
-        this.translator = new StandardTranslator();
+        this.translator = new StandardTranslator(mockConsumerTypeCurator);
 
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        this.importer = new EntitlementImporter(certSerialCurator, cdnCurator,
-            i18n, mockProductCurator, ec);
+        this.importer = new EntitlementImporter(certSerialCurator, cdnCurator, i18n, mockProductCurator, ec);
 
-        consumer = TestUtil.createConsumer(owner);
+        ConsumerType ctype = TestUtil.createConsumerType();
+        ctype.setId("test-ctype");
+
+        consumer = TestUtil.createConsumer(ctype, owner);
+
         consumerDTO = this.translator.translate(consumer, ConsumerDTO.class);
         consumerDTO.setUrlWeb("");
         consumerDTO.setUrlApi("");
+
+        when(this.mockConsumerTypeCurator.getConsumerType(eq(consumer))).thenReturn(ctype);
+        when(this.mockConsumerTypeCurator.find(eq(ctype.getId()))).thenReturn(ctype);
 
         cert = createEntitlementCertificate("my-test-key", "my-cert");
         cert.setId("test-id");

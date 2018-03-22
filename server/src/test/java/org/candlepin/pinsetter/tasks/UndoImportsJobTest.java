@@ -133,10 +133,9 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
         // Create owner w/upstream consumer
         Owner owner1 = TestUtil.createOwner();
         Owner owner2 = TestUtil.createOwner();
-        ConsumerType type = TestUtil.createConsumerType();
+        ConsumerType type = this.createConsumerType();
         UpstreamConsumer uc1 = new UpstreamConsumer("uc1", null, type, "uc1");
         UpstreamConsumer uc2 = new UpstreamConsumer("uc2", null, type, "uc2");
-        this.consumerTypeCurator.create(type);
         this.ownerCurator.create(owner1);
         this.ownerCurator.create(owner2);
         owner1.setUpstreamConsumer(uc1);
@@ -226,12 +225,8 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
 
             case ENTITLEMENT_DERIVED:
                 pool.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
-                consumer = TestUtil.createConsumer(owner);
-                entitlement = TestUtil.createEntitlement(owner, consumer, pool, null);
-
-                this.consumerTypeCurator.create(consumer.getType());
-                this.consumerCurator.create(consumer);
-                this.entitlementCurator.create(entitlement);
+                consumer = this.createConsumer(owner);
+                entitlement = this.createEntitlement(owner, consumer, pool, null);
 
                 pool.setSourceEntitlement(entitlement);
                 break;

@@ -15,12 +15,16 @@
 package org.candlepin.dto.api.v1;
 
 import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCapability;
 import org.candlepin.model.ConsumerInstalledProduct;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Release;
@@ -44,7 +48,9 @@ import java.util.Set;
 public class ConsumerTranslatorTest extends
     AbstractTranslatorTest<Consumer, ConsumerDTO, ConsumerTranslator> {
 
-    protected ConsumerTranslator translator = new ConsumerTranslator();
+    protected ConsumerTypeCurator mockConsumerTypeCurator;
+
+    protected ConsumerTranslator translator;
 
     protected CertificateTranslatorTest certificateTranslatorTest = new CertificateTranslatorTest();
     protected ConsumerTypeTranslatorTest consumerTypeTranslatorTest = new ConsumerTypeTranslatorTest();
@@ -67,8 +73,10 @@ public class ConsumerTranslatorTest extends
         this.hypervisorIdTranslatorTest.initModelTranslator(modelTranslator);
         this.guestIdTranslatorTest.initModelTranslator(modelTranslator);
 
-        modelTranslator.registerTranslator(
-            this.translator, Consumer.class, ConsumerDTO.class);
+        this.mockConsumerTypeCurator = mock(ConsumerTypeCurator.class);
+        this.translator = new ConsumerTranslator(this.mockConsumerTypeCurator);
+
+        modelTranslator.registerTranslator(this.translator, Consumer.class, ConsumerDTO.class);
     }
 
     @Override
@@ -78,6 +86,8 @@ public class ConsumerTranslatorTest extends
 
     @Override
     protected Consumer initSourceObject() {
+        ConsumerType ctype = this.consumerTypeTranslatorTest.initSourceObject();
+
         Consumer consumer = new Consumer();
 
         consumer.setId("consumer_id");
@@ -97,8 +107,8 @@ public class ConsumerTranslatorTest extends
         consumer.setRecipientOwnerKey("test_recipient_owner_key");
         consumer.setAnnotations("test_annotations");
         consumer.setContentAccessMode("test_content_access_mode");
-        consumer.setType(this.consumerTypeTranslatorTest.initSourceObject());
         consumer.setIdCert((IdentityCertificate) this.certificateTranslatorTest.initSourceObject());
+        consumer.setType(ctype);
 
         Map<String, String> facts = new HashMap<>();
         for (int i = 0; i < 5; ++i) {
@@ -135,6 +145,9 @@ public class ConsumerTranslatorTest extends
             guestIds.add(guestId);
         }
         consumer.setGuestIds(guestIds);
+
+        when(mockConsumerTypeCurator.find(eq(ctype.getId()))).thenReturn(ctype);
+        when(mockConsumerTypeCurator.getConsumerType(eq(consumer))).thenReturn(ctype);
 
         return consumer;
     }
@@ -173,7 +186,9 @@ public class ConsumerTranslatorTest extends
                     childrenGenerated);
                 this.hypervisorIdTranslatorTest.verifyOutput(source.getHypervisorId(), dest.getHypervisorId(),
                     childrenGenerated);
-                this.consumerTypeTranslatorTest.verifyOutput(source.getType(), dest.getType(), true);
+
+                ConsumerType ctype = this.mockConsumerTypeCurator.getConsumerType(source);
+                this.consumerTypeTranslatorTest.verifyOutput(ctype, dest.getType(), true);
                 this.certificateTranslatorTest.verifyOutput(source.getIdCert(), dest.getIdCert(), true);
 
                 if (source.getInstalledProducts() != null) {

@@ -127,9 +127,9 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @Before
     public void setUp() {
         standardSystemType = consumerTypeCurator.create(new ConsumerType("standard-system"));
-        standardSystemTypeDTO = new ConsumerTypeDTO(standardSystemType.getLabel());
+        standardSystemTypeDTO = modelTranslator.translate(standardSystemType, ConsumerTypeDTO.class);
         personType = consumerTypeCurator.create(new ConsumerType(ConsumerTypeEnum.PERSON));
-        personTypeDTO = new ConsumerTypeDTO(personType.getLabel());
+        personTypeDTO = modelTranslator.translate(personType, ConsumerTypeDTO.class);
         owner = ownerCurator.create(new Owner("test-owner"));
         ownerDTO = modelTranslator.translate(owner, OwnerDTO.class);
         owner.setDefaultServiceLevel(DEFAULT_SERVICE_LEVEL);
@@ -576,7 +576,8 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         Provider<GuestMigration> migrationProvider = Providers.of(testMigration);
 
         ConsumerResource cr = new ConsumerResource(
-            this.consumerCurator, null, null, null, null, this.entitlementCurator, null, null, null, null,
+            this.consumerCurator, this.consumerTypeCurator, null, null, null, this.entitlementCurator, null,
+            null, null, null,
             null, null, null, null, this.poolManager, null, null, null, null, null, null, null, null,
             new CandlepinCommonTestConfig(), null, null, null, mock(ConsumerBindUtil.class),
             null, null, null, null, consumerEnricher, migrationProvider, this.modelTranslator);

@@ -52,6 +52,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.LockModeType;
 import javax.persistence.TypedQuery;
@@ -115,8 +116,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             entitlement.setConsumer(consumer);
         }
 
-        ConsumerType consumerType = consumerTypeCurator.lookupByLabel(consumer.getType().getLabel());
-        consumer.setType(consumerType);
+        consumer.setTypeId(consumer.getTypeId());
 
         IdentityCertificate idCert = consumer.getIdCert();
         this.currentSession().replicate(idCert.getSerial(), ReplicationMode.EXCEPTION);
@@ -255,9 +255,13 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         ConsumerType person = consumerTypeCurator
             .lookupByLabel(ConsumerType.ConsumerTypeEnum.PERSON.getLabel());
 
-        return (Consumer) createSecureCriteria()
-            .add(Restrictions.eq("username", user.getUsername()))
-            .add(Restrictions.eq("type", person)).uniqueResult();
+        if (person != null) {
+            return (Consumer) createSecureCriteria()
+                .add(Restrictions.eq("username", user.getUsername()))
+                .add(Restrictions.eq("typeId", person.getId())).uniqueResult();
+        }
+
+        return null;
     }
 
     /**
@@ -415,7 +419,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         existingConsumer.setFacts(updatedConsumer.getFacts());
         existingConsumer.setName(updatedConsumer.getName());
         existingConsumer.setOwner(updatedConsumer.getOwner());
-        existingConsumer.setType(updatedConsumer.getType());
+        existingConsumer.setTypeId(updatedConsumer.getTypeId());
         existingConsumer.setUuid(updatedConsumer.getUuid());
 
         if (flush) {
@@ -793,15 +797,24 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         if (owner != null) {
             crit.add(Restrictions.eq("owner", owner));
         }
+
         if (userName != null && !userName.isEmpty()) {
             crit.add(Restrictions.eq("username", userName));
         }
+
         if (types != null && !types.isEmpty()) {
-            crit.add(Restrictions.in("type", types));
+            Collection<String> typeIds = types.stream()
+                .filter(t -> t.getId() != null)
+                .map(t -> t.getId())
+                .collect(Collectors.toList());
+
+            crit.add(CPRestrictions.in("typeId", typeIds));
         }
+
         if (uuids != null && !uuids.isEmpty()) {
-            crit.add(Restrictions.in("uuid", uuids));
+            crit.add(CPRestrictions.in("uuid", uuids));
         }
+
         if (hypervisorIds != null && !hypervisorIds.isEmpty()) {
             // Cannot use Restrictions.in here because hypervisorId is case insensitive
             Set<Criterion> ors = new HashSet<>();
@@ -811,6 +824,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             crit.createAlias("hypervisorId", "hvsr");
             crit.add(Restrictions.or(ors.toArray(new Criterion[ors.size()])));
         }
+
         if (factFilters != null && !factFilters.isEmpty()) {
             // Process the filters passed for the attributes
             FilterBuilder factFilter = new FactFilterBuilder();
@@ -921,8 +935,11 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             .add(Restrictions.eq("o.key", ownerKey));
 
         if (!CollectionUtils.isEmpty(typeLabels)) {
-            crit.createAlias("c.type", "ct")
-                .add(Restrictions.in("ct.label", typeLabels));
+            DetachedCriteria typeQuery = DetachedCriteria.forClass(ConsumerType.class, "ctype")
+                .add(CPRestrictions.in("ctype.label", typeLabels))
+                .setProjection(Projections.id());
+
+            crit.add(Subqueries.propertyIn("c.typeId", typeQuery));
         }
 
         boolean hasSkus = !CollectionUtils.isEmpty(skus);
@@ -935,18 +952,18 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         if (hasSkus) {
             crit.createAlias("po.product", "pr")
                 .createAlias("pr.attributes", "pa")
-                .add(Restrictions.in("pr.id", skus))
+                .add(CPRestrictions.in("pr.id", skus))
                 .add(Restrictions.eq("pa.indices", "type"))
                 .add(Restrictions.eq("pa.elements", "MKT"));
         }
 
         if (hasSubscriptionIds) {
             crit.createAlias("po.sourceSubscription", "ss")
-                .add(Restrictions.in("ss.subscriptionId", subscriptionIds));
+                .add(CPRestrictions.in("ss.subscriptionId", subscriptionIds));
         }
 
         if (hasContracts) {
-            crit.add(Restrictions.in("po.contractNumber", contracts));
+            crit.add(CPRestrictions.in("po.contractNumber", contracts));
         }
 
         crit.setProjection(Projections.countDistinct("c.id"));
@@ -964,7 +981,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     public int getConsumerCount(Owner owner, ConsumerType type) {
         Criteria c = this.createSecureCriteria()
             .add(Restrictions.eq("owner", owner))
-            .add(Restrictions.eq("type", type))
+            .add(Restrictions.eq("typeId", type.getId()))
             .setProjection(Projections.rowCount());
 
         return ((Long) c.uniqueResult()).intValue();
@@ -973,7 +990,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     public int getConsumerEntitlementCount(Owner owner, ConsumerType type) {
         Criteria c = createSecureCriteria()
             .add(Restrictions.eq("owner", owner))
-            .add(Restrictions.eq("type", type))
+            .add(Restrictions.eq("typeId", type.getId()))
             .createAlias("entitlements", "ent")
             .setMaxResults(0)
             .setProjection(Projections.sum("ent.quantity"));

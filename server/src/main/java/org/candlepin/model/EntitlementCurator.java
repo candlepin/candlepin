@@ -65,18 +65,20 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     private CandlepinQueryFactory cpQueryFactory;
     private OwnerProductCurator ownerProductCurator;
     private ProductCurator productCurator;
+    private ConsumerTypeCurator consumerTypeCurator;
 
     /**
      * default ctor
      */
     @Inject
     public EntitlementCurator(OwnerProductCurator ownerProductCurator, ProductCurator productCurator,
-        CandlepinQueryFactory cpQueryFactory) {
+        ConsumerTypeCurator consumerTypeCurator, CandlepinQueryFactory cpQueryFactory) {
         super(Entitlement.class);
 
         this.cpQueryFactory = cpQueryFactory;
         this.ownerProductCurator = ownerProductCurator;
         this.productCurator = productCurator;
+        this.consumerTypeCurator = consumerTypeCurator;
     }
 
     // TODO: handles addition of new entitlements only atm!
@@ -518,24 +520,28 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
      * also assumes the consumer is about to create an entitlement with the pool provided
      * as an argument, so includes the products from that pool
      *
-     * @param c
+     * @param consumer
      * @param pool
      * @return entitled product IDs
      */
-    public Set<String> listEntitledProductIds(Consumer c, Pool pool) {
+    public Set<String> listEntitledProductIds(Consumer consumer, Pool pool) {
         // FIXME Either address the TODO below, or move this method out of the curator.
         // TODO: Swap this to a db query if we're worried about memory:
         Set<String> entitledProductIds = new HashSet<>();
         List<Pool> pools = new LinkedList<>();
-        for (Entitlement e : c.getEntitlements()) {
+        for (Entitlement e : consumer.getEntitlements()) {
             pools.add(e.getPool());
         }
+
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
+
         pools.add(pool);
         for (Pool p : pools) {
             if (!poolOverlapsRange(p, pool.getStartDate(), pool.getEndDate())) {
                 // Skip this entitlement:
                 continue;
             }
+
             entitledProductIds.add(p.getProduct().getId());
             for (Product pp : productCurator.getPoolProvidedProductsCached(p)) {
                 entitledProductIds.add(pp.getId());
@@ -543,7 +549,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
 
             // A distributor should technically be entitled to derived products and
             // will need to be able to sync content downstream.
-            if (c.isManifestDistributor() && p.getDerivedProduct() != null) {
+            if (ctype.isManifest() && p.getDerivedProduct() != null) {
                 entitledProductIds.add(p.getDerivedProduct().getId());
 
                 for (Product dpp : productCurator.getPoolDerivedProvidedProductsCached(p)) {
@@ -622,14 +628,14 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         Set<String> filteredIds = new HashSet<>();
         if (entsIdsToFilter != null && entsIdsToFilter.iterator().hasNext()) {
             String querySql = "SELECT DISTINCT e.id " +
-                "FROM Entitlement e JOIN e.consumer c JOIN c.type t " +
-                "WHERE t.manifest = true AND e.id IN (:entitlement_ids)";
+                "FROM Entitlement e, Consumer c, ConsumerType t " +
+                "WHERE t.manifest = true AND c.typeId = t.id AND e.consumer = c AND e.id IN (:eids)";
 
             Query query = this.getEntityManager().createQuery(querySql);
             int blockSize = Math.min(this.getInBlockSize(), this.getQueryParameterLimit());
 
             for (List<String> block : Iterables.partition(entsIdsToFilter, blockSize)) {
-                query.setParameter("entitlement_ids", block);
+                query.setParameter("eids", block);
                 filteredIds.addAll(query.getResultList());
             }
         }
@@ -983,6 +989,8 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         Set<String> entitlementIds = new HashSet<>();
 
         if (consumer != null && poolIds != null && poolIds.iterator().hasNext()) {
+            ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
+
             // Impl note:
             // We do this in direct SQL, as it lets us take a sane path from base to dependent
             // entitlements, rather than the lunacy that would be required with HQL, JPQL or
@@ -1016,7 +1024,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             // Need to check for dependent ents matching the derived provided products
             // if we are processing a distributor. We do this in a separate query to
             // avoid unnecessary query overhead when we are not dealing with a distributor.
-            if (consumer.isManifestDistributor()) {
+            if (ctype.isManifest()) {
                 querySql = "SELECT DISTINCT e.id " +
                     // Required pool
                     "FROM cp2_pool_derprov_products ppp1 " +

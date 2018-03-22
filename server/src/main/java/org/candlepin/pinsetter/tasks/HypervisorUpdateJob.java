@@ -104,10 +104,7 @@ public class HypervisorUpdateJob extends KingpinJob {
         this.subAdapter = subAdapter;
         this.complianceRules = complianceRules;
 
-        this.hypervisorType = consumerTypeCurator.lookupByLabel(ConsumerTypeEnum.HYPERVISOR.getLabel());
-        if (this.hypervisorType == null) {
-            this.hypervisorType = consumerTypeCurator.create(new ConsumerType(ConsumerTypeEnum.HYPERVISOR));
-        }
+        this.hypervisorType = consumerTypeCurator.lookupByLabel(ConsumerTypeEnum.HYPERVISOR.getLabel(), true);
     }
 
     public static JobStatus scheduleJob(JobCurator jobCurator,

@@ -612,12 +612,17 @@ public class ConsumerResource {
         }
         populateEntity(consumer, dto);
 
-        if (dto.getType() != null) {
-            consumer.setType(new ConsumerType(dto.getType().getLabel()));
-        }
-        else {
+        if (dto.getType() == null) {
             throw new BadRequestException(i18n.tr("Unit type must be specified."));
         }
+
+        ConsumerType ctype = this.consumerTypeCurator.lookupByLabel(dto.getType().getLabel());
+
+        if (ctype == null) {
+            throw new BadRequestException(i18n.tr("Invalid unit type: {0}", dto.getType().getLabel()));
+        }
+
+        consumer.setType(ctype);
 
         if (dto.getCreated() != null) {
             consumer.setCreated(dto.getCreated());
@@ -652,10 +657,10 @@ public class ConsumerResource {
         userName = setUserName(consumer, principal, userName);
         checkConsumerName(consumer);
 
-        ConsumerType type = lookupConsumerType(consumer.getType().getLabel());
+        ConsumerType type = this.consumerTypeCurator.getConsumerType(consumer);
         validateViaConsumerType(consumer, type, keys, owner, userName, principal);
 
-        if (consumer.isShare()) {
+        if (type.isType(ConsumerTypeEnum.SHARE)) {
             // Share consumers do not need identity certificates so refuse to create them.
             identityCertCreation = false;
             validateShareConsumer(consumer, principal, keys);
@@ -698,7 +703,7 @@ public class ConsumerResource {
 
         // If no service level was specified, and the owner has a default set, use it:
         if (consumer.getServiceLevel().equals("") && owner.getDefaultServiceLevel() != null &&
-            !consumer.isShare()) {
+            !type.isType(ConsumerTypeEnum.SHARE)) {
 
             consumer.setServiceLevel(owner.getDefaultServiceLevel());
         }
@@ -852,8 +857,10 @@ public class ConsumerResource {
     }
 
     private void validateContentAccessMode(Consumer consumer) throws BadRequestException {
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
+
         if (consumer.getContentAccessMode() != null) {
-            if (!consumer.isManifestDistributor()) {
+            if (!ctype.isManifest()) {
                 throw new BadRequestException(
                     i18n.tr("The consumer cannot be assigned a content access mode."));
             }
@@ -882,7 +889,7 @@ public class ConsumerResource {
         if (type.isType(ConsumerTypeEnum.PERSON)) {
             if (keys.size() > 0) {
                 throw new BadRequestException(
-                        i18n.tr("A unit type of \"person\" cannot be used with activation keys"));
+                    i18n.tr("A unit type of \"person\" cannot be used with activation keys"));
             }
 
             if (!isConsumerPersonNameValid(consumer.getName())) {
@@ -902,7 +909,7 @@ public class ConsumerResource {
             if (type.isManifest() && userAgent != null &&
                 userAgent.size() > 0 && userAgent.get(0).startsWith("RHSM")) {
                 throw new BadRequestException(
-                        i18n.tr("You may not create a manifest consumer via Subscription Manager."));
+                    i18n.tr("You may not create a manifest consumer via Subscription Manager."));
             }
         }
     }
@@ -1052,8 +1059,8 @@ public class ConsumerResource {
         return key;
     }
 
-    private void verifyPersonConsumer(Consumer consumer, ConsumerType type,
-        Owner owner, String username, Principal principal) {
+    private void verifyPersonConsumer(Consumer consumer, ConsumerType type, Owner owner, String username,
+        Principal principal) {
 
         User user = null;
         try {
@@ -1078,7 +1085,9 @@ public class ConsumerResource {
         if (type.isType(ConsumerTypeEnum.PERSON)) {
             Consumer existing = consumerCurator.findByUser(user);
 
-            if (existing != null && existing.getType().isType(ConsumerTypeEnum.PERSON)) {
+            if (existing != null &&
+                this.consumerTypeCurator.getConsumerType(existing).isType(ConsumerTypeEnum.PERSON)) {
+
                 // TODO: This is not the correct error code for this situation!
                 throw new BadRequestException(
                     i18n.tr("User \"{0}\" has already registered a personal consumer", user.getUsername()));
@@ -1206,6 +1215,7 @@ public class ConsumerResource {
 
         Consumer toUpdate = consumerCurator.verifyAndLookupConsumer(uuid);
         Consumer incoming = new Consumer();
+
         incoming.setUuid(uuid);
         populateEntity(incoming, dto);
 
@@ -1219,7 +1229,9 @@ public class ConsumerResource {
         // Sanitize the inbound facts before applying the update
         this.sanitizeConsumerFacts(incoming);
 
-        if (toUpdate.isShare() || incoming.isShare()) {
+        ConsumerType toUpdateType = this.consumerTypeCurator.getConsumerType(toUpdate);
+
+        if (toUpdateType.isType(ConsumerTypeEnum.SHARE)) {
             validateShareConsumerUpdate(toUpdate, incoming, principal);
         }
 
@@ -1274,23 +1286,20 @@ public class ConsumerResource {
         changesMade = checkForHypervisorIdUpdate(toUpdate, updated) || changesMade;
         changesMade = guestMigration.isMigrationPending() || changesMade;
 
-        if (updated.getContentTags() != null &&
-            !updated.getContentTags().equals(toUpdate.getContentTags())) {
+        if (updated.getContentTags() != null && !updated.getContentTags().equals(toUpdate.getContentTags())) {
             log.info("   Updating content tags.");
             toUpdate.setContentTags(updated.getContentTags());
             changesMade = true;
         }
 
         // Allow optional setting of the autoheal attribute:
-        if (updated.isAutoheal() != null &&
-            !updated.isAutoheal().equals(toUpdate.isAutoheal())) {
+        if (updated.isAutoheal() != null && !updated.isAutoheal().equals(toUpdate.isAutoheal())) {
             log.info("   Updating consumer autoheal setting.");
             toUpdate.setAutoheal(updated.isAutoheal());
             changesMade = true;
         }
 
-        if (updated.getReleaseVer() != null &&
-            (updated.getReleaseVer().getReleaseVer() != null) &&
+        if (updated.getReleaseVer() != null && (updated.getReleaseVer().getReleaseVer() != null) &&
             !updated.getReleaseVer().equals(toUpdate.getReleaseVer())) {
             log.info("   Updating consumer releaseVer setting.");
             toUpdate.setReleaseVer(updated.getReleaseVer());
@@ -1299,8 +1308,7 @@ public class ConsumerResource {
 
         // Allow optional setting of the service level attribute:
         String level = updated.getServiceLevel();
-        if (level != null &&
-            !level.equals(toUpdate.getServiceLevel())) {
+        if (level != null && !level.equals(toUpdate.getServiceLevel())) {
             log.info("   Updating consumer service level setting.");
             consumerBindUtil.validateServiceLevel(toUpdate.getOwner(), level);
             toUpdate.setServiceLevel(level);
@@ -1338,17 +1346,22 @@ public class ConsumerResource {
             }
         }
 
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(toUpdate);
+
         if (updated.getContentAccessMode() != null &&
             !updated.getContentAccessMode().equals(toUpdate.getContentAccessMode()) &&
-            toUpdate.isManifestDistributor()) {
+            ctype.isManifest()) {
+
             if (!toUpdate.getOwner().isAllowedContentAccessMode(updated.getContentAccessMode())) {
                 throw new BadRequestException(i18n.tr(
                     "The consumer cannot use the supplied content access mode."));
             }
+
             toUpdate.setContentAccessMode(updated.getContentAccessMode());
             changesMade = true;
         }
-        if (!StringUtils.isEmpty(updated.getContentAccessMode()) && !toUpdate.isManifestDistributor()) {
+
+        if (!StringUtils.isEmpty(updated.getContentAccessMode()) && !ctype.isManifest()) {
             throw new BadRequestException(i18n.tr("The consumer cannot be assigned a content access mode."));
         }
 
@@ -1551,6 +1564,7 @@ public class ConsumerResource {
     public void deleteConsumer(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid,
         @Context Principal principal) {
+
         log.debug("Deleting consumer_uuid {}", uuid);
 
         Consumer toDelete = consumerCurator.findByUuid(uuid);
@@ -1562,11 +1576,13 @@ public class ConsumerResource {
             this.poolManager.revokeAllEntitlements(toDelete, false);
         }
         catch (ForbiddenException e) {
+            ConsumerType ctype = this.consumerTypeCurator.find(toDelete.getTypeId());
+
             String msg = e.message().getDisplayMessage();
             throw new ForbiddenException(i18n.tr("Cannot unregister {0} {1} because: {2}",
-                toDelete.getType().getLabel(), toDelete.getName(), msg), e);
-
+                ctype != null ? ctype.getLabel() : "unknown type", toDelete.getName(), msg), e);
         }
+
         consumerRules.onConsumerDelete(toDelete);
 
         Event event = eventFactory.consumerDeleted(toDelete);
@@ -1593,8 +1609,9 @@ public class ConsumerResource {
 
         log.debug("Getting client certificates for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
 
-        if (consumer.isShare()) {
+        if (ctype.isType(ConsumerTypeEnum.SHARE)) {
             logShareConsumerRequestWarning("cert fetch", consumer);
             return new ArrayList<>();
         }
@@ -1643,7 +1660,9 @@ public class ConsumerResource {
 
         log.debug("Getting content access certificate for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        if (consumer.isShare()) {
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
+
+        if (ctype.isType(ConsumerTypeEnum.SHARE)) {
             throw new BadRequestException(
                 i18n.tr("Content access body can not be requested for a share consumer"));
         }
@@ -1698,8 +1717,9 @@ public class ConsumerResource {
         @QueryParam("serials") String serials) {
 
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
 
-        if (consumer.isShare()) {
+        if (ctype.isType(ConsumerTypeEnum.SHARE)) {
             logShareConsumerRequestWarning("cert export", consumer);
             return null;
         }
@@ -1766,8 +1786,9 @@ public class ConsumerResource {
 
         log.debug("Getting client certificate serials for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
 
-        if (consumer.isShare()) {
+        if (ctype.isType(ConsumerTypeEnum.SHARE)) {
             logShareConsumerRequestWarning("cert serial fetch", consumer);
             return new ArrayList<>();
         }
@@ -1801,16 +1822,21 @@ public class ConsumerResource {
         String[] productIds, List<String> fromPools, Date entitleDate, Consumer consumer, boolean async) {
         short parameters = 0;
 
-        if (consumer.isShare() && StringUtils.isBlank(poolIdString)) {
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
+
+        if (ctype.isType(ConsumerTypeEnum.SHARE) && StringUtils.isBlank(poolIdString)) {
             throw new BadRequestException(i18n.tr("Share consumers must be bound to a specific pool"));
         }
+
         if (poolIdString != null) {
             parameters++;
         }
+
         if (ArrayUtils.isNotEmpty(productIds) || CollectionUtils.isNotEmpty(fromPools) ||
             entitleDate != null) {
             parameters++;
         }
+
         if (parameters > 1) {
             throw new BadRequestException(i18n.tr("Cannot bind by multiple parameters."));
         }
@@ -1864,6 +1890,7 @@ public class ConsumerResource {
 
         // Verify consumer exists:
         Consumer consumer = consumerCurator.verifyAndLookupConsumerWithEntitlements(consumerUuid);
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
         log.debug("Consumer (post verify): {}", consumer);
 
         // Check that only one query param was set, and some other validations
@@ -1874,9 +1901,12 @@ public class ConsumerResource {
             // I hate double negatives, but if they have accepted all
             // terms, we want comeToTerms to be true.
             long subTermsStart = System.currentTimeMillis();
-            if (!consumer.isShare() && subAdapter.hasUnacceptedSubscriptionTerms(consumer.getOwner())) {
+            if (!ctype.isType(ConsumerTypeEnum.SHARE) &&
+                subAdapter.hasUnacceptedSubscriptionTerms(consumer.getOwner())) {
+
                 return Response.serverError().build();
             }
+
             log.debug("Checked if consumer has unaccepted subscription terms in {}ms",
                 (System.currentTimeMillis() - subTermsStart));
         }
@@ -1887,12 +1917,7 @@ public class ConsumerResource {
 
         if (poolIdString != null && quantity == null) {
             Pool pool = poolManager.find(poolIdString);
-            if (pool != null) {
-                quantity = consumerBindUtil.getQuantityToBind(pool, consumer);
-            }
-            else {
-                quantity = 1;
-            }
+            quantity = pool != null ? consumerBindUtil.getQuantityToBind(pool, consumer) : 1;
         }
 
         //
@@ -2218,9 +2243,11 @@ public class ConsumerResource {
         @QueryParam("entitlement") String entitlementId,
         @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {
 
-        Consumer c = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        if (c.isShare()) {
-            logShareConsumerRequestWarning("cert regen", c);
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
+
+        if (ctype.isType(ConsumerTypeEnum.SHARE)) {
+            logShareConsumerRequestWarning("cert regen", consumer);
             return;
         }
 
@@ -2229,7 +2256,7 @@ public class ConsumerResource {
             poolManager.regenerateCertificatesOf(e, lazyRegen);
         }
         else {
-            poolManager.regenerateCertificatesOf(c, lazyRegen);
+            poolManager.regenerateCertificatesOf(consumer, lazyRegen);
         }
     }
 
@@ -2266,7 +2293,9 @@ public class ConsumerResource {
         List<KeyValueParameter> extensionArgs) {
 
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        if (consumer.isShare()) {
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
+
+        if (ctype.isType(ConsumerTypeEnum.SHARE)) {
             throw new BadRequestException(i18n.tr("Can not export manifest of a share consumer"));
         }
 
@@ -2323,7 +2352,9 @@ public class ConsumerResource {
         List<KeyValueParameter> extensionArgs) {
 
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        if (consumer.isShare()) {
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
+
+        if (ctype.isType(ConsumerTypeEnum.SHARE)) {
             throw new BadRequestException(i18n.tr("Can not export manifest of a share consumer"));
         }
         return manifestManager.generateManifestAsync(consumerUuid, cdnLabel, webAppPrefix, apiUrl,
@@ -2367,7 +2398,9 @@ public class ConsumerResource {
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @PathParam("export_id") String exportId) {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        if (consumer.isShare()) {
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
+
+        if (ctype.isType(ConsumerTypeEnum.SHARE)) {
             throw new BadRequestException(i18n.tr("Can not export manifest of a share consumer"));
         }
         // *******************************************************************************
@@ -2420,14 +2453,16 @@ public class ConsumerResource {
     @Path("{consumer_uuid}")
     public ConsumerDTO regenerateIdentityCertificates(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid) {
-        Consumer c = consumerCurator.verifyAndLookupConsumer(uuid);
-        if (c.isShare()) {
-            logShareConsumerRequestWarning("regenerate identity certificate", c);
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(uuid);
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
+
+        if (ctype.isType(ConsumerTypeEnum.SHARE)) {
+            logShareConsumerRequestWarning("regenerate identity certificate", consumer);
         }
         else {
-            c = regenerateIdentityCertificate(c);
+            consumer = regenerateIdentityCertificate(consumer);
         }
-        return translator.translate(c, ConsumerDTO.class);
+        return translator.translate(consumer, ConsumerDTO.class);
     }
 
     /**
@@ -2576,11 +2611,14 @@ public class ConsumerResource {
         @ApiParam("Date to get compliance information for, default is now.")
         @QueryParam("on_date") String onDate) {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(uuid);
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
+
         Date date = ResourceDateParser.parseDateString(onDate);
-        if (consumer.isShare()) {
+        if (ctype.isType(ConsumerTypeEnum.SHARE)) {
             logShareConsumerRequestWarning("fetch compliance", consumer);
             return new ComplianceStatus(date);
         }
+
         return this.complianceRules.getStatus(consumer, date);
     }
 
@@ -2597,8 +2635,10 @@ public class ConsumerResource {
 
         if (uuids != null && !uuids.isEmpty()) {
             for (Consumer consumer : consumerCurator.findByUuids(uuids)) {
+                ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
                 ComplianceStatus status;
-                if (consumer.isShare()) {
+
+                if (ctype.isType(ConsumerTypeEnum.SHARE)) {
                     logShareConsumerRequestWarning("fetch compliance", consumer);
                     status = new ComplianceStatus(null);
                 }

@@ -14,13 +14,13 @@
  */
 package org.candlepin.resteasy.filter;
 
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UpdateConsumerCheckIn;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerCurator;
 import org.candlepin.test.DatabaseTestFixture;
 
 import com.google.inject.AbstractModule;
@@ -38,10 +38,13 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.lang.reflect.Method;
+import java.util.Date;
 
 import javax.inject.Inject;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ResourceInfo;
+
+
 
 /**
  * AuthInterceptorTest
@@ -57,6 +60,9 @@ public class ConsumerCheckInFilterTest extends DatabaseTestFixture {
     private ConsumerCheckInFilter interceptor;
     private MockHttpRequest mockReq;
 
+    private Consumer consumer;
+    private ConsumerPrincipal principal;
+
     protected Module getGuiceOverrideModule() {
         return new ConsumerCheckInFilterModule();
     }
@@ -70,11 +76,11 @@ public class ConsumerCheckInFilterTest extends DatabaseTestFixture {
 
         mockReq = MockHttpRequest.create("GET", "http://localhost/candlepin/status");
 
-        Consumer consumer = createConsumer(createOwner());
-        ConsumerPrincipal principal = new ConsumerPrincipal(consumer);
+        this.consumer = createConsumer(createOwner());
+        this.principal = new ConsumerPrincipal(consumer);
 
         ResteasyProviderFactory.pushContext(ResourceInfo.class, mockInfo);
-        ResteasyProviderFactory.pushContext(Principal.class, principal);
+        ResteasyProviderFactory.pushContext(Principal.class, this.principal);
 
         interceptor = new ConsumerCheckInFilter(consumerCurator);
     }
@@ -89,25 +95,38 @@ public class ConsumerCheckInFilterTest extends DatabaseTestFixture {
 
     @Test
     public void testUpdatesCheckinWithAnnotation() throws Exception {
+        Date lastCheckin = this.consumer.getLastCheckin();
+        Thread.sleep(1000);
+
         Method method = FakeResource.class.getMethod("checkinMethod", String.class);
         mockResourceMethod(method);
 
         interceptor.filter(getContext());
 
         ConsumerPrincipal p = (ConsumerPrincipal) ResteasyProviderFactory.getContextData(Principal.class);
-        doNothing().when(consumerCurator).updateLastCheckin(p.getConsumer());
-        verify(consumerCurator).updateLastCheckin(p.getConsumer());
+
+        this.consumerCurator.refresh(this.consumer);
+
+        Date updatedLastCheckin = p.getConsumer().getLastCheckin();
+        assertNotEquals(lastCheckin, updatedLastCheckin);
     }
 
     @Test
     public void testNoCheckinWithoutAnnotation() throws Exception {
+        Date lastCheckin = this.consumer.getLastCheckin();
+        Thread.sleep(1000);
+
         Method method = FakeResource.class.getMethod("someMethod", String.class);
         mockResourceMethod(method);
 
         interceptor.filter(getContext());
 
         ConsumerPrincipal p = (ConsumerPrincipal) ResteasyProviderFactory.getContextData(Principal.class);
-        verify(consumerCurator, never()).updateLastCheckin(p.getConsumer());
+
+        this.consumerCurator.refresh(this.consumer);
+
+        Date updatedLastCheckin = p.getConsumer().getLastCheckin();
+        assertEquals(lastCheckin, updatedLastCheckin);
     }
 
     /**
@@ -128,7 +147,7 @@ public class ConsumerCheckInFilterTest extends DatabaseTestFixture {
     private static class ConsumerCheckInFilterModule extends AbstractModule {
         @Override
         protected void configure() {
-            bind(ConsumerCurator.class).toInstance(mock(ConsumerCurator.class));
+            // Nothing to do
         }
     }
 }

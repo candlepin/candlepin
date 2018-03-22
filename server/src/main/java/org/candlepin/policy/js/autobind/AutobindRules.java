@@ -19,6 +19,10 @@ import org.candlepin.dto.rules.v1.ConsumerDTO;
 import org.candlepin.dto.rules.v1.OwnerDTO;
 import org.candlepin.dto.rules.v1.PoolDTO;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCapability;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
@@ -44,6 +48,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+
+
 /**
  * AutobindRules
  *
@@ -52,20 +58,24 @@ import java.util.Set;
 public class AutobindRules {
 
     protected static final String SELECT_POOL_FUNCTION = "select_pools";
+    private static Logger log = LoggerFactory.getLogger(AutobindRules.class);
 
     private JsRunner jsRules;
-    private static Logger log = LoggerFactory.getLogger(AutobindRules.class);
     private RulesObjectMapper mapper;
     private ProductCurator productCurator;
+    private ConsumerTypeCurator consumerTypeCurator;
     private ModelTranslator translator;
 
     @Inject
-    public AutobindRules(JsRunner jsRules, ProductCurator productCurator, RulesObjectMapper mapper,
-        ModelTranslator translator) {
+    public AutobindRules(JsRunner jsRules, ProductCurator productCurator,
+        ConsumerTypeCurator consumerTypeCurator, RulesObjectMapper mapper, ModelTranslator translator) {
+
         this.jsRules = jsRules;
         this.productCurator = productCurator;
+        this.consumerTypeCurator = consumerTypeCurator;
         this.mapper = mapper;
         this.translator = translator;
+
         jsRules.init("autobind_name_space");
     }
 
@@ -195,9 +205,8 @@ public class AutobindRules {
      * If this consumer only supports V1 certificates, we need to filter out pools
      * with too many content sets.
      */
-    private List<Pool> filterPoolsForV1Certificates(Consumer consumer,
-        List<Pool> pools) {
-        if (!consumer.isCertV3Capable()) {
+    private List<Pool> filterPoolsForV1Certificates(Consumer consumer, List<Pool> pools) {
+        if (!this.consumerIsCertV3Capable(consumer)) {
             List<Pool> newPools = new LinkedList<>();
 
             for (Pool p : pools) {
@@ -221,6 +230,41 @@ public class AutobindRules {
 
         // Otherwise return the list of pools as is:
         return pools;
+    }
+
+    /**
+     * Checks if the specified consumer is capable of using v3 certificates
+     *
+     * @param consumer
+     *  The consumer to check
+     *
+     * @return
+     *  true if the consumer is capable of using v3 certificates; false otherwise
+     */
+    private boolean consumerIsCertV3Capable(Consumer consumer) {
+        if (consumer == null) {
+            throw new IllegalArgumentException("consumer is null");
+        }
+
+        ConsumerType type = this.consumerTypeCurator.getConsumerType(consumer);
+
+        if (type.isManifest()) {
+            for (ConsumerCapability capability : consumer.getCapabilities()) {
+                if ("cert_v3".equals(capability.getName())) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+        else if (type.isType(ConsumerTypeEnum.HYPERVISOR)) {
+            // Hypervisors in this context don't use content, so V3 is allowed
+            return true;
+        }
+
+        // Consumer isn't a special type, check their certificate_version fact
+        String entitlementVersion = consumer.getFact("system.certificate_version");
+        return entitlementVersion != null && entitlementVersion.startsWith("3.");
     }
 
 }
