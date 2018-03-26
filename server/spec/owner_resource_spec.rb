@@ -123,6 +123,9 @@ describe 'Owner Resource' do
     pools = @cp.list_owner_pools(owner['key'], {:page => 2, :per_page => 2, :sort_by => "id", :order => "asc", :consumer => system.uuid})
     pools.length.should == 2
     (pools[0].id <=> pools[1].id).should == -1
+    # Make sure the total count of pools is returned properly
+    response = @cp.list_owner_pools(owner['key'], {:page => 2, :per_page => 2, :sort_by => "id", :order => "asc", :consumer => system.uuid}, [], true)
+    response.headers[:x_total_count].should == '4'
   end
 
   it "lets owners be created and refreshed at the same time" do
