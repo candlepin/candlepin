@@ -773,9 +773,9 @@ public class OwnerResource {
         @ApiParam("Date to use as current time for lookup criteria. Defaults" +
                 " to current date if not specified.")
         @QueryParam("activeon") @DefaultValue(DateFormat.NOW) @DateFormat Date activeOn,
-        @ApiParam("Find pools matching the given pattern in a variety of fields" +
-                " * and ? wildcards are supported.")
-        @QueryParam("matches") String matches,
+        @ApiParam("Find pools matching the given pattern in a variety of fields;" +
+                " * and ? wildcards are supported; may be specified multiple times")
+        @QueryParam("matches") List<String> matches,
         @ApiParam("The attributes to return based on the specified types.")
         @QueryParam("attribute") @CandlepinParam(type = KeyValueParameter.class)
             List<KeyValueParameter> attrFilters,
@@ -785,6 +785,9 @@ public class OwnerResource {
         @ApiParam("When set to true, it will return only future dated pools to the result, " +
                 "based on the activeon date.")
         @QueryParam("only_future") @DefaultValue("false") boolean onlyFuture,
+        @ApiParam("One or more pool IDs to use to filter the output; only pools with IDs matching " +
+                "those provided will be returned; may be specified multiple times")
+        @QueryParam("poolid") List<String> poolIds,
         @Context Principal principal,
         @Context PageRequest pageRequest) {
 
@@ -823,24 +826,36 @@ public class OwnerResource {
             throw new BadRequestException(
                 i18n.tr("The flags add_future and only_future cannot be used at the same time."));
         }
+
         // Process the filters passed for the attributes
         PoolFilterBuilder poolFilters = new PoolFilterBuilder();
         for (KeyValueParameter filterParam : attrFilters) {
             poolFilters.addAttributeFilter(filterParam.key(), filterParam.value());
         }
-        if (!StringUtils.isEmpty(matches)) {
-            poolFilters.addMatchesFilter(matches);
+
+        if (matches != null) {
+            for (String elem : matches) {
+                if (elem != null && !elem.isEmpty()) {
+                    poolFilters.addMatchesFilter(elem);
+                }
+            }
+        }
+
+        if (poolIds != null && !poolIds.isEmpty()) {
+            poolFilters.addIdFilters(poolIds);
         }
 
         Page<List<Pool>> page = poolManager.listAvailableEntitlementPools(
             c, key, owner, productId, subscriptionId, activeOn, listAll, poolFilters, pageRequest,
-        addFuture, onlyFuture);
+            addFuture, onlyFuture);
+
         List<Pool> poolList = page.getPageData();
         calculatedAttributesUtil.setCalculatedAttributes(poolList, activeOn);
         calculatedAttributesUtil.setQuantityAttributes(poolList, c, activeOn);
 
         // Store the page for the LinkHeaderResponseFilter
         ResteasyProviderFactory.pushContext(Page.class, page);
+
         return poolList;
     }
 
