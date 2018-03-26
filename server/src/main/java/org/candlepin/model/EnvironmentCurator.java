@@ -37,6 +37,72 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
         super(Environment.class);
     }
 
+    /**
+     * Fetches the environment for the specified consumer. If the consumer does not have a defined
+     * environment ID, this method returns null. If the consumer has an invalid environment ID,
+     * this method throws an exception.
+     *
+     * @param consumer
+     *  The consumer for which to fetch an Environment object
+     *
+     * @throws IllegalArgumentException
+     *  if consumer is null
+     *
+     * @throws IllegalStateException
+     *  if the consumer's defined environment ID is invalid
+     *
+     * @return
+     *  An Environment instance for the specified consumer, or null if the consumer does not have a
+     *  defined environment ID
+     */
+    public Environment getConsumerEnvironment(Consumer consumer) {
+        if (consumer == null) {
+            throw new IllegalArgumentException("consumer is null");
+        }
+
+        Environment environment = null;
+
+        if (consumer.getEnvironmentId() != null) {
+            environment = this.find(consumer.getEnvironmentId());
+
+            if (environment == null) {
+                throw new IllegalStateException(
+                    "consumer is not associated with a valid environment: " + consumer);
+            }
+        }
+
+        return environment;
+    }
+
+    /**
+     * Fetches the consumers associated with the specified environment.
+     *
+     * @param environment
+     *  The environment for which to fetch consumers
+     *
+     * @return
+     *  A CandlepinQuery to iterate the consumers associated with the specified environment
+     */
+    public CandlepinQuery<Consumer> getEnvironmentConsumers(Environment environment) {
+        return this.getEnvironmentConsumers(environment != null ? environment.getId() : null);
+    }
+
+    /**
+     * Fetches the consumers associated with the specified environment ID.
+     *
+     * @param environmentId
+     *  The ID of the environment for which to fetch consumers
+     *
+     * @return
+     *  A CandlepinQuery to iterate the consumers associated with the specified environment ID
+     */
+    public CandlepinQuery<Consumer> getEnvironmentConsumers(String environmentId) {
+        DetachedCriteria criteria = DetachedCriteria.forClass(Consumer.class)
+            .add(Restrictions.eq("environmentId", environmentId));
+
+        return this.cpQueryFactory.<Consumer>buildQuery(this.currentSession(), criteria);
+    }
+
     @SuppressWarnings("unchecked")
     public CandlepinQuery<Environment> listForOwner(Owner o) {
         DetachedCriteria criteria = this.createSecureDetachedCriteria()

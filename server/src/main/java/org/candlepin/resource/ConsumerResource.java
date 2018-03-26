@@ -1315,15 +1315,14 @@ public class ConsumerResource {
             changesMade = true;
         }
 
-        String environmentId = updated.getEnvironment() == null ? null : updated.getEnvironment().getId();
-        if (environmentId != null && (toUpdate.getEnvironment() == null ||
-            !toUpdate.getEnvironment().getId().equals(environmentId))) {
-            Environment e = environmentCurator.find(environmentId);
+        if (updated.getEnvironmentId() != null && (toUpdate.getEnvironmentId() == null ||
+            !toUpdate.getEnvironmentId().equals(updated.getEnvironmentId()))) {
+            Environment e = environmentCurator.find(updated.getEnvironmentId());
             if (e == null) {
                 throw new NotFoundException(i18n.tr(
-                    "Environment with ID \"{0}\" could not be found.", environmentId));
+                    "Environment with ID \"{0}\" could not be found.", updated.getEnvironmentId()));
             }
-            log.info("Updating environment to: {}", environmentId);
+            log.info("Updating environment to: {}", updated.getEnvironmentId());
             toUpdate.setEnvironment(e);
 
             // lazily regenerate certs, so the client can still work

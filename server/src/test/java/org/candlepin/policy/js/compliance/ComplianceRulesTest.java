@@ -38,6 +38,7 @@ import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
@@ -99,6 +100,7 @@ public class ComplianceRulesTest {
     @Mock private Provider<JsRunnerRequestCache> cacheProvider;
     @Mock private JsRunnerRequestCache cache;
     @Mock private ProductCurator productCurator;
+    @Mock private EnvironmentCurator environmentCurator;
 
     private ModelTranslator translator;
     private I18n i18n;
@@ -110,7 +112,7 @@ public class ComplianceRulesTest {
     public void setUp() {
         MockitoAnnotations.initMocks(this);
 
-        translator = new StandardTranslator(consumerTypeCurator);
+        translator = new StandardTranslator(consumerTypeCurator, environmentCurator);
 
         Locale locale = new Locale("en_US");
         i18n = I18nFactory.getI18n(getClass(), "org.candlepin.i18n.Messages", locale, I18nFactory.FALLBACK);

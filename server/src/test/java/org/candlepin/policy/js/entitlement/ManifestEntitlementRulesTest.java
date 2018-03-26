@@ -45,14 +45,11 @@ import java.util.Set;
 public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
 
     private Consumer createMockConsumer(boolean manifestDistributor) {
-        ConsumerType type = TestUtil.createConsumerType();
+        ConsumerType type = this.mockConsumerType(TestUtil.createConsumerType());
         type.setManifest(manifestDistributor);
 
         Consumer consumer = TestUtil.createConsumer();
         consumer.setType(type);
-
-        when(consumerTypeCurator.getConsumerType(eq(consumer))).thenReturn(type);
-        when(consumerTypeCurator.find(eq(type.getId()))).thenReturn(type);
 
         return consumer;
     }

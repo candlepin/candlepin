@@ -23,6 +23,7 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
@@ -62,6 +63,7 @@ public class ActivationKeyRulesTest {
     @Mock private Provider<JsRunnerRequestCache> cacheProvider;
     @Mock private JsRunnerRequestCache cache;
     @Mock private ConsumerTypeCurator mockConsumerTypeCurator;
+    @Mock private EnvironmentCurator environmentCurator;
 
     private I18n i18n;
     private JsRunnerProvider provider;
@@ -83,7 +85,7 @@ public class ActivationKeyRulesTest {
 
         provider = new JsRunnerProvider(rulesCuratorMock, cacheProvider);
         ProductCurator productCurator = mock(ProductCurator.class);
-        translator = new StandardTranslator(mockConsumerTypeCurator);
+        translator = new StandardTranslator(mockConsumerTypeCurator, environmentCurator);
         actKeyRules = new ActivationKeyRules(provider.get(), i18n,
                 new RulesObjectMapper(new ProductCachedSerializationModule(productCurator)), translator);
     }

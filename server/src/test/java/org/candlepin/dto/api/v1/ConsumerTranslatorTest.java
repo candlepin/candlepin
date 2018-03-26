@@ -25,6 +25,8 @@ import org.candlepin.model.ConsumerCapability;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.Environment;
+import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Release;
@@ -49,6 +51,7 @@ public class ConsumerTranslatorTest extends
     AbstractTranslatorTest<Consumer, ConsumerDTO, ConsumerTranslator> {
 
     protected ConsumerTypeCurator mockConsumerTypeCurator;
+    protected EnvironmentCurator mockEnvironmentCurator;
 
     protected ConsumerTranslator translator;
 
@@ -74,7 +77,8 @@ public class ConsumerTranslatorTest extends
         this.guestIdTranslatorTest.initModelTranslator(modelTranslator);
 
         this.mockConsumerTypeCurator = mock(ConsumerTypeCurator.class);
-        this.translator = new ConsumerTranslator(this.mockConsumerTypeCurator);
+        this.mockEnvironmentCurator = mock(EnvironmentCurator.class);
+        this.translator = new ConsumerTranslator(this.mockConsumerTypeCurator, this.mockEnvironmentCurator);
 
         modelTranslator.registerTranslator(this.translator, Consumer.class, ConsumerDTO.class);
     }
@@ -88,6 +92,8 @@ public class ConsumerTranslatorTest extends
     protected Consumer initSourceObject() {
         ConsumerType ctype = this.consumerTypeTranslatorTest.initSourceObject();
 
+        Environment environment = this.environmentTranslatorTest.initSourceObject();
+
         Consumer consumer = new Consumer();
 
         consumer.setId("consumer_id");
@@ -98,7 +104,7 @@ public class ConsumerTranslatorTest extends
         consumer.setServiceLevel("consumer_service_level");
         consumer.setReleaseVer(new Release("releaseVer"));
         consumer.setOwner(this.ownerTranslatorTest.initSourceObject());
-        consumer.setEnvironment(this.environmentTranslatorTest.initSourceObject());
+        consumer.setEnvironment(environment);
         consumer.setEntitlementCount(0L);
         consumer.setLastCheckin(new Date());
         consumer.setCanActivate(Boolean.TRUE);
@@ -149,6 +155,9 @@ public class ConsumerTranslatorTest extends
         when(mockConsumerTypeCurator.find(eq(ctype.getId()))).thenReturn(ctype);
         when(mockConsumerTypeCurator.getConsumerType(eq(consumer))).thenReturn(ctype);
 
+        when(mockEnvironmentCurator.find(eq(environment.getId()))).thenReturn(environment);
+        when(mockEnvironmentCurator.getConsumerEnvironment(eq(consumer))).thenReturn(environment);
+
         return consumer;
     }
 
@@ -179,16 +188,18 @@ public class ConsumerTranslatorTest extends
             assertEquals(source.getContentAccessMode(), dest.getContentAccessMode());
 
             if (childrenGenerated) {
+                ConsumerType ctype = this.mockConsumerTypeCurator.getConsumerType(source);
+                this.consumerTypeTranslatorTest.verifyOutput(ctype, dest.getType(), true);
+
+                Environment environment = this.mockEnvironmentCurator.getConsumerEnvironment(source);
+                this.environmentTranslatorTest.verifyOutput(environment, dest.getEnvironment(), true);
+
                 assertEquals(source.getReleaseVer().getReleaseVer(), dest.getReleaseVersion());
 
                 this.ownerTranslatorTest.verifyOutput(source.getOwner(), dest.getOwner(), childrenGenerated);
-                this.environmentTranslatorTest.verifyOutput(source.getEnvironment(), dest.getEnvironment(),
-                    childrenGenerated);
                 this.hypervisorIdTranslatorTest.verifyOutput(source.getHypervisorId(), dest.getHypervisorId(),
                     childrenGenerated);
 
-                ConsumerType ctype = this.mockConsumerTypeCurator.getConsumerType(source);
-                this.consumerTypeTranslatorTest.verifyOutput(ctype, dest.getType(), true);
                 this.certificateTranslatorTest.verifyOutput(source.getIdCert(), dest.getIdCert(), true);
 
                 if (source.getInstalledProducts() != null) {

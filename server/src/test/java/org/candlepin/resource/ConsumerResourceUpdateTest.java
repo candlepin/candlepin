@@ -135,7 +135,7 @@ public class ConsumerResourceUpdateTest {
         testMigration = new GuestMigration(consumerCurator);
 
         migrationProvider = Providers.of(testMigration);
-        this.translator = new StandardTranslator(this.consumerTypeCurator);
+        this.translator = new StandardTranslator(this.consumerTypeCurator, this.environmentCurator);
         this.resource = new ConsumerResource(this.consumerCurator,
             this.consumerTypeCurator, null, this.subscriptionService, this.ownerService, null,
             this.idCertService, null, this.i18n, this.sink, this.eventFactory, null, null,
@@ -159,13 +159,14 @@ public class ConsumerResourceUpdateTest {
     }
 
     protected ConsumerType mockConsumerType(ConsumerType ctype) {
-        // Ensure the type has an ID
         if (ctype != null) {
+            // Ensure the type has an ID
             if (ctype.getId() == null) {
                 ctype.setId("test-ctype-" + ctype.getLabel() + "-" + TestUtil.randomInt());
             }
 
             when(consumerTypeCurator.lookupByLabel(eq(ctype.getLabel()))).thenReturn(ctype);
+            when(consumerTypeCurator.lookupByLabel(eq(ctype.getLabel()), anyBoolean())).thenReturn(ctype);
             when(consumerTypeCurator.find(eq(ctype.getId()))).thenReturn(ctype);
 
             doAnswer(new Answer<ConsumerType>() {
@@ -174,15 +175,15 @@ public class ConsumerResourceUpdateTest {
                     Object[] args = invocation.getArguments();
                     Consumer consumer = (Consumer) args[0];
                     ConsumerTypeCurator curator = (ConsumerTypeCurator) invocation.getMock();
-
                     ConsumerType ctype = null;
 
-                    if (consumer != null && consumer.getTypeId() != null) {
-                        ctype = curator.find(consumer.getTypeId());
+                    if (consumer == null || consumer.getTypeId() == null) {
+                        throw new IllegalArgumentException("consumer is null or lacks a type ID");
+                    }
 
-                        if (ctype == null) {
-                            throw new IllegalStateException("No such consumer type: " + consumer.getTypeId());
-                        }
+                    ctype = curator.find(consumer.getTypeId());
+                    if (ctype == null) {
+                        throw new IllegalStateException("No such consumer type: " + consumer.getTypeId());
                     }
 
                     return ctype;

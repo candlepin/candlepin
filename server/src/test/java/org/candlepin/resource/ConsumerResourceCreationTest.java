@@ -15,6 +15,7 @@
 package org.candlepin.resource;
 
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -46,6 +47,7 @@ import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
@@ -82,7 +84,6 @@ import org.mockito.stubbing.Answer;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
-import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -95,9 +96,9 @@ import java.util.Locale;
 
 import javax.inject.Provider;
 
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 
 /**
@@ -130,7 +131,9 @@ public class ConsumerResourceCreationTest {
     @Mock protected ServiceLevelValidator serviceLevelValidator;
     @Mock protected ConsumerBindUtil consumerBindUtil;
     @Mock protected ConsumerEnricher consumerEnricher;
-    @Inject protected ModelTranslator modelTranslator;
+    @Mock protected EnvironmentCurator environmentCurator;
+
+    protected ModelTranslator modelTranslator;
 
     private I18n i18n;
 
@@ -148,10 +151,10 @@ public class ConsumerResourceCreationTest {
     public void init() throws Exception {
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
 
-        this.modelTranslator = new StandardTranslator(this.consumerTypeCurator);
-
         testMigration = new GuestMigration(consumerCurator);
         migrationProvider = Providers.of(testMigration);
+
+        this.modelTranslator = new StandardTranslator(this.consumerTypeCurator, this.environmentCurator);
 
         this.config = initConfig();
         this.resource = new ConsumerResource(
@@ -205,13 +208,14 @@ public class ConsumerResourceCreationTest {
     }
 
     protected ConsumerType mockConsumerType(ConsumerType ctype) {
-        // Ensure the type has an ID
         if (ctype != null) {
+            // Ensure the type has an ID
             if (ctype.getId() == null) {
                 ctype.setId("test-ctype-" + ctype.getLabel() + "-" + TestUtil.randomInt());
             }
 
             when(consumerTypeCurator.lookupByLabel(eq(ctype.getLabel()))).thenReturn(ctype);
+            when(consumerTypeCurator.lookupByLabel(eq(ctype.getLabel()), anyBoolean())).thenReturn(ctype);
             when(consumerTypeCurator.find(eq(ctype.getId()))).thenReturn(ctype);
 
             doAnswer(new Answer<ConsumerType>() {
@@ -220,15 +224,15 @@ public class ConsumerResourceCreationTest {
                     Object[] args = invocation.getArguments();
                     Consumer consumer = (Consumer) args[0];
                     ConsumerTypeCurator curator = (ConsumerTypeCurator) invocation.getMock();
-
                     ConsumerType ctype = null;
 
-                    if (consumer != null && consumer.getTypeId() != null) {
-                        ctype = curator.find(consumer.getTypeId());
+                    if (consumer == null || consumer.getTypeId() == null) {
+                        throw new IllegalArgumentException("consumer is null or lacks a type ID");
+                    }
 
-                        if (ctype == null) {
-                            throw new IllegalStateException("No such consumer type: " + consumer.getTypeId());
-                        }
+                    ctype = curator.find(consumer.getTypeId());
+                    if (ctype == null) {
+                        throw new IllegalStateException("No such consumer type: " + consumer.getTypeId());
                     }
 
                     return ctype;

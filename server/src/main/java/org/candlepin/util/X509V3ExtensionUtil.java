@@ -354,13 +354,11 @@ public class X509V3ExtensionUtil extends X509Util {
 
         for (ProductContent pc : archApproriateProductContent) {
             Content content = new Content();
-            if (enableEnvironmentFiltering) {
-                if (consumer.getEnvironment() != null && !promotedContent.containsKey(
-                    pc.getContent().getId())) {
-                    log.debug("Skipping content not promoted to environment: " +
-                        pc.getContent().getId());
-                    continue;
-                }
+            if (enableEnvironmentFiltering && consumer.getEnvironmentId() != null &&
+                !promotedContent.containsKey(pc.getContent().getId())) {
+
+                log.debug("Skipping content not promoted to environment: {}", pc.getContent());
+                continue;
             }
 
             // Augment the content path with the prefix if it is passed in
@@ -391,25 +389,26 @@ public class X509V3ExtensionUtil extends X509Util {
             content.setArches(archesList);
 
             Boolean enabled = pc.isEnabled();
+
             // sku level content enable override. if on both lists, active wins.
             if (skuDisabled.contains(pc.getContent().getId())) {
                 enabled = false;
             }
+
             if (skuEnabled.contains(pc.getContent().getId())) {
                 enabled = true;
             }
 
-            // Check if we should override the enabled flag due to setting on promoted
-            // content
-            if ((consumer.getEnvironment() != null) && enableEnvironmentFiltering) {
+            // Check if we should override the enabled flag due to setting on promoted content
+            if (enableEnvironmentFiltering && consumer.getEnvironmentId() != null) {
                 // we know content has been promoted at this point
-                Boolean enabledOverride = promotedContent.get(
-                    pc.getContent().getId()).getEnabled();
+                Boolean enabledOverride = promotedContent.get(pc.getContent().getId()).getEnabled();
                 if (enabledOverride != null) {
-                    log.debug("overriding enabled flag: " + enabledOverride);
+                    log.debug("overriding enabled flag: {}", enabledOverride);
                     enabled = enabledOverride;
                 }
             }
+
             // only included if not the default value of true
             if (!enabled) {
                 content.setEnabled(enabled);

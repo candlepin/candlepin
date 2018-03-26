@@ -38,6 +38,7 @@ import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContent;
+import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.KeyPairCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
@@ -143,12 +144,16 @@ public class DefaultEntitlementCertServiceAdapterTest {
     @Inject private Configuration config;
     @Inject private X509ExtensionUtil extensionUtil;
 
+    @Mock private Configuration mockConfig;
+    @Mock private X509V3ExtensionUtil mockV3extensionUtil;
+    @Mock private X509ExtensionUtil mockExtensionUtil;
     @Mock private ConsumerTypeCurator mockConsumerTypeCurator;
     @Mock private CertificateSerialCurator serialCurator;
     @Mock private EntitlementCurator entCurator;
     @Mock private KeyPairCurator keyPairCurator;
     @Mock private PKIUtility mockedPKI;
     @Mock private ProductCurator productCurator;
+    @Mock private EnvironmentCurator mockEnvironmentCurator;
 
     private Consumer consumer;
     private Product product;
@@ -219,7 +224,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             mock(EntitlementCertificateCurator.class),
             keyPairCurator, serialCurator, entCurator,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
-            config, productCurator, this.mockConsumerTypeCurator);
+            config, productCurator, this.mockConsumerTypeCurator, this.mockEnvironmentCurator);
 
         product = TestUtil.createProduct("12345", "a product");
         product.setAttribute(Product.Attributes.VERSION, "version");
@@ -344,6 +349,44 @@ public class DefaultEntitlementCertServiceAdapterTest {
         return content;
     }
 
+    protected Environment mockEnvironment(Environment environment) {
+        if (environment != null) {
+            // Ensure the environment has an ID
+            if (environment.getId() == null) {
+                environment.setId("test-env-" + environment.getName() + "-" + TestUtil.randomInt());
+            }
+
+            when(this.mockEnvironmentCurator.find(eq(environment.getId()))).thenReturn(environment);
+
+            doAnswer(new Answer<Environment>() {
+                @Override
+                public Environment answer(InvocationOnMock invocation) throws Throwable {
+                    Object[] args = invocation.getArguments();
+                    Consumer consumer = (Consumer) args[0];
+                    EnvironmentCurator curator = (EnvironmentCurator) invocation.getMock();
+                    Environment environment = null;
+
+                    if (consumer == null) {
+                        throw new IllegalArgumentException("consumer is null");
+                    }
+
+                    if (consumer.getEnvironmentId() != null) {
+                        environment = curator.find(consumer.getEnvironmentId());
+
+                        if (environment == null) {
+                            throw new IllegalStateException("No such environment: " +
+                                consumer.getEnvironmentId());
+                        }
+                    }
+
+                    return environment;
+                }
+            }).when(this.mockEnvironmentCurator).getConsumerEnvironment(any(Consumer.class));
+        }
+
+        return environment;
+    }
+
     @Test
     public void temporaryCertificateForUnmappedGuests() throws Exception {
         Date now = new Date();
@@ -356,7 +399,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             mock(EntitlementCertificateCurator.class),
             keyPairCurator, serialCurator, entCurator,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
-            config, productCurator, this.mockConsumerTypeCurator);
+            config, productCurator, this.mockConsumerTypeCurator, this.mockEnvironmentCurator);
 
         X509Certificate result = certServiceAdapter.createX509Certificate(consumer, pool,
             entitlement, product, new HashSet<>(),
@@ -383,7 +426,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             mock(EntitlementCertificateCurator.class),
             keyPairCurator, serialCurator, entCurator,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
-            config, productCurator, this.mockConsumerTypeCurator);
+            config, productCurator, this.mockConsumerTypeCurator, this.mockEnvironmentCurator);
 
         // pool start date is more than an hour ago, use it
         Calendar cal = Calendar.getInstance();
@@ -483,7 +526,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         throws CertificateSizeException {
 
         // Environment, with promoted content:
-        Environment e = new Environment("env1", "Env 1", owner);
+        Environment e = this.mockEnvironment(new Environment("env1", "Env 1", owner));
 
         e.getEnvironmentContent().add(new EnvironmentContent(e, content, true));
         this.consumer.setEnvironment(e);
@@ -546,7 +589,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         owner.setContentPrefix("/someorg/$env/");
 
         // Setup an environment for the consumer:
-        Environment e = new Environment("env1", "Awesome Environment #1", owner);
+        Environment e = this.mockEnvironment(new Environment("env1", "Awesome Environment #1", owner));
         e.getEnvironmentContent().add(new EnvironmentContent(e, content, true));
         this.consumer.setEnvironment(e);
 
@@ -567,7 +610,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         owner.setContentPrefix("/some org/$env/");
 
         // Setup an environment for the consumer:
-        Environment e = new Environment("env1", "Awesome Environment #1", owner);
+        Environment e = this.mockEnvironment(new Environment("env1", "Awesome Environment #1", owner));
         e.getEnvironmentContent().add(new EnvironmentContent(e, content, true));
         this.consumer.setEnvironment(e);
 
@@ -683,7 +726,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             entitledProdIds).size());
 
         // Make sure that we filter by environment when asked.
-        Environment environment = new Environment();
+        Environment environment = this.mockEnvironment(new Environment());
         consumer.setEnvironment(environment);
 
         Map<String, EnvironmentContent> promotedContent = new HashMap<>();
@@ -818,23 +861,23 @@ public class DefaultEntitlementCertServiceAdapterTest {
             any(String.class));
     }
 
-    @Test
-    public void ensureV3CertificateCreationOkWhenConsumerSupportsV3Dot1Certs()
-        throws Exception {
-        Configuration mockConfig = mock(Configuration.class);
-
-        consumer.setFact("system.certificate_version", "3.3");
-        subscription.getProduct().setAttribute(Product.Attributes.RAM, "4");
-
-        X509V3ExtensionUtil mockV3extensionUtil = mock(X509V3ExtensionUtil.class);
-        X509ExtensionUtil mockExtensionUtil = mock(X509ExtensionUtil.class);
-
-        DefaultEntitlementCertServiceAdapter entAdapter = new DefaultEntitlementCertServiceAdapter(
+    protected DefaultEntitlementCertServiceAdapter initCertServiceAdapter() {
+        return new DefaultEntitlementCertServiceAdapter(
             mockedPKI, mockExtensionUtil, mockV3extensionUtil,
             mock(EntitlementCertificateCurator.class),
             keyPairCurator, serialCurator, entCurator,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
-            mockConfig, productCurator, this.mockConsumerTypeCurator);
+            mockConfig, productCurator, this.mockConsumerTypeCurator, this.mockEnvironmentCurator);
+    }
+
+    @Test
+    public void ensureV3CertificateCreationOkWhenConsumerSupportsV3Dot1Certs()
+        throws Exception {
+
+        consumer.setFact("system.certificate_version", "3.3");
+        subscription.getProduct().setAttribute(Product.Attributes.RAM, "4");
+
+        DefaultEntitlementCertServiceAdapter entAdapter = this.initCertServiceAdapter();
 
         entAdapter.createX509Certificate(consumer, pool, entitlement, product, new HashSet<>(),
             getProductModels(product, new HashSet<>(), "prefix", entitlement),
@@ -863,19 +906,9 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     @Test
     public void ensureV3CertIsCreatedWhenEnableCertV3ConfigIsTrue() throws Exception {
-        Configuration mockConfig = mock(Configuration.class);
-
         consumer.setFact("system.certificate_version", "3.0");
 
-        X509V3ExtensionUtil mockV3extensionUtil = mock(X509V3ExtensionUtil.class);
-        X509ExtensionUtil mockExtensionUtil = mock(X509ExtensionUtil.class);
-
-        DefaultEntitlementCertServiceAdapter entAdapter = new DefaultEntitlementCertServiceAdapter(
-            mockedPKI, mockExtensionUtil, mockV3extensionUtil,
-            mock(EntitlementCertificateCurator.class),
-            keyPairCurator, serialCurator, entCurator,
-            I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
-            mockConfig, productCurator, this.mockConsumerTypeCurator);
+        DefaultEntitlementCertServiceAdapter entAdapter = this.initCertServiceAdapter();
 
         entAdapter.createX509Certificate(consumer, pool, entitlement,
             product, new HashSet<>(),
@@ -889,8 +922,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     @Test
     public void ensureV3CertIsCreatedWhenV3CapabilityPresent() throws Exception {
-        Configuration mockConfig = mock(Configuration.class);
-
         ConsumerType ctype = new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN);
         ctype.setId("test-id");
 
@@ -903,15 +934,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         set.add(new ConsumerCapability(consumer, "cert_v3"));
         consumer.setCapabilities(set);
 
-        X509V3ExtensionUtil mockV3extensionUtil = mock(X509V3ExtensionUtil.class);
-        X509ExtensionUtil mockExtensionUtil = mock(X509ExtensionUtil.class);
-
-        DefaultEntitlementCertServiceAdapter entAdapter = new DefaultEntitlementCertServiceAdapter(
-            mockedPKI, mockExtensionUtil, mockV3extensionUtil,
-            mock(EntitlementCertificateCurator.class),
-            keyPairCurator, serialCurator, entCurator,
-            I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
-            mockConfig, productCurator, this.mockConsumerTypeCurator);
+        DefaultEntitlementCertServiceAdapter entAdapter = this.initCertServiceAdapter();
 
         entAdapter.createX509Certificate(consumer, pool, entitlement,
             product, new HashSet<>(),
@@ -926,8 +949,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     @Test
     public void ensureV1CertIsCreatedWhenV3factNotPresent() throws Exception {
-        Configuration mockConfig = mock(Configuration.class);
-
         ConsumerType ctype = new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM);
         ctype.setId("test-id");
 
@@ -936,15 +957,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         when(mockConsumerTypeCurator.find(eq(ctype.getId()))).thenReturn(ctype);
         when(mockConsumerTypeCurator.getConsumerType(consumer)).thenReturn(ctype);
 
-        X509V3ExtensionUtil mockV3extensionUtil = mock(X509V3ExtensionUtil.class);
-        X509ExtensionUtil mockExtensionUtil = mock(X509ExtensionUtil.class);
-
-        DefaultEntitlementCertServiceAdapter entAdapter = new DefaultEntitlementCertServiceAdapter(
-            mockedPKI, mockExtensionUtil, mockV3extensionUtil,
-            mock(EntitlementCertificateCurator.class),
-            keyPairCurator, serialCurator, entCurator,
-            I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
-            mockConfig, productCurator, this.mockConsumerTypeCurator);
+        DefaultEntitlementCertServiceAdapter entAdapter = this.initCertServiceAdapter();
 
         entAdapter.createX509Certificate(consumer, pool, entitlement,
             product, new HashSet<>(),
@@ -958,8 +971,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     @Test
     public void ensureV3CertIsCreatedWhenHypervisor() throws Exception {
-        Configuration mockConfig = mock(Configuration.class);
-
         ConsumerType ctype = new ConsumerType(ConsumerType.ConsumerTypeEnum.HYPERVISOR);
         ctype.setId("test-id");
 
@@ -968,15 +979,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         when(mockConsumerTypeCurator.find(eq(ctype.getId()))).thenReturn(ctype);
         when(mockConsumerTypeCurator.getConsumerType(consumer)).thenReturn(ctype);
 
-        X509V3ExtensionUtil mockV3extensionUtil = mock(X509V3ExtensionUtil.class);
-        X509ExtensionUtil mockExtensionUtil = mock(X509ExtensionUtil.class);
-
-        DefaultEntitlementCertServiceAdapter entAdapter = new DefaultEntitlementCertServiceAdapter(
-            mockedPKI, mockExtensionUtil, mockV3extensionUtil,
-            mock(EntitlementCertificateCurator.class),
-            keyPairCurator, serialCurator, entCurator,
-            I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
-            mockConfig, productCurator, this.mockConsumerTypeCurator);
+        DefaultEntitlementCertServiceAdapter entAdapter = this.initCertServiceAdapter();
 
         entAdapter.createX509Certificate(consumer, pool, entitlement,
             product, new HashSet<>(),

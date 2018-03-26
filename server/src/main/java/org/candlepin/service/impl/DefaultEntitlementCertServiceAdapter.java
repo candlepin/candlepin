@@ -29,6 +29,7 @@ import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContent;
+import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.KeyPairCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
@@ -90,6 +91,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
     private Configuration config;
     private ProductCurator productCurator;
     private ConsumerTypeCurator consumerTypeCurator;
+    private EnvironmentCurator environmentCurator;
 
     @Inject
     public DefaultEntitlementCertServiceAdapter(PKIUtility pki,
@@ -101,7 +103,8 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         EntitlementCurator entCurator, I18n i18n,
         Configuration config,
         ProductCurator productCurator,
-        ConsumerTypeCurator consumerTypeCurator) {
+        ConsumerTypeCurator consumerTypeCurator,
+        EnvironmentCurator environmentCurator) {
 
         this.pki = pki;
         this.extensionUtil = extensionUtil;
@@ -114,6 +117,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         this.config = config;
         this.productCurator = productCurator;
         this.consumerTypeCurator = consumerTypeCurator;
+        this.environmentCurator = environmentCurator;
     }
 
 
@@ -282,19 +286,22 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
      * @return
      * @throws IOException
      */
-    private String getContentPrefix(Consumer consumer, boolean useContentPrefix)
-        throws IOException {
+    private String getContentPrefix(Consumer consumer, boolean useContentPrefix) throws IOException {
         String contentPrefix = null;
+
         if (useContentPrefix) {
             contentPrefix = consumer.getOwner().getContentPrefix();
-            Environment env = consumer.getEnvironment();
+            Environment env = this.environmentCurator.getConsumerEnvironment(consumer);
+
             if (contentPrefix != null && !contentPrefix.equals("")) {
                 if (env != null) {
                     contentPrefix = contentPrefix.replaceAll("\\$env", env.getName());
                 }
+
                 contentPrefix = this.cleanUpPrefix(contentPrefix);
             }
         }
+
         return contentPrefix;
     }
 
@@ -306,15 +313,18 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         // Build a set of all content IDs promoted to the consumer's environment so
         // we can determine if anything needs to be skipped:
         Map<String, EnvironmentContent> promotedContent = new HashMap<>();
-        if (consumer.getEnvironment() != null) {
-            log.debug("Consumer has environment, checking for promoted content in: " +
-                consumer.getEnvironment());
-            for (EnvironmentContent envContent :
-                consumer.getEnvironment().getEnvironmentContent()) {
-                log.debug("  promoted content: " + envContent.getContent().getId());
+
+        if (consumer.getEnvironmentId() != null) {
+            Environment environment = this.environmentCurator.getConsumerEnvironment(consumer);
+            log.debug("Consumer has an environment; checking for promoted content in: {}", environment);
+
+            for (EnvironmentContent envContent : environment.getEnvironmentContent()) {
+                log.debug("  promoted content: {}", envContent.getContent());
+
                 promotedContent.put(envContent.getContent().getId(), envContent);
             }
         }
+
         return promotedContent;
     }
 

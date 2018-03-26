@@ -458,10 +458,32 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         return this.cpQueryFactory.<Entitlement>buildQuery(this.currentSession(), criteria);
     }
 
+    /**
+     * Fetches a the entitlements used by consumers in the specified environment.
+     *
+     * @param environment
+     *  The environment for which to fetch entitlements
+     *
+     * @return
+     *  A CandlepinQuery to iterate over the entitlements in the specified environment
+     */
     public CandlepinQuery<Entitlement> listByEnvironment(Environment environment) {
+        return this.listByEnvironment(environment != null ? environment.getId() : null);
+    }
+
+    /**
+     * Fetches a the entitlements used by consumers in the specified environment.
+     *
+     * @param environmentId
+     *  The ID of the environment for which to fetch entitlements
+     *
+     * @return
+     *  A CandlepinQuery to iterate over the entitlements in the specified environment
+     */
+    public CandlepinQuery<Entitlement> listByEnvironment(String environmentId) {
         DetachedCriteria criteria = DetachedCriteria.forClass(Entitlement.class)
             .createCriteria("consumer")
-            .add(Restrictions.eq("environment", environment));
+            .add(Restrictions.eq("environmentId", environmentId));
 
         return this.cpQueryFactory.<Entitlement>buildQuery(this.currentSession(), criteria);
     }

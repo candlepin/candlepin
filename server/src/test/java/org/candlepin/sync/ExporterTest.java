@@ -40,6 +40,7 @@ import org.candlepin.model.DistributorVersionCapability;
 import org.candlepin.model.DistributorVersionCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.KeyPair;
 import org.candlepin.model.Owner;
@@ -109,6 +110,7 @@ public class ExporterTest {
     private CdnCurator cdnc;
     private CdnExporter cdne;
     private EntitlementExporter ee;
+    private EnvironmentCurator mockEnvironmentCurator;
     private PKIUtility pki;
     private CandlepinCommonTestConfig config;
     private ExportRules exportRules;
@@ -121,8 +123,9 @@ public class ExporterTest {
     @Before
     public void setUp() {
         ctc = mock(ConsumerTypeCurator.class);
+        mockEnvironmentCurator = mock(EnvironmentCurator.class);
         me = new MetaExporter();
-        translator = new StandardTranslator(ctc);
+        translator = new StandardTranslator(ctc, mockEnvironmentCurator);
         ce = new ConsumerExporter(translator);
         cte = new ConsumerTypeExporter(translator);
         rc = mock(RulesCurator.class);

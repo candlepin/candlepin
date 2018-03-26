@@ -102,8 +102,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Locale;
 
 import javax.inject.Inject;
@@ -486,15 +484,6 @@ public class DatabaseTestFixture {
         Environment environment = new Environment(id, name, owner);
         environment.setDescription(description);
 
-        if (consumers != null) {
-            // Ugly hack to deal with how environment currently encapsulates its collections
-            if (!(consumers instanceof List)) {
-                consumers = new LinkedList<>(consumers);
-            }
-
-            environment.setConsumers((List<Consumer>) consumers);
-        }
-
         if (content != null) {
             for (Content elem : content) {
                 EnvironmentContent envContent = new EnvironmentContent(environment, elem, true);
@@ -506,7 +495,17 @@ public class DatabaseTestFixture {
             }
         }
 
-        return this.environmentCurator.create(environment);
+        environment = this.environmentCurator.create(environment);
+
+        // Update consumers to point to the new environment
+        if (consumers != null) {
+            for (Consumer consumer : consumers) {
+                consumer.setEnvironmentId(environment.getId());
+                this.consumerCurator.merge(consumer);
+            }
+        }
+
+        return environment;
     }
 
     protected Owner createOwner() {
