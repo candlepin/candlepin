@@ -614,11 +614,14 @@ describe 'Owner Resource Pool Filter Tests' do
       }
     )
 
+    @product3 = create_product(random_string("prod-3"), random_string("Product3"));
+
     create_pool_and_subscription(@owner['key'], @product1.id, 10, [], '', '', '', nil, nil, true)
     create_pool_and_subscription(@owner['key'], @product2.id, 10)
+    create_pool_and_subscription(@owner['key'], @product3.id, 10)
 
-    pools = @cp.list_owner_pools(@owner['key'])
-    pools.length.should == 2
+    @pools = @cp.list_owner_pools(@owner['key'])
+    @pools.length.should == 3
   end
 
   it "lets owners filter pools by single filter" do
@@ -686,6 +689,31 @@ describe 'Owner Resource Pool Filter Tests' do
       user = user_client(@owner, random_string('user'))
       # needs to be an owner level user
       user.get_pools_for_subscription(@owner['key'], pool.subscriptionId).size.should == 2
+  end
+
+  it "lets owners filter pools by pool ID" do
+    pools = @cp.list_owner_pools(@owner['key'], { :poolid => @pools[0].id })
+    expect(pools.length).to eq(1)
+    expect(pools[0].id).to eq(@pools[0].id)
+
+    pools = @cp.list_owner_pools(@owner['key'], { :poolid => @pools[1].id })
+    expect(pools.length).to eq(1)
+    expect(pools[0].id).to eq(@pools[1].id)
+
+    pools = @cp.list_owner_pools(@owner['key'], { :poolid => @pools[2].id })
+    expect(pools.length).to eq(1)
+    expect(pools[0].id).to eq(@pools[2].id)
+  end
+
+  it "lets owners filter pools by multiple pool IDs" do
+    poolIds = [@pools[0].id, @pools[2].id]
+
+    pools = @cp.list_owner_pools(@owner['key'], { :poolid => poolIds })
+
+    expect(pools.length).to eq(2)
+    expect(pools[0].id).to_not eq(pools[1].id)
+    expect(poolIds).to include(pools[0].id)
+    expect(poolIds).to include(pools[1].id)
   end
 
 end

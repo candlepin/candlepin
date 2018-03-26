@@ -1463,9 +1463,9 @@ public class OwnerResource {
         @ApiParam("Date to use as current time for lookup criteria. Defaults" +
                 " to current date if not specified.")
         @QueryParam("activeon") @DefaultValue(DateFormat.NOW) @DateFormat Date activeOn,
-        @ApiParam("Find pools matching the given pattern in a variety of fields" +
-                " * and ? wildcards are supported.")
-        @QueryParam("matches") String matches,
+        @ApiParam("Find pools matching the given pattern in a variety of fields;" +
+                " * and ? wildcards are supported; may be specified multiple times")
+        @QueryParam("matches") List<String> matches,
         @ApiParam("The attributes to return based on the specified types.")
         @QueryParam("attribute") @CandlepinParam(type = KeyValueParameter.class)
             List<KeyValueParameter> attrFilters,
@@ -1478,6 +1478,9 @@ public class OwnerResource {
         @ApiParam("Will only return pools with a start date after the supplied date. " +
                 "Overrides the activeOn date.")
         @QueryParam("after") @DateFormat Date after,
+        @ApiParam("One or more pool IDs to use to filter the output; only pools with IDs matching " +
+                "those provided will be returned; may be specified multiple times")
+        @QueryParam("poolid") List<String> poolIds,
         @Context Principal principal,
         @Context PageRequest pageRequest) {
 
@@ -1516,10 +1519,12 @@ public class OwnerResource {
             throw new BadRequestException(
                 i18n.tr("The flags add_future and only_future cannot be used at the same time."));
         }
+
         if (after != null && (addFuture || onlyFuture)) {
             throw new BadRequestException(
                     i18n.tr("The flags add_future and only_future cannot be used with the parameter after."));
         }
+
         if (after != null) {
             activeOn = null;
         }
@@ -1529,13 +1534,21 @@ public class OwnerResource {
         for (KeyValueParameter filterParam : attrFilters) {
             poolFilters.addAttributeFilter(filterParam.key(), filterParam.value());
         }
-        if (!StringUtils.isEmpty(matches)) {
-            poolFilters.addMatchesFilter(matches);
+
+        if (matches != null) {
+            matches.stream()
+                .filter(elem -> elem != null && !elem.isEmpty())
+                .forEach(elem -> poolFilters.addMatchesFilter(elem));
+        }
+
+        if (poolIds != null && !poolIds.isEmpty()) {
+            poolFilters.addIdFilters(poolIds);
         }
 
         Page<List<Pool>> page = poolManager.listAvailableEntitlementPools(
             c, key, owner, productId, subscriptionId, activeOn, listAll, poolFilters, pageRequest,
-        addFuture, onlyFuture, after);
+            addFuture, onlyFuture, after);
+
         List<Pool> poolList = page.getPageData();
         calculatedAttributesUtil.setCalculatedAttributes(poolList, activeOn);
         calculatedAttributesUtil.setQuantityAttributes(poolList, c, activeOn);
@@ -1547,6 +1560,7 @@ public class OwnerResource {
         for (Pool pool : poolList) {
             poolDTOs.add(translator.translate(pool, PoolDTO.class));
         }
+
         return poolDTOs;
     }
 
