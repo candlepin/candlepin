@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.2.2
+Version: 2.2.3
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,12 @@ fi
 
 #raw
 %changelog
+* Tue Mar 27 2018 Kevin Howell <khowell@redhat.com> 2.2.3-1
+- Added pool ID filtering functionality to OwnerPoolResource.listPools
+  (crog@redhat.com)
+- 1560054: Add total count of records as a header when paging is used.
+  (bcourt@redhat.com)
+
 * Wed Jan 24 2018 Christopher Snyder <csnyder@redhat.com> 2.2.2-1
 - 1531628: Reduced scope of consumer lock to exclude type in some queries
   (crog@redhat.com)
