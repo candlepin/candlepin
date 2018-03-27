@@ -121,9 +121,14 @@ public class HostedTestSubscriptionResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Subscription createSubscription(Subscription subscription) {
+    public Subscription createSubscription(
+        Subscription subscription,
+        @QueryParam("disable_resolution") Boolean disableResolution) {
         if (subscription.getId() == null || subscription.getId().trim().length() == 0) {
             subscription.setId(this.idGenerator.generateId());
+        }
+        if (disableResolution != null && disableResolution) {
+            return adapter.createSubscription(subscription);
         }
         return adapter.createSubscription(resolverUtil.resolveSubscriptionAndProduct(subscription));
     }
