@@ -48,7 +48,8 @@
     <persistence-unit name="testingUserType" transaction-type="RESOURCE_LOCAL">
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
         <class>org.candlepin.hibernate.EmptyStringUserTypeTest$Thing</class>
-         <exclude-unlisted-classes>true</exclude-unlisted-classes>
+        <class>org.candlepin.hibernate.ResultDataUserTypeTest$ResultData</class>
+        <exclude-unlisted-classes>true</exclude-unlisted-classes>
         <validation-mode>NONE</validation-mode>
         <properties>
             <property name="hibernate.dialect" value="org.hibernate.dialect.HSQLDialect"/>
