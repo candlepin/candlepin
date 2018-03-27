@@ -24,6 +24,7 @@ import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.GuestIdDTO;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
@@ -211,7 +212,9 @@ public class GuestIdResource {
             toUpdate.getOwner(), allGuestIds);
 
         GuestMigration guestMigration = migrationProvider.get().buildMigrationManifest(consumer, toUpdate);
-        if (consumerResource.performConsumerUpdates(consumer, toUpdate, guestMigration)) {
+        if (consumerResource.performConsumerUpdates(this.translator.translate(consumer, ConsumerDTO.class),
+            toUpdate, guestMigration)) {
+
             if (guestMigration.isMigrationPending()) {
                 guestMigration.migrate();
             }

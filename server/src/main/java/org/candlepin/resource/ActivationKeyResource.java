@@ -29,9 +29,7 @@ import org.candlepin.model.Release;
 import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
-import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.candlepin.policy.js.activationkey.ActivationKeyRules;
-import org.candlepin.util.ElementTransformer;
 import org.candlepin.util.ServiceLevelValidator;
 import org.candlepin.util.TransformedIterator;
 
@@ -119,12 +117,7 @@ public class ActivationKeyResource {
         ActivationKey key = activationKeyCurator.verifyAndLookupKey(activationKeyId);
 
         return new TransformedIterator<>(key.getPools().iterator(),
-            new ElementTransformer<ActivationKeyPool, PoolDTO>() {
-                @Override
-                public PoolDTO transform(ActivationKeyPool akp) {
-                    return translator.translate(akp.getPool(), PoolDTO.class);
-                }
-            }
+            akp -> translator.translate(akp.getPool(), PoolDTO.class)
         );
     }
 

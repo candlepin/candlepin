@@ -22,6 +22,7 @@ import org.candlepin.auth.UpdateConsumerCheckIn;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.GuestIdDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -311,7 +312,8 @@ public class HypervisorResource {
         withIds.setGuestIds(guestIds);
 
         GuestMigration guestMigration = migrationProvider.get().buildMigrationManifest(withIds, consumer);
-        boolean guestIdsUpdated = consumerResource.performConsumerUpdates(withIds, consumer, guestMigration);
+        boolean guestIdsUpdated = consumerResource.performConsumerUpdates(
+            this.translator.translate(withIds, ConsumerDTO.class), consumer, guestMigration);
         if (guestIdsUpdated) {
             if (guestMigration.isMigrationPending()) {
                 guestMigration.migrate();
@@ -339,7 +341,9 @@ public class HypervisorResource {
         consumer.setHypervisorId(hypervisorId);
 
         // Create Consumer
-        return consumerResource.createConsumerFromEntity(consumer,
+        return consumerResource.createConsumerFromDTO(
+            this.translator.translate(consumer, ConsumerDTO.class),
+            this.hypervisorType,
             principal,
             null,
             owner.getKey(),

@@ -14,7 +14,6 @@
  */
 package org.candlepin.util;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.eq;
@@ -24,6 +23,7 @@ import static org.mockito.Mockito.when;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.dto.api.v1.ActivationKeyDTO;
 import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.ContentOverride;
 import org.candlepin.model.ProductCurator;
@@ -94,26 +94,6 @@ public class ContentOverrideValidatorTest extends DatabaseTestFixture  {
     }
 
     @Test
-    public void testValidateValidOverride() {
-        ContentOverride override = new ContentOverride("label", "testname", "value");
-        validator.validate(override);
-    }
-
-    @Test
-    public void testValidateSingleInvalid() {
-        when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
-        ContentOverride override = new ContentOverride("label", "baseurl", "value");
-
-        try {
-            validator.validate(override);
-            fail("Expected exception was \"BadRequestException\" not thrown.");
-        }
-        catch (BadRequestException bre) {
-            assertEquals("Not allowed to override values for: baseurl", bre.getMessage());
-        }
-    }
-
-    @Test
     public void testValidateCollectionBothInvalid() {
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
         List<ContentOverride> overrides = new LinkedList<>();
@@ -129,6 +109,34 @@ public class ContentOverrideValidatorTest extends DatabaseTestFixture  {
                 "^Not allowed to override values for: (?:baseurl, name|name, baseurl)"
             ));
         }
+    }
 
+    @Test
+    public void testValidateDTOsValidCollection() {
+        List<ActivationKeyDTO.ActivationKeyContentOverrideDTO> overrideDTOs = new LinkedList<>();
+        overrideDTOs.add(new ActivationKeyDTO.ActivationKeyContentOverrideDTO("label", "testname", "value"));
+        overrideDTOs.add(new ActivationKeyDTO.ActivationKeyContentOverrideDTO(
+            "other label", "other name", "other value"));
+
+        validator.validateDTOs(overrideDTOs);
+    }
+
+    @Test
+    public void testValidateDTOsCollectionBothInvalid() {
+        when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
+        List<ActivationKeyDTO.ActivationKeyContentOverrideDTO> overrideDTOs = new LinkedList<>();
+        overrideDTOs.add(new ActivationKeyDTO.ActivationKeyContentOverrideDTO("label", "baseurl", "value"));
+        overrideDTOs.add(new ActivationKeyDTO.ActivationKeyContentOverrideDTO(
+            "other label", "name", "other value"));
+
+        try {
+            validator.validateDTOs(overrideDTOs);
+            fail("Expected exception \"BadRequestException\" was not thrown.");
+        }
+        catch (BadRequestException bre) {
+            assertTrue(bre.getMessage().matches(
+                "^Not allowed to override values for: (?:baseurl, name|name, baseurl)"
+            ));
+        }
     }
 }

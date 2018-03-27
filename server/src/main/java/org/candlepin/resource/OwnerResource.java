@@ -14,6 +14,7 @@
  */
 package org.candlepin.resource;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
@@ -74,7 +75,6 @@ import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Release;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceSubscription;
@@ -654,22 +654,21 @@ public class OwnerResource {
      * Populates the specified entity with data from the provided DTO.
      */
     private Owner lookupOwnerFromDto(OwnerDTO ownerDto) {
-        Owner owner = null;
-        if (ownerDto.getId() != null) {
-            // look up by ID
-            owner = this.ownerCurator.find(ownerDto.getId());
-        }
-        else if (ownerDto.getKey() != null) {
-            // look up by key
-            owner = this.ownerCurator.lookupByKey(ownerDto.getKey());
-        }
-
-        if (owner == null) {
-            throw new NotFoundException(i18n.tr("Unable to find owner: {0}", ownerDto));
-        }
-        return owner;
+        return this.findOwnerByIdOrKey(ownerDto.getId(), ownerDto.getKey());
     }
 
+    /**
+     * Populates the specified entity with data from the provided DTO.
+     *
+     * @param entity
+     *  The entity instance to populate
+     *
+     * @param dto
+     *  The DTO containing the data with which to populate the entity
+     *
+     * @throws IllegalArgumentException
+     *  if either entity or dto are null, or if the dto's environment content is not empty
+     */
     protected void populateEntity(Environment entity, EnvironmentDTO dto) {
 
         if (entity == null) {
@@ -684,15 +683,14 @@ public class OwnerResource {
             throw new IllegalArgumentException("can not specify environment content at creation time");
         }
 
-        entity.setId(dto.getId() != null ? dto.getId() : null);
-        entity.setName(dto.getName() != null ? dto.getName() : null);
-        entity.setDescription(dto.getDescription() != null ? dto.getDescription() : null);
+        entity.setId(dto.getId());
+        entity.setName(dto.getName());
+        entity.setDescription(dto.getDescription());
         entity.setOwner(lookupOwnerFromDto(dto.getOwner()));
     }
 
     /**
-     * Populates the specified entity with data from the provided DTO. This method will not set the
-     * ID field.
+     * Populates an entity that is to be created with data from the provided DTO.
      *
      * @param entity
      *  The entity instance to populate
@@ -729,52 +727,18 @@ public class OwnerResource {
             entity.setQuantity(dto.getQuantity());
         }
 
-        if (dto.getContractNumber() != null) {
-            entity.setContractNumber(dto.getContractNumber());
-        }
-
-        if (dto.getOrderNumber() != null) {
-            entity.setOrderNumber(dto.getOrderNumber());
-        }
-
-        if (dto.getAccountNumber() != null) {
-            entity.setAccountNumber(dto.getAccountNumber());
-        }
-
-        if (dto.getUpstreamPoolId() != null) {
-            entity.setUpstreamPoolId(dto.getUpstreamPoolId());
-        }
-
         if (dto.getAttributes() != null) {
             if (dto.getAttributes().isEmpty()) {
-                entity.setAttributes(Collections.<String, String>emptyMap());
+                entity.setAttributes(Collections.emptyMap());
             }
             else {
                 entity.setAttributes(dto.getAttributes());
             }
         }
 
-        if (dto.getBranding() != null) {
-            if (dto.getBranding().isEmpty()) {
-                entity.setBranding(Collections.<Branding>emptySet());
-            }
-            else {
-                Set<Branding> branding = new HashSet<>();
-                for (BrandingDTO brandingDTO : dto.getBranding()) {
-                    if (brandingDTO != null) {
-                        branding.add(new Branding(
-                            brandingDTO.getProductId(),
-                            brandingDTO.getType(),
-                            brandingDTO.getName()));
-                    }
-                }
-                entity.setBranding(branding);
-            }
-        }
-
         if (dto.getProvidedProducts() != null) {
             if (dto.getProvidedProducts().isEmpty()) {
-                entity.setProvidedProductDtos(Collections.<ProvidedProduct>emptySet());
+                entity.setProvidedProducts(Collections.emptySet());
             }
             else {
                 Set<Product> products = new HashSet<>();
@@ -790,7 +754,7 @@ public class OwnerResource {
 
         if (dto.getDerivedProvidedProducts() != null) {
             if (dto.getDerivedProvidedProducts().isEmpty()) {
-                entity.setDerivedProvidedProductDtos(Collections.<ProvidedProduct>emptySet());
+                entity.setDerivedProvidedProducts(Collections.emptySet());
             }
             else {
                 Set<Product> derivedProducts = new HashSet<>();
@@ -806,35 +770,22 @@ public class OwnerResource {
             }
         }
 
-        // The owner might already be populated in the endpoint method.
-        if (entity.getOwner() == null) {
-            if (dto.getOwner() != null) {
-                OwnerDTO ownerDTO = dto.getOwner();
-                entity.setOwner(findOwnerByIdOrKey(ownerDTO.getId(), ownerDTO.getKey()));
+        if (dto.getBranding() != null) {
+            if (dto.getBranding().isEmpty()) {
+                entity.setBranding(Collections.emptySet());
             }
-        }
-
-        if (dto.getProductId() != null && entity.getOwner() != null) {
-            Product product = findProduct(entity.getOwner(), dto.getProductId());
-            entity.setProduct(product);
-        }
-
-        if (dto.getDerivedProductId() != null && entity.getOwner() != null) {
-            Product derivedProduct = findProduct(entity.getOwner(), dto.getDerivedProductId());
-            entity.setDerivedProduct(derivedProduct);
-        }
-
-        if (dto.getSourceEntitlement() != null) {
-            EntitlementDTO sourceEntitlementDTO = dto.getSourceEntitlement();
-            entity.setSourceEntitlement(findEntitlement(sourceEntitlementDTO.getId()));
-        }
-
-        if (dto.getSubscriptionSubKey() != null) {
-            entity.setSubscriptionSubKey(dto.getSubscriptionSubKey());
-        }
-
-        if (dto.getSubscriptionId() != null) {
-            entity.setSubscriptionId(dto.getSubscriptionId());
+            else {
+                Set<Branding> branding = new HashSet<>();
+                for (BrandingDTO brandingDTO : dto.getBranding()) {
+                    if (brandingDTO != null) {
+                        branding.add(new Branding(
+                            brandingDTO.getProductId(),
+                            brandingDTO.getType(),
+                            brandingDTO.getName()));
+                    }
+                }
+                entity.setBranding(branding);
+            }
         }
     }
 
@@ -923,47 +874,27 @@ public class OwnerResource {
     @ApiOperation(notes = "Creates an Owner", value = "Create Owner")
     @ApiResponses({ @ApiResponse(code = 400, message = "Invalid owner specified in body") })
     public OwnerDTO createOwner(@ApiParam(name = "owner", required = true) OwnerDTO dto) {
+        // Validate and set content access mode list & content access mode
+        if (StringUtils.isBlank(dto.getContentAccessModeList())) {
+            dto.setContentAccessModeList(ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE);
+        }
+
+        if (StringUtils.isBlank(dto.getContentAccessMode())) {
+            dto.setContentAccessMode(ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE);
+        }
+
+        if (!containsContentAccessMode(dto.getContentAccessModeList(), dto.getContentAccessMode())) {
+            throw new BadRequestException(
+                i18n.tr("The content access mode \"{1}\" is not allowed for this owner.",
+                    dto.getContentAccessMode()));
+        }
+
+        // Translate the DTO to an entity Owner.
         Owner owner = new Owner();
         this.populateEntity(owner, dto);
-
-        // Set the key :(
         owner.setKey(dto.getKey());
-
-        // Set content access mode list
-        if (StringUtils.isBlank(dto.getContentAccessModeList())) {
-            owner.setContentAccessModeList(ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE);
-        }
-        else {
-            owner.setContentAccessModeList(dto.getContentAccessModeList());
-        }
-        if (StringUtils.isBlank(owner.getContentAccessModeList())) {
-            owner.setContentAccessModeList(
-                ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE);
-            owner.setContentAccessMode(
-                ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE);
-        }
-        if (StringUtils.isBlank(owner.getContentAccessMode())) {
-            throw new BadRequestException(
-                i18n.tr("You must assign a Content Access Mode from the mode list."));
-        }
-
-        if (!owner.isAllowedContentAccessMode(owner.getContentAccessMode())) {
-            throw new BadRequestException(
-                i18n.tr("The content access mode is not allowed for this owner."));
-        }
-
-        // Set content access mode
-        String cam = StringUtils.isBlank(dto.getContentAccessMode()) ?
-            ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE :
-            dto.getContentAccessMode();
-
-        if (owner.isAllowedContentAccessMode(cam)) {
-            owner.setContentAccessMode(cam);
-        }
-        else {
-            throw new BadRequestException(
-                i18n.tr("The content access mode \"{1}\" is not allowed for this owner.", cam));
-        }
+        owner.setContentAccessModeList(dto.getContentAccessModeList());
+        owner.setContentAccessMode(dto.getContentAccessMode());
 
         // Try to persist the owner
         try {
@@ -982,6 +913,20 @@ public class OwnerResource {
         sink.emitOwnerCreated(owner);
 
         return this.translator.translate(owner, OwnerDTO.class);
+    }
+
+    /**
+     * Checks if the provided content access mode list contains the provided access mode.
+     *
+     * @param list the provided content access mode list
+     *
+     * @param mode the provided content access mode
+     *
+     * @return true if the provided content access mode is contained in the list, false otherwise.
+     */
+    public static boolean containsContentAccessMode(String list, String mode) {
+        String[] camList = list.split(",");
+        return ArrayUtils.contains(camList, mode);
     }
 
     /**
@@ -1005,13 +950,9 @@ public class OwnerResource {
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
     public OwnerDTO updateOwner(@PathParam("owner_key") @Verify(Owner.class) String key,
         @ApiParam(name = "owner", required = true) OwnerDTO dto) {
-
-        Owner owner = findOwnerByKey(key);
-
         log.debug("Updating owner: {}", key);
 
-        // Do the bulk of our entity population
-        this.populateEntity(owner, dto);
+        Owner owner = findOwnerByKey(key);
 
         // Note: We don't allow updating the content access mode list externally
 
@@ -1033,6 +974,9 @@ public class OwnerResource {
             owner.setContentAccessMode(cam);
             refreshContentAccess = true;
         }
+
+        // Do the bulk of our entity population
+        this.populateEntity(owner, dto);
 
         owner = ownerCurator.merge(owner);
         ownerCurator.flush();
@@ -1231,8 +1175,6 @@ public class OwnerResource {
     public ActivationKeyDTO createActivationKey(@PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @ApiParam(name = "activation_key", required = true) ActivationKeyDTO dto) {
 
-        Owner owner = findOwnerByKey(ownerKey);
-
         if (StringUtils.isBlank(dto.getName())) {
             throw new BadRequestException(i18n.tr("Must provide a name for activation key."));
         }
@@ -1245,6 +1187,12 @@ public class OwnerResource {
                     "include the characters \"-\" or \"_\"", dto.getName()));
         }
 
+        if (dto.getContentOverrides() != null) {
+            contentOverrideValidator.validateDTOs(dto.getContentOverrides());
+        }
+
+        Owner owner = findOwnerByKey(ownerKey);
+
         if (activationKeyCurator.lookupForOwner(dto.getName(), owner) != null) {
             throw new BadRequestException(
                 i18n.tr("The activation key name \"{0}\" is already in use for owner {1}",
@@ -1253,16 +1201,9 @@ public class OwnerResource {
 
         serviceLevelValidator.validate(owner, dto.getServiceLevel());
 
-        // Creating and populating the ActivationKey before the content override validation because the
-        // contentOverrideDTOs need to be converted to model content overrides before validation anyway.
-        OwnerDTO ownerDTO = translator.translate(owner, OwnerDTO.class);
-        dto.setOwner(ownerDTO);
         ActivationKey key = new ActivationKey();
         this.populateEntity(key, dto);
-
-        if (key.getContentOverrides() != null) {
-            contentOverrideValidator.validate(key.getContentOverrides());
-        }
+        key.setOwner(owner);
 
         ActivationKey newKey = activationKeyCurator.create(key);
         sink.emitActivationKeyCreated(newKey);
@@ -1288,8 +1229,7 @@ public class OwnerResource {
         @ApiParam(name = "environment", required = true) EnvironmentDTO envDTO) {
 
         Environment env = new Environment();
-        OwnerDTO ownerDTO = new OwnerDTO();
-        ownerDTO.setKey(ownerKey);
+        OwnerDTO ownerDTO = new OwnerDTO().setKey(ownerKey);
         envDTO.setOwner(ownerDTO);
         populateEntity(env, envDTO);
 
@@ -1786,8 +1726,24 @@ public class OwnerResource {
         // Populate the rest of the pool
         this.populateEntity(pool, inputPoolDTO);
 
-        // Resolve products
-        //pool = resolverUtil.resolvePool(pool);
+        pool.setContractNumber(inputPoolDTO.getContractNumber());
+        pool.setOrderNumber(inputPoolDTO.getOrderNumber());
+        pool.setAccountNumber(inputPoolDTO.getAccountNumber());
+        pool.setUpstreamPoolId(inputPoolDTO.getUpstreamPoolId());
+        pool.setSubscriptionSubKey(inputPoolDTO.getSubscriptionSubKey());
+        pool.setSubscriptionId(inputPoolDTO.getSubscriptionId());
+
+        if (inputPoolDTO.getProductId() != null) {
+            pool.setProduct(findProduct(pool.getOwner(), inputPoolDTO.getProductId()));
+        }
+
+        if (inputPoolDTO.getDerivedProductId() != null) {
+            pool.setDerivedProduct(findProduct(pool.getOwner(), inputPoolDTO.getDerivedProductId()));
+        }
+
+        if (inputPoolDTO.getSourceEntitlement() != null) {
+            pool.setSourceEntitlement(findEntitlement(inputPoolDTO.getSourceEntitlement().getId()));
+        }
 
         pool = poolManager.createAndEnrichPools(pool);
         return this.translator.translate(pool, PoolDTO.class);
@@ -1797,9 +1753,6 @@ public class OwnerResource {
      * Updates a pool for an Owner.
      * assumes this is a normal pool, and errors out otherwise cause we cannot
      * create master pools from bonus pools
-     * TODO: while this method replaces the now deprecated updateSubsciption, it
-     * still uses it underneath. We need to re-implement the wheel like we did
-     * in createPool
      *
      * @httpcode 404
      * @httpcode 200
@@ -1827,7 +1780,8 @@ public class OwnerResource {
         // potential security concerns.
         if (currentPool.getOwner() == null || !ownerKey.equals(currentPool.getOwner().getKey())) {
             throw new NotFoundException(
-                i18n.tr("Unable to find a pool with the ID \"{0}\"", newPoolDTO.getId()));
+                i18n.tr("Pool \"{0}\" does not belong to the specified owner \"{1}\"",
+                currentPool.getId(), ownerKey));
         }
 
         // Verify the pool type is one that allows modifications
@@ -1843,65 +1797,57 @@ public class OwnerResource {
         Pool newPool = new Pool();
         this.populateEntity(newPool, newPoolDTO);
 
-        // Ignore what the client has specified as the owner, since we already know the owner here
+        // Owner & id have already been validated/resolved.
         newPool.setOwner(currentPool.getOwner());
+        newPool.setId(newPoolDTO.getId());
 
-        /*
-         * These are @JsonIgnored. If a client creates a pool and subsequently
-         * wants to update it , we need to ensure Products are set
-         * appropriately.
+        /* These are @JsonIgnored. If a client creates a pool and subsequently
+         * wants to update it , we need to ensure Products are set appropriately.
          */
         newPool.setProduct(currentPool.getProduct());
         newPool.setDerivedProduct(currentPool.getDerivedProduct());
 
-        // Fill out the new pool with data from the existing pool for values which aren't set
-        // TODO: Abstract this out to something more dedicated if we end up needing this logic elsewhere
-
-        // Start by forcefully setting things we don't allow the client to change. Move these down as
-        // necessary.
-        newPool.setActiveSubscription(currentPool.getActiveSubscription());
+        // Forcefully set fields we don't allow the client to change.
         newPool.setCreatedByShare(currentPool.isCreatedByShare());
         newPool.setHasSharedAncestor(currentPool.hasSharedAncestor());
-        newPool.setSourceEntitlement(currentPool.getSourceEntitlement());
-        newPool.setSourceStack(currentPool.getSourceStack());
         newPool.setSourceSubscription(currentPool.getSourceSubscription());
-        newPool.setEntitlements(currentPool.getEntitlements());
-        newPool.setRestrictedToUsername(currentPool.getRestrictedToUsername());
         newPool.setContractNumber(currentPool.getContractNumber());
         newPool.setAccountNumber(currentPool.getAccountNumber());
         newPool.setOrderNumber(currentPool.getOrderNumber());
-        newPool.setConsumed(currentPool.getConsumed());
-        newPool.setExported(currentPool.getExported());
-        newPool.setShared(currentPool.getShared());
         newPool.setUpstreamPoolId(currentPool.getUpstreamPoolId());
         newPool.setUpstreamEntitlementId(currentPool.getUpstreamEntitlementId());
         newPool.setUpstreamConsumerId(currentPool.getUpstreamConsumerId());
         newPool.setCertificate(currentPool.getCertificate());
         newPool.setCdn(currentPool.getCdn());
 
-        // Set the fields for those that are null (indicating the user didn't change it)
-        if (newPool.getQuantity() == null) {
-            newPool.setQuantity(currentPool.getQuantity());
-        }
-
-        if (newPool.getStartDate() == null) {
+        // Update fields the client has changed, or otherwise set the current value.
+        if (newPoolDTO.getStartDate() == null) {
             newPool.setStartDate(currentPool.getStartDate());
         }
 
-        if (newPool.getEndDate() == null) {
+        if (newPoolDTO.getEndDate() == null) {
             newPool.setEndDate(currentPool.getEndDate());
         }
 
-        if (newPool.getAttributes() == null) {
+        if (newPoolDTO.getQuantity() == null) {
+            newPool.setQuantity(currentPool.getQuantity());
+        }
+
+        if (newPoolDTO.getAttributes() == null) {
             newPool.setAttributes(currentPool.getAttributes());
         }
 
-        if (newPool.getBranding() == null) {
-            newPool.setBranding(currentPool.getBranding());
+        if (newPoolDTO.getProvidedProducts() == null) {
+            newPool.setProvidedProducts(currentPool.getProvidedProducts());
         }
 
-        // Resolve the bits we may not have set
-        newPool = resolverUtil.resolvePool(newPool);
+        if (newPoolDTO.getDerivedProvidedProducts() == null) {
+            newPool.setDerivedProvidedProducts(currentPool.getDerivedProvidedProducts());
+        }
+
+        if (newPoolDTO.getBranding() == null) {
+            newPool.setBranding(currentPool.getBranding());
+        }
 
         // Apply changes to the pool and its derived pools
         this.poolManager.updateMasterPool(newPool);

@@ -425,29 +425,26 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     }
 
     /**
-     * Returns if the <code>other</code> consumer's facts are
-     * the same as the facts of this consumer.
+     * Returns if the <code>otherFacts</code> are
+     * the same as the facts of this consumer model entity.
      *
-     * @param other the Consumer whose facts to compare
+     * @param otherFacts the facts to compare
      * @return <code>true</code> if the facts are the same, <code>false</code> otherwise
      */
-    public boolean factsAreEqual(Consumer other) {
-        Map<String, String> myFacts = getFacts();
-        Map<String, String> otherFacts = other.getFacts();
-
-        if (myFacts == null && otherFacts == null) {
+    public boolean factsAreEqual(Map<String, String> otherFacts) {
+        if (this.getFacts() == null && otherFacts == null) {
             return true;
         }
 
-        if (myFacts == null || otherFacts == null) {
+        if (this.getFacts() == null || otherFacts == null) {
             return false;
         }
 
-        if (myFacts.size() != otherFacts.size()) {
+        if (this.getFacts().size() != otherFacts.size()) {
             return false;
         }
 
-        for (Entry<String, String> entry : myFacts.entrySet()) {
+        for (Entry<String, String> entry : this.getFacts().entrySet()) {
             String myVal = entry.getValue();
             String otherVal = otherFacts.get(entry.getKey());
 

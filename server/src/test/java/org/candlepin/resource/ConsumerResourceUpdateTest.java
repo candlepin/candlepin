@@ -897,15 +897,17 @@ public class ConsumerResourceUpdateTest {
 
         Consumer update = getFakeConsumer();
         update.setCapabilities(caps1);
-        assertFalse(resource.performConsumerUpdates(update, existing, testMigration));
+        assertFalse(resource.performConsumerUpdates(
+            this.translator.translate(update, ConsumerDTO.class), existing, testMigration));
 
         update.setCapabilities(caps2);
-        assertTrue(resource.performConsumerUpdates(update, existing, testMigration));
+        assertTrue(resource.performConsumerUpdates(
+            this.translator.translate(update, ConsumerDTO.class), existing, testMigration));
 
         // need a new consumer here, can't null out capabilities
         update = getFakeConsumer();
-        assertFalse(resource.performConsumerUpdates(update, existing, testMigration));
-
+        assertFalse(resource.performConsumerUpdates(
+            this.translator.translate(update, ConsumerDTO.class), existing, testMigration));
     }
 
     @Test

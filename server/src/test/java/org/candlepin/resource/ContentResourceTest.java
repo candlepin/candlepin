@@ -29,12 +29,9 @@ import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.EmptyCandlepinQuery;
-import org.candlepin.model.Environment;
-import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.service.impl.DefaultUniqueIdGenerator;
 
@@ -44,7 +41,6 @@ import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Locale;
 
 
@@ -110,79 +106,30 @@ public class ContentResourceTest {
     }
 
     @Test(expected = BadRequestException.class)
-    public void createContent() {
-        Content content = mock(Content.class);
-        when(content.getId()).thenReturn("10");
-        when(cc.find(eq("10"))).thenReturn(content);
-        assertEquals(content, cr.createContent(content));
+    public void createContentNoLongerSupported() {
+        ContentDTO contentDTO = mock(ContentDTO.class);
+        assertEquals(contentDTO, cr.createContent(contentDTO));
+
+        verify(cc, never()).create(any());
     }
 
     @Test(expected = BadRequestException.class)
-    public void createContentNull()  {
-        Content content = mock(Content.class);
-        when(content.getId()).thenReturn("10");
-        when(cc.find(eq(10L))).thenReturn(null);
-        cr.createContent(content);
-
-        verify(cc, never()).create(content);
-    }
-
-    @Test(expected = BadRequestException.class)
-    public void deleteContent() {
-        Owner owner = mock(Owner.class);
-        Content content = mock(Content.class);
-        when(content.getId()).thenReturn("10");
-        when(cc.find(eq("10"))).thenReturn(content);
-        EnvironmentContent ec = new EnvironmentContent(mock(Environment.class), content, true);
-        List<EnvironmentContent> envContents = Arrays.asList(ec);
-        when(envContentCurator.lookupByContent(owner, content.getId())).thenReturn(envContents);
-
+    public void deleteContentNoLongerSupported() {
         cr.remove("10");
 
-        verify(cc, never()).delete(eq(content));
-        verify(envContentCurator, never()).delete(eq(ec));
+        verify(cc, never()).delete(any());
+        verify(envContentCurator, never()).delete(any());
     }
 
     @Test(expected = BadRequestException.class)
-    public void deleteContentNull() {
-        Content content = mock(Content.class);
-        when(content.getId()).thenReturn("10");
-        when(cc.find(eq("10"))).thenReturn(null);
-        cr.remove("10");
-        verify(cc, never()).delete(eq(content));
-    }
-
-    @Test(expected = BadRequestException.class)
-    public void testUpdateContent() {
-        final String productId = "productId";
+    public void testUpdateContentNoLongerSupported() {
         final String contentId = "10";
+        ContentDTO contentDTO = mock(ContentDTO.class);
 
-        Owner owner = mock(Owner.class);
-        Product product = mock(Product.class);
-        Content content = mock(Content.class);
-        CandlepinQuery cqmock = mock(CandlepinQuery.class);
+        cr.updateContent(contentId, contentDTO);
 
-        when(product.getId()).thenReturn(productId);
-        when(content.getId()).thenReturn(contentId);
-        when(cqmock.list()).thenReturn(Arrays.asList(product));
-
-        when(cc.find(any(String.class))).thenReturn(content);
-        when(cc.merge(any(Content.class))).thenReturn(content);
-        when(productCurator.getProductsByContent(eq(owner), eq(Arrays.asList(contentId))))
-            .thenReturn(cqmock);
-
-        cr.updateContent(contentId, content);
-
-        verify(cc, never()).find(eq(contentId));
-        verify(cc, never()).merge(eq(content));
-        verify(productCurator, never()).getProductsByContent(owner, Arrays.asList(contentId));
-    }
-
-    @Test(expected = BadRequestException.class)
-    public void testUpdateContentThrowsExceptionWhenContentDoesNotExist() {
-        Content content = mock(Content.class);
-        when(cc.find(any(String.class))).thenReturn(null);
-
-        cr.updateContent("someId", content);
+        verify(cc, never()).find(any());
+        verify(cc, never()).merge(any());
+        verify(productCurator, never()).getProductsByContent(any(), any());
     }
 }

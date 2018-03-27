@@ -21,6 +21,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.auth.Principal;
+import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
@@ -228,8 +229,9 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
             consumerResource, i18n, subAdapter, complianceRules);
         injector.injectMembers(job);
         job.execute(ctx);
-        verify(consumerResource, never()).createConsumerFromEntity(any(Consumer.class), any(Principal.class),
-            anyString(), anyString(), anyString(), eq(false));
+        verify(consumerResource, never()).createConsumerFromDTO(any(ConsumerDTO.class),
+            any(ConsumerType.class), any(Principal.class), anyString(), anyString(), anyString(),
+            eq(false));
     }
 
     @Test
