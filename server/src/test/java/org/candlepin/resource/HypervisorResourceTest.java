@@ -31,6 +31,7 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.api.v1.GuestIdDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -38,6 +39,7 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.DeletedConsumerCurator;
+import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.GuestIdCurator;
 import org.candlepin.model.IdentityCertificate;
@@ -71,7 +73,6 @@ import org.mockito.stubbing.Answer;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
-import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -103,14 +104,14 @@ public class HypervisorResourceTest {
     @Mock private EventBuilder consumerEventBuilder;
     @Mock private ConsumerEnricher consumerEnricher;
     @Mock private GuestIdCurator guestIdCurator;
+    @Mock private EnvironmentCurator environmentCurator;
     private GuestIdResource guestIdResource;
 
     private ConsumerResource consumerResource;
     private I18n i18n;
     private ConsumerType hypervisorType;
     private HypervisorResource hypervisorResource;
-
-    @Inject protected ModelTranslator modelTranslator;
+    private ModelTranslator modelTranslator;
 
     private Provider<GuestMigration> migrationProvider;
     private GuestMigration testMigration;
@@ -128,6 +129,8 @@ public class HypervisorResourceTest {
         this.hypervisorType.setId("test-hypervisor-ctype");
 
         this.mockConsumerType(this.hypervisorType);
+
+        this.modelTranslator = new StandardTranslator(this.consumerTypeCurator, this.environmentCurator);
 
         this.consumerResource = new ConsumerResource(this.consumerCurator,
             this.consumerTypeCurator, null, this.subscriptionService, this.ownerService, null,

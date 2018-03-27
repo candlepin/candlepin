@@ -268,12 +268,12 @@ public class ConsumerTest extends DatabaseTestFixture {
         second.setFact("key2", "two");
         second.setFact("key3", "3");
 
-        assertTrue(first.factsAreEqual(second));
+        assertTrue(first.factsAreEqual(second.getFacts()));
     }
 
     @Test
     public void defaultFactsEqual() {
-        assertTrue(new Consumer().factsAreEqual(new Consumer()));
+        assertTrue(new Consumer().factsAreEqual(new Consumer().getFacts()));
     }
 
     @Test
@@ -290,7 +290,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         second.setFact("key2", "2");
         second.setFact("key3", "3");
 
-        assertFalse(first.factsAreEqual(second));
+        assertFalse(first.factsAreEqual(second.getFacts()));
     }
 
     @Test
@@ -305,7 +305,7 @@ public class ConsumerTest extends DatabaseTestFixture {
 
         second.setFact("key1", "1");
 
-        assertFalse(first.factsAreEqual(second));
+        assertFalse(first.factsAreEqual(second.getFacts()));
     }
 
     @Test
@@ -321,7 +321,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         second.setFact("key2", "2");
         second.setFact("key3", "3");
 
-        assertFalse(first.factsAreEqual(second));
+        assertFalse(first.factsAreEqual(second.getFacts()));
     }
 
     @Test
@@ -336,7 +336,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         second.setFact("key1", "1");
         second.setFact("key2", null);
 
-        assertTrue(first.factsAreEqual(second));
+        assertTrue(first.factsAreEqual(second.getFacts()));
     }
 
     @Test
@@ -351,7 +351,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         second.setFact("key1", "1");
         second.setFact("key2", "two");
 
-        assertFalse(first.factsAreEqual(second));
+        assertFalse(first.factsAreEqual(second.getFacts()));
     }
 
     @Test
@@ -362,7 +362,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         Consumer second = new Consumer();
         second.setFact("key1", "1");
 
-        assertFalse(first.factsAreEqual(second));
+        assertFalse(first.factsAreEqual(second.getFacts()));
     }
 
     @Test
@@ -373,7 +373,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         Consumer second = new Consumer();
         second.setFacts(null);
 
-        assertFalse(first.factsAreEqual(second));
+        assertFalse(first.factsAreEqual(second.getFacts()));
     }
 
     @Test
@@ -384,7 +384,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         Consumer second = new Consumer();
         second.setFact("key1", null);
 
-        assertFalse(first.factsAreEqual(second));
+        assertFalse(first.factsAreEqual(second.getFacts()));
     }
 
     @Test
@@ -395,7 +395,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         Consumer second = new Consumer();
         second.setFacts(null);
 
-        assertTrue(first.factsAreEqual(second));
+        assertTrue(first.factsAreEqual(second.getFacts()));
     }
 
     @Test

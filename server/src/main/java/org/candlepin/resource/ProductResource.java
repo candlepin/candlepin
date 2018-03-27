@@ -20,6 +20,7 @@ import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.ProductCertificateDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.model.CandlepinQuery;
@@ -257,7 +258,7 @@ public class ProductResource {
     @GET
     @Path("/owners")
     @Produces(MediaType.APPLICATION_JSON)
-    public CandlepinQuery<Owner> getProductOwners(
+    public CandlepinQuery<OwnerDTO> getProductOwners(
         @ApiParam(value = "Multiple product UUIDs", required = true)
         @QueryParam("product") List<String> productUuids) {
 
@@ -265,7 +266,8 @@ public class ProductResource {
             throw new BadRequestException(i18n.tr("No product IDs specified"));
         }
 
-        return this.ownerCurator.lookupOwnersWithProduct(productUuids);
+        return this.translator.translateQuery(
+            this.ownerCurator.lookupOwnersWithProduct(productUuids), OwnerDTO.class);
     }
 
     @ApiOperation(notes = "Refreshes Pools by Product", value = "refreshPoolsForProduct")

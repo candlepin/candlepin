@@ -28,6 +28,7 @@ import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.paging.Page;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
+import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.GuestIdDTO;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
@@ -141,14 +142,14 @@ public class GuestIdResourceTest {
     public void updateGuests() {
         List<GuestIdDTO> guestIds = new LinkedList<>();
         guestIds.add(new GuestIdDTO("1"));
-        when(consumerResource.performConsumerUpdates(any(Consumer.class),
+        when(consumerResource.performConsumerUpdates(any(ConsumerDTO.class),
             eq(consumer), any(GuestMigration.class))).
             thenReturn(true);
 
         guestIdResource.updateGuests(consumer.getUuid(), guestIds);
 
         Mockito.verify(consumerResource, Mockito.times(1))
-            .performConsumerUpdates(any(Consumer.class), eq(consumer), any(GuestMigration.class));
+            .performConsumerUpdates(any(ConsumerDTO.class), eq(consumer), any(GuestMigration.class));
         // consumerResource returned true, so the consumer should be updated
         Mockito.verify(testMigration, Mockito.times(1)).migrate();
     }
@@ -159,13 +160,13 @@ public class GuestIdResourceTest {
         guestIds.add(new GuestIdDTO("1"));
 
         // consumerResource tells us nothing changed
-        when(consumerResource.performConsumerUpdates(any(Consumer.class),
+        when(consumerResource.performConsumerUpdates(any(ConsumerDTO.class),
             eq(consumer), any(GuestMigration.class))).
             thenReturn(false);
 
         guestIdResource.updateGuests(consumer.getUuid(), guestIds);
         Mockito.verify(consumerResource, Mockito.times(1))
-            .performConsumerUpdates(any(Consumer.class), eq(consumer), any(GuestMigration.class));
+            .performConsumerUpdates(any(ConsumerDTO.class), eq(consumer), any(GuestMigration.class));
         Mockito.verify(consumerCurator, Mockito.never()).update(eq(consumer));
     }
 

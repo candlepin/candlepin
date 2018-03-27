@@ -57,7 +57,7 @@ public class HypervisorIdTranslator extends TimestampedEntityTranslator<Hypervis
 
         dest = super.populate(translator, source, dest);
 
-        dest.setId(source.getId().toString());
+        dest.setId(source.getId() != null ? source.getId().toString() : null);
         dest.setHypervisorId(source.getHypervisorId());
         dest.setReporterId(source.getReporterId());
 
