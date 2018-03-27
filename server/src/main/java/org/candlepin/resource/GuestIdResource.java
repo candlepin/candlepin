@@ -42,7 +42,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -199,21 +198,18 @@ public class GuestIdResource {
         Consumer toUpdate = consumerCurator.findByUuid(consumerUuid);
 
         // Create a skeleton consumer for consumerResource.performConsumerUpdates
-        Consumer consumer = new Consumer();
-        List<GuestId> guestIds = new ArrayList<>();
-        populateEntities(guestIds, guestIdDTOs);
-        consumer.setGuestIds(guestIds);
+        ConsumerDTO consumer = new ConsumerDTO();
+        consumer.setGuestIds(guestIdDTOs);
 
         Set<String> allGuestIds = new HashSet<>();
-        for (GuestId gid : consumer.getGuestIds()) {
+        for (GuestIdDTO gid : consumer.getGuestIds()) {
             allGuestIds.add(gid.getGuestId());
         }
         VirtConsumerMap guestConsumerMap = consumerCurator.getGuestConsumersMap(
             toUpdate.getOwner(), allGuestIds);
 
         GuestMigration guestMigration = migrationProvider.get().buildMigrationManifest(consumer, toUpdate);
-        if (consumerResource.performConsumerUpdates(this.translator.translate(consumer, ConsumerDTO.class),
-            toUpdate, guestMigration)) {
+        if (consumerResource.performConsumerUpdates(consumer, toUpdate, guestMigration)) {
 
             if (guestMigration.isMigrationPending()) {
                 guestMigration.migrate();

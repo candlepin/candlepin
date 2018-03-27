@@ -1252,10 +1252,8 @@ public class ConsumerResource {
             validateShareConsumerUpdate(toUpdate, dto, principal);
         }
 
-        Consumer consumerEntity = new Consumer();
-        populateEntity(consumerEntity, dto);
         GuestMigration guestMigration = migrationProvider.get();
-        guestMigration.buildMigrationManifest(consumerEntity, toUpdate);
+        guestMigration.buildMigrationManifest(dto, toUpdate);
 
         if (performConsumerUpdates(dto, toUpdate, guestMigration)) {
             try {
