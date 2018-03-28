@@ -44,59 +44,6 @@ public class EntitlementDTO extends TimestampedCandlepinDTO<EntitlementDTO> {
 
     private static final long serialVersionUID = 1L;
 
-    /* TODO: Some fields that used to be exported, are no longer, so they are missing from this DTO.
-     * A decision needs to be made if any of them will need to be included.
-     *
-     * Fields we don't export any more
-     * (because they are not accessed or they are overriden during import anyway):
-     * - entitlement.href
-     * - entitlement.startDate
-     * - entitlement.endDate
-     * - entitlement.created
-     * - entitlement.updated
-     *
-     * - entitlement.certificates.created
-     * - entitlement.certificates.updated
-     *
-     * - entitlement.certificates.serial.revoked
-     * - entitlement.certificates.serial.serial
-     *
-     * - entitlement.pool.created
-     * - entitlement.pool.updated
-     * - entitlement.pool.type
-     * - entitlement.pool.owner
-     * - entitlement.pool.activeSubscription
-     * - entitlement.pool.createdByShare
-     * - entitlement.pool.hasSharedAncestor
-     * - entitlement.pool.sourceEntitlement
-     * - entitlement.pool.quantity
-     * - entitlement.pool.startDate
-     * - entitlement.pool.endDate
-     * - entitlement.pool.attributes
-     * - entitlement.pool.restrictedToUsername
-     * - entitlement.pool.consumed
-     * - entitlement.pool.exported
-     * - entitlement.pool.shared
-     * - entitlement.pool.calculatedAttributes
-     * - entitlement.pool.upstreamPoolId
-     * - entitlement.pool.upstreamEntitlementId
-     * - entitlement.pool.upstreamConsumerId
-     * - entitlement.pool.productAttributes
-     * - entitlement.pool.derivedProductAttributes
-     * - entitlement.pool.derivedProductName
-     * - entitlement.pool.stacked
-     * - entitlement.pool.stackId
-     * - entitlement.pool.developmentPool
-     * - entitlement.pool.sourceStackId
-     * - entitlement.pool.subscriptionSubKey
-     * - entitlement.pool.subscriptionId
-     *
-     * - entitlement.pool.branding.id (not to be confused with productId)
-     * - entitlement.pool.branding.created
-     * - entitlement.pool.branding.updated
-     *
-     */
-
     private String id;
     private OwnerDTO owner;
     private ConsumerDTO consumer;

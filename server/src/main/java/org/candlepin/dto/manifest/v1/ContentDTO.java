@@ -57,38 +57,6 @@ public class ContentDTO extends TimestampedCandlepinDTO<ContentDTO> {
     }
 
     /**
-     * Initializes a new ContentDTO instance with the specified values.
-     * <p/></p>
-     * <strong>Note</strong>: This constructor passes the provided values to their respective
-     * mutator methods, and does not capture any exceptions they may throw due to malformed
-     * values.
-     *
-     * @param id
-     *  The ID of the content to be represented by this DTO; cannot be null
-     *
-     * @param name
-     *  The name of the content to be represented by this DTO
-     *
-     * @param type
-     *  The type of the content to be represented by this DTO
-     *
-     * @param label
-     *  The label of the content to be represented by this DTO
-     *
-     * @param vendor
-     *  The vendor of the content to be represented by this DTO
-     */
-    public ContentDTO(String id, String name, String type, String label, String vendor) {
-        super();
-
-        this.setId(id);
-        this.setName(name);
-        this.setType(type);
-        this.setLabel(label);
-        this.setVendor(vendor);
-    }
-
-    /**
      * Initializes a new ContentDTO instance using the data contained by the given DTO.
      *
      * @param source

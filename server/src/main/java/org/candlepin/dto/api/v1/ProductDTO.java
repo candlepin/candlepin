@@ -170,26 +170,6 @@ public class ProductDTO extends TimestampedCandlepinDTO<ProductDTO> {
     }
 
     /**
-     * Initializes a new ProductDTO instance with the specified Red Hat ID and name.
-     * <p/></p>
-     * <strong>Note</strong>: This constructor passes the provided values to their respective
-     * mutator methods, and does not capture any exceptions they may throw as due to malformed
-     * values.
-     *
-     * @param id
-     *  The ID of the product to be represented by this DTO; cannot be null
-     *
-     * @param name
-     *  The name of the product to be represented by this DTO
-     */
-    public ProductDTO(String id, String name) {
-        super();
-
-        this.setId(id);
-        this.setName(name);
-    }
-
-    /**
      * Initializes a new ProductDTO instance using the data contained by the given DTO.
      *
      * @param source

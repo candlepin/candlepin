@@ -117,13 +117,6 @@ public class EnvironmentDTO extends TimestampedCandlepinDTO<EnvironmentDTO> {
         // Intentionally left empty
     }
 
-    // Helper constructor for tests:
-    public EnvironmentDTO(String id, String name, OwnerDTO owner) {
-        this.id = id;
-        this.owner = owner;
-        this.name = name;
-    }
-
     /**
      * Initializes a new EnvironmentDTO instance which is a shallow copy of the provided
      * source entity.

@@ -16,13 +16,13 @@ package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.CandlepinDTO;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+
+
 
 /**
  * A DTO representation of the Branding entity used internally by
@@ -52,30 +52,6 @@ public class PoolQuantityDTO extends CandlepinDTO<PoolQuantityDTO> {
      */
     public PoolQuantityDTO(PoolQuantityDTO source) {
         super(source);
-    }
-
-    /**
-     * Initializes a new PoolQuantityDTO instance based on the given values.
-     *
-     * @param pool this pool quantity's pool.
-     *
-     * @param quantity this pool quantity's quantity.
-     */
-    @JsonCreator
-    public PoolQuantityDTO(
-        @JsonProperty("pool") PoolDTO pool,
-        @JsonProperty("quantity") Integer quantity) {
-
-        if (pool == null) {
-            throw new IllegalArgumentException("pool is null");
-        }
-
-        if (quantity == null || quantity < 0) {
-            throw new IllegalArgumentException("quantity is not valid");
-        }
-
-        this.pool = pool;
-        this.quantity = quantity;
     }
 
     /**

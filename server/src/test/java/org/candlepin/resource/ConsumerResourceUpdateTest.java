@@ -770,7 +770,9 @@ public class ConsumerResourceUpdateTest {
     @Test(expected = NotFoundException.class)
     public void throwsAnExceptionWhenEnvironmentNotFound() {
         String uuid = "A Consumer";
-        EnvironmentDTO changedEnvironment = new EnvironmentDTO("42", "environment", null);
+        EnvironmentDTO changedEnvironment = new EnvironmentDTO()
+            .setId("42")
+            .setName("environment");
 
         ConsumerDTO updated = new ConsumerDTO();
         updated.setUuid(uuid);
@@ -779,8 +781,7 @@ public class ConsumerResourceUpdateTest {
         Consumer existing = getFakeConsumer();
         existing.setUuid(updated.getUuid());
 
-        when(consumerCurator.verifyAndLookupConsumer(
-            existing.getUuid())).thenReturn(existing);
+        when(consumerCurator.verifyAndLookupConsumer(existing.getUuid())).thenReturn(existing);
         when(environmentCurator.find(changedEnvironment.getId())).thenReturn(null);
 
         resource.updateConsumer(existing.getUuid(), updated, principal);
