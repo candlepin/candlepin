@@ -72,7 +72,7 @@ public class EventCurator extends AbstractHibernateCurator<Event> {
     @SuppressWarnings("unchecked")
     public CandlepinQuery<Event> listMostRecent(int limit, Consumer consumer) {
         DetachedCriteria criteria = this.createEventCriteria()
-            .add(Restrictions.eq("consumerId", consumer.getId()));
+            .add(Restrictions.eq("consumerUuid", consumer.getUuid()));
 
         return this.cpQueryFactory.<Event>buildQuery(this.currentSession(), criteria)
             .setMaxResults(limit);

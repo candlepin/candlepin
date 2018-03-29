@@ -2027,7 +2027,9 @@
         </createIndex>
     </changeSet>
     <changeSet author="awood" id="1413225753032-290">
-        <comment>Add the default quartz lock columns.</comment>
+        <comment>
+            Add the default quartz lock columns.
+        </comment>
         <insert tableName="QRTZ_LOCKS">
             <column name="LOCK_NAME" value="TRIGGER_ACCESS"/>
             <column name="SCHED_NAME" value="TestScheduler"/>
@@ -2314,4 +2316,5 @@
     <include file="db/changelog/20171023140857-add-modified-prods-index.xml"/>
     <include file="db/changelog/20171017062314-add-target-index-on-job-table.xml"/>
     <include file="db/changelog/20180102110530-create-owner-refresh-date-column.xml"/>
+    <include file="db/changelog/20180329144902-change-cp-event-dot-consumer-id-to-consumer-uuid.xml"/>
 </databaseChangeLog>

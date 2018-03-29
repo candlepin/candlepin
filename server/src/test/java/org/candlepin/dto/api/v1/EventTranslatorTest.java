@@ -49,7 +49,7 @@ public class EventTranslatorTest extends AbstractTranslatorTest<Event, EventDTO,
         Event source = new Event();
         source.setId("id");
         source.setTargetName("target-name");
-        source.setConsumerId("consumer-id");
+        source.setConsumerUuid("consumer-uuid");
         source.setEntityId("entity-id");
         source.setMessageText("message-text");
         source.setOwnerId("owner-id");
@@ -74,7 +74,7 @@ public class EventTranslatorTest extends AbstractTranslatorTest<Event, EventDTO,
         if (source != null) {
             assertEquals(source.getId(), dest.getId());
             assertEquals(source.getTargetName(), dest.getTargetName());
-            assertEquals(source.getConsumerId(), dest.getConsumerId());
+            assertEquals(source.getConsumerUuid(), dest.getConsumerUuid());
             assertEquals(source.getEntityId(), dest.getEntityId());
             assertEquals(source.getOwnerId(), dest.getOwnerId());
             assertEquals(source.getPrincipalStore(), dest.getPrincipalStore());

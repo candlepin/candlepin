@@ -120,9 +120,9 @@ public class Event implements Persisted {
     @Size(max = 255)
     private String ownerId;
 
-    @Column(nullable = true)
+    @Column(name = "consumer_uuid", nullable = true)
     @Size(max = 255)
-    private String consumerId;
+    private String consumerUuid;
 
     // Generic id field in case a cross reference is needed to some other entity
     // Use with reference type
@@ -146,10 +146,10 @@ public class Event implements Persisted {
     public Event() {
     }
 
-    public Event(Type type, Target target, String targetName,
-        Principal principal, String ownerId, String consumerId,
-        String entityId, String eventData,
-        String referenceId, ReferenceType referenceType) {
+    public Event(Type type, Target target, String targetName, Principal principal, String ownerId,
+        String consumerUuid, String entityId, String eventData, String referenceId,
+        ReferenceType referenceType) {
+
         this.type = type;
         this.target = target;
         this.targetName = targetName;
@@ -160,7 +160,7 @@ public class Event implements Persisted {
 
         this.entityId = entityId;
         this.eventData = eventData;
-        this.consumerId = consumerId;
+        this.consumerUuid = consumerUuid;
         this.referenceId = referenceId;
         this.referenceType = referenceType;
 
@@ -262,17 +262,20 @@ public class Event implements Persisted {
 
     @Override
     public String toString() {
-        return "Event [" + "id=" + getId() + ", target=" + getTarget() +
-            ", type=" + getType() + ", time=" + getTimestamp() + ", entity=" +
-            getEntityId() + "]";
+        String date = this.getTimestamp() != null ?
+            String.format("%1$tF %1$tT%1$tz", this.getTimestamp()) :
+            null;
+
+        return String.format("Event [id: %s, target: %s, type: %s, time: %s, entity: %s]",
+            this.getId(), this.getTarget(), this.getType(), date, this.getEntityId());
     }
 
-    public String getConsumerId() {
-        return consumerId;
+    public String getConsumerUuid() {
+        return consumerUuid;
     }
 
-    public void setConsumerId(String consumerId) {
-        this.consumerId = consumerId;
+    public void setConsumerUuid(String consumerUuid) {
+        this.consumerUuid = consumerUuid;
     }
 
     /**

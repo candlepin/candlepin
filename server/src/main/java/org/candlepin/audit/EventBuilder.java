@@ -107,8 +107,8 @@ public class EventBuilder {
 
                 if (entity instanceof ConsumerProperty) {
                     Consumer owningConsumer = ((ConsumerProperty) entity).getConsumer();
-                    if (owningConsumer != null && owningConsumer.getId() != null) {
-                        event.setConsumerId(owningConsumer.getId());
+                    if (owningConsumer != null && owningConsumer.getUuid() != null) {
+                        event.setConsumerUuid(owningConsumer.getUuid());
                     }
                 }
             }
