@@ -72,6 +72,8 @@ public class HornetqEventDispatcher  {
         ServerLocator locator = HornetQClient.createServerLocatorWithoutHA(
             new TransportConfiguration(InVMConnectorFactory.class.getName()));
         locator.setMinLargeMessageSize(largeMsgSize);
+        locator.setConnectionTTL(-1);
+        locator.setClientFailureCheckPeriod(-1);
         return locator.createSessionFactory();
     }
 
