@@ -99,7 +99,7 @@ public class EventFactoryTest {
             "\"message\":\"Only supports 2 of 12 sockets.\"}," +
             "{\"productName\":\"Awesome Middleware\"," +
             "\"message\":\"Supports architecture ppc64 but the system is x86_64.\"}]," +
-            "\"consumer_uuid\":\"48b09f4e-f18c-4765-9c41-9aed6f122739\",\"status\":\"invalid\"}";
+            "\"status\":\"invalid\"}";
         Event event = eventFactory.complianceCreated(consumer, status);
         assertEquals(expectedEventData, event.getEventData());
     }

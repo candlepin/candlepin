@@ -216,7 +216,6 @@ public class EventFactory {
 
     public Event complianceCreated(Consumer consumer, ComplianceStatus compliance) {
         Map<String, Object> eventData = new HashMap<>();
-        eventData.put("consumer_uuid", consumer.getUuid());
         eventData.put("status", compliance.getStatus());
 
         List<Map<String, String>> reasons = new ArrayList<>(compliance.getReasons().size());

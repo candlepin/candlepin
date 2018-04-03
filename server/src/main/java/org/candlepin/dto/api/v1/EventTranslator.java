@@ -63,7 +63,7 @@ public class EventTranslator implements ObjectTranslator<Event, EventDTO> {
 
         destination.setId(source.getId());
         destination.setTargetName(source.getTargetName());
-        destination.setConsumerId(source.getConsumerId());
+        destination.setConsumerUuid(source.getConsumerUuid());
         destination.setEntityId(source.getEntityId());
         destination.setMessageText(source.getMessageText());
         destination.setOwnerId(source.getOwnerId());

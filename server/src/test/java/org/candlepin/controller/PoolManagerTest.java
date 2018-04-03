@@ -1839,7 +1839,7 @@ public class PoolManagerTest {
         pool.setEntitlements(entitlements);
 
         Event event = new Event();
-        event.setConsumerId(guest.getUuid());
+        event.setConsumerUuid(guest.getUuid());
         event.setOwnerId(owner.getId());
         event.setTarget(Target.ENTITLEMENT);
         event.setType(Type.EXPIRED);
