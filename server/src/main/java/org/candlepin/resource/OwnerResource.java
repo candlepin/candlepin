@@ -540,13 +540,8 @@ public class OwnerResource {
         }
 
         if (dto.getDefaultServiceLevel() != null) {
-            if (dto.getDefaultServiceLevel().isEmpty()) {
-                entity.setDefaultServiceLevel(null);
-            }
-            else {
-                this.serviceLevelValidator.validate(entity, dto.getDefaultServiceLevel());
-                entity.setDefaultServiceLevel(dto.getDefaultServiceLevel());
-            }
+            entity.setDefaultServiceLevel(
+                !dto.getDefaultServiceLevel().isEmpty() ? dto.getDefaultServiceLevel() : null);
         }
 
         if (dto.getLogLevel() != null) {
@@ -895,8 +890,13 @@ public class OwnerResource {
 
         // Translate the DTO to an entity Owner.
         Owner owner = new Owner();
-        this.populateEntity(owner, dto);
+
+        if (dto.getKey() == null || dto.getKey().isEmpty()) {
+            throw new BadRequestException(i18n.tr("Owner lacks a key"));
+        }
+
         owner.setKey(dto.getKey());
+        this.populateEntity(owner, dto);
         owner.setContentAccessModeList(dto.getContentAccessModeList());
         owner.setContentAccessMode(dto.getContentAccessMode());
 
