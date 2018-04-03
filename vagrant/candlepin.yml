@@ -6,10 +6,11 @@
     JAVA_HOME: /usr/lib/jvm/java-1.8.0/
 
   roles:
-    - role: candlepin-root
-      become: yes
-      become_user: root
-    - candlepin-user
+    - role: candlepin
 
   vars:
     ansible_user: vagrant
+    candlepin_git_pull: False
+    candlepin_user: vagrant
+    candlepin_user_home: /home/vagrant
+    candlepin_checkout: /vagrant

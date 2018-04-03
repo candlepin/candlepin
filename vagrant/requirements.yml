@@ -1,0 +1,2 @@
+- src: https://github.com/Lorquas/ansible-role-candlepin.git
+  name: candlepin
