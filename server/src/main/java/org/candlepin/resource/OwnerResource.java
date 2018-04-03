@@ -450,32 +450,36 @@ public class OwnerResource {
      * Returns the product object that is identified by the given product id and owner object,
      * if it is found in the system. Otherwise, it throws a NotFoundException.
      *
-     * @param o the owner of the product we are searching for.
+     * @param owner
+     *  The owner of the product we are searching for
      *
-     * @return the id of the product we are searching for.
+     * @param productId
+     *  The ID of the product to lookup
      *
-     * @throws NotFoundException
-     *  if the product with the given owner and product id was not found in the system.
+     * @throws IllegalArgumentException
+     *  if owner is null, or if productId is null or empty
      *
      * @throws BadRequestException
-     *  if the given product id is null or empty, or if the given owner is null.
+     *  if a product with the specified ID cannot be found within the context of the given owner
+     *
+     * @return
+     *  the product with the specified product ID and owner
      */
-    private Product findProduct(Owner o, String productId) {
-        Product product;
-        if (productId != null && !productId.isEmpty()) {
-            if (o != null) {
-                product = ownerProductCurator.getProductById(o, productId);
-            }
-            else {
-                throw new BadRequestException(i18n.tr("Owner is null."));
-            }
-        }
-        else {
-            throw new BadRequestException(i18n.tr("Product id is null or empty."));
+    private Product findProduct(Owner owner, String productId) {
+        if (owner == null) {
+            throw new IllegalArgumentException("owner is null");
         }
 
+        if (productId == null || productId.isEmpty()) {
+            throw new IllegalArgumentException("productId is null or empty");
+        }
+
+        Product product = this.ownerProductCurator.getProductById(owner, productId);
+
         if (product == null) {
-            throw new BadRequestException(i18n.tr("Product with id {0} could not be found.", productId));
+            throw new BadRequestException(
+                i18n.tr("Unable to find a product with the ID \"{0}\" for owner \"{1}\"",
+                    productId, owner.getKey()));
         }
 
         return product;
@@ -640,9 +644,9 @@ public class OwnerResource {
                 entity.setProducts(new HashSet<>());
             }
             else {
-                for (String productDTO : dto.getProductIds()) {
-                    if (productDTO != null) {
-                        Product product = findProduct(entity.getOwner(), productDTO);
+                for (String productId : dto.getProductIds()) {
+                    if (productId != null) {
+                        Product product = findProduct(entity.getOwner(), productId);
                         entity.addProduct(product);
                     }
                 }
@@ -1733,9 +1737,11 @@ public class OwnerResource {
         pool.setSubscriptionSubKey(inputPoolDTO.getSubscriptionSubKey());
         pool.setSubscriptionId(inputPoolDTO.getSubscriptionId());
 
-        if (inputPoolDTO.getProductId() != null) {
-            pool.setProduct(findProduct(pool.getOwner(), inputPoolDTO.getProductId()));
+        if (inputPoolDTO.getProductId() == null || inputPoolDTO.getProductId().isEmpty()) {
+            throw new BadRequestException(i18n.tr("Pool product ID not specified"));
         }
+
+        pool.setProduct(findProduct(pool.getOwner(), inputPoolDTO.getProductId()));
 
         if (inputPoolDTO.getDerivedProductId() != null) {
             pool.setDerivedProduct(findProduct(pool.getOwner(), inputPoolDTO.getDerivedProductId()));
