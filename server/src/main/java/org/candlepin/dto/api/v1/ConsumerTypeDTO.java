@@ -52,21 +52,6 @@ public class ConsumerTypeDTO extends CandlepinDTO<ConsumerTypeDTO> {
     }
 
     /**
-     * ConsumerTypeDTO constructor with label
-     *
-     * @param labelIn to set
-     */
-    public ConsumerTypeDTO(String labelIn) {
-        this.label = labelIn;
-        for (ConsumerTypeEnum cte : ConsumerTypeEnum.values()) {
-            if (cte.getLabel().equals(labelIn)) {
-                this.manifest = cte.isManifest();
-                break;
-            }
-        }
-    }
-
-    /**
      * Initializes a new ConsumerTypeDTO instance which is a shallow copy of the provided
      * source entity.
      *

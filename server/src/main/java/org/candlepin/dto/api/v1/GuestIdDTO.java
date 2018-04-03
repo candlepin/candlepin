@@ -51,6 +51,7 @@ public class GuestIdDTO extends TimestampedCandlepinDTO<GuestIdDTO> {
      * Initializes a new GuestIdDTO instance with null values.
      */
     public GuestIdDTO() {
+        // Intentionally left empty
     }
 
     /**

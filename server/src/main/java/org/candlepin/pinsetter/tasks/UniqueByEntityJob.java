@@ -36,21 +36,24 @@ public abstract class UniqueByEntityJob extends KingpinJob {
     private static Logger log = LoggerFactory.getLogger(UniqueByEntityJob.class);
 
     @SuppressWarnings("unchecked")
-    public static JobStatus scheduleJob(JobCurator jobCurator,
-        Scheduler scheduler, JobDetail detail,
+    public static JobStatus scheduleJob(JobCurator jobCurator, Scheduler scheduler, JobDetail detail,
         Trigger trigger) throws SchedulerException {
+
         JobStatus result = jobCurator.getByClassAndTarget(
             detail.getJobDataMap().getString(JobStatus.TARGET_ID),
             (Class<? extends KingpinJob>) detail.getJobClass());
+
         if (result == null) {
             return KingpinJob.scheduleJob(jobCurator, scheduler, detail, trigger);
         }
+
         if (result.getState() == JobStatus.JobState.PENDING ||
             result.getState() == JobStatus.JobState.CREATED ||
             result.getState() == JobStatus.JobState.WAITING) {
             log.debug("Returning existing job id: {}", result.getId());
             return result;
         }
+
         log.debug("Scheduling job without a trigger: {}", detail.getKey().getName());
         JobStatus status = KingpinJob.scheduleJob(jobCurator, scheduler, detail, null);
         return status;
@@ -66,8 +69,7 @@ public abstract class UniqueByEntityJob extends KingpinJob {
             return false;
         }
 
-        long running = jobCurator.findNumRunningByClassAndTarget(
-            status.getTargetId(), jobClass);
+        long running = jobCurator.findNumRunningByClassAndTarget(status.getTargetId(), jobClass);
         return running == 0;  // We can start the job if there are 0 like it running
     }
 }

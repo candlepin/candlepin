@@ -284,7 +284,10 @@ public class ConsumerResourceTest {
         ConsumerType share = this.mockConsumerType(new ConsumerType(ConsumerTypeEnum.SHARE));
         ConsumerTypeDTO shareDto = this.translator.translate(share, ConsumerTypeDTO.class);
 
-        ConsumerDTO c = createConsumerDTO("test-consumer", "test-user", new OwnerDTO("Test Owner"), shareDto);
+        OwnerDTO ownerDto = new OwnerDTO()
+            .setDisplayName("Test Owner");
+
+        ConsumerDTO c = createConsumerDTO("test-consumer", "test-user", ownerDto, shareDto);
 
         ConsumerResource consumerResource = new ConsumerResource(
             mockConsumerCurator, mockConsumerTypeCurator, null, null, null, mockEntitlementCurator, null,
@@ -312,7 +315,11 @@ public class ConsumerResourceTest {
     public void testValidateShareConsumerRequiresRecipientPermissions() {
         ConsumerType share = this.mockConsumerType(new ConsumerType(ConsumerTypeEnum.SHARE));
         ConsumerTypeDTO shareDto = this.translator.translate(share, ConsumerTypeDTO.class);
-        ConsumerDTO c = createConsumerDTO("test-consumer", "test-user", new OwnerDTO("Test Owner"), shareDto);
+
+        OwnerDTO ownerDto = new OwnerDTO()
+            .setDisplayName("Test Owner");
+
+        ConsumerDTO c = createConsumerDTO("test-consumer", "test-user", ownerDto, shareDto);
 
         ConsumerResource consumerResource = new ConsumerResource(
             mockConsumerCurator, mockConsumerTypeCurator, null, null, null, mockEntitlementCurator, null,

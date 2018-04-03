@@ -69,28 +69,6 @@ public class OwnerDTO extends TimestampedCandlepinDTO<OwnerDTO> {
         super(source);
     }
 
-    /**
-     * Constructor with required parameters.
-     *
-     * @param key Owner's unique identifier
-     * @param displayName Owner's name - suitable for UI
-     */
-    public OwnerDTO(String key, String displayName) {
-        this();
-
-        this.key = key;
-        this.displayName = displayName;
-    }
-
-    /**
-     * Creates an Owner with only a name
-     *
-     * @param name to be used for both the display name and the key
-     */
-    public OwnerDTO(String name) {
-        this(name, name);
-    }
-
     @HateoasInclude
     @JsonProperty
     public String getId() {

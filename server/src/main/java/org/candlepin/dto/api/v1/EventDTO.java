@@ -50,6 +50,7 @@ public class EventDTO extends CandlepinDTO<EventDTO> {
         public PrincipalDataDTO(
             @JsonProperty("type") String type,
             @JsonProperty("name") String name) {
+
             if (type == null || type.isEmpty()) {
                 throw new IllegalArgumentException("type is null or empty");
             }

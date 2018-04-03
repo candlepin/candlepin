@@ -14,14 +14,14 @@
  */
 package org.candlepin.dto.manifest.v1;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.candlepin.dto.TimestampedCandlepinDTO;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+
+
 
 /**
  * A DTO representation of the Branding entity used internally by PoolDTO
@@ -53,44 +53,6 @@ public class BrandingDTO extends TimestampedCandlepinDTO<BrandingDTO> {
      */
     public BrandingDTO(BrandingDTO source) {
         super(source);
-    }
-
-    /**
-     * Initializes a new BrandingDTO instance based on the given values.
-     *
-     * @param productId this branding's product id.
-     *
-     * @param name this branding's name.
-     *
-     * @param type this branding's type.
-     */
-    @JsonCreator
-    public BrandingDTO(
-        @JsonProperty("id") String id,
-        @JsonProperty("productId") String productId,
-        @JsonProperty("name") String name,
-        @JsonProperty("type") String type) {
-
-        if (id == null || id.isEmpty()) {
-            throw new IllegalArgumentException("id is null or empty");
-        }
-
-        if (productId == null || productId.isEmpty()) {
-            throw new IllegalArgumentException("productId is null or empty");
-        }
-
-        if (name == null || name.isEmpty()) {
-            throw new IllegalArgumentException("name is null or empty");
-        }
-
-        if (type == null || type.isEmpty()) {
-            throw new IllegalArgumentException("type is null or empty");
-        }
-
-        this.id = id;
-        this.productId = productId;
-        this.name = name;
-        this.type = type;
     }
 
     /**
