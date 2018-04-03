@@ -346,7 +346,7 @@ public class EntitlementCertificateGeneratorTest {
             anyMapOf(String.class, Product.class), eq(true))).thenReturn(entCerts);
 
         Consumer consumer = TestUtil.createConsumer(owner);
-        Entitlement entitlement = new Entitlement(pool, consumer, 1);
+        Entitlement entitlement = new Entitlement(pool, consumer, owner, 1);
         entitlement.setDirty(true);
 
         this.ecGenerator.regenerateCertificatesOf(entitlement, false);

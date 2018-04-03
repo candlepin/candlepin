@@ -217,9 +217,9 @@ public class ConsumerTest extends DatabaseTestFixture {
         this.getEntityManager().persist(pool.getOwner());
         this.getEntityManager().persist(pool);
 
-        Entitlement e1 = createEntitlement(pool, consumer);
-        Entitlement e2 = createEntitlement(pool, consumer);
-        Entitlement e3 = createEntitlement(pool, consumer);
+        Entitlement e1 = createEntitlement(pool, consumer, o);
+        Entitlement e2 = createEntitlement(pool, consumer, o);
+        Entitlement e3 = createEntitlement(pool, consumer, o);
         this.getEntityManager().persist(e1);
         this.getEntityManager().persist(e2);
         this.getEntityManager().persist(e3);
@@ -233,8 +233,8 @@ public class ConsumerTest extends DatabaseTestFixture {
         assertEquals(3, lookedUp.getEntitlements().size());
     }
 
-    private Entitlement createEntitlement(Pool pool, Consumer c) {
-        Entitlement e = new Entitlement(pool, c, 1);
+    private Entitlement createEntitlement(Pool pool, Consumer c, Owner o) {
+        Entitlement e = new Entitlement(pool, c, o, 1);
         e.setId(Util.generateDbUUID());
         return e;
     }
@@ -247,7 +247,7 @@ public class ConsumerTest extends DatabaseTestFixture {
 
     @Test
     public void canDeleteSelf() {
-        setupPrincipal(new ConsumerPrincipal(consumer));
+        setupPrincipal(new ConsumerPrincipal(consumer, owner));
 
         consumerCurator.delete(consumer);
 

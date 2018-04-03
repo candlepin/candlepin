@@ -118,7 +118,7 @@ public interface PoolManager {
         throws EntitlementRefusedException;
 
     List<PoolQuantity> getBestPools(Consumer consumer, String[] productIds,
-        Date entitleDate, Owner owner, String serviceLevelOverride, Collection<String> fromPools)
+        Date entitleDate, String ownerId, String serviceLevelOverride, Collection<String> fromPools)
         throws EntitlementRefusedException;
 
     Pool find(String poolId);
@@ -127,7 +127,7 @@ public interface PoolManager {
 
     List<Pool> lookupBySubscriptionId(Owner owner, String id);
 
-    List<Pool> lookupBySubscriptionIds(Owner owner, Collection<String> id);
+    List<Pool> lookupBySubscriptionIds(String ownerId, Collection<String> id);
 
     Refresher getRefresher(SubscriptionServiceAdapter subAdapter, OwnerServiceAdapter ownerAdapter);
     Refresher getRefresher(SubscriptionServiceAdapter subAdapter, OwnerServiceAdapter ownerAdapter,
@@ -172,7 +172,7 @@ public interface PoolManager {
      * each potentially usable pool.
      *
      * @param consumer Consumer being entitled.
-     * @param owner Owner whose subscriptions should be inspected.
+     * @param ownerId Owner whose subscriptions should be inspected.
      * @param productId only entitlements which provide this product are included.
      * @param activeOn Indicates to return only pools valid on this date.
      *        Set to null for no date filtering.
@@ -183,7 +183,7 @@ public interface PoolManager {
      * @return List of entitlement pools.
      */
     Page<List<Pool>> listAvailableEntitlementPools(Consumer consumer, ActivationKey key,
-        Owner owner, String productId, String subscriptionId, Date activeOn,
+        String ownerId, String productId, String subscriptionId, Date activeOn,
         boolean includeWarnings, PoolFilterBuilder filterBuilder, PageRequest pageRequest,
         boolean addFuture, boolean onlyFuture, Date after);
 
@@ -192,13 +192,13 @@ public interface PoolManager {
      *  means that a product pool with this level can be used with a consumer of any
      *  service level.
      *
-     * @param owner The owner that has the list of available service levels for
+     * @param ownerId The ownerId that has the list of available service levels for
      *              its consumers
      * @param exempt boolean to show if the desired list is the levels that are
      *               explicitly marked with the support_level_exempt attribute.
      * @return Set of levels based on exempt flag.
      */
-    Set<String> retrieveServiceLevelsForOwner(Owner owner, boolean exempt);
+    Set<String> retrieveServiceLevelsForOwner(String ownerId, boolean exempt);
 
     /**
      * Finds the entitlements for the specified Pool.
@@ -244,11 +244,11 @@ public interface PoolManager {
      * @throws EntitlementRefusedException if unable to bind
      */
     List<PoolQuantity> getBestPoolsForHost(Consumer guest,
-        Consumer host, Date entitleDate, Owner owner,
+        Consumer host, Date entitleDate, String ownerId,
         String serviceLevelOverride, Collection<String> fromPools) throws EntitlementRefusedException;
 
     /**
-     * @param consumer
+     * @param guest
      * @param host
      * @param entitleDate
      * @param possiblePools
@@ -321,10 +321,10 @@ public interface PoolManager {
 
     void deletePools(Collection<Pool> pools, Collection<String> alreadyDeletedPools);
 
-    void handlePostEntitlement(PoolManager manager, Consumer consumer,
+    void handlePostEntitlement(PoolManager manager, Consumer consumer, Owner owner,
         Map<String, Entitlement> entitlements, Map<String, PoolQuantity> poolQuantityMap);
 
-    void checkBonusPoolQuantities(Owner owner,
+    void checkBonusPoolQuantities(String ownerId,
         Map<String, Entitlement> entitlements);
 
     /**

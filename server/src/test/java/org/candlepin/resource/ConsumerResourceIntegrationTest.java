@@ -370,7 +370,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
         Consumer evilConsumer = TestUtil.createConsumer(standardSystemType, owner);
         consumerCurator.create(evilConsumer);
-        setupPrincipal(new ConsumerPrincipal(evilConsumer));
+        setupPrincipal(new ConsumerPrincipal(evilConsumer, owner));
 
         securityInterceptor.enable();
 
@@ -386,7 +386,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
             null, 1, null, null, false, null, null);
 
-        setupPrincipal(new ConsumerPrincipal(consumer));
+        setupPrincipal(new ConsumerPrincipal(consumer, owner));
 
         assertEquals(3, consumerResource.getEntitlementCertificates(consumer.getUuid(), null).size());
     }
@@ -395,7 +395,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     public void canNotDeleteConsumerOtherThanSelf() {
         Consumer evilConsumer = TestUtil.createConsumer(standardSystemType, owner);
         consumerCurator.create(evilConsumer);
-        setupPrincipal(new ConsumerPrincipal(evilConsumer));
+        setupPrincipal(new ConsumerPrincipal(evilConsumer, owner));
 
         securityInterceptor.enable();
 
@@ -411,7 +411,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
         IdentityCertificate idCert = icsa.generateIdentityCert(c);
         c.setIdCert(idCert);
-        setupPrincipal(new ConsumerPrincipal(c));
+        setupPrincipal(new ConsumerPrincipal(c, owner));
         consumerResource.deleteConsumer(c.getUuid(), principal);
     }
 
@@ -440,7 +440,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
     @Test(expected = ForbiddenException.class)
     public void testConsumerCannotListAllConsumers() {
-        setupPrincipal(new ConsumerPrincipal(consumer));
+        setupPrincipal(new ConsumerPrincipal(consumer, owner));
         securityInterceptor.enable();
 
         consumerResource.list(null, null, null, new ArrayList<>(), null, null, null);
@@ -468,7 +468,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
             null, 1, null, null, false, null, null);
 
-        setupPrincipal(new ConsumerPrincipal(consumer));
+        setupPrincipal(new ConsumerPrincipal(consumer, owner));
         securityInterceptor.enable();
 
         assertEquals(3, consumerResource.listEntitlements(
@@ -487,7 +487,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         consumerResource.bind(evilConsumer.getUuid(), pool.getId().toString(),
             null, 1, null, null, false, null, null);
 
-        setupPrincipal(new ConsumerPrincipal(evilConsumer));
+        setupPrincipal(new ConsumerPrincipal(evilConsumer, owner));
         securityInterceptor.enable();
 
         consumerResource.listEntitlements(consumer.getUuid(), null, true,

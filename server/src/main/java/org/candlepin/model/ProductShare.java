@@ -79,9 +79,16 @@ public class ProductShare extends AbstractHibernateObject implements Owned, Even
         this.id = id;
     }
 
-    @Override
     public Owner getOwner() {
         return owner;
+    }
+
+    /**
+     * @return the owner Id of this Consumer.
+     */
+    @Override
+    public String getOwnerId() {
+        return (owner == null) ? null : owner.getId();
     }
 
     public void setOwner(Owner owner) {

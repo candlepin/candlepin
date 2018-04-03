@@ -15,6 +15,7 @@
 package org.candlepin.resource.dto;
 
 import org.candlepin.model.Consumer;
+import org.candlepin.model.Owner;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -33,15 +34,17 @@ public class AutobindData {
     private String[] productIds;
     private Collection<String> possiblePools;
     private Consumer consumer;
+    private Owner owner;
 
-    public AutobindData(Consumer consumer) {
+    public AutobindData(Consumer consumer, Owner owner) {
         // Consumer is always required
         this.consumer = consumer;
+        this.owner = owner;
         possiblePools = new LinkedList<>();
     }
 
-    public static AutobindData create(Consumer consumer) {
-        return new AutobindData(consumer);
+    public static AutobindData create(Consumer consumer, Owner owner) {
+        return new AutobindData(consumer, owner);
     }
 
     public AutobindData on(Date date) {
@@ -99,6 +102,14 @@ public class AutobindData {
         this.consumer = consumer;
     }
 
+    public Owner getOwner() {
+        return owner;
+    }
+
+    public void setOwner(Owner owner) {
+        this.owner = owner;
+    }
+
     @Override
     public boolean equals(Object other) {
         if (!(other instanceof AutobindData)) {
@@ -132,6 +143,8 @@ public class AutobindData {
             .append(this.productIds)
             .append(", consumer: ")
             .append(this.consumer)
+            .append(", owner: ")
+            .append(this.owner)
             .append(", possiblePools: ")
             .append(this.possiblePools)
             .toString();

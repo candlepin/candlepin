@@ -146,7 +146,7 @@ public class PoolResource {
             new Date();
 
         Consumer c = null;
-        Owner o = null;
+        String oId = null;
         if (consumerUuid != null) {
             c = consumerCurator.findByUuid(consumerUuid);
             if (c == null) {
@@ -160,14 +160,15 @@ public class PoolResource {
             }
 
             if (listAll) {
-                o = c.getOwner();
+                oId = c.getOwnerId();
             }
         }
         if (ownerId != null) {
-            o = ownerCurator.secureFind(ownerId);
+            Owner o = ownerCurator.secureFind(ownerId);
             if (o == null) {
                 throw new NotFoundException(i18n.tr("owner: {0}", ownerId));
             }
+            oId = o.getId();
             // Now that we have an owner, check that this principal can access it:
             if (!principal.canAccess(o, SubResource.POOLS, Access.READ_ONLY)) {
                 throw new ForbiddenException(i18n.tr("User {0} cannot access owner {1}",
@@ -183,7 +184,7 @@ public class PoolResource {
                 principal.getPrincipalName()));
         }
 
-        Page<List<Pool>> page = poolManager.listAvailableEntitlementPools(c, null, o,
+        Page<List<Pool>> page = poolManager.listAvailableEntitlementPools(c, null, oId,
             productId, null, activeOnDate, listAll, new PoolFilterBuilder(), pageRequest,
             false, false, null);
         List<Pool> poolList = page.getPageData();

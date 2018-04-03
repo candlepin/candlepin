@@ -568,8 +568,9 @@ public class ConsumerResource {
         }
 
         if (dto.getHypervisorId() != null) {
-            HypervisorId hypervisorId = new HypervisorId(entity, dto.getHypervisorId().getHypervisorId(),
-                dto.getHypervisorId().getReporterId());
+            Owner owner = ownerCurator.findOwnerById(entity.getOwnerId());
+            HypervisorId hypervisorId = new HypervisorId(entity, owner,
+                dto.getHypervisorId().getHypervisorId(), dto.getHypervisorId().getReporterId());
             entity.setHypervisorId(hypervisorId);
         }
 
@@ -746,9 +747,8 @@ public class ConsumerResource {
         }
 
         Consumer consumerToCreate = new Consumer();
-        populateEntity(consumerToCreate, consumer);
-
         consumerToCreate.setOwner(owner);
+        populateEntity(consumerToCreate, consumer);
         consumerToCreate.setType(type);
 
         if (!type.isType(ConsumerTypeEnum.SHARE)) {
@@ -759,13 +759,14 @@ public class ConsumerResource {
         if (hvsrId != null && hvsrId.getHypervisorId() != null && !hvsrId.getHypervisorId().isEmpty()) {
             // If a hypervisorId is supplied, make sure the consumer and owner are correct
             hvsrId.setConsumer(consumerToCreate);
+            hvsrId.setOwner(owner);
         }
 
         updateCapabilities(consumerToCreate, null);
         logNewConsumerDebugInfo(consumerToCreate, keys, type);
 
-        validateContentAccessMode(consumerToCreate);
-        consumerBindUtil.validateServiceLevel(owner, consumerToCreate.getServiceLevel());
+        validateContentAccessMode(consumerToCreate, owner);
+        consumerBindUtil.validateServiceLevel(owner.getId(), consumerToCreate.getServiceLevel());
 
         try {
             Date createdDate = consumerToCreate.getCreated();
@@ -796,7 +797,7 @@ public class ConsumerResource {
             consumerCurator.update(consumerToCreate);
 
             log.info("Consumer {} created in org {}",
-                consumerToCreate.getUuid(), consumerToCreate.getOwner().getKey());
+                consumerToCreate.getUuid(), consumerToCreate.getOwnerId());
 
             return consumerToCreate;
         }
@@ -892,7 +893,7 @@ public class ConsumerResource {
         }
     }
 
-    private void validateContentAccessMode(Consumer consumer) throws BadRequestException {
+    private void validateContentAccessMode(Consumer consumer, Owner owner) throws BadRequestException {
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
 
         if (consumer.getContentAccessMode() != null) {
@@ -900,8 +901,7 @@ public class ConsumerResource {
                 throw new BadRequestException(
                     i18n.tr("The consumer cannot be assigned a content access mode."));
             }
-
-            if (!consumer.getOwner().isAllowedContentAccessMode(consumer.getContentAccessMode())) {
+            if (owner.isAllowedContentAccessMode(consumer.getContentAccessMode())) {
                 throw new BadRequestException(
                     i18n.tr("The consumer cannot use the supplied content access mode."));
             }
@@ -1329,7 +1329,7 @@ public class ConsumerResource {
         String level = updated.getServiceLevel();
         if (level != null && !level.equals(toUpdate.getServiceLevel())) {
             log.info("   Updating consumer service level setting.");
-            consumerBindUtil.validateServiceLevel(toUpdate.getOwner(), level);
+            consumerBindUtil.validateServiceLevel(toUpdate.getOwnerId(), level);
             toUpdate.setServiceLevel(level);
             changesMade = true;
         }
@@ -1371,7 +1371,8 @@ public class ConsumerResource {
             !updated.getContentAccessMode().equals(toUpdate.getContentAccessMode()) &&
             ctype.isManifest()) {
 
-            if (!toUpdate.getOwner().isAllowedContentAccessMode(updated.getContentAccessMode())) {
+            Owner toUpdateOwner = ownerCurator.findOwnerById(toUpdate.getOwnerId());
+            if (!toUpdateOwner.isAllowedContentAccessMode(updated.getContentAccessMode())) {
                 throw new BadRequestException(i18n.tr(
                     "The consumer cannot use the supplied content access mode."));
             }
@@ -1420,6 +1421,8 @@ public class ConsumerResource {
                     if (existingId.getHypervisorId() != null &&
                         !existingId.getHypervisorId().equals(incomingId.getHypervisorId())) {
                         existingId.setHypervisorId(incomingId.getHypervisorId());
+                        Owner owner = ownerCurator.findOwnerById(existing.getOwnerId());
+                        existingId.setOwner(owner);
                     }
                     else {
                         return false;
@@ -1427,7 +1430,10 @@ public class ConsumerResource {
                 }
                 else {
                     // Safer to build a new clean HypervisorId object
-                    existing.setHypervisorId(new HypervisorId(incomingId.getHypervisorId()));
+                    Owner owner = ownerCurator.findOwnerById(existing.getOwnerId());
+                    HypervisorId hypervisorId = new HypervisorId(incomingId.getHypervisorId());
+                    hypervisorId.setOwner(owner);
+                    existing.setHypervisorId(hypervisorId);
                 }
             }
             return true;
@@ -1581,7 +1587,8 @@ public class ConsumerResource {
                 !guest.getInstalledProducts().isEmpty();
 
             if (guest.isAutoheal() && !deletableGuestEntitlements.isEmpty() && hasInstalledProducts) {
-                AutobindData autobindData = AutobindData.create(guest).on(new Date());
+                Owner owner = ownerCurator.findOwnerById(guest.getOwnerId());
+                AutobindData autobindData = AutobindData.create(guest, owner).on(new Date());
                 // Autobind could be disabled for the owner. If it is, we simply don't
                 // perform the autobind for the guest.
                 try {
@@ -1643,7 +1650,7 @@ public class ConsumerResource {
 
     private void logShareConsumerRequestWarning(String api, Consumer consumer) {
         log.warn("skipping {} request for share consumer {} of org {} and of recipient org {}",
-            api, consumer.getUuid(), consumer.getOwner().getKey(), consumer.getRecipientOwnerKey());
+            api, consumer.getUuid(), consumer.getOwnerId(), consumer.getRecipientOwnerKey());
     }
 
     @ApiOperation(notes = "Retrieves a list of Entitlement Certificates for the Consumer",
@@ -1717,7 +1724,8 @@ public class ConsumerResource {
                 i18n.tr("Content access body can not be requested for a share consumer"));
         }
 
-        String cam = consumer.getOwner().getContentAccessMode();
+        Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
+        String cam = owner.getContentAccessMode();
         if (!ContentAccessCertServiceAdapter.ORG_ENV_ACCESS_MODE.equals(cam)) {
             throw new BadRequestException(i18n.tr("Content access mode does not allow this request."));
         }
@@ -1947,12 +1955,14 @@ public class ConsumerResource {
         validateBindArguments(poolIdString, quantity, productIds, fromPools,
             entitleDate, consumer, async);
 
+        Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
+
         try {
             // I hate double negatives, but if they have accepted all
             // terms, we want comeToTerms to be true.
             long subTermsStart = System.currentTimeMillis();
             if (!ctype.isType(ConsumerTypeEnum.SHARE) &&
-                subAdapter.hasUnacceptedSubscriptionTerms(consumer.getOwner())) {
+                subAdapter.hasUnacceptedSubscriptionTerms(owner)) {
 
                 return Response.serverError().build();
             }
@@ -1977,10 +1987,11 @@ public class ConsumerResource {
             JobDetail detail = null;
 
             if (poolIdString != null) {
-                detail = EntitlerJob.bindByPool(poolIdString, consumer, quantity);
+                detail = EntitlerJob.bindByPool(poolIdString, consumer, owner.getKey(), quantity);
             }
             else {
-                detail = EntitleByProductsJob.bindByProducts(productIds, consumer, entitleDate, fromPools);
+                detail = EntitleByProductsJob.bindByProducts(productIds, consumer, entitleDate, fromPools,
+                    owner.getKey());
             }
 
             // events will be triggered by the job
@@ -1998,13 +2009,13 @@ public class ConsumerResource {
         }
         else {
             try {
-                AutobindData autobindData = AutobindData.create(consumer).on(entitleDate)
+                AutobindData autobindData = AutobindData.create(consumer, owner).on(entitleDate)
                     .forProducts(productIds).withPools(fromPools);
                 entitlements = entitler.bindByProducts(autobindData);
             }
             catch (AutobindDisabledForOwnerException e) {
                 throw new BadRequestException(i18n.tr("Ignoring request to auto-attach. " +
-                    "It is disabled for org \"{0}\".", consumer.getOwner().getKey()));
+                    "It is disabled for org \"{0}\".", owner.getKey()));
             }
         }
 
@@ -2047,16 +2058,17 @@ public class ConsumerResource {
 
         // Verify consumer exists:
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
+        Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
 
-        if (consumer.getOwner().isAutobindDisabled()) {
+        if (owner.isAutobindDisabled()) {
             throw new BadRequestException(i18n.tr("Owner has autobind disabled."));
         }
 
         List<PoolQuantity> dryRunPools = new ArrayList<>();
 
         try {
-            consumerBindUtil.validateServiceLevel(consumer.getOwner(), serviceLevel);
-            dryRunPools = entitler.getDryRun(consumer, serviceLevel);
+            consumerBindUtil.validateServiceLevel(consumer.getOwnerId(), serviceLevel);
+            dryRunPools = entitler.getDryRun(consumer, owner, serviceLevel);
         }
         catch (ForbiddenException fe) {
             return Collections.<PoolQuantityDTO>emptyList();
@@ -2146,7 +2158,8 @@ public class ConsumerResource {
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
 
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        return translator.translate(consumer.getOwner(), OwnerDTO.class);
+        Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
+        return translator.translate(owner, OwnerDTO.class);
     }
 
     @ApiOperation(
@@ -2407,8 +2420,11 @@ public class ConsumerResource {
         if (ctype.isType(ConsumerTypeEnum.SHARE)) {
             throw new BadRequestException(i18n.tr("Can not export manifest of a share consumer"));
         }
-        return manifestManager.generateManifestAsync(consumerUuid, cdnLabel, webAppPrefix, apiUrl,
-            getExtensionParamMap(extensionArgs));
+
+        Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
+
+        return manifestManager.generateManifestAsync(consumerUuid, owner.getKey(), cdnLabel, webAppPrefix,
+            apiUrl, getExtensionParamMap(extensionArgs));
     }
 
     /**
@@ -2625,10 +2641,11 @@ public class ConsumerResource {
         }
 
         Consumer host = consumerCurator.getHost(consumer);
+        Owner hostOwner = ownerCurator.findOwnerById(host.getOwnerId());
 
         // The host would be in a different organization if a host-restricted pool has been shared into the
         // current organization.
-        if (host == null || principal.canAccess(host.getOwner(), SubResource.CONSUMERS, Access.READ_ONLY)) {
+        if (host == null || principal.canAccess(hostOwner, SubResource.CONSUMERS, Access.READ_ONLY)) {
             return translator.translate(host, ConsumerDTO.class);
         }
 

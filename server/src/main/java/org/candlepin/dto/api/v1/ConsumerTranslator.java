@@ -18,13 +18,17 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.dto.TimestampedEntityTranslator;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerType;
-import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.ConsumerCapability;
 import org.candlepin.model.ConsumerInstalledProduct;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentCurator;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Release;
+
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -38,18 +42,21 @@ public class ConsumerTranslator extends TimestampedEntityTranslator<Consumer, Co
 
     protected ConsumerTypeCurator consumerTypeCurator;
     protected EnvironmentCurator environmentCurator;
+    private OwnerCurator ownerCurator;
 
     public ConsumerTranslator(ConsumerTypeCurator consumerTypeCurator,
-        EnvironmentCurator environmentCurator) {
+        EnvironmentCurator environmentCurator, OwnerCurator ownerCurator) {
 
         if (consumerTypeCurator == null) {
             throw new IllegalArgumentException("ConsumerTypeCurator is null");
         }
-
         if (environmentCurator == null) {
             throw new IllegalArgumentException("environmentCurator is null");
         }
-
+        if (ownerCurator == null) {
+            throw new IllegalArgumentException("OwnerCurator is null");
+        }
+        this.ownerCurator = ownerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
         this.environmentCurator = environmentCurator;
     }
@@ -108,7 +115,10 @@ public class ConsumerTranslator extends TimestampedEntityTranslator<Consumer, Co
 
         // Process nested objects if we have a ModelTranslator to use to the translation...
         if (translator != null) {
-            dest.setOwner(translator.translate(source.getOwner(), OwnerDTO.class));
+            if (StringUtils.isNotEmpty(source.getOwnerId())) {
+                Owner owner = ownerCurator.findOwnerById(source.getOwnerId());
+                dest.setOwner(translator.translate(owner, OwnerDTO.class));
+            }
 
             Environment environment = this.environmentCurator.getConsumerEnvironment(source);
             dest.setEnvironment(translator.translate(environment, EnvironmentDTO.class));

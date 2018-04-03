@@ -129,6 +129,7 @@ public class StoreFactory {
         @Inject private ConsumerCurator consumerCurator;
         @Inject private DeletedConsumerCurator deletedConsumerCurator;
         @Inject private Provider<I18n> i18nProvider;
+        @Inject private OwnerCurator ownerCurator;
 
         @Override
         public Consumer lookup(String key) {
@@ -149,7 +150,7 @@ public class StoreFactory {
 
         @Override
         public Owner getOwner(Consumer entity) {
-            return entity.getOwner();
+            return ownerCurator.findOwnerById(entity.getOwnerId());
         }
     }
 

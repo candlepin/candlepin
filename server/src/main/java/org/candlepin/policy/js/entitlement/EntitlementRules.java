@@ -28,14 +28,14 @@ import org.candlepin.dto.rules.v1.EntitlementDTO;
 import org.candlepin.dto.rules.v1.PoolDTO;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
-import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerProductCurator;
-import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
@@ -77,8 +77,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-
 
 /**
  * Enforces entitlement rules for normal (non-manifest) consumers.
@@ -315,14 +313,14 @@ public class EntitlementRules implements Enforcer {
             return null;
         }
 
-        List<Owner> potentialOwners = new ArrayList<>(Arrays.asList(consumer.getOwner()));
+        List<String> potentialOwners = new ArrayList<>(Arrays.asList(consumer.getOwnerId()));
         for (Pool p : pools) {
             if (p.isCreatedByShare()) {
-                potentialOwners.add(p.getSourceEntitlement().getOwner());
+                potentialOwners.add(p.getSourceEntitlement().getOwner().getId());
             }
         }
 
-        Consumer host = consumerCurator.getHost(consumer, potentialOwners.toArray(new Owner[] {}));
+        Consumer host = consumerCurator.getHost(consumer, potentialOwners.toArray(new String[] {}));
         return host;
     }
 
@@ -564,7 +562,7 @@ public class EntitlementRules implements Enforcer {
         }
     }
 
-    protected void runPostEntitlement(PoolManager poolManager, Consumer consumer,
+    protected void runPostEntitlement(PoolManager poolManager, Consumer consumer, Owner owner,
         Map<String, Entitlement> entitlementMap, List<Pool> subPoolsForStackIds, boolean isUpdate,
         Map<String, PoolQuantity> poolQuantityMap) {
 
@@ -599,7 +597,7 @@ public class EntitlementRules implements Enforcer {
         }
 
         if (ctype.isType(ConsumerTypeEnum.SHARE) && !isUpdate) {
-            postBindShareCreate(poolManager, consumer, entitlementMap);
+            postBindShareCreate(poolManager, consumer, owner, entitlementMap);
         }
     }
 
@@ -664,11 +662,10 @@ public class EntitlementRules implements Enforcer {
         }
     }
 
-    private void postBindShareCreate(PoolManager poolManager, Consumer c,
+    private void postBindShareCreate(PoolManager poolManager, Consumer c, Owner sharingOwner,
         Map<String, Entitlement> entitlementMap) {
         log.debug("Running post-bind share create");
 
-        Owner sharingOwner = c.getOwner();
         Owner recipient = ownerCurator.lookupByKey(c.getRecipientOwnerKey());
         List<Pool> sharedPoolsToCreate = new ArrayList<>();
 
@@ -956,7 +953,7 @@ public class EntitlementRules implements Enforcer {
             subscriptionIds.add(entitlement.getPool().getSubscriptionId());
         }
 
-        List<Pool> subscriptionPools = poolManager.lookupBySubscriptionIds(consumer.getOwner(),
+        List<Pool> subscriptionPools = poolManager.lookupBySubscriptionIds(consumer.getOwnerId(),
             subscriptionIds);
         Map<String, List<Pool>> subscriptionPoolMap = new HashMap<>();
 
@@ -1021,7 +1018,7 @@ public class EntitlementRules implements Enforcer {
 
     }
 
-    public void postEntitlement(PoolManager poolManager, Consumer consumer,
+    public void postEntitlement(PoolManager poolManager, Consumer consumer, Owner owner,
         Map<String, Entitlement> entitlements, List<Pool> subPoolsForStackIds, boolean isUpdate,
         Map<String, PoolQuantity> poolQuantityMap) {
 
@@ -1029,6 +1026,7 @@ public class EntitlementRules implements Enforcer {
 
         runPostEntitlement(poolManager,
             consumer,
+            owner,
             entitlements,
             subPoolsForStackIds,
             isUpdate,

@@ -23,6 +23,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCapability;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.PoolQuantity;
@@ -57,6 +58,7 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
     @Test
     public void postEntitlement() {
         Consumer c = this.createMockConsumer(true);
+        Owner o = mock(Owner.class);
         PoolManager pm = mock(PoolManager.class);
         Entitlement e = mock(Entitlement.class);
         Pool pool = mock(Pool.class);
@@ -73,7 +75,7 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         entitlements.put("pool", e);
         Map<String, PoolQuantity> poolQuantityMap = new HashMap<>();
         poolQuantityMap.put("pool", new PoolQuantity(pool, 1));
-        enforcer.postEntitlement(pm, c, entitlements, null, false, poolQuantityMap);
+        enforcer.postEntitlement(pm, c, o, entitlements, null, false, poolQuantityMap);
     }
 
     @Test

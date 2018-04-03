@@ -51,7 +51,7 @@ public class OwnerPermission implements Permission, Serializable {
         Access requiredAccess) {
         if (target instanceof Owned) {
             // First make sure the owner matches:
-            if (owner.getKey().equals(((Owned) target).getOwner().getKey()) &&
+            if (owner.getId().equals(((Owned) target).getOwnerId()) &&
                 access.provides(requiredAccess)) {
                 return true;
             }
@@ -68,7 +68,7 @@ public class OwnerPermission implements Permission, Serializable {
             return Restrictions.eq("key", owner.getKey());
         }
         else if (Consumer.class.equals(entityClass)) {
-            return Restrictions.eq("owner", owner);
+            return Restrictions.eq("ownerId", owner.getId());
         }
         else if (Pool.class.equals(entityClass)) {
             return Restrictions.eq("owner", owner);

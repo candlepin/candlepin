@@ -41,6 +41,7 @@ import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
@@ -94,6 +95,7 @@ public class ComplianceRulesTest {
 
     @Mock private ConsumerCurator consumerCurator;
     @Mock private ConsumerTypeCurator consumerTypeCurator;
+    @Mock private OwnerCurator mockOwnerCurator;
     @Mock private EntitlementCurator entCurator;
     @Mock private RulesCurator rulesCuratorMock;
     @Mock private EventSink eventSink;
@@ -111,8 +113,7 @@ public class ComplianceRulesTest {
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-
-        translator = new StandardTranslator(consumerTypeCurator, environmentCurator);
+        translator = new StandardTranslator(consumerTypeCurator, environmentCurator, mockOwnerCurator);
 
         Locale locale = new Locale("en_US");
         i18n = I18nFactory.getI18n(getClass(), "org.candlepin.i18n.Messages", locale, I18nFactory.FALLBACK);
@@ -128,6 +129,8 @@ public class ComplianceRulesTest {
             new RulesObjectMapper(new ProductCachedSerializationModule(productCurator)), translator);
 
         owner = new Owner("test");
+        owner.setId(TestUtil.randomString());
+        when(mockOwnerCurator.findOwnerById(eq(owner.getId()))).thenReturn(owner);
         activeGuestAttrs = new HashMap<>();
         activeGuestAttrs.put("virtWhoType", "libvirt");
         activeGuestAttrs.put("active", "1");
@@ -209,7 +212,7 @@ public class ComplianceRulesTest {
         pool.setCreated(new Date());
         when(productCurator.getPoolProvidedProductsCached(pool.getId()))
             .thenReturn(pool.getProvidedProducts());
-        Entitlement e = new Entitlement(pool, consumer, 1);
+        Entitlement e = new Entitlement(pool, consumer, owner, 1);
         e.setId("ent_" + TestUtil.randomInt());
         e.setUpdated(new Date());
         e.setCreated(new Date());

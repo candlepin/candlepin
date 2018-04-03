@@ -89,10 +89,11 @@ public class ExportJob extends UniqueByEntityJob {
      * @param apiUrl
      * @return a JobDetail representing the job to be started.
      */
-    public static JobDetail scheduleExport(Consumer consumer, String cdnLabel, String webAppPrefix,
+    public static JobDetail scheduleExport(Consumer consumer, String ownerKey, String cdnLabel, String
+        webAppPrefix,
         String apiUrl, Map<String, String> extensionData) {
         JobDataMap map = new JobDataMap();
-        map.put(JobStatus.OWNER_ID, consumer.getOwner().getKey());
+        map.put(JobStatus.OWNER_ID, ownerKey);
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.CONSUMER);
         map.put(JobStatus.TARGET_ID, consumer.getUuid());
         map.put(CDN_LABEL, cdnLabel);

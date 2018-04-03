@@ -206,7 +206,7 @@ public class StatusReasonMessageGeneratorTest {
             "1000",
             "1000"
         );
-        Entitlement e = new Entitlement(p, consumer, 1);
+        Entitlement e = new Entitlement(p, consumer, owner, 1);
         return e;
     }
 }

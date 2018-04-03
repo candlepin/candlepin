@@ -154,6 +154,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
 
         beginTransaction();
         c = consumerCurator.find(c.getId());
+        c.setOwner(owner);
         for (Entitlement ent : c.getEntitlements()) {
             ent.getPool().getEntitlements().remove(ent);
             Hibernate.initialize(ent.getPool().getEntitlements());

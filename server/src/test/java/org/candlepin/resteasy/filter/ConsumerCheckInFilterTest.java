@@ -21,6 +21,7 @@ import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UpdateConsumerCheckIn;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.Owner;
 import org.candlepin.test.DatabaseTestFixture;
 
 import com.google.inject.AbstractModule;
@@ -76,8 +77,9 @@ public class ConsumerCheckInFilterTest extends DatabaseTestFixture {
 
         mockReq = MockHttpRequest.create("GET", "http://localhost/candlepin/status");
 
-        this.consumer = createConsumer(createOwner());
-        this.principal = new ConsumerPrincipal(consumer);
+        Owner owner = createOwner();
+        this.consumer = createConsumer(owner);
+        this.principal = new ConsumerPrincipal(consumer, owner);
 
         ResteasyProviderFactory.pushContext(ResourceInfo.class, mockInfo);
         ResteasyProviderFactory.pushContext(Principal.class, this.principal);

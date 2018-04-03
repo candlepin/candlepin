@@ -431,7 +431,7 @@ public class HypervisorUpdateJob extends KingpinJob {
 
 
         // Create HypervisorId
-        HypervisorId hypervisorId = new HypervisorId(consumer, incHypervisorId);
+        HypervisorId hypervisorId = new HypervisorId(consumer, owner, incHypervisorId);
         consumer.setHypervisorId(hypervisorId);
 
         // TODO: Refactor this to not call resource methods directly

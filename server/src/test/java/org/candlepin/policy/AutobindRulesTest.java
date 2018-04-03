@@ -14,12 +14,9 @@
  */
 package org.candlepin.policy;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
@@ -35,6 +32,7 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
@@ -79,6 +77,7 @@ public class AutobindRulesTest {
     @Mock private JsRunnerRequestCache cache;
     @Mock private Configuration config;
     @Mock private RulesCurator rulesCurator;
+    @Mock private OwnerCurator mockOwnerCurator;
     @Mock private ProductCurator mockProductCurator;
     @Mock private ConsumerTypeCurator consumerTypeCurator;
     @Mock private EnvironmentCurator environmentCurator;
@@ -107,12 +106,13 @@ public class AutobindRulesTest {
         when(cacheProvider.get()).thenReturn(cache);
         JsRunner jsRules = new JsRunnerProvider(rulesCurator, cacheProvider).get();
 
-        translator = new StandardTranslator(consumerTypeCurator, environmentCurator);
-        autobindRules = new AutobindRules(jsRules, mockProductCurator, consumerTypeCurator,
+        translator = new StandardTranslator(consumerTypeCurator, environmentCurator, mockOwnerCurator);
+        autobindRules = new AutobindRules(jsRules, mockProductCurator, consumerTypeCurator, mockOwnerCurator,
             new RulesObjectMapper(new ProductCachedSerializationModule(mockProductCurator)), translator);
 
         owner = new Owner();
-
+        owner.setId(TestUtil.randomString());
+        when(mockOwnerCurator.findOwnerById(eq(owner.getId()))).thenReturn(owner);
 
         ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         ctype.setId("test-ctype");
@@ -440,7 +440,7 @@ public class AutobindRulesTest {
 
         // SLA filtering only occurs when consumer has SLA set.
         consumer.setServiceLevel("");
-        consumer.getOwner().setDefaultServiceLevel("Premium");
+        owner.setDefaultServiceLevel("Premium");
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
             new String[]{ productId, slaPremiumProdId, slaStandardProdId},

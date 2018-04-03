@@ -337,7 +337,8 @@ public class HypervisorResource {
         consumer.setOwner(owner);
 
         // Create HypervisorId
-        HypervisorId hypervisorId = new HypervisorId(consumer, incHypervisorId);
+        HypervisorId hypervisorId = new HypervisorId(consumer, owner, incHypervisorId);
+        hypervisorId.setOwner(owner);
         consumer.setHypervisorId(hypervisorId);
 
         // Create Consumer

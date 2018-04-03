@@ -14,19 +14,11 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventFactory;
@@ -51,8 +43,8 @@ import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.OwnerManager;
 import org.candlepin.controller.ProductManager;
 import org.candlepin.dto.api.v1.ActivationKeyDTO;
-import org.candlepin.dto.api.v1.EntitlementDTO;
 import org.candlepin.dto.api.v1.ConsumerDTO;
+import org.candlepin.dto.api.v1.EntitlementDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.PoolDTO;
 import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
@@ -465,7 +457,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Test(expected = ForbiddenException.class)
     public void testConsumerRoleCannotGetOwner() {
         Consumer c = createConsumer(owner);
-        setupPrincipal(new ConsumerPrincipal(c));
+        setupPrincipal(new ConsumerPrincipal(c, owner));
 
         securityInterceptor.enable();
 
@@ -475,7 +467,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Test
     public void testConsumerCanListPools() {
         Consumer c = createConsumer(owner);
-        Principal principal = setupPrincipal(new ConsumerPrincipal(c));
+        Principal principal = setupPrincipal(new ConsumerPrincipal(c, owner));
 
         securityInterceptor.enable();
 
@@ -489,7 +481,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         c.setFact("virt.is_guest", "true");
         c.setFact("virt.uuid", "system_uuid");
         consumerCurator.merge(c);
-        Principal principal = setupPrincipal(new ConsumerPrincipal(c));
+        Principal principal = setupPrincipal(new ConsumerPrincipal(c, owner));
 
         securityInterceptor.enable();
 
@@ -694,7 +686,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Test(expected = ForbiddenException.class)
     public void testConsumerRoleCannotAccessOwnerAtomFeed() {
         Consumer c = createConsumer(owner);
-        setupPrincipal(new ConsumerPrincipal(c));
+        setupPrincipal(new ConsumerPrincipal(c, owner));
 
         securityInterceptor.enable();
 
@@ -704,7 +696,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Test(expected = ForbiddenException.class)
     public void consumerCannotListAllConsumersInOwner() {
         Consumer c = createConsumer(owner);
-        setupPrincipal(new ConsumerPrincipal(c));
+        setupPrincipal(new ConsumerPrincipal(c, owner));
 
         securityInterceptor.enable();
 
@@ -816,7 +808,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Test(expected = ForbiddenException.class)
     public void consumerCannotCountAllConsumersInOwner() {
         Consumer c = createConsumer(owner);
-        setupPrincipal(new ConsumerPrincipal(c));
+        setupPrincipal(new ConsumerPrincipal(c, owner));
         securityInterceptor.enable();
 
         ownerResource.countConsumers(owner.getKey(), typeLabels,
@@ -854,7 +846,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         Consumer c = this.createConsumer(owner);
 
-        Principal principal = setupPrincipal(new ConsumerPrincipal(c));
+        Principal principal = setupPrincipal(new ConsumerPrincipal(c, owner));
         securityInterceptor.enable();
 
         List<PoolDTO> pools = ownerResource.listPools(owner.getKey(), c.getUuid(), null,

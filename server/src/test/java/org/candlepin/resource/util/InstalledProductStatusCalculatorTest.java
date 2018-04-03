@@ -33,6 +33,7 @@ import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
@@ -99,6 +100,7 @@ public class InstalledProductStatusCalculatorTest {
     @Mock private PoolCurator poolCurator;
     @Mock private ProductCurator productCurator;
     @Mock private OwnerProductCurator ownerProductCurator;
+    @Mock private OwnerCurator ownerCurator;
 
     private ModelTranslator translator;
     private JsRunnerProvider provider;
@@ -109,7 +111,9 @@ public class InstalledProductStatusCalculatorTest {
     public void setUp() {
         MockitoAnnotations.initMocks(this);
 
-        translator = new StandardTranslator(this.consumerTypeCurator, this.environmentCurator);
+        translator = new StandardTranslator(this.consumerTypeCurator,
+            this.environmentCurator,
+            this.ownerCurator);
 
         // Load the default production rules:
         InputStream is = this.getClass().getResourceAsStream(RulesCurator.DEFAULT_RULES_FILE);
@@ -258,6 +262,7 @@ public class InstalledProductStatusCalculatorTest {
         //test that the enricher does not set the arch and version when they are populated
         // in the CIP
         Owner owner = TestUtil.createOwner();
+        owner.setId(TestUtil.randomString());
         Product product = TestUtil.createProduct("p1", "product1");
         Consumer consumer = this.mockConsumer(owner, product);
 
@@ -821,7 +826,7 @@ public class InstalledProductStatusCalculatorTest {
         );
 
         p.setId("" + lastPoolId++);
-        Entitlement e = new Entitlement(p, consumer, 1);
+        Entitlement e = new Entitlement(p, consumer, owner, 1);
 
         when(poolCurator.provides(p, product.getId())).thenReturn(true);
 
@@ -947,7 +952,7 @@ public class InstalledProductStatusCalculatorTest {
 
                 return cqmock;
             }
-        }).when(this.ownerProductCurator).getProductsByIds(eq(owner), anyCollection());
+        }).when(this.ownerProductCurator).getProductsByIds(eq(owner.getId()), anyCollection());
     }
 
     private ConsumerInstalledProduct getInstalledProduct(Consumer consumer, Product product) {

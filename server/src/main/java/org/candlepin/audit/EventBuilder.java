@@ -14,8 +14,6 @@
  */
 package org.candlepin.audit;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
 import org.candlepin.common.exceptions.IseException;
@@ -25,8 +23,11 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.Eventful;
 import org.candlepin.model.Named;
 import org.candlepin.model.Owned;
-import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,10 +87,10 @@ public class EventBuilder {
             }
 
             if (entity instanceof Owned) {
-                Owner entityOwner = ((Owned) entity).getOwner();
+                String ownerId = ((Owned) entity).getOwnerId();
 
-                if (entityOwner != null && entityOwner.getId() != null) {
-                    event.setOwnerId(entityOwner.getId());
+                if (ownerId != null) {
+                    event.setOwnerId(ownerId);
                 }
             }
 

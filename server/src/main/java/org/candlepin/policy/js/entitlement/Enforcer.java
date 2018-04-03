@@ -17,6 +17,7 @@ package org.candlepin.policy.js.entitlement;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.policy.ValidationResult;
@@ -138,7 +139,7 @@ public interface Enforcer {
      * @param ents The entitlement that was just granted.
      * @param subPoolsForStackIds
      */
-    void postEntitlement(PoolManager poolManager, Consumer c, Map<String, Entitlement> ents,
+    void postEntitlement(PoolManager poolManager, Consumer c, Owner owner, Map<String, Entitlement> ents,
         List<Pool> subPoolsForStackIds, boolean isUpdate, Map<String, PoolQuantity> poolQuantityMap);
 
     /**

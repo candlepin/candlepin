@@ -242,7 +242,7 @@ public class PoolRulesStackDerivedTest {
     }
 
     private Entitlement createEntFromPool(Pool pool) {
-        Entitlement e = new Entitlement(pool, consumer, 2);
+        Entitlement e = new Entitlement(pool, consumer, owner, 2);
         e.setCreated(new Date());
         try {
             Thread.sleep(1);

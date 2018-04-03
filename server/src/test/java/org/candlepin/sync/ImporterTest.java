@@ -116,6 +116,7 @@ public class ImporterTest {
     private ProductCurator pc;
     private EntitlementCurator ec;
     private EnvironmentCurator environmentCurator;
+    private OwnerCurator oc;
     private SubscriptionReconciler mockSubReconciler;
     private ConsumerTypeCurator consumerTypeCurator;
     private ModelTranslator translator;
@@ -150,8 +151,9 @@ public class ImporterTest {
 
         this.mockSubReconciler = Mockito.mock(SubscriptionReconciler.class);
         this.consumerTypeCurator = Mockito.mock(ConsumerTypeCurator.class);
+        oc = mock(OwnerCurator.class);
 
-        this.translator = new StandardTranslator(this.consumerTypeCurator, this.environmentCurator);
+        this.translator = new StandardTranslator(this.consumerTypeCurator, this.environmentCurator, this.oc);
     }
 
     @After

@@ -19,9 +19,9 @@ import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCapability;
+import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
-import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentAccessCertificate;
@@ -33,6 +33,7 @@ import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.KeyPairCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerContentCurator;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerEnvContentAccess;
 import org.candlepin.model.OwnerEnvContentAccessCurator;
 import org.candlepin.model.Pool;
@@ -66,8 +67,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-
-
 /**
  * DefaultEntitlementCertServiceAdapter
  */
@@ -78,6 +77,7 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
     private KeyPairCurator keyPairCurator;
     private CertificateSerialCurator serialCurator;
     private OwnerContentCurator ownerContentCurator;
+    private OwnerCurator ownerCurator;
     private ContentAccessCertificateCurator contentAccessCertificateCurator;
     private X509V3ExtensionUtil v3extensionUtil;
     private OwnerEnvContentAccessCurator ownerEnvContentAccessCurator;
@@ -93,6 +93,7 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         KeyPairCurator keyPairCurator,
         CertificateSerialCurator serialCurator,
         OwnerContentCurator ownerContentCurator,
+        OwnerCurator ownerCurator,
         OwnerEnvContentAccessCurator ownerEnvContentAccessCurator,
         ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator,
@@ -104,6 +105,7 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         this.serialCurator = serialCurator;
         this.v3extensionUtil = v3extensionUtil;
         this.ownerContentCurator = ownerContentCurator;
+        this.ownerCurator = ownerCurator;
         this.ownerEnvContentAccessCurator = ownerEnvContentAccessCurator;
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -114,7 +116,7 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
     public ContentAccessCertificate getCertificate(Consumer consumer)
         throws GeneralSecurityException, IOException {
 
-        Owner owner = consumer.getOwner();
+        Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
         // we only know about one mode right now. If add any, we will need to add the
         // appropriate cert generation
         if (!ORG_ENV_ACCESS_MODE.equals(owner.getContentAccessMode()) ||
@@ -149,7 +151,7 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
             KeyPair keyPair = keyPairCurator.getConsumerKeyPair(consumer);
             byte[] pemEncodedKeyPair = pki.getPemEncoded(keyPair.getPrivate());
 
-            X509Certificate x509Cert = createX509Certificate(consumer,
+            X509Certificate x509Cert = createX509Certificate(consumer, owner,
                 BigInteger.valueOf(serial.getId()), keyPair, startDate, endDate);
 
             existing = new ContentAccessCertificate();
@@ -195,9 +197,8 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         }
 
         Environment env = this.environmentCurator.getConsumerEnvironment(consumer);
-        Owner owner = consumer.getOwner();
         OwnerEnvContentAccess oeca = ownerEnvContentAccessCurator.getContentAccess(
-            owner.getId(), env == null ? null : env.getId());
+            consumer.getOwnerId(), env == null ? null : env.getId());
         return oeca == null || consumer.getContentAccessCert() == null ||
             oeca.getUpdated().getTime() > date.getTime();
     }
@@ -218,7 +219,7 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         return payload + signature;
     }
 
-    public X509Certificate createX509Certificate(Consumer consumer, BigInteger serialNumber,
+    public X509Certificate createX509Certificate(Consumer consumer, Owner owner, BigInteger serialNumber,
         KeyPair keyPair, Date startDate, Date endDate)
         throws GeneralSecurityException, IOException {
 
@@ -229,7 +230,7 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         dtoContents.add(dContent);
 
         Environment environment = this.environmentCurator.getConsumerEnvironment(consumer);
-        dContent.setPath(getContentPrefix(consumer.getOwner(), environment));
+        dContent.setPath(getContentPrefix(owner, environment));
 
         container.setContent(dtoContents);
 
@@ -237,7 +238,7 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         Set<X509ByteExtensionWrapper> byteExtensions = prepareV3ByteExtensions(container);
 
         X509Certificate x509Cert =  this.pki.createX509Certificate(
-            createDN(consumer), extensions, byteExtensions, startDate,
+            createDN(consumer, owner), extensions, byteExtensions, startDate,
             endDate, keyPair, serialNumber, null);
 
         return x509Cert;
@@ -305,15 +306,14 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         return contentPrefix.toString();
     }
 
-    private String createDN(Consumer consumer) {
+    private String createDN(Consumer consumer, Owner owner) {
         StringBuilder sb = new StringBuilder("CN=");
         sb.append(consumer.getUuid());
         sb.append(", O=");
-        sb.append(consumer.getOwner().getKey());
+        sb.append(owner.getKey());
 
         if (consumer.getEnvironmentId() != null) {
             Environment environment = this.environmentCurator.getConsumerEnvironment(consumer);
-
             sb.append(", OU=");
             sb.append(environment.getName());
         }

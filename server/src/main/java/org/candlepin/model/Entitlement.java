@@ -138,18 +138,19 @@ public class Entitlement extends AbstractHibernateObject<Entitlement>
      * @param consumerIn consumer associated with the entitlement
      * @param quantityIn entitlement quantity
      */
-    public Entitlement(Pool poolIn, Consumer consumerIn, Integer quantityIn) {
-        this(consumerIn, quantityIn);
+    public Entitlement(Pool poolIn, Consumer consumerIn, Owner owner, Integer quantityIn) {
+        this(consumerIn, owner, quantityIn);
         pool = poolIn;
         updatedOnStart = poolIn.getStartDate().after(new Date());
     }
 
     /**
      * @param consumerIn consumer associated with the entitlement
+     * @param ownerIn owner associated with the entitlement
      * @param quantityIn entitlement quantity
      */
-    public Entitlement(Consumer consumerIn, Integer quantityIn) {
-        owner = consumerIn.getOwner();
+    public Entitlement(Consumer consumerIn, Owner ownerIn, Integer quantityIn) {
+        owner = ownerIn;
         consumer = consumerIn;
         quantity = quantityIn == null || quantityIn.intValue() < 1 ?
             1 : quantityIn;
@@ -162,6 +163,15 @@ public class Entitlement extends AbstractHibernateObject<Entitlement>
     @XmlTransient
     public Owner getOwner() {
         return owner;
+    }
+
+    /**
+     * @return the owner Id of this Entitlement.
+     */
+    @Override
+    @XmlTransient
+    public String getOwnerId() {
+        return (owner == null) ? null : owner.getId();
     }
 
     /**

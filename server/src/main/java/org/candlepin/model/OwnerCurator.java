@@ -17,6 +17,7 @@ package org.candlepin.model;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Criteria;
 import org.hibernate.ReplicationMode;
 import org.hibernate.Session;
@@ -45,6 +46,36 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
 
     public OwnerCurator() {
         super(Owner.class);
+    }
+
+    /**
+     * Fetches the Owner for the specified ownerId. If the ownerId is null or owner was not found, this
+     * method throws an exception.
+     *
+     * @param ownerId
+     *  The ownerId for which to fetch a Owner object
+     *
+     * @throws IllegalArgumentException
+     *  if ownerId is null
+     *
+     * @throws IllegalStateException
+     *  if the owner was not found for the given id
+     *
+     * @return
+     *  An Owner instance for the specified ownerId
+     */
+    public Owner findOwnerById(String ownerId) {
+        if (StringUtils.isEmpty(ownerId)) {
+            throw new IllegalArgumentException("ownerId is null");
+        }
+
+        Owner owner = this.find(ownerId);
+
+        if (owner == null) {
+            throw new IllegalStateException("owner not found for the id: " + ownerId);
+        }
+
+        return owner;
     }
 
     @Transactional
@@ -172,7 +203,7 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
     @SuppressWarnings("unchecked")
     public CandlepinQuery<String> getConsumerIds(String ownerId) {
         DetachedCriteria criteria = DetachedCriteria.forClass(Consumer.class)
-            .add(Restrictions.eq("owner.id", ownerId))
+            .add(Restrictions.eq("ownerId", ownerId))
             .setProjection(Property.forName("id"));
 
         return this.cpQueryFactory.<String>buildQuery(this.currentSession(), criteria);
@@ -185,7 +216,7 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
     @SuppressWarnings("unchecked")
     public CandlepinQuery<String> getConsumerUuids(String ownerId) {
         DetachedCriteria criteria = DetachedCriteria.forClass(Consumer.class)
-            .add(Restrictions.eq("owner.id", ownerId))
+            .add(Restrictions.eq("ownerId", ownerId))
             .setProjection(Property.forName("uuid"));
 
         return this.cpQueryFactory.<String>buildQuery(this.currentSession(), criteria);

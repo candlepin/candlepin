@@ -132,7 +132,7 @@ public class GuestIdCuratorTest extends DatabaseTestFixture {
         consumer.addGuestId(new GuestId(guestId));
         consumerCurator.create(consumer);
 
-        GuestId result = curator.findByGuestIdAndOrg(guestId.toUpperCase(), owner);
+        GuestId result = curator.findByGuestIdAndOrg(guestId.toUpperCase(), owner.getId());
         /**
          * Note that we keep the original case of the guestId, we only search
          * in case insensitive way

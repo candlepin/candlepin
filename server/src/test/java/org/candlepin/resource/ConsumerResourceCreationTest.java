@@ -17,9 +17,7 @@ package org.candlepin.resource;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
@@ -47,8 +45,8 @@ import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
-import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.DeletedConsumerCurator;
+import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
@@ -81,6 +79,8 @@ import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -95,9 +95,6 @@ import java.util.List;
 import java.util.Locale;
 
 import javax.inject.Provider;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 
@@ -151,10 +148,11 @@ public class ConsumerResourceCreationTest {
     public void init() throws Exception {
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
 
+        this.modelTranslator = new StandardTranslator(this.consumerTypeCurator, this.environmentCurator,
+            this.ownerCurator);
+
         testMigration = new GuestMigration(consumerCurator);
         migrationProvider = Providers.of(testMigration);
-
-        this.modelTranslator = new StandardTranslator(this.consumerTypeCurator, this.environmentCurator);
 
         this.config = initConfig();
         this.resource = new ConsumerResource(
@@ -170,6 +168,7 @@ public class ConsumerResourceCreationTest {
         this.systemDto = this.modelTranslator.translate(this.system, ConsumerTypeDTO.class);
 
         owner = new Owner("test_owner");
+        owner.setId(TestUtil.randomString());
         user = new User(USER, "");
         PermissionBlueprint p = new PermissionBlueprint(PermissionType.OWNER, owner, Access.ALL);
         role = new Role();

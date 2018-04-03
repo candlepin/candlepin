@@ -97,13 +97,14 @@ public class HypervisorId extends AbstractHibernateObject {
         this.setHypervisorId(hypervisorId);
     }
 
-    public HypervisorId(Consumer consumer, String hypervisorId) {
+    public HypervisorId(Consumer consumer, Owner owner, String hypervisorId) {
         this(hypervisorId);
-        this.setConsumer(consumer); // Also sets owner
+        this.setConsumer(consumer);
+        this.setOwner(owner);
     }
 
-    public HypervisorId(Consumer consumer, String hypervisorId, String reporterId) {
-        this(consumer, hypervisorId);
+    public HypervisorId(Consumer consumer, Owner owner, String hypervisorId, String reporterId) {
+        this(consumer, owner, hypervisorId);
         this.setReporterId(reporterId);
     }
 
@@ -168,7 +169,6 @@ public class HypervisorId extends AbstractHibernateObject {
      */
     public void setConsumer(Consumer consumer) {
         this.consumer = consumer;
-        this.owner = consumer.getOwner();
     }
 
     /**

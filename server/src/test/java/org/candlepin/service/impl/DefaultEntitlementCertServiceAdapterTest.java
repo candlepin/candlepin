@@ -14,7 +14,7 @@
  */
 package org.candlepin.service.impl;
 
-import static org.candlepin.pki.impl.BouncyCastleProviderLoader.BC_PROVIDER;
+import static org.candlepin.pki.impl.BouncyCastleProviderLoader.*;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMap;
@@ -41,6 +41,7 @@ import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.KeyPairCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
@@ -150,6 +151,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     @Mock private ConsumerTypeCurator mockConsumerTypeCurator;
     @Mock private CertificateSerialCurator serialCurator;
     @Mock private EntitlementCurator entCurator;
+    @Mock private OwnerCurator ownerCurator;
     @Mock private KeyPairCurator keyPairCurator;
     @Mock private PKIUtility mockedPKI;
     @Mock private ProductCurator productCurator;
@@ -222,7 +224,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         certServiceAdapter = new DefaultEntitlementCertServiceAdapter(
             mockedPKI, extensionUtil, v3extensionUtil,
             mock(EntitlementCertificateCurator.class),
-            keyPairCurator, serialCurator, entCurator,
+            keyPairCurator, serialCurator, ownerCurator, entCurator,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
             config, productCurator, this.mockConsumerTypeCurator, this.mockEnvironmentCurator);
 
@@ -291,6 +293,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         largeContentSubscription.setQuantity(1L);
 
         owner = new Owner();
+        owner.setId(TestUtil.randomString());
+        when(ownerCurator.findOwnerById(owner.getId())).thenReturn(owner);
 
         pool = new Pool();
         pool.setQuantity(1L);
@@ -397,11 +401,11 @@ public class DefaultEntitlementCertServiceAdapterTest {
         certServiceAdapter = new DefaultEntitlementCertServiceAdapter(
             realPKI, extensionUtil, v3extensionUtil,
             mock(EntitlementCertificateCurator.class),
-            keyPairCurator, serialCurator, entCurator,
+            keyPairCurator, serialCurator, ownerCurator, entCurator,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
             config, productCurator, this.mockConsumerTypeCurator, this.mockEnvironmentCurator);
 
-        X509Certificate result = certServiceAdapter.createX509Certificate(consumer, pool,
+        X509Certificate result = certServiceAdapter.createX509Certificate(consumer, owner, pool,
             entitlement, product, new HashSet<>(),
             getProductModels(product, new HashSet<>(), "prefix", entitlement),
             new BigInteger("1234"), keyPair, true);
@@ -424,7 +428,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         certServiceAdapter = new DefaultEntitlementCertServiceAdapter(
             realPKI, extensionUtil, v3extensionUtil,
             mock(EntitlementCertificateCurator.class),
-            keyPairCurator, serialCurator, entCurator,
+            keyPairCurator, serialCurator, ownerCurator, entCurator,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
             config, productCurator, this.mockConsumerTypeCurator, this.mockEnvironmentCurator);
 
@@ -432,7 +436,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Calendar cal = Calendar.getInstance();
         cal.add(Calendar.HOUR, -2);
         pool.setStartDate(cal.getTime());
-        X509Certificate result = certServiceAdapter.createX509Certificate(consumer, pool,
+        X509Certificate result = certServiceAdapter.createX509Certificate(consumer, owner, pool,
             entitlement, product, new HashSet<>(),
             getProductModels(product, new HashSet<>(), "prefix", entitlement),
             new BigInteger("1234"), keyPair, true);
@@ -441,7 +445,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         // pool start date is less than an hour ago, so an hour gets used
         cal.add(Calendar.MINUTE, 90);
         pool.setStartDate(cal.getTime());
-        result = certServiceAdapter.createX509Certificate(consumer, pool, entitlement,
+        result = certServiceAdapter.createX509Certificate(consumer, owner, pool, entitlement,
             product, new HashSet<>(), getProductModels(product,
             new HashSet<>(), "prefix", entitlement), new BigInteger("1234"), keyPair, true);
         assertTrue(result.getNotBefore().getTime() < pool.getStartDate().getTime() / 1000 * 1000);
@@ -468,7 +472,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         // TODO: Is this even needed anymore?
         // subscription.setProvidedProducts(providedProducts);
 
-        certServiceAdapter.createX509Certificate(consumer, pool, entitlement,
+        certServiceAdapter.createX509Certificate(consumer, owner, pool, entitlement,
             product, providedProducts, getProductModels(product, providedProducts, "prefix", entitlement),
             new BigInteger("1234"), keyPair, true);
     }
@@ -497,7 +501,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             product.addContent(content, false);
         }
 
-        certServiceAdapter.createX509Certificate(consumer, pool, entitlement,
+        certServiceAdapter.createX509Certificate(consumer, owner, pool, entitlement,
             product, new HashSet<>(), getProductModels(product, new HashSet<>(),
             "prefix", entitlement), new BigInteger("1234"), keyPair, true);
     }
@@ -573,7 +577,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     public void testPrefixesShouldBeUsed() throws Exception {
         owner.setContentPrefix("/somePrefix/");
 
-        certServiceAdapter.createX509Certificate(consumer, pool, entitlement,
+        certServiceAdapter.createX509Certificate(consumer, owner, pool, entitlement,
             product, new HashSet<>(), getProductModels(product, new HashSet<>(),
             "prefix", entitlement), new BigInteger("1234"), keyPair, true);
 
@@ -593,7 +597,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         e.getEnvironmentContent().add(new EnvironmentContent(e, content, true));
         this.consumer.setEnvironment(e);
 
-        certServiceAdapter.createX509Certificate(consumer, pool, entitlement,
+        certServiceAdapter.createX509Certificate(consumer, owner, pool, entitlement,
             product, new HashSet<>(),
             getProductModels(product, new HashSet<>(), "prefix", entitlement),
             new BigInteger("1234"), keyPair, true);
@@ -614,7 +618,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         e.getEnvironmentContent().add(new EnvironmentContent(e, content, true));
         this.consumer.setEnvironment(e);
 
-        certServiceAdapter.createX509Certificate(consumer, pool, entitlement,
+        certServiceAdapter.createX509Certificate(consumer, owner, pool, entitlement,
             product, new HashSet<>(),
             getProductModels(product, new HashSet<>(), "prefix", entitlement),
             new BigInteger("1234"), keyPair, true);
@@ -629,7 +633,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     public void testPrefixIgnoresEnvIfConsumerHasNone() throws Exception {
         owner.setContentPrefix("/someorg/$env/");
 
-        certServiceAdapter.createX509Certificate(consumer, pool, entitlement,
+        certServiceAdapter.createX509Certificate(consumer, owner, pool, entitlement,
             product, new HashSet<>(),
             getProductModels(product, new HashSet<>(), "prefix", entitlement),
             new BigInteger("1234"), keyPair, true);
@@ -644,7 +648,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     public void testPrefixesAreNotUsedForUeberCertificate() throws Exception {
         owner.setContentPrefix("/somePrefix/");
 
-        certServiceAdapter.createX509Certificate(consumer, pool, entitlement,
+        certServiceAdapter.createX509Certificate(consumer, owner, pool, entitlement,
             product, new HashSet<>(),
             getProductModels(product, new HashSet<>(), "prefix", entitlement),
             new BigInteger("1234"), keyPair, false);
@@ -658,7 +662,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     @Test
     public void testBlankPrefixesShouldNotEffectAnything() throws Exception {
         owner.setContentPrefix("");
-        certServiceAdapter.createX509Certificate(consumer, pool, entitlement,
+        certServiceAdapter.createX509Certificate(consumer, owner, pool, entitlement,
             product, new HashSet<>(),
             getProductModels(product, new HashSet<>(), "prefix", entitlement),
             new BigInteger("1234"), keyPair, true);
@@ -673,7 +677,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     public void testNullPrefixesShouldNotEffectAnything() throws Exception {
         owner.setContentPrefix(null);
 
-        certServiceAdapter.createX509Certificate(consumer, pool, entitlement,
+        certServiceAdapter.createX509Certificate(consumer, owner, pool, entitlement,
             product, new HashSet<>(),
             getProductModels(product, new HashSet<>(), "prefix", entitlement),
             new BigInteger("1234"), keyPair, true);
@@ -740,7 +744,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     public void contentExtentionsShouldBeAddedDuringCertificateGeneration()
         throws Exception {
 
-        certServiceAdapter.createX509Certificate(consumer, pool, entitlement,
+        certServiceAdapter.createX509Certificate(consumer, owner, pool, entitlement,
             product, new HashSet<>(),
             getProductModels(product, new HashSet<>(), "prefix", entitlement),
             new BigInteger("1234"), keyPair, true);
@@ -755,7 +759,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     public void entitlementQuantityShouldBeAddedDuringCertificateGeneration()
         throws Exception {
 
-        certServiceAdapter.createX509Certificate(consumer, pool, entitlement,
+        certServiceAdapter.createX509Certificate(consumer, owner, pool, entitlement,
             product, new HashSet<>(),
             getProductModels(product, new HashSet<>(), "prefix", entitlement),
             new BigInteger("1234"), keyPair, true);
@@ -768,7 +772,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     @Test
     public void managementDisabledByDefault() throws Exception {
-        certServiceAdapter.createX509Certificate(consumer, pool, entitlement,
+        certServiceAdapter.createX509Certificate(consumer, owner, pool, entitlement,
             product, new HashSet<>(),
             getProductModels(product, new HashSet<>(), "prefix", entitlement),
             new BigInteger("1234"), keyPair, true);
@@ -783,7 +787,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     public void managementEnabledByAttribute() throws Exception {
         pool.getProduct().setAttribute(Product.Attributes.MANAGEMENT_ENABLED, "1");
 
-        certServiceAdapter.createX509Certificate(consumer, pool, entitlement,
+        certServiceAdapter.createX509Certificate(consumer, owner, pool, entitlement,
             product, new HashSet<>(),
             getProductModels(product, new HashSet<>(), "prefix", entitlement),
             new BigInteger("1234"), keyPair, true);
@@ -798,7 +802,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     public void stackingIdByAttribute() throws Exception {
         pool.getProduct().setAttribute(Product.Attributes.STACKING_ID, "3456");
 
-        certServiceAdapter.createX509Certificate(consumer, pool, entitlement,
+        certServiceAdapter.createX509Certificate(consumer, owner, pool, entitlement,
             product, new HashSet<>(),
             getProductModels(product, new HashSet<>(), "prefix", entitlement),
             new BigInteger("1234"), keyPair, true);
@@ -813,7 +817,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         //note that "true" gets recoded to "1" to match other bools in the cert
         entitlement.getPool().setAttribute(Product.Attributes.VIRT_ONLY, "true");
 
-        certServiceAdapter.createX509Certificate(consumer, pool, entitlement,
+        certServiceAdapter.createX509Certificate(consumer, owner, pool, entitlement,
             product, new HashSet<>(),
             getProductModels(product, new HashSet<>(), "prefix", entitlement),
             new BigInteger("1234"), keyPair, true);
@@ -828,7 +832,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     public void orderNumberAttribute() throws Exception {
         //note that "true" gets recoded to "1" to match other bools in the cert
         pool.setOrderNumber("this_order");
-        certServiceAdapter.createX509Certificate(consumer, pool, entitlement,
+        certServiceAdapter.createX509Certificate(consumer, owner, pool, entitlement,
             product, new HashSet<>(),
             getProductModels(product, new HashSet<>(), "prefix", entitlement),
             new BigInteger("1234"), keyPair, true);
@@ -845,7 +849,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         pool.getProduct().setAttribute(Product.Attributes.SUPPORT_LEVEL, "Premium");
         pool.getProduct().setAttribute(Product.Attributes.SUPPORT_TYPE, "Level 3");
 
-        certServiceAdapter.createX509Certificate(consumer, pool, entitlement,
+        certServiceAdapter.createX509Certificate(consumer, owner, pool, entitlement,
             product, new HashSet<>(),
             getProductModels(product, new HashSet<>(), "prefix", entitlement),
             new BigInteger("1234"), keyPair, true);
@@ -865,7 +869,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         return new DefaultEntitlementCertServiceAdapter(
             mockedPKI, mockExtensionUtil, mockV3extensionUtil,
             mock(EntitlementCertificateCurator.class),
-            keyPairCurator, serialCurator, entCurator,
+            keyPairCurator, serialCurator, ownerCurator, entCurator,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
             mockConfig, productCurator, this.mockConsumerTypeCurator, this.mockEnvironmentCurator);
     }
@@ -879,7 +883,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         DefaultEntitlementCertServiceAdapter entAdapter = this.initCertServiceAdapter();
 
-        entAdapter.createX509Certificate(consumer, pool, entitlement, product, new HashSet<>(),
+        entAdapter.createX509Certificate(consumer, owner, pool, entitlement, product, new HashSet<>(),
             getProductModels(product, new HashSet<>(), "prefix", entitlement),
             new BigInteger("1234"), keyPair, true);
     }
@@ -888,7 +892,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     public void supportValuesAbsentOnCertIfNoSupportAttributes()
         throws Exception {
 
-        certServiceAdapter.createX509Certificate(consumer, pool, entitlement,
+        certServiceAdapter.createX509Certificate(consumer, owner, pool, entitlement,
             product, new HashSet<>(),
             getProductModels(product, new HashSet<>(), "prefix", entitlement),
             new BigInteger("1234"), keyPair, true);
@@ -910,7 +914,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         DefaultEntitlementCertServiceAdapter entAdapter = this.initCertServiceAdapter();
 
-        entAdapter.createX509Certificate(consumer, pool, entitlement,
+        entAdapter.createX509Certificate(consumer, owner, pool, entitlement,
             product, new HashSet<>(),
             getProductModels(product, new HashSet<>(), "prefix", entitlement),
             new BigInteger("1234"), keyPair, true);
@@ -936,7 +940,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         DefaultEntitlementCertServiceAdapter entAdapter = this.initCertServiceAdapter();
 
-        entAdapter.createX509Certificate(consumer, pool, entitlement,
+        entAdapter.createX509Certificate(consumer, owner, pool, entitlement,
             product, new HashSet<>(),
             getProductModels(product, new HashSet<>(), "prefix", entitlement),
             new BigInteger("1234"), keyPair, true);
@@ -959,7 +963,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         DefaultEntitlementCertServiceAdapter entAdapter = this.initCertServiceAdapter();
 
-        entAdapter.createX509Certificate(consumer, pool, entitlement,
+        entAdapter.createX509Certificate(consumer, owner, pool, entitlement,
             product, new HashSet<>(),
             getProductModels(product, new HashSet<>(), "prefix", entitlement),
             new BigInteger("1234"), keyPair, true);
@@ -981,7 +985,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         DefaultEntitlementCertServiceAdapter entAdapter = this.initCertServiceAdapter();
 
-        entAdapter.createX509Certificate(consumer, pool, entitlement,
+        entAdapter.createX509Certificate(consumer, owner, pool, entitlement,
             product, new HashSet<>(),
             getProductModels(product, new HashSet<>(), "prefix", entitlement),
             new BigInteger("1234"), keyPair, true);

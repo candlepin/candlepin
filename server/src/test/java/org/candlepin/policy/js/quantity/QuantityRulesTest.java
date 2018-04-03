@@ -30,6 +30,7 @@ import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
@@ -82,6 +83,7 @@ public class QuantityRulesTest {
     private ModelTranslator translator;
 
     @Mock private RulesCurator rulesCuratorMock;
+    @Mock private OwnerCurator ownerCuratorMock;
     @Mock private Provider<JsRunnerRequestCache> cacheProvider;
     @Mock private JsRunnerRequestCache cache;
     @Mock private ProductCurator productCurator;
@@ -100,7 +102,7 @@ public class QuantityRulesTest {
         when(cacheProvider.get()).thenReturn(cache);
         provider = new JsRunnerProvider(rulesCuratorMock, cacheProvider);
 
-        translator = new StandardTranslator(consumerTypeCurator, environmentCurator);
+        translator = new StandardTranslator(consumerTypeCurator, environmentCurator, ownerCuratorMock);
         quantityRules = new QuantityRules(provider.get(), new RulesObjectMapper(
             new ProductCachedSerializationModule(productCurator)), translator);
 

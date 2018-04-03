@@ -24,6 +24,8 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
@@ -64,14 +66,17 @@ public class AutobindRules {
     private RulesObjectMapper mapper;
     private ProductCurator productCurator;
     private ConsumerTypeCurator consumerTypeCurator;
+    private OwnerCurator ownerCurator;
     private ModelTranslator translator;
 
     @Inject
     public AutobindRules(JsRunner jsRules, ProductCurator productCurator,
-        ConsumerTypeCurator consumerTypeCurator, RulesObjectMapper mapper, ModelTranslator translator) {
+        ConsumerTypeCurator consumerTypeCurator, OwnerCurator ownerCurator, RulesObjectMapper mapper,
+        ModelTranslator translator) {
 
         this.jsRules = jsRules;
         this.productCurator = productCurator;
+        this.ownerCurator = ownerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
         this.mapper = mapper;
         this.translator = translator;
@@ -118,7 +123,8 @@ public class AutobindRules {
         // Provide objects for the script:
         JsonJsContext args = new JsonJsContext(mapper);
         args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
-        args.put("owner", this.translator.translate(consumer.getOwner(), OwnerDTO.class));
+        Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
+        args.put("owner", this.translator.translate(owner, OwnerDTO.class));
         args.put("serviceLevelOverride", serviceLevelOverride);
         args.put("pools", poolDTOs.toArray());
         args.put("products", productIds);

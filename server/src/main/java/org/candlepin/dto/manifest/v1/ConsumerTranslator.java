@@ -20,8 +20,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Owner;
-
-
+import org.candlepin.model.OwnerCurator;
 
 /**
  * The ConsumerTranslator provides translation from Consumer model objects to
@@ -30,13 +29,17 @@ import org.candlepin.model.Owner;
 public class ConsumerTranslator implements ObjectTranslator<Consumer, ConsumerDTO> {
 
     private ConsumerTypeCurator consumerTypeCurator;
+    private OwnerCurator ownerCurator;
 
-    public ConsumerTranslator(ConsumerTypeCurator consumerTypeCurator) {
+    public ConsumerTranslator(ConsumerTypeCurator consumerTypeCurator, OwnerCurator ownerCurator) {
         if (consumerTypeCurator == null) {
             throw new IllegalArgumentException("ConsumerTypeCurator is null");
         }
-
         this.consumerTypeCurator = consumerTypeCurator;
+        if (ownerCurator == null) {
+            throw new IllegalArgumentException("OwnerCurator is null");
+        }
+        this.ownerCurator = ownerCurator;
     }
 
     /**
@@ -82,9 +85,10 @@ public class ConsumerTranslator implements ObjectTranslator<Consumer, ConsumerDT
 
         // Process nested objects if we have a ModelTranslator to use to the translation...
         if (translator != null) {
-            Owner owner = source.getOwner();
-            dest.setOwner(owner != null ? translator.translate(owner, OwnerDTO.class) : null);
-
+            if (source.getOwnerId() != null) {
+                Owner owner = this.ownerCurator.findOwnerById(source.getOwnerId());
+                dest.setOwner(owner != null ? translator.translate(owner, OwnerDTO.class) : null);
+            }
             // Temporary measure to maintain API compatibility
             if (source.getTypeId() != null) {
                 ConsumerType ctype = this.consumerTypeCurator.getConsumerType(source);

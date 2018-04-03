@@ -61,12 +61,11 @@ public class ContentAccessCertificateCurator extends AbstractHibernateCurator<Co
         @SuppressWarnings("unchecked")
 
         String hql = " SELECT cac.id, s.id " +
-            "    FROM Consumer c" +
-            "       JOIN c.owner o" +
-            "       JOIN c.contentAccessCert cac" +
-            "       JOIN cac.serial s" +
-            "    WHERE" +
-            "       o.key=:ownerkey";
+            "          FROM Consumer c, Owner o" +
+            "              JOIN c.contentAccessCert cac" +
+            "              JOIN  cac .serial s" +
+            "          WHERE o.key=:ownerkey" +
+            "                and o.id = c.ownerId";
         Query query = this.getEntityManager().createQuery(hql);
         List<Object[]> rows = query.setParameter("ownerkey", owner.getKey()).getResultList();
 

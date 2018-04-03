@@ -81,7 +81,7 @@ public class HandleEntitlementsOp implements BindOperation {
             pool.getEntitlements().add(ent);
             ent.setPool(pool);
             ent.setConsumer(consumer);
-            ent.setOwner(consumer.getOwner());
+            ent.setOwner(pool.getOwner());
 
             pool.setConsumed(pool.getConsumed() + quantity);
 

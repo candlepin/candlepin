@@ -15,7 +15,7 @@
 package org.candlepin.dto.manifest.v1;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.dto.AbstractTranslatorTest;
@@ -23,12 +23,12 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 
 import org.junit.runner.RunWith;
 
 import junitparams.JUnitParamsRunner;
-
-
 
 /**
  * Test suite for the ConsumerTranslator (manifest import/export) class
@@ -38,6 +38,7 @@ public class ConsumerTranslatorTest extends
     AbstractTranslatorTest<Consumer, ConsumerDTO, ConsumerTranslator> {
 
     protected ConsumerTypeCurator mockConsumerTypeCurator;
+    protected OwnerCurator mockOwnerCurator;
 
     protected ConsumerTranslator translator;
 
@@ -50,7 +51,8 @@ public class ConsumerTranslatorTest extends
         this.ownerTranslatorTest.initModelTranslator(modelTranslator);
 
         this.mockConsumerTypeCurator = mock(ConsumerTypeCurator.class);
-        this.translator = new ConsumerTranslator(this.mockConsumerTypeCurator);
+        this.mockOwnerCurator = mock(OwnerCurator.class);
+        this.translator = new ConsumerTranslator(this.mockConsumerTypeCurator, this.mockOwnerCurator);
 
         modelTranslator.registerTranslator(this.translator, Consumer.class, ConsumerDTO.class);
     }
@@ -67,7 +69,9 @@ public class ConsumerTranslatorTest extends
 
         consumer.setUuid("consumer_uuid");
         consumer.setName("consumer_name");
-        consumer.setOwner(this.ownerTranslatorTest.initSourceObject());
+        Owner owner = this.ownerTranslatorTest.initSourceObject();
+        when(mockOwnerCurator.findOwnerById(eq(owner.getId()))).thenReturn(owner);
+        consumer.setOwner(owner);
         consumer.setContentAccessMode("test_content_access_mode");
         consumer.setType(ctype);
 
@@ -92,7 +96,12 @@ public class ConsumerTranslatorTest extends
             assertEquals(source.getContentAccessMode(), dest.getContentAccessMode());
 
             if (childrenGenerated) {
-                this.ownerTranslatorTest.verifyOutput(source.getOwner(), dest.getOwner(), true);
+                if (dest.getOwner() != null) {
+                    assertEquals(source.getOwnerId(), dest.getOwner().getId());
+                }
+                else {
+                    assertNull(source.getOwnerId());
+                }
 
                 ConsumerType ctype = this.mockConsumerTypeCurator.getConsumerType(source);
                 this.consumerTypeTranslatorTest.verifyOutput(ctype, dest.getType(), true);
