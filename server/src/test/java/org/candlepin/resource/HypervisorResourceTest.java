@@ -217,8 +217,8 @@ public class HypervisorResourceTest {
         Owner owner = new Owner("admin");
 
         Map<String, List<GuestIdDTO>> hostGuestMap = new HashMap<>();
-        hostGuestMap.put("test-host", new ArrayList(Arrays.asList(new GuestIdDTO("GUEST_A"),
-            new GuestIdDTO("GUEST_B"))));
+        hostGuestMap.put("test-host", new ArrayList(Arrays.asList(TestUtil.createGuestIdDTO("GUEST_A"),
+            TestUtil.createGuestIdDTO("GUEST_B"))));
 
         when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
         when(consumerCurator.getHostConsumersMap(any(Owner.class), any(Set.class)))
@@ -260,7 +260,7 @@ public class HypervisorResourceTest {
 
         Map<String, List<GuestIdDTO>> hostGuestMap = new HashMap<>();
         String hypervisorId = "test-host";
-        hostGuestMap.put(hypervisorId, new ArrayList(Arrays.asList(new GuestIdDTO("GUEST_B"))));
+        hostGuestMap.put(hypervisorId, new ArrayList(Arrays.asList(TestUtil.createGuestIdDTO("GUEST_B"))));
 
         Owner o = new Owner("owner-id", "Owner ID");
         o.setId("owner-id");
@@ -296,8 +296,8 @@ public class HypervisorResourceTest {
 
         Map<String, List<GuestIdDTO>> hostGuestMap = new HashMap<>();
         String expectedHostVirtId = "test-host-id";
-        hostGuestMap.put(expectedHostVirtId, new ArrayList(Arrays.asList(new GuestIdDTO("GUEST_A"),
-            new GuestIdDTO("GUEST_B"))));
+        hostGuestMap.put(expectedHostVirtId, new ArrayList(Arrays.asList(TestUtil.createGuestIdDTO("GUEST_A"),
+            TestUtil.createGuestIdDTO("GUEST_B"))));
 
         when(consumerCurator.getHostConsumersMap(any(Owner.class), any(Set.class)))
             .thenReturn(new VirtConsumerMap());
@@ -331,8 +331,8 @@ public class HypervisorResourceTest {
         Owner owner = new Owner("admin");
 
         Map<String, List<GuestIdDTO>> hostGuestMap = new HashMap<>();
-        hostGuestMap.put("test-host", new ArrayList(Arrays.asList(new GuestIdDTO("GUEST_A"),
-            new GuestIdDTO("GUEST_B"))));
+        hostGuestMap.put("test-host", new ArrayList(Arrays.asList(TestUtil.createGuestIdDTO("GUEST_A"),
+            TestUtil.createGuestIdDTO("GUEST_B"))));
 
         when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
 
@@ -370,10 +370,10 @@ public class HypervisorResourceTest {
         Owner owner = new Owner("admin");
 
         Map<String, List<GuestIdDTO>> hostGuestMap = new HashMap<>();
-        hostGuestMap.put("", new ArrayList(Arrays.asList(new GuestIdDTO("GUEST_A"),
-            new GuestIdDTO("GUEST_B"))));
-        hostGuestMap.put("HYPERVISOR_A", new ArrayList(Arrays.asList(new GuestIdDTO("GUEST_C"),
-            new GuestIdDTO("GUEST_D"))));
+        hostGuestMap.put("", new ArrayList(Arrays.asList(TestUtil.createGuestIdDTO("GUEST_A"),
+            TestUtil.createGuestIdDTO("GUEST_B"))));
+        hostGuestMap.put("HYPERVISOR_A", new ArrayList(Arrays.asList(TestUtil.createGuestIdDTO("GUEST_C"),
+            TestUtil.createGuestIdDTO("GUEST_D"))));
 
         when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
 
@@ -404,7 +404,7 @@ public class HypervisorResourceTest {
 
         Map<String, List<GuestIdDTO>> hostGuestMap = new HashMap<>();
         hostGuestMap.put("HYPERVISOR_A", new ArrayList(
-            Arrays.asList(new GuestIdDTO("GUEST_A"), new GuestIdDTO(""))));
+            Arrays.asList(TestUtil.createGuestIdDTO("GUEST_A"), TestUtil.createGuestIdDTO(""))));
         when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
 
         when(consumerCurator.getHostConsumersMap(any(Owner.class), any(Set.class)))

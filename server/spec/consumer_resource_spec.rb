@@ -418,6 +418,34 @@ describe 'Consumer Resource' do
     end.should raise_exception(RestClient::BadRequest)
   end
 
+  it "should let a consumer register with consumer type as a label" do
+    # This is legacy functionality; this test should not be used to indicate expected or desired
+    # behavior going forward, but to note that at the time of writing, this functionality is
+    # required by older clients
+
+    owner = create_owner(random_string('owner'))
+    user_name = random_string('user')
+    client = user_client(owner, user_name)
+
+    path = client.get_path("consumers")
+
+    consumer = {
+      :uuid => random_string("someuuid"),
+      :type => "system",
+      :name => "test_consumer",
+      :facts => {},
+      :installedProducts => [],
+      :contentTags => [],
+    }
+
+    params = {
+      :owner => owner['key']
+    }
+
+    consumer = client.post(path, params, consumer)
+    expect(consumer).to_not be_nil
+  end
+
   it "does not let an owner reregister another owner's consumer" do
     linux_net = create_owner(random_string('linux_net'))
     greenfield = create_owner(random_string('greenfield_consulting'))

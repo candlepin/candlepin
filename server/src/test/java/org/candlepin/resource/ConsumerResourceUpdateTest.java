@@ -410,7 +410,7 @@ public class ConsumerResourceUpdateTest {
         ConsumerDTO updated = new ConsumerDTO();
         updated.setUuid(uuid);
 
-        GuestIdDTO expectedGuestId = new GuestIdDTO("Guest 2");
+        GuestIdDTO expectedGuestId = TestUtil.createGuestIdDTO("Guest 2");
         updated.addGuestId(expectedGuestId);
 
         when(this.consumerCurator.getGuestConsumersMap(any(String.class), any(Set.class))).
@@ -715,7 +715,7 @@ public class ConsumerResourceUpdateTest {
         String uuid = "A Consumer";
         String expectedFactName = "FACT1";
         String expectedFactValue = "F1";
-        GuestIdDTO expectedGuestId = new GuestIdDTO("GUEST_ID_1");
+        GuestIdDTO expectedGuestId = TestUtil.createGuestIdDTO("GUEST_ID_1");
 
         Consumer existing = getFakeConsumer();
         existing.setFacts(new HashMap<>());

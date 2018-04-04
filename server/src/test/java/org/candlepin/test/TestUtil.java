@@ -23,6 +23,7 @@ import org.candlepin.auth.permissions.Permission;
 import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.ConsumerTypeDTO;
 import org.candlepin.dto.api.v1.ContentDTO;
+import org.candlepin.dto.api.v1.GuestIdDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.dto.api.v1.ProductDTO.ProductContentDTO;
@@ -61,6 +62,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -578,6 +580,14 @@ public class TestUtil {
             createPool(owner, createProduct()),
             null
         );
+    }
+
+    public static GuestIdDTO createGuestIdDTO(String guestId) {
+        GuestIdDTO dto = new GuestIdDTO()
+            .setGuestId(guestId)
+            .setAttributes(Collections.<String, String>emptyMap());
+
+        return dto;
     }
 
     public void addPermissionToUser(User u, Access role, Owner o) {

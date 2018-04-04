@@ -15,7 +15,6 @@
 package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.CandlepinDTO;
-import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 
 import io.swagger.annotations.ApiModel;
 
@@ -42,15 +41,6 @@ public class ConsumerTypeDTO extends CandlepinDTO<ConsumerTypeDTO> {
         // Intentionally left empty
     }
 
-    // TODO:
-    // Remove these constructors; they're coupled to the actual entity and we need to not carry
-    // forward extraneous constructors without reason
-
-    public ConsumerTypeDTO(ConsumerTypeEnum type) {
-        this.label = type.getLabel();
-        this.manifest = type.isManifest();
-    }
-
     /**
      * Initializes a new ConsumerTypeDTO instance which is a shallow copy of the provided
      * source entity.
@@ -60,6 +50,21 @@ public class ConsumerTypeDTO extends CandlepinDTO<ConsumerTypeDTO> {
      */
     public ConsumerTypeDTO(ConsumerTypeDTO source) {
         super(source);
+    }
+
+    /**
+     * Creates a new ConsumerTypeDTO initialized with the given label.
+     *
+     * @param label
+     *  The label to set upon initialization
+     *
+     * @deprecated
+     *  This constructor is present purely to support legacy behavior and may be removed at any
+     *  point in the future
+     */
+    @Deprecated
+    public ConsumerTypeDTO(String label) {
+        this.setLabel(label);
     }
 
     public String getId() {
