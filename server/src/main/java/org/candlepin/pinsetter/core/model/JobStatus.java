@@ -240,12 +240,14 @@ public class JobStatus extends AbstractHibernateObject {
     }
 
     public void setResult(String result) {
-        // truncate the result to fit column
-        if (result == null || result.length() < RESULT_COL_LENGTH) {
-            this.result = result;
+        if (result != null && !result.isEmpty()) {
+            // truncate the result to fit column
+            this.result = result.length() >= RESULT_COL_LENGTH ?
+                result.substring(0, RESULT_COL_LENGTH) :
+                result;
         }
         else {
-            this.result = result.substring(0, RESULT_COL_LENGTH);
+            this.result = null;
         }
     }
 

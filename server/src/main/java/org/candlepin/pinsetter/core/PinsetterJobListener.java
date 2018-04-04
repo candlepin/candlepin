@@ -138,6 +138,7 @@ public class PinsetterJobListener implements JobListener {
             else {
                 status.update(ctx);
             }
+
             curator.merge(status);
         }
         else {

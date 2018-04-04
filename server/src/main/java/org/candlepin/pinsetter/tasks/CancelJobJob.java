@@ -17,6 +17,7 @@ package org.candlepin.pinsetter.tasks;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.PinsetterException;
 import org.candlepin.pinsetter.core.PinsetterKernel;
+import org.candlepin.pinsetter.core.model.JobStatus;
 
 import com.google.inject.Inject;
 
@@ -62,10 +63,14 @@ public class CancelJobJob extends KingpinJob {
             }
 
             try {
-                pinsetterKernel.cancelJobs(this.jobCurator.findCanceledJobs(statusIds));
+                Set<JobStatus> jobs = this.jobCurator.findCanceledJobs(statusIds);
+
+                if (jobs.size() > 0) {
+                    pinsetterKernel.cancelJobs(jobs);
+                }
             }
             catch (PinsetterException e) {
-                log.error("Exception canceling jobs.", e);
+                log.error("Exception canceling jobs", e);
             }
         }
         catch (SchedulerException e) {
@@ -75,6 +80,6 @@ public class CancelJobJob extends KingpinJob {
 
     @Override
     protected boolean logExecutionTime() {
-        return false;
+        return log.isTraceEnabled();
     }
 }
