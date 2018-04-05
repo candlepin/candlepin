@@ -43,6 +43,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resource.util.GuestMigration;
+import org.candlepin.test.TestUtil;
 import org.candlepin.util.ElementTransformer;
 import org.candlepin.util.ServiceLevelValidator;
 
@@ -138,13 +139,13 @@ public class GuestIdResourceTest {
         when(guestIdCurator.findByConsumerAndId(eq(consumer), any(String.class)))
             .thenReturn(new GuestId("guest"));
         GuestIdDTO result = guestIdResource.getGuestId(consumer.getUuid(), "some-id");
-        assertEquals(new GuestIdDTO("guest"), result);
+        assertEquals(TestUtil.createGuestIdDTO("guest"), result);
     }
 
     @Test
     public void updateGuests() {
         List<GuestIdDTO> guestIds = new LinkedList<>();
-        guestIds.add(new GuestIdDTO("1"));
+        guestIds.add(TestUtil.createGuestIdDTO("1"));
         when(consumerResource.performConsumerUpdates(any(ConsumerDTO.class),
             eq(consumer), any(GuestMigration.class))).
             thenReturn(true);
@@ -160,7 +161,7 @@ public class GuestIdResourceTest {
     @Test
     public void updateGuestsNoUpdate() {
         List<GuestIdDTO> guestIds = new LinkedList<>();
-        guestIds.add(new GuestIdDTO("1"));
+        guestIds.add(TestUtil.createGuestIdDTO("1"));
 
         // consumerResource tells us nothing changed
         when(consumerResource.performConsumerUpdates(any(ConsumerDTO.class),
@@ -175,7 +176,7 @@ public class GuestIdResourceTest {
 
     @Test
     public void updateGuest() {
-        GuestIdDTO guest = new GuestIdDTO("some_guest");
+        GuestIdDTO guest = TestUtil.createGuestIdDTO("some_guest");
         GuestId guestEnt = new GuestId();
         guestEnt.setId("some_id");
         guestIdResource.updateGuest(consumer.getUuid(), guest.getGuestId(), guest);
@@ -188,7 +189,7 @@ public class GuestIdResourceTest {
 
     @Test(expected = BadRequestException.class)
     public void updateGuestMismatchedGuestId() {
-        GuestIdDTO guest = new GuestIdDTO("some_guest");
+        GuestIdDTO guest = TestUtil.createGuestIdDTO("some_guest");
         guestIdResource.updateGuest(consumer.getUuid(), "other_id", guest);
     }
 
@@ -227,7 +228,7 @@ public class GuestIdResourceTest {
         Consumer guestConsumer =
             new Consumer("guest_consumer", "guest_consumer", owner, ct);
         GuestId originalGuest = new GuestId("guest-id", guestConsumer);
-        GuestIdDTO guest = new GuestIdDTO("guest-id");
+        GuestIdDTO guest = TestUtil.createGuestIdDTO("guest-id");
 
         when(guestIdCurator.findByGuestIdAndOrg(
             eq(guest.getGuestId()), eq(owner.getId()))).thenReturn(originalGuest);

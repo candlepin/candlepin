@@ -55,15 +55,6 @@ public class GuestIdDTO extends TimestampedCandlepinDTO<GuestIdDTO> {
     }
 
     /**
-     * Convenience constructor for tests with required parameter guestId
-     */
-    public GuestIdDTO(String guestId) {
-        this();
-        this.guestId = guestId;
-        attributes = new HashMap<>();
-    }
-
-    /**
      * Initializes a new GuestIdDTO instance which is a shallow copy of the provided
      * source entity.
      *
@@ -72,6 +63,21 @@ public class GuestIdDTO extends TimestampedCandlepinDTO<GuestIdDTO> {
      */
     public GuestIdDTO(GuestIdDTO source) {
         super(source);
+    }
+
+    /**
+     * Creates a new GuestIdDTO initialized with the given guest ID.
+     *
+     * @param guestId
+     *  The guestId to set upon initialization
+     *
+     * @deprecated
+     *  This constructor is present purely to support legacy behavior and may be removed at any
+     *  point in the future
+     */
+    @Deprecated
+    public GuestIdDTO(String guestId) {
+        this.setGuestId(guestId);
     }
 
     /**
@@ -178,6 +184,7 @@ public class GuestIdDTO extends TimestampedCandlepinDTO<GuestIdDTO> {
                 .append(this.getId(), that.getId())
                 .append(this.getGuestId(), that.getGuestId())
                 .append(this.getAttributes(), that.getAttributes());
+
             return builder.isEquals();
         }
 
