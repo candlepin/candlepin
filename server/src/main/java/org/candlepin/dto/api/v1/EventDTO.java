@@ -504,7 +504,9 @@ public class EventDTO extends CandlepinDTO<EventDTO> {
     @Override
     public EventDTO clone() {
         EventDTO copy = super.clone();
-        copy.timestamp = this.timestamp != null ? (Date) this.timestamp.clone() : null;
+
+        Date timestamp = this.getTimestamp();
+        copy.setTimestamp(timestamp != null ? (Date) timestamp.clone() : null);
 
         return copy;
     }

@@ -178,7 +178,7 @@ public class EntitlementDTO extends CandlepinDTO<EntitlementDTO> {
      */
     @Override
     public String toString() {
-        return String.format("EntitlementDTO [ID: %s, pool: %s, quantity: %d]",
+        return String.format("EntitlementDTO [id: %s, pool id: %s, quantity: %d]",
             this.getId(), this.getPool() != null ? this.getPool().getId() : null, this.getQuantity());
     }
 
@@ -235,10 +235,13 @@ public class EntitlementDTO extends CandlepinDTO<EntitlementDTO> {
         EntitlementDTO copy = super.clone();
 
         PoolDTO pool = this.getPool();
-        copy.pool = pool != null ? pool.clone() : null;
+        copy.setPool(pool != null ? pool.clone() : null);
 
-        copy.endDate = this.endDate != null ? (Date) this.endDate.clone() : null;
-        copy.startDate = this.startDate != null ? (Date) this.startDate.clone() : null;
+        Date startDate = this.getStartDate();
+        copy.setStartDate(startDate != null ? (Date) startDate.clone() : null);
+
+        Date endDate = this.getEndDate();
+        copy.setEndDate(endDate != null ? (Date) endDate.clone() : null);
 
         return copy;
     }

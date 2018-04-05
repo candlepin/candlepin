@@ -50,7 +50,7 @@ public class UpstreamConsumerDTOTest extends AbstractDTOTest<UpstreamConsumerDTO
         this.values.put("ApiUrl", "test-api-url");
         this.values.put("WebUrl", "test-web-url");
         this.values.put("ConsumerType", type);
-        this.values.put("IdentityCertificate", cert);
+        this.values.put("IdCertificate", cert);
         this.values.put("OwnerId", "test-owner-id");
         this.values.put("ContentAccessMode", "test-content-access-mode");
         this.values.put("Created", new Date());

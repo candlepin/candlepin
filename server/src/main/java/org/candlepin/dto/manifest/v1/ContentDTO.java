@@ -523,7 +523,7 @@ public class ContentDTO extends TimestampedCandlepinDTO<ContentDTO> {
     public ContentDTO clone() {
         ContentDTO copy = super.clone();
 
-        copy.setModifiedProductIds(this.modifiedProductIds);
+        copy.setModifiedProductIds(this.getModifiedProductIds());
 
         return copy;
     }

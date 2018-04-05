@@ -144,7 +144,7 @@ public class BrandingDTO extends TimestampedCandlepinDTO<BrandingDTO> {
      */
     @Override
     public String toString() {
-        return String.format("BrandingDTO [productId: %s, name: %s, type: %s]",
+        return String.format("BrandingDTO [product id: %s, name: %s, type: %s]",
             this.getProductId(), this.getName(), this.getType());
     }
 
@@ -184,16 +184,6 @@ public class BrandingDTO extends TimestampedCandlepinDTO<BrandingDTO> {
             .append(this.getType());
 
         return builder.toHashCode();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public BrandingDTO clone() {
-        // Nothing to copy here. All fields are immutable types.
-
-        return super.clone();
     }
 
     /**

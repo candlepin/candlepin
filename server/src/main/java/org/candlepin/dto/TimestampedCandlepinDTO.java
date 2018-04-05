@@ -171,10 +171,10 @@ public abstract class TimestampedCandlepinDTO<T extends TimestampedCandlepinDTO>
         T copy = super.clone();
 
         Date created = this.getCreated();
-        copy.created = created != null ? (Date) created.clone() : null;
+        copy.setCreated(created != null ? (Date) created.clone() : null);
 
         Date updated = this.getUpdated();
-        copy.updated = updated != null ? (Date) updated.clone() : null;
+        copy.setUpdated(updated != null ? (Date) updated.clone() : null);
 
         return copy;
     }

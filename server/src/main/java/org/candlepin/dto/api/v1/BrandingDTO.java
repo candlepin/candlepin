@@ -166,16 +166,6 @@ public class BrandingDTO extends TimestampedCandlepinDTO<BrandingDTO> {
      * {@inheritDoc}
      */
     @Override
-    public BrandingDTO clone() {
-        // Nothing to copy here. All fields are immutable types.
-
-        return super.clone();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public BrandingDTO populate(BrandingDTO source) {
         super.populate(source);
 

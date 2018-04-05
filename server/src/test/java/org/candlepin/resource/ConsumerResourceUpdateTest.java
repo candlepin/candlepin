@@ -832,7 +832,7 @@ public class ConsumerResourceUpdateTest {
         resource.updateConsumer(consumer.getUuid(), updated, principal);
 
         assertEquals(updated.getName(), consumer.getName());
-        assertNull(consumer.getIdCert());
+        assertNull(consumer.getIdCertificate());
     }
 
     @Test

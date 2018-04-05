@@ -118,7 +118,7 @@ public class ConsumerTypeDTO extends CandlepinDTO<ConsumerTypeDTO> {
     @Override
     public String toString() {
         return String.format("ConsumerTypeDTO [id: %s, label: %s, manifest: %b]",
-                this.getId(), this.getLabel(), this.isManifest());
+            this.getId(), this.getLabel(), this.isManifest());
     }
 
     /**
@@ -155,15 +155,6 @@ public class ConsumerTypeDTO extends CandlepinDTO<ConsumerTypeDTO> {
             .append(this.isManifest());
 
         return builder.toHashCode();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ConsumerTypeDTO clone() {
-        // Nothing to do here; all the fields are immutable types.
-        return super.clone();
     }
 
     /**

@@ -420,8 +420,12 @@ public class JobStatusDTO extends TimestampedCandlepinDTO<JobStatusDTO> {
     @Override
     public JobStatusDTO clone() {
         JobStatusDTO copy = super.clone();
-        copy.startTime = this.startTime != null ? (Date) this.startTime.clone() : null;
-        copy.finishTime = this.finishTime != null ? (Date) this.finishTime.clone() : null;
+
+        Date startTime = this.getStartTime();
+        copy.setStartTime(startTime != null ? (Date) startTime.clone() : null);
+
+        Date endTime = this.getFinishTime();
+        copy.setFinishTime(endTime != null ? (Date) endTime.clone() : null);
 
         return copy;
     }

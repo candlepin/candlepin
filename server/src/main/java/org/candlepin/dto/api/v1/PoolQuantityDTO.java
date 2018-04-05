@@ -102,7 +102,7 @@ public class PoolQuantityDTO extends CandlepinDTO<PoolQuantityDTO> {
     @Override
     public String toString() {
         PoolDTO pool = this.getPool();
-        return String.format("PoolQuantityDTO [poolId: %s, quantity: %s]",
+        return String.format("PoolQuantityDTO [pool id: %s, quantity: %s]",
             pool != null ? pool.getId() : null, this.getQuantity());
     }
 
@@ -139,16 +139,6 @@ public class PoolQuantityDTO extends CandlepinDTO<PoolQuantityDTO> {
             .append(this.getPool() != null ? this.getPool().getId() : null);
 
         return builder.toHashCode();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public PoolQuantityDTO clone() {
-        // Nothing to copy here. All fields are immutable types.
-
-        return super.clone();
     }
 
     /**

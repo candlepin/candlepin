@@ -428,6 +428,7 @@ public class ConsumerResource {
             owner, userName, types, uuids, hypervisorIds, attrFilters,
             Collections.<String>emptyList(), Collections.<String>emptyList(),
             Collections.<String>emptyList());
+
         return this.translator.translateQuery(query, ConsumerDTO.class);
     }
 

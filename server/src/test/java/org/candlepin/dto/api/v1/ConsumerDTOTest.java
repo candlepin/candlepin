@@ -109,7 +109,7 @@ public class ConsumerDTOTest extends AbstractDTOTest<ConsumerDTO> {
         this.values.put("Annotations", "test-annotations");
         this.values.put("ContentAccessMode", "test-content-access-mode");
         this.values.put("Type", type);
-        this.values.put("IdentityCertificate", cert);
+        this.values.put("IdCertificate", cert);
         this.values.put("GuestIds", guestIdDTOS);
         this.values.put("Created", new Date());
         this.values.put("Updated", new Date());

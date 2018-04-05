@@ -438,18 +438,21 @@ public class EntitlementDTO extends TimestampedCandlepinDTO<EntitlementDTO> {
         EntitlementDTO copy = (EntitlementDTO) super.clone();
 
         OwnerDTO owner = this.getOwner();
-        copy.owner = owner != null ? owner.clone() : null;
+        copy.setOwner(owner != null ? owner.clone() : null);
 
         PoolDTO pool = this.getPool();
-        copy.pool = pool != null ? pool.clone() : null;
+        copy.setPool(pool != null ? pool.clone() : null);
 
         ConsumerDTO consumer = this.getConsumer();
-        copy.consumer = consumer != null ? consumer.clone() : null;
+        copy.setConsumer(consumer != null ? consumer.clone() : null);
+
+        Date startDate = this.getStartDate();
+        copy.setStartDate(startDate != null ? (Date) startDate.clone() : null);
+
+        Date endDate = this.getEndDate();
+        copy.setEndDate(endDate != null ? (Date) endDate.clone() : null);
 
         copy.setCertificates(this.getCertificates());
-
-        copy.endDate = this.endDate != null ? (Date) this.endDate.clone() : null;
-        copy.startDate = this.startDate != null ? (Date) this.startDate.clone() : null;
 
         return copy;
     }

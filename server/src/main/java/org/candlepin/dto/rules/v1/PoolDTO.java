@@ -727,8 +727,11 @@ public class PoolDTO extends CandlepinDTO<PoolDTO> {
         copy.setProvidedProducts(this.getProvidedProducts());
         copy.setDerivedProvidedProducts(this.getDerivedProvidedProducts());
 
-        copy.endDate = this.endDate != null ? (Date) this.endDate.clone() : null;
-        copy.startDate = this.startDate != null ? (Date) this.startDate.clone() : null;
+        Date startDate = this.getStartDate();
+        copy.setStartDate(startDate != null ? (Date) startDate.clone() : null);
+
+        Date endDate = this.getEndDate();
+        copy.setEndDate(endDate != null ? (Date) endDate.clone() : null);
 
         return copy;
     }

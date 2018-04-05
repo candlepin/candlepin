@@ -207,7 +207,6 @@ public class CdnDTO extends TimestampedCandlepinDTO<CdnDTO> {
      */
     @Override
     public int hashCode() {
-
         HashCodeBuilder builder = new HashCodeBuilder(37, 7)
             .append(super.hashCode())
             .append(this.getId())
@@ -228,7 +227,7 @@ public class CdnDTO extends TimestampedCandlepinDTO<CdnDTO> {
         CdnDTO copy = super.clone();
 
         CertificateDTO cdnCert = this.getCertificate();
-        copy.cert = cdnCert != null ? cdnCert.clone() : null;
+        copy.setCertificate(cdnCert != null ? cdnCert.clone() : null);
 
         return copy;
     }
