@@ -206,7 +206,7 @@ public class PoolRules {
             // Using derived here because only one derived pool is created for
             // this subscription
             Pool bonusPool = PoolHelper.clonePool(masterPool, sku, virtQuantity, virtAttributes, "derived",
-                ownerProductCurator, null, productCurator);
+                ownerProductCurator, null, null, productCurator);
 
             log.info("Creating new derived pool: {}", bonusPool);
             return bonusPool;
@@ -387,8 +387,8 @@ public class PoolRules {
      * @return updates
      */
     public List<PoolUpdate> updatePoolsFromStack(Consumer consumer, Collection<Pool> pools,
-        boolean deleteIfNoStackedEnts) {
-        return updatePoolsFromStack(consumer, pools, null, deleteIfNoStackedEnts);
+        Collection<Entitlement> entitlements, boolean deleteIfNoStackedEnts) {
+        return updatePoolsFromStack(consumer, pools, entitlements, null, deleteIfNoStackedEnts);
     }
 
     /**
@@ -399,7 +399,8 @@ public class PoolRules {
      * @return updates
      */
     public List<PoolUpdate> updatePoolsFromStack(Consumer consumer, Collection<Pool> pools,
-        Collection<String> alreadyDeletedPools, boolean deleteIfNoStackedEnts) {
+        Collection<Entitlement> newEntitlements, Collection<String> alreadyDeletedPools,
+        boolean deleteIfNoStackedEnts) {
 
         Map<String, List<Entitlement>> entitlementMap = new HashMap<>();
         Set<String> sourceStackIds = new HashSet<>();
@@ -409,7 +410,12 @@ public class PoolRules {
             sourceStackIds.add(pool.getSourceStackId());
         }
 
-        for (Entitlement entitlement : this.entCurator.findByStackIds(consumer, sourceStackIds)) {
+        List<Entitlement> allEntitlements = this.entCurator.findByStackIds(consumer, sourceStackIds).list();
+        if (CollectionUtils.isNotEmpty(newEntitlements)) {
+            allEntitlements.addAll(newEntitlements);
+        }
+
+        for (Entitlement entitlement : allEntitlements) {
             List<Entitlement> ents = entitlementMap.get(entitlement.getPool().getStackId());
             if (ents == null) {
                 ents = new ArrayList<>();

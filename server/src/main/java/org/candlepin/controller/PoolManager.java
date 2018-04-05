@@ -147,9 +147,9 @@ public interface PoolManager {
     Set<Pool> revokeEntitlements(List<Entitlement> ents);
     void revokeEntitlement(Entitlement entitlement);
 
-    Pool updatePoolQuantity(Pool pool, long adjust);
-
     Pool setPoolQuantity(Pool pool, long set);
+
+    void setPoolQuantity(Map<Pool, Long> poolQuantities);
 
     void regenerateDirtyEntitlements(Consumer consumer);
 
@@ -231,7 +231,8 @@ public interface PoolManager {
      * @param consumer
      * @param pools
      */
-    void updatePoolsFromStack(Consumer consumer, List<Pool> pool);
+    void updatePoolsFromStackWithoutDeletingStack(Consumer consumer,
+        List<Pool> pool, Collection<Entitlement> entitlements);
 
     /**
      * @param guest products we want to provide for
@@ -320,9 +321,6 @@ public interface PoolManager {
     void deletePools(Collection<Pool> pools);
 
     void deletePools(Collection<Pool> pools, Collection<String> alreadyDeletedPools);
-
-    void handlePostEntitlement(PoolManager manager, Consumer consumer, Owner owner,
-        Map<String, Entitlement> entitlements, Map<String, PoolQuantity> poolQuantityMap);
 
     void checkBonusPoolQuantities(String ownerId,
         Map<String, Entitlement> entitlements);

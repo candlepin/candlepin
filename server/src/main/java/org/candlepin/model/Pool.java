@@ -1439,6 +1439,20 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
         }
     }
 
+    /**
+     * adjusts current quantity by adding the input quantity
+     * @param quantityToAdjust the quantity to add
+     * @return the updated quantity
+     */
+    @JsonIgnore
+    public long adjustQuantity(long quantityToAdjust) {
+        long newCount = getQuantity() + quantityToAdjust;
+        if (newCount < 0) {
+            newCount = 0;
+        }
+        return newCount;
+    }
+
     @JsonIgnore
     public static Long parseQuantity(String quantity) {
         Long q;

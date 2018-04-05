@@ -170,6 +170,25 @@ public class PoolTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void testQuantityAdjust() {
+        Pool p = new Pool();
+        p.setQuantity(10L);
+        Long q = p.adjustQuantity(2L);
+        assertEquals((Long) 12L, (Long) q);
+
+        q = p.adjustQuantity(-2L);
+        assertEquals((Long) 8L, (Long) q);
+    }
+
+    @Test
+    public void testQuantityAdjustNonNegative() {
+        Pool p = new Pool();
+        p.setQuantity(0L);
+        Long q = p.adjustQuantity(-2L);
+        assertEquals((Long) 0L, (Long) q);
+    }
+
+    @Test
     public void testUnlimitedPool() {
         Product newProduct = this.createProduct(owner);
 

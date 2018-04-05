@@ -21,6 +21,7 @@ import org.candlepin.audit.EventBuilder;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.bind.BindChainFactory;
+import org.candlepin.bind.PoolOperationCallback;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
@@ -1610,7 +1611,9 @@ public class CandlepinPoolManager implements PoolManager {
         Owner owner = ownerCurator.get(consumer.getOwnerId());
 
         // the only thing we do here is decrement bonus pool quantity
-        enforcer.postEntitlement(this, consumer, owner, entMap, new ArrayList<>(), true, poolQuantityMap);
+        PoolOperationCallback poolOperationCallback = enforcer.postEntitlement(this,
+            consumer, owner, entMap, new ArrayList<>(), true, poolQuantityMap);
+        poolOperationCallback.apply(this);
 
         // we might have changed the bonus pool quantities, revoke ents if needed.
         checkBonusPoolQuantities(consumer.getOwnerId(), entMap);
@@ -2002,7 +2005,7 @@ public class CandlepinPoolManager implements PoolManager {
 
             List<Pool> subPools = poolCurator.getSubPoolForStackIds(entry.getKey(), stackIds);
             if (CollectionUtils.isNotEmpty(subPools)) {
-                poolRules.updatePoolsFromStack(entry.getKey(), subPools, alreadyDeletedPools, true);
+                poolRules.updatePoolsFromStack(entry.getKey(), subPools, null, alreadyDeletedPools, true);
             }
         }
     }
@@ -2252,7 +2255,7 @@ public class CandlepinPoolManager implements PoolManager {
                                         subPools.size(), consumer);
 
                                     this.poolRules.updatePoolsFromStack(
-                                        consumer, subPools, alreadyDeletedPoolIds, true);
+                                        consumer, subPools, null, alreadyDeletedPoolIds, true);
                                 }
                             }
                         }
@@ -2312,25 +2315,6 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     /**
-     * Adjust the count of a pool. The caller does not have knowledge
-     * of the current quantity. It only determines how much to adjust.
-     *
-     * @param pool The pool.
-     * @param adjust the long amount to adjust ( +/-)
-     * @return pool
-     */
-    @Override
-    public Pool updatePoolQuantity(Pool pool, long adjust) {
-        pool = poolCurator.lockAndLoad(pool);
-        long newCount = pool.getQuantity() + adjust;
-        if (newCount < 0) {
-            newCount = 0;
-        }
-        pool.setQuantity(newCount);
-        return poolCurator.merge(pool);
-    }
-
-    /**
      * Set the count of a pool. The caller sets the absolute quantity.
      *   Current use is setting unlimited bonus pool to -1 or 0.
      *
@@ -2343,6 +2327,21 @@ public class CandlepinPoolManager implements PoolManager {
         pool = poolCurator.lockAndLoad(pool);
         pool.setQuantity(set);
         return poolCurator.merge(pool);
+    }
+
+    /**
+     * Set the count of pools. The caller sets the absolute quantity.
+     *   Current use is setting unlimited bonus pool to -1 or 0.
+     */
+    @Override
+    public void setPoolQuantity(Map<Pool, Long> poolQuantities) {
+        if (poolQuantities != null) {
+            poolCurator.lockAndLoad(poolQuantities.keySet());
+            for (Entry<Pool, Long> entry : poolQuantities.entrySet()) {
+                entry.getKey().setQuantity(entry.getValue());
+            }
+            poolCurator.mergeAll(poolQuantities.keySet(), false);
+        }
     }
 
     @Override
@@ -2372,42 +2371,6 @@ public class CandlepinPoolManager implements PoolManager {
         boolean lazy) {
 
         return new Refresher(this, subAdapter, ownerAdapter, ownerManager, lazy);
-    }
-
-    public void handlePostEntitlement(PoolManager manager, Consumer consumer, Owner owner,
-        Map<String, Entitlement> entitlements, Map<String, PoolQuantity> poolQuantityMap) {
-        Set<String> stackIds = new HashSet<>();
-
-        for (Entitlement entitlement : entitlements.values()) {
-            if (entitlement.getPool().isStacked()) {
-                stackIds.add(entitlement.getPool().getStackId());
-            }
-        }
-
-        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
-
-        List<Pool> subPoolsForStackIds = null;
-        // Manifest and Share consumers should not contribute to the sharing org's stack,
-        // as these consumer types should not have created a stack derived pool in the first place.
-        // Therefore, we do not need to check if any stack derived pools need updating
-        if (!stackIds.isEmpty() && !ctype.isType(ConsumerTypeEnum.SHARE) && !ctype.isManifest()) {
-            subPoolsForStackIds = poolCurator.getSubPoolForStackIds(consumer, stackIds);
-            if (CollectionUtils.isNotEmpty(subPoolsForStackIds)) {
-                poolRules.updatePoolsFromStack(consumer, subPoolsForStackIds, false);
-                poolCurator.mergeAll(subPoolsForStackIds, false);
-            }
-        }
-        else {
-            subPoolsForStackIds = new ArrayList<>();
-        }
-
-        enforcer.postEntitlement(manager,
-            consumer,
-            owner,
-            entitlements,
-            subPoolsForStackIds,
-            false,
-            poolQuantityMap);
     }
 
     @Override
@@ -2529,8 +2492,9 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     @Override
-    public void updatePoolsFromStack(Consumer consumer, List<Pool> pools) {
-        poolRules.updatePoolsFromStack(consumer, pools, false);
+    public void updatePoolsFromStackWithoutDeletingStack(Consumer consumer, List<Pool> pools,
+        Collection<Entitlement> entitlements) {
+        poolRules.updatePoolsFromStack(consumer, pools, entitlements, false);
     }
 
     public List<Pool> getOwnerSubPoolsForStackId(Owner owner, String stackId) {

@@ -14,6 +14,7 @@
  */
 package org.candlepin.policy.js.entitlement;
 
+import org.candlepin.bind.PoolOperationCallback;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
@@ -138,9 +139,11 @@ public interface Enforcer {
      * @param c consumer
      * @param ents The entitlement that was just granted.
      * @param subPoolsForStackIds
+     * @return the delayedPoolOp encapsulating all the computed operations to perform later
      */
-    void postEntitlement(PoolManager poolManager, Consumer c, Owner owner, Map<String, Entitlement> ents,
-        List<Pool> subPoolsForStackIds, boolean isUpdate, Map<String, PoolQuantity> poolQuantityMap);
+    PoolOperationCallback postEntitlement(PoolManager poolManager, Consumer c, Owner owner, Map<String,
+        Entitlement> ents, List<Pool> subPoolsForStackIds, boolean isUpdate, Map<String,
+        PoolQuantity> poolQuantityMap);
 
     /**
      * Run post-entitlement actions.

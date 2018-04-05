@@ -24,6 +24,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.bind.PoolOperationCallback;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
@@ -173,8 +174,9 @@ public class PoolHelperTest {
         attributes.put(targetPool2.getId(), PoolHelper.getFlattenedAttributes(targetPool2));
 
         when(pm.createPools(anyListOf(Pool.class))).then(returnsFirstArg());
-        List<Pool> pools = PoolHelper.createHostRestrictedPools(pm, cons, targetPools, entitlements,
-            attributes, productCurator);
+        PoolOperationCallback poolOperationCallback = PoolHelper.createHostRestrictedPools(pm,
+            cons, targetPools, entitlements, attributes, productCurator);
+        List<Pool> pools = poolOperationCallback.getPoolCreates();
 
         assertEquals(2, pools.size());
         Pool first = null, second = null;
@@ -235,9 +237,10 @@ public class PoolHelperTest {
         Map<String, Map<String, String>> attributes = new HashMap<>();
         attributes.put(targetPool.getId(), PoolHelper.getFlattenedAttributes(targetPool));
         when(pm.createPools(anyListOf(Pool.class))).then(returnsFirstArg());
-        List<Pool> hostRestrictedPools = PoolHelper.createHostRestrictedPools(pm, cons, targetPools,
-            entitlements, attributes, productCurator);
+        PoolOperationCallback poolOperationCallback = PoolHelper.createHostRestrictedPools(pm,
+            cons, targetPools, entitlements, attributes, productCurator);
 
+        List<Pool> hostRestrictedPools = poolOperationCallback.getPoolCreates();
         assertEquals(1, hostRestrictedPools.size());
         Pool hostRestrictedPool = hostRestrictedPools.get(0);
         assertEquals(targetPool.getId(), hostRestrictedPool.getAttributeValue("source_pool_id"));
@@ -269,7 +272,7 @@ public class PoolHelperTest {
         pool.getBranding().add(branding);
         String quant = "unlimited";
         Pool clone = PoolHelper.clonePool(pool, product2, quant, attributes, "TaylorSwift", null,
-            ent, productCurator);
+            ent, TestUtil.createConsumer(), productCurator);
         assertEquals(owner, clone.getOwner());
         assertEquals(new Long(-1L), clone.getQuantity());
         assertEquals(product2, clone.getProduct());

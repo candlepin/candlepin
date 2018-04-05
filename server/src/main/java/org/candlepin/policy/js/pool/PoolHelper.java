@@ -14,6 +14,7 @@
  */
 package org.candlepin.policy.js.pool;
 
+import org.candlepin.bind.PoolOperationCallback;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
@@ -80,10 +81,11 @@ public class PoolHelper {
      * @param pools Pools these host restricted pools are being derived from.
      * @return pools the created pools
      */
-    public static List<Pool> createHostRestrictedPools(PoolManager poolManager, Consumer consumer,
+    public static PoolOperationCallback createHostRestrictedPools(PoolManager poolManager, Consumer consumer,
         List<Pool> pools, Map<String, Entitlement> sourceEntitlements,
         Map<String, Map<String, String>> attributeMaps, ProductCurator productCurator) {
-        List<Pool> poolsToCreate = new ArrayList<>();
+
+        PoolOperationCallback poolOperationCallback = new PoolOperationCallback();
         List<Pool> poolsToUpdateFromStack = new ArrayList<>();
         for (Pool pool : pools) {
             Product product = pool.getProduct();
@@ -103,6 +105,8 @@ public class PoolHelper {
                     pool.getOrderNumber(),
                     productCurator.getPoolProvidedProductsCached(pool),
                     sourceEntitlements.get(pool.getId()),
+                    consumer,
+                    pool,
                     pool.hasSharedAncestor());
             }
             else {
@@ -123,6 +127,8 @@ public class PoolHelper {
                     pool.getOrderNumber(),
                     productCurator.getPoolDerivedProvidedProductsCached(pool),
                     sourceEntitlements.get(pool.getId()),
+                    consumer,
+                    pool,
                     pool.hasSharedAncestor());
             }
 
@@ -143,18 +149,18 @@ public class PoolHelper {
 
                 String subscriptionId = pool.getSubscriptionId();
                 if (subscriptionId != null && !subscriptionId.isEmpty()) {
-                    consumerSpecificPool.setSourceSubscription(new SourceSubscription(subscriptionId,
-                        sourceEntitlements.get(pool.getId()).getId()));
+                    poolOperationCallback.createSourceSubscription(consumerSpecificPool, subscriptionId,
+                        sourceEntitlements.get(pool.getId()));
                 }
             }
-            poolsToCreate.add(consumerSpecificPool);
+            poolOperationCallback.addPoolToCreate(consumerSpecificPool);
         }
 
         if (CollectionUtils.isNotEmpty(poolsToUpdateFromStack)) {
-            poolManager.updatePoolsFromStack(consumer, poolsToUpdateFromStack);
+            poolManager.updatePoolsFromStackWithoutDeletingStack(consumer, poolsToUpdateFromStack, null);
         }
 
-        return poolManager.createPools(poolsToCreate);
+        return poolOperationCallback;
     }
 
     /**
@@ -224,13 +230,13 @@ public class PoolHelper {
 
     public static Pool clonePool(Pool sourcePool, Product product, String quantity,
         Map<String, String> attributes, String subKey, OwnerProductCurator curator,
-        Entitlement sourceEntitlement, ProductCurator productCurator) {
+        Entitlement sourceEntitlement, Consumer sourceConsumer, ProductCurator productCurator) {
 
         Pool pool = createPool(product, sourcePool.getOwner(), quantity,
             sourcePool.getStartDate(), sourcePool.getEndDate(),
             sourcePool.getContractNumber(), sourcePool.getAccountNumber(),
             sourcePool.getOrderNumber(), new HashSet<>(), sourceEntitlement,
-            sourcePool.hasSharedAncestor());
+            sourceConsumer, sourcePool, sourcePool.hasSharedAncestor());
 
         SourceSubscription srcSub = sourcePool.getSourceSubscription();
         if (srcSub != null && srcSub.getSubscriptionId() != null) {
@@ -262,7 +268,8 @@ public class PoolHelper {
 
     private static Pool createPool(Product product, Owner owner, String quantity, Date startDate,
         Date endDate, String contractNumber, String accountNumber, String orderNumber,
-        Set<Product> providedProducts, Entitlement sourceEntitlement, Boolean hasSharedAncestor) {
+        Set<Product> providedProducts, Entitlement sourceEntitlement, Consumer sourceConsumer,
+        Pool sourcePool, Boolean hasSharedAncestor) {
 
         Long q = Pool.parseQuantity(quantity);
 
@@ -281,10 +288,9 @@ public class PoolHelper {
         // Must be sure to copy the provided products, not try to re-use them directly:
         pool.setProvidedProducts(providedProducts);
 
-        if (sourceEntitlement != null && sourceEntitlement.getPool() != null) {
-            if (sourceEntitlement.getPool().isStacked()) {
-                pool.setSourceStack(new SourceStack(sourceEntitlement.getConsumer(),
-                    sourceEntitlement.getPool().getStackId()));
+        if (sourcePool != null && sourceConsumer != null && sourceEntitlement != null) {
+            if (sourcePool.isStacked()) {
+                pool.setSourceStack(new SourceStack(sourceConsumer, sourcePool.getStackId()));
             }
             else {
                 pool.setSourceEntitlement(sourceEntitlement);
