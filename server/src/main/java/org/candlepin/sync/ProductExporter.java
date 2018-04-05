@@ -14,6 +14,9 @@
  */
 package org.candlepin.sync;
 
+import com.google.inject.Inject;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.manifest.v1.ProductDTO;
 import org.candlepin.model.Product;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,9 +29,16 @@ import java.io.Writer;
  */
 public class ProductExporter {
 
+    private ModelTranslator translator;
+
+    @Inject
+    public ProductExporter(ModelTranslator translator) {
+        this.translator = translator;
+    }
+
     public void export(ObjectMapper mapper, Writer writer, Product product)
         throws IOException {
-        mapper.writeValue(writer, product);
+        mapper.writeValue(writer, this.translator.translate(product, ProductDTO.class));
     }
 
 }

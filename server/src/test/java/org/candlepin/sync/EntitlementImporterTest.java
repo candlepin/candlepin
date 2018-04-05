@@ -25,6 +25,7 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.manifest.v1.ConsumerDTO;
 import org.candlepin.dto.manifest.v1.EntitlementDTO;
+import org.candlepin.dto.manifest.v1.ProductDTO;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerial;
@@ -99,7 +100,8 @@ public class EntitlementImporterTest {
             ownerCurator);
 
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        this.importer = new EntitlementImporter(certSerialCurator, cdnCurator, i18n, mockProductCurator, ec);
+        this.importer = new EntitlementImporter(certSerialCurator, cdnCurator, i18n, mockProductCurator, ec,
+            translator);
 
         ConsumerType ctype = TestUtil.createConsumerType();
         ctype.setId("test-ctype");
@@ -152,7 +154,7 @@ public class EntitlementImporterTest {
         when(om.readValue(reader, EntitlementDTO.class)).thenReturn(dtoEnt);
 
         // Create our expected products
-        Map<String, Product> productsById = buildProductCache(
+        Map<String, ProductDTO> productsById = buildProductCache(
             parentProduct, provided1, derivedProduct, derivedProvided1);
 
         Subscription sub = importer.importObject(om, reader, owner,
@@ -190,10 +192,10 @@ public class EntitlementImporterTest {
         assertEquals(sub.getCdn().getLabel(), meta.getCdnLabel());
     }
 
-    private Map<String, Product> buildProductCache(Product... products) {
-        Map<String, Product> productsById = new HashMap<>();
+    private Map<String, ProductDTO> buildProductCache(Product... products) {
+        Map<String, ProductDTO> productsById = new HashMap<>();
         for (Product p : products) {
-            productsById.put(p.getId(), p);
+            productsById.put(p.getId(), this.translator.translate(p, ProductDTO.class));
         }
         return productsById;
     }

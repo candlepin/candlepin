@@ -23,6 +23,7 @@ import org.candlepin.dto.manifest.v1.CertificateDTO;
 import org.candlepin.dto.manifest.v1.CertificateSerialDTO;
 import org.candlepin.dto.manifest.v1.ConsumerDTO;
 import org.candlepin.dto.manifest.v1.ConsumerTypeDTO;
+import org.candlepin.dto.manifest.v1.ProductDTO;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerial;
@@ -42,7 +43,6 @@ import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.ImportUpstreamConsumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.dto.Subscription;
@@ -571,7 +571,7 @@ public class Importer {
         if (importFiles.get(ImportFile.PRODUCTS.fileName()) != null) {
             ProductImporter importer = new ProductImporter();
 
-            Set<Product> productsToImport = importProducts(
+            Set<ProductDTO> productsToImport = importProducts(
                 importFiles.get(ImportFile.PRODUCTS.fileName()).listFiles(), importer, owner
             );
 
@@ -746,10 +746,10 @@ public class Importer {
         }
     }
 
-    protected Set<Product> importProducts(File[] products, ProductImporter importer, Owner owner)
+    protected Set<ProductDTO> importProducts(File[] products, ProductImporter importer, Owner owner)
         throws IOException {
 
-        Set<Product> productsToImport = new HashSet<>();
+        Set<ProductDTO> productsToImport = new HashSet<>();
         for (File product : products) {
             // Skip product.pem's, we just need the json to import:
             if (product.getName().endsWith(".json")) {
@@ -768,17 +768,17 @@ public class Importer {
         return productsToImport;
     }
 
-    protected List<Subscription> importEntitlements(Owner owner, Set<Product> products, File[] entitlements,
+    protected List<Subscription> importEntitlements(Owner owner, Set<ProductDTO> products, File[] entitlements,
         String consumerUuid, Meta meta)
         throws IOException, SyncDataFormatException {
 
         log.debug("Importing entitlements for owner: {}", owner);
 
         EntitlementImporter importer = new EntitlementImporter(csCurator, cdnCurator, i18n, productCurator,
-            entitlementCurator);
-        Map<String, Product> productsById = new HashMap<>();
+            entitlementCurator, translator);
+        Map<String, ProductDTO> productsById = new HashMap<>();
 
-        for (Product product : products) {
+        for (ProductDTO product : products) {
             log.debug("Adding product owned by {} to ID map", owner.getKey());
 
             // Note: This may actually be causing problems with subscriptions receiving the wrong
