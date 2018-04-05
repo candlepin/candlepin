@@ -91,7 +91,6 @@ public class HypervisorResource {
     private Provider<GuestMigration> migrationProvider;
     private ModelTranslator translator;
     private GuestIdResource guestIdResource;
-
     private ConsumerType hypervisorType;
 
     @Inject
@@ -99,7 +98,6 @@ public class HypervisorResource {
         ConsumerTypeCurator consumerTypeCurator, I18n i18n, OwnerCurator ownerCurator,
         Provider<GuestMigration> migrationProvider, ModelTranslator translator,
         GuestIdResource guestIdResource) {
-
         this.consumerResource = consumerResource;
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -208,6 +206,7 @@ public class HypervisorResource {
                 log.debug("Syncing virt host: {} ({} guest IDs)", hypervisorId, hostEntry.getValue().size());
 
                 boolean hostConsumerCreated = false;
+                boolean updatedType = false;
                 // Attempt to find a consumer for the given hypervisorId
                 Consumer consumer = null;
                 if (hypervisorConsumersMap.get(hypervisorId) == null) {
@@ -223,6 +222,10 @@ public class HypervisorResource {
                 }
                 else {
                     consumer = hypervisorConsumersMap.get(hypervisorId);
+                    if (!hypervisorType.getId().equals(consumer.getTypeId())) {
+                        consumer.setType(hypervisorType);
+                        updatedType = true;
+                    }
                 }
                 List<GuestId> guestIds = new ArrayList<>();
                 guestIdResource.populateEntities(guestIds, hostEntry.getValue());
@@ -235,7 +238,7 @@ public class HypervisorResource {
                 if (hostConsumerCreated) {
                     result.created(consumer);
                 }
-                else if (guestIdsUpdated) {
+                else if (guestIdsUpdated || updatedType) {
                     result.updated(consumer);
                 }
                 else {
