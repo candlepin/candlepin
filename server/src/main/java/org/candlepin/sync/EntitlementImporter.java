@@ -16,12 +16,14 @@ package org.candlepin.sync;
 
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.manifest.v1.BrandingDTO;
 import org.candlepin.dto.manifest.v1.CertificateDTO;
 import org.candlepin.dto.manifest.v1.CertificateSerialDTO;
 import org.candlepin.dto.manifest.v1.EntitlementDTO;
 import org.candlepin.dto.manifest.v1.OwnerDTO;
 import org.candlepin.dto.manifest.v1.PoolDTO;
+import org.candlepin.dto.manifest.v1.ProductDTO;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCurator;
@@ -32,7 +34,6 @@ import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
-import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.SourceStack;
@@ -66,19 +67,21 @@ public class EntitlementImporter {
     private I18n i18n;
     private ProductCurator productCurator;
     private EntitlementCurator entitlementCurator;
+    private ModelTranslator translator;
 
     public EntitlementImporter(CertificateSerialCurator csCurator, CdnCurator cdnCurator, I18n i18n,
-        ProductCurator productCurator, EntitlementCurator entitlementCurator) {
+        ProductCurator productCurator, EntitlementCurator entitlementCurator, ModelTranslator translator) {
 
         this.csCurator = csCurator;
         this.cdnCurator = cdnCurator;
         this.i18n = i18n;
         this.productCurator = productCurator;
         this.entitlementCurator = entitlementCurator;
+        this.translator = translator;
     }
 
     public Subscription importObject(ObjectMapper mapper, Reader reader, Owner owner,
-        Map<String, Product> productsById, String consumerUuid, Meta meta)
+        Map<String, ProductDTO> productsById, String consumerUuid, Meta meta)
         throws IOException, SyncDataFormatException {
 
         EntitlementDTO entitlementDTO = mapper.readValue(reader, EntitlementDTO.class);
@@ -123,13 +126,13 @@ public class EntitlementImporter {
             }
         }
 
-        Product product = this.findProduct(productsById, entitlement.getPool().getProductId());
-        subscription.setProduct(product.toDTO());
+        ProductDTO productDTO = this.findProduct(productsById, entitlement.getPool().getProductId());
+        subscription.setProduct(this.translator.translate(productDTO, ProductData.class));
 
         // Add any sub product data to the subscription.
         if (entitlement.getPool().getDerivedProductId() != null) {
-            product = this.findProduct(productsById, entitlement.getPool().getDerivedProductId());
-            subscription.setDerivedProduct(product.toDTO());
+            productDTO = this.findProduct(productsById, entitlement.getPool().getDerivedProductId());
+            subscription.setDerivedProduct(this.translator.translate(productDTO, ProductData.class));
         }
 
         associateProvidedProducts(productsById, entitlement, subscription);
@@ -567,7 +570,7 @@ public class EntitlementImporter {
      * before. On import we load into these transient collections, and here we transfer
      * to the actual persisted location.
      */
-    public void associateProvidedProducts(Map<String, Product> productsById, Entitlement entitlement,
+    public void associateProvidedProducts(Map<String, ProductDTO> productsById, Entitlement entitlement,
         Subscription subscription)
         throws SyncDataFormatException {
 
@@ -575,16 +578,16 @@ public class EntitlementImporter {
         Set<ProductData> providedProducts = new HashSet<>();
         entitlement.getPool().populateAllTransientProvidedProducts(productCurator);
         for (ProvidedProduct providedProduct : entitlement.getPool().getProvidedProductDtos()) {
-            Product product = this.findProduct(productsById, providedProduct.getProductId());
-            providedProducts.add(product.toDTO());
+            ProductDTO productDTO = this.findProduct(productsById, providedProduct.getProductId());
+            providedProducts.add(this.translator.translate(productDTO, ProductData.class));
         }
         subscription.setProvidedProducts(providedProducts);
 
         // Associate derived provided products:
         Set<ProductData> derivedProvidedProducts = new HashSet<>();
         for (ProvidedProduct pp : entitlement.getPool().getDerivedProvidedProductDtos()) {
-            Product product = this.findProduct(productsById, pp.getProductId());
-            derivedProvidedProducts.add(product.toDTO());
+            ProductDTO productDTO = this.findProduct(productsById, pp.getProductId());
+            derivedProvidedProducts.add(this.translator.translate(productDTO, ProductData.class));
         }
         subscription.setDerivedProvidedProducts(derivedProvidedProducts);
 
@@ -592,10 +595,10 @@ public class EntitlementImporter {
         log.debug("Subscription has {} derived provided products.", derivedProvidedProducts.size());
     }
 
-    private Product findProduct(Map<String, Product> productsById, String productId)
+    private ProductDTO findProduct(Map<String, ProductDTO> productsById, String productId)
         throws SyncDataFormatException {
 
-        Product product = productsById.get(productId);
+        ProductDTO product = productsById.get(productId);
         if (product == null) {
             throw new SyncDataFormatException(i18n.tr("Unable to find product with ID: {0}", productId));
         }

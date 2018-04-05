@@ -135,7 +135,7 @@ public class ExporterTest {
         re = new RulesExporter(rc);
         ece = new EntitlementCertExporter();
         ecsa = mock(EntitlementCertServiceAdapter.class);
-        pe = new ProductExporter();
+        pe = new ProductExporter(translator);
         psa = mock(ProductServiceAdapter.class);
         pce = new ProductCertExporter();
         ec = mock(EntitlementCurator.class);

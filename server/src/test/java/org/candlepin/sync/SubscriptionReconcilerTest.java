@@ -24,13 +24,18 @@ import java.util.List;
 import java.util.Locale;
 
 import org.candlepin.audit.EventSink;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.StandardTranslator;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolCurator;
@@ -68,15 +73,18 @@ public class SubscriptionReconcilerTest {
     private I18n i18n;
     private int index = 1;
     private SubscriptionReconciler reconciler;
+    private ModelTranslator translator;
 
 
     @Before
     public void init() {
         this.owner = new Owner();
         this.reconciler = new SubscriptionReconciler(this.poolCurator);
+        this.translator = new StandardTranslator(new ConsumerTypeCurator(), new EnvironmentCurator(),
+            new OwnerCurator());
 
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        this.importer = new EntitlementImporter(certSerialCurator, cdnCurator, i18n, pc, ec);
+        this.importer = new EntitlementImporter(certSerialCurator, cdnCurator, i18n, pc, ec, translator);
     }
 
     /*

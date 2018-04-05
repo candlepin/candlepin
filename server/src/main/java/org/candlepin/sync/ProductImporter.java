@@ -14,10 +14,9 @@
  */
 package org.candlepin.sync;
 
-import org.candlepin.model.Content;
+import org.candlepin.dto.manifest.v1.ContentDTO;
+import org.candlepin.dto.manifest.v1.ProductDTO;
 import org.candlepin.model.Owner;
-import org.candlepin.model.Product;
-import org.candlepin.model.ProductContent;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -40,9 +39,9 @@ public class ProductImporter {
         // Intentionally left empty
     }
 
-    public Product createObject(ObjectMapper mapper, Reader reader, Owner owner) throws IOException {
+    public ProductDTO createObject(ObjectMapper mapper, Reader reader, Owner owner) throws IOException {
 
-        Product importedProduct = mapper.readValue(reader, Product.class);
+        ProductDTO importedProduct = mapper.readValue(reader, ProductDTO.class);
 
         // Make sure the (UU)ID's are null, otherwise Hibernate thinks these are
         // detached entities.
@@ -52,27 +51,29 @@ public class ProductImporter {
         // so we can use multipliers on local products if necessary.
         importedProduct.setMultiplier(1L);
 
-        // Update attached content and ensure it isn't malformed
-        for (ProductContent pc : importedProduct.getProductContent()) {
-            Content content = pc.getContent();
+        if (importedProduct.getProductContent() != null) {
+            // Update attached content and ensure it isn't malformed
+            for (ProductDTO.ProductContentDTO pc : importedProduct.getProductContent()) {
+                ContentDTO content = pc.getContent();
 
-            // Clear the UUID
-            content.setUuid(null);
+                // Clear the UUID
+                content.setUuid(null);
 
-            // Fix the vendor string if it is/was cleared (BZ 990113)
-            if (StringUtils.isBlank(content.getVendor())) {
-                content.setVendor("unknown");
+                // Fix the vendor string if it is/was cleared (BZ 990113)
+                if (StringUtils.isBlank(content.getVendor())) {
+                    content.setVendor("unknown");
+                }
+
+                // On standalone servers we will set metadata expire to 1 second so
+                // clients an immediately get changes to content when published on the
+                // server. We would use 0, but the client plugin interprets this as unset
+                // and ignores it completely resulting in the default yum values being
+                // used.
+                //
+                // We know this is a standalone server due to the fact that import is
+                // being used, so there is no need to guard this behavior.
+                content.setMetadataExpire(1L);
             }
-
-            // On standalone servers we will set metadata expire to 1 second so
-            // clients an immediately get changes to content when published on the
-            // server. We would use 0, but the client plugin interprets this as unset
-            // and ignores it completely resulting in the default yum values being
-            // used.
-            //
-            // We know this is a standalone server due to the fact that import is
-            // being used, so there is no need to guard this behavior.
-            content.setMetadataExpire(new Long(1));
         }
 
         return importedProduct;

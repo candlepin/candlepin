@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2017 Red Hat, Inc.
+ * Copyright (c) 2009 - 2018 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -16,22 +16,23 @@ package org.candlepin.dto.shim;
 
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
-import org.candlepin.dto.api.v1.ContentDTO;
+import org.candlepin.dto.manifest.v1.ContentDTO;
 import org.candlepin.model.dto.ContentData;
 
 
 
 /**
- * The ContentDataTranslator provides translation from ContentData DTO objects to the new
- * ContentDTOs (API)
+ * The ContentDTOTranslator provides translation from the new ContentDTOs (manifest import/export)
+ * to the traditional ContentData DTO objects
+ *
  */
-public class ContentDataTranslator implements ObjectTranslator<ContentData, ContentDTO> {
+public class ContentDTOTranslator implements ObjectTranslator<ContentDTO, ContentData> {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public ContentDTO translate(ContentData source) {
+    public ContentData translate(ContentDTO source) {
         return this.translate(null, source);
     }
 
@@ -39,23 +40,25 @@ public class ContentDataTranslator implements ObjectTranslator<ContentData, Cont
      * {@inheritDoc}
      */
     @Override
-    public ContentDTO translate(ModelTranslator translator, ContentData source) {
-        return source != null ? this.populate(translator, source, new ContentDTO()) : null;
+    public ContentData translate(ModelTranslator translator, ContentDTO source) {
+        return source != null ? this.populate(translator, source, new ContentData()) : null;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public ContentDTO populate(ContentData source, ContentDTO destination) {
+    public ContentData populate(ContentDTO source, ContentData destination) {
         return this.populate(null, source, destination);
     }
 
     /**
      * {@inheritDoc}
+     *
+     * <p>Note: the 'locked' field is always set to false since it is not currently being exported.</p>
      */
     @Override
-    public ContentDTO populate(ModelTranslator translator, ContentData source, ContentDTO dest) {
+    public ContentData populate(ModelTranslator translator, ContentDTO source, ContentData dest) {
         if (source == null) {
             throw new IllegalArgumentException("source is null");
         }
@@ -77,10 +80,12 @@ public class ContentDataTranslator implements ObjectTranslator<ContentData, Cont
         dest.setRequiredTags(source.getRequiredTags());
         dest.setReleaseVersion(source.getReleaseVersion());
         dest.setGpgUrl(source.getGpgUrl());
-        dest.setMetadataExpiration(source.getMetadataExpire());
-        dest.setModifiedProductIds(source.getModifiedProductIds());
+        dest.setMetadataExpire(source.getMetadataExpire());
         dest.setArches(source.getArches());
-        dest.setLocked(source.isLocked());
+        dest.setModifiedProductIds(source.getModifiedProductIds());
+
+        // We manually set this to false since it is not included in the exported data.
+        dest.setLocked(false);
 
         return dest;
     }

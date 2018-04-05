@@ -49,7 +49,9 @@ import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.dto.api.v1.ProductTranslator;
 import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
 import org.candlepin.dto.api.v1.UpstreamConsumerTranslator;
+import org.candlepin.dto.shim.ContentDTOTranslator;
 import org.candlepin.dto.shim.ContentDataTranslator;
+import org.candlepin.dto.shim.ProductDTOTranslator;
 import org.candlepin.dto.shim.ProductDataTranslator;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Cdn;
@@ -191,6 +193,10 @@ public class StandardTranslator extends SimpleModelTranslator {
             new ContentDataTranslator(), ContentData.class, ContentDTO.class);
         this.registerTranslator(
             new ProductDataTranslator(), ProductData.class, ProductDTO.class);
+        this.registerTranslator(
+            new ContentDTOTranslator(), org.candlepin.dto.manifest.v1.ContentDTO.class, ContentData.class);
+        this.registerTranslator(
+            new ProductDTOTranslator(), org.candlepin.dto.manifest.v1.ProductDTO.class, ProductData.class);
 
         // Rules framework translators
         /////////////////////////////////////////////
