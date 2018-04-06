@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.3.4
+Version: 2.3.5
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,40 @@ fi
 
 #raw
 %changelog
+* Fri Apr 06 2018 Kevin Howell <khowell@redhat.com> 2.3.5-1
+- accept auto-attach on activation key (adarshvritant@gmail.com)
+- Implemented CdnDTO for manifest import/export. (nmoumoul@redhat.com)
+- Manifest import/export now uses ProductDTO (nmoumoul@redhat.com)
+- 1365248: Reconcile registered consumers and hypevisors (wpoteat@redhat.com)
+- 1563436: Restore ConsumerTypeDTO constructor for legacy consumer JSON
+  (crog@redhat.com)
+- 1563367: Reduced log noise associated with the CancelJobJob (crog@redhat.com)
+- 1561737: Removed extraenous DTO constructors (crog@redhat.com)
+- 1555582: Added additional input validation to pool creation (crog@redhat.com)
+- 1562097: Renamed Event.consumerId to consumerUuid (crog@redhat.com)
+- replace consumer.owner ref with consumer.ownerId (adarshvritant@gmail.com)
+- Enable a bypass of resolving custom products when adding subscriptions.
+  (bcourt@redhat.com)
+- GuestMigration.buildMigrationManifest now can accept a DTO
+  (nmoumoul@redhat.com)
+- Optimized DTO usage in API endpoints (nmoumoul@redhat.com)
+- Modify ResultDataUserType to read legacy format or JSON and write JSON
+  (awood@redhat.com)
+- Added pool ID filtering functionality to OwnerPoolResource.listPools
+  (crog@redhat.com)
+- Changed consumer.environment to consumer.environmentId (crog@redhat.com)
+- 1558114: Add total count of records as a header when paging is used.
+  (bcourt@redhat.com)
+- Added a creation flag to ConsumerTypeCurator.lookupByLabel (crog@redhat.com)
+- Changed Consumer.type to Consumer.typeId (crog@redhat.com)
+- Unify custom tasks under the LiquibaseCustomTask interfaces.
+  (awood@redhat.com)
+- Address issues raised in code review. (awood@redhat.com)
+- Write meaningful string to cp_job result column for EntitlerJob.
+  (awood@redhat.com)
+- Rename PKIReader to CertificateReader (awood@redhat.com)
+- Refactor PKIReader to decouple from BouncyCastle. (awood@redhat.com)
+
 * Tue Mar 20 2018 Kevin Howell <khowell@redhat.com> 2.3.4-1
 - Add reasons back to compliance.created events (khowell@redhat.com)
 - Add back manifest fields for EntitlementDTO/ConsumerDTO/CertificateDTO
