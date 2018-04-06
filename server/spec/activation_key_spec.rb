@@ -30,6 +30,14 @@ describe 'Activation Keys' do
     expect(@activation_key['id']).to_not be_nil
   end
 
+  it 'should set autoAttach on activation key' do
+    @activation_key['autoAttach'].should == nil
+    activation_key = @cp.create_activation_key(@owner['key'], random_string('test_token'), nil, true)
+    activation_key['autoAttach'].should == true
+    activation_key = @cp.create_activation_key(@owner['key'], random_string('test_token'), nil, false)
+    activation_key['autoAttach'].should == false
+  end
+
   it 'should allow owners to list existing activation keys' do
     keys = @cp.list_activation_keys()
     keys.length.should >= 1
