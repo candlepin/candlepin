@@ -147,7 +147,7 @@ public class ExporterTest {
         dvc = mock(DistributorVersionCurator.class);
         dve = new DistributorVersionExporter();
         cdnc = mock(CdnCurator.class);
-        cdne = new CdnExporter();
+        cdne = new CdnExporter(translator);
         pc = mock(ProductCurator.class);
         ProductCachedSerializationModule productCachedModule = new ProductCachedSerializationModule(pc);
         su = new SyncUtils(config, productCachedModule);

@@ -14,7 +14,9 @@
  */
 package org.candlepin.sync;
 
+import org.candlepin.dto.manifest.v1.CdnDTO;
 import org.candlepin.model.Cdn;
+import org.candlepin.model.CdnCertificate;
 import org.candlepin.model.CdnCurator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,7 +29,7 @@ import java.io.Reader;
 import java.util.Set;
 
 /**
- * DistributorVersionImporter
+ * CdnImporter reads Cdn objects from a manifest and creates/updates them on the system as needed.
  */
 public class CdnImporter {
     private static Logger log =  LoggerFactory.getLogger(CdnImporter.class);
@@ -38,29 +40,71 @@ public class CdnImporter {
         this.curator = curator;
     }
 
-    public Cdn createObject(ObjectMapper mapper, Reader reader) throws IOException {
-        Cdn cdn = mapper.readValue(reader, Cdn.class);
-        cdn.setId(null);
-        return cdn;
+    public CdnDTO createObject(ObjectMapper mapper, Reader reader) throws IOException {
+        CdnDTO cdnDTO = mapper.readValue(reader, CdnDTO.class);
+        cdnDTO.setId(null);
+        return cdnDTO;
     }
 
     /**
+     * Creates the imported CDNs, or updates them if they already exist.
+     *
      * @param cdnSet Set of CDN's.
      */
-    public void store(Set<Cdn> cdnSet) {
+    public void store(Set<CdnDTO> cdnSet) {
         log.debug("Creating/updating cdns");
-        for (Cdn cdn : cdnSet) {
-            Cdn existing = curator.lookupByLabel(cdn.getLabel());
+        for (CdnDTO cdnDTO : cdnSet) {
+            // TODO: this should be using bulk entity lookup to improve performance
+            Cdn existing = curator.lookupByLabel(cdnDTO.getLabel());
             if (existing == null) {
-                log.debug("Creating CDN: {}", cdn);
-                curator.create(cdn);
+                Cdn entity = new Cdn();
+                populateEntity(entity, cdnDTO);
+
+                log.debug("Creating CDN: {}", cdnDTO);
+                curator.create(entity);
             }
             else {
-                log.debug("Updating CDN: {}", cdn);
-                existing.setName(cdn.getName());
-                existing.setUrl(cdn.getUrl());
+                log.debug("Updating CDN: {}", cdnDTO);
+                existing.setName(cdnDTO.getName());
+                existing.setUrl(cdnDTO.getUrl());
                 curator.merge(existing);
             }
+        }
+    }
+
+    /**
+     * Populates the specified entity with data from the provided DTO.
+     *
+     * @param entity
+     *  The entity instance to populate
+     *
+     * @param dto
+     *  The DTO containing the data with which to populate the entity
+     *
+     * @throws IllegalArgumentException
+     *  if either entity or dto are null
+     */
+    private void populateEntity(Cdn entity, CdnDTO dto) {
+        if (entity == null) {
+            throw new IllegalArgumentException("the cdn model entity is null");
+        }
+
+        if (dto == null) {
+            throw new IllegalArgumentException("the cdn dto is null");
+        }
+
+        entity.setId(dto.getId());
+        entity.setName(dto.getName());
+        entity.setUrl(dto.getUrl());
+        entity.setLabel(dto.getLabel());
+        entity.setUpdated(dto.getUpdated());
+        entity.setCreated(dto.getCreated());
+
+        if (dto.getCertificate() != null) {
+            CdnCertificate cdnCert = new CdnCertificate();
+            ImporterUtils.populateEntity(cdnCert, dto.getCertificate());
+            cdnCert.setId(dto.getId());
+            entity.setCertificate(cdnCert);
         }
     }
 }

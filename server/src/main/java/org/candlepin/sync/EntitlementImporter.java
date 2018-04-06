@@ -19,7 +19,6 @@ import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.manifest.v1.BrandingDTO;
 import org.candlepin.dto.manifest.v1.CertificateDTO;
-import org.candlepin.dto.manifest.v1.CertificateSerialDTO;
 import org.candlepin.dto.manifest.v1.EntitlementDTO;
 import org.candlepin.dto.manifest.v1.OwnerDTO;
 import org.candlepin.dto.manifest.v1.PoolDTO;
@@ -433,26 +432,8 @@ public class EntitlementImporter {
                 for (CertificateDTO dtoCert : dto.getCertificates()) {
                     if (dtoCert != null) {
                         EntitlementCertificate entityCert = new EntitlementCertificate();
+                        ImporterUtils.populateEntity(entityCert, dtoCert);
                         entityCert.setId(dtoCert.getId());
-                        entityCert.setKey(dtoCert.getKey());
-                        entityCert.setCert(dtoCert.getCert());
-                        entityCert.setCreated(dtoCert.getCreated());
-                        entityCert.setUpdated(dtoCert.getUpdated());
-
-                        if (dtoCert.getSerial() != null) {
-                            CertificateSerialDTO dtoSerial = dtoCert.getSerial();
-                            CertificateSerial entitySerial = new CertificateSerial();
-                            entitySerial.setId(dtoSerial.getId());
-                            entitySerial.setCollected(dtoSerial.isCollected());
-                            entitySerial.setExpiration(dtoSerial.getExpiration());
-                            entitySerial.setRevoked(dtoSerial.isRevoked());
-                            entitySerial.setSerial(dtoSerial.getSerial() != null ?
-                                dtoSerial.getSerial().longValueExact() : null);
-                            entitySerial.setCreated(dtoSerial.getCreated());
-                            entitySerial.setUpdated(dtoSerial.getUpdated());
-
-                            entityCert.setSerial(entitySerial);
-                        }
                         entityCerts.add(entityCert);
                     }
                 }
