@@ -588,6 +588,10 @@ public class OwnerResource {
             entity.setDescription(dto.getDescription());
         }
 
+        if (dto.isAutoAttach() != null) {
+            entity.setAutoAttach(dto.isAutoAttach());
+        }
+
         if (dto.getServiceLevel() != null) {
             entity.setServiceLevel(dto.getServiceLevel());
         }
