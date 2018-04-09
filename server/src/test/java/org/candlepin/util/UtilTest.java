@@ -35,7 +35,6 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
-import java.math.BigInteger;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -44,6 +43,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
+
+
 
 /**
  * Test Class for the Util class
@@ -132,24 +133,50 @@ public class UtilTest {
         assertFalse(curyear == c.get(Calendar.YEAR));
     }
 
-    @Ignore("This will fail on the last day of each month!")
     @Test
     public void tomorrow() {
-        Calendar c = Calendar.getInstance();
-        c.setTime(new Date());
-        int today = c.get(Calendar.DAY_OF_MONTH);
-        c.setTime(Util.tomorrow());
-        assertEquals(today + 1, c.get(Calendar.DAY_OF_MONTH));
+        // Due to the whole doing-stuff-takes-time thing, we need to allow a handful of milliseconds
+        // to pass over this test. We'll assume things are functioning correctly if the actual result
+        // is within a tolerable amount of milliseconds from our calculated time.
+        long tolerance = 500;
+
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.DAY_OF_MONTH, 1);
+
+        long expected = cal.getTimeInMillis();
+        long actual = Util.yesterday().getTime();
+
+        assertTrue(actual - expected <= tolerance);
     }
 
-    @Ignore("This will fail on the first day of each month!")
     @Test
     public void yesterday() {
-        Calendar c = Calendar.getInstance();
-        c.setTime(new Date());
-        int today = c.get(Calendar.DAY_OF_MONTH);
-        c.setTime(Util.yesterday());
-        assertEquals(today - 1, c.get(Calendar.DAY_OF_MONTH));
+        // Due to the whole doing-stuff-takes-time thing, we need to allow a handful of milliseconds
+        // to pass over this test. We'll assume things are functioning correctly if the actual result
+        // is within a tolerable amount of milliseconds from our calculated time.
+        long tolerance = 500;
+
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.DAY_OF_MONTH, -1);
+
+        long expected = cal.getTimeInMillis();
+        long actual = Util.yesterday().getTime();
+
+        assertTrue(actual - expected <= tolerance);
+    }
+
+    @Test
+    public void midnight() {
+        Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+
+        Date expected = cal.getTime();
+        Date actual = Util.midnight();
+
+        assertEquals(expected, actual);
     }
 
     // This is pretty silly - basically doing the same thing the
@@ -222,30 +249,24 @@ public class UtilTest {
     }
 
     @Test
-    public void roundToMidnight() {
+    public void testSetToMidnight() {
         Date now = new Date();
-        Date midnight = Util.roundToMidnight(now);
+        Date midnight = Util.setToMidnight(now);
         assertFalse(now.equals(midnight));
 
         Calendar cal = Calendar.getInstance();
         cal.setTime(midnight);
-        assertEquals(23, cal.get(Calendar.HOUR_OF_DAY));
-        assertEquals(59, cal.get(Calendar.MINUTE));
-        assertEquals(59, cal.get(Calendar.SECOND));
+        assertEquals(0, cal.get(Calendar.HOUR_OF_DAY));
+        assertEquals(0, cal.get(Calendar.MINUTE));
+        assertEquals(0, cal.get(Calendar.SECOND));
         assertEquals(TimeZone.getDefault(), cal.getTimeZone());
 
-        Date stillmidnight = Util.roundToMidnight(midnight);
+        Date stillmidnight = Util.setToMidnight(midnight);
         cal.setTime(stillmidnight);
-        assertEquals(23, cal.get(Calendar.HOUR_OF_DAY));
-        assertEquals(59, cal.get(Calendar.MINUTE));
-        assertEquals(59, cal.get(Calendar.SECOND));
+        assertEquals(0, cal.get(Calendar.HOUR_OF_DAY));
+        assertEquals(0, cal.get(Calendar.MINUTE));
+        assertEquals(0, cal.get(Calendar.SECOND));
         assertEquals(TimeZone.getDefault(), cal.getTimeZone());
-    }
-
-    @Test
-    public void bigint() {
-        assertEquals(BigInteger.valueOf(10L), Util.toBigInt(10L));
-        assertEquals(BigInteger.valueOf(-10L), Util.toBigInt(-10L));
     }
 
     @Test
