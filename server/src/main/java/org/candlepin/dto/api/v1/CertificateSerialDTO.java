@@ -164,7 +164,7 @@ public class CertificateSerialDTO extends TimestampedCandlepinDTO<CertificateSer
         CertificateSerialDTO copy = super.clone();
 
         Date expiration = this.getExpiration();
-        copy.expiration = expiration != null ? (Date) expiration.clone() : null;
+        copy.setExpiration(expiration != null ? (Date) expiration.clone() : null);
 
         return copy;
     }

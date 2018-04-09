@@ -138,12 +138,12 @@ public class UpstreamConsumerDTO extends TimestampedCandlepinDTO<UpstreamConsume
 
     @JsonProperty("idCert")
     @HateoasArrayExclude
-    public CertificateDTO getIdentityCertificate() {
+    public CertificateDTO getIdCertificate() {
         return this.identityCert;
     }
 
     @JsonProperty("idCert")
-    public UpstreamConsumerDTO setIdentityCertificate(CertificateDTO identityCert) {
+    public UpstreamConsumerDTO setIdCertificate(CertificateDTO identityCert) {
         this.identityCert = identityCert;
         return this;
     }
@@ -186,7 +186,7 @@ public class UpstreamConsumerDTO extends TimestampedCandlepinDTO<UpstreamConsume
                 .append(this.getWebUrl(), that.getWebUrl())
                 .append(this.getOwnerId(), that.getOwnerId())
                 .append(this.getConsumerType(), that.getConsumerType())
-                .append(this.getIdentityCertificate(), that.getIdentityCertificate())
+                .append(this.getIdCertificate(), that.getIdCertificate())
                 .append(this.getContentAccessMode(), that.getContentAccessMode());
 
             return builder.isEquals();
@@ -209,7 +209,7 @@ public class UpstreamConsumerDTO extends TimestampedCandlepinDTO<UpstreamConsume
             .append(this.getWebUrl())
             .append(this.getOwnerId())
             .append(this.getConsumerType())
-            .append(this.getIdentityCertificate())
+            .append(this.getIdCertificate())
             .append(this.getContentAccessMode());
 
         return builder.toHashCode();
@@ -223,10 +223,10 @@ public class UpstreamConsumerDTO extends TimestampedCandlepinDTO<UpstreamConsume
         UpstreamConsumerDTO copy = super.clone();
 
         ConsumerTypeDTO type = this.getConsumerType();
-        copy.consumerType = type != null ? (ConsumerTypeDTO) type.clone() : null;
+        copy.setConsumerType(type != null ? (ConsumerTypeDTO) type.clone() : null);
 
-        CertificateDTO cert = this.getIdentityCertificate();
-        copy.identityCert = cert != null ? (CertificateDTO) cert.clone() : null;
+        CertificateDTO cert = this.getIdCertificate();
+        copy.setIdCertificate(cert != null ? (CertificateDTO) cert.clone() : null);
 
         return copy;
     }
@@ -245,7 +245,7 @@ public class UpstreamConsumerDTO extends TimestampedCandlepinDTO<UpstreamConsume
         this.setWebUrl(source.getWebUrl());
         this.setOwnerId(source.getOwnerId());
         this.setConsumerType(source.getConsumerType());
-        this.setIdentityCertificate(source.getIdentityCertificate());
+        this.setIdCertificate(source.getIdCertificate());
         this.setContentAccessMode(source.getContentAccessMode());
 
         return this;

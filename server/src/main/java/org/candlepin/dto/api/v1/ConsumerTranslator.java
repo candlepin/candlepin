@@ -50,12 +50,15 @@ public class ConsumerTranslator extends TimestampedEntityTranslator<Consumer, Co
         if (consumerTypeCurator == null) {
             throw new IllegalArgumentException("ConsumerTypeCurator is null");
         }
+
         if (environmentCurator == null) {
             throw new IllegalArgumentException("environmentCurator is null");
         }
+
         if (ownerCurator == null) {
             throw new IllegalArgumentException("OwnerCurator is null");
         }
+
         this.ownerCurator = ownerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
         this.environmentCurator = environmentCurator;
@@ -170,7 +173,7 @@ public class ConsumerTranslator extends TimestampedEntityTranslator<Consumer, Co
             dest.setGuestIds(new ArrayList<>());
 
             dest.setHypervisorId(translator.translate(source.getHypervisorId(), HypervisorIdDTO.class));
-            dest.setIdCert(translator.translate(source.getIdCert(), CertificateDTO.class));
+            dest.setIdCertificate(translator.translate(source.getIdCert(), CertificateDTO.class));
         }
         else {
             dest.setReleaseVersion(null);
@@ -180,7 +183,7 @@ public class ConsumerTranslator extends TimestampedEntityTranslator<Consumer, Co
             dest.setCapabilities(null);
             dest.setHypervisorId(null);
             dest.setType(null);
-            dest.setIdCert(null);
+            dest.setIdCertificate(null);
         }
 
         return dest;

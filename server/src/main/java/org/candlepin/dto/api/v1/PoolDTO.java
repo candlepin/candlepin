@@ -1476,10 +1476,10 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> implements Linkabl
         PoolDTO copy = super.clone();
 
         OwnerDTO owner = this.getOwner();
-        copy.owner = owner != null ? owner.clone() : null;
+        copy.setOwner(owner != null ? owner.clone() : null);
 
         CertificateDTO certificate = this.getCertificate();
-        copy.certificate = certificate != null ? certificate.clone() : null;
+        copy.setCertificate(certificate != null ? certificate.clone() : null);
 
         copy.setAttributes(this.getAttributes());
         copy.setCalculatedAttributes(this.getCalculatedAttributes());
@@ -1489,8 +1489,11 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> implements Linkabl
         copy.setProvidedProducts(this.getProvidedProducts());
         copy.setDerivedProvidedProducts(this.getDerivedProvidedProducts());
 
-        copy.endDate = this.endDate != null ? (Date) this.endDate.clone() : null;
-        copy.startDate = this.startDate != null ? (Date) this.startDate.clone() : null;
+        Date endDate = this.getEndDate();
+        copy.setEndDate(endDate != null ? (Date) endDate.clone() : null);
+
+        Date startDate = this.getStartDate();
+        copy.setStartDate(startDate != null ? (Date) startDate.clone() : null);
 
         return copy;
     }

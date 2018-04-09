@@ -208,7 +208,8 @@ public class ConsumerTranslatorTest extends
                 this.hypervisorIdTranslatorTest.verifyOutput(source.getHypervisorId(), dest.getHypervisorId(),
                     childrenGenerated);
 
-                this.certificateTranslatorTest.verifyOutput(source.getIdCert(), dest.getIdCert(), true);
+                this.certificateTranslatorTest.verifyOutput(source.getIdCert(),
+                    dest.getIdCertificate(), true);
 
                 if (source.getInstalledProducts() != null) {
                     for (ConsumerInstalledProduct cip : source.getInstalledProducts()) {
@@ -249,7 +250,7 @@ public class ConsumerTranslatorTest extends
                 assertNull(dest.getEnvironment());
                 assertNull(dest.getHypervisorId());
                 assertNull(dest.getType());
-                assertNull(dest.getIdCert());
+                assertNull(dest.getIdCertificate());
                 assertNull(dest.getInstalledProducts());
                 assertNull(dest.getCapabilities());
                 assertNull(dest.getGuestIds());

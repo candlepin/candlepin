@@ -245,14 +245,12 @@ public class ConsumerDTO extends CandlepinDTO<ConsumerDTO> {
      */
     @Override
     public int hashCode() {
-        String oid = this.getOwner() != null ? this.getOwner().getId() : null;
-
         HashCodeBuilder builder = new HashCodeBuilder(37, 7)
             .append(this.getUuid())
             .append(this.getName())
-            .append(oid)
+            .append(this.getOwner() != null ? this.getOwner().getId() : null)
             .append(this.getContentAccessMode())
-            .append(this.getType())
+            .append(this.getType() != null ? this.getType().getId() : null)
             .append(this.getUrlWeb())
             .append(this.getUrlApi());
 
@@ -265,8 +263,12 @@ public class ConsumerDTO extends CandlepinDTO<ConsumerDTO> {
     @Override
     public ConsumerDTO clone() {
         ConsumerDTO copy = super.clone();
-        copy.owner = owner != null ? owner.clone() : null;
-        copy.type = type != null ? type.clone() : null;
+
+        OwnerDTO owner = this.getOwner();
+        copy.setOwner(owner != null ? owner.clone() : null);
+
+        ConsumerTypeDTO ctype = this.getType();
+        copy.setType(ctype != null ? ctype.clone() : null);
 
         return copy;
     }

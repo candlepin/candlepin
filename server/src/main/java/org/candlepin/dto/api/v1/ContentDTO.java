@@ -548,11 +548,17 @@ public class ContentDTO extends TimestampedCandlepinDTO<ContentDTO> {
         return this;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String toString() {
         return String.format("ContentDTO [id: %s, name: %s, label: %s]", this.id, this.name, this.label);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean equals(Object obj) {
         if (obj == this) {
@@ -584,6 +590,9 @@ public class ContentDTO extends TimestampedCandlepinDTO<ContentDTO> {
         return false;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int hashCode() {
         HashCodeBuilder builder = new HashCodeBuilder(7, 17)
@@ -606,11 +615,14 @@ public class ContentDTO extends TimestampedCandlepinDTO<ContentDTO> {
         return builder.toHashCode();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public ContentDTO clone() {
         ContentDTO copy = super.clone();
 
-        copy.setModifiedProductIds(this.modifiedProductIds);
+        copy.setModifiedProductIds(this.getModifiedProductIds());
 
         return copy;
     }

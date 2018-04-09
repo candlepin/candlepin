@@ -463,7 +463,7 @@ public class ConsumerResourceTest {
         ConsumerDTO fooc = cr.regenerateIdentityCertificates(consumer.getUuid());
 
         assertNotNull(fooc);
-        CertificateDTO ic1 = fooc.getIdCert();
+        CertificateDTO ic1 = fooc.getIdCertificate();
         assertNotNull(ic1);
         assertFalse(ic.getId().equals(ic1.getId()));
     }
@@ -496,7 +496,7 @@ public class ConsumerResourceTest {
 
         ConsumerDTO c = cr.getConsumer(consumer.getUuid());
 
-        assertFalse(origserial.equals(c.getIdCert().getSerial().getSerial()));
+        assertFalse(origserial.equals(c.getIdCertificate().getSerial().getSerial()));
     }
 
     @Test
@@ -518,7 +518,7 @@ public class ConsumerResourceTest {
 
         ConsumerDTO c = cr.getConsumer(consumer.getUuid());
 
-        assertEquals(origserial, c.getIdCert().getSerial().getSerial());
+        assertEquals(origserial, c.getIdCertificate().getSerial().getSerial());
     }
 
     @Test(expected = BadRequestException.class)

@@ -901,7 +901,7 @@ public class ProductDTO extends TimestampedCandlepinDTO<ProductDTO> {
 
     @Override
     public ProductDTO clone() {
-        ProductDTO copy = (ProductDTO) super.clone();
+        ProductDTO copy = super.clone();
 
         copy.setAttributes(this.getAttributes());
         copy.setProductContent(this.getProductContent());

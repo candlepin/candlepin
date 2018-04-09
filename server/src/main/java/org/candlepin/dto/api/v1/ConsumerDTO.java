@@ -711,29 +711,31 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
     }
 
     /**
-     * Retrieves the id cert field of this ConsumerDTO object.
+     * Retrieves the ID certificate field of this ConsumerDTO object.
      *
-     * @return the id cert of the consumer, or null if it has not yet been defined
+     * @return the ID cert of the consumer, or null if it has not yet been defined
      */
     @HateoasArrayExclude
-    public CertificateDTO getIdCert() {
+    @JsonProperty("idCert")
+    public CertificateDTO getIdCertificate() {
         return this.idCert;
     }
 
     /**
-     * Sets the idCert to set on this ConsumerDTO object.
+     * Sets the identity certificate for this ConsumerDTO object.
      *
      * @param idCert the idCert to set on this ConsumerDTO object.
      *
      * @return a reference to this DTO object.
      */
-    public ConsumerDTO setIdCert(CertificateDTO idCert) {
+    @JsonProperty("idCert")
+    public ConsumerDTO setIdCertificate(CertificateDTO idCert) {
         this.idCert = idCert;
         return this;
     }
 
     /**
-     * Retrieves the guest id field of this ConsumerDTO object.
+     * Retrieves the guest ID field of this ConsumerDTO object.
      *
      * @return the guestIds the consumer, or null if it has not yet been defined
      * The rest call however will never return a guestId list, we only accept guestIds.
@@ -905,7 +907,7 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
                 .append(this.getAnnotations(), that.getAnnotations())
                 .append(this.getContentAccessMode(), that.getContentAccessMode())
                 .append(this.getType(), that.getType())
-                .append(this.getIdCert(), that.getIdCert())
+                .append(this.getIdCertificate(), that.getIdCertificate())
                 .append(this.getGuestIds(), that.getGuestIds());
 
             return builder.isEquals();
@@ -947,7 +949,7 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
             .append(this.getAnnotations())
             .append(this.getContentAccessMode())
             .append(this.getType())
-            .append(this.getIdCert())
+            .append(this.getIdCertificate())
             .append(this.getGuestIds());
 
         return builder.toHashCode();
@@ -960,15 +962,25 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
     public ConsumerDTO clone() {
         ConsumerDTO copy = super.clone();
 
-        copy.owner = owner != null ? owner.clone() : null;
-        copy.environment = environment != null ? environment.clone() : null;
+        OwnerDTO owner = this.getOwner();
+        copy.setOwner(owner != null ? owner.clone() : null);
+
+        EnvironmentDTO environment = this.getEnvironment();
+        copy.setEnvironment(environment != null ? environment.clone() : null);
+
+        HypervisorIdDTO hid = this.getHypervisorId();
+        copy.setHypervisorId(hid != null ? hid.clone() : null);
+
+        ConsumerTypeDTO ctype = this.getType();
+        copy.setType(ctype != null ? ctype.clone() : null);
+
+        CertificateDTO idCert = this.getIdCertificate();
+        copy.setIdCertificate(idCert != null ? idCert.clone() : null);
+
         copy.setFacts(this.getFacts());
         copy.setInstalledProducts(this.getInstalledProducts());
         copy.setCapabilities(this.getCapabilities());
-        copy.hypervisorId = hypervisorId != null ? hypervisorId.clone() : null;
         copy.setContentTags(this.getContentTags());
-        copy.type = type != null ? type.clone() : null;
-        copy.idCert = idCert != null ? idCert.clone() : null;
 
         return copy;
     }
@@ -1003,7 +1015,7 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
         this.setAnnotations(source.getAnnotations());
         this.setContentAccessMode(source.getContentAccessMode());
         this.setType(source.getType());
-        this.setIdCert(source.getIdCert());
+        this.setIdCertificate(source.getIdCertificate());
 
         return this;
     }

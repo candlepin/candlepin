@@ -290,13 +290,13 @@ public class OwnerDTO extends TimestampedCandlepinDTO<OwnerDTO> {
         OwnerDTO copy = super.clone();
 
         OwnerDTO parent = this.getParentOwner();
-        copy.parentOwner = parent != null ? (OwnerDTO) parent.clone() : null;
+        copy.setParentOwner(parent != null ? parent.clone() : null);
 
         UpstreamConsumerDTO consumer = this.getUpstreamConsumer();
-        copy.upstreamConsumer = consumer != null ? (UpstreamConsumerDTO) consumer.clone() : null;
+        copy.setUpstreamConsumer(consumer != null ? consumer.clone() : null);
 
         Date lastRefreshed = this.getLastRefreshed();
-        copy.lastRefreshed = lastRefreshed != null ? (Date) lastRefreshed.clone() : null;
+        copy.setLastRefreshed(lastRefreshed != null ? (Date) lastRefreshed.clone() : null);
 
         return copy;
     }
