@@ -14,76 +14,86 @@
  */
 package org.candlepin.model;
 
-import static org.candlepin.util.Util.addDaysToDt;
-import static org.candlepin.util.Util.addToFields;
-import static org.candlepin.util.Util.toDate;
-import static org.candlepin.util.Util.tomorrow;
-import static org.candlepin.util.Util.yesterday;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import org.candlepin.test.DatabaseTestFixture;
-
 import org.candlepin.util.Util;
 import org.junit.Test;
 
-import java.lang.reflect.Field;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import javax.inject.Inject;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+
 
 /**
  * CertificateSerialCuratorTest
  */
 public class CertificateSerialCuratorTest extends DatabaseTestFixture {
-    @Inject private ProductCurator productCurator;
-    @Inject private EntitlementCurator entitlementCurator;
-    @Inject private CertificateSerialCurator certSerialCurator;
 
-    private class CertSerialBuilder {
-        private Date dt = new Date();
-        private boolean collected = false;
-        private boolean revoked = false;
+    /**
+     * Utility class for building and fetching CertificateSerial instances
+     */
+    private static class CertSerialBuilder {
+        private CertificateSerialCurator curator;
+        private List<CertificateSerial> created;
 
-        public CertSerialBuilder collected(boolean val) {
-            this.collected = val;
+        private Date expiration;
+        private boolean collected;
+        private boolean revoked;
+
+        public CertSerialBuilder(CertificateSerialCurator curator) {
+            this.curator = curator;
+            this.created = new ArrayList<>();
+
+            this.expiration = new Date();
+            this.collected = false;
+            this.revoked = false;
+        }
+
+
+        public CertSerialBuilder collected(boolean collected) {
+            this.collected = collected;
             return this;
         }
 
         public CertSerialBuilder withExpDate(String date) {
-            this.dt = toDate(date);
+            this.expiration = Util.toDate(date);
             return this;
         }
 
-        public CertSerialBuilder withExpDate(Date dt) {
-            this.dt = dt;
+        public CertSerialBuilder withExpDate(Date expiration) {
+            this.expiration = expiration;
             return this;
         }
 
-        public CertSerialBuilder revoked(boolean re) {
-            this.revoked = re;
+        public CertSerialBuilder revoked(boolean revoked) {
+            this.revoked = revoked;
             return this;
         }
 
-        public CertificateSerial save() {
-            CertificateSerial serial = new CertificateSerial(dt);
+        public CertificateSerial build() {
+            CertificateSerial serial = new CertificateSerial(expiration);
             serial.setCollected(collected);
             serial.setRevoked(revoked);
-            serial = certSerialCurator.create(serial);
+            serial = this.curator.create(serial);
+
+            created.add(serial);
+
             return serial;
+        }
+
+        public Stream<CertificateSerial> fetch(Predicate<CertificateSerial> filter) {
+            return this.created.stream().filter(filter);
         }
     }
 
-    public CertSerialBuilder createCS() {
-        return this.new CertSerialBuilder();
-    }
 
     @Test
     public void testSerialCreation() {
@@ -94,149 +104,188 @@ public class CertificateSerialCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void certSerialCreateWithManuallySetId() {
-        Long expectedSerialNumber = Util.generateUniqueLong();
-        CertificateSerial serial = new CertificateSerial(expectedSerialNumber, new Date());
-        // When manually setting the id for an entity, hibernate requires that
-        // we call merge instead of save/persist.
-        certSerialCurator.save(serial);
-        assertNotNull(serial);
-        assertNotNull(serial.getId());
-        assertEquals(expectedSerialNumber, serial.getId());
+    public void testGetUncollectedRevokedCertSerials() {
+        Date now = new Date();
+        Date lastWeek = Util.addDaysToDt(-7);
+        Date nextWeek = Util.addDaysToDt(7);
 
-        CandlepinQuery<CertificateSerial> serialQuery =
-            certSerialCurator.listBySerialIds(new String[] {serial.getId().toString()});
-        assertEquals(1, serialQuery.getRowCount());
+        CertSerialBuilder builder = new CertSerialBuilder(this.certSerialCurator);
+        builder.withExpDate(lastWeek).collected(false).revoked(false).build();
+        builder.withExpDate(lastWeek).collected(false).revoked(true).build();
+        builder.withExpDate(lastWeek).collected(true).revoked(false).build();
+        builder.withExpDate(lastWeek).collected(true).revoked(true).build();
+        builder.withExpDate(now).collected(false).revoked(false).build();
+        builder.withExpDate(now).collected(false).revoked(true).build();
+        builder.withExpDate(now).collected(true).revoked(false).build();
+        builder.withExpDate(now).collected(true).revoked(true).build();
+        builder.withExpDate(nextWeek).collected(false).revoked(false).build();
+        builder.withExpDate(nextWeek).collected(false).revoked(true).build();
+        builder.withExpDate(nextWeek).collected(true).revoked(false).build();
+        builder.withExpDate(nextWeek).collected(true).revoked(true).build();
+
+        List<Long> expected = builder
+            .fetch((serial) -> serial != null && !serial.isCollected() && serial.isRevoked())
+            .map((serial) -> serial.getId())
+            .collect(Collectors.toList());
+
+        List<Long> uncollected = this.certSerialCurator.getUncollectedRevokedCertSerials().list();
+
+        assertNotNull(uncollected);
+        assertEquals(expected.size(), uncollected.size());
+        assertTrue(uncollected.containsAll(expected));
     }
 
     @Test
-    public void testRetrieveToBeCollectedSerials1() {
-        createCS().withExpDate("01/10/2010").collected(false).revoked(true).save();
-        createCS().withExpDate("02/10/2010").collected(true).revoked(true).save();
-        createCS().withExpDate("03/10/2010").collected(false).revoked(false).save();
-        createCS().withExpDate("04/10/2010").collected(true).revoked(true).save();
+    public void testGetUncollectedRevokedCertSerialsWithNoMatchingSerials() {
+        Date now = new Date();
+        Date lastWeek = Util.addDaysToDt(-7);
+        Date nextWeek = Util.addDaysToDt(7);
 
-        List<CertificateSerial> lcs = this.certSerialCurator.retrieveTobeCollectedSerials().list();
-        Set<Date> dates = extractExpiredDates(lcs);
-        assertEquals(1, lcs.size());
-        assertTrue(dates.contains(toDate("01/10/2010")));
-    }
+        CertSerialBuilder builder = new CertSerialBuilder(this.certSerialCurator);
+        builder.withExpDate(lastWeek).collected(false).revoked(false).build();
+        // builder.withExpDate(lastWeek).collected(false).revoked(true).build();
+        builder.withExpDate(lastWeek).collected(true).revoked(false).build();
+        builder.withExpDate(lastWeek).collected(true).revoked(true).build();
+        builder.withExpDate(now).collected(false).revoked(false).build();
+        // builder.withExpDate(now).collected(false).revoked(true).build();
+        builder.withExpDate(now).collected(true).revoked(false).build();
+        builder.withExpDate(now).collected(true).revoked(true).build();
+        builder.withExpDate(nextWeek).collected(false).revoked(false).build();
+        // builder.withExpDate(nextWeek).collected(false).revoked(true).build();
+        builder.withExpDate(nextWeek).collected(true).revoked(false).build();
+        builder.withExpDate(nextWeek).collected(true).revoked(true).build();
 
-    /**
-     * @param lcs
-     * @return
-     */
-    private Set<Date> extractExpiredDates(List<CertificateSerial> lcs) {
-        Set<Date> dates = new HashSet<>();
-        for (Iterator<CertificateSerial> iterator = lcs.iterator(); iterator.hasNext();) {
-            CertificateSerial certificateSerial = iterator.next();
-            dates.add(certificateSerial.getExpiration());
-        }
-        return dates;
-    }
+        List<Long> uncollected = this.certSerialCurator.getUncollectedRevokedCertSerials().list();
 
-    @Test
-    public void testRetrieveToBeCollectedSerials2() {
-        createCS().withExpDate("01/10/2010").collected(true).revoked(true).save();
-        List<CertificateSerial> lcs = this.certSerialCurator.retrieveTobeCollectedSerials().list();
-        assertEquals(0, lcs.size());
+        assertNotNull(uncollected);
+        assertTrue(uncollected.isEmpty());
     }
 
     @Test
-    public void testGetExpiredSerialsWithFewExpiredAndRevokedSerials() {
-        Date yesterday = yesterday();
-        Date threeDaysPrev = addDaysToDt(-3);
-        createCS().withExpDate(yesterday).collected(true).revoked(true).save();
-        createCS().withExpDate(addDaysToDt(3)).collected(true).revoked(true).save();
-        createCS().withExpDate(threeDaysPrev).collected(true).revoked(true).save();
-        List<CertificateSerial> lcs = this.certSerialCurator.getExpiredSerials().list();
-        Set<Date> dates = extractExpiredDates(lcs);
-        assertEquals(2, lcs.size());
-        assertTrue(dates.contains(yesterday));
-        assertTrue(dates.contains(threeDaysPrev));
+    public void testGetUncollectedRevokedCertSerialsWithNoData() {
+        List<Long> uncollected = this.certSerialCurator.getUncollectedRevokedCertSerials().list();
+
+        assertNotNull(uncollected);
+        assertTrue(uncollected.isEmpty());
     }
 
     @Test
-    public void testGetExpiredSerialsWithEmptyDatabase() {
-        List<CertificateSerial> lcs = this.certSerialCurator.getExpiredSerials().list();
-        assertEquals(0, lcs.size());
+    public void testGetExpiredRevokedCertSerials() {
+        Date now = new Date();
+        Date lastWeek = Util.addDaysToDt(-7);
+        Date nextWeek = Util.addDaysToDt(7);
+
+        CertSerialBuilder builder = new CertSerialBuilder(this.certSerialCurator);
+        builder.withExpDate(lastWeek).collected(false).revoked(false).build();
+        builder.withExpDate(lastWeek).collected(false).revoked(true).build();
+        builder.withExpDate(lastWeek).collected(true).revoked(false).build();
+        builder.withExpDate(lastWeek).collected(true).revoked(true).build();
+        builder.withExpDate(now).collected(false).revoked(false).build();
+        builder.withExpDate(now).collected(false).revoked(true).build();
+        builder.withExpDate(now).collected(true).revoked(false).build();
+        builder.withExpDate(now).collected(true).revoked(true).build();
+        builder.withExpDate(nextWeek).collected(false).revoked(false).build();
+        builder.withExpDate(nextWeek).collected(false).revoked(true).build();
+        builder.withExpDate(nextWeek).collected(true).revoked(false).build();
+        builder.withExpDate(nextWeek).collected(true).revoked(true).build();
+
+        Date cutoff = Util.midnight();
+        List<Long> expected = builder
+            .fetch((serial) -> serial != null && serial.isRevoked() && serial.getExpiration().before(cutoff))
+            .map((serial) -> serial.getId())
+            .collect(Collectors.toList());
+
+        List<Long> uncollected = this.certSerialCurator.getExpiredRevokedCertSerials().list();
+
+        assertNotNull(uncollected);
+        assertEquals(expected.size(), uncollected.size());
+        assertTrue(uncollected.containsAll(expected));
     }
 
     @Test
-    public void testGetExpiredSerialsWithNonRevokedButExpiredSerials() {
-        createCS().withExpDate(yesterday()).revoked(false).save();
-        List<CertificateSerial> lcs = this.certSerialCurator.getExpiredSerials().list();
-        assertEquals(0, lcs.size());
+    public void testGetExpiredRevokedCertSerialsWithNoMatchingSerials() {
+        Date now = new Date();
+        Date lastWeek = Util.addDaysToDt(-7);
+        Date nextWeek = Util.addDaysToDt(7);
+
+        CertSerialBuilder builder = new CertSerialBuilder(this.certSerialCurator);
+        builder.withExpDate(lastWeek).collected(false).revoked(false).build();
+        // builder.withExpDate(lastWeek).collected(false).revoked(true).build();
+        builder.withExpDate(lastWeek).collected(true).revoked(false).build();
+        // builder.withExpDate(lastWeek).collected(true).revoked(true).build();
+        builder.withExpDate(now).collected(false).revoked(false).build();
+        builder.withExpDate(now).collected(false).revoked(true).build();
+        builder.withExpDate(now).collected(true).revoked(false).build();
+        builder.withExpDate(now).collected(true).revoked(true).build();
+        builder.withExpDate(nextWeek).collected(false).revoked(false).build();
+        builder.withExpDate(nextWeek).collected(false).revoked(true).build();
+        builder.withExpDate(nextWeek).collected(true).revoked(false).build();
+        builder.withExpDate(nextWeek).collected(true).revoked(true).build();
+
+        List<Long> expected = builder
+            .fetch((serial) -> serial != null && serial.isRevoked() && serial.getExpiration().before(now))
+            .map((serial) -> serial.getId())
+            .collect(Collectors.toList());
+
+        List<Long> uncollected = this.certSerialCurator.getExpiredRevokedCertSerials().list();
+
+        assertNotNull(uncollected);
+        assertEquals(expected.size(), uncollected.size());
+        assertTrue(uncollected.containsAll(expected));
     }
 
     @Test
-    public void testDeleteExpiredSerialsWithEmptyDatabase() {
-        assertEquals(0, this.certSerialCurator.deleteExpiredSerials());
+    public void testGetExpiredRevokedCertSerialsWithNoData() {
+        List<Long> uncollected = this.certSerialCurator.getExpiredRevokedCertSerials().list();
+
+        assertNotNull(uncollected);
+        assertTrue(uncollected.isEmpty());
     }
 
     @Test
-    public void testDeleteExpiredSerialsWithNonRevokedButExpiredSerials() {
-        createCS().withExpDate(yesterday()).revoked(false).save();
-        createCS().withExpDate(addDaysToDt(-20)).revoked(false).save();
-        assertEquals(0, this.certSerialCurator.deleteExpiredSerials());
+    public void testGetExpiredRevokedCertSerialsWithSpecifiedDate() {
+        Date now = new Date();
+        Date lastWeek = Util.addDaysToDt(-7);
+        Date nextWeek = Util.addDaysToDt(7);
+        Date cutoff = Util.addDaysToDt(1);
+
+        CertSerialBuilder builder = new CertSerialBuilder(this.certSerialCurator);
+        builder.withExpDate(lastWeek).collected(false).revoked(false).build();
+        builder.withExpDate(lastWeek).collected(false).revoked(true).build();
+        builder.withExpDate(lastWeek).collected(true).revoked(false).build();
+        builder.withExpDate(lastWeek).collected(true).revoked(true).build();
+        builder.withExpDate(now).collected(false).revoked(false).build();
+        builder.withExpDate(now).collected(false).revoked(true).build();
+        builder.withExpDate(now).collected(true).revoked(false).build();
+        builder.withExpDate(now).collected(true).revoked(true).build();
+        builder.withExpDate(nextWeek).collected(false).revoked(false).build();
+        builder.withExpDate(nextWeek).collected(false).revoked(true).build();
+        builder.withExpDate(nextWeek).collected(true).revoked(false).build();
+        builder.withExpDate(nextWeek).collected(true).revoked(true).build();
+
+        List<Long> expected = builder
+            .fetch((serial) -> serial != null && serial.isRevoked() && serial.getExpiration().before(cutoff))
+            .map((serial) -> serial.getId())
+            .collect(Collectors.toList());
+
+        List<Long> uncollected = this.certSerialCurator.getExpiredRevokedCertSerials(cutoff).list();
+
+        assertNotNull(uncollected);
+        assertEquals(expected.size(), uncollected.size());
+        assertTrue(uncollected.containsAll(expected));
     }
 
-    @Test
-    public void testDeleteExpiredSerialsWithRevokedAndExpiredSerials() {
-        createCS().withExpDate(addDaysToDt(-2)).revoked(true).save();
-        createCS().withExpDate(addDaysToDt(-10)).revoked(true).save();
-        assertEquals(2, this.certSerialCurator.deleteExpiredSerials());
-    }
-
-    /**
-     * This tests the batching logic for IN clause limit
-     */
-    @Test
-    public void testDelete50ExpiredSerials() {
-        setPrivateField(CertificateSerialCurator.class, "inClauseLimit", 50);
-        for (int i = 0; i < 50; i++) {
-            createCS().withExpDate(addDaysToDt(-10)).revoked(true).save();
-        }
-        assertEquals(50, this.certSerialCurator.deleteExpiredSerials());
-    }
-
-    @Test
-    public void testDelete55ExpiredSerials() {
-        setPrivateField(CertificateSerialCurator.class, "inClauseLimit", 55);
-        for (int i = 0; i < 55; i++) {
-            createCS().withExpDate(addDaysToDt(-10)).revoked(true).save();
-        }
-        assertEquals(55, this.certSerialCurator.deleteExpiredSerials());
-    }
-
-    private void setPrivateField(Class<CertificateSerialCurator> clazz, String intField, int val) {
-        Field f;
-        try {
-            f = clazz.getDeclaredField(intField);
-            f.setAccessible(true);
-            f.setInt(clazz, val);
-        }
-        catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Test
-    public void testDeleteExpiredSerialsWithMixedSerials() {
-        createCS().withExpDate(addToFields(0, -3, 0)).revoked(true).save();
-        createCS().withExpDate(addToFields(0, 0, -1)).revoked(true).save();
-        createCS().withExpDate(addDaysToDt(-10)).revoked(true).save();
-        createCS().withExpDate(addDaysToDt(30)).revoked(true).save();
-        createCS().withExpDate(tomorrow()).revoked(false).save();
-        assertEquals(3, this.certSerialCurator.deleteExpiredSerials());
+    @Test(expected = IllegalArgumentException.class)
+    public void testGetExpiredRevokedCertSerialsWithNullDateThrowsException() {
+        this.certSerialCurator.getExpiredRevokedCertSerials(null);
     }
 
     @Test
     public void testListBySerialIds() {
-        CertificateSerial serial = createCS().withExpDate("03/10/2010")
-            .collected(false).revoked(false).save();
-        CertificateSerial serial1 = createCS().withExpDate("03/10/2012")
-            .collected(true).revoked(true).save();
+        CertSerialBuilder builder = new CertSerialBuilder(this.certSerialCurator);
+
+        CertificateSerial serial = builder.withExpDate("03/10/2010").collected(false).revoked(false).build();
+        CertificateSerial serial1 = builder.withExpDate("03/10/2012").collected(true).revoked(true).build();
 
         String[] ids = new String[2];
         ids[0] = String.valueOf(serial.getSerial());
@@ -257,8 +306,25 @@ public class CertificateSerialCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void givenNullReturnsNull() {
+    public void testListBySerialIdsReturnsNullGivenNull() {
         assertEquals(null, certSerialCurator.listBySerialIds(null));
+    }
+
+    @Test
+    public void certSerialCreateWithManuallySetId() {
+        Long expectedSerialNumber = Util.generateUniqueLong();
+        CertificateSerial serial = new CertificateSerial(expectedSerialNumber, new Date());
+        // When manually setting the id for an entity, hibernate requires that
+        // we call merge instead of save/persist.
+        certSerialCurator.save(serial);
+        assertNotNull(serial);
+        assertNotNull(serial.getId());
+        assertEquals(expectedSerialNumber, serial.getId());
+
+        CandlepinQuery<CertificateSerial> serialQuery =
+            certSerialCurator.listBySerialIds(new String[] {serial.getId().toString()});
+
+        assertEquals(1, serialQuery.getRowCount());
     }
 
 }
