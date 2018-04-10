@@ -882,6 +882,11 @@ public class OwnerResource {
     @ApiOperation(notes = "Creates an Owner", value = "Create Owner")
     @ApiResponses({ @ApiResponse(code = 400, message = "Invalid owner specified in body") })
     public OwnerDTO createOwner(@ApiParam(name = "owner", required = true) OwnerDTO dto) {
+        // Verify that we have an owner key (as required)
+        if (StringUtils.isBlank(dto.getKey())) {
+            throw new BadRequestException(i18n.tr("Owners must be created with a valid key"));
+        }
+
         // Validate and set content access mode list & content access mode
         if (StringUtils.isBlank(dto.getContentAccessModeList())) {
             dto.setContentAccessModeList(ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE);
@@ -897,10 +902,18 @@ public class OwnerResource {
                     dto.getContentAccessMode()));
         }
 
+
+        // Check that the default service level is *not* set at this point
+        if (!StringUtils.isBlank(dto.getDefaultServiceLevel())) {
+            throw new BadRequestException(i18n.tr(
+                "The default service level cannot be specified during owner creation"));
+        }
+
         // Translate the DTO to an entity Owner.
         Owner owner = new Owner();
-        this.populateEntity(owner, dto);
         owner.setKey(dto.getKey());
+
+        this.populateEntity(owner, dto);
         owner.setContentAccessModeList(dto.getContentAccessModeList());
         owner.setContentAccessMode(dto.getContentAccessMode());
 
