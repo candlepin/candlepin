@@ -36,6 +36,7 @@ class QpidWatcher(proton.handlers.MessagingHandler):
         self.timeout = args.timeout
         self.subject = args.subject
         self.show_message = args.show_message
+        self.drain = args.drain
 
     def on_start(self, event):
         conn = event.container.connect(url=self.url, ssl_domain=self.ssl_domain)
@@ -45,7 +46,11 @@ class QpidWatcher(proton.handlers.MessagingHandler):
             event.container.schedule(self.timeout, self)
 
         # Note that Copy() does not actually consume the message off the queue!
-        self.receiver = event.container.create_receiver(conn, self.source, options=proton.reactor.Copy())
+        if self.drain:
+            clazz = proton.reactor.Move
+        else:
+            clazz = proton.reactor.Copy
+        self.receiver = event.container.create_receiver(conn, self.source, options=clazz())
 
     def on_timer_task(self, event):
         elapsed = event.container.mark() - self.last_event
@@ -88,6 +93,8 @@ if __name__ == "__main__":
         " (defaults to %(default)d s)", type=int, default=30)
     parser.add_argument("-m", "--messages", help="number of messages to receive; -1 receives indefinitely"
         " (defaults to %(default)d)", type=int, default=-1)
+    parser.add_argument("--drain", help="drain messages instead of watching them", action="store_true",
+        default=False)
     parser.add_argument("--subject", help="subject to watch for", action="append")
     parser.add_argument("--show-message", help="show the message received", action="store_true",
         default=False)
