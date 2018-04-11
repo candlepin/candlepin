@@ -145,7 +145,7 @@ public class ExporterTest {
         exportRules = mock(ExportRules.class);
         pprov = mock(PrincipalProvider.class);
         dvc = mock(DistributorVersionCurator.class);
-        dve = new DistributorVersionExporter();
+        dve = new DistributorVersionExporter(translator);
         cdnc = mock(CdnCurator.class);
         cdne = new CdnExporter(translator);
         pc = mock(ProductCurator.class);

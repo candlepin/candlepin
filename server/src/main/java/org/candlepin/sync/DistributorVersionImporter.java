@@ -14,6 +14,7 @@
  */
 package org.candlepin.sync;
 
+import org.candlepin.dto.manifest.v1.DistributorVersionDTO;
 import org.candlepin.model.DistributorVersion;
 import org.candlepin.model.DistributorVersionCapability;
 import org.candlepin.model.DistributorVersionCurator;
@@ -25,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -39,12 +41,13 @@ public class DistributorVersionImporter {
         this.curator = curator;
     }
 
-    public DistributorVersion createObject(ObjectMapper mapper, Reader reader)
+    public DistributorVersionDTO createObject(ObjectMapper mapper, Reader reader)
         throws IOException {
-        DistributorVersion distributorVersion = mapper.readValue(reader,
-            DistributorVersion.class);
+        DistributorVersionDTO distributorVersion = mapper.readValue(reader,
+            DistributorVersionDTO.class);
         distributorVersion.setId(null);
-        for (DistributorVersionCapability dvc : distributorVersion.getCapabilities()) {
+        for (DistributorVersionDTO.DistributorVersionCapabilityDTO dvc :
+            distributorVersion.getCapabilities()) {
             dvc.setId(null);
         }
         return distributorVersion;
@@ -53,20 +56,63 @@ public class DistributorVersionImporter {
     /**
      * @param distVers Set of Distributor Versions.
      */
-    public void store(Set<DistributorVersion> distVers) {
+    public void store(Set<DistributorVersionDTO> distVers) {
         log.debug("Creating/updating distributor versions");
-        for (DistributorVersion distVer : distVers) {
+        for (DistributorVersionDTO distVer : distVers) {
+            // TODO: this should be using bulk entity lookup to improve performance
             DistributorVersion existing = curator.findByName(distVer.getName());
             if (existing == null) {
-                curator.create(distVer);
+                DistributorVersion newDistVer = distributorVersionDTOtoDistributorVersionEntity(distVer);
+                curator.create(newDistVer);
                 log.debug("Created distributor version: " + distVer.getName());
             }
             else {
-                existing.setCapabilities(distVer.getCapabilities());
+                existing.setCapabilities(capabilityDTOsToCapabilityEntities(distVer.getCapabilities()));
                 existing.setDisplayName(distVer.getDisplayName());
                 curator.merge(existing);
                 log.debug("Updating distributor version: " + distVer.getName());
             }
         }
+    }
+
+    /**
+     * Utility method that creates a new DistributorVersion object based on a DistributorVersionDTO.
+     *
+     * @param dto the DistributorVersionDTO that the data is drawn from
+     *
+     * @return a newly created and populated DistributorVersion object
+     */
+    private DistributorVersion distributorVersionDTOtoDistributorVersionEntity(DistributorVersionDTO dto) {
+        DistributorVersion entity = new DistributorVersion();
+        entity.setId(dto.getId());
+        entity.setName(dto.getName());
+        entity.setDisplayName(dto.getDisplayName());
+        entity.setCreated(dto.getCreated());
+        entity.setUpdated(dto.getUpdated());
+        entity.setCapabilities(capabilityDTOsToCapabilityEntities(dto.getCapabilities()));
+        return entity;
+    }
+
+    /**
+     * Utility method that creates and populates a set of new DistributorVersionCapability objects
+     * based on the provided set of DistributorVersionCapabilityDTOs.
+     *
+     * @param dtos the DistributorVersionCapabilityDTO Set that the data is drawn from
+     *
+     * @return a newly created and populated Set of DistributorVersionCapability objects
+     */
+    private Set<DistributorVersionCapability> capabilityDTOsToCapabilityEntities(
+        Set<DistributorVersionDTO.DistributorVersionCapabilityDTO> dtos) {
+
+        Set<DistributorVersionCapability> entities = new HashSet<>();
+        for (DistributorVersionDTO.DistributorVersionCapabilityDTO dto : dtos) {
+            if (dto != null) {
+                DistributorVersionCapability capability = new DistributorVersionCapability();
+                capability.setId(dto.getId());
+                capability.setName(dto.getName());
+                entities.add(capability);
+            }
+        }
+        return entities;
     }
 }
