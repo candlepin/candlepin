@@ -189,6 +189,7 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         pinsetterListener.contextInitialized();
 
         loggerListener = injector.getInstance(LoggerContextListener.class);
+        loggerListener.contextInitialized();
 
         /**
          * Custom ModelConverter to handle our specific serialization requirements

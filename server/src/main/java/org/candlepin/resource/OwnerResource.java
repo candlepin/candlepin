@@ -49,6 +49,7 @@ import org.candlepin.dto.api.v1.EnvironmentDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.PoolDTO;
 import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
+import org.candlepin.logging.LoggerAndMDCFilter;
 import org.candlepin.model.Branding;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
@@ -917,6 +918,10 @@ public class OwnerResource {
             throw new BadRequestException(i18n.tr("Could not create the Owner: {0}", owner));
         }
 
+        if (owner.getLogLevel() != null) {
+            LoggerAndMDCFilter.insertFilter();
+        }
+
         log.info("Created owner: {}", owner);
         sink.emitOwnerCreated(owner);
 
@@ -988,6 +993,10 @@ public class OwnerResource {
 
         owner = ownerCurator.merge(owner);
         ownerCurator.flush();
+
+        if (owner.getLogLevel() != null) {
+            LoggerAndMDCFilter.insertFilter();
+        }
 
         // Refresh content access mode if necessary
         if (refreshContentAccess) {
@@ -1296,6 +1305,8 @@ public class OwnerResource {
         owner.setLogLevel(logLevel.toString());
         owner = ownerCurator.merge(owner);
 
+        LoggerAndMDCFilter.insertFilter();
+
         return this.translator.translate(owner, OwnerDTO.class);
     }
 
@@ -1313,6 +1324,11 @@ public class OwnerResource {
         Owner owner = findOwnerByKey(ownerKey);
         owner.setLogLevel(null);
         ownerCurator.merge(owner);
+
+        // Remove the TurboFilter only if there are no other owners with org-logging enabled
+        if (!ownerCurator.ownerLoggingEnabled()) {
+            LoggerAndMDCFilter.removeFilter();
+        }
     }
 
     /**

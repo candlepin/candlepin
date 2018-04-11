@@ -19,11 +19,13 @@ import static org.junit.Assert.*;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.spi.TurboFilterList;
 import ch.qos.logback.core.spi.FilterReply;
 
 /**
@@ -98,6 +100,42 @@ public class LoggerAndMDCFilterTest {
 
         assertEquals(FilterReply.DENY,
             filter.decide(null, logger, Level.DEBUG, null, null, null));
+    }
+
+    @Test
+    public void testInsertFilter() {
+        LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+        TurboFilterList filterList = context.getTurboFilterList();
+
+        assertTrue(filterList.stream().noneMatch(f -> f instanceof LoggerAndMDCFilter));
+
+        LoggerAndMDCFilter.insertFilter();
+        assertTrue(filterList.stream().anyMatch(f -> f instanceof LoggerAndMDCFilter));
+
+        int length = filterList.size();
+
+        LoggerAndMDCFilter.insertFilter();
+        assertEquals(length, filterList.size());
+    }
+
+    @Test
+    public void testRemoveFilter() {
+        LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+        TurboFilterList filterList = context.getTurboFilterList();
+
+        LoggerAndMDCFilter instance1 = new LoggerAndMDCFilter();
+        instance1.setName("instance1");
+
+        LoggerAndMDCFilter instance2 = new LoggerAndMDCFilter();
+        instance2.setName("instance2");
+
+        filterList.add(instance1);
+        filterList.add(instance2);
+
+        int originalLength = filterList.size();
+        LoggerAndMDCFilter.removeFilter();
+        assertEquals(originalLength - 2, filterList.size());
+        assertTrue(filterList.stream().noneMatch(f -> f instanceof LoggerAndMDCFilter));
     }
 
     @Test
