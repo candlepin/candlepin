@@ -63,6 +63,7 @@ import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Content;
+import org.candlepin.model.DistributorVersion;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentCurator;
@@ -172,6 +173,9 @@ public class StandardTranslator extends SimpleModelTranslator {
         this.registerTranslator(
             new org.candlepin.dto.manifest.v1.ContentTranslator(),
             Content.class, org.candlepin.dto.manifest.v1.ContentDTO.class);
+        this.registerTranslator(
+            new org.candlepin.dto.manifest.v1.DistributorVersionTranslator(),
+            DistributorVersion.class, org.candlepin.dto.manifest.v1.DistributorVersionDTO.class);
         this.registerTranslator(
             new org.candlepin.dto.manifest.v1.EntitlementTranslator(),
             Entitlement.class, org.candlepin.dto.manifest.v1.EntitlementDTO.class);

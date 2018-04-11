@@ -14,6 +14,9 @@
  */
 package org.candlepin.sync;
 
+import com.google.inject.Inject;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.manifest.v1.DistributorVersionDTO;
 import org.candlepin.model.DistributorVersion;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,9 +28,17 @@ import java.io.Writer;
  * DistributorVersionExporter
  */
 public class DistributorVersionExporter {
+
+    private ModelTranslator translator;
+
+    @Inject
+    public DistributorVersionExporter(ModelTranslator translator) {
+        this.translator = translator;
+    }
+
     void export(ObjectMapper mapper, Writer writer, DistributorVersion version)
         throws IOException {
 
-        mapper.writeValue(writer, version);
+        mapper.writeValue(writer, this.translator.translate(version, DistributorVersionDTO.class));
     }
 }

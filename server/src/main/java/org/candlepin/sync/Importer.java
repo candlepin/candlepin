@@ -23,13 +23,13 @@ import org.candlepin.dto.manifest.v1.CdnDTO;
 import org.candlepin.dto.manifest.v1.CertificateDTO;
 import org.candlepin.dto.manifest.v1.ConsumerDTO;
 import org.candlepin.dto.manifest.v1.ConsumerTypeDTO;
+import org.candlepin.dto.manifest.v1.DistributorVersionDTO;
 import org.candlepin.dto.manifest.v1.ProductDTO;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.ContentCurator;
-import org.candlepin.model.DistributorVersion;
 import org.candlepin.model.DistributorVersionCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.ExporterMetadata;
@@ -857,7 +857,7 @@ public class Importer {
 
     protected void importDistributorVersions(File[] versionFiles) throws IOException {
         DistributorVersionImporter importer = new DistributorVersionImporter(distVerCurator);
-        Set<DistributorVersion> distVers = new HashSet<>();
+        Set<DistributorVersionDTO> distVers = new HashSet<>();
 
         for (File verFile : versionFiles) {
             Reader reader = null;
