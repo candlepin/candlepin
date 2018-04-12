@@ -31,7 +31,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
-import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -129,6 +128,16 @@ public class Util {
         return addDaysToDt(-1);
     }
 
+    public static Date midnight() {
+        Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+
+        return cal.getTime();
+    }
+
     public static Date addDaysToDt(int dayField) {
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.DAY_OF_MONTH, dayField);
@@ -155,17 +164,14 @@ public class Util {
         return calendar.getTime();
     }
 
-    public static Date roundToMidnight(Date dt) {
+    public static Date setToMidnight(Date dt) {
         Calendar cal = Calendar.getInstance();
         cal.setTime(dt);
-        cal.set(Calendar.MINUTE, 59);
-        cal.set(Calendar.SECOND, 59);
-        cal.set(Calendar.HOUR_OF_DAY, 23);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MILLISECOND, 0);
         return cal.getTime();
-    }
-
-    public static BigInteger toBigInt(long l) {
-        return new BigInteger(String.valueOf(l));
     }
 
     public static Date toDate(String dt) {

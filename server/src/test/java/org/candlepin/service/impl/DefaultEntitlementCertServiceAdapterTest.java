@@ -17,7 +17,6 @@ package org.candlepin.service.impl;
 import static org.candlepin.pki.impl.BouncyCastleProviderLoader.*;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
@@ -1686,15 +1685,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
         when(serial.getId()).thenReturn(1L);
 
         pool.setId("poolId");
-        doAnswer(new Answer<Map<String, CertificateSerial>>() {
-            @Override
-            public Map<String, CertificateSerial> answer(InvocationOnMock invocation) throws Throwable {
-                Object[] args = invocation.getArguments();
-                Map<String, CertificateSerial> map = (Map<String, CertificateSerial>) args[0];
-                map.put("poolId", serial);
-                return null;
-            }
-        }).when(serialCurator).saveOrUpdateAll(anyMap());
 
         EntitlementCertificate cert = certServiceAdapter.generateEntitlementCert(entitlement, product);
 

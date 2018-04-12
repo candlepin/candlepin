@@ -519,7 +519,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
 
         // Serials need to be saved before the certs.
         log.debug("Persisting new certificate serials");
-        serialCurator.saveOrUpdateAll(serialMap);
+        serialCurator.saveOrUpdateAll(serialMap.values(), false, false);
 
         // Now that the serials have been saved, update the newly created
         // certs with their serials and add them to the entitlements.
