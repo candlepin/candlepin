@@ -78,6 +78,13 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
         return owner;
     }
 
+    public boolean ownerLoggingEnabled() {
+        Long ownersWithLogging = (Long) getEntityManager()
+            .createQuery("SELECT COUNT(o) FROM Owner o WHERE logLevel IS NOT NULL")
+            .getSingleResult();
+        return ownersWithLogging > 0;
+    }
+
     @Transactional
     public Owner replicate(Owner owner) {
         this.currentSession().replicate(owner, ReplicationMode.EXCEPTION);

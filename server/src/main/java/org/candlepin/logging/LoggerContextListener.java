@@ -14,10 +14,14 @@
  */
 package org.candlepin.logging;
 
+import org.candlepin.model.OwnerCurator;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ch.qos.logback.classic.LoggerContext;
+
+import javax.inject.Inject;
 
 /**
  * In order to release the resources used by logback-classic, it is always a
@@ -30,6 +34,20 @@ import ch.qos.logback.classic.LoggerContext;
  * </a>
  */
 public class LoggerContextListener {
+    private OwnerCurator ownerCurator;
+
+    @Inject
+    public LoggerContextListener(OwnerCurator ownerCurator) {
+        this.ownerCurator = ownerCurator;
+    }
+
+    public void contextInitialized() {
+         // Add the TurboFilter only if there are owners with org-logging enabled
+        if (ownerCurator.ownerLoggingEnabled()) {
+            LoggerAndMDCFilter.insertFilter();
+        }
+    }
+
     public void contextDestroyed() {
         LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
         Logger logger = context.getLogger(Logger.ROOT_LOGGER_NAME);
