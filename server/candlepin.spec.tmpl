@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.3.5
+Version: 2.3.6
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,10 @@ fi
 
 #raw
 %changelog
+* Fri Apr 13 2018 Kevin Howell <khowell@redhat.com> 2.3.6-1
+- 1566244: Speculative Fix For Failing CertificateRevocationListTask
+  (crog@redhat.com)
+
 * Fri Apr 06 2018 Kevin Howell <khowell@redhat.com> 2.3.5-1
 - accept auto-attach on activation key (adarshvritant@gmail.com)
 - Implemented CdnDTO for manifest import/export. (nmoumoul@redhat.com)
