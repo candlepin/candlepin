@@ -14,7 +14,6 @@
  */
 package org.candlepin.util;
 
-import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.PKIUtility;
@@ -52,8 +51,10 @@ import java.security.PrivateKey;
 import java.security.cert.X509CRL;
 import java.security.interfaces.RSAPrivateKey;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -302,28 +303,74 @@ public class CrlFileUtil {
 
     @Transactional
     public boolean syncCRLWithDB(File file) throws IOException {
-        List<BigInteger> revoke = new LinkedList<>();
-        List<CertificateSerial> serials = this.certificateSerialCurator
-            .retrieveTobeCollectedSerials()
-            .list();
+        List<Long> uncollected = this.certificateSerialCurator.getUncollectedRevokedCertSerials().list();
+        List<BigInteger> revoke = new ArrayList<>(uncollected.size());
 
-        for (CertificateSerial serial : serials) {
-            revoke.add(serial.getSerial());
-            serial.setCollected(true);
+        List<Long> expired = this.certificateSerialCurator.getExpiredRevokedCertSerials().list();
+        List<BigInteger> unrevoke = new ArrayList<>(expired.size());
+
+        // Convert our serials to BigIntegers for the CRL processing; also do some basic filtering since
+        // we're iterating anyway
+        if (uncollected.size() > 0) {
+            for (Iterator<Long> ci = uncollected.iterator(); ci.hasNext();) {
+                Long serial = ci.next();
+
+                if (serial != null) {
+                    revoke.add(BigInteger.valueOf(serial));
+                }
+                else {
+                    ci.remove();
+                }
+            }
         }
 
-        List<BigInteger> unrevoke = new LinkedList<>();
-        for (CertificateSerial serial : this.certificateSerialCurator.getExpiredSerials()) {
-            unrevoke.add(serial.getSerial());
+        if (expired.size() > 0) {
+            for (Iterator<Long> ci = expired.iterator(); ci.hasNext();) {
+                Long serial = ci.next();
+
+                if (serial != null) {
+                    unrevoke.add(BigInteger.valueOf(serial));
+                }
+                else {
+                    ci.remove();
+                }
+            }
         }
 
         if (revoke.size() > 0 || unrevoke.size() > 0) {
+            log.info("Updating CRL file; adding {} newly revoked serials, removing {} expired serials",
+                revoke.size(), unrevoke.size());
+
             this.updateCRLFile(file, revoke, unrevoke);
 
-            // Store the state of the newly-revoked serials as "collected"
-            this.certificateSerialCurator.saveOrUpdateAll(serials, true, true);
+            // Do some cleanup so we don't leave a bunch of cert serials lying around
+            if (uncollected.size() > 0) {
+                int collected = this.certificateSerialCurator.markSerialsAsCollected(uncollected);
+
+                if (collected != uncollected.size()) {
+                    // We have a severe problem here.
+                    log.error("Unable to collect all expected revoked serials; collected: {}, revoked: {}",
+                        collected, uncollected.size());
+                }
+                else {
+                    log.info("Collected {} revoked serials", collected);
+                }
+            }
+
+            if (expired.size() > 0) {
+                int deleted = this.certificateSerialCurator.deleteSerials(expired);
+
+                if (deleted != expired.size()) {
+                    log.error("Unable to delete all expected expired serials; deleted: {}, expired: {}",
+                        deleted, expired.size());
+                }
+                else {
+                    log.info("Deleted {} expired serials", deleted);
+                }
+            }
         }
 
         return true;
     }
+
 }
