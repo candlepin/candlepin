@@ -16,8 +16,9 @@ package org.candlepin.model;
 
 import com.google.inject.Inject;
 
-import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
+
+
 
 /**
  * ExportMetadataCurator
@@ -29,17 +30,17 @@ public class ExporterMetadataCurator extends AbstractHibernateCurator<ExporterMe
         super(ExporterMetadata.class);
     }
 
-    public ExporterMetadata lookupByType(String type) {
-        Criteria query = currentSession().createCriteria(ExporterMetadata.class);
-        query.add(Restrictions.eq("type", type));
-        return (ExporterMetadata) query.uniqueResult();
+    public ExporterMetadata getByType(String type) {
+        return (ExporterMetadata) this.currentSession().createCriteria(ExporterMetadata.class)
+            .add(Restrictions.eq("type", type))
+            .uniqueResult();
     }
 
-    public ExporterMetadata lookupByTypeAndOwner(String type, Owner owner) {
-        Criteria query = currentSession().createCriteria(ExporterMetadata.class);
-        query.add(Restrictions.eq("type", type));
-        query.add(Restrictions.eq("owner", owner));
-        return (ExporterMetadata) query.uniqueResult();
+    public ExporterMetadata getByTypeAndOwner(String type, Owner owner) {
+        return (ExporterMetadata) this.currentSession().createCriteria(ExporterMetadata.class)
+            .add(Restrictions.eq("type", type))
+            .add(Restrictions.eq("owner", owner))
+            .uniqueResult();
     }
 
 }

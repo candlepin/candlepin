@@ -872,7 +872,7 @@ public class InstalledProductStatusCalculatorTest {
 
         consumer.setFact("cpu.cpu_socket(s)", "4");
 
-        when(this.consumerTypeCurator.find(eq(ctype.getId()))).thenReturn(ctype);
+        when(this.consumerTypeCurator.get(eq(ctype.getId()))).thenReturn(ctype);
         when(this.consumerTypeCurator.getConsumerType(eq(consumer))).thenReturn(ctype);
 
         return consumer;

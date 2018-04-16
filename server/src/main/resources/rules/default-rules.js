@@ -520,7 +520,7 @@ var Entitlement = {
                     //   needs to be adjusted based on the virt limit
                     var virt_quantity = parseInt(virt_limit) * entitlement.getQuantity();
                     if (virt_quantity > 0) {
-                        var pools = post.lookupBySubscriptionId(pool.getSubscriptionId());
+                        var pools = post.getBySubscriptionId(pool.getSubscriptionId());
                         for (var idex = 0 ; idex < pools.size(); idex++ ) {
                             var derivedPool = pools.get(idex);
                             if (derivedPool.getAttribute("pool_derived")) {
@@ -535,7 +535,7 @@ var Entitlement = {
                     //   A quantity of 0 will block future binds, whereas -1 does not.
                     if (pool.getQuantity() == pool.getExported()) {
                         //getting all pools matching the sub id. Filtering out the 'parent'.
-                        var pools = post.lookupBySubscriptionId(pool.getSubscriptionId());
+                        var pools = post.getBySubscriptionId(pool.getSubscriptionId());
                         for (var idex = 0 ; idex < pools.size(); idex++ ) {
                             var derivedPool = pools.get(idex);
                             if (derivedPool.getAttribute("pool_derived")) {
@@ -1335,7 +1335,7 @@ var Unbind = {
                 //   exported, we need to add back the reduced bonus pool quantity.
                 var virt_quantity = parseInt(virt_limit) * entitlement.getQuantity();
                 if (virt_quantity > 0) {
-                    var pools = post.lookupBySubscriptionId(pool.getSubscriptionId());
+                    var pools = post.getBySubscriptionId(pool.getSubscriptionId());
                     for (var idex = 0 ; idex < pools.size(); idex++ ) {
                         var derivedPool = pools.get(idex);
                         if (derivedPool.getAttribute("pool_derived")) {
@@ -1347,7 +1347,7 @@ var Unbind = {
             else {
                 // As we have unbound an entitlement from a physical pool that was previously
                 //   exported, we need to set the unlimited bonus pool quantity to -1.
-                var pools = post.lookupBySubscriptionId(pool.getSubscriptionId());
+                var pools = post.getBySubscriptionId(pool.getSubscriptionId());
                 for (var idex = 0 ; idex < pools.size(); idex++ ) {
                     var derivedPool = pools.get(idex);
                     if (derivedPool.getAttribute("pool_derived")) {

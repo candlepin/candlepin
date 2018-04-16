@@ -120,7 +120,7 @@ public class RefresherTest {
         when(subAdapter.getSubscriptions(owner)).thenReturn(subscriptions);
         when(subAdapter.getSubscription("subId")).thenReturn(subscription);
 
-        when(poolManager.lookupBySubscriptionId(owner, "subId")).thenReturn(pools);
+        when(poolManager.getBySubscriptionId(owner, "subId")).thenReturn(pools);
 
         refresher.add(owner);
         refresher.add(product);
@@ -158,7 +158,7 @@ public class RefresherTest {
         when(subAdapter.getSubscriptions(eq(productData))).thenReturn(subscriptions);
         when(subAdapter.getSubscriptions(eq(productData2))).thenReturn(subscriptions);
         when(subAdapter.getSubscription("subId")).thenReturn(subscription);
-        when(poolManager.lookupBySubscriptionId(owner, "subId")).thenReturn(pools);
+        when(poolManager.getBySubscriptionId(owner, "subId")).thenReturn(pools);
 
         Pool mainPool = TestUtil.copyFromSub(subscription);
         when(poolManager.convertToMasterPool(subscription)).thenReturn(mainPool);

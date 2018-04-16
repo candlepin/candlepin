@@ -119,7 +119,7 @@ public class EntitlementImporter {
 
         String cdnLabel = meta.getCdnLabel();
         if (!StringUtils.isBlank(cdnLabel)) {
-            Cdn cdn = cdnCurator.lookupByLabel(cdnLabel);
+            Cdn cdn = cdnCurator.getByLabel(cdnLabel);
             if (cdn != null) {
                 subscription.setCdn(cdn);
             }
@@ -604,7 +604,7 @@ public class EntitlementImporter {
     private Entitlement findEntitlement(String entitlementId) {
         Entitlement entitlement = null;
         if (entitlementId != null && !entitlementId.isEmpty()) {
-            entitlement = entitlementCurator.find(entitlementId);
+            entitlement = entitlementCurator.get(entitlementId);
         }
         else {
             throw new BadRequestException(i18n.tr("Entitlement id is null or empty."));

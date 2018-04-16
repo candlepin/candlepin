@@ -99,8 +99,8 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
         ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.HYPERVISOR);
         ctype.setId("test-ctype");
 
-        when(consumerTypeCurator.lookupByLabel(eq(ConsumerTypeEnum.HYPERVISOR.getLabel()))).thenReturn(ctype);
-        when(consumerTypeCurator.lookupByLabel(eq(ConsumerTypeEnum.HYPERVISOR.getLabel()), anyBoolean()))
+        when(consumerTypeCurator.getByLabel(eq(ConsumerTypeEnum.HYPERVISOR.getLabel()))).thenReturn(ctype);
+        when(consumerTypeCurator.getByLabel(eq(ConsumerTypeEnum.HYPERVISOR.getLabel()), anyBoolean()))
             .thenReturn(ctype);
 
         when(owner.getKey()).thenReturn("joe");
@@ -129,7 +129,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
 
     @Test
     public void hypervisorUpdateExecCreate() throws JobExecutionException {
-        when(ownerCurator.lookupByKey(eq("joe"))).thenReturn(owner);
+        when(ownerCurator.getByKey(eq("joe"))).thenReturn(owner);
 
         JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal, null);
         JobExecutionContext ctx = mock(JobExecutionContext.class);
@@ -146,7 +146,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
 
     @Test
     public void reporterIdOnCreateTest() throws JobExecutionException {
-        when(ownerCurator.lookupByKey(eq("joe"))).thenReturn(owner);
+        when(ownerCurator.getByKey(eq("joe"))).thenReturn(owner);
 
         JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal,
             "createReporterId");
@@ -166,7 +166,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
 
     @Test
     public void hypervisorUpdateExecUpdate() throws JobExecutionException {
-        when(ownerCurator.lookupByKey(eq("joe"))).thenReturn(owner);
+        when(ownerCurator.getByKey(eq("joe"))).thenReturn(owner);
         Consumer hypervisor = new Consumer();
         String hypervisorId = "uuid_999";
         hypervisor.setHypervisorId(new HypervisorId(hypervisorId));
@@ -188,7 +188,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
 
     @Test
     public void reporterIdOnUpdateTest() throws JobExecutionException {
-        when(ownerCurator.lookupByKey(eq("joe"))).thenReturn(owner);
+        when(ownerCurator.getByKey(eq("joe"))).thenReturn(owner);
         Consumer hypervisor = new Consumer();
         String hypervisorId = "uuid_999";
         hypervisor.setHypervisorId(new HypervisorId(hypervisorId));
@@ -210,7 +210,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
 
     @Test
     public void hypervisorUpdateExecCreateNoHypervisorId() throws JobExecutionException {
-        when(ownerCurator.lookupByKey(eq("joe"))).thenReturn(owner);
+        when(ownerCurator.getByKey(eq("joe"))).thenReturn(owner);
 
         hypervisorJson =
                 "{\"hypervisors\":" +
@@ -236,7 +236,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
 
     @Test
     public void hypervisorUpdateIgnoresEmptyGuestIds() throws Exception {
-        when(ownerCurator.lookupByKey(eq("joe"))).thenReturn(owner);
+        when(ownerCurator.getByKey(eq("joe"))).thenReturn(owner);
 
         hypervisorJson =
                 "{\"hypervisors\":" +
@@ -303,7 +303,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
     public void ensureJobFailsWhenAutobindDisabledForTargetOwner() throws Exception {
         // Disabled autobind
         when(owner.isAutobindDisabled()).thenReturn(true);
-        when(ownerCurator.lookupByKey(eq("joe"))).thenReturn(owner);
+        when(ownerCurator.getByKey(eq("joe"))).thenReturn(owner);
 
         JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal, null);
         JobExecutionContext ctx = mock(JobExecutionContext.class);

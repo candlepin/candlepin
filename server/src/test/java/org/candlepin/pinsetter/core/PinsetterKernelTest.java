@@ -171,7 +171,7 @@ public class PinsetterKernelTest {
         pk = new PinsetterKernel(config, jfactory, jlistener, jcurator,
                 sfactory, triggerListener, modeManager);
         JobStatus status = mock(JobStatus.class);
-        when(jcurator.find(startsWith(
+        when(jcurator.get(startsWith(
             Util.getClassName(JobCleaner.class)))).thenReturn(status);
         when(jcurator.create(any(JobStatus.class))).thenThrow(new EntityExistsException());
         pk.startup();

@@ -102,7 +102,7 @@ public class OwnerTest extends DatabaseTestFixture {
 
         assertEquals(2, o.getConsumers().size());
 
-        Owner lookedUp = ownerCurator.find(o.getId());
+        Owner lookedUp = ownerCurator.get(o.getId());
         assertEquals(2, lookedUp.getConsumers().size());
     }
 

@@ -73,7 +73,7 @@ public class CertificateSerialResourceTest {
         CertificateSerialCurator csc = mock(CertificateSerialCurator.class);
         CertificateSerialResource csr = new CertificateSerialResource(csc, this.modelTranslator);
         CertificateSerial cs = new CertificateSerial(10L);
-        when(csc.find(cs.getId())).thenReturn(cs);
+        when(csc.get(cs.getId())).thenReturn(cs);
 
         CertificateSerialDTO output = csr.getCertificateSerial(10L);
         assertNotNull(output);

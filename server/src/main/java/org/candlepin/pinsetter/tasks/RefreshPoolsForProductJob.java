@@ -63,7 +63,7 @@ public class RefreshPoolsForProductJob extends KingpinJob {
         Boolean lazy = context.getMergedJobDataMap().getBoolean(LAZY_REGEN);
         StringBuilder result = new StringBuilder();
 
-        Product product = this.productCurator.find(productUuid);
+        Product product = this.productCurator.get(productUuid);
 
         if (product != null) {
             Refresher refresher = poolManager.getRefresher(this.subAdapter, this.ownerAdapter, lazy);

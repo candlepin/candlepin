@@ -182,7 +182,7 @@ public class ImporterTest {
         em.setExported(daybefore);
         em.setId("42");
         em.setType(ExporterMetadata.TYPE_SYSTEM);
-        when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
+        when(emc.getByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
         Importer i = new Importer(null, null, null, null, null, null,
             null, null, null, emc, null, null, i18n, null,
             null, su, null, this.mockSubReconciler, this.ec, this.translator);
@@ -207,7 +207,7 @@ public class ImporterTest {
         File actualmeta = createFile("meta.json", "0.0.3", new Date(),
             "test_user", "prefix");
         ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
-        when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(null);
+        when(emc.getByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(null);
         Importer i = new Importer(null, null, null, null, null, null,
             null, null, null, emc, null, null, i18n,
             null, null, su, null, this.mockSubReconciler, this.ec, this.translator);
@@ -229,7 +229,7 @@ public class ImporterTest {
         em.setExported(getDateBeforeDays(3));
         em.setId("42");
         em.setType(ExporterMetadata.TYPE_SYSTEM);
-        when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
+        when(emc.getByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
         Importer i = new Importer(null, null, null, null, null, null,
             null, null, null, emc, null, null, i18n,
             null, null, su, null, this.mockSubReconciler, this.ec, this.translator);
@@ -258,7 +258,7 @@ public class ImporterTest {
         em.setExported(date); // exact same date = assumed same manifest
         em.setId("42");
         em.setType(ExporterMetadata.TYPE_SYSTEM);
-        when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
+        when(emc.getByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
         Importer i = new Importer(null, null, null, null, null, null,
             null, null, null, emc, null, null, i18n,
             null, null, su, null, this.mockSubReconciler, this.ec, this.translator);
@@ -306,7 +306,7 @@ public class ImporterTest {
         em.setExported(getDateBeforeDays(30));
         em.setId("42");
         em.setType(ExporterMetadata.TYPE_SYSTEM);
-        when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
+        when(emc.getByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
         Importer i = new Importer(null, null, null, null, null, null,
             null, null, null, emc, null, null, i18n,
             null, null, su, null, this.mockSubReconciler, this.ec, this.translator);
@@ -337,7 +337,7 @@ public class ImporterTest {
         File actualmeta = createFile("meta.json", "0.0.3", new Date(),
             "test_user", "prefix");
         ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
-        when(emc.lookupByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, null))
+        when(emc.getByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, null))
             .thenReturn(null);
         Importer i = new Importer(null, null, null, null, null, null,
             null, null, null, emc, null, null, i18n,
@@ -578,15 +578,15 @@ public class ImporterTest {
         Owner owner = new Owner("admin", "Admin Owner");
 
         ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
-        when(emc.lookupByTypeAndOwner("per_user", owner)).thenReturn(null);
+        when(emc.getByTypeAndOwner("per_user", owner)).thenReturn(null);
 
         ConsumerType stype = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         stype.setId("test-ctype");
-        when(consumerTypeCurator.lookupByLabel(eq("system"))).thenReturn(stype);
-        when(consumerTypeCurator.find(eq(stype.getId()))).thenReturn(stype);
+        when(consumerTypeCurator.getByLabel(eq("system"))).thenReturn(stype);
+        when(consumerTypeCurator.get(eq(stype.getId()))).thenReturn(stype);
 
         OwnerCurator oc = mock(OwnerCurator.class);
-        when(oc.lookupWithUpstreamUuid(any(String.class))).thenReturn(null);
+        when(oc.getByUpstreamUuid(any(String.class))).thenReturn(null);
 
         PoolManager pm = mock(PoolManager.class);
         Refresher refresher = mock(Refresher.class);
@@ -618,8 +618,8 @@ public class ImporterTest {
 
         ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
         ctype.setId("test-ctype");
-        when(consumerTypeCurator.lookupByLabel(eq("candlepin"))).thenReturn(ctype);
-        when(consumerTypeCurator.find(eq(ctype.getId()))).thenReturn(ctype);
+        when(consumerTypeCurator.getByLabel(eq("candlepin"))).thenReturn(ctype);
+        when(consumerTypeCurator.get(eq(ctype.getId()))).thenReturn(ctype);
 
         File consumerFile = new File(folder.getRoot(), "consumer.json");
         mapper.writeValue(consumerFile, consumerDTO);
@@ -733,8 +733,8 @@ public class ImporterTest {
         OwnerCurator oc = mock(OwnerCurator.class);
         ConsumerType type = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
         type.setId("test-ctype");
-        when(consumerTypeCurator.lookupByLabel(eq("candlepin"))).thenReturn(type);
-        when(consumerTypeCurator.find(eq(type.getId()))).thenReturn(type);
+        when(consumerTypeCurator.getByLabel(eq("candlepin"))).thenReturn(type);
+        when(consumerTypeCurator.get(eq(type.getId()))).thenReturn(type);
 
         Importer i = new Importer(consumerTypeCurator, null, null, oc,
             mock(IdentityCertificateCurator.class), null, null,
@@ -834,7 +834,7 @@ public class ImporterTest {
         //  is passed and then jump out instead of trying to fake the actual file
         //  processing.
         doThrow(new RuntimeException("Done with the test")).when(emc)
-            .lookupByTypeAndOwner(any(String.class), any(Owner.class));
+            .getByTypeAndOwner(any(String.class), any(Owner.class));
         OwnerCurator oc = mock(OwnerCurator.class);
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);

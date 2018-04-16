@@ -113,7 +113,7 @@ public class QuantityRulesTest {
 
         ctype = TestUtil.createConsumerType();
         consumer = TestUtil.createConsumer(owner);
-        when(consumerTypeCurator.find(eq(ctype.getId()))).thenReturn(ctype);
+        when(consumerTypeCurator.get(eq(ctype.getId()))).thenReturn(ctype);
         when(consumerTypeCurator.getConsumerType(eq(consumer))).thenReturn(ctype);
 
         Entitlement e = TestUtil.createEntitlement(owner, consumer, pool, new EntitlementCertificate());

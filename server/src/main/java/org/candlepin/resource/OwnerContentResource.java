@@ -121,7 +121,7 @@ public class OwnerContentResource {
      *  the Owner instance for the owner with the specified key.
      */
     protected Owner getOwnerByKey(String key) {
-        Owner owner = this.ownerCurator.lookupByKey(key);
+        Owner owner = this.ownerCurator.getByKey(key);
 
         if (owner == null) {
             throw new NotFoundException(i18n.tr("Owner with key \"{0}\" was not found.", key));

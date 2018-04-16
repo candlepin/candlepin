@@ -79,7 +79,7 @@ public class RefreshPoolsJob extends UniqueByEntityJob {
             JobDataMap map = context.getMergedJobDataMap();
             String ownerKey = map.getString(JobStatus.TARGET_ID);
             Boolean lazy = map.getBoolean(LAZY_REGEN);
-            Owner owner = ownerCurator.lookupByKey(ownerKey);
+            Owner owner = ownerCurator.getByKey(ownerKey);
 
             if (owner == null) {
                 context.setResult("Nothing to do. Owner no longer exists");

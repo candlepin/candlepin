@@ -64,7 +64,7 @@ public class OwnerInfoCurator {
         this.poolCurator = poolCurator;
     }
 
-    public OwnerInfo lookupByOwner(Owner owner) {
+    public OwnerInfo getByOwner(Owner owner) {
         OwnerInfo info = new OwnerInfo();
         Date now = new Date();
 

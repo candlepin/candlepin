@@ -415,7 +415,7 @@ public class ConsumerResource {
 
         Owner owner = null;
         if (ownerKey != null) {
-            owner = ownerCurator.lookupByKey(ownerKey);
+            owner = ownerCurator.getByKey(ownerKey);
             if (owner == null) {
                 throw new NotFoundException(i18n.tr(
                     "owner with key: {0} was not found.", ownerKey));
@@ -539,7 +539,7 @@ public class ConsumerResource {
         }
 
         if (dto.getEnvironment() != null) {
-            Environment env = environmentCurator.find(dto.getEnvironment().getId());
+            Environment env = environmentCurator.get(dto.getEnvironment().getId());
             if (env == null) {
                 throw new NotFoundException(i18n.tr("Environment \"{0}\" could not be found.",
                     dto.getEnvironment().getId()));
@@ -690,7 +690,7 @@ public class ConsumerResource {
         Consumer consumer = null;
         if (ownerKey != null && dto.getFact("system_uuid") != null &&
             !"true".equalsIgnoreCase(dto.getFact("virt.is_guest"))) {
-            Owner owner = ownerCurator.lookupByKey(ownerKey);
+            Owner owner = ownerCurator.getByKey(ownerKey);
             if (owner != null) {
                 consumer = consumerCurator.getHypervisor(dto.getFact("system_uuid"), owner);
                 if (consumer != null) {
@@ -707,14 +707,14 @@ public class ConsumerResource {
         if (dto.getUuid() != null) {
             consumer.setUuid(dto.getUuid());
         }
-        consumer.setOwner(ownerCurator.lookupByKey(ownerKey));
+        consumer.setOwner(ownerCurator.getByKey(ownerKey));
         populateEntity(consumer, dto);
 
         if (dto.getType() == null) {
             throw new BadRequestException(i18n.tr("Unit type must be specified."));
         }
 
-        ConsumerType ctype = this.consumerTypeCurator.lookupByLabel(dto.getType().getLabel());
+        ConsumerType ctype = this.consumerTypeCurator.getByLabel(dto.getType().getLabel());
         if (ctype == null) {
             throw new BadRequestException(i18n.tr("Invalid unit type: {0}", dto.getType().getLabel()));
         }
@@ -918,7 +918,7 @@ public class ConsumerResource {
         }
 
         String recipient = consumer.getRecipientOwnerKey();
-        Owner recipientOwner = ownerCurator.lookupByKey(recipient);
+        Owner recipientOwner = ownerCurator.getByKey(recipient);
         if (recipientOwner == null) {
             throw new NotFoundException(i18n.tr("owner with key: {0} was not found.", recipient));
         }
@@ -1125,7 +1125,7 @@ public class ConsumerResource {
     }
 
     private ActivationKey findKey(String keyName, Owner owner) {
-        ActivationKey key = activationKeyCurator.lookupForOwner(keyName, owner);
+        ActivationKey key = activationKeyCurator.getByKeyName(owner, keyName);
 
         if (key == null) {
             throw new NotFoundException(i18n.tr("Activation key \"{0}\" not found for organization \"{1}\".",
@@ -1190,7 +1190,7 @@ public class ConsumerResource {
 
         createOwnerIfNeeded(principal);
 
-        Owner owner = ownerCurator.lookupByKey(ownerKey);
+        Owner owner = ownerCurator.getByKey(ownerKey);
         if (owner == null) {
             throw new BadRequestException(i18n.tr("Organization {0} does not exist.", ownerKey));
         }
@@ -1247,7 +1247,7 @@ public class ConsumerResource {
         }
 
         for (Owner owner : ((UserPrincipal) principal).getOwners()) {
-            Owner existingOwner = ownerCurator.lookupByKey(owner.getKey());
+            Owner existingOwner = ownerCurator.getByKey(owner.getKey());
 
             if (existingOwner == null) {
                 log.info("Principal carries permission for owner that does not exist.");
@@ -1375,7 +1375,7 @@ public class ConsumerResource {
         String environmentId = updated.getEnvironment() == null ? null : updated.getEnvironment().getId();
         if (environmentId != null && (toUpdate.getEnvironmentId() == null ||
             !toUpdate.getEnvironmentId().equals(environmentId))) {
-            Environment e = environmentCurator.find(environmentId);
+            Environment e = environmentCurator.get(environmentId);
             if (e == null) {
                 throw new NotFoundException(i18n.tr(
                     "Environment with ID \"{0}\" could not be found.", environmentId));
@@ -1671,7 +1671,7 @@ public class ConsumerResource {
             this.poolManager.revokeAllEntitlements(toDelete, false);
         }
         catch (ForbiddenException e) {
-            ConsumerType ctype = this.consumerTypeCurator.find(toDelete.getTypeId());
+            ConsumerType ctype = this.consumerTypeCurator.get(toDelete.getTypeId());
 
             String msg = e.message().getDisplayMessage();
             throw new ForbiddenException(i18n.tr("Cannot unregister {0} {1} because: {2}",
@@ -2014,7 +2014,7 @@ public class ConsumerResource {
         }
 
         if (poolIdString != null && quantity == null) {
-            Pool pool = poolManager.find(poolIdString);
+            Pool pool = poolManager.get(poolIdString);
             quantity = pool != null ? consumerBindUtil.getQuantityToBind(pool, consumer) : 1;
         }
 
@@ -2130,7 +2130,7 @@ public class ConsumerResource {
     }
 
     private Entitlement verifyAndLookupEntitlement(String entitlementId) {
-        Entitlement entitlement = entitlementCurator.find(entitlementId);
+        Entitlement entitlement = entitlementCurator.get(entitlementId);
 
         if (entitlement == null) {
             throw new NotFoundException(i18n.tr(
@@ -2238,7 +2238,7 @@ public class ConsumerResource {
 
         consumerCurator.verifyAndLookupConsumer(consumerUuid);
 
-        Entitlement toDelete = entitlementCurator.find(dbid);
+        Entitlement toDelete = entitlementCurator.get(dbid);
         if (toDelete != null) {
             poolManager.revokeEntitlement(toDelete);
             return;

@@ -75,7 +75,7 @@ public class ConsumerTranslatorTest extends
         consumer.setContentAccessMode("test_content_access_mode");
         consumer.setType(ctype);
 
-        when(mockConsumerTypeCurator.find(eq(ctype.getId()))).thenReturn(ctype);
+        when(mockConsumerTypeCurator.get(eq(ctype.getId()))).thenReturn(ctype);
         when(mockConsumerTypeCurator.getConsumerType(eq(consumer))).thenReturn(ctype);
 
         return consumer;

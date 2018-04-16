@@ -109,14 +109,14 @@ public class JobResourceTest {
     @Test
     public void getStatusAndDeleteIfFinishedTest() {
         //nothing to delete..
-        when(jobCurator.find("bogus_id")).thenReturn(new JobStatus());
+        when(jobCurator.get("bogus_id")).thenReturn(new JobStatus());
         jobResource.getStatusAndDeleteIfFinished("foobar");
         verify(jobCurator, never()).delete(any(JobStatus.class));
 
         //now lets make a deletable JobStatus
         JobStatus finishedJobStatus = new JobStatus();
         finishedJobStatus.setState(JobState.FINISHED);
-        when(jobCurator.find("deletable_id")).thenReturn(finishedJobStatus);
+        when(jobCurator.get("deletable_id")).thenReturn(finishedJobStatus);
         jobResource.getStatusAndDeleteIfFinished("deletable_id");
         verify(jobCurator, atLeastOnce()).delete(finishedJobStatus);
     }
@@ -129,7 +129,7 @@ public class JobResourceTest {
         JobStatus canceledJobStatus = new JobStatus();
         canceledJobStatus.setState(JobState.CANCELED);
 
-        when(jobCurator.find("cancel_id")).thenReturn(createdJobStatus);
+        when(jobCurator.get("cancel_id")).thenReturn(createdJobStatus);
         when(jobCurator.cancel("cancel_id")).thenReturn(canceledJobStatus);
         jobResource.cancel("cancel_id");
         verify(jobCurator, atLeastOnce()).cancel("cancel_id");

@@ -83,7 +83,7 @@ public class ActivationKeyContentOverrideResourceTest {
         when(context.getPathParameters()).thenReturn(mvm);
         akcor = new ActivationKeyContentOverrideResource(
             activationKeyContentOverrideCurator, akc, contentOverrideValidator, i18n);
-        when(akc.verifyAndLookupKey(eq(key.getId()))).thenReturn(key);
+        when(akc.secureGet(eq(key.getId()))).thenReturn(key);
         when(principal.canAccess(any(Object.class), any(SubResource.class),
             any(Access.class))).thenReturn(true);
     }

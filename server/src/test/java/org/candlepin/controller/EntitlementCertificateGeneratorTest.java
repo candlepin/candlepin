@@ -399,7 +399,7 @@ public class EntitlementCertificateGeneratorTest {
         HashMap<String, EntitlementCertificate> ecMap = new HashMap<>();
         ecMap.put(pool.getId(), new EntitlementCertificate());
 
-        when(this.mockEntitlementCurator.find(eq(entitlement.getId()))).thenReturn(entitlement);
+        when(this.mockEntitlementCurator.get(eq(entitlement.getId()))).thenReturn(entitlement);
         when(this.mockEntCertAdapter.generateEntitlementCerts(any(Consumer.class), any(Map.class),
             any(Map.class), any(Map.class), eq(true))).thenReturn(ecMap);
 

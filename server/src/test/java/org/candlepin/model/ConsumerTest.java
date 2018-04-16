@@ -106,7 +106,7 @@ public class ConsumerTest extends DatabaseTestFixture {
 
     @Test
     public void testLookup() throws Exception {
-        Consumer lookedUp = consumerCurator.find(consumer.getId());
+        Consumer lookedUp = consumerCurator.get(consumer.getId());
         assertEquals(consumer.getId(), lookedUp.getId());
         assertEquals(consumer.getName(), lookedUp.getName());
 
@@ -121,7 +121,7 @@ public class ConsumerTest extends DatabaseTestFixture {
     public void testSetInitialization() throws Exception {
         Consumer noFacts = new Consumer(CONSUMER_NAME, USER_NAME, owner, consumerType);
         consumerCurator.create(noFacts);
-        noFacts = consumerCurator.find(noFacts.getId());
+        noFacts = consumerCurator.get(noFacts.getId());
         assertNotNull(noFacts.getFacts());
         assertNotNull(noFacts.getInstalledProducts());
         assertNotNull(noFacts.getGuestIds());
@@ -129,7 +129,7 @@ public class ConsumerTest extends DatabaseTestFixture {
 
     @Test
     public void testInfo() {
-        Consumer lookedUp = consumerCurator.find(consumer.getId());
+        Consumer lookedUp = consumerCurator.get(consumer.getId());
         Map<String, String> metadata = lookedUp.getFacts();
         assertEquals(2, metadata.keySet().size());
         assertEquals("bar", metadata.get("foo"));
@@ -149,7 +149,7 @@ public class ConsumerTest extends DatabaseTestFixture {
 
         consumerResource.updateConsumer(consumer.getUuid(), newConsumer, mock(Principal.class));
 
-        Consumer lookedUp = consumerCurator.find(consumer.getId());
+        Consumer lookedUp = consumerCurator.get(consumer.getId());
         Date lookedUpDate = lookedUp.getUpdated();
         assertEquals("FACT_VALUE", lookedUp.getFact("FACT"));
 
@@ -163,7 +163,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         consumer2.setFact("foo", "bar2");
         consumerCurator.create(consumer2);
 
-        Consumer lookedUp = consumerCurator.find(consumer.getId());
+        Consumer lookedUp = consumerCurator.get(consumer.getId());
         Map<String, String> metadata = lookedUp.getFacts();
         assertEquals(2, metadata.keySet().size());
         assertEquals("bar", metadata.get("foo"));
@@ -171,7 +171,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         assertEquals("bar1", metadata.get("foo1"));
         assertEquals("bar1", lookedUp.getFacts().get("foo1"));
 
-        Consumer lookedUp2 = consumerCurator.find(consumer2.getId());
+        Consumer lookedUp2 = consumerCurator.get(consumer2.getId());
         metadata = lookedUp2.getFacts();
         assertEquals(1, metadata.keySet().size());
         assertEquals("bar2", metadata.get("foo"));
@@ -182,23 +182,23 @@ public class ConsumerTest extends DatabaseTestFixture {
         consumer.setFact("foo", "notbar");
         consumerCurator.merge(consumer);
 
-        Consumer lookedUp = consumerCurator.find(consumer.getId());
+        Consumer lookedUp = consumerCurator.get(consumer.getId());
         assertEquals("notbar", lookedUp.getFact("foo"));
     }
 
     @Test
     public void testRemoveConsumedProducts() {
-        consumerCurator.delete(consumerCurator.find(consumer.getId()));
-        assertNull(consumerCurator.find(consumer.getId()));
+        consumerCurator.delete(consumerCurator.get(consumer.getId()));
+        assertNull(consumerCurator.get(consumer.getId()));
     }
 
     @Test
-    public void testLookupByUuidNonExistent() {
+    public void testgetByUuidNonExistent() {
         consumerCurator.findByUuid("this is not a uuid!");
     }
 
     @Test
-    public void testLookupByUuid() {
+    public void testgetByUuid() {
         Consumer consumer2 = new Consumer("consumer2", USER_NAME, owner, consumerType);
         consumerCurator.create(consumer2);
 
@@ -229,7 +229,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         consumer.addEntitlement(e3);
         consumerCurator.merge(consumer);
 
-        Consumer lookedUp = consumerCurator.find(consumer.getId());
+        Consumer lookedUp = consumerCurator.get(consumer.getId());
         assertEquals(3, lookedUp.getEntitlements().size());
     }
 
@@ -251,7 +251,7 @@ public class ConsumerTest extends DatabaseTestFixture {
 
         consumerCurator.delete(consumer);
 
-        assertNull(consumerCurator.find(consumer.getId()));
+        assertNull(consumerCurator.get(consumer.getId()));
     }
 
     @Test
@@ -426,7 +426,7 @@ public class ConsumerTest extends DatabaseTestFixture {
 
     @Test
     public void testInstalledProducts() throws Exception {
-        Consumer lookedUp = consumerCurator.find(consumer.getId());
+        Consumer lookedUp = consumerCurator.get(consumer.getId());
         lookedUp.addInstalledProduct(
             new ConsumerInstalledProduct("someproduct", "someproductname")
         );
@@ -434,29 +434,29 @@ public class ConsumerTest extends DatabaseTestFixture {
             new ConsumerInstalledProduct("someproduct2", "someproductname2")
         );
         consumerCurator.update(lookedUp);
-        lookedUp = consumerCurator.find(consumer.getId());
+        lookedUp = consumerCurator.get(consumer.getId());
         assertEquals(2, lookedUp.getInstalledProducts().size());
         ConsumerInstalledProduct installed = lookedUp.getInstalledProducts().
             iterator().next();
         lookedUp.getInstalledProducts().remove(installed);
         consumerCurator.update(lookedUp);
-        lookedUp = consumerCurator.find(consumer.getId());
+        lookedUp = consumerCurator.get(consumer.getId());
         assertEquals(1, lookedUp.getInstalledProducts().size());
     }
 
     @Test
     public void testGuests() throws Exception {
-        Consumer lookedUp = consumerCurator.find(consumer.getId());
+        Consumer lookedUp = consumerCurator.get(consumer.getId());
         lookedUp.addGuestId(new GuestId("guest1"));
         lookedUp.addGuestId(new GuestId("guest2"));
         consumerCurator.update(lookedUp);
-        lookedUp = consumerCurator.find(consumer.getId());
+        lookedUp = consumerCurator.get(consumer.getId());
         assertEquals(2, lookedUp.getGuestIds().size());
         GuestId installed = lookedUp.getGuestIds().
             iterator().next();
         lookedUp.getGuestIds().remove(installed);
         consumerCurator.update(lookedUp);
-        lookedUp = consumerCurator.find(consumer.getId());
+        lookedUp = consumerCurator.get(consumer.getId());
         assertEquals(1, lookedUp.getGuestIds().size());
     }
 

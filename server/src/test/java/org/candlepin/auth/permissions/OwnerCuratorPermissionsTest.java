@@ -80,10 +80,10 @@ public class OwnerCuratorPermissionsTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testLookupByKeyOwnerPermissionFiltering() {
-        assertEquals(owner1, ownerCurator.lookupByKey(owner1.getKey()));
-        assertEquals(owner2, ownerCurator.lookupByKey(owner2.getKey()));
-        assertNull(ownerCurator.lookupByKey(owner3.getKey()));
+    public void testgetByKeyOwnerPermissionFiltering() {
+        assertEquals(owner1, ownerCurator.getByKey(owner1.getKey()));
+        assertEquals(owner2, ownerCurator.getByKey(owner2.getKey()));
+        assertNull(ownerCurator.getByKey(owner3.getKey()));
     }
 
 }

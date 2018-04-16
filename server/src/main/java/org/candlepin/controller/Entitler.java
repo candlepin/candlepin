@@ -124,12 +124,10 @@ public class Entitler {
             return bindByPoolQuantities(consumer, poolMap);
         }
         catch (EntitlementRefusedException e) {
-            // TODO: Could be multiple errors, but we'll just report the first
-            // one for now
-            Pool pool = poolCurator.find(poolId);
+            // TODO: Could be multiple errors, but we'll just report the first one for now
+            Pool pool = poolCurator.get(poolId);
             throw new ForbiddenException(messageTranslator.poolErrorToMessage(
-                pool, e.getResults().get(poolId).getErrors().get(0)
-            ));
+                pool, e.getResults().get(poolId).getErrors().get(0)));
         }
     }
 
@@ -248,11 +246,11 @@ public class Entitler {
                         host.getUuid(), e.getMessage());
                 }
 
-                /* Consumer is stale at this point.  Note that we use find() instead of
+                /* Consumer is stale at this point.  Note that we use get() instead of
                  * findByUuid() or getConsumer() since the latter two methods are secured
                  * to a specific host principal and bindByProducts can get called when
                  * a guest is switching hosts */
-                consumer = consumerCurator.find(consumer.getId());
+                consumer = consumerCurator.get(consumer.getId());
                 data.setConsumer(consumer);
             }
         }

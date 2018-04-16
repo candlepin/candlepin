@@ -195,7 +195,7 @@ public class PoolTest extends DatabaseTestFixture {
         pQs.put(consumerPool.getId(), 1);
         poolManager.entitleByPools(consumer, pQs);
 
-        consumerPool = poolCurator.find(consumerPool.getId());
+        consumerPool = poolCurator.get(consumerPool.getId());
         assertFalse(consumerPool.entitlementsAvailable(1));
         assertEquals(1, consumerPool.getEntitlements().size());
     }
@@ -221,7 +221,7 @@ public class PoolTest extends DatabaseTestFixture {
         pQs.put(consumerPool.getId(), 1);
         poolManager.entitleByPools(consumer, pQs);
 
-        assertEquals(1, consumerCurator.find(consumer.getId()).getEntitlements().size());
+        assertEquals(1, consumerCurator.get(consumer.getId()).getEntitlements().size());
     }
 
     // test subscription product changed exception
@@ -312,7 +312,7 @@ public class PoolTest extends DatabaseTestFixture {
 
         Pool pool = TestUtil.createPool(owner, parentProduct, providedProducts, 5);
         poolCurator.create(pool);
-        pool = poolCurator.find(pool.getId());
+        pool = poolCurator.get(pool.getId());
         assertEquals(1, pool.getProvidedProducts().size());
 
         // Clear the set and create a new one:
@@ -321,7 +321,7 @@ public class PoolTest extends DatabaseTestFixture {
         pool.addProvidedProduct(childProduct3);
         poolCurator.merge(pool);
 
-        pool = poolCurator.find(pool.getId());
+        pool = poolCurator.get(pool.getId());
         assertEquals(2, pool.getProvidedProducts().size());
     }
 
@@ -337,9 +337,9 @@ public class PoolTest extends DatabaseTestFixture {
         Entitlement ent = entitlements.get(0);
         assertTrue(ent.getQuantity() == 3);
         poolManager.adjustEntitlementQuantity(consumer, ent, 5);
-        Entitlement ent2 = entitlementCurator.find(ent.getId());
+        Entitlement ent2 = entitlementCurator.get(ent.getId());
         assertTrue(ent2.getQuantity() == 5);
-        Pool pool2 = poolCurator.find(pool.getId());
+        Pool pool2 = poolCurator.get(pool.getId());
         assertTrue(pool2.getConsumed() == 5);
         assertTrue(pool2.getEntitlements().size() == 1);
     }

@@ -91,7 +91,7 @@ public class UeberCertificateGenerator {
 
     @Transactional
     public UeberCertificate generate(String ownerKey, Principal principal) {
-        Owner owner = this.ownerCurator.lookupByKey(ownerKey);
+        Owner owner = this.ownerCurator.getByKey(ownerKey);
         if (owner == null) {
             throw new NotFoundException(i18n.tr("Unable to find an owner with key: {0}", ownerKey));
         }
@@ -111,7 +111,7 @@ public class UeberCertificateGenerator {
     }
 
     private UeberCertificate generateUeberCert(Owner owner, String generatedByUsername) throws Exception {
-        ConsumerType ueberCertType = this.consumerTypeCurator.lookupByLabel(UEBER_CERT_CONSUMER_TYPE, true);
+        ConsumerType ueberCertType = this.consumerTypeCurator.getByLabel(UEBER_CERT_CONSUMER_TYPE, true);
 
         UeberCertData ueberCertData = new UeberCertData(owner, generatedByUsername, ueberCertType);
 

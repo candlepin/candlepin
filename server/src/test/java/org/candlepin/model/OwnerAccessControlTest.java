@@ -56,7 +56,7 @@ public class OwnerAccessControlTest extends DatabaseTestFixture {
         dto = resource.createOwner(dto);
 
         assertNotNull(dto.getId());
-        assertNotNull(ownerCurator.find(dto.getId()));
+        assertNotNull(ownerCurator.get(dto.getId()));
     }
 
     @Test(expected = ForbiddenException.class)

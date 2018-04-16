@@ -109,7 +109,7 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
 
     @Override
     public void deleteRole(String roleId) {
-        Role r = roleCurator.find(roleId);
+        Role r = roleCurator.get(roleId);
         roleCurator.delete(r);
     }
 
@@ -127,7 +127,7 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
 
     @Override
     public Role getRole(String roleId) {
-        return roleCurator.find(roleId);
+        return roleCurator.get(roleId);
     }
 
     @Override

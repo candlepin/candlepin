@@ -78,6 +78,7 @@ public class EventResource {
                 eventDTOs.add(this.translator.translate(event, EventDTO.class));
             }
         }
+
         return eventDTOs;
     }
 
@@ -87,7 +88,7 @@ public class EventResource {
     @Path("{uuid}")
     @Produces(MediaType.APPLICATION_JSON)
     public EventDTO getEvent(@PathParam("uuid") String uuid) {
-        Event toReturn = eventCurator.find(uuid);
+        Event toReturn = eventCurator.get(uuid);
 
         if (toReturn != null) {
             List<Event> events = new LinkedList<>();

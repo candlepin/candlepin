@@ -86,7 +86,7 @@ public class ImportJobTest extends BaseJobTest{
 
         JobDetail detail = job.scheduleImport(owner, archiveFilePath, uploadedFileName, co);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
-        when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
+        when(ownerCurator.getByKey(eq(owner.getKey()))).thenReturn(owner);
         when(manifestManager.importStoredManifest(eq(owner), any(String.class),
             any(ConflictOverrides.class), eq(uploadedFileName))).thenReturn(record);
         job.execute(ctx);
@@ -103,7 +103,7 @@ public class ImportJobTest extends BaseJobTest{
 
         JobDetail detail = job.scheduleImport(owner, archiveFilePath, uploadedFileName, co);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
-        when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
+        when(ownerCurator.getByKey(eq(owner.getKey()))).thenReturn(owner);
         when(manifestManager.importStoredManifest(eq(owner), any(String.class), any(ConflictOverrides.class),
             eq(uploadedFileName))).thenThrow(new ImporterException(expectedMessage));
 
@@ -126,7 +126,7 @@ public class ImportJobTest extends BaseJobTest{
 
         JobDetail detail = job.scheduleImport(owner, archiveFilePath, uploadedFileName, co);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
-        when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(null);
+        when(ownerCurator.getByKey(eq(owner.getKey()))).thenReturn(null);
 
         try {
             job.execute(ctx);

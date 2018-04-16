@@ -192,7 +192,7 @@ public class EntitlementResource {
     public EntitlementDTO getEntitlement(
         @PathParam("entitlement_id") @Verify(Entitlement.class) String entitlementId) {
 
-        Entitlement entitlement = entitlementCurator.find(entitlementId);
+        Entitlement entitlement = entitlementCurator.get(entitlementId);
 
         if (entitlement == null) {
             throw new NotFoundException(
@@ -226,7 +226,7 @@ public class EntitlementResource {
         }
 
         // Verify entitlement exists:
-        Entitlement entitlement = entitlementCurator.find(id);
+        Entitlement entitlement = entitlementCurator.get(id);
         if (entitlement != null) {
             // make sure that this will be a change
             if (!entitlement.getQuantity().equals(update.getQuantity())) {
@@ -251,7 +251,7 @@ public class EntitlementResource {
     public String getUpstreamCert(
         @PathParam("dbid") String entitlementId) {
 
-        Entitlement ent = entitlementCurator.find(entitlementId);
+        Entitlement ent = entitlementCurator.get(entitlementId);
         if (ent == null) {
             throw new NotFoundException(i18n.tr(
                 "Entitlement with ID \"{0}\" could not be found.", entitlementId));
@@ -289,7 +289,7 @@ public class EntitlementResource {
     @Produces(MediaType.WILDCARD)
     @Path("/{dbid}")
     public void unbind(@PathParam("dbid") String dbid) {
-        Entitlement toDelete = entitlementCurator.find(dbid);
+        Entitlement toDelete = entitlementCurator.get(dbid);
         if (toDelete != null) {
             poolManager.revokeEntitlement(toDelete);
             return;
@@ -334,7 +334,7 @@ public class EntitlementResource {
         @QueryParam("to_consumer") @Verify(Consumer.class) String uuid,
         @QueryParam("quantity") Integer quantity) {
         // confirm entitlement
-        Entitlement entitlement = entitlementCurator.find(id);
+        Entitlement entitlement = entitlementCurator.get(id);
         List<Entitlement> entitlements = new ArrayList<>();
 
         if (entitlement != null) {

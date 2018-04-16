@@ -82,7 +82,7 @@ public class ConsumerTypeImporterTest {
 
         ConsumerTypeCurator curator = mock(ConsumerTypeCurator.class);
 
-        when(curator.lookupByLabel("prosumer")).thenReturn(testType);
+        when(curator.getByLabel("prosumer")).thenReturn(testType);
 
         ConsumerTypeImporter importer = new ConsumerTypeImporter(curator);
         importer.store(new HashSet<ConsumerType>() {
@@ -102,7 +102,7 @@ public class ConsumerTypeImporterTest {
 
         ConsumerTypeCurator curator = mock(ConsumerTypeCurator.class);
 
-        when(curator.lookupByLabel("prosumer")).thenReturn(null);
+        when(curator.getByLabel("prosumer")).thenReturn(null);
 
         ConsumerTypeImporter importer = new ConsumerTypeImporter(curator);
         importer.store(new HashSet<ConsumerType>() {

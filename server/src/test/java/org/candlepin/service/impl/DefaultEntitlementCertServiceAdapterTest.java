@@ -310,7 +310,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         consumer.setUuid("test-consumer");
 
         when(this.mockConsumerTypeCurator.getConsumerType(eq(consumer))).thenReturn(type);
-        when(this.mockConsumerTypeCurator.find(eq(type.getId()))).thenReturn(type);
+        when(this.mockConsumerTypeCurator.get(eq(type.getId()))).thenReturn(type);
 
         entitlement = new Entitlement();
         entitlement.setQuantity(new Integer(ENTITLEMENT_QUANTITY));
@@ -359,7 +359,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
                 environment.setId("test-env-" + environment.getName() + "-" + TestUtil.randomInt());
             }
 
-            when(this.mockEnvironmentCurator.find(eq(environment.getId()))).thenReturn(environment);
+            when(this.mockEnvironmentCurator.get(eq(environment.getId()))).thenReturn(environment);
 
             doAnswer(new Answer<Environment>() {
                 @Override
@@ -374,7 +374,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
                     }
 
                     if (consumer.getEnvironmentId() != null) {
-                        environment = curator.find(consumer.getEnvironmentId());
+                        environment = curator.get(consumer.getEnvironmentId());
 
                         if (environment == null) {
                             throw new IllegalStateException("No such environment: " +
@@ -930,7 +930,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         consumer.setType(ctype);
 
-        when(mockConsumerTypeCurator.find(eq(ctype.getId()))).thenReturn(ctype);
+        when(mockConsumerTypeCurator.get(eq(ctype.getId()))).thenReturn(ctype);
         when(mockConsumerTypeCurator.getConsumerType(consumer)).thenReturn(ctype);
 
         Set<ConsumerCapability> set = new HashSet<>();
@@ -957,7 +957,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         consumer.setType(ctype);
 
-        when(mockConsumerTypeCurator.find(eq(ctype.getId()))).thenReturn(ctype);
+        when(mockConsumerTypeCurator.get(eq(ctype.getId()))).thenReturn(ctype);
         when(mockConsumerTypeCurator.getConsumerType(consumer)).thenReturn(ctype);
 
         DefaultEntitlementCertServiceAdapter entAdapter = this.initCertServiceAdapter();
@@ -979,7 +979,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         consumer.setType(ctype);
 
-        when(mockConsumerTypeCurator.find(eq(ctype.getId()))).thenReturn(ctype);
+        when(mockConsumerTypeCurator.get(eq(ctype.getId()))).thenReturn(ctype);
         when(mockConsumerTypeCurator.getConsumerType(consumer)).thenReturn(ctype);
 
         DefaultEntitlementCertServiceAdapter entAdapter = this.initCertServiceAdapter();

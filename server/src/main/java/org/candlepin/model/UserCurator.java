@@ -45,7 +45,7 @@ public class UserCurator extends AbstractHibernateCurator<User> {
 
     @Transactional
     public User update(User user) {
-        User existingUser = this.find(user.getId());
+        User existingUser = this.get(user.getId());
         if (existingUser == null) {
             return create(user);
         }

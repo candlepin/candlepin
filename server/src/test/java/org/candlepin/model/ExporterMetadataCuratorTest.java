@@ -51,22 +51,22 @@ public class ExporterMetadataCuratorTest extends DatabaseTestFixture {
         em.setExported(new Date());
         assertNull(em.getId());
         ExporterMetadata emdb = emc.create(em);
-        ExporterMetadata emfound = emc.find(emdb.getId());
+        ExporterMetadata emfound = emc.get(emdb.getId());
         assertNotNull(emfound);
         assertNotNull(emfound.getId());
         assertEquals(emdb.getId(), emfound.getId());
     }
 
     @Test
-    public void lookupByType() {
+    public void getByType() {
         ExporterMetadata em = new ExporterMetadata();
         em.setType(ExporterMetadata.TYPE_SYSTEM);
         em.setExported(new Date());
         assertNull(em.getId());
         ExporterMetadata emdb = emc.create(em);
 
-        assertNull(emc.lookupByType(ExporterMetadata.TYPE_PER_USER));
-        assertEquals(emdb, emc.lookupByType(ExporterMetadata.TYPE_SYSTEM));
+        assertNull(emc.getByType(ExporterMetadata.TYPE_PER_USER));
+        assertEquals(emdb, emc.getByType(ExporterMetadata.TYPE_SYSTEM));
     }
 
     @Test
@@ -82,7 +82,7 @@ public class ExporterMetadataCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void lookupByTypeAndOwner() {
+    public void getByTypeAndOwner() {
         ExporterMetadata em = new ExporterMetadata();
         Owner owner = createOwner();
         em.setType(ExporterMetadata.TYPE_PER_USER);
@@ -90,7 +90,7 @@ public class ExporterMetadataCuratorTest extends DatabaseTestFixture {
         em.setOwner(owner);
         ExporterMetadata emdb = emc.create(em);
 
-        assertEquals(emdb, emc.lookupByTypeAndOwner(
+        assertEquals(emdb, emc.getByTypeAndOwner(
             ExporterMetadata.TYPE_PER_USER, owner));
     }
 }

@@ -85,7 +85,7 @@ public class ContentResourceTest {
 
     @Test(expected = NotFoundException.class)
     public void getContentNull() {
-        when(cc.find(anyLong())).thenReturn(null);
+        when(cc.get(anyLong())).thenReturn(null);
         cr.getContent("10");
     }
 
@@ -98,7 +98,7 @@ public class ContentResourceTest {
 
         when(cqmock.list()).thenReturn(Arrays.asList(owner));
         when(oc.listAll()).thenReturn(cqmock);
-        when(cc.lookupByUuid(eq("10"))).thenReturn(content);
+        when(cc.getByUuid(eq("10"))).thenReturn(content);
 
         ContentDTO output = cr.getContent("10");
 
@@ -128,7 +128,7 @@ public class ContentResourceTest {
 
         cr.updateContent(contentId, contentDTO);
 
-        verify(cc, never()).find(any());
+        verify(cc, never()).get(any());
         verify(cc, never()).merge(any());
         verify(productCurator, never()).getProductsByContent(any(), any());
     }

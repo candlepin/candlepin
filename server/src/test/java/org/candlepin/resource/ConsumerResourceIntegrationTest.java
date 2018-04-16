@@ -210,7 +210,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             owner.getKey(), null, true);
 
         assertNotNull(submitted);
-        assertNotNull(consumerCurator.find(submitted.getId()));
+        assertNotNull(consumerCurator.get(submitted.getId()));
         assertEquals(standardSystemType.getLabel(), submitted.getType().getLabel());
         assertEquals(METADATA_VALUE, submitted.getFact(METADATA_NAME));
     }
@@ -242,7 +242,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             true);
         assertNotNull(submitted);
         assertNotNull(submitted.getId());
-        assertNotNull(consumerCurator.find(submitted.getId()));
+        assertNotNull(consumerCurator.get(submitted.getId()));
         assertNotNull(consumerCurator.findByUuid(uuid));
         assertEquals(standardSystemType.getLabel(), submitted.getType()
             .getLabel());
@@ -263,7 +263,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             USER_NAME, owner, standardSystemType));
         consumerResource.deleteConsumer(consumer.getUuid(), principal);
 
-        assertNull(consumerCurator.find(created.getId()));
+        assertNull(consumerCurator.get(created.getId()));
     }
 
     @Test
@@ -307,7 +307,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         consumer = consumerCurator.findByUuid(consumer.getUuid());
         assertEquals(1, consumer.getEntitlements().size());
 
-        pool = poolManager.find(pool.getId());
+        pool = poolManager.get(pool.getId());
         assertEquals(Long.valueOf(1), pool.getConsumed());
         assertEquals(1, resultList.size());
         assertEquals(pool.getId(), resultList.get(0).getPool().getId());
@@ -330,7 +330,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
         assertNotNull(submitted);
         assertEquals(toSubmit.getUuid(), submitted.getUuid());
-        assertNotNull(consumerCurator.find(submitted.getId()));
+        assertNotNull(consumerCurator.get(submitted.getId()));
         assertEquals(standardSystemType.getLabel(), submitted.getType().getLabel());
         assertEquals(METADATA_VALUE, submitted.getFact(METADATA_NAME));
 
@@ -594,7 +594,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
         cr.regenerateEntitlementCertificates(this.consumer.getUuid(), ent.getId(), false);
 
-        Entitlement entWithRefreshedCerts = entitlementCurator.find(ent.getId());
+        Entitlement entWithRefreshedCerts = entitlementCurator.get(ent.getId());
         ent = this.modelTranslator.translate(entWithRefreshedCerts, EntitlementDTO.class);
         assertEquals(1, ent.getCertificates().size());
         CertificateDTO entCertAfter = ent.getCertificates().iterator().next();

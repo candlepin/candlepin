@@ -99,7 +99,7 @@ public class PinsetterJobListenerDatabaseTest {
         listener.jobWasExecuted(ctx, e);
 
         // verify the message stored is a substring of the long message
-        JobStatus verify = curator.find("name");
+        JobStatus verify = curator.get("name");
         assertEquals(longstr.substring(0, JobStatus.RESULT_COL_LENGTH),
             verify.getResult());
     }

@@ -90,7 +90,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     public Set<Entitlement> bulkUpdate(Set<Entitlement> entitlements) {
         Set<Entitlement> toReturn = new HashSet<>();
         for (Entitlement toUpdate : entitlements) {
-            Entitlement found = find(toUpdate.getId());
+            Entitlement found = this.get(toUpdate.getId());
             if (found != null) {
                 toReturn.add(found);
                 continue;
@@ -741,7 +741,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
      */
     @Transactional
     public void delete(Entitlement entity) {
-        Entitlement toDelete = find(entity.getId());
+        Entitlement toDelete = this.get(entity.getId());
 
         if (toDelete != null) {
             this.deleteImpl(toDelete);

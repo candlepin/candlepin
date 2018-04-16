@@ -382,7 +382,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         if (owner.getKey() != null) {
             String ownerKey = owner.getKey();
-            owner = ownerCurator.lookupByKey(owner.getKey());
+            owner = ownerCurator.getByKey(owner.getKey());
 
             if (owner == null) {
                 throw new IllegalStateException(
@@ -391,7 +391,7 @@ public class CandlepinPoolManager implements PoolManager {
         }
         else {
             String id = owner.getId();
-            owner = ownerCurator.find(owner.getId());
+            owner = ownerCurator.get(owner.getId());
 
             if (owner == null) {
                 throw new IllegalStateException(i18n.tr("Unable to find an owner with the ID \"{0}\"", id));
@@ -413,9 +413,9 @@ public class CandlepinPoolManager implements PoolManager {
         }
         else {
             // If we don't have a subscription ID, this *is* the master pool, but we need to use
-            // the original, hopefully unmodified pool
+            // the original, hopefully unmodified, pool
             subscriptionPools = pool.getId() != null ?
-                Collections.<Pool>singletonList(this.poolCurator.find(pool.getId())) :
+                Collections.<Pool>singletonList(this.poolCurator.get(pool.getId())) :
                 Collections.<Pool>singletonList(pool);
         }
 
@@ -972,8 +972,8 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         Owner owner = sub.getOwner().getId() != null ?
-            this.ownerCurator.find(sub.getOwner().getId()) :
-            this.ownerCurator.lookupByKey(sub.getOwner().getKey());
+            this.ownerCurator.get(sub.getOwner().getId()) :
+            this.ownerCurator.getByKey(sub.getOwner().getKey());
 
         if (owner == null) {
             throw new IllegalStateException("Subscription references an owner which cannot be resolved: " +
@@ -1019,12 +1019,12 @@ public class CandlepinPoolManager implements PoolManager {
     // Remove these methods or update them to properly mirror the curator.
 
     @Override
-    public Pool find(String poolId) {
-        return this.poolCurator.find(poolId);
+    public Pool get(String poolId) {
+        return this.poolCurator.get(poolId);
     }
 
     @Override
-    public List<Pool> secureFind(Collection<String> poolIds) {
+    public List<Pool> secureGet(Collection<String> poolIds) {
         if (CollectionUtils.isNotEmpty(poolIds)) {
             return this.poolCurator.listAllByIds(poolIds).list();
         }
@@ -1033,14 +1033,14 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     @Override
-    public List<Pool> lookupBySubscriptionId(Owner owner, String id) {
-        return this.poolCurator.lookupBySubscriptionId(owner, id);
+    public List<Pool> getBySubscriptionId(Owner owner, String id) {
+        return this.poolCurator.getBySubscriptionId(owner, id);
     }
 
     @Override
-    public List<Pool> lookupBySubscriptionIds(String ownerId, Collection<String> subscriptionIds) {
+    public List<Pool> getBySubscriptionIds(String ownerId, Collection<String> subscriptionIds) {
         if (CollectionUtils.isNotEmpty(subscriptionIds)) {
-            return this.poolCurator.lookupBySubscriptionIds(ownerId, subscriptionIds);
+            return this.poolCurator.getBySubscriptionIds(ownerId, subscriptionIds);
         }
 
         return new ArrayList<>();
@@ -1119,7 +1119,7 @@ public class CandlepinPoolManager implements PoolManager {
         // fromPools will be empty if the dev pool was already created.
         if (consumer != null && consumer.isDev() && !fromPools.isEmpty()) {
             String poolId = fromPools.iterator().next();
-            PoolQuantity pq = new PoolQuantity(poolCurator.find(poolId), 1);
+            PoolQuantity pq = new PoolQuantity(poolCurator.get(poolId), 1);
             bestPools.add(pq);
         }
         else {
@@ -1592,7 +1592,7 @@ public class CandlepinPoolManager implements PoolManager {
         Map<String, PoolQuantity> poolQuantityMap = new HashMap<>();
         poolQuantityMap.put(pool.getId(), new PoolQuantity(pool, change));
 
-        Owner owner = ownerCurator.find(consumer.getOwnerId());
+        Owner owner = ownerCurator.get(consumer.getOwnerId());
 
         // the only thing we do here is decrement bonus pool quantity
         enforcer.postEntitlement(this, consumer, owner, entMap, new ArrayList<>(), true, poolQuantityMap);
@@ -1681,7 +1681,7 @@ public class CandlepinPoolManager implements PoolManager {
             excludePoolIds.add(pool.getId());
         }
 
-        List<Pool> overConsumedPools = poolCurator.lookupOversubscribedBySubscriptionIds(ownerId,
+        List<Pool> overConsumedPools = poolCurator.getOversubscribedBySubscriptionIds(ownerId,
             subEntitlementMap);
 
         List<Pool> derivedPools = new ArrayList<>();

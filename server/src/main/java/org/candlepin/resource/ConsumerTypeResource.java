@@ -115,7 +115,7 @@ public class ConsumerTypeResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{id}")
     public ConsumerTypeDTO getConsumerType(@PathParam("id") String id) {
-        ConsumerType type = consumerTypeCurator.find(id);
+        ConsumerType type = consumerTypeCurator.get(id);
 
         if (type == null) {
             throw new NotFoundException(i18n.tr("Unit type with id \"{0}\" could not be found.", id));
@@ -152,7 +152,7 @@ public class ConsumerTypeResource {
     @Produces(MediaType.APPLICATION_JSON)
     public ConsumerTypeDTO update(
         @ApiParam(name = "consumerType", required = true) ConsumerTypeDTO dto) throws BadRequestException {
-        ConsumerType type = consumerTypeCurator.find(dto.getId());
+        ConsumerType type = consumerTypeCurator.get(dto.getId());
 
         if (type == null) {
             throw new NotFoundException(i18n.tr("Unit type with label {0} could not be found.", dto.getId()));
@@ -168,7 +168,7 @@ public class ConsumerTypeResource {
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public void deleteConsumerType(@PathParam("id") String id) {
-        ConsumerType type = consumerTypeCurator.find(id);
+        ConsumerType type = consumerTypeCurator.get(id);
 
         if (type == null) {
             throw new NotFoundException(i18n.tr("Unit type with id {0} could not be found.", id));

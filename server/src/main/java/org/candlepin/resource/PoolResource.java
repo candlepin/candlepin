@@ -163,8 +163,9 @@ public class PoolResource {
                 oId = c.getOwnerId();
             }
         }
+
         if (ownerId != null) {
-            Owner o = ownerCurator.secureFind(ownerId);
+            Owner o = ownerCurator.secureGet(ownerId);
             if (o == null) {
                 throw new NotFoundException(i18n.tr("owner: {0}", ownerId));
             }
@@ -212,14 +213,14 @@ public class PoolResource {
         @QueryParam("consumer") String consumerUuid,
         @ApiParam("Uses ISO 8601 format") @QueryParam("activeon") String activeOn,
         @Context Principal principal) {
-        Pool toReturn = poolManager.find(id);
+
+        Pool toReturn = poolManager.get(id);
 
         Consumer c = null;
         if (consumerUuid != null) {
             c = consumerCurator.findByUuid(consumerUuid);
             if (c == null) {
-                throw new NotFoundException(i18n.tr("consumer: {0} not found",
-                    consumerUuid));
+                throw new NotFoundException(i18n.tr("consumer: {0} not found", consumerUuid));
             }
 
             if (!principal.canAccess(c, SubResource.NONE, Access.READ_ONLY)) {
@@ -233,16 +234,16 @@ public class PoolResource {
             if (activeOn != null) {
                 activeOnDate = ResourceDateParser.parseDateString(activeOn);
             }
+
             toReturn.setCalculatedAttributes(
-                calculatedAttributesUtil.buildCalculatedAttributes(toReturn, activeOnDate)
-            );
+                calculatedAttributesUtil.buildCalculatedAttributes(toReturn, activeOnDate));
+
             calculatedAttributesUtil.setQuantityAttributes(toReturn, c, activeOnDate);
 
             return translator.translate(toReturn, PoolDTO.class);
         }
 
-        throw new NotFoundException(i18n.tr(
-            "Subscription Pool with ID \"{0}\" could not be found.", id));
+        throw new NotFoundException(i18n.tr("Subscription Pool with ID \"{0}\" could not be found.", id));
     }
 
     @ApiOperation(notes = "Remove a Pool", value = "deletePool")
@@ -251,18 +252,20 @@ public class PoolResource {
     @Path("/{pool_id}")
     @Produces(MediaType.APPLICATION_JSON)
     public void deletePool(@PathParam("pool_id") String id) {
-        Pool pool = poolManager.find(id);
+        Pool pool = poolManager.get(id);
         if (pool == null) {
-            throw new NotFoundException(i18n.tr(
-                "Entitlement Pool with ID \"{0}\" could not be found.", id));
+            throw new NotFoundException(i18n.tr("Entitlement Pool with ID \"{0}\" could not be found.", id));
         }
+
         if (pool.getType() != PoolType.NORMAL) {
             throw new BadRequestException(i18n.tr("Cannot delete bonus pools, as they are auto generated"));
         }
+
         if (pool.isCreatedByShare()) {
             throw new BadRequestException(i18n.tr("Cannot delete shared pools, This should be triggered by" +
                 " deleting the share entitlement instead"));
         }
+
         poolManager.deletePools(Collections.singleton(pool));
     }
 
@@ -274,11 +277,10 @@ public class PoolResource {
     public CdnDTO getPoolCdn(
         @PathParam("pool_id") @Verify(Pool.class) String id) {
 
-        Pool pool = poolManager.find(id);
+        Pool pool = poolManager.get(id);
 
         if (pool == null) {
-            throw new NotFoundException(i18n.tr(
-                "Subscription Pool with ID \"{0}\" could not be found.", id));
+            throw new NotFoundException(i18n.tr("Subscription Pool with ID \"{0}\" could not be found.", id));
         }
 
         return this.translator.translate(pool.getCdn(), CdnDTO.class);
@@ -293,7 +295,7 @@ public class PoolResource {
         @Verify(value = Pool.class, subResource = SubResource.ENTITLEMENTS) String id,
         @Context Principal principal) {
 
-        Pool pool = poolManager.find(id);
+        Pool pool = poolManager.get(id);
 
         if (pool == null) {
             throw new NotFoundException(i18n.tr("Subscription Pool with ID \"{0}\" could not be found.", id));
@@ -321,7 +323,7 @@ public class PoolResource {
      *  the certificate associated with the specified pool
      */
     protected SubscriptionsCertificate getPoolCertificate(String poolId) {
-        Pool pool = poolManager.find(poolId);
+        Pool pool = poolManager.get(poolId);
 
         if (pool == null) {
             throw new NotFoundException(i18n.tr(

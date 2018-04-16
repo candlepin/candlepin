@@ -157,10 +157,10 @@ public class ConsumerTranslatorTest extends
         }
         consumer.setGuestIds(guestIds);
 
-        when(mockConsumerTypeCurator.find(eq(ctype.getId()))).thenReturn(ctype);
+        when(mockConsumerTypeCurator.get(eq(ctype.getId()))).thenReturn(ctype);
         when(mockConsumerTypeCurator.getConsumerType(eq(consumer))).thenReturn(ctype);
 
-        when(mockEnvironmentCurator.find(eq(environment.getId()))).thenReturn(environment);
+        when(mockEnvironmentCurator.get(eq(environment.getId()))).thenReturn(environment);
         when(mockEnvironmentCurator.getConsumerEnvironment(eq(consumer))).thenReturn(environment);
 
         return consumer;

@@ -78,7 +78,7 @@ public class ActiveEntitlementJobTest extends DatabaseTestFixture {
         assertEquals("valid", consumer.getEntitlementStatus());
 
         // Should have changed
-        assertTrue(entitlementCurator.find(ent.getId()).isUpdatedOnStart());
+        assertTrue(entitlementCurator.get(ent.getId()).isUpdatedOnStart());
     }
 
     @Test
@@ -93,7 +93,7 @@ public class ActiveEntitlementJobTest extends DatabaseTestFixture {
         job.toExecute(null);
 
         // Unchanged
-        assertTrue(entitlementCurator.find(ent.getId()).isUpdatedOnStart());
+        assertTrue(entitlementCurator.get(ent.getId()).isUpdatedOnStart());
     }
 
     @Test
@@ -115,6 +115,6 @@ public class ActiveEntitlementJobTest extends DatabaseTestFixture {
         assertFalse("valid".equals(consumer.getEntitlementStatus()));
 
         // Should not have changed
-        assertFalse(entitlementCurator.find(ent.getId()).isUpdatedOnStart());
+        assertFalse(entitlementCurator.get(ent.getId()).isUpdatedOnStart());
     }
 }

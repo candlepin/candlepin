@@ -71,7 +71,7 @@ public class ConsumerTypeResourceTest extends DatabaseTestFixture {
     @Test
     public void testCreateType() {
         String label = "test_label";
-        ConsumerType existing = this.consumerTypeCurator.lookupByLabel(label);
+        ConsumerType existing = this.consumerTypeCurator.getByLabel(label);
 
         // Verify it doesn't exist already
         assertNull(existing);
@@ -91,7 +91,7 @@ public class ConsumerTypeResourceTest extends DatabaseTestFixture {
         this.consumerTypeCurator.clear();
 
         // Ensure the type actually hit the DB
-        existing = this.consumerTypeCurator.lookupByLabel(label);
+        existing = this.consumerTypeCurator.getByLabel(label);
         assertNotNull(existing);
         assertEquals(dto.getLabel(), existing.getLabel());
         assertEquals(dto.isManifest(), existing.isManifest());
@@ -122,7 +122,7 @@ public class ConsumerTypeResourceTest extends DatabaseTestFixture {
         this.consumerTypeCurator.clear();
 
         // Ensure the update actually hit the DB
-        ConsumerType existing = this.consumerTypeCurator.lookupByLabel(label);
+        ConsumerType existing = this.consumerTypeCurator.getByLabel(label);
         assertNotNull(existing);
         assertEquals(dto.getLabel(), existing.getLabel());
         assertEquals(manifest, existing.isManifest());
@@ -148,7 +148,7 @@ public class ConsumerTypeResourceTest extends DatabaseTestFixture {
         this.consumerTypeCurator.clear();
 
         // Ensure the update actually hit the DB
-        ConsumerType existing = this.consumerTypeCurator.find(this.testType.getId());
+        ConsumerType existing = this.consumerTypeCurator.get(this.testType.getId());
         assertNotNull(existing);
         assertEquals(label, existing.getLabel());
         assertEquals(dto.isManifest(), existing.isManifest());
@@ -173,7 +173,7 @@ public class ConsumerTypeResourceTest extends DatabaseTestFixture {
         this.consumerTypeCurator.clear();
 
         // Ensure the update changed nothing in the DB
-        ConsumerType existing = this.consumerTypeCurator.find(this.testType.getId());
+        ConsumerType existing = this.consumerTypeCurator.get(this.testType.getId());
         assertNotNull(existing);
         assertEquals(label, existing.getLabel());
         assertEquals(manifest, existing.isManifest());
@@ -198,7 +198,7 @@ public class ConsumerTypeResourceTest extends DatabaseTestFixture {
     @Test
     public void testDeleteType() {
         String id = this.testType.getId();
-        assertNotNull(this.consumerTypeCurator.find(id));
+        assertNotNull(this.consumerTypeCurator.get(id));
 
         this.consumerTypeResource.deleteConsumerType(id);
 
@@ -207,7 +207,7 @@ public class ConsumerTypeResourceTest extends DatabaseTestFixture {
         this.consumerTypeCurator.clear();
 
         // Verify the type no longer exists
-        assertNull(this.consumerTypeCurator.find(id));
+        assertNull(this.consumerTypeCurator.get(id));
     }
 
     @Test(expected = NotFoundException.class)

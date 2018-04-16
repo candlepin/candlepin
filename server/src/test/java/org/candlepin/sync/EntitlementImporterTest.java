@@ -113,7 +113,7 @@ public class EntitlementImporterTest {
         consumerDTO.setUrlApi("");
 
         when(this.mockConsumerTypeCurator.getConsumerType(eq(consumer))).thenReturn(ctype);
-        when(this.mockConsumerTypeCurator.find(eq(ctype.getId()))).thenReturn(ctype);
+        when(this.mockConsumerTypeCurator.get(eq(ctype.getId()))).thenReturn(ctype);
 
         cert = createEntitlementCertificate("my-test-key", "my-cert");
         cert.setId("test-id");
@@ -123,7 +123,7 @@ public class EntitlementImporterTest {
         meta = new Meta();
         meta.setCdnLabel("test-cdn");
         testCdn = new Cdn("test-cdn", "Test CDN", "https://test.url.com");
-        when(cdnCurator.lookupByLabel("test-cdn")).thenReturn(testCdn);
+        when(cdnCurator.getByLabel("test-cdn")).thenReturn(testCdn);
     }
 
     @Test

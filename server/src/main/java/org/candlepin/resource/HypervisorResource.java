@@ -107,7 +107,7 @@ public class HypervisorResource {
         this.translator = translator;
         this.guestIdResource = guestIdResource;
 
-        this.hypervisorType = consumerTypeCurator.lookupByLabel(ConsumerTypeEnum.HYPERVISOR.getLabel(), true);
+        this.hypervisorType = consumerTypeCurator.getByLabel(ConsumerTypeEnum.HYPERVISOR.getLabel(), true);
     }
 
     /**
@@ -298,7 +298,7 @@ public class HypervisorResource {
      * Get the owner or bust
      */
     private Owner getOwner(String ownerKey) {
-        Owner owner = ownerCurator.lookupByKey(ownerKey);
+        Owner owner = ownerCurator.getByKey(ownerKey);
         if (owner == null) {
             throw new NotFoundException(i18n.tr(
                 "owner with key: {0} was not found.", ownerKey));

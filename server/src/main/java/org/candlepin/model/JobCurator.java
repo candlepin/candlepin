@@ -60,7 +60,7 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
     @Transactional
     public JobStatus cancel(String jobId) {
         this.cancelNoReturn(jobId);
-        JobStatus result = this.find(jobId);
+        JobStatus result = this.get(jobId);
         if (result != null) {
             this.refresh(result);
         }

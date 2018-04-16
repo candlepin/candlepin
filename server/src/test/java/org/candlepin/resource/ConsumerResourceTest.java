@@ -186,9 +186,9 @@ public class ConsumerResourceTest {
                 ctype.setId("test-ctype-" + ctype.getLabel() + "-" + TestUtil.randomInt());
             }
 
-            when(mockConsumerTypeCurator.lookupByLabel(eq(ctype.getLabel()))).thenReturn(ctype);
-            when(mockConsumerTypeCurator.lookupByLabel(eq(ctype.getLabel()), anyBoolean())).thenReturn(ctype);
-            when(mockConsumerTypeCurator.find(eq(ctype.getId()))).thenReturn(ctype);
+            when(mockConsumerTypeCurator.getByLabel(eq(ctype.getLabel()))).thenReturn(ctype);
+            when(mockConsumerTypeCurator.getByLabel(eq(ctype.getLabel()), anyBoolean())).thenReturn(ctype);
+            when(mockConsumerTypeCurator.get(eq(ctype.getId()))).thenReturn(ctype);
 
             doAnswer(new Answer<ConsumerType>() {
                 @Override
@@ -202,7 +202,7 @@ public class ConsumerResourceTest {
                         throw new IllegalArgumentException("consumer is null or lacks a type ID");
                     }
 
-                    ctype = curator.find(consumer.getTypeId());
+                    ctype = curator.get(consumer.getTypeId());
                     if (ctype == null) {
                         throw new IllegalStateException("No such consumer type: " + consumer.getTypeId());
                     }
@@ -227,7 +227,7 @@ public class ConsumerResourceTest {
                 owner.setKey("test-owner-key-" + rand);
             }
 
-            when(mockOwnerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
+            when(mockOwnerCurator.getByKey(eq(owner.getKey()))).thenReturn(owner);
         }
 
         return owner;
@@ -302,7 +302,7 @@ public class ConsumerResourceTest {
             .thenReturn(Boolean.TRUE);
 
         Owner o = mock(Owner.class);
-        when(mockOwnerCurator.lookupByKey(any(String.class))).thenReturn(o);
+        when(mockOwnerCurator.getByKey(any(String.class))).thenReturn(o);
 
         c.setFact("foo", "bar");
 
@@ -334,11 +334,11 @@ public class ConsumerResourceTest {
             .thenReturn(Boolean.TRUE);
 
         Owner o = mock(Owner.class);
-        when(mockOwnerCurator.lookupByKey(any(String.class))).thenReturn(o);
+        when(mockOwnerCurator.getByKey(any(String.class))).thenReturn(o);
 
         Owner o2 = mock(Owner.class);
         c.setRecipientOwnerKey("o2");
-        when(mockOwnerCurator.lookupByKey(eq("o2"))).thenReturn(o2);
+        when(mockOwnerCurator.getByKey(eq("o2"))).thenReturn(o2);
 
         when(uap.canAccess(eq(o2), eq(SubResource.ENTITLEMENTS), eq(Access.CREATE)))
             .thenReturn(Boolean.FALSE);
@@ -383,7 +383,7 @@ public class ConsumerResourceTest {
         when(e.getPool()).thenReturn(p);
         when(p.getSubscriptionId()).thenReturn("4444");
 
-        when(mockEntitlementCurator.find(eq("9999"))).thenReturn(e);
+        when(mockEntitlementCurator.get(eq("9999"))).thenReturn(e);
         when(mockSubscriptionServiceAdapter.getSubscription(eq("4444"))).thenReturn(s);
 
         when(mockEntitlementCertServiceAdapter.generateEntitlementCert(
@@ -536,7 +536,7 @@ public class ConsumerResourceTest {
         ConsumerContentOverrideCurator ccoc = mock(ConsumerContentOverrideCurator.class);
 
         when(ak.getId()).thenReturn("testKey");
-        when(akc.lookupForOwner(eq(owner.getKey()), eq(owner))).thenReturn(ak);
+        when(akc.getByKeyName(eq(owner), eq(owner.getKey()))).thenReturn(ak);
 
         ConsumerResource cr = new ConsumerResource(null, mockConsumerTypeCurator, null,
             null, null, null, null, null, i18n, null, null, null, null,
@@ -608,7 +608,7 @@ public class ConsumerResourceTest {
         ConsumerCurator consumerCurator = mock(ConsumerCurator.class);
         when(consumerCurator.verifyAndLookupConsumer(eq("fake uuid"))).thenReturn(consumer);
 
-        when(mockEntitlementCurator.find(any(Serializable.class))).thenReturn(null);
+        when(mockEntitlementCurator.get(any(Serializable.class))).thenReturn(null);
 
         ConsumerResource consumerResource = new ConsumerResource(mockConsumerCurator, mockConsumerTypeCurator,
             null, null, null, mockEntitlementCurator, null, null, i18n, null, null, null,
@@ -868,7 +868,7 @@ public class ConsumerResourceTest {
         when(cqmock.list()).thenReturn(consumers);
         when(cqmock.iterator()).thenReturn(consumers.iterator());
 
-        when(mockOwnerCurator.lookupByKey(eq("taylorOwner"))).thenReturn(new Owner());
+        when(mockOwnerCurator.getByKey(eq("taylorOwner"))).thenReturn(new Owner());
         when(mockConsumerCurator.searchOwnerConsumers(
             any(Owner.class), anyString(), (java.util.Collection<ConsumerType>) any(Collection.class),
             any(List.class), any(List.class), any(List.class), any(List.class), any(List.class),
@@ -1007,7 +1007,7 @@ public class ConsumerResourceTest {
 
         Cdn cdn = new Cdn("cdn-label", "test", "url");
 
-        when(mockCdnCurator.lookupByLabel(eq(cdn.getLabel()))).thenReturn(cdn);
+        when(mockCdnCurator.getByLabel(eq(cdn.getLabel()))).thenReturn(cdn);
 
         cr.exportDataAsync(null, consumer.getUuid(), cdn.getLabel(), "prefix", cdn.getUrl(), extParams);
         verify(manifestManager).generateManifestAsync(eq(consumer.getUuid()), eq(owner.getKey()),
