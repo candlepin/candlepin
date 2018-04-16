@@ -550,7 +550,7 @@ public class CandlepinPoolManager implements PoolManager {
          * send out the events. Create an event for each pool that could change,
          * even if we won't use them all.
          */
-        if (CollectionUtils.isEmpty(existingPools)) {
+        if (existingPools == null || existingPools.isEmpty()) {
             return new HashSet<>(0);
         }
 
@@ -617,10 +617,10 @@ public class CandlepinPoolManager implements PoolManager {
         // Process pool updates...
         for (PoolUpdate updatedPool : updatedPools) {
             Pool existingPool = updatedPool.getPool();
-            log.info("Pool changed: {}", updatedPool.toString());
+            log.debug("Pool changed: {}", updatedPool);
 
             if (existingPool == null || !existingPoolIds.contains(existingPool.getId())) {
-                log.info("Pool has already been deleted from the database.");
+                log.debug("Pool has already been deleted from the database.");
                 continue;
             }
 
