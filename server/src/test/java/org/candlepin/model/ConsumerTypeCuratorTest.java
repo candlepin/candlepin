@@ -64,38 +64,38 @@ public class ConsumerTypeCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testLookupByLabel() {
+    public void testgetByLabel() {
         String label = "test-label";
         ConsumerType ctype = this.createConsumerType(label, false);
 
-        ConsumerType test = this.consumerTypeCurator.lookupByLabel(label);
+        ConsumerType test = this.consumerTypeCurator.getByLabel(label);
         assertSame(ctype, test);
     }
 
     @Test
-    public void testLookupByLabelForBadLabel() {
+    public void testgetByLabelForBadLabel() {
         String label = "test-label";
         ConsumerType ctype = this.createConsumerType(label, false);
 
-        ConsumerType test = this.consumerTypeCurator.lookupByLabel("bad_label");
+        ConsumerType test = this.consumerTypeCurator.getByLabel("bad_label");
         assertNull(test);
     }
 
     @Test
-    public void testLookupByLabelExistingTypeWithCreation() {
+    public void testgetByLabelExistingTypeWithCreation() {
         String label = "test-label";
         ConsumerType ctype = this.createConsumerType(label, false);
 
-        ConsumerType test = this.consumerTypeCurator.lookupByLabel(label, true);
+        ConsumerType test = this.consumerTypeCurator.getByLabel(label, true);
         assertSame(ctype, test);
     }
 
     @Test
-    public void testLookupByLabelNewTypeWithCreation() {
+    public void testgetByLabelNewTypeWithCreation() {
         String label = "new-ctype";
         ConsumerType ctype = this.createConsumerType("test-type", true);
 
-        ConsumerType test = this.consumerTypeCurator.lookupByLabel(label, true);
+        ConsumerType test = this.consumerTypeCurator.getByLabel(label, true);
         assertNotNull(test);
         assertNotSame(ctype, test);
 
@@ -103,11 +103,11 @@ public class ConsumerTypeCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testLookupByLabelNewTypeFromEnumWithCreation() {
+    public void testgetByLabelNewTypeFromEnumWithCreation() {
         ConsumerTypeEnum cte = ConsumerTypeEnum.CANDLEPIN;
         ConsumerType ctype = this.createConsumerType("test-type", true);
 
-        ConsumerType test = this.consumerTypeCurator.lookupByLabel(cte.getLabel(), true);
+        ConsumerType test = this.consumerTypeCurator.getByLabel(cte.getLabel(), true);
         assertNotNull(test);
         assertNotSame(ctype, test);
 
@@ -116,22 +116,22 @@ public class ConsumerTypeCuratorTest extends DatabaseTestFixture {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testLookupByLabelWithNullLabel() {
-        this.consumerTypeCurator.lookupByLabel(null);
+    public void testgetByLabelWithNullLabel() {
+        this.consumerTypeCurator.getByLabel(null);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testLookupByLabelWithNullLabelAndCreation() {
-        this.consumerTypeCurator.lookupByLabel(null, true);
+    public void testgetByLabelWithNullLabelAndCreation() {
+        this.consumerTypeCurator.getByLabel(null, true);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testLookupByLabelWithEmptyLabel() {
-        this.consumerTypeCurator.lookupByLabel("");
+    public void testgetByLabelWithEmptyLabel() {
+        this.consumerTypeCurator.getByLabel("");
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testLookupByLabelWithEmptyLabelAndCreation() {
-        this.consumerTypeCurator.lookupByLabel("", true);
+    public void testgetByLabelWithEmptyLabelAndCreation() {
+        this.consumerTypeCurator.getByLabel("", true);
     }
 }

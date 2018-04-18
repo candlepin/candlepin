@@ -54,7 +54,7 @@ public class ConsumerTypeCurator extends AbstractHibernateCurator<ConsumerType> 
             throw new IllegalArgumentException("consumer is null or does not have a defined type ID");
         }
 
-        ConsumerType type = this.find(consumer.getTypeId());
+        ConsumerType type = this.get(consumer.getTypeId());
 
         if (type == null) {
             throw new IllegalStateException("consumer is not associated with a valid type: " + consumer);
@@ -64,13 +64,15 @@ public class ConsumerTypeCurator extends AbstractHibernateCurator<ConsumerType> 
     }
 
     /**
-     * lookup the ConsumerType by its label.
+     * Attempts to fetch a ConsumerType by its label.
      *
-     * @param label type to lookup
-     * @return ConsumerType whose label matches the given label.
+     * @param label
+     *  The label of the consumer type to fetch
+     *
+     * @return ConsumerType whose label matches the given label
      */
-    public ConsumerType lookupByLabel(String label) {
-        return this.lookupByLabel(label, false);
+    public ConsumerType getByLabel(String label) {
+        return this.getByLabel(label, false);
     }
 
     /**
@@ -90,7 +92,7 @@ public class ConsumerTypeCurator extends AbstractHibernateCurator<ConsumerType> 
      *  The consumer type with the specified label, or null if the label does not exist and the create flag
      *  is not set
      */
-    public ConsumerType lookupByLabel(String label, boolean createIfAbsent) {
+    public ConsumerType getByLabel(String label, boolean createIfAbsent) {
         if (label == null || label.isEmpty()) {
             throw new IllegalArgumentException("label is null or empty");
         }
@@ -129,7 +131,7 @@ public class ConsumerTypeCurator extends AbstractHibernateCurator<ConsumerType> 
      * @return all types matching the specified labels;
      */
     @SuppressWarnings("unchecked")
-    public List<ConsumerType> lookupByLabels(Collection<String> labels) {
+    public List<ConsumerType> getByLabels(Collection<String> labels) {
         return (List<ConsumerType>) currentSession().createCriteria(ConsumerType.class)
             .add(Restrictions.in("label", labels)).list();
     }

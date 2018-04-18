@@ -56,7 +56,7 @@ public class DefaultOwnerServiceAdapter implements OwnerServiceAdapter {
     @Override
     public String getContentAccessMode(String ownerKey) {
         // Since we're acting as the upstream source, we'll just pass-through any existing value.
-        Owner owner = ownerKey != null ? this.ownerCurator.lookupByKey(ownerKey) : null;
+        Owner owner = ownerKey != null ? this.ownerCurator.getByKey(ownerKey) : null;
         if (owner == null) {
             throw new IllegalArgumentException("ownerKey does not represent a valid owner: " + ownerKey);
         }
@@ -70,7 +70,7 @@ public class DefaultOwnerServiceAdapter implements OwnerServiceAdapter {
     @Override
     public String getContentAccessModeList(String ownerKey) {
         // Since we're acting as the upstream source, we'll just pass-through any existing value.
-        Owner owner = ownerKey != null ? this.ownerCurator.lookupByKey(ownerKey) : null;
+        Owner owner = ownerKey != null ? this.ownerCurator.getByKey(ownerKey) : null;
         if (owner == null) {
             throw new IllegalArgumentException("ownerKey does not represent a valid owner: " + ownerKey);
         }

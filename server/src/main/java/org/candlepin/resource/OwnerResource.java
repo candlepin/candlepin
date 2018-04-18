@@ -285,7 +285,7 @@ public class OwnerResource {
     private Owner findOwnerByKey(String key) {
         Owner owner;
         if (key != null && !key.isEmpty()) {
-            owner = ownerCurator.lookupByKey(key);
+            owner = ownerCurator.getByKey(key);
         }
         else {
             throw new BadRequestException(i18n.tr("Owner key is null or empty."));
@@ -315,7 +315,7 @@ public class OwnerResource {
     private Owner findOwnerById(String id) {
         Owner owner = null;
         if (id != null && !id.isEmpty()) {
-            owner = ownerCurator.find(id);
+            owner = ownerCurator.get(id);
         }
         else {
             throw new BadRequestException(i18n.tr("Owner id is null or empty."));
@@ -372,7 +372,7 @@ public class OwnerResource {
     private Entitlement findEntitlement(String entitlementId) {
         Entitlement entitlement = null;
         if (entitlementId != null && !entitlementId.isEmpty()) {
-            entitlement = entitlementCurator.find(entitlementId);
+            entitlement = entitlementCurator.get(entitlementId);
         }
         else {
             throw new BadRequestException(i18n.tr("Entitlement id is null or empty."));
@@ -433,7 +433,7 @@ public class OwnerResource {
     private Pool findPool(String poolId) {
         Pool pool;
         if (poolId != null && !poolId.isEmpty()) {
-            pool = poolManager.find(poolId);
+            pool = poolManager.get(poolId);
         }
         else {
             throw new BadRequestException(i18n.tr("Pool id is null or empty."));
@@ -521,11 +521,11 @@ public class OwnerResource {
 
             if (pdto.getId() != null) {
                 // look up by ID
-                parent = this.ownerCurator.find(pdto.getId());
+                parent = this.ownerCurator.get(pdto.getId());
             }
             else if (pdto.getKey() != null) {
                 // look up by key
-                parent = this.ownerCurator.lookupByKey(pdto.getKey());
+                parent = this.ownerCurator.getByKey(pdto.getKey());
             }
 
             if (parent == null) {
@@ -810,7 +810,7 @@ public class OwnerResource {
         responseContainer = "list")
     public CandlepinQuery<OwnerDTO> list(@QueryParam("key") String keyFilter) {
         CandlepinQuery<Owner> query = keyFilter != null ?
-            this.ownerCurator.lookupByKeys(Arrays.asList(keyFilter)) :
+            this.ownerCurator.getByKeys(Arrays.asList(keyFilter)) :
             this.ownerCurator.listAll();
 
         return this.translator.translateQuery(query, OwnerDTO.class);
@@ -866,7 +866,7 @@ public class OwnerResource {
     public OwnerInfo getOwnerInfo(@PathParam("owner_key")
         @Verify(value = Owner.class, subResource = SubResource.CONSUMERS) String ownerKey) {
         Owner owner = findOwnerByKey(ownerKey);
-        return ownerInfoCurator.lookupByOwner(owner);
+        return ownerInfoCurator.getByOwner(owner);
     }
 
     /**
@@ -1214,7 +1214,7 @@ public class OwnerResource {
 
         Owner owner = findOwnerByKey(ownerKey);
 
-        if (activationKeyCurator.lookupForOwner(dto.getName(), owner) != null) {
+        if (activationKeyCurator.getByKeyName(owner, dto.getName()) != null) {
             throw new BadRequestException(
                 i18n.tr("The activation key name \"{0}\" is already in use for owner {1}",
                         dto.getName(), ownerKey));
@@ -1468,11 +1468,10 @@ public class OwnerResource {
 
         ActivationKey key = null;
         if (activationKeyName != null) {
-            key = activationKeyCurator.lookupForOwner(activationKeyName, owner);
+            key = activationKeyCurator.getByKeyName(owner, activationKeyName);
             if (key == null) {
                 throw new BadRequestException(
-                    i18n.tr("ActivationKey with id {0} could not be found.", activationKeyName)
-                );
+                    i18n.tr("ActivationKey with id {0} could not be found.", activationKeyName));
             }
         }
 
@@ -1697,7 +1696,7 @@ public class OwnerResource {
         @QueryParam("auto_create_owner") @DefaultValue("false") Boolean autoCreateOwner,
         @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {
 
-        Owner owner = ownerCurator.lookupByKey(ownerKey);
+        Owner owner = ownerCurator.getByKey(ownerKey);
         if (owner == null) {
             if (autoCreateOwner && ownerService.isOwnerKeyValidForCreation(ownerKey)) {
                 owner = this.ownerCurator.create(new Owner(ownerKey, ownerKey));
@@ -1792,7 +1791,7 @@ public class OwnerResource {
     public void updatePool(@PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @ApiParam(name = "pool", required = true) PoolDTO newPoolDTO) {
 
-        Pool currentPool = this.poolManager.find(newPoolDTO.getId());
+        Pool currentPool = this.poolManager.get(newPoolDTO.getId());
         if (currentPool == null) {
             throw new NotFoundException(
                 i18n.tr("Unable to find a pool with the ID \"{0}\"", newPoolDTO.getId()));
@@ -1914,7 +1913,7 @@ public class OwnerResource {
 
         Owner owner = findOwnerByKey(ownerKey);
 
-        if (this.exportCurator.lookupByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner) == null) {
+        if (this.exportCurator.getByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner) == null) {
             throw new NotFoundException("No import found for owner " + ownerKey);
         }
 
@@ -2161,7 +2160,7 @@ public class OwnerResource {
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @QueryParam("hypervisor_id") List<String> hypervisorIds) {
 
-        Owner owner = ownerCurator.lookupByKey(ownerKey);
+        Owner owner = ownerCurator.getByKey(ownerKey);
         CandlepinQuery<Consumer> query = (hypervisorIds == null || hypervisorIds.isEmpty()) ?
             this.consumerCurator.getHypervisorsForOwner(owner.getId()) :
             this.consumerCurator.getHypervisorsBulk(hypervisorIds, owner.getId());

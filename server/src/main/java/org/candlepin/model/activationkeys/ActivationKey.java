@@ -111,6 +111,7 @@ public class ActivationKey extends AbstractHibernateObject<ActivationKey> implem
     private Boolean autoAttach;
 
     public ActivationKey() {
+        // Intentionally left empty
     }
 
     public ActivationKey(String name, Owner owner) {

@@ -633,7 +633,7 @@ public class EntitlementRules implements Enforcer {
                 // exported, we need to add back the reduced bonus pool quantity.
                 int virtQuantity = Integer.parseInt(virtLimit) * entitlement.getQuantity();
                 if (virtQuantity > 0) {
-                    List<Pool> pools = poolManager.lookupBySubscriptionId(pool.getOwner(),
+                    List<Pool> pools = poolManager.getBySubscriptionId(pool.getOwner(),
                         pool.getSubscriptionId());
                     for (int idex = 0; idex < pools.size(); idex++) {
                         Pool derivedPool = pools.get(idex);
@@ -648,7 +648,7 @@ public class EntitlementRules implements Enforcer {
                 // was previously
                 // exported, we need to set the unlimited bonus pool quantity to
                 // -1.
-                List<Pool> pools = poolManager.lookupBySubscriptionId(pool.getOwner(),
+                List<Pool> pools = poolManager.getBySubscriptionId(pool.getOwner(),
                     pool.getSubscriptionId());
                 for (int idex = 0; idex < pools.size(); idex++) {
                     Pool derivedPool = pools.get(idex);
@@ -666,7 +666,7 @@ public class EntitlementRules implements Enforcer {
         Map<String, Entitlement> entitlementMap) {
         log.debug("Running post-bind share create");
 
-        Owner recipient = ownerCurator.lookupByKey(c.getRecipientOwnerKey());
+        Owner recipient = ownerCurator.getByKey(c.getRecipientOwnerKey());
         List<Pool> sharedPoolsToCreate = new ArrayList<>();
 
         for (Entitlement entitlement: entitlementMap.values()) {
@@ -953,7 +953,7 @@ public class EntitlementRules implements Enforcer {
             subscriptionIds.add(entitlement.getPool().getSubscriptionId());
         }
 
-        List<Pool> subscriptionPools = poolManager.lookupBySubscriptionIds(consumer.getOwnerId(),
+        List<Pool> subscriptionPools = poolManager.getBySubscriptionIds(consumer.getOwnerId(),
             subscriptionIds);
         Map<String, List<Pool>> subscriptionPoolMap = new HashMap<>();
 

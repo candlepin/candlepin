@@ -153,7 +153,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         this.getEntityManager().clear();
 
         beginTransaction();
-        c = consumerCurator.find(c.getId());
+        c = consumerCurator.get(c.getId());
         c.setOwner(owner);
         for (Entitlement ent : c.getEntitlements()) {
             ent.getPool().getEntitlements().remove(ent);

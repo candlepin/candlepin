@@ -72,7 +72,7 @@ public class ImportJob extends UniqueByEntityJob {
         Throwable caught = null;
         Owner targetOwner = null;
         try {
-            targetOwner = ownerCurator.lookupByKey(ownerKey);
+            targetOwner = ownerCurator.getByKey(ownerKey);
             if (targetOwner == null) {
                 throw new NotFoundException(String.format("Owner %s was not found.", ownerKey));
             }

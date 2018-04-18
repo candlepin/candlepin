@@ -151,8 +151,8 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         p.getProduct().setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "no");
         PoolManager poolManager = mock(PoolManager.class);
 
-        when(akc.verifyAndLookupKey(eq("testKey"))).thenReturn(ak);
-        when(poolManager.find(eq("testPool"))).thenReturn(p);
+        when(akc.secureGet(eq("testKey"))).thenReturn(ak);
+        when(poolManager.get(eq("testPool"))).thenReturn(p);
 
         ActivationKeyResource akr = new ActivationKeyResource(
             akc, i18n, poolManager, serviceLevelValidator, activationKeyRules, null,
@@ -168,8 +168,8 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         p.setQuantity(10L);
         PoolManager poolManager = mock(PoolManager.class);
 
-        when(akc.verifyAndLookupKey(eq("testKey"))).thenReturn(ak);
-        when(poolManager.find(eq("testPool"))).thenReturn(p);
+        when(akc.secureGet(eq("testKey"))).thenReturn(ak);
+        when(poolManager.get(eq("testPool"))).thenReturn(p);
 
         ActivationKeyResource akr = new ActivationKeyResource(
             akc, i18n, poolManager, serviceLevelValidator, activationKeyRules, null,
@@ -186,8 +186,8 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         p.setQuantity(10L);
         PoolManager poolManager = mock(PoolManager.class);
 
-        when(akc.verifyAndLookupKey(eq("testKey"))).thenReturn(ak);
-        when(poolManager.find(eq("testPool"))).thenReturn(p);
+        when(akc.secureGet(eq("testKey"))).thenReturn(ak);
+        when(poolManager.get(eq("testPool"))).thenReturn(p);
 
         ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager,
             serviceLevelValidator, activationKeyRules, null,
@@ -204,8 +204,8 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         p.setQuantity(-1L);
         PoolManager poolManager = mock(PoolManager.class);
 
-        when(akc.verifyAndLookupKey(eq("testKey"))).thenReturn(ak);
-        when(poolManager.find(eq("testPool"))).thenReturn(p);
+        when(akc.secureGet(eq("testKey"))).thenReturn(ak);
+        when(poolManager.get(eq("testPool"))).thenReturn(p);
 
         ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager,
             serviceLevelValidator, activationKeyRules, null,
@@ -223,8 +223,8 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         p.setQuantity(1L);
         PoolManager poolManager = mock(PoolManager.class);
 
-        when(akc.verifyAndLookupKey(eq("testKey"))).thenReturn(ak);
-        when(poolManager.find(eq("testPool"))).thenReturn(p);
+        when(akc.secureGet(eq("testKey"))).thenReturn(ak);
+        when(poolManager.get(eq("testPool"))).thenReturn(p);
 
         ActivationKeyResource akr = new ActivationKeyResource(
             akc, i18n, poolManager, serviceLevelValidator, activationKeyRules, null,
@@ -240,8 +240,8 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         p.getProduct().setAttribute(Pool.Attributes.REQUIRES_CONSUMER_TYPE, "candlepin");
         PoolManager poolManager = mock(PoolManager.class);
 
-        when(akc.verifyAndLookupKey(eq("testKey"))).thenReturn(ak);
-        when(poolManager.find(eq("testPool"))).thenReturn(p);
+        when(akc.secureGet(eq("testKey"))).thenReturn(ak);
+        when(poolManager.get(eq("testPool"))).thenReturn(p);
 
         ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager,
             serviceLevelValidator, activationKeyRules, null,
@@ -259,9 +259,9 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         Pool p2 = genPool();
         p2.setAttribute(Pool.Attributes.REQUIRES_HOST, "host1");
 
-        when(akc.verifyAndLookupKey(eq("testKey"))).thenReturn(ak);
-        when(poolManager.find(eq("testPool1"))).thenReturn(p1);
-        when(poolManager.find(eq("testPool2"))).thenReturn(p2);
+        when(akc.secureGet(eq("testKey"))).thenReturn(ak);
+        when(poolManager.get(eq("testPool1"))).thenReturn(p1);
+        when(poolManager.get(eq("testPool2"))).thenReturn(p2);
 
         ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager,
             serviceLevelValidator, activationKeyRules, null,
@@ -287,8 +287,8 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         p2.setAttribute(Pool.Attributes.REQUIRES_HOST, "host2");
 
         ak.addPool(p2, 1L);
-        when(akc.verifyAndLookupKey(eq("testKey"))).thenReturn(ak);
-        when(poolManager.find(eq("testPool1"))).thenReturn(p1);
+        when(akc.secureGet(eq("testKey"))).thenReturn(ak);
+        when(poolManager.get(eq("testPool1"))).thenReturn(p1);
 
         ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager,
             serviceLevelValidator, activationKeyRules, null,
@@ -306,9 +306,9 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         Pool p2 = genPool();
         p2.setAttribute(Pool.Attributes.REQUIRES_HOST, "");
 
-        when(akc.verifyAndLookupKey(eq("testKey"))).thenReturn(ak);
-        when(poolManager.find(eq("testPool1"))).thenReturn(p1);
-        when(poolManager.find(eq("testPool2"))).thenReturn(p2);
+        when(akc.secureGet(eq("testKey"))).thenReturn(ak);
+        when(poolManager.get(eq("testPool1"))).thenReturn(p1);
+        when(poolManager.get(eq("testPool2"))).thenReturn(p2);
 
         ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager,
             serviceLevelValidator, activationKeyRules, null,
@@ -327,8 +327,8 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         Pool p = genPool();
         PoolManager poolManager = mock(PoolManager.class);
 
-        when(akc.verifyAndLookupKey(eq("testKey"))).thenReturn(ak);
-        when(poolManager.find(eq("testPool"))).thenReturn(p);
+        when(akc.secureGet(eq("testKey"))).thenReturn(ak);
+        when(poolManager.get(eq("testPool"))).thenReturn(p);
 
         ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager,
             serviceLevelValidator, activationKeyRules, null,

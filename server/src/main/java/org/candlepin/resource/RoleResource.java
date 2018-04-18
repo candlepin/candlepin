@@ -82,7 +82,7 @@ public class RoleResource {
         // Attach actual owner objects to each incoming permission:
         for (PermissionBlueprint p : role.getPermissions()) {
             Owner temp = p.getOwner();
-            Owner actual = ownerCurator.lookupByKey(temp.getKey());
+            Owner actual = ownerCurator.getByKey(temp.getKey());
             if (actual == null) {
                 throw new NotFoundException(i18n.tr("No such owner: {0}", temp.getKey()));
             }
@@ -135,7 +135,7 @@ public class RoleResource {
 
         // Attach actual owner objects to each incoming permission:
         Owner temp = permission.getOwner();
-        Owner real = ownerCurator.lookupByKey(temp.getKey());
+        Owner real = ownerCurator.getByKey(temp.getKey());
         permission.setOwner(real);
         existingRole.addPermission(permission);
 

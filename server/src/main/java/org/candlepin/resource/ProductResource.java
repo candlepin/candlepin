@@ -105,7 +105,7 @@ public class ProductResource {
      *  the Product instance for the product with the specified id
      */
     protected Product fetchProduct(String productUuid) {
-        Product product = this.productCurator.find(productUuid);
+        Product product = this.productCurator.get(productUuid);
 
         if (product == null) {
             throw new NotFoundException(
@@ -267,7 +267,7 @@ public class ProductResource {
         }
 
         return this.translator.translateQuery(
-            this.ownerCurator.lookupOwnersWithProduct(productUuids), OwnerDTO.class);
+            this.ownerCurator.getOwnersWithProducts(productUuids), OwnerDTO.class);
     }
 
     @ApiOperation(notes = "Refreshes Pools by Product", value = "refreshPoolsForProduct")
@@ -292,7 +292,7 @@ public class ProductResource {
         // TODO:
         // Replace this with the commented out block below once the job scheduling is no longer performed
         // via PinsetterAsyncFilter
-        ResultIterator<Owner> iterator = this.ownerCurator.lookupOwnersWithProduct(productUuids).iterate();
+        ResultIterator<Owner> iterator = this.ownerCurator.getOwnersWithProducts(productUuids).iterate();
         List<JobDetail> details = new LinkedList<>();
         while (iterator.hasNext()) {
             details.add(RefreshPoolsJob.forOwner(iterator.next(), lazyRegen));

@@ -63,7 +63,7 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
         Environment environment = null;
 
         if (consumer.getEnvironmentId() != null) {
-            environment = this.find(consumer.getEnvironmentId());
+            environment = this.get(consumer.getEnvironmentId());
 
             if (environment == null) {
                 throw new IllegalStateException(

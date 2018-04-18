@@ -156,7 +156,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         List<String> options = q.list();
 
         if (options != null && options.size() != 0) {
-            result = this.find(options.get(0));
+            result = this.get(options.get(0));
         }
 
         return result;
@@ -240,7 +240,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @Transactional
     public Consumer findByUser(User user) {
         ConsumerType person = consumerTypeCurator
-            .lookupByLabel(ConsumerType.ConsumerTypeEnum.PERSON.getLabel());
+            .getByLabel(ConsumerType.ConsumerTypeEnum.PERSON.getLabel());
 
         if (person != null) {
             return (Consumer) createSecureCriteria()
@@ -392,7 +392,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         // Validate inbound facts before even attempting to apply the update
         this.validateFacts(updatedConsumer);
 
-        Consumer existingConsumer = find(updatedConsumer.getId());
+        Consumer existingConsumer = this.get(updatedConsumer.getId());
 
         if (existingConsumer == null) {
             return this.create(updatedConsumer, flush);

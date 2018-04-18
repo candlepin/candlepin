@@ -293,9 +293,9 @@ public class GuestIdResource {
 
     private GuestId validateGuestId(GuestId guest, String guestUuid) {
         if (guest == null) {
-            throw new NotFoundException(i18n.tr(
-                "Guest with UUID {0} could not be found.", guestUuid));
+            throw new NotFoundException(i18n.tr("Guest with UUID {0} could not be found.", guestUuid));
         }
+
         return guest;
     }
 
@@ -307,7 +307,7 @@ public class GuestIdResource {
                 consumerResource.deleteConsumer(guestConsumer.getUuid(), principal);
             }
             else {
-                ConsumerType type = this.consumerTypeCurator.find(guestConsumer.getTypeId());
+                ConsumerType type = this.consumerTypeCurator.get(guestConsumer.getTypeId());
 
                 throw new ForbiddenException(i18n.tr("Cannot unregister {0} {1} because: {2}",
                     type, guestConsumer.getName(), i18n.tr("Invalid Credentials")));

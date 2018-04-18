@@ -60,7 +60,7 @@ public class ResolverUtil {
 
         if (owner.getKey() != null) {
             String key = owner.getKey();
-            owner = ownerCurator.lookupByKey(owner.getKey());
+            owner = ownerCurator.getByKey(owner.getKey());
 
             if (owner == null) {
                 throw new NotFoundException(i18n.tr("Unable to find an owner with the key \"{0}\"", key));
@@ -68,7 +68,7 @@ public class ResolverUtil {
         }
         else {
             String id = owner.getId();
-            owner = ownerCurator.find(owner.getId());
+            owner = ownerCurator.get(owner.getId());
 
             if (owner == null) {
                 throw new NotFoundException(i18n.tr("Unable to find an owner with the ID \"{0}\"", id));
@@ -153,7 +153,7 @@ public class ResolverUtil {
         if (dto != null) {
             if (dto.getUuid() != null) {
                 // UUID is set. Verify that product exists and matches the ID provided, if any
-                Product product = this.productCurator.find(dto.getUuid());
+                Product product = this.productCurator.get(dto.getUuid());
 
                 if (product == null) {
                     throw new NotFoundException(

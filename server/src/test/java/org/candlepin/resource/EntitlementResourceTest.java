@@ -107,9 +107,9 @@ public class EntitlementResourceTest {
                 ctype.setId("test-ctype-" + ctype.getLabel() + "-" + TestUtil.randomInt());
             }
 
-            when(consumerTypeCurator.lookupByLabel(eq(ctype.getLabel()))).thenReturn(ctype);
-            when(consumerTypeCurator.lookupByLabel(eq(ctype.getLabel()), anyBoolean())).thenReturn(ctype);
-            when(consumerTypeCurator.find(eq(ctype.getId()))).thenReturn(ctype);
+            when(consumerTypeCurator.getByLabel(eq(ctype.getLabel()))).thenReturn(ctype);
+            when(consumerTypeCurator.getByLabel(eq(ctype.getLabel()), anyBoolean())).thenReturn(ctype);
+            when(consumerTypeCurator.get(eq(ctype.getId()))).thenReturn(ctype);
 
             doAnswer(new Answer<ConsumerType>() {
                 @Override
@@ -123,7 +123,7 @@ public class EntitlementResourceTest {
                         throw new IllegalArgumentException("consumer is null or lacks a type ID");
                     }
 
-                    ctype = curator.find(consumer.getTypeId());
+                    ctype = curator.get(consumer.getTypeId());
                     if (ctype == null) {
                         throw new IllegalStateException("No such consumer type: " + consumer.getTypeId());
                     }
@@ -147,7 +147,7 @@ public class EntitlementResourceTest {
 
         e.getPool().setCertificate(subcert);
 
-        when(entitlementCurator.find(eq(e.getId()))).thenReturn(e);
+        when(entitlementCurator.get(eq(e.getId()))).thenReturn(e);
 
         String expected = "HELLOCERT";
         String result = entResource.getUpstreamCert(e.getId());
@@ -161,7 +161,7 @@ public class EntitlementResourceTest {
         Entitlement e = TestUtil.createEntitlement();
         e.setId("entitlementID");
         e.getPool().setSourceSubscription(null);
-        when(entitlementCurator.find(eq(e.getId()))).thenReturn(e);
+        when(entitlementCurator.get(eq(e.getId()))).thenReturn(e);
         entResource.getUpstreamCert(e.getId());
     }
 
@@ -186,7 +186,7 @@ public class EntitlementResourceTest {
         e.setId("entitlementID");
         e.getPool().setSourceStack(new SourceStack(consumer, "mystack"));
 
-        when(entitlementCurator.find(eq(e.getId()))).thenReturn(e);
+        when(entitlementCurator.get(eq(e.getId()))).thenReturn(e);
 
         String result = entResource.getUpstreamCert(e.getId());
         assertEquals(expected, result);
@@ -201,7 +201,7 @@ public class EntitlementResourceTest {
         Entitlement e = TestUtil.createEntitlement();
         e.setId("entitlementID");
         e.getPool().setSourceStack(new SourceStack(consumer, "mystack"));
-        when(entitlementCurator.find(eq(e.getId()))).thenReturn(e);
+        when(entitlementCurator.get(eq(e.getId()))).thenReturn(e);
 
         entResource.getUpstreamCert(e.getId());
     }
@@ -218,7 +218,7 @@ public class EntitlementResourceTest {
         e.setConsumer(sourceConsumer);
         e.setQuantity(25);
 
-        when(entitlementCurator.find(eq(e.getId()))).thenReturn(e);
+        when(entitlementCurator.get(eq(e.getId()))).thenReturn(e);
         when(consumerCurator.verifyAndLookupConsumer(eq(destConsumer.getUuid())))
             .thenReturn(destConsumer);
 
@@ -236,7 +236,7 @@ public class EntitlementResourceTest {
         e.setConsumer(consumer);
         e.setQuantity(25);
 
-        when(entitlementCurator.find(eq(e.getId()))).thenReturn(e);
+        when(entitlementCurator.get(eq(e.getId()))).thenReturn(e);
         when(consumerCurator.verifyAndLookupConsumer(eq(destConsumer.getUuid()))).thenReturn(destConsumer);
 
         entResource.migrateEntitlement(e.getId(), destConsumer.getUuid(), 15);
@@ -253,7 +253,7 @@ public class EntitlementResourceTest {
         e.setConsumer(sourceConsumer);
         e.setQuantity(25);
 
-        when(entitlementCurator.find(eq(e.getId()))).thenReturn(e);
+        when(entitlementCurator.get(eq(e.getId()))).thenReturn(e);
         when(consumerCurator.verifyAndLookupConsumer(eq(consumer.getUuid()))).thenReturn(consumer);
 
         entResource.migrateEntitlement(e.getId(), consumer.getUuid(), 15);
@@ -274,7 +274,7 @@ public class EntitlementResourceTest {
         e.setConsumer(sourceConsumer);
         e.setQuantity(25);
 
-        when(entitlementCurator.find(eq(e.getId()))).thenReturn(e);
+        when(entitlementCurator.get(eq(e.getId()))).thenReturn(e);
         when(consumerCurator.verifyAndLookupConsumer(eq(destConsumer.getUuid())))
             .thenReturn(destConsumer);
 

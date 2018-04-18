@@ -119,8 +119,8 @@ public class AutobindRulesTest {
 
         consumer = new Consumer("test consumer", "test user", owner, ctype);
 
-        when(consumerTypeCurator.find(eq(ctype.getId()))).thenReturn(ctype);
-        when(consumerTypeCurator.lookupByLabel(eq(ctype.getLabel()))).thenReturn(ctype);
+        when(consumerTypeCurator.get(eq(ctype.getId()))).thenReturn(ctype);
+        when(consumerTypeCurator.getByLabel(eq(ctype.getLabel()))).thenReturn(ctype);
         when(consumerTypeCurator.getConsumerType(eq(consumer))).thenReturn(ctype);
 
         compliance = new ComplianceStatus();
@@ -186,8 +186,8 @@ public class AutobindRulesTest {
 
         consumer = new Consumer("test consumer", "test user", owner, ctype);
 
-        when(consumerTypeCurator.find(eq(ctype.getId()))).thenReturn(ctype);
-        when(consumerTypeCurator.lookupByLabel(eq(ctype.getLabel()))).thenReturn(ctype);
+        when(consumerTypeCurator.get(eq(ctype.getId()))).thenReturn(ctype);
+        when(consumerTypeCurator.getByLabel(eq(ctype.getLabel()))).thenReturn(ctype);
         when(consumerTypeCurator.getConsumerType(eq(consumer))).thenReturn(ctype);
 
         List<PoolQuantity> results = autobindRules.selectBestPools(consumer,

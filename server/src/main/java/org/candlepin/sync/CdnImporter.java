@@ -55,7 +55,7 @@ public class CdnImporter {
         log.debug("Creating/updating cdns");
         for (CdnDTO cdnDTO : cdnSet) {
             // TODO: this should be using bulk entity lookup to improve performance
-            Cdn existing = curator.lookupByLabel(cdnDTO.getLabel());
+            Cdn existing = curator.getByLabel(cdnDTO.getLabel());
             if (existing == null) {
                 Cdn entity = new Cdn();
                 populateEntity(entity, cdnDTO);

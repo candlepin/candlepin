@@ -92,12 +92,12 @@ public class StoreFactory {
 
         @Override
         public Owner lookup(String key) {
-            return this.ownerCurator.lookupByKey(key);
+            return this.ownerCurator.getByKey(key);
         }
 
         @Override
         public List<Owner> lookup(Collection<String> keys) {
-            return this.ownerCurator.lookupByKeys(keys).list();
+            return this.ownerCurator.getByKeys(keys).list();
         }
 
         @Override
@@ -111,7 +111,7 @@ public class StoreFactory {
 
         @Override
         public Environment lookup(String key) {
-            return envCurator.secureFind(key);
+            return envCurator.secureGet(key);
         }
 
         @Override
@@ -159,7 +159,7 @@ public class StoreFactory {
 
         @Override
         public Entitlement lookup(String key) {
-            return entitlementCurator.secureFind(key);
+            return entitlementCurator.secureGet(key);
         }
 
         @Override
@@ -178,7 +178,7 @@ public class StoreFactory {
 
         @Override
         public Pool lookup(String key) {
-            return poolCurator.secureFind(key);
+            return poolCurator.secureGet(key);
         }
 
         @Override
@@ -197,7 +197,7 @@ public class StoreFactory {
 
         @Override
         public ActivationKey lookup(String key) {
-            return activationKeyCurator.secureFind(key);
+            return activationKeyCurator.secureGet(key);
         }
 
         @Override
@@ -216,7 +216,7 @@ public class StoreFactory {
 
         @Override
         public Product lookup(String key) {
-            return productCurator.find(key);
+            return productCurator.get(key);
         }
 
         @Override
@@ -235,7 +235,7 @@ public class StoreFactory {
 
         @Override
         public JobStatus lookup(String jobId) {
-            return jobCurator.find(jobId);
+            return jobCurator.get(jobId);
         }
 
         @Override

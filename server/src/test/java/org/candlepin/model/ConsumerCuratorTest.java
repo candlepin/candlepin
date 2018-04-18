@@ -523,7 +523,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         Date dt = ResourceDateParser.parseDateString("2011-09-26T18:10:50.184081+00:00");
         consumerCurator.updateLastCheckin(consumer, dt);
         consumerCurator.refresh(consumer);
-        consumer = consumerCurator.find(consumer.getId());
+        consumer = consumerCurator.get(consumer.getId());
 
         assertEquals(consumer.getLastCheckin().getTime(), dt.getTime());
     }

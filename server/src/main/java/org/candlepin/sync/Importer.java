@@ -321,13 +321,13 @@ public class Importer {
 
         ExporterMetadata lastrun = null;
         if (ExporterMetadata.TYPE_SYSTEM.equals(type)) {
-            lastrun = expMetaCurator.lookupByType(type);
+            lastrun = expMetaCurator.getByType(type);
         }
         else if (ExporterMetadata.TYPE_PER_USER.equals(type)) {
             if (owner == null) {
                 throw new ImporterException(i18n.tr("Invalid owner"));
             }
-            lastrun = expMetaCurator.lookupByTypeAndOwner(type, owner);
+            lastrun = expMetaCurator.getByTypeAndOwner(type, owner);
         }
 
         if (lastrun == null) {
@@ -682,7 +682,7 @@ public class Importer {
             // because it could have an id not in our database. We need to
             // stick with the label. Hence we need to lookup the ACTUAL type
             // by label here before attempting to store the UpstreamConsumer
-            ConsumerType type = consumerTypeCurator.lookupByLabel(consumer.getType().getLabel());
+            ConsumerType type = consumerTypeCurator.getByLabel(consumer.getType().getLabel());
             consumer.setType(this.translator.translate(type, ConsumerTypeDTO.class));
 
             // in older manifests the web app prefix will not

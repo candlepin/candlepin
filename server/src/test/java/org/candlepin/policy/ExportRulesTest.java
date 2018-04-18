@@ -86,7 +86,7 @@ public class ExportRulesTest {
         when(entitlement.getConsumer()).thenReturn(consumer);
 
         when(consumer.getTypeId()).thenReturn(consumerType.getId());
-        when(consumerTypeCuratorMock.find(eq(consumerType.getId()))).thenReturn(consumerType);
+        when(consumerTypeCuratorMock.get(eq(consumerType.getId()))).thenReturn(consumerType);
         when(consumerTypeCuratorMock.getConsumerType(eq(consumer))).thenReturn(consumerType);
 
         assertFalse(exportRules.canExport(entitlement));
@@ -113,7 +113,7 @@ public class ExportRulesTest {
         when(pool.getAttributes()).thenReturn(attributes);
 
         when(consumer.getTypeId()).thenReturn(consumerType.getId());
-        when(consumerTypeCuratorMock.find(eq(consumerType.getId()))).thenReturn(consumerType);
+        when(consumerTypeCuratorMock.get(eq(consumerType.getId()))).thenReturn(consumerType);
         when(consumerTypeCuratorMock.getConsumerType(eq(consumer))).thenReturn(consumerType);
 
         assertTrue(exportRules.canExport(entitlement));
@@ -137,7 +137,7 @@ public class ExportRulesTest {
         when(pool.getAttributes()).thenReturn(new HashMap<>());
 
         when(consumer.getTypeId()).thenReturn(consumerType.getId());
-        when(consumerTypeCuratorMock.find(eq(consumerType.getId()))).thenReturn(consumerType);
+        when(consumerTypeCuratorMock.get(eq(consumerType.getId()))).thenReturn(consumerType);
         when(consumerTypeCuratorMock.getConsumerType(eq(consumer))).thenReturn(consumerType);
 
         assertTrue(exportRules.canExport(entitlement));

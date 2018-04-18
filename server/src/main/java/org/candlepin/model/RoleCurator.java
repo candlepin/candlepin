@@ -44,7 +44,7 @@ public class RoleCurator extends AbstractHibernateCurator<Role> {
      * @param name role's unique name to lookup.
      * @return the role whose name matches the one given.
      */
-    public Role lookupByName(String name) {
+    public Role getByName(String name) {
         return (Role) currentSession().createCriteria(Role.class)
             .add(Restrictions.eq("name", name))
             .uniqueResult();

@@ -464,7 +464,7 @@ public class ExporterTest {
         when(consumer.getTypeId()).thenReturn(ctype.getId());
 
         when(ctc.getConsumerType(eq(consumer))).thenReturn(ctype);
-        when(ctc.find(eq(ctype.getId()))).thenReturn(ctype);
+        when(ctc.get(eq(ctype.getId()))).thenReturn(ctype);
 
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
         when(cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
@@ -517,7 +517,7 @@ public class ExporterTest {
         when(consumer.getName()).thenReturn("consumer_name");
         when(consumer.getTypeId()).thenReturn(ctype.getId());
         when(ctc.getConsumerType(eq(consumer))).thenReturn(ctype);
-        when(ctc.find(eq(ctype.getId()))).thenReturn(ctype);
+        when(ctc.get(eq(ctype.getId()))).thenReturn(ctype);
 
         DistributorVersion dv = new DistributorVersion("test-dist-ver");
         Set<DistributorVersionCapability> dvcSet = new HashSet<>();

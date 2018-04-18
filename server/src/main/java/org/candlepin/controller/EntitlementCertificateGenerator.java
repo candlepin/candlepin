@@ -238,7 +238,7 @@ public class EntitlementCertificateGenerator {
         }
         else {
             for (String entitlementId : entitlementIds) {
-                Entitlement entitlement = entitlementCurator.find(entitlementId);
+                Entitlement entitlement = entitlementCurator.get(entitlementId);
 
                 if (entitlement == null) {
                     // If it has been deleted, that's fine; one less to regenerate

@@ -134,7 +134,7 @@ public class OwnerManager {
             // parent being deleted
             // TODO: There has to be a more efficient way to do this...
             log.info("Deleting consumer: {}", consumer);
-            Consumer next = consumerCurator.find(consumer.getId());
+            Consumer next = consumerCurator.get(consumer.getId());
             if (next != null) {
                 consumerCurator.delete(next);
             }
@@ -157,7 +157,7 @@ public class OwnerManager {
             poolManager.deletePool(p);
         }
 
-        ExporterMetadata m = exportCurator.lookupByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner);
+        ExporterMetadata m = exportCurator.getByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner);
         if (m != null) {
             log.info("Deleting export metadata: {}", m);
             exportCurator.delete(m);

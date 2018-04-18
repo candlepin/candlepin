@@ -51,10 +51,10 @@ public abstract class ContentOverrideResource<T extends ContentOverride,
     Curator extends ContentOverrideCurator<T, Parent>,
     Parent extends AbstractHibernateObject> {
 
-    private Curator contentOverrideCurator;
-    private ContentOverrideValidator contentOverrideValidator;
-    private String parentPath;
-    private I18n i18n;
+    protected Curator contentOverrideCurator;
+    protected ContentOverrideValidator contentOverrideValidator;
+    protected String parentPath;
+    protected I18n i18n;
 
     public ContentOverrideResource(Curator contentOverrideCurator,
         ContentOverrideValidator contentOverrideValidator,
@@ -121,8 +121,8 @@ public abstract class ContentOverrideResource<T extends ContentOverride,
         List<ContentOverride> entries) {
 
         String parentId = info.getPathParameters().getFirst(this.getParentPath());
-
         Parent parent = this.verifyAndGetParent(parentId, principal, Access.ALL);
+
         if (entries.size() == 0) {
             contentOverrideCurator.removeByParent(parent);
         }
@@ -145,6 +145,7 @@ public abstract class ContentOverrideResource<T extends ContentOverride,
                 }
             }
         }
+
         return contentOverrideCurator.getList(parent);
     }
 

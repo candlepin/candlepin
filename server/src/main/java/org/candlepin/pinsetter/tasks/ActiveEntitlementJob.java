@@ -47,7 +47,7 @@ public class ActiveEntitlementJob extends KingpinJob {
         // not uuids
         List<String> ids = consumerCurator.getConsumerIdsWithStartedEnts();
         for (String id : ids) {
-            Consumer c = consumerCurator.find(id);
+            Consumer c = consumerCurator.get(id);
             complianceRules.getStatus(c);
         }
     }

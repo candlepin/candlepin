@@ -169,9 +169,9 @@ public class EntitlementRulesTestFixture {
                 ctype.setId("test-ctype-" + ctype.getLabel() + "-" + TestUtil.randomInt());
             }
 
-            when(consumerTypeCurator.lookupByLabel(eq(ctype.getLabel()))).thenReturn(ctype);
-            when(consumerTypeCurator.lookupByLabel(eq(ctype.getLabel()), anyBoolean())).thenReturn(ctype);
-            when(consumerTypeCurator.find(eq(ctype.getId()))).thenReturn(ctype);
+            when(consumerTypeCurator.getByLabel(eq(ctype.getLabel()))).thenReturn(ctype);
+            when(consumerTypeCurator.getByLabel(eq(ctype.getLabel()), anyBoolean())).thenReturn(ctype);
+            when(consumerTypeCurator.get(eq(ctype.getId()))).thenReturn(ctype);
 
             doAnswer(new Answer<ConsumerType>() {
                 @Override
@@ -185,7 +185,7 @@ public class EntitlementRulesTestFixture {
                         throw new IllegalArgumentException("consumer is null or lacks a type ID");
                     }
 
-                    ctype = curator.find(consumer.getTypeId());
+                    ctype = curator.get(consumer.getTypeId());
                     if (ctype == null) {
                         throw new IllegalStateException("No such consumer type: " + consumer.getTypeId());
                     }

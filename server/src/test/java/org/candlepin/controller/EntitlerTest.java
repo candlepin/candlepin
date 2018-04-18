@@ -263,7 +263,7 @@ public class EntitlerTest {
         List<Entitlement> eList = new ArrayList<>();
         eList.add(ent);
 
-        when(pm.find(eq(poolid))).thenReturn(pool);
+        when(pm.get(eq(poolid))).thenReturn(pool);
         Map<String, Integer> pQs = new HashMap<>();
         pQs.put(poolid, 1);
         when(pm.entitleByPools(eq(consumer), eq(pQs))).thenReturn(eList);
@@ -378,7 +378,7 @@ public class EntitlerTest {
             EntitlementRefusedException ere = new EntitlementRefusedException(fakeResult);
 
             when(pool.getId()).thenReturn(poolid);
-            when(poolCurator.find(eq(poolid))).thenReturn(pool);
+            when(poolCurator.get(eq(poolid))).thenReturn(pool);
             Map<String, Integer> pQs = new HashMap<>();
             pQs.put(poolid, 1);
             when(pm.entitleByPools(eq(consumer), eq(pQs))).thenThrow(ere);

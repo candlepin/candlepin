@@ -165,7 +165,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         prod.setAttribute("content_sets", jsonData);
         productCurator.create(prod);
 
-        Product lookedUp = productCurator.find(prod.getUuid());
+        Product lookedUp = productCurator.get(prod.getUuid());
         assertEquals(jsonData, lookedUp.getAttributeValue("content_sets"));
 
         data = mapper.readValue(lookedUp.getAttributeValue("content_sets"),
@@ -195,7 +195,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         prod.setAttribute("content_sets", jsonData);
         productCurator.create(prod);
 
-        Product lookedUp = productCurator.find(prod.getUuid());
+        Product lookedUp = productCurator.get(prod.getUuid());
         assertEquals(jsonData, lookedUp.getAttributeValue("content_sets"));
 
         data = mapper.readValue(lookedUp.getAttributeValue("content_sets"),
@@ -235,7 +235,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         prod.setDependentProductIds(dependentProductIds);
         productCurator.create(prod);
 
-        Product lookedUp = productCurator.find(prod.getUuid());
+        Product lookedUp = productCurator.get(prod.getUuid());
         assertThat(lookedUp.getDependentProductIds(), hasItem("ProductX"));
     }
 
@@ -266,7 +266,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         Product prod = new Product("cp_test-label", "variant", "version", "arch", "", "SVC");
         productCurator.create(prod);
 
-        productCurator.find(prod.getUuid());
+        productCurator.get(prod.getUuid());
     }
 
     @Test
@@ -308,7 +308,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         Product original = createTestProduct();
         productCurator.create(original);
 
-        Product modified = productCurator.find(original.getUuid());
+        Product modified = productCurator.get(original.getUuid());
         String newName = "new name";
         modified.setName(newName);
 
@@ -319,7 +319,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
         productCurator.merge(modified);
 
-        Product lookedUp = productCurator.find(original.getUuid());
+        Product lookedUp = productCurator.get(original.getUuid());
         assertEquals(newName, lookedUp.getName());
         assertEquals(3, lookedUp.getAttributes().size());
         assertEquals("a1", lookedUp.getAttributeValue("a1"));
@@ -560,7 +560,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         p2.addContent(contentUpdate, true);
         productCurator.merge(p2);
 
-        Product result = productCurator.find(p.getUuid());
+        Product result = productCurator.get(p.getUuid());
         assertEquals(1, result.getProductContent().size());
     }
 

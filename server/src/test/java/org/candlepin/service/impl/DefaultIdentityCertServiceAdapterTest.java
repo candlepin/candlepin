@@ -83,7 +83,7 @@ public class DefaultIdentityCertServiceAdapterTest {
         when(consumer.getUuid()).thenReturn(Util.generateUUID());
         KeyPair kp = createKeyPair();
         when(kpc.getConsumerKeyPair(consumer)).thenReturn(kp);
-        when(idcur.find(consumer.getId())).thenReturn(null);
+        when(idcur.get(consumer.getId())).thenReturn(null);
         when(csc.create(any(CertificateSerial.class))).thenAnswer(
             new Answer<CertificateSerial>() {
                 public CertificateSerial answer(InvocationOnMock invocation) {
@@ -125,8 +125,8 @@ public class DefaultIdentityCertServiceAdapterTest {
         IdentityCertificate mockic = mock(IdentityCertificate.class);
 
         when(consumer.getIdCert()).thenReturn(mockic);
-        when(idcur.find(mockic.getId())).thenReturn(mockic);
-        when(idcur.find(consumer.getId())).thenReturn(mockic);
+        when(idcur.get(mockic.getId())).thenReturn(mockic);
+        when(idcur.get(consumer.getId())).thenReturn(mockic);
 
         IdentityCertificate ic = dicsa.generateIdentityCert(consumer);
 
@@ -140,7 +140,7 @@ public class DefaultIdentityCertServiceAdapterTest {
         IdentityCertificate mockic = mock(IdentityCertificate.class);
         when(consumer.getIdCert()).thenReturn(mockic);
         when(mockic.getId()).thenReturn("43");
-        when(idcur.find(mockic.getId())).thenReturn(mockic);
+        when(idcur.get(mockic.getId())).thenReturn(mockic);
 
 
         KeyPair kp = createKeyPair();
@@ -188,7 +188,7 @@ public class DefaultIdentityCertServiceAdapterTest {
         Consumer consumer = mock(Consumer.class);
         when(consumer.getId()).thenReturn("42L");
         when(consumer.getUuid()).thenReturn(Util.generateUUID());
-        when(idcur.find(consumer.getId())).thenReturn(null);
+        when(idcur.get(consumer.getId())).thenReturn(null);
 
 
         KeyPair kp = createKeyPair();

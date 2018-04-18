@@ -65,7 +65,7 @@ public class CertificateSerialResource {
     @Path("/{serial_id}")
     @Produces(MediaType.APPLICATION_JSON)
     public CertificateSerialDTO getCertificateSerial(@PathParam("serial_id") Long serialId) {
-        CertificateSerial serial = this.certificateSerialCurator.find(serialId);
+        CertificateSerial serial = this.certificateSerialCurator.get(serialId);
         return this.translator.translate(serial, CertificateSerialDTO.class);
     }
 }

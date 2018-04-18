@@ -75,7 +75,7 @@ public class ConsumerExporterTest {
         consumer.setContentAccessMode("access_mode");
 
         when(mockConsumerTypeCurator.getConsumerType(eq(consumer))).thenReturn(ctype);
-        when(mockConsumerTypeCurator.find(eq(ctype.getId()))).thenReturn(ctype);
+        when(mockConsumerTypeCurator.get(eq(ctype.getId()))).thenReturn(ctype);
 
         exporter.export(mapper, writer, consumer, "/subscriptions", "/candlepin");
 

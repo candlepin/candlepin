@@ -162,7 +162,7 @@ public class ComplianceRulesTest {
         Consumer consumer = new Consumer();
         consumer.setType(ctype);
 
-        when(this.consumerTypeCurator.find(eq(ctype.getId()))).thenReturn(ctype);
+        when(this.consumerTypeCurator.get(eq(ctype.getId()))).thenReturn(ctype);
         when(this.consumerTypeCurator.getConsumerType(eq(consumer))).thenReturn(ctype);
 
         for (Product product : installedProducts) {

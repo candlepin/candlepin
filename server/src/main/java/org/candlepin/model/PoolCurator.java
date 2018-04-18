@@ -48,7 +48,6 @@ import org.hibernate.type.StringType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -87,13 +86,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         super(Pool.class);
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
-    }
-
-    @Override
-    @Transactional
-    public Pool find(Serializable id) {
-        Pool pool = super.find(id);
-        return pool;
     }
 
     /**
@@ -811,7 +803,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @return pools from the given subscription, sorted by pool.id to avoid deadlocks
      */
     @SuppressWarnings("unchecked")
-    public List<Pool> lookupBySubscriptionId(Owner owner, String subId) {
+    public List<Pool> getBySubscriptionId(Owner owner, String subId) {
         return createSecureCriteria()
             .createAlias("sourceSubscription", "sourceSub")
             .add(Restrictions.eq("owner", owner))
@@ -828,8 +820,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      *         deadlocks
      */
     @SuppressWarnings("unchecked")
-    public List<Pool> lookupBySubscriptionIds(Owner owner, Collection<String> subIds) {
-        return lookupBySubscriptionIds(owner.getId(), subIds);
+    public List<Pool> getBySubscriptionIds(Owner owner, Collection<String> subIds) {
+        return this.getBySubscriptionIds(owner.getId(), subIds);
     }
 
     /**
@@ -841,7 +833,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      *         deadlocks
      */
     @SuppressWarnings("unchecked")
-    public List<Pool> lookupBySubscriptionIds(String ownerId, Collection<String> subIds) {
+    public List<Pool> getBySubscriptionIds(String ownerId, Collection<String> subIds) {
         return createSecureCriteria()
             .createAlias("sourceSubscription", "sourceSub")
             .add(Restrictions.eq("owner.id", ownerId))
@@ -870,8 +862,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @return Pools with too many entitlements for their new quantity.
      */
     @SuppressWarnings("unchecked")
-    public List<Pool> lookupOversubscribedBySubscriptionIds(String ownerId, Map<String, Entitlement>
-        subIdMap) {
+    public List<Pool> getOversubscribedBySubscriptionIds(String ownerId, Map<String, Entitlement> subIdMap) {
         List<Criterion> subIdMapCriteria = new ArrayList<>();
         Criterion[] exampleCriteria = new Criterion[0];
         for (Entry<String, Entitlement> entry : subIdMap.entrySet()) {
@@ -1083,7 +1074,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      */
     @Transactional
     public void delete(Pool entity) {
-        Pool toDelete = find(entity.getId());
+        Pool toDelete = this.get(entity.getId());
+
         if (toDelete != null) {
             this.deleteImpl(toDelete);
             this.flush();

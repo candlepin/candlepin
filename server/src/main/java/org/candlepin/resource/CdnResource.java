@@ -85,7 +85,7 @@ public class CdnResource {
     @Path("/{label}")
     public void delete(@PathParam("label") String label,
         @Context Principal principal) {
-        Cdn cdn = curator.lookupByLabel(label);
+        Cdn cdn = curator.getByLabel(label);
         if (cdn != null) {
             cdnManager.deleteCdn(cdn);
         }
@@ -98,7 +98,7 @@ public class CdnResource {
     public CdnDTO create(
         @ApiParam(name = "cdn", required = true) CdnDTO cdnDTOInput,
         @Context Principal principal) {
-        Cdn existing = curator.lookupByLabel(cdnDTOInput.getLabel());
+        Cdn existing = curator.getByLabel(cdnDTOInput.getLabel());
         if (existing != null) {
             throw new BadRequestException(i18n.tr(
                 "A CDN with the label {0} already exists", cdnDTOInput.getLabel()));
@@ -194,7 +194,7 @@ public class CdnResource {
     }
 
     private Cdn verifyAndLookupCdn(String label) {
-        Cdn cdn = curator.lookupByLabel(label);
+        Cdn cdn = curator.getByLabel(label);
 
         if (cdn == null) {
             throw new NotFoundException(i18n.tr("No such content delivery network: {0}",

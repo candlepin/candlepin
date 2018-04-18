@@ -65,7 +65,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testOwnerInfoNoConsumers() {
-        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+        OwnerInfo info = ownerInfoCurator.getByOwner(owner);
 
         Map<String, Integer> expectedConsumers = new HashMap<String, Integer>() {
             {
@@ -88,11 +88,11 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testOwnerInfoOneSystemNoEntitlements() {
-        ConsumerType type = consumerTypeCurator.lookupByLabel("system");
+        ConsumerType type = consumerTypeCurator.getByLabel("system");
         Consumer consumer = new Consumer("test-consumer", "test-user", owner, type);
         consumerCurator.create(consumer);
 
-        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+        OwnerInfo info = ownerInfoCurator.getByOwner(owner);
 
         Map<String, Integer> expectedConsumers = new HashMap<String, Integer>() {
             {
@@ -115,7 +115,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testOwnerInfoOneSystemEntitlement() {
-        ConsumerType type = consumerTypeCurator.lookupByLabel("system");
+        ConsumerType type = consumerTypeCurator.getByLabel("system");
         Consumer consumer = new Consumer("test-consumer", "test-user", owner, type);
         consumerCurator.create(consumer);
 
@@ -124,7 +124,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         entitlement.setQuantity(1);
         entitlementCurator.create(entitlement);
 
-        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+        OwnerInfo info = ownerInfoCurator.getByOwner(owner);
 
         Map<String, Integer> expectedConsumers = new HashMap<String, Integer>() {
             {
@@ -147,7 +147,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testOwnerInfoOneSystemEntitlementWithQuantityOfTwo() {
-        ConsumerType type = consumerTypeCurator.lookupByLabel("system");
+        ConsumerType type = consumerTypeCurator.getByLabel("system");
         Consumer consumer = new Consumer("test-consumer", "test-user", owner, type);
         consumerCurator.create(consumer);
 
@@ -156,7 +156,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         entitlement.setQuantity(2);
         entitlementCurator.create(entitlement);
 
-        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+        OwnerInfo info = ownerInfoCurator.getByOwner(owner);
 
         Map<String, Integer> expectedConsumers = new HashMap<String, Integer>() {
             {
@@ -179,7 +179,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testOwnerInfoOneOfEachEntitlement() {
-        ConsumerType type = consumerTypeCurator.lookupByLabel("system");
+        ConsumerType type = consumerTypeCurator.getByLabel("system");
         Consumer consumer = new Consumer("test-consumer", "test-user", owner, type);
         consumerCurator.create(consumer);
         EntitlementCertificate cert = createEntitlementCertificate("fake", "fake");
@@ -187,7 +187,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         entitlement.setQuantity(1);
         entitlementCurator.create(entitlement);
 
-        type = consumerTypeCurator.lookupByLabel("domain");
+        type = consumerTypeCurator.getByLabel("domain");
         consumer = new Consumer("test-consumer", "test-user", owner, type);
         consumerCurator.create(consumer);
 
@@ -196,7 +196,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         entitlement.setQuantity(1);
         entitlementCurator.create(entitlement);
 
-        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+        OwnerInfo info = ownerInfoCurator.getByOwner(owner);
 
         Map<String, Integer> expectedConsumers = new HashMap<String, Integer>() {
             {
@@ -219,12 +219,12 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testOwnerPoolEntitlementCountPoolOnly() {
-        ConsumerType type = consumerTypeCurator.lookupByLabel("domain");
+        ConsumerType type = consumerTypeCurator.getByLabel("domain");
         pool1.setAttribute(Pool.Attributes.REQUIRES_CONSUMER_TYPE, type.getLabel());
         owner.addEntitlementPool(pool1);
         this.poolCurator.merge(pool1);
 
-        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+        OwnerInfo info = ownerInfoCurator.getByOwner(owner);
 
         Map<String, Integer> expectedPoolCount = new HashMap<String, Integer>() {
             {
@@ -240,11 +240,11 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testOwnerPoolEntitlementCountProductOnly() {
-        ConsumerType type = consumerTypeCurator.lookupByLabel("system");
+        ConsumerType type = consumerTypeCurator.getByLabel("system");
         pool1.getProduct().setAttribute(Pool.Attributes.REQUIRES_CONSUMER_TYPE, type.getLabel());
         owner.addEntitlementPool(pool1);
 
-        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+        OwnerInfo info = ownerInfoCurator.getByOwner(owner);
 
         Map<String, Integer> expectedPoolCount = new HashMap<String, Integer>() {
             {
@@ -259,14 +259,14 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testOwnerPoolEntitlementPoolOverridesProduct() {
-        ConsumerType type = consumerTypeCurator.lookupByLabel("domain");
-        ConsumerType type2 = consumerTypeCurator.lookupByLabel("system");
+        ConsumerType type = consumerTypeCurator.getByLabel("domain");
+        ConsumerType type2 = consumerTypeCurator.getByLabel("system");
         pool1.setAttribute(Pool.Attributes.REQUIRES_CONSUMER_TYPE, type.getLabel());
         pool1.getProduct().setAttribute(Pool.Attributes.REQUIRES_CONSUMER_TYPE, type2.getLabel());
         owner.addEntitlementPool(pool1);
         this.poolCurator.merge(pool1);
 
-        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+        OwnerInfo info = ownerInfoCurator.getByOwner(owner);
 
         Map<String, Integer> expectedPoolCount = new HashMap<String, Integer>() {
             {
@@ -281,13 +281,13 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testConsumerTypeCountByPoolExcludesFuturePools() {
-        ConsumerType type = consumerTypeCurator.lookupByLabel("system");
+        ConsumerType type = consumerTypeCurator.getByLabel("system");
         pool1.setAttribute(Pool.Attributes.REQUIRES_CONSUMER_TYPE, type.getLabel());
         pool1.setStartDate(Util.tomorrow());
         owner.addEntitlementPool(pool1);
         this.poolCurator.merge(pool1);
 
-        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+        OwnerInfo info = ownerInfoCurator.getByOwner(owner);
 
         Map<String, Integer> expectedPoolCount = new HashMap<String, Integer>() {
             {
@@ -302,13 +302,13 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testConsumerTypeCountByPoolExcludesExpiredPools() {
-        ConsumerType type = consumerTypeCurator.lookupByLabel("system");
+        ConsumerType type = consumerTypeCurator.getByLabel("system");
         pool1.setAttribute(Pool.Attributes.REQUIRES_CONSUMER_TYPE, type.getLabel());
         pool1.setEndDate(Util.yesterday());
         owner.addEntitlementPool(pool1);
         this.poolCurator.merge(pool1);
 
-        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+        OwnerInfo info = ownerInfoCurator.getByOwner(owner);
 
         Map<String, Integer> expectedPoolCount = new HashMap<String, Integer>() {
             {
@@ -326,7 +326,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
     public void testConsumerTypeCountByPoolPutsDefaultsIntoSystem() {
         owner.addEntitlementPool(pool1);
 
-        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+        OwnerInfo info = ownerInfoCurator.getByOwner(owner);
 
         Map<String, Integer> expectedPoolCount = new HashMap<String, Integer>() {
             {
@@ -341,12 +341,12 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testOwnerPoolEnabledCountPoolOnly() {
-        ConsumerType type = consumerTypeCurator.lookupByLabel("domain");
+        ConsumerType type = consumerTypeCurator.getByLabel("domain");
         pool1.setAttribute(Pool.Attributes.ENABLED_CONSUMER_TYPES, type.getLabel());
         owner.addEntitlementPool(pool1);
         this.poolCurator.merge(pool1);
 
-        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+        OwnerInfo info = ownerInfoCurator.getByOwner(owner);
 
         Map<String, Integer> expectedPoolCount = new HashMap<String, Integer>() {
             {
@@ -359,12 +359,12 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testOwnerPoolEnabledCountProductOnly() {
-        ConsumerType type = consumerTypeCurator.lookupByLabel("system");
+        ConsumerType type = consumerTypeCurator.getByLabel("system");
         pool1.getProduct().setAttribute(Pool.Attributes.ENABLED_CONSUMER_TYPES, type.getLabel());
         owner.addEntitlementPool(pool1);
         this.poolCurator.merge(pool1);
 
-        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+        OwnerInfo info = ownerInfoCurator.getByOwner(owner);
 
         Map<String, Integer> expectedPoolCount = new HashMap<String, Integer>() {
             {
@@ -377,14 +377,14 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testOwnerPoolEnabledPoolOverridesProduct() {
-        ConsumerType type = consumerTypeCurator.lookupByLabel("domain");
-        ConsumerType type2 = consumerTypeCurator.lookupByLabel("system");
+        ConsumerType type = consumerTypeCurator.getByLabel("domain");
+        ConsumerType type2 = consumerTypeCurator.getByLabel("system");
         pool1.setAttribute(Pool.Attributes.ENABLED_CONSUMER_TYPES, type.getLabel());
         pool1.getProduct().setAttribute(Pool.Attributes.ENABLED_CONSUMER_TYPES, type2.getLabel());
         owner.addEntitlementPool(pool1);
         this.poolCurator.merge(pool1);
 
-        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+        OwnerInfo info = ownerInfoCurator.getByOwner(owner);
 
         Map<String, Integer> expectedPoolCount = new HashMap<String, Integer>() {
             {
@@ -397,12 +397,12 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testEnabledConsumerTypeCountByPoolExcludesFuturePools() {
-        ConsumerType type = consumerTypeCurator.lookupByLabel("system");
+        ConsumerType type = consumerTypeCurator.getByLabel("system");
         pool1.setAttribute(Pool.Attributes.ENABLED_CONSUMER_TYPES, type.getLabel());
         pool1.setStartDate(Util.tomorrow());
         owner.addEntitlementPool(pool1);
 
-        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+        OwnerInfo info = ownerInfoCurator.getByOwner(owner);
 
         Map<String, Integer> expectedPoolCount = new HashMap<>();
 
@@ -411,12 +411,12 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testEnabledConsumerTypeCountByPoolExcludesExpiredPools() {
-        ConsumerType type = consumerTypeCurator.lookupByLabel("system");
+        ConsumerType type = consumerTypeCurator.getByLabel("system");
         pool1.setAttribute(Pool.Attributes.ENABLED_CONSUMER_TYPES, type.getLabel());
         pool1.setEndDate(Util.yesterday());
         owner.addEntitlementPool(pool1);
 
-        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+        OwnerInfo info = ownerInfoCurator.getByOwner(owner);
 
         Map<String, Integer> expectedPoolCount = new HashMap<>();
 
@@ -425,13 +425,13 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testOwnerPoolMultiEnabledCount() {
-        ConsumerType type1 = consumerTypeCurator.lookupByLabel("domain");
-        ConsumerType type2 = consumerTypeCurator.lookupByLabel("system");
+        ConsumerType type1 = consumerTypeCurator.getByLabel("domain");
+        ConsumerType type2 = consumerTypeCurator.getByLabel("system");
         pool1.setAttribute(Pool.Attributes.ENABLED_CONSUMER_TYPES, type1.getLabel() + "," + type2.getLabel());
         owner.addEntitlementPool(pool1);
         this.poolCurator.merge(pool1);
 
-        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+        OwnerInfo info = ownerInfoCurator.getByOwner(owner);
 
         Map<String, Integer> expectedPoolCount = new HashMap<String, Integer>() {
             {
@@ -448,7 +448,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         pool1.setAttribute(Pool.Attributes.ENABLED_CONSUMER_TYPES, "non-type");
         owner.addEntitlementPool(pool1);
 
-        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+        OwnerInfo info = ownerInfoCurator.getByOwner(owner);
 
         Map<String, Integer> expectedPoolCount = new HashMap<>();
 
@@ -459,7 +459,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
     public void testOwnerInfoEntitlementsConsumedByFamilyPutsFamilylessInNone() {
         owner.addEntitlementPool(pool1);
 
-        ConsumerType type = consumerTypeCurator.lookupByLabel("system");
+        ConsumerType type = consumerTypeCurator.getByLabel("system");
         Consumer consumer = new Consumer("test-consumer", "test-user", owner, type);
         consumerCurator.create(consumer);
 
@@ -469,7 +469,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         entitlementCurator.create(entitlement);
         pool1.getEntitlements().add(entitlement);
 
-        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+        OwnerInfo info = ownerInfoCurator.getByOwner(owner);
 
         Map<String, OwnerInfo.ConsumptionTypeCounts> expected =
             new HashMap<String, OwnerInfo.ConsumptionTypeCounts>() {
@@ -488,7 +488,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         pool1.setAttribute(Pool.Attributes.PRODUCT_FAMILY, "test family");
         pool1.getProduct().setAttribute(Pool.Attributes.PRODUCT_FAMILY, "bad test family");
 
-        ConsumerType type = consumerTypeCurator.lookupByLabel("system");
+        ConsumerType type = consumerTypeCurator.getByLabel("system");
         Consumer consumer = new Consumer("test-consumer", "test-user", owner, type);
         consumerCurator.create(consumer);
 
@@ -498,7 +498,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         entitlementCurator.create(entitlement);
         pool1.getEntitlements().add(entitlement);
 
-        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+        OwnerInfo info = ownerInfoCurator.getByOwner(owner);
 
         Map<String, OwnerInfo.ConsumptionTypeCounts> expected =
             new HashMap<String, OwnerInfo.ConsumptionTypeCounts>() {
@@ -516,7 +516,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
 
         pool1.getProduct().setAttribute(Pool.Attributes.PRODUCT_FAMILY, "test family");
 
-        ConsumerType type = consumerTypeCurator.lookupByLabel("system");
+        ConsumerType type = consumerTypeCurator.getByLabel("system");
         Consumer consumer = new Consumer("test-consumer", "test-user", owner, type);
         consumerCurator.create(consumer);
 
@@ -526,7 +526,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         entitlementCurator.create(entitlement);
         pool1.getEntitlements().add(entitlement);
 
-        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+        OwnerInfo info = ownerInfoCurator.getByOwner(owner);
 
         Map<String, OwnerInfo.ConsumptionTypeCounts> expected =
             new HashMap<String, OwnerInfo.ConsumptionTypeCounts>() {
@@ -545,7 +545,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
 
         pool1.getProduct().setAttribute(Pool.Attributes.VIRT_ONLY, "true");
 
-        ConsumerType type = consumerTypeCurator.lookupByLabel("system");
+        ConsumerType type = consumerTypeCurator.getByLabel("system");
         Consumer consumer = new Consumer("test-consumer", "test-user", owner, type);
         consumerCurator.create(consumer);
 
@@ -555,7 +555,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         entitlementCurator.create(entitlement);
         pool1.getEntitlements().add(entitlement);
 
-        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+        OwnerInfo info = ownerInfoCurator.getByOwner(owner);
 
         Map<String, OwnerInfo.ConsumptionTypeCounts> expected =
             new HashMap<String, OwnerInfo.ConsumptionTypeCounts>() {
@@ -575,7 +575,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         pool1.getProduct().setAttribute(Pool.Attributes.PRODUCT_FAMILY, "test family");
         pool1.getProduct().setAttribute(Pool.Attributes.VIRT_ONLY, "true");
 
-        ConsumerType type = consumerTypeCurator.lookupByLabel("system");
+        ConsumerType type = consumerTypeCurator.getByLabel("system");
         Consumer consumer = new Consumer("test-consumer", "test-user", owner, type);
         consumerCurator.create(consumer);
 
@@ -585,7 +585,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         entitlementCurator.create(entitlement);
         pool1.getEntitlements().add(entitlement);
 
-        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+        OwnerInfo info = ownerInfoCurator.getByOwner(owner);
 
         Map<String, OwnerInfo.ConsumptionTypeCounts> expected =
             new HashMap<String, OwnerInfo.ConsumptionTypeCounts>() {
@@ -599,7 +599,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testConsumerGuestCount() {
-        ConsumerType type = consumerTypeCurator.lookupByLabel("system");
+        ConsumerType type = consumerTypeCurator.getByLabel("system");
         Consumer guest1 = new Consumer("test-consumer", "test-user", owner, type);
         guest1.setFact("virt.is_guest", "true");
         consumerCurator.create(guest1);
@@ -616,7 +616,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         Consumer physical2 = new Consumer("test-consumer2", "test-user", owner, type);
         consumerCurator.create(physical2);
 
-        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+        OwnerInfo info = ownerInfoCurator.getByOwner(owner);
         assertEquals((Integer) 2, info.getConsumerGuestCounts().get(OwnerInfo.GUEST));
         assertEquals((Integer) 2, info.getConsumerGuestCounts().get(OwnerInfo.PHYSICAL));
 
@@ -624,7 +624,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         // Create another owner to make sure we don't see another owners consumers:
         Owner anotherOwner = createOwner();
         ownerCurator.create(anotherOwner);
-        info = ownerInfoCurator.lookupByOwner(anotherOwner);
+        info = ownerInfoCurator.getByOwner(anotherOwner);
         assertEquals((Integer) 0, info.getConsumerGuestCounts().get(OwnerInfo.GUEST));
         assertEquals((Integer) 0, info.getConsumerGuestCounts().get(OwnerInfo.PHYSICAL));
     }
@@ -633,7 +633,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
     public void testConsumerCountsByEntitlementStatus() {
         setupConsumerCountTest("test-user");
 
-        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+        OwnerInfo info = ownerInfoCurator.getByOwner(owner);
         assertConsumerCountsByEntitlementStatus(info);
     }
 
@@ -645,7 +645,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
 
         // Should only get the counts for a single setup case above.
         // The test-user consumers should be ignored.
-        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+        OwnerInfo info = ownerInfoCurator.getByOwner(owner);
         assertConsumerCountsByEntitlementStatus(info);
     }
 
@@ -653,7 +653,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
     public void testPermissionsAppliedForConsumerCounts() {
         User mySystemsUser = setupOnlyMyConsumersPrincipal();
 
-        ConsumerType type = consumerTypeCurator.lookupByLabel("system");
+        ConsumerType type = consumerTypeCurator.getByLabel("system");
         Consumer consumer = new Consumer("my-system-1", mySystemsUser.getUsername(),
             owner, type);
         consumerCurator.create(consumer);
@@ -661,7 +661,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         consumer = new Consumer("not-my-system", "another-user", owner, type);
         consumerCurator.create(consumer);
 
-        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+        OwnerInfo info = ownerInfoCurator.getByOwner(owner);
 
         Map<String, Integer> expectedConsumers = new HashMap<String, Integer>() {
             {
@@ -678,7 +678,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
     public void testPermissionsAppliedForConsumerTypeEntitlementEntitlementsConsumedByType() {
         User mySystemsUser = setupOnlyMyConsumersPrincipal();
 
-        ConsumerType type = consumerTypeCurator.lookupByLabel("system");
+        ConsumerType type = consumerTypeCurator.getByLabel("system");
         Consumer consumer = new Consumer("my-system-1", mySystemsUser.getUsername(),
             owner, type);
         consumerCurator.create(consumer);
@@ -700,7 +700,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         entitlementCurator.create(otherEntitlement);
         consumerCurator.merge(consumer);
 
-        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+        OwnerInfo info = ownerInfoCurator.getByOwner(owner);
 
         Map<String, Integer> expectedConsumers = new HashMap<String, Integer>() {
             {
@@ -723,7 +723,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
     }
 
     private void setupConsumerCountTest(String username) {
-        ConsumerType systemType = consumerTypeCurator.lookupByLabel("system");
+        ConsumerType systemType = consumerTypeCurator.getByLabel("system");
         Consumer consumer1 = new Consumer("test-consumer1", username, owner, systemType);
         consumer1.setEntitlementStatus(ComplianceStatus.GREEN);
         consumerCurator.create(consumer1);

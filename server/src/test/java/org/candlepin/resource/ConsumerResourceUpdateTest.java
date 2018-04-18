@@ -170,9 +170,9 @@ public class ConsumerResourceUpdateTest {
                 ctype.setId("test-ctype-" + ctype.getLabel() + "-" + TestUtil.randomInt());
             }
 
-            when(consumerTypeCurator.lookupByLabel(eq(ctype.getLabel()))).thenReturn(ctype);
-            when(consumerTypeCurator.lookupByLabel(eq(ctype.getLabel()), anyBoolean())).thenReturn(ctype);
-            when(consumerTypeCurator.find(eq(ctype.getId()))).thenReturn(ctype);
+            when(consumerTypeCurator.getByLabel(eq(ctype.getLabel()))).thenReturn(ctype);
+            when(consumerTypeCurator.getByLabel(eq(ctype.getLabel()), anyBoolean())).thenReturn(ctype);
+            when(consumerTypeCurator.get(eq(ctype.getId()))).thenReturn(ctype);
 
             doAnswer(new Answer<ConsumerType>() {
                 @Override
@@ -186,7 +186,7 @@ public class ConsumerResourceUpdateTest {
                         throw new IllegalArgumentException("consumer is null or lacks a type ID");
                     }
 
-                    ctype = curator.find(consumer.getTypeId());
+                    ctype = curator.get(consumer.getTypeId());
                     if (ctype == null) {
                         throw new IllegalStateException("No such consumer type: " + consumer.getTypeId());
                     }
@@ -557,7 +557,7 @@ public class ConsumerResourceUpdateTest {
         existingMigratedTo.setUuid("MIGRATED_TO");
         when(this.consumerCurator.verifyAndLookupConsumer(existingMigratedTo.getUuid()))
             .thenReturn(existingMigratedTo);
-        when(this.consumerCurator.find(eq(guest1.getId()))).thenReturn(guest1);
+        when(this.consumerCurator.get(eq(guest1.getId()))).thenReturn(guest1);
 
         this.resource.updateConsumer(
             existingMigratedTo.getUuid(),
@@ -589,7 +589,7 @@ public class ConsumerResourceUpdateTest {
         when(this.consumerCurator.getGuestConsumersMap(any(String.class), any(Set.class))).
             thenReturn(mockVirtConsumerMap("Guest 1", guest1));
         // Ensure that the guest was not reported by another host.
-        when(this.consumerCurator.find(eq(guest1.getId()))).thenReturn(guest1);
+        when(this.consumerCurator.get(eq(guest1.getId()))).thenReturn(guest1);
 
         this.resource.updateConsumer(host.getUuid(), updatedHost, principal);
         verify(poolManager, never()).revokeEntitlement(eq(entitlement));
@@ -702,7 +702,7 @@ public class ConsumerResourceUpdateTest {
 
         when(this.consumerCurator.getGuestConsumersMap(any(String.class), any(Set.class))).
             thenReturn(mockVirtConsumerMap("Guest 1", guest1));
-        when(this.consumerCurator.find(eq(guest1.getId()))).thenReturn(guest1);
+        when(this.consumerCurator.get(eq(guest1.getId()))).thenReturn(guest1);
 
         this.resource.updateConsumer(host.getUuid(), updatedHost, principal);
 
@@ -765,7 +765,7 @@ public class ConsumerResourceUpdateTest {
         ConsumerDTO updated = new ConsumerDTO();
         updated.setEnvironment(translator.translate(changedEnvironment, EnvironmentDTO.class));
 
-        when(environmentCurator.find(changedEnvironment.getId())).thenReturn(changedEnvironment);
+        when(environmentCurator.get(changedEnvironment.getId())).thenReturn(changedEnvironment);
 
         resource.updateConsumer(existing.getUuid(), updated, principal);
 
@@ -788,7 +788,7 @@ public class ConsumerResourceUpdateTest {
         existing.setUuid(updated.getUuid());
 
         when(consumerCurator.verifyAndLookupConsumer(existing.getUuid())).thenReturn(existing);
-        when(environmentCurator.find(changedEnvironment.getId())).thenReturn(null);
+        when(environmentCurator.get(changedEnvironment.getId())).thenReturn(null);
 
         resource.updateConsumer(existing.getUuid(), updated, principal);
     }

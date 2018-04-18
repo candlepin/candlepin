@@ -69,7 +69,7 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
             throw new IllegalArgumentException("ownerId is null");
         }
 
-        Owner owner = this.find(ownerId);
+        Owner owner = this.get(ownerId);
 
         if (owner == null) {
             throw new IllegalStateException("owner not found for the id: " + ownerId);
@@ -92,25 +92,25 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
     }
 
     /**
-     * @param key owner's unique key to lookup.
+     * @param key owner's unique key to fetch.
      * @return the owner whose key matches the one given.
      */
     @Transactional
-    public Owner lookupByKey(String key) {
+    public Owner getByKey(String key) {
         return (Owner) createSecureCriteria()
             .add(Restrictions.eq("key", key))
             .uniqueResult();
     }
 
     @Transactional
-    public CandlepinQuery<Owner> lookupByKeys(Collection<String> keys) {
+    public CandlepinQuery<Owner> getByKeys(Collection<String> keys) {
         DetachedCriteria criteria = this.createSecureDetachedCriteria()
             .add(CPRestrictions.in("key", keys));
 
         return this.cpQueryFactory.<Owner>buildQuery(this.currentSession(), criteria);
     }
 
-    public Owner lookupWithUpstreamUuid(String upstreamUuid) {
+    public Owner getByUpstreamUuid(String upstreamUuid) {
         return (Owner) createSecureCriteria()
             .createCriteria("upstreamConsumer")
             .add(Restrictions.eq("uuid", upstreamUuid))
@@ -122,7 +122,7 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
      * @param productIds
      * @return a list of owners
      */
-    public CandlepinQuery<Owner> lookupOwnersByActiveProduct(Collection<String> productIds) {
+    public CandlepinQuery<Owner> getOwnersByActiveProduct(Collection<String> productIds) {
         // NOTE: only used by superadmin API calls, no permissions filtering needed here.
         DetachedCriteria poolIdQuery = DetachedCriteria.forClass(Pool.class, "pool")
             .createAlias("pool.providedProducts", "providedProducts")
@@ -145,8 +145,8 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
     }
 
     /**
-     * Retrieves a list of owners which have pools referencing the specified product IDs. If no
-     * owners are associated with the given products, this method returns an empty list.
+     * Retrieves a list of owners which have pools referencing one or more of the specified product
+     * IDs. If no owners are associated with the given products, this method returns an empty list.
      *
      * @param productIds
      *  The product IDs for which to retrieve owners
@@ -155,7 +155,7 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
      *  a list of owners associated with the specified products
      */
     @SuppressWarnings("checkstyle:indentation")
-    public CandlepinQuery<Owner> lookupOwnersWithProduct(Collection<String> productIds) {
+    public CandlepinQuery<Owner> getOwnersWithProducts(Collection<String> productIds) {
         if (productIds != null && !productIds.isEmpty()) {
             Session session = this.currentSession();
 

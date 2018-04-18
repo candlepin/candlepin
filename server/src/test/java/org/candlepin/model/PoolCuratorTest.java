@@ -535,7 +535,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Pool pool = createPool(owner, p, 25L,
             TestUtil.createDate(1999, 1, 10), TestUtil.createDate(2099, 1, 9));
         poolCurator.create(pool);
-        pool = poolCurator.find(pool.getId());
+        pool = poolCurator.get(pool.getId());
 
         assertEquals("A Great Operating System", pool.getProductName());
     }
@@ -583,7 +583,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         Pool pool = TestUtil.createPool(owner, product, providedProducts, 5);
         poolCurator.create(pool);
-        pool = poolCurator.find(pool.getId());
+        pool = poolCurator.get(pool.getId());
         assertTrue(pool.getProvidedProducts().size() > 0);
     }
 
@@ -602,14 +602,14 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         sub.setModified(new Date());
 
         Pool newPool = poolManager.createAndEnrichPools(sub).get(0);
-        List<Pool> pools = poolCurator.lookupBySubscriptionId(owner, sub.getId());
+        List<Pool> pools = poolCurator.getBySubscriptionId(owner, sub.getId());
 
         assertEquals(160L, pools.get(0).getQuantity().longValue());
         assertEquals(newPool.getQuantity(), pools.get(0).getQuantity());
     }
 
     @Test
-    public void testlookupBySubscriptionIds() {
+    public void testgetBySubscriptionIds() {
         Product product = new Product("someProduct", "An Extremely Great Product", 10L);
         product = this.createProduct(product, owner);
 
@@ -632,7 +632,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         p3.setSourceSubscription(new SourceSubscription(subId3, "master"));
         poolCurator.create(p3);
 
-        List<Pool> pools = poolCurator.lookupBySubscriptionIds(owner, Arrays.asList(subId1, subId2));
+        List<Pool> pools = poolCurator.getBySubscriptionIds(owner, Arrays.asList(subId1, subId2));
         assertEquals(2, pools.size());
         assertThat(pools, hasItems(p, p2));
         assertThat(pools, not(hasItem(p3)));
@@ -648,7 +648,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             subIds.add(createPoolForCriteriaTest(product));
         }
 
-        List<Pool> pools = poolCurator.lookupBySubscriptionIds(owner, subIds);
+        List<Pool> pools = poolCurator.getBySubscriptionIds(owner, subIds);
         assertEquals(30, pools.size());
 
         for (Pool pool : pools) {
@@ -763,7 +763,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
         poolCurator.create(pool);
         String subid = pool.getSubscriptionId();
-        assertEquals(1, poolCurator.lookupBySubscriptionId(owner, subid).size());
+        assertEquals(1, poolCurator.getBySubscriptionId(owner, subid).size());
 
         Entitlement e = new Entitlement(pool, consumer, owner, 1);
         e.setId(Util.generateDbUUID());
@@ -773,14 +773,14 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         Map<String, Entitlement> subMap = new HashMap<>();
         subMap.put(subid, e);
-        assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionIds(owner.getId(), subMap).size());
+        assertEquals(0, poolCurator.getOversubscribedBySubscriptionIds(owner.getId(), subMap).size());
 
         e = new Entitlement(pool, consumer, owner, 1);
         e.setId(Util.generateDbUUID());
         entitlementCurator.create(e);
         pool.setConsumed(pool.getConsumed() + 1);
         poolCurator.merge(pool);
-        assertEquals(1, poolCurator.lookupOversubscribedBySubscriptionIds(owner.getId(), subMap).size());
+        assertEquals(1, poolCurator.getOversubscribedBySubscriptionIds(owner.getId(), subMap).size());
     }
 
     @Test
@@ -825,7 +825,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         overConsumedPool.setConsumed(overConsumedPool.getConsumed() + 2);
         poolCurator.merge(overConsumedPool);
 
-        List<Pool> gotPools = poolCurator.lookupOversubscribedBySubscriptionIds(owner.getId(), subIdMap);
+        List<Pool> gotPools = poolCurator.getOversubscribedBySubscriptionIds(owner.getId(), subIdMap);
         assertEquals(5, gotPools.size());
 
         assertThat(expectedPools, hasItems(gotPools.toArray(new Pool[0])));
@@ -867,7 +867,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         Map<String, Entitlement> subMap = new HashMap<>();
         subMap.put(subid, sourceEnt);
-        assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionIds(owner.getId(), subMap).size());
+        assertEquals(0, poolCurator.getOversubscribedBySubscriptionIds(owner.getId(), subMap).size());
 
         // Oversubscribe to the derived pool:
         Entitlement derivedEnt = new Entitlement(derivedPool, consumer, owner, 3);
@@ -878,12 +878,12 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
 
         // Passing the source entitlement should find the oversubscribed derived pool:
-        assertEquals(1, poolCurator.lookupOversubscribedBySubscriptionIds(owner.getId(), subMap).size());
+        assertEquals(1, poolCurator.getOversubscribedBySubscriptionIds(owner.getId(), subMap).size());
 
         subMap.clear();
         subMap.put(subid, derivedEnt);
         // Passing the derived entitlement should not see any oversubscribed pool:
-        assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionIds(owner.getId(), subMap).size());
+        assertEquals(0, poolCurator.getOversubscribedBySubscriptionIds(owner.getId(), subMap).size());
     }
 
     @Test
@@ -893,7 +893,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
         poolCurator.create(pool);
         String subid = pool.getSubscriptionId();
-        assertEquals(1, poolCurator.lookupBySubscriptionId(owner, subid).size());
+        assertEquals(1, poolCurator.getBySubscriptionId(owner, subid).size());
 
 
         Entitlement e = new Entitlement(pool, consumer, owner, 1);
@@ -902,12 +902,12 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         Map<String, Entitlement> subMap = new HashMap<>();
         subMap.put(subid, e);
-        assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionIds(owner.getId(), subMap).size());
+        assertEquals(0, poolCurator.getOversubscribedBySubscriptionIds(owner.getId(), subMap).size());
 
         e = new Entitlement(pool, consumer, owner, 1);
         e.setId(Util.generateDbUUID());
         entitlementCurator.create(e);
-        assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionIds(owner.getId(), subMap).size());
+        assertEquals(0, poolCurator.getOversubscribedBySubscriptionIds(owner.getId(), subMap).size());
     }
 
     @Test
@@ -1313,12 +1313,12 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         pool2.setSourceSubscription(new SourceSubscription(sourcePool.getSubscriptionId(), "derived"));
         poolCurator.create(pool2);
 
-        assertTrue(poolCurator.lookupBySubscriptionId(owner, sub.getId()).size() == 2);
+        assertTrue(poolCurator.getBySubscriptionId(owner, sub.getId()).size() == 2);
         poolManager.deletePool(sourcePool);
 
         // because we check for null now, we want to verify the
         // subpool gets deleted when the original pool is deleted.
-        Pool gone = poolCurator.find(pool2.getId());
+        Pool gone = poolCurator.get(pool2.getId());
         assertEquals(gone, null);
     }
 
@@ -1333,11 +1333,11 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         }
 
         for (Pool pool : pools) {
-            assertNotNull(poolCurator.find(pool.getId()));
+            assertNotNull(poolCurator.get(pool.getId()));
         }
         poolCurator.batchDelete(pools, null);
         for (Pool pool : pools) {
-            assertNull(poolCurator.find(pool.getId()));
+            assertNull(poolCurator.get(pool.getId()));
         }
     }
 
@@ -1355,11 +1355,11 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         }
 
         for (Pool pool : pools) {
-            assertNotNull(poolCurator.find(pool.getId()));
+            assertNotNull(poolCurator.get(pool.getId()));
         }
         poolCurator.batchDelete(pools, ids);
         for (Pool pool : pools) {
-            assertNotNull(poolCurator.find(pool.getId()));
+            assertNotNull(poolCurator.get(pool.getId()));
         }
     }
 
@@ -2209,7 +2209,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         this.poolCurator.clear();
 
         this.poolCurator.removeCdn(cdn);
-        Pool fetched = this.poolCurator.find(pool.getId());
+        Pool fetched = this.poolCurator.get(pool.getId());
 
         assertNotNull(fetched);
         assertNull(fetched.getCdn());

@@ -307,7 +307,7 @@ public class ManifestManager {
                     consumerUuid, ctype != null ? ctype.getLabel() : "unknown type"));
         }
 
-        if (!StringUtils.isBlank(cdnLabel) && cdnCurator.lookupByLabel(cdnLabel) == null) {
+        if (!StringUtils.isBlank(cdnLabel) && cdnCurator.getByLabel(cdnLabel) == null) {
             throw new ForbiddenException(
                 i18n.tr("A CDN with label {0} does not exist on this system.", cdnLabel));
         }

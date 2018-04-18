@@ -121,13 +121,13 @@ public interface PoolManager {
         Date entitleDate, String ownerId, String serviceLevelOverride, Collection<String> fromPools)
         throws EntitlementRefusedException;
 
-    Pool find(String poolId);
+    Pool get(String poolId);
 
-    List<Pool> secureFind(Collection<String> poolId);
+    List<Pool> secureGet(Collection<String> poolId);
 
-    List<Pool> lookupBySubscriptionId(Owner owner, String id);
+    List<Pool> getBySubscriptionId(Owner owner, String id);
 
-    List<Pool> lookupBySubscriptionIds(String ownerId, Collection<String> id);
+    List<Pool> getBySubscriptionIds(String ownerId, Collection<String> id);
 
     Refresher getRefresher(SubscriptionServiceAdapter subAdapter, OwnerServiceAdapter ownerAdapter);
     Refresher getRefresher(SubscriptionServiceAdapter subAdapter, OwnerServiceAdapter ownerAdapter,

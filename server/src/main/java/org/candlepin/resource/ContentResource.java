@@ -94,7 +94,7 @@ public class ContentResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{content_uuid}")
     public ContentDTO getContent(@PathParam("content_uuid") String contentUuid) {
-        Content content = this.contentCurator.lookupByUuid(contentUuid);
+        Content content = this.contentCurator.getByUuid(contentUuid);
 
         if (content == null) {
             throw new NotFoundException(

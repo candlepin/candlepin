@@ -21,18 +21,16 @@ import org.hibernate.criterion.Restrictions;
 /**
  * IdentityCertificateCurator
  */
-public class IdentityCertificateCurator extends
-    AbstractHibernateCurator<IdentityCertificate> {
+public class IdentityCertificateCurator extends AbstractHibernateCurator<IdentityCertificate> {
 
     @Inject
     public IdentityCertificateCurator() {
         super(IdentityCertificate.class);
     }
 
-    public IdentityCertificate lookupBySerialNumber(
-        Long serialNumber) {
-        return (IdentityCertificate) currentSession().createCriteria(
-            IdentityCertificate.class).add(
-            Restrictions.eq("serial", serialNumber)).uniqueResult();
+    public IdentityCertificate getBySerialNumber(Long serialNumber) {
+        return (IdentityCertificate) currentSession().createCriteria(IdentityCertificate.class)
+            .add(Restrictions.eq("serial", serialNumber))
+            .uniqueResult();
     }
 }

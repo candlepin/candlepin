@@ -173,7 +173,7 @@ public class ConsumerImporterTest {
         Owner anotherOwner = new Owner("other", "Other");
         anotherOwner.setId("blah");
         anotherOwner.setUpstreamConsumer(uc);
-        when(curator.lookupWithUpstreamUuid(consumer.getUuid())).thenReturn(anotherOwner);
+        when(curator.getByUpstreamUuid(consumer.getUuid())).thenReturn(anotherOwner);
 
         importer.store(owner, consumer, new ConflictOverrides(), null);
     }

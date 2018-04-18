@@ -50,7 +50,7 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
     @Override
     @Transactional
     public void delete(Content entity) {
-        Content toDelete = find(entity.getUuid());
+        Content toDelete = this.get(entity.getUuid());
         currentSession().delete(toDelete);
     }
 
@@ -66,7 +66,7 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
      *  was found.
      */
     @Transactional
-    public Content lookupByUuid(String uuid) {
+    public Content getByUuid(String uuid) {
         return (Content) currentSession().createCriteria(Content.class).setCacheable(true)
             .add(Restrictions.eq("uuid", uuid)).uniqueResult();
     }

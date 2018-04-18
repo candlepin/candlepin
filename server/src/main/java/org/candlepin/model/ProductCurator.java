@@ -91,7 +91,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      *  a Product instance for the product with the specified name, or null if a matching product
      *  was not found.
      */
-    public Product lookupByName(Owner owner, String name) {
+    public Product getByName(Owner owner, String name) {
         return (Product) this.createSecureCriteria(OwnerProduct.class, null)
             .createAlias("owner", "owner")
             .createAlias("product", "product")
@@ -415,7 +415,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     @Override
     @Transactional
     public void delete(Product entity) {
-        Product toDelete = find(entity.getUuid());
+        Product toDelete = this.get(entity.getUuid());
         currentSession().delete(toDelete);
     }
 

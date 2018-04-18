@@ -130,7 +130,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
         ProductResource pr = new ProductResource(pc, null, null, config, i18n, this.modelTranslator);
         Owner o = mock(Owner.class);
         Product p = mock(Product.class);
-        // when(pc.lookupById(eq(o), eq("10"))).thenReturn(p);
+        // when(pc.getById(eq(o), eq("10"))).thenReturn(p);
         Set<Subscription> subs = new HashSet<>();
         Subscription s = mock(Subscription.class);
         subs.add(s);

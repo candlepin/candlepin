@@ -48,7 +48,7 @@ public class EnvironmentCuratorTest extends DatabaseTestFixture {
     @Test
     public void create() {
         assertEquals(1, envCurator.listAll().list().size());
-        Environment e = envCurator.find("env1");
+        Environment e = envCurator.get("env1");
         assertEquals(owner, e.getOwner());
     }
 
@@ -115,9 +115,9 @@ public class EnvironmentCuratorTest extends DatabaseTestFixture {
         this.environmentCurator.evict(environment1);
         this.environmentCurator.evict(environment2);
         this.environmentCurator.evict(environment3);
-        environment1 = this.environmentCurator.find(environment1.getId());
-        environment2 = this.environmentCurator.find(environment2.getId());
-        environment3 = this.environmentCurator.find(environment3.getId());
+        environment1 = this.environmentCurator.get(environment1.getId());
+        environment2 = this.environmentCurator.get(environment2.getId());
+        environment3 = this.environmentCurator.get(environment3.getId());
 
         assertNull(environment1);
         assertNull(environment2);

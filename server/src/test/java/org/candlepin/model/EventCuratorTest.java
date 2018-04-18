@@ -55,7 +55,7 @@ public class EventCuratorTest extends DatabaseTestFixture {
         Event event = eventFactory.consumerCreated(newConsumer);
         eventCurator.create(event);
 
-        Event lookedUp = eventCurator.find(event.getId());
+        Event lookedUp = eventCurator.get(event.getId());
         assertEquals(Type.CREATED, lookedUp.getType());
         assertNotNull(lookedUp.getId());
     }

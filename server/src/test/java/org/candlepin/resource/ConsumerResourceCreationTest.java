@@ -196,7 +196,7 @@ public class ConsumerResourceCreationTest {
         cert.setId("testId");
         cert.setSerial(new CertificateSerial(new Date()));
         when(idCertService.generateIdentityCert(any(Consumer.class))).thenReturn(cert);
-        when(ownerCurator.lookupByKey(owner.getKey())).thenReturn(owner);
+        when(ownerCurator.getByKey(owner.getKey())).thenReturn(owner);
         when(complianceRules.getStatus(
             any(Consumer.class), any(Date.class), any(Boolean.class), any(Boolean.class)))
                 .thenReturn(new ComplianceStatus(new Date()));
@@ -213,9 +213,9 @@ public class ConsumerResourceCreationTest {
                 ctype.setId("test-ctype-" + ctype.getLabel() + "-" + TestUtil.randomInt());
             }
 
-            when(consumerTypeCurator.lookupByLabel(eq(ctype.getLabel()))).thenReturn(ctype);
-            when(consumerTypeCurator.lookupByLabel(eq(ctype.getLabel()), anyBoolean())).thenReturn(ctype);
-            when(consumerTypeCurator.find(eq(ctype.getId()))).thenReturn(ctype);
+            when(consumerTypeCurator.getByLabel(eq(ctype.getLabel()))).thenReturn(ctype);
+            when(consumerTypeCurator.getByLabel(eq(ctype.getLabel()), anyBoolean())).thenReturn(ctype);
+            when(consumerTypeCurator.get(eq(ctype.getId()))).thenReturn(ctype);
 
             doAnswer(new Answer<ConsumerType>() {
                 @Override
@@ -229,7 +229,7 @@ public class ConsumerResourceCreationTest {
                         throw new IllegalArgumentException("consumer is null or lacks a type ID");
                     }
 
-                    ctype = curator.find(consumer.getTypeId());
+                    ctype = curator.get(consumer.getTypeId());
                     if (ctype == null) {
                         throw new IllegalStateException("No such consumer type: " + consumer.getTypeId());
                     }
@@ -363,7 +363,7 @@ public class ConsumerResourceCreationTest {
 
     private List<String> mockActivationKeys() {
         ActivationKey key1 = new ActivationKey("key1", owner);
-        when(activationKeyCurator.lookupForOwner("key1", owner)).thenReturn(key1);
+        when(activationKeyCurator.getByKeyName(owner, "key1")).thenReturn(key1);
         List<String> keys = new LinkedList<>();
         keys.add(key1.getName());
         return keys;
@@ -393,7 +393,7 @@ public class ConsumerResourceCreationTest {
         ConsumerDTO consumer = TestUtil.createConsumerDTO("sys.example.com", null, null, systemDto);
         resource.create(consumer, p, null, owner.getKey(), createKeysString(keys), true);
         for (String keyName : keys) {
-            verify(activationKeyCurator).lookupForOwner(keyName, owner);
+            verify(activationKeyCurator).getByKeyName(owner, keyName);
         }
     }
 
@@ -409,7 +409,7 @@ public class ConsumerResourceCreationTest {
         // Create a key that has autobind disabled.
         ActivationKey key = new ActivationKey("autobind-disabled-key", owner);
         key.setAutoAttach(true);
-        when(activationKeyCurator.lookupForOwner(key.getName(), owner)).thenReturn(key);
+        when(activationKeyCurator.getByKeyName(owner, key.getName())).thenReturn(key);
 
         // No auth should be required for registering with keys:
         Principal p = new NoAuthPrincipal();

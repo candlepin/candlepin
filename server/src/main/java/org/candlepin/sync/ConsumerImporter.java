@@ -69,7 +69,7 @@ public class ConsumerImporter {
         }
 
         // Make sure no other owner is already using this upstream UUID:
-        Owner alreadyUsing = curator.lookupWithUpstreamUuid(consumer.getUuid());
+        Owner alreadyUsing = curator.getByUpstreamUuid(consumer.getUuid());
         if (alreadyUsing != null && !alreadyUsing.getKey().equals(owner.getKey())) {
             log.error("Cannot import manifest for org: {}", owner.getKey());
             log.error("Upstream distributor {} already in used by org: {}",
@@ -199,11 +199,11 @@ public class ConsumerImporter {
 
             if (pdto.getId() != null) {
                 // look up by ID
-                parent = this.curator.find(pdto.getId());
+                parent = this.curator.get(pdto.getId());
             }
             else if (pdto.getKey() != null) {
                 // look up by key
-                parent = this.curator.lookupByKey(pdto.getKey());
+                parent = this.curator.getByKey(pdto.getKey());
             }
 
             if (parent == null) {

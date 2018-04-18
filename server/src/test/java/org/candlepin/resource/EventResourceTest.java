@@ -64,7 +64,7 @@ public class EventResourceTest {
     @Test
     public void getevent() {
         Event e = getEvent();
-        when(ec.find(eq("8aba"))).thenReturn(e);
+        when(ec.get(eq("8aba"))).thenReturn(e);
         when(translator.translate(any(Event.class), any(Class.class))).thenReturn(getEventDTO());
         EventResource er = new EventResource(ec, null, injector.getInstance(EventAdapter.class), translator);
         assertEquals(getEventDTO(), er.getEvent("8aba"));
@@ -72,7 +72,7 @@ public class EventResourceTest {
 
     @Test(expected = NotFoundException.class)
     public void notfound() {
-        when(ec.find(anyString())).thenReturn(null);
+        when(ec.get(anyString())).thenReturn(null);
         EventResource er = new EventResource(ec,
             injector.getInstance(I18n.class),
             injector.getInstance(EventAdapter.class), translator);

@@ -127,7 +127,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
 
         // We expect the original to be kept around as an orphan until the orphan removal job
         // gets around to removing them
-        assertNotNull(this.productCurator.find(product.getUuid()));
+        assertNotNull(this.productCurator.get(product.getUuid()));
         assertEquals(0, this.ownerProductCurator.getOwnerCount(product));
         assertNotNull(this.ownerProductCurator.getProductById(owner, product.getId()));
 
@@ -223,7 +223,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
 
         // The product will be orphaned, but should still exist
         assertFalse(this.ownerProductCurator.isProductMappedToOwner(product, owner));
-        assertNotNull(this.productCurator.find(product.getUuid()));
+        assertNotNull(this.productCurator.get(product.getUuid()));
         assertEquals(0, this.ownerProductCurator.getOwnerCount(product));
 
         verifyZeroInteractions(this.mockEntCertGenerator);
@@ -242,7 +242,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
 
         assertFalse(this.ownerProductCurator.isProductMappedToOwner(product, owner1));
         assertTrue(this.ownerProductCurator.isProductMappedToOwner(product, owner2));
-        assertNotNull(this.productCurator.find(product.getUuid()));
+        assertNotNull(this.productCurator.get(product.getUuid()));
         assertEquals(1, this.ownerProductCurator.getOwnerCount(product));
 
         verifyZeroInteractions(this.mockEntCertGenerator);
@@ -292,10 +292,10 @@ public class ProductManagerTest extends DatabaseTestFixture {
         // product itself, which should trigger the creation of a new product object (since reuse
         // is currently disabled). The old product will still, temporarily, exist as an orphan
         // until the orphan cleanup job has a chance to run and remove them.
-        assertNotNull(this.productCurator.find(product.getUuid()));
+        assertNotNull(this.productCurator.get(product.getUuid()));
         assertEquals(0, this.ownerProductCurator.getOwnerCount(product));
         assertNotNull(this.ownerProductCurator.getProductById(owner, product.getId()));
-        assertNotNull(this.contentCurator.find(content.getUuid()));
+        assertNotNull(this.contentCurator.get(content.getUuid()));
 
         if (regenCerts) {
             verify(this.mockEntCertGenerator, times(1)).regenerateCertificatesOf(

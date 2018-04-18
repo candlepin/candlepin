@@ -118,7 +118,7 @@ public class UndoImportsJob extends UniqueByEntityJob {
             String displayName = owner.getDisplayName();
 
             // Remove imports
-            ExporterMetadata metadata = this.exportCurator.lookupByTypeAndOwner(
+            ExporterMetadata metadata = this.exportCurator.getByTypeAndOwner(
                 ExporterMetadata.TYPE_PER_USER, owner);
 
             if (metadata == null) {

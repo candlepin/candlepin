@@ -171,7 +171,7 @@ public abstract class KingpinJob implements Job {
         catch (EntityExistsException e) {
             // status exists, let's update it
             // in theory this should be the rare case
-            status = jobCurator.find(detail.getKey().getName());
+            status = jobCurator.get(detail.getKey().getName());
             jobCurator.merge(status);
         }
         catch (RuntimeException e) {

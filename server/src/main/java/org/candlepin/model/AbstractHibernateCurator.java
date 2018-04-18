@@ -31,6 +31,7 @@ import com.google.inject.Provider;
 import com.google.inject.persist.Transactional;
 
 import org.hibernate.Criteria;
+import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.SQLQuery;
@@ -89,19 +90,22 @@ import javax.persistence.criteria.Path;
  * @param <E> Entity specific curator.
  */
 public abstract class AbstractHibernateCurator<E extends Persisted> {
+    private static Logger log = LoggerFactory.getLogger(AbstractHibernateCurator.class);
+
     @Inject protected CandlepinQueryFactory cpQueryFactory;
     @Inject protected Provider<EntityManager> entityManager;
     @Inject protected I18n i18n;
     @Inject protected Configuration config;
-    private final Class<E> entityType;
-
     @Inject private PrincipalProvider principalProvider;
-    private static Logger log = LoggerFactory.getLogger(AbstractHibernateCurator.class);
+
+    private final Class<E> entityType;
+    private NaturalIdLoadAccess<E> natIdLoader;
 
     public AbstractHibernateCurator(Class<E> entityType) {
         //entityType = (Class<E>) ((ParameterizedType)
         //getClass().getGenericSuperclass()).getActualTypeArguments()[0];
         this.entityType = entityType;
+        this.natIdLoader = null;
     }
 
     public Class<E> entityType() {
@@ -145,22 +149,17 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         currentSession().enableFilter(filterName).setParameter(parameterName, value);
     }
 
-    public void enableFilterList(String filterName, String parameterName,
-        Collection value) {
+    public void enableFilterList(String filterName, String parameterName, Collection value) {
         currentSession().enableFilter(filterName).setParameterList(parameterName, value);
     }
 
-    /**
-     * @param id db id of entity to be found.
-     * @return entity matching given id, or null otherwise.
-     */
     @Transactional
-    public E find(Serializable id) {
-        return id == null ? null : get(entityType, id);
+    protected final <T> T secureGet(Class<T> clazz, Serializable id) {
+        return clazz.cast(createSecureCriteria().add(Restrictions.idEq(id)).uniqueResult());
     }
 
     /**
-     * Same as {@link find} but allows permissions on the current principal to inject
+     * Same as {@link get} but allows permissions on the current principal to inject
      * filters into the query before it is run. Primarily useful in authentication when
      * we want to verify access to an entity specified in the URL, but not reveal if
      * the entity exists or not if you don't have permissions to see it at all.
@@ -169,8 +168,22 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * @return entity matching given id, or null otherwise.
      */
     @Transactional
-    public E secureFind(Serializable id) {
+    public E secureGet(Serializable id) {
         return id == null ? null : secureGet(entityType, id);
+    }
+
+    @Transactional
+    protected <T> T get(Class<T> clazz, Serializable id) {
+        return this.currentSession().get(clazz, id);
+    }
+
+    /**
+     * @param id db id of entity to be found.
+     * @return entity matching given id, or null otherwise.
+     */
+    @Transactional
+    public E get(Serializable id) {
+        return id == null ? null : this.get(entityType, id);
     }
 
     /**
@@ -522,10 +535,13 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      */
     @Transactional
     public void delete(E entity) {
-        E toDelete = find(entity.getId());
-        currentSession().delete(toDelete);
+        if (entity != null) {
+            Session session = this.currentSession();
+            session.delete(session.get(this.entityType, entity.getId()));
+        }
     }
 
+    @Transactional
     public void bulkDelete(Collection<E> entities) {
         for (E entity : entities) {
             delete(entity);
@@ -544,16 +560,6 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     @Transactional
     public E merge(E entity) {
         return getEntityManager().merge(entity);
-    }
-
-    @Transactional
-    protected final <T> T secureGet(Class<T> clazz, Serializable id) {
-        return clazz.cast(createSecureCriteria().add(Restrictions.idEq(id)).uniqueResult());
-    }
-
-    @Transactional
-    protected <T> T get(Class<T> clazz, Serializable id) {
-        return this.currentSession().get(clazz, id);
     }
 
     @Transactional
@@ -580,8 +586,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     }
 
     public Session currentSession() {
-        Session sess = (Session) entityManager.get().getDelegate();
-        return sess;
+        return (Session) entityManager.get().getDelegate();
     }
 
     public Session openSession() {
@@ -591,6 +596,58 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
     public EntityManager getEntityManager() {
         return entityManager.get();
+    }
+
+    /**
+     * Fetches the natural ID loader for this entity. This loader can be used and reused to
+     * quickly load entities using their natural IDs. Once a natural ID loader has been created for
+     * a given curator instance, this method will return that single natural ID loader.
+     * <p></p>
+     * To load an entity using the loader, the following template can be followed:
+     *
+     * <pre>
+     *  EntityType entity = this.getNaturalIdLoader()
+     *      .using("field_name_1", "value_1)
+     *      .using("field_name_2", "value_2)
+     *      ...
+     *      .using("field_name_n", "value_n)
+     *      .load()
+     * </pre>
+     *
+     * Where each field name represents the fields that make up the natural ID.
+     * <p></p>
+     * It should be noted that the field values set on the loader will be retained between calls so
+     * long as the loader is not reinstantiated. This can have both positive or negative
+     * consequences depending on the context. This could be used to optimize out some unnecessary
+     * value assignments, but it could also lead to incorrect lookups succeeding when they should
+     * fail. Care should be taken to ensure that the loader is either reinstantiated on every call
+     * (which is slightly inefficient), or that every field is assigned properly before calling the
+     * loader's "load" method.
+     *
+     * @return
+     *  A natural ID loader for this curator's entity type
+     */
+    protected NaturalIdLoadAccess<E> getNaturalIdLoader() {
+        return this.getNaturalIdLoader(false);
+    }
+
+    /**
+     * Fetches the natural ID loader for this entity. See the zero-parameter getNaturalIdLoader
+     * method for expected usage of this method and the natural ID loader.
+     *
+     * @param reinstantiate
+     *  If set, forces the natural ID loader to be reinstantiated even if a natural ID loader had
+     *  already been created for this curator.
+     *
+     * @return
+     *  A natural ID loader for this curator's entity type
+     */
+    protected NaturalIdLoadAccess<E> getNaturalIdLoader(boolean reinstantiate) {
+        if (this.natIdLoader == null || reinstantiate) {
+            this.natIdLoader = this.currentSession().byNaturalId(this.entityType);
+        }
+
+        return this.natIdLoader;
     }
 
     public Collection<E> saveAll(Collection<E> entities, boolean flush, boolean evict) {

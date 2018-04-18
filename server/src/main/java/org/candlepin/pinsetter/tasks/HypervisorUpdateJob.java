@@ -104,7 +104,7 @@ public class HypervisorUpdateJob extends KingpinJob {
         this.subAdapter = subAdapter;
         this.complianceRules = complianceRules;
 
-        this.hypervisorType = consumerTypeCurator.lookupByLabel(ConsumerTypeEnum.HYPERVISOR.getLabel(), true);
+        this.hypervisorType = consumerTypeCurator.getByLabel(ConsumerTypeEnum.HYPERVISOR.getLabel(), true);
     }
 
     public static JobStatus scheduleJob(JobCurator jobCurator,
@@ -206,7 +206,7 @@ public class HypervisorUpdateJob extends KingpinJob {
 
             HypervisorUpdateResultUuids result = new HypervisorUpdateResultUuids();
 
-            Owner owner = ownerCurator.lookupByKey(ownerKey);
+            Owner owner = ownerCurator.getByKey(ownerKey);
             if (owner == null) {
                 context.setResult("Nothing to do. Owner does not exist");
                 log.warn("Hypervisor update attempted against non-existent org id \"{0}\"", ownerKey);
