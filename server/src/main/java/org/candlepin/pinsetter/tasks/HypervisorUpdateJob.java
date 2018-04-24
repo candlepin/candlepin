@@ -107,16 +107,18 @@ public class HypervisorUpdateJob extends KingpinJob {
         this.hypervisorType = consumerTypeCurator.lookupByLabel(ConsumerTypeEnum.HYPERVISOR.getLabel(), true);
     }
 
-    public static JobStatus scheduleJob(JobCurator jobCurator,
-        Scheduler scheduler, JobDetail detail,
+    public static JobStatus scheduleJob(JobCurator jobCurator, Scheduler scheduler, JobDetail detail,
         Trigger trigger) throws SchedulerException {
+
         JobStatus result = jobCurator.getByClassAndTarget(
             detail.getJobDataMap().getString(JobStatus.TARGET_ID),
             HypervisorUpdateJob.class);
+
         if (result == null) {
             return KingpinJob.scheduleJob(jobCurator, scheduler, detail, trigger);
         }
-        log.debug("Scheduling job without a trigger: " + detail.getKey().getName());
+
+        log.debug("Scheduling job without a trigger: {}", detail.getKey().getName());
         JobStatus status = KingpinJob.scheduleJob(jobCurator, scheduler, detail, null);
         return status;
     }
@@ -350,6 +352,7 @@ public class HypervisorUpdateJob extends KingpinJob {
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.OWNER);
         map.put(JobStatus.TARGET_ID, owner.getKey());
         map.put(JobStatus.OWNER_ID, owner.getKey());
+        map.put(JobStatus.OWNER_LOG_LEVEL, owner.getLogLevel());
         map.put(CREATE, create);
         map.put(DATA, compress(data));
         map.put(PRINCIPAL, principal);
