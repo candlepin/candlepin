@@ -14,6 +14,8 @@
  */
 package org.candlepin.pinsetter.tasks;
 
+import static org.mockito.Mockito.mock;
+
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.Owner;
@@ -23,9 +25,13 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.junit.Assert;
 import org.junit.Test;
 
+import org.quartz.JobExecutionContext;
+
 import java.util.List;
 
 import javax.inject.Inject;
+
+
 
 /**
  *
@@ -44,7 +50,8 @@ public class ImportRecordJobTest extends DatabaseTestFixture {
 
         // just make sure that running this on owners with no records
         // doesn't blow up
-        this.job.execute(null);
+        JobExecutionContext context = mock(JobExecutionContext.class);
+        this.job.execute(context);
     }
 
     @Test
@@ -59,7 +66,8 @@ public class ImportRecordJobTest extends DatabaseTestFixture {
             this.importRecordCurator.create(record);
         }
 
-        this.job.execute(null);
+        JobExecutionContext context = mock(JobExecutionContext.class);
+        this.job.execute(context);
 
         List<ImportRecord> records = this.importRecordCurator.findRecords(owner).list();
 
@@ -78,7 +86,8 @@ public class ImportRecordJobTest extends DatabaseTestFixture {
             this.importRecordCurator.create(record);
         }
 
-        this.job.execute(null);
+        JobExecutionContext context = mock(JobExecutionContext.class);
+        this.job.execute(context);
 
         List<ImportRecord> records = this.importRecordCurator.findRecords(owner).list();
 
@@ -106,7 +115,8 @@ public class ImportRecordJobTest extends DatabaseTestFixture {
             this.importRecordCurator.create(record);
         }
 
-        this.job.execute(null);
+        JobExecutionContext context = mock(JobExecutionContext.class);
+        this.job.execute(context);
 
         Assert.assertEquals(10, importRecordCurator.findRecords(owner1).list().size());
         Assert.assertEquals(4, importRecordCurator.findRecords(owner2).list().size());

@@ -17,6 +17,7 @@ package org.candlepin.pinsetter.tasks;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.mock;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
@@ -27,6 +28,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
 import java.io.File;
@@ -53,7 +55,9 @@ public class CertificateRevocationListTaskTest extends BaseJobTest {
     @Test(expected = JobExecutionException.class)
     public void executeNullFilePath() throws JobExecutionException {
         when(config.getString(ConfigProperties.CRL_FILE_PATH)).thenReturn(null);
-        task.execute(null);
+
+        JobExecutionContext context = mock(JobExecutionContext.class);
+        task.execute(context);
     }
 
     @Test
@@ -61,7 +65,8 @@ public class CertificateRevocationListTaskTest extends BaseJobTest {
         when(config.getString(ConfigProperties.CRL_FILE_PATH)).thenReturn("/tmp/test.crl");
         when(crlFileUtil.syncCRLWithDB(any(File.class))).thenReturn(true);
 
-        task.execute(null);
+        JobExecutionContext context = mock(JobExecutionContext.class);
+        task.execute(context);
 
         verify(crlFileUtil).syncCRLWithDB(any(File.class));
     }

@@ -1119,7 +1119,9 @@ public class OwnerResource {
     public JobDetail healEntire(
         @ApiParam("ownerKey id of the owner to be healed.")
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
-        return HealEntireOrgJob.healEntireOrg(ownerKey, new Date());
+
+        Owner owner = findOwnerByKey(ownerKey);
+        return HealEntireOrgJob.healEntireOrg(owner, new Date());
     }
 
     /**

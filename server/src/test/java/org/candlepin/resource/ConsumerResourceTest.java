@@ -824,7 +824,7 @@ public class ConsumerResourceTest {
 
         consumerResource.exportDataAsync(null, consumer.getUuid(), cdn.getLabel(),
             "prefix", cdn.getUrl(), extParams);
-        verify(mockManifestManager).generateManifestAsync(eq(consumer.getUuid()), eq(owner.getKey()),
+        verify(mockManifestManager).generateManifestAsync(eq(consumer.getUuid()), eq(owner),
             eq(cdn.getLabel()), eq("prefix"), eq(cdn.getUrl()), any(Map.class));
     }
 

@@ -29,7 +29,6 @@ public class BaseJobTest {
         injector = Guice.createInjector(
                 new TestingModules.MockJpaModule(),
                 new TestingModules.ServletEnvironmentModule(),
-                new TestingModules.StandardTest()
-        );
+                new TestingModules.StandardTest());
     }
 }

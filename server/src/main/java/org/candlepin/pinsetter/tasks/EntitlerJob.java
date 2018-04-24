@@ -24,6 +24,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.JobCurator;
+import org.candlepin.model.Owner;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.dto.PoolIdAndErrors;
@@ -121,16 +122,18 @@ public class EntitlerJob extends KingpinJob {
         }
     }
 
-    public static JobDetail bindByPool(String poolId, Consumer consumer, String ownerKey, Integer qty) {
+    public static JobDetail bindByPool(String poolId, Consumer consumer, Owner owner, Integer qty) {
         PoolIdAndQuantity[] poolQuantities = new PoolIdAndQuantity[1];
         poolQuantities[0] = new PoolIdAndQuantity(poolId, qty);
-        return bindByPoolAndQuantities(consumer, ownerKey, poolQuantities);
+        return bindByPoolAndQuantities(consumer, owner, poolQuantities);
     }
 
-    public static JobDetail bindByPoolAndQuantities(Consumer consumer, String ownerKey,
+    public static JobDetail bindByPoolAndQuantities(Consumer consumer, Owner owner,
         PoolIdAndQuantity... poolQuantities) {
+
         JobDataMap map = new JobDataMap();
-        map.put(JobStatus.OWNER_ID, ownerKey);
+        map.put(JobStatus.OWNER_ID, owner.getKey());
+        map.put(JobStatus.OWNER_LOG_LEVEL, owner.getLogLevel());
         map.put("pool_and_quantities", poolQuantities);
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.CONSUMER);
         map.put(JobStatus.TARGET_ID, consumer.getUuid());

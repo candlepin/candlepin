@@ -49,11 +49,12 @@ public class SweepBarJobTest extends BaseJobTest {
         Set<JobKey> mockJK = new HashSet<>();
         JobKey jk = new JobKey("test key");
         mockJK.add(jk);
-        when(pk.getSingleJobKeys()).thenReturn(mockJK);    }
+        when(pk.getSingleJobKeys()).thenReturn(mockJK);
+    }
 
     @Test
     public void testSweepBarJob() throws Exception {
-        sweepBarJob.execute(null);
+        sweepBarJob.execute(ctx);
         verify(j, atLeastOnce()).cancelOrphanedJobs(Matchers.anyListOf(String.class));
     }
 }
