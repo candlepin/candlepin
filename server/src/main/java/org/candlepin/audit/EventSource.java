@@ -21,6 +21,7 @@ import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
 import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
 import org.apache.activemq.artemis.core.remoting.impl.invm.InVMConnectorFactory;
+import org.candlepin.controller.QpidStatusListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,12 +31,12 @@ import java.util.List;
 /**
  * EventSource
  */
-public class EventSource {
+public class EventSource implements QpidStatusListener {
     private static  Logger log = LoggerFactory.getLogger(EventSource.class);
-    static final String QUEUE_ADDRESS = "event";
+
     private ClientSessionFactory factory;
     private ObjectMapper mapper;
-    private List<EventReceiver> eventReceivers = new LinkedList<>();
+    private List<MessageReceiver> messageReceivers = new LinkedList<>();
 
 
     @Inject
@@ -65,10 +66,43 @@ public class EventSource {
     }
 
     void registerListener(EventListener listener) throws Exception {
-        this.eventReceivers.add(new EventReceiver(listener, factory, mapper));
+        if (listener.requiresQpid()) {
+            this.messageReceivers.add(new QpidEventMessageReceiver(listener, factory, mapper));
+        }
+        else {
+            this.messageReceivers.add(new EventMessageReceiver(listener, factory, mapper));
+        }
     }
 
     private void closeEventReceivers() {
-        this.eventReceivers.forEach(EventReceiver::close);
+        this.messageReceivers.forEach(MessageReceiver::close);
+    }
+
+    @Override
+    public void onStatusUpdate(QpidStatus oldStatus, QpidStatus newStatus) {
+        if (newStatus.equals(oldStatus)) {
+            log.debug("Status has not changed.");
+            return;
+        }
+
+        log.debug("EventSource was notified of a QpidStatus change: {}", newStatus);
+        for (MessageReceiver receiver : this.messageReceivers) {
+            if (!receiver.requiresQpid()) {
+                continue;
+            }
+
+            if (QpidStatus.FLOW_STOPPED.equals(newStatus) || QpidStatus.DOWN.equals(newStatus)) {
+                log.debug("Stopping session for EventReciever.");
+                receiver.stopSession();
+            }
+            else if (QpidStatus.CONNECTED.equals(newStatus)) {
+                log.debug("Starting session for EventReciever.");
+                receiver.startSession();
+            }
+        }
+    }
+
+    public static String getQueueName(EventListener listener) {
+        return MessageAddress.EVENT_ADDRESS_PREFIX + "." + listener.getClass().getCanonicalName();
     }
 }

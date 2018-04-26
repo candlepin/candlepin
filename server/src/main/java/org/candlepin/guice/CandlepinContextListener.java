@@ -170,6 +170,7 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
             if (config.getBoolean(ConfigProperties.SUSPEND_MODE_ENABLED)) {
                 qpidMonitor.addStatusChangeListener(injector.getInstance(SuspendModeTransitioner.class));
             }
+
             // Run the monitor immediately so that the listeners are notified of the current status.
             // After which we can schedule the monitor to run on the configured interval.
             qpidMonitor.run();

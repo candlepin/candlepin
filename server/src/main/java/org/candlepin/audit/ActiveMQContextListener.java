@@ -14,6 +14,7 @@
  */
 package org.candlepin.audit;
 
+import org.apache.activemq.artemis.core.config.DivertConfiguration;
 import org.candlepin.config.ConfigProperties;
 
 import com.google.common.collect.Lists;
@@ -35,10 +36,12 @@ import org.apache.activemq.artemis.core.settings.impl.AddressFullMessagePolicy;
 import org.apache.activemq.artemis.core.settings.impl.AddressSettings;
 import org.apache.commons.io.FileUtils;
 
+import org.candlepin.controller.QpidStatusMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -73,6 +76,17 @@ public class ActiveMQContextListener {
         org.candlepin.common.config.Configuration candlepinConfig =
             injector.getInstance(org.candlepin.common.config.Configuration.class);
 
+        List<EventListener> eventListeners = new ArrayList<>();
+        getActiveMQListeners(candlepinConfig).forEach(listenerClass -> {
+            try {
+                Class<?> clazz = this.getClass().getClassLoader().loadClass(listenerClass);
+                eventListeners.add((EventListener) injector.getInstance(clazz));
+            }
+            catch (Exception e) {
+                log.warn("Unable to register listener {}", listenerClass, e);
+            }
+        });
+
         if (activeMQServer == null) {
             Configuration config = new ConfigurationImpl();
 
@@ -100,40 +114,8 @@ public class ActiveMQContextListener {
             config.setJournalDirectory(new File(baseDir, "journal").toString());
             config.setLargeMessagesDirectory(new File(baseDir, "largemsgs").toString());
             config.setPagingDirectory(new File(baseDir, "paging").toString());
-
-            Map<String, AddressSettings> settings = new HashMap<>();
-            AddressSettings commonAddressConfig = new AddressSettings();
-
-            String addressPolicyString =
-                candlepinConfig.getString(ConfigProperties.ACTIVEMQ_ADDRESS_FULL_POLICY);
-            long maxQueueSizeInMb = candlepinConfig.getInt(ConfigProperties.ACTIVEMQ_MAX_QUEUE_SIZE);
-            long maxPageSizeInMb = candlepinConfig.getInt(ConfigProperties.ACTIVEMQ_MAX_PAGE_SIZE);
-
-            AddressFullMessagePolicy addressPolicy = null;
-            if (addressPolicyString.equals("PAGE")) {
-                addressPolicy = AddressFullMessagePolicy.PAGE;
-            }
-            else if (addressPolicyString.equals("BLOCK")) {
-                addressPolicy = AddressFullMessagePolicy.BLOCK;
-            }
-            else {
-                throw new IllegalArgumentException("Unknown ACTIVEMQ_ADDRESS_FULL_POLICY: " +
-                        addressPolicyString + " . Please use one of: PAGE, BLOCK");
-            }
-
-            // Paging sizes need to be converted to bytes
-            commonAddressConfig.setMaxSizeBytes(maxQueueSizeInMb * FileUtils.ONE_MB);
-            if (addressPolicy == AddressFullMessagePolicy.PAGE) {
-                commonAddressConfig.setPageSizeBytes(maxPageSizeInMb * FileUtils.ONE_MB);
-            }
-            commonAddressConfig.setAddressFullMessagePolicy(addressPolicy);
-
-            // Set the retry settings on the common address configuration.
-            configureMessageRetry(commonAddressConfig, candlepinConfig);
-
-            //Enable for all the queues
-            settings.put("#", commonAddressConfig);
-            config.setAddressesSettings(settings);
+            config.setAddressesSettings(buildAddressSettings(eventListeners, candlepinConfig));
+            config.addDivertConfiguration(buildDivertConfig());
 
             int maxScheduledThreads = candlepinConfig.getInt(ConfigProperties.ACTIVEMQ_MAX_SCHEDULED_THREADS);
             int maxThreads = candlepinConfig.getInt(ConfigProperties.ACTIVEMQ_MAX_THREADS);
@@ -168,20 +150,19 @@ public class ActiveMQContextListener {
             throw new RuntimeException(e);
         }
 
-        setupAmqp(injector, candlepinConfig);
         cleanupOldQueues();
 
-        List<String> listeners = getActiveMQListeners(candlepinConfig);
-
+        // Create the event source and register all listeners now that the server is started
+        // and the old queues are cleaned up.
         eventSource = injector.getInstance(EventSource.class);
-        for (int i = 0; i < listeners.size(); i++) {
+        setupAmqp(injector, candlepinConfig, eventSource);
+
+        for (EventListener listener : eventListeners) {
             try {
-                Class<?> clazz = this.getClass().getClassLoader().loadClass(
-                    listeners.get(i));
-                eventSource.registerListener((EventListener) injector.getInstance(clazz));
+                eventSource.registerListener(listener);
             }
             catch (Exception e) {
-                log.warn("Unable to register listener " + listeners.get(i), e);
+                log.warn("Unable to register listener {}", listener, e);
             }
         }
 
@@ -197,10 +178,81 @@ public class ActiveMQContextListener {
         }
     }
 
-    private void setupAmqp(Injector injector,
+    private Map<String, AddressSettings> buildAddressSettings(List<EventListener> eventListeners,
         org.candlepin.common.config.Configuration candlepinConfig) {
+        Map<String, AddressSettings> settings = new HashMap<>();
+        String addressPolicyString =
+            candlepinConfig.getString(ConfigProperties.ACTIVEMQ_ADDRESS_FULL_POLICY);
+        long maxQueueSizeInMb = candlepinConfig.getInt(ConfigProperties.ACTIVEMQ_MAX_QUEUE_SIZE);
+        long maxPageSizeInMb = candlepinConfig.getInt(ConfigProperties.ACTIVEMQ_MAX_PAGE_SIZE);
+
+        AddressFullMessagePolicy addressPolicy = null;
+        if (addressPolicyString.equals("PAGE")) {
+            addressPolicy = AddressFullMessagePolicy.PAGE;
+        }
+        else if (addressPolicyString.equals("BLOCK")) {
+            addressPolicy = AddressFullMessagePolicy.BLOCK;
+        }
+        else {
+            throw new IllegalArgumentException("Unknown ACTIVEMQ_ADDRESS_FULL_POLICY: " +
+                                                   addressPolicyString + " . Please use one of: PAGE, BLOCK");
+        }
+
+        for (EventListener listener : eventListeners) {
+            String address = MessageAddress.DEFAULT_EVENT_MESSAGE_ADDRESS;
+            AddressSettings commonAddressConfig = new AddressSettings();
+            // Paging sizes need to be converted to bytes
+            commonAddressConfig.setMaxSizeBytes(maxQueueSizeInMb * FileUtils.ONE_MB);
+            if (addressPolicy == AddressFullMessagePolicy.PAGE) {
+                commonAddressConfig.setPageSizeBytes(maxPageSizeInMb * FileUtils.ONE_MB);
+            }
+            commonAddressConfig.setAddressFullMessagePolicy(addressPolicy);
+
+            // Set the retry settings on the common address configuration.
+            if (listener.requiresQpid()) {
+                // When qpid is enabled we want the message to be set to be redelivered right away
+                // so that it goes right back to the top of the queue. When there's an issue with
+                // Qpid, the receiver will shut down the Consumer and the messages will remain in
+                // order.
+                commonAddressConfig.setRedeliveryDelay(0);
+                commonAddressConfig.setMaxDeliveryAttempts(1);
+                address = MessageAddress.QPID_EVENT_MESSAGE_ADDRESS;
+            }
+            else {
+                // Message retry will be configured for anything other than the Qpid
+                // listener and requires different settings.
+                configureMessageRetry(commonAddressConfig, candlepinConfig);
+            }
+
+            settings.put(address, commonAddressConfig);
+        }
+        return settings;
+    }
+
+    private DivertConfiguration buildDivertConfig() {
+        // Set up a divert to qpid queue. This allow us to send a single message that will
+        // end up getting diverted to all queues plus the qpid queue. We do this to allow
+        // the qpid address to have different settings without having to send a separate message
+        // specifically to this queue.
+        DivertConfiguration divertConfig = new DivertConfiguration();
+        divertConfig.setName("QPID_DIVERT");
+        divertConfig.setExclusive(false);
+        divertConfig.setAddress(MessageAddress.DEFAULT_EVENT_MESSAGE_ADDRESS);
+        divertConfig.setForwardingAddress(MessageAddress.QPID_EVENT_MESSAGE_ADDRESS);
+        return divertConfig;
+    }
+
+    private void setupAmqp(Injector injector, org.candlepin.common.config.Configuration candlepinConfig,
+        EventSource eventSource) {
         try {
             if (candlepinConfig.getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED)) {
+                // Listen for Qpid connection changes so that the appropriate ClientSessions
+                // can be shutdown/restarted when Qpid status changes.
+                QpidStatusMonitor qpidStatusMonitor = injector.getInstance(QpidStatusMonitor.class);
+                qpidStatusMonitor.addStatusChangeListener(eventSource);
+
+                // TODO Look into whether this connection is required. Qpid connection is NOT a singleton
+                //      so I'm not sure that this connection is required as it isn't doing anything.
                 //Both these classes should be singletons
                 QpidConnection conFactory = injector.getInstance(QpidConnection.class);
                 conFactory.connect();

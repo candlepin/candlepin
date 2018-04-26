@@ -51,4 +51,9 @@ public class DatabaseListener implements EventListener {
             eventCurator.create(event);
         }
     }
+
+    @Override
+    public boolean requiresQpid() {
+        return false;
+    }
 }

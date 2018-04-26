@@ -114,18 +114,19 @@ public class QpidConnection implements QpidStatusListener {
      * @param target enumeration
      * @param type enumeration
      * @param msg Usually contains serialized JSON with the message
-     * @throws Exception
+     *
+     * @throws QpidConnectionException when a Qpid connection issue occurs while sending message
      */
-    public void sendTextMessage(Target target, Type type, String msg) {
+    public void sendTextMessage(Target target, Type type, String msg) throws QpidConnectionException {
         // Don't bother to try and send the message if we know the connection
         // became unavailable or if the queue is FLOW_STOPPED. Throw and exception
         // and let HornetQ attempt to resend it later.
         if (connection == null) {
-            throw new RuntimeException("Message not sent: No connection to Qpid.");
+            throw new QpidConnectionException("Message not sent: No connection to Qpid.");
         }
 
         if (this.isFlowStopped) {
-            throw new RuntimeException("Message not sent: Qpid queue is FLOW_STOPPED.");
+            throw new QpidConnectionException("Message not sent: Qpid queue is FLOW_STOPPED.");
         }
 
         try {
@@ -135,6 +136,10 @@ public class QpidConnection implements QpidStatusListener {
                 TopicPublisher tp = m.get(type);
                 tp.send(session.createTextMessage(msg));
             }
+        }
+        catch (JMSException jmse) {
+            throw new QpidConnectionException("Connection issue when sending event to Qpid message bus.",
+                jmse);
         }
         catch (Exception ex) {
             throw new RuntimeException("Error sending event to Qpid message bus", ex);
