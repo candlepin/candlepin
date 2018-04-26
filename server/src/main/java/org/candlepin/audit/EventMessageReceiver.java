@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2012 Red Hat, Inc.
+ * Copyright (c) 2009 - 2016 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -15,35 +15,24 @@
 package org.candlepin.audit;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.activemq.artemis.api.core.client.ClientMessage;
-import org.apache.activemq.artemis.api.core.client.ClientSession;
-import org.apache.activemq.artemis.api.core.client.MessageHandler;
+import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 /**
- * A ListenerWrapper serves as a bridge between Artemis' message delevery and candlepin's
- * Event handling. It is responsible for translating the message to an Event object,
- * and passing it along to a candlepin EventListener for processing.
- *
- * The ListenerWrapper handles all client session management and ensures that the
- * message remains on the message queue until it has been successfully processed by
- * the listener.
+ * A MessageReceiver implementation that on failure to handle an event, will put the message
+ * back in the associated queue and will retry the send on a configured basis. This is the
+ * default ActiveMQ message handler implementation.
  */
-public class ListenerWrapper implements MessageHandler {
+public class EventMessageReceiver extends MessageReceiver {
 
-    private EventListener listener;
-    private static Logger log = LoggerFactory.getLogger(ListenerWrapper.class);
-    private ObjectMapper mapper;
-    private ClientSession session;
+    private static Logger log = LoggerFactory.getLogger(EventMessageReceiver.class);
 
-    public ListenerWrapper(EventListener listener, ObjectMapper mapper, ClientSession session) {
-        this.listener = listener;
-        this.mapper = mapper;
-        this.session = session;
+    public EventMessageReceiver(EventListener listener, ClientSessionFactory sessionFactory,
+        ObjectMapper mapper) throws ActiveMQException {
+        super(listener, sessionFactory, mapper);
     }
 
     @Override
@@ -62,6 +51,7 @@ public class ListenerWrapper implements MessageHandler {
             Event event = mapper.readValue(body, Event.class);
             listener.onEvent(event);
 
+            log.debug("Message listener {} processed message: {}: SUCCESS", listener, msg.getMessageID());
             // Finally commit the session so that the message is taken out of the queue.
             session.commit();
         }
@@ -70,6 +60,8 @@ public class ListenerWrapper implements MessageHandler {
             String messageId = (msg == null) ? "" : Long.toString(msg.getMessageID());
             String reason = (e.getCause() == null) ? e.getMessage() : e.getCause().getMessage();
             log.error("Unable to process message {}: {}", messageId, reason);
+
+            log.debug("Message listener {} processed message: {}: FAILURE", listener, msg.getMessageID());
 
             // If debugging is enabled log a more in depth message.
             log.debug("Unable to process message. Rolling back client session.\n{}", body, e);
@@ -84,6 +76,10 @@ public class ListenerWrapper implements MessageHandler {
 
             // Session was rolled back, nothing left to do.
         }
+    }
+
+    protected String getQueueAddress() {
+        return MessageAddress.DEFAULT_EVENT_MESSAGE_ADDRESS;
     }
 
 }
