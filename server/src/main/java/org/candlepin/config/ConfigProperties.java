@@ -327,7 +327,7 @@ public class ConfigProperties {
             this.put(ACTIVEMQ_MAX_QUEUE_SIZE, "10");
             this.put(ACTIVEMQ_MAX_PAGE_SIZE, "1");
 
-            this.put(ACTIVEMQ_REDELIVERY_DELAY, "5000");
+            this.put(ACTIVEMQ_REDELIVERY_DELAY, "30000");
             this.put(ACTIVEMQ_MAX_REDELIVERY_DELAY, "60000");
             this.put(ACTIVEMQ_REDELIVERY_MULTIPLIER, "2");
 

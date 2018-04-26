@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2012 Red Hat, Inc.
+ * Copyright (c) 2009 - 2018 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -15,21 +15,15 @@
 package org.candlepin.audit;
 
 /**
- * Listens for Events that are put on the event queue.
+ * Represents an exception that occurs when a message send fails due to a Qpid connection issue.
  */
-public interface EventListener {
+public class QpidConnectionException extends RuntimeException {
 
-    /**
-     * Called when an event was received from the event queue.
-     *
-     * @param e the event that was received.
-     */
-    void onEvent(Event e);
+    public QpidConnectionException(String message) {
+        super(message);
+    }
 
-    /**
-     * Defines whether this event listener requires a Qpid connection.
-     *
-     * @return true if a qpid connection is required to handle the message, false otherwise.
-     */
-    boolean requiresQpid();
+    public QpidConnectionException(String message, Throwable throwable) {
+        super(message, throwable);
+    }
 }
