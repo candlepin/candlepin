@@ -51,7 +51,6 @@ import org.candlepin.model.dto.Subscription;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
-import org.candlepin.pki.impl.BouncyCastlePKIUtility;
 import org.candlepin.pki.impl.BouncyCastleProviderLoader;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.CertificateSizeException;
@@ -1675,7 +1674,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     @Test
     public void testDetachedEntitlementDataNotAddedToCertV1() throws Exception {
-        KeyPair keyPair = new BouncyCastlePKIUtility(null, null, null).generateNewKeyPair();
         when(keyPairCurator.getConsumerKeyPair(any(Consumer.class))).thenReturn(keyPair);
 
         when(mockedPKI.getPemEncoded(any(X509Certificate.class))).thenReturn("".getBytes());

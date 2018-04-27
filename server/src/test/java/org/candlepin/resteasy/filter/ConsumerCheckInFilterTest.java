@@ -31,10 +31,8 @@ import com.google.inject.Module;
 import org.jboss.resteasy.core.interception.PostMatchContainerRequestContext;
 import org.jboss.resteasy.mock.MockHttpRequest;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import org.jukito.JukitoRunner;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -50,7 +48,6 @@ import javax.ws.rs.container.ResourceInfo;
 /**
  * AuthInterceptorTest
  */
-@RunWith(JukitoRunner.class)
 public class ConsumerCheckInFilterTest extends DatabaseTestFixture {
     @Inject private Injector injector;
 
