@@ -19,6 +19,7 @@ import static org.candlepin.pki.impl.BouncyCastleProviderLoader.*;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.pki.CertificateReader;
+import org.candlepin.pki.PKIProviderUtility;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.X509ByteExtensionWrapper;
@@ -96,13 +97,19 @@ import java.util.Set;
  * have to use the raw ASN.1 libraries to build up our own properly formatted CRL DER
  * representation, then PEM encode it.
  */
-public class BouncyCastlePKIUtility extends PKIUtility {
+public class BouncyCastlePKIUtility implements PKIProviderUtility {
     private static Logger log = LoggerFactory.getLogger(BouncyCastlePKIUtility.class);
+
+    private CertificateReader reader;
+    private SubjectKeyIdentifierWriter subjectKeyWriter;
+    private Configuration config;
 
     @Inject
     public BouncyCastlePKIUtility(CertificateReader reader, SubjectKeyIdentifierWriter subjectKeyWriter,
         Configuration config) {
-        super(reader, subjectKeyWriter, config);
+        this.reader = reader;
+        this.subjectKeyWriter = subjectKeyWriter;
+        this.config = config;
     }
 
     @Override

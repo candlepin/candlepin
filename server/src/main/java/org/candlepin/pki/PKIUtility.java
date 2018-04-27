@@ -48,32 +48,35 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
+import javax.inject.Inject;
+
 /**
  * PKIUtility
  */
-public abstract class PKIUtility {
+public class PKIUtility {
     private static Logger log = LoggerFactory.getLogger(PKIUtility.class);
 
     // TODO : configurable?
     public static final int RSA_KEY_SIZE = 2048;
-    public static final String SIGNATURE_ALGO = "SHA256WithRSA";
 
-    protected CertificateReader reader;
-    protected SubjectKeyIdentifierWriter subjectKeyWriter;
-    protected Configuration config;
+    private CertificateReader reader;
+    private PKIProviderUtility pkiImpl;
 
+    @Inject
     public PKIUtility(CertificateReader reader, SubjectKeyIdentifierWriter subjectKeyWriter,
-        Configuration config) {
+        Configuration config, PKIProviderUtility pkiImpl) {
         this.reader = reader;
-        this.subjectKeyWriter = subjectKeyWriter;
-        this.config = config;
+        this.pkiImpl = pkiImpl;
     }
 
-    public abstract X509Certificate createX509Certificate(String dn,
+    public X509Certificate createX509Certificate(String dn,
         Set<X509ExtensionWrapper> extensions, Set<X509ByteExtensionWrapper> byteExtensions,
         Date startDate, Date endDate,
         KeyPair clientKeyPair, BigInteger serialNumber, String alternateName)
-        throws GeneralSecurityException, IOException;
+        throws GeneralSecurityException, IOException {
+        return pkiImpl.createX509Certificate(dn, extensions, byteExtensions, startDate, endDate,
+            clientKeyPair, serialNumber, alternateName);
+    }
 
     /**
      * Generate CRL.
@@ -81,8 +84,10 @@ public abstract class PKIUtility {
      * @param entries the entries
      * @return the x509 CRL
      */
-    public abstract X509CRL createX509CRL(List<X509CRLEntryWrapper> entries,
-        BigInteger crlNumber);
+    public X509CRL createX509CRL(List<X509CRLEntryWrapper> entries,
+        BigInteger crlNumber) {
+        return pkiImpl.createX509CRL(entries, crlNumber);
+    }
 
     public KeyPair decodeKeys(byte[] privKeyBits, byte[] pubKeyBits)
         throws InvalidKeySpecException, NoSuchAlgorithmException {
@@ -111,11 +116,17 @@ public abstract class PKIUtility {
      * @return PEM-encoded bytes of the certificate
      * @throws IOException if there is i/o problem
      */
-    public abstract byte[] getPemEncoded(X509Certificate cert) throws IOException;
+    public byte[] getPemEncoded(X509Certificate cert) throws IOException {
+        return pkiImpl.getPemEncoded(cert);
+    }
 
-    public abstract byte[] getPemEncoded(Key key) throws IOException;
+    public byte[] getPemEncoded(Key key) throws IOException {
+        return pkiImpl.getPemEncoded(key);
+    }
 
-    public abstract byte[] getPemEncoded(X509CRL crl) throws IOException;
+    public byte[] getPemEncoded(X509CRL crl) throws IOException {
+        return pkiImpl.getPemEncoded(crl);
+    }
 
     /**
      * Writes the specified certificate to the given output stream in PEM encoding.
@@ -129,7 +140,9 @@ public abstract class PKIUtility {
      * @throws IOException
      *  If an IOException occurs while writing the certificate
      */
-    public abstract void writePemEncoded(X509Certificate cert, OutputStream out) throws IOException;
+    public void writePemEncoded(X509Certificate cert, OutputStream out) throws IOException {
+        pkiImpl.writePemEncoded(cert, out);
+    }
 
     /**
      * Writes the specified key to the given output stream in PEM encoding.
@@ -143,7 +156,9 @@ public abstract class PKIUtility {
      * @throws IOException
      *  If an IOException occurs while writing the key
      */
-    public abstract void writePemEncoded(Key key, OutputStream out) throws IOException;
+    public void writePemEncoded(Key key, OutputStream out) throws IOException {
+        pkiImpl.writePemEncoded(key, out);
+    }
 
     /**
      * Writes the specified certificate revocation list to the given output stream in PEM encoding.
@@ -157,7 +172,9 @@ public abstract class PKIUtility {
      * @throws IOException
      *  If an IOException occurs while writing the certificate revocation list
      */
-    public abstract void writePemEncoded(X509CRL crl, OutputStream out) throws IOException;
+    public void writePemEncoded(X509CRL crl, OutputStream out) throws IOException {
+        pkiImpl.writePemEncoded(crl, out);
+    }
 
     public static X509Certificate createCert(byte[] certData) {
         try {
@@ -235,6 +252,7 @@ public abstract class PKIUtility {
         }
     }
 
-
-    public abstract String decodeDERValue(byte[] value);
+    public String decodeDERValue(byte[] value) {
+        return pkiImpl.decodeDERValue(value);
+    }
 }
