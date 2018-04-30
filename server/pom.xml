@@ -25,6 +25,16 @@
     <org.jukito-jukito.version>1.4</org.jukito-jukito.version>
     <org.hsqldb-hsqldb.version>2.3.2</org.hsqldb-hsqldb.version>
     <com.mattbertolini-liquibase-slf4j.version>1.2.1</com.mattbertolini-liquibase-slf4j.version>
+    <org.apache.activemq-artemis-server.version>2.4.0</org.apache.activemq-artemis-server.version>
+    <org.apache.activemq-artemis-core-client.version>2.4.0</org.apache.activemq-artemis-core-client.version>
+    <org.apache.activemq-artemis-commons.version>2.4.0</org.apache.activemq-artemis-commons.version>
+    <org.apache.activemq-artemis-selector.version>2.4.0</org.apache.activemq-artemis-selector.version>
+    <org.apache.activemq-artemis-journal.version>2.4.0</org.apache.activemq-artemis-journal.version>
+    <io.netty-netty-all.version>4.1.16.Final</io.netty-netty-all.version>
+    <commons-beanutils-commons-beanutils.version>1.9.3</commons-beanutils-commons-beanutils.version>
+    <org.jgroups-jgroups.version>3.6.13.Final</org.jgroups-jgroups.version>
+    <org.apache.geronimo.specs-geronimo-json_1.0_spec.version>1.0-alpha-1</org.apache.geronimo.specs-geronimo-json_1.0_spec.version>
+    <org.apache.johnzon-johnzon-core.version>0.9.5</org.apache.johnzon-johnzon-core.version>
     <org.apache.qpid-qpid-common.version>0.32</org.apache.qpid-qpid-common.version>
     <org.apache.qpid-qpid-client.version>0.32</org.apache.qpid-qpid-client.version>
     <org.apache.mina-mina-core.version>1.0.1</org.apache.mina-mina-core.version>
@@ -72,16 +82,8 @@
     <org.jboss.logging-jboss-logging.version>3.3.0.Final</org.jboss.logging-jboss-logging.version>
     <org.hibernate.javax.persistence-hibernate-jpa-2.1-api.version>1.0.0.Final</org.hibernate.javax.persistence-hibernate-jpa-2.1-api.version>
     <javax.transaction-jta.version>1.1</javax.transaction-jta.version>
-    <org.apache.activemq-artemis-server.version>2.4.0</org.apache.activemq-artemis-server.version>
-    <org.apache.activemq-artemis-core-client.version>2.4.0</org.apache.activemq-artemis-core-client.version>
-    <org.apache.activemq-artemis-commons.version>2.4.0</org.apache.activemq-artemis-commons.version>
-    <org.apache.activemq-artemis-selector.version>2.4.0</org.apache.activemq-artemis-selector.version>
-    <org.apache.activemq-artemis-journal.version>2.4.0</org.apache.activemq-artemis-journal.version>
-    <io.netty-netty-all.version>4.1.16.Final</io.netty-netty-all.version>
-    <commons-beanutils-commons-beanutils.version>1.9.3</commons-beanutils-commons-beanutils.version>
-    <org.jgroups-jgroups.version>3.6.13.Final</org.jgroups-jgroups.version>
-    <org.apache.geronimo.specs-geronimo-json_1.0_spec.version>1.0-alpha-1</org.apache.geronimo.specs-geronimo-json_1.0_spec.version>
-    <org.apache.johnzon-johnzon-core.version>0.9.5</org.apache.johnzon-johnzon-core.version>
+    <org.mozilla-jss.version>4.4.0</org.mozilla-jss.version>
+    <ldapjdk-ldapjdk.version>4.19</ldapjdk-ldapjdk.version>
     <com.fasterxml.jackson.core-jackson-annotations.version>2.9.4</com.fasterxml.jackson.core-jackson-annotations.version>
     <com.fasterxml.jackson.core-jackson-core.version>2.9.4</com.fasterxml.jackson.core-jackson-core.version>
     <com.fasterxml.jackson.core-jackson-databind.version>2.9.4</com.fasterxml.jackson.core-jackson-databind.version>
@@ -217,6 +219,116 @@
       <artifactId>liquibase-slf4j</artifactId>
       <version>${com.mattbertolini-liquibase-slf4j.version}</version>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>artemis-server</artifactId>
+      <version>${org.apache.activemq-artemis-server.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>artemis-core-client</artifactId>
+      <version>${org.apache.activemq-artemis-core-client.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>artemis-commons</artifactId>
+      <version>${org.apache.activemq-artemis-commons.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>artemis-selector</artifactId>
+      <version>${org.apache.activemq-artemis-selector.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>artemis-journal</artifactId>
+      <version>${org.apache.activemq-artemis-journal.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-all</artifactId>
+      <version>${io.netty-netty-all.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>commons-beanutils</groupId>
+      <artifactId>commons-beanutils</artifactId>
+      <version>${commons-beanutils-commons-beanutils.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.jgroups</groupId>
+      <artifactId>jgroups</artifactId>
+      <version>${org.jgroups-jgroups.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.geronimo.specs</groupId>
+      <artifactId>geronimo-json_1.0_spec</artifactId>
+      <version>${org.apache.geronimo.specs-geronimo-json_1.0_spec.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.johnzon</groupId>
+      <artifactId>johnzon-core</artifactId>
+      <version>${org.apache.johnzon-johnzon-core.version}</version>
       <exclusions>
         <exclusion>
           <groupId>*</groupId>
@@ -742,9 +854,9 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>org.apache.activemq</groupId>
-      <artifactId>artemis-server</artifactId>
-      <version>${org.apache.activemq-artemis-server.version}</version>
+      <groupId>org.mozilla</groupId>
+      <artifactId>jss</artifactId>
+      <version>${org.mozilla-jss.version}</version>
       <exclusions>
         <exclusion>
           <groupId>*</groupId>
@@ -753,97 +865,9 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>org.apache.activemq</groupId>
-      <artifactId>artemis-core-client</artifactId>
-      <version>${org.apache.activemq-artemis-core-client.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>*</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.activemq</groupId>
-      <artifactId>artemis-commons</artifactId>
-      <version>${org.apache.activemq-artemis-commons.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>*</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.activemq</groupId>
-      <artifactId>artemis-selector</artifactId>
-      <version>${org.apache.activemq-artemis-selector.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>*</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.activemq</groupId>
-      <artifactId>artemis-journal</artifactId>
-      <version>${org.apache.activemq-artemis-journal.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>*</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>io.netty</groupId>
-      <artifactId>netty-all</artifactId>
-      <version>${io.netty-netty-all.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>*</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>commons-beanutils</groupId>
-      <artifactId>commons-beanutils</artifactId>
-      <version>${commons-beanutils-commons-beanutils.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>*</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.jgroups</groupId>
-      <artifactId>jgroups</artifactId>
-      <version>${org.jgroups-jgroups.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>*</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-json_1.0_spec</artifactId>
-      <version>${org.apache.geronimo.specs-geronimo-json_1.0_spec.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>*</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.johnzon</groupId>
-      <artifactId>johnzon-core</artifactId>
-      <version>${org.apache.johnzon-johnzon-core.version}</version>
+      <groupId>ldapjdk</groupId>
+      <artifactId>ldapjdk</artifactId>
+      <version>${ldapjdk-ldapjdk.version}</version>
       <exclusions>
         <exclusion>
           <groupId>*</groupId>

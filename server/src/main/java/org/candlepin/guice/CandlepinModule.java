@@ -77,7 +77,6 @@ import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
 import org.candlepin.pinsetter.tasks.SweepBarJob;
 import org.candlepin.pinsetter.tasks.UnpauseJob;
 import org.candlepin.pki.CertificateReader;
-import org.candlepin.pki.PKIProviderUtility;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.impl.BouncyCastlePKIUtility;
 import org.candlepin.pki.PrivateKeyReader;
@@ -205,8 +204,7 @@ public class CandlepinModule extends AbstractModule {
 
         configureJPA();
 
-        bind(PKIUtility.class);
-        bind(PKIProviderUtility.class).to(BouncyCastlePKIUtility.class).asEagerSingleton();
+        bind(PKIUtility.class).to(BouncyCastlePKIUtility.class).asEagerSingleton();
         bind(CertificateReader.class).asEagerSingleton();
         bind(PrivateKeyReader.class);
         bind(X509ExtensionUtil.class);

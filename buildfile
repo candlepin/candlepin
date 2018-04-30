@@ -154,6 +154,8 @@ BOUNCYCASTLE = group('bcpkix-jdk15on', 'bcprov-jdk15on',
                      :under => 'org.bouncycastle',
                      :version => '1.59')
 
+JSS = ['org.mozilla:jss:jar:4.4.0', 'ldapjdk:ldapjdk:jar:4.19']
+
 SERVLET = 'javax.servlet:servlet-api:jar:2.5'
 
 GUICE =  [group('guice-assistedinject', 'guice-multibindings',
@@ -375,6 +377,7 @@ define "candlepin" do
 
     ### Building
     compile_classpath = [
+      ACTIVEMQ,
       AMQP,
       BOUNCYCASTLE,
       COLLECTIONS,
@@ -382,7 +385,7 @@ define "candlepin" do
       GETTEXT_COMMONS,
       GUICE,
       HIBERNATE,
-      ACTIVEMQ,
+      JSS,
       JACKSON,
       LIQUIBASE,
       LOGGING,

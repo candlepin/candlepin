@@ -16,7 +16,7 @@ package org.candlepin.util;
 
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.pki.CertificateReader;
-import org.candlepin.pki.PKIProviderUtility;
+import org.candlepin.pki.ProviderBasedPKIUtility;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.X509CRLEntryWrapper;
 
@@ -230,7 +230,7 @@ public class CrlFileUtil {
                 writer.preScan(reaper);
             }
 
-            writer.setSigningAlgorithm(PKIProviderUtility.SIGNATURE_ALGO);
+            writer.setSigningAlgorithm(ProviderBasedPKIUtility.SIGNATURE_ALGO);
 
             // Verify we actually have work to do now
             if (writer.hasChangesQueued()) {

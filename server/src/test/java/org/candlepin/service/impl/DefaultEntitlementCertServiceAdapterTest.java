@@ -87,8 +87,8 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
-import java.security.Key;
 import java.security.KeyPair;
+import java.security.PrivateKey;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
@@ -1677,7 +1677,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         when(keyPairCurator.getConsumerKeyPair(any(Consumer.class))).thenReturn(keyPair);
 
         when(mockedPKI.getPemEncoded(any(X509Certificate.class))).thenReturn("".getBytes());
-        when(mockedPKI.getPemEncoded(any(Key.class))).thenReturn("".getBytes());
+        when(mockedPKI.getPemEncoded(any(PrivateKey.class))).thenReturn("".getBytes());
 
         final CertificateSerial serial = mock(CertificateSerial.class);
         when(serial.getId()).thenReturn(1L);

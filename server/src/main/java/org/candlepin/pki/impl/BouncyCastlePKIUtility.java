@@ -19,7 +19,6 @@ import static org.candlepin.pki.impl.BouncyCastleProviderLoader.*;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.pki.CertificateReader;
-import org.candlepin.pki.PKIProviderUtility;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.X509ByteExtensionWrapper;
@@ -30,7 +29,6 @@ import org.candlepin.util.Util;
 import com.google.inject.Inject;
 
 import org.bouncycastle.asn1.ASN1Encodable;
-import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.DERUTF8String;
@@ -65,10 +63,10 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
-import java.security.Key;
 import java.security.KeyPair;
 import java.security.cert.X509CRL;
 import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAPrivateKey;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -97,19 +95,13 @@ import java.util.Set;
  * have to use the raw ASN.1 libraries to build up our own properly formatted CRL DER
  * representation, then PEM encode it.
  */
-public class BouncyCastlePKIUtility implements PKIProviderUtility {
+public class BouncyCastlePKIUtility extends PKIUtility {
     private static Logger log = LoggerFactory.getLogger(BouncyCastlePKIUtility.class);
-
-    private CertificateReader reader;
-    private SubjectKeyIdentifierWriter subjectKeyWriter;
-    private Configuration config;
 
     @Inject
     public BouncyCastlePKIUtility(CertificateReader reader, SubjectKeyIdentifierWriter subjectKeyWriter,
         Configuration config) {
-        this.reader = reader;
-        this.subjectKeyWriter = subjectKeyWriter;
-        this.config = config;
+        super(reader, subjectKeyWriter, config);
     }
 
     @Override
@@ -272,7 +264,7 @@ public class BouncyCastlePKIUtility implements PKIProviderUtility {
     }
 
     @Override
-    public byte[] getPemEncoded(Key key) throws IOException {
+    public byte[] getPemEncoded(RSAPrivateKey key) throws IOException {
         return getPemEncoded((Object) key);
     }
 
@@ -287,47 +279,12 @@ public class BouncyCastlePKIUtility implements PKIProviderUtility {
     }
 
     @Override
-    public void writePemEncoded(Key key, OutputStream out) throws IOException {
+    public void writePemEncoded(RSAPrivateKey key, OutputStream out) throws IOException {
         this.writePemEncoded((Object) key, out);
     }
 
     @Override
     public void writePemEncoded(X509CRL crl, OutputStream out) throws IOException {
         this.writePemEncoded((Object) crl, out);
-    }
-
-    @Override
-    public String decodeDERValue(byte[] value) {
-        ASN1InputStream vis = null;
-        ASN1InputStream decoded = null;
-        try {
-            vis = new ASN1InputStream(value);
-            decoded = new ASN1InputStream(
-                ((DEROctetString) vis.readObject()).getOctets());
-
-            return decoded.readObject().toString();
-        }
-        catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        finally {
-            if (vis != null) {
-                try {
-                    vis.close();
-                }
-                catch (IOException e) {
-                    log.warn("failed to close ASN1 stream", e);
-                }
-            }
-
-            if (decoded != null) {
-                try {
-                    decoded.close();
-                }
-                catch (IOException e) {
-                    log.warn("failed to close ASN1 stream", e);
-                }
-            }
-        }
     }
 }
