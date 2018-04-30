@@ -13,12 +13,6 @@
 ## GCJ-compiled .jar.so files.
 %global __jar_repack %{nil}
 
-%if 0%{?fedora} >= 19 || 0%{?rhel} >= 7
-%global tomcat tomcat
-%else
-%global tomcat tomcat6
-%endif
-
 Name: candlepin
 Version: 2.3.5
 Release: 1%{?dist}
@@ -45,7 +39,7 @@ BuildRequires: selinux-policy-doc
 
 Requires: java >= 0:1.8.0
 Requires: wget
-Requires: %{tomcat}
+Requires: tomcat >= 0:7.0.0
 Requires: liquibase >= 0:3.0.0
 # Need JDBC driver for cpdb
 Requires: postgresql-jdbc
@@ -53,11 +47,11 @@ Requires: postgresql-jdbc
 %description
 Candlepin is an open source entitlement management system.
 
-## %package %{tomcat}
+## %package tomcat
 ## Summary: Candlepin web application for tomcat
 ## Requires: candlepin = %{version}
 
-## %description %{tomcat}
+## %description tomcat
 ## Candlepin web application for tomcat
 
 ## %package devel
@@ -135,11 +129,11 @@ sed -i 's/#LOGROTATE-3.8#//' %{buildroot}%{_sysconfdir}/logrotate.d/%{name}
 touch %{buildroot}/%{_sysconfdir}/%{name}/%{name}.conf
 
 ## tomcat
-%{__install} -d -m 755 %{buildroot}/%{_sharedstatedir}/%{tomcat}/webapps/%{name}
-%{__install} -d -m 755 %{buildroot}/%{_sysconfdir}/%{tomcat}/
-%{__unzip} %{SOURCE1} -d %{buildroot}/%{_sharedstatedir}/%{tomcat}/webapps/%{name}
+%{__install} -d -m 755 %{buildroot}/%{_sharedstatedir}/tomcat/webapps/%{name}
+%{__install} -d -m 755 %{buildroot}/%{_sysconfdir}/tomcat/
+%{__unzip} %{SOURCE1} -d %{buildroot}/%{_sharedstatedir}/tomcat/webapps/%{name}
 
-%{__ln_s} /etc/candlepin/certs/keystore %{buildroot}/%{_sysconfdir}/%{tomcat}/keystore
+%{__ln_s} /etc/candlepin/certs/keystore %{buildroot}/%{_sysconfdir}/tomcat/keystore
 
 ## /var/lib dir for hornetq state
 %{__install} -d -m 755 %{buildroot}/%{_sharedstatedir}/%{name}
@@ -208,10 +202,10 @@ fi
 %config(noreplace) %attr(644,root,root) %{_sysconfdir}/logrotate.d/candlepin
 
 %defattr(644, tomcat, tomcat, 775)
-%{_sharedstatedir}/%{tomcat}/webapps/%{name}/*
+%{_sharedstatedir}/tomcat/webapps/%{name}/*
 %{_sharedstatedir}/%{name}
 %{_localstatedir}/cache/%{name}
-%config(noreplace) %{_sysconfdir}/%{tomcat}/keystore
+%config(noreplace) %{_sysconfdir}/tomcat/keystore
 
 %defattr(600,tomcat,tomcat,-)
 %config(noreplace) %{_sysconfdir}/%{name}/%{name}.conf
