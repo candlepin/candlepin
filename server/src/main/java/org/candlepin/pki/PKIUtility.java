@@ -27,7 +27,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
-import java.security.Key;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -41,6 +40,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509CRL;
 import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
@@ -48,46 +48,39 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-import javax.inject.Inject;
-
 /**
  * PKIUtility
  */
-public class PKIUtility {
+public abstract class PKIUtility implements ProviderBasedPKIUtility {
     private static Logger log = LoggerFactory.getLogger(PKIUtility.class);
 
     // TODO : configurable?
     public static final int RSA_KEY_SIZE = 2048;
 
-    private CertificateReader reader;
-    private PKIProviderUtility pkiImpl;
+    protected CertificateReader reader;
+    protected SubjectKeyIdentifierWriter subjectKeyWriter;
+    protected Configuration config;
 
-    @Inject
-    public PKIUtility(CertificateReader reader, SubjectKeyIdentifierWriter subjectKeyWriter,
-        Configuration config, PKIProviderUtility pkiImpl) {
+    public PKIUtility(CertificateReader reader, SubjectKeyIdentifierWriter writer, Configuration config) {
         this.reader = reader;
-        this.pkiImpl = pkiImpl;
+        this.subjectKeyWriter = writer;
+        this.config = config;
     }
 
-    public X509Certificate createX509Certificate(String dn,
+    public abstract X509Certificate createX509Certificate(String dn,
         Set<X509ExtensionWrapper> extensions, Set<X509ByteExtensionWrapper> byteExtensions,
-        Date startDate, Date endDate,
-        KeyPair clientKeyPair, BigInteger serialNumber, String alternateName)
-        throws GeneralSecurityException, IOException {
-        return pkiImpl.createX509Certificate(dn, extensions, byteExtensions, startDate, endDate,
-            clientKeyPair, serialNumber, alternateName);
-    }
+        Date startDate, Date endDate, KeyPair clientKeyPair, BigInteger serialNumber, String alternateName)
+        throws GeneralSecurityException, IOException;
 
     /**
-     * Generate CRL.
+     * Generate an X.509 CRL.  This method is used to initially bootstrap a CRL when none exists already.
+     * Subsequent modifications are performed by the X509CRLStreamWriter class which is much faster but
+     * works by modifying an existing CRL.
      *
      * @param entries the entries
      * @return the x509 CRL
      */
-    public X509CRL createX509CRL(List<X509CRLEntryWrapper> entries,
-        BigInteger crlNumber) {
-        return pkiImpl.createX509CRL(entries, crlNumber);
-    }
+    public abstract X509CRL createX509CRL(List<X509CRLEntryWrapper> entries, BigInteger crlNumber);
 
     public KeyPair decodeKeys(byte[] privKeyBits, byte[] pubKeyBits)
         throws InvalidKeySpecException, NoSuchAlgorithmException {
@@ -110,22 +103,24 @@ public class PKIUtility {
     }
 
     /**
-     * Take an X509Certificate object and return a byte[] of the certificate,
-     * PEM encoded
+     * Take an X509Certificate object and return a byte[] of the certificate, PEM encoded
      * @param cert
      * @return PEM-encoded bytes of the certificate
      * @throws IOException if there is i/o problem
      */
-    public byte[] getPemEncoded(X509Certificate cert) throws IOException {
-        return pkiImpl.getPemEncoded(cert);
-    }
+    public abstract byte[] getPemEncoded(X509Certificate cert) throws IOException;
 
-    public byte[] getPemEncoded(Key key) throws IOException {
-        return pkiImpl.getPemEncoded(key);
-    }
+    public abstract byte[] getPemEncoded(RSAPrivateKey key) throws IOException;
 
-    public byte[] getPemEncoded(X509CRL crl) throws IOException {
-        return pkiImpl.getPemEncoded(crl);
+    public abstract byte[] getPemEncoded(X509CRL crl) throws IOException;
+
+    public byte[] getPemEncoded(PrivateKey key) throws IOException {
+        if (RSAPrivateKey.class.isAssignableFrom(key.getClass())) {
+            return getPemEncoded((RSAPrivateKey) key);
+        }
+        else {
+            throw new RuntimeException("Only RSA keys are supported");
+        }
     }
 
     /**
@@ -140,12 +135,10 @@ public class PKIUtility {
      * @throws IOException
      *  If an IOException occurs while writing the certificate
      */
-    public void writePemEncoded(X509Certificate cert, OutputStream out) throws IOException {
-        pkiImpl.writePemEncoded(cert, out);
-    }
+    public abstract void writePemEncoded(X509Certificate cert, OutputStream out) throws IOException;
 
     /**
-     * Writes the specified key to the given output stream in PEM encoding.
+     * Writes the specified RSA private key to the given output stream in PEM encoding.
      *
      * @param key
      *  The key to encode
@@ -156,9 +149,7 @@ public class PKIUtility {
      * @throws IOException
      *  If an IOException occurs while writing the key
      */
-    public void writePemEncoded(Key key, OutputStream out) throws IOException {
-        pkiImpl.writePemEncoded(key, out);
-    }
+    public abstract void writePemEncoded(RSAPrivateKey key, OutputStream out) throws IOException;
 
     /**
      * Writes the specified certificate revocation list to the given output stream in PEM encoding.
@@ -172,9 +163,7 @@ public class PKIUtility {
      * @throws IOException
      *  If an IOException occurs while writing the certificate revocation list
      */
-    public void writePemEncoded(X509CRL crl, OutputStream out) throws IOException {
-        pkiImpl.writePemEncoded(crl, out);
-    }
+    public abstract void writePemEncoded(X509CRL crl, OutputStream out) throws IOException;
 
     public static X509Certificate createCert(byte[] certData) {
         try {
@@ -189,6 +178,12 @@ public class PKIUtility {
         }
     }
 
+    /**
+     * Compute a SHA256withRSA digital signature on an inputStream.  The digest is signed
+     * with the CA key retrieved using CertificateReader.
+     * @param input an input stream to sign
+     * @return a byte array of the SHA256withRSA digital signature
+     */
     public byte[] getSHA256WithRSAHash(InputStream input) {
         try {
             Signature signature = Signature.getInstance("SHA256withRSA");
@@ -225,6 +220,15 @@ public class PKIUtility {
         return false;
     }
 
+    /**
+     * Verify a digital signature.  The method calculates a digital signature using the SHA256withRSA
+     * algorithm (and the public key from the certificate parameter) and then compares it with the signature
+     * passed in through the signedHas parameter.
+     * @param input input to verify
+     * @param signedHash an existing signature to verify
+     * @param certificate a certificate with the public key to use for verification
+     * @return if the calculated signature matches the provided signature
+     */
     public boolean verifySHA256WithRSAHash(InputStream input, byte[] signedHash, Certificate certificate) {
         try {
             Signature signature = Signature.getInstance("SHA256withRSA");
@@ -250,9 +254,5 @@ public class PKIUtility {
         while ((nread = input.read(dataBytes)) != -1) {
             signature.update(dataBytes, 0, nread);
         }
-    }
-
-    public String decodeDERValue(byte[] value) {
-        return pkiImpl.decodeDERValue(value);
     }
 }

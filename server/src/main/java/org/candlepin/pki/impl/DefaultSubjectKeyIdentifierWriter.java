@@ -25,15 +25,25 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Set;
 
 /**
- * Default implementation of SubjectKeyIdentifierWriter.  This implementation is exactly what you might
+ * Default implementation of {@link SubjectKeyIdentifierWriter}. This implementation is exactly what you might
  * expect but hosted candlepin instances have use cases that require custom SubjectKeyIdentifiers so they may
  * write and bind other implementations of the SubjectKeyIdentifierWriter interface.
+ *
+ * @see SubjectKeyIdentifierWriter
  */
 public class DefaultSubjectKeyIdentifierWriter implements SubjectKeyIdentifierWriter {
 
     @Override
     public byte[] getSubjectKeyIdentifier(KeyPair clientKeyPair, Set<X509ExtensionWrapper> extensions)
-        throws IOException, NoSuchAlgorithmException {
-        return new JcaX509ExtensionUtils().createSubjectKeyIdentifier(clientKeyPair.getPublic()).getEncoded();
+        throws IOException {
+        // TODO switch to JSS
+        try {
+            return new JcaX509ExtensionUtils()
+                .createSubjectKeyIdentifier(clientKeyPair.getPublic())
+                .getEncoded();
+        }
+        catch (NoSuchAlgorithmException e) {
+            throw new IOException("Could not create KeyIdentifier", e);
+        }
     }
 }

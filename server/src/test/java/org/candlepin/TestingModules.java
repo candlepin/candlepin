@@ -52,7 +52,6 @@ import org.candlepin.pinsetter.core.PinsetterJobListener;
 import org.candlepin.pinsetter.core.PinsetterTriggerListener;
 import org.candlepin.pinsetter.tasks.CertificateRevocationListTask;
 import org.candlepin.pki.CertificateReader;
-import org.candlepin.pki.PKIProviderUtility;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.BouncyCastlePKIUtility;
@@ -284,8 +283,7 @@ public class TestingModules {
             bind(DateSource.class).to(DateSourceForTesting.class).asEagerSingleton();
             bind(Enforcer.class).to(EnforcerForTesting.class); // .to(JavascriptEnforcer.class);
             bind(SubjectKeyIdentifierWriter.class).to(DefaultSubjectKeyIdentifierWriter.class);
-            bind(PKIUtility.class);
-            bind(PKIProviderUtility.class).to(BouncyCastlePKIUtility.class);
+            bind(PKIUtility.class).to(BouncyCastlePKIUtility.class).asEagerSingleton();
             bind(CertificateReader.class).to(CertificateReaderForTesting.class).asEagerSingleton();
             bind(SubscriptionServiceAdapter.class).to(ImportSubscriptionServiceAdapter.class);
             bind(OwnerServiceAdapter.class).to(DefaultOwnerServiceAdapter.class);

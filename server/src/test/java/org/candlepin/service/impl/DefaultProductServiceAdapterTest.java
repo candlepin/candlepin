@@ -37,7 +37,6 @@ import org.candlepin.util.X509ExtensionUtil;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.security.Key;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -113,7 +112,7 @@ public class DefaultProductServiceAdapterTest {
 
         KeyPair kp = createKeyPair();
         when(pki.generateNewKeyPair()).thenReturn(kp);
-        when(pki.getPemEncoded(any(Key.class))).thenReturn("junk".getBytes());
+        when(pki.getPemEncoded(any(PrivateKey.class))).thenReturn("junk".getBytes());
 
         ProductCertificate result = dpsa.getProductCertificate(owner, product.getId());
         assertNotNull(result);
