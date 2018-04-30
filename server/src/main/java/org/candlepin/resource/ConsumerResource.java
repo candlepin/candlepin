@@ -2025,11 +2025,11 @@ public class ConsumerResource {
             JobDetail detail = null;
 
             if (poolIdString != null) {
-                detail = EntitlerJob.bindByPool(poolIdString, consumer, owner.getKey(), quantity);
+                detail = EntitlerJob.bindByPool(poolIdString, consumer, owner, quantity);
             }
             else {
                 detail = EntitleByProductsJob.bindByProducts(productIds, consumer, entitleDate, fromPools,
-                    owner.getKey());
+                    owner);
             }
 
             // events will be triggered by the job
@@ -2461,7 +2461,7 @@ public class ConsumerResource {
 
         Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
 
-        return manifestManager.generateManifestAsync(consumerUuid, owner.getKey(), cdnLabel, webAppPrefix,
+        return manifestManager.generateManifestAsync(consumerUuid, owner, cdnLabel, webAppPrefix,
             apiUrl, getExtensionParamMap(extensionArgs));
     }
 

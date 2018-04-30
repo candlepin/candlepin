@@ -122,8 +122,7 @@ public class ManifestManagerTest {
         when(consumerCurator.verifyAndLookupConsumer(eq(consumer.getUuid()))).thenReturn(consumer);
         when(cdnCurator.getByLabel(eq(cdn.getLabel()))).thenReturn(cdn);
 
-        manager.generateManifestAsync(consumer.getUuid(), owner.getKey(), cdn.getLabel(), webAppPrefix,
-            apiUrl,
+        manager.generateManifestAsync(consumer.getUuid(), owner, cdn.getLabel(), webAppPrefix, apiUrl,
             new HashMap<>());
 
         verify(poolManager, never()).regenerateDirtyEntitlements(anyCollection());
@@ -458,8 +457,7 @@ public class ManifestManagerTest {
         when(cdnCurator.getByLabel(eq(cdn.getLabel()))).thenReturn(cdn);
 
         try {
-            manager.generateManifestAsync(consumer.getUuid(), owner.getKey(), cdn.getLabel(), webAppPrefix,
-                apiUrl,
+            manager.generateManifestAsync(consumer.getUuid(), owner, cdn.getLabel(), webAppPrefix, apiUrl,
                 extData);
             fail("Expected ForbiddenException not thrown");
         }
@@ -484,8 +482,7 @@ public class ManifestManagerTest {
         when(cdnCurator.getByLabel(eq(cdn.getLabel()))).thenReturn(null);
 
         try {
-            manager.generateManifestAsync(consumer.getUuid(), owner.getKey(), cdn.getLabel(), webAppPrefix,
-                apiUrl,
+            manager.generateManifestAsync(consumer.getUuid(), owner, cdn.getLabel(), webAppPrefix, apiUrl,
                 extData);
             fail("Expected ForbiddenException not thrown");
         }
@@ -510,8 +507,7 @@ public class ManifestManagerTest {
         when(cdnCurator.getByLabel(eq(cdn.getLabel()))).thenReturn(null);
 
         try {
-            manager.generateManifestAsync(consumer.getUuid(), owner.getKey(), cdn.getLabel(), webAppPrefix,
-                apiUrl,
+            manager.generateManifestAsync(consumer.getUuid(), owner, cdn.getLabel(), webAppPrefix, apiUrl,
                 extData);
             fail("Expected ForbiddenException not thrown");
         }

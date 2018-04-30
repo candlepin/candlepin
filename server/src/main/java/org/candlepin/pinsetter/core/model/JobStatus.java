@@ -55,6 +55,7 @@ public class JobStatus extends AbstractHibernateObject {
     public static final String TARGET_ID = "target_id";
     public static final String OWNER_ID = "owner_id";
     public static final String CORRELATION_ID = "correlation_id";
+    public static final String OWNER_LOG_LEVEL = "owner_log_level";
     public static final int RESULT_COL_LENGTH = 255;
 
     /**
