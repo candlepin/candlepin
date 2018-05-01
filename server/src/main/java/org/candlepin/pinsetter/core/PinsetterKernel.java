@@ -449,14 +449,14 @@ public class PinsetterKernel implements ModeChangeListener {
             jobsToDelete.add(key);
         }
 
-        log.info("Deleting {} cancelled jobs from scheduler.", toCancel.size());
+        log.debug("Deleting {} cancelled jobs from scheduler.", toCancel.size());
         try {
             scheduler.deleteJobs(jobsToDelete);
         }
         catch (SchedulerException se) {
             throw new PinsetterException("Problem canceling jobs.", se);
         }
-        log.info("Finished deleting jobs from scheduler");
+        log.debug("Finished deleting jobs from scheduler");
     }
 
     /**
