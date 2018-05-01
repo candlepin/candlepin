@@ -188,7 +188,7 @@ public class EventSinkImpl implements EventSink {
             getClientProducer().send(message);
         }
         catch (Exception e) {
-            log.error("Error while trying to send event: " + event, e);
+            log.error("Error while trying to send event: {}", e);
         }
     }
 

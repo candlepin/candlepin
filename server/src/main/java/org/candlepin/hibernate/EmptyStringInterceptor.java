@@ -48,8 +48,8 @@ public class EmptyStringInterceptor extends EmptyInterceptor {
         boolean modified = false;
         for (int i = 0; i < types.length; i++) {
             if (types[i] instanceof StringType && "".equals(state[i])) {
-                log.debug("Attempting to write an empty string to the database" +
-                    " for " + propertyNames[i] + ".  Substituting null instead.");
+                log.debug("Attempting to write an empty string to the database for field \"{}\"; " +
+                    "Substituting null instead.", propertyNames[i]);
                 state[i] = null;
                 modified = true;
             }
