@@ -132,6 +132,15 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @Size(max = 255)
     private String serviceLevel;
 
+    @Column(length = 255, nullable = true)
+    @Size(max = 255)
+    private String offering;
+
+    //usage is a key word for mysql
+    @Column(length = 255, nullable = true, name = "intent_usage")
+    @Size(max = 255)
+    private String usage;
+
     // for selecting Y/Z stream
     @Column(length = 255, nullable =  true)
     @Size(max = 255)
@@ -650,6 +659,22 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     public void setServiceLevel(String level) {
         this.serviceLevel = level;
+    }
+
+    public String getOffering() {
+        return offering;
+    }
+
+    public void setOffering(String offering) {
+        this.offering = offering;
+    }
+
+    public String getUsage() {
+        return usage;
+    }
+
+    public void setUsage(String usage) {
+        this.usage = usage;
     }
 
     /**

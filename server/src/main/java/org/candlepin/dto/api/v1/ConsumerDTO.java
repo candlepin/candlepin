@@ -66,6 +66,8 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
     protected String username;
     protected String entitlementStatus;
     protected String serviceLevel;
+    protected String offering;
+    protected String usage;
     protected String releaseVer;
     protected OwnerDTO owner;
     protected EnvironmentDTO environment;
@@ -249,6 +251,51 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
         this.serviceLevel = serviceLevel;
         return this;
     }
+
+    /**
+     * Retrieves the offering field of this ConsumerDTO object.
+     *
+     * @return the offering of the consumer, or null if it has not yet been defined
+     */
+    public String getOffering() {
+        return this.offering;
+    }
+
+    /**
+     * Sets the offering to set on this ConsumerDTO object.
+     *
+     * @param offering the offering to set on this ConsumerDTO object.
+     *
+     * @return a reference to this DTO object.
+     */
+    public ConsumerDTO setOffering(String offering) {
+        this.offering = offering;
+        return this;
+    }
+
+
+    /**
+     * Retrieves the usage field of this ConsumerDTO object.
+     *
+     * @return the usage of the consumer, or null if it has not yet been defined
+     */
+    public String getUsage() {
+        return this.usage;
+    }
+
+    /**
+     * Sets the usage to set on this ConsumerDTO object.
+     *
+     * @param usage the usage to set on this ConsumerDTO object.
+     *
+     * @return a reference to this DTO object.
+     */
+    public ConsumerDTO setUsage(String usage) {
+        this.usage = usage;
+        return this;
+    }
+
+    /**
 
     /**
      * Retrieves the releaseVer field of this ConsumerDTO object.
@@ -893,6 +940,8 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
                 .append(this.getUsername(), that.getUsername())
                 .append(this.getEntitlementStatus(), that.getEntitlementStatus())
                 .append(this.getServiceLevel(), that.getServiceLevel())
+                .append(this.getOffering(), that.getOffering())
+                .append(this.getUsage(), that.getUsage())
                 .append(this.getReleaseVersion(), that.getReleaseVersion())
                 .append(thisOid, thatOid)
                 .append(thisEnvId, thatEnvId)
@@ -935,6 +984,8 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
             .append(this.getUsername())
             .append(this.getEntitlementStatus())
             .append(this.getServiceLevel())
+            .append(this.getOffering())
+            .append(this.getUsage())
             .append(this.getReleaseVersion())
             .append(oid)
             .append(envId)
@@ -1000,6 +1051,8 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
         this.setUsername(source.getUsername());
         this.setEntitlementStatus(source.getEntitlementStatus());
         this.setServiceLevel(source.getServiceLevel());
+        this.setOffering(source.getOffering());
+        this.setUsage(source.getUsage());
         this.setReleaseVersion(source.getReleaseVersion());
         this.setOwner(source.getOwner());
         this.setEnvironment(source.getEnvironment());

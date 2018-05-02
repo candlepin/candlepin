@@ -535,6 +535,14 @@ public class ConsumerResource {
             entity.setServiceLevel(dto.getServiceLevel());
         }
 
+        if (dto.getOffering() != null) {
+            entity.setOffering(dto.getOffering());
+        }
+
+        if (dto.getUsage() != null) {
+            entity.setUsage(dto.getUsage());
+        }
+
         if (dto.getReleaseVersion() != null) {
             entity.setReleaseVer(new Release(dto.getReleaseVersion()));
         }
@@ -1368,6 +1376,20 @@ public class ConsumerResource {
             log.info("   Updating consumer service level setting.");
             consumerBindUtil.validateServiceLevel(toUpdate.getOwnerId(), level);
             toUpdate.setServiceLevel(level);
+            changesMade = true;
+        }
+
+        String offering = updated.getOffering();
+        if (offering != null && !offering.equals(toUpdate.getOffering())) {
+            log.info("   Updating offering setting.");
+            toUpdate.setOffering(offering);
+            changesMade = true;
+        }
+
+        String usage = updated.getUsage();
+        if (usage != null && !usage.equals(toUpdate.getUsage())) {
+            log.info("   Updating usage setting.");
+            toUpdate.setUsage(usage);
             changesMade = true;
         }
 
