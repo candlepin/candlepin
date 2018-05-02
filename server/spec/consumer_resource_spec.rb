@@ -42,6 +42,65 @@ describe 'Consumer Resource' do
     end.to raise_error(RestClient::BadRequest)
   end
 
+  it 'should allow setting usage and offering on a consumer' do
+      consumer = @user2.register(
+        random_string('intent'),
+        :system,
+        nil,
+        {},
+        nil,
+        @owner2['key'],
+        [],
+        [],
+        nil,
+        [],
+        nil,
+        [],
+        nil,
+        nil,
+        nil,
+        nil,
+        nil,
+        0,
+        nil,
+        'offer',
+        'u-sage')
+      consumer['offering'].should == 'offer'
+      consumer['usage'].should == 'u-sage'
+  end
+
+  it 'should allow updating usage and offering on a consumer' do
+      consumer = @user2.register(
+        random_string('intent'),
+        :system,
+        nil,
+        {},
+        nil,
+        @owner2['key'],
+        [],
+        [],
+        nil,
+        [],
+        nil,
+        [],
+        nil,
+        nil,
+        nil,
+        nil,
+        nil,
+        0,
+        nil,
+        'offer',
+        'u-sage')
+      consumer['offering'].should == 'offer'
+      consumer['usage'].should == 'u-sage'
+
+      @user2.update_consumer({:uuid => consumer['uuid'], :offering => 'updatedoffering', :usage => 'updatedusage'})
+      consumer = @user2.get_consumer(consumer['uuid'])
+      consumer['usage'].should == 'updatedusage'
+      consumer['offering'].should == 'updatedoffering'
+  end
+
   it 'should not allow setting entitlement count on register' do
      consumer = @user2.register(
         random_string('newConsumer'),
