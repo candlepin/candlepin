@@ -93,6 +93,8 @@ public class ConsumerDTOTest extends AbstractDTOTest<ConsumerDTO> {
         this.values.put("Username", "test-user-name");
         this.values.put("EntitlementStatus", "test-entitlement-status");
         this.values.put("ServiceLevel", "test-service-level");
+        this.values.put("Usage", "test-usage");
+        this.values.put("Offering", "test-offering");
         this.values.put("ReleaseVersion", "test-release-ver");
         this.values.put("Owner", this.ownerDTOTest.getPopulatedDTOInstance());
         this.values.put("Environment", this.environmentDTOTest.getPopulatedDTOInstance());
