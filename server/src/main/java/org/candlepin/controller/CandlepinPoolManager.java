@@ -547,6 +547,16 @@ public class CandlepinPoolManager implements PoolManager {
         List<PoolUpdate> updatedPools = poolRules.updatePools(pool, existingPools, originalQuantity,
             changedProducts);
 
+        /*
+         * 1567922: Due to poolRules.updatePools call above, some fields of a product on a pool might change.
+         * Hibernate does not persist these changes yet, and when those pool changes result in
+         * revocation of entitlements later in this process, and the same pool is attempted to be locked
+         * due to it, we get an error.
+         * Temporarily we are resorting to flush the changes here, there will be an investigation later, at
+         * which time, this line of the comment could be replaced with a refactor.
+         */
+        poolCurator.flush();
+
         String virtLimit = pool.getProduct().getAttributeValue(Product.Attributes.VIRT_LIMIT);
         boolean createsSubPools = !StringUtils.isBlank(virtLimit) && !"0".equals(virtLimit);
 
@@ -579,7 +589,7 @@ public class CandlepinPoolManager implements PoolManager {
         List<PoolUpdate> updatedPools) {
 
         boolean flush = false;
-        Set<String> existingPoolIds = new HashSet<String>();
+        Set<String> existingUndeletedPoolIds = new HashSet<String>();
         Set<Pool> poolsToDelete = new HashSet<Pool>();
         Set<Pool> poolsToRegenEnts = new HashSet<Pool>();
         Set<String> entitlementsToRegen = new HashSet<String>();
@@ -587,18 +597,18 @@ public class CandlepinPoolManager implements PoolManager {
         // Get our list of pool IDs so we can check which of them still exist in the DB...
         for (PoolUpdate update : updatedPools) {
             if (update != null && update.getPool() != null && update.getPool().getId() != null) {
-                existingPoolIds.add(update.getPool().getId());
+                existingUndeletedPoolIds.add(update.getPool().getId());
             }
         }
 
-        existingPoolIds = this.poolCurator.getExistingPoolIdsByIds(existingPoolIds);
+        existingUndeletedPoolIds = this.poolCurator.getExistingPoolIdsByIds(existingUndeletedPoolIds);
 
         // Process pool updates...
         for (PoolUpdate updatedPool : updatedPools) {
             Pool existingPool = updatedPool.getPool();
             log.info("Pool changed: {}", updatedPool.toString());
 
-            if (existingPool == null || !existingPoolIds.contains(existingPool.getId())) {
+            if (existingPool == null || !existingUndeletedPoolIds.contains(existingPool.getId())) {
                 log.info("Pool has already been deleted from the database.");
                 continue;
             }
@@ -618,7 +628,12 @@ public class CandlepinPoolManager implements PoolManager {
             // the quantity has not yet been expressed on the pool itself
             if (updatedPool.getQuantityChanged()) {
                 RevocationOp revPlan = new RevocationOp(poolCurator, Collections.singletonList(existingPool));
-                revPlan.execute(this);
+                Set<Pool> deletedPools = revPlan.execute(this);
+                if (deletedPools != null) {
+                    for (Pool pool : deletedPools) {
+                        existingUndeletedPoolIds.remove(pool.getId());
+                    }
+                }
             }
 
             // dates changed. regenerate all entitlement certificates
@@ -1697,8 +1712,8 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     @Override
-    public void revokeEntitlements(List<Entitlement> entsToRevoke) {
-        revokeEntitlements(entsToRevoke, null, true);
+    public Set<Pool> revokeEntitlements(List<Entitlement> entsToRevoke) {
+        return revokeEntitlements(entsToRevoke, null, true);
     }
 
     public void revokeEntitlements(List<Entitlement> entsToRevoke, Set<String> alreadyDeletedPools) {
@@ -1713,14 +1728,15 @@ public class CandlepinPoolManager implements PoolManager {
      * @param regenCertsAndStatuses if this revocation should also trigger regeneration of certificates
      * and recomputation of statuses. For performance reasons some callers might
      * choose to set this to false.
+     * @return the pools that are deleted as a consequence of revoking entitlements
      */
     @Transactional
     @Traceable
-    public void revokeEntitlements(List<Entitlement> entsToRevoke, Set<String> alreadyDeletedPools,
+    public Set<Pool> revokeEntitlements(List<Entitlement> entsToRevoke, Set<String> alreadyDeletedPools,
         boolean regenCertsAndStatuses) {
 
         if (CollectionUtils.isEmpty(entsToRevoke)) {
-            return;
+            return null;
         }
 
         log.debug("Starting batch revoke of {} entitlements", entsToRevoke.size());
@@ -1735,7 +1751,7 @@ public class CandlepinPoolManager implements PoolManager {
             log.trace("Additional pool IDs: {}", getPoolIds(poolsToDelete));
         }
 
-        List<Pool> poolsToLock = new ArrayList<Pool>();
+        Set<Pool> poolsToLock = new HashSet<Pool>();
         poolsToLock.addAll(poolsToDelete);
 
         for (Entitlement ent: entsToRevoke) {
@@ -1816,7 +1832,7 @@ public class CandlepinPoolManager implements PoolManager {
             log.info("Regeneration and status computation was not requested finishing batch revoke");
 
             sendDeletedEvents(entsToRevoke);
-            return;
+            return poolsToDelete;
         }
 
         log.info("Recomputing status for {} consumers.", consumerSortedEntitlements.size());
@@ -1834,6 +1850,7 @@ public class CandlepinPoolManager implements PoolManager {
         log.info("All statuses recomputed.");
 
         sendDeletedEvents(entsToRevoke);
+        return poolsToDelete;
     }
 
     private void sendDeletedEvents(List<Entitlement> entsToRevoke) {

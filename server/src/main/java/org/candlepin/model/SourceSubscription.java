@@ -144,8 +144,8 @@ public class SourceSubscription extends AbstractHibernateObject {
 
     @Override
     public String toString() {
-        return String.format("SourceSubscription [subscriptionId: %s, subscriptionSubKey: %s]",
-            this.getSubscriptionId(), this.getSubscriptionSubKey());
+        return String.format("SourceSubscription [id: %s, subscriptionId: %s, subscriptionSubKey: %s]",
+            this.getId(), this.getSubscriptionId(), this.getSubscriptionSubKey());
     }
 
 

@@ -67,6 +67,7 @@ public class Branding extends AbstractHibernateObject {
     private String type;
 
     public Branding() {
+        // Intentionally left empty
     }
 
     public Branding(String productId, String type, String name) {
@@ -127,6 +128,7 @@ public class Branding extends AbstractHibernateObject {
         if (this == anObject) {
             return true;
         }
+
         if (!(anObject instanceof Branding)) {
             return false;
         }
@@ -142,5 +144,11 @@ public class Branding extends AbstractHibernateObject {
     public int hashCode() {
         return new HashCodeBuilder(129, 15).append(this.name)
             .append(this.productId).append(this.type).toHashCode();
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Branding [id: %s, name: %s, productId: %s, type: %s]",
+            this.getId(), this.getName(), this.getProductId(), this.getType());
     }
 }
