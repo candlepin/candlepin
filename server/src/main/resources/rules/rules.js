@@ -389,13 +389,23 @@ function get_pool_priority(pool, consumer, context) {
  * Returns true if the following are all true:
  * - the pool's SLA is non-null, non-empty and not in the exempt list.
  * - at least one of these is non-null and non-empty: SLA override, consumer's SLA, owner's default SLA.
- * - the pool's SLA matches either the SLA override, the consumer's SLA, or the owner's default SLA.
+ * - the pool's SLA matches either the SLA override, the consumer's SLA, or the owner's default SLA
+ *   (Order of priority is: SLA override > consumer's SLA > owner's default SLA.)
  *
  * False otherwise.
  */
 function should_pool_be_prioritized_for_sla(context, pool) {
     var poolSLA = pool.getProductAttribute('support_level');
-    var consumerSLA = get_consumer_sla(context);
+
+    log.debug("context.serviceLevelOverride: " + context.serviceLevelOverride);
+    var consumerSLA = context.serviceLevelOverride;
+    if (!consumerSLA || consumerSLA == "") {
+        consumerSLA = context.consumer.serviceLevel;
+            if (!consumerSLA || consumerSLA == "") {
+                consumerSLA = context.owner.defaultServiceLevel;
+            }
+    }
+
     if (!is_pool_sla_null_or_exempt(context, poolSLA) &&
         consumerSLA && consumerSLA !== "" &&
         Utils.equalsIgnoreCase(consumerSLA, poolSLA)) {
@@ -413,23 +423,6 @@ function is_pool_sla_null_or_exempt(context, poolSLA) {
     }
 
     return isLevelExempt(poolSLA, context.exemptList);
-}
-
-/*
- * Fetches the sla of the consumer, unless serviceLevelOverride is set, in which
- * case we use that. If neither of those is set, use the owner's default sla.
- * Order of priority is: service level override > consumer's service level > owner's default service level.
- */
-function get_consumer_sla(context) {
-    log.debug("context.serviceLevelOverride: " + context.serviceLevelOverride);
-    var consumerSLA = context.serviceLevelOverride;
-    if (!consumerSLA || consumerSLA == "") {
-        consumerSLA = context.consumer.serviceLevel;
-            if (!consumerSLA || consumerSLA == "") {
-                consumerSLA = context.owner.defaultServiceLevel;
-            }
-    }
-    return consumerSLA;
 }
 
 /* Utility functions */
@@ -2398,11 +2391,16 @@ var Autobind = {
     /*
      * The pool is valid if any of these is true:
      *  - The pool's SLA is null or in the exempt list.
-     *  - The consumer does not have any existing entitlements.
-     *  - The consumer has existing entitlements and one of them has a product that matches the pool SLA.
+     *  - The pool's SLA is non-null, non-exempt, and the consumer does not have any existing entitlements.
+     *  - The pool's SLA is non-null, non-exempt, and the consumer has existing entitlements,
+     *    but none of their products has an SLA.
+     *  - The pool's SLA is non-null, non-exempt, and the consumer has existing entitlements,
+     *    and at least one of them has a product with a non-null SLA that matches the pool SLA.
      *
-     * The pool is invalid if the pool SLA is non-null, non-exempt, and the consumer has one or more existing
-     * entitlements, but none of their products' SLAs matches the pool's SLA.
+     * The pool is invalid if this is true:
+     *  - The pool's SLA is non-null, non-exempt, and the consumer has existing entitlements,
+     *    and one or more of those have products with non-null SLAs,
+     *    but those SLAs do not match with the pool's SLA.
      */
     is_pool_sla_valid: function(context, pool) {
         var poolSLA = pool.getProductAttribute('support_level');
@@ -2412,7 +2410,7 @@ var Autobind = {
         }
 
         var consumer_entitlement_slas = this.get_slas_of_existing_consumer_entitlements_from_compliance_status(context);
-        if (consumer_entitlement_slas <= 0) {
+        if (consumer_entitlement_slas.length <= 0) {
             return true;
         }
 
@@ -2433,7 +2431,7 @@ var Autobind = {
 
     /*
      * Traverses the ComplianceStatus object's product maps to find and return a list of
-     * the consumer's entitlements' SLAs.
+     * the consumer's entitlements' SLAs. Null SLAs are not returned.
      */
     get_slas_of_existing_consumer_entitlements_from_compliance_status: function(context) {
         var listOfProductMaps = [];
@@ -2447,7 +2445,6 @@ var Autobind = {
                 var setOfEntitlements = productMap[productId];
                 setOfEntitlements.forEach(function(entitlement) {
                     var sla = entitlement.pool.getProductAttribute('support_level');
-
                     var exists = false;
                     for (i = 0 ; i < sla_list.length ; i++) {
                         if (Utils.equalsIgnoreCase(sla_list[i], sla)) {
@@ -2456,7 +2453,7 @@ var Autobind = {
                         }
                     }
 
-                    if (!exists) {
+                    if (!exists && sla) {
                         sla_list.push(sla);
                     }
                 });

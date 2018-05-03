@@ -863,14 +863,10 @@ describe 'Consumer Resource' do
       random_string('product'),
       {:attributes => {:support_level => 'Ultra-VIP'},
       :owner => @owner1['key']})
-    product4 = create_product(random_string('product'),
-      random_string('product'),
-      {:attributes => {:support_level => 'Sub-Standard'},
-      :owner => @owner1['key']})
+
     pool1 = create_pool_and_subscription(@owner1['key'], product1.id)
     pool2 = create_pool_and_subscription(@owner1['key'], product2.id)
     pool3 = create_pool_and_subscription(@owner1['key'], product3.id)
-    pool4 = create_pool_and_subscription(@owner1['key'], product4.id)
 
     user_cp = user_client(@owner1, random_string('billy'))
     consumer = user_cp.register(random_string('system'), :system, nil,
@@ -879,8 +875,7 @@ describe 'Consumer Resource' do
     installed = [
         {'productId' => product1.id, 'productName' => product1.name},
         {'productId' => product2.id, 'productName' => product2.name},
-        {'productId' => product3.id, 'productName' => product3.name},
-        {'productId' => product4.id, 'productName' => product4.name}]
+        {'productId' => product3.id, 'productName' => product3.name}]
 
     # We set the consumer's SLA as VIP
     consumer_client.update_consumer({:serviceLevel => 'VIP',
@@ -897,39 +892,6 @@ describe 'Consumer Resource' do
     # but we do filter on the consumer's existing entitlements' SLA's, and in this case
     # the consumer has an existing entitlement whose SLA is 'Ultra-VIP',
     # so only 'Ultra-VIP' pools are eligible during autoattach (and the 'VIP' pool is not).
-    returned_pools = @cp.autobind_dryrun(consumer['uuid'])
-    returned_pools.length.should == 1
-    returned_pool_id = returned_pools.first.pool.id
-    returned_pool = @cp.get_pool(returned_pool_id)
-    returned_pool.subscriptionId.should == pool3.subscriptionId
-    expect(get_attribute_value(returned_pool['productAttributes'], 'support_level')).to eq('Ultra-VIP')
-
-    # dry run against the Override SLA:
-    # should return only one pool because we no longer filter on the override sla,
-    # but we do filter on the consumer's existing entitlements' SLA's, and in this case
-    # the consumer has an existing entitlement whose SLA is 'Ultra-VIP',
-    # so only 'Ultra-VIP' pools are eligible during autoattach (and the 'Sub-Standard' pool is not).
-    returned_pools = @cp.autobind_dryrun(consumer['uuid'], 'Sub-Standard')
-    returned_pools.length.should == 1
-    returned_pool_id = returned_pools.first.pool.id
-    returned_pool = @cp.get_pool(returned_pool_id)
-    returned_pool.subscriptionId.should == pool3.subscriptionId
-    expect(get_attribute_value(returned_pool['productAttributes'], 'support_level')).to eq('Ultra-VIP')
-
-    # Remove the consumer's SLA, to force subsequent autobinds to use the owner's default SLA
-    # and populate the owner's default SLA
-    consumer_client.update_consumer({:serviceLevel => ''})
-    consumer = @cp.get_consumer(consumer['uuid'])
-    consumer['serviceLevel'].should == ''
-    @cp.update_owner(@owner1['key'], {:defaultServiceLevel => 'Sub-Standard'})
-    current_owner = @cp.get_owner(@owner1['key'])
-    current_owner['defaultServiceLevel'].should == 'Sub-Standard'
-
-    # dry run against the owner's default SLA:
-    # should return only one pool because we no longer filter on the owner's default sla,
-    # but we do filter on the consumer's existing entitlements' SLA's, and in this case
-    # the consumer has an existing entitlement whose SLA is 'Ultra-VIP',
-    # so only 'Ultra-VIP' pools are eligible during autoattach (and the 'Sub-Standard' pool is not).
     returned_pools = @cp.autobind_dryrun(consumer['uuid'])
     returned_pools.length.should == 1
     returned_pool_id = returned_pools.first.pool.id
