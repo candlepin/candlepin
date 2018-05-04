@@ -244,6 +244,7 @@ describe 'Consumer Resource Host/Guest' do
     guest_client3.update_consumer({:serviceLevel => 'Standard', :installedProducts => installed})
 
     # first guest causes host to attach to pool
+    # We no longer filter based on consumer/pool SLA match, but we highly prioritize, so the VIP SLA pool is attached.
     guest_client1.consume_product()
 
     guest_ents = guest_client1.list_entitlements()
@@ -258,7 +259,7 @@ describe 'Consumer Resource Host/Guest' do
     host_consumer = host_client.get_consumer()
     host_consumer['serviceLevel'].should == ''
 
-    # second guest grabs available because SLA matches
+    # second guest grabs the VIP pool because it is already available
     guest_client2.consume_product()
 
     guest_ents = guest_client2.list_entitlements()
@@ -274,31 +275,22 @@ describe 'Consumer Resource Host/Guest' do
     host_consumer = host_client.get_consumer()
     host_consumer['serviceLevel'].should == ''
 
-    # third guest with Standard SLA will not attach to guest VIP pool
-    # it will not cause host to attach to Standard pool
-    # instead the third guest will attach to the available Standard pool
+    # third guest, even though has a Standard SLA, will not attach to the Standard pool
+    # instead will attach to the available VIP pool, since we no longer match on SLA.
     guest_client3.consume_product()
 
     guest_ents = guest_client3.list_entitlements()
     guest_ents.size.should == 1
     guest_ent = guest_ents[0]
 
-    expect(get_attribute_value(guest_ent.pool['attributes'], 'requires_host')).to be_nil
-    expect(get_attribute_value(guest_ent.pool['productAttributes'], 'support_level')).to eq('Standard')
+    expect(get_attribute_value(guest_ent.pool['attributes'], 'requires_host')).to eq(host_consumer['uuid'])
+    expect(get_attribute_value(guest_ent.pool['productAttributes'], 'support_level')).to eq('VIP')
 
     host_consumer = host_client.get_consumer()
     host_consumer['serviceLevel'].should == ''
     host_ents = host_client.list_entitlements()
     host_ents.size.should == 1
-
-    # ensure that the guest 3 consumption of the Standard
-    # host_limited pool does not spawn a 'requires_host' bonus
-    guest_consumer3 = guest_client3.get_consumer()
-    @cp.list_owner_pools(@owner1['key']).each do |pool|
-        req_host = get_attribute_value(pool['attributes'], 'requires_host')
-        if !req_host.nil?
-            req_host.should_not == guest_consumer3['uuid']
-        end
-    end
+    host_ent = host_ents[0]
+    expect(get_attribute_value(host_ent.pool['productAttributes'], 'support_level')).to eq('VIP')
   end
 end
