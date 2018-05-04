@@ -140,7 +140,7 @@ HSQLDB_OLD = 'org.hsqldb:hsqldb:jar:1.8.0.10'
 
 ORACLE = ['com.oracle:ojdbc6:jar:11.2.0', 'org.quartz-scheduler:quartz-oracle:jar:2.1.5']
 
-COMMONS = ['commons-codec:commons-codec:jar:1.4',
+COMMONS = ['commons-codec:commons-codec:jar:1.11',
            'commons-collections:commons-collections:jar:3.2.2',
            'commons-io:commons-io:jar:1.4',
            'commons-lang:commons-lang:jar:2.5']
