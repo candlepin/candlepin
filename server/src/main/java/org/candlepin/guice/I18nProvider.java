@@ -17,7 +17,6 @@ package org.candlepin.guice;
 import org.candlepin.common.guice.CommonI18nProvider;
 
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 import com.google.inject.Provider;
 import com.google.inject.ProvisionException;
 
@@ -30,24 +29,29 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
 
 /**
  * I18nProvider
  */
+@Singleton
 public class I18nProvider extends CommonI18nProvider implements Provider<I18n> {
     private static Logger log = LoggerFactory.getLogger(I18nProvider.class);
     private static Map<Locale, I18n> cache = new ConcurrentHashMap<>();
-
-    private I18n i18n;
+    private final Provider<HttpServletRequest> request;
 
     @Inject
-    public I18nProvider(Injector injector) {
-        HttpServletRequest request = null;
+    public I18nProvider(Provider<HttpServletRequest> request) {
+        this.request = request;
+    }
+
+    @Override
+    public I18n get() {
         Locale locale = null;
 
         try {
-            request = injector.getInstance(HttpServletRequest.class);
+            locale = request.get().getLocale();
         }
         catch (ProvisionException e) {
             // This can happen in pinsetter, or anything else not in an http
@@ -55,34 +59,28 @@ public class I18nProvider extends CommonI18nProvider implements Provider<I18n> {
             // just ignore it.
         }
 
-        if (request != null) {
-            locale = request.getLocale();
-        }
-
         locale = (locale == null) ? Locale.US : locale;
 
         // If the locale does not exist, xnap is pretty inefficient.
         // This cache will hold the records more efficiently.
-        //
-        // Make sure to keep the access wrapped in synchronized so we can
-        // share across threads!
-        synchronized (cache) {
-            i18n = cache.get(locale);
-            if (i18n == null) {
-                log.debug("Getting i18n engine for locale {}", locale);
 
-                i18n = I18nFactory.getI18n(getClass(), getBaseName(), locale, I18nFactory.FALLBACK);
-                cache.put(locale, i18n);
+        // see https://en.wikipedia.org/wiki/Double-checked_locking
+        I18n i18n = cache.get(locale);
+        if (i18n == null) {
+            synchronized (cache) {
+                i18n = cache.get(locale);
+                if (i18n == null) {
+                    log.debug("Getting i18n engine for locale {}", locale);
+
+                    i18n = I18nFactory.getI18n(getClass(), getBaseName(), locale, I18nFactory.FALLBACK);
+                    cache.put(locale, i18n);
+                }
             }
         }
-    }
-
-    @Override
-    public I18n get() {
         return i18n;
     }
 
     public String getTestString() {
-        return i18n.tr("Bad Request");
+        return get().tr("Bad Request");
     }
 }
