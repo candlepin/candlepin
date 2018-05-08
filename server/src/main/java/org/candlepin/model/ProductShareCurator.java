@@ -19,11 +19,13 @@ import com.google.inject.Inject;
 import java.util.Collection;
 import java.util.List;
 
+import javax.inject.Singleton;
 import javax.persistence.TypedQuery;
 
 /**
  * Curator to handle creation and maintenance of ProductShare objects
  */
+@Singleton
 public class ProductShareCurator extends AbstractHibernateCurator<ProductShare> {
 
     @Inject

@@ -18,10 +18,13 @@ import com.google.inject.persist.Transactional;
 
 import org.hibernate.criterion.Restrictions;
 
+import javax.inject.Singleton;
+
 /**
  *
  * UserCurator
  */
+@Singleton
 public class UserCurator extends AbstractHibernateCurator<User> {
 
     public UserCurator() {

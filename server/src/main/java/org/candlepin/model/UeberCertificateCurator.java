@@ -18,6 +18,7 @@ import com.google.inject.Inject;
 
 import java.util.List;
 
+import javax.inject.Singleton;
 import javax.persistence.Query;
 
 /**
@@ -26,6 +27,7 @@ import javax.persistence.Query;
  * Facilitates the creation and deletion of UeberCertificate objects in the database.
  *
  */
+@Singleton
 public class UeberCertificateCurator extends AbstractHibernateCurator<UeberCertificate> {
 
     @Inject

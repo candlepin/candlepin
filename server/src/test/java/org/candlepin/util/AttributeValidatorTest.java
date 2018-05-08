@@ -31,6 +31,8 @@ import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.Locale;
 
+import javax.inject.Provider;
+
 
 
 /**
@@ -41,6 +43,7 @@ public class AttributeValidatorTest {
 
     private static I18n i18n = I18nFactory.getI18n(AttributeValidatorTest.class, Locale.US,
         I18nFactory.FALLBACK);
+    private static Provider<I18n> i18nProvider = () -> i18n;
 
     private Configuration config;
 
@@ -57,7 +60,7 @@ public class AttributeValidatorTest {
             builder.append(i % 10);
         }
 
-        AttributeValidator validator = new AttributeValidator(this.config, i18n);
+        AttributeValidator validator = new AttributeValidator(this.config, i18nProvider);
         validator.validate(builder.toString(), value);
     }
 
@@ -68,7 +71,7 @@ public class AttributeValidatorTest {
             builder.append(i % 10);
         }
 
-        AttributeValidator validator = new AttributeValidator(this.config, i18n);
+        AttributeValidator validator = new AttributeValidator(this.config, i18nProvider);
         validator.validate("key", builder.toString());
     }
 
@@ -182,7 +185,7 @@ public class AttributeValidatorTest {
         this.config.setProperty(ConfigProperties.NON_NEG_LONG_ATTRIBUTES, "nnlongattrib");
         this.config.setProperty(ConfigProperties.BOOLEAN_ATTRIBUTES, "boolattrib");
 
-        AttributeValidator validator = new AttributeValidator(this.config, i18n);
+        AttributeValidator validator = new AttributeValidator(this.config, i18nProvider);
 
         boolean result;
 

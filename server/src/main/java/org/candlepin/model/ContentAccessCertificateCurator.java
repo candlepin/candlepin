@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.inject.Singleton;
 import javax.persistence.Query;
 
 
@@ -33,6 +34,7 @@ import javax.persistence.Query;
 /**
  * ContentAccessCertificateCurator
  */
+@Singleton
 public class ContentAccessCertificateCurator extends AbstractHibernateCurator<ContentAccessCertificate> {
 
     private static Logger log = LoggerFactory.getLogger(ContentAccessCertificateCurator.class);
