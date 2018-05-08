@@ -38,12 +38,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.inject.Singleton;
+
 
 
 /**
  * The OwnerProductCurator provides functionality for managing the mapping between owners and
  * products.
  */
+@Singleton
 public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> {
     private static Logger log = LoggerFactory.getLogger(OwnerProductCurator.class);
 

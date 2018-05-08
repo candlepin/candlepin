@@ -166,6 +166,7 @@ public class DatabaseTestFixture {
     protected TestingInterceptor securityInterceptor;
     protected DateSourceForTesting dateSource;
     protected I18n i18n;
+    protected Provider<I18n> i18nProvider = () -> i18n;
 
     @BeforeClass
     public static void initClass() {

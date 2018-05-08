@@ -33,12 +33,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
+import javax.inject.Singleton;
 
 /**
  * The OwnerContentCurator provides functionality for managing the mapping between owners and
  * content.
  */
+@Singleton
 public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> {
     private static Logger log = LoggerFactory.getLogger(OwnerContentCurator.class);
 

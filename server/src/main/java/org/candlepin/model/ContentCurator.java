@@ -28,11 +28,14 @@ import org.slf4j.LoggerFactory;
 import java.util.Collection;
 import java.util.List;
 
+import javax.inject.Singleton;
+
 
 
 /**
  * ContentCurator
  */
+@Singleton
 public class ContentCurator extends AbstractHibernateCurator<Content> {
 
     private static Logger log = LoggerFactory.getLogger(ContentCurator.class);

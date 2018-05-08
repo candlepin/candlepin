@@ -24,9 +24,12 @@ import com.google.inject.persist.Transactional;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 
+import javax.inject.Singleton;
+
 /**
  * SubscriptionTokenCurator
  */
+@Singleton
 public class ActivationKeyCurator extends AbstractHibernateCurator<ActivationKey> {
 
     public ActivationKeyCurator() {
@@ -69,7 +72,7 @@ public class ActivationKeyCurator extends AbstractHibernateCurator<ActivationKey
 
         if (key == null) {
             throw new BadRequestException(
-                i18n.tr("ActivationKey with id {0} could not be found.",
+                i18nProvider.get().tr("ActivationKey with id {0} could not be found.",
                     activationKeyId));
         }
         return key;

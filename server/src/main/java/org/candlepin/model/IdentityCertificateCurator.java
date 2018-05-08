@@ -18,9 +18,12 @@ import com.google.inject.Inject;
 
 import org.hibernate.criterion.Restrictions;
 
+import javax.inject.Singleton;
+
 /**
  * IdentityCertificateCurator
  */
+@Singleton
 public class IdentityCertificateCurator extends
     AbstractHibernateCurator<IdentityCertificate> {
 

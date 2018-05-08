@@ -125,6 +125,7 @@ public class ConsumerResourceUpdateTest {
     private ModelTranslator translator;
 
     private I18n i18n;
+    private Provider<I18n> i18nProvider = () -> i18n;
 
     private ConsumerResource resource;
     private Provider<GuestMigration> migrationProvider;
@@ -148,7 +149,7 @@ public class ConsumerResourceUpdateTest {
             this.activationKeyCurator, this.entitler, this.complianceRules,
             this.deletedConsumerCurator, this.environmentCurator, null,
             config, null, null, null, this.consumerBindUtil,
-            null, null, new FactValidator(config, this.i18n),
+            null, null, new FactValidator(config, this.i18nProvider),
             null, consumerEnricher, migrationProvider, this.translator);
 
         when(complianceRules.getStatus(any(Consumer.class), any(Date.class), any(Boolean.class),

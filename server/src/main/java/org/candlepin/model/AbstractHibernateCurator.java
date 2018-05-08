@@ -91,7 +91,7 @@ import javax.persistence.criteria.Path;
 public abstract class AbstractHibernateCurator<E extends Persisted> {
     @Inject protected CandlepinQueryFactory cpQueryFactory;
     @Inject protected Provider<EntityManager> entityManager;
-    @Inject protected I18n i18n;
+    @Inject protected Provider<I18n> i18nProvider;
     @Inject protected Configuration config;
     private final Class<E> entityType;
 
@@ -767,7 +767,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     }
 
     private String getConcurrentModificationMessage() {
-        return i18n.tr("Request failed due to concurrent modification, please re-try.");
+        return i18nProvider.get().tr("Request failed due to concurrent modification, please re-try.");
     }
 
     /**

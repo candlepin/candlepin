@@ -30,11 +30,14 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import javax.inject.Singleton;
+
 
 
 /**
  * CertificateSerialCurator - Interface to request a unique certificate serial number.
  */
+@Singleton
 public class CertificateSerialCurator extends AbstractHibernateCurator<CertificateSerial> {
 
     private static int inClauseLimit = 1000;
