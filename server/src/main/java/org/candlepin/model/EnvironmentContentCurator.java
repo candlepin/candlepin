@@ -18,11 +18,14 @@ import org.hibernate.criterion.Restrictions;
 
 import java.util.List;
 
+import javax.inject.Singleton;
+
 
 
 /**
  * EnvironmentContentCurator
  */
+@Singleton
 public class EnvironmentContentCurator extends AbstractHibernateCurator<EnvironmentContent> {
 
     public EnvironmentContentCurator() {

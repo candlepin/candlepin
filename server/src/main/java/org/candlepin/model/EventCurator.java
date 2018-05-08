@@ -22,11 +22,14 @@ import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 
+import javax.inject.Singleton;
+
 
 
 /**
  * AttributeCurator
  */
+@Singleton
 public class EventCurator extends AbstractHibernateCurator<Event> {
 
     @Inject private CandlepinQueryFactory cpQueryFactory;

@@ -51,6 +51,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.inject.Singleton;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
@@ -59,6 +60,7 @@ import javax.persistence.Query;
 /**
  * EntitlementCurator
  */
+@Singleton
 public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     private static Logger log = LoggerFactory.getLogger(EntitlementCurator.class);
 
@@ -420,7 +422,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         if (object != null && productId != null) {
             Product p = this.ownerProductCurator.getProductById(ownerId, productId);
             if (p == null) {
-                throw new BadRequestException(i18n.tr(
+                throw new BadRequestException(i18nProvider.get().tr(
                     "Product with ID \"{0}\" could not be found.", productId));
             }
             entitlementsPage = listByProduct(object, objectType, productId, pageRequest);

@@ -18,12 +18,15 @@ import org.candlepin.auth.Principal;
 
 import com.google.inject.Provider;
 
+import javax.inject.Singleton;
+
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
 /**
  * Guice provider that pulls the principal out of the ResteasyProviderFactory's context.
  * This class is not servlet-scoped because Pinsetter also uses it.
  */
+@Singleton
 public class PrincipalProvider implements Provider<Principal> {
     @Override
     public Principal get() {

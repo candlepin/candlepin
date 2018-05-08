@@ -109,6 +109,7 @@ public class HypervisorResourceTest {
 
     private ConsumerResource consumerResource;
     private I18n i18n;
+    private Provider<I18n> i18nProvider = () -> i18n;
     private ConsumerType hypervisorType;
     private HypervisorResource hypervisorResource;
     private ModelTranslator modelTranslator;
@@ -140,7 +141,8 @@ public class HypervisorResourceTest {
             this.activationKeyCurator, null, this.complianceRules,
             this.deletedConsumerCurator, null, null, config,
             null, null, null, this.consumerBindUtil, null, null,
-            new FactValidator(config, this.i18n), null, consumerEnricher, migrationProvider, modelTranslator);
+            new FactValidator(config, this.i18nProvider), null, consumerEnricher, migrationProvider,
+            modelTranslator);
 
         this.guestIdResource = new GuestIdResource(this.guestIdCurator, this.consumerCurator,
             this.consumerTypeCurator, this.consumerResource, this.i18n, this.eventFactory, this.sink,

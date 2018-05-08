@@ -31,6 +31,8 @@ import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.Locale;
 
+import javax.inject.Provider;
+
 
 
 /**
@@ -40,6 +42,7 @@ import java.util.Locale;
 public class FactValidatorTest {
 
     private static I18n i18n = I18nFactory.getI18n(FactValidatorTest.class, Locale.US, I18nFactory.FALLBACK);
+    private static Provider<I18n> i18nProvider = () -> i18n;
     private Configuration config;
 
     @Before
@@ -55,7 +58,7 @@ public class FactValidatorTest {
             builder.append(i % 10);
         }
 
-        FactValidator validator = new FactValidator(this.config, i18n);
+        FactValidator validator = new FactValidator(this.config, i18nProvider);
         validator.validate(builder.toString(), value);
     }
 
@@ -66,7 +69,7 @@ public class FactValidatorTest {
             builder.append(i % 10);
         }
 
-        FactValidator validator = new FactValidator(this.config, i18n);
+        FactValidator validator = new FactValidator(this.config, i18nProvider);
         validator.validate("key", builder.toString());
     }
 
@@ -126,7 +129,7 @@ public class FactValidatorTest {
         this.config.setProperty(ConfigProperties.INTEGER_FACTS, "fact1,intfact,fact2");
         this.config.setProperty(ConfigProperties.NON_NEG_INTEGER_FACTS, "nnintfact");
 
-        FactValidator validator = new FactValidator(this.config, i18n);
+        FactValidator validator = new FactValidator(this.config, i18nProvider);
 
         boolean result;
 

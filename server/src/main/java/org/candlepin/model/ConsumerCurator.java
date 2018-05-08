@@ -55,12 +55,14 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.inject.Singleton;
 import javax.persistence.LockModeType;
 import javax.persistence.TypedQuery;
 
 /**
  * ConsumerCurator
  */
+@Singleton
 public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     private static Logger log = LoggerFactory.getLogger(ConsumerCurator.class);
 
@@ -622,7 +624,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     public List<Consumer> getGuests(Consumer consumer) {
         if (consumer.getFact("virt.uuid") != null &&
             !consumer.getFact("virt.uuid").trim().equals("")) {
-            throw new BadRequestException(i18n.tr(
+            throw new BadRequestException(i18nProvider.get().tr(
                 "The system with UUID {0} is a virtual guest. It does not have guests.",
                 consumer.getUuid()));
         }
@@ -747,7 +749,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         Consumer consumer = this.findByUuid(consumerUuid);
 
         if (consumer == null) {
-            throw new NotFoundException(i18n.tr("Unit with ID \"{0}\" could not be found.", consumerUuid));
+            throw new NotFoundException(i18nProvider.get().tr("Unit with ID \"{0}\" could not be found.",
+                consumerUuid));
         }
 
         return consumer;
@@ -756,7 +759,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     public Consumer verifyAndLookupConsumerWithEntitlements(String consumerUuid) {
         Consumer consumer = this.findByUuid(consumerUuid);
         if (consumer == null) {
-            throw new NotFoundException(i18n.tr("Unit with ID \"{0}\" could not be found.", consumerUuid));
+            throw new NotFoundException(i18nProvider.get().tr("Unit with ID \"{0}\" could not be found.",
+                consumerUuid));
         }
 
         for (Entitlement e : consumer.getEntitlements()) {

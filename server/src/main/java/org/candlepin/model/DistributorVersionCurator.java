@@ -20,9 +20,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import javax.inject.Singleton;
+
 /**
  * DistributorVersionCurator
  */
+@Singleton
 public class DistributorVersionCurator
     extends AbstractHibernateCurator<DistributorVersion> {
 

@@ -25,11 +25,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.inject.Singleton;
+
 
 
 /**
  * EnvironmentCurator
  */
+@Singleton
 public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
     private static Logger log = LoggerFactory.getLogger(OwnerContentCurator.class);
 

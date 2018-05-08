@@ -20,6 +20,7 @@ import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 
 import java.util.Collection;
 import java.util.List;
+import javax.inject.Singleton;
 import javax.persistence.NoResultException;
 
 
@@ -27,6 +28,7 @@ import javax.persistence.NoResultException;
 /**
  * ConsumerTypeCurator
  */
+@Singleton
 public class ConsumerTypeCurator extends AbstractHibernateCurator<ConsumerType> {
 
     public ConsumerTypeCurator() {

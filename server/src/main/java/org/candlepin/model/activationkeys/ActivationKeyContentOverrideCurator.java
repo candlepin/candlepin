@@ -17,9 +17,12 @@ package org.candlepin.model.activationkeys;
 import org.candlepin.model.ContentOverride;
 import org.candlepin.model.ContentOverrideCurator;
 
+import javax.inject.Singleton;
+
 /**
  * ActivationKeyContentOverrideCurator
  */
+@Singleton
 public class ActivationKeyContentOverrideCurator
     extends ContentOverrideCurator<ActivationKeyContentOverride, ActivationKey> {
 
