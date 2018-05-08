@@ -32,7 +32,7 @@ public class EntitlementFinderUtil {
         EntitlementFilterBuilder filters = new EntitlementFilterBuilder();
         if (attrFilters != null) {
             for (KeyValueParameter filterParam : attrFilters) {
-                filters.addAttributeFilter(filterParam.key(), filterParam.value());
+                filters.addAttributeFilter(filterParam.getKey(), filterParam.getValue());
             }
         }
         if (!StringUtils.isEmpty(matches)) {

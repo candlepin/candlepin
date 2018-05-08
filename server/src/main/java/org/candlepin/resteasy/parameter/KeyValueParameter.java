@@ -19,7 +19,7 @@ import org.candlepin.common.exceptions.CandlepinParameterParseException;
 /**
  * KeyValueParameter
  */
-public class KeyValueParameter extends CandlepinParameter {
+public class KeyValueParameter  {
 
     private String key;
     private String value;
@@ -31,30 +31,24 @@ public class KeyValueParameter extends CandlepinParameter {
      *     FORMAT: paramName=key:value
      * </pre>
      *
-     * @param queryParameterValue the value of the query parameter as entered in the URL
+     * @param inValue the value of the query parameter as entered in the URL
      *                            in the format: key:value
      */
-    public KeyValueParameter(String queryParameterValue) {
-        super(queryParameterValue);
-    }
-
-    @Override
-    void parse() throws CandlepinParameterParseException {
-        String[] parts = this.paramValue.split(":", 2); // Maximum of two parts
+    public KeyValueParameter(String inValue) {
+        String[] parts = inValue.split(":", 2); // Maximum of two parts
         if (parts.length == 1) {
-            throw new CandlepinParameterParseException(this.paramName,
-                this.paramName + "=name:value");
+            throw new CandlepinParameterParseException("name:value");
         }
 
-        this.key = parts[0];
-        this.value = parts.length > 1 ? parts[1] : "";
+        key = parts[0];
+        value = parts.length > 1 ? parts[1] : "";
     }
 
-    public String key() {
+    public String getKey() {
         return key;
     }
 
-    public String value() {
+    public String getValue() {
         return value;
     }
 

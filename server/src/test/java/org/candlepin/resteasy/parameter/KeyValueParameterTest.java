@@ -28,48 +28,36 @@ public class KeyValueParameterTest {
     @Test
     public void validParsing() {
         KeyValueParameter param = new KeyValueParameter("param:paramValue");
-        param.setParamName("testparam");
-        param.parse();
-        assertEquals("param", param.key());
-        assertEquals("paramValue", param.value());
+        assertEquals("param", param.getKey());
+        assertEquals("paramValue", param.getValue());
     }
 
     @Test
     public void valueCanBeEmpty() {
         KeyValueParameter param = new KeyValueParameter("param:");
-        param.setParamName("testparam");
-        param.parse();
-        assertEquals("param", param.key());
-        assertEquals("", param.value());
+        assertEquals("param", param.getKey());
+        assertEquals("", param.getValue());
     }
 
     @Test
     public void parameterValueCanContainMultipleColins() {
         KeyValueParameter param = new KeyValueParameter("param:paramValue:c");
-        param.setParamName("testparam");
-        param.parse();
-        assertEquals("param", param.key());
-        assertEquals("paramValue:c", param.value());
+        assertEquals("param", param.getKey());
+        assertEquals("paramValue:c", param.getValue());
     }
 
     @Test(expected = CandlepinParameterParseException.class)
     public void parameterValueCanNotBeEmpty() {
         KeyValueParameter param = new KeyValueParameter("");
-        param.setParamName("testparam");
-        param.parse();
     }
 
     @Test(expected = CandlepinParameterParseException.class)
     public void parameterValueCanNotBePropertyOnly() {
         KeyValueParameter param = new KeyValueParameter("param");
-        param.setParamName("testparam");
-        param.parse();
     }
 
     @Test(expected = CandlepinParameterParseException.class)
     public void throwsExceptionOnInvalidKeyValueFormat() {
         KeyValueParameter param = new KeyValueParameter("param|paramValue");
-        param.setParamName("testparam");
-        param.parse();
     }
 }

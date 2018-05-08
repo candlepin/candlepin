@@ -67,13 +67,12 @@ public class JaxRsExceptionResponseBuilderTest {
     @Test
     public void candlepinParserError() {
         CandlepinParameterParseException parseEx =
-            new CandlepinParameterParseException("paramName", "thisFormat");
+            new CandlepinParameterParseException("thisFormat");
         RuntimeException ex = new RuntimeException(parseEx);
         Response resp = exceptionBuilder.getResponse(ex);
         ExceptionMessage e =  (ExceptionMessage) resp.getEntity();
 
         assertTrue(exceptionBuilder.canHandle(ex));
-        assertTrue(e.getDisplayMessage().contains("paramName"));
         assertTrue(e.getDisplayMessage().contains("thisFormat"));
     }
 

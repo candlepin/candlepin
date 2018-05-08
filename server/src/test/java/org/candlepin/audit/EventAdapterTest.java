@@ -70,8 +70,8 @@ public class EventAdapterTest {
         assertNotNull(e.getTitle());
         assertTrue(e.getTitle().contains("CONSUMER"));
         assertTrue(e.getTitle().contains("CREATED"));
-        assertTrue(e.getSummary().contains("unit"));
-        assertTrue(e.getSummary().contains("created"));
+        assertTrue(e.getContent().getText().contains("unit"));
+        assertTrue(e.getContent().getText().contains("created"));
         assertEquals(events.get(0).getTimestamp(), f.getUpdated());
     }
 

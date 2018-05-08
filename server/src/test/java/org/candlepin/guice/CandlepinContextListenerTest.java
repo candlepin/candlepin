@@ -37,6 +37,7 @@ import com.google.inject.Module;
 import com.google.inject.Stage;
 
 import org.jboss.resteasy.spi.Registry;
+import org.jboss.resteasy.spi.ResteasyDeployment;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -65,6 +66,7 @@ public class CandlepinContextListenerTest {
     private ScheduledExecutorService executorService;
     private ServletContextEvent evt;
     private ServletContext ctx;
+    private ResteasyDeployment resteasyDeployment;
     private VerifyConfigRead configRead;
 
     @SuppressWarnings("checkstyle:visibilitymodifier")
@@ -218,12 +220,14 @@ public class CandlepinContextListenerTest {
     private void prepareForInitialization() {
         evt = mock(ServletContextEvent.class);
         ctx = mock(ServletContext.class);
+        resteasyDeployment = mock(ResteasyDeployment.class);
         Registry registry = mock(Registry.class);
         ResteasyProviderFactory rpfactory = mock(ResteasyProviderFactory.class);
         when(evt.getServletContext()).thenReturn(ctx);
-        when(ctx.getAttribute(eq(Registry.class.getName()))).thenReturn(registry);
         when(ctx.getAttribute(eq(ResteasyProviderFactory.class.getName()))).thenReturn(rpfactory);
         when(ctx.getAttribute(eq(CandlepinContextListener.CONFIGURATION_NAME))).thenReturn(config);
+        when(ctx.getAttribute(eq(ResteasyDeployment.class.getName()))).thenReturn(resteasyDeployment);
+        when(resteasyDeployment.getRegistry()).thenReturn(registry);
     }
 
     public class ContextListenerTestModule extends AbstractModule {

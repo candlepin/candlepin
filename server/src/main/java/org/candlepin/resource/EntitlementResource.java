@@ -42,7 +42,6 @@ import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.Enforcer.CallerType;
 import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
 import org.candlepin.resource.util.EntitlementFinderUtil;
-import org.candlepin.resteasy.parameter.CandlepinParam;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.util.Util;
 
@@ -156,8 +155,7 @@ public class EntitlementResource {
     public List<EntitlementDTO> listAllForConsumer(
         @QueryParam("consumer") String consumerUuid,
         @QueryParam("matches") String matches,
-        @QueryParam("attribute") @CandlepinParam(type = KeyValueParameter.class)
-        List<KeyValueParameter> attrFilters,
+        @QueryParam("attribute") List<KeyValueParameter> attrFilters,
         @Context PageRequest pageRequest) {
 
         EntitlementFilterBuilder filters = EntitlementFinderUtil.createFilter(matches, attrFilters);

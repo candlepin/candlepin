@@ -70,8 +70,6 @@ import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.model.dto.Subscription;
-import org.candlepin.resteasy.parameter.CandlepinParam;
-import org.candlepin.resteasy.parameter.CandlepinParameterUnmarshaller;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.impl.DefaultOwnerServiceAdapter;
@@ -91,7 +89,6 @@ import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.jboss.resteasy.specimpl.MultivaluedMapImpl;
-import org.jboss.resteasy.util.GenericType;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -102,7 +99,6 @@ import org.xnap.commons.i18n.I18n;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.annotation.Annotation;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -117,7 +113,7 @@ import java.util.Set;
 
 import javax.inject.Inject;
 import javax.persistence.PersistenceException;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MultivaluedMap;
 
 
@@ -1436,18 +1432,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ownerResource.setLogLevel(owner.getKey(), "THISLEVELISBAD");
     }
 
-    @QueryParam("test-attr") @CandlepinParam(type = KeyValueParameter.class)
     private KeyValueParameter createKeyValueParam(String key, String val) throws Exception {
-        // Can't create the KeyValueParam directly as the parse method
-        // is package protected -- create one via the unmarshaller so we don't have to
-        // change the visibility of the parse method.
-        Annotation[] annotations = this.getClass()
-            .getDeclaredMethod("createKeyValueParam", String.class, String.class)
-            .getAnnotations();
-        CandlepinParameterUnmarshaller unmarshaller =
-            new CandlepinParameterUnmarshaller();
-        unmarshaller.setAnnotations(annotations);
-        return (KeyValueParameter) unmarshaller.fromString(key + ":" + val);
+        return new KeyValueParameter(key + ":" + val);
     }
 
     @Test
