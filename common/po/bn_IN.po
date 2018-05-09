@@ -1849,7 +1849,7 @@ msgstr ""
 #~ msgid "must match ''{regexp}''"
 #~ msgstr "অবশ্যই ''{regexp}'' মিলতে হবে"
 
-#~ msgid "script expression ''{0}'' didn't evaluate to true"
+#~ msgid "script expression ''{0}'' didn''t evaluate to true"
 #~ msgstr "স্ক্রিপ্ট এক্সপ্রেশন ''{0}'' সত্যতে মূল্যায়ন করা হয়নি"
 
 #~ msgid ""

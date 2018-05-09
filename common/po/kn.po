@@ -1854,7 +1854,7 @@ msgstr ""
 #~ msgid "must match ''{regexp}''"
 #~ msgstr "''{regexp}'' ಗೆ ಹೊಂದಿಕೆಯಾಗಬೇಕು"
 
-#~ msgid "script expression ''{0}'' didn't evaluate to true"
+#~ msgid "script expression ''{0}'' didn''t evaluate to true"
 #~ msgstr "ಸ್ಕ್ರಿಪ್ಟ್ ಎಕ್ಸ್‌ಪ್ರೆಶನ್ ''{0}''ಎನ್ನುವುದು ಟ್ರೂಗೆ ಮೌಲ್ಯಮಾಪನಗೊಂಡಿಲ್ಲ"
 
 #~ msgid ""

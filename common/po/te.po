@@ -1846,7 +1846,7 @@ msgstr ""
 #~ msgid "must match ''{regexp}''"
 #~ msgstr "తప్పక ''{regexp}'' తో సరిపోలాలి"
 
-#~ msgid "script expression ''{0}'' didn't evaluate to true"
+#~ msgid "script expression ''{0}'' didn''t evaluate to true"
 #~ msgstr "స్క్రిప్ట్ ఎక్సుప్రెషన్ ''{0}'' అనునది true కు ఎవాల్యుయేట్ కాలేదు"
 
 #~ msgid ""

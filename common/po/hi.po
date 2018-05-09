@@ -1846,7 +1846,7 @@ msgstr ""
 #~ msgid "must match ''{regexp}''"
 #~ msgstr "''{regexp}'' से मेल जरूर खाना चाहिए"
 
-#~ msgid "script expression ''{0}'' didn't evaluate to true"
+#~ msgid "script expression ''{0}'' didn''t evaluate to true"
 #~ msgstr "''{0}'' स्क्रिप्ट अभिव्यक्ति सही में मूल्यांकित नहीं हो सका"
 
 #~ msgid ""

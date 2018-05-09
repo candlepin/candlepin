@@ -1851,7 +1851,7 @@ msgstr ""
 #~ msgid "must match ''{regexp}''"
 #~ msgstr "''{regexp}'' ৰ সৈতে মিল খাব লাগিব"
 
-#~ msgid "script expression ''{0}'' didn't evaluate to true"
+#~ msgid "script expression ''{0}'' didn''t evaluate to true"
 #~ msgstr "স্ক্ৰিপ্ট অভিবক্তি \"{0}\" ৰ বিশ্লেষণ true নহ''ল"
 
 #~ msgid ""

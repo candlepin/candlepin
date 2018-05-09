@@ -1843,7 +1843,7 @@ msgstr ""
 #~ msgid "must match ''{regexp}''"
 #~ msgstr "ਲਾਜਮੀ ''{regexp}'' ਨਾਲ ਮੇਲ ਖਾਵੇ"
 
-#~ msgid "script expression ''{0}'' didn't evaluate to true"
+#~ msgid "script expression ''{0}'' didn''t evaluate to true"
 #~ msgstr "''{0}'' ਸਕ੍ਰਿਪਟ ਸਮੀਕਰਣ ਨਤੀਜਾ ਸੱਚ ਨਹੀਂ ਨਿਕਲਿਆ"
 
 #~ msgid ""

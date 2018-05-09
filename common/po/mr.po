@@ -1845,7 +1845,7 @@ msgstr ""
 #~ msgid "must match ''{regexp}''"
 #~ msgstr "''{regexp}'' सह जुळायला पाहिजे"
 
-#~ msgid "script expression ''{0}'' didn't evaluate to true"
+#~ msgid "script expression ''{0}'' didn''t evaluate to true"
 #~ msgstr "स्क्रिप्ट एक्सप्रेशन ''{0}'' true असे मुल्यमापन झाले नाही"
 
 #~ msgid ""
