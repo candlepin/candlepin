@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-01-15 10:55-0500\n"
+"POT-Creation-Date: 2018-05-09 13:16-0400\n"
 "PO-Revision-Date: 2017-10-18 11:23-0400\n"
 "Last-Translator: John Sefler <jsefler@redhat.com>\n"
 "Language-Team: Gujarati\n"
@@ -45,7 +45,7 @@ msgid "offset and limit parameters must be positive integers"
 msgstr "ઑફસેટ અને મર્યાદા પરિમાણો હકારાત્મક પૂર્ણાંક હોવા જ જોઇએ"
 
 #: common/src/main/java/org/candlepin/common/resteasy/filter/PageRequestFilter.java:106
-msgid "the order parameter must be either ''ascending'' or ''descending''"
+msgid "the order parameter must be either \"ascending\" or \"descending\""
 msgstr ""
 
 #: common/src/main/java/org/candlepin/common/resteasy/filter/PageRequestFilter.java:116
@@ -64,85 +64,85 @@ msgstr "પ્રશ્ન પરિમાણ {0} માટે અયોગ્�
 msgid "{0} is not a valid value for {1}"
 msgstr "{0} એ {1} માટે માન્ય કિંમત નથી"
 
-#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:41
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:43
 msgid "must be false"
 msgstr "ખોટા જ હોવા જોઈએ"
 
-#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:43
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:45
 msgid "must be true"
 msgstr "સાચુ હોવુ જ જોઈએ"
-
-#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:45
-#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:55
-#, java-format
-msgid "must be less than or equal to {0}"
-msgstr "કરતાં ઓછી અથવા {0} સમાન હોવો જોઈએ"
 
 #: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:47
 #: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:57
 #, java-format
+msgid "must be less than or equal to {0}"
+msgstr "કરતાં ઓછી અથવા {0} સમાન હોવો જોઈએ"
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:49
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:59
+#, java-format
 msgid "must be greater than or equal to {0}"
 msgstr "કરતાં વધારે અથવા {0} બરાબર હોવા જ જોઈએ"
 
-#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:50
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:52
 msgid ""
 "numeric value out of bounds (<{integer} digits>.<{fraction} digits> expected)"
 msgstr ""
 "આંકડાકીય કિંમત સીમાઓ (અપેક્ષિત <{integer} digits>.<{fraction} digits>) ની બહાર"
 
-#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:53
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:55
 msgid "must be in the future"
 msgstr "ભવિષ્યમાં જ હોવી જોઈએ"
 
-#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:59
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:61
 msgid "may not be null"
 msgstr "નકામું ન પણ હોય"
 
-#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:61
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:63
 msgid "must be null"
 msgstr "નકામું હોવુ જ જોઈએ"
 
-#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:63
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:65
 msgid "must be in the past"
 msgstr "ભૂતકાળમાં જ હોવી જોઈએ"
 
-#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:65
-msgid "must match ''{regexp}''"
-msgstr "''{regexp}'' મેચ થવા જોઇએ"
-
 #: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:67
-#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:73
+msgid "must match \"{regexp}\""
+msgstr ""
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:69
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:75
 #, java-format
 msgid "size must be between {0} and {1}"
 msgstr "{0} અને {1} વચ્ચે જ માપ હોવુ જોઈએ"
 
-#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:69
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:71
 msgid "invalid credit card number"
 msgstr "અમાન્ય ક્રેડિટ કાર્ડ નંબર"
 
-#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:71
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:73
 msgid "not a well-formed email address"
 msgstr "ઇમેઇલ સરનામું સારી રચનામાં નથી"
 
-#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:75
 #: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:77
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:79
 msgid "may not be empty"
 msgstr "ખાલી હોઈ શકે નહિં"
 
-#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:79
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:81
 msgid "must be between {min} and {max}"
 msgstr "{min} અને {max} વચ્ચે જ હોવી જોઈએ"
 
-#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:81
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:83
 msgid "may have unsafe HTML content"
 msgstr ""
 
-#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:83
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:85
 #, java-format
-msgid "script expression ''{0}'' didn't evaluate to true"
-msgstr "સ્ક્રિપ્ટ અભિવ્યક્તિ''{0}'' નું ખરી રીતે મૂલ્યાંકન કર્યું નથી"
+msgid "script expression \"{0}\" didn't evaluate to true"
+msgstr ""
 
-#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:86
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:88
 msgid "must be a valid URL"
 msgstr "માન્ય URL હોવો આવશ્યક છે"
 
@@ -406,18 +406,19 @@ msgstr ""
 msgid "Unable to find an owner with the ID \"{0}\""
 msgstr ""
 
-#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:1517
+#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:1532
 #, java-format
 msgid "Subscription pool {0} do not exist."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:1853
+#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:1870
 msgid ""
 "Unmapped guest entitlement expired without establishing a host/guest mapping."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:207
-msgid "Auto-attach is disabled for owner '{0}'."
+#, java-format
+msgid "Auto-attach is disabled for owner \"{0}\"."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:257
@@ -429,12 +430,12 @@ msgstr ""
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:467
 #, java-format
-msgid "SKU product not available to this development unit: ''{0}''"
+msgid "SKU product not available to this development unit: \"{0}\""
 msgstr ""
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:473
 #, java-format
-msgid "Installed product not available to this development unit: ''{0}''"
+msgid "Installed product not available to this development unit: \"{0}\""
 msgstr ""
 
 #: server/src/main/java/org/candlepin/controller/ManifestManager.java:203
@@ -461,10 +462,8 @@ msgstr ""
 #, java-format
 msgid ""
 "Unit {0} cannot be exported. A manifest cannot be made for units of type "
-"''{1}''."
+"\"{1}\"."
 msgstr ""
-"ગ્રાહક {0} નિકાસ કરી શકાતુ નથી. manifest ને ગ્રાહકનાં પ્રકાર ''{1}'' માટે બનાવી "
-"શકાતુ નથી."
 
 #: server/src/main/java/org/candlepin/controller/ManifestManager.java:307
 #, java-format
@@ -478,23 +477,23 @@ msgid ""
 "details"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/hostedtest/HostedTestSubscriptionResource.java:281
+#: server/src/main/java/org/candlepin/hostedtest/HostedTestSubscriptionResource.java:280
 #: server/src/main/java/org/candlepin/model/EntitlementCurator.java:422
-#: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:157
+#: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:156
 #, java-format
-msgid "Product with ID ''{0}'' could not be found."
-msgstr "ID ''{0}'' સાથે પ્રોડક્ટને શોધી શક્યા નહિં."
+msgid "Product with ID \"{0}\" could not be found."
+msgstr ""
 
-#: server/src/main/java/org/candlepin/hostedtest/HostedTestSubscriptionResource.java:292
+#: server/src/main/java/org/candlepin/hostedtest/HostedTestSubscriptionResource.java:290
 #: server/src/main/java/org/candlepin/resource/OwnerContentResource.java:122
 #: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:130
 #, java-format
 msgid "Owner with key \"{0}\" was not found."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/hostedtest/HostedTestSubscriptionResource.java:303
+#: server/src/main/java/org/candlepin/hostedtest/HostedTestSubscriptionResource.java:301
 #: server/src/main/java/org/candlepin/resource/OwnerContentResource.java:149
-#: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:186
+#: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:184
 #, java-format
 msgid "Content with ID \"{0}\" could not be found."
 msgstr ""
@@ -510,10 +509,10 @@ msgstr "UUID {0} સાથે સિસ્ટમ એ એક વર્ચ્ય�
 
 #: server/src/main/java/org/candlepin/model/ConsumerCurator.java:680
 #: server/src/main/java/org/candlepin/model/ConsumerCurator.java:689
-#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:159
+#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:158
 #, java-format
-msgid "Unit with ID ''{0}'' could not be found."
-msgstr "ID ''{0}'' સાથે એકમને શોધી શક્યા નહિં."
+msgid "Unit with ID \"{0}\" could not be found."
+msgstr ""
 
 #: server/src/main/java/org/candlepin/model/RulesCurator.java:108
 msgid "No rules file found in the database"
@@ -556,14 +555,14 @@ msgstr "{0} દ્દારા ઉમેદવારીઓ કાઢી ના�
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:78
 msgid ""
-"Cannot add pools that are restricted to unit type ''person'' to activation "
+"Cannot add pools that are restricted to unit type \"person\" to activation "
 "keys."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:82
 #, java-format
-msgid "Multi-entitlement not supported for pool ''{0}''"
-msgstr "પૂલ ''{0}'' માટે મલ્ટી ઉમેદવારી આધારભૂત નથી"
+msgid "Multi-entitlement not supported for pool \"{0}\""
+msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author swkothar
@@ -636,12 +635,10 @@ msgstr ""
 msgid "Subscriptions for {0} expired on: {1}"
 msgstr "તેની પર નિવૃત્ત થયેલ {0} માટે ઉમેદવારીઓ: {1}"
 
-# translation auto-copied from project Candlepin, version master, document
-# keys, author swkothar
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:376
 #, java-format
-msgid "''{0}'' Should contain name, priority and at least one attribute"
-msgstr "''{0}'' એ નામ, પ્રાધન્ય અને ઓછામાં ઓછા એક ગુણધર્મને સમાવવુ જોઇએ"
+msgid "\"{0}\" Should contain name, priority and at least one attribute"
+msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -652,32 +649,32 @@ msgstr "બીજો પરિમાણ એ પ્રાધાન્ય નં�
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:157
 #, java-format
 msgid ""
-"This unit has already had the subscription matching pool ID ''{1}'' attached."
+"This unit has already had the subscription matching pool ID \"{1}\" attached."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:159
 #, java-format
-msgid "No subscriptions are available from the pool with ID ''{1}''."
+msgid "No subscriptions are available from the pool with ID \"{1}\"."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:161
 #, java-format
-msgid "Units of this type are not allowed to attach the pool with ID ''{1}''."
+msgid "Units of this type are not allowed to attach the pool with ID \"{1}\"."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:163
 #, java-format
-msgid "Multi-entitlement not supported for pool with ID ''{1}''."
+msgid "Multi-entitlement not supported for pool with ID \"{1}\"."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:165
 #, java-format
-msgid "Pool ''{1}'' is restricted to guests running on host: ''{4}''."
+msgid "Pool \"{1}\" is restricted to guests running on host: \"{4}\"."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:167
 #, java-format
-msgid "Pool ''{1}'' is restricted to a specific consumer."
+msgid "Pool \"{1}\" is restricted to a specific consumer."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:169
@@ -686,127 +683,127 @@ msgstr "પુલ એ ઉમેદવારી સંચાલન કાર્�
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:171
 #, java-format
-msgid "Pool is restricted to virtual guests: ''{1}''."
+msgid "Pool is restricted to virtual guests: \"{1}\"."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:173
 #, java-format
-msgid "Pool is restricted to physical systems: ''{1}''."
+msgid "Pool is restricted to physical systems: \"{1}\"."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:175
 #, java-format
 msgid ""
-"Subscription ''{2}'' must be attached using a quantity evenly divisible by "
+"Subscription \"{2}\" must be attached using a quantity evenly divisible by "
 "{3}"
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:177
 #, java-format
 msgid ""
-"Unit does not support instance based calculation required by pool ''{1}''"
+"Unit does not support instance based calculation required by pool \"{1}\""
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:179
 #, java-format
-msgid "Unit does not support band calculation required by pool ''{1}''"
+msgid "Unit does not support band calculation required by pool \"{1}\""
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:181
 #, java-format
-msgid "Unit does not support core calculation required by pool ''{1}''"
+msgid "Unit does not support core calculation required by pool \"{1}\""
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:183
 #, java-format
-msgid "Unit does not support RAM calculation required by pool ''{1}''"
+msgid "Unit does not support RAM calculation required by pool \"{1}\""
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:185
 #, java-format
-msgid "Unit does not support derived products data required by pool ''{1}''"
+msgid "Unit does not support derived products data required by pool \"{1}\""
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:187
 #, java-format
-msgid "Pool is restricted to unmapped virtual guests: ''{1}''"
+msgid "Pool is restricted to unmapped virtual guests: \"{1}\""
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:189
 #, java-format
 msgid ""
-"Pool is restricted to virtual guests in their first day of existence: ''{1}''"
+"Pool is restricted to virtual guests in their first day of existence: \"{1}\""
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:191
 #, java-format
-msgid "Pool ''{1}'' is a shared pool and sharing a shared pool is prohibited."
+msgid "Pool \"{1}\" is a shared pool and sharing a shared pool is prohibited."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:193
 #, java-format
-msgid "Pool ''{1}'' is a development pool and sharing it is prohibited."
+msgid "Pool \"{1}\" is a development pool and sharing it is prohibited."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:195
 #, java-format
-msgid "Pool ''{1}'' is an unmapped guest pool and sharing it is prohibited."
+msgid "Pool \"{1}\" is an unmapped guest pool and sharing it is prohibited."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:197
 #, java-format
 msgid ""
-"Pool is restricted when it is temporary and begins in the future: ''{1}''"
+"Pool is restricted when it is temporary and begins in the future: \"{1}\""
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:199
 #, java-format
-msgid "Unable to attach pool with ID ''{1}''.: {0}."
+msgid "Unable to attach pool with ID \"{1}\".: {0}."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:207
 #, java-format
 msgid ""
-"This system already has a subscription for the product ''{1}'' attached."
+"This system already has a subscription for the product \"{1}\" attached."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:209
 #, java-format
 msgid ""
-"There are not enough free subscriptions available for the product ''{1}''"
+"There are not enough free subscriptions available for the product \"{1}\""
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:211
 #, java-format
-msgid "Units of this type are not allowed for the product ''{1}''."
+msgid "Units of this type are not allowed for the product \"{1}\"."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:213
 #, java-format
-msgid "Only virtual systems can have subscription ''{1}'' attached."
+msgid "Only virtual systems can have subscription \"{1}\" attached."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:215
 #, java-format
-msgid "Unable to attach subscription for the product ''{1}'': {0}."
+msgid "Unable to attach subscription for the product \"{1}\": {0}."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:223
 #, java-format
 msgid ""
-"Insufficient pool quantity available for adjustment to entitlement ''{1}''."
+"Insufficient pool quantity available for adjustment to entitlement \"{1}\"."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:225
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:227
 #, java-format
 msgid ""
-"Multi-entitlement not supported for pool connected with entitlement ''{1}''."
+"Multi-entitlement not supported for pool connected with entitlement \"{1}\"."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:229
 #, java-format
-msgid "Unable to adjust quantity for the entitlement with id ''{1}'': {0}"
+msgid "Unable to adjust quantity for the entitlement with id \"{1}\": {0}"
 msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/ActivationKeyResource.java:179
@@ -948,7 +945,7 @@ msgid "Cannot specify username with activation keys."
 msgstr "સક્રિયકરણ કીઓ સાથે વપરાશકર્તાનામને સ્પષ્ટ કરી શકાતુ નથી."
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:686
-msgid "A unit type of ''person'' cannot be used with activation keys"
+msgid "A unit type of \"person\" cannot be used with activation keys"
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
@@ -972,27 +969,25 @@ msgstr "આ સંસ્થા માટે કોઇપણ સક્રિય�
 msgid "System name cannot begin with # character"
 msgstr "સિસ્ટમ નામ # અક્ષર સાથે શરૂ કરી શકાતુ નથી"
 
-# translation auto-copied from project Candlepin, version master, document
-# keys, author swkothar
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:850
 #, java-format
-msgid "Activation key ''{0}'' not found for organization ''{1}''."
-msgstr "સક્રિયકરણ કી ''{0}'' સંસ્થા ''{1}'' માટે મળી નથી."
+msgid "Activation key \"{0}\" not found for organization \"{1}\"."
+msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:869
 #, java-format
-msgid "User with ID ''{0}'' could not be found."
-msgstr "ID ''{0}'' સાથે વપરાશકર્તાને શોધી શક્યા નહિં."
+msgid "User with ID \"{0}\" could not be found."
+msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:875
 #, java-format
-msgid "User ''{0}'' has no roles for organization ''{1}''"
-msgstr "વપરાશકર્તા ''{0}'' પાસે સંસ્થા ''{1}'' માટે ભૂમિકા નથી"
+msgid "User \"{0}\" has no roles for organization \"{1}\""
+msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:886
 #, java-format
-msgid "User ''{0}'' has already registered a personal consumer"
-msgstr "વપરાશકર્તા ''{0}'' પહેલેથી વ્યક્તિગત ગ્રાહકને રજીસ્ટર કરેલ છે"
+msgid "User \"{0}\" has already registered a personal consumer"
+msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:902
 msgid "You must specify an organization for new units."
@@ -1007,8 +1002,8 @@ msgstr "સંસ્થા {0} અસ્તિત્વ ધરાવતી ન�
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:986
 #, java-format
-msgid "Unit type ''{0}'' could not be found."
-msgstr "એકમ પ્રકાર ''{0}'' ને શોધી શક્યા નહિં."
+msgid "Unit type \"{0}\" could not be found."
+msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1037
 #, java-format
@@ -1017,8 +1012,8 @@ msgstr "એકમ {0} સુધારવામાં સમસ્યા"
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1108
 #, java-format
-msgid "Environment with ID ''{0}'' could not be found."
-msgstr "ID ''{0}'' સાથે પર્યાવરણને શોધી શક્યા નહિં."
+msgid "Environment with ID \"{0}\" could not be found."
+msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1431
 #: server/src/main/java/org/candlepin/resource/GuestIdResource.java:235
@@ -1066,34 +1061,32 @@ msgstr "ગુણવત્તાને સ્પષ્ટ કરી શકાત
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1787
 #, java-format
-msgid "Ignoring request to auto-attach. It is disabled for org ''{0}''."
+msgid "Ignoring request to auto-attach. It is disabled for org \"{0}\"."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1827
 msgid "Owner has autobind disabled."
 msgstr ""
 
-# translation auto-copied from project Candlepin, version master, document
-# keys, author swkothar
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1857
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1964
-#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:184
-#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:225
-#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:244
-#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:285
-#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:380
+#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:183
+#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:223
+#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:242
+#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:283
+#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:378
 #, java-format
-msgid "Entitlement with ID ''{0}'' could not be found."
-msgstr "ID ''{0}'' સાથે એંટાઇટેલમેંટ શોધી શક્યા નહિં."
+msgid "Entitlement with ID \"{0}\" could not be found."
+msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1987
 #, java-format
-msgid "Entitlement Certificate with serial number ''{0}'' could not be found."
-msgstr "શ્રેણી નંબર ''{0}'' સાથે એંટાઇટેલમેંટ પ્રમાણપત્રને શોધી શક્યા નહિં."
+msgid "Entitlement Certificate with serial number \"{0}\" could not be found."
+msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2009
 #, java-format
-msgid "No entitlements for consumer ''{0}'' with pool id ''{1}''"
+msgid "No entitlements for consumer \"{0}\" with pool id \"{1}\""
 msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2104
@@ -1125,25 +1118,25 @@ msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2447
 #, java-format
-msgid "Deletion record for hypervisor ''{0}'' not found."
-msgstr "હાઇપરવિઝર ''{0}'' સાથે નિરાકરણ અહેવાલ મળ્યો નથી."
-
-#: server/src/main/java/org/candlepin/resource/ConsumerTypeResource.java:86
-#, java-format
-msgid "Unit type with id ''{0}'' could not be found."
+msgid "Deletion record for hypervisor \"{0}\" not found."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerTypeResource.java:104
+#: server/src/main/java/org/candlepin/resource/ConsumerTypeResource.java:85
+#, java-format
+msgid "Unit type with id \"{0}\" could not be found."
+msgstr ""
+
+#: server/src/main/java/org/candlepin/resource/ConsumerTypeResource.java:102
 #, java-format
 msgid "Problem creating unit type: {0}"
 msgstr "એકમ પ્રકારને બનાવી રહ્યા હોય ત્યારે સમસ્યા: {0}"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerTypeResource.java:120
+#: server/src/main/java/org/candlepin/resource/ConsumerTypeResource.java:118
 #, java-format
 msgid "Unit type with label {0} could not be found."
 msgstr "લેબલ {0} સાથે એકમ પ્રકાર શોધી શક્યા નહિં."
 
-#: server/src/main/java/org/candlepin/resource/ConsumerTypeResource.java:136
+#: server/src/main/java/org/candlepin/resource/ConsumerTypeResource.java:133
 #, java-format
 msgid "Unit type with id {0} could not be found."
 msgstr "id {0} સાથે એકમ પ્રકાર શોધી શક્યા નહિં."
@@ -1170,40 +1163,40 @@ msgstr "નામ {0} સાથે વિતરક આવૃત્તિ પહ�
 msgid "No such distributor version: {0}"
 msgstr "આવી વિતરણ આવૃત્તિ નથી: {0}"
 
-#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:115
+#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:114
 #, java-format
-msgid "Object with ID ''{0}'' could not found."
-msgstr "ID ''{0}'' સાથે ઑબ્જેક્ટને શોધી શક્યા નહિં."
+msgid "Object with ID \"{0}\" could not found."
+msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:137
+#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:136
 #, java-format
-msgid "Unit ''{0}'' has no subscription for product ''{1}''."
-msgstr "એકમ ''{0}'' પાસે પ્રોડક્ટ ''{1}'' માટે ઉમેદવારી નથી."
+msgid "Unit \"{0}\" has no subscription for product \"{1}\"."
+msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:210
+#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:209
 msgid "Quantity value must be greater than 0."
 msgstr "ગુણવત્તા કિંમત એ 0 કરતા વધારે જ હોવુ જોઇએ."
 
-#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:265
+#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:263
 #, java-format
 msgid "Unable to find upstream certificate for entitlement: {0}"
 msgstr "ઉમેદવારી માટે અપસ્ટ્રીમ પ્રમાણપત્રને શોધવાનું અસમર્થ: {0}"
 
-#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:336
-#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:341
+#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:334
+#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:339
 #, java-format
-msgid "Entitlement migration is not permissible for units of type ''{0}''"
-msgstr "ઉમેદવારી સ્થળાંતર એ પ્રકાર ''{0}'' નાં એકમો માટે પરવાનગી આપી શકાય નહિં"
+msgid "Entitlement migration is not permissible for units of type \"{0}\""
+msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:346
+#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:344
 msgid "Source and destination units must belong to the same organization"
 msgstr "સ્ત્રોત અને લક્ષ્ય એકમો એજ સંસ્થા સાથે જોડાયેલ હોવા જ જોઇએ"
 
-#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:353
+#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:351
 msgid "The entitlement cannot be utilized by the destination unit: "
 msgstr "ઉમેદવારી એ લક્ષ્ય એકમ દ્દારા ઉપયોગ કરી શકાતો નથી: "
 
-#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:374
+#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:372
 msgid ""
 "The quantity specified must be greater than zero and less than or equal to "
 "the total for this entitlement"
@@ -1252,12 +1245,10 @@ msgstr ""
 msgid "One of the content does not exist in the environment anymore: {0}"
 msgstr ""
 
-# translation auto-copied from project Candlepin, version master, document
-# keys, author swkothar
 #: server/src/main/java/org/candlepin/resource/EventResource.java:89
 #, java-format
-msgid "Event with ID ''{0}'' could not be found."
-msgstr "ID ''{0}'' સાથે ઘટનાને શોધી શક્યા નહિં"
+msgid "Event with ID \"{0}\" could not be found."
+msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/GuestIdResource.java:165
 msgid "Please supply a valid guest id"
@@ -1279,8 +1270,8 @@ msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/HypervisorResource.java:197
 #, java-format
-msgid "Unable to find hypervisor in org ''{0}''"
-msgstr "org ''{0}'' માં હાયપરવાઇઝર શોધવામાં અસમર્થ"
+msgid "Unable to find hypervisor in org \"{0}\""
+msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/HypervisorResource.java:262
 msgid "Host to guest mapping was not provided for hypervisor update."
@@ -1324,23 +1315,23 @@ msgstr "એક સમાપ્ત થયેલ સ્થિતિમાં ક�
 msgid "content \"{0}\" is locked"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:281
+#: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:279
 #, java-format
 msgid "Contradictory ids in update request: {0}, {1}"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:289
-#: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:313
-#: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:345
-#: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:372
-#: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:393
+#: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:287
+#: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:311
+#: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:343
+#: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:370
+#: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:391
 #, java-format
 msgid "product \"{0}\" is locked"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:399
+#: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:396
 #, java-format
-msgid "Product with ID ''{0}'' cannot be deleted while subscriptions exist."
+msgid "Product with ID \"{0}\" cannot be deleted while subscriptions exist."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:335
@@ -1365,8 +1356,8 @@ msgstr "માલિકને બનાવી શક્યા નહિં: {0}"
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:383
 #, java-format
 msgid ""
-"owner ''{0}'' cannot be deleted while there is a share consumer. You may use "
-"'force' to bypass."
+"owner \"{0}\" cannot be deleted while there is a share consumer. You may use "
+"\"force\" to bypass."
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
@@ -1378,14 +1369,14 @@ msgstr "સક્રિયકરણ કી માટે નામને પૂ�
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:554
 #, java-format
 msgid ""
-"The activation key name ''{0}'' must be alphanumeric or include the "
-"characters ''-'' or ''_''"
+"The activation key name \"{0}\" must be alphanumeric or include the "
+"characters \"-\" or \"_\""
 msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:560
 #, java-format
-msgid "The activation key name ''{0}'' is already in use for owner {1}"
-msgstr "સક્રિયકરણ કી નામ ''{0}'' પહેલેથી માલિક {1} માટે વપરાશમાં છે"
+msgid "The activation key name \"{0}\" is already in use for owner {1}"
+msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:655
 #, java-format
@@ -1505,18 +1496,18 @@ msgstr "ગ્રાહક: {0} મળ્યુ નથી"
 #: server/src/main/java/org/candlepin/resource/PoolResource.java:258
 #: server/src/main/java/org/candlepin/resource/PoolResource.java:277
 #, java-format
-msgid "Subscription Pool with ID ''{0}'' could not be found."
-msgstr "ID ''{0}'' સાથે ઉમેદવારી પુલ શોધી શક્યા નહિં."
+msgid "Subscription Pool with ID \"{0}\" could not be found."
+msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/PoolResource.java:240
 #, java-format
-msgid "Entitlement Pool with ID ''{0}'' could not be found."
-msgstr "ID ''{0}'' સાથે એંંટાઇટેલમેંટ પુલને શોધી શક્યા નહિં."
+msgid "Entitlement Pool with ID \"{0}\" could not be found."
+msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/ProductResource.java:106
 #, java-format
-msgid "Product with UUID ''{0}'' could not be found."
-msgstr "UUID ''{0}'' સાથે પ્રોડક્ટ શોધી શક્યા નહિં."
+msgid "Product with UUID \"{0}\" could not be found."
+msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/ProductResource.java:153
 #: server/src/main/java/org/candlepin/resource/ProductResource.java:172
@@ -1627,8 +1618,8 @@ msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:132
 #, java-format
-msgid "Cannot bind to pool ''{0}'' in activation key ''{1}'': {2}"
-msgstr "સક્રિયકરણ કી ''{1}'' માં ''{0}'' ને બાંધી શકાતુ નથી : {2}"
+msgid "Cannot bind to pool \"{0}\" in activation key \"{1}\": {2}"
+msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/util/ConsumerTypeValidator.java:59
 #, java-format
@@ -1851,7 +1842,101 @@ msgstr ""
 msgid "The {0} \"{1}\" must be a Boolean value"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/util/ServiceLevelValidator.java:68
+#: server/src/main/java/org/candlepin/util/ServiceLevelValidator.java:69
 #, java-format
-msgid "Service level ''{0}'' is not available to units of organization {1}."
-msgstr "સેવા સ્તર ''{0}'' એ સંસ્થા {1} નાં એકમો માટે ઉપલબ્ધ નથી."
+msgid "Service level \"{0}\" is not available to units of organization {1}."
+msgstr ""
+
+#~ msgid "must match ''{regexp}''"
+#~ msgstr "''{regexp}'' મેચ થવા જોઇએ"
+
+#~ msgid "script expression ''{0}'' didn't evaluate to true"
+#~ msgstr "સ્ક્રિપ્ટ અભિવ્યક્તિ''{0}'' નું ખરી રીતે મૂલ્યાંકન કર્યું નથી"
+
+#~ msgid ""
+#~ "Unit {0} cannot be exported. A manifest cannot be made for units of type "
+#~ "''{1}''."
+#~ msgstr ""
+#~ "ગ્રાહક {0} નિકાસ કરી શકાતુ નથી. manifest ને ગ્રાહકનાં પ્રકાર ''{1}'' માટે બનાવી "
+#~ "શકાતુ નથી."
+
+#~ msgid "Product with ID ''{0}'' could not be found."
+#~ msgstr "ID ''{0}'' સાથે પ્રોડક્ટને શોધી શક્યા નહિં."
+
+#~ msgid "Unit with ID ''{0}'' could not be found."
+#~ msgstr "ID ''{0}'' સાથે એકમને શોધી શક્યા નહિં."
+
+#~ msgid "Multi-entitlement not supported for pool ''{0}''"
+#~ msgstr "પૂલ ''{0}'' માટે મલ્ટી ઉમેદવારી આધારભૂત નથી"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author swkothar
+#~ msgid "''{0}'' Should contain name, priority and at least one attribute"
+#~ msgstr "''{0}'' એ નામ, પ્રાધન્ય અને ઓછામાં ઓછા એક ગુણધર્મને સમાવવુ જોઇએ"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author swkothar
+#~ msgid "Activation key ''{0}'' not found for organization ''{1}''."
+#~ msgstr "સક્રિયકરણ કી ''{0}'' સંસ્થા ''{1}'' માટે મળી નથી."
+
+#~ msgid "User with ID ''{0}'' could not be found."
+#~ msgstr "ID ''{0}'' સાથે વપરાશકર્તાને શોધી શક્યા નહિં."
+
+#~ msgid "User ''{0}'' has no roles for organization ''{1}''"
+#~ msgstr "વપરાશકર્તા ''{0}'' પાસે સંસ્થા ''{1}'' માટે ભૂમિકા નથી"
+
+#~ msgid "User ''{0}'' has already registered a personal consumer"
+#~ msgstr "વપરાશકર્તા ''{0}'' પહેલેથી વ્યક્તિગત ગ્રાહકને રજીસ્ટર કરેલ છે"
+
+#~ msgid "Unit type ''{0}'' could not be found."
+#~ msgstr "એકમ પ્રકાર ''{0}'' ને શોધી શક્યા નહિં."
+
+#~ msgid "Environment with ID ''{0}'' could not be found."
+#~ msgstr "ID ''{0}'' સાથે પર્યાવરણને શોધી શક્યા નહિં."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author swkothar
+#~ msgid "Entitlement with ID ''{0}'' could not be found."
+#~ msgstr "ID ''{0}'' સાથે એંટાઇટેલમેંટ શોધી શક્યા નહિં."
+
+#~ msgid ""
+#~ "Entitlement Certificate with serial number ''{0}'' could not be found."
+#~ msgstr "શ્રેણી નંબર ''{0}'' સાથે એંટાઇટેલમેંટ પ્રમાણપત્રને શોધી શક્યા નહિં."
+
+#~ msgid "Deletion record for hypervisor ''{0}'' not found."
+#~ msgstr "હાઇપરવિઝર ''{0}'' સાથે નિરાકરણ અહેવાલ મળ્યો નથી."
+
+#~ msgid "Object with ID ''{0}'' could not found."
+#~ msgstr "ID ''{0}'' સાથે ઑબ્જેક્ટને શોધી શક્યા નહિં."
+
+#~ msgid "Unit ''{0}'' has no subscription for product ''{1}''."
+#~ msgstr "એકમ ''{0}'' પાસે પ્રોડક્ટ ''{1}'' માટે ઉમેદવારી નથી."
+
+#~ msgid "Entitlement migration is not permissible for units of type ''{0}''"
+#~ msgstr "ઉમેદવારી સ્થળાંતર એ પ્રકાર ''{0}'' નાં એકમો માટે પરવાનગી આપી શકાય નહિં"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author swkothar
+#~ msgid "Event with ID ''{0}'' could not be found."
+#~ msgstr "ID ''{0}'' સાથે ઘટનાને શોધી શક્યા નહિં"
+
+#~ msgid "Unable to find hypervisor in org ''{0}''"
+#~ msgstr "org ''{0}'' માં હાયપરવાઇઝર શોધવામાં અસમર્થ"
+
+#~ msgid "The activation key name ''{0}'' is already in use for owner {1}"
+#~ msgstr "સક્રિયકરણ કી નામ ''{0}'' પહેલેથી માલિક {1} માટે વપરાશમાં છે"
+
+#~ msgid "Subscription Pool with ID ''{0}'' could not be found."
+#~ msgstr "ID ''{0}'' સાથે ઉમેદવારી પુલ શોધી શક્યા નહિં."
+
+#~ msgid "Entitlement Pool with ID ''{0}'' could not be found."
+#~ msgstr "ID ''{0}'' સાથે એંંટાઇટેલમેંટ પુલને શોધી શક્યા નહિં."
+
+#~ msgid "Product with UUID ''{0}'' could not be found."
+#~ msgstr "UUID ''{0}'' સાથે પ્રોડક્ટ શોધી શક્યા નહિં."
+
+#~ msgid "Cannot bind to pool ''{0}'' in activation key ''{1}'': {2}"
+#~ msgstr "સક્રિયકરણ કી ''{1}'' માં ''{0}'' ને બાંધી શકાતુ નથી : {2}"
+
+#~ msgid "Service level ''{0}'' is not available to units of organization {1}."
+#~ msgstr "સેવા સ્તર ''{0}'' એ સંસ્થા {1} નાં એકમો માટે ઉપલબ્ધ નથી."
