@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.1.15
+Version: 2.1.16
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,13 @@ fi
 
 #raw
 %changelog
+* Wed May 09 2018 Kevin Howell <khowell@redhat.com> 2.1.16-1
+- 1566217: Downgrade the logging when no jobs are cancelled
+  (wpoteat@redhat.com)
+- 1571354: Manifest import no longer fails when product changes
+  (adarshvritant@gmail.com)
+- Correct incorrect punctuation in user messages. (awood@redhat.com)
+
 * Mon Mar 19 2018 Kevin Howell <khowell@redhat.com> 2.1.15-1
 - 1558065: Added precondition check to add-share-consumer task
   (crog@redhat.com)
