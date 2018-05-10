@@ -26,6 +26,8 @@ import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
@@ -43,6 +45,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -55,6 +58,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.inject.Provider;
 import javax.inject.Singleton;
 import javax.persistence.LockModeType;
 import javax.persistence.TypedQuery;
@@ -72,8 +76,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @Inject private Configuration config;
     @Inject private FactValidator factValidator;
     @Inject private OwnerCurator ownerCurator;
-
-    private Map<String, Consumer> cachedHosts = new HashMap<>();
+    @Inject private Provider<HostCache> cachedHostsProvider;
 
     public ConsumerCurator() {
         super(Consumer.class);
@@ -528,8 +531,9 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         }
 
         String guestLower = guestId.toLowerCase();
-        if (cachedHosts.containsKey(guestLower)) {
-            return cachedHosts.get(guestLower);
+        Pair<String, List> key = new ImmutablePair<>(guestLower, Arrays.asList(owners));
+        if (cachedHostsProvider.get().containsKey(key)) {
+            return cachedHostsProvider.get().get(key);
         }
 
         Disjunction guestIdCrit = Restrictions.disjunction();
@@ -550,7 +554,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         }
 
         Consumer host = (Consumer) crit.uniqueResult();
-        cachedHosts.put(guestLower, host);
+        cachedHostsProvider.get().put(key, host);
         return host;
     }
 
