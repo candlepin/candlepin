@@ -13,7 +13,6 @@ gem 'stringex'
 gem 'digest-murmurhash'
 gem 'httpclient'
 gem 'activesupport', '~> 4.2'
-gem 'qpid_proton'
 
 # Remove this once we are fully using the new Ruby bindings
 gem 'rest-client', '~> 1.6.0'
@@ -27,4 +26,8 @@ group :development do
   # can result in new errors, so we control the version
   # very strictly
   gem 'rubocop', '=0.36.0'
+end
+
+group 'proton' do
+  gem 'qpid_proton', '~> 0.21.0'
 end
