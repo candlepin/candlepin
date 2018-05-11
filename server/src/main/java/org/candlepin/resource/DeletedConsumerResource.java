@@ -14,8 +14,9 @@
  */
 package org.candlepin.resource;
 
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.DeletedConsumerDTO;
 import org.candlepin.model.CandlepinQuery;
-import org.candlepin.model.DeletedConsumer;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.resource.util.ResourceDateParser;
 
@@ -40,22 +41,27 @@ import io.swagger.annotations.Authorization;
 @Api(value = "deleted_consumers", authorizations = { @Authorization("basic") })
 public class DeletedConsumerResource {
     private DeletedConsumerCurator deletedConsumerCurator;
+    private ModelTranslator translator;
 
     @Inject
-    public DeletedConsumerResource(DeletedConsumerCurator deletedConsumerCurator) {
+    public DeletedConsumerResource(DeletedConsumerCurator deletedConsumerCurator,
+        ModelTranslator translator) {
+
         this.deletedConsumerCurator = deletedConsumerCurator;
+        this.translator = translator;
     }
 
     @ApiOperation(
         notes = "Retrieves a list of Deleted Consumers By deletion date or all. " +
         "List returned is the deleted Consumers.",
-        value = "listByDate", response = DeletedConsumer.class, responseContainer = "list")
+        value = "listByDate", response = DeletedConsumerDTO.class, responseContainer = "list")
     @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 404, message = "") })
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public CandlepinQuery<DeletedConsumer> listByDate(@QueryParam("date") String dateStr) {
-        return dateStr != null ?
+    public CandlepinQuery<DeletedConsumerDTO> listByDate(@QueryParam("date") String dateStr) {
+        return this.translator.translateQuery(dateStr != null ?
             this.deletedConsumerCurator.findByDate(ResourceDateParser.parseDateString(dateStr)) :
-            this.deletedConsumerCurator.listAll();
+            this.deletedConsumerCurator.listAll(),
+            DeletedConsumerDTO.class);
     }
 }
