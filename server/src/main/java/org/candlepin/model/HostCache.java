@@ -19,13 +19,12 @@ import org.candlepin.guice.CandlepinRequestScoped;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.HashMap;
-import java.util.List;
 
 /**
  * Cache for host consumers (see https://github.com/candlepin/candlepin/pull/1334 for original rationale)
  *
- * Key is a Pair of Strings, with the first being the guest ID and the second being the possible org IDs.
+ * Key is a Pair of Strings, with the first being the guest ID and the second is the org ID.
  */
 @CandlepinRequestScoped
-public class HostCache extends HashMap<Pair<String, List>, Consumer> {
+public class HostCache extends HashMap<Pair<String, String>, Consumer> {
 }
