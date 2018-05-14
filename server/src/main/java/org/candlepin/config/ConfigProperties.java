@@ -128,6 +128,12 @@ public class ConfigProperties {
     public static final String ACTIVEMQ_REDELIVERY_MULTIPLIER =
         "candlepin.audit.hornetq.redelivery_multiplier";
 
+    /**
+     * The maximum number of redelivery attempts that should be made.
+     */
+    public static final String ACTIVEMQ_MAX_DELIVERY_ATTEMPTS =
+        "candlepin.audit.hornetq.max_delivery_attempts";
+
     public static final String AUDIT_LISTENERS = "candlepin.audit.listeners";
     public static final String AUDIT_LOG_FILE = "candlepin.audit.log_file";
     /**
@@ -327,9 +333,13 @@ public class ConfigProperties {
             this.put(ACTIVEMQ_MAX_QUEUE_SIZE, "10");
             this.put(ACTIVEMQ_MAX_PAGE_SIZE, "1");
 
+            // Re-deliver after 15 minutes on first failure.
             this.put(ACTIVEMQ_REDELIVERY_DELAY, "30000");
-            this.put(ACTIVEMQ_MAX_REDELIVERY_DELAY, "60000");
+            // Maximum re-delivery delay of 1 hour.
+            this.put(ACTIVEMQ_MAX_REDELIVERY_DELAY, "3600000");
             this.put(ACTIVEMQ_REDELIVERY_MULTIPLIER, "2");
+            // By default, never stop delivery attempts.
+            this.put(ACTIVEMQ_MAX_DELIVERY_ATTEMPTS, "0");
 
             this.put(AUDIT_LISTENERS,
                 "org.candlepin.audit.DatabaseListener," +
