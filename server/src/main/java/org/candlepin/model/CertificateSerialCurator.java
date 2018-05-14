@@ -26,6 +26,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
+import javax.inject.Singleton;
 import javax.persistence.Query;
 
 
@@ -33,6 +34,7 @@ import javax.persistence.Query;
 /**
  * CertificateSerialCurator - Interface to request a unique certificate serial number.
  */
+@Singleton
 public class CertificateSerialCurator extends AbstractHibernateCurator<CertificateSerial> {
 
     public CertificateSerialCurator() {

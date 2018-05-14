@@ -20,12 +20,14 @@ import com.google.inject.Inject;
 
 import javax.cache.Cache;
 import javax.cache.CacheManager;
+import javax.inject.Singleton;
 
 /**
  * Wrapper that makes it easier to retrieve various caches in Candlepin
  * @author fnguyen
  *
  */
+@Singleton
 public class CandlepinCache {
     private static final String CACHE_PRODUCT_FULL = "productfullcache";
 

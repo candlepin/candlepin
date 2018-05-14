@@ -41,11 +41,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import javax.inject.Singleton;
 import javax.persistence.EntityManager;
 
 /**
  * OwnerInfoCurator
  */
+@Singleton
 public class OwnerInfoCurator {
     private static Logger log = LoggerFactory.getLogger(OwnerInfoCurator.class);
 

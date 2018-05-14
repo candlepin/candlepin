@@ -26,10 +26,13 @@ import org.candlepin.sync.file.ManifestFileType;
 
 import com.google.inject.persist.Transactional;
 
+import javax.inject.Singleton;
+
 /**
  * Provides DB management for stored manifest archive files.
  *
  */
+@Singleton
 public class ManifestFileRecordCurator extends AbstractHibernateCurator<ManifestFileRecord> {
 
     private static final String QUERY_CLASS_NAME = ManifestFileRecord.class.getCanonicalName();

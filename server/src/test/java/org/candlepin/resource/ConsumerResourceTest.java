@@ -135,6 +135,7 @@ public class ConsumerResourceTest {
     public ExpectedException thrown = ExpectedException.none();
 
     private I18n i18n;
+    private Provider<I18n> i18nProvider = () -> i18n;
     private Configuration config;
     private FactValidator factValidator;
 
@@ -180,7 +181,7 @@ public class ConsumerResourceTest {
         when(eventBuilder.setEventData(any(Consumer.class))).thenReturn(eventBuilder);
         when(eventFactory.getEventBuilder(any(Target.class), any(Type.class))).thenReturn(eventBuilder);
 
-        this.factValidator = new FactValidator(this.config, this.i18n);
+        this.factValidator = new FactValidator(this.config, this.i18nProvider);
 
         testMigration = new GuestMigration(mockConsumerCurator);
         migrationProvider = Providers.of(testMigration);

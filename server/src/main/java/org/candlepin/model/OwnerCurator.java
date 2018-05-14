@@ -34,11 +34,14 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
+import javax.inject.Singleton;
+
 
 
 /**
  * OwnerCurator
  */
+@Singleton
 public class OwnerCurator extends AbstractHibernateCurator<Owner> {
 
     @Inject private CandlepinQueryFactory cpQueryFactory;

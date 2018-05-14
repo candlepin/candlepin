@@ -18,11 +18,14 @@ import com.google.inject.Inject;
 
 import org.hibernate.criterion.Restrictions;
 
+import javax.inject.Singleton;
+
 
 
 /**
  * ExportMetadataCurator
  */
+@Singleton
 public class ExporterMetadataCurator extends AbstractHibernateCurator<ExporterMetadata> {
 
     @Inject

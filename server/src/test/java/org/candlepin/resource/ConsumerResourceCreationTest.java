@@ -133,6 +133,7 @@ public class ConsumerResourceCreationTest {
     protected ModelTranslator modelTranslator;
 
     private I18n i18n;
+    private Provider<I18n> i18nProvider = () -> i18n;
 
     private ConsumerResource resource;
     private ConsumerTypeDTO systemDto;
@@ -160,7 +161,7 @@ public class ConsumerResourceCreationTest {
             null, this.idCertService, null, this.i18n, this.sink, null, null, null, this.userService, null,
             null, this.ownerCurator, this.activationKeyCurator, null, this.complianceRules,
             this.deletedConsumerCurator, null, null, this.config, null, null, null, this.consumerBindUtil,
-            null, null, new FactValidator(this.config, this.i18n),
+            null, null, new FactValidator(this.config, this.i18nProvider),
             null, consumerEnricher, migrationProvider, modelTranslator);
 
         this.system = this.initConsumerType();

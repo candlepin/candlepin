@@ -23,11 +23,14 @@ import com.google.inject.persist.Transactional;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 
+import javax.inject.Singleton;
+
 
 
 /**
  * SubscriptionTokenCurator
  */
+@Singleton
 public class ActivationKeyCurator extends AbstractHibernateCurator<ActivationKey> {
 
     public ActivationKeyCurator() {

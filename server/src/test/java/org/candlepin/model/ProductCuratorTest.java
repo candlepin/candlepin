@@ -75,7 +75,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         // Inject this attributeValidator into the curator
         Field field = ProductCurator.class.getDeclaredField("attributeValidator");
         field.setAccessible(true);
-        field.set(this.productCurator, new AttributeValidator(this.config, this.i18n));
+        field.set(this.productCurator, new AttributeValidator(this.config, this.i18nProvider));
 
         this.owner = this.createOwner();
 
