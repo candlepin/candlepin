@@ -280,7 +280,8 @@ public class ActiveMQContextListener {
             candlepinConfig.getLong(ConfigProperties.ACTIVEMQ_MAX_REDELIVERY_DELAY));
         addressSettings.setRedeliveryMultiplier(
             candlepinConfig.getLong(ConfigProperties.ACTIVEMQ_REDELIVERY_MULTIPLIER));
-        addressSettings.setMaxDeliveryAttempts(0);
+        addressSettings.setMaxDeliveryAttempts(
+            candlepinConfig.getInt(ConfigProperties.ACTIVEMQ_MAX_DELIVERY_ATTEMPTS));
     }
 
     /**
