@@ -18,11 +18,14 @@ import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 
+import javax.inject.Singleton;
+
 
 
 /**
  * Curator for {@link ImportRecord}s.
  */
+@Singleton
 public class ImportRecordCurator extends AbstractHibernateCurator<ImportRecord> {
 
     public ImportRecordCurator() {

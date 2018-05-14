@@ -22,11 +22,14 @@ import org.hibernate.criterion.Restrictions;
 import java.util.Date;
 import java.util.List;
 
+import javax.inject.Singleton;
+
 
 
 /**
  * EntitlementCertificateCurator
  */
+@Singleton
 public class EntitlementCertificateCurator extends AbstractHibernateCurator<EntitlementCertificate> {
 
     @Inject

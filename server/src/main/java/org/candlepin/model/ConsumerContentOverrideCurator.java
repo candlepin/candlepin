@@ -14,9 +14,12 @@
  */
 package org.candlepin.model;
 
+import javax.inject.Singleton;
+
 /**
  * ConsumerContentOverrideCurator
  */
+@Singleton
 public class ConsumerContentOverrideCurator
     extends ContentOverrideCurator<ConsumerContentOverride, Consumer> {
 

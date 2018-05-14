@@ -34,11 +34,14 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Set;
 
+import javax.inject.Singleton;
+
 
 
 /**
  * ProductCertificateCurator
  */
+@Singleton
 public class ProductCertificateCurator extends AbstractHibernateCurator<ProductCertificate> {
     private static Logger log = LoggerFactory.getLogger(ProductCertificateCurator.class);
 

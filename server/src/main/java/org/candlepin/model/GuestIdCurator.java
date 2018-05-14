@@ -19,9 +19,12 @@ import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Singleton;
+
 /**
  * GuestIdCurator
  */
+@Singleton
 public class GuestIdCurator extends AbstractHibernateCurator<GuestId> {
 
     private static Logger log = LoggerFactory.getLogger(GuestIdCurator.class);
