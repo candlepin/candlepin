@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.3.6
+Version: 2.3.7
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,11 @@ fi
 
 #raw
 %changelog
+* Mon May 14 2018 Kevin Howell <khowell@redhat.com> 2.3.7-1
+- Make host cache CandlepinRequestScoped (khowell@redhat.com)
+- Make various components singletons (khowell@redhat.com)
+- Make I18nProvider a singleton (khowell@redhat.com)
+
 * Fri Apr 13 2018 Kevin Howell <khowell@redhat.com> 2.3.6-1
 - 1566244: Speculative Fix For Failing CertificateRevocationListTask
   (crog@redhat.com)
