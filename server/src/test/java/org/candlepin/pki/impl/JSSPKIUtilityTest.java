@@ -21,9 +21,12 @@ import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
+import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509CRLEntryWrapper;
+import org.candlepin.pki.X509ExtensionWrapper;
 import org.candlepin.test.CertificateReaderForTesting;
 import org.candlepin.test.TestDateUtil;
+import org.candlepin.util.OIDUtil;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
@@ -34,6 +37,7 @@ import com.google.inject.Module;
 import org.bouncycastle.asn1.ASN1Integer;
 import org.bouncycastle.asn1.ASN1OctetString;
 import org.bouncycastle.asn1.DERBitString;
+import org.bouncycastle.asn1.DERUTF8String;
 import org.bouncycastle.asn1.misc.MiscObjectIdentifiers;
 import org.bouncycastle.asn1.misc.NetscapeCertType;
 import org.bouncycastle.asn1.x509.AuthorityKeyIdentifier;
@@ -74,7 +78,9 @@ import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.inject.Inject;
 
@@ -154,6 +160,37 @@ public class JSSPKIUtilityTest {
         );
 
         assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testCustomExtensions() throws Exception {
+        Date start = new Date();
+        Date end = Date.from(LocalDate.now().plusDays(365).atStartOfDay(ZoneId.systemDefault()).toInstant());
+
+        String extOid =
+            OIDUtil.REDHAT_OID + "." + OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ENTITLEMENT_TYPE_KEY);
+        X509ExtensionWrapper typeExtension = new X509ExtensionWrapper(extOid, false, "OrgLevel");
+        Set<X509ExtensionWrapper> exts = new LinkedHashSet<>();
+        exts.add(typeExtension);
+
+        String byteExtOid =
+            OIDUtil.REDHAT_OID + "." + OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ENTITLEMENT_DATA_KEY);
+        byte[] someBytes = new byte[] { 0xd, 0xe, 0xf, 0xa, 0xc, 0xe, 0xa, 0xc, 0xe };
+        X509ByteExtensionWrapper byeExtension = new X509ByteExtensionWrapper(byteExtOid, false, someBytes);
+        Set<X509ByteExtensionWrapper> byteExtensions = new LinkedHashSet<>();
+        byteExtensions.add(byeExtension);
+
+        X509Certificate cert = jssUtil.createX509Certificate("cn=candlepinproject.org", exts,
+            byteExtensions, start, end, subjectKeyPair, BigInteger.valueOf(2000L), "altName");
+
+        ASN1OctetString value =
+            (ASN1OctetString) ASN1OctetString.fromByteArray(cert.getExtensionValue(extOid));
+        DERUTF8String actual = DERUTF8String.getInstance(value.getOctets());
+        assertEquals("OrgLevel", actual.getString());
+
+        value = (ASN1OctetString) ASN1OctetString.fromByteArray(cert.getExtensionValue(byteExtOid));
+        ASN1OctetString actualBytes = ASN1OctetString.getInstance(value.getOctets());
+        assertArrayEquals(someBytes, actualBytes.getOctets());
     }
 
     @Test
