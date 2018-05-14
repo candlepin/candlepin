@@ -435,8 +435,11 @@ public class X509CRLStreamWriterTest {
 
         long changedCrlUpdateDelta =
             changedCrl.getNextUpdate().getTime() - changedCrl.getThisUpdate().getTime();
+        long expectedUpdateDelta = oneHourHence.getTime() - oneHourAgo.getTime();
 
-        assertEquals(changedCrlUpdateDelta, oneHourHence.getTime() - oneHourAgo.getTime());
+        // Allow for a little fuzz between the expected and actual value due to timing issues that can occur
+        assertThat(Math.abs(changedCrlUpdateDelta - expectedUpdateDelta),
+            OrderingComparison.lessThanOrEqualTo(5L));
         assertThat(changedCrl.getThisUpdate(), OrderingComparison.greaterThan(originalCrl.getThisUpdate()));
 
         assertEquals(newSerials, discoveredSerials);
