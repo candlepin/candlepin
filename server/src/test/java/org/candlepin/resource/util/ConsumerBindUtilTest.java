@@ -24,7 +24,9 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.Role;
@@ -61,6 +63,7 @@ public class ConsumerBindUtilTest {
     private static final String USER = "testuser";
 
     @Mock private ConsumerContentOverrideCurator consumerContentOverrideCurator;
+    @Mock private OwnerCurator ownerCurator;
     @Mock private Entitler entitler;
     @Mock private ServiceLevelValidator serviceLevelValidator;
 
@@ -76,10 +79,15 @@ public class ConsumerBindUtilTest {
     public void init() throws Exception {
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
 
+        this.system = new ConsumerType(ConsumerTypeEnum.SYSTEM);
+        this.system.setId("test-ctype-" + TestUtil.randomInt());
+        owner = TestUtil.createOwner();
+        owner.setId(TestUtil.randomString());
         consumerBindUtil = new ConsumerBindUtil(
             this.entitler,
             this.i18n,
             this.consumerContentOverrideCurator,
+            this.ownerCurator,
             null,
             this.serviceLevelValidator
         );
@@ -118,7 +126,7 @@ public class ConsumerBindUtilTest {
         cips.add(cip);
         consumer.setInstalledProducts(cips);
 
-        AutobindData ad = new AutobindData(consumer).withPools(poolIds).forProducts(prodIds);
+        AutobindData ad = new AutobindData(consumer, owner).withPools(poolIds).forProducts(prodIds);
         consumerBindUtil.handleActivationKeys(consumer, keys, false);
         verify(entitler).bindByProducts(eq(ad));
     }
@@ -139,7 +147,7 @@ public class ConsumerBindUtilTest {
         cips.add(cip);
         consumer.setInstalledProducts(cips);
 
-        AutobindData ad = new AutobindData(consumer).forProducts(prodIds);
+        AutobindData ad = new AutobindData(consumer, owner).forProducts(prodIds);
         consumerBindUtil.handleActivationKeys(consumer, keys, false);
         verify(entitler).bindByProducts(eq(ad));
     }
@@ -164,7 +172,7 @@ public class ConsumerBindUtilTest {
         cips.add(cip);
         consumer.setInstalledProducts(cips);
 
-        AutobindData ad = new AutobindData(consumer).forProducts(prodIds);
+        AutobindData ad = new AutobindData(consumer, owner).forProducts(prodIds);
         consumerBindUtil.handleActivationKeys(consumer, keys, false);
         verify(entitler).bindByProducts(eq(ad));
     }
@@ -178,7 +186,7 @@ public class ConsumerBindUtilTest {
 
         Consumer consumer = new Consumer("sys.example.com", null, null, system);
         doThrow(new BadRequestException("exception")).when(serviceLevelValidator)
-            .validate(eq(owner), eq(key1.getServiceLevel()));
+            .validate(eq(owner.getId()), eq(key1.getServiceLevel()));
         consumerBindUtil.handleActivationKeys(consumer, keys, false);
     }
 
@@ -191,7 +199,7 @@ public class ConsumerBindUtilTest {
 
         Consumer consumer = new Consumer("sys.example.com", null, null, system);
         doThrow(new BadRequestException("exception")).when(serviceLevelValidator)
-            .validate(eq(owner), eq(key1.getServiceLevel()));
+            .validate(eq(owner.getId()), eq(key1.getServiceLevel()));
         consumerBindUtil.handleActivationKeys(consumer, keys, false);
     }
 

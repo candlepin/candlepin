@@ -21,11 +21,14 @@ import org.hibernate.criterion.Restrictions;
 
 import java.util.Date;
 
+import javax.inject.Singleton;
+
 
 
 /**
  * DeletedConsumerCurator
  */
+@Singleton
 public class DeletedConsumerCurator extends AbstractHibernateCurator<DeletedConsumer> {
 
     public DeletedConsumerCurator() {

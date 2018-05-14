@@ -260,7 +260,7 @@ public class OwnerContentResourceTest extends DatabaseTestFixture {
         assertNull(this.ownerContentCurator.getContentById(owner, content.getId()));
 
         this.environmentCurator.evict(environment);
-        environment = this.environmentCurator.find(environment.getId());
+        environment = this.environmentCurator.get(environment.getId());
 
         assertEquals(0, environment.getEnvironmentContent().size());
     }
@@ -284,7 +284,7 @@ public class OwnerContentResourceTest extends DatabaseTestFixture {
             assertNotNull(this.ownerContentCurator.getContentById(owner, content.getId()));
 
             this.environmentCurator.evict(environment);
-            environment = this.environmentCurator.find(environment.getId());
+            environment = this.environmentCurator.get(environment.getId());
 
             assertEquals(1, environment.getEnvironmentContent().size());
 

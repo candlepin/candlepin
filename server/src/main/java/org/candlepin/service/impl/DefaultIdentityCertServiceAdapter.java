@@ -71,8 +71,8 @@ public class DefaultIdentityCertServiceAdapter implements
             log.warn("Unable to delete null identity cert for consumer: {}", consumer.getUuid());
             return;
         }
-        IdentityCertificate certificate = idCertCurator
-            .find(consumer.getIdCert().getId());
+
+        IdentityCertificate certificate = idCertCurator.get(consumer.getIdCert().getId());
         if (certificate != null) {
             idCertCurator.delete(certificate);
         }
@@ -90,7 +90,7 @@ public class DefaultIdentityCertServiceAdapter implements
         IdentityCertificate certificate = null;
 
         if (consumer.getIdCert() != null) {
-            certificate = idCertCurator.find(consumer.getIdCert().getId());
+            certificate = idCertCurator.get(consumer.getIdCert().getId());
         }
 
         if (certificate != null) {
@@ -107,7 +107,7 @@ public class DefaultIdentityCertServiceAdapter implements
         IdentityCertificate certificate = null;
 
         if (consumer.getIdCert() != null) {
-            certificate = idCertCurator.find(consumer.getIdCert().getId());
+            certificate = idCertCurator.get(consumer.getIdCert().getId());
         }
 
         if (certificate != null) {

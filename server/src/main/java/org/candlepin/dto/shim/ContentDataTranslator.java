@@ -23,7 +23,7 @@ import org.candlepin.model.dto.ContentData;
 
 /**
  * The ContentDataTranslator provides translation from ContentData DTO objects to the new
- * ContentDTOs
+ * ContentDTOs (API)
  */
 public class ContentDataTranslator implements ObjectTranslator<ContentData, ContentDTO> {
 

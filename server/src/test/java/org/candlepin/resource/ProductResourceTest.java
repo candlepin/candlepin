@@ -24,6 +24,7 @@ import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.dto.api.v1.ContentDTO;
+import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.ProductCertificateDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.model.ContentCurator;
@@ -129,7 +130,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
         ProductResource pr = new ProductResource(pc, null, null, config, i18n, this.modelTranslator);
         Owner o = mock(Owner.class);
         Product p = mock(Product.class);
-        // when(pc.lookupById(eq(o), eq("10"))).thenReturn(p);
+        // when(pc.getById(eq(o), eq("10"))).thenReturn(p);
         Set<Subscription> subs = new HashSet<>();
         Subscription s = mock(Subscription.class);
         subs.add(s);
@@ -211,18 +212,23 @@ public class ProductResourceTest extends DatabaseTestFixture {
         Owner owner1 = owners.get(0);
         Owner owner2 = owners.get(1);
         Owner owner3 = owners.get(2);
+        OwnerDTO ownerDTO1 = this.modelTranslator.translate(owner1, OwnerDTO.class);
+        OwnerDTO ownerDTO2 = this.modelTranslator.translate(owner2, OwnerDTO.class);
+        OwnerDTO ownerDTO3 = this.modelTranslator.translate(owner3, OwnerDTO.class);
 
-        owners = productResource.getProductOwners(Arrays.asList("p1")).list();
-        assertEquals(Arrays.asList(owner1, owner2), owners);
+        List<OwnerDTO> ownersReturned = null;
 
-        owners = productResource.getProductOwners(Arrays.asList("p1", "p2")).list();
-        assertEquals(Arrays.asList(owner1, owner2, owner3), owners);
+        ownersReturned = productResource.getProductOwners(Arrays.asList("p1")).list();
+        assertEquals(Arrays.asList(ownerDTO1, ownerDTO2), ownersReturned);
 
-        owners = productResource.getProductOwners(Arrays.asList("p3")).list();
-        assertEquals(Arrays.asList(owner3), owners);
+        ownersReturned = productResource.getProductOwners(Arrays.asList("p1", "p2")).list();
+        assertEquals(Arrays.asList(ownerDTO1, ownerDTO2, ownerDTO3), ownersReturned);
 
-        owners = productResource.getProductOwners(Arrays.asList("nope")).list();
-        assertEquals(0, owners.size());
+        ownersReturned = productResource.getProductOwners(Arrays.asList("p3")).list();
+        assertEquals(Arrays.asList(ownerDTO3), ownersReturned);
+
+        ownersReturned = productResource.getProductOwners(Arrays.asList("nope")).list();
+        assertEquals(0, ownersReturned.size());
     }
 
     @Test(expected = BadRequestException.class)

@@ -19,15 +19,38 @@ import org.candlepin.dto.TimestampedEntityTranslator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCapability;
 import org.candlepin.model.ConsumerInstalledProduct;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
+
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.HashSet;
 import java.util.Set;
+
+
 
 /**
  * The ConsumerTranslator provides translation from Consumer model objects to
  * ConsumerDTOs, as used by the Rules framework.
  */
 public class ConsumerTranslator extends TimestampedEntityTranslator<Consumer, ConsumerDTO> {
+
+    private ConsumerTypeCurator consumerTypeCurator;
+    private OwnerCurator ownerCurator;
+
+    public ConsumerTranslator(ConsumerTypeCurator consumerTypeCurator, OwnerCurator ownerCurator) {
+        if (consumerTypeCurator == null) {
+            throw new IllegalArgumentException("ConsumerTypeCurator is null");
+        }
+        this.consumerTypeCurator = consumerTypeCurator;
+
+        if (ownerCurator == null) {
+            throw new IllegalArgumentException("OwnerCurator is null");
+        }
+        this.ownerCurator = ownerCurator;
+    }
 
     /**
      * {@inheritDoc}
@@ -68,7 +91,11 @@ public class ConsumerTranslator extends TimestampedEntityTranslator<Consumer, Co
 
         // Process nested objects if we have a ModelTranslator to use to the translation...
         if (translator != null) {
-            dest.setOwner(translator.translate(source.getOwner(), OwnerDTO.class));
+
+            if (StringUtils.isNotEmpty(source.getOwnerId())) {
+                Owner owner = ownerCurator.findOwnerById(source.getOwnerId());
+                dest.setOwner(translator.translate(owner, OwnerDTO.class));
+            }
 
             Set<ConsumerInstalledProduct> installedProducts = source.getInstalledProducts();
             if (installedProducts != null) {
@@ -92,7 +119,14 @@ public class ConsumerTranslator extends TimestampedEntityTranslator<Consumer, Co
                 dest.setCapabilities(capabilitiesDTO);
             }
 
-            dest.setType(translator.translate(source.getType(), ConsumerTypeDTO.class));
+            // Temporary measure to maintain API compatibility
+            if (source.getTypeId() != null) {
+                ConsumerType ctype = this.consumerTypeCurator.getConsumerType(source);
+                dest.setType(translator.translate(ctype, ConsumerTypeDTO.class));
+            }
+            else {
+                dest.setType(null);
+            }
         }
         else {
             dest.setOwner(null);

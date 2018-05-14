@@ -269,7 +269,7 @@ public class JobResource {
     @Produces(MediaType.APPLICATION_JSON)
     public JobStatusDTO getStatus(@PathParam("job_id") @Verify(JobStatus.class) String jobId,
         @QueryParam("result_data") @DefaultValue("false") boolean resultData) {
-        JobStatus js = curator.find(jobId);
+        JobStatus js = curator.get(jobId);
         js.cloakResultData(!resultData);
         return this.translator.translate(js, JobStatusDTO.class);
     }
@@ -280,7 +280,7 @@ public class JobResource {
     @Path("/{job_id}")
     @Produces(MediaType.APPLICATION_JSON)
     public JobStatusDTO cancel(@PathParam("job_id") @Verify(JobStatus.class) String jobId) {
-        JobStatus j = curator.find(jobId);
+        JobStatus j = curator.get(jobId);
         if (j.getState().equals(JobState.CANCELED)) {
             throw new BadRequestException(i18n.tr("job already canceled"));
         }
@@ -298,7 +298,7 @@ public class JobResource {
     @Consumes(MediaType.WILDCARD)
     public JobStatusDTO getStatusAndDeleteIfFinished(
         @PathParam("job_id") @Verify(JobStatus.class) String jobId) {
-        JobStatus status = curator.find(jobId);
+        JobStatus status = curator.get(jobId);
 
         if (status != null && status.getState() == JobState.FINISHED) {
             curator.delete(status);

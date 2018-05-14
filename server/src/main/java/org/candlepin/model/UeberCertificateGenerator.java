@@ -43,6 +43,8 @@ import java.util.LinkedList;
 import java.util.Set;
 import java.util.TimeZone;
 
+
+
 /**
  * UeberCertificateGenerator
  */
@@ -61,6 +63,7 @@ public class UeberCertificateGenerator {
     private X509ExtensionUtil extensionUtil;
     private OwnerCurator ownerCurator;
     private UeberCertificateCurator ueberCertCurator;
+    private ConsumerTypeCurator consumerTypeCurator;
     private I18n i18n;
 
     @Inject
@@ -72,6 +75,7 @@ public class UeberCertificateGenerator {
         CertificateSerialCurator serialCurator,
         OwnerCurator ownerCurator,
         UeberCertificateCurator ueberCertCurator,
+        ConsumerTypeCurator consumerTypeCurator,
         I18n i18n) {
 
         this.idGenerator = idGenerator;
@@ -81,12 +85,13 @@ public class UeberCertificateGenerator {
         this.extensionUtil = extensionUtil;
         this.ownerCurator = ownerCurator;
         this.ueberCertCurator = ueberCertCurator;
+        this.consumerTypeCurator = consumerTypeCurator;
         this.i18n = i18n;
     }
 
     @Transactional
     public UeberCertificate generate(String ownerKey, Principal principal) {
-        Owner owner = this.ownerCurator.lookupByKey(ownerKey);
+        Owner owner = this.ownerCurator.getByKey(ownerKey);
         if (owner == null) {
             throw new NotFoundException(i18n.tr("Unable to find an owner with key: {0}", ownerKey));
         }
@@ -106,7 +111,9 @@ public class UeberCertificateGenerator {
     }
 
     private UeberCertificate generateUeberCert(Owner owner, String generatedByUsername) throws Exception {
-        UeberCertData ueberCertData = new UeberCertData(owner, generatedByUsername);
+        ConsumerType ueberCertType = this.consumerTypeCurator.getByLabel(UEBER_CERT_CONSUMER_TYPE, true);
+
+        UeberCertData ueberCertData = new UeberCertData(owner, generatedByUsername, ueberCertType);
 
         CertificateSerial serial = new CertificateSerial(ueberCertData.getEndDate());
         serialCurator.create(serial);
@@ -159,6 +166,7 @@ public class UeberCertificateGenerator {
      */
     private class UeberCertData {
         private Owner owner;
+        private ConsumerType ueberCertType;
         private Consumer consumer;
         private Product product;
         private Content content;
@@ -168,11 +176,12 @@ public class UeberCertificateGenerator {
         private Date startDate;
         private Date endDate;
 
-        public UeberCertData(Owner owner, String generatedByUsername) {
+        public UeberCertData(Owner owner, String generatedByUsername, ConsumerType ueberCertType) {
             startDate = Calendar.getInstance().getTime();
             endDate = lateIn2049();
 
             this.owner = owner;
+            this.ueberCertType = ueberCertType;
             this.consumer = createUeberConsumer(generatedByUsername, owner);
             this.product = createUeberProductForOwner(idGenerator, owner);
             this.content = createUeberContent(idGenerator, owner, product);
@@ -180,7 +189,7 @@ public class UeberCertificateGenerator {
 
             this.pool = new Pool(this.owner, this.product, new LinkedList<>(), 1L, this.startDate,
                 this.endDate, "", "", "");
-            this.entitlement = new Entitlement(this.pool, this.consumer, 1);
+            this.entitlement = new Entitlement(this.pool, this.consumer, owner, 1);
         }
 
         public Product getProduct() {
@@ -212,8 +221,7 @@ public class UeberCertificateGenerator {
         }
 
         private Consumer createUeberConsumer(String username, Owner owner) {
-            ConsumerType type = new ConsumerType(UEBER_CERT_CONSUMER_TYPE);
-            Consumer consumer = new Consumer(UEBER_CERT_CONSUMER, username, owner, type);
+            Consumer consumer = new Consumer(UEBER_CERT_CONSUMER, username, owner, this.ueberCertType);
             return consumer;
         }
 

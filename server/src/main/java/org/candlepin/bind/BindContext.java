@@ -16,7 +16,11 @@ package org.candlepin.bind;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQuantity;
@@ -44,6 +48,7 @@ import java.util.Map;
  */
 public class BindContext {
     private Consumer consumer;
+    private Owner owner;
     private Consumer lockedConsumer;
     private Map<String, PoolQuantity> poolQuantities;
     private Map<String, Entitlement> entitlementMap;
@@ -53,16 +58,23 @@ public class BindContext {
     private EntitlementRefusedException exception;
     private PoolCurator poolCurator;
     private ConsumerCurator consumerCurator;
+    private ConsumerTypeCurator consumerTypeCurator;
+    private OwnerCurator ownerCurator;
     private I18n i18n;
 
     @Inject
     public BindContext(PoolCurator poolCurator,
         ConsumerCurator consumerCurator,
+        ConsumerTypeCurator consumerTypeCurator,
+        OwnerCurator ownerCurator,
         I18n i18n,
         @Assisted Consumer consumer,
         @Assisted Map<String, Integer> quantities) {
+
         this.poolCurator = poolCurator;
         this.consumerCurator = consumerCurator;
+        this.consumerTypeCurator = consumerTypeCurator;
+        this.ownerCurator = ownerCurator;
         this.i18n = i18n;
         this.consumer = consumer;
         this.quantities = quantities;
@@ -74,6 +86,17 @@ public class BindContext {
 
     public Consumer getConsumer() {
         return consumer;
+    }
+
+    public ConsumerType getConsumerType() {
+        return this.consumerTypeCurator.getConsumerType(this.getConsumer());
+    }
+
+    public Owner getOwner() {
+        if (owner == null) {
+            owner = ownerCurator.findOwnerById(consumer.getOwnerId());
+        }
+        return owner;
     }
 
     public Map<String, PoolQuantity> getPoolQuantities() {
@@ -112,6 +135,7 @@ public class BindContext {
         if (lockedConsumer == null) {
             lockedConsumer = consumerCurator.lockAndLoad(consumer);
         }
+
         return lockedConsumer;
     }
 
@@ -121,7 +145,7 @@ public class BindContext {
 
             for (PoolQuantity poolQuantity : poolQuantities.values()) {
                 Pool pool = poolQuantity.getPool();
-                Entitlement ent = new Entitlement(consumer, poolQuantity.getQuantity());
+                Entitlement ent = new Entitlement(consumer, getOwner(), poolQuantity.getQuantity());
                 // we manually generate ids as they are needed before the entitlement
                 // can be persisted.
                 ent.setId(Util.generateDbUUID());

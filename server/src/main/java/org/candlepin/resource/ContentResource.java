@@ -94,7 +94,7 @@ public class ContentResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{content_uuid}")
     public ContentDTO getContent(@PathParam("content_uuid") String contentUuid) {
-        Content content = this.contentCurator.lookupByUuid(contentUuid);
+        Content content = this.contentCurator.getByUuid(contentUuid);
 
         if (content == null) {
             throw new NotFoundException(
@@ -108,7 +108,7 @@ public class ContentResource {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public ContentDTO createContent(Content content) {
+    public ContentDTO createContent(ContentDTO content) {
         throw new BadRequestException(this.i18n.tr(
             "Organization-agnostic content write operations are not supported."));
     }
@@ -118,7 +118,7 @@ public class ContentResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("/batch")
-    public Iterable<ContentDTO> createBatchContent(List<Content> contents) {
+    public Iterable<ContentDTO> createBatchContent(List<ContentDTO> contents) {
         throw new BadRequestException(this.i18n.tr(
             "Organization-agnostic content write operations are not supported."));
     }
@@ -128,7 +128,7 @@ public class ContentResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("/{content_uuid}")
-    public ContentDTO updateContent(@PathParam("content_uuid") String contentUuid, Content changes) {
+    public ContentDTO updateContent(@PathParam("content_uuid") String contentUuid, ContentDTO changes) {
         throw new BadRequestException(this.i18n.tr(
             "Organization-agnostic content write operations are not supported."));
     }

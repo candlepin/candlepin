@@ -20,7 +20,15 @@ import org.candlepin.dto.TimestampedEntityTranslator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCapability;
 import org.candlepin.model.ConsumerInstalledProduct;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.Environment;
+import org.candlepin.model.EnvironmentCurator;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Release;
+
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -31,6 +39,30 @@ import java.util.Set;
  * ConsumerDTOs
  */
 public class ConsumerTranslator extends TimestampedEntityTranslator<Consumer, ConsumerDTO> {
+
+    protected ConsumerTypeCurator consumerTypeCurator;
+    protected EnvironmentCurator environmentCurator;
+    private OwnerCurator ownerCurator;
+
+    public ConsumerTranslator(ConsumerTypeCurator consumerTypeCurator,
+        EnvironmentCurator environmentCurator, OwnerCurator ownerCurator) {
+
+        if (consumerTypeCurator == null) {
+            throw new IllegalArgumentException("ConsumerTypeCurator is null");
+        }
+
+        if (environmentCurator == null) {
+            throw new IllegalArgumentException("environmentCurator is null");
+        }
+
+        if (ownerCurator == null) {
+            throw new IllegalArgumentException("OwnerCurator is null");
+        }
+
+        this.ownerCurator = ownerCurator;
+        this.consumerTypeCurator = consumerTypeCurator;
+        this.environmentCurator = environmentCurator;
+    }
 
     /**
      * {@inheritDoc}
@@ -60,9 +92,7 @@ public class ConsumerTranslator extends TimestampedEntityTranslator<Consumer, Co
      * {@inheritDoc}
      */
     @Override
-    public ConsumerDTO populate(ModelTranslator translator, Consumer source,
-        ConsumerDTO dest) {
-
+    public ConsumerDTO populate(ModelTranslator translator, Consumer source, ConsumerDTO dest) {
         dest = super.populate(translator, source, dest);
 
         dest.setId(source.getId())
@@ -88,8 +118,13 @@ public class ConsumerTranslator extends TimestampedEntityTranslator<Consumer, Co
 
         // Process nested objects if we have a ModelTranslator to use to the translation...
         if (translator != null) {
-            dest.setOwner(translator.translate(source.getOwner(), OwnerDTO.class));
-            dest.setEnvironment(translator.translate(source.getEnvironment(), EnvironmentDTO.class));
+            if (StringUtils.isNotEmpty(source.getOwnerId())) {
+                Owner owner = ownerCurator.findOwnerById(source.getOwnerId());
+                dest.setOwner(translator.translate(owner, OwnerDTO.class));
+            }
+
+            Environment environment = this.environmentCurator.getConsumerEnvironment(source);
+            dest.setEnvironment(translator.translate(environment, EnvironmentDTO.class));
 
             Set<ConsumerInstalledProduct> installedProducts = source.getInstalledProducts();
             if (installedProducts != null) {
@@ -125,12 +160,20 @@ public class ConsumerTranslator extends TimestampedEntityTranslator<Consumer, Co
                 dest.setCapabilities(capabilitiesDTO);
             }
 
+            // Temporary measure to maintain API compatibility
+            if (source.getTypeId() != null) {
+                ConsumerType ctype = this.consumerTypeCurator.getConsumerType(source);
+                dest.setType(translator.translate(ctype, ConsumerTypeDTO.class));
+            }
+            else {
+                dest.setType(null);
+            }
+
             //This will put in the property so that the virtWho instances won't error
             dest.setGuestIds(new ArrayList<>());
 
             dest.setHypervisorId(translator.translate(source.getHypervisorId(), HypervisorIdDTO.class));
-            dest.setType(translator.translate(source.getType(), ConsumerTypeDTO.class));
-            dest.setIdCert(translator.translate(source.getIdCert(), CertificateDTO.class));
+            dest.setIdCertificate(translator.translate(source.getIdCert(), CertificateDTO.class));
         }
         else {
             dest.setReleaseVersion(null);
@@ -140,7 +183,7 @@ public class ConsumerTranslator extends TimestampedEntityTranslator<Consumer, Co
             dest.setCapabilities(null);
             dest.setHypervisorId(null);
             dest.setType(null);
-            dest.setIdCert(null);
+            dest.setIdCertificate(null);
         }
 
         return dest;

@@ -45,7 +45,7 @@ public class ConsumerTypeValidator {
 
     public List<ConsumerType> findAndValidateTypeLabels(Set<String> labels) {
         if (labels != null && !labels.isEmpty()) {
-            List<ConsumerType> types = consumerTypeCurator.lookupByLabels(labels);
+            List<ConsumerType> types = consumerTypeCurator.getByLabels(labels);
             validate(types, labels);
             return types;
         }

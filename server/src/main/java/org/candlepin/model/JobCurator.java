@@ -40,6 +40,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.inject.Singleton;
 import javax.persistence.TypedQuery;
 
 
@@ -47,6 +48,7 @@ import javax.persistence.TypedQuery;
 /**
  *
  */
+@Singleton
 public class JobCurator extends AbstractHibernateCurator<JobStatus> {
 
     private Configuration config;
@@ -60,7 +62,7 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
     @Transactional
     public JobStatus cancel(String jobId) {
         this.cancelNoReturn(jobId);
-        JobStatus result = this.find(jobId);
+        JobStatus result = this.get(jobId);
         if (result != null) {
             this.refresh(result);
         }

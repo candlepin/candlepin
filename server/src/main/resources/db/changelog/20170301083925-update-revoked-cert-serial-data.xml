@@ -14,6 +14,7 @@
 
     <changeSet id="20170301083925-1" author="mstead">
         <validCheckSum>7:e5dc16a5b9672bbdf38bdac361c9d289</validCheckSum>
+        <validCheckSum>7:f6ab674c256df2b2a99789e343daf40b</validCheckSum>
 
         <comment>
             Calculate the value of the field for all known serials

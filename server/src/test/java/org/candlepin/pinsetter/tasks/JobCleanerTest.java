@@ -13,6 +13,7 @@
  * in this software or its documentation.
  */
 package org.candlepin.pinsetter.tasks;
+
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
@@ -21,13 +22,15 @@ import org.candlepin.model.JobCurator;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.quartz.JobExecutionContext;
+
 import java.util.Date;
 
 
 /**
  * JobCleanerTest
  */
-public class JobCleanerTest extends BaseJobTest{
+public class JobCleanerTest extends BaseJobTest {
 
     @Before
     public void init() {
@@ -38,8 +41,10 @@ public class JobCleanerTest extends BaseJobTest{
     public void execute() throws Exception {
         JobCurator curator = mock(JobCurator.class);
         JobCleaner cleaner = new JobCleaner(curator);
+        JobExecutionContext context = mock(JobExecutionContext.class);
         injector.injectMembers(cleaner);
-        cleaner.execute(null);
+
+        cleaner.execute(context);
         verify(curator).cleanUpOldCompletedJobs(any(Date.class));
         verify(curator).cleanupAllOldJobs(any(Date.class));
     }

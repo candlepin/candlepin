@@ -11,10 +11,12 @@
 
     <changeSet id="20161109145238-1" author="wpoteat">
         <validCheckSum>7:e7d90208e03c95b6b43ff73e4a6c441b</validCheckSum>
+        <validCheckSum>7:bbc2d8aa1f2baa79d636c765a244fee8</validCheckSum>
 
         <comment>add-owner-environment-content-access</comment>
         <createTable tableName="cp_owner_env_content_access">
             <column name="id" type="VARCHAR(32)">
+                <!-- NOTE: in 2.1 primaryKeyName was cp_owner_env_content_access_pkey -->
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_owner_ec_access_pkey"/>
             </column>
             <column name="owner_id" type="VARCHAR(32)">
@@ -35,6 +37,8 @@
         <addForeignKeyConstraint baseColumnNames="environment_id" baseTableName="cp_owner_env_content_access" constraintName="fk_owner_env_cont_acc_env" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_environment" referencesUniqueColumn="false"/>
     </changeSet>
     <changeSet author="wpoteat" id="20161109145238-02">
+        <validCheckSum>7:f0088c7c4134a1161a75334886f85f48</validCheckSum>
+        <!-- NOTE: in 2.1 constraintName was cp_owner_env_content_access_ukey -->
         <addUniqueConstraint columnNames="owner_id, environment_id" constraintName="cp_owner_ec_access_ukey" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_owner_env_content_access"/>
     </changeSet>
 

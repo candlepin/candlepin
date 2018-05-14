@@ -19,9 +19,12 @@ import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Singleton;
+
 /**
  * GuestIdCurator
  */
+@Singleton
 public class GuestIdCurator extends AbstractHibernateCurator<GuestId> {
 
     private static Logger log = LoggerFactory.getLogger(GuestIdCurator.class);
@@ -45,11 +48,11 @@ public class GuestIdCurator extends AbstractHibernateCurator<GuestId> {
             .uniqueResult();
     }
 
-    public GuestId findByGuestIdAndOrg(String guestUuid, Owner owner) {
+    public GuestId findByGuestIdAndOrg(String guestUuid, String ownerId) {
         return (GuestId) this.currentSession().createCriteria(GuestId.class)
             .add(Restrictions.eq("guestIdLower", guestUuid.toLowerCase()))
             .createAlias("consumer", "gconsumer")
-            .add(Restrictions.eq("gconsumer.owner", owner))
+            .add(Restrictions.eq("gconsumer.ownerId", ownerId))
             .setMaxResults(1)
             .uniqueResult();
     }

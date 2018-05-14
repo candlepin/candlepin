@@ -19,19 +19,19 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.Refresher;
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.manifest.v1.CdnDTO;
 import org.candlepin.dto.manifest.v1.CertificateDTO;
-import org.candlepin.dto.manifest.v1.CertificateSerialDTO;
 import org.candlepin.dto.manifest.v1.ConsumerDTO;
 import org.candlepin.dto.manifest.v1.ConsumerTypeDTO;
-import org.candlepin.model.Cdn;
+import org.candlepin.dto.manifest.v1.DistributorVersionDTO;
+import org.candlepin.dto.manifest.v1.ProductDTO;
 import org.candlepin.model.CdnCurator;
-import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.ContentCurator;
-import org.candlepin.model.DistributorVersion;
 import org.candlepin.model.DistributorVersionCurator;
+import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
 import org.candlepin.model.IdentityCertificate;
@@ -41,7 +41,6 @@ import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.ImportUpstreamConsumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.dto.Subscription;
@@ -87,7 +86,6 @@ import java.util.zip.ZipInputStream;
 import javax.persistence.PersistenceException;
 
 
-
 /**
  * Importer
  */
@@ -128,6 +126,7 @@ public class Importer {
     }
 
     private ConsumerTypeCurator consumerTypeCurator;
+    private EntitlementCurator entitlementCurator;
     private ProductCurator productCurator;
     private ObjectMapper mapper;
     private RulesImporter rulesImporter;
@@ -155,7 +154,7 @@ public class Importer {
         ExporterMetadataCurator emc, CertificateSerialCurator csc, EventSink sink, I18n i18n,
         DistributorVersionCurator distVerCurator, CdnCurator cdnCurator, SyncUtils syncUtils,
         ImportRecordCurator importRecordCurator, SubscriptionReconciler subscriptionReconciler,
-        ModelTranslator translator) {
+        EntitlementCurator entitlementCurator, ModelTranslator translator) {
 
         this.config = config;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -176,6 +175,7 @@ public class Importer {
         this.cdnCurator = cdnCurator;
         this.importRecordCurator = importRecordCurator;
         this.subscriptionReconciler = subscriptionReconciler;
+        this.entitlementCurator = entitlementCurator;
         this.translator = translator;
     }
 
@@ -321,13 +321,13 @@ public class Importer {
 
         ExporterMetadata lastrun = null;
         if (ExporterMetadata.TYPE_SYSTEM.equals(type)) {
-            lastrun = expMetaCurator.lookupByType(type);
+            lastrun = expMetaCurator.getByType(type);
         }
         else if (ExporterMetadata.TYPE_PER_USER.equals(type)) {
             if (owner == null) {
                 throw new ImporterException(i18n.tr("Invalid owner"));
             }
-            lastrun = expMetaCurator.lookupByTypeAndOwner(type, owner);
+            lastrun = expMetaCurator.getByTypeAndOwner(type, owner);
         }
 
         if (lastrun == null) {
@@ -568,7 +568,7 @@ public class Importer {
         if (importFiles.get(ImportFile.PRODUCTS.fileName()) != null) {
             ProductImporter importer = new ProductImporter();
 
-            Set<Product> productsToImport = importProducts(
+            Set<ProductDTO> productsToImport = importProducts(
                 importFiles.get(ImportFile.PRODUCTS.fileName()).listFiles(), importer, owner
             );
 
@@ -662,7 +662,8 @@ public class Importer {
                 try (Reader reader = new FileReader(uc)) {
                     CertificateDTO dtoCert = mapper.readValue(reader, CertificateDTO.class);
                     idcert = new IdentityCertificate();
-                    populateEntity(idcert, dtoCert);
+                    ImporterUtils.populateEntity(idcert, dtoCert);
+                    idcert.setId(dtoCert.getId());
                 }
             }
             else {
@@ -681,7 +682,7 @@ public class Importer {
             // because it could have an id not in our database. We need to
             // stick with the label. Hence we need to lookup the ACTUAL type
             // by label here before attempting to store the UpstreamConsumer
-            ConsumerType type = consumerTypeCurator.lookupByLabel(consumer.getType().getLabel());
+            ConsumerType type = consumerTypeCurator.getByLabel(consumer.getType().getLabel());
             consumer.setType(this.translator.translate(type, ConsumerTypeDTO.class));
 
             // in older manifests the web app prefix will not
@@ -702,60 +703,17 @@ public class Importer {
         return consumer;
     }
 
-    /**
-     * Populates the specified entity with data from the provided DTO.
-     *
-     * @param entity
-     *  The entity instance to populate
-     *
-     * @param dto
-     *  The DTO containing the data with which to populate the entity
-     *
-     * @throws IllegalArgumentException
-     *  if either entity or dto are null
-     */
-    private void populateEntity(IdentityCertificate entity, CertificateDTO dto) {
-        if (entity == null) {
-            throw new IllegalArgumentException("the certificate model entity is null");
-        }
-
-        if (dto == null) {
-            throw new IllegalArgumentException("the certificate dto is null");
-        }
-
-        entity.setId(dto.getId());
-        entity.setKey(dto.getKey());
-        entity.setCert(dto.getCert());
-
-        if (dto.getSerial() != null) {
-            CertificateSerialDTO dtoSerial = dto.getSerial();
-            CertificateSerial entitySerial = new CertificateSerial();
-            entitySerial.setId(dtoSerial.getId());
-            entitySerial.setCollected(dtoSerial.isCollected());
-            entitySerial.setExpiration(dtoSerial.getExpiration());
-
-            entity.setSerial(entitySerial);
-        }
-    }
-
-    protected Set<Product> importProducts(File[] products, ProductImporter importer, Owner owner)
+    protected Set<ProductDTO> importProducts(File[] products, ProductImporter importer, Owner owner)
         throws IOException {
 
-        Set<Product> productsToImport = new HashSet<>();
+        Set<ProductDTO> productsToImport = new HashSet<>();
         for (File product : products) {
             // Skip product.pem's, we just need the json to import:
             if (product.getName().endsWith(".json")) {
                 log.debug("Importing product {} for owner {}", product.getName(), owner.getKey());
 
-                Reader reader = null;
-                try {
-                    reader = new FileReader(product);
+                try (Reader reader = new FileReader(product)) {
                     productsToImport.add(importer.createObject(mapper, reader, owner));
-                }
-                finally {
-                    if (reader != null) {
-                        reader.close();
-                    }
                 }
             }
         }
@@ -767,16 +725,17 @@ public class Importer {
         return productsToImport;
     }
 
-    protected List<Subscription> importEntitlements(Owner owner, Set<Product> products, File[] entitlements,
+    protected List<Subscription> importEntitlements(Owner owner, Set<ProductDTO> products, File[] entitlements,
         String consumerUuid, Meta meta)
         throws IOException, SyncDataFormatException {
 
         log.debug("Importing entitlements for owner: {}", owner);
 
-        EntitlementImporter importer = new EntitlementImporter(csCurator, cdnCurator, i18n, productCurator);
-        Map<String, Product> productsById = new HashMap<>();
+        EntitlementImporter importer = new EntitlementImporter(csCurator, cdnCurator, i18n, productCurator,
+            entitlementCurator, translator);
+        Map<String, ProductDTO> productsById = new HashMap<>();
 
-        for (Product product : products) {
+        for (ProductDTO product : products) {
             log.debug("Adding product owned by {} to ID map", owner.getKey());
 
             // Note: This may actually be causing problems with subscriptions receiving the wrong
@@ -898,7 +857,7 @@ public class Importer {
 
     protected void importDistributorVersions(File[] versionFiles) throws IOException {
         DistributorVersionImporter importer = new DistributorVersionImporter(distVerCurator);
-        Set<DistributorVersion> distVers = new HashSet<>();
+        Set<DistributorVersionDTO> distVers = new HashSet<>();
 
         for (File verFile : versionFiles) {
             Reader reader = null;
@@ -917,7 +876,7 @@ public class Importer {
 
     protected void importContentDeliveryNetworks(File[] cdnFiles) throws IOException {
         CdnImporter importer = new CdnImporter(cdnCurator);
-        Set<Cdn> cdns = new HashSet<>();
+        Set<CdnDTO> cdns = new HashSet<>();
 
         for (File cdnFile : cdnFiles) {
             Reader reader = null;

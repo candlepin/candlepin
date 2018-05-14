@@ -50,6 +50,7 @@ import org.candlepin.dto.api.v1.CertificateDTO;
 import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.ConsumerInstalledProductDTO;
 import org.candlepin.dto.api.v1.GuestIdDTO;
+import org.candlepin.dto.api.v1.HypervisorIdDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.PoolQuantityDTO;
 import org.candlepin.model.CandlepinQuery;
@@ -290,6 +291,25 @@ public class ConsumerResource {
 
     /**
      * Sanitizes inbound consumer facts, truncating long facts and dropping invalid or untracked
+     * facts. The consumer DTO will be updated in-place.
+     *
+     * @param consumerDTO
+     *  The consumer DTO to populate with sanitized facts
+     */
+    public void sanitizeConsumerFacts(ConsumerDTO consumerDTO) {
+        if (consumerDTO != null) {
+            Map<String, String> facts = consumerDTO.getFacts();
+
+            if (facts != null && facts.size() > 0) {
+                log.debug("Sanitizing facts for consumer {}", consumerDTO.getName());
+                Map<String, String> sanitized = sanitizeConsumerFacts(facts);
+                consumerDTO.setFacts(sanitized);
+            }
+        }
+    }
+
+    /**
+     * Sanitizes inbound consumer facts, truncating long facts and dropping invalid or untracked
      * facts. The consumer will be updated in-place.
      *
      * @param consumer
@@ -301,63 +321,74 @@ public class ConsumerResource {
 
             if (facts != null && facts.size() > 0) {
                 log.debug("Sanitizing facts for consumer {}", consumer.getName());
-                Map<String, String> sanitized = new HashMap<>();
-                Set<String> lowerCaseKeys = new HashSet<>();
-
-                String factPattern = config.getString(ConfigProperties.CONSUMER_FACTS_MATCHER);
-                Pattern pattern = Pattern.compile(factPattern);
-
-                for (Map.Entry<String, String> fact : facts.entrySet()) {
-                    String key = fact.getKey();
-                    String value = fact.getValue();
-
-                    // Check for null fact keys (discard and continue)
-                    if (key == null) {
-                        log.warn("  Consumer contains a fact using a null key. Discarding fact...");
-                        continue;
-                    }
-
-                    // facts are case insensitive
-                    String lowerCaseKey = key.toLowerCase();
-                    if (lowerCaseKeys.contains(lowerCaseKey)) {
-                        log.warn("  Consumer contains duplicate fact. Discarding fact \"{}\"" +
-                            " with value \"{}\"", key, value);
-                        continue;
-                    }
-
-                    // Check for fact match (discard and continue)
-                    if (!pattern.matcher(key).matches()) {
-                        log.warn("  Consumer fact \"{}\" does not match pattern \"{}\"", key, factPattern);
-                        log.warn("  Discarding fact \"{}\"...", key);
-                        continue;
-                    }
-
-                    // Check for long keys or values, truncating as necessary
-                    if (key.length() > FactValidator.FACT_MAX_LENGTH) {
-                        key = key.substring(0, FactValidator.FACT_MAX_LENGTH - 3) + "...";
-                    }
-
-                    if (value != null && value.length() > FactValidator.FACT_MAX_LENGTH) {
-                        value = value.substring(0, FactValidator.FACT_MAX_LENGTH - 3) + "...";
-                    }
-
-                    // Validate fact (discarding malformed facts) (discard and continue)
-                    try {
-                        this.factValidator.validate(key, value);
-                    }
-                    catch (PropertyValidationException e) {
-                        log.warn("  {}", e.getMessage());
-                        log.warn("  Discarding fact \"{}\"...", key);
-                        continue;
-                    }
-
-                    sanitized.put(key, value);
-                    lowerCaseKeys.add(lowerCaseKey);
-                }
-
+                Map<String, String> sanitized = sanitizeConsumerFacts(facts);
                 consumer.setFacts(sanitized);
             }
         }
+    }
+
+    /**
+     * Sanitizes inbound consumer facts, truncating long facts and dropping invalid or untracked facts.
+     *
+     * @param facts the facts that are to be sanitized
+     *
+     * @return the sanitized facts
+     */
+    private Map<String, String> sanitizeConsumerFacts(Map<String, String> facts) {
+        Map<String, String> sanitized = new HashMap<>();
+        Set<String> lowerCaseKeys = new HashSet<>();
+
+        String factPattern = config.getString(ConfigProperties.CONSUMER_FACTS_MATCHER);
+        Pattern pattern = Pattern.compile(factPattern);
+
+        for (Map.Entry<String, String> fact : facts.entrySet()) {
+            String key = fact.getKey();
+            String value = fact.getValue();
+
+            // Check for null fact keys (discard and continue)
+            if (key == null) {
+                log.warn("  Consumer contains a fact using a null key. Discarding fact...");
+                continue;
+            }
+
+            // facts are case insensitive
+            String lowerCaseKey = key.toLowerCase();
+            if (lowerCaseKeys.contains(lowerCaseKey)) {
+                log.warn("  Consumer contains duplicate fact. Discarding fact \"{}\"" +
+                    " with value \"{}\"", key, value);
+                continue;
+            }
+
+            // Check for fact match (discard and continue)
+            if (!pattern.matcher(key).matches()) {
+                log.warn("  Consumer fact \"{}\" does not match pattern \"{}\"", key, factPattern);
+                log.warn("  Discarding fact \"{}\"...", key);
+                continue;
+            }
+
+            // Check for long keys or values, truncating as necessary
+            if (key.length() > FactValidator.FACT_MAX_LENGTH) {
+                key = key.substring(0, FactValidator.FACT_MAX_LENGTH - 3) + "...";
+            }
+
+            if (value != null && value.length() > FactValidator.FACT_MAX_LENGTH) {
+                value = value.substring(0, FactValidator.FACT_MAX_LENGTH - 3) + "...";
+            }
+
+            // Validate fact (discarding malformed facts) (discard and continue)
+            try {
+                this.factValidator.validate(key, value);
+            }
+            catch (PropertyValidationException e) {
+                log.warn("  {}", e.getMessage());
+                log.warn("  Discarding fact \"{}\"...", key);
+                continue;
+            }
+
+            sanitized.put(key, value);
+            lowerCaseKeys.add(lowerCaseKey);
+        }
+        return sanitized;
     }
 
     @ApiOperation(notes = "Retrieves a list of the Consumers", value = "list", response = Consumer.class,
@@ -384,7 +415,7 @@ public class ConsumerResource {
 
         Owner owner = null;
         if (ownerKey != null) {
-            owner = ownerCurator.lookupByKey(ownerKey);
+            owner = ownerCurator.getByKey(ownerKey);
             if (owner == null) {
                 throw new NotFoundException(i18n.tr(
                     "owner with key: {0} was not found.", ownerKey));
@@ -397,6 +428,7 @@ public class ConsumerResource {
             owner, userName, types, uuids, hypervisorIds, attrFilters,
             Collections.<String>emptyList(), Collections.<String>emptyList(),
             Collections.<String>emptyList());
+
         return this.translator.translateQuery(query, ConsumerDTO.class);
     }
 
@@ -452,15 +484,13 @@ public class ConsumerResource {
     }
 
     /**
-     * Populates the specified entity with data from the provided DTO. This method will not set the
-     * ID, entitlementStatus, complianceStatusHash, idCert, entitlements, keyPair, canActivate
-     * because clients are not allowed to create or update those properties.
+     * Populates the specified entity with data from the provided DTO, during consumer creation (not update).
+     * This method will not set the ID, entitlementStatus, complianceStatusHash, idCert, entitlements,
+     * keyPair and canActivate, because clients are not allowed to create or update those properties.
      *
      * while autoheal is populated, it is overridden in create method.
      *
-     * owner is not populated because create and update populate it differently.
-     *
-     * type, uuid is not populated because we can specify it during create but not update.
+     * owner is not populated because create populates it differently.
      *
      * @param entity
      *  The entity instance to populate
@@ -480,8 +510,16 @@ public class ConsumerResource {
             throw new IllegalArgumentException("the consumer dto is null");
         }
 
+        if (dto.getCreated() != null) {
+            entity.setCreated(dto.getCreated());
+        }
+
         if (dto.getName() != null) {
             entity.setName(dto.getName());
+        }
+
+        if (dto.getUuid() != null) {
+            entity.setUuid(dto.getUuid());
         }
 
         if (dto.getFacts() != null) {
@@ -501,7 +539,7 @@ public class ConsumerResource {
         }
 
         if (dto.getEnvironment() != null) {
-            Environment env = environmentCurator.find(dto.getEnvironment().getId());
+            Environment env = environmentCurator.get(dto.getEnvironment().getId());
             if (env == null) {
                 throw new NotFoundException(i18n.tr("Environment \"{0}\" could not be found.",
                     dto.getEnvironment().getId()));
@@ -514,12 +552,7 @@ public class ConsumerResource {
         }
 
         if (dto.getCapabilities() != null) {
-            Set<ConsumerCapability> capabilities = new HashSet<>();
-            for (CapabilityDTO capabilityDTO : dto.getCapabilities()) {
-                if (capabilityDTO != null) {
-                    capabilities.add(new ConsumerCapability(entity, capabilityDTO.getName()));
-                }
-            }
+            Set<ConsumerCapability> capabilities = populateCapabilities(entity, dto);
             entity.setCapabilities(capabilities);
         }
 
@@ -535,9 +568,23 @@ public class ConsumerResource {
             entity.setGuestIds(guestIds);
         }
 
-        if (dto.getHypervisorId() != null) {
-            HypervisorId hypervisorId = new HypervisorId(entity, dto.getHypervisorId().getHypervisorId(),
+        if (dto.getHypervisorId() != null && entity.getOwnerId() != null) {
+            HypervisorId hypervisorId = new HypervisorId(
+                entity,
+                ownerCurator.findOwnerById(entity.getOwnerId()),
+                dto.getHypervisorId().getHypervisorId(),
                 dto.getHypervisorId().getReporterId());
+            entity.setHypervisorId(hypervisorId);
+        }
+
+        if (dto.getHypervisorId() == null &&
+            dto.getFact("system_uuid") != null &&
+            !"true".equals(dto.getFact("virt.is_guest")) &&
+            entity.getOwnerId() != null) {
+            HypervisorId hypervisorId = new HypervisorId(
+                entity,
+                ownerCurator.findOwnerById(entity.getOwnerId()),
+                dto.getFact("system_uuid"));
             entity.setHypervisorId(hypervisorId);
         }
 
@@ -562,25 +609,58 @@ public class ConsumerResource {
         }
 
         if (dto.getInstalledProducts() != null) {
-            Set<ConsumerInstalledProduct> installedProducts = new HashSet<>();
-            for (ConsumerInstalledProductDTO installedProductDTO : dto.getInstalledProducts()) {
-                if (installedProductDTO != null) {
-                    ConsumerInstalledProduct installedProduct = new ConsumerInstalledProduct(
-                        installedProductDTO.getProductId(),
-                        installedProductDTO.getProductName(),
-                        entity,
-                        installedProductDTO.getVersion(),
-                        installedProductDTO.getArch(),
-                        installedProductDTO.getStatus(),
-                        installedProductDTO.getStartDate(),
-                        installedProductDTO.getEndDate());
-
-                    installedProducts.add(installedProduct);
-                }
-            }
-
+            Set<ConsumerInstalledProduct> installedProducts = populateInstalledProducts(entity, dto);
             entity.setInstalledProducts(installedProducts);
         }
+    }
+
+    /**
+     * Utility method that translates a ConsumerDTO's capabilities to Consumer model entity capabilities.
+     *
+     * @param entity the Consumer model entity which the capabilities are to reference
+     *
+     * @param dto the ConsumerDTO whose capabilities we want to translate
+     *
+     * @return the model entity ConsumerCapabilities set that was created
+     */
+    private Set<ConsumerCapability> populateCapabilities(Consumer entity, ConsumerDTO dto) {
+        Set<ConsumerCapability> capabilities = new HashSet<>();
+        for (CapabilityDTO capabilityDTO : dto.getCapabilities()) {
+            if (capabilityDTO != null) {
+                capabilities.add(new ConsumerCapability(entity, capabilityDTO.getName()));
+            }
+        }
+        return capabilities;
+    }
+
+    /**
+     * Utility method that translates a ConsumerDTO's installed products to
+     * Consumer model entity installed products.
+     *
+     * @param entity the Consumer model entity which the installed products are to reference
+     *
+     * @param dto the ConsumerDTO whose installed products we want to translate
+     *
+     * @return the model entity ConsumerInstalledProduct set that was created
+     */
+    private Set<ConsumerInstalledProduct> populateInstalledProducts(Consumer entity, ConsumerDTO dto) {
+        Set<ConsumerInstalledProduct> installedProducts = new HashSet<>();
+        for (ConsumerInstalledProductDTO installedProductDTO : dto.getInstalledProducts()) {
+            if (installedProductDTO != null) {
+                ConsumerInstalledProduct installedProduct = new ConsumerInstalledProduct(
+                    installedProductDTO.getProductId(),
+                    installedProductDTO.getProductName(),
+                    entity,
+                    installedProductDTO.getVersion(),
+                    installedProductDTO.getArch(),
+                    installedProductDTO.getStatus(),
+                    installedProductDTO.getStartDate(),
+                    installedProductDTO.getEndDate());
+
+                installedProducts.add(installedProduct);
+            }
+        }
+        return installedProducts;
     }
 
     @ApiOperation(notes = "Creates a Consumer. NOTE: Opening this method up " +
@@ -606,24 +686,41 @@ public class ConsumerResource {
         @QueryParam("identity_cert_creation") @DefaultValue("true") boolean identityCertCreation)
         throws BadRequestException {
 
-        Consumer consumer = new Consumer();
+        // fix for duplicate hypervisor/consumer problem
+        Consumer consumer = null;
+        if (ownerKey != null && dto.getFact("system_uuid") != null &&
+            !"true".equalsIgnoreCase(dto.getFact("virt.is_guest"))) {
+            Owner owner = ownerCurator.getByKey(ownerKey);
+            if (owner != null) {
+                consumer = consumerCurator.getHypervisor(dto.getFact("system_uuid"), owner);
+                if (consumer != null) {
+                    consumer.setIdCert(generateIdCert(consumer, false));
+                    this.updateConsumer(consumer.getUuid(), dto, principal);
+                    return translator.translate(consumer, ConsumerDTO.class);
+                }
+            }
+        }
+        if (consumer == null) {
+            consumer = new Consumer();
+        }
+
         if (dto.getUuid() != null) {
             consumer.setUuid(dto.getUuid());
         }
+        consumer.setOwner(ownerCurator.getByKey(ownerKey));
         populateEntity(consumer, dto);
 
-        if (dto.getType() != null) {
-            consumer.setType(new ConsumerType(dto.getType().getLabel()));
-        }
-        else {
+        if (dto.getType() == null) {
             throw new BadRequestException(i18n.tr("Unit type must be specified."));
         }
 
-        if (dto.getCreated() != null) {
-            consumer.setCreated(dto.getCreated());
+        ConsumerType ctype = this.consumerTypeCurator.getByLabel(dto.getType().getLabel());
+        if (ctype == null) {
+            throw new BadRequestException(i18n.tr("Invalid unit type: {0}", dto.getType().getLabel()));
         }
 
-        return translator.translate(createConsumerFromEntity(consumer,
+        return translator.translate(createConsumerFromDTO(dto,
+                ctype,
                 principal,
                 userName,
                 ownerKey,
@@ -632,8 +729,9 @@ public class ConsumerResource {
             ConsumerDTO.class);
     }
 
-    public Consumer createConsumerFromEntity(Consumer consumer, Principal principal, String userName,
-        String ownerKey, String activationKeys, boolean identityCertCreation) throws BadRequestException {
+    public Consumer createConsumerFromDTO(ConsumerDTO consumer, ConsumerType type, Principal principal,
+        String userName, String ownerKey, String activationKeys, boolean identityCertCreation)
+        throws BadRequestException {
 
         // API:registerConsumer
         Set<String> keyStrings = splitKeys(activationKeys);
@@ -652,10 +750,9 @@ public class ConsumerResource {
         userName = setUserName(consumer, principal, userName);
         checkConsumerName(consumer);
 
-        ConsumerType type = lookupConsumerType(consumer.getType().getLabel());
         validateViaConsumerType(consumer, type, keys, owner, userName, principal);
 
-        if (consumer.isShare()) {
+        if (type.isType(ConsumerTypeEnum.SHARE)) {
             // Share consumers do not need identity certificates so refuse to create them.
             identityCertCreation = false;
             validateShareConsumer(consumer, principal, keys);
@@ -668,26 +765,11 @@ public class ConsumerResource {
             consumer.setAutoheal(false);
         }
         else {
-            consumer.setCanActivate(subAdapter.canActivateSubscription(consumer));
             consumer.setAutoheal(true); // this is the default
             if (StringUtils.isNotEmpty(consumer.getRecipientOwnerKey())) {
                 throw new BadRequestException(i18n.tr("Only share consumers can specify recipient owners"));
             }
         }
-
-        if (consumer.getEntitlementCount() != 0) {
-            log.warn("ignoring incoming entitlement count during register: {}",
-                consumer.getEntitlementCount());
-            consumer.setEntitlementCount(0);
-        }
-
-        if (consumer.getIdCert() != null) {
-            log.warn("ignoring incoming identity cert during register: {}", consumer.getIdCert());
-            consumer.setIdCert(null);
-        }
-
-        consumer.setOwner(owner);
-        consumer.setType(type);
 
         if (consumer.getServiceLevel() == null) {
             consumer.setServiceLevel("");
@@ -698,66 +780,64 @@ public class ConsumerResource {
 
         // If no service level was specified, and the owner has a default set, use it:
         if (consumer.getServiceLevel().equals("") && owner.getDefaultServiceLevel() != null &&
-            !consumer.isShare()) {
-
+            !type.isType(ConsumerTypeEnum.SHARE)) {
             consumer.setServiceLevel(owner.getDefaultServiceLevel());
         }
 
-        updateCapabilities(consumer, null);
-        logNewConsumerDebugInfo(consumer, keys, type);
+        Consumer consumerToCreate = new Consumer();
+        consumerToCreate.setOwner(owner);
+        populateEntity(consumerToCreate, consumer);
+        consumerToCreate.setType(type);
 
-        if (consumer.getInstalledProducts() != null) {
-            for (ConsumerInstalledProduct p : consumer.getInstalledProducts()) {
-                p.setConsumer(consumer);
-            }
+        if (!type.isType(ConsumerTypeEnum.SHARE)) {
+            consumerToCreate.setCanActivate(subAdapter.canActivateSubscription(consumerToCreate));
         }
 
-        if (consumer.getGuestIds() != null) {
-            for (GuestId g : consumer.getGuestIds()) {
-                g.setConsumer(consumer);
-            }
-        }
-
-        HypervisorId hvsrId = consumer.getHypervisorId();
+        HypervisorId hvsrId = consumerToCreate.getHypervisorId();
         if (hvsrId != null && hvsrId.getHypervisorId() != null && !hvsrId.getHypervisorId().isEmpty()) {
             // If a hypervisorId is supplied, make sure the consumer and owner are correct
-            hvsrId.setConsumer(consumer);
+            hvsrId.setConsumer(consumerToCreate);
+            hvsrId.setOwner(owner);
         }
 
-        validateContentAccessMode(consumer);
-        consumerBindUtil.validateServiceLevel(owner, consumer.getServiceLevel());
+        updateCapabilities(consumerToCreate, null);
+        logNewConsumerDebugInfo(consumerToCreate, keys, type);
+
+        validateContentAccessMode(consumerToCreate, owner);
+        consumerBindUtil.validateServiceLevel(owner.getId(), consumerToCreate.getServiceLevel());
 
         try {
-            Date createdDate = consumer.getCreated();
-            Date lastCheckIn = consumer.getLastCheckin();
+            Date createdDate = consumerToCreate.getCreated();
+            Date lastCheckIn = consumerToCreate.getLastCheckin();
             // create sets created to current time.
-            consumer = consumerCurator.create(consumer);
+            consumerToCreate = consumerCurator.create(consumerToCreate);
             //  If we sent in a created date, we want it persisted at the update below
             if (createdDate != null) {
-                consumer.setCreated(createdDate);
+                consumerToCreate.setCreated(createdDate);
             }
             if (lastCheckIn != null) {
-                log.info("Creating with specific last check-in time: {}", consumer.getLastCheckin());
-                consumer.setLastCheckin(lastCheckIn);
+                log.info("Creating with specific last check-in time: {}", lastCheckIn);
+                consumerToCreate.setLastCheckin(lastCheckIn);
             }
             if (identityCertCreation) {
-                IdentityCertificate idCert = generateIdCert(consumer, false);
-                consumer.setIdCert(idCert);
+                IdentityCertificate idCert = generateIdCert(consumerToCreate, false);
+                consumerToCreate.setIdCert(idCert);
             }
-            sink.emitConsumerCreated(consumer);
+            sink.emitConsumerCreated(consumerToCreate);
 
             if (keys.size() > 0) {
-                consumerBindUtil.handleActivationKeys(consumer, keys, owner.isAutobindDisabled());
+                consumerBindUtil.handleActivationKeys(consumerToCreate, keys, owner.isAutobindDisabled());
             }
 
             // Don't allow complianceRules to update entitlementStatus, because we're about to perform
             // an update unconditionally.
-            complianceRules.getStatus(consumer, null, false, false);
-            consumerCurator.update(consumer);
+            complianceRules.getStatus(consumerToCreate, null, false, false);
+            consumerCurator.update(consumerToCreate);
 
-            log.info("Consumer {} created in org {}", consumer.getUuid(), consumer.getOwner().getKey());
+            log.info("Consumer {} created in org {}",
+                consumerToCreate.getUuid(), consumerToCreate.getOwnerId());
 
-            return consumer;
+            return consumerToCreate;
         }
         catch (CandlepinException ce) {
             // If it is one of ours, rethrow it.
@@ -776,7 +856,7 @@ public class ConsumerResource {
      * @param principal the principal performing the operation
      * @throws BadRequestException if any validations fail
      */
-    private void validateShareConsumerUpdate(Consumer oldShare, Consumer newShare, Principal principal)
+    private void validateShareConsumerUpdate(Consumer oldShare, ConsumerDTO newShare, Principal principal)
         throws BadRequestException {
         String oldRecipient = oldShare.getRecipientOwnerKey();
         String newRecipient = newShare.getRecipientOwnerKey();
@@ -804,7 +884,7 @@ public class ConsumerResource {
      * @param keys any provided activation keys
      * @throws BadRequestException if any validations fail
      */
-    private void validateShareConsumer(Consumer consumer, Principal principal, List<ActivationKey> keys)
+    private void validateShareConsumer(ConsumerDTO consumer, Principal principal, List<ActivationKey> keys)
         throws BadRequestException {
         if (keys.size() > 0) {
             throw new BadRequestException(
@@ -813,7 +893,7 @@ public class ConsumerResource {
         if (StringUtils.isNotBlank(consumer.getServiceLevel())) {
             throw new BadRequestException(i18n.tr("A unit type of \"share\" cannot have a service level"));
         }
-        if (!consumer.getReleaseVer().equals(new Release(null))) {
+        if (StringUtils.isNotBlank(consumer.getReleaseVersion())) {
             throw new BadRequestException(i18n.tr("A unit type of \"share\" cannot have a release version"));
         }
         if (CollectionUtils.isNotEmpty(consumer.getInstalledProducts())) {
@@ -838,7 +918,7 @@ public class ConsumerResource {
         }
 
         String recipient = consumer.getRecipientOwnerKey();
-        Owner recipientOwner = ownerCurator.lookupByKey(recipient);
+        Owner recipientOwner = ownerCurator.getByKey(recipient);
         if (recipientOwner == null) {
             throw new NotFoundException(i18n.tr("owner with key: {0} was not found.", recipient));
         }
@@ -851,14 +931,15 @@ public class ConsumerResource {
         }
     }
 
-    private void validateContentAccessMode(Consumer consumer) throws BadRequestException {
+    private void validateContentAccessMode(Consumer consumer, Owner owner) throws BadRequestException {
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
+
         if (consumer.getContentAccessMode() != null) {
-            if (!consumer.isManifestDistributor()) {
+            if (!ctype.isManifest()) {
                 throw new BadRequestException(
                     i18n.tr("The consumer cannot be assigned a content access mode."));
             }
-
-            if (!consumer.getOwner().isAllowedContentAccessMode(consumer.getContentAccessMode())) {
+            if (owner.isAllowedContentAccessMode(consumer.getContentAccessMode())) {
                 throw new BadRequestException(
                     i18n.tr("The consumer cannot use the supplied content access mode."));
             }
@@ -877,12 +958,12 @@ public class ConsumerResource {
         }
     }
 
-    private void validateViaConsumerType(Consumer consumer, ConsumerType type, List<ActivationKey> keys,
+    private void validateViaConsumerType(ConsumerDTO consumer, ConsumerType type, List<ActivationKey> keys,
         Owner owner, String userName, Principal principal) {
         if (type.isType(ConsumerTypeEnum.PERSON)) {
             if (keys.size() > 0) {
                 throw new BadRequestException(
-                        i18n.tr("A unit type of \"person\" cannot be used with activation keys"));
+                    i18n.tr("A unit type of \"person\" cannot be used with activation keys"));
             }
 
             if (!isConsumerPersonNameValid(consumer.getName())) {
@@ -902,7 +983,7 @@ public class ConsumerResource {
             if (type.isManifest() && userAgent != null &&
                 userAgent.size() > 0 && userAgent.get(0).startsWith("RHSM")) {
                 throw new BadRequestException(
-                        i18n.tr("You may not create a manifest consumer via Subscription Manager."));
+                    i18n.tr("You may not create a manifest consumer via Subscription Manager."));
             }
         }
     }
@@ -933,7 +1014,7 @@ public class ConsumerResource {
      * @param userName
      * @return a String object
      */
-    private String setUserName(Consumer consumer, Principal principal, String userName) {
+    private String setUserName(ConsumerDTO consumer, Principal principal, String userName) {
         if (userName == null) {
             userName = principal.getUsername();
         }
@@ -949,7 +1030,7 @@ public class ConsumerResource {
      * @param update
      * @return a String object
      */
-    private boolean updateCapabilities(Consumer existing, Consumer update) {
+    private boolean updateCapabilities(Consumer existing, ConsumerDTO update) {
         boolean change = false;
         if (update == null) {
             // create
@@ -972,8 +1053,10 @@ public class ConsumerResource {
         else {
             // update
             if (update.getCapabilities() != null) {
-                if (!update.getCapabilities().equals(existing.getCapabilities())) {
-                    existing.setCapabilities(update.getCapabilities());
+                Set<ConsumerCapability> entityCapabilities = populateCapabilities(existing, update);
+
+                if (!entityCapabilities.equals(existing.getCapabilities())) {
+                    existing.setCapabilities(entityCapabilities);
                     change = true;
                 }
             }
@@ -1007,7 +1090,7 @@ public class ConsumerResource {
      * @param consumer
      * @return a String object
      */
-    private void checkConsumerName(Consumer consumer) {
+    private void checkConsumerName(ConsumerDTO consumer) {
         // for now this applies to both types consumer
         if (consumer.getName() != null) {
             if (consumer.getName().indexOf('#') == 0) {
@@ -1042,7 +1125,7 @@ public class ConsumerResource {
     }
 
     private ActivationKey findKey(String keyName, Owner owner) {
-        ActivationKey key = activationKeyCurator.lookupForOwner(keyName, owner);
+        ActivationKey key = activationKeyCurator.getByKeyName(owner, keyName);
 
         if (key == null) {
             throw new NotFoundException(i18n.tr("Activation key \"{0}\" not found for organization \"{1}\".",
@@ -1052,8 +1135,8 @@ public class ConsumerResource {
         return key;
     }
 
-    private void verifyPersonConsumer(Consumer consumer, ConsumerType type,
-        Owner owner, String username, Principal principal) {
+    private void verifyPersonConsumer(ConsumerDTO consumer, ConsumerType type, Owner owner, String username,
+        Principal principal) {
 
         User user = null;
         try {
@@ -1078,7 +1161,9 @@ public class ConsumerResource {
         if (type.isType(ConsumerTypeEnum.PERSON)) {
             Consumer existing = consumerCurator.findByUser(user);
 
-            if (existing != null && existing.getType().isType(ConsumerTypeEnum.PERSON)) {
+            if (existing != null &&
+                this.consumerTypeCurator.getConsumerType(existing).isType(ConsumerTypeEnum.PERSON)) {
+
                 // TODO: This is not the correct error code for this situation!
                 throw new BadRequestException(
                     i18n.tr("User \"{0}\" has already registered a personal consumer", user.getUsername()));
@@ -1105,7 +1190,7 @@ public class ConsumerResource {
 
         createOwnerIfNeeded(principal);
 
-        Owner owner = ownerCurator.lookupByKey(ownerKey);
+        Owner owner = ownerCurator.getByKey(ownerKey);
         if (owner == null) {
             throw new BadRequestException(i18n.tr("Organization {0} does not exist.", ownerKey));
         }
@@ -1162,7 +1247,7 @@ public class ConsumerResource {
         }
 
         for (Owner owner : ((UserPrincipal) principal).getOwners()) {
-            Owner existingOwner = ownerCurator.lookupByKey(owner.getKey());
+            Owner existingOwner = ownerCurator.getByKey(owner.getKey());
 
             if (existingOwner == null) {
                 log.info("Principal carries permission for owner that does not exist.");
@@ -1176,17 +1261,6 @@ public class ConsumerResource {
             }
         }
     }
-
-    private ConsumerType lookupConsumerType(String label) {
-        ConsumerType type = consumerTypeCurator.lookupByLabel(label);
-
-        if (type == null) {
-            throw new BadRequestException(i18n.tr("Unit type \"{0}\" could not be found.", label));
-        }
-
-        return type;
-    }
-
 
     // While this is a PUT, we are treating it as a PATCH until this operation
     // becomes more prevalent. We only update the portions of the consumer that appear
@@ -1205,28 +1279,21 @@ public class ConsumerResource {
         @Context Principal principal) {
 
         Consumer toUpdate = consumerCurator.verifyAndLookupConsumer(uuid);
-        Consumer incoming = new Consumer();
-        incoming.setUuid(uuid);
-        populateEntity(incoming, dto);
-
-        if (incoming.getGuestIds() != null) {
-            Set<String> allGuestIds = new HashSet<>();
-            for (GuestId gid : incoming.getGuestIds()) {
-                allGuestIds.add(gid.getGuestId());
-            }
-        }
+        dto.setUuid(uuid);
 
         // Sanitize the inbound facts before applying the update
-        this.sanitizeConsumerFacts(incoming);
+        this.sanitizeConsumerFacts(dto);
 
-        if (toUpdate.isShare() || incoming.isShare()) {
-            validateShareConsumerUpdate(toUpdate, incoming, principal);
+        ConsumerType toUpdateType = this.consumerTypeCurator.getConsumerType(toUpdate);
+
+        if (toUpdateType.isType(ConsumerTypeEnum.SHARE)) {
+            validateShareConsumerUpdate(toUpdate, dto, principal);
         }
 
         GuestMigration guestMigration = migrationProvider.get();
-        guestMigration.buildMigrationManifest(incoming, toUpdate);
+        guestMigration.buildMigrationManifest(dto, toUpdate);
 
-        if (performConsumerUpdates(incoming, toUpdate, guestMigration)) {
+        if (performConsumerUpdates(dto, toUpdate, guestMigration)) {
             try {
                 if (guestMigration.isMigrationPending()) {
                     guestMigration.migrate();
@@ -1241,19 +1308,19 @@ public class ConsumerResource {
             }
             catch (Exception e) {
                 log.error("Problem updating unit:", e);
-                throw new BadRequestException(i18n.tr("Problem updating unit {0}", incoming));
+                throw new BadRequestException(i18n.tr("Problem updating unit {0}", dto));
             }
         }
     }
 
-    public boolean performConsumerUpdates(Consumer updated, Consumer toUpdate,
+    public boolean performConsumerUpdates(ConsumerDTO updated, Consumer toUpdate,
         GuestMigration guestMigration) {
 
         return performConsumerUpdates(updated, toUpdate, guestMigration, true);
     }
 
     @Transactional
-    public boolean performConsumerUpdates(Consumer updated, Consumer toUpdate,
+    public boolean performConsumerUpdates(ConsumerDTO updated, Consumer toUpdate,
         GuestMigration guestMigration, boolean isIdCert) {
 
         log.debug("Updating consumer: {}", toUpdate.getUuid());
@@ -1274,43 +1341,41 @@ public class ConsumerResource {
         changesMade = checkForHypervisorIdUpdate(toUpdate, updated) || changesMade;
         changesMade = guestMigration.isMigrationPending() || changesMade;
 
-        if (updated.getContentTags() != null &&
-            !updated.getContentTags().equals(toUpdate.getContentTags())) {
+        if (updated.getContentTags() != null && !updated.getContentTags().equals(toUpdate.getContentTags())) {
             log.info("   Updating content tags.");
             toUpdate.setContentTags(updated.getContentTags());
             changesMade = true;
         }
 
         // Allow optional setting of the autoheal attribute:
-        if (updated.isAutoheal() != null &&
-            !updated.isAutoheal().equals(toUpdate.isAutoheal())) {
+        if (updated.getAutoheal() != null && !updated.getAutoheal().equals(toUpdate.isAutoheal())) {
             log.info("   Updating consumer autoheal setting.");
-            toUpdate.setAutoheal(updated.isAutoheal());
+            toUpdate.setAutoheal(updated.getAutoheal());
             changesMade = true;
         }
 
-        if (updated.getReleaseVer() != null &&
-            (updated.getReleaseVer().getReleaseVer() != null) &&
-            !updated.getReleaseVer().equals(toUpdate.getReleaseVer())) {
+        if (updated.getReleaseVersion() != null &&
+            !updated.getReleaseVersion().equals(toUpdate.getReleaseVer() == null ? null :
+            toUpdate.getReleaseVer().getReleaseVer())) {
+
             log.info("   Updating consumer releaseVer setting.");
-            toUpdate.setReleaseVer(updated.getReleaseVer());
+            toUpdate.setReleaseVer(new Release(updated.getReleaseVersion()));
             changesMade = true;
         }
 
         // Allow optional setting of the service level attribute:
         String level = updated.getServiceLevel();
-        if (level != null &&
-            !level.equals(toUpdate.getServiceLevel())) {
+        if (level != null && !level.equals(toUpdate.getServiceLevel())) {
             log.info("   Updating consumer service level setting.");
-            consumerBindUtil.validateServiceLevel(toUpdate.getOwner(), level);
+            consumerBindUtil.validateServiceLevel(toUpdate.getOwnerId(), level);
             toUpdate.setServiceLevel(level);
             changesMade = true;
         }
 
         String environmentId = updated.getEnvironment() == null ? null : updated.getEnvironment().getId();
-        if (environmentId != null && (toUpdate.getEnvironment() == null ||
-            !toUpdate.getEnvironment().getId().equals(environmentId))) {
-            Environment e = environmentCurator.find(environmentId);
+        if (environmentId != null && (toUpdate.getEnvironmentId() == null ||
+            !toUpdate.getEnvironmentId().equals(environmentId))) {
+            Environment e = environmentCurator.get(environmentId);
             if (e == null) {
                 throw new NotFoundException(i18n.tr(
                     "Environment with ID \"{0}\" could not be found.", environmentId));
@@ -1338,17 +1403,23 @@ public class ConsumerResource {
             }
         }
 
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(toUpdate);
+
         if (updated.getContentAccessMode() != null &&
             !updated.getContentAccessMode().equals(toUpdate.getContentAccessMode()) &&
-            toUpdate.isManifestDistributor()) {
-            if (!toUpdate.getOwner().isAllowedContentAccessMode(updated.getContentAccessMode())) {
+            ctype.isManifest()) {
+
+            Owner toUpdateOwner = ownerCurator.findOwnerById(toUpdate.getOwnerId());
+            if (!toUpdateOwner.isAllowedContentAccessMode(updated.getContentAccessMode())) {
                 throw new BadRequestException(i18n.tr(
                     "The consumer cannot use the supplied content access mode."));
             }
+
             toUpdate.setContentAccessMode(updated.getContentAccessMode());
             changesMade = true;
         }
-        if (!StringUtils.isEmpty(updated.getContentAccessMode()) && !toUpdate.isManifestDistributor()) {
+
+        if (!StringUtils.isEmpty(updated.getContentAccessMode()) && !ctype.isManifest()) {
             throw new BadRequestException(i18n.tr("The consumer cannot be assigned a content access mode."));
         }
 
@@ -1375,8 +1446,8 @@ public class ConsumerResource {
         return changesMade;
     }
 
-    private boolean checkForHypervisorIdUpdate(Consumer existing, Consumer incoming) {
-        HypervisorId incomingId = incoming.getHypervisorId();
+    private boolean checkForHypervisorIdUpdate(Consumer existing, ConsumerDTO incoming) {
+        HypervisorIdDTO incomingId = incoming.getHypervisorId();
         if (incomingId != null) {
             HypervisorId existingId = existing.getHypervisorId();
             if (incomingId.getHypervisorId() == null || incomingId.getHypervisorId().isEmpty()) {
@@ -1388,6 +1459,8 @@ public class ConsumerResource {
                     if (existingId.getHypervisorId() != null &&
                         !existingId.getHypervisorId().equals(incomingId.getHypervisorId())) {
                         existingId.setHypervisorId(incomingId.getHypervisorId());
+                        Owner owner = ownerCurator.findOwnerById(existing.getOwnerId());
+                        existingId.setOwner(owner);
                     }
                     else {
                         return false;
@@ -1395,9 +1468,34 @@ public class ConsumerResource {
                 }
                 else {
                     // Safer to build a new clean HypervisorId object
-                    existing.setHypervisorId(new HypervisorId(incomingId.getHypervisorId()));
+                    Owner owner = ownerCurator.findOwnerById(existing.getOwnerId());
+                    HypervisorId hypervisorId = new HypervisorId(incomingId.getHypervisorId());
+                    hypervisorId.setOwner(owner);
+                    existing.setHypervisorId(hypervisorId);
                 }
             }
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Check if the consumers facts have changed. If they do not appear to have been
+     * specified in this PUT, skip updating facts entirely. It returns true if facts
+     * were included in request and have changed
+     *
+     * @param existing existing consumer
+     * @param incomingFacts incoming facts
+     * @return a boolean
+     */
+    private boolean checkForFactsUpdate(Consumer existing, Map<String, String> incomingFacts) {
+        if (incomingFacts == null) {
+            log.debug("Facts not included in this consumer update, skipping update.");
+            return false;
+        }
+        else if (!existing.factsAreEqual(incomingFacts)) {
+            log.info("Updating facts.");
+            existing.setFacts(incomingFacts);
             return true;
         }
         return false;
@@ -1413,16 +1511,20 @@ public class ConsumerResource {
      * @return a boolean
      */
     public boolean checkForFactsUpdate(Consumer existing, Consumer incoming) {
-        if (incoming.getFacts() == null) {
-            log.debug("Facts not included in this consumer update, skipping update.");
-            return false;
-        }
-        else if (!existing.factsAreEqual(incoming)) {
-            log.info("Updating facts.");
-            existing.setFacts(incoming.getFacts());
-            return true;
-        }
-        return false;
+        return this.checkForFactsUpdate(existing, incoming.getFacts());
+    }
+
+    /**
+     * Check if the consumers facts have changed. If they do not appear to have been
+     * specified in this PUT, skip updating facts entirely. It returns true if facts
+     * were included in request and have changed
+     *
+     * @param existing existing consumer
+     * @param incomingDTO incoming consumer DTO
+     * @return a boolean
+     */
+    public boolean checkForFactsUpdate(Consumer existing, ConsumerDTO incomingDTO) {
+        return this.checkForFactsUpdate(existing, incomingDTO.getFacts());
     }
 
     /**
@@ -1435,13 +1537,18 @@ public class ConsumerResource {
      * @param incoming incoming consumer
      * @return a boolean
      */
-    private boolean checkForInstalledProductsUpdate(Consumer existing, Consumer incoming) {
+    private boolean checkForInstalledProductsUpdate(Consumer existing, ConsumerDTO incoming) {
         if (incoming.getInstalledProducts() == null) {
             log.debug("Installed packages not included in this consumer update, skipping update.");
             return false;
         }
-        else if (existing.getInstalledProducts() == null ||
-            !existing.getInstalledProducts().equals(incoming.getInstalledProducts())) {
+
+        Set<ConsumerInstalledProduct> incomingInstalledProducts =
+            populateInstalledProducts(existing, incoming);
+
+
+        if (existing.getInstalledProducts() == null ||
+            !existing.getInstalledProducts().equals(incomingInstalledProducts)) {
 
             log.info("Updating installed products.");
 
@@ -1452,7 +1559,7 @@ public class ConsumerResource {
                 existing.getInstalledProducts().clear();
             }
 
-            for (ConsumerInstalledProduct cip : incoming.getInstalledProducts()) {
+            for (ConsumerInstalledProduct cip : incomingInstalledProducts) {
                 existing.addInstalledProduct(cip);
             }
 
@@ -1518,7 +1625,8 @@ public class ConsumerResource {
                 !guest.getInstalledProducts().isEmpty();
 
             if (guest.isAutoheal() && !deletableGuestEntitlements.isEmpty() && hasInstalledProducts) {
-                AutobindData autobindData = AutobindData.create(guest).on(new Date());
+                Owner owner = ownerCurator.findOwnerById(guest.getOwnerId());
+                AutobindData autobindData = AutobindData.create(guest, owner).on(new Date());
                 // Autobind could be disabled for the owner. If it is, we simply don't
                 // perform the autobind for the guest.
                 try {
@@ -1551,6 +1659,7 @@ public class ConsumerResource {
     public void deleteConsumer(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid,
         @Context Principal principal) {
+
         log.debug("Deleting consumer_uuid {}", uuid);
 
         Consumer toDelete = consumerCurator.findByUuid(uuid);
@@ -1562,11 +1671,13 @@ public class ConsumerResource {
             this.poolManager.revokeAllEntitlements(toDelete, false);
         }
         catch (ForbiddenException e) {
+            ConsumerType ctype = this.consumerTypeCurator.get(toDelete.getTypeId());
+
             String msg = e.message().getDisplayMessage();
             throw new ForbiddenException(i18n.tr("Cannot unregister {0} {1} because: {2}",
-                toDelete.getType().getLabel(), toDelete.getName(), msg), e);
-
+                ctype != null ? ctype.getLabel() : "unknown type", toDelete.getName(), msg), e);
         }
+
         consumerRules.onConsumerDelete(toDelete);
 
         Event event = eventFactory.consumerDeleted(toDelete);
@@ -1577,7 +1688,7 @@ public class ConsumerResource {
 
     private void logShareConsumerRequestWarning(String api, Consumer consumer) {
         log.warn("skipping {} request for share consumer {} of org {} and of recipient org {}",
-            api, consumer.getUuid(), consumer.getOwner().getKey(), consumer.getRecipientOwnerKey());
+            api, consumer.getUuid(), consumer.getOwnerId(), consumer.getRecipientOwnerKey());
     }
 
     @ApiOperation(notes = "Retrieves a list of Entitlement Certificates for the Consumer",
@@ -1593,8 +1704,9 @@ public class ConsumerResource {
 
         log.debug("Getting client certificates for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
 
-        if (consumer.isShare()) {
+        if (ctype.isType(ConsumerTypeEnum.SHARE)) {
             logShareConsumerRequestWarning("cert fetch", consumer);
             return new ArrayList<>();
         }
@@ -1643,12 +1755,15 @@ public class ConsumerResource {
 
         log.debug("Getting content access certificate for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        if (consumer.isShare()) {
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
+
+        if (ctype.isType(ConsumerTypeEnum.SHARE)) {
             throw new BadRequestException(
                 i18n.tr("Content access body can not be requested for a share consumer"));
         }
 
-        String cam = consumer.getOwner().getContentAccessMode();
+        Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
+        String cam = owner.getContentAccessMode();
         if (!ContentAccessCertServiceAdapter.ORG_ENV_ACCESS_MODE.equals(cam)) {
             throw new BadRequestException(i18n.tr("Content access mode does not allow this request."));
         }
@@ -1698,8 +1813,9 @@ public class ConsumerResource {
         @QueryParam("serials") String serials) {
 
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
 
-        if (consumer.isShare()) {
+        if (ctype.isType(ConsumerTypeEnum.SHARE)) {
             logShareConsumerRequestWarning("cert export", consumer);
             return null;
         }
@@ -1766,8 +1882,9 @@ public class ConsumerResource {
 
         log.debug("Getting client certificate serials for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
 
-        if (consumer.isShare()) {
+        if (ctype.isType(ConsumerTypeEnum.SHARE)) {
             logShareConsumerRequestWarning("cert serial fetch", consumer);
             return new ArrayList<>();
         }
@@ -1801,16 +1918,21 @@ public class ConsumerResource {
         String[] productIds, List<String> fromPools, Date entitleDate, Consumer consumer, boolean async) {
         short parameters = 0;
 
-        if (consumer.isShare() && StringUtils.isBlank(poolIdString)) {
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
+
+        if (ctype.isType(ConsumerTypeEnum.SHARE) && StringUtils.isBlank(poolIdString)) {
             throw new BadRequestException(i18n.tr("Share consumers must be bound to a specific pool"));
         }
+
         if (poolIdString != null) {
             parameters++;
         }
+
         if (ArrayUtils.isNotEmpty(productIds) || CollectionUtils.isNotEmpty(fromPools) ||
             entitleDate != null) {
             parameters++;
         }
+
         if (parameters > 1) {
             throw new BadRequestException(i18n.tr("Cannot bind by multiple parameters."));
         }
@@ -1864,19 +1986,25 @@ public class ConsumerResource {
 
         // Verify consumer exists:
         Consumer consumer = consumerCurator.verifyAndLookupConsumerWithEntitlements(consumerUuid);
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
         log.debug("Consumer (post verify): {}", consumer);
 
         // Check that only one query param was set, and some other validations
         validateBindArguments(poolIdString, quantity, productIds, fromPools,
             entitleDate, consumer, async);
 
+        Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
+
         try {
             // I hate double negatives, but if they have accepted all
             // terms, we want comeToTerms to be true.
             long subTermsStart = System.currentTimeMillis();
-            if (!consumer.isShare() && subAdapter.hasUnacceptedSubscriptionTerms(consumer.getOwner())) {
+            if (!ctype.isType(ConsumerTypeEnum.SHARE) &&
+                subAdapter.hasUnacceptedSubscriptionTerms(owner)) {
+
                 return Response.serverError().build();
             }
+
             log.debug("Checked if consumer has unaccepted subscription terms in {}ms",
                 (System.currentTimeMillis() - subTermsStart));
         }
@@ -1886,13 +2014,8 @@ public class ConsumerResource {
         }
 
         if (poolIdString != null && quantity == null) {
-            Pool pool = poolManager.find(poolIdString);
-            if (pool != null) {
-                quantity = consumerBindUtil.getQuantityToBind(pool, consumer);
-            }
-            else {
-                quantity = 1;
-            }
+            Pool pool = poolManager.get(poolIdString);
+            quantity = pool != null ? consumerBindUtil.getQuantityToBind(pool, consumer) : 1;
         }
 
         //
@@ -1902,10 +2025,11 @@ public class ConsumerResource {
             JobDetail detail = null;
 
             if (poolIdString != null) {
-                detail = EntitlerJob.bindByPool(poolIdString, consumer, quantity);
+                detail = EntitlerJob.bindByPool(poolIdString, consumer, owner, quantity);
             }
             else {
-                detail = EntitleByProductsJob.bindByProducts(productIds, consumer, entitleDate, fromPools);
+                detail = EntitleByProductsJob.bindByProducts(productIds, consumer, entitleDate, fromPools,
+                    owner);
             }
 
             // events will be triggered by the job
@@ -1923,13 +2047,13 @@ public class ConsumerResource {
         }
         else {
             try {
-                AutobindData autobindData = AutobindData.create(consumer).on(entitleDate)
+                AutobindData autobindData = AutobindData.create(consumer, owner).on(entitleDate)
                     .forProducts(productIds).withPools(fromPools);
                 entitlements = entitler.bindByProducts(autobindData);
             }
             catch (AutobindDisabledForOwnerException e) {
                 throw new BadRequestException(i18n.tr("Ignoring request to auto-attach. " +
-                    "It is disabled for org \"{0}\".", consumer.getOwner().getKey()));
+                    "It is disabled for org \"{0}\".", owner.getKey()));
             }
         }
 
@@ -1972,16 +2096,17 @@ public class ConsumerResource {
 
         // Verify consumer exists:
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
+        Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
 
-        if (consumer.getOwner().isAutobindDisabled()) {
+        if (owner.isAutobindDisabled()) {
             throw new BadRequestException(i18n.tr("Owner has autobind disabled."));
         }
 
         List<PoolQuantity> dryRunPools = new ArrayList<>();
 
         try {
-            consumerBindUtil.validateServiceLevel(consumer.getOwner(), serviceLevel);
-            dryRunPools = entitler.getDryRun(consumer, serviceLevel);
+            consumerBindUtil.validateServiceLevel(consumer.getOwnerId(), serviceLevel);
+            dryRunPools = entitler.getDryRun(consumer, owner, serviceLevel);
         }
         catch (ForbiddenException fe) {
             return Collections.<PoolQuantityDTO>emptyList();
@@ -2005,7 +2130,7 @@ public class ConsumerResource {
     }
 
     private Entitlement verifyAndLookupEntitlement(String entitlementId) {
-        Entitlement entitlement = entitlementCurator.find(entitlementId);
+        Entitlement entitlement = entitlementCurator.get(entitlementId);
 
         if (entitlement == null) {
             throw new NotFoundException(i18n.tr(
@@ -2071,7 +2196,8 @@ public class ConsumerResource {
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
 
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        return translator.translate(consumer.getOwner(), OwnerDTO.class);
+        Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
+        return translator.translate(owner, OwnerDTO.class);
     }
 
     @ApiOperation(
@@ -2112,7 +2238,7 @@ public class ConsumerResource {
 
         consumerCurator.verifyAndLookupConsumer(consumerUuid);
 
-        Entitlement toDelete = entitlementCurator.find(dbid);
+        Entitlement toDelete = entitlementCurator.get(dbid);
         if (toDelete != null) {
             poolManager.revokeEntitlement(toDelete);
             return;
@@ -2218,9 +2344,11 @@ public class ConsumerResource {
         @QueryParam("entitlement") String entitlementId,
         @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {
 
-        Consumer c = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        if (c.isShare()) {
-            logShareConsumerRequestWarning("cert regen", c);
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
+
+        if (ctype.isType(ConsumerTypeEnum.SHARE)) {
+            logShareConsumerRequestWarning("cert regen", consumer);
             return;
         }
 
@@ -2229,7 +2357,7 @@ public class ConsumerResource {
             poolManager.regenerateCertificatesOf(e, lazyRegen);
         }
         else {
-            poolManager.regenerateCertificatesOf(c, lazyRegen);
+            poolManager.regenerateCertificatesOf(consumer, lazyRegen);
         }
     }
 
@@ -2266,7 +2394,9 @@ public class ConsumerResource {
         List<KeyValueParameter> extensionArgs) {
 
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        if (consumer.isShare()) {
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
+
+        if (ctype.isType(ConsumerTypeEnum.SHARE)) {
             throw new BadRequestException(i18n.tr("Can not export manifest of a share consumer"));
         }
 
@@ -2323,11 +2453,16 @@ public class ConsumerResource {
         List<KeyValueParameter> extensionArgs) {
 
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        if (consumer.isShare()) {
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
+
+        if (ctype.isType(ConsumerTypeEnum.SHARE)) {
             throw new BadRequestException(i18n.tr("Can not export manifest of a share consumer"));
         }
-        return manifestManager.generateManifestAsync(consumerUuid, cdnLabel, webAppPrefix, apiUrl,
-            getExtensionParamMap(extensionArgs));
+
+        Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
+
+        return manifestManager.generateManifestAsync(consumerUuid, owner, cdnLabel, webAppPrefix,
+            apiUrl, getExtensionParamMap(extensionArgs));
     }
 
     /**
@@ -2367,7 +2502,9 @@ public class ConsumerResource {
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @PathParam("export_id") String exportId) {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        if (consumer.isShare()) {
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
+
+        if (ctype.isType(ConsumerTypeEnum.SHARE)) {
             throw new BadRequestException(i18n.tr("Can not export manifest of a share consumer"));
         }
         // *******************************************************************************
@@ -2420,14 +2557,16 @@ public class ConsumerResource {
     @Path("{consumer_uuid}")
     public ConsumerDTO regenerateIdentityCertificates(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid) {
-        Consumer c = consumerCurator.verifyAndLookupConsumer(uuid);
-        if (c.isShare()) {
-            logShareConsumerRequestWarning("regenerate identity certificate", c);
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(uuid);
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
+
+        if (ctype.isType(ConsumerTypeEnum.SHARE)) {
+            logShareConsumerRequestWarning("regenerate identity certificate", consumer);
         }
         else {
-            c = regenerateIdentityCertificate(c);
+            consumer = regenerateIdentityCertificate(consumer);
         }
-        return translator.translate(c, ConsumerDTO.class);
+        return translator.translate(consumer, ConsumerDTO.class);
     }
 
     /**
@@ -2540,10 +2679,11 @@ public class ConsumerResource {
         }
 
         Consumer host = consumerCurator.getHost(consumer);
+        Owner hostOwner = ownerCurator.findOwnerById(host.getOwnerId());
 
         // The host would be in a different organization if a host-restricted pool has been shared into the
         // current organization.
-        if (host == null || principal.canAccess(host.getOwner(), SubResource.CONSUMERS, Access.READ_ONLY)) {
+        if (host == null || principal.canAccess(hostOwner, SubResource.CONSUMERS, Access.READ_ONLY)) {
             return translator.translate(host, ConsumerDTO.class);
         }
 
@@ -2576,11 +2716,14 @@ public class ConsumerResource {
         @ApiParam("Date to get compliance information for, default is now.")
         @QueryParam("on_date") String onDate) {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(uuid);
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
+
         Date date = ResourceDateParser.parseDateString(onDate);
-        if (consumer.isShare()) {
+        if (ctype.isType(ConsumerTypeEnum.SHARE)) {
             logShareConsumerRequestWarning("fetch compliance", consumer);
             return new ComplianceStatus(date);
         }
+
         return this.complianceRules.getStatus(consumer, date);
     }
 
@@ -2597,8 +2740,10 @@ public class ConsumerResource {
 
         if (uuids != null && !uuids.isEmpty()) {
             for (Consumer consumer : consumerCurator.findByUuids(uuids)) {
+                ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
                 ComplianceStatus status;
-                if (consumer.isShare()) {
+
+                if (ctype.isType(ConsumerTypeEnum.SHARE)) {
                     logShareConsumerRequestWarning("fetch compliance", consumer);
                     status = new ComplianceStatus(null);
                 }

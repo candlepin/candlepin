@@ -19,7 +19,6 @@ import org.hibernate.annotations.Index;
 
 import java.io.Serializable;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
@@ -35,7 +34,6 @@ import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 
 
 
@@ -77,9 +75,6 @@ public class Environment extends AbstractHibernateObject implements Serializable
     @NotNull
     private String id;
 
-    @OneToMany(mappedBy = "environment", targetEntity = Consumer.class)
-    private List<Consumer> consumers;
-
     @OneToMany(mappedBy = "environment", targetEntity = EnvironmentContent.class,
         cascade = CascadeType.ALL)
     private Set<EnvironmentContent> environmentContent = new HashSet<>();
@@ -116,6 +111,14 @@ public class Environment extends AbstractHibernateObject implements Serializable
         return owner;
     }
 
+    /**
+     * @return the owner Id of this Environment.
+     */
+    @Override
+    public String getOwnerId() {
+        return (owner == null) ? null : owner.getId();
+    }
+
     public void setOwner(Owner owner) {
         this.owner = owner;
     }
@@ -142,15 +145,6 @@ public class Environment extends AbstractHibernateObject implements Serializable
 
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    @XmlTransient
-    public List<Consumer> getConsumers() {
-        return consumers;
-    }
-
-    public void setConsumers(List<Consumer> consumers) {
-        this.consumers = consumers;
     }
 
     @Override

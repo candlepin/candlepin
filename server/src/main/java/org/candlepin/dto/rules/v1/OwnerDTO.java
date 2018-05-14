@@ -122,18 +122,12 @@ public class OwnerDTO extends CandlepinDTO<OwnerDTO> {
      * {@inheritDoc}
      */
     @Override
-    public OwnerDTO clone() {
-        return super.clone();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public OwnerDTO populate(OwnerDTO source) {
         super.populate(source);
+
         this.setId(source.getId());
         this.setDefaultServiceLevel(source.getDefaultServiceLevel());
+
         return this;
     }
 }

@@ -29,10 +29,13 @@ import org.candlepin.dto.rules.v1.PoolDTO;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerProductCurator;
-import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
@@ -75,8 +78,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-
-
 /**
  * Enforces entitlement rules for normal (non-manifest) consumers.
  */
@@ -89,8 +90,9 @@ public class EntitlementRules implements Enforcer {
     private JsRunner jsRules;
     private Configuration config;
     private ConsumerCurator consumerCurator;
+    private ConsumerTypeCurator consumerTypeCurator;
     private ProductCurator productCurator;
-    private RulesObjectMapper objectMapper = null;
+    private RulesObjectMapper objectMapper;
     private OwnerCurator ownerCurator;
     private OwnerProductCurator ownerProductCurator;
     private ProductShareCurator shareCurator;
@@ -104,7 +106,7 @@ public class EntitlementRules implements Enforcer {
     @Inject
     public EntitlementRules(DateSource dateSource,
         JsRunner jsRules, I18n i18n, Configuration config, ConsumerCurator consumerCurator,
-        ProductCurator productCurator, RulesObjectMapper mapper,
+        ConsumerTypeCurator consumerTypeCurator, ProductCurator productCurator, RulesObjectMapper mapper,
         OwnerCurator ownerCurator, OwnerProductCurator ownerProductCurator,
         ProductShareCurator productShareCurator, ProductManager productManager, EventSink eventSink,
         EventFactory eventFactory, ModelTranslator translator) {
@@ -114,6 +116,7 @@ public class EntitlementRules implements Enforcer {
         this.i18n = i18n;
         this.config = config;
         this.consumerCurator = consumerCurator;
+        this.consumerTypeCurator = consumerTypeCurator;
         this.productCurator = productCurator;
         this.objectMapper = mapper;
         this.ownerCurator = ownerCurator;
@@ -177,15 +180,18 @@ public class EntitlementRules implements Enforcer {
 
         Map<String, ValidationResult> resultMap = new HashMap<>();
 
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
+
         /* This document describes the java script portion of the pre entitlement rules check:
          * http://www.candlepinproject.org/docs/candlepin/pre_entitlement_rules_check.html
          * As described in the document, none of the checks are related to share binds, so we
          * skip that step for share consumers.
          */
-        if (!consumer.isShare()) {
+        if (!ctype.isType(ConsumerTypeEnum.SHARE)) {
             Stream<EntitlementDTO> entStream = consumer.getEntitlements() == null ? Stream.empty() :
                 consumer.getEntitlements().stream()
                     .map(this.translator.getStreamMapper(Entitlement.class, EntitlementDTO.class));
+
 
             JsonJsContext args = new JsonJsContext(objectMapper);
             args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
@@ -216,7 +222,7 @@ public class EntitlementRules implements Enforcer {
         }
 
         for (PoolQuantity poolQuantity : entitlementPoolQuantities) {
-            if (consumer.isShare()) {
+            if (ctype.isType(ConsumerTypeEnum.SHARE)) {
                 ValidationResult result = new ValidationResult();
                 resultMap.put(poolQuantity.getPool().getId(), result);
                 validatePoolSharingEligibility(result, poolQuantity.getPool());
@@ -234,7 +240,9 @@ public class EntitlementRules implements Enforcer {
         JsonJsContext args = new JsonJsContext(objectMapper);
         Map<String, ValidationResult> resultMap = new HashMap<>();
 
-        if (!consumer.isShare()) {
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
+
+        if (!ctype.isType(ConsumerTypeEnum.SHARE)) {
             Stream<PoolDTO> poolStream = pools == null ? Stream.empty() :
                 pools.stream().map(this.translator.getStreamMapper(Pool.class, PoolDTO.class));
 
@@ -265,7 +273,7 @@ public class EntitlementRules implements Enforcer {
         List<Pool> filteredPools = new LinkedList<>();
         for (Pool pool : pools) {
             ValidationResult result;
-            if (consumer.isShare()) {
+            if (ctype.isType(ConsumerTypeEnum.SHARE)) {
                 result = new ValidationResult();
                 resultMap.put(pool.getId(), result);
                 validatePoolSharingEligibility(result, pool);
@@ -305,14 +313,14 @@ public class EntitlementRules implements Enforcer {
             return null;
         }
 
-        List<Owner> potentialOwners = new ArrayList<>(Arrays.asList(consumer.getOwner()));
+        List<String> potentialOwners = new ArrayList<>(Arrays.asList(consumer.getOwnerId()));
         for (Pool p : pools) {
             if (p.isCreatedByShare()) {
-                potentialOwners.add(p.getSourceEntitlement().getOwner());
+                potentialOwners.add(p.getSourceEntitlement().getOwner().getId());
             }
         }
 
-        Consumer host = consumerCurator.getHost(consumer, potentialOwners.toArray(new Owner[] {}));
+        Consumer host = consumerCurator.getHost(consumer, potentialOwners.toArray(new String[] {}));
         return host;
     }
 
@@ -329,7 +337,10 @@ public class EntitlementRules implements Enforcer {
     @Override
     public ValidationResult update(Consumer consumer, Entitlement entitlement, Integer change) {
         ValidationResult result = new ValidationResult();
-        if (!consumer.isManifestDistributor() && !consumer.isShare()) {
+
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
+
+        if (!ctype.isManifest() && !ctype.isType(ConsumerTypeEnum.SHARE)) {
             Pool pool = entitlement.getPool();
             // multi ent check
             if (!"yes".equalsIgnoreCase(pool.getProductAttributeValue(Pool.Attributes.MULTI_ENTITLEMENT)) &&
@@ -551,7 +562,7 @@ public class EntitlementRules implements Enforcer {
         }
     }
 
-    protected void runPostEntitlement(PoolManager poolManager, Consumer consumer,
+    protected void runPostEntitlement(PoolManager poolManager, Consumer consumer, Owner owner,
         Map<String, Entitlement> entitlementMap, List<Pool> subPoolsForStackIds, boolean isUpdate,
         Map<String, PoolQuantity> poolQuantityMap) {
 
@@ -567,6 +578,8 @@ public class EntitlementRules implements Enforcer {
             }
         }
 
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
+
         // Perform pool management based on the attributes of the pool:
         if (!virtLimitEntitlements.isEmpty()) {
             /* Share and manifest consumers only need to compute postBindVirtLimit in hosted mode
@@ -575,7 +588,7 @@ public class EntitlementRules implements Enforcer {
                in hosted mode. These checks are done further below, but doing this up-front to save
                 us some computation.
              */
-            if (!(consumer.isShare() || consumer.isManifestDistributor()) ||
+            if (!(ctype.isType(ConsumerTypeEnum.SHARE) || ctype.isManifest()) ||
                 !config.getBoolean(ConfigProperties.STANDALONE)) {
 
                 postBindVirtLimit(poolManager, consumer, virtLimitEntitlements, flatAttributeMaps,
@@ -583,8 +596,8 @@ public class EntitlementRules implements Enforcer {
             }
         }
 
-        if (consumer.isShare() && !isUpdate) {
-            postBindShareCreate(poolManager, consumer, entitlementMap);
+        if (ctype.isType(ConsumerTypeEnum.SHARE) && !isUpdate) {
+            postBindShareCreate(poolManager, consumer, owner, entitlementMap);
         }
     }
 
@@ -601,14 +614,16 @@ public class EntitlementRules implements Enforcer {
         }
     }
 
-    private void postUnbindVirtLimit(PoolManager poolManager, Entitlement entitlement, Pool pool, Consumer c,
-        Map<String, String> attributes) {
+    private void postUnbindVirtLimit(PoolManager poolManager, Entitlement entitlement, Pool pool,
+        Consumer consumer, Map<String, String> attributes) {
 
         log.debug("Running virt_limit post unbind.");
 
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
+
         boolean hostLimited = "true".equals(attributes.get(Product.Attributes.HOST_LIMITED));
 
-        if (!config.getBoolean(ConfigProperties.STANDALONE) && !hostLimited && c.isManifestDistributor()) {
+        if (!config.getBoolean(ConfigProperties.STANDALONE) && !hostLimited && ctype.isManifest()) {
             // We're making an assumption that VIRT_LIMIT is defined the same way in every possible
             // source for the attributes map.
             String virtLimit = attributes.get(Product.Attributes.VIRT_LIMIT);
@@ -618,7 +633,7 @@ public class EntitlementRules implements Enforcer {
                 // exported, we need to add back the reduced bonus pool quantity.
                 int virtQuantity = Integer.parseInt(virtLimit) * entitlement.getQuantity();
                 if (virtQuantity > 0) {
-                    List<Pool> pools = poolManager.lookupBySubscriptionId(pool.getOwner(),
+                    List<Pool> pools = poolManager.getBySubscriptionId(pool.getOwner(),
                         pool.getSubscriptionId());
                     for (int idex = 0; idex < pools.size(); idex++) {
                         Pool derivedPool = pools.get(idex);
@@ -633,7 +648,7 @@ public class EntitlementRules implements Enforcer {
                 // was previously
                 // exported, we need to set the unlimited bonus pool quantity to
                 // -1.
-                List<Pool> pools = poolManager.lookupBySubscriptionId(pool.getOwner(),
+                List<Pool> pools = poolManager.getBySubscriptionId(pool.getOwner(),
                     pool.getSubscriptionId());
                 for (int idex = 0; idex < pools.size(); idex++) {
                     Pool derivedPool = pools.get(idex);
@@ -647,12 +662,11 @@ public class EntitlementRules implements Enforcer {
         }
     }
 
-    private void postBindShareCreate(PoolManager poolManager, Consumer c,
+    private void postBindShareCreate(PoolManager poolManager, Consumer c, Owner sharingOwner,
         Map<String, Entitlement> entitlementMap) {
         log.debug("Running post-bind share create");
 
-        Owner sharingOwner = c.getOwner();
-        Owner recipient = ownerCurator.lookupByKey(c.getRecipientOwnerKey());
+        Owner recipient = ownerCurator.getByKey(c.getRecipientOwnerKey());
         List<Pool> sharedPoolsToCreate = new ArrayList<>();
 
         for (Entitlement entitlement: entitlementMap.values()) {
@@ -842,7 +856,7 @@ public class EntitlementRules implements Enforcer {
         return resolvedProducts;
     }
 
-    private void postBindVirtLimit(PoolManager poolManager, Consumer c,
+    private void postBindVirtLimit(PoolManager poolManager, Consumer consumer,
         Map<String, Entitlement> entitlementMap, Map<String, Map<String, String>> attributeMaps,
         List<Pool> subPoolsForStackIds, boolean isUpdate, Map<String, PoolQuantity> poolQuantityMap) {
 
@@ -856,7 +870,10 @@ public class EntitlementRules implements Enforcer {
 
         log.debug("Running virt_limit post-bind.");
 
-        boolean consumerFactExpression = !c.isManifestDistributor() && !c.isShare() && !c.isGuest();
+        ConsumerType type = this.consumerTypeCurator.getConsumerType(consumer);
+
+        boolean consumerFactExpression = !type.isManifest() && !type.isType(ConsumerTypeEnum.SHARE) &&
+            !consumer.isGuest();
 
         boolean isStandalone = config.getBoolean(ConfigProperties.STANDALONE);
 
@@ -900,15 +917,15 @@ public class EntitlementRules implements Enforcer {
         }
 
         // Share consumers do not have host restricted pools
-        if (CollectionUtils.isNotEmpty(createHostRestrictedPoolFor) && !c.isShare()) {
+        if (CollectionUtils.isNotEmpty(createHostRestrictedPoolFor) && !type.isType(ConsumerTypeEnum.SHARE)) {
             log.debug("creating host restricted pools for: {}", createHostRestrictedPoolFor);
-            PoolHelper.createHostRestrictedPools(poolManager, c, createHostRestrictedPoolFor, entitlementMap,
-                attributeMaps, productCurator);
+            PoolHelper.createHostRestrictedPools(poolManager, consumer, createHostRestrictedPoolFor,
+                entitlementMap, attributeMaps, productCurator);
         }
 
         if (CollectionUtils.isNotEmpty(decrementHostedBonusPoolQuantityFor)) {
             log.debug("adjustHostedBonusPoolQuantity for: {}", decrementHostedBonusPoolQuantityFor);
-            adjustHostedBonusPoolQuantity(poolManager, c, decrementHostedBonusPoolQuantityFor,
+            adjustHostedBonusPoolQuantity(poolManager, consumer, decrementHostedBonusPoolQuantityFor,
                 attributeMaps, poolQuantityMap);
         }
     }
@@ -917,10 +934,13 @@ public class EntitlementRules implements Enforcer {
      * When distributors/share consumers bind to virt_limit pools in hosted, we need to go adjust the
      * quantity on the bonus pool, as those entitlements have now been exported to on-site or to the share.
      */
-    private void adjustHostedBonusPoolQuantity(PoolManager poolManager, Consumer c,
+    private void adjustHostedBonusPoolQuantity(PoolManager poolManager, Consumer consumer,
         List<Entitlement> entitlements, Map<String, Map<String, String>> attributesMaps,
         Map<String, PoolQuantity> poolQuantityMap) {
-        boolean consumerFactExpression = (c.isManifestDistributor() || c.isShare()) &&
+
+        ConsumerType type = this.consumerTypeCurator.getConsumerType(consumer);
+
+        boolean consumerFactExpression = (type.isManifest() || type.isType(ConsumerTypeEnum.SHARE)) &&
             !config.getBoolean(ConfigProperties.STANDALONE);
 
         if (!consumerFactExpression) {
@@ -932,8 +952,11 @@ public class EntitlementRules implements Enforcer {
         for (Entitlement entitlement : entitlements) {
             subscriptionIds.add(entitlement.getPool().getSubscriptionId());
         }
-        List<Pool> subscriptionPools = poolManager.lookupBySubscriptionIds(c.getOwner(), subscriptionIds);
+
+        List<Pool> subscriptionPools = poolManager.getBySubscriptionIds(consumer.getOwnerId(),
+            subscriptionIds);
         Map<String, List<Pool>> subscriptionPoolMap = new HashMap<>();
+
         for (Pool pool : subscriptionPools) {
             if (!subscriptionPoolMap.containsKey(pool.getSubscriptionId())) {
                 subscriptionPoolMap.put(pool.getSubscriptionId(), new ArrayList<>());
@@ -995,7 +1018,7 @@ public class EntitlementRules implements Enforcer {
 
     }
 
-    public void postEntitlement(PoolManager poolManager, Consumer consumer,
+    public void postEntitlement(PoolManager poolManager, Consumer consumer, Owner owner,
         Map<String, Entitlement> entitlements, List<Pool> subPoolsForStackIds, boolean isUpdate,
         Map<String, PoolQuantity> poolQuantityMap) {
 
@@ -1003,6 +1026,7 @@ public class EntitlementRules implements Enforcer {
 
         runPostEntitlement(poolManager,
             consumer,
+            owner,
             entitlements,
             subPoolsForStackIds,
             isUpdate,

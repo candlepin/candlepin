@@ -62,6 +62,7 @@ public class EntitlerJobTest extends BaseJobTest{
 
     private String consumerUuid;
     private Consumer consumer;
+    private Owner owner;
     private Entitler e;
     private PoolCurator pC;
     private I18n i18n;
@@ -70,8 +71,11 @@ public class EntitlerJobTest extends BaseJobTest{
     public void init() {
         super.init();
         consumerUuid = "49bd6a8f-e9f8-40cc-b8d7-86cafd687a0e";
-        consumer = new Consumer("Test Consumer", "test-consumer", new Owner("test-owner"),
-            new ConsumerType("system"));
+
+        ConsumerType ctype = new ConsumerType("system");
+        ctype.setId("test-ctype");
+        owner = new Owner("test-owner");
+        consumer = new Consumer("Test Consumer", "test-consumer", owner, ctype);
         consumer.setUuid(consumerUuid);
         e = mock(Entitler.class);
         pC = mock(PoolCurator.class);
@@ -84,7 +88,7 @@ public class EntitlerJobTest extends BaseJobTest{
 
         PoolIdAndQuantity[] pQs = new PoolIdAndQuantity[1];
         pQs[0] = new PoolIdAndQuantity(pool, 1);
-        JobDetail detail = EntitlerJob.bindByPoolAndQuantities(consumer, pQs);
+        JobDetail detail = EntitlerJob.bindByPoolAndQuantities(consumer, owner, pQs);
         assertNotNull(detail);
         PoolIdAndQuantity[] resultPools = (PoolIdAndQuantity[]) detail.getJobDataMap().get(
                 "pool_and_quantities");
@@ -100,7 +104,7 @@ public class EntitlerJobTest extends BaseJobTest{
 
         PoolIdAndQuantity[] pQs = new PoolIdAndQuantity[1];
         pQs[0] = new PoolIdAndQuantity(pool, 1);
-        JobDetail detail = EntitlerJob.bindByPoolAndQuantities(consumer, pQs);
+        JobDetail detail = EntitlerJob.bindByPoolAndQuantities(consumer, owner, pQs);
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
 
@@ -121,10 +125,10 @@ public class EntitlerJobTest extends BaseJobTest{
         verify(e).sendEvents(eq(ents));
         ArgumentCaptor<Object> argumentCaptor = ArgumentCaptor.forClass(Object.class);
         verify(ctx).setResult(argumentCaptor.capture());
-        PoolIdAndQuantity[] result = (PoolIdAndQuantity[]) argumentCaptor.getValue();
-        assertEquals(1, result.length);
-        assertEquals(pool, result[0].getPoolId());
-        assertEquals(100, result[0].getQuantity().intValue());
+        List<PoolIdAndQuantity> result = (List<PoolIdAndQuantity>) argumentCaptor.getValue();
+        assertEquals(1, result.size());
+        assertEquals(pool, result.get(0).getPoolId());
+        assertEquals(100, result.get(0).getQuantity().intValue());
     }
 
     /**
@@ -139,7 +143,7 @@ public class EntitlerJobTest extends BaseJobTest{
     public void serializeJobDataMapForPool() throws IOException {
         PoolIdAndQuantity[] pQs = new PoolIdAndQuantity[1];
         pQs[0] = new PoolIdAndQuantity("pool10", 1);
-        JobDetail detail = EntitlerJob.bindByPoolAndQuantities(consumer, pQs);
+        JobDetail detail = EntitlerJob.bindByPoolAndQuantities(consumer, owner, pQs);
         serialize(detail.getJobDataMap());
     }
 
@@ -147,7 +151,7 @@ public class EntitlerJobTest extends BaseJobTest{
     public void recoveryIsFalse() {
         PoolIdAndQuantity[] pQs = new PoolIdAndQuantity[1];
         pQs[0] = new PoolIdAndQuantity("pool10", 1);
-        JobDetail detail = EntitlerJob.bindByPoolAndQuantities(consumer, pQs);
+        JobDetail detail = EntitlerJob.bindByPoolAndQuantities(consumer, owner, pQs);
         assertFalse(detail.requestsRecovery());
         assertTrue(detail.isDurable());
     }
@@ -162,7 +166,7 @@ public class EntitlerJobTest extends BaseJobTest{
     public void handleException() throws JobExecutionException, EntitlementRefusedException {
         PoolIdAndQuantity[] pQs = new PoolIdAndQuantity[1];
         pQs[0] = new PoolIdAndQuantity("pool10", 1);
-        JobDetail detail = EntitlerJob.bindByPoolAndQuantities(consumer, pQs);
+        JobDetail detail = EntitlerJob.bindByPoolAndQuantities(consumer, owner, pQs);
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
         Class<HashMap<String, Integer>> className = (Class<HashMap<String, Integer>>) (Class) Map.class;
@@ -179,7 +183,7 @@ public class EntitlerJobTest extends BaseJobTest{
     public void respondWithValidationErrors() throws JobExecutionException, EntitlementRefusedException {
         PoolIdAndQuantity[] pQs = new PoolIdAndQuantity[1];
         pQs[0] = new PoolIdAndQuantity("pool10", 1);
-        JobDetail detail = EntitlerJob.bindByPoolAndQuantities(consumer, pQs);
+        JobDetail detail = EntitlerJob.bindByPoolAndQuantities(consumer, owner, pQs);
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
 

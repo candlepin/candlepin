@@ -153,7 +153,8 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         this.getEntityManager().clear();
 
         beginTransaction();
-        c = consumerCurator.find(c.getId());
+        c = consumerCurator.get(c.getId());
+        c.setOwner(owner);
         for (Entitlement ent : c.getEntitlements()) {
             ent.getPool().getEntitlements().remove(ent);
             Hibernate.initialize(ent.getPool().getEntitlements());
@@ -1220,7 +1221,10 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         assertTrue(poolIds.contains(dependentEnt.getId()));
 
         // Bind the ents for the distributor consumer
-        assertTrue(distributor.isManifestDistributor());
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(distributor);
+        assertNotNull(ctype);
+        assertTrue(ctype.isManifest());
+
         assertNotNull(this.bind(distributor, requiredPool));
         Entitlement distributorDependentEnt = this.bind(distributor, dependentPool);
         assertNotNull(distributorDependentEnt);
@@ -1262,7 +1266,10 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         assertEquals(0, poolIds.size());
 
         // Bind the ents for the distributor consumer
-        assertTrue(distributor.isManifestDistributor());
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(distributor);
+        assertNotNull(ctype);
+        assertTrue(ctype.isManifest());
+
         assertNotNull(this.bind(distributor, requiredPool));
         Entitlement distributorDependentEnt = this.bind(distributor, dependentPool);
         assertNotNull(distributorDependentEnt);

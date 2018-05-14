@@ -21,6 +21,7 @@ import org.candlepin.controller.Entitler;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.Owner;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.util.Util;
 
@@ -77,9 +78,11 @@ public class EntitleByProductsJob extends KingpinJob {
     }
 
     public static JobDetail bindByProducts(String[] prodIds, Consumer consumer,
-        Date entitleDate, Collection<String> fromPools) {
+        Date entitleDate, Collection<String> fromPools, Owner owner) {
+
         JobDataMap map = new JobDataMap();
-        map.put(JobStatus.OWNER_ID, consumer.getOwner().getKey());
+        map.put(JobStatus.OWNER_ID, owner.getKey());
+        map.put(JobStatus.OWNER_LOG_LEVEL, owner.getLogLevel());
         map.put("product_ids", prodIds);
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.CONSUMER);
         map.put(JobStatus.TARGET_ID, consumer.getUuid());
@@ -91,6 +94,7 @@ public class EntitleByProductsJob extends KingpinJob {
             .withIdentity("bind_by_products_" + Util.generateUUID())
             .usingJobData(map)
             .build();
+
         return detail;
     }
 }

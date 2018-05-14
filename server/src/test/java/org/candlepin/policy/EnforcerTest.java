@@ -31,6 +31,7 @@ import org.candlepin.dto.StandardTranslator;
 import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerProductCurator;
@@ -86,12 +87,13 @@ public class EnforcerTest extends DatabaseTestFixture {
     @Mock private ProductCurator mockProductCurator;
     @Mock private OwnerCurator mockOwnerCurator;
     @Mock private OwnerProductCurator mockOwnerProductCurator;
+    @Mock private EnvironmentCurator mockEnvironmentCurator;
     @Mock private ProductShareCurator mockProductShareCurator;
     @Mock private ProductManager mockProductManager;
     @Mock private EventSink mockEventSink;
     @Mock private EventFactory mockEventFactory;
 
-    private ModelTranslator translator;
+    @Inject private ModelTranslator translator;
     private Enforcer enforcer;
     private Owner owner;
     private Consumer consumer;
@@ -107,9 +109,7 @@ public class EnforcerTest extends DatabaseTestFixture {
         owner = createOwner();
         ownerCurator.create(owner);
 
-        consumer = TestUtil.createConsumer(owner);
-        consumerTypeCurator.create(consumer.getType());
-        consumerCurator.create(consumer);
+        consumer = this.createConsumer(owner);
 
         BufferedReader reader = new BufferedReader(new InputStreamReader(
             getClass().getResourceAsStream("/rules/test-rules.js")));
@@ -128,10 +128,10 @@ public class EnforcerTest extends DatabaseTestFixture {
 
         JsRunner jsRules = new JsRunnerProvider(rulesCurator, cacheProvider).get();
 
-        translator = new StandardTranslator();
+        translator = new StandardTranslator(consumerTypeCurator, mockEnvironmentCurator, mockOwnerCurator);
 
         enforcer = new EntitlementRules(
-            new DateSourceForTesting(2010, 1, 1), jsRules, i18n, config, consumerCurator,
+            new DateSourceForTesting(2010, 1, 1), jsRules, i18n, config, consumerCurator, consumerTypeCurator,
             mockProductCurator,
             new RulesObjectMapper(new ProductCachedSerializationModule(mockProductCurator)),
             mockOwnerCurator, mockOwnerProductCurator, mockProductShareCurator, mockProductManager,
@@ -237,8 +237,9 @@ public class EnforcerTest extends DatabaseTestFixture {
         product.setAttribute(PRODUCT_CPULIMITED, "2");
         product = this.createProduct(product, owner);
 
-        ValidationResult result = enforcer.preEntitlement(
-            TestUtil.createConsumer(),
+        Consumer consumer = this.createConsumer(owner);
+
+        ValidationResult result = enforcer.preEntitlement(consumer,
             entitlementPoolWithMembersAndExpiration(owner, product, 1, 2, expiryDate(2000, 1, 1)), 1);
 
         assertFalse(result.isSuccessful());

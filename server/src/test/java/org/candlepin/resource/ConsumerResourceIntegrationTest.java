@@ -51,8 +51,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
-import org.candlepin.pki.PKIReader;
-import org.candlepin.pki.impl.BouncyCastlePKIReader;
+import org.candlepin.pki.CertificateReader;
 import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resource.util.GuestMigration;
@@ -128,9 +127,9 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @Before
     public void setUp() {
         standardSystemType = consumerTypeCurator.create(new ConsumerType("standard-system"));
-        standardSystemTypeDTO = new ConsumerTypeDTO(standardSystemType.getLabel());
+        standardSystemTypeDTO = modelTranslator.translate(standardSystemType, ConsumerTypeDTO.class);
         personType = consumerTypeCurator.create(new ConsumerType(ConsumerTypeEnum.PERSON));
-        personTypeDTO = new ConsumerTypeDTO(personType.getLabel());
+        personTypeDTO = modelTranslator.translate(personType, ConsumerTypeDTO.class);
         owner = ownerCurator.create(new Owner("test-owner"));
         ownerDTO = modelTranslator.translate(owner, OwnerDTO.class);
         owner.setDefaultServiceLevel(DEFAULT_SERVICE_LEVEL);
@@ -211,7 +210,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             owner.getKey(), null, true);
 
         assertNotNull(submitted);
-        assertNotNull(consumerCurator.find(submitted.getId()));
+        assertNotNull(consumerCurator.get(submitted.getId()));
         assertEquals(standardSystemType.getLabel(), submitted.getType().getLabel());
         assertEquals(METADATA_VALUE, submitted.getFact(METADATA_NAME));
     }
@@ -243,7 +242,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             true);
         assertNotNull(submitted);
         assertNotNull(submitted.getId());
-        assertNotNull(consumerCurator.find(submitted.getId()));
+        assertNotNull(consumerCurator.get(submitted.getId()));
         assertNotNull(consumerCurator.findByUuid(uuid));
         assertEquals(standardSystemType.getLabel(), submitted.getType()
             .getLabel());
@@ -264,7 +263,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             USER_NAME, owner, standardSystemType));
         consumerResource.deleteConsumer(consumer.getUuid(), principal);
 
-        assertNull(consumerCurator.find(created.getId()));
+        assertNull(consumerCurator.get(created.getId()));
     }
 
     @Test
@@ -308,7 +307,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         consumer = consumerCurator.findByUuid(consumer.getUuid());
         assertEquals(1, consumer.getEntitlements().size());
 
-        pool = poolManager.find(pool.getId());
+        pool = poolManager.get(pool.getId());
         assertEquals(Long.valueOf(1), pool.getConsumed());
         assertEquals(1, resultList.size());
         assertEquals(pool.getId(), resultList.get(0).getPool().getId());
@@ -331,12 +330,14 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
         assertNotNull(submitted);
         assertEquals(toSubmit.getUuid(), submitted.getUuid());
-        assertNotNull(consumerCurator.find(submitted.getId()));
+        assertNotNull(consumerCurator.get(submitted.getId()));
         assertEquals(standardSystemType.getLabel(), submitted.getType().getLabel());
         assertEquals(METADATA_VALUE, submitted.getFact(METADATA_NAME));
 
         // now pass in consumer type with null id just like the client would
-        ConsumerTypeDTO type = new ConsumerTypeDTO(standardSystemType.getLabel());
+        ConsumerTypeDTO type = new ConsumerTypeDTO()
+            .setLabel(standardSystemType.getLabel());
+
         assertNull(type.getId());
         ConsumerDTO nulltypeid = createConsumerDTO(CONSUMER_NAME, USER_NAME, null, type);
         submitted = consumerResource.create(
@@ -371,7 +372,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
         Consumer evilConsumer = TestUtil.createConsumer(standardSystemType, owner);
         consumerCurator.create(evilConsumer);
-        setupPrincipal(new ConsumerPrincipal(evilConsumer));
+        setupPrincipal(new ConsumerPrincipal(evilConsumer, owner));
 
         securityInterceptor.enable();
 
@@ -387,7 +388,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
             null, 1, null, null, false, null, null);
 
-        setupPrincipal(new ConsumerPrincipal(consumer));
+        setupPrincipal(new ConsumerPrincipal(consumer, owner));
 
         assertEquals(3, consumerResource.getEntitlementCertificates(consumer.getUuid(), null).size());
     }
@@ -396,7 +397,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     public void canNotDeleteConsumerOtherThanSelf() {
         Consumer evilConsumer = TestUtil.createConsumer(standardSystemType, owner);
         consumerCurator.create(evilConsumer);
-        setupPrincipal(new ConsumerPrincipal(evilConsumer));
+        setupPrincipal(new ConsumerPrincipal(evilConsumer, owner));
 
         securityInterceptor.enable();
 
@@ -412,7 +413,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
         IdentityCertificate idCert = icsa.generateIdentityCert(c);
         c.setIdCert(idCert);
-        setupPrincipal(new ConsumerPrincipal(c));
+        setupPrincipal(new ConsumerPrincipal(c, owner));
         consumerResource.deleteConsumer(c.getUuid(), principal);
     }
 
@@ -441,7 +442,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
     @Test(expected = ForbiddenException.class)
     public void testConsumerCannotListAllConsumers() {
-        setupPrincipal(new ConsumerPrincipal(consumer));
+        setupPrincipal(new ConsumerPrincipal(consumer, owner));
         securityInterceptor.enable();
 
         consumerResource.list(null, null, null, new ArrayList<>(), null, null, null);
@@ -469,7 +470,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
             null, 1, null, null, false, null, null);
 
-        setupPrincipal(new ConsumerPrincipal(consumer));
+        setupPrincipal(new ConsumerPrincipal(consumer, owner));
         securityInterceptor.enable();
 
         assertEquals(3, consumerResource.listEntitlements(
@@ -488,7 +489,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         consumerResource.bind(evilConsumer.getUuid(), pool.getId().toString(),
             null, 1, null, null, false, null, null);
 
-        setupPrincipal(new ConsumerPrincipal(evilConsumer));
+        setupPrincipal(new ConsumerPrincipal(evilConsumer, owner));
         securityInterceptor.enable();
 
         consumerResource.listEntitlements(consumer.getUuid(), null, true,
@@ -577,7 +578,8 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         Provider<GuestMigration> migrationProvider = Providers.of(testMigration);
 
         ConsumerResource cr = new ConsumerResource(
-            this.consumerCurator, null, null, null, null, this.entitlementCurator, null, null, null, null,
+            this.consumerCurator, this.consumerTypeCurator, null, null, null, this.entitlementCurator, null,
+            null, null, null,
             null, null, null, null, this.poolManager, null, null, null, null, null, null, null, null,
             new CandlepinCommonTestConfig(), null, null, null, mock(ConsumerBindUtil.class),
             null, null, null, null, consumerEnricher, migrationProvider, this.modelTranslator);
@@ -592,7 +594,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
         cr.regenerateEntitlementCertificates(this.consumer.getUuid(), ent.getId(), false);
 
-        Entitlement entWithRefreshedCerts = entitlementCurator.find(ent.getId());
+        Entitlement entWithRefreshedCerts = entitlementCurator.get(ent.getId());
         ent = this.modelTranslator.translate(entWithRefreshedCerts, EntitlementDTO.class);
         assertEquals(1, ent.getCertificates().size());
         CertificateDTO entCertAfter = ent.getCertificates().iterator().next();
@@ -609,7 +611,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         @Override
         protected void configure() {
             bind(Configuration.class).to(CandlepinCommonTestConfig.class);
-            bind(PKIReader.class).to(BouncyCastlePKIReader.class).asEagerSingleton();
+            bind(CertificateReader.class).asEagerSingleton();
         }
     }
 

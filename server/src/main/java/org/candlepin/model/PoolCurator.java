@@ -48,7 +48,6 @@ import org.hibernate.type.StringType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -65,11 +64,14 @@ import java.util.TreeSet;
 
 import javax.persistence.TypedQuery;
 
+import javax.inject.Singleton;
+
 
 
 /**
  * PoolCurator
  */
+@Singleton
 public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     /** The recommended number of expired pools to fetch in a single call to listExpiredPools */
@@ -77,20 +79,16 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     private static Logger log = LoggerFactory.getLogger(PoolCurator.class);
     private ConsumerCurator consumerCurator;
+    private ConsumerTypeCurator consumerTypeCurator;
+
     @Inject
     protected Injector injector;
 
     @Inject
-    public PoolCurator(ConsumerCurator consumerCurator) {
+    public PoolCurator(ConsumerCurator consumerCurator, ConsumerTypeCurator consumerTypeCurator) {
         super(Pool.class);
         this.consumerCurator = consumerCurator;
-    }
-
-    @Override
-    @Transactional
-    public Pool find(Serializable id) {
-        Pool pool = super.find(id);
-        return pool;
+        this.consumerTypeCurator = consumerTypeCurator;
     }
 
     /**
@@ -202,7 +200,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      */
     @Transactional
     public List<Pool> listByConsumer(Consumer c) {
-        return listAvailableEntitlementPools(c, c.getOwner(), (Set<String>) null, null);
+        return listAvailableEntitlementPools(c, c.getOwnerId(), (Set<String>) null, null);
     }
 
     /**
@@ -269,7 +267,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     @SuppressWarnings("unchecked")
     @Transactional
     public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o, String productId, Date activeOn) {
-        return listAvailableEntitlementPools(c, o,
+        String ownerId = (o == null) ? null : o.getId();
+        return listAvailableEntitlementPools(c, ownerId,
             (productId != null ? Arrays.asList(productId) : (Collection<String>) null), null, activeOn,
             new PoolFilterBuilder(), null, false, false, false, null).getPageData();
     }
@@ -279,7 +278,17 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o, Collection<String> productIds,
         Date activeOn) {
 
-        return listAvailableEntitlementPools(c, o, productIds, null, activeOn,
+        String ownerId = (o == null) ? null : o.getId();
+        return listAvailableEntitlementPools(c, ownerId, productIds, null, activeOn,
+            new PoolFilterBuilder(), null, false, false, false, null).getPageData();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Transactional
+    public List<Pool> listAvailableEntitlementPools(Consumer c, String ownerId, Collection<String> productIds,
+        Date activeOn) {
+
+        return listAvailableEntitlementPools(c, ownerId, productIds, null, activeOn,
             new PoolFilterBuilder(), null, false, false, false, null).getPageData();
     }
 
@@ -291,11 +300,22 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
 
     @Transactional
+    public Page<List<Pool>> listAvailableEntitlementPools(Consumer c, String ownerId, String productId,
+        String subscriptionId, Date activeOn, PoolFilterBuilder filters,
+        PageRequest pageRequest, boolean postFilter, boolean addFuture, boolean onlyFuture, Date after) {
+
+        return this.listAvailableEntitlementPools(c, ownerId,
+            (productId != null ? Arrays.asList(productId) : (Collection<String>) null), subscriptionId,
+            activeOn, filters, pageRequest, postFilter, addFuture, onlyFuture, after);
+    }
+
+    @Transactional
     public Page<List<Pool>> listAvailableEntitlementPools(Consumer c, Owner o, String productId,
         String subscriptionId, Date activeOn, PoolFilterBuilder filters,
         PageRequest pageRequest, boolean postFilter, boolean addFuture, boolean onlyFuture, Date after) {
 
-        return this.listAvailableEntitlementPools(c, o,
+        String ownerId = (o == null) ? null : o.getId();
+        return this.listAvailableEntitlementPools(c, ownerId,
             (productId != null ? Arrays.asList(productId) : (Collection<String>) null), subscriptionId,
             activeOn, filters, pageRequest, postFilter, addFuture, onlyFuture, after);
     }
@@ -306,7 +326,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * Pools will be refreshed from the underlying subscription service.
      *
      * @param consumer Consumer being entitled.
-     * @param owner Owner whose subscriptions should be inspected.
+     * @param ownerId Owner whose subscriptions should be inspected.
      * @param productIds only entitlements which provide these products are included.
      * @param activeOn Indicates to return only pools valid on this date.
      *        Set to null for no date filtering.
@@ -318,14 +338,14 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     @Transactional
     @SuppressWarnings({"unchecked", "checkstyle:indentation", "checkstyle:methodlength"})
     // TODO: Remove the methodlength suppression once this method is cleaned up
-    public Page<List<Pool>> listAvailableEntitlementPools(Consumer consumer, Owner owner,
+    public Page<List<Pool>> listAvailableEntitlementPools(Consumer consumer, String ownerId,
         Collection<String> productIds, String subscriptionId, Date activeOn, PoolFilterBuilder filters,
         PageRequest pageRequest, boolean postFilter, boolean addFuture, boolean onlyFuture, Date after) {
 
         if (log.isDebugEnabled()) {
             log.debug("Listing available pools for:");
             log.debug("    consumer: {}", consumer);
-            log.debug("    owner: {}", owner);
+            log.debug("    owner: {}", ownerId);
             log.debug("    products: {}", productIds);
             log.debug("    subscription: {}", subscriptionId);
             log.debug("    active on: {}", activeOn);
@@ -342,12 +362,12 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             // Impl note: This block was inherited from the current implementation of the
             // CriteriaRules.availableEntitlementCriteria method.
 
-            if (owner != null && !owner.equals(consumer.getOwner())) {
+            if (ownerId != null && !ownerId.equals(consumer.getOwnerId())) {
                 // Both a consumer and an owner were specified, but the consumer belongs to a different owner.
                 // We can't possibly match a pool on two owners, so we can just abort immediately with an
                 // empty page
                 log.warn("Attempting to filter entitlement pools by owner and a consumer belonging to a " +
-                    "different owner: {}, {}", owner, consumer);
+                    "different owner: {}, {}", ownerId, consumer);
 
                 Page<List<Pool>> output = new Page<>();
                 output.setPageData(Collections.<Pool>emptyList());
@@ -357,9 +377,10 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             }
 
             // We'll set the owner restriction later
-            owner = consumer.getOwner();
+            ownerId = consumer.getOwnerId();
 
-            if (consumer.isManifestDistributor()) {
+            ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
+            if (ctype.isManifest()) {
                 DetachedCriteria hostPoolSubquery = DetachedCriteria.forClass(Pool.class, "PoolI")
                     .createAlias("PoolI.attributes", "attrib")
                     .setProjection(Projections.id())
@@ -396,8 +417,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             }
         }
 
-        if (owner != null) {
-            criteria.add(Restrictions.eq("Pool.owner", owner));
+        if (ownerId != null) {
+            criteria.add(Restrictions.eq("Pool.owner.id", ownerId));
         }
 
         if (activeOn != null) {
@@ -700,15 +721,15 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     /**
      * Determine if owner has at least one active pool
      *
-     * @param o Owner whose subscriptions should be inspected.
+     * @param ownerId Owner whose subscriptions should be inspected.
      * @param date The date to test the active state.
      *        Set to null for current.
      * @return boolean is active on test date.
      */
     @SuppressWarnings("unchecked")
     @Transactional
-    public boolean hasActiveEntitlementPools(Owner o, Date date) {
-        if (o == null) {
+    public boolean hasActiveEntitlementPools(String ownerId, Date date) {
+        if (ownerId == null) {
             return false;
         }
 
@@ -718,7 +739,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
         Criteria crit = createSecureCriteria();
         crit.add(Restrictions.eq("activeSubscription", Boolean.TRUE));
-        crit.add(Restrictions.eq("owner", o));
+        crit.add(Restrictions.eq("owner.id", ownerId));
         crit.add(Restrictions.le("startDate", date));
         crit.add(Restrictions.ge("endDate", date));
         crit.setProjection(Projections.rowCount());
@@ -785,7 +806,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @return pools from the given subscription, sorted by pool.id to avoid deadlocks
      */
     @SuppressWarnings("unchecked")
-    public List<Pool> lookupBySubscriptionId(Owner owner, String subId) {
+    public List<Pool> getBySubscriptionId(Owner owner, String subId) {
         return createSecureCriteria()
             .createAlias("sourceSubscription", "sourceSub")
             .add(Restrictions.eq("owner", owner))
@@ -802,10 +823,23 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      *         deadlocks
      */
     @SuppressWarnings("unchecked")
-    public List<Pool> lookupBySubscriptionIds(Owner owner, Collection<String> subIds) {
+    public List<Pool> getBySubscriptionIds(Owner owner, Collection<String> subIds) {
+        return this.getBySubscriptionIds(owner.getId(), subIds);
+    }
+
+    /**
+     * Query pools by the subscriptions that generated them.
+     *
+     * @param ownerId The owner of the subscriptions to query
+     * @param subIds Subscriptions to look up pools by
+     * @return pools from the given subscriptions, sorted by pool.id to avoid
+     *         deadlocks
+     */
+    @SuppressWarnings("unchecked")
+    public List<Pool> getBySubscriptionIds(String ownerId, Collection<String> subIds) {
         return createSecureCriteria()
             .createAlias("sourceSubscription", "sourceSub")
-            .add(Restrictions.eq("owner", owner))
+            .add(Restrictions.eq("owner.id", ownerId))
             .add(CPRestrictions.in("sourceSub.subscriptionId", subIds))
             .addOrder(Order.asc("id"))
             .list();
@@ -824,14 +858,14 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * with virt_bonus on-site subscriptions where one pool is created per
      * physical entitlement.
      *
-     * @param owner Owner - The owner of the entitlements being passed in. Scoping
+     * @param ownerId Owner - The owner of the entitlements being passed in. Scoping
      *        this to a single owner prevents performance problems in large datasets.
      * @param subIdMap Map where key is Subscription ID of the pool, and value
      *        is the Entitlement just created or modified.
      * @return Pools with too many entitlements for their new quantity.
      */
     @SuppressWarnings("unchecked")
-    public List<Pool> lookupOversubscribedBySubscriptionIds(Owner owner, Map<String, Entitlement> subIdMap) {
+    public List<Pool> getOversubscribedBySubscriptionIds(String ownerId, Map<String, Entitlement> subIdMap) {
         List<Criterion> subIdMapCriteria = new ArrayList<>();
         Criterion[] exampleCriteria = new Criterion[0];
         for (Entry<String, Entitlement> entry : subIdMap.entrySet()) {
@@ -847,7 +881,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return currentSession()
             .createCriteria(Pool.class)
             .createAlias("sourceSubscription", "sourceSub")
-            .add(Restrictions.eq("owner", owner))
+            .add(Restrictions.eq("owner.id", ownerId))
             .add(Restrictions.ge("quantity", 0L))
             .add(Restrictions.gtProperty("consumed", "quantity"))
             .add(Restrictions.or(subIdMapCriteria.toArray(exampleCriteria))).list();
@@ -923,19 +957,23 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return activationKeys;
     }
 
+    public Set<String> retrieveServiceLevelsForOwner(Owner owner, boolean exempt) {
+        return retrieveServiceLevelsForOwner(owner.getId(), exempt);
+    }
+
     /**
      * Method to compile service/support level lists. One is the available levels for
      *  consumers for this owner. The second is the level names that are exempt. Exempt
      *  means that a product pool with this level can be used with a consumer of any
      *  service level.
      *
-     * @param owner The owner that has the list of available service levels for
+     * @param ownerId The owner that has the list of available service levels for
      *              its consumers
      * @param exempt boolean to show if the desired list is the levels that are
      *               explicitly marked with the support_level_exempt attribute.
      * @return Set of levels based on exempt flag.
      */
-    public Set<String> retrieveServiceLevelsForOwner(Owner owner, boolean exempt) {
+    public Set<String> retrieveServiceLevelsForOwner(String ownerId, boolean exempt) {
         String stmt = "SELECT DISTINCT key(Attribute), value(Attribute), Product.id " +
             "FROM Pool AS Pool " +
             "  INNER JOIN Pool.product AS Product " +
@@ -948,7 +986,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             "ORDER BY key(Attribute) DESC";
 
         Query q = currentSession().createQuery(stmt)
-            .setParameter("owner_id", owner.getId())
+            .setParameter("owner_id", ownerId)
             .setParameter("sl_attr", Product.Attributes.SUPPORT_LEVEL)
             .setParameter("sle_attr", Product.Attributes.SUPPORT_LEVEL_EXEMPT);
 
@@ -1039,7 +1077,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      */
     @Transactional
     public void delete(Pool entity) {
-        Pool toDelete = find(entity.getId());
+        Pool toDelete = this.get(entity.getId());
+
         if (toDelete != null) {
             this.deleteImpl(toDelete);
             this.flush();
@@ -1457,7 +1496,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             .createAlias("product", "Product")
             .setProjection(Projections.distinct(Projections.id()));
 
-        criteria.add(Restrictions.eq("owner", consumer.getOwner()))
+        criteria.add(Restrictions.eq("owner.id", consumer.getOwnerId()))
             .add(this.addAttributeFilterSubquery(
                 Pool.Attributes.DEVELOPMENT_POOL, Arrays.asList("true")))
             .add(this.addAttributeFilterSubquery(
@@ -1513,7 +1552,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     public void calculateExportedForOwnersPools(Owner owner) {
         String stmt = "update Pool p set p.exported = coalesce(" +
             "(select sum(ent.quantity) FROM Entitlement ent, Consumer cons, ConsumerType ctype " +
-            "where ent.pool.id = p.id and ent.consumer.id = cons.id and cons.type.id = ctype.id " +
+            "where ent.pool.id = p.id and ent.consumer.id = cons.id and cons.typeId = ctype.id " +
             "and ctype.manifest = 'Y'),0) where p.owner = :owner";
 
         Query q = currentSession().createQuery(stmt);
@@ -1795,7 +1834,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     public void calculateSharedForOwnerPools(Owner owner) {
         String stmt = "update Pool p set p.shared = coalesce(" +
             "(select sum(ent.quantity) FROM Entitlement ent, Consumer cons, ConsumerType ctype " +
-            "where ent.pool.id = p.id and ent.consumer.id = cons.id and cons.type.id = ctype.id " +
+            "where ent.pool.id = p.id and ent.consumer.id = cons.id and cons.typeId = ctype.id " +
             "and ctype.label = 'share'), 0) where p.owner = :owner";
 
         Query q = currentSession().createQuery(stmt);

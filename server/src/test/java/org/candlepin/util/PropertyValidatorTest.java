@@ -32,6 +32,8 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import javax.inject.Provider;
+
 
 
 /**
@@ -41,6 +43,7 @@ import java.util.Map;
 public class PropertyValidatorTest {
 
     private I18n i18n;
+    private Provider<I18n> i18nProvider = () -> i18n;
 
     @Before
     public void init() {
@@ -61,6 +64,7 @@ public class PropertyValidatorTest {
         translator.put(Float.class, Float.TYPE);
         translator.put(Double.class, Double.TYPE);
         translator.put(Void.class, Void.TYPE);
+        translator.put(i18nProvider.getClass(), Provider.class);
 
         try {
             if (args != null && args.length > 0) {
@@ -98,7 +102,7 @@ public class PropertyValidatorTest {
         "0, key, value, false"})
     public void testLengthValidator(int length, String key, String value, boolean shouldValidate) {
         Validator validator = this.getValidator(PropertyValidator.LengthValidator.class,
-            this.i18n, "test", length);
+            this.i18nProvider, "test", length);
 
         boolean result;
 
@@ -116,7 +120,7 @@ public class PropertyValidatorTest {
     @Test(expected = RuntimeException.class)
     public void testLengthValidatorConfigurationFailure() {
         Validator validator = this.getValidator(PropertyValidator.LengthValidator.class,
-            this.i18n, "test", -1);
+            this.i18nProvider, "test", -1);
     }
 
     @Test
@@ -130,7 +134,8 @@ public class PropertyValidatorTest {
         "key, 3.14, false",
         "key, -2.72, false"})
     public void testIntegerValidator(String key, String value, boolean shouldValidate) {
-        Validator validator = this.getValidator(PropertyValidator.IntegerValidator.class, this.i18n, "test");
+        Validator validator = this.getValidator(PropertyValidator.IntegerValidator.class, this.i18nProvider,
+            "test");
 
         boolean result;
 
@@ -157,7 +162,7 @@ public class PropertyValidatorTest {
         "key, -2.72, false"})
     public void testNonNegativeIntegerValidator(String key, String value, boolean shouldValidate) {
         Validator validator = this.getValidator(PropertyValidator.NonNegativeIntegerValidator.class,
-            this.i18n, "test");
+            this.i18nProvider, "test");
 
         boolean result;
 
@@ -183,7 +188,8 @@ public class PropertyValidatorTest {
         "key, 3.14, false",
         "key, -2.72, false"})
     public void testLongValidator(String key, String value, boolean shouldValidate) {
-        Validator validator = this.getValidator(PropertyValidator.LongValidator.class, this.i18n, "test");
+        Validator validator = this.getValidator(PropertyValidator.LongValidator.class, this.i18nProvider,
+            "test");
 
         boolean result;
 
@@ -210,7 +216,7 @@ public class PropertyValidatorTest {
         "key, -2.72, false"})
     public void testNonNegativeLongValidator(String key, String value, boolean shouldValidate) {
         Validator validator = this.getValidator(PropertyValidator.NonNegativeLongValidator.class,
-            this.i18n, "test");
+            this.i18nProvider, "test");
 
         boolean result;
 
@@ -237,7 +243,7 @@ public class PropertyValidatorTest {
         "key, n, false"})
     public void testBooleanValidator(String key, String value, boolean shouldValidate) {
         Validator validator = this.getValidator(PropertyValidator.BooleanValidator.class,
-            this.i18n, "test");
+            this.i18nProvider, "test");
 
         boolean result;
 

@@ -55,6 +55,7 @@ public class JobStatus extends AbstractHibernateObject {
     public static final String TARGET_ID = "target_id";
     public static final String OWNER_ID = "owner_id";
     public static final String CORRELATION_ID = "correlation_id";
+    public static final String OWNER_LOG_LEVEL = "owner_log_level";
     public static final int RESULT_COL_LENGTH = 255;
 
     /**
@@ -240,12 +241,14 @@ public class JobStatus extends AbstractHibernateObject {
     }
 
     public void setResult(String result) {
-        // truncate the result to fit column
-        if (result == null || result.length() < RESULT_COL_LENGTH) {
-            this.result = result;
+        if (result != null && !result.isEmpty()) {
+            // truncate the result to fit column
+            this.result = result.length() >= RESULT_COL_LENGTH ?
+                result.substring(0, RESULT_COL_LENGTH) :
+                result;
         }
         else {
-            this.result = result.substring(0, RESULT_COL_LENGTH);
+            this.result = null;
         }
     }
 

@@ -30,6 +30,7 @@ import com.google.inject.Inject;
 import com.google.inject.persist.UnitOfWork;
 
 import org.quartz.Job;
+import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -78,6 +79,29 @@ public abstract class KingpinJob implements Job {
             //this can occur in testing
         }
 
+        // Check if this job is running within the context of a specific org
+        if (context != null) {
+            JobDataMap map = context.getMergedJobDataMap();
+
+            String orgKey = null;
+            String orgLogLevel = null;
+
+            if (map != null) {
+                // Impl note: we use the OWNER_ID map key to store the org key
+                orgKey = map.getString(JobStatus.OWNER_ID);
+                orgLogLevel = map.getString(JobStatus.OWNER_LOG_LEVEL);
+            }
+
+            if (orgKey != null) {
+                MDC.put("org", orgKey);
+            }
+
+            if (orgLogLevel != null) {
+                MDC.put("orgLogLevel", orgLogLevel);
+            }
+        }
+
+        // Log the job start time if the job is configured to do so
         if (logExecutionTime()) {
             log.info("Starting job: {}", getClass().getName());
         }
@@ -171,7 +195,7 @@ public abstract class KingpinJob implements Job {
         catch (EntityExistsException e) {
             // status exists, let's update it
             // in theory this should be the rare case
-            status = jobCurator.find(detail.getKey().getName());
+            status = jobCurator.get(detail.getKey().getName());
             jobCurator.merge(status);
         }
         catch (RuntimeException e) {

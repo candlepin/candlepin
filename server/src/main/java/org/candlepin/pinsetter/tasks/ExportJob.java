@@ -21,6 +21,7 @@ import java.util.Map;
 import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.Owner;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.sync.ExportResult;
 import org.candlepin.util.Util;
@@ -89,10 +90,12 @@ public class ExportJob extends UniqueByEntityJob {
      * @param apiUrl
      * @return a JobDetail representing the job to be started.
      */
-    public static JobDetail scheduleExport(Consumer consumer, String cdnLabel, String webAppPrefix,
-        String apiUrl, Map<String, String> extensionData) {
+    public static JobDetail scheduleExport(Consumer consumer, Owner owner, String cdnLabel,
+        String webAppPrefix, String apiUrl, Map<String, String> extensionData) {
+
         JobDataMap map = new JobDataMap();
-        map.put(JobStatus.OWNER_ID, consumer.getOwner().getKey());
+        map.put(JobStatus.OWNER_ID, owner.getKey());
+        map.put(JobStatus.OWNER_LOG_LEVEL, owner.getLogLevel());
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.CONSUMER);
         map.put(JobStatus.TARGET_ID, consumer.getUuid());
         map.put(CDN_LABEL, cdnLabel);

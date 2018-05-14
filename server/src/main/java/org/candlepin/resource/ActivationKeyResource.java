@@ -29,9 +29,7 @@ import org.candlepin.model.Release;
 import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
-import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.candlepin.policy.js.activationkey.ActivationKeyRules;
-import org.candlepin.util.ElementTransformer;
 import org.candlepin.util.ServiceLevelValidator;
 import org.candlepin.util.TransformedIterator;
 
@@ -93,6 +91,33 @@ public class ActivationKeyResource {
         this.translator = translator;
     }
 
+    /**
+     * Fetches an activation key using the specified key ID. If a valid activation key could not be
+     * found, this method throws an exception.
+     *
+     * @param keyId
+     *  The ID of the activation key to fetch
+     *
+     * @throws BadRequestException
+     *  if the given ID is null, empty or is not associated with a valid activation key
+     *
+     * @return
+     *  an ActivationKey with the specified ID
+     */
+    protected ActivationKey fetchActivationKey(String keyId) {
+        if (keyId == null || keyId.isEmpty()) {
+            throw new BadRequestException(i18n.tr("activation key ID is null or empty"));
+        }
+
+        ActivationKey key = this.activationKeyCurator.secureGet(keyId);
+
+        if (key == null) {
+            throw new BadRequestException(i18n.tr("ActivationKey with id {0} could not be found.", keyId));
+        }
+
+        return key;
+    }
+
     @ApiOperation(notes = "Retrieves a single Activation Key", value = "Get Activation Key")
     @ApiResponses({ @ApiResponse(code = 400, message = "") })
     @GET
@@ -102,7 +127,7 @@ public class ActivationKeyResource {
         @PathParam("activation_key_id")
         @Verify(ActivationKey.class) String activationKeyId) {
 
-        ActivationKey key = activationKeyCurator.verifyAndLookupKey(activationKeyId);
+        ActivationKey key = this.fetchActivationKey(activationKeyId);
 
         return this.translator.translate(key, ActivationKeyDTO.class);
     }
@@ -116,15 +141,10 @@ public class ActivationKeyResource {
     public Iterator<PoolDTO> getActivationKeyPools(
         @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId) {
 
-        ActivationKey key = activationKeyCurator.verifyAndLookupKey(activationKeyId);
+        ActivationKey key = this.fetchActivationKey(activationKeyId);
 
         return new TransformedIterator<>(key.getPools().iterator(),
-            new ElementTransformer<ActivationKeyPool, PoolDTO>() {
-                @Override
-                public PoolDTO transform(ActivationKeyPool akp) {
-                    return translator.translate(akp.getPool(), PoolDTO.class);
-                }
-            }
+            akp -> translator.translate(akp.getPool(), PoolDTO.class)
         );
     }
 
@@ -138,14 +158,14 @@ public class ActivationKeyResource {
         @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId,
         @ApiParam(name = "update", required = true) ActivationKeyDTO update) {
 
-        ActivationKey toUpdate = activationKeyCurator.verifyAndLookupKey(activationKeyId);
+        ActivationKey toUpdate = this.fetchActivationKey(activationKeyId);
         if (update.getName() != null) {
             toUpdate.setName(update.getName());
         }
 
         String serviceLevel = update.getServiceLevel();
         if (serviceLevel != null) {
-            serviceLevelValidator.validate(toUpdate.getOwner(), serviceLevel);
+            serviceLevelValidator.validate(toUpdate.getOwner().getId(), serviceLevel);
             toUpdate.setServiceLevel(serviceLevel);
         }
 
@@ -176,7 +196,7 @@ public class ActivationKeyResource {
         @PathParam("pool_id") @Verify(Pool.class) String poolId,
         @QueryParam("quantity") Long quantity) {
 
-        ActivationKey key = activationKeyCurator.verifyAndLookupKey(activationKeyId);
+        ActivationKey key = this.fetchActivationKey(activationKeyId);
         Pool pool = findPool(poolId);
 
         // Throws a BadRequestException if adding pool to key is a bad idea
@@ -205,7 +225,7 @@ public class ActivationKeyResource {
         @PathParam("pool_id")
         @Verify(Pool.class) String poolId) {
 
-        ActivationKey key = activationKeyCurator.verifyAndLookupKey(activationKeyId);
+        ActivationKey key = this.fetchActivationKey(activationKeyId);
         Pool pool = findPool(poolId);
         key.removePool(pool);
         activationKeyCurator.update(key);
@@ -223,7 +243,7 @@ public class ActivationKeyResource {
         @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId,
         @PathParam("product_id") String productId) {
 
-        ActivationKey key = activationKeyCurator.verifyAndLookupKey(activationKeyId);
+        ActivationKey key = this.fetchActivationKey(activationKeyId);
         Product product = confirmProduct(key.getOwner(), productId);
 
         // Make sure we don't try to register the product ID twice.
@@ -247,7 +267,7 @@ public class ActivationKeyResource {
     public ActivationKeyDTO removeProductIdFromKey(
         @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId,
         @PathParam("product_id") String productId) {
-        ActivationKey key = activationKeyCurator.verifyAndLookupKey(activationKeyId);
+        ActivationKey key = this.fetchActivationKey(activationKeyId);
         Product product = confirmProduct(key.getOwner(), productId);
         key.removeProduct(product);
         activationKeyCurator.update(key);
@@ -272,7 +292,7 @@ public class ActivationKeyResource {
     public void deleteActivationKey(
         @PathParam("activation_key_id")
         @Verify(ActivationKey.class) String activationKeyId) {
-        ActivationKey key = activationKeyCurator.verifyAndLookupKey(activationKeyId);
+        ActivationKey key = this.fetchActivationKey(activationKeyId);
 
         log.debug("Deleting activation key: {}", activationKeyId);
 
@@ -280,7 +300,7 @@ public class ActivationKeyResource {
     }
 
     private Pool findPool(String poolId) {
-        Pool pool = poolManager.find(poolId);
+        Pool pool = poolManager.get(poolId);
 
         if (pool == null) {
             throw new BadRequestException(i18n.tr("Pool with id {0} could not be found.", poolId));

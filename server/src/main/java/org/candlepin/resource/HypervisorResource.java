@@ -22,11 +22,13 @@ import org.candlepin.auth.UpdateConsumerCheckIn;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.GuestIdDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.HypervisorId;
 import org.candlepin.model.Owner;
@@ -80,26 +82,32 @@ import io.swagger.annotations.Authorization;
 @Api(value = "hypervisors", authorizations = { @Authorization("basic") })
 public class HypervisorResource {
     private static Logger log = LoggerFactory.getLogger(HypervisorResource.class);
+
     private ConsumerCurator consumerCurator;
+    private ConsumerTypeCurator consumerTypeCurator;
     private ConsumerResource consumerResource;
     private I18n i18n;
     private OwnerCurator ownerCurator;
     private Provider<GuestMigration> migrationProvider;
     private ModelTranslator translator;
     private GuestIdResource guestIdResource;
+    private ConsumerType hypervisorType;
 
     @Inject
-    public HypervisorResource(ConsumerResource consumerResource,
-        ConsumerCurator consumerCurator, I18n i18n, OwnerCurator ownerCurator,
+    public HypervisorResource(ConsumerResource consumerResource, ConsumerCurator consumerCurator,
+        ConsumerTypeCurator consumerTypeCurator, I18n i18n, OwnerCurator ownerCurator,
         Provider<GuestMigration> migrationProvider, ModelTranslator translator,
         GuestIdResource guestIdResource) {
         this.consumerResource = consumerResource;
         this.consumerCurator = consumerCurator;
+        this.consumerTypeCurator = consumerTypeCurator;
         this.i18n = i18n;
         this.ownerCurator = ownerCurator;
         this.migrationProvider = migrationProvider;
         this.translator = translator;
         this.guestIdResource = guestIdResource;
+
+        this.hypervisorType = consumerTypeCurator.getByLabel(ConsumerTypeEnum.HYPERVISOR.getLabel(), true);
     }
 
     /**
@@ -198,6 +206,7 @@ public class HypervisorResource {
                 log.debug("Syncing virt host: {} ({} guest IDs)", hypervisorId, hostEntry.getValue().size());
 
                 boolean hostConsumerCreated = false;
+                boolean updatedType = false;
                 // Attempt to find a consumer for the given hypervisorId
                 Consumer consumer = null;
                 if (hypervisorConsumersMap.get(hypervisorId) == null) {
@@ -213,6 +222,10 @@ public class HypervisorResource {
                 }
                 else {
                     consumer = hypervisorConsumersMap.get(hypervisorId);
+                    if (!hypervisorType.getId().equals(consumer.getTypeId())) {
+                        consumer.setType(hypervisorType);
+                        updatedType = true;
+                    }
                 }
                 List<GuestId> guestIds = new ArrayList<>();
                 guestIdResource.populateEntities(guestIds, hostEntry.getValue());
@@ -225,7 +238,7 @@ public class HypervisorResource {
                 if (hostConsumerCreated) {
                     result.created(consumer);
                 }
-                else if (guestIdsUpdated) {
+                else if (guestIdsUpdated || updatedType) {
                     result.updated(consumer);
                 }
                 else {
@@ -285,7 +298,7 @@ public class HypervisorResource {
      * Get the owner or bust
      */
     private Owner getOwner(String ownerKey) {
-        Owner owner = ownerCurator.lookupByKey(ownerKey);
+        Owner owner = ownerCurator.getByKey(ownerKey);
         if (owner == null) {
             throw new NotFoundException(i18n.tr(
                 "owner with key: {0} was not found.", ownerKey));
@@ -302,8 +315,8 @@ public class HypervisorResource {
         withIds.setGuestIds(guestIds);
 
         GuestMigration guestMigration = migrationProvider.get().buildMigrationManifest(withIds, consumer);
-        boolean guestIdsUpdated =
-            consumerResource.performConsumerUpdates(withIds, consumer, guestMigration);
+        boolean guestIdsUpdated = consumerResource.performConsumerUpdates(
+            this.translator.translate(withIds, ConsumerDTO.class), consumer, guestMigration);
         if (guestIdsUpdated) {
             if (guestMigration.isMigrationPending()) {
                 guestMigration.migrate();
@@ -318,19 +331,23 @@ public class HypervisorResource {
     /*
      * Create a new hypervisor type consumer to represent the incoming hypervisorId
      */
-    private Consumer createConsumerForHypervisorId(String incHypervisorId,
-        Owner owner, Principal principal) {
+    private Consumer createConsumerForHypervisorId(String incHypervisorId, Owner owner, Principal principal) {
         Consumer consumer = new Consumer();
         consumer.setName(incHypervisorId);
-        consumer.setType(new ConsumerType(ConsumerTypeEnum.HYPERVISOR));
+        consumer.setType(this.hypervisorType);
         consumer.setFact("uname.machine", "x86_64");
         consumer.setGuestIds(new ArrayList<>());
         consumer.setOwner(owner);
+
         // Create HypervisorId
-        HypervisorId hypervisorId = new HypervisorId(consumer, incHypervisorId);
+        HypervisorId hypervisorId = new HypervisorId(consumer, owner, incHypervisorId);
+        hypervisorId.setOwner(owner);
         consumer.setHypervisorId(hypervisorId);
+
         // Create Consumer
-        return consumerResource.createConsumerFromEntity(consumer,
+        return consumerResource.createConsumerFromDTO(
+            this.translator.translate(consumer, ConsumerDTO.class),
+            this.hypervisorType,
             principal,
             null,
             owner.getKey(),

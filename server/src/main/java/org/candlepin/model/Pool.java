@@ -557,9 +557,16 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
     /**
      * @return owner of the pool.
      */
-    @Override
     public Owner getOwner() {
         return owner;
+    }
+
+    /**
+     * @return the owner Id of this Pool.
+     */
+    @Override
+    public String getOwnerId() {
+        return (owner == null) ? null : owner.getId();
     }
 
     /**

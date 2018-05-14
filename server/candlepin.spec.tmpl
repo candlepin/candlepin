@@ -13,14 +13,8 @@
 ## GCJ-compiled .jar.so files.
 %global __jar_repack %{nil}
 
-%if 0%{?fedora} >= 19 || 0%{?rhel} >= 7
-%global tomcat tomcat
-%else
-%global tomcat tomcat6
-%endif
-
 Name: candlepin
-Version: 2.3.2
+Version: 2.5.1
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -45,7 +39,7 @@ BuildRequires: selinux-policy-doc
 
 Requires: java >= 0:1.8.0
 Requires: wget
-Requires: %{tomcat}
+Requires: tomcat >= 0:7.0.0
 Requires: liquibase >= 0:3.0.0
 # Need JDBC driver for cpdb
 Requires: postgresql-jdbc
@@ -53,11 +47,11 @@ Requires: postgresql-jdbc
 %description
 Candlepin is an open source entitlement management system.
 
-## %package %{tomcat}
+## %package tomcat
 ## Summary: Candlepin web application for tomcat
 ## Requires: candlepin = %{version}
 
-## %description %{tomcat}
+## %description tomcat
 ## Candlepin web application for tomcat
 
 ## %package devel
@@ -135,11 +129,11 @@ sed -i 's/#LOGROTATE-3.8#//' %{buildroot}%{_sysconfdir}/logrotate.d/%{name}
 touch %{buildroot}/%{_sysconfdir}/%{name}/%{name}.conf
 
 ## tomcat
-%{__install} -d -m 755 %{buildroot}/%{_sharedstatedir}/%{tomcat}/webapps/%{name}
-%{__install} -d -m 755 %{buildroot}/%{_sysconfdir}/%{tomcat}/
-%{__unzip} %{SOURCE1} -d %{buildroot}/%{_sharedstatedir}/%{tomcat}/webapps/%{name}
+%{__install} -d -m 755 %{buildroot}/%{_sharedstatedir}/tomcat/webapps/%{name}
+%{__install} -d -m 755 %{buildroot}/%{_sysconfdir}/tomcat/
+%{__unzip} %{SOURCE1} -d %{buildroot}/%{_sharedstatedir}/tomcat/webapps/%{name}
 
-%{__ln_s} /etc/candlepin/certs/keystore %{buildroot}/%{_sysconfdir}/%{tomcat}/keystore
+%{__ln_s} /etc/candlepin/certs/keystore %{buildroot}/%{_sysconfdir}/tomcat/keystore
 
 ## /var/lib dir for hornetq state
 %{__install} -d -m 755 %{buildroot}/%{_sharedstatedir}/%{name}
@@ -208,10 +202,10 @@ fi
 %config(noreplace) %attr(644,root,root) %{_sysconfdir}/logrotate.d/candlepin
 
 %defattr(644, tomcat, tomcat, 775)
-%{_sharedstatedir}/%{tomcat}/webapps/%{name}/*
+%{_sharedstatedir}/tomcat/webapps/%{name}/*
 %{_sharedstatedir}/%{name}
 %{_localstatedir}/cache/%{name}
-%config(noreplace) %{_sysconfdir}/%{tomcat}/keystore
+%config(noreplace) %{_sysconfdir}/tomcat/keystore
 
 %defattr(600,tomcat,tomcat,-)
 %config(noreplace) %{_sysconfdir}/%{name}/%{name}.conf
@@ -226,6 +220,83 @@ fi
 
 #raw
 %changelog
+* Tue May 01 2018 Kevin Howell <khowell@redhat.com> 2.5.1-1
+- Added the RoleDTO and PermissionBlueprintDTO (crog@redhat.com)
+- 1517978: Jobs now respect owner-specific logging level where appropriate
+  (crog@redhat.com)
+- re-factor ConsumerResourceTest (adarshvritant@gmail.com)
+- Remove toString call where it is not necessary. (awood@redhat.com)
+- Improved standardization of curator method verbiage (crog@redhat.com)
+
+* Fri Apr 13 2018 Kevin Howell <khowell@redhat.com> 2.5.0-1
+- 1566244: Speculative Fix For Failing CertificateRevocationListTask
+  (crog@redhat.com)
+- 1565810: Recalculating pool quantities during refresh is now transactional
+  (nmoumoul@redhat.com)
+- Implemented DistributorVersionDTO for manifest import/export.
+  (nmoumoul@redhat.com)
+- Add --drain option to qpid_watch to empty clogged queues. (awood@redhat.com)
+- Improved error output surrounding owner creation and service levels
+  (crog@redhat.com)
+- Added the new UserDTO for the API v1 DTO package (crog@redhat.com)
+- Made several corrections and standardizations to the DTOs (crog@redhat.com)
+
+* Fri Apr 06 2018 Kevin Howell <khowell@redhat.com> 2.3.5-1
+- accept auto-attach on activation key (adarshvritant@gmail.com)
+- Implemented CdnDTO for manifest import/export. (nmoumoul@redhat.com)
+- Manifest import/export now uses ProductDTO (nmoumoul@redhat.com)
+- 1365248: Reconcile registered consumers and hypevisors (wpoteat@redhat.com)
+- 1563436: Restore ConsumerTypeDTO constructor for legacy consumer JSON
+  (crog@redhat.com)
+- 1563367: Reduced log noise associated with the CancelJobJob (crog@redhat.com)
+- 1561737: Removed extraenous DTO constructors (crog@redhat.com)
+- 1555582: Added additional input validation to pool creation (crog@redhat.com)
+- 1562097: Renamed Event.consumerId to consumerUuid (crog@redhat.com)
+- replace consumer.owner ref with consumer.ownerId (adarshvritant@gmail.com)
+- Enable a bypass of resolving custom products when adding subscriptions.
+  (bcourt@redhat.com)
+- GuestMigration.buildMigrationManifest now can accept a DTO
+  (nmoumoul@redhat.com)
+- Optimized DTO usage in API endpoints (nmoumoul@redhat.com)
+- Modify ResultDataUserType to read legacy format or JSON and write JSON
+  (awood@redhat.com)
+- Added pool ID filtering functionality to OwnerPoolResource.listPools
+  (crog@redhat.com)
+- Changed consumer.environment to consumer.environmentId (crog@redhat.com)
+- 1558114: Add total count of records as a header when paging is used.
+  (bcourt@redhat.com)
+- Added a creation flag to ConsumerTypeCurator.lookupByLabel (crog@redhat.com)
+- Changed Consumer.type to Consumer.typeId (crog@redhat.com)
+- Unify custom tasks under the LiquibaseCustomTask interfaces.
+  (awood@redhat.com)
+- Address issues raised in code review. (awood@redhat.com)
+- Write meaningful string to cp_job result column for EntitlerJob.
+  (awood@redhat.com)
+- Rename PKIReader to CertificateReader (awood@redhat.com)
+- Refactor PKIReader to decouple from BouncyCastle. (awood@redhat.com)
+
+* Tue Mar 20 2018 Kevin Howell <khowell@redhat.com> 2.3.4-1
+- Add reasons back to compliance.created events (khowell@redhat.com)
+- Add back manifest fields for EntitlementDTO/ConsumerDTO/CertificateDTO
+  (nmoumoul@redhat.com)
+- 1558060: Added precondition check to add-share-consumer task
+  (crog@redhat.com)
+- 1552777: Add liquibase checksums for 2.1 upgrade (khowell@redhat.com)
+- Implemented ProductDTO for manifest import/export (nmoumoul@redhat.com)
+
+* Thu Mar 15 2018 Kevin Howell <khowell@redhat.com> 2.3.3-1
+- Add SubjectKeyIdentifierWriter extension point back into Candlepin.
+  (awood@redhat.com)
+- Create a custom UserType for job result data. (awood@redhat.com)
+- Add toString implementations for objects stored as job results.
+  (awood@redhat.com)
+- Suppress some compiler warnings and remove unused fields. (awood@redhat.com)
+- Replace explicit type in generics with diamond operator. (awood@redhat.com)
+- Correct incorrect punctuation in user messages. (awood@redhat.com)
+- Implemented EntitlementDTO & CertificateDTO for manifest import/export.
+  (nmoumoul@redhat.com)
+- Added several improvements to the request scanner (crog@redhat.com)
+
 * Tue Feb 27 2018 Kevin Howell <khowell@redhat.com> 2.3.2-1
 - Added the EntitlementDTO for the JavaScript rules (crog@redhat.com)
 - Add Java 8 to mead packages argument (khowell@redhat.com)

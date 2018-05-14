@@ -42,7 +42,7 @@ public class UeberCertificateCuratorTests extends DatabaseTestFixture {
     @Test
     public void ensureCertificateCreationAndGet() {
         UeberCertificate cert = this.createUeberCert(owner);
-        assertEquals(cert, ueberCertificateCurator.find(cert.getId()));
+        assertEquals(cert, ueberCertificateCurator.get(cert.getId()));
         assertEquals(cert, ueberCertificateCurator.findForOwner(owner));
     }
 
@@ -77,7 +77,7 @@ public class UeberCertificateCuratorTests extends DatabaseTestFixture {
         CertificateSerial serial = cert.getSerial();
         this.ueberCertificateCurator.deleteForOwner(owner);
         assertNull(this.ueberCertificateCurator.findForOwner(owner));
-        CertificateSerial fetchedSerial = certSerialCurator.find(serial.getId());
+        CertificateSerial fetchedSerial = certSerialCurator.get(serial.getId());
         assertTrue("Serial should have been revoked", fetchedSerial.isRevoked());
     }
 

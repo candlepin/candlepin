@@ -899,4 +899,80 @@ describe 'Hypervisor Resource', :type => :virt do
     user = user_client(owner, random_string("user"))
     job_detail = async_update_hypervisor(owner, user, 'hypervisor.bind.com', hypervisor_id, ["blah"])
   end
+
+  it 'should merge consumer into hypervisor with the same uuid' do
+    owner = create_owner random_string('owner')
+    user = user_client(owner, random_string('user'))
+
+    virtwho = create_virtwho_client(user)
+    host_hyp_id = "test-uuid"
+    guests = ['g1', 'g2']
+    hostguestmapping = get_host_guest_mapping(host_hyp_id, guests)
+    result = virtwho.hypervisor_check_in(owner['key'], hostguestmapping)
+    result.should_not be_nil
+
+    test_host = user.register("test-host", :system, nil, {"system_uuid" => "test-uuid", "virt.is_guest"=>"false"}, nil, owner['key'])
+
+    @cp.list_consumers({:owner=>owner['key']}).length.should == 2
+    test_host = @cp.get_consumer(test_host['uuid'])
+    test_host['type']['label'].should == 'hypervisor'
+    result['created'][0]['uuid'].should == test_host['uuid']
+  end
+
+  it 'should merge consumer into hypervisor with the same uuid - async' do
+    owner = create_owner random_string('owner')
+    user = user_client(owner, random_string('user'))
+
+    host_hyp_id = "test-uuid"
+    guests = ['g1', 'g2']
+    job_detail = async_update_hypervisor(owner, user, host_hyp_id, host_hyp_id, guests)
+    result_data = job_detail['resultData']
+    result_data.created.size.should == 1
+    hypervisor_uuid = result_data.created[0]
+
+    test_host = user.register("test-host", :system, nil, {"system_uuid" => "test-uuid", "virt.is_guest"=>"false"}, nil, owner['key'])
+
+    @cp.list_consumers({:owner=>owner['key']}).length.should == 1
+    test_host = @cp.get_consumer(test_host['uuid'])
+    test_host['type']['label'].should == 'hypervisor'
+    hypervisor_uuid.should == test_host['uuid']
+  end
+
+  it 'should merge hypervisor into consumer with the same uuid' do
+    owner = create_owner random_string('owner')
+    user = user_client(owner, random_string('user'))
+
+    test_host = user.register("test-host", :system, nil, {"system_uuid" => "test-uuid", "virt.is_guest"=>"false"}, nil, owner['key'])
+
+    virtwho = create_virtwho_client(user)
+    host_hyp_id = "test-uuid"
+    guests = ['g1', 'g2']
+    hostguestmapping = get_host_guest_mapping(host_hyp_id, guests)
+    result = virtwho.hypervisor_check_in(owner['key'], hostguestmapping)
+    result.should_not be_nil
+
+    @cp.list_consumers({:owner=>owner['key']}).length.should == 2
+    test_host = @cp.get_consumer(test_host['uuid'])
+    test_host['type']['label'].should == 'hypervisor'
+    result['updated'][0]['uuid'].should == test_host['uuid']
+  end
+
+  it 'should merge hypervisor into consumer with the same uuid - async' do
+    owner = create_owner random_string('owner')
+    user = user_client(owner, random_string('user'))
+
+    test_host = user.register("test-host", :system, nil, {"system_uuid" => "test-uuid", "virt.is_guest"=>"false"}, nil, owner['key'])
+
+    host_hyp_id = "test-uuid"
+    guests = ['g1', 'g2']
+    job_detail = async_update_hypervisor(owner, user, host_hyp_id, host_hyp_id, guests)
+    result_data = job_detail['resultData']
+    result_data.updated.size.should == 1
+    hypervisor_uuid = result_data.updated[0]
+
+    @cp.list_consumers({:owner=>owner['key']}).length.should == 1
+    test_host = @cp.get_consumer(test_host['uuid'])
+    test_host['type']['label'].should == 'hypervisor'
+    hypervisor_uuid.should == test_host['uuid']
+  end
 end

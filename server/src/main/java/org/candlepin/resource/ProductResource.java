@@ -20,6 +20,7 @@ import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.ProductCertificateDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.model.CandlepinQuery;
@@ -104,7 +105,7 @@ public class ProductResource {
      *  the Product instance for the product with the specified id
      */
     protected Product fetchProduct(String productUuid) {
-        Product product = this.productCurator.find(productUuid);
+        Product product = this.productCurator.get(productUuid);
 
         if (product == null) {
             throw new NotFoundException(
@@ -257,7 +258,7 @@ public class ProductResource {
     @GET
     @Path("/owners")
     @Produces(MediaType.APPLICATION_JSON)
-    public CandlepinQuery<Owner> getProductOwners(
+    public CandlepinQuery<OwnerDTO> getProductOwners(
         @ApiParam(value = "Multiple product UUIDs", required = true)
         @QueryParam("product") List<String> productUuids) {
 
@@ -265,7 +266,8 @@ public class ProductResource {
             throw new BadRequestException(i18n.tr("No product IDs specified"));
         }
 
-        return this.ownerCurator.lookupOwnersWithProduct(productUuids);
+        return this.translator.translateQuery(
+            this.ownerCurator.getOwnersWithProducts(productUuids), OwnerDTO.class);
     }
 
     @ApiOperation(notes = "Refreshes Pools by Product", value = "refreshPoolsForProduct")
@@ -290,7 +292,7 @@ public class ProductResource {
         // TODO:
         // Replace this with the commented out block below once the job scheduling is no longer performed
         // via PinsetterAsyncFilter
-        ResultIterator<Owner> iterator = this.ownerCurator.lookupOwnersWithProduct(productUuids).iterate();
+        ResultIterator<Owner> iterator = this.ownerCurator.getOwnersWithProducts(productUuids).iterate();
         List<JobDetail> details = new LinkedList<>();
         while (iterator.hasNext()) {
             details.add(RefreshPoolsJob.forOwner(iterator.next(), lazyRegen));

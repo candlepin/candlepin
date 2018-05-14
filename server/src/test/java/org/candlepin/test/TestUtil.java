@@ -23,6 +23,7 @@ import org.candlepin.auth.permissions.Permission;
 import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.ConsumerTypeDTO;
 import org.candlepin.dto.api.v1.ContentDTO;
+import org.candlepin.dto.api.v1.GuestIdDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.dto.api.v1.ProductDTO.ProductContentDTO;
@@ -61,6 +62,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -83,7 +85,8 @@ public class TestUtil {
     }
 
     public static Owner createOwner(String key, String name) {
-        return new Owner(key, name);
+        Owner owner = new Owner(key, name);
+        return owner;
     }
 
     public static Owner createOwner(String key) {
@@ -129,7 +132,14 @@ public class TestUtil {
     }
 
     public static Consumer createDistributor() {
-        return createConsumer(new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN), createOwner());
+        return createDistributor(createOwner());
+    }
+
+    public static Consumer createDistributor(Owner owner) {
+        ConsumerType ctype = new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN);
+        ctype.setId("test-ctype-" + randomInt());
+
+        return createConsumer(ctype, owner);
     }
 
     /**
@@ -144,6 +154,7 @@ public class TestUtil {
             owner,
             createConsumerType()
         );
+
         consumer.setCreated(new Date());
         consumer.setFact("foo", "bar");
         consumer.setFact("foo1", "bar1");
@@ -152,7 +163,10 @@ public class TestUtil {
     }
 
     public static ConsumerType createConsumerType() {
-        return new ConsumerType("test-consumer-type-" + randomInt());
+        ConsumerType ctype = new ConsumerType("test-consumer-type-" + randomInt());
+        ctype.setId("test-ctype-" + randomInt());
+
+        return ctype;
     }
 
     private static final Random RANDOM = new Random(System.currentTimeMillis());
@@ -566,6 +580,14 @@ public class TestUtil {
             createPool(owner, createProduct()),
             null
         );
+    }
+
+    public static GuestIdDTO createGuestIdDTO(String guestId) {
+        GuestIdDTO dto = new GuestIdDTO()
+            .setGuestId(guestId)
+            .setAttributes(Collections.<String, String>emptyMap());
+
+        return dto;
     }
 
     public void addPermissionToUser(User u, Access role, Owner o) {

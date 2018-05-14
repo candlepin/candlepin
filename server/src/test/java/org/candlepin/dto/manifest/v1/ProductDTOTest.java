@@ -1,0 +1,159 @@
+/**
+ * Copyright (c) 2009 - 2018 Red Hat, Inc.
+ *
+ * This software is licensed to you under the GNU General Public License,
+ * version 2 (GPLv2). There is NO WARRANTY for this software, express or
+ * implied, including the implied warranties of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. You should have received a copy of GPLv2
+ * along with this software; if not, see
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
+ *
+ * Red Hat trademarks are not licensed under GPLv2. No permission is
+ * granted to use or replicate Red Hat trademarks that are incorporated
+ * in this software or its documentation.
+ */
+package org.candlepin.dto.manifest.v1;
+
+import static org.junit.Assert.*;
+
+import org.candlepin.dto.AbstractDTOTest;
+
+import org.junit.Test;
+
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
+
+
+
+/**
+ * Test suite for the ProductDTO (manifest import/export) class
+ */
+public class ProductDTOTest extends AbstractDTOTest<ProductDTO> {
+
+    protected ContentDTOTest contentDTOTest = new ContentDTOTest();
+
+    protected Map<String, Object> values;
+
+    public ProductDTOTest() {
+        super(ProductDTO.class);
+
+        Collection<ProductDTO.ProductContentDTO> productContent = new LinkedList<>();
+
+        for (int i = 0; i < 5; ++i) {
+            ContentDTO content = this.contentDTOTest.getPopulatedDTOInstance();
+            content.setId(content.getId() + "-" + i);
+
+            productContent.add(new ProductDTO.ProductContentDTO(content, i % 2 != 0));
+        }
+
+        Map<String, String> attributes = new HashMap<>();
+
+        for (int i = 0; i < 5; ++i) {
+            attributes.put("attrib-" + i, "value-" + i);
+        }
+
+        Collection<String> dependentProductIds = new LinkedList<>();
+
+        for (int i = 0; i < 5; ++i) {
+            dependentProductIds.add("dependentProdId" + i);
+        }
+
+        this.values = new HashMap<>();
+        this.values.put("Id", "test_value");
+        this.values.put("Uuid", "test_value");
+        this.values.put("Multiplier", 3L);
+        this.values.put("Name", "test_value");
+        this.values.put("Locked", Boolean.TRUE);
+        this.values.put("ProductContent", productContent);
+        this.values.put("Attributes", attributes);
+        this.values.put("DependentProductIds", dependentProductIds);
+        this.values.put("Created", new Date());
+        this.values.put("Updated", new Date());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected Object getInputValueForMutator(String field) {
+        return this.values.get(field);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected Object getOutputValueForAccessor(String field, Object input) {
+        // Nothing to do here
+        return input;
+    }
+
+    @Test
+    public void testHasAttributeWithAbsentAttribute() {
+        ProductDTO dto = new ProductDTO();
+        assertFalse(dto.hasAttribute("attrib"));
+    }
+
+    @Test
+    public void testHasAttributeWithPresentAttribute() {
+        ProductDTO dto = new ProductDTO();
+        dto.setAttribute("attrib", "value");
+
+        assertTrue(dto.hasAttribute("attrib"));
+    }
+
+    @Test
+    public void testAttributeCRUDOps() {
+        ProductDTO dto = new ProductDTO();
+        String attrib = "test-attrib";
+
+        assertFalse(dto.hasAttribute(attrib));
+        String value = dto.getAttributeValue(attrib);
+        assertNull(value);
+
+        dto.setAttribute(attrib, "val");
+
+        assertTrue(dto.hasAttribute(attrib));
+        value = dto.getAttributeValue(attrib);
+        assertEquals("val", value);
+
+        dto.setAttribute(attrib, null);
+
+        assertTrue(dto.hasAttribute(attrib));
+        value = dto.getAttributeValue(attrib);
+        assertNull(value);
+
+        dto.removeAttribute(attrib);
+
+        assertFalse(dto.hasAttribute(attrib));
+        value = dto.getAttributeValue(attrib);
+        assertNull(value);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testGetAttributeWithNullAttribute() {
+        ProductDTO dto = new ProductDTO();
+        dto.getAttributeValue(null);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testSetAttributeWithNullAttribute() {
+        ProductDTO dto = new ProductDTO();
+        dto.setAttribute(null, "value");
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testHasAttributeWithNullAttribute() {
+        ProductDTO dto = new ProductDTO();
+        dto.hasAttribute(null);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testRemoveAttributeWithNullAttribute() {
+        ProductDTO dto = new ProductDTO();
+        dto.removeAttribute(null);
+    }
+}

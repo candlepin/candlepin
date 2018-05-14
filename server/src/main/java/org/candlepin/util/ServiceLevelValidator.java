@@ -17,6 +17,7 @@ package org.candlepin.util;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 
 import com.google.inject.Inject;
 
@@ -41,20 +42,22 @@ public class ServiceLevelValidator {
     private static final int MAX_COL_LENGTH = 255;
     private I18n i18n;
     private PoolManager poolManager;
+    private OwnerCurator ownerCurator;
 
     @Inject
-    public ServiceLevelValidator(I18n i18n, PoolManager poolManager) {
+    public ServiceLevelValidator(I18n i18n, PoolManager poolManager, OwnerCurator ownerCurator) {
         this.i18n = i18n;
         this.poolManager = poolManager;
+        this.ownerCurator = ownerCurator;
     }
 
-    public void validate(Owner owner, Collection<String> serviceLevels) {
+    public void validate(String ownerId, Collection<String> serviceLevels) {
         Set<String> invalidServiceLevels = new HashSet<>();
 
         for (String serviceLevel : serviceLevels) {
             if (!StringUtils.isBlank(serviceLevel)) {
                 boolean found = false;
-                for (String level : poolManager.retrieveServiceLevelsForOwner(owner, false)) {
+                for (String level : poolManager.retrieveServiceLevelsForOwner(ownerId, false)) {
                     if (serviceLevel.equalsIgnoreCase(level)) {
                         found = true;
                         break;
@@ -68,6 +71,7 @@ public class ServiceLevelValidator {
         }
 
         if (!invalidServiceLevels.isEmpty()) {
+            Owner owner = ownerCurator.findOwnerById(ownerId);
             String error = i18n.tr("Service level \"{0}\" is not available to units of organization {1}.",
                 StringUtils.join(invalidServiceLevels, ", "), owner.getKey());
 
@@ -75,7 +79,7 @@ public class ServiceLevelValidator {
         }
     }
 
-    public void validate(Owner owner, String... serviceLevels) {
-        this.validate(owner, Arrays.asList(serviceLevels));
+    public void validate(String ownerId, String... serviceLevels) {
+        this.validate(ownerId, Arrays.asList(serviceLevels));
     }
 }

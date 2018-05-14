@@ -15,6 +15,8 @@
 package org.candlepin.bind;
 
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.policy.js.compliance.ComplianceRules;
@@ -74,10 +76,14 @@ public class ComplianceOp implements BindOperation {
     @Override
     public boolean execute(BindContext context) {
         Consumer consumer = context.getLockedConsumer();
+        ConsumerType ctype = context.getConsumerType();
+
         complianceRules.updateEntsOnStart(consumer);
-        if (!consumer.isManifestDistributor() && !consumer.isShare()) {
+
+        if (!ctype.isManifest() && !ctype.isType(ConsumerTypeEnum.SHARE)) {
             complianceRules.applyStatus(consumer, status, false);
         }
+
         return true;
     }
 }

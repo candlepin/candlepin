@@ -14,7 +14,7 @@
  */
 package org.candlepin.resource;
 
-import static org.quartz.JobBuilder.newJob;
+import static org.quartz.JobBuilder.*;
 
 import org.candlepin.auth.Verify;
 import org.candlepin.common.exceptions.BadRequestException;
@@ -29,6 +29,8 @@ import org.candlepin.dto.api.v1.EntitlementDTO;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EntitlementFilterBuilder;
@@ -54,6 +56,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Authorization;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -72,13 +81,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.annotations.Authorization;
-
 /**
  * REST api gateway for the User object.
  */
@@ -86,9 +88,11 @@ import io.swagger.annotations.Authorization;
 @Api(value = "entitlements", authorizations = { @Authorization("basic") })
 public class EntitlementResource {
     private static Logger log = LoggerFactory.getLogger(EntitlementResource.class);
-    private final ConsumerCurator consumerCurator;
+
+    private ConsumerCurator consumerCurator;
+    private ConsumerTypeCurator consumerTypeCurator;
     private PoolManager poolManager;
-    private final EntitlementCurator entitlementCurator;
+    private EntitlementCurator entitlementCurator;
     private I18n i18n;
     private Entitler entitler;
     private Enforcer enforcer;
@@ -98,13 +102,17 @@ public class EntitlementResource {
     @Inject
     public EntitlementResource(EntitlementCurator entitlementCurator,
         ConsumerCurator consumerCurator,
+        ConsumerTypeCurator consumerTypeCurator,
         PoolManager poolManager,
         I18n i18n,
-        Entitler entitler, Enforcer enforcer, EntitlementRulesTranslator messageTranslator,
+        Entitler entitler,
+        Enforcer enforcer,
+        EntitlementRulesTranslator messageTranslator,
         ModelTranslator translator) {
 
         this.entitlementCurator = entitlementCurator;
         this.consumerCurator = consumerCurator;
+        this.consumerTypeCurator = consumerTypeCurator;
         this.i18n = i18n;
         this.poolManager = poolManager;
         this.entitler = entitler;
@@ -184,7 +192,7 @@ public class EntitlementResource {
     public EntitlementDTO getEntitlement(
         @PathParam("entitlement_id") @Verify(Entitlement.class) String entitlementId) {
 
-        Entitlement entitlement = entitlementCurator.find(entitlementId);
+        Entitlement entitlement = entitlementCurator.get(entitlementId);
 
         if (entitlement == null) {
             throw new NotFoundException(
@@ -218,7 +226,7 @@ public class EntitlementResource {
         }
 
         // Verify entitlement exists:
-        Entitlement entitlement = entitlementCurator.find(id);
+        Entitlement entitlement = entitlementCurator.get(id);
         if (entitlement != null) {
             // make sure that this will be a change
             if (!entitlement.getQuantity().equals(update.getQuantity())) {
@@ -243,7 +251,7 @@ public class EntitlementResource {
     public String getUpstreamCert(
         @PathParam("dbid") String entitlementId) {
 
-        Entitlement ent = entitlementCurator.find(entitlementId);
+        Entitlement ent = entitlementCurator.get(entitlementId);
         if (ent == null) {
             throw new NotFoundException(i18n.tr(
                 "Entitlement with ID \"{0}\" could not be found.", entitlementId));
@@ -281,7 +289,7 @@ public class EntitlementResource {
     @Produces(MediaType.WILDCARD)
     @Path("/{dbid}")
     public void unbind(@PathParam("dbid") String dbid) {
-        Entitlement toDelete = entitlementCurator.find(dbid);
+        Entitlement toDelete = entitlementCurator.get(dbid);
         if (toDelete != null) {
             poolManager.revokeEntitlement(toDelete);
             return;
@@ -326,7 +334,7 @@ public class EntitlementResource {
         @QueryParam("to_consumer") @Verify(Consumer.class) String uuid,
         @QueryParam("quantity") Integer quantity) {
         // confirm entitlement
-        Entitlement entitlement = entitlementCurator.find(id);
+        Entitlement entitlement = entitlementCurator.get(id);
         List<Entitlement> entitlements = new ArrayList<>();
 
         if (entitlement != null) {
@@ -336,29 +344,38 @@ public class EntitlementResource {
             if (quantity > 0 && quantity <= entitlement.getQuantity()) {
                 Consumer sourceConsumer = entitlement.getConsumer();
                 Consumer destinationConsumer = consumerCurator.verifyAndLookupConsumer(uuid);
-                if (!sourceConsumer.isManifestDistributor()) {
+
+                ConsumerType scType = this.consumerTypeCurator.getConsumerType(sourceConsumer);
+                ConsumerType dcType = this.consumerTypeCurator.getConsumerType(destinationConsumer);
+
+                if (!scType.isManifest()) {
                     throw new BadRequestException(i18n.tr(
                         "Entitlement migration is not permissible for units of type \"{0}\"",
-                        sourceConsumer.getType().getLabel()));
+                        scType.getLabel()));
                 }
-                if (!destinationConsumer.isManifestDistributor()) {
+
+                if (!dcType.isManifest()) {
                     throw new BadRequestException(i18n.tr(
                         "Entitlement migration is not permissible for units of type \"{0}\"",
-                        destinationConsumer.getType().getLabel()));
+                        dcType.getLabel()));
                 }
-                if (!sourceConsumer.getOwner().getKey().equals(destinationConsumer.getOwner().getKey())) {
+
+                if (!sourceConsumer.getOwnerId().equals(destinationConsumer.getOwnerId())) {
                     throw new BadRequestException(i18n.tr(
                         "Source and destination units must belong to the same organization"));
                 }
+
                 // test to ensure destination can use the pool
                 ValidationResult result = enforcer.preEntitlement(destinationConsumer,
                     entitlement.getPool(), 0, CallerType.BIND);
+
                 if (!result.isSuccessful()) {
                     throw new BadRequestException(i18n.tr(
                         "The entitlement cannot be utilized by the destination unit: ") +
                         messageTranslator.poolErrorToMessage(entitlement.getPool(),
                             result.getErrors().get(0)));
                 }
+
                 if (quantity.intValue() == entitlement.getQuantity()) {
                     unbind(id);
                 }
@@ -366,13 +383,12 @@ public class EntitlementResource {
                     entitler.adjustEntitlementQuantity(sourceConsumer, entitlement,
                         entitlement.getQuantity() - quantity);
                 }
+
                 Pool pool = entitlement.getPool();
-                entitlements.addAll(entitler.bindByPoolQuantity(destinationConsumer, pool.getId(),
-                    quantity));
+                entitlements.addAll(entitler.bindByPoolQuantity(destinationConsumer, pool.getId(), quantity));
 
                 // Trigger events:
                 entitler.sendEvents(entitlements);
-
             }
             else {
                 throw new BadRequestException(i18n.tr(

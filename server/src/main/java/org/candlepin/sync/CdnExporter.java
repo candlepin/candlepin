@@ -14,6 +14,9 @@
  */
 package org.candlepin.sync;
 
+import com.google.inject.Inject;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.manifest.v1.CdnDTO;
 import org.candlepin.model.Cdn;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,9 +28,17 @@ import java.io.Writer;
  * CdnExporter
  */
 public class CdnExporter {
+
+    private ModelTranslator translator;
+
+    @Inject
+    public CdnExporter(ModelTranslator translator) {
+        this.translator = translator;
+    }
+
     void export(ObjectMapper mapper, Writer writer, Cdn cdn)
         throws IOException {
 
-        mapper.writeValue(writer, cdn);
+        mapper.writeValue(writer, this.translator.translate(cdn, CdnDTO.class));
     }
 }

@@ -18,6 +18,10 @@ import static org.junit.Assert.assertTrue;
 
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.dto.StandardTranslator;
+import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.EnvironmentCurator;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.Owner;
 import org.candlepin.test.TestUtil;
@@ -44,7 +48,8 @@ public class ProductExporterTest {
             }
         ));
 
-        ProductExporter exporter = new ProductExporter();
+        ProductExporter exporter = new ProductExporter(
+            new StandardTranslator(new ConsumerTypeCurator(), new EnvironmentCurator(), new OwnerCurator()));
 
         StringWriter writer = new StringWriter();
 

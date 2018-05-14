@@ -15,7 +15,6 @@
 package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.CandlepinDTO;
-import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 
 import io.swagger.annotations.ApiModel;
 
@@ -42,26 +41,6 @@ public class ConsumerTypeDTO extends CandlepinDTO<ConsumerTypeDTO> {
         // Intentionally left empty
     }
 
-    public ConsumerTypeDTO(ConsumerTypeEnum type) {
-        this.label = type.getLabel();
-        this.manifest = type.isManifest();
-    }
-
-    /**
-     * ConsumerTypeDTO constructor with label
-     *
-     * @param labelIn to set
-     */
-    public ConsumerTypeDTO(String labelIn) {
-        this.label = labelIn;
-        for (ConsumerTypeEnum cte : ConsumerTypeEnum.values()) {
-            if (cte.getLabel().equals(labelIn)) {
-                this.manifest = cte.isManifest();
-                break;
-            }
-        }
-    }
-
     /**
      * Initializes a new ConsumerTypeDTO instance which is a shallow copy of the provided
      * source entity.
@@ -71,6 +50,21 @@ public class ConsumerTypeDTO extends CandlepinDTO<ConsumerTypeDTO> {
      */
     public ConsumerTypeDTO(ConsumerTypeDTO source) {
         super(source);
+    }
+
+    /**
+     * Creates a new ConsumerTypeDTO initialized with the given label.
+     *
+     * @param label
+     *  The label to set upon initialization
+     *
+     * @deprecated
+     *  This constructor is present purely to support legacy behavior and may be removed at any
+     *  point in the future
+     */
+    @Deprecated
+    public ConsumerTypeDTO(String label) {
+        this.setLabel(label);
     }
 
     public String getId() {
@@ -144,15 +138,6 @@ public class ConsumerTypeDTO extends CandlepinDTO<ConsumerTypeDTO> {
             .append(this.isManifest());
 
         return builder.toHashCode();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ConsumerTypeDTO clone() {
-        // Nothing to do here; all the fields are immutable types.
-        return super.clone();
     }
 
     /**

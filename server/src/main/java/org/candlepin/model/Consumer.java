@@ -14,15 +14,14 @@
  */
 package org.candlepin.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.candlepin.common.jackson.HateoasArrayExclude;
 import org.candlepin.common.jackson.HateoasInclude;
 import org.candlepin.jackson.StringTrimmingConverter;
-import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.util.Util;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import org.apache.commons.lang.StringUtils;
@@ -50,7 +49,6 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
@@ -146,17 +144,16 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @JoinColumn(name = "cont_acc_cert_id")
     private ContentAccessCertificate contentAccessCert;
 
-    @ManyToOne
-    @JoinColumn(nullable = false)
-    private ConsumerType type;
+    // Reference to the ConsumerType by ID
+    @Column(name = "type_id")
+    @NotNull
+    private String typeId;
 
-    @ManyToOne
-    @JoinColumn(nullable = false)
-    private Owner owner;
+    @Column(name = "owner_id")
+    private String ownerId;
 
-    @ManyToOne
-    @JoinColumn(nullable = true)
-    private Environment environment;
+    @Column(name = "environment_id")
+    private String environmentId;
 
     @Column(name = "entitlement_count")
     @NotNull
@@ -235,14 +232,19 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
         this.name = name;
         this.username = userName;
-        this.owner = owner;
-        this.type = type;
+        if (owner != null) {
+            this.ownerId = owner.getId();
+        }
         this.facts = new HashMap<>();
         this.installedProducts = new HashSet<>();
         this.guestIds = new ArrayList<>();
         this.autoheal = true;
         this.serviceLevel = "";
         this.entitlementCount = 0L;
+
+        if (type != null) {
+            this.setType(type);
+        }
     }
 
     public Consumer() {
@@ -341,23 +343,44 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     /**
      * @return this consumers type.
      */
-    public ConsumerType getType() {
-        return type;
+    public String getTypeId() {
+        return this.typeId;
     }
 
     /**
-     * @param typeIn consumer type
+     * Sets the ID of the consumer type to of this consumer.
+     *
+     * @param typeId
+     *  The ID of the consumer type to use for this consumer
      */
-    public void setType(ConsumerType typeIn) {
-        type = typeIn;
+    public void setTypeId(String typeId) {
+        this.typeId = typeId;
     }
 
     /**
-     * @return the owner of this Consumer.
+     * Sets the consumer type of this consumer.
+     *
+     * @param type
+     *  The ConsumerType instance to use as the type for this consumer
+     */
+    public void setType(ConsumerType type) {
+        if (type == null || type.getId() == null) {
+            throw new IllegalArgumentException("type is null or has not been persisted");
+        }
+
+        this.typeId = type.getId();
+    }
+
+    /**
+     * @return the owner Id of this Consumer.
      */
     @Override
-    public Owner getOwner() {
-        return owner;
+    public String getOwnerId() {
+        return ownerId;
+    }
+
+    public String setOwnerId(String ownerId) {
+        return ownerId;
     }
 
     /**
@@ -365,15 +388,15 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
      * @param owner owner to associate to this Consumer.
      */
     public void setOwner(Owner owner) {
-        this.owner = owner;
+        if (owner != null) {
+            this.ownerId = owner.getId();
+        }
     }
 
     @Override
     public String toString() {
-        String consumerType = (this.getType() != null) ? this.getType().getLabel() : "null";
-
-        return String.format("Consumer [id: %s, uuid: %s, consumerType: %s, name: %s]",
-            this.getId(), this.getUuid(), consumerType, this.getName());
+        return String.format("Consumer [id: %s, uuid: %s, name: %s]",
+            this.getId(), this.getUuid(), this.getName());
     }
 
     /**
@@ -408,29 +431,26 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     }
 
     /**
-     * Returns if the <code>other</code> consumer's facts are
-     * the same as the facts of this consumer.
+     * Returns if the <code>otherFacts</code> are
+     * the same as the facts of this consumer model entity.
      *
-     * @param other the Consumer whose facts to compare
+     * @param otherFacts the facts to compare
      * @return <code>true</code> if the facts are the same, <code>false</code> otherwise
      */
-    public boolean factsAreEqual(Consumer other) {
-        Map<String, String> myFacts = getFacts();
-        Map<String, String> otherFacts = other.getFacts();
-
-        if (myFacts == null && otherFacts == null) {
+    public boolean factsAreEqual(Map<String, String> otherFacts) {
+        if (this.getFacts() == null && otherFacts == null) {
             return true;
         }
 
-        if (myFacts == null || otherFacts == null) {
+        if (this.getFacts() == null || otherFacts == null) {
             return false;
         }
 
-        if (myFacts.size() != otherFacts.size()) {
+        if (this.getFacts().size() != otherFacts.size()) {
             return false;
         }
 
-        for (Entry<String, String> entry : myFacts.entrySet()) {
+        for (Entry<String, String> entry : this.getFacts().entrySet()) {
             String myVal = entry.getValue();
             String otherVal = otherFacts.get(entry.getKey());
 
@@ -624,12 +644,59 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         this.serviceLevel = level;
     }
 
-    public Environment getEnvironment() {
-        return environment;
+    /**
+     * Fetches the ID of the environment with which this consumer is associated. If the consumer is not
+     * associated with an environment, this method returns null.
+     *
+     * @return the ID of the environment for this consumer
+     */
+    public String getEnvironmentId() {
+        return this.environmentId;
     }
 
-    public void setEnvironment(Environment environment) {
-        this.environment = environment;
+    /**
+     * Sets or clears the environment ID for this consumer.
+     *
+     * It is advised to use the setEnvironment method rather than setting the ID directly, as this
+     * method does not perform any validation on the environment being set.
+     *
+     * @param environmentId
+     *  The ID of the environment to set for this consumer
+     *
+     * @return
+     *  A reference to this consumer
+     */
+    public Consumer setEnvironmentId(String environmentId) {
+        this.environmentId = environmentId != null && !environmentId.isEmpty() ? environmentId : null;
+        return this;
+    }
+
+    /**
+     * Sets or clears the environment ID for this consumer. If the environment is not null, but does not
+     * have an environment ID, this method throws an exception.
+     *
+     * @param environment
+     *  The environment to associate to this consumer, or null to clear the environment
+     *
+     * @throws IllegalStateException
+     *  if environment is not null, but does not have an environment ID
+     *
+     * @return
+     *  A reference to this consumer
+     */
+    public Consumer setEnvironment(Environment environment) {
+        if (environment != null) {
+            if (environment.getId() == null || environment.getId().isEmpty()) {
+                throw new IllegalStateException("environment has not been persisted");
+            }
+
+            this.environmentId = environment.getId();
+        }
+        else {
+            this.environmentId = null;
+        }
+
+        return this;
     }
 
     /**
@@ -716,35 +783,6 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         return this;
     }
 
-    /**
-     * Logic to determine if this consumer can handle a V3 or greater certificate.
-     * Used to determine what type of certificate to generate, as well as to guard access
-     * to subscription that provide too much content to fit in a V1 certificate.
-     *
-     * @return true is the consumer can handle V3 (or greater) certificates.
-     */
-    @XmlTransient
-    public boolean isCertV3Capable() {
-        if (isManifestDistributor()) {
-            for (ConsumerCapability capability : getCapabilities()) {
-                if ("cert_v3".equals(capability.getName())) {
-                    return true;
-                }
-            }
-            return false;
-        }
-        else if (getType().getLabel().equals(
-            ConsumerTypeEnum.HYPERVISOR.getLabel())) {
-            // Hypervisors in this context don't use content, so V3 is allowed:
-            return true;
-        }
-        else {
-            // NOTE: in future this might need to change to accomodate v4 certificates.
-            String entitlementVersion = getFact("system.certificate_version");
-            return entitlementVersion != null && entitlementVersion.startsWith("3.");
-        }
-    }
-
     public String getAnnotations() {
         return this.annotations;
     }
@@ -755,16 +793,6 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     public boolean isDev() {
         return !StringUtils.isEmpty(getFact("dev_sku"));
-    }
-
-    @JsonIgnore
-    public boolean isShare() {
-        return getType() != null && getType().isType(ConsumerTypeEnum.SHARE);
-    }
-
-    @JsonIgnore
-    public boolean isManifestDistributor() {
-        return getType() != null && getType().isManifest();
     }
 
     @JsonIgnore
@@ -781,7 +809,8 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     }
 
     public String getRecipientOwnerKey() {
-        return recipientOwnerKey; }
+        return recipientOwnerKey;
+    }
 
     public void setRecipientOwnerKey(String recipientOwnerKey) {
         this.recipientOwnerKey = recipientOwnerKey;

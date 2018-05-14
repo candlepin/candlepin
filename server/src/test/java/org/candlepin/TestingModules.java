@@ -51,7 +51,7 @@ import org.candlepin.pinsetter.core.GuiceJobFactory;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
 import org.candlepin.pinsetter.core.PinsetterTriggerListener;
 import org.candlepin.pinsetter.tasks.CertificateRevocationListTask;
-import org.candlepin.pki.PKIReader;
+import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.BouncyCastlePKIUtility;
@@ -91,9 +91,9 @@ import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
 import org.candlepin.service.impl.stub.StubEntitlementCertServiceAdapter;
 import org.candlepin.sync.file.DBManifestService;
 import org.candlepin.sync.file.ManifestFileService;
+import org.candlepin.test.CertificateReaderForTesting;
 import org.candlepin.test.DateSourceForTesting;
 import org.candlepin.test.EnforcerForTesting;
-import org.candlepin.test.PKIReaderForTesting;
 import org.candlepin.test.VerifyAuthorizationFilterFactory;
 import org.candlepin.util.DateSource;
 import org.candlepin.util.ExpiryDateFunction;
@@ -283,7 +283,7 @@ public class TestingModules {
             bind(Enforcer.class).to(EnforcerForTesting.class); // .to(JavascriptEnforcer.class);
             bind(SubjectKeyIdentifierWriter.class).to(DefaultSubjectKeyIdentifierWriter.class);
             bind(PKIUtility.class).to(BouncyCastlePKIUtility.class);
-            bind(PKIReader.class).to(PKIReaderForTesting.class).asEagerSingleton();
+            bind(CertificateReader.class).to(CertificateReaderForTesting.class).asEagerSingleton();
             bind(SubscriptionServiceAdapter.class).to(ImportSubscriptionServiceAdapter.class);
             bind(OwnerServiceAdapter.class).to(DefaultOwnerServiceAdapter.class);
             bind(EntitlementCertServiceAdapter.class).to(StubEntitlementCertServiceAdapter.class);
@@ -333,7 +333,7 @@ public class TestingModules {
             install(new FactoryModuleBuilder().build(PreEntitlementRulesCheckOpFactory.class));
 
             // Bind model translator
-            bind(ModelTranslator.class).toInstance(new StandardTranslator());
+            bind(ModelTranslator.class).to(StandardTranslator.class).asEagerSingleton();
         }
     }
 }

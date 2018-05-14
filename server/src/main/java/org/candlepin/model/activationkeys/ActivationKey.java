@@ -111,6 +111,7 @@ public class ActivationKey extends AbstractHibernateObject<ActivationKey> implem
     private Boolean autoAttach;
 
     public ActivationKey() {
+        // Intentionally left empty
     }
 
     public ActivationKey(String name, Owner owner) {
@@ -179,6 +180,14 @@ public class ActivationKey extends AbstractHibernateObject<ActivationKey> implem
      */
     public Owner getOwner() {
         return owner;
+    }
+
+    /**
+     * @return the owner Id of this Consumer.
+     */
+    @Override
+    public String getOwnerId() {
+        return (owner == null) ? null : owner.getId();
     }
 
     /**

@@ -29,7 +29,7 @@ import java.util.Arrays;
 
 
 /**
- * Test suite for the UpstreamConsumerTranslator class
+ * Test suite for the ContentTranslator class
  */
 @RunWith(JUnitParamsRunner.class)
 public class ContentTranslatorTest extends

@@ -15,6 +15,7 @@
 package org.candlepin.util;
 
 import org.candlepin.common.exceptions.BadRequestException;
+import org.candlepin.dto.api.v1.ActivationKeyDTO;
 import org.candlepin.model.ContentOverride;
 import org.candlepin.policy.js.override.OverrideRules;
 
@@ -25,8 +26,6 @@ import org.xnap.commons.i18n.I18n;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -61,9 +60,18 @@ public class ContentOverrideValidator {
         }
     }
 
-    public void validate(ContentOverride override) {
-        List<ContentOverride> tmpList = new LinkedList<>();
-        tmpList.add(override);
-        validate(tmpList);
+    public void validateDTOs(Collection<ActivationKeyDTO.ActivationKeyContentOverrideDTO> overrides) {
+        Set<String> invalidOverrides = new HashSet<>();
+        for (ActivationKeyDTO.ActivationKeyContentOverrideDTO override : overrides) {
+            if (!overrideRules.canOverrideForConsumer(override.getName())) {
+                invalidOverrides.add(override.getName());
+            }
+        }
+
+        if (!invalidOverrides.isEmpty()) {
+            String error = i18n.tr("Not allowed to override values for: {0}",
+                StringUtils.join(invalidOverrides, ", "));
+            throw new BadRequestException(error);
+        }
     }
 }

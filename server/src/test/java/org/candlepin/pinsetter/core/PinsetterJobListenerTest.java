@@ -69,7 +69,7 @@ public class PinsetterJobListenerTest {
         when(ctx.getMergedJobDataMap()).thenReturn(map);
         when(detail.getKey()).thenReturn(jobKey("foo"));
         when(ctx.getJobDetail()).thenReturn(detail);
-        when(jcurator.find(eq("foo"))).thenReturn(status);
+        when(jcurator.get(eq("foo"))).thenReturn(status);
 
         listener.jobToBeExecuted(ctx);
 
@@ -91,7 +91,7 @@ public class PinsetterJobListenerTest {
 
         when(detail.getKey()).thenReturn(jobKey("foo"));
         when(ctx.getJobDetail()).thenReturn(detail);
-        when(jcurator.find(eq("foo"))).thenReturn(status);
+        when(jcurator.get(eq("foo"))).thenReturn(status);
 
         listener.jobWasExecuted(ctx, null);
 
@@ -107,7 +107,7 @@ public class PinsetterJobListenerTest {
 
         when(detail.getKey()).thenReturn(jobKey("foo"));
         when(ctx.getJobDetail()).thenReturn(detail);
-        when(jcurator.find(eq("foo"))).thenReturn(null);
+        when(jcurator.get(eq("foo"))).thenReturn(null);
 
         listener.jobWasExecuted(ctx, e);
 
@@ -128,7 +128,7 @@ public class PinsetterJobListenerTest {
         when(ctx.getMergedJobDataMap()).thenReturn(map);
         when(detail.getKey()).thenReturn(jobKey("foo"));
         when(ctx.getJobDetail()).thenReturn(detail);
-        when(jcurator.find(eq("foo"))).thenReturn(null);
+        when(jcurator.get(eq("foo"))).thenReturn(null);
 
         listener.jobToBeExecuted(ctx);
 
@@ -143,7 +143,7 @@ public class PinsetterJobListenerTest {
 
         when(detail.getKey()).thenReturn(jobKey("foo"));
         when(ctx.getJobDetail()).thenReturn(detail);
-        when(jcurator.find(eq("foo"))).thenReturn(status);
+        when(jcurator.get(eq("foo"))).thenReturn(status);
 
         listener.jobWasExecuted(ctx, null);
 
@@ -159,7 +159,7 @@ public class PinsetterJobListenerTest {
 
         when(detail.getKey()).thenReturn(jobKey("foo"));
         when(ctx.getJobDetail()).thenReturn(detail);
-        when(jcurator.find(eq("foo"))).thenReturn(status);
+        when(jcurator.get(eq("foo"))).thenReturn(status);
         when(e.getMessage()).thenReturn("job errored");
 
         listener.jobWasExecuted(ctx, e);
@@ -175,7 +175,7 @@ public class PinsetterJobListenerTest {
         JobDetail detail = mock(JobDetail.class);
         when(detail.getKey()).thenReturn(jobKey("foo"));
         when(ctx.getJobDetail()).thenReturn(detail);
-        when(jcurator.find(any(String.class))).thenThrow(new RuntimeException());
+        when(jcurator.get(any(String.class))).thenThrow(new RuntimeException());
         try {
             listener.jobWasExecuted(ctx, null);
         }
@@ -196,7 +196,7 @@ public class PinsetterJobListenerTest {
         when(ctx.getMergedJobDataMap()).thenReturn(map);
         when(detail.getKey()).thenReturn(jobKey("foo"));
         when(ctx.getJobDetail()).thenReturn(detail);
-        when(jcurator.find(any(String.class))).thenThrow(new RuntimeException());
+        when(jcurator.get(any(String.class))).thenThrow(new RuntimeException());
         try {
             listener.jobToBeExecuted(ctx);
         }
@@ -214,7 +214,7 @@ public class PinsetterJobListenerTest {
 
         when(detail.getKey()).thenReturn(jobKey("foo"));
         when(ctx.getJobDetail()).thenReturn(detail);
-        when(jcurator.find(eq("foo"))).thenReturn(status);
+        when(jcurator.get(eq("foo"))).thenReturn(status);
         String longstr = RandomStringUtils.randomAlphanumeric(
             JobStatus.RESULT_COL_LENGTH);
         when(e.getMessage()).thenReturn(longstr);
@@ -239,7 +239,7 @@ public class PinsetterJobListenerTest {
         when(ctx.getJobDetail()).thenReturn(detail);
 
         JobStatus status = new JobStatus(detail);
-        when(jcurator.find(eq("name"))).thenReturn(status);
+        when(jcurator.get(eq("name"))).thenReturn(status);
 
         String longstr = RandomStringUtils.randomAlphanumeric(300);
         when(e.getMessage()).thenReturn(longstr);

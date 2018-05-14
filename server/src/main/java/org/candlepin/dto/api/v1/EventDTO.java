@@ -27,6 +27,8 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Date;
 
+
+
 /**
  * A DTO representation of the Event entity
  */
@@ -48,6 +50,7 @@ public class EventDTO extends CandlepinDTO<EventDTO> {
         public PrincipalDataDTO(
             @JsonProperty("type") String type,
             @JsonProperty("name") String name) {
+
             if (type == null || type.isEmpty()) {
                 throw new IllegalArgumentException("type is null or empty");
             }
@@ -104,7 +107,7 @@ public class EventDTO extends CandlepinDTO<EventDTO> {
     private Date timestamp;
     private String entityId;
     private String ownerId;
-    private String consumerId;
+    private String consumerUuid;
     private String referenceId;
     private String eventData;
     private String messageText;
@@ -280,23 +283,23 @@ public class EventDTO extends CandlepinDTO<EventDTO> {
     }
 
     /**
-     * Retrieves the consumer id of this EventDTO object.
+     * Retrieves the consumer UUID of this EventDTO object.
      *
-     * @return the consumer id of this EventDTO object.
+     * @return the consumer UUID of this EventDTO object.
      */
-    public String getConsumerId() {
-        return consumerId;
+    public String getConsumerUuid() {
+        return consumerUuid;
     }
 
     /**
-     * Sets the consumer id of this EventDTO object.
+     * Sets the consumer UUID of this EventDTO object.
      *
-     * @param consumerId the consumer id of this EventDTO object.
+     * @param consumerUuid the consumer UUID of this EventDTO object.
      *
      * @return a reference to this DTO object.
      */
-    public EventDTO setConsumerId(String consumerId) {
-        this.consumerId = consumerId;
+    public EventDTO setConsumerUuid(String consumerUuid) {
+        this.consumerUuid = consumerUuid;
         return this;
     }
 
@@ -452,7 +455,7 @@ public class EventDTO extends CandlepinDTO<EventDTO> {
             EqualsBuilder builder = new EqualsBuilder()
                 .append(this.getId(), that.getId())
                 .append(this.getTargetName(), that.getTargetName())
-                .append(this.getConsumerId(), that.getConsumerId())
+                .append(this.getConsumerUuid(), that.getConsumerUuid())
                 .append(this.getEntityId(), that.getEntityId())
                 .append(this.getMessageText(), that.getMessageText())
                 .append(this.getOwnerId(), that.getOwnerId())
@@ -479,7 +482,7 @@ public class EventDTO extends CandlepinDTO<EventDTO> {
         HashCodeBuilder builder = new HashCodeBuilder(37, 7)
             .append(this.getId())
             .append(this.getTargetName())
-            .append(this.getConsumerId())
+            .append(this.getConsumerUuid())
             .append(this.getEntityId())
             .append(this.getMessageText())
             .append(this.getOwnerId())
@@ -501,7 +504,9 @@ public class EventDTO extends CandlepinDTO<EventDTO> {
     @Override
     public EventDTO clone() {
         EventDTO copy = super.clone();
-        copy.timestamp = this.timestamp != null ? (Date) this.timestamp.clone() : null;
+
+        Date timestamp = this.getTimestamp();
+        copy.setTimestamp(timestamp != null ? (Date) timestamp.clone() : null);
 
         return copy;
     }
@@ -515,7 +520,7 @@ public class EventDTO extends CandlepinDTO<EventDTO> {
 
         this.setId(source.getId())
             .setTargetName(source.getTargetName())
-            .setConsumerId(source.getConsumerId())
+            .setConsumerUuid(source.getConsumerUuid())
             .setEntityId(source.getEntityId())
             .setMessageText(source.getMessageText())
             .setOwnerId(source.getOwnerId())

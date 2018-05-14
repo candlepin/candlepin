@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="20180329144902-1" author="crog">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="cp_event" columnName="consumerid" />
+        </preConditions>
+
+        <comment>Change cp_event.consumer_id to consumer_uuid</comment>
+
+        <renameColumn tableName="cp_event" oldColumnName="consumerid" newColumnName="consumer_uuid" columnDataType="varchar(255)" />
+    </changeSet>
+
+</databaseChangeLog>
+<!-- vim: set expandtab sts=4 sw=4 ai: -->

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2012 Red Hat, Inc.
+ * Copyright (c) 2009 - 2018 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -14,91 +14,152 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.util.Util;
-
-import com.google.common.collect.Iterables;
 import com.google.inject.persist.Transactional;
 
-import org.hibernate.Query;
 import org.hibernate.criterion.DetachedCriteria;
-import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
+import java.util.TimeZone;
+
+import javax.inject.Singleton;
+import javax.persistence.Query;
 
 
 
 /**
  * CertificateSerialCurator - Interface to request a unique certificate serial number.
  */
+@Singleton
 public class CertificateSerialCurator extends AbstractHibernateCurator<CertificateSerial> {
-
-    private static int inClauseLimit = 1000;
 
     public CertificateSerialCurator() {
         super(CertificateSerial.class);
     }
 
     /**
-     * @return list of certificate serials which are revoked but not yet collected
-     * and put into CRL
+     * Fetches a collection of serials from uncollected, revoked certficiate serials. If there are
+     * no such certificate serials, this method returns an empty collection.
+     *
+     * @return
+     *  a collection of serials from uncollected, revoked certificate serials
      */
-    @SuppressWarnings("unchecked")
-    public CandlepinQuery<CertificateSerial> retrieveTobeCollectedSerials() {
+    public CandlepinQuery<Long> getUncollectedRevokedCertSerials() {
         DetachedCriteria criteria = DetachedCriteria.forClass(CertificateSerial.class)
             .add(Restrictions.eq("revoked", true))
-            .add(Restrictions.eq("collected", false));
+            .add(Restrictions.eq("collected", false))
+            .setProjection(Projections.id()); // Note: the ID *is* the serial for cert serials
 
-        return this.cpQueryFactory.<CertificateSerial>buildQuery(this.currentSession(), criteria);
-    }
-
-    @SuppressWarnings("unchecked")
-    public CandlepinQuery<CertificateSerial> getExpiredSerials() {
-        //TODO - Should date fields be truncated when checking expiration?
-
-        DetachedCriteria criteria = DetachedCriteria.forClass(CertificateSerial.class)
-            .add(Restrictions.le("expiration", Util.yesterday()))
-            .add(Restrictions.eq("revoked", true));
-
-        return this.cpQueryFactory.<CertificateSerial>buildQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.<Long>buildQuery(this.currentSession(), criteria);
     }
 
     /**
-     * Delete expired serials.
+     * Fetches a collection of serials from revoked certficiate serials that expired prior to
+     * midnight, yesterday in UTC. If there are no such certificate serials, this method returns an
+     * empty collection.
      *
-     * @return the number of rows deleted.
+     * @return
+     *  a collection of serials from revoked certficiate serials that expired prior to "today."
+     */
+    public CandlepinQuery<Long> getExpiredRevokedCertSerials() {
+        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+
+        // Set to midnight first
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+
+        // Subtract a day to put us in "yesterday" relative to midnight UTC of whatever "today" is
+        cal.add(Calendar.DAY_OF_MONTH, -1);
+
+        return this.getExpiredRevokedCertSerials(cal.getTime());
+    }
+
+    /**
+     * Fetches a collection of serials from revoked certificate serials that expired prior to the
+     * specified cutoff date. If there are no such certificate serials, this method returns an empty
+     * collection.
+     *
+     * @param cutoff
+     *  The cutoff date to use for considering certificate serials "expired"
+     *
+     * @throws IllegalArgumentException
+     *  if the cutoff date is null
+     *
+     * @return
+     *  a collection of serials from revoked certficiate serials that expired prior to the specified
+     *  cutoff date
+     */
+    public CandlepinQuery<Long> getExpiredRevokedCertSerials(Date cutoff) {
+        if (cutoff == null) {
+            throw new IllegalArgumentException("cutoff is null");
+        }
+
+        DetachedCriteria criteria = DetachedCriteria.forClass(CertificateSerial.class)
+            .add(Restrictions.lt("expiration", cutoff))
+            .add(Restrictions.eq("revoked", true))
+            .setProjection(Projections.id()); // Note: the ID *is* the serial for cert serials
+
+        return this.cpQueryFactory.<Long>buildQuery(this.currentSession(), criteria);
+    }
+
+    /**
+     * Marks the specified serials as collected.
+     *
+     * @param serials
+     *  A collection of serials to mark as collected
+     *
+     * @return
+     *  the number of certificate serials updated
      */
     @Transactional
-    public int deleteExpiredSerials() {
-        // Some databases don't like to update based on a field that is being updated
-        // So we must get expired ids, and then delete them
-        @SuppressWarnings("unchecked")
-        List<String> ids = this.currentSession()
-            .createCriteria(CertificateSerial.class)
-            .add(Restrictions.le("expiration", Util.yesterday()))
-            .add(Restrictions.eq("revoked", true))
-            .setProjection(Projections.id())
-            .addOrder(Order.asc("id"))
-            .list();
+    public int markSerialsAsCollected(Collection<Long> serials) {
+        int updated = 0;
 
-        if (ids.isEmpty()) {
-            return 0;
+        if (serials != null && !serials.isEmpty()) {
+            // Impl note: the ID *is* the serial for cert serials. If this changes in the future, this query
+            // should change, not the input.
+            String hql = "UPDATE CertificateSerial cs SET collected = true WHERE id IN (:serials)";
+            Query query = this.getEntityManager().createQuery(hql);
+
+            for (Collection<Long> block : this.partition(serials)) {
+                updated += query.setParameter("serials", block).executeUpdate();
+            }
         }
 
-        String hql = "DELETE from CertificateSerial WHERE id IN (:expiredIds)";
-        Query query = this.currentSession().createQuery(hql);
+        return updated;
+    }
 
-        int removed = 0;
+    /**
+     * Deletes the certificate serials with the specified serials.
+     *
+     * @param serials
+     *  A collection of serials to delete
+     *
+     * @return
+     *  the number of certificate serials deleted
+     */
+    @Transactional
+    public int deleteSerials(Collection<Long> serials) {
+        int deleted = 0;
 
-        for (List<String> block : Iterables.partition(ids, getInBlockSize())) {
-            removed += query.setParameterList("expiredIds", block).executeUpdate();
+        if (serials != null && !serials.isEmpty()) {
+            // Impl note: the ID *is* the serial for cert serials. If this changes in the future, this query
+            // should change, not the input.
+            String hql = "DELETE from CertificateSerial WHERE id IN (:serials)";
+            Query query = this.getEntityManager().createQuery(hql);
+
+            for (Collection<Long> block : this.partition(serials)) {
+                deleted += query.setParameter("serials", block).executeUpdate();
+            }
         }
 
-        return removed;
+        return deleted;
     }
 
     @SuppressWarnings("unchecked")
@@ -119,17 +180,8 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
         return this.cpQueryFactory.<CertificateSerial>buildQuery(this.currentSession(), criteria);
     }
 
-    /*
-     * This method is really not necessary, but is probably the cleanest way to
-     * unit test.
-     */
-    public Collection<CertificateSerial> saveOrUpdateAll(Map<String, CertificateSerial> serialMap) {
-        return this.saveOrUpdateAll(serialMap.values(), false, false);
-    }
-
     @SuppressWarnings("unchecked")
     public List<Long> listEntitlementSerialIds(Consumer c) {
-        List<Long> resultList = null;
         String hql = "SELECT s.id" +
             "    FROM EntitlementCertificate ec" +
             "     JOIN ec.entitlement e" +
@@ -140,12 +192,12 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
             "       c.id=:consumerId" +
             "    AND" +
             "       p.endDate >= :nowDate";
-        javax.persistence.Query query = this.getEntityManager().createQuery(hql);
 
-        resultList = (List<Long>) query
+        Query query = this.getEntityManager().createQuery(hql);
+
+        return (List<Long>) query
             .setParameter("consumerId", c.getId())
             .setParameter("nowDate", new Date())
             .getResultList();
-        return resultList;
     }
 }

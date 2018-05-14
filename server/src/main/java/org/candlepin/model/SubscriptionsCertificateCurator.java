@@ -15,9 +15,12 @@
 package org.candlepin.model;
 
 
+import javax.inject.Singleton;
+
 /**
  * Handles the Certificate operations.
  */
+@Singleton
 public class SubscriptionsCertificateCurator extends AbstractHibernateCurator<SubscriptionsCertificate> {
 
     public SubscriptionsCertificateCurator() {

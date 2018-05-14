@@ -102,8 +102,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Locale;
 
 import javax.inject.Inject;
@@ -168,6 +166,7 @@ public class DatabaseTestFixture {
     protected TestingInterceptor securityInterceptor;
     protected DateSourceForTesting dateSource;
     protected I18n i18n;
+    protected Provider<I18n> i18nProvider = () -> i18n;
 
     @BeforeClass
     public static void initClass() {
@@ -396,24 +395,42 @@ public class DatabaseTestFixture {
         return content;
     }
 
+    protected Consumer createConsumer(Owner owner, ConsumerType ctype) {
+        if (ctype == null) {
+            ctype = this.createConsumerType();
+        }
+
+        Consumer consumer = new Consumer("test-consumer", "test-user", owner, ctype);
+
+        return this.consumerCurator.create(consumer);
+    }
+
     protected Consumer createConsumer(Owner owner) {
-        ConsumerType type = new ConsumerType("test-consumer-type-" + TestUtil.randomInt());
-        Consumer c = new Consumer("test-consumer", "test-user", owner, type);
-        return persistConsumer(type, c);
+        return this.createConsumer(owner, null);
     }
 
     protected Consumer createDistributor(Owner owner) {
-        ConsumerType type = new ConsumerType("test-distributor-type-" + TestUtil.randomInt());
-        type.setManifest(true);
-        Consumer c = new Consumer("test-distributor", "test-user", owner, type);
-        return persistConsumer(type, c);
+        ConsumerType type = this.createConsumerType(true);
+        Consumer consumer = new Consumer("test-distributor", "test-user", owner, type);
+
+        return this.consumerCurator.create(consumer);
     }
 
-    private Consumer persistConsumer(ConsumerType type, Consumer consumer) {
-        consumerTypeCurator.create(type);
-        consumer.setType(type);
-        consumerCurator.create(consumer);
-        return consumer;
+    protected ConsumerType createConsumerType() {
+        return this.createConsumerType(false);
+    }
+
+    protected ConsumerType createConsumerType(boolean manifest) {
+        String label = "test-distributor-type-" + TestUtil.randomInt();
+
+        return this.createConsumerType(label, manifest);
+    }
+
+    protected ConsumerType createConsumerType(String label, boolean manifest) {
+        ConsumerType ctype = new ConsumerType(label);
+        ctype.setManifest(manifest);
+
+        return this.consumerTypeCurator.create(ctype);
     }
 
     protected Entitlement createEntitlement(Owner owner, Consumer consumer, Pool pool,
@@ -468,15 +485,6 @@ public class DatabaseTestFixture {
         Environment environment = new Environment(id, name, owner);
         environment.setDescription(description);
 
-        if (consumers != null) {
-            // Ugly hack to deal with how environment currently encapsulates its collections
-            if (!(consumers instanceof List)) {
-                consumers = new LinkedList<>(consumers);
-            }
-
-            environment.setConsumers((List<Consumer>) consumers);
-        }
-
         if (content != null) {
             for (Content elem : content) {
                 EnvironmentContent envContent = new EnvironmentContent(environment, elem, true);
@@ -488,7 +496,17 @@ public class DatabaseTestFixture {
             }
         }
 
-        return this.environmentCurator.create(environment);
+        environment = this.environmentCurator.create(environment);
+
+        // Update consumers to point to the new environment
+        if (consumers != null) {
+            for (Consumer consumer : consumers) {
+                consumer.setEnvironmentId(environment.getId());
+                this.consumerCurator.merge(consumer);
+            }
+        }
+
+        return environment;
     }
 
     protected Owner createOwner() {

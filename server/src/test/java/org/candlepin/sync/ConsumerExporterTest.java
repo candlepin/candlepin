@@ -14,7 +14,9 @@
  */
 package org.candlepin.sync;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
@@ -22,11 +24,17 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.EnvironmentCurator;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.test.TestUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -35,8 +43,12 @@ import java.util.HashMap;
 /**
  * ConsumerExporterTest
  */
+@RunWith(MockitoJUnitRunner.class)
 public class ConsumerExporterTest {
 
+    @Mock private ConsumerTypeCurator mockConsumerTypeCurator;
+    @Mock private EnvironmentCurator mockEnvironmentCurator;
+    @Mock private OwnerCurator ownerCurator;
     private ModelTranslator translator;
 
     @Test
@@ -48,7 +60,7 @@ public class ConsumerExporterTest {
                 }
             }));
 
-        translator = new StandardTranslator();
+        translator = new StandardTranslator(mockConsumerTypeCurator, mockEnvironmentCurator, ownerCurator);
         ConsumerExporter exporter = new ConsumerExporter(translator);
         ConsumerType ctype = new ConsumerType("candlepin");
         ctype.setId("8888");
@@ -61,6 +73,9 @@ public class ConsumerExporterTest {
         consumer.setName("testy consumer");
         consumer.setType(ctype);
         consumer.setContentAccessMode("access_mode");
+
+        when(mockConsumerTypeCurator.getConsumerType(eq(consumer))).thenReturn(ctype);
+        when(mockConsumerTypeCurator.get(eq(ctype.getId()))).thenReturn(ctype);
 
         exporter.export(mapper, writer, consumer, "/subscriptions", "/candlepin");
 

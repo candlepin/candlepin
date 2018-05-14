@@ -20,9 +20,12 @@ import com.google.inject.Inject;
 
 import java.security.NoSuchAlgorithmException;
 
+import javax.inject.Singleton;
+
 /**
  * KeyPairCurator
  */
+@Singleton
 public class KeyPairCurator extends
     AbstractHibernateCurator<KeyPair> {
 

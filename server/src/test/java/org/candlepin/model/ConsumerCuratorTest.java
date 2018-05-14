@@ -90,7 +90,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         // Inject this factValidator into the curator
         Field field = ConsumerCurator.class.getDeclaredField("factValidator");
         field.setAccessible(true);
-        field.set(this.consumerCurator, new FactValidator(this.config, this.i18n));
+        field.set(this.consumerCurator, new FactValidator(this.config, this.i18nProvider));
 
         factConsumer = new Consumer("a consumer", "username", owner, ct);
 
@@ -330,7 +330,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void noHostRegistered() {
-        Consumer host = consumerCurator.getHost("system-uuid-for-guest", owner);
+        Consumer host = consumerCurator.getHost("system-uuid-for-guest", owner.getId());
         assertTrue(host == null);
     }
 
@@ -346,7 +346,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         host.addGuestId(new GuestId("DAF0FE10-956B-7B4E-B7DC-B383CE681BA8"));
         consumerCurator.update(host);
 
-        Consumer guestHost = consumerCurator.getHost("daf0fe10-956b-7b4e-b7dc-b383ce681ba8", owner);
+        Consumer guestHost = consumerCurator.getHost("daf0fe10-956b-7b4e-b7dc-b383ce681ba8", owner.getId());
         assertEquals(host, guestHost);
     }
 
@@ -363,7 +363,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumerCurator.update(host);
 
         Consumer guestHost = consumerCurator.getHost(
-            "Daf0fe10-956b-7b4e-b7dc-B383CE681ba8", owner);
+            "Daf0fe10-956b-7b4e-b7dc-B383CE681ba8", owner.getId());
         assertEquals(host, guestHost);
     }
 
@@ -380,7 +380,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumerCurator.update(host);
 
         Consumer guestHost = consumerCurator.getHost(
-            "10fef0da-6b95-4e7b-b7dc-b383ce681ba8", owner);
+            "10fef0da-6b95-4e7b-b7dc-b383ce681ba8", owner.getId());
         assertEquals(host, guestHost);
     }
 
@@ -413,7 +413,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         host2.addGuestId(host2Guest);
         consumerCurator.update(host2);
 
-        Consumer guestHost = consumerCurator.getHost("daf0fe10-956b-7b4e-b7dc-b383ce681ba8", owner);
+        Consumer guestHost = consumerCurator.getHost("daf0fe10-956b-7b4e-b7dc-b383ce681ba8", owner.getId());
 
         assertTrue(host1Guest.getUpdated().before(host2Guest.getUpdated()));
         assertEquals(host2.getUuid(), guestHost.getUuid());
@@ -448,7 +448,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         host1.addGuestId(host1Guest);
         consumerCurator.update(host1);
 
-        Consumer guestHost = consumerCurator.getHost("daf0fe10-956b-7b4e-b7dc-b383ce681ba8", owner);
+        Consumer guestHost = consumerCurator.getHost("daf0fe10-956b-7b4e-b7dc-b383ce681ba8", owner.getId());
         assertTrue(host1Guest.getUpdated().after(host2Guest.getUpdated()));
         assertEquals(host1.getUuid(), guestHost.getUuid());
     }
@@ -466,11 +466,11 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         host.addGuestId(new GuestId("DAF0FE10-956B-7B4E-B7DC-B383CE681BA8"));
         consumerCurator.update(host);
 
-        Consumer guestHost = spy.getHost("daf0fe10-956b-7b4e-b7dc-b383ce681ba8", owner);
+        Consumer guestHost = spy.getHost("daf0fe10-956b-7b4e-b7dc-b383ce681ba8", owner.getId());
         assertEquals(host, guestHost);
-        guestHost = spy.getHost("daf0fe10-956b-7b4e-b7dc-b383ce681ba8", owner);
+        guestHost = spy.getHost("daf0fe10-956b-7b4e-b7dc-b383ce681ba8", owner.getId());
         assertEquals(host, guestHost);
-        guestHost = spy.getHost("daf0fe10-956b-7b4e-b7dc-b383ce681ba8", owner);
+        guestHost = spy.getHost("daf0fe10-956b-7b4e-b7dc-b383ce681ba8", owner.getId());
         assertEquals(host, guestHost);
         verify(spy, times(1)).currentSession();
     }
@@ -496,13 +496,13 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         hostB.addGuestId(new GuestId("DAF0FE10-956B-7B4E-B7DC-B383CE681BA9"));
         consumerCurator.update(hostB);
 
-        Consumer guestHostA = spy.getHost("daf0fe10-956b-7b4e-b7dc-b383ce681ba8", owner);
-        Consumer guestHostB = spy.getHost("daf0fe10-956b-7b4e-b7dc-b383ce681ba9", owner);
+        Consumer guestHostA = spy.getHost("daf0fe10-956b-7b4e-b7dc-b383ce681ba8", owner.getId());
+        Consumer guestHostB = spy.getHost("daf0fe10-956b-7b4e-b7dc-b383ce681ba9", owner.getId());
         assertEquals(hostA, guestHostA);
         assertEquals(hostB, guestHostB);
-        guestHostA = spy.getHost("daf0fe10-956b-7b4e-b7dc-b383ce681ba8", owner);
+        guestHostA = spy.getHost("daf0fe10-956b-7b4e-b7dc-b383ce681ba8", owner.getId());
         assertEquals(hostA, guestHostA);
-        guestHostB = spy.getHost("daf0fe10-956b-7b4e-b7dc-b383ce681ba9", owner);
+        guestHostB = spy.getHost("daf0fe10-956b-7b4e-b7dc-b383ce681ba9", owner.getId());
         assertEquals(hostB, guestHostB);
         verify(spy, times(2)).currentSession();
     }
@@ -523,7 +523,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         Date dt = ResourceDateParser.parseDateString("2011-09-26T18:10:50.184081+00:00");
         consumerCurator.updateLastCheckin(consumer, dt);
         consumerCurator.refresh(consumer);
-        consumer = consumerCurator.find(consumer.getId());
+        consumer = consumerCurator.get(consumer.getId());
 
         assertEquals(consumer.getLastCheckin().getTime(), dt.getTime());
     }
@@ -675,7 +675,8 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumer3.setUuid("3");
         consumer3 = consumerCurator.create(consumer3);
 
-        List<Consumer> results = consumerCurator.findByUuidsAndOwner(Arrays.asList("2"), owner2).list();
+        List<Consumer> results = consumerCurator
+            .findByUuidsAndOwner(Arrays.asList("2"), owner2.getId()).list();
         assertTrue(results.contains(consumer2));
         assertFalse(results.contains(consumer));
         assertFalse(results.contains(consumer3));
@@ -697,7 +698,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         Set<String> guestIds = new HashSet<>();
         guestIds.add(guestId1ReverseEndian); // reversed endian match
         guestIds.add(guestId2); // direct match
-        VirtConsumerMap guestMap = consumerCurator.getGuestConsumersMap(owner, guestIds);
+        VirtConsumerMap guestMap = consumerCurator.getGuestConsumersMap(owner.getId(), guestIds);
 
         assertEquals(2, guestMap.size());
 
@@ -724,7 +725,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         Set<String> guestIds = new HashSet<>();
         guestIds.add(guestId1ReverseEndian.toUpperCase()); // reversed endian match
         guestIds.add(guestId2.toUpperCase()); // direct match
-        VirtConsumerMap guestMap = consumerCurator.getGuestConsumersMap(owner, guestIds);
+        VirtConsumerMap guestMap = consumerCurator.getGuestConsumersMap(owner.getId(), guestIds);
 
         assertEquals(2, guestMap.size());
 
@@ -789,7 +790,9 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     public void testGetHypervisor() {
         String hypervisorid = "hypervisor";
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        consumer.setHypervisorId(new HypervisorId(hypervisorid));
+        HypervisorId hypervisorId = new HypervisorId(hypervisorid);
+        hypervisorId.setOwner(owner);
+        consumer.setHypervisorId(hypervisorId);
         consumer = consumerCurator.create(consumer);
         Consumer result = consumerCurator.getHypervisor(hypervisorid, owner);
         assertEquals(consumer, result);
@@ -799,7 +802,9 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     public void testGetHypervisorCaseInsensitive() {
         String hypervisorid = "HYpervisor";
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        consumer.setHypervisorId(new HypervisorId(hypervisorid));
+        HypervisorId hypervisorId = new HypervisorId(hypervisorid);
+        hypervisorId.setOwner(owner);
+        consumer.setHypervisorId(hypervisorId);
         consumer = consumerCurator.create(consumer);
         Consumer result = consumerCurator.getHypervisor(hypervisorid.toUpperCase(), owner);
         assertEquals(consumer, result);
@@ -811,7 +816,9 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         otherOwner = ownerCurator.create(otherOwner);
         String hypervisorid = "hypervisor";
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        consumer.setHypervisorId(new HypervisorId(hypervisorid));
+        HypervisorId hypervisorId = new HypervisorId(hypervisorid);
+        hypervisorId.setOwner(owner);
+        consumer.setHypervisorId(hypervisorId);
         consumer = consumerCurator.create(consumer);
         Consumer result = consumerCurator.getHypervisor(hypervisorid, otherOwner);
         assertNull(result);
@@ -821,12 +828,16 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     public void testGetHypervisorConsumerMap() {
         String hypervisorId1 = "Hypervisor";
         Consumer consumer1 = new Consumer("testConsumer", "testUser", owner, ct);
-        consumer1.setHypervisorId(new HypervisorId(hypervisorId1));
+        HypervisorId hypervisorId = new HypervisorId(hypervisorId1);
+        hypervisorId.setOwner(owner);
+        consumer1.setHypervisorId(hypervisorId);
         consumer1 = consumerCurator.create(consumer1);
 
         String hypervisorId2 = "hyPERvisor2";
         Consumer consumer2 = new Consumer("testConsumer", "testUser", owner, ct);
-        consumer2.setHypervisorId(new HypervisorId(hypervisorId2));
+        HypervisorId hypervisorID2 = new HypervisorId(hypervisorId2);
+        hypervisorID2.setOwner(owner);
+        consumer2.setHypervisorId(hypervisorID2);
         consumer2 = consumerCurator.create(consumer2);
 
         Set<String> hypervisorIds = new HashSet<>();
@@ -844,7 +855,9 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     public void testGetHypervisorsBulk() {
         String hypervisorid = "hypervisor";
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        consumer.setHypervisorId(new HypervisorId(hypervisorid));
+        HypervisorId hypervisorId = new HypervisorId(hypervisorid);
+        hypervisorId.setOwner(owner);
+        consumer.setHypervisorId(hypervisorId);
         consumer = consumerCurator.create(consumer);
         List<String> hypervisorIds = new LinkedList<>();
         hypervisorIds.add(hypervisorid);
@@ -858,7 +871,9 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     public void testGetHypervisorsBulkCaseInsensitive() {
         String hypervisorid = "hYPervisor";
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        consumer.setHypervisorId(new HypervisorId(hypervisorid));
+        HypervisorId hypervisorId = new HypervisorId(hypervisorid);
+        hypervisorId.setOwner(owner);
+        consumer.setHypervisorId(hypervisorId);
         consumer = consumerCurator.create(consumer);
         List<String> hypervisorIds = new LinkedList<>();
         hypervisorIds.add(hypervisorid.toUpperCase());
@@ -873,7 +888,9 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     public void testGetHypervisorsBulkEmpty() {
         String hypervisorid = "hypervisor";
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        consumer.setHypervisorId(new HypervisorId(hypervisorid));
+        HypervisorId hypervisorId = new HypervisorId(hypervisorid);
+        hypervisorId.setOwner(owner);
+        consumer.setHypervisorId(hypervisorId);
         consumer = consumerCurator.create(consumer);
         List<Consumer> results = consumerCurator
             .getHypervisorsBulk(new LinkedList<>(), owner.getId())
@@ -885,11 +902,15 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     @Test
     public void testGetHypervisorsByOwner() {
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        consumer.setHypervisorId(new HypervisorId("hypervisor"));
+        HypervisorId hypervisorId = new HypervisorId("hypervisor");
+        hypervisorId.setOwner(owner);
+        consumer.setHypervisorId(hypervisorId);
         consumer = consumerCurator.create(consumer);
         Owner otherOwner = ownerCurator.create(new Owner("other owner"));
         Consumer consumer2 = new Consumer("testConsumer2", "testUser2", otherOwner, ct);
-        consumer2.setHypervisorId(new HypervisorId("hypervisortwo"));
+        HypervisorId hypervisorId2 = new HypervisorId("hypervisortwo");
+        hypervisorId2.setOwner(owner);
+        consumer2.setHypervisorId(hypervisorId2);
         consumer2 = consumerCurator.create(consumer2);
         Consumer nonHypervisor = new Consumer("testConsumer3", "testUser3", owner, ct);
         nonHypervisor = consumerCurator.create(nonHypervisor);
@@ -1032,8 +1053,11 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     public void shouldCountOwnerConsumersOnlyWithTypeLabels() {
         Consumer c1 = createConsumer(owner);
         Consumer c2 = createConsumer(owner);
-        String l1 = c1.getType().getLabel();
-        String l2 = c2.getType().getLabel();
+        ConsumerType c1t = consumerTypeCurator.getConsumerType(c1);
+        ConsumerType c2t = consumerTypeCurator.getConsumerType(c2);
+        String l1 = c1t.getLabel();
+        String l2 = c2t.getLabel();
+
         assertNotEquals(l1, l2);
         HashSet<String> typeLabels = new HashSet<>(1);
         typeLabels.add(l1);
@@ -1048,8 +1072,10 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     public void testDisjunctionInCountingWithTypeLabels() {
         Consumer c1 = createConsumer(owner);
         Consumer c2 = createConsumer(owner);
-        String l1 = c1.getType().getLabel();
-        String l2 = c2.getType().getLabel();
+        ConsumerType c1t = consumerTypeCurator.getConsumerType(c1);
+        ConsumerType c2t = consumerTypeCurator.getConsumerType(c2);
+        String l1 = c1t.getLabel();
+        String l2 = c2t.getLabel();
 
         assertNotEquals(l1, l2);
         HashSet<String> typeLabels = new HashSet<>(1);
@@ -1273,8 +1299,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         List<String> c = new ArrayList<>();
         c.add("unknown-contract");
 
-        int count = consumerCurator.countConsumers(owner.getKey(), typeLabels,
-            skus, subscriptionIds, c);
+        int count = consumerCurator.countConsumers(owner.getKey(), typeLabels, skus, subscriptionIds, c);
 
         assertEquals(0, count);
     }
@@ -1292,21 +1317,24 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         Consumer c2 = createConsumerAndBindItToProduct(owner, skuProduct);
         Consumer c3 = createConsumerAndBindItToProduct(owner, skuProduct, subscriptionId);
         Consumer c4 = createConsumerAndBindItToProduct(owner, skuProduct, subscriptionId, poolContract);
+        ConsumerType c1t = consumerTypeCurator.getConsumerType(c1);
+        ConsumerType c2t = consumerTypeCurator.getConsumerType(c2);
+        ConsumerType c3t = consumerTypeCurator.getConsumerType(c3);
+        ConsumerType c4t = consumerTypeCurator.getConsumerType(c4);
 
         Set<String> labels = new HashSet<>();
         List<String> skus = new ArrayList<>();
         List<String> subIds = new ArrayList<>();
         List<String> contracts = new ArrayList<>();
-        labels.add(c1.getType().getLabel());
-        labels.add(c2.getType().getLabel());
-        labels.add(c3.getType().getLabel());
-        labels.add(c4.getType().getLabel());
+        labels.add(c1t.getLabel());
+        labels.add(c2t.getLabel());
+        labels.add(c3t.getLabel());
+        labels.add(c4t.getLabel());
         skus.add(sku);
         subIds.add(subscriptionId);
         contracts.add(poolContract);
 
-        int count = consumerCurator.countConsumers(owner.getKey(), typeLabels, skus,
-            subIds, contracts);
+        int count = consumerCurator.countConsumers(owner.getKey(), typeLabels, skus, subIds, contracts);
 
         assertEquals(1, count);
     }

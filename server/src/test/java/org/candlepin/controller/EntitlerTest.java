@@ -33,6 +33,7 @@ import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
@@ -91,6 +92,7 @@ public class EntitlerTest {
     @Mock private EntitlementCurator entitlementCurator;
     @Mock private Configuration config;
     @Mock private OwnerProductCurator ownerProductCurator;
+    @Mock private OwnerCurator ownerCurator;
     @Mock private PoolCurator poolCurator;
     @Mock private ProductCurator productCurator;
     @Mock private ProductServiceAdapter productAdapter;
@@ -106,7 +108,8 @@ public class EntitlerTest {
 
     @Before
     public void init() {
-        when(consumer.getOwner()).thenReturn(owner);
+        when(consumer.getOwnerId()).thenReturn("admin");
+        when(ownerCurator.findOwnerById(eq("admin"))).thenReturn(owner);
 
         i18n = I18nFactory.getI18n(
             getClass(),
@@ -116,7 +119,8 @@ public class EntitlerTest {
         translator = new EntitlementRulesTranslator(i18n);
 
         entitler = new Entitler(pm, cc, i18n, ef, sink, translator, entitlementCurator, config,
-            ownerProductCurator, poolCurator, productCurator, productManager, productAdapter, contentManager);
+            ownerProductCurator, ownerCurator, poolCurator, productCurator, productManager, productAdapter,
+            contentManager);
     }
 
     private void mockProducts(Owner owner, final Map<String, Product> products) {
@@ -259,7 +263,7 @@ public class EntitlerTest {
         List<Entitlement> eList = new ArrayList<>();
         eList.add(ent);
 
-        when(pm.find(eq(poolid))).thenReturn(pool);
+        when(pm.get(eq(poolid))).thenReturn(pool);
         Map<String, Integer> pQs = new HashMap<>();
         pQs.put(poolid, 1);
         when(pm.entitleByPools(eq(consumer), eq(pQs))).thenReturn(eList);
@@ -274,14 +278,14 @@ public class EntitlerTest {
         String[] pids = {"prod1", "prod2", "prod3"};
         when(cc.findByUuid(eq("abcd1234"))).thenReturn(consumer);
         entitler.bindByProducts(pids, "abcd1234", null, null);
-        AutobindData data = AutobindData.create(consumer).forProducts(pids);
+        AutobindData data = AutobindData.create(consumer, owner).forProducts(pids);
         verify(pm).entitleByProducts(eq(data));
     }
 
     @Test
     public void bindByProducts() throws Exception  {
         String[] pids = {"prod1", "prod2", "prod3"};
-        AutobindData data = AutobindData.create(consumer).forProducts(pids);
+        AutobindData data = AutobindData.create(consumer, owner).forProducts(pids);
         entitler.bindByProducts(data);
         verify(pm).entitleByProducts(data);
     }
@@ -374,7 +378,7 @@ public class EntitlerTest {
             EntitlementRefusedException ere = new EntitlementRefusedException(fakeResult);
 
             when(pool.getId()).thenReturn(poolid);
-            when(poolCurator.find(eq(poolid))).thenReturn(pool);
+            when(poolCurator.get(eq(poolid))).thenReturn(pool);
             Map<String, Integer> pQs = new HashMap<>();
             pQs.put(poolid, 1);
             when(pm.entitleByPools(eq(consumer), eq(pQs))).thenThrow(ere);
@@ -435,7 +439,7 @@ public class EntitlerTest {
             Map<String, ValidationResult> fakeResult = new HashMap<>();
             fakeResult.put("blah", fakeOutResult(msg));
             EntitlementRefusedException ere = new EntitlementRefusedException(fakeResult);
-            AutobindData data = AutobindData.create(consumer).forProducts(pids);
+            AutobindData data = AutobindData.create(consumer, owner).forProducts(pids);
             when(pm.entitleByProducts(data)).thenThrow(ere);
             entitler.bindByProducts(data);
         }
@@ -477,6 +481,8 @@ public class EntitlerTest {
     @Test
     public void testRevokesLapsedUnmappedGuestEntitlementsOnAutoHeal() throws Exception {
         Owner owner1 = new Owner("o1");
+        owner1.setId(TestUtil.randomString());
+        when(ownerCurator.findOwnerById(eq(owner1.getId()))).thenReturn(owner1);
         Product product = TestUtil.createProduct();
 
         Pool p1 = TestUtil.createPool(owner1, product);
@@ -505,7 +511,7 @@ public class EntitlerTest {
         String[] pids = {product.getId(), "prod2"};
         when(cc.findByUuid(eq("abcd1234"))).thenReturn(c);
         entitler.bindByProducts(pids, "abcd1234", null, null);
-        AutobindData data = AutobindData.create(c).forProducts(pids);
+        AutobindData data = AutobindData.create(c, owner1).forProducts(pids);
         verify(pm).entitleByProducts(eq(data));
         verify(pm).revokeEntitlements(Arrays.asList(e1));
     }
@@ -577,7 +583,7 @@ public class EntitlerTest {
         devSystem.setFact("dev_sku", p.getId());
 
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
-        when(poolCurator.hasActiveEntitlementPools(eq(owner), any(Date.class))).thenReturn(true);
+        when(poolCurator.hasActiveEntitlementPools(eq(owner.getId()), any(Date.class))).thenReturn(true);
         when(productAdapter.getProductsByIds(eq(owner), any(List.class))).thenReturn(devProdDTOs);
 
         this.mockProducts(owner, p);
@@ -587,7 +593,7 @@ public class EntitlerTest {
         when(pm.createPool(any(Pool.class))).thenReturn(devPool);
         when(devPool.getId()).thenReturn("test_pool_id");
 
-        AutobindData ad = new AutobindData(devSystem);
+        AutobindData ad = new AutobindData(devSystem, owner);
         entitler.bindByProducts(ad);
         verify(pm).createPool(any(Pool.class));
     }
@@ -608,11 +614,11 @@ public class EntitlerTest {
         devSystem.addInstalledProduct(new ConsumerInstalledProduct(p));
 
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(true);
-        when(poolCurator.hasActiveEntitlementPools(eq(owner), any(Date.class))).thenReturn(true);
+        when(poolCurator.hasActiveEntitlementPools(eq(owner.getId()), any(Date.class))).thenReturn(true);
         when(productAdapter.getProductsByIds(any(Owner.class), any(List.class))).thenReturn(devProdDTOs);
         when(ownerProductCurator.getProductById(eq(owner), eq(p.getId()))).thenReturn(p);
 
-        AutobindData ad = new AutobindData(devSystem);
+        AutobindData ad = new AutobindData(devSystem, owner);
         entitler.bindByProducts(ad);
     }
 
@@ -628,11 +634,11 @@ public class EntitlerTest {
         devSystem.addInstalledProduct(new ConsumerInstalledProduct(p));
 
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
-        when(poolCurator.hasActiveEntitlementPools(eq(owner), any(Date.class))).thenReturn(false);
+        when(poolCurator.hasActiveEntitlementPools(eq(owner.getId()), any(Date.class))).thenReturn(false);
         when(productAdapter.getProductsByIds(any(Owner.class), any(List.class))).thenReturn(devProdDTOs);
         when(ownerProductCurator.getProductById(eq(owner), eq(p.getId()))).thenReturn(p);
 
-        AutobindData ad = new AutobindData(devSystem);
+        AutobindData ad = new AutobindData(devSystem, owner);
         entitler.bindByProducts(ad);
     }
 
@@ -666,7 +672,7 @@ public class EntitlerTest {
         devSystem.addInstalledProduct(new ConsumerInstalledProduct(ip));
 
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
-        when(poolCurator.hasActiveEntitlementPools(eq(owner), any(Date.class))).thenReturn(true);
+        when(poolCurator.hasActiveEntitlementPools(eq(owner.getId()), any(Date.class))).thenReturn(true);
         when(productAdapter.getProductsByIds(any(Owner.class), any(List.class))).thenReturn(devProdDTOs);
         when(ownerProductCurator.getProductById(eq(owner), eq(p.getId()))).thenReturn(p);
         when(ownerProductCurator.getProductById(eq(owner), eq(ip.getId()))).thenReturn(ip);
@@ -676,7 +682,7 @@ public class EntitlerTest {
         mockProductImport(owner, p, ip);
         mockContentImport(owner, new Content[] {});
 
-        AutobindData ad = new AutobindData(devSystem);
+        AutobindData ad = new AutobindData(devSystem, owner);
         try {
             entitler.bindByProducts(ad);
         }
@@ -706,16 +712,16 @@ public class EntitlerTest {
         devSystem.addInstalledProduct(new ConsumerInstalledProduct(ip2));
 
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
-        when(poolCurator.hasActiveEntitlementPools(eq(owner), any(Date.class))).thenReturn(true);
+        when(poolCurator.hasActiveEntitlementPools(eq(owner.getId()), any(Date.class))).thenReturn(true);
         when(productAdapter.getProductsByIds(any(Owner.class), any(List.class))).thenReturn(devProdDTOs);
 
         this.mockProducts(owner, p, ip1, ip2);
         this.mockProductImport(owner, p, ip1, ip2);
         this.mockContentImport(owner, Collections.<String, Content>emptyMap());
 
-        Pool expectedPool = entitler.assembleDevPool(devSystem, p.getId());
+        Pool expectedPool = entitler.assembleDevPool(devSystem, owner, p.getId());
         when(pm.createPool(any(Pool.class))).thenReturn(expectedPool);
-        AutobindData ad = new AutobindData(devSystem);
+        AutobindData ad = new AutobindData(devSystem, owner);
         entitler.bindByProducts(ad);
     }
 
@@ -741,7 +747,7 @@ public class EntitlerTest {
         this.mockProductImport(owner, p1, p2, p3);
         this.mockContentImport(owner, Collections.<String, Content>emptyMap());
 
-        Pool created = entitler.assembleDevPool(devSystem, devSystem.getFact("dev_sku"));
+        Pool created = entitler.assembleDevPool(devSystem, owner, devSystem.getFact("dev_sku"));
         Calendar cal = Calendar.getInstance();
         cal.setTime(created.getStartDate());
         cal.add(Calendar.DAY_OF_YEAR, 47);
@@ -801,7 +807,7 @@ public class EntitlerTest {
                 }
             });
 
-        Pool created = entitler.assembleDevPool(devSystem, devSystem.getFact("dev_sku"));
+        Pool created = entitler.assembleDevPool(devSystem, owner, devSystem.getFact("dev_sku"));
         assertEquals(entitler.DEFAULT_DEV_SLA,
             created.getProduct().getAttributeValue(Product.Attributes.SUPPORT_LEVEL));
     }

@@ -22,8 +22,7 @@ import org.hibernate.criterion.Restrictions;
 /**
  * Subscription manager.
  */
-public class CdnCurator
-    extends AbstractHibernateCurator<Cdn> {
+public class CdnCurator extends AbstractHibernateCurator<Cdn> {
 
     @Inject
     public CdnCurator() {
@@ -35,10 +34,10 @@ public class CdnCurator
      * @param label CDN label
      * @return CDN whose label matches the given value.
      */
-    public Cdn lookupByLabel(String label) {
-        return (Cdn) currentSession()
-            .createCriteria(Cdn.class)
-            .add(Restrictions.eq("label", label)).uniqueResult();
+    public Cdn getByLabel(String label) {
+        return (Cdn) currentSession().createCriteria(Cdn.class)
+            .add(Restrictions.eq("label", label))
+            .uniqueResult();
     }
 
     /**

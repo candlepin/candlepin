@@ -14,24 +14,25 @@
  */
 package org.candlepin.dto.manifest.v1;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.candlepin.dto.CandlepinDTO;
+import org.candlepin.dto.TimestampedCandlepinDTO;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+
+
 
 /**
  * A DTO representation of the Branding entity used internally by PoolDTO
  * for the manifest import/export framework.
  */
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class BrandingDTO extends CandlepinDTO<BrandingDTO> {
+public class BrandingDTO extends TimestampedCandlepinDTO<BrandingDTO> {
 
     public static final long serialVersionUID = 1L;
 
+    private String id;
     private String productId;
     private String name;
     private String type;
@@ -55,35 +56,24 @@ public class BrandingDTO extends CandlepinDTO<BrandingDTO> {
     }
 
     /**
-     * Initializes a new BrandingDTO instance based on the given values.
+     * Returns this branding's internal DB id.
      *
-     * @param productId this branding's product id.
-     *
-     * @param name this branding's name.
-     *
-     * @param type this branding's type.
+     * @return this branding's internal DB id.
      */
-    @JsonCreator
-    public BrandingDTO(
-        @JsonProperty("productId") String productId,
-        @JsonProperty("name") String name,
-        @JsonProperty("type") String type) {
+    public String getId() {
+        return this.id;
+    }
 
-        if (productId == null || productId.isEmpty()) {
-            throw new IllegalArgumentException("productId is null or empty");
-        }
-
-        if (name == null || name.isEmpty()) {
-            throw new IllegalArgumentException("name is null or empty");
-        }
-
-        if (type == null || type.isEmpty()) {
-            throw new IllegalArgumentException("type is null or empty");
-        }
-
-        this.productId = productId;
-        this.name = name;
-        this.type = type;
+    /**
+     * Sets this branding's internal DB id.
+     *
+     * @param id the internal DB id to set on this branding DTO.
+     *
+     * @return a reference to this branding DTO object.
+     */
+    public BrandingDTO setId(String id) {
+        this.id = id;
+        return this;
     }
 
     /**
@@ -154,7 +144,7 @@ public class BrandingDTO extends CandlepinDTO<BrandingDTO> {
      */
     @Override
     public String toString() {
-        return String.format("BrandingDTO [productId: %s, name: %s, type: %s]",
+        return String.format("BrandingDTO [product id: %s, name: %s, type: %s]",
             this.getProductId(), this.getName(), this.getType());
     }
 
@@ -167,10 +157,11 @@ public class BrandingDTO extends CandlepinDTO<BrandingDTO> {
             return true;
         }
 
-        if (obj instanceof BrandingDTO) {
+        if (obj instanceof BrandingDTO && super.equals(obj)) {
             BrandingDTO that = (BrandingDTO) obj;
 
             EqualsBuilder builder = new EqualsBuilder()
+                .append(this.getId(), that.getId())
                 .append(this.getProductId(), that.getProductId())
                 .append(this.getName(), that.getName())
                 .append(this.getType(), that.getType());
@@ -186,6 +177,8 @@ public class BrandingDTO extends CandlepinDTO<BrandingDTO> {
     @Override
     public int hashCode() {
         HashCodeBuilder builder = new HashCodeBuilder(37, 7)
+            .append(super.hashCode())
+            .append(this.getId())
             .append(this.getProductId())
             .append(this.getName())
             .append(this.getType());
@@ -197,19 +190,10 @@ public class BrandingDTO extends CandlepinDTO<BrandingDTO> {
      * {@inheritDoc}
      */
     @Override
-    public BrandingDTO clone() {
-        // Nothing to copy here. All fields are immutable types.
-
-        return super.clone();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public BrandingDTO populate(BrandingDTO source) {
         super.populate(source);
 
+        this.setId(source.getId());
         this.setProductId(source.getProductId());
         this.setName(source.getName());
         this.setType(source.getType());

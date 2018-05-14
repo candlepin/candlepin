@@ -71,8 +71,8 @@ public class HealEntireOrgJob extends UniqueByEntityJob {
             // NOTE: ownerId is actually the owner key here.
 
             JobDataMap map = ctx.getMergedJobDataMap();
-            String ownerId = (String) map.get("ownerId");
-            Owner owner = ownerCurator.lookupByKey(ownerId);
+            String ownerId = (String) map.get(JobStatus.TARGET_ID);
+            Owner owner = ownerCurator.getByKey(ownerId);
             if (owner.isAutobindDisabled()) {
                 throw new BadRequestException(i18n.tr("Auto-attach is disabled for owner {0}.",
                     owner.getKey()));
@@ -85,7 +85,7 @@ public class HealEntireOrgJob extends UniqueByEntityJob {
                 // of looking up the non or partially compliant products to bind.
                 try {
                     Consumer consumer = consumerCurator.getConsumer(uuid);
-                    healSingleConsumer(consumer, entitleDate);
+                    healSingleConsumer(consumer, owner, entitleDate);
                 }
                 // We want to catch everything and continue.
                 // Perhaps add something to surface errors later
@@ -105,17 +105,19 @@ public class HealEntireOrgJob extends UniqueByEntityJob {
      * Each consumer heal should be a separate transaction
      */
     @Transactional
-    private void healSingleConsumer(Consumer consumer, Date date) throws AutobindDisabledForOwnerException {
-        List<Entitlement> ents = entitler.bindByProducts(AutobindData.create(consumer).on(date), true);
+    private void healSingleConsumer(Consumer consumer, Owner owner, Date date)
+        throws AutobindDisabledForOwnerException {
+
+        List<Entitlement> ents = entitler.bindByProducts(AutobindData.create(consumer, owner).on(date), true);
         entitler.sendEvents(ents);
     }
 
-    public static JobDetail healEntireOrg(String ownerId, Date entitleDate) {
+    public static JobDetail healEntireOrg(Owner owner, Date entitleDate) {
         JobDataMap map = new JobDataMap();
-        map.put("ownerId", ownerId);
-        map.put(JobStatus.OWNER_ID, ownerId);
+        map.put(JobStatus.OWNER_ID, owner.getKey());
+        map.put(JobStatus.OWNER_LOG_LEVEL, owner.getLogLevel());
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.OWNER);
-        map.put(JobStatus.TARGET_ID, ownerId);
+        map.put(JobStatus.TARGET_ID, owner.getKey());
         map.put("entitle_date", entitleDate);
         map.put(JobStatus.CORRELATION_ID, MDC.get(LoggingFilter.CSID));
 

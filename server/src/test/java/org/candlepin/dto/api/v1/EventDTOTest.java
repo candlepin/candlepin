@@ -40,7 +40,7 @@ public class EventDTOTest extends AbstractDTOTest<EventDTO> {
         this.values.put("Timestamp", new Date());
         this.values.put("EntityId", "entity-id");
         this.values.put("OwnerId", "owner-id");
-        this.values.put("ConsumerId", "consumer-id");
+        this.values.put("ConsumerUuid", "consumer-uuid");
         this.values.put("ReferenceId", "reference-id");
         this.values.put("EventData", "event-data");
         this.values.put("MessageText", "message-text");

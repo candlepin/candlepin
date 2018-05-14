@@ -26,6 +26,8 @@ import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
@@ -36,12 +38,14 @@ import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
+import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -52,15 +56,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.stream.Collectors;
 
+import javax.inject.Provider;
+import javax.inject.Singleton;
 import javax.persistence.LockModeType;
 import javax.persistence.TypedQuery;
-
-
 
 /**
  * ConsumerCurator
  */
+@Singleton
 public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     private static Logger log = LoggerFactory.getLogger(ConsumerCurator.class);
 
@@ -69,8 +75,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @Inject private DeletedConsumerCurator deletedConsumerCurator;
     @Inject private Configuration config;
     @Inject private FactValidator factValidator;
-
-    private Map<String, Consumer> cachedHosts = new HashMap<>();
+    @Inject private OwnerCurator ownerCurator;
+    @Inject private Provider<HostCache> cachedHostsProvider;
 
     public ConsumerCurator() {
         super(Consumer.class);
@@ -90,8 +96,9 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         log.debug("Deleting consumer: {}", entity);
 
         // save off the IDs before we delete
-        DeletedConsumer dc = new DeletedConsumer(entity.getUuid(), entity.getOwner().getId(),
-            entity.getOwner().getKey(), entity.getOwner().getDisplayName());
+        Owner owner = ownerCurator.findOwnerById(entity.getOwnerId());
+        DeletedConsumer dc = new DeletedConsumer(entity.getUuid(), entity.getOwnerId(),
+            owner.getKey(), owner.getDisplayName());
 
         super.delete(entity);
 
@@ -115,8 +122,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             entitlement.setConsumer(consumer);
         }
 
-        ConsumerType consumerType = consumerTypeCurator.lookupByLabel(consumer.getType().getLabel());
-        consumer.setType(consumerType);
+        consumer.setTypeId(consumer.getTypeId());
 
         IdentityCertificate idCert = consumer.getIdCert();
         this.currentSession().replicate(idCert.getSerial(), ReplicationMode.EXCEPTION);
@@ -125,20 +131,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         this.currentSession().replicate(consumer, ReplicationMode.EXCEPTION);
 
         return consumer;
-    }
-
-    /**
-     * Lookup consumer by its name
-     *
-     * @param name consumer name to find
-     * @return Consumer whose name matches the given name, null otherwise.
-     */
-    @Transactional
-    public Consumer findByName(Owner o, String name) {
-        return (Consumer) createSecureCriteria()
-            .add(Restrictions.eq("name", name))
-            .add(Restrictions.eq("owner", o))
-            .uniqueResult();
     }
 
     /**
@@ -169,7 +161,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         List<String> options = q.list();
 
         if (options != null && options.size() != 0) {
-            result = this.find(options.get(0));
+            result = this.get(options.get(0));
         }
 
         return result;
@@ -190,7 +182,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * none exists.
      */
     @Transactional
-    public VirtConsumerMap getGuestConsumersMap(Owner owner, Set<String> guestIds) {
+    public VirtConsumerMap getGuestConsumersMap(String ownerId, Set<String> guestIds) {
         VirtConsumerMap guestConsumersMap = new VirtConsumerMap();
 
         if (guestIds.size() == 0) {
@@ -216,7 +208,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
         Query query = this.currentSession()
             .createSQLQuery(sql)
-            .setParameter("ownerid", owner.getId());
+            .setParameter("ownerid", ownerId);
 
         for (List<String> block : blocks) {
             query.setParameterList("guestids", block);
@@ -228,7 +220,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         }
 
         // At this point we might have duplicates for re-registered consumers:
-        for (Consumer c : this.findByUuidsAndOwner(consumerUuids, owner)) {
+        for (Consumer c : this.findByUuidsAndOwner(consumerUuids, ownerId)) {
             String virtUuid = c.getFact("virt.uuid").toLowerCase();
             if (guestConsumersMap.get(virtUuid) == null) {
                 // Store both big and little endian forms in the result:
@@ -253,11 +245,15 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @Transactional
     public Consumer findByUser(User user) {
         ConsumerType person = consumerTypeCurator
-            .lookupByLabel(ConsumerType.ConsumerTypeEnum.PERSON.getLabel());
+            .getByLabel(ConsumerType.ConsumerTypeEnum.PERSON.getLabel());
 
-        return (Consumer) createSecureCriteria()
-            .add(Restrictions.eq("username", user.getUsername()))
-            .add(Restrictions.eq("type", person)).uniqueResult();
+        if (person != null) {
+            return (Consumer) createSecureCriteria()
+                .add(Restrictions.eq("username", user.getUsername()))
+                .add(Restrictions.eq("typeId", person.getId())).uniqueResult();
+        }
+
+        return null;
     }
 
     /**
@@ -280,9 +276,9 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     @Transactional
-    public CandlepinQuery<Consumer> findByUuidsAndOwner(Collection<String> uuids, Owner owner) {
+    public CandlepinQuery<Consumer> findByUuidsAndOwner(Collection<String> uuids, String ownerId) {
         DetachedCriteria criteria = DetachedCriteria.forClass(Consumer.class)
-            .add(Restrictions.eq("owner", owner))
+            .add(Restrictions.eq("ownerId", ownerId))
             .add(Restrictions.in("uuid", uuids));
 
         return this.cpQueryFactory.<Consumer>buildQuery(this.currentSession(), criteria);
@@ -302,7 +298,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @Transactional
     public CandlepinQuery<Consumer> listByOwner(Owner owner) {
         DetachedCriteria criteria = this.createSecureDetachedCriteria()
-            .add(Restrictions.eq("owner", owner));
+            .add(Restrictions.eq("ownerId", owner.getId()));
 
         return this.cpQueryFactory.<Consumer>buildQuery(this.currentSession(), criteria);
     }
@@ -319,13 +315,13 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @Transactional
     public Consumer getSharingConsumer(Owner sharingOwner, String recipientOwnerKey) {
         return (Consumer) createSecureCriteria()
-            .add(Restrictions.eq("owner", sharingOwner))
+            .add(Restrictions.eq("ownerId", sharingOwner.getId()))
             .add(Restrictions.eq("recipientOwnerKey", recipientOwnerKey)).uniqueResult();
     }
 
     public boolean doesShareConsumerExist(Owner owner) {
         long result = (Long) createSecureCriteria()
-            .add(Restrictions.eq("owner", owner))
+            .add(Restrictions.eq("ownerId", owner.getId()))
             .add(Restrictions.isNotNull("recipientOwnerKey"))
             .setProjection(Projections.count("id"))
             .uniqueResult();
@@ -401,7 +397,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         // Validate inbound facts before even attempting to apply the update
         this.validateFacts(updatedConsumer);
 
-        Consumer existingConsumer = find(updatedConsumer.getId());
+        Consumer existingConsumer = this.get(updatedConsumer.getId());
 
         if (existingConsumer == null) {
             return this.create(updatedConsumer, flush);
@@ -414,8 +410,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         // everywhere else, and just blindly copying everything over.
         existingConsumer.setFacts(updatedConsumer.getFacts());
         existingConsumer.setName(updatedConsumer.getName());
-        existingConsumer.setOwner(updatedConsumer.getOwner());
-        existingConsumer.setType(updatedConsumer.getType());
+        existingConsumer.setOwnerId(updatedConsumer.getOwnerId());
+        existingConsumer.setTypeId(updatedConsumer.getTypeId());
         existingConsumer.setUuid(updatedConsumer.getUuid());
 
         if (flush) {
@@ -513,7 +509,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * @return host consumer who most recently reported the given guestId (if any)
      */
     @Transactional
-    public Consumer getHost(Consumer consumer, Owner... owners) {
+    public Consumer getHost(Consumer consumer, String... owners) {
         String guestId = consumer.getFact("virt.uuid");
         if (guestId == null) {
             return null;
@@ -529,14 +525,15 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * @return the host's consumer
      */
     @Transactional
-    public Consumer getHost(String guestId, Owner... owners) {
+    public Consumer getHost(String guestId, String... owners) {
         if (guestId == null) {
             return null;
         }
 
         String guestLower = guestId.toLowerCase();
-        if (cachedHosts.containsKey(guestLower)) {
-            return cachedHosts.get(guestLower);
+        Pair<String, List> key = new ImmutablePair<>(guestLower, Arrays.asList(owners));
+        if (cachedHostsProvider.get().containsKey(key)) {
+            return cachedHostsProvider.get().get(key);
         }
 
         Disjunction guestIdCrit = Restrictions.disjunction();
@@ -553,11 +550,11 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             .setProjection(Projections.property("consumer"));
 
         if (owners.length > 0) {
-            crit.add(CPRestrictions.in("gconsumer.owner", owners));
+            crit.add(CPRestrictions.in("gconsumer.ownerId", owners));
         }
 
         Consumer host = (Consumer) crit.uniqueResult();
-        cachedHosts.put(guestLower, host);
+        cachedHostsProvider.get().put(key, host);
         return host;
     }
 
@@ -581,7 +578,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         }
 
         String hql = "SELECT gid FROM GuestId gid " +
-            "WHERE gid.consumer.owner = :owner AND gid.guestIdLower IN (:guest_ids)" +
+            "WHERE gid.consumer.ownerId = :owner AND gid.guestIdLower IN (:guest_ids)" +
             "ORDER BY gid.updated DESC";
 
         TypedQuery<GuestId> query = this.getEntityManager().createQuery(hql, GuestId.class);
@@ -598,7 +595,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             }
 
             List<GuestId> guests = query
-                .setParameter("owner", owner)
+                .setParameter("owner", owner.getId())
                 .setParameter("guest_ids", sanitized)
                 .getResultList();
 
@@ -631,7 +628,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     public List<Consumer> getGuests(Consumer consumer) {
         if (consumer.getFact("virt.uuid") != null &&
             !consumer.getFact("virt.uuid").trim().equals("")) {
-            throw new BadRequestException(i18n.tr(
+            throw new BadRequestException(i18nProvider.get().tr(
                 "The system with UUID {0} is a virtual guest. It does not have guests.",
                 consumer.getUuid()));
         }
@@ -641,8 +638,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             for (GuestId cg : consumerGuests) {
                 // Check if this is the most recent host to report the guest by asking
                 // for the consumer's current host and comparing it to ourselves.
-                if (consumer.equals(getHost(cg.getGuestId(), consumer.getOwner()))) {
-                    Consumer guest = findByVirtUuid(cg.getGuestId(), consumer.getOwner().getId());
+                if (consumer.equals(getHost(cg.getGuestId(), consumer.getOwnerId()))) {
+                    Consumer guest = findByVirtUuid(cg.getGuestId(), consumer.getOwnerId());
                     if (guest != null) {
                         guests.add(guest);
                     }
@@ -668,7 +665,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @Transactional
     public Consumer getHypervisor(String hypervisorId, Owner owner) {
         return (Consumer) currentSession().createCriteria(Consumer.class)
-            .add(Restrictions.eq("owner", owner))
+            .add(Restrictions.eq("ownerId", owner.getId()))
             .createAlias("hypervisorId", "hvsr")
             .add(Restrictions.eq("hvsr.hypervisorId", hypervisorId.toLowerCase()))
             .setMaxResults(1)
@@ -712,9 +709,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         }
 
         DetachedCriteria criteria = DetachedCriteria.forClass(Consumer.class)
-            .createAlias("owner", "o")
             .createAlias("hypervisorId", "hvsr")
-            .add(Restrictions.eq("o.id", ownerId))
+            .add(Restrictions.eq("ownerId", ownerId))
             .add(this.getHypervisorIdRestriction(hypervisorIds))
             .addOrder(Order.asc("hvsr.hypervisorId"))
             .setFetchMode("type", FetchMode.SELECT);
@@ -735,10 +731,10 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @SuppressWarnings("unchecked")
     @Transactional
     public CandlepinQuery<Consumer> getHypervisorsForOwner(String ownerId) {
+
         DetachedCriteria criteria = this.createSecureDetachedCriteria()
-            .createAlias("owner", "o")
             .createAlias("hypervisorId", "hvsr")
-            .add(Restrictions.eq("o.id", ownerId))
+            .add(Restrictions.eq("ownerId", ownerId))
             .add(Restrictions.isNotNull("hvsr.hypervisorId"));
 
         return this.cpQueryFactory.<Consumer>buildQuery(this.currentSession(), criteria);
@@ -757,7 +753,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         Consumer consumer = this.findByUuid(consumerUuid);
 
         if (consumer == null) {
-            throw new NotFoundException(i18n.tr("Unit with ID \"{0}\" could not be found.", consumerUuid));
+            throw new NotFoundException(i18nProvider.get().tr("Unit with ID \"{0}\" could not be found.",
+                consumerUuid));
         }
 
         return consumer;
@@ -766,7 +763,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     public Consumer verifyAndLookupConsumerWithEntitlements(String consumerUuid) {
         Consumer consumer = this.findByUuid(consumerUuid);
         if (consumer == null) {
-            throw new NotFoundException(i18n.tr("Unit with ID \"{0}\" could not be found.", consumerUuid));
+            throw new NotFoundException(i18nProvider.get().tr("Unit with ID \"{0}\" could not be found.",
+                consumerUuid));
         }
 
         for (Entitlement e : consumer.getEntitlements()) {
@@ -791,17 +789,26 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
         DetachedCriteria crit = super.createSecureDetachedCriteria();
         if (owner != null) {
-            crit.add(Restrictions.eq("owner", owner));
+            crit.add(Restrictions.eq("ownerId", owner.getId()));
         }
+
         if (userName != null && !userName.isEmpty()) {
             crit.add(Restrictions.eq("username", userName));
         }
+
         if (types != null && !types.isEmpty()) {
-            crit.add(Restrictions.in("type", types));
+            Collection<String> typeIds = types.stream()
+                .filter(t -> t.getId() != null)
+                .map(t -> t.getId())
+                .collect(Collectors.toList());
+
+            crit.add(CPRestrictions.in("typeId", typeIds));
         }
+
         if (uuids != null && !uuids.isEmpty()) {
-            crit.add(Restrictions.in("uuid", uuids));
+            crit.add(CPRestrictions.in("uuid", uuids));
         }
+
         if (hypervisorIds != null && !hypervisorIds.isEmpty()) {
             // Cannot use Restrictions.in here because hypervisorId is case insensitive
             Set<Criterion> ors = new HashSet<>();
@@ -811,6 +818,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             crit.createAlias("hypervisorId", "hvsr");
             crit.add(Restrictions.or(ors.toArray(new Criterion[ors.size()])));
         }
+
         if (factFilters != null && !factFilters.isEmpty()) {
             // Process the filters passed for the attributes
             FilterBuilder factFilter = new FactFilterBuilder();
@@ -830,7 +838,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
                     DetachedCriteria subCrit = DetachedCriteria.forClass(Consumer.class, "subquery_consumer");
 
                     if (owner != null) {
-                        subCrit.add(Restrictions.eq("owner", owner));
+                        subCrit.add(Restrictions.eq("ownerId", owner.getId()));
                     }
 
                     subCrit.createCriteria("entitlements")
@@ -853,7 +861,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
                     DetachedCriteria subCrit = DetachedCriteria.forClass(Consumer.class, "subquery_consumer");
 
                     if (owner != null) {
-                        subCrit.add(Restrictions.eq("owner", owner));
+                        subCrit.add(Restrictions.eq("ownerId", owner.getId()));
                     }
 
                     subCrit.createCriteria("entitlements").createCriteria("pool")
@@ -870,7 +878,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
                     DetachedCriteria subCrit = DetachedCriteria.forClass(Consumer.class, "subquery_consumer");
 
                     if (owner != null) {
-                        subCrit.add(Restrictions.eq("owner", owner));
+                        subCrit.add(Restrictions.eq("ownerId", owner.getId()));
                     }
 
                     subCrit.createCriteria("entitlements").createCriteria("pool").add(
@@ -917,12 +925,18 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         }
 
         Criteria crit = super.createSecureCriteria("c");
-        crit.createAlias("c.owner", "o")
+
+        DetachedCriteria ownerCriteria = DetachedCriteria.forClass(Owner.class, "o")
+            .setProjection(Property.forName("o.id"))
             .add(Restrictions.eq("o.key", ownerKey));
+        crit.add(Property.forName("c.ownerId").in(ownerCriteria));
 
         if (!CollectionUtils.isEmpty(typeLabels)) {
-            crit.createAlias("c.type", "ct")
-                .add(Restrictions.in("ct.label", typeLabels));
+            DetachedCriteria typeQuery = DetachedCriteria.forClass(ConsumerType.class, "ctype")
+                .add(CPRestrictions.in("ctype.label", typeLabels))
+                .setProjection(Projections.id());
+
+            crit.add(Subqueries.propertyIn("c.typeId", typeQuery));
         }
 
         boolean hasSkus = !CollectionUtils.isEmpty(skus);
@@ -935,18 +949,18 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         if (hasSkus) {
             crit.createAlias("po.product", "pr")
                 .createAlias("pr.attributes", "pa")
-                .add(Restrictions.in("pr.id", skus))
+                .add(CPRestrictions.in("pr.id", skus))
                 .add(Restrictions.eq("pa.indices", "type"))
                 .add(Restrictions.eq("pa.elements", "MKT"));
         }
 
         if (hasSubscriptionIds) {
             crit.createAlias("po.sourceSubscription", "ss")
-                .add(Restrictions.in("ss.subscriptionId", subscriptionIds));
+                .add(CPRestrictions.in("ss.subscriptionId", subscriptionIds));
         }
 
         if (hasContracts) {
-            crit.add(Restrictions.in("po.contractNumber", contracts));
+            crit.add(CPRestrictions.in("po.contractNumber", contracts));
         }
 
         crit.setProjection(Projections.countDistinct("c.id"));
@@ -963,8 +977,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      */
     public int getConsumerCount(Owner owner, ConsumerType type) {
         Criteria c = this.createSecureCriteria()
-            .add(Restrictions.eq("owner", owner))
-            .add(Restrictions.eq("type", type))
+            .add(Restrictions.eq("ownerId", owner.getId()))
+            .add(Restrictions.eq("typeId", type.getId()))
             .setProjection(Projections.rowCount());
 
         return ((Long) c.uniqueResult()).intValue();
@@ -972,8 +986,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
     public int getConsumerEntitlementCount(Owner owner, ConsumerType type) {
         Criteria c = createSecureCriteria()
-            .add(Restrictions.eq("owner", owner))
-            .add(Restrictions.eq("type", type))
+            .add(Restrictions.eq("ownerId", owner.getId()))
+            .add(Restrictions.eq("typeId", type.getId()))
             .createAlias("entitlements", "ent")
             .setMaxResults(0)
             .setProjection(Projections.sum("ent.quantity"));

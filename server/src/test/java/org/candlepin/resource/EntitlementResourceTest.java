@@ -15,10 +15,13 @@
 package org.candlepin.resource;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.isA;
 import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.isA;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
@@ -31,6 +34,7 @@ import org.candlepin.dto.api.v1.EntitlementDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EntitlementFilterBuilder;
@@ -47,7 +51,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.stubbing.Answer;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -70,6 +76,7 @@ public class EntitlementResourceTest {
     @Mock private ProductCurator prodCurator;
     @Mock private EntitlementCurator entitlementCurator;
     @Mock private ConsumerCurator consumerCurator;
+    @Mock private ConsumerTypeCurator consumerTypeCurator;
     @Mock private CandlepinPoolManager poolManager;
     @Mock private Entitler entitler;
     @Mock private SubscriptionResource subResource;
@@ -79,15 +86,54 @@ public class EntitlementResourceTest {
 
     private EntitlementResource entResource;
 
-
     @Before
     public void before() {
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        entResource = new EntitlementResource(entitlementCurator, consumerCurator,
+        entResource = new EntitlementResource(entitlementCurator, consumerCurator, consumerTypeCurator,
             poolManager, i18n, entitler, entRules, messageTranslator, modelTranslator);
+
         owner = new Owner("admin");
-        consumer = new Consumer("myconsumer", "bill", owner,
-            TestUtil.createConsumerType());
+
+        ConsumerType ctype = TestUtil.createConsumerType();
+        this.mockConsumerType(ctype);
+
+        consumer = new Consumer("myconsumer", "bill", owner, ctype);
+    }
+
+    protected ConsumerType mockConsumerType(ConsumerType ctype) {
+        if (ctype != null) {
+            // Ensure the type has an ID
+            if (ctype.getId() == null) {
+                ctype.setId("test-ctype-" + ctype.getLabel() + "-" + TestUtil.randomInt());
+            }
+
+            when(consumerTypeCurator.getByLabel(eq(ctype.getLabel()))).thenReturn(ctype);
+            when(consumerTypeCurator.getByLabel(eq(ctype.getLabel()), anyBoolean())).thenReturn(ctype);
+            when(consumerTypeCurator.get(eq(ctype.getId()))).thenReturn(ctype);
+
+            doAnswer(new Answer<ConsumerType>() {
+                @Override
+                public ConsumerType answer(InvocationOnMock invocation) throws Throwable {
+                    Object[] args = invocation.getArguments();
+                    Consumer consumer = (Consumer) args[0];
+                    ConsumerTypeCurator curator = (ConsumerTypeCurator) invocation.getMock();
+                    ConsumerType ctype = null;
+
+                    if (consumer == null || consumer.getTypeId() == null) {
+                        throw new IllegalArgumentException("consumer is null or lacks a type ID");
+                    }
+
+                    ctype = curator.get(consumer.getTypeId());
+                    if (ctype == null) {
+                        throw new IllegalStateException("No such consumer type: " + consumer.getTypeId());
+                    }
+
+                    return ctype;
+                }
+            }).when(consumerTypeCurator).getConsumerType(any(Consumer.class));
+        }
+
+        return ctype;
     }
 
     @Test
@@ -101,7 +147,7 @@ public class EntitlementResourceTest {
 
         e.getPool().setCertificate(subcert);
 
-        when(entitlementCurator.find(eq(e.getId()))).thenReturn(e);
+        when(entitlementCurator.get(eq(e.getId()))).thenReturn(e);
 
         String expected = "HELLOCERT";
         String result = entResource.getUpstreamCert(e.getId());
@@ -115,7 +161,7 @@ public class EntitlementResourceTest {
         Entitlement e = TestUtil.createEntitlement();
         e.setId("entitlementID");
         e.getPool().setSourceSubscription(null);
-        when(entitlementCurator.find(eq(e.getId()))).thenReturn(e);
+        when(entitlementCurator.get(eq(e.getId()))).thenReturn(e);
         entResource.getUpstreamCert(e.getId());
     }
 
@@ -140,7 +186,7 @@ public class EntitlementResourceTest {
         e.setId("entitlementID");
         e.getPool().setSourceStack(new SourceStack(consumer, "mystack"));
 
-        when(entitlementCurator.find(eq(e.getId()))).thenReturn(e);
+        when(entitlementCurator.get(eq(e.getId()))).thenReturn(e);
 
         String result = entResource.getUpstreamCert(e.getId());
         assertEquals(expected, result);
@@ -155,7 +201,7 @@ public class EntitlementResourceTest {
         Entitlement e = TestUtil.createEntitlement();
         e.setId("entitlementID");
         e.getPool().setSourceStack(new SourceStack(consumer, "mystack"));
-        when(entitlementCurator.find(eq(e.getId()))).thenReturn(e);
+        when(entitlementCurator.get(eq(e.getId()))).thenReturn(e);
 
         entResource.getUpstreamCert(e.getId());
     }
@@ -164,13 +210,15 @@ public class EntitlementResourceTest {
     public void migrateEntitlementQuantityFail() {
         ConsumerType ct = TestUtil.createConsumerType();
         ct.setManifest(true);
+        this.mockConsumerType(ct);
+
         Entitlement e = TestUtil.createEntitlement();
         Consumer sourceConsumer = new Consumer("source-consumer", "bill", owner, ct);
         Consumer destConsumer = new Consumer("destination-consumer", "bill", owner, ct);
         e.setConsumer(sourceConsumer);
         e.setQuantity(25);
 
-        when(entitlementCurator.find(eq(e.getId()))).thenReturn(e);
+        when(entitlementCurator.get(eq(e.getId()))).thenReturn(e);
         when(consumerCurator.verifyAndLookupConsumer(eq(destConsumer.getUuid())))
             .thenReturn(destConsumer);
 
@@ -181,12 +229,14 @@ public class EntitlementResourceTest {
     public void migrateEntitlementSourceConsumerFail() {
         ConsumerType ct = TestUtil.createConsumerType();
         ct.setManifest(true);
+        this.mockConsumerType(ct);
+
         Entitlement e = TestUtil.createEntitlement();
         Consumer destConsumer = new Consumer("destination-consumer", "bill", owner, ct);
         e.setConsumer(consumer);
         e.setQuantity(25);
 
-        when(entitlementCurator.find(eq(e.getId()))).thenReturn(e);
+        when(entitlementCurator.get(eq(e.getId()))).thenReturn(e);
         when(consumerCurator.verifyAndLookupConsumer(eq(destConsumer.getUuid()))).thenReturn(destConsumer);
 
         entResource.migrateEntitlement(e.getId(), destConsumer.getUuid(), 15);
@@ -196,12 +246,14 @@ public class EntitlementResourceTest {
     public void migrateEntitlementDestinationConsumerFail() {
         ConsumerType ct = TestUtil.createConsumerType();
         ct.setManifest(true);
+        this.mockConsumerType(ct);
+
         Entitlement e = TestUtil.createEntitlement();
         Consumer sourceConsumer = new Consumer("source-consumer", "bill", owner, ct);
         e.setConsumer(sourceConsumer);
         e.setQuantity(25);
 
-        when(entitlementCurator.find(eq(e.getId()))).thenReturn(e);
+        when(entitlementCurator.get(eq(e.getId()))).thenReturn(e);
         when(consumerCurator.verifyAndLookupConsumer(eq(consumer.getUuid()))).thenReturn(consumer);
 
         entResource.migrateEntitlement(e.getId(), consumer.getUuid(), 15);
@@ -211,14 +263,18 @@ public class EntitlementResourceTest {
     public void migrateEntitlementSameOwnerFail() {
         ConsumerType ct = TestUtil.createConsumerType();
         ct.setManifest(true);
+        this.mockConsumerType(ct);
+
         Entitlement e = TestUtil.createEntitlement();
         Owner owner2 = new Owner("admin2");
+        owner.setId(TestUtil.randomString());
+        owner2.setId(TestUtil.randomString());
         Consumer sourceConsumer = new Consumer("source-consumer", "bill", owner, ct);
         Consumer destConsumer = new Consumer("destination-consumer", "bill", owner2, ct);
         e.setConsumer(sourceConsumer);
         e.setQuantity(25);
 
-        when(entitlementCurator.find(eq(e.getId()))).thenReturn(e);
+        when(entitlementCurator.get(eq(e.getId()))).thenReturn(e);
         when(consumerCurator.verifyAndLookupConsumer(eq(destConsumer.getUuid())))
             .thenReturn(destConsumer);
 
@@ -273,9 +329,8 @@ public class EntitlementResourceTest {
         entitlementDTO.setId("getAllEntitlementsForConsumer");
 
         when(consumerCurator.findByUuid(eq(consumer.getUuid()))).thenReturn(consumer);
-        when(
-                entitlementCurator.listByConsumer(isA(Consumer.class), anyString(),
-                        isA(EntitlementFilterBuilder.class), isA(PageRequest.class))).thenReturn(page);
+        when(entitlementCurator.listByConsumer(isA(Consumer.class), anyString(),
+            isA(EntitlementFilterBuilder.class), isA(PageRequest.class))).thenReturn(page);
         when(modelTranslator.translate(isA(Entitlement.class),
             eq(EntitlementDTO.class))).thenReturn(entitlementDTO);
 

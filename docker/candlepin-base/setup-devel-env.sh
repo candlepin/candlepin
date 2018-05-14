@@ -22,6 +22,7 @@ PACKAGES=(
     java-1.6.0-openjdk-devel  # FIXME see if still necessary
     #java-1.7.0-openjdk-devel
     java-1.8.0-openjdk-devel  # FIXME redundant?
+    jss
     libxml2-python
     liquibase
     mariadb

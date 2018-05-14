@@ -117,13 +117,6 @@ public class EnvironmentDTO extends TimestampedCandlepinDTO<EnvironmentDTO> {
         // Intentionally left empty
     }
 
-    // Helper constructor for tests:
-    public EnvironmentDTO(String id, String name, OwnerDTO owner) {
-        this.id = id;
-        this.owner = owner;
-        this.name = name;
-    }
-
     /**
      * Initializes a new EnvironmentDTO instance which is a shallow copy of the provided
      * source entity.
@@ -328,8 +321,7 @@ public class EnvironmentDTO extends TimestampedCandlepinDTO<EnvironmentDTO> {
      */
     @Override
     public String toString() {
-        return String.format(
-            "EnvironmentDTO [id: %s, name: %s]",
+        return String.format("EnvironmentDTO [id: %s, name: %s]",
             this.getId(), this.getName());
     }
 
@@ -396,7 +388,10 @@ public class EnvironmentDTO extends TimestampedCandlepinDTO<EnvironmentDTO> {
     @Override
     public EnvironmentDTO clone() {
         EnvironmentDTO copy = super.clone();
-        copy.owner = owner != null ? owner.clone() : null;
+
+        OwnerDTO owner = this.getOwner();
+        copy.setOwner(owner != null ? owner.clone() : null);
+
         copy.setEnvironmentContent(this.getEnvironmentContent());
 
         return copy;

@@ -139,11 +139,15 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         String hypervisorid = "HyPuUiD";
         String hypervisorid2 = "HyPuUiD2";
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        consumer.setHypervisorId(new HypervisorId(hypervisorid));
+        HypervisorId hypervisorId = new HypervisorId(hypervisorid);
+        hypervisorId.setOwner(owner);
+        consumer.setHypervisorId(hypervisorId);
         consumer = consumerCurator.create(consumer);
 
         Consumer consumer2 = new Consumer("testConsumer2", "testUser2", owner, ct);
-        consumer2.setHypervisorId(new HypervisorId(hypervisorid2));
+        HypervisorId hypervisorId2 = new HypervisorId(hypervisorid2);
+        hypervisorId2.setOwner(owner);
+        consumer2.setHypervisorId(hypervisorId2);
         consumer2 = consumerCurator.create(consumer2);
 
         List<String> hypervisorIds = new ArrayList<>();

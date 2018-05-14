@@ -17,20 +17,21 @@ package org.candlepin.pki.impl;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.pki.CertificateReader;
+import org.candlepin.pki.PrivateKeyReader;
 
 import org.junit.Test;
 
-import java.security.cert.CertificateException;
 import java.util.HashMap;
 
 
 /**
- * BouncyCastlePKIReaderTest
+ * CertificateReaderTest
  */
-public class BouncyCastlePKIReaderTest {
+public class CertificateReaderTest {
 
     @Test
-    public void readkey() throws CertificateException {
+    public void readkey() throws Exception {
         Configuration config = new MapConfiguration(
             new HashMap<String, String>() {
                 {
@@ -39,10 +40,10 @@ public class BouncyCastlePKIReaderTest {
                     put(ConfigProperties.CA_CERT_UPSTREAM,
                         "target/test/resources/certs/upstream");
                     put(ConfigProperties.CA_KEY,
-                        "target/test/resources/keys/DEStestkey.pem");
-                    put(ConfigProperties.CA_KEY_PASSWORD, "dog8code");
+                        "target/test/resources/keys/pkcs1-des-encrypted.pem");
+                    put(ConfigProperties.CA_KEY_PASSWORD, "password");
                 }
             });
-        new BouncyCastlePKIReader(config);
+        new CertificateReader(config, new PrivateKeyReader());
     }
 }

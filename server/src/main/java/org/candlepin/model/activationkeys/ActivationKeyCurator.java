@@ -14,7 +14,6 @@
  */
 package org.candlepin.model.activationkeys;
 
-import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.model.AbstractHibernateCurator;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Owner;
@@ -24,9 +23,14 @@ import com.google.inject.persist.Transactional;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 
+import javax.inject.Singleton;
+
+
+
 /**
  * SubscriptionTokenCurator
  */
+@Singleton
 public class ActivationKeyCurator extends AbstractHibernateCurator<ActivationKey> {
 
     public ActivationKeyCurator() {
@@ -50,28 +54,24 @@ public class ActivationKeyCurator extends AbstractHibernateCurator<ActivationKey
 
     @Transactional
     public ActivationKey update(ActivationKey key) {
+        // Why is a method named "update" calling into "save" which is a synonym for "create" rather than
+        // our update verb "merge" ????
+
         save(key);
         return key;
     }
 
     @Transactional
-    public ActivationKey lookupForOwner(String keyName, Owner owner) {
-        return (ActivationKey) currentSession().createCriteria(ActivationKey.class)
-            .add(Restrictions.eq("name", keyName)).add(Restrictions.eq("owner", owner))
+    public ActivationKey getByKeyName(Owner owner, String name) {
+        // Impl note:
+        // The usage of "uniqueResult" here is valid as long as we maintain the unique index on the
+        // (owner, name) tuple. At the time of writing this is present in the table definition, but
+        // could break things if removed.
+
+        return (ActivationKey) this.currentSession().createCriteria(ActivationKey.class)
+            .add(Restrictions.eq("owner", owner))
+            .add(Restrictions.eq("name", name))
             .uniqueResult();
     }
 
-    // TODO:
-    // Move this method to the ActivationKeyResource. The curator should not be returning resource-level
-    // exceptions
-    public ActivationKey verifyAndLookupKey(String activationKeyId) {
-        ActivationKey key = this.secureFind(activationKeyId);
-
-        if (key == null) {
-            throw new BadRequestException(
-                i18n.tr("ActivationKey with id {0} could not be found.",
-                    activationKeyId));
-        }
-        return key;
-    }
 }

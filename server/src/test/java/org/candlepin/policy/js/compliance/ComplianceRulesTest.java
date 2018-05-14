@@ -32,13 +32,16 @@ import org.candlepin.dto.StandardTranslator;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerCurator;
-import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
@@ -91,12 +94,15 @@ public class ComplianceRulesTest {
     private static final String STACK_ID_2 = "my-stack-2";
 
     @Mock private ConsumerCurator consumerCurator;
+    @Mock private ConsumerTypeCurator consumerTypeCurator;
+    @Mock private OwnerCurator mockOwnerCurator;
     @Mock private EntitlementCurator entCurator;
     @Mock private RulesCurator rulesCuratorMock;
     @Mock private EventSink eventSink;
     @Mock private Provider<JsRunnerRequestCache> cacheProvider;
     @Mock private JsRunnerRequestCache cache;
     @Mock private ProductCurator productCurator;
+    @Mock private EnvironmentCurator environmentCurator;
 
     private ModelTranslator translator;
     private I18n i18n;
@@ -106,9 +112,9 @@ public class ComplianceRulesTest {
 
     @Before
     public void setUp() {
-        translator = new StandardTranslator();
-
         MockitoAnnotations.initMocks(this);
+        translator = new StandardTranslator(consumerTypeCurator, environmentCurator, mockOwnerCurator);
+
         Locale locale = new Locale("en_US");
         i18n = I18nFactory.getI18n(getClass(), "org.candlepin.i18n.Messages", locale, I18nFactory.FALLBACK);
         // Load the default production rules:
@@ -119,10 +125,12 @@ public class ComplianceRulesTest {
         when(cacheProvider.get()).thenReturn(cache);
         provider = new JsRunnerProvider(rulesCuratorMock, cacheProvider);
         compliance = new ComplianceRules(provider.get(), entCurator, new StatusReasonMessageGenerator(i18n),
-            eventSink, consumerCurator,
+            eventSink, consumerCurator, consumerTypeCurator,
             new RulesObjectMapper(new ProductCachedSerializationModule(productCurator)), translator);
 
         owner = new Owner("test");
+        owner.setId(TestUtil.randomString());
+        when(mockOwnerCurator.findOwnerById(eq(owner.getId()))).thenReturn(owner);
         activeGuestAttrs = new HashMap<>();
         activeGuestAttrs.put("virtWhoType", "libvirt");
         activeGuestAttrs.put("active", "1");
@@ -136,7 +144,7 @@ public class ComplianceRulesTest {
     public void additivePropertiesCanStillDeserialize() {
         JsRunner mockRunner = mock(JsRunner.class);
         compliance = new ComplianceRules(mockRunner, entCurator, new StatusReasonMessageGenerator(i18n),
-            eventSink, consumerCurator,
+            eventSink, consumerCurator, consumerTypeCurator,
             new RulesObjectMapper(new ProductCachedSerializationModule(productCurator)), translator);
 
         when(mockRunner.runJsFunction(any(Class.class), eq("get_status"),
@@ -148,8 +156,14 @@ public class ComplianceRulesTest {
     }
 
     private Consumer mockConsumer(Product ... installedProducts) {
+        ConsumerType ctype = new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM);
+        ctype.setId("test-ctype-" + TestUtil.randomInt());
+
         Consumer consumer = new Consumer();
-        consumer.setType(new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM));
+        consumer.setType(ctype);
+
+        when(this.consumerTypeCurator.get(eq(ctype.getId()))).thenReturn(ctype);
+        when(this.consumerTypeCurator.getConsumerType(eq(consumer))).thenReturn(ctype);
 
         for (Product product : installedProducts) {
             consumer.addInstalledProduct(new ConsumerInstalledProduct(product.getId(), product.getName()));
@@ -198,7 +212,7 @@ public class ComplianceRulesTest {
         pool.setCreated(new Date());
         when(productCurator.getPoolProvidedProductsCached(pool.getId()))
             .thenReturn(pool.getProvidedProducts());
-        Entitlement e = new Entitlement(pool, consumer, 1);
+        Entitlement e = new Entitlement(pool, consumer, owner, 1);
         e.setId("ent_" + TestUtil.randomInt());
         e.setUpdated(new Date());
         e.setCreated(new Date());
@@ -273,8 +287,7 @@ public class ComplianceRulesTest {
     private Consumer mockFullyEntitledConsumer() {
         Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
         List<Entitlement> ents = new LinkedList<>();
-        ents.add(mockEntitlement(c, TestUtil.createProduct("Awesome Product"),
-            PRODUCT_1, PRODUCT_2));
+        ents.add(mockEntitlement(c, TestUtil.createProduct("Awesome Product"), PRODUCT_1, PRODUCT_2));
         mockEntCurator(c, ents);
         return c;
     }
@@ -293,8 +306,7 @@ public class ComplianceRulesTest {
     public void entitledProducts() {
         Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
         List<Entitlement> ents = new LinkedList<>();
-        ents.add(mockEntitlement(c, TestUtil.createProduct("Awesome Product"),
-            PRODUCT_1));
+        ents.add(mockEntitlement(c, TestUtil.createProduct("Awesome Product"), PRODUCT_1));
         mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));

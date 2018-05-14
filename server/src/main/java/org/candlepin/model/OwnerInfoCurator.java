@@ -29,7 +29,6 @@ import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
 import org.hibernate.type.StringType;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,13 +41,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import javax.inject.Singleton;
 import javax.persistence.EntityManager;
-
-
 
 /**
  * OwnerInfoCurator
  */
+@Singleton
 public class OwnerInfoCurator {
     private static Logger log = LoggerFactory.getLogger(OwnerInfoCurator.class);
 
@@ -67,7 +66,7 @@ public class OwnerInfoCurator {
         this.poolCurator = poolCurator;
     }
 
-    public OwnerInfo lookupByOwner(Owner owner) {
+    public OwnerInfo getByOwner(Owner owner) {
         OwnerInfo info = new OwnerInfo();
         Date now = new Date();
 
@@ -122,7 +121,7 @@ public class OwnerInfoCurator {
     private void setConsumerGuestCounts(Owner owner, OwnerInfo info) {
         Criteria cr = consumerCurator.createSecureCriteria()
             .createAlias("facts", "f")
-            .add(Restrictions.eq("owner", owner))
+            .add(Restrictions.eq("ownerId", owner.getId()))
             .add(Restrictions.ilike("f.indices", "virt.is_guest"))
             .add(Restrictions.ilike("f.elements", "true"))
             .setProjection(Projections.count("id"));
@@ -130,7 +129,7 @@ public class OwnerInfoCurator {
         int guestCount = ((Long) cr.uniqueResult()).intValue();
 
         Criteria totalConsumersCriteria = consumerCurator.createSecureCriteria()
-            .add(Restrictions.eq("owner", owner))
+            .add(Restrictions.eq("ownerId", owner.getId()))
             .setProjection(Projections.count("id"));
 
         int totalConsumers = ((Long) totalConsumersCriteria.uniqueResult()).intValue();
@@ -143,8 +142,7 @@ public class OwnerInfoCurator {
     @SuppressWarnings("checkstyle:indentation")
     private void setConsumerCountsByComplianceStatus(Owner owner, OwnerInfo info) {
         Criteria countCriteria = consumerCurator.createSecureCriteria()
-            .createAlias("type", "t")
-            .add(Restrictions.eq("owner", owner))
+            .add(Restrictions.eq("ownerId", owner.getId()))
             .add(Restrictions.isNotNull("entitlementStatus"))
             .setProjection(Projections.projectionList()
                 .add(Projections.groupProperty("entitlementStatus"))

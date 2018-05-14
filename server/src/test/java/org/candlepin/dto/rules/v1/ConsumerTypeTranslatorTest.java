@@ -48,6 +48,7 @@ public class ConsumerTypeTranslatorTest extends
     @Override
     public ConsumerType initSourceObject() {
         ConsumerType type = new ConsumerType();
+        type.setId("test_id");
         type.setLabel("type_label");
         type.setManifest(true);
 

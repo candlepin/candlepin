@@ -19,11 +19,14 @@ import com.google.inject.Inject;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 
+import javax.inject.Singleton;
+
 
 
 /**
  * RoleCurator
  */
+@Singleton
 public class RoleCurator extends AbstractHibernateCurator<Role> {
 
     @Inject private CandlepinQueryFactory cpQueryFactory;
@@ -44,7 +47,7 @@ public class RoleCurator extends AbstractHibernateCurator<Role> {
      * @param name role's unique name to lookup.
      * @return the role whose name matches the one given.
      */
-    public Role lookupByName(String name) {
+    public Role getByName(String name) {
         return (Role) currentSession().createCriteria(Role.class)
             .add(Restrictions.eq("name", name))
             .uniqueResult();

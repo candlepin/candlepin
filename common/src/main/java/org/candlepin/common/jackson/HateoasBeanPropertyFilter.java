@@ -19,6 +19,8 @@ import com.fasterxml.jackson.core.JsonStreamContext;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.PropertyWriter;
 
+
+
 /**
  * HateoasBeanPropertyFilter: This is a Jackson filter which first checks if we
  * are serializing a nested object, and if so switches to HATEOAS style
@@ -34,14 +36,14 @@ public class HateoasBeanPropertyFilter extends JsonBeanPropertyFilter {
 
         if ((context.getParent() != null) && (context.getParent().inArray())) {
             // skip annotated fields if within array:
-            if (!annotationPresent(obj, writer.getName(), HateoasArrayExclude.class)) {
+            if (writer.findAnnotation(HateoasArrayExclude.class) == null) {
                 return true;
             }
         }
         // Check if we should trigger reduced HATEOAS serialization for a nested object by
         // looking for the annotation on the field's getter:
         else if ((context.getParent() != null) && (context.getParent().inObject())) {
-            if (annotationPresent(obj, writer.getName(), HateoasInclude.class)) {
+            if (writer.findAnnotation(HateoasInclude.class) != null) {
                 return true;
             }
         }

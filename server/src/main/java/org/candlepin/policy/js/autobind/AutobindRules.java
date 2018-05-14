@@ -19,7 +19,13 @@ import org.candlepin.dto.rules.v1.ConsumerDTO;
 import org.candlepin.dto.rules.v1.OwnerDTO;
 import org.candlepin.dto.rules.v1.PoolDTO;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCapability;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
@@ -44,6 +50,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+
+
 /**
  * AutobindRules
  *
@@ -52,20 +60,27 @@ import java.util.Set;
 public class AutobindRules {
 
     protected static final String SELECT_POOL_FUNCTION = "select_pools";
+    private static Logger log = LoggerFactory.getLogger(AutobindRules.class);
 
     private JsRunner jsRules;
-    private static Logger log = LoggerFactory.getLogger(AutobindRules.class);
     private RulesObjectMapper mapper;
     private ProductCurator productCurator;
+    private ConsumerTypeCurator consumerTypeCurator;
+    private OwnerCurator ownerCurator;
     private ModelTranslator translator;
 
     @Inject
-    public AutobindRules(JsRunner jsRules, ProductCurator productCurator, RulesObjectMapper mapper,
+    public AutobindRules(JsRunner jsRules, ProductCurator productCurator,
+        ConsumerTypeCurator consumerTypeCurator, OwnerCurator ownerCurator, RulesObjectMapper mapper,
         ModelTranslator translator) {
+
         this.jsRules = jsRules;
         this.productCurator = productCurator;
+        this.ownerCurator = ownerCurator;
+        this.consumerTypeCurator = consumerTypeCurator;
         this.mapper = mapper;
         this.translator = translator;
+
         jsRules.init("autobind_name_space");
     }
 
@@ -108,7 +123,8 @@ public class AutobindRules {
         // Provide objects for the script:
         JsonJsContext args = new JsonJsContext(mapper);
         args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
-        args.put("owner", this.translator.translate(consumer.getOwner(), OwnerDTO.class));
+        Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
+        args.put("owner", this.translator.translate(owner, OwnerDTO.class));
         args.put("serviceLevelOverride", serviceLevelOverride);
         args.put("pools", poolDTOs.toArray());
         args.put("products", productIds);
@@ -195,9 +211,8 @@ public class AutobindRules {
      * If this consumer only supports V1 certificates, we need to filter out pools
      * with too many content sets.
      */
-    private List<Pool> filterPoolsForV1Certificates(Consumer consumer,
-        List<Pool> pools) {
-        if (!consumer.isCertV3Capable()) {
+    private List<Pool> filterPoolsForV1Certificates(Consumer consumer, List<Pool> pools) {
+        if (!this.consumerIsCertV3Capable(consumer)) {
             List<Pool> newPools = new LinkedList<>();
 
             for (Pool p : pools) {
@@ -221,6 +236,41 @@ public class AutobindRules {
 
         // Otherwise return the list of pools as is:
         return pools;
+    }
+
+    /**
+     * Checks if the specified consumer is capable of using v3 certificates
+     *
+     * @param consumer
+     *  The consumer to check
+     *
+     * @return
+     *  true if the consumer is capable of using v3 certificates; false otherwise
+     */
+    private boolean consumerIsCertV3Capable(Consumer consumer) {
+        if (consumer == null) {
+            throw new IllegalArgumentException("consumer is null");
+        }
+
+        ConsumerType type = this.consumerTypeCurator.getConsumerType(consumer);
+
+        if (type.isManifest()) {
+            for (ConsumerCapability capability : consumer.getCapabilities()) {
+                if ("cert_v3".equals(capability.getName())) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+        else if (type.isType(ConsumerTypeEnum.HYPERVISOR)) {
+            // Hypervisors in this context don't use content, so V3 is allowed
+            return true;
+        }
+
+        // Consumer isn't a special type, check their certificate_version fact
+        String entitlementVersion = consumer.getFact("system.certificate_version");
+        return entitlementVersion != null && entitlementVersion.startsWith("3.");
     }
 
 }

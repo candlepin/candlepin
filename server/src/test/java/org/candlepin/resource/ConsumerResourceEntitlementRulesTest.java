@@ -61,8 +61,7 @@ public class ConsumerResourceEntitlementRulesTest extends DatabaseTestFixture {
 
     @Before
     public void setUp() {
-        standardSystemType = consumerTypeCurator.create(
-                new ConsumerType("standard-system"));
+        standardSystemType = consumerTypeCurator.create(new ConsumerType("standard-system"));
         owner = ownerCurator.create(new Owner("test-owner"));
         ownerCurator.create(owner);
 
@@ -80,24 +79,22 @@ public class ConsumerResourceEntitlementRulesTest extends DatabaseTestFixture {
     public void testMaxMembership() {
         // 10 entitlements available, lets try to entitle 11 consumers.
         for (int i = 0; i < pool.getQuantity(); i++) {
-            Consumer c = TestUtil.createConsumer(consumer.getType(), owner);
+            Consumer c = TestUtil.createConsumer(standardSystemType, owner);
             consumerCurator.create(c);
             consumerResource.bind(c.getUuid(), pool.getId(),
                 null, 1, null, null, false, null, null);
         }
 
         // Now for the 11th:
-        Consumer c = TestUtil.createConsumer(consumer.getType(), owner);
+        Consumer c = TestUtil.createConsumer(standardSystemType, owner);
         consumerCurator.create(c);
-        consumerResource.bind(c.getUuid(), pool.getId(), null, 1, null, null,
-            false, null, null);
+        consumerResource.bind(c.getUuid(), pool.getId(), null, 1, null, null, false, null, null);
     }
 
     @Test(expected = RuntimeException.class)
     public void testEntitlementsHaveExpired() {
         dateSource.currentDate(TestDateUtil.date(2030, 1, 13));
-        consumerResource.bind(consumer.getUuid(), pool.getId(), null,
-            null, null, null, false, null, null);
+        consumerResource.bind(consumer.getUuid(), pool.getId(), null, null, null, null, false, null, null);
     }
 
     @Override

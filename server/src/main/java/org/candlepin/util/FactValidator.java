@@ -23,24 +23,28 @@ import org.xnap.commons.i18n.I18n;
 
 import java.util.Set;
 
+import javax.inject.Provider;
+import javax.inject.Singleton;
+
 
 
 /**
  * The FactValidator is a PropertyValidator implementation, configured to validate consumer facts.
  */
+@Singleton
 public class FactValidator extends PropertyValidator {
     /** The maximum length of any fact key (name) or value */
     public static final int FACT_MAX_LENGTH = 255;
 
     @Inject
-    public FactValidator(Configuration config, I18n i18n) {
+    public FactValidator(Configuration config, Provider<I18n> i18nProvider) {
         Set<String> attributes;
 
         // Add integer attributes...
         attributes = config.getSet(ConfigProperties.INTEGER_FACTS, null);
         if (attributes != null) {
             for (String key : attributes) {
-                this.validators.put(key, new PropertyValidator.IntegerValidator(i18n, "fact"));
+                this.validators.put(key, new PropertyValidator.IntegerValidator(i18nProvider, "fact"));
             }
         }
 
@@ -48,11 +52,13 @@ public class FactValidator extends PropertyValidator {
         attributes = config.getSet(ConfigProperties.NON_NEG_INTEGER_FACTS, null);
         if (attributes != null) {
             for (String key : attributes) {
-                this.validators.put(key, new PropertyValidator.NonNegativeIntegerValidator(i18n, "fact"));
+                this.validators.put(key, new PropertyValidator.NonNegativeIntegerValidator(i18nProvider,
+                    "fact"));
             }
         }
 
         // Add global validators...
-        this.globalValidators.add(new PropertyValidator.LengthValidator(i18n, "fact", FACT_MAX_LENGTH));
+        this.globalValidators.add(new PropertyValidator.LengthValidator(i18nProvider, "fact",
+            FACT_MAX_LENGTH));
     }
 }

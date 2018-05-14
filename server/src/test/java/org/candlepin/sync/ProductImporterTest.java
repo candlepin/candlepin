@@ -19,6 +19,8 @@ import static org.mockito.Mockito.*;
 
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.dto.manifest.v1.ContentDTO;
+import org.candlepin.dto.manifest.v1.ProductDTO;
 import org.candlepin.model.Content;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
@@ -35,7 +37,8 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.HashMap;
-
+import java.util.HashSet;
+import java.util.Set;
 
 
 /**
@@ -68,7 +71,7 @@ public class ProductImporterTest {
 
         String json = getJsonForProduct(product);
         Reader reader = new StringReader(json);
-        Product created = importer.createObject(mapper, reader, owner);
+        ProductDTO created = importer.createObject(mapper, reader, owner);
         assertEquals(product.getUuid(), created.getUuid());
         assertEquals(product.getName(), created.getName());
         assertEquals(product.getAttributes(), created.getAttributes());
@@ -76,11 +79,20 @@ public class ProductImporterTest {
 
     @Test
     public void testNewProductCreated() throws Exception {
-        Product product = TestUtil.createProduct();
+        ProductDTO product = new ProductDTO();
+        product.setId("test-id");
+        product.setName("test-name");
+        product.setAttribute("attr1", "val1");
+        product.setAttribute("attr2", "val2");
+        product.setMultiplier(1L);
+        Set<String> dependentProdIDs = new HashSet<>();
+        dependentProdIDs.add("g23gh23h2");
+        dependentProdIDs.add("353g823h");
+        product.setDependentProductIds(dependentProdIDs);
         String json = getJsonForProduct(product);
         Reader reader = new StringReader(json);
 
-        Product created = importer.createObject(mapper, reader, owner);
+        ProductDTO created = importer.createObject(mapper, reader, owner);
 
         assertEquals(product, created);
     }
@@ -92,8 +104,8 @@ public class ProductImporterTest {
 
         String json = getJsonForProduct(product);
         Reader reader = new StringReader(json);
-        Product created = importer.createObject(mapper, reader, owner);
-        Content c = created.getProductContent().iterator().next().getContent();
+        ProductDTO created = importer.createObject(mapper, reader, owner);
+        ContentDTO c = created.getProductContent().iterator().next().getContent();
 
         // Metadata expiry should be overridden to 0 on import:
         assertEquals(new Long(1), c.getMetadataExpire());
@@ -106,8 +118,8 @@ public class ProductImporterTest {
 
         String json = getJsonForProduct(product);
         Reader reader = new StringReader(json);
-        Product created = importer.createObject(mapper, reader, owner);
-        Content c = created.getProductContent().iterator().next().getContent();
+        ProductDTO created = importer.createObject(mapper, reader, owner);
+        ContentDTO c = created.getProductContent().iterator().next().getContent();
         assertEquals("unknown", c.getVendor());
     }
 
@@ -138,4 +150,9 @@ public class ProductImporterTest {
         return writer.toString();
     }
 
+    private String getJsonForProduct(ProductDTO product) throws Exception {
+        Writer writer = new StringWriter();
+        mapper.writeValue(writer, product);
+        return writer.toString();
+    }
 }

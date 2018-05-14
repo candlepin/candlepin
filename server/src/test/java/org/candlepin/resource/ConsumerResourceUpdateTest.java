@@ -17,6 +17,7 @@ package org.candlepin.resource;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.audit.Event;
@@ -51,6 +52,7 @@ import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.VirtConsumerMap;
@@ -77,7 +79,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.stubbing.Answer;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -91,8 +95,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-import javax.inject.Inject;
 import javax.inject.Provider;
+
+
 
 @RunWith(MockitoJUnitRunner.class)
 public class ConsumerResourceUpdateTest {
@@ -102,6 +107,7 @@ public class ConsumerResourceUpdateTest {
     @Mock private OwnerServiceAdapter ownerService;
     @Mock private SubscriptionServiceAdapter subscriptionService;
     @Mock private ConsumerCurator consumerCurator;
+    @Mock private OwnerCurator ownerCurator;
     @Mock private ConsumerTypeCurator consumerTypeCurator;
     @Mock private EventSink sink;
     @Mock private EventFactory eventFactory;
@@ -119,11 +125,11 @@ public class ConsumerResourceUpdateTest {
     private ModelTranslator translator;
 
     private I18n i18n;
+    private Provider<I18n> i18nProvider = () -> i18n;
 
     private ConsumerResource resource;
     private Provider<GuestMigration> migrationProvider;
     private GuestMigration testMigration;
-    @Inject protected ModelTranslator modelTranslator;
 
     @Before
     public void init() throws Exception {
@@ -133,7 +139,9 @@ public class ConsumerResourceUpdateTest {
         testMigration = new GuestMigration(consumerCurator);
 
         migrationProvider = Providers.of(testMigration);
-        this.translator = new StandardTranslator();
+        this.translator = new StandardTranslator(this.consumerTypeCurator,
+            this.environmentCurator,
+            this.ownerCurator);
         this.resource = new ConsumerResource(this.consumerCurator,
             this.consumerTypeCurator, null, this.subscriptionService, this.ownerService, null,
             this.idCertService, null, this.i18n, this.sink, this.eventFactory, null, null,
@@ -141,8 +149,8 @@ public class ConsumerResourceUpdateTest {
             this.activationKeyCurator, this.entitler, this.complianceRules,
             this.deletedConsumerCurator, this.environmentCurator, null,
             config, null, null, null, this.consumerBindUtil,
-            null, null, new FactValidator(config, this.i18n),
-            null, consumerEnricher, migrationProvider, modelTranslator);
+            null, null, new FactValidator(config, this.i18nProvider),
+            null, consumerEnricher, migrationProvider, this.translator);
 
         when(complianceRules.getStatus(any(Consumer.class), any(Date.class), any(Boolean.class),
             any(Boolean.class))).thenReturn(new ComplianceStatus(new Date()));
@@ -156,6 +164,42 @@ public class ConsumerResourceUpdateTest {
             .thenReturn(consumerEventBuilder);
     }
 
+    protected ConsumerType mockConsumerType(ConsumerType ctype) {
+        if (ctype != null) {
+            // Ensure the type has an ID
+            if (ctype.getId() == null) {
+                ctype.setId("test-ctype-" + ctype.getLabel() + "-" + TestUtil.randomInt());
+            }
+
+            when(consumerTypeCurator.getByLabel(eq(ctype.getLabel()))).thenReturn(ctype);
+            when(consumerTypeCurator.getByLabel(eq(ctype.getLabel()), anyBoolean())).thenReturn(ctype);
+            when(consumerTypeCurator.get(eq(ctype.getId()))).thenReturn(ctype);
+
+            doAnswer(new Answer<ConsumerType>() {
+                @Override
+                public ConsumerType answer(InvocationOnMock invocation) throws Throwable {
+                    Object[] args = invocation.getArguments();
+                    Consumer consumer = (Consumer) args[0];
+                    ConsumerTypeCurator curator = (ConsumerTypeCurator) invocation.getMock();
+                    ConsumerType ctype = null;
+
+                    if (consumer == null || consumer.getTypeId() == null) {
+                        throw new IllegalArgumentException("consumer is null or lacks a type ID");
+                    }
+
+                    ctype = curator.get(consumer.getTypeId());
+                    if (ctype == null) {
+                        throw new IllegalStateException("No such consumer type: " + consumer.getTypeId());
+                    }
+
+                    return ctype;
+                }
+            }).when(consumerTypeCurator).getConsumerType(any(Consumer.class));
+        }
+
+        return ctype;
+    }
+
     @Test
     public void nothingChanged() throws Exception {
         ConsumerDTO consumer = getFakeConsumerDTO();
@@ -164,6 +208,9 @@ public class ConsumerResourceUpdateTest {
     }
 
     private Consumer getFakeConsumer() {
+        ConsumerType ctype = new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM);
+        this.mockConsumerType(ctype);
+
         Consumer consumer = new Consumer();
         Owner owner = new Owner();
         owner.setId("FAKEOWNERID");
@@ -171,10 +218,12 @@ public class ConsumerResourceUpdateTest {
         consumer.setUuid(uuid);
         consumer.setOwner(owner);
         consumer.setName("FAKENAME");
-        consumer.setType(new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM));
+        consumer.setType(ctype);
+
         // go ahead and patch the curator to match it
         when(this.consumerCurator.findByUuid(uuid)).thenReturn(consumer);
         when(this.consumerCurator.verifyAndLookupConsumer(uuid)).thenReturn(consumer);
+
         return consumer;
     }
 
@@ -215,7 +264,6 @@ public class ConsumerResourceUpdateTest {
         ConsumerDTO incoming2 = new ConsumerDTO();
         incoming2.setReleaseVersion(null);
         this.resource.updateConsumer(consumer2.getUuid(), incoming2, principal);
-
     }
 
     private void compareConsumerRelease(String release1, String release2, Boolean verify) {
@@ -355,7 +403,7 @@ public class ConsumerResourceUpdateTest {
     public void testUpdateConsumerUpdatesGuestIds() {
         String uuid = "TEST_CONSUMER";
         String[] existingGuests = new String[]{"Guest 1", "Guest 2", "Guest 3"};
-        Consumer existing = createConsumerWithGuests(existingGuests);
+        Consumer existing = createConsumerWithGuests(createOwner(), existingGuests);
         existing.setUuid(uuid);
 
         when(this.consumerCurator.verifyAndLookupConsumer(uuid)).thenReturn(existing);
@@ -363,10 +411,10 @@ public class ConsumerResourceUpdateTest {
         ConsumerDTO updated = new ConsumerDTO();
         updated.setUuid(uuid);
 
-        GuestIdDTO expectedGuestId = new GuestIdDTO("Guest 2");
+        GuestIdDTO expectedGuestId = TestUtil.createGuestIdDTO("Guest 2");
         updated.addGuestId(expectedGuestId);
 
-        when(this.consumerCurator.getGuestConsumersMap(any(Owner.class), any(Set.class))).
+        when(this.consumerCurator.getGuestConsumersMap(any(String.class), any(Set.class))).
             thenReturn(new VirtConsumerMap());
         this.resource.updateConsumer(existing.getUuid(), updated, principal);
 
@@ -381,7 +429,7 @@ public class ConsumerResourceUpdateTest {
     public void testUpdateConsumerDoesNotChangeGuestsWhenGuestIdsNotIncludedInRequest() {
         String uuid = "TEST_CONSUMER";
         String[] guests = new String[]{ "Guest 1", "Guest 2" };
-        Consumer existing = createConsumerWithGuests(guests);
+        Consumer existing = createConsumerWithGuests(createOwner(), guests);
         existing.setUuid(uuid);
 
         when(this.consumerCurator.verifyAndLookupConsumer(uuid)).thenReturn(existing);
@@ -395,7 +443,7 @@ public class ConsumerResourceUpdateTest {
     public void testUpdateConsumerClearsGuestListWhenRequestGuestListIsEmptyButNotNull() {
         String uuid = "TEST_CONSUMER";
         String[] guests = new String[]{ "Guest 1", "Guest 2" };
-        Consumer existing = createConsumerWithGuests(guests);
+        Consumer existing = createConsumerWithGuests(createOwner(), guests);
         existing.setUuid(uuid);
 
         when(this.consumerCurator.verifyAndLookupConsumer(uuid)).thenReturn(existing);
@@ -409,7 +457,7 @@ public class ConsumerResourceUpdateTest {
     @Test
     public void ensureEventIsNotFiredWhenNoChangeWasMadeToConsumerGuestIds() {
         String uuid = "TEST_CONSUMER";
-        Consumer existing = createConsumerWithGuests("Guest 1", "Guest 2");
+        Consumer existing = createConsumerWithGuests(createOwner(), "Guest 1", "Guest 2");
         existing.setUuid(uuid);
 
         when(this.consumerCurator.verifyAndLookupConsumer(uuid)).thenReturn(existing);
@@ -417,7 +465,7 @@ public class ConsumerResourceUpdateTest {
         ConsumerDTO updated = createConsumerDTOWithGuests("Guest 1", "Guest 2");
         updated.setUuid(uuid);
 
-        when(this.consumerCurator.getGuestConsumersMap(any(Owner.class), any(Set.class))).
+        when(this.consumerCurator.getGuestConsumersMap(any(String.class), any(Set.class))).
             thenReturn(new VirtConsumerMap());
 
         this.resource.updateConsumer(existing.getUuid(), updated, principal);
@@ -427,7 +475,7 @@ public class ConsumerResourceUpdateTest {
     @Test
     public void ensureEventIsNotFiredWhenGuestIDCaseChanges() {
         String uuid = "TEST_CONSUMER";
-        Consumer existing = createConsumerWithGuests("aaa123", "bbb123");
+        Consumer existing = createConsumerWithGuests(createOwner(), "aaa123", "bbb123");
         existing.setUuid(uuid);
 
         when(this.consumerCurator.verifyAndLookupConsumer(uuid)).thenReturn(existing);
@@ -436,7 +484,7 @@ public class ConsumerResourceUpdateTest {
         ConsumerDTO updated = createConsumerDTOWithGuests("aaa123", "BBB123");
         updated.setUuid(uuid);
 
-        when(this.consumerCurator.getGuestConsumersMap(any(Owner.class), any(Set.class))).
+        when(this.consumerCurator.getGuestConsumersMap(any(String.class), any(Set.class))).
             thenReturn(new VirtConsumerMap());
 
         this.resource.updateConsumer(existing.getUuid(), updated, principal);
@@ -448,7 +496,8 @@ public class ConsumerResourceUpdateTest {
     @Test
     public void ensureNewGuestIsHealedIfItWasMigratedFromAnotherHost() throws Exception {
         String uuid = "TEST_CONSUMER";
-        Consumer existingHost = createConsumerWithGuests("Guest 1", "Guest 2");
+        Owner owner = createOwner();
+        Consumer existingHost = createConsumerWithGuests(owner, "Guest 1", "Guest 2");
         existingHost.setUuid(uuid);
 
         Entitlement entitlement = TestUtil.createEntitlement();
@@ -462,13 +511,13 @@ public class ConsumerResourceUpdateTest {
         guest1.addInstalledProduct(installed);
 
         when(consumerCurator.findByVirtUuid("Guest 1",
-            existingHost.getOwner().getId())).thenReturn(guest1);
+            owner.getId())).thenReturn(guest1);
         // Ensure that the guests host is the existing.
         when(consumerCurator.getHost("Guest 1",
-            existingHost.getOwner())).thenReturn(existingHost);
+            owner.getId())).thenReturn(existingHost);
         when(consumerCurator.findByUuid("Guest 1")).thenReturn(guest1);
 
-        Consumer existingMigratedTo = createConsumerWithGuests();
+        Consumer existingMigratedTo = createConsumerWithGuests(owner);
         existingMigratedTo.setUuid("MIGRATED_TO");
         when(this.consumerCurator.findByUuid(existingMigratedTo.getUuid()))
             .thenReturn(existingMigratedTo);
@@ -480,7 +529,7 @@ public class ConsumerResourceUpdateTest {
         );
 
         verify(poolManager).revokeEntitlement(eq(entitlement));
-        verify(entitler).bindByProducts(AutobindData.create(guest1));
+        verify(entitler).bindByProducts(AutobindData.create(guest1, owner));
     }
 
     @Test
@@ -488,7 +537,7 @@ public class ConsumerResourceUpdateTest {
         // the guest in this test does not have any installed products, we
         // expect them to get their entitlements stripped on migration
         String uuid = "TEST_CONSUMER";
-        Consumer existingHost = createConsumerWithGuests("Guest 1", "Guest 2");
+        Consumer existingHost = createConsumerWithGuests(createOwner(), "Guest 1", "Guest 2");
         existingHost.setUuid(uuid);
 
         Entitlement entitlement = TestUtil.createEntitlement();
@@ -500,16 +549,16 @@ public class ConsumerResourceUpdateTest {
         guest1.addEntitlement(entitlement);
         guest1.setAutoheal(true);
 
-        when(this.consumerCurator.getGuestConsumersMap(any(Owner.class), any(Set.class))).
+        when(this.consumerCurator.getGuestConsumersMap(any(String.class), any(Set.class))).
             thenReturn(mockVirtConsumerMap("Guest 1", guest1));
 
         // Ensure that the guests host is the existing.
 
-        Consumer existingMigratedTo = createConsumerWithGuests("Guest 1");
+        Consumer existingMigratedTo = createConsumerWithGuests(createOwner(), "Guest 1");
         existingMigratedTo.setUuid("MIGRATED_TO");
         when(this.consumerCurator.verifyAndLookupConsumer(existingMigratedTo.getUuid()))
             .thenReturn(existingMigratedTo);
-        when(this.consumerCurator.find(eq(guest1.getId()))).thenReturn(guest1);
+        when(this.consumerCurator.get(eq(guest1.getId()))).thenReturn(guest1);
 
         this.resource.updateConsumer(
             existingMigratedTo.getUuid(),
@@ -521,7 +570,7 @@ public class ConsumerResourceUpdateTest {
     @Test
     public void ensureGuestEntitlementsUntouchedWhenGuestIsNewWithNoOtherHost() {
         String uuid = "TEST_CONSUMER";
-        Consumer host = createConsumerWithGuests();
+        Consumer host = createConsumerWithGuests(createOwner());
         host.setUuid(uuid);
 
         when(this.consumerCurator.verifyAndLookupConsumer(uuid)).thenReturn(host);
@@ -538,10 +587,10 @@ public class ConsumerResourceUpdateTest {
         guest1.addEntitlement(entitlement);
         guest1.setAutoheal(true);
 
-        when(this.consumerCurator.getGuestConsumersMap(any(Owner.class), any(Set.class))).
+        when(this.consumerCurator.getGuestConsumersMap(any(String.class), any(Set.class))).
             thenReturn(mockVirtConsumerMap("Guest 1", guest1));
         // Ensure that the guest was not reported by another host.
-        when(this.consumerCurator.find(eq(guest1.getId()))).thenReturn(guest1);
+        when(this.consumerCurator.get(eq(guest1.getId()))).thenReturn(guest1);
 
         this.resource.updateConsumer(host.getUuid(), updatedHost, principal);
         verify(poolManager, never()).revokeEntitlement(eq(entitlement));
@@ -550,7 +599,7 @@ public class ConsumerResourceUpdateTest {
     @Test
     public void ensureGuestEntitlementsUntouchedWhenGuestExistsWithNoOtherHost() {
         String uuid = "TEST_CONSUMER";
-        Consumer host = createConsumerWithGuests("Guest 1");
+        Consumer host = createConsumerWithGuests(createOwner(), "Guest 1");
         host.setUuid(uuid);
 
         when(this.consumerCurator.verifyAndLookupConsumer(uuid)).thenReturn(host);
@@ -567,7 +616,7 @@ public class ConsumerResourceUpdateTest {
         guest1.addEntitlement(entitlement);
 
         // Ensure that the guest was already reported by same host.
-        when(this.consumerCurator.getGuestConsumersMap(any(Owner.class), any(Set.class))).
+        when(this.consumerCurator.getGuestConsumersMap(any(String.class), any(Set.class))).
             thenReturn(mockVirtConsumerMap("Guest 1", guest1));
         this.resource.updateConsumer(host.getUuid(), updatedHost, principal);
         verify(poolManager, never()).revokeEntitlement(eq(entitlement));
@@ -576,7 +625,7 @@ public class ConsumerResourceUpdateTest {
     @Test
     public void ensureGuestEntitlementsAreNotRevokedWhenGuestIsRemovedFromHost() {
         String uuid = "TEST_CONSUMER";
-        Consumer host = createConsumerWithGuests("Guest 1", "Guest 2");
+        Consumer host = createConsumerWithGuests(createOwner(), "Guest 1", "Guest 2");
         host.setUuid(uuid);
 
         when(this.consumerCurator.verifyAndLookupConsumer(uuid)).thenReturn(host);
@@ -592,7 +641,7 @@ public class ConsumerResourceUpdateTest {
         guest1.setUuid("Guest 1");
         guest1.addEntitlement(entitlement);
 
-        when(this.consumerCurator.getGuestConsumersMap(any(Owner.class), any(Set.class))).
+        when(this.consumerCurator.getGuestConsumersMap(any(String.class), any(Set.class))).
             thenReturn(mockVirtConsumerMap("Guest 1", guest1));
 
         this.resource.updateConsumer(host.getUuid(), updatedHost, principal);
@@ -609,7 +658,7 @@ public class ConsumerResourceUpdateTest {
     @Test
     public void ensureGuestEntitlementsAreNotRemovedWhenGuestsAndHostAreTheSame() {
         String uuid = "TEST_CONSUMER";
-        Consumer host = createConsumerWithGuests("Guest 1");
+        Consumer host = createConsumerWithGuests(createOwner(), "Guest 1");
         host.setUuid(uuid);
 
         when(this.consumerCurator.verifyAndLookupConsumer(uuid)).thenReturn(host);
@@ -625,7 +674,7 @@ public class ConsumerResourceUpdateTest {
         guest1.setUuid("Guest 1");
         guest1.addEntitlement(entitlement);
 
-        when(this.consumerCurator.getGuestConsumersMap(any(Owner.class), any(Set.class))).
+        when(this.consumerCurator.getGuestConsumersMap(any(String.class), any(Set.class))).
             thenReturn(mockVirtConsumerMap("Guest 1", guest1));
 
         this.resource.updateConsumer(host.getUuid(), updatedHost, principal);
@@ -636,7 +685,7 @@ public class ConsumerResourceUpdateTest {
     @Test
     public void guestEntitlementsNotRemovedIfEntitlementIsVirtOnlyButRequiresHostNotSet() {
         String uuid = "TEST_CONSUMER";
-        Consumer host = createConsumerWithGuests("Guest 1", "Guest 2");
+        Consumer host = createConsumerWithGuests(createOwner(), "Guest 1", "Guest 2");
         host.setUuid(uuid);
 
         when(this.consumerCurator.verifyAndLookupConsumer(uuid)).thenReturn(host);
@@ -652,9 +701,9 @@ public class ConsumerResourceUpdateTest {
         guest1.addEntitlement(entitlement);
         guest1.setAutoheal(true);
 
-        when(this.consumerCurator.getGuestConsumersMap(any(Owner.class), any(Set.class))).
+        when(this.consumerCurator.getGuestConsumersMap(any(String.class), any(Set.class))).
             thenReturn(mockVirtConsumerMap("Guest 1", guest1));
-        when(this.consumerCurator.find(eq(guest1.getId()))).thenReturn(guest1);
+        when(this.consumerCurator.get(eq(guest1.getId()))).thenReturn(guest1);
 
         this.resource.updateConsumer(host.getUuid(), updatedHost, principal);
 
@@ -667,7 +716,7 @@ public class ConsumerResourceUpdateTest {
         String uuid = "A Consumer";
         String expectedFactName = "FACT1";
         String expectedFactValue = "F1";
-        GuestIdDTO expectedGuestId = new GuestIdDTO("GUEST_ID_1");
+        GuestIdDTO expectedGuestId = TestUtil.createGuestIdDTO("GUEST_ID_1");
 
         Consumer existing = getFakeConsumer();
         existing.setFacts(new HashMap<>());
@@ -683,7 +732,7 @@ public class ConsumerResourceUpdateTest {
         updated.addInstalledProduct(expectedInstalledProduct);
         updated.addGuestId(expectedGuestId);
 
-        when(this.consumerCurator.getGuestConsumersMap(any(Owner.class), any(Set.class))).
+        when(this.consumerCurator.getGuestConsumersMap(any(String.class), any(Set.class))).
             thenReturn(new VirtConsumerMap());
         this.resource.updateConsumer(existing.getUuid(), updated, principal);
 
@@ -717,7 +766,7 @@ public class ConsumerResourceUpdateTest {
         ConsumerDTO updated = new ConsumerDTO();
         updated.setEnvironment(translator.translate(changedEnvironment, EnvironmentDTO.class));
 
-        when(environmentCurator.find(changedEnvironment.getId())).thenReturn(changedEnvironment);
+        when(environmentCurator.get(changedEnvironment.getId())).thenReturn(changedEnvironment);
 
         resource.updateConsumer(existing.getUuid(), updated, principal);
 
@@ -728,7 +777,9 @@ public class ConsumerResourceUpdateTest {
     @Test(expected = NotFoundException.class)
     public void throwsAnExceptionWhenEnvironmentNotFound() {
         String uuid = "A Consumer";
-        EnvironmentDTO changedEnvironment = new EnvironmentDTO("42", "environment", null);
+        EnvironmentDTO changedEnvironment = new EnvironmentDTO()
+            .setId("42")
+            .setName("environment");
 
         ConsumerDTO updated = new ConsumerDTO();
         updated.setUuid(uuid);
@@ -737,9 +788,8 @@ public class ConsumerResourceUpdateTest {
         Consumer existing = getFakeConsumer();
         existing.setUuid(updated.getUuid());
 
-        when(consumerCurator.verifyAndLookupConsumer(
-            existing.getUuid())).thenReturn(existing);
-        when(environmentCurator.find(changedEnvironment.getId())).thenReturn(null);
+        when(consumerCurator.verifyAndLookupConsumer(existing.getUuid())).thenReturn(existing);
+        when(environmentCurator.get(changedEnvironment.getId())).thenReturn(null);
 
         resource.updateConsumer(existing.getUuid(), updated, principal);
     }
@@ -783,7 +833,7 @@ public class ConsumerResourceUpdateTest {
         resource.updateConsumer(consumer.getUuid(), updated, principal);
 
         assertEquals(updated.getName(), consumer.getName());
-        assertNull(consumer.getIdCert());
+        assertNull(consumer.getIdCertificate());
     }
 
     @Test
@@ -809,6 +859,9 @@ public class ConsumerResourceUpdateTest {
 
     @Test
     public void consumerCapabilityUpdate() {
+        ConsumerType ct = new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN);
+        this.mockConsumerType(ct);
+
         Consumer c = getFakeConsumer();
         Set<ConsumerCapability> caps = new HashSet<>();
         ConsumerCapability cca = new ConsumerCapability(c, "capability_a");
@@ -818,7 +871,6 @@ public class ConsumerResourceUpdateTest {
         caps.add(ccb);
         caps.add(ccc);
         c.setCapabilities(caps);
-        ConsumerType ct = new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN);
         c.setType(ct);
         assertEquals(3, c.getCapabilities().size());
 
@@ -853,23 +905,27 @@ public class ConsumerResourceUpdateTest {
 
         Consumer update = getFakeConsumer();
         update.setCapabilities(caps1);
-        assertFalse(resource.performConsumerUpdates(update, existing, testMigration));
+        assertFalse(resource.performConsumerUpdates(
+            this.translator.translate(update, ConsumerDTO.class), existing, testMigration));
 
         update.setCapabilities(caps2);
-        assertTrue(resource.performConsumerUpdates(update, existing, testMigration));
+        assertTrue(resource.performConsumerUpdates(
+            this.translator.translate(update, ConsumerDTO.class), existing, testMigration));
 
         // need a new consumer here, can't null out capabilities
         update = getFakeConsumer();
-        assertFalse(resource.performConsumerUpdates(update, existing, testMigration));
-
+        assertFalse(resource.performConsumerUpdates(
+            this.translator.translate(update, ConsumerDTO.class), existing, testMigration));
     }
 
     @Test
     public void consumerLastCheckin() {
+        ConsumerType ct = new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN);
+        this.mockConsumerType(ct);
+
         Consumer c = getFakeConsumer();
         Date now = new Date();
         c.setLastCheckin(now);
-        ConsumerType ct = new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN);
         c.setType(ct);
 
         when(this.consumerCurator.verifyAndLookupConsumer(c.getUuid())).thenReturn(c);
@@ -880,11 +936,17 @@ public class ConsumerResourceUpdateTest {
         resource.updateConsumer(c.getUuid(), updated, principal);
     }
 
-    private Consumer createConsumerWithGuests(String ... guestIds) {
-        Consumer a = new Consumer();
-        a.setType(new ConsumerType(ConsumerType.ConsumerTypeEnum.HYPERVISOR));
+    private Owner createOwner() {
         Owner owner = new Owner();
         owner.setId("FAKEOWNERID");
+        return owner;
+    }
+
+    private Consumer createConsumerWithGuests(Owner owner, String ... guestIds) {
+        Consumer a = new Consumer();
+        ConsumerType ctype = new ConsumerType(ConsumerType.ConsumerTypeEnum.HYPERVISOR);
+        this.mockConsumerType(ctype);
+        a.setType(ctype);
         a.setOwner(owner);
         for (String guestId : guestIds) {
             a.addGuestId(new GuestId(guestId));
@@ -893,7 +955,7 @@ public class ConsumerResourceUpdateTest {
     }
 
     private ConsumerDTO createConsumerDTOWithGuests(String ... guestIds) {
-        Consumer consumer = createConsumerWithGuests(guestIds);
+        Consumer consumer = createConsumerWithGuests(createOwner(), guestIds);
         // re-add guestIds as consumer translator removes them.
         List<GuestIdDTO> guestIdDTOS = new LinkedList<>();
         for (GuestId guestId : consumer.getGuestIds()) {

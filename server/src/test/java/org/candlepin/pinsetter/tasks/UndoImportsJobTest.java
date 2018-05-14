@@ -133,10 +133,9 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
         // Create owner w/upstream consumer
         Owner owner1 = TestUtil.createOwner();
         Owner owner2 = TestUtil.createOwner();
-        ConsumerType type = TestUtil.createConsumerType();
+        ConsumerType type = this.createConsumerType();
         UpstreamConsumer uc1 = new UpstreamConsumer("uc1", null, type, "uc1");
         UpstreamConsumer uc2 = new UpstreamConsumer("uc2", null, type, "uc2");
-        this.consumerTypeCurator.create(type);
         this.ownerCurator.create(owner1);
         this.ownerCurator.create(owner2);
         owner1.setUpstreamConsumer(uc1);
@@ -172,8 +171,8 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
             this.poolManager.listPoolsByOwner(owner1).list()
         );
         assertEquals(Arrays.asList(pool7, pool8, pool9), this.poolManager.listPoolsByOwner(owner2).list());
-        assertEquals(metadata1, exportCurator.lookupByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner1));
-        assertEquals(metadata2, exportCurator.lookupByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner2));
+        assertEquals(metadata1, exportCurator.getByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner1));
+        assertEquals(metadata2, exportCurator.getByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner2));
         assertEquals(0, this.importRecordCurator.findRecords(owner1).list().size());
         assertEquals(0, this.importRecordCurator.findRecords(owner2).list().size());
 
@@ -182,7 +181,7 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
 
         this.jobDataMap.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.OWNER);
         this.jobDataMap.put(JobStatus.TARGET_ID, owner1.getId());
-        this.jobDataMap.put(UndoImportsJob.OWNER_KEY, owner1.getKey());
+        this.jobDataMap.put(JobStatus.OWNER_ID, owner1.getKey());
         this.jobDataMap.put(PinsetterJobListener.PRINCIPAL_KEY, principal);
 
         beginTransaction(); //since we locking owner we need start transaction
@@ -194,8 +193,8 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
             this.poolManager.listPoolsByOwner(owner1).list());
 
         assertEquals(Arrays.asList(pool7, pool8, pool9), this.poolManager.listPoolsByOwner(owner2).list());
-        assertNull(exportCurator.lookupByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner1));
-        assertEquals(metadata2, exportCurator.lookupByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner2));
+        assertNull(exportCurator.getByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner1));
+        assertEquals(metadata2, exportCurator.getByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner2));
         assertNull(owner1.getUpstreamConsumer());
 
         List<ImportRecord> records = this.importRecordCurator.findRecords(owner1).list();
@@ -226,12 +225,8 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
 
             case ENTITLEMENT_DERIVED:
                 pool.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
-                consumer = TestUtil.createConsumer(owner);
-                entitlement = TestUtil.createEntitlement(owner, consumer, pool, null);
-
-                this.consumerTypeCurator.create(consumer.getType());
-                this.consumerCurator.create(consumer);
-                this.entitlementCurator.create(entitlement);
+                consumer = this.createConsumer(owner);
+                entitlement = this.createEntitlement(owner, consumer, pool, null);
 
                 pool.setSourceEntitlement(entitlement);
                 break;

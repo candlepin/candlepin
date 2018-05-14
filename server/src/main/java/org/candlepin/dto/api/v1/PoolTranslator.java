@@ -114,8 +114,7 @@ public class PoolTranslator extends TimestampedEntityTranslator<Pool, PoolDTO> {
             if (branding != null && !branding.isEmpty()) {
                 for (Branding brand : branding) {
                     if (brand != null) {
-                        dest.addBranding(
-                            new BrandingDTO(brand.getProductId(), brand.getName(), brand.getType()));
+                        dest.addBranding(modelTranslator.translate(brand, BrandingDTO.class));
                     }
                 }
             }

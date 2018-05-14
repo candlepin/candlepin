@@ -16,6 +16,7 @@ package org.candlepin.auth;
 
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.DeletedConsumerCurator;
+import org.candlepin.model.OwnerCurator;
 
 import com.google.inject.Inject;
 
@@ -42,10 +43,10 @@ public class SSLAuth extends ConsumerAuth {
     private static Logger log = LoggerFactory.getLogger(SSLAuth.class);
 
     @Inject
-    SSLAuth(ConsumerCurator consumerCurator,
+    SSLAuth(ConsumerCurator consumerCurator, OwnerCurator ownerCurator,
         DeletedConsumerCurator deletedConsumerCurator,
         Provider<I18n> i18nProvider) {
-        super(consumerCurator, deletedConsumerCurator, i18nProvider);
+        super(consumerCurator, ownerCurator, deletedConsumerCurator, i18nProvider);
     }
 
     public Principal getPrincipal(HttpRequest httpRequest) {

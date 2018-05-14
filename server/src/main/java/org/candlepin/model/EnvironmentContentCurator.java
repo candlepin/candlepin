@@ -18,18 +18,21 @@ import org.hibernate.criterion.Restrictions;
 
 import java.util.List;
 
+import javax.inject.Singleton;
+
 
 
 /**
  * EnvironmentContentCurator
  */
+@Singleton
 public class EnvironmentContentCurator extends AbstractHibernateCurator<EnvironmentContent> {
 
     public EnvironmentContentCurator() {
         super(EnvironmentContent.class);
     }
 
-    public EnvironmentContent lookupByEnvironmentAndContent(Environment e, String contentId) {
+    public EnvironmentContent getByEnvironmentAndContent(Environment e, String contentId) {
         return (EnvironmentContent) this.currentSession().createCriteria(EnvironmentContent.class)
             .createAlias("content", "content")
             .add(Restrictions.eq("environment", e))
@@ -37,14 +40,14 @@ public class EnvironmentContentCurator extends AbstractHibernateCurator<Environm
             .uniqueResult();
     }
 
-    public EnvironmentContent lookupByEnvironmentAndContent(Environment e, Content content) {
+    public EnvironmentContent getByEnvironmentAndContent(Environment e, Content content) {
         return (EnvironmentContent) this.currentSession().createCriteria(EnvironmentContent.class)
             .add(Restrictions.eq("environment", e))
             .add(Restrictions.eq("content", content))
             .uniqueResult();
     }
 
-    public List<EnvironmentContent> lookupByContent(Owner owner, String contentId) {
+    public List<EnvironmentContent> getByContent(Owner owner, String contentId) {
         return this.currentSession().createCriteria(EnvironmentContent.class)
             .createAlias("environment", "environment")
             .createAlias("content", "content")

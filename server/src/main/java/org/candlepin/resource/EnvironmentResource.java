@@ -123,7 +123,7 @@ public class EnvironmentResource {
     @Produces(MediaType.APPLICATION_JSON)
     public EnvironmentDTO getEnv(
         @PathParam("env_id") @Verify(Environment.class) String envId) {
-        Environment e = envCurator.find(envId);
+        Environment e = envCurator.get(envId);
         if (e == null) {
             throw new NotFoundException(i18n.tr("No such environment: {0}", envId));
         }
@@ -139,14 +139,16 @@ public class EnvironmentResource {
     @Produces(MediaType.WILDCARD)
     @Path("/{env_id}")
     public void deleteEnv(@PathParam("env_id") @Verify(Environment.class) String envId) {
-        Environment e = envCurator.find(envId);
+        Environment e = envCurator.get(envId);
         if (e == null) {
             throw new NotFoundException(i18n.tr("No such environment: {0}", envId));
         }
 
+        CandlepinQuery<Consumer> consumers = this.envCurator.getEnvironmentConsumers(e);
+
         // Cleanup all consumers and their entitlements:
         log.info("Deleting consumers in environment {}", e);
-        for (Consumer c : e.getConsumers()) {
+        for (Consumer c : consumers.list()) {
             log.info("Deleting consumer: {}", c);
 
             // We're about to delete these consumers; no need to regen/dirty their dependent
@@ -235,7 +237,7 @@ public class EnvironmentResource {
                 promoteMe.getEnvironmentId(), promoteMe.getContentId()
             );
 
-            EnvironmentContent existing = this.envContentCurator.lookupByEnvironmentAndContent(
+            EnvironmentContent existing = this.envContentCurator.getByEnvironmentAndContent(
                 env, promoteMe.getContentId()
             );
 
@@ -301,7 +303,7 @@ public class EnvironmentResource {
 
         // Step through and validate all given content IDs before deleting
         for (String contentId : contentIds) {
-            EnvironmentContent envContent = envContentCurator.lookupByEnvironmentAndContent(e, contentId);
+            EnvironmentContent envContent = envContentCurator.getByEnvironmentAndContent(e, contentId);
 
             if (envContent == null) {
                 throw new NotFoundException(i18n.tr("Content does not exist in environment: {0}", contentId));
@@ -376,10 +378,9 @@ public class EnvironmentResource {
     }
 
     private Environment lookupEnvironment(String envId) {
-        Environment e = envCurator.find(envId);
+        Environment e = envCurator.get(envId);
         if (e == null) {
-            throw new NotFoundException(i18n.tr(
-                "No such environment: {0}", envId));
+            throw new NotFoundException(i18n.tr("No such environment: {0}", envId));
         }
         return e;
     }

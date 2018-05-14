@@ -40,23 +40,6 @@ public class ConsumerType extends AbstractHibernateObject<ConsumerType> {
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp_consumer_type";
 
-    @Id
-    @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid")
-    @Column(length = 32)
-    @NotNull
-    private String id;
-
-    @Column(nullable = false, unique = true)
-    @Size(max = 255)
-    @NotNull
-    private String label;
-
-    @Column(nullable = false, length = 1)
-    @Type(type = "yes_no")
-    @NotNull
-    private boolean manifest = false;
-
     /**
      * Initial DB values that are part of a "basic" install ConsumerTypeEnum
      */
@@ -88,6 +71,24 @@ public class ConsumerType extends AbstractHibernateObject<ConsumerType> {
             return getLabel();
         }
     }
+
+
+    @Id
+    @GeneratedValue(generator = "system-uuid")
+    @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    @Column(length = 32)
+    @NotNull
+    private String id;
+
+    @Column(nullable = false, unique = true)
+    @Size(max = 255)
+    @NotNull
+    private String label;
+
+    @Column(nullable = false, length = 1)
+    @Type(type = "yes_no")
+    @NotNull
+    private boolean manifest = false;
 
     /**
      * default ctor
@@ -142,7 +143,7 @@ public class ConsumerType extends AbstractHibernateObject<ConsumerType> {
     }
 
     public boolean isType(ConsumerTypeEnum type) {
-        return this.label.equals(type.getLabel());
+        return type != null && type.getLabel().equals(this.getLabel());
     }
 
     /**

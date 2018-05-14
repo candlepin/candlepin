@@ -52,7 +52,7 @@ public class PinsetterTriggerListenerTest {
         when(trigger.mayFireAgain()).thenReturn(true);
         when(trigger.getJobKey()).thenReturn(jobKey);
         when(trigger.getNextFireTime()).thenReturn(new Date());
-        when(jobCurator.find(Matchers.anyString())).thenReturn(jobStatus);
+        when(jobCurator.get(Matchers.anyString())).thenReturn(jobStatus);
 
         ptl.triggerMisfired(trigger);
         assert (jobStatus.getResult().startsWith("Will reattempt job at or after"));
@@ -68,7 +68,7 @@ public class PinsetterTriggerListenerTest {
         JobKey jobKey = new JobKey("mockName");
         when(trigger.mayFireAgain()).thenReturn(false);
         when(trigger.getJobKey()).thenReturn(jobKey);
-        when(jobCurator.find(Matchers.anyString())).thenReturn(jobStatus);
+        when(jobCurator.get(Matchers.anyString())).thenReturn(jobStatus);
 
         ptl.triggerMisfired(trigger);
         assert (jobStatus.getResult().startsWith("Failed run. Will not attempt again."));

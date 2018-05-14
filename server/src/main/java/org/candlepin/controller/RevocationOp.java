@@ -16,6 +16,9 @@ package org.candlepin.controller;
 
 import com.google.inject.persist.Transactional;
 import org.candlepin.common.exceptions.ForbiddenException;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
@@ -30,6 +33,7 @@ import java.util.Map;
 import java.util.Set;
 
 
+
 /**
  * Created by wpoteat on 5/11/17.
  */
@@ -40,13 +44,16 @@ public class RevocationOp {
     private Map<Pool, List<Pool>> sharedPools;
     private Map<Pool, Long> poolNewConsumed;
     private PoolCurator poolCurator;
+    private ConsumerTypeCurator consumerTypeCurator;
 
-    public RevocationOp(PoolCurator poolCurator, List<Pool> pools) {
+    public RevocationOp(PoolCurator poolCurator, ConsumerTypeCurator consumerTypeCurator, List<Pool> pools) {
         entitlementsToRevoke = new HashSet<>();
         shareEntitlementsToAdjust = new HashMap<>();
         sharedPools = new HashMap<>();
         poolNewConsumed = new HashMap<>();
+
         this.poolCurator = poolCurator;
+        this.consumerTypeCurator = consumerTypeCurator;
         this.pools = pools;
     }
 
@@ -75,7 +82,7 @@ public class RevocationOp {
     }
 
     @Transactional
-    public void execute(PoolManager poolManager) {
+    public Set<Pool> execute(PoolManager poolManager) {
         Collection<Pool> overflowing = new ArrayList<>();
         for (Pool pool : pools) {
             if (pool.isOverflowing()) {
@@ -83,7 +90,7 @@ public class RevocationOp {
             }
         }
         if (overflowing.isEmpty()) {
-            return;
+            return null;
         }
         overflowing = poolCurator.lockAndLoad(overflowing);
         for (Pool pool : overflowing) {
@@ -98,7 +105,7 @@ public class RevocationOp {
             determineExcessEntitlements(pool);
         }
         // revoke the entitlements amassed above
-        poolManager.revokeEntitlements(new ArrayList<>(entitlementsToRevoke));
+        Set deletedPools = poolManager.revokeEntitlements(new ArrayList<>(entitlementsToRevoke));
         // here is where we actually change the source entitlement quantities for the shared pools.
         // We have to wait until we get here so that share pool entitlements we want revoked are gone
         for (Entitlement entitlement : shareEntitlementsToAdjust.keySet()) {
@@ -112,7 +119,7 @@ public class RevocationOp {
                         .get(0).toString());
             }
         }
-
+        return deletedPools;
     }
 
     /**
@@ -168,7 +175,9 @@ public class RevocationOp {
         long existing = pool.getQuantity();
         for (Entitlement ent : entitlements) {
             if (newConsumed > existing) {
-                if (!ent.getConsumer().isShare()) {
+                ConsumerType ctype = this.consumerTypeCurator.getConsumerType(ent.getConsumer());
+
+                if (!ctype.isType(ConsumerTypeEnum.SHARE)) {
                     if (ent.getPool().isCreatedByShare()) {
                         Entitlement source = ent.getPool().getSourceEntitlement();
                         // the source entitlement may have already been adjusted in the shared pool reduction

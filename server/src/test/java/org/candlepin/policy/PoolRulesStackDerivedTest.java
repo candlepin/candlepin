@@ -133,8 +133,10 @@ public class PoolRulesStackDerivedTest {
         principal = TestUtil.createOwnerPrincipal();
         owner = principal.getOwners().get(0);
 
-        consumer = new Consumer("consumer", "registeredbybob", owner,
-            new ConsumerType(ConsumerTypeEnum.SYSTEM));
+        ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.SYSTEM);
+        ctype.setId("test-ctype");
+
+        consumer = new Consumer("consumer", "registeredbybob", owner, ctype);
 
         // Two subtly different products stacked together:
         prod1 = TestUtil.createProduct("prod1", "prod1");
@@ -240,7 +242,7 @@ public class PoolRulesStackDerivedTest {
     }
 
     private Entitlement createEntFromPool(Pool pool) {
-        Entitlement e = new Entitlement(pool, consumer, 2);
+        Entitlement e = new Entitlement(pool, consumer, owner, 2);
         e.setCreated(new Date());
         try {
             Thread.sleep(1);

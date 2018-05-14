@@ -15,6 +15,8 @@
 package org.candlepin.bind;
 
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Pool;
@@ -65,9 +67,12 @@ public class HandleEntitlementsOp implements BindOperation {
     @Override
     public boolean execute(BindContext context) {
         Consumer consumer = context.getLockedConsumer();
+        ConsumerType ctype = context.getConsumerType();
+
         Map<String, Entitlement> entitlementMap = context.getEntitlementMap();
         Map<String, PoolQuantity> lockedPools = context.getPoolQuantities();
         List<Pool> poolsToSave = new LinkedList<>();
+
         for (Entry<String, PoolQuantity> entry: lockedPools.entrySet()) {
             Entitlement ent = entitlementMap.get(entry.getKey());
             Pool pool = entry.getValue().getPool();
@@ -76,21 +81,25 @@ public class HandleEntitlementsOp implements BindOperation {
             pool.getEntitlements().add(ent);
             ent.setPool(pool);
             ent.setConsumer(consumer);
-            ent.setOwner(consumer.getOwner());
+            ent.setOwner(pool.getOwner());
 
             pool.setConsumed(pool.getConsumed() + quantity);
-            if (consumer.isManifestDistributor()) {
+
+            if (ctype.isManifest()) {
                 pool.setExported(pool.getExported() + quantity);
             }
-            else if (consumer.isShare()) {
+            else if (ctype.isType(ConsumerTypeEnum.SHARE)) {
                 pool.setShared(pool.getShared() + quantity);
             }
+
             consumer.addEntitlement(ent);
             consumer.setEntitlementCount(consumer.getEntitlementCount() + quantity);
             poolsToSave.add(pool);
         }
+
         entitlementCurator.saveAll(entitlementMap.values(), false, false);
         poolCurator.updateAll(poolsToSave, false, false);
+
         return true;
     }
 }

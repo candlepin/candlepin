@@ -29,6 +29,7 @@ import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
@@ -81,6 +82,7 @@ public class Entitler {
     private EntitlementCurator entitlementCurator;
     private I18n i18n;
     private OwnerProductCurator ownerProductCurator;
+    private OwnerCurator ownerCurator;
     private PoolCurator poolCurator;
     private PoolManager poolManager;
     private ProductCurator productCurator;
@@ -94,8 +96,8 @@ public class Entitler {
     public Entitler(PoolManager pm, ConsumerCurator cc, I18n i18n, EventFactory evtFactory,
         EventSink sink, EntitlementRulesTranslator messageTranslator,
         EntitlementCurator entitlementCurator, Configuration config, OwnerProductCurator ownerProductCurator,
-        PoolCurator poolCurator, ProductCurator productCurator, ProductManager productManager,
-        ProductServiceAdapter productAdapter, ContentManager contentManager) {
+        OwnerCurator ownerCurator, PoolCurator poolCurator, ProductCurator productCurator,
+        ProductManager productManager, ProductServiceAdapter productAdapter, ContentManager contentManager) {
 
         this.poolManager = pm;
         this.i18n = i18n;
@@ -106,6 +108,7 @@ public class Entitler {
         this.entitlementCurator = entitlementCurator;
         this.config = config;
         this.ownerProductCurator = ownerProductCurator;
+        this.ownerCurator = ownerCurator;
         this.poolCurator = poolCurator;
         this.productCurator = productCurator;
         this.productManager = productManager;
@@ -121,12 +124,10 @@ public class Entitler {
             return bindByPoolQuantities(consumer, poolMap);
         }
         catch (EntitlementRefusedException e) {
-            // TODO: Could be multiple errors, but we'll just report the first
-            // one for now
-            Pool pool = poolCurator.find(poolId);
+            // TODO: Could be multiple errors, but we'll just report the first one for now
+            Pool pool = poolCurator.get(poolId);
             throw new ForbiddenException(messageTranslator.poolErrorToMessage(
-                pool, e.getResults().get(poolId).getErrors().get(0)
-            ));
+                pool, e.getResults().get(poolId).getErrors().get(0)));
         }
     }
 
@@ -169,7 +170,8 @@ public class Entitler {
         String consumeruuid, Date entitleDate, Collection<String> fromPools)
         throws AutobindDisabledForOwnerException {
         Consumer c = consumerCurator.findByUuid(consumeruuid);
-        AutobindData data = AutobindData.create(c).on(entitleDate)
+        Owner o = ownerCurator.findOwnerById(c.getOwnerId());
+        AutobindData data = AutobindData.create(c, o).on(entitleDate)
             .forProducts(productIds).withPools(fromPools);
         return bindByProducts(data);
     }
@@ -202,7 +204,7 @@ public class Entitler {
     public List<Entitlement> bindByProducts(AutobindData data, boolean force)
         throws AutobindDisabledForOwnerException {
         Consumer consumer = data.getConsumer();
-        Owner owner = consumer.getOwner();
+        Owner owner = data.getOwner();
 
         if (!consumer.isDev() && owner.isAutobindDisabled()) {
             log.info("Skipping auto-attach for consumer '{}'. Auto-attach is disabled for owner {}.",
@@ -221,7 +223,7 @@ public class Entitler {
 
             // Scoped to the consumer's organization.  Even in the event of sharing, a guest in one
             // organization should not be able to compel a heal in an another organization
-            Consumer host = consumerCurator.getHost(consumer, consumer.getOwner());
+            Consumer host = consumerCurator.getHost(consumer, consumer.getOwnerId());
             if (host != null && (force || host.isAutoheal())) {
                 log.info("Attempting to heal host machine with UUID \"{}\" for guest with UUID \"{}\"",
                     host.getUuid(), consumer.getUuid());
@@ -244,17 +246,17 @@ public class Entitler {
                         host.getUuid(), e.getMessage());
                 }
 
-                /* Consumer is stale at this point.  Note that we use find() instead of
+                /* Consumer is stale at this point.  Note that we use get() instead of
                  * findByUuid() or getConsumer() since the latter two methods are secured
                  * to a specific host principal and bindByProducts can get called when
                  * a guest is switching hosts */
-                consumer = consumerCurator.find(consumer.getId());
+                consumer = consumerCurator.get(consumer.getId());
                 data.setConsumer(consumer);
             }
         }
         if (consumer.isDev()) {
             if (config.getBoolean(ConfigProperties.STANDALONE) ||
-                !poolCurator.hasActiveEntitlementPools(consumer.getOwner(), null)) {
+                !poolCurator.hasActiveEntitlementPools(consumer.getOwnerId(), null)) {
 
                 throw new ForbiddenException(i18n.tr(
                     "Development units may only be used on hosted servers" +
@@ -270,7 +272,7 @@ public class Entitler {
             if (devPool != null) {
                 poolManager.deletePool(devPool);
             }
-            devPool = poolManager.createPool(assembleDevPool(consumer, sku));
+            devPool = poolManager.createPool(assembleDevPool(consumer, owner, sku));
             data.setPossiblePools(Arrays.asList(devPool.getId()));
             data.setProductIds(new String[]{sku});
         }
@@ -322,12 +324,12 @@ public class Entitler {
      * @param sku the product id of the developer SKU.
      * @return the newly created developer pool (note: not yet persisted)
      */
-    protected Pool assembleDevPool(Consumer consumer, String sku) {
-        DeveloperProducts devProducts = getDeveloperPoolProducts(consumer, sku);
+    protected Pool assembleDevPool(Consumer consumer, Owner owner, String sku) {
+        DeveloperProducts devProducts = getDeveloperPoolProducts(consumer, owner, sku);
         Product skuProduct = devProducts.getSku();
         Date startDate = consumer.getCreated();
         Date endDate = getEndDate(skuProduct, startDate);
-        Pool pool = new Pool(consumer.getOwner(), skuProduct, devProducts.getProvided(), 1L, startDate,
+        Pool pool = new Pool(owner, skuProduct, devProducts.getProvided(), 1L, startDate,
             endDate, "", "", "");
 
         log.info("Created development pool with SKU {}", skuProduct.getId());
@@ -336,8 +338,8 @@ public class Entitler {
         return pool;
     }
 
-    private DeveloperProducts getDeveloperPoolProducts(Consumer consumer, String sku) {
-        DeveloperProducts devProducts = getDevProductMap(consumer, sku);
+    private DeveloperProducts getDeveloperPoolProducts(Consumer consumer, Owner owner, String sku) {
+        DeveloperProducts devProducts = getDevProductMap(consumer, owner, sku);
         verifyDevProducts(consumer, sku, devProducts);
         return devProducts;
     }
@@ -351,14 +353,13 @@ public class Entitler {
      * @return a {@link DeveloperProducts} object that contains the Product objects
      *         from the adapter.
      */
-    private DeveloperProducts getDevProductMap(Consumer consumer, String sku) {
+    private DeveloperProducts getDevProductMap(Consumer consumer, Owner owner, String sku) {
         List<String> devProductIds = new ArrayList<>();
         devProductIds.add(sku);
         for (ConsumerInstalledProduct ip : consumer.getInstalledProducts()) {
             devProductIds.add(ip.getProductId());
         }
 
-        Owner owner = consumer.getOwner();
         Map<String, ProductData> productMap = new HashMap<>();
         Map<String, ContentData> contentMap = new HashMap<>();
 
@@ -487,15 +488,14 @@ public class Entitler {
      * @param consumer The consumer being entitled.
      * @return List of Entitlements
      */
-    public List<PoolQuantity> getDryRun(Consumer consumer,
+    public List<PoolQuantity> getDryRun(Consumer consumer, Owner owner,
         String serviceLevelOverride) {
 
         List<PoolQuantity> result = new ArrayList<>();
         try {
-            Owner owner = consumer.getOwner();
             if (consumer.isDev()) {
                 if (config.getBoolean(ConfigProperties.STANDALONE) ||
-                    !poolCurator.hasActiveEntitlementPools(consumer.getOwner(), null)) {
+                    !poolCurator.hasActiveEntitlementPools(consumer.getOwnerId(), null)) {
                     throw new ForbiddenException(i18n.tr(
                         "Development units may only be used on hosted servers" +
                         " and with orgs that have active subscriptions."
@@ -510,12 +510,12 @@ public class Entitler {
                 if (devPool != null) {
                     poolManager.deletePool(devPool);
                 }
-                devPool = poolManager.createPool(assembleDevPool(consumer, sku));
+                devPool = poolManager.createPool(assembleDevPool(consumer, owner, sku));
                 result.add(new PoolQuantity(devPool, 1));
             }
             else {
                 result = poolManager.getBestPools(
-                    consumer, null, null, owner, serviceLevelOverride, null);
+                    consumer, null, null, owner.getId(), serviceLevelOverride, null);
             }
             log.debug("Created Pool Quantity list: {}", result);
         }

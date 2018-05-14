@@ -133,7 +133,7 @@ public class CertificateSerial extends AbstractHibernateObject<CertificateSerial
     }
 
     public BigInteger getSerial() {
-        return Util.toBigInt(this.getId());
+        return this.getId() != null ? BigInteger.valueOf(this.getId()) : null;
     }
 
     public void setSerial(Long serial) {

@@ -490,12 +490,12 @@ class Candlepin
     return get("/pools", params)
   end
 
-  def list_owner_pools(owner_key, params = {}, attribute_filters=[])
+  def list_owner_pools(owner_key, params = {}, attribute_filters=[], dont_parse= false)
     path = "/owners/#{owner_key}/pools"
 
     params[:attribute] = attribute_filters if !attribute_filters.empty?
 
-    return get(path, params)
+    return get(path, params, :json, dont_parse)
   end
 
   def list_owner_service_levels(owner_key, exempt=false)
@@ -1101,7 +1101,7 @@ class Candlepin
     return get(path, params)
   end
 
-  def create_activation_key(owner_key, name, service_level=nil, autobind=false)
+  def create_activation_key(owner_key, name, service_level=nil, autobind=nil)
     key = {
       :name => name,
     }
@@ -1110,9 +1110,7 @@ class Candlepin
       key['serviceLevel'] = service_level
     end
 
-    if autobind
-      key['autoAttach'] = true
-    end
+    key['autoAttach'] = autobind
 
     return post("/owners/#{owner_key}/activation_keys", {}, key)
   end

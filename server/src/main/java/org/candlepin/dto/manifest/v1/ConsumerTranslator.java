@@ -17,13 +17,30 @@ package org.candlepin.dto.manifest.v1;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 
 /**
  * The ConsumerTranslator provides translation from Consumer model objects to
  * ConsumerDTOs, as used by the manifest import/export API.
  */
 public class ConsumerTranslator implements ObjectTranslator<Consumer, ConsumerDTO> {
+
+    private ConsumerTypeCurator consumerTypeCurator;
+    private OwnerCurator ownerCurator;
+
+    public ConsumerTranslator(ConsumerTypeCurator consumerTypeCurator, OwnerCurator ownerCurator) {
+        if (consumerTypeCurator == null) {
+            throw new IllegalArgumentException("ConsumerTypeCurator is null");
+        }
+        this.consumerTypeCurator = consumerTypeCurator;
+        if (ownerCurator == null) {
+            throw new IllegalArgumentException("OwnerCurator is null");
+        }
+        this.ownerCurator = ownerCurator;
+    }
 
     /**
      * {@inheritDoc}
@@ -68,9 +85,18 @@ public class ConsumerTranslator implements ObjectTranslator<Consumer, ConsumerDT
 
         // Process nested objects if we have a ModelTranslator to use to the translation...
         if (translator != null) {
-            Owner sourceOwner = source.getOwner();
-            dest.setOwner(sourceOwner != null ? sourceOwner.getId() : null);
-            dest.setType(translator.translate(source.getType(), ConsumerTypeDTO.class));
+            if (source.getOwnerId() != null) {
+                Owner owner = this.ownerCurator.findOwnerById(source.getOwnerId());
+                dest.setOwner(owner != null ? translator.translate(owner, OwnerDTO.class) : null);
+            }
+            // Temporary measure to maintain API compatibility
+            if (source.getTypeId() != null) {
+                ConsumerType ctype = this.consumerTypeCurator.getConsumerType(source);
+                dest.setType(translator.translate(ctype, ConsumerTypeDTO.class));
+            }
+            else {
+                dest.setType(null);
+            }
         }
         else {
             dest.setOwner(null);

@@ -145,12 +145,12 @@ public class ContentManagerTest extends DatabaseTestFixture {
 
         // We expect the original to be kept around as an orphan until the orphan removal job
         // gets around to removing them
-        assertNotNull(this.contentCurator.find(content.getUuid()));
+        assertNotNull(this.contentCurator.get(content.getUuid()));
         assertEquals(0, this.ownerContentCurator.getOwnerCount(content));
         assertNotNull(this.ownerContentCurator.getContentById(owner, content.getId()));
 
         // The product should have also changed in the same way as a result of the content change
-        assertNotNull(this.productCurator.find(product.getUuid()));
+        assertNotNull(this.productCurator.get(product.getUuid()));
         assertEquals(0, this.ownerProductCurator.getOwnerCount(product));
         assertNotNull(this.ownerProductCurator.getProductById(owner, product.getId()));
 
@@ -260,7 +260,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
         }
 
         assertFalse(this.ownerContentCurator.isContentMappedToOwner(content, owner));
-        assertNotNull(this.contentCurator.find(content.getUuid()));
+        assertNotNull(this.contentCurator.get(content.getUuid()));
         assertEquals(0, this.ownerContentCurator.getOwnerCount(content));
 
         if (regenCerts) {
@@ -296,7 +296,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
 
         assertFalse(this.ownerContentCurator.isContentMappedToOwner(content, owner1));
         assertTrue(this.ownerContentCurator.isContentMappedToOwner(content, owner2));
-        assertNotNull(this.contentCurator.find(content.getUuid()));
+        assertNotNull(this.contentCurator.get(content.getUuid()));
 
         if (regenCerts) {
             verify(this.mockEntCertGenerator, times(1)).regenerateCertificatesOf(

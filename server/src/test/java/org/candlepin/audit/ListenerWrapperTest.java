@@ -113,7 +113,7 @@ public class ListenerWrapperTest {
         StringWriter sw = new StringWriter();
         Event e = new Event();
         e.setId("10");
-        e.setConsumerId("20");
+        e.setConsumerUuid("20");
         e.setPrincipal(new PrincipalData("5678", "910112"));
         mapper.writeValue(sw, e);
         return sw.toString();

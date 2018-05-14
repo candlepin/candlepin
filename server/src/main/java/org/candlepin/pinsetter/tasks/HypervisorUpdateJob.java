@@ -104,22 +104,21 @@ public class HypervisorUpdateJob extends KingpinJob {
         this.subAdapter = subAdapter;
         this.complianceRules = complianceRules;
 
-        this.hypervisorType = consumerTypeCurator.lookupByLabel(ConsumerTypeEnum.HYPERVISOR.getLabel());
-        if (this.hypervisorType == null) {
-            this.hypervisorType = consumerTypeCurator.create(new ConsumerType(ConsumerTypeEnum.HYPERVISOR));
-        }
+        this.hypervisorType = consumerTypeCurator.getByLabel(ConsumerTypeEnum.HYPERVISOR.getLabel(), true);
     }
 
-    public static JobStatus scheduleJob(JobCurator jobCurator,
-        Scheduler scheduler, JobDetail detail,
+    public static JobStatus scheduleJob(JobCurator jobCurator, Scheduler scheduler, JobDetail detail,
         Trigger trigger) throws SchedulerException {
+
         JobStatus result = jobCurator.getByClassAndTarget(
             detail.getJobDataMap().getString(JobStatus.TARGET_ID),
             HypervisorUpdateJob.class);
+
         if (result == null) {
             return KingpinJob.scheduleJob(jobCurator, scheduler, detail, trigger);
         }
-        log.debug("Scheduling job without a trigger: " + detail.getKey().getName());
+
+        log.debug("Scheduling job without a trigger: {}", detail.getKey().getName());
         JobStatus status = KingpinJob.scheduleJob(jobCurator, scheduler, detail, null);
         return status;
     }
@@ -191,7 +190,7 @@ public class HypervisorUpdateJob extends KingpinJob {
      * {@inheritDoc}
      *
      * Executes {@link ConsumerResource#create(org.candlepin.model.Consumer, org.candlepin.auth.Principal,
-     *  java.utl.String, java.utl.String, java.utl.String)}
+     *  java.lang.String, java.lang.String, java.lang.String)}
      * Executes (@link ConusmerResource#performConsumerUpdates(java.utl.String, org.candlepin.model.Consumer)}
      * as a pinsetter job.
      *
@@ -209,7 +208,7 @@ public class HypervisorUpdateJob extends KingpinJob {
 
             HypervisorUpdateResultUuids result = new HypervisorUpdateResultUuids();
 
-            Owner owner = ownerCurator.lookupByKey(ownerKey);
+            Owner owner = ownerCurator.getByKey(ownerKey);
             if (owner == null) {
                 context.setResult("Nothing to do. Owner does not exist");
                 log.warn("Hypervisor update attempted against non-existent org id \"{0}\"", ownerKey);
@@ -253,8 +252,8 @@ public class HypervisorUpdateJob extends KingpinJob {
                     }
                     else {
                         log.debug("Registering new host consumer for hypervisor ID: {}", hypervisorId);
-                        Consumer newHost = createConsumerForHypervisorId(hypervisorId, owner, principal,
-                            incoming);
+                        Consumer newHost = createConsumerForHypervisorId(hypervisorId, jobReporterId, owner,
+                            principal, incoming);
 
                         // Since we just created this new consumer, we can migrate the guests immediately
                         GuestMigration guestMigration = new GuestMigration(consumerCurator)
@@ -280,13 +279,18 @@ public class HypervisorUpdateJob extends KingpinJob {
                             hypervisorId, ownerKey, knownHost.getHypervisorId().getReporterId(),
                             jobReporterId);
                     }
+                    boolean typeUpdated = false;
+                    if (!hypervisorType.getId().equals(knownHost.getTypeId())) {
+                        typeUpdated = true;
+                        knownHost.setType(hypervisorType);
+                    }
 
                     GuestMigration guestMigration = new GuestMigration(consumerCurator)
                         .buildMigrationManifest(incoming, knownHost);
 
                     boolean factsUpdated = consumerResource.checkForFactsUpdate(knownHost, incoming);
 
-                    if (factsUpdated || guestMigration.isMigrationPending()) {
+                    if (factsUpdated || guestMigration.isMigrationPending() || typeUpdated) {
                         knownHost.setLastCheckin(new Date());
                         guestMigration.migrate(false);
                         result.updated(knownHost);
@@ -350,6 +354,7 @@ public class HypervisorUpdateJob extends KingpinJob {
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.OWNER);
         map.put(JobStatus.TARGET_ID, owner.getKey());
         map.put(JobStatus.OWNER_ID, owner.getKey());
+        map.put(JobStatus.OWNER_LOG_LEVEL, owner.getLogLevel());
         map.put(CREATE, create);
         map.put(DATA, compress(data));
         map.put(PRINCIPAL, principal);
@@ -403,7 +408,7 @@ public class HypervisorUpdateJob extends KingpinJob {
     /*
      * Create a new hypervisor type consumer to represent the incoming hypervisorId
      */
-    private Consumer createConsumerForHypervisorId(String incHypervisorId,
+    private Consumer createConsumerForHypervisorId(String incHypervisorId, String reporterId,
         Owner owner, Principal principal, Consumer incoming) {
         Consumer consumer = new Consumer();
         if (incoming.getName() != null) {
@@ -434,7 +439,8 @@ public class HypervisorUpdateJob extends KingpinJob {
 
 
         // Create HypervisorId
-        HypervisorId hypervisorId = new HypervisorId(consumer, incHypervisorId);
+        HypervisorId hypervisorId = new HypervisorId(consumer, owner, incHypervisorId);
+        hypervisorId.setReporterId(reporterId);
         consumer.setHypervisorId(hypervisorId);
 
         // TODO: Refactor this to not call resource methods directly

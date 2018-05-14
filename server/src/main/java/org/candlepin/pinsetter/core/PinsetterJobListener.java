@@ -124,7 +124,7 @@ public class PinsetterJobListener implements JobListener {
 
     @Transactional
     private void updateJob(JobExecutionContext ctx, JobExecutionException exc) {
-        JobStatus status = curator.find(ctx.getJobDetail().getKey().getName());
+        JobStatus status = curator.get(ctx.getJobDetail().getKey().getName());
         if (status != null) {
             if (exc != null) {
                 log.error("Job [" + status.getId() + "] failed." , exc);
@@ -138,6 +138,7 @@ public class PinsetterJobListener implements JobListener {
             else {
                 status.update(ctx);
             }
+
             curator.merge(status);
         }
         else {

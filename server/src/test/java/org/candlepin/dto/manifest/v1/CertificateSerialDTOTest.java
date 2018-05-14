@@ -16,6 +16,7 @@ package org.candlepin.dto.manifest.v1;
 
 import org.candlepin.dto.AbstractDTOTest;
 
+import java.math.BigInteger;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,7 +34,10 @@ public class CertificateSerialDTOTest extends AbstractDTOTest<CertificateSerialD
 
         this.values = new HashMap<>();
         this.values.put("Id", 12345L);
+        this.values.put("Serial", BigInteger.TEN);
+        this.values.put("Date", new Date());
         this.values.put("Collected", true);
+        this.values.put("Revoked", true);
         this.values.put("Expiration", new Date());
         this.values.put("Created", new Date());
         this.values.put("Updated", new Date());

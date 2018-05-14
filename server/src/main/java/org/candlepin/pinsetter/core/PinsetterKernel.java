@@ -443,8 +443,11 @@ public class PinsetterKernel implements ModeChangeListener {
      *
      * @param toCancel the JobStatus records of the jobs to cancel.
      * @throws PinsetterException if there is an error deleting the jobs from the schedule.
+     *
+     * @return
+     *  The number of jobs cancelled as a result of a call to this method
      */
-    public void cancelJobs(Collection<JobStatus> toCancel) throws PinsetterException {
+    public int cancelJobs(Collection<JobStatus> toCancel) throws PinsetterException {
         List<JobKey> jobsToDelete = new LinkedList<>();
 
         for (JobStatus status : toCancel) {
@@ -454,14 +457,20 @@ public class PinsetterKernel implements ModeChangeListener {
             jobsToDelete.add(key);
         }
 
-        log.info("Deleting {} cancelled jobs from scheduler.", toCancel.size());
-        try {
-            scheduler.deleteJobs(jobsToDelete);
+        if (jobsToDelete.size() > 0) {
+            log.info("Deleting {} cancelled jobs from scheduler", jobsToDelete.size());
+
+            try {
+                scheduler.deleteJobs(jobsToDelete);
+            }
+            catch (SchedulerException se) {
+                throw new PinsetterException("Problem canceling jobs.", se);
+            }
+
+            log.info("Finished deleting jobs from scheduler");
         }
-        catch (SchedulerException se) {
-            throw new PinsetterException("Problem canceling jobs.", se);
-        }
-        log.info("Finished deleting jobs from scheduler");
+
+        return jobsToDelete.size();
     }
 
     /**

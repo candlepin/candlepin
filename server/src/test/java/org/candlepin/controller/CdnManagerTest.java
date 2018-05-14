@@ -38,7 +38,7 @@ public class CdnManagerTest extends DatabaseTestFixture {
     @Test
     public void testCreateCdn() throws Exception {
         Cdn cdn = createCdn("test_cdn");
-        Cdn fetched = curator.lookupByLabel(cdn.getLabel());
+        Cdn fetched = curator.getByLabel(cdn.getLabel());
         assertNotNull(fetched);
         assertEquals("test_cdn", fetched.getLabel());
     }
@@ -50,7 +50,7 @@ public class CdnManagerTest extends DatabaseTestFixture {
         cdn.setName("Updated CDN");
         manager.updateCdn(cdn);
 
-        Cdn fetched = curator.lookupByLabel(cdn.getLabel());
+        Cdn fetched = curator.getByLabel(cdn.getLabel());
         assertNotNull(fetched);
         assertEquals(cdn.getLabel(), fetched.getLabel());
         assertEquals("Updated CDN", fetched.getName());
@@ -60,7 +60,7 @@ public class CdnManagerTest extends DatabaseTestFixture {
     public void deleteCdn() throws Exception {
         Cdn cdn = createCdn("test_cdn");
         manager.deleteCdn(cdn);
-        assertNull(curator.lookupByLabel(cdn.getLabel()));
+        assertNull(curator.getByLabel(cdn.getLabel()));
     }
 
     @Test
@@ -77,10 +77,10 @@ public class CdnManagerTest extends DatabaseTestFixture {
         assertNotNull(pool.getCdn());
 
         manager.deleteCdn(cdn);
-        assertNull(curator.lookupByLabel(cdn.getLabel()));
+        assertNull(curator.getByLabel(cdn.getLabel()));
         poolCurator.clear();
 
-        Pool updatedPool = poolCurator.find(pool.getId());
+        Pool updatedPool = poolCurator.get(pool.getId());
         assertNull(updatedPool.getCdn());
     }
 
@@ -91,7 +91,7 @@ public class CdnManagerTest extends DatabaseTestFixture {
         assertNotNull(serial);
         assertFalse(serial.isRevoked());
         manager.deleteCdn(cdn);
-        CertificateSerial fetched = certSerialCurator.find(serial.getId());
+        CertificateSerial fetched = certSerialCurator.get(serial.getId());
         assertNotNull(fetched);
         assertTrue(fetched.isRevoked());
     }

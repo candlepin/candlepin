@@ -29,7 +29,6 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xnap.commons.i18n.I18n;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -40,6 +39,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.cache.Cache;
+import javax.inject.Singleton;
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import javax.persistence.Query;
@@ -54,11 +54,11 @@ import javax.persistence.criteria.Path;
 /**
  * interact with Products.
  */
+@Singleton
 public class ProductCurator extends AbstractHibernateCurator<Product> {
     private static Logger log = LoggerFactory.getLogger(ProductCurator.class);
 
     private Configuration config;
-    private I18n i18n;
     private CandlepinCache candlepinCache;
     private AttributeValidator attributeValidator;
 
@@ -66,13 +66,12 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      * default ctor
      */
     @Inject
-    public ProductCurator(Configuration config, I18n i18n, CandlepinCache candlepinCache,
+    public ProductCurator(Configuration config, CandlepinCache candlepinCache,
         AttributeValidator attributeValidator) {
 
         super(Product.class);
 
         this.config = config;
-        this.i18n = i18n;
         this.candlepinCache = candlepinCache;
         this.attributeValidator = attributeValidator;
     }
@@ -91,7 +90,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      *  a Product instance for the product with the specified name, or null if a matching product
      *  was not found.
      */
-    public Product lookupByName(Owner owner, String name) {
+    public Product getByName(Owner owner, String name) {
         return (Product) this.createSecureCriteria(OwnerProduct.class, null)
             .createAlias("owner", "owner")
             .createAlias("product", "product")
@@ -415,7 +414,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     @Override
     @Transactional
     public void delete(Product entity) {
-        Product toDelete = find(entity.getUuid());
+        Product toDelete = this.get(entity.getUuid());
         currentSession().delete(toDelete);
     }
 

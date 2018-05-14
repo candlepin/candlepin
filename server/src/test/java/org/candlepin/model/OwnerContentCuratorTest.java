@@ -538,8 +538,8 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
 
         this.environmentCurator.evict(environment1);
         this.environmentCurator.evict(environment2);
-        environment1 = this.environmentCurator.find(environment1.getId());
-        environment2 = this.environmentCurator.find(environment2.getId());
+        environment1 = this.environmentCurator.get(environment1.getId());
+        environment2 = this.environmentCurator.get(environment2.getId());
 
         assertEquals(1, environment1.getEnvironmentContent().size());
         assertEquals(1, environment2.getEnvironmentContent().size());
@@ -576,8 +576,8 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
 
         this.environmentCurator.evict(environment1);
         this.environmentCurator.evict(environment2);
-        environment1 = this.environmentCurator.find(environment1.getId());
-        environment2 = this.environmentCurator.find(environment2.getId());
+        environment1 = this.environmentCurator.get(environment1.getId());
+        environment2 = this.environmentCurator.get(environment2.getId());
 
         assertEquals(0, environment1.getEnvironmentContent().size());
         assertEquals(1, environment2.getEnvironmentContent().size());

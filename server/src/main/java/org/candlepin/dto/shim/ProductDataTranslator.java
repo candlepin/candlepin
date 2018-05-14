@@ -28,7 +28,7 @@ import java.util.Collection;
 
 /**
  * The ProductDataTranslator provides translation from ProductData DTO objects to the new
- * ProductDTOs
+ * ProductDTOs (API)
  */
 public class ProductDataTranslator implements ObjectTranslator<ProductData, ProductDTO> {
 

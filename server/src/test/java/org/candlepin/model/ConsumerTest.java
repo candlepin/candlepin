@@ -19,7 +19,6 @@ import static org.mockito.Mockito.mock;
 
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
-import org.candlepin.common.config.Configuration;
 import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.resource.ConsumerResource;
@@ -34,15 +33,13 @@ import java.util.Date;
 import java.util.Map;
 
 import javax.inject.Inject;
-import javax.persistence.PersistenceException;
+import javax.validation.ConstraintViolationException;
 
 
 
 public class ConsumerTest extends DatabaseTestFixture {
 
     @Inject private ConsumerResource consumerResource;
-    @Inject private RoleCurator roleCurator;
-    @Inject private Configuration config;
 
     private Owner owner;
     private Product rhel;
@@ -68,7 +65,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         consumerCurator.create(consumer);
     }
 
-    @Test(expected = PersistenceException.class)
+    @Test(expected = ConstraintViolationException.class)
     public void testConsumerTypeRequired() {
         Consumer newConsumer = new Consumer();
         newConsumer.setName("cname");
@@ -77,38 +74,46 @@ public class ConsumerTest extends DatabaseTestFixture {
         consumerCurator.create(newConsumer);
     }
 
-    @Test(expected = PersistenceException.class)
+    @Test(expected = ConstraintViolationException.class)
     public void testConsumerNameLengthCreate() {
         String name = "";
         for (int x = 0; x < 300; x++) {
             name += "x";
         }
+
         Consumer newConsumer = new Consumer();
         newConsumer.setName(name);
         newConsumer.setOwner(owner);
+        newConsumer.setType(consumerType);
 
         consumerCurator.create(newConsumer);
     }
 
-    @Test(expected = PersistenceException.class)
+    @Test(expected = ConstraintViolationException.class)
     public void testConsumerNameLengthUpdate() {
         String name = "";
         for (int x = 0; x < 300; x++) {
             name += "x";
         }
+
         Consumer newConsumer = new Consumer();
         newConsumer.setName(name);
         newConsumer.setOwner(owner);
+        newConsumer.setType(consumerType);
 
         consumerCurator.update(newConsumer);
     }
 
     @Test
     public void testLookup() throws Exception {
-        Consumer lookedUp = consumerCurator.find(consumer.getId());
+        Consumer lookedUp = consumerCurator.get(consumer.getId());
         assertEquals(consumer.getId(), lookedUp.getId());
         assertEquals(consumer.getName(), lookedUp.getName());
-        assertEquals(consumer.getType().getLabel(), lookedUp.getType().getLabel());
+
+        ConsumerType ctypeExpected = this.consumerTypeCurator.getConsumerType(consumer);
+        ConsumerType ctypeActual = this.consumerTypeCurator.getConsumerType(lookedUp);
+
+        assertEquals(ctypeExpected.getLabel(), ctypeActual.getLabel());
         assertNotNull(consumer.getUuid());
     }
 
@@ -116,7 +121,7 @@ public class ConsumerTest extends DatabaseTestFixture {
     public void testSetInitialization() throws Exception {
         Consumer noFacts = new Consumer(CONSUMER_NAME, USER_NAME, owner, consumerType);
         consumerCurator.create(noFacts);
-        noFacts = consumerCurator.find(noFacts.getId());
+        noFacts = consumerCurator.get(noFacts.getId());
         assertNotNull(noFacts.getFacts());
         assertNotNull(noFacts.getInstalledProducts());
         assertNotNull(noFacts.getGuestIds());
@@ -124,7 +129,7 @@ public class ConsumerTest extends DatabaseTestFixture {
 
     @Test
     public void testInfo() {
-        Consumer lookedUp = consumerCurator.find(consumer.getId());
+        Consumer lookedUp = consumerCurator.get(consumer.getId());
         Map<String, String> metadata = lookedUp.getFacts();
         assertEquals(2, metadata.keySet().size());
         assertEquals("bar", metadata.get("foo"));
@@ -144,7 +149,7 @@ public class ConsumerTest extends DatabaseTestFixture {
 
         consumerResource.updateConsumer(consumer.getUuid(), newConsumer, mock(Principal.class));
 
-        Consumer lookedUp = consumerCurator.find(consumer.getId());
+        Consumer lookedUp = consumerCurator.get(consumer.getId());
         Date lookedUpDate = lookedUp.getUpdated();
         assertEquals("FACT_VALUE", lookedUp.getFact("FACT"));
 
@@ -158,7 +163,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         consumer2.setFact("foo", "bar2");
         consumerCurator.create(consumer2);
 
-        Consumer lookedUp = consumerCurator.find(consumer.getId());
+        Consumer lookedUp = consumerCurator.get(consumer.getId());
         Map<String, String> metadata = lookedUp.getFacts();
         assertEquals(2, metadata.keySet().size());
         assertEquals("bar", metadata.get("foo"));
@@ -166,7 +171,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         assertEquals("bar1", metadata.get("foo1"));
         assertEquals("bar1", lookedUp.getFacts().get("foo1"));
 
-        Consumer lookedUp2 = consumerCurator.find(consumer2.getId());
+        Consumer lookedUp2 = consumerCurator.get(consumer2.getId());
         metadata = lookedUp2.getFacts();
         assertEquals(1, metadata.keySet().size());
         assertEquals("bar2", metadata.get("foo"));
@@ -177,23 +182,23 @@ public class ConsumerTest extends DatabaseTestFixture {
         consumer.setFact("foo", "notbar");
         consumerCurator.merge(consumer);
 
-        Consumer lookedUp = consumerCurator.find(consumer.getId());
+        Consumer lookedUp = consumerCurator.get(consumer.getId());
         assertEquals("notbar", lookedUp.getFact("foo"));
     }
 
     @Test
     public void testRemoveConsumedProducts() {
-        consumerCurator.delete(consumerCurator.find(consumer.getId()));
-        assertNull(consumerCurator.find(consumer.getId()));
+        consumerCurator.delete(consumerCurator.get(consumer.getId()));
+        assertNull(consumerCurator.get(consumer.getId()));
     }
 
     @Test
-    public void testLookupByUuidNonExistent() {
+    public void testgetByUuidNonExistent() {
         consumerCurator.findByUuid("this is not a uuid!");
     }
 
     @Test
-    public void testLookupByUuid() {
+    public void testgetByUuid() {
         Consumer consumer2 = new Consumer("consumer2", USER_NAME, owner, consumerType);
         consumerCurator.create(consumer2);
 
@@ -212,9 +217,9 @@ public class ConsumerTest extends DatabaseTestFixture {
         this.getEntityManager().persist(pool.getOwner());
         this.getEntityManager().persist(pool);
 
-        Entitlement e1 = createEntitlement(pool, consumer);
-        Entitlement e2 = createEntitlement(pool, consumer);
-        Entitlement e3 = createEntitlement(pool, consumer);
+        Entitlement e1 = createEntitlement(pool, consumer, o);
+        Entitlement e2 = createEntitlement(pool, consumer, o);
+        Entitlement e3 = createEntitlement(pool, consumer, o);
         this.getEntityManager().persist(e1);
         this.getEntityManager().persist(e2);
         this.getEntityManager().persist(e3);
@@ -224,12 +229,12 @@ public class ConsumerTest extends DatabaseTestFixture {
         consumer.addEntitlement(e3);
         consumerCurator.merge(consumer);
 
-        Consumer lookedUp = consumerCurator.find(consumer.getId());
+        Consumer lookedUp = consumerCurator.get(consumer.getId());
         assertEquals(3, lookedUp.getEntitlements().size());
     }
 
-    private Entitlement createEntitlement(Pool pool, Consumer c) {
-        Entitlement e = new Entitlement(pool, c, 1);
+    private Entitlement createEntitlement(Pool pool, Consumer c, Owner o) {
+        Entitlement e = new Entitlement(pool, c, o, 1);
         e.setId(Util.generateDbUUID());
         return e;
     }
@@ -242,11 +247,11 @@ public class ConsumerTest extends DatabaseTestFixture {
 
     @Test
     public void canDeleteSelf() {
-        setupPrincipal(new ConsumerPrincipal(consumer));
+        setupPrincipal(new ConsumerPrincipal(consumer, owner));
 
         consumerCurator.delete(consumer);
 
-        assertNull(consumerCurator.find(consumer.getId()));
+        assertNull(consumerCurator.get(consumer.getId()));
     }
 
     @Test
@@ -263,12 +268,12 @@ public class ConsumerTest extends DatabaseTestFixture {
         second.setFact("key2", "two");
         second.setFact("key3", "3");
 
-        assertTrue(first.factsAreEqual(second));
+        assertTrue(first.factsAreEqual(second.getFacts()));
     }
 
     @Test
     public void defaultFactsEqual() {
-        assertTrue(new Consumer().factsAreEqual(new Consumer()));
+        assertTrue(new Consumer().factsAreEqual(new Consumer().getFacts()));
     }
 
     @Test
@@ -285,7 +290,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         second.setFact("key2", "2");
         second.setFact("key3", "3");
 
-        assertFalse(first.factsAreEqual(second));
+        assertFalse(first.factsAreEqual(second.getFacts()));
     }
 
     @Test
@@ -300,7 +305,7 @@ public class ConsumerTest extends DatabaseTestFixture {
 
         second.setFact("key1", "1");
 
-        assertFalse(first.factsAreEqual(second));
+        assertFalse(first.factsAreEqual(second.getFacts()));
     }
 
     @Test
@@ -316,7 +321,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         second.setFact("key2", "2");
         second.setFact("key3", "3");
 
-        assertFalse(first.factsAreEqual(second));
+        assertFalse(first.factsAreEqual(second.getFacts()));
     }
 
     @Test
@@ -331,7 +336,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         second.setFact("key1", "1");
         second.setFact("key2", null);
 
-        assertTrue(first.factsAreEqual(second));
+        assertTrue(first.factsAreEqual(second.getFacts()));
     }
 
     @Test
@@ -346,7 +351,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         second.setFact("key1", "1");
         second.setFact("key2", "two");
 
-        assertFalse(first.factsAreEqual(second));
+        assertFalse(first.factsAreEqual(second.getFacts()));
     }
 
     @Test
@@ -357,7 +362,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         Consumer second = new Consumer();
         second.setFact("key1", "1");
 
-        assertFalse(first.factsAreEqual(second));
+        assertFalse(first.factsAreEqual(second.getFacts()));
     }
 
     @Test
@@ -368,7 +373,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         Consumer second = new Consumer();
         second.setFacts(null);
 
-        assertFalse(first.factsAreEqual(second));
+        assertFalse(first.factsAreEqual(second.getFacts()));
     }
 
     @Test
@@ -379,7 +384,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         Consumer second = new Consumer();
         second.setFact("key1", null);
 
-        assertFalse(first.factsAreEqual(second));
+        assertFalse(first.factsAreEqual(second.getFacts()));
     }
 
     @Test
@@ -390,7 +395,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         Consumer second = new Consumer();
         second.setFacts(null);
 
-        assertTrue(first.factsAreEqual(second));
+        assertTrue(first.factsAreEqual(second.getFacts()));
     }
 
     @Test
@@ -421,7 +426,7 @@ public class ConsumerTest extends DatabaseTestFixture {
 
     @Test
     public void testInstalledProducts() throws Exception {
-        Consumer lookedUp = consumerCurator.find(consumer.getId());
+        Consumer lookedUp = consumerCurator.get(consumer.getId());
         lookedUp.addInstalledProduct(
             new ConsumerInstalledProduct("someproduct", "someproductname")
         );
@@ -429,29 +434,29 @@ public class ConsumerTest extends DatabaseTestFixture {
             new ConsumerInstalledProduct("someproduct2", "someproductname2")
         );
         consumerCurator.update(lookedUp);
-        lookedUp = consumerCurator.find(consumer.getId());
+        lookedUp = consumerCurator.get(consumer.getId());
         assertEquals(2, lookedUp.getInstalledProducts().size());
         ConsumerInstalledProduct installed = lookedUp.getInstalledProducts().
             iterator().next();
         lookedUp.getInstalledProducts().remove(installed);
         consumerCurator.update(lookedUp);
-        lookedUp = consumerCurator.find(consumer.getId());
+        lookedUp = consumerCurator.get(consumer.getId());
         assertEquals(1, lookedUp.getInstalledProducts().size());
     }
 
     @Test
     public void testGuests() throws Exception {
-        Consumer lookedUp = consumerCurator.find(consumer.getId());
+        Consumer lookedUp = consumerCurator.get(consumer.getId());
         lookedUp.addGuestId(new GuestId("guest1"));
         lookedUp.addGuestId(new GuestId("guest2"));
         consumerCurator.update(lookedUp);
-        lookedUp = consumerCurator.find(consumer.getId());
+        lookedUp = consumerCurator.get(consumer.getId());
         assertEquals(2, lookedUp.getGuestIds().size());
         GuestId installed = lookedUp.getGuestIds().
             iterator().next();
         lookedUp.getGuestIds().remove(installed);
         consumerCurator.update(lookedUp);
-        lookedUp = consumerCurator.find(consumer.getId());
+        lookedUp = consumerCurator.get(consumer.getId());
         assertEquals(1, lookedUp.getGuestIds().size());
     }
 

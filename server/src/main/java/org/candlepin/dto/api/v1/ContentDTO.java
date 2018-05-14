@@ -112,38 +112,6 @@ public class ContentDTO extends TimestampedCandlepinDTO<ContentDTO> {
     }
 
     /**
-     * Initializes a new ContentDTO instance with the specified values.
-     * <p/></p>
-     * <strong>Note</strong>: This constructor passes the provided values to their respective
-     * mutator methods, and does not capture any exceptions they may throw due to malformed
-     * values.
-     *
-     * @param id
-     *  The ID of the content to be represented by this DTO; cannot be null
-     *
-     * @param name
-     *  The name of the content to be represented by this DTO
-     *
-     * @param type
-     *  The type of the content to be represented by this DTO
-     *
-     * @param label
-     *  The label of the content to be represented by this DTO
-     *
-     * @param vendor
-     *  The vendor of the content to be represented by this DTO
-     */
-    public ContentDTO(String id, String name, String type, String label, String vendor) {
-        super();
-
-        this.setId(id);
-        this.setName(name);
-        this.setType(type);
-        this.setLabel(label);
-        this.setVendor(vendor);
-    }
-
-    /**
      * Initializes a new ContentDTO instance using the data contained by the given DTO.
      *
      * @param source
@@ -580,11 +548,17 @@ public class ContentDTO extends TimestampedCandlepinDTO<ContentDTO> {
         return this;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String toString() {
         return String.format("ContentDTO [id: %s, name: %s, label: %s]", this.id, this.name, this.label);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean equals(Object obj) {
         if (obj == this) {
@@ -616,6 +590,9 @@ public class ContentDTO extends TimestampedCandlepinDTO<ContentDTO> {
         return false;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int hashCode() {
         HashCodeBuilder builder = new HashCodeBuilder(7, 17)
@@ -638,11 +615,14 @@ public class ContentDTO extends TimestampedCandlepinDTO<ContentDTO> {
         return builder.toHashCode();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public ContentDTO clone() {
         ContentDTO copy = super.clone();
 
-        copy.setModifiedProductIds(this.modifiedProductIds);
+        copy.setModifiedProductIds(this.getModifiedProductIds());
 
         return copy;
     }

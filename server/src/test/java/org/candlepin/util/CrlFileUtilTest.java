@@ -19,7 +19,7 @@ import static org.junit.Assert.*;
 
 import org.candlepin.TestingModules;
 import org.candlepin.model.CertificateSerialCurator;
-import org.candlepin.pki.PKIReader;
+import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.PKIUtility;
 
 import com.google.inject.Guice;
@@ -61,7 +61,7 @@ public class CrlFileUtilTest {
     private static final BouncyCastleProvider BC_PROVIDER = new BouncyCastleProvider();
     private CrlFileUtil cfu;
 
-    @Inject private PKIReader pkiReader;
+    @Inject private CertificateReader certificateReader;
     @Inject private PKIUtility pkiUtility;
     @Mock private CertificateSerialCurator certSerialCurator;
     private File temp;
@@ -76,7 +76,7 @@ public class CrlFileUtilTest {
         );
         injector.injectMembers(this);
 
-        this.cfu = new CrlFileUtil(this.pkiReader, this.pkiUtility, this.certSerialCurator);
+        this.cfu = new CrlFileUtil(this.certificateReader, this.pkiUtility, this.certSerialCurator);
         this.temp = File.createTempFile("cp_test_crl-", ".pem");
         this.initialEntry = new HashSet<>();
         this.initialEntry.add(BigInteger.ONE);
@@ -225,7 +225,7 @@ public class CrlFileUtilTest {
             try {
                 in = new BufferedInputStream(new FileInputStream(f));
                 x509crl = (X509CRL) CertificateFactory.getInstance("X.509").generateCRL(in);
-                x509crl.verify(pkiReader.getCACert().getPublicKey(), BC_PROVIDER.PROVIDER_NAME);
+                x509crl.verify(certificateReader.getCACert().getPublicKey(), BC_PROVIDER.PROVIDER_NAME);
                 Set<BigInteger> s = new HashSet<>();
 
                 for (X509CRLEntry entry : x509crl.getRevokedCertificates()) {

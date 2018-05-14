@@ -46,7 +46,7 @@ public class RoleTest extends DatabaseTestFixture {
 
         Role r = createRole(owner);
 
-        Role lookedUp = roleCurator.find(r.getId());
+        Role lookedUp = roleCurator.get(r.getId());
         assertEquals(1, lookedUp.getPermissions().size());
         assertEquals(1, lookedUp.getUsers().size());
     }
@@ -86,7 +86,7 @@ public class RoleTest extends DatabaseTestFixture {
         role.addPermission(new PermissionBlueprint(PermissionType.OWNER, owner, Access.ALL));
         roleCurator.flush();
 
-        role = roleCurator.find(role.getId());
+        role = roleCurator.get(role.getId());
         assertEquals(1, role.getPermissions().size());
         PermissionBlueprint perm = role.getPermissions().iterator().next();
         assertNotNull(perm.getId());

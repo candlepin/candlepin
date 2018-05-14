@@ -73,10 +73,11 @@ public class PinsetterTriggerListener extends TriggerListenerSupport {
 
         try {
             String id = trigger.getJobKey().getName();
-            JobStatus js = jobCurator.find(id);
+            JobStatus js = jobCurator.get(id);
             if (js == null) {
                 throw new RuntimeException("No JobStatus for job with id of " + id);
             }
+
             // if may not refire again, change to fail
             if (!trigger.mayFireAgain()) {
                 log.warn("Job {} not allowed to fire again. Setting state to FAILED.", id);

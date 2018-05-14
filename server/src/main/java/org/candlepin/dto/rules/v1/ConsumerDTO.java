@@ -414,8 +414,7 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> {
      */
     @Override
     public String toString() {
-        return String.format("ConsumerDTO [uuid: %s, username: %s]",
-                this.getUuid(), this.getUsername());
+        return String.format("ConsumerDTO [uuid: %s, username: %s]", this.getUuid(), this.getUsername());
     }
 
     /**
@@ -472,11 +471,15 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> {
     public ConsumerDTO clone() {
         ConsumerDTO copy = super.clone();
 
-        copy.owner = owner != null ? owner.clone() : null;
+        OwnerDTO owner = this.getOwner();
+        copy.setOwner(owner != null ? owner.clone() : null);
+
+        ConsumerTypeDTO ctype = this.getType();
+        copy.setType(ctype != null ? ctype.clone() : null);
+
         copy.setFacts(this.getFacts());
         copy.setInstalledProducts(this.getInstalledProducts());
         copy.setCapabilities(this.getCapabilities());
-        copy.type = type != null ? type.clone() : null;
 
         return copy;
     }

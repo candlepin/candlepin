@@ -14,6 +14,7 @@
  */
 package org.candlepin.resource.util;
 
+import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.GuestId;
@@ -26,7 +27,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -72,6 +75,55 @@ public class GuestMigration {
      * If a consumer's guest was already reported by another host consumer, record that host in the
      * manifest as well so that the migration can be made atomically.
      *
+     * @param incoming incoming consumer in DTO form
+     * @param existing existing consumer in model form
+     * @return guestMigration object that contains all information related to the migration
+     */
+    public GuestMigration buildMigrationManifest(ConsumerDTO incoming, Consumer existing) {
+        if (incoming.getGuestIds() == null) {
+            log.debug("Guests not included in this consumer update, skipping update.");
+            migrationPending = false;
+            return this;
+        }
+
+        manifest = new MigrationManifest(existing);
+
+        log.debug("Updating {} guest IDs.", incoming.getGuestIds().size());
+        List<GuestId> existingGuests = existing.getGuestIds();
+        // Transform incoming GuestIdDTOs to GuestIds
+        List<GuestId> incomingGuestIds = incoming.getGuestIds().stream().filter(Objects::nonNull)
+            .map(guestIdDTO -> new GuestId(guestIdDTO.getGuestId(), existing, guestIdDTO.getAttributes()))
+            .collect(Collectors.toList());
+
+        List<GuestId> removedGuests = getRemovedGuestIds(existing, incomingGuestIds);
+        List<GuestId> addedGuests = getAddedGuestIds(existing, incomingGuestIds);
+
+        // remove guests that are missing.
+        if (existingGuests != null) {
+            for (GuestId guestId : removedGuests) {
+                existingGuests.remove(guestId);
+                log.debug("Guest ID removed: {}", guestId);
+            }
+        }
+
+        // Check guests that are existing/added.
+        for (GuestId guestId : incomingGuestIds) {
+            if (addedGuests.contains(guestId)) {
+                manifest.addGuestId(guestId);
+                log.debug("New guest ID added: {}", guestId);
+            }
+        }
+
+        migrationPending = removedGuests.size() != 0 || addedGuests.size() != 0;
+        return this;
+    }
+
+    /**
+     * Build a manifest detailing any guest migrations occurring due to a host consumer update.
+     *
+     * If a consumer's guest was already reported by another host consumer, record that host in the
+     * manifest as well so that the migration can be made atomically.
+     *
      * @param incoming incoming consumer
      * @param existing existing consumer
      * @return guestMigration object that contains all information related to the migration
@@ -87,8 +139,8 @@ public class GuestMigration {
 
         log.debug("Updating {} guest IDs.", incoming.getGuestIds().size());
         List<GuestId> existingGuests = existing.getGuestIds();
-        List<GuestId> removedGuests = getRemovedGuestIds(existing, incoming);
-        List<GuestId> addedGuests = getAddedGuestIds(existing, incoming);
+        List<GuestId> removedGuests = getRemovedGuestIds(existing, incoming.getGuestIds());
+        List<GuestId> addedGuests = getAddedGuestIds(existing, incoming.getGuestIds());
 
         // remove guests that are missing.
         if (existingGuests != null) {
@@ -110,17 +162,28 @@ public class GuestMigration {
         return this;
     }
 
-    private List<GuestId> getAddedGuestIds(Consumer existing, Consumer incoming) {
-        return getDifferenceInGuestIds(incoming, existing);
+    private List<GuestId> getAddedGuestIds(Consumer existing, List<GuestId> incomingIds) {
+        return getDifferenceInGuestIds(incomingIds, existing);
     }
 
-    private List<GuestId> getRemovedGuestIds(Consumer existing, Consumer incoming) {
-        return getDifferenceInGuestIds(existing, incoming);
+    private List<GuestId> getRemovedGuestIds(Consumer existing, List<GuestId> incomingIds) {
+        return getDifferenceInGuestIds(existing, incomingIds);
     }
 
-    private List<GuestId> getDifferenceInGuestIds(Consumer c1, Consumer c2) {
-        List<GuestId> ids1 = c1.getGuestIds() == null ? new ArrayList<>() : new ArrayList<>(c1.getGuestIds());
-        List<GuestId> ids2 = c2.getGuestIds() == null ? new ArrayList<>() : new ArrayList<>(c2.getGuestIds());
+    private List<GuestId> getDifferenceInGuestIds(Consumer existingConsumer, List<GuestId> incomingIds) {
+        List<GuestId> ids1 = existingConsumer.getGuestIds() == null ? new ArrayList<>() :
+            new ArrayList<>(existingConsumer.getGuestIds());
+        List<GuestId> ids2 = incomingIds == null ? new ArrayList<>() : new ArrayList<>(incomingIds);
+
+        List<GuestId> removedGuests = new ArrayList<>(ids1);
+        removedGuests.removeAll(ids2);
+        return removedGuests;
+    }
+
+    private List<GuestId> getDifferenceInGuestIds(List<GuestId> incomingIds, Consumer existingConsumer) {
+        List<GuestId> ids1 = incomingIds == null ? new ArrayList<>() : new ArrayList<>(incomingIds);
+        List<GuestId> ids2 = existingConsumer.getGuestIds() == null ? new ArrayList<>() :
+            new ArrayList<>(existingConsumer.getGuestIds());
 
         List<GuestId> removedGuests = new ArrayList<>(ids1);
         removedGuests.removeAll(ids2);

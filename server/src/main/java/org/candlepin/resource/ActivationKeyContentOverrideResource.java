@@ -14,6 +14,7 @@
  */
 package org.candlepin.resource;
 
+import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverrideCurator;
@@ -29,14 +30,15 @@ import javax.ws.rs.Path;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.Authorization;
 
+
+
 /**
  * ActivationKeyContentOverrideResource
  */
 @Path("/activation_keys/{activation_key_id}/content_overrides")
 @Api(value = "activation_keys", authorizations = { @Authorization("basic") })
 public class ActivationKeyContentOverrideResource extends
-    ContentOverrideResource<ActivationKeyContentOverride,
-    ActivationKeyContentOverrideCurator,
+    ContentOverrideResource<ActivationKeyContentOverride, ActivationKeyContentOverrideCurator,
     ActivationKey> {
 
     private ActivationKeyCurator activationKeyCurator;
@@ -51,13 +53,24 @@ public class ActivationKeyContentOverrideResource extends
         ActivationKeyContentOverrideCurator contentOverrideCurator,
         ActivationKeyCurator activationKeyCurator,
         ContentOverrideValidator contentOverrideValidator, I18n i18n) {
+
         super(contentOverrideCurator, contentOverrideValidator, i18n, "activation_key_id");
         this.activationKeyCurator = activationKeyCurator;
     }
 
     @Override
     protected ActivationKey findParentById(String parentId) {
-        return activationKeyCurator.verifyAndLookupKey(parentId);
+        if (parentId == null || parentId.isEmpty()) {
+            throw new BadRequestException(i18n.tr("activation key ID is null or empty"));
+        }
+
+        ActivationKey key = this.activationKeyCurator.secureGet(parentId);
+
+        if (key == null) {
+            throw new BadRequestException(i18n.tr("ActivationKey with id {0} could not be found.", parentId));
+        }
+
+        return key;
     }
 
 }

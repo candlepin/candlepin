@@ -24,6 +24,8 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
+import org.candlepin.test.TestUtil;
 
 import org.jboss.resteasy.spi.HttpRequest;
 import org.junit.Before;
@@ -41,6 +43,7 @@ public class SSLAuthTest {
 
     @Mock private HttpRequest httpRequest;
     @Mock private ConsumerCurator consumerCurator;
+    @Mock private OwnerCurator ownerCurator;
     @Mock private DeletedConsumerCurator deletedConsumerCurator;
     @Mock private Provider<I18n> i18nProvider;
 
@@ -49,7 +52,10 @@ public class SSLAuthTest {
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        this.auth = new SSLAuth(this.consumerCurator, this.deletedConsumerCurator, i18nProvider);
+        this.auth = new SSLAuth(this.consumerCurator,
+            this.ownerCurator,
+            this.deletedConsumerCurator,
+            i18nProvider);
     }
 
     /**
@@ -69,15 +75,19 @@ public class SSLAuthTest {
      */
     @Test
     public void correctUserName() throws Exception {
+        ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.SYSTEM);
+        ctype.setId("test-ctype");
+
         Owner owner = new Owner("test owner");
-        Consumer consumer = new Consumer("machine_name", "test user", owner,
-            new ConsumerType(ConsumerTypeEnum.SYSTEM));
-        ConsumerPrincipal expected = new ConsumerPrincipal(consumer);
+        owner.setId(TestUtil.randomString());
+        Consumer consumer = new Consumer("machine_name", "test user", owner, ctype);
+        ConsumerPrincipal expected = new ConsumerPrincipal(consumer, owner);
 
         String dn = "CN=453-44423-235";
 
         mockCert(dn);
         when(this.consumerCurator.getConsumer("453-44423-235")).thenReturn(consumer);
+        when(this.ownerCurator.findOwnerById(owner.getOwnerId())).thenReturn(owner);
         assertEquals(expected, this.auth.getPrincipal(httpRequest));
     }
 
@@ -113,7 +123,7 @@ public class SSLAuthTest {
 
         when(idCert.getSubjectX500Principal()).thenReturn(principal);
         when(this.httpRequest.getAttribute("javax.servlet.request.X509Certificate"))
-                .thenReturn(new X509Certificate[]{idCert});
+            .thenReturn(new X509Certificate[]{idCert});
     }
 
 }

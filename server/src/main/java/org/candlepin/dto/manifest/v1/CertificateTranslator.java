@@ -15,7 +15,7 @@
 package org.candlepin.dto.manifest.v1;
 
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.ObjectTranslator;
+import org.candlepin.dto.TimestampedEntityTranslator;
 import org.candlepin.model.Certificate;
 
 
@@ -24,7 +24,7 @@ import org.candlepin.model.Certificate;
  * The CertificateTranslator provides translation from Certificate model objects to
  * CertificateDTOs as used by the manifest import/export framework.
  */
-public class CertificateTranslator implements ObjectTranslator<Certificate, CertificateDTO> {
+public class CertificateTranslator extends TimestampedEntityTranslator<Certificate, CertificateDTO> {
 
     /**
      * {@inheritDoc}
@@ -55,13 +55,7 @@ public class CertificateTranslator implements ObjectTranslator<Certificate, Cert
      */
     @Override
     public CertificateDTO populate(ModelTranslator translator, Certificate source, CertificateDTO dest) {
-        if (source == null) {
-            throw new IllegalArgumentException("source is null");
-        }
-
-        if (dest == null) {
-            throw new IllegalArgumentException("destination is null");
-        }
+        dest = super.populate(translator, source, dest);
 
         dest.setId(source.getId());
         dest.setKey(source.getKey());

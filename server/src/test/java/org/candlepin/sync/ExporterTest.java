@@ -40,9 +40,11 @@ import org.candlepin.model.DistributorVersionCapability;
 import org.candlepin.model.DistributorVersionCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.KeyPair;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
@@ -93,6 +95,7 @@ import java.util.zip.ZipInputStream;
 public class ExporterTest {
 
     private ConsumerTypeCurator ctc;
+    private OwnerCurator oc;
     private MetaExporter me;
     private ConsumerExporter ce;
     private ConsumerTypeExporter cte;
@@ -109,6 +112,7 @@ public class ExporterTest {
     private CdnCurator cdnc;
     private CdnExporter cdne;
     private EntitlementExporter ee;
+    private EnvironmentCurator mockEnvironmentCurator;
     private PKIUtility pki;
     private CandlepinCommonTestConfig config;
     private ExportRules exportRules;
@@ -121,15 +125,17 @@ public class ExporterTest {
     @Before
     public void setUp() {
         ctc = mock(ConsumerTypeCurator.class);
+        mockEnvironmentCurator = mock(EnvironmentCurator.class);
+        oc = mock(OwnerCurator.class);
         me = new MetaExporter();
-        translator = new StandardTranslator();
+        translator = new StandardTranslator(ctc, mockEnvironmentCurator, oc);
         ce = new ConsumerExporter(translator);
         cte = new ConsumerTypeExporter(translator);
         rc = mock(RulesCurator.class);
         re = new RulesExporter(rc);
         ece = new EntitlementCertExporter();
         ecsa = mock(EntitlementCertServiceAdapter.class);
-        pe = new ProductExporter();
+        pe = new ProductExporter(translator);
         psa = mock(ProductServiceAdapter.class);
         pce = new ProductCertExporter();
         ec = mock(EntitlementCurator.class);
@@ -139,9 +145,9 @@ public class ExporterTest {
         exportRules = mock(ExportRules.class);
         pprov = mock(PrincipalProvider.class);
         dvc = mock(DistributorVersionCurator.class);
-        dve = new DistributorVersionExporter();
+        dve = new DistributorVersionExporter(translator);
         cdnc = mock(CdnCurator.class);
-        cdne = new CdnExporter();
+        cdne = new CdnExporter(translator);
         pc = mock(ProductCurator.class);
         ProductCachedSerializationModule productCachedModule = new ProductCachedSerializationModule(pc);
         su = new SyncUtils(config, productCachedModule);
@@ -258,7 +264,7 @@ public class ExporterTest {
         when(ctc.listAll()).thenReturn(emptyIteratorMock);
 
         // FINALLY test this badboy
-        Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
+        Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ece, ecsa, pe, psa,
             pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
             exportExtensionAdapter, translator);
 
@@ -314,7 +320,7 @@ public class ExporterTest {
         when(cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
         when(ctc.listAll()).thenReturn(cqmock);
 
-        Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
+        Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ece, ecsa, pe, psa,
             pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
             exportExtensionAdapter, translator);
 
@@ -357,7 +363,7 @@ public class ExporterTest {
         when(cdnc.listAll()).thenReturn(emptyIteratorMock);
 
         // FINALLY test this badboy
-        Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
+        Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ece, ecsa, pe, psa,
             pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
             exportExtensionAdapter, translator);
         File export = e.getFullExport(consumer);
@@ -410,7 +416,7 @@ public class ExporterTest {
         when(cdnc.listAll()).thenReturn(emptyIteratorMock);
 
         // FINALLY test this badboy
-        Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
+        Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ece, ecsa, pe, psa,
             pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
             exportExtensionAdapter, translator);
         File export = e.getFullExport(consumer);
@@ -445,6 +451,9 @@ public class ExporterTest {
         idcert.setUpdated(new Date());
         when(consumer.getIdCert()).thenReturn(idcert);
 
+        ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
+        ctype.setId("test-ctype");
+
         KeyPair keyPair = createKeyPair();
         when(consumer.getKeyPair()).thenReturn(keyPair);
         when(pki.getPemEncoded(keyPair.getPrivateKey())).thenReturn("privateKey".getBytes());
@@ -452,7 +461,10 @@ public class ExporterTest {
         when(consumer.getUuid()).thenReturn("8auuid");
         when(consumer.getName()).thenReturn("consumer_name");
         when(consumer.getContentAccessMode()).thenReturn("access_mode");
-        when(consumer.getType()).thenReturn(new ConsumerType(ConsumerTypeEnum.CANDLEPIN));
+        when(consumer.getTypeId()).thenReturn(ctype.getId());
+
+        when(ctc.getConsumerType(eq(consumer))).thenReturn(ctype);
+        when(ctc.get(eq(ctype.getId()))).thenReturn(ctype);
 
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
         when(cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
@@ -463,7 +475,7 @@ public class ExporterTest {
         when(cdnc.listAll()).thenReturn(emptyIteratorMock);
 
         // FINALLY test this badboy
-        Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
+        Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ece, ecsa, pe, psa,
             pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
             exportExtensionAdapter, translator);
         File export = e.getFullExport(consumer);
@@ -494,13 +506,18 @@ public class ExporterTest {
         idcert.setUpdated(new Date());
         when(consumer.getIdCert()).thenReturn(idcert);
 
+        ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
+        ctype.setId("test-ctype");
+
         KeyPair keyPair = createKeyPair();
         when(consumer.getKeyPair()).thenReturn(keyPair);
         when(pki.getPemEncoded(keyPair.getPrivateKey())).thenReturn("privateKey".getBytes());
         when(pki.getPemEncoded(keyPair.getPublicKey())).thenReturn("publicKey".getBytes());
         when(consumer.getUuid()).thenReturn("8auuid");
         when(consumer.getName()).thenReturn("consumer_name");
-        when(consumer.getType()).thenReturn(new ConsumerType(ConsumerTypeEnum.CANDLEPIN));
+        when(consumer.getTypeId()).thenReturn(ctype.getId());
+        when(ctc.getConsumerType(eq(consumer))).thenReturn(ctype);
+        when(ctc.get(eq(ctype.getId()))).thenReturn(ctype);
 
         DistributorVersion dv = new DistributorVersion("test-dist-ver");
         Set<DistributorVersionCapability> dvcSet = new HashSet<>();
@@ -523,7 +540,7 @@ public class ExporterTest {
         when(ctc.listAll()).thenReturn(emptyIteratorMock);
 
         // FINALLY test this badboy
-        Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
+        Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ece, ecsa, pe, psa,
             pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
             exportExtensionAdapter, translator);
         File export = e.getFullExport(consumer);
@@ -541,7 +558,7 @@ public class ExporterTest {
         when(ctc.listAll()).thenReturn(emptyIteratorMock);
 
         Map<String, String> extensionData = new HashMap<>();
-        Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
+        Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ece, ecsa, pe, psa,
             pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
             exportExtensionAdapter, translator);
 
@@ -802,9 +819,10 @@ public class ExporterTest {
             assertEquals("8auuid", c.getUuid());
             assertEquals("consumer_name", c.getName());
             assertEquals("access_mode", c.getContentAccessMode());
+
             ConsumerType type = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
             assertEquals(type.getLabel(), c.getType().getLabel());
-            assertEquals(type.getId(), c.getType().getId());
+            assertEquals(type.isManifest(), c.getType().isManifest());
         }
     }
 

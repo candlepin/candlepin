@@ -24,7 +24,10 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.api.v1.JobStatusDTO;
 import org.candlepin.model.CandlepinQuery;
+import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.JobCurator;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.TransformedCandlepinQuery;
 import org.candlepin.pinsetter.core.PinsetterException;
 import org.candlepin.pinsetter.core.PinsetterKernel;
@@ -54,7 +57,11 @@ public class JobResourceTest {
 
     private JobResource jobResource;
     @Mock private JobCurator jobCurator;
+    @Mock private OwnerCurator ownerCurator;
     @Mock private PinsetterKernel pinsetterKernel;
+    @Mock private ConsumerTypeCurator consumerTypeCurator;
+    @Mock private EnvironmentCurator environmentCurator;
+
     private I18n i18n;
     private ModelTranslator translator;
 
@@ -62,7 +69,9 @@ public class JobResourceTest {
     public void init() {
         MockitoAnnotations.initMocks(this);
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        translator = new StandardTranslator();
+        translator = new StandardTranslator(this.consumerTypeCurator,
+            this.environmentCurator,
+            this.ownerCurator);
         jobResource = new JobResource(jobCurator, pinsetterKernel, i18n, translator);
     }
 
@@ -100,14 +109,14 @@ public class JobResourceTest {
     @Test
     public void getStatusAndDeleteIfFinishedTest() {
         //nothing to delete..
-        when(jobCurator.find("bogus_id")).thenReturn(new JobStatus());
+        when(jobCurator.get("bogus_id")).thenReturn(new JobStatus());
         jobResource.getStatusAndDeleteIfFinished("foobar");
         verify(jobCurator, never()).delete(any(JobStatus.class));
 
         //now lets make a deletable JobStatus
         JobStatus finishedJobStatus = new JobStatus();
         finishedJobStatus.setState(JobState.FINISHED);
-        when(jobCurator.find("deletable_id")).thenReturn(finishedJobStatus);
+        when(jobCurator.get("deletable_id")).thenReturn(finishedJobStatus);
         jobResource.getStatusAndDeleteIfFinished("deletable_id");
         verify(jobCurator, atLeastOnce()).delete(finishedJobStatus);
     }
@@ -120,7 +129,7 @@ public class JobResourceTest {
         JobStatus canceledJobStatus = new JobStatus();
         canceledJobStatus.setState(JobState.CANCELED);
 
-        when(jobCurator.find("cancel_id")).thenReturn(createdJobStatus);
+        when(jobCurator.get("cancel_id")).thenReturn(createdJobStatus);
         when(jobCurator.cancel("cancel_id")).thenReturn(canceledJobStatus);
         jobResource.cancel("cancel_id");
         verify(jobCurator, atLeastOnce()).cancel("cancel_id");

@@ -19,11 +19,14 @@ import com.google.inject.Inject;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 
+import javax.inject.Singleton;
+
 
 
 /**
  * PermissionBlueprintCurator
  */
+@Singleton
 public class PermissionBlueprintCurator extends AbstractHibernateCurator<PermissionBlueprint> {
 
     @Inject private CandlepinQueryFactory cpQueryFactory;

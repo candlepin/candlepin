@@ -24,10 +24,13 @@ import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.GuestIdDTO;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.GuestIdCurator;
 import org.candlepin.model.VirtConsumerMap;
@@ -39,7 +42,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -75,6 +77,7 @@ public class GuestIdResource {
 
     private GuestIdCurator guestIdCurator;
     private ConsumerCurator consumerCurator;
+    private ConsumerTypeCurator consumerTypeCurator;
     private ConsumerResource consumerResource;
     private I18n i18n;
     private EventSink sink;
@@ -84,10 +87,13 @@ public class GuestIdResource {
 
     @Inject
     public GuestIdResource(GuestIdCurator guestIdCurator, ConsumerCurator consumerCurator,
-        ConsumerResource consumerResource, I18n i18n, EventFactory eventFactory, EventSink sink,
-        Provider<GuestMigration> migrationProvider, ModelTranslator translator) {
+        ConsumerTypeCurator consumerTypeCurator, ConsumerResource consumerResource, I18n i18n,
+        EventFactory eventFactory, EventSink sink, Provider<GuestMigration> migrationProvider,
+        ModelTranslator translator) {
+
         this.guestIdCurator = guestIdCurator;
         this.consumerCurator = consumerCurator;
+        this.consumerTypeCurator = consumerTypeCurator;
         this.consumerResource = consumerResource;
         this.i18n = i18n;
         this.eventFactory = eventFactory;
@@ -192,20 +198,19 @@ public class GuestIdResource {
         Consumer toUpdate = consumerCurator.findByUuid(consumerUuid);
 
         // Create a skeleton consumer for consumerResource.performConsumerUpdates
-        Consumer consumer = new Consumer();
-        List<GuestId> guestIds = new ArrayList<>();
-        populateEntities(guestIds, guestIdDTOs);
-        consumer.setGuestIds(guestIds);
+        ConsumerDTO consumer = new ConsumerDTO();
+        consumer.setGuestIds(guestIdDTOs);
 
         Set<String> allGuestIds = new HashSet<>();
-        for (GuestId gid : consumer.getGuestIds()) {
+        for (GuestIdDTO gid : consumer.getGuestIds()) {
             allGuestIds.add(gid.getGuestId());
         }
         VirtConsumerMap guestConsumerMap = consumerCurator.getGuestConsumersMap(
-            toUpdate.getOwner(), allGuestIds);
+            toUpdate.getOwnerId(), allGuestIds);
 
         GuestMigration guestMigration = migrationProvider.get().buildMigrationManifest(consumer, toUpdate);
         if (consumerResource.performConsumerUpdates(consumer, toUpdate, guestMigration)) {
+
             if (guestMigration.isMigrationPending()) {
                 guestMigration.migrate();
             }
@@ -256,7 +261,7 @@ public class GuestIdResource {
         GuestId guestIdEntity = new GuestId();
         populateEntity(guestIdEntity, updatedDTO);
         guestIdEntity.setConsumer(consumer);
-        GuestId toUpdate = guestIdCurator.findByGuestIdAndOrg(guestId, consumer.getOwner());
+        GuestId toUpdate = guestIdCurator.findByGuestIdAndOrg(guestId, consumer.getOwnerId());
         if (toUpdate != null) {
             guestIdEntity.setId(toUpdate.getId());
         }
@@ -288,25 +293,24 @@ public class GuestIdResource {
 
     private GuestId validateGuestId(GuestId guest, String guestUuid) {
         if (guest == null) {
-            throw new NotFoundException(i18n.tr(
-                "Guest with UUID {0} could not be found.", guestUuid));
+            throw new NotFoundException(i18n.tr("Guest with UUID {0} could not be found.", guestUuid));
         }
+
         return guest;
     }
 
     private void unregisterConsumer(GuestId guest, Principal principal) {
         Consumer guestConsumer = consumerCurator.findByVirtUuid(guest.getGuestId(),
-            guest.getConsumer().getOwner().getId());
+            guest.getConsumer().getOwnerId());
         if (guestConsumer != null) {
-            if ((principal == null) ||
-                principal.canAccess(guestConsumer, SubResource.NONE, Access.ALL)) {
+            if ((principal == null) || principal.canAccess(guestConsumer, SubResource.NONE, Access.ALL)) {
                 consumerResource.deleteConsumer(guestConsumer.getUuid(), principal);
             }
             else {
-                throw new ForbiddenException(i18n.tr(
-                    "Cannot unregister {0} {1} because: {2}",
-                    guestConsumer.getType().getLabel(), guestConsumer.getName(),
-                    i18n.tr("Invalid Credentials")));
+                ConsumerType type = this.consumerTypeCurator.get(guestConsumer.getTypeId());
+
+                throw new ForbiddenException(i18n.tr("Cannot unregister {0} {1} because: {2}",
+                    type, guestConsumer.getName(), i18n.tr("Invalid Credentials")));
             }
         }
     }

@@ -16,6 +16,7 @@ package org.candlepin.dto.manifest.v1;
 
 import org.candlepin.dto.AbstractDTOTest;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,9 +31,12 @@ public class BrandingDTOTest extends AbstractDTOTest<BrandingDTO> {
         super(BrandingDTO.class);
 
         this.values = new HashMap<>();
+        this.values.put("Id", "test-id");
         this.values.put("ProductId", "test-product-id");
         this.values.put("Name", "test-name");
         this.values.put("Type", "test-type");
+        this.values.put("Updated", new Date());
+        this.values.put("Created", new Date());
     }
 
     /**

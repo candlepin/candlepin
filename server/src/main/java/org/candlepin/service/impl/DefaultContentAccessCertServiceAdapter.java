@@ -18,16 +18,22 @@ import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCapability;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentAccessCertificate;
 import org.candlepin.model.ContentAccessCertificateCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContent;
+import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.KeyPairCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerContentCurator;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerEnvContentAccess;
 import org.candlepin.model.OwnerEnvContentAccessCurator;
 import org.candlepin.model.Pool;
@@ -65,18 +71,20 @@ import java.util.Set;
  * DefaultEntitlementCertServiceAdapter
  */
 public class DefaultContentAccessCertServiceAdapter implements ContentAccessCertServiceAdapter {
+    private static Logger log = LoggerFactory.getLogger(DefaultContentAccessCertServiceAdapter.class);
 
     private PKIUtility pki;
     private KeyPairCurator keyPairCurator;
     private CertificateSerialCurator serialCurator;
     private OwnerContentCurator ownerContentCurator;
+    private OwnerCurator ownerCurator;
     private ContentAccessCertificateCurator contentAccessCertificateCurator;
     private X509V3ExtensionUtil v3extensionUtil;
     private OwnerEnvContentAccessCurator ownerEnvContentAccessCurator;
     private ConsumerCurator consumerCurator;
+    private ConsumerTypeCurator consumerTypeCurator;
+    private EnvironmentCurator environmentCurator;
 
-    private static Logger log =
-        LoggerFactory.getLogger(DefaultContentAccessCertServiceAdapter.class);
 
     @Inject
     public DefaultContentAccessCertServiceAdapter(PKIUtility pki,
@@ -85,8 +93,11 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         KeyPairCurator keyPairCurator,
         CertificateSerialCurator serialCurator,
         OwnerContentCurator ownerContentCurator,
+        OwnerCurator ownerCurator,
         OwnerEnvContentAccessCurator ownerEnvContentAccessCurator,
-        ConsumerCurator consumerCurator) {
+        ConsumerCurator consumerCurator,
+        ConsumerTypeCurator consumerTypeCurator,
+        EnvironmentCurator environmentCurator) {
 
         this.pki = pki;
         this.contentAccessCertificateCurator = contentAccessCertificateCurator;
@@ -94,18 +105,23 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         this.serialCurator = serialCurator;
         this.v3extensionUtil = v3extensionUtil;
         this.ownerContentCurator = ownerContentCurator;
+        this.ownerCurator = ownerCurator;
         this.ownerEnvContentAccessCurator = ownerEnvContentAccessCurator;
         this.consumerCurator = consumerCurator;
+        this.consumerTypeCurator = consumerTypeCurator;
+        this.environmentCurator = environmentCurator;
     }
 
     @Transactional
     public ContentAccessCertificate getCertificate(Consumer consumer)
         throws GeneralSecurityException, IOException {
 
-        Owner owner = consumer.getOwner();
+        Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
         // we only know about one mode right now. If add any, we will need to add the
         // appropriate cert generation
-        if (!ORG_ENV_ACCESS_MODE.equals(owner.getContentAccessMode()) || !consumer.isCertV3Capable()) {
+        if (!ORG_ENV_ACCESS_MODE.equals(owner.getContentAccessMode()) ||
+            !this.consumerIsCertV3Capable(consumer)) {
+
             return null;
         }
 
@@ -135,7 +151,7 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
             KeyPair keyPair = keyPairCurator.getConsumerKeyPair(consumer);
             byte[] pemEncodedKeyPair = pki.getPemEncoded(keyPair.getPrivate());
 
-            X509Certificate x509Cert = createX509Certificate(consumer,
+            X509Certificate x509Cert = createX509Certificate(consumer, owner,
                 BigInteger.valueOf(serial.getId()), keyPair, startDate, endDate);
 
             existing = new ContentAccessCertificate();
@@ -153,7 +169,8 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         else {
             pem = existing.getCert();
         }
-        Environment env = consumer.getEnvironment();
+
+        Environment env = this.environmentCurator.getConsumerEnvironment(consumer);
         // we need to see if this is newer than the previous result
         OwnerEnvContentAccess oeca = ownerEnvContentAccessCurator.getContentAccess(owner.getId(),
             env == null ? null : env.getId());
@@ -178,10 +195,10 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         if (date == null) {
             return true;
         }
-        Environment env = consumer.getEnvironment();
-        Owner owner = consumer.getOwner();
+
+        Environment env = this.environmentCurator.getConsumerEnvironment(consumer);
         OwnerEnvContentAccess oeca = ownerEnvContentAccessCurator.getContentAccess(
-            owner.getId(), env == null ? null : env.getId());
+            consumer.getOwnerId(), env == null ? null : env.getId());
         return oeca == null || consumer.getContentAccessCert() == null ||
             oeca.getUpdated().getTime() > date.getTime();
     }
@@ -202,7 +219,7 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         return payload + signature;
     }
 
-    public X509Certificate createX509Certificate(Consumer consumer, BigInteger serialNumber,
+    public X509Certificate createX509Certificate(Consumer consumer, Owner owner, BigInteger serialNumber,
         KeyPair keyPair, Date startDate, Date endDate)
         throws GeneralSecurityException, IOException {
 
@@ -211,16 +228,55 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         org.candlepin.model.dto.Content dContent = new org.candlepin.model.dto.Content();
         List<org.candlepin.model.dto.Content> dtoContents = new ArrayList<>();
         dtoContents.add(dContent);
-        dContent.setPath(getContentPrefix(consumer.getOwner(), consumer.getEnvironment()));
+
+        Environment environment = this.environmentCurator.getConsumerEnvironment(consumer);
+        dContent.setPath(getContentPrefix(owner, environment));
+
         container.setContent(dtoContents);
 
         Set<X509ExtensionWrapper> extensions = prepareV3Extensions();
         Set<X509ByteExtensionWrapper> byteExtensions = prepareV3ByteExtensions(container);
 
         X509Certificate x509Cert =  this.pki.createX509Certificate(
-            createDN(consumer), extensions, byteExtensions, startDate,
+            createDN(consumer, owner), extensions, byteExtensions, startDate,
             endDate, keyPair, serialNumber, null);
+
         return x509Cert;
+    }
+
+    /**
+     * Checks if the specified consumer is capable of using v3 certificates
+     *
+     * @param consumer
+     *  The consumer to check
+     *
+     * @return
+     *  true if the consumer is capable of using v3 certificates; false otherwise
+     */
+    private boolean consumerIsCertV3Capable(Consumer consumer) {
+        if (consumer == null || consumer.getTypeId() == null) {
+            throw new IllegalArgumentException("consumer is null or lacks a consumer type");
+        }
+
+        ConsumerType type = this.consumerTypeCurator.getConsumerType(consumer);
+
+        if (type.isManifest()) {
+            for (ConsumerCapability capability : consumer.getCapabilities()) {
+                if ("cert_v3".equals(capability.getName())) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+        else if (type.isType(ConsumerTypeEnum.HYPERVISOR)) {
+            // Hypervisors in this context don't use content, so V3 is allowed
+            return true;
+        }
+
+        // Consumer isn't a special type, check their certificate_version fact
+        String entitlementVersion = consumer.getFact("system.certificate_version");
+        return entitlementVersion != null && entitlementVersion.startsWith("3.");
     }
 
     private Map<String, EnvironmentContent> getPromotedContent(Environment environment) {
@@ -228,19 +284,18 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         // we can determine if anything needs to be skipped:
         Map<String, EnvironmentContent> promotedContent = new HashMap<>();
         if (environment != null) {
-            log.debug("Consumer has environment, checking for promoted content in: " +
-                environment);
-            for (EnvironmentContent envContent :
-                environment.getEnvironmentContent()) {
-                log.debug("  promoted content: " + envContent.getContent().getId());
+            log.debug("Consumer has an environment, checking for promoted content in: {}", environment);
+
+            for (EnvironmentContent envContent : environment.getEnvironmentContent()) {
+                log.debug("  promoted content: {}", envContent.getContent().getId());
                 promotedContent.put(envContent.getContent().getId(), envContent);
             }
         }
+
         return promotedContent;
     }
 
-    private String getContentPrefix(Owner owner, Environment environment)
-        throws IOException {
+    private String getContentPrefix(Owner owner, Environment environment) throws IOException {
         StringBuffer contentPrefix = new StringBuffer();
         contentPrefix.append("/");
         contentPrefix.append(owner.getKey());
@@ -251,15 +306,18 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         return contentPrefix.toString();
     }
 
-    private String createDN(Consumer consumer) {
+    private String createDN(Consumer consumer, Owner owner) {
         StringBuilder sb = new StringBuilder("CN=");
         sb.append(consumer.getUuid());
         sb.append(", O=");
-        sb.append(consumer.getOwner().getKey());
-        if (consumer.getEnvironment() != null) {
+        sb.append(owner.getKey());
+
+        if (consumer.getEnvironmentId() != null) {
+            Environment environment = this.environmentCurator.getConsumerEnvironment(consumer);
             sb.append(", OU=");
-            sb.append(consumer.getEnvironment().getName());
+            sb.append(environment.getName());
         }
+
         return sb.toString();
     }
 

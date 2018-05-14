@@ -17,6 +17,7 @@ package org.candlepin.model;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Criteria;
 import org.hibernate.ReplicationMode;
 import org.hibernate.Session;
@@ -33,11 +34,14 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
+import javax.inject.Singleton;
+
 
 
 /**
  * OwnerCurator
  */
+@Singleton
 public class OwnerCurator extends AbstractHibernateCurator<Owner> {
 
     @Inject private CandlepinQueryFactory cpQueryFactory;
@@ -45,6 +49,36 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
 
     public OwnerCurator() {
         super(Owner.class);
+    }
+
+    /**
+     * Fetches the Owner for the specified ownerId. If the ownerId is null or owner was not found, this
+     * method throws an exception.
+     *
+     * @param ownerId
+     *  The ownerId for which to fetch a Owner object
+     *
+     * @throws IllegalArgumentException
+     *  if ownerId is null
+     *
+     * @throws IllegalStateException
+     *  if the owner was not found for the given id
+     *
+     * @return
+     *  An Owner instance for the specified ownerId
+     */
+    public Owner findOwnerById(String ownerId) {
+        if (StringUtils.isEmpty(ownerId)) {
+            throw new IllegalArgumentException("ownerId is null");
+        }
+
+        Owner owner = this.get(ownerId);
+
+        if (owner == null) {
+            throw new IllegalStateException("owner not found for the id: " + ownerId);
+        }
+
+        return owner;
     }
 
     @Transactional
@@ -61,25 +95,25 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
     }
 
     /**
-     * @param key owner's unique key to lookup.
+     * @param key owner's unique key to fetch.
      * @return the owner whose key matches the one given.
      */
     @Transactional
-    public Owner lookupByKey(String key) {
+    public Owner getByKey(String key) {
         return (Owner) createSecureCriteria()
             .add(Restrictions.eq("key", key))
             .uniqueResult();
     }
 
     @Transactional
-    public CandlepinQuery<Owner> lookupByKeys(Collection<String> keys) {
+    public CandlepinQuery<Owner> getByKeys(Collection<String> keys) {
         DetachedCriteria criteria = this.createSecureDetachedCriteria()
             .add(CPRestrictions.in("key", keys));
 
         return this.cpQueryFactory.<Owner>buildQuery(this.currentSession(), criteria);
     }
 
-    public Owner lookupWithUpstreamUuid(String upstreamUuid) {
+    public Owner getByUpstreamUuid(String upstreamUuid) {
         return (Owner) createSecureCriteria()
             .createCriteria("upstreamConsumer")
             .add(Restrictions.eq("uuid", upstreamUuid))
@@ -91,7 +125,7 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
      * @param productIds
      * @return a list of owners
      */
-    public CandlepinQuery<Owner> lookupOwnersByActiveProduct(Collection<String> productIds) {
+    public CandlepinQuery<Owner> getOwnersByActiveProduct(Collection<String> productIds) {
         // NOTE: only used by superadmin API calls, no permissions filtering needed here.
         DetachedCriteria poolIdQuery = DetachedCriteria.forClass(Pool.class, "pool")
             .createAlias("pool.providedProducts", "providedProducts")
@@ -114,8 +148,8 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
     }
 
     /**
-     * Retrieves a list of owners which have pools referencing the specified product IDs. If no
-     * owners are associated with the given products, this method returns an empty list.
+     * Retrieves a list of owners which have pools referencing one or more of the specified product
+     * IDs. If no owners are associated with the given products, this method returns an empty list.
      *
      * @param productIds
      *  The product IDs for which to retrieve owners
@@ -124,7 +158,7 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
      *  a list of owners associated with the specified products
      */
     @SuppressWarnings("checkstyle:indentation")
-    public CandlepinQuery<Owner> lookupOwnersWithProduct(Collection<String> productIds) {
+    public CandlepinQuery<Owner> getOwnersWithProducts(Collection<String> productIds) {
         if (productIds != null && !productIds.isEmpty()) {
             Session session = this.currentSession();
 
@@ -172,7 +206,7 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
     @SuppressWarnings("unchecked")
     public CandlepinQuery<String> getConsumerIds(String ownerId) {
         DetachedCriteria criteria = DetachedCriteria.forClass(Consumer.class)
-            .add(Restrictions.eq("owner.id", ownerId))
+            .add(Restrictions.eq("ownerId", ownerId))
             .setProjection(Property.forName("id"));
 
         return this.cpQueryFactory.<String>buildQuery(this.currentSession(), criteria);
@@ -185,7 +219,7 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
     @SuppressWarnings("unchecked")
     public CandlepinQuery<String> getConsumerUuids(String ownerId) {
         DetachedCriteria criteria = DetachedCriteria.forClass(Consumer.class)
-            .add(Restrictions.eq("owner.id", ownerId))
+            .add(Restrictions.eq("ownerId", ownerId))
             .setProjection(Property.forName("uuid"));
 
         return this.cpQueryFactory.<String>buildQuery(this.currentSession(), criteria);

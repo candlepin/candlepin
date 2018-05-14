@@ -21,6 +21,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.auth.Principal;
+import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
@@ -60,7 +61,7 @@ import javax.inject.Provider;
 /**
  * HypervisorUpdateJobTest
  */
-public class HypervisorUpdateJobTest extends BaseJobTest{
+public class HypervisorUpdateJobTest extends BaseJobTest {
 
     private Owner owner;
     private Principal principal;
@@ -94,8 +95,14 @@ public class HypervisorUpdateJobTest extends BaseJobTest{
         subAdapter = mock(SubscriptionServiceAdapter.class);
         complianceRules = mock(ComplianceRules.class);
         when(owner.getId()).thenReturn("joe");
-        when(consumerTypeCurator.create(any(ConsumerType.class))).thenReturn(new ConsumerType(ConsumerTypeEnum
-            .HYPERVISOR));
+
+        ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.HYPERVISOR);
+        ctype.setId("test-ctype");
+
+        when(consumerTypeCurator.getByLabel(eq(ConsumerTypeEnum.HYPERVISOR.getLabel()))).thenReturn(ctype);
+        when(consumerTypeCurator.getByLabel(eq(ConsumerTypeEnum.HYPERVISOR.getLabel()), anyBoolean()))
+            .thenReturn(ctype);
+
         when(owner.getKey()).thenReturn("joe");
         when(principal.getUsername()).thenReturn("joe user");
 
@@ -122,7 +129,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest{
 
     @Test
     public void hypervisorUpdateExecCreate() throws JobExecutionException {
-        when(ownerCurator.lookupByKey(eq("joe"))).thenReturn(owner);
+        when(ownerCurator.getByKey(eq("joe"))).thenReturn(owner);
 
         JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal, null);
         JobExecutionContext ctx = mock(JobExecutionContext.class);
@@ -139,7 +146,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest{
 
     @Test
     public void reporterIdOnCreateTest() throws JobExecutionException {
-        when(ownerCurator.lookupByKey(eq("joe"))).thenReturn(owner);
+        when(ownerCurator.getByKey(eq("joe"))).thenReturn(owner);
 
         JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal,
             "createReporterId");
@@ -159,7 +166,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest{
 
     @Test
     public void hypervisorUpdateExecUpdate() throws JobExecutionException {
-        when(ownerCurator.lookupByKey(eq("joe"))).thenReturn(owner);
+        when(ownerCurator.getByKey(eq("joe"))).thenReturn(owner);
         Consumer hypervisor = new Consumer();
         String hypervisorId = "uuid_999";
         hypervisor.setHypervisorId(new HypervisorId(hypervisorId));
@@ -181,7 +188,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest{
 
     @Test
     public void reporterIdOnUpdateTest() throws JobExecutionException {
-        when(ownerCurator.lookupByKey(eq("joe"))).thenReturn(owner);
+        when(ownerCurator.getByKey(eq("joe"))).thenReturn(owner);
         Consumer hypervisor = new Consumer();
         String hypervisorId = "uuid_999";
         hypervisor.setHypervisorId(new HypervisorId(hypervisorId));
@@ -203,7 +210,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest{
 
     @Test
     public void hypervisorUpdateExecCreateNoHypervisorId() throws JobExecutionException {
-        when(ownerCurator.lookupByKey(eq("joe"))).thenReturn(owner);
+        when(ownerCurator.getByKey(eq("joe"))).thenReturn(owner);
 
         hypervisorJson =
                 "{\"hypervisors\":" +
@@ -222,13 +229,14 @@ public class HypervisorUpdateJobTest extends BaseJobTest{
             consumerResource, i18n, subAdapter, complianceRules);
         injector.injectMembers(job);
         job.execute(ctx);
-        verify(consumerResource, never()).createConsumerFromEntity(any(Consumer.class), any(Principal.class),
-            anyString(), anyString(), anyString(), eq(false));
+        verify(consumerResource, never()).createConsumerFromDTO(any(ConsumerDTO.class),
+            any(ConsumerType.class), any(Principal.class), anyString(), anyString(), anyString(),
+            eq(false));
     }
 
     @Test
     public void hypervisorUpdateIgnoresEmptyGuestIds() throws Exception {
-        when(ownerCurator.lookupByKey(eq("joe"))).thenReturn(owner);
+        when(ownerCurator.getByKey(eq("joe"))).thenReturn(owner);
 
         hypervisorJson =
                 "{\"hypervisors\":" +
@@ -295,7 +303,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest{
     public void ensureJobFailsWhenAutobindDisabledForTargetOwner() throws Exception {
         // Disabled autobind
         when(owner.isAutobindDisabled()).thenReturn(true);
-        when(ownerCurator.lookupByKey(eq("joe"))).thenReturn(owner);
+        when(ownerCurator.getByKey(eq("joe"))).thenReturn(owner);
 
         JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal, null);
         JobExecutionContext ctx = mock(JobExecutionContext.class);

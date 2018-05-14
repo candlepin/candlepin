@@ -16,6 +16,7 @@ package org.candlepin.sync;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -24,14 +25,20 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.manifest.v1.ConsumerDTO;
 import org.candlepin.dto.manifest.v1.EntitlementDTO;
+import org.candlepin.dto.manifest.v1.ProductDTO;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
+import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
@@ -65,9 +72,13 @@ public class EntitlementImporterTest {
 
     @Mock private EventSink sink;
     @Mock private CertificateSerialCurator certSerialCurator;
+    @Mock private OwnerCurator ownerCurator;
     @Mock private CdnCurator cdnCurator;
     @Mock private ObjectMapper om;
     @Mock private ProductCurator mockProductCurator;
+    @Mock private EntitlementCurator ec;
+    @Mock private EnvironmentCurator mockEnvironmentCurator;
+    @Mock private ConsumerTypeCurator mockConsumerTypeCurator;
 
     private Owner owner;
     private EntitlementImporter importer;
@@ -84,16 +95,25 @@ public class EntitlementImporterTest {
     @Before
     public void init() {
         this.owner = new Owner();
-        this.translator = new StandardTranslator();
+        this.translator = new StandardTranslator(mockConsumerTypeCurator,
+            mockEnvironmentCurator,
+            ownerCurator);
 
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        this.importer = new EntitlementImporter(certSerialCurator, cdnCurator,
-            i18n, mockProductCurator);
+        this.importer = new EntitlementImporter(certSerialCurator, cdnCurator, i18n, mockProductCurator, ec,
+            translator);
 
-        consumer = TestUtil.createConsumer(owner);
+        ConsumerType ctype = TestUtil.createConsumerType();
+        ctype.setId("test-ctype");
+
+        consumer = TestUtil.createConsumer(ctype, owner);
+
         consumerDTO = this.translator.translate(consumer, ConsumerDTO.class);
         consumerDTO.setUrlWeb("");
         consumerDTO.setUrlApi("");
+
+        when(this.mockConsumerTypeCurator.getConsumerType(eq(consumer))).thenReturn(ctype);
+        when(this.mockConsumerTypeCurator.get(eq(ctype.getId()))).thenReturn(ctype);
 
         cert = createEntitlementCertificate("my-test-key", "my-cert");
         cert.setId("test-id");
@@ -103,7 +123,7 @@ public class EntitlementImporterTest {
         meta = new Meta();
         meta.setCdnLabel("test-cdn");
         testCdn = new Cdn("test-cdn", "Test CDN", "https://test.url.com");
-        when(cdnCurator.lookupByLabel("test-cdn")).thenReturn(testCdn);
+        when(cdnCurator.getByLabel("test-cdn")).thenReturn(testCdn);
     }
 
     @Test
@@ -134,7 +154,7 @@ public class EntitlementImporterTest {
         when(om.readValue(reader, EntitlementDTO.class)).thenReturn(dtoEnt);
 
         // Create our expected products
-        Map<String, Product> productsById = buildProductCache(
+        Map<String, ProductDTO> productsById = buildProductCache(
             parentProduct, provided1, derivedProduct, derivedProvided1);
 
         Subscription sub = importer.importObject(om, reader, owner,
@@ -172,10 +192,10 @@ public class EntitlementImporterTest {
         assertEquals(sub.getCdn().getLabel(), meta.getCdnLabel());
     }
 
-    private Map<String, Product> buildProductCache(Product... products) {
-        Map<String, Product> productsById = new HashMap<>();
+    private Map<String, ProductDTO> buildProductCache(Product... products) {
+        Map<String, ProductDTO> productsById = new HashMap<>();
         for (Product p : products) {
-            productsById.put(p.getId(), p);
+            productsById.put(p.getId(), this.translator.translate(p, ProductDTO.class));
         }
         return productsById;
     }

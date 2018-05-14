@@ -147,7 +147,7 @@ public class CertificateDTO extends TimestampedCandlepinDTO<CertificateDTO> {
         CertificateDTO copy = super.clone();
 
         CertificateSerialDTO serial = this.getSerial();
-        copy.serial = serial != null ? (CertificateSerialDTO) serial.clone() : null;
+        copy.setSerial(serial != null ? (CertificateSerialDTO) serial.clone() : null);
 
         return copy;
     }

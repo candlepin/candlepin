@@ -113,15 +113,6 @@ public class ConsumerTypeDTO extends CandlepinDTO<ConsumerTypeDTO> {
      * {@inheritDoc}
      */
     @Override
-    public ConsumerTypeDTO clone() {
-        // Nothing to do here; all the fields are immutable types.
-        return super.clone();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public ConsumerTypeDTO populate(ConsumerTypeDTO source) {
         super.populate(source);
 

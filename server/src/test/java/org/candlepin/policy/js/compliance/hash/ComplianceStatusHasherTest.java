@@ -322,8 +322,10 @@ public class ComplianceStatusHasherTest {
     }
 
     private Consumer createConsumer(Owner owner) {
-        Consumer consumer = new Consumer("test-consumer", "test-consumer", owner,
-            new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM));
+        ConsumerType ctype = new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM);
+        ctype.setId("test-ctype");
+
+        Consumer consumer = new Consumer("test-consumer", "test-consumer", owner, ctype);
         consumer.setId("1");
         consumer.setUuid("12345");
         consumer.setFact("ram", "4");

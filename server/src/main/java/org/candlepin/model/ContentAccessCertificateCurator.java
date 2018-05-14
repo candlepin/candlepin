@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.inject.Singleton;
 import javax.persistence.Query;
 
 
@@ -33,6 +34,7 @@ import javax.persistence.Query;
 /**
  * ContentAccessCertificateCurator
  */
+@Singleton
 public class ContentAccessCertificateCurator extends AbstractHibernateCurator<ContentAccessCertificate> {
 
     private static Logger log = LoggerFactory.getLogger(ContentAccessCertificateCurator.class);
@@ -61,12 +63,11 @@ public class ContentAccessCertificateCurator extends AbstractHibernateCurator<Co
         @SuppressWarnings("unchecked")
 
         String hql = " SELECT cac.id, s.id " +
-            "    FROM Consumer c" +
-            "       JOIN c.owner o" +
-            "       JOIN c.contentAccessCert cac" +
-            "       JOIN cac.serial s" +
-            "    WHERE" +
-            "       o.key=:ownerkey";
+            "          FROM Consumer c, Owner o" +
+            "              JOIN c.contentAccessCert cac" +
+            "              JOIN  cac .serial s" +
+            "          WHERE o.key=:ownerkey" +
+            "                and o.id = c.ownerId";
         Query query = this.getEntityManager().createQuery(hql);
         List<Object[]> rows = query.setParameter("ownerkey", owner.getKey()).getResultList();
 

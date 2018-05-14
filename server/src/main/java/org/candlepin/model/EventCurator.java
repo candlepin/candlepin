@@ -22,11 +22,14 @@ import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 
+import javax.inject.Singleton;
+
 
 
 /**
  * AttributeCurator
  */
+@Singleton
 public class EventCurator extends AbstractHibernateCurator<Event> {
 
     @Inject private CandlepinQueryFactory cpQueryFactory;
@@ -72,7 +75,7 @@ public class EventCurator extends AbstractHibernateCurator<Event> {
     @SuppressWarnings("unchecked")
     public CandlepinQuery<Event> listMostRecent(int limit, Consumer consumer) {
         DetachedCriteria criteria = this.createEventCriteria()
-            .add(Restrictions.eq("consumerId", consumer.getId()));
+            .add(Restrictions.eq("consumerUuid", consumer.getUuid()));
 
         return this.cpQueryFactory.<Event>buildQuery(this.currentSession(), criteria)
             .setMaxResults(limit);
