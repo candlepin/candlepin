@@ -1583,7 +1583,9 @@ public class ConsumerResource {
             return;
         }
 
-        Consumer host = consumerCurator.getHost(guest);
+        String guestVirtUuid = guest.getFact("virt.uuid");
+
+        Consumer host = consumerCurator.getHost(guestVirtUuid, guest.getOwnerId());
 
         // we need to create a list of entitlements to delete before actually
         // deleting, otherwise we are tampering with the loop iterator (BZ #786730)
@@ -2677,19 +2679,8 @@ public class ConsumerResource {
             throw new BadRequestException(i18n.tr("The system with UUID {0} is not a virtual guest.",
                 consumer.getUuid()));
         }
-
-        Consumer host = consumerCurator.getHost(consumer);
-        Owner hostOwner = ownerCurator.findOwnerById(host.getOwnerId());
-
-        // The host would be in a different organization if a host-restricted pool has been shared into the
-        // current organization.
-        if (host == null || principal.canAccess(hostOwner, SubResource.CONSUMERS, Access.READ_ONLY)) {
-            return translator.translate(host, ConsumerDTO.class);
-        }
-
-        throw new ForbiddenException(
-            i18n.tr("This host is under a different organization that you do not have access to")
-        );
+        Consumer host = consumerCurator.getHost(consumer.getFact("virt.uuid"), consumer.getOwnerId());
+        return translator.translate(host, ConsumerDTO.class);
     }
 
     @ApiOperation(notes = "Retrieves the Release of a Consumer", value = "getRelease")
