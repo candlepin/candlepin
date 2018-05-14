@@ -90,7 +90,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         // Inject this factValidator into the curator
         Field field = ConsumerCurator.class.getDeclaredField("factValidator");
         field.setAccessible(true);
-        field.set(this.consumerCurator, new FactValidator(this.config, this.i18n));
+        field.set(this.consumerCurator, new FactValidator(this.config, this.i18nProvider));
 
         factConsumer = new Consumer("a consumer", "username", owner, ct);
 

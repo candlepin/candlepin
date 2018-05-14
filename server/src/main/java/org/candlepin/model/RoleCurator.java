@@ -19,11 +19,14 @@ import com.google.inject.Inject;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 
+import javax.inject.Singleton;
+
 
 
 /**
  * RoleCurator
  */
+@Singleton
 public class RoleCurator extends AbstractHibernateCurator<Role> {
 
     @Inject private CandlepinQueryFactory cpQueryFactory;

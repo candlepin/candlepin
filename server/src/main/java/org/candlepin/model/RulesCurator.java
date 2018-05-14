@@ -32,9 +32,12 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Date;
 
+import javax.inject.Singleton;
+
 /**
  * RulesCurator
  */
+@Singleton
 public class RulesCurator extends AbstractHibernateCurator<Rules> {
     private static Logger log = LoggerFactory.getLogger(RulesCurator.class);
     public static final String DEFAULT_RULES_FILE = "/rules/rules.js";
@@ -105,7 +108,7 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
         Rules dbRules = getDbRules();
         if (dbRules == null) {
             log.error("There is no rules file in the database, something is very wrong.");
-            throw new NotFoundException(i18n.tr("No rules file found in the database"));
+            throw new NotFoundException(i18nProvider.get().tr("No rules file found in the database"));
         }
 
         return dbRules;

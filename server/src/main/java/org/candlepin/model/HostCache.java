@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2012 Red Hat, Inc.
+ * Copyright (c) 2009 - 2018 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -14,16 +14,18 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.guice.CandlepinRequestScoped;
 
-import javax.inject.Singleton;
+import org.apache.commons.lang3.tuple.Pair;
+
+import java.util.HashMap;
+import java.util.List;
 
 /**
- * Handles the Certificate operations.
+ * Cache for host consumers (see https://github.com/candlepin/candlepin/pull/1334 for original rationale)
+ *
+ * Key is a Pair of Strings, with the first being the guest ID and the second being the possible org IDs.
  */
-@Singleton
-public class SubscriptionsCertificateCurator extends AbstractHibernateCurator<SubscriptionsCertificate> {
-
-    public SubscriptionsCertificateCurator() {
-        super(SubscriptionsCertificate.class);
-    }
+@CandlepinRequestScoped
+public class HostCache extends HashMap<Pair<String, List>, Consumer> {
 }

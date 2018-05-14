@@ -23,25 +23,29 @@ import org.xnap.commons.i18n.I18n;
 
 import java.util.Set;
 
+import javax.inject.Provider;
+import javax.inject.Singleton;
+
 
 
 /**
  * The AttributeValidator is a PropertyValidator implementation, configured to validate pool or
  * product attributes.
  */
+@Singleton
 public class AttributeValidator extends PropertyValidator {
     /** The maximum length of any fact key (name) or value */
     public static final int ATTRIBUTE_MAX_LENGTH = 255;
 
     @Inject
-    public AttributeValidator(Configuration config, I18n i18n) {
+    public AttributeValidator(Configuration config, Provider<I18n> i18nProvider) {
         Set<String> attributes;
 
         // Add integer attributes...
         attributes = config.getSet(ConfigProperties.INTEGER_ATTRIBUTES, null);
         if (attributes != null) {
             for (String key : attributes) {
-                this.validators.put(key, new PropertyValidator.IntegerValidator(i18n, "attribute"));
+                this.validators.put(key, new PropertyValidator.IntegerValidator(i18nProvider, "attribute"));
             }
         }
 
@@ -50,7 +54,7 @@ public class AttributeValidator extends PropertyValidator {
         if (attributes != null) {
             for (String key : attributes) {
                 this.validators.put(key,
-                    new PropertyValidator.NonNegativeIntegerValidator(i18n, "attribute"));
+                    new PropertyValidator.NonNegativeIntegerValidator(i18nProvider, "attribute"));
             }
         }
 
@@ -58,7 +62,7 @@ public class AttributeValidator extends PropertyValidator {
         attributes = config.getSet(ConfigProperties.LONG_ATTRIBUTES, null);
         if (attributes != null) {
             for (String key : attributes) {
-                this.validators.put(key, new PropertyValidator.LongValidator(i18n, "attribute"));
+                this.validators.put(key, new PropertyValidator.LongValidator(i18nProvider, "attribute"));
             }
         }
 
@@ -66,7 +70,8 @@ public class AttributeValidator extends PropertyValidator {
         attributes = config.getSet(ConfigProperties.NON_NEG_LONG_ATTRIBUTES, null);
         if (attributes != null) {
             for (String key : attributes) {
-                this.validators.put(key, new PropertyValidator.NonNegativeLongValidator(i18n, "attribute"));
+                this.validators.put(key, new PropertyValidator.NonNegativeLongValidator(i18nProvider,
+                    "attribute"));
             }
         }
 
@@ -74,13 +79,13 @@ public class AttributeValidator extends PropertyValidator {
         attributes = config.getSet(ConfigProperties.BOOLEAN_ATTRIBUTES, null);
         if (attributes != null) {
             for (String key : attributes) {
-                this.validators.put(key, new PropertyValidator.BooleanValidator(i18n, "attribute"));
+                this.validators.put(key, new PropertyValidator.BooleanValidator(i18nProvider, "attribute"));
             }
         }
 
         // Add global validators...
         this.globalValidators.add(
-            new PropertyValidator.LengthValidator(i18n, "attribute", ATTRIBUTE_MAX_LENGTH));
+            new PropertyValidator.LengthValidator(i18nProvider, "attribute", ATTRIBUTE_MAX_LENGTH));
     }
 
 }
