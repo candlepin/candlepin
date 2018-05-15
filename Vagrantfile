@@ -40,6 +40,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
     config.vm.provision "ansible" do |ansible|
       ansible.playbook = "vagrant/candlepin.yml"
+      ansible.galaxy_role_file = "vagrant/requirements.yml"
       ansible.extra_vars = {}
       # This will pass any environment variables beginning with "CANDLEPIN_" or
       # "candlepin_" (less the prefix) along with their values to ansible for
