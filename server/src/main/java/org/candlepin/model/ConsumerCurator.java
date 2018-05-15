@@ -45,7 +45,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -492,7 +491,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     /**
-     * Get host consumer for a guest consumer.
+     * Get host consumer for a guest system id.
      *
      * As multiple hosts could have reported the same guest ID, we find the newest
      * and assume this is the authoritative host for the guest.
@@ -505,33 +504,17 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * during the session. An auto-bind can call this method up to 50 times and this
      * will cut the database calls significantly.
      *
-     * @param consumer the consumer to get the host for
+     * @param guestId a virtual guest ID (not a consumer UUID)
      * @return host consumer who most recently reported the given guestId (if any)
      */
     @Transactional
-    public Consumer getHost(Consumer consumer, String... owners) {
-        String guestId = consumer.getFact("virt.uuid");
+    public Consumer getHost(String guestId, String ownerId) {
         if (guestId == null) {
             return null;
         }
-
-        return getHost(guestId, owners);
-    }
-
-    /**
-     * Get the host consumer for a guest system id.  We need this method for use in getGuests.
-     * @param guestId
-     * @param owners
-     * @return the host's consumer
-     */
-    @Transactional
-    public Consumer getHost(String guestId, String... owners) {
-        if (guestId == null) {
-            return null;
-        }
-
         String guestLower = guestId.toLowerCase();
-        Pair<String, List> key = new ImmutablePair<>(guestLower, Arrays.asList(owners));
+
+        Pair<String, String> key = new ImmutablePair<>(guestLower, ownerId);
         if (cachedHostsProvider.get().containsKey(key)) {
             return cachedHostsProvider.get().get(key);
         }
@@ -544,14 +527,11 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         Criteria crit = currentSession()
             .createCriteria(GuestId.class)
             .createAlias("consumer", "gconsumer")
+            .add(Restrictions.eq("gconsumer.ownerId", ownerId))
             .add(guestIdCrit)
             .addOrder(Order.desc("updated"))
             .setMaxResults(1)
             .setProjection(Projections.property("consumer"));
-
-        if (owners.length > 0) {
-            crit.add(CPRestrictions.in("gconsumer.ownerId", owners));
-        }
 
         Consumer host = (Consumer) crit.uniqueResult();
         cachedHostsProvider.get().put(key, host);

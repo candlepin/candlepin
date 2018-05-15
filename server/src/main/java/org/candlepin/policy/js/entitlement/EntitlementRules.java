@@ -63,7 +63,6 @@ import org.xnap.commons.i18n.I18n;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -138,13 +137,7 @@ public class EntitlementRules implements Enforcer {
     @Override
     public ValidationResult preEntitlement(Consumer consumer, Pool entitlementPool, Integer quantity,
         CallerType caller) {
-
-        return preEntitlement(
-            consumer,
-            getHost(consumer, new ArrayList<>(Arrays.asList(entitlementPool))),
-            entitlementPool,
-            quantity,
-            caller);
+        return preEntitlement(consumer, getHost(consumer), entitlementPool, quantity, caller);
     }
 
     public ValidationResult preEntitlement(Consumer consumer, Consumer host,
@@ -158,19 +151,9 @@ public class EntitlementRules implements Enforcer {
 
     @Override
     public Map<String, ValidationResult> preEntitlement(Consumer consumer,
-        Collection<PoolQuantity> entitlementPoolQuantities, CallerType caller) {
-
-        List<Pool> pools = new ArrayList<>();
-
-        for (PoolQuantity pq : entitlementPoolQuantities) {
-            pools.add(pq.getPool());
-        }
-
-        return preEntitlement(
-            consumer,
-            getHost(consumer, pools),
-            entitlementPoolQuantities,
-            caller);
+        Collection<PoolQuantity> entitlementPoolQuantities,
+        CallerType caller) {
+        return preEntitlement(consumer, getHost(consumer), entitlementPoolQuantities, caller);
     }
 
     @Override
@@ -251,7 +234,7 @@ public class EntitlementRules implements Enforcer {
                     .map(this.translator.getStreamMapper(Entitlement.class, EntitlementDTO.class));
 
             args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
-            args.put("hostConsumer", this.translator.translate(getHost(consumer, pools), ConsumerDTO.class));
+            args.put("hostConsumer", this.translator.translate(getHost(consumer), ConsumerDTO.class));
             args.put("consumerEntitlements", entStream.collect(Collectors.toSet()));
             args.put("standalone", config.getBoolean(ConfigProperties.STANDALONE));
             args.put("pools", poolStream.collect(Collectors.toSet()));
@@ -300,27 +283,9 @@ public class EntitlementRules implements Enforcer {
         return filteredPools;
     }
 
-    /**
-     * Similar to consumerCurator's getHost but here we are ensuring that the owners we search are actually
-     * sharing with this consumer.
-     *
-     * @param consumer
-     * @param pools
-     * @return
-     */
-    private Consumer getHost(Consumer consumer, List<Pool> pools) {
-        if (!consumer.hasFact("virt.uuid")) {
-            return null;
-        }
-
-        List<String> potentialOwners = new ArrayList<>(Arrays.asList(consumer.getOwnerId()));
-        for (Pool p : pools) {
-            if (p.isCreatedByShare()) {
-                potentialOwners.add(p.getSourceEntitlement().getOwner().getId());
-            }
-        }
-
-        Consumer host = consumerCurator.getHost(consumer, potentialOwners.toArray(new String[] {}));
+    private Consumer getHost(Consumer consumer) {
+        Consumer host = consumer.hasFact("virt.uuid") ? consumerCurator.getHost(
+            consumer.getFact("virt.uuid"), consumer.getOwnerId()) : null;
         return host;
     }
 
