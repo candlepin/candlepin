@@ -14,14 +14,14 @@
  */
 package org.candlepin.util;
 
-import org.bouncycastle.operator.ContentSigner;
-import org.bouncycastle.util.io.Streams;
-
 import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.security.Signature;
+import java.security.SignatureException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -66,12 +66,11 @@ public class DERUtil {
      * @param count the counter to modify.  Can be null.
      * @throws IOException if the stream cannot provide the number of required bytes
      */
-    public static void readFullyAndTrack(InputStream s, byte[] bytes,
-        AtomicInteger count) throws IOException {
-        if (Streams.readFully(s, bytes) != bytes.length) {
-            throw new EOFException("EOF encountered in middle of object");
-        }
-
+    public static void readFullyAndTrack(InputStream s, byte[] bytes, AtomicInteger count)
+        throws IOException {
+        DataInputStream stream = new DataInputStream(s);
+        // Throws an EOFException if we can't read the full bytes.length
+        stream.readFully(bytes);
         if (count != null) {
             count.addAndGet(bytes.length);
         }
@@ -251,41 +250,40 @@ public class DERUtil {
      * @param length
      * @throws IOException if something goes wrong
      */
-    public static void writeLength(OutputStream out, int length, ContentSigner signer) throws IOException {
-        OutputStream signerStream = null;
+    public static void writeLength(OutputStream out, int length, Signature signer) throws IOException {
+        try {
+            if (length > 127) {
+                int size = 1;
+                int val = length;
 
-        if (signer != null) {
-            signerStream = signer.getOutputStream();
-        }
+                while ((val >>>= 8) != 0) {
+                    size++;
+                }
 
-        if (length > 127) {
-            int size = 1;
-            int val = length;
-
-            while ((val >>>= 8) != 0) {
-                size++;
-            }
-
-            byte b = (byte) (size | 0x80);
-            out.write(b);
-            if (signerStream != null) {
-                signerStream.write(b);
-            }
-
-            for (int i = (size - 1) * 8; i >= 0; i -= 8) {
-                b = (byte) (length >> i);
+                byte b = (byte) (size | 0x80);
                 out.write(b);
-                if (signerStream != null) {
-                    signerStream.write(b);
+                if (signer != null) {
+                    signer.update(b);
+                }
+
+                for (int i = (size - 1) * 8; i >= 0; i -= 8) {
+                    b = (byte) (length >> i);
+                    out.write(b);
+                    if (signer != null) {
+                        signer.update(b);
+                    }
+                }
+            }
+            else {
+                byte b = (byte) length;
+                out.write(b);
+                if (signer != null) {
+                    signer.update(b);
                 }
             }
         }
-        else {
-            byte b = (byte) length;
-            out.write(b);
-            if (signerStream != null) {
-                signerStream.write(b);
-            }
+        catch (SignatureException e) {
+            throw new IOException("Could not update signer", e);
         }
     }
 
@@ -293,17 +291,17 @@ public class DERUtil {
         writeTag(out, tag, tagNo, null);
     }
 
-    public static void writeTag(OutputStream out, int tag, int tagNo, ContentSigner signer) throws
+    public static void writeTag(OutputStream out, int tag, int tagNo, Signature signer) throws
         IOException {
-        OutputStream signerStream = null;
-        if (signer != null) {
-            signerStream = signer.getOutputStream();
-        }
-
         int rebuiltTag = rebuildTag(tag, tagNo);
         out.write(rebuiltTag);
-        if (signerStream != null) {
-            signerStream.write((byte) rebuiltTag);
+        if (signer != null) {
+            try {
+                signer.update((byte) rebuiltTag);
+            }
+            catch (SignatureException e) {
+                throw new IOException("Could not update signer", e);
+            }
         }
     }
 
@@ -316,7 +314,7 @@ public class DERUtil {
         writeBytes(out, value, null);
     }
 
-    public static void writeValue(OutputStream out, byte[] value, ContentSigner signer) throws IOException {
+    public static void writeValue(OutputStream out, byte[] value, Signature signer) throws IOException {
         writeBytes(out, value, signer);
     }
 
@@ -333,15 +331,15 @@ public class DERUtil {
         writeBytes(out, value, null);
     }
 
-    public static void writeBytes(OutputStream out, byte[] value, ContentSigner signer) throws IOException {
-        OutputStream signerStream = null;
-        if (signer != null) {
-            signerStream = signer.getOutputStream();
-        }
-
+    public static void writeBytes(OutputStream out, byte[] value, Signature signer) throws IOException {
         out.write(value);
-        if (signerStream != null) {
-            signerStream.write(value, 0, value.length);
+        if (signer != null) {
+            try {
+                signer.update(value, 0, value.length);
+            }
+            catch (SignatureException e) {
+                throw new IOException("Could not update signer", e);
+            }
         }
     }
 }
