@@ -25,8 +25,7 @@ unless use_pmd.nil?
 end
 
 ### Dependencies
-RESTEASY = [group('jaxrs-api',
-                  'resteasy-jaxrs',
+RESTEASY = [group('resteasy-jaxrs',
                   'resteasy-jaxb-provider',
                   'resteasy-guice',
                   'resteasy-atom-provider',
@@ -36,14 +35,19 @@ RESTEASY = [group('jaxrs-api',
                   # ContentTypeHackFilter.java when updating,
                   # please check if its still needed, and remove if not.
                   #
-                  # Note that we can go no higher.  Later versions require
-                  # servlet spec 3.0 which Tomcat 6 does not support
-                  :version => '3.0.10.Final'),
+                  :version => '3.5.1.Final'),
             'org.scannotation:scannotation:jar:1.0.3',
             'org.apache.httpcomponents:httpclient:jar:4.3.2',
             'org.apache.james:apache-mime4j:jar:0.6',
             'javax.mail:mail:jar:1.4.4',
-            'javax.ws.rs:javax.ws.rs-api:jar:2.0.1']
+            'javax.ws.rs:javax.ws.rs-api:jar:2.1',
+            'javax.json.bind:javax.json.bind-api:jar:1.0',
+            'org.jboss.spec.javax.ws.rs:jboss-jaxrs-api_2.1_spec:jar:1.0.0.Final',
+            'javax.annotation:javax.annotation-api:jar:1.3.2',
+            'org.eclipse.microprofile.rest.client:microprofile-rest-client-api:jar:1.0.1',
+            'org.reactivestreams:reactive-streams:jar:1.0.0.final']
+
+
 
 JACKSON_NS = "com.fasterxml.jackson"
 JACKSON_VERSION = "2.9.4"

@@ -823,7 +823,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             // Process the filters passed for the attributes
             FilterBuilder factFilter = new FactFilterBuilder();
             for (KeyValueParameter filterParam : factFilters) {
-                factFilter.addAttributeFilter(filterParam.key(), filterParam.value());
+                factFilter.addAttributeFilter(filterParam.getKey(), filterParam.getValue());
             }
             factFilter.applyTo(crit);
         }

@@ -43,12 +43,12 @@ import org.candlepin.controller.Entitler;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.api.v1.EventDTO;
-import org.candlepin.dto.api.v1.EntitlementDTO;
 import org.candlepin.dto.api.v1.CapabilityDTO;
 import org.candlepin.dto.api.v1.CertificateDTO;
 import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.ConsumerInstalledProductDTO;
+import org.candlepin.dto.api.v1.EntitlementDTO;
+import org.candlepin.dto.api.v1.EventDTO;
 import org.candlepin.dto.api.v1.GuestIdDTO;
 import org.candlepin.dto.api.v1.HypervisorIdDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
@@ -106,7 +106,6 @@ import org.candlepin.resource.util.EntitlementFinderUtil;
 import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.resteasy.DateFormat;
-import org.candlepin.resteasy.parameter.CandlepinParam;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.service.ContentAccessCertServiceAdapter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
@@ -403,8 +402,7 @@ public class ConsumerResource {
         @QueryParam("owner") String ownerKey,
         @QueryParam("uuid") List<String> uuids,
         @QueryParam("hypervisor_id") List<String> hypervisorIds,
-        @QueryParam("fact") @CandlepinParam(type = KeyValueParameter.class)
-            List<KeyValueParameter> attrFilters,
+        @QueryParam("fact") List<KeyValueParameter> attrFilters,
         @Context PageRequest pageRequest) {
 
         if (userName == null && (typeLabels == null || typeLabels.isEmpty()) && ownerKey == null &&
@@ -2149,8 +2147,7 @@ public class ConsumerResource {
         @QueryParam("product") String productId,
         @QueryParam("regen") @DefaultValue("true") Boolean regen,
         @QueryParam("matches") String matches,
-        @QueryParam("attribute") @CandlepinParam(type = KeyValueParameter.class)
-        List<KeyValueParameter> attrFilters,
+        @QueryParam("attribute") List<KeyValueParameter> attrFilters,
         @Context PageRequest pageRequest) {
 
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
@@ -2388,7 +2385,7 @@ public class ConsumerResource {
         @QueryParam("cdn_label") String cdnLabel,
         @QueryParam("webapp_prefix") String webAppPrefix,
         @QueryParam("api_url") String apiUrl,
-        @QueryParam("ext") @CandlepinParam(type = KeyValueParameter.class)
+        @QueryParam("ext")
         @ApiParam(value = "Key/Value pairs to be passed to the extension adapter when generating a manifest",
         required = false, example = "ext=version:1.2.3&ext=extension_key:EXT1")
         List<KeyValueParameter> extensionArgs) {
@@ -2447,7 +2444,7 @@ public class ConsumerResource {
         @QueryParam("api_url")
         @ApiParam(value = "the URL pointing to the manifest's originating candlepin API", required = false)
         String apiUrl,
-        @QueryParam("ext") @CandlepinParam(type = KeyValueParameter.class)
+        @QueryParam("ext")
         @ApiParam(value = "Key/Value pairs to be passed to the extension adapter when generating a manifest",
         required = false, example = "ext=version:1.2.3&ext=extension_key:EXT1")
         List<KeyValueParameter> extensionArgs) {
@@ -2475,7 +2472,7 @@ public class ConsumerResource {
     private Map<String, String> getExtensionParamMap(List<KeyValueParameter> params) {
         Map<String, String> paramMap = new HashMap<>();
         for (KeyValueParameter param : params) {
-            paramMap.put(param.key(), param.value());
+            paramMap.put(param.getKey(), param.getValue());
         }
         return paramMap;
     }

@@ -123,8 +123,8 @@ public class JaxRsExceptionResponseBuilder {
 
         Throwable cause = exception.getCause();
         if (cause instanceof CandlepinParameterParseException) {
-            String msg = i18n.get().tr("Invalid format for query parameter {0}. Expected format: {1}",
-                ((CandlepinParameterParseException) cause).getParamName(),
+            String msg = i18n.get().tr("Invalid format for query parameter. " +
+                "Expected format: {0}",
                 ((CandlepinParameterParseException) cause).getExpectedFormat());
             bldr.entity(new ExceptionMessage(msg));
         }

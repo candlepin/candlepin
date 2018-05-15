@@ -14,7 +14,6 @@
  */
 package org.candlepin.resource;
 
-import org.apache.commons.lang.ArrayUtils;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
@@ -41,11 +40,11 @@ import org.candlepin.controller.OwnerManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.ActivationKeyDTO;
-import org.candlepin.dto.api.v1.EventDTO;
 import org.candlepin.dto.api.v1.BrandingDTO;
-import org.candlepin.dto.api.v1.EntitlementDTO;
 import org.candlepin.dto.api.v1.ConsumerDTO;
+import org.candlepin.dto.api.v1.EntitlementDTO;
 import org.candlepin.dto.api.v1.EnvironmentDTO;
+import org.candlepin.dto.api.v1.EventDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.PoolDTO;
 import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
@@ -70,13 +69,13 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerInfo;
 import org.candlepin.model.OwnerInfoCurator;
-import org.candlepin.model.Pool;
 import org.candlepin.model.OwnerProductCurator;
+import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.Product;
-import org.candlepin.model.Release;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.model.Release;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.UeberCertificate;
 import org.candlepin.model.UeberCertificateCurator;
@@ -95,7 +94,6 @@ import org.candlepin.resource.util.ConsumerTypeValidator;
 import org.candlepin.resource.util.EntitlementFinderUtil;
 import org.candlepin.resource.util.ResolverUtil;
 import org.candlepin.resteasy.DateFormat;
-import org.candlepin.resteasy.parameter.CandlepinParam;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.service.ContentAccessCertServiceAdapter;
 import org.candlepin.service.OwnerServiceAdapter;
@@ -110,14 +108,8 @@ import org.candlepin.util.Util;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.annotations.Authorization;
-
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.exception.ConstraintViolationException;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
@@ -125,13 +117,19 @@ import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import org.jboss.resteasy.util.GenericType;
 import org.quartz.JobDetail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import ch.qos.logback.classic.Level;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Authorization;
 
 import java.io.File;
 import java.io.IOException;
@@ -157,6 +155,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
@@ -1075,8 +1074,7 @@ public class OwnerResource {
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @QueryParam("product") String productId,
         @QueryParam("matches") String matches,
-        @QueryParam("attribute") @CandlepinParam(type = KeyValueParameter.class)
-        List<KeyValueParameter> attrFilters,
+        @QueryParam("attribute") List<KeyValueParameter> attrFilters,
         @Context PageRequest pageRequest) {
 
         Owner owner = findOwnerByKey(ownerKey);
@@ -1356,8 +1354,7 @@ public class OwnerResource {
         @QueryParam("type") Set<String> typeLabels,
         @QueryParam("uuid") @Verify(value = Consumer.class, nullable = true) List<String> uuids,
         @QueryParam("hypervisor_id") List<String> hypervisorIds,
-        @QueryParam("fact") @CandlepinParam(type = KeyValueParameter.class)
-            List<KeyValueParameter> attrFilters,
+        @QueryParam("fact") List<KeyValueParameter> attrFilters,
         @QueryParam("sku") List<String> skus,
         @QueryParam("subscription_id") List<String> subscriptionIds,
         @QueryParam("contract") List<String> contracts,
@@ -1430,8 +1427,7 @@ public class OwnerResource {
                 " * and ? wildcards are supported; may be specified multiple times")
         @QueryParam("matches") List<String> matches,
         @ApiParam("The attributes to return based on the specified types.")
-        @QueryParam("attribute") @CandlepinParam(type = KeyValueParameter.class)
-            List<KeyValueParameter> attrFilters,
+        @QueryParam("attribute") List<KeyValueParameter> attrFilters,
         @ApiParam("When set to true, it will add future dated pools to the result, " +
                 "based on the activeon date.")
         @QueryParam("add_future") @DefaultValue("false") boolean addFuture,
@@ -1494,7 +1490,7 @@ public class OwnerResource {
         // Process the filters passed for the attributes
         PoolFilterBuilder poolFilters = new PoolFilterBuilder();
         for (KeyValueParameter filterParam : attrFilters) {
-            poolFilters.addAttributeFilter(filterParam.key(), filterParam.value());
+            poolFilters.addAttributeFilter(filterParam.getKey(), filterParam.getValue());
         }
 
         if (matches != null) {
