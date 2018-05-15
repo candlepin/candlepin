@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2012 Red Hat, Inc.
+ * Copyright (c) 2009 - 2018 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -14,10 +14,7 @@
  */
 package org.candlepin.util;
 
-import static org.bouncycastle.asn1.BERTags.*;
 import static org.candlepin.util.DERUtil.*;
-
-import org.bouncycastle.asn1.x509.TBSCertList.CRLEntry;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
@@ -26,6 +23,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.cert.X509CRLEntry;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -83,11 +81,18 @@ import java.util.concurrent.atomic.AtomicInteger;
  * See https://en.wikipedia.org/wiki/X.690 and http://luca.ntop.org/Teaching/Appunti/asn1.html
  * for reference on ASN1 and DER encoding.
  */
-public class X509CRLEntryStream implements Closeable, Iterator<CRLEntry> {
-    private InputStream crlStream;
+public abstract class X509CRLEntryStream implements Closeable, Iterator<X509CRLEntry> {
+    protected InputStream crlStream;
+    protected int revokedSeqBytes;
+    protected AtomicInteger count;
 
-    private int revokedSeqBytes;
-    private AtomicInteger count;
+    // ASN1 tag values for these types.  See https://en.wikipedia.org/wiki/X.690
+    // These constants exist in the crypto provider libraries but for the purposes of making this class
+    // provider independent, I'm defining them here.
+    protected final int GENERALIZED_TIME = 24;
+    protected final int UTC_TIME = 23;
+    protected final int SEQUENCE = 16;
+    protected final int OBJECT_IDENTIFIER = 6;
 
     /**
      * Construct a X509CRLStream.  <b>The underlying data in the stream parameter must
@@ -143,17 +148,14 @@ public class X509CRLEntryStream implements Closeable, Iterator<CRLEntry> {
         // Read the CRL metadata and trash it.  We get to the thisUpdate item
         // and then break out.
         int tagNo;
-        while (true) {
+        do {
             tag = readTag(s, count);
             tagNo = readTagNumber(s, tag, count);
             int length = readLength(s, count);
             byte[] item = new byte[length];
             readFullyAndTrack(s, item, count);
 
-            if (tagNo == GENERALIZED_TIME || tagNo == UTC_TIME) {
-                break;
-            }
-        }
+        } while (tagNo != GENERALIZED_TIME && tagNo != UTC_TIME);
 
         tag = readTag(s, count);
         tagNo = readTagNumber(s, tag, count);
@@ -181,7 +183,10 @@ public class X509CRLEntryStream implements Closeable, Iterator<CRLEntry> {
         return readLength(s, count);
     }
 
-    public CRLEntry next() {
+    protected abstract X509CRLEntry getX509CRLEntry(byte[] obj) throws IOException;
+
+    @Override
+    public X509CRLEntry next() {
         try {
             // Strip the tag for the revokedCertificate entry
             int tag = readTag(crlStream, count);
@@ -202,7 +207,7 @@ public class X509CRLEntryStream implements Closeable, Iterator<CRLEntry> {
             readFullyAndTrack(crlStream, entry, count);
 
             ByteArrayOutputStream reconstructed = new ByteArrayOutputStream();
-            // An ASN1 SEQUENCE tag is 0x30
+            // An ASN1 SEQUENCE tag byte is 0x30
             reconstructed.write(0x30);
             writeLength(reconstructed, entryLength);
             reconstructed.write(entry);
@@ -216,13 +221,14 @@ public class X509CRLEntryStream implements Closeable, Iterator<CRLEntry> {
             byte[] obj = reconstructed.toByteArray();
             reconstructed.close();
 
-            return CRLEntry.getInstance(obj);
+            return getX509CRLEntry(obj);
         }
         catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
+    @Override
     public boolean hasNext() {
         return revokedSeqBytes > count.get();
     }

@@ -44,6 +44,7 @@ import org.bouncycastle.asn1.x509.CertificateList;
 import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.asn1.x509.Extensions;
 import org.bouncycastle.asn1.x509.ExtensionsGenerator;
+import org.bouncycastle.asn1.x509.TBSCertList;
 import org.bouncycastle.asn1.x509.TBSCertList.CRLEntry;
 import org.bouncycastle.asn1.x509.Time;
 import org.bouncycastle.cert.X509CRLHolder;
@@ -71,7 +72,11 @@ import java.io.OutputStream;
 import java.math.BigInteger;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
+import java.security.Signature;
+import java.security.SignatureException;
+import java.security.cert.CRLException;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
@@ -143,7 +148,7 @@ public class X509CRLStreamWriter {
     private AlgorithmIdentifier signingAlg;
 
     private int deletedEntriesLength;
-    private ContentSigner signer;
+    private Signature signer;
     private RSAPrivateKey key;
     private AuthorityKeyIdentifier aki;
 
@@ -218,7 +223,7 @@ public class X509CRLStreamWriter {
         ASN1InputStream asn1In = null;
 
         try {
-            reaperStream = new X509CRLEntryStream(crlToChange);
+            reaperStream = new BouncyCastleX509CRLEntryStream(crlToChange);
             if (!reaperStream.hasNext()) {
                 emptyCrl = true;
                 preScanned = true;
@@ -226,7 +231,7 @@ public class X509CRLStreamWriter {
             }
 
             while (reaperStream.hasNext()) {
-                CRLEntry entry = reaperStream.next();
+                CRLEntry entry = TBSCertList.CRLEntry.getInstance(reaperStream.next().getEncoded());
                 if (validator != null && validator.shouldDelete(entry)) {
                     // Get the serial number
                     deletedEntries.add(entry.getUserCertificate().getValue());
@@ -252,14 +257,7 @@ public class X509CRLStreamWriter {
                             signingAlg = AlgorithmIdentifier.getInstance(seq);
                         }
 
-                        try {
-                            // Build the signer
-                            this.signer = createContentSigner(signingAlg, key);
-                        }
-                        catch (OperatorCreationException e) {
-                            throw new IOException(
-                                "Could not create ContentSigner for " + signingAlg.getAlgorithm());
-                        }
+                        this.signer = createContentSigner(signingAlg, key);
                     }
                 }
                 else if (o instanceof ASN1BitString) {
@@ -292,6 +290,9 @@ public class X509CRLStreamWriter {
             // in the length of the L bytes will be accounted for in the overall difference between
             // the length of the two byte arrays.
             extensionsDelta = newExtensions.length - oldExtensions.length;
+        }
+        catch (CRLException e) {
+            throw new IOException("Could not build TBSCertList.CRLEntry", e);
         }
         finally {
             if (reaperStream != null) {
@@ -419,9 +420,9 @@ public class X509CRLStreamWriter {
                 signingAlg = oldCrl.toASN1Structure().getSignatureAlgorithm();
             }
 
-            ContentSigner s;
             try {
-                s = createContentSigner(signingAlg, key);
+                String algorithm = new DefaultAlgorithmNameFinder().getAlgorithmName(signingAlg);
+                ContentSigner s = new JcaContentSignerBuilder(algorithm).build(key);
                 X509CRLHolder newCrl = crlBuilder.build(s);
                 out.write(newCrl.getEncoded());
             }
@@ -487,18 +488,18 @@ public class X509CRLStreamWriter {
         }
 
         // Copy the old extensions over
-        if (newExtensions != null) {
-            out.write(newExtensions);
-            signer.getOutputStream().write(newExtensions, 0, newExtensions.length);
-        }
-        out.write(signingAlg.getEncoded());
-
         try {
-            byte[] signature = signer.getSignature();
+            if (newExtensions != null) {
+                out.write(newExtensions);
+                signer.update(newExtensions, 0, newExtensions.length);
+            }
+            out.write(signingAlg.getEncoded());
+
+            byte[] signature = signer.sign();
             ASN1BitString signatureBits = new DERBitString(signature);
             out.write(signatureBits.getEncoded());
         }
-        catch (DataLengthException e) {
+        catch (DataLengthException | SignatureException e) {
             throw new IOException("Could not sign", e);
         }
     }
@@ -554,6 +555,7 @@ public class X509CRLStreamWriter {
         return out.getEncoded();
     }
 
+    @SuppressWarnings("checkstyle:methodlength")
     protected int handleHeader(OutputStream out) throws IOException {
         /* The length of an RSA signature is padded out to the length of the modulus
          * in bytes.  See http://stackoverflow.com/questions/6658728/rsa-signature-size
@@ -669,7 +671,12 @@ public class X509CRLStreamWriter {
         byte[] header = temp.toByteArray();
         temp.close();
         out.write(header);
-        signer.getOutputStream().write(header, 0, header.length);
+        try {
+            signer.update(header, 0, header.length);
+        }
+        catch (SignatureException e) {
+            throw new IOException("Could not update signer", e);
+        }
 
         writeLength(out, newRevokedCertsLength, signer);
         return oldRevokedCertsLength;
@@ -836,7 +843,7 @@ public class X509CRLStreamWriter {
         return echoTag(out, i, signer);
     }
 
-    protected int echoTag(OutputStream out, AtomicInteger i, ContentSigner s) throws IOException {
+    protected int echoTag(OutputStream out, AtomicInteger i, Signature s) throws IOException {
         int tag = readTag(crlIn, i);
         int tagNo = readTagNumber(crlIn, tag, i);
         writeTag(out, tag, tagNo, s);
@@ -866,7 +873,7 @@ public class X509CRLStreamWriter {
         return echoLength(out, i, signer);
     }
 
-    protected int echoLength(OutputStream out, AtomicInteger i, ContentSigner s) throws IOException {
+    protected int echoLength(OutputStream out, AtomicInteger i, Signature s) throws IOException {
         int length = readLength(crlIn, i);
         writeLength(out, length, s);
         return length;
@@ -895,17 +902,23 @@ public class X509CRLStreamWriter {
         echoValue(out, length, i, signer);
     }
 
-    protected void echoValue(OutputStream out, int length, AtomicInteger i, ContentSigner s)
+    protected void echoValue(OutputStream out, int length, AtomicInteger i, Signature s)
         throws IOException {
         byte[] item = new byte[length];
         readFullyAndTrack(crlIn, item, i);
         writeValue(out, item, s);
     }
 
-    protected ContentSigner createContentSigner(AlgorithmIdentifier signingAlg, PrivateKey key) throws
-        OperatorCreationException {
+    protected Signature createContentSigner(AlgorithmIdentifier signingAlg, PrivateKey key) throws
+        IOException {
         String algorithm = new DefaultAlgorithmNameFinder().getAlgorithmName(signingAlg);
-        JcaContentSignerBuilder builder = new JcaContentSignerBuilder(algorithm).setProvider(BC_PROVIDER);
-        return builder.build(key);
+        try {
+            Signature s = Signature.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
+            s.initSign(key);
+            return s;
+        }
+        catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchProviderException e) {
+            throw new IOException("Could not create Signature for " + algorithm, e);
+        }
     }
 }
