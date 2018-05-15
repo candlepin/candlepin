@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2012 Red Hat, Inc.
+ * Copyright (c) 2009 - 2018 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -12,24 +12,21 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.audit;
+
+package org.candlepin.controller;
+
+import org.candlepin.audit.QpidStatus;
 
 /**
- * Listens for Events that are put on the event queue.
+ * An interface for objects that would like to listen for Qpid status updates.
  */
-public interface EventListener {
+public interface QpidStatusListener {
 
     /**
-     * Called when an event was received from the event queue.
+     * Called when QpidStatusMonitor determines the latest Qpid status.
      *
-     * @param e the event that was received.
+     * @param oldStatus the status of Qpid on the previous update.
+     * @param newStatus the current status of Qpid.
      */
-    void onEvent(Event e);
-
-    /**
-     * Defines whether this event listener requires a Qpid connection.
-     *
-     * @return true if a qpid connection is required to handle the message, false otherwise.
-     */
-    boolean requiresQpid();
+    void onStatusUpdate(QpidStatus oldStatus, QpidStatus newStatus);
 }

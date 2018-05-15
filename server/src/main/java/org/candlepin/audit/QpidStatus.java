@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2012 Red Hat, Inc.
+ * Copyright (c) 2009 - 2018 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -12,24 +12,24 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
+
 package org.candlepin.audit;
 
 /**
- * Listens for Events that are put on the event queue.
+ * Represents the status of the connection to the Qpid broker.
  */
-public interface EventListener {
+public enum QpidStatus {
+    /**
+     * Qpid is up and running.
+     */
+    CONNECTED,
 
     /**
-     * Called when an event was received from the event queue.
-     *
-     * @param e the event that was received.
+     * Qpid is up but the exchange is flow stopped.
      */
-    void onEvent(Event e);
-
+    FLOW_STOPPED,
     /**
-     * Defines whether this event listener requires a Qpid connection.
-     *
-     * @return true if a qpid connection is required to handle the message, false otherwise.
+     * Qpid is down.
      */
-    boolean requiresQpid();
+    DOWN
 }
