@@ -31,10 +31,6 @@ RESTEASY = [group('resteasy-jaxrs',
                   'resteasy-atom-provider',
                   'resteasy-multipart-provider',
                   :under => 'org.jboss.resteasy',
-                  # XXX: this version requires us to use
-                  # ContentTypeHackFilter.java when updating,
-                  # please check if its still needed, and remove if not.
-                  #
                   :version => '3.5.1.Final'),
             'org.scannotation:scannotation:jar:1.0.3',
             'org.apache.httpcomponents:httpclient:jar:4.3.2',

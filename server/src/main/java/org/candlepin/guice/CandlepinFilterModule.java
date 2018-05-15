@@ -19,7 +19,6 @@ import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.servlet.filter.CandlepinPersistFilter;
 import org.candlepin.servlet.filter.CandlepinScopeFilter;
-import org.candlepin.servlet.filter.ContentTypeHackFilter;
 import org.candlepin.servlet.filter.EventFilter;
 
 import com.google.inject.servlet.ServletModule;
@@ -58,7 +57,6 @@ public class CandlepinFilterModule extends ServletModule {
         filterRegex(regex).through(CandlepinScopeFilter.class);
         filterRegex(regex).through(CandlepinPersistFilter.class);
         filterRegex(regex).through(LoggingFilter.class, loggingFilterConfig);
-        filterRegex(regex).through(ContentTypeHackFilter.class);
         filterRegex(regex).through(EventFilter.class);
 
         serveRegex(regex).with(HttpServletDispatcher.class);
