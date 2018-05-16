@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-05-09 13:16-0400\n"
+"POT-Creation-Date: 2018-05-16 09:48-0400\n"
 "PO-Revision-Date: 2018-03-19 05:54+0000\n"
 "Last-Translator: khowell <khowell@redhat.com>\n"
 "Language-Team: French\n"
@@ -423,8 +423,8 @@ msgstr ""
 msgid "Auto-attach is disabled for owner \"{0}\"."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/controller/Entitler.java:257
-#: server/src/main/java/org/candlepin/controller/Entitler.java:497
+#: server/src/main/java/org/candlepin/controller/Entitler.java:255
+#: server/src/main/java/org/candlepin/controller/Entitler.java:495
 msgid ""
 "Development units may only be used on hosted servers and with orgs that have "
 "active subscriptions."
@@ -432,12 +432,12 @@ msgstr ""
 "Les unités de développement ne peuvent être utilisées que sur les serveurs "
 "hébergés et avec les entreprises possédant un abonnement en cours."
 
-#: server/src/main/java/org/candlepin/controller/Entitler.java:467
+#: server/src/main/java/org/candlepin/controller/Entitler.java:465
 #, java-format
 msgid "SKU product not available to this development unit: \"{0}\""
 msgstr ""
 
-#: server/src/main/java/org/candlepin/controller/Entitler.java:473
+#: server/src/main/java/org/candlepin/controller/Entitler.java:471
 #, java-format
 msgid "Installed product not available to this development unit: \"{0}\""
 msgstr ""
@@ -510,15 +510,15 @@ msgstr ""
 "La requête a échoué du fait d''une modification concurrente. Merci de "
 "réessayer."
 
-#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:556
+#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:539
 #, java-format
 msgid "The system with UUID {0} is a virtual guest. It does not have guests."
 msgstr ""
 "Le système avec l''UUID {0} est un invité virtuel. Il ne possède pas "
 "d''invités."
 
-#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:680
-#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:689
+#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:663
+#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:672
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:158
 #, java-format
 msgid "Unit with ID \"{0}\" could not be found."
@@ -629,37 +629,36 @@ msgstr "Ne supporte que {1} parmi {2} invités virtuels."
 msgid "Only supports {1} of {2} vCPUs."
 msgstr "Ne supporte qu'' {1} parmi {2} vCPU."
 
-#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:67
+#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:68
 msgid ""
 "Guest has not been reported on any host and is using a temporary unmapped "
-"guest subscription."
+"guest subscription. For more information, please see https://access.redhat."
+"com/solutions/1592573"
 msgstr ""
-"L''invité n''a pas été reporté sur un hôte et utilise un abonnement invité "
-"non mappé temporaire."
 
-#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:70
+#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:71
 #, java-format
 msgid "Only supports {1}TB of {2}TB of storage."
 msgstr "Ne supporte qu'' {1}To of {2}To de stockage."
 
-#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:72
+#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:73
 #, java-format
 msgid "{0} COVERAGE PROBLEM.  Supports {1} of {2}"
 msgstr "{0} PROBLÈME DE COUVERTURE.  Supporte {1} parmi {2}"
 
-#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:291
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:260
 #, java-format
 msgid "Subscriptions for {0} expired on: {1}"
 msgstr "Les abonnements pour {0} expirent le : {1}"
 
-#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:376
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:345
 #, java-format
 msgid "\"{0}\" Should contain name, priority and at least one attribute"
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:390
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:359
 msgid "second parameter should be the priority number."
 msgstr "le second paramètre devrait être le numéro de priorité."
 
@@ -1050,63 +1049,63 @@ msgstr "Problème lors de la mise à jour de l''unité {0}"
 msgid "Environment with ID \"{0}\" could not be found."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1431
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1433
 #: server/src/main/java/org/candlepin/resource/GuestIdResource.java:235
 #, java-format
 msgid "Cannot unregister {0} {1} because: {2}"
 msgstr "Impossible d''annuler l''enregistrement {0} {1} car : {2}"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1488
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1491
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1527
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1540
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1543
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1648
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1651
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1490
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1493
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1529
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1542
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1545
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1650
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1653
 msgid "Cannot retrieve content access certificate"
 msgstr "Impossible d''extraire le certificat de droit d''accès au contenu"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1510
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1512
 msgid "Content access body can not be requested for a share consumer"
 msgstr ""
 "Le corps de texte du droit d''accès au contenu n''est pas accessible à un "
 "consommateur partagé"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1516
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1518
 msgid "Content access mode does not allow this request."
 msgstr "Le mode d''accès au contenu n''autorise pas cette requête."
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1584
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1586
 msgid "Unable to create entitlement certificate archive"
 msgstr "Impossible de créer l''archive du certificat de droits d''accès"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1661
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1663
 msgid "Share consumers must be bound to a specific pool"
 msgstr "Les consommateurs partagés peuvent être liés à un pool spécifique"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1671
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1673
 msgid "Cannot bind by multiple parameters."
 msgstr "Impossible de lier par des paramètres multiples."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author samfreemanz
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1675
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1677
 msgid "Cannot specify a quantity when auto-binding."
 msgstr "Impossible de spécifier une quantité lors de la liaison automatique."
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1787
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1789
 #, java-format
 msgid "Ignoring request to auto-attach. It is disabled for org \"{0}\"."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1827
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1829
 msgid "Owner has autobind disabled."
 msgstr "Autobind désactivé pour ce propriétaire."
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1857
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1964
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1859
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1966
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:183
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:223
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:242
@@ -1116,45 +1115,39 @@ msgstr "Autobind désactivé pour ce propriétaire."
 msgid "Entitlement with ID \"{0}\" could not be found."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1987
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1989
 #, java-format
 msgid "Entitlement Certificate with serial number \"{0}\" could not be found."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2009
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2011
 #, java-format
 msgid "No entitlements for consumer \"{0}\" with pool id \"{1}\""
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2104
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2161
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2205
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2106
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2163
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2207
 msgid "Can not export manifest of a share consumer"
 msgstr "Impossible d''exporter un manifeste des consommateur partagé"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2114
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2116
 msgid "Unable to create export archive"
 msgstr "Impossible de créer une archive d''export"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2326
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2328
 #, java-format
 msgid "Problem regenerating ID cert for unit {0}"
 msgstr "Problème lors de la régénération du cert ID pour l''unité {0}"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2356
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2358
 #, java-format
 msgid "The system with UUID {0} is not a virtual guest."
 msgstr "Le système avec l''UUID {0} n''est pas un invité virtuel."
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2369
-msgid ""
-"This host is under a different organization that you do not have access to"
-msgstr ""
-"Cet hôte est sous une autre organisation à laquelle vous n''avez pas accès"
-
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2447
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2439
 #, java-format
 msgid "Deletion record for hypervisor \"{0}\" not found."
 msgstr ""
