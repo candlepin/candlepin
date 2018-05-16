@@ -216,9 +216,7 @@ public class Entitler {
             // Remove any expired unmapped guest entitlements
             revokeUnmappedGuestEntitlements(consumer);
 
-            // Scoped to the consumer's organization.  Even in the event of sharing, a guest in one
-            // organization should not be able to compel a heal in an another organization
-            Consumer host = consumerCurator.getHost(consumer, consumer.getOwner());
+            Consumer host = consumerCurator.getHost(guestUuid, consumer.getOwner().getId());
             if (host != null && (force || host.isAutoheal())) {
                 log.info("Attempting to heal host machine with UUID \"{}\" for guest with UUID \"{}\"",
                     host.getUuid(), consumer.getUuid());

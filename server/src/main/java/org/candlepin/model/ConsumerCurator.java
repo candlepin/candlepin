@@ -26,6 +26,8 @@ import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.Query;
@@ -43,7 +45,6 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -51,6 +52,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import javax.inject.Provider;
 import javax.persistence.LockModeType;
 
 
@@ -66,8 +68,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @Inject private DeletedConsumerCurator deletedConsumerCurator;
     @Inject private Configuration config;
     @Inject private FactValidator factValidator;
-
-    private Map<String, Consumer> cachedHosts = new HashMap<String, Consumer>();
+    @Inject private Provider<HostCache> cachedHostsProvider;
 
     public ConsumerCurator() {
         super(Consumer.class);
@@ -477,7 +478,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     /**
-     * Get host consumer for a guest consumer.
+     * Get host consumer for a guest system id.
      *
      * As multiple hosts could have reported the same guest ID, we find the newest
      * and assume this is the authoritative host for the guest.
@@ -490,34 +491,19 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * during the session. An auto-bind can call this method up to 50 times and this
      * will cut the database calls significantly.
      *
-     * @param consumer the consumer to get the host for
+     * @param guestId a virtual guest ID (not a consumer UUID)
      * @return host consumer who most recently reported the given guestId (if any)
      */
     @Transactional
-    public Consumer getHost(Consumer consumer, Owner... owners) {
-        String guestId = consumer.getFact("virt.uuid");
+    public Consumer getHost(String guestId, String ownerId) {
         if (guestId == null) {
             return null;
         }
-
-        return getHost(guestId, owners);
-    }
-
-    /**
-     * Get the host consumer for a guest system id.  We need this method for use in getGuests.
-     * @param guestId
-     * @param owners
-     * @return the host's consumer
-     */
-    @Transactional
-    public Consumer getHost(String guestId, Owner... owners) {
-        if (guestId == null) {
-            return null;
-        }
-
         String guestLower = guestId.toLowerCase();
-        if (cachedHosts.containsKey(guestLower)) {
-            return cachedHosts.get(guestLower);
+
+        Pair<String, String> key = new ImmutablePair<String, String>(guestLower, ownerId);
+        if (cachedHostsProvider.get().containsKey(key)) {
+            return cachedHostsProvider.get().get(key);
         }
 
         Disjunction guestIdCrit = Restrictions.disjunction();
@@ -528,17 +514,14 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         Criteria crit = currentSession()
             .createCriteria(GuestId.class)
             .createAlias("consumer", "gconsumer")
+            .add(Restrictions.eq("gconsumer.owner.id", ownerId))
             .add(guestIdCrit)
             .addOrder(Order.desc("updated"))
             .setMaxResults(1)
             .setProjection(Projections.property("consumer"));
 
-        if (owners.length > 0) {
-            crit.add(CPRestrictions.in("gconsumer.owner", owners));
-        }
-
         Consumer host = (Consumer) crit.uniqueResult();
-        cachedHosts.put(guestLower, host);
+        cachedHostsProvider.get().put(key, host);
         return host;
     }
 
@@ -562,7 +545,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             for (GuestId cg : consumerGuests) {
                 // Check if this is the most recent host to report the guest by asking
                 // for the consumer's current host and comparing it to ourselves.
-                if (consumer.equals(getHost(cg.getGuestId(), consumer.getOwner()))) {
+                if (consumer.equals(getHost(cg.getGuestId(), consumer.getOwner().getId()))) {
                     Consumer guest = findByVirtUuid(cg.getGuestId(), consumer.getOwner().getId());
                     if (guest != null) {
                         guests.add(guest);

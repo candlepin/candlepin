@@ -56,7 +56,6 @@ import org.xnap.commons.i18n.I18n;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -122,14 +121,9 @@ public class EntitlementRules implements Enforcer {
     }
 
     @Override
-    public ValidationResult preEntitlement(Consumer consumer, Pool entitlementPool,
-        Integer quantity, CallerType caller) {
-        return preEntitlement(
-            consumer,
-            getHost(consumer, new ArrayList<Pool>(Arrays.asList(entitlementPool))),
-            entitlementPool,
-            quantity,
-            caller);
+    public ValidationResult preEntitlement(Consumer consumer, Pool entitlementPool, Integer quantity,
+        CallerType caller) {
+        return preEntitlement(consumer, getHost(consumer), entitlementPool, quantity, caller);
     }
 
     public ValidationResult preEntitlement(Consumer consumer, Consumer host,
@@ -143,15 +137,7 @@ public class EntitlementRules implements Enforcer {
     public Map<String, ValidationResult> preEntitlement(Consumer consumer,
         Collection<PoolQuantity> entitlementPoolQuantities,
         CallerType caller) {
-        List<Pool> pools = new ArrayList<Pool>();
-        for (PoolQuantity pq : entitlementPoolQuantities) {
-            pools.add(pq.getPool());
-        }
-        return preEntitlement(
-            consumer,
-            getHost(consumer, pools),
-            entitlementPoolQuantities,
-            caller);
+        return preEntitlement(consumer, getHost(consumer), entitlementPoolQuantities, caller);
     }
 
     @Override
@@ -214,7 +200,7 @@ public class EntitlementRules implements Enforcer {
 
         if (!consumer.isShare()) {
             args.put("consumer", consumer);
-            args.put("hostConsumer", getHost(consumer, pools));
+            args.put("hostConsumer", getHost(consumer));
             args.put("consumerEntitlements", consumer.getEntitlements());
             args.put("standalone", config.getBoolean(ConfigProperties.STANDALONE));
             args.put("pools", pools);
@@ -261,26 +247,9 @@ public class EntitlementRules implements Enforcer {
         return filteredPools;
     }
 
-    /**
-     * Similar to consumerCurator's getHost but here we are ensuring that the owners we search are actually
-     * sharing with this consumer.
-     *
-     * @param consumer
-     * @param pools
-     * @return
-     */
-    private Consumer getHost(Consumer consumer, List<Pool> pools) {
-        if (!consumer.hasFact("virt.uuid")) {
-            return null;
-        }
-        List<Owner> potentialOwners = new ArrayList<Owner>(Arrays.asList(consumer.getOwner()));
-        for (Pool p : pools) {
-            if (p.getType() == Pool.PoolType.SHARE_DERIVED) {
-                potentialOwners.add(p.getSourceEntitlement().getOwner());
-            }
-        }
-
-        Consumer host = consumerCurator.getHost(consumer, potentialOwners.toArray(new Owner[] {}));
+    private Consumer getHost(Consumer consumer) {
+        Consumer host = consumer.hasFact("virt.uuid") ? consumerCurator.getHost(
+            consumer.getFact("virt.uuid"), consumer.getOwner().getId()) : null;
         return host;
     }
 

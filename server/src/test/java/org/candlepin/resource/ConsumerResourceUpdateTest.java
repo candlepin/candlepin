@@ -480,7 +480,7 @@ public class ConsumerResourceUpdateTest {
             existingHost.getOwner().getId())).thenReturn(guest1);
         // Ensure that the guests host is the existing.
         when(consumerCurator.getHost("Guest 1",
-            existingHost.getOwner())).thenReturn(existingHost);
+            existingHost.getOwner().getId())).thenReturn(existingHost);
         when(consumerCurator.findByUuid("Guest 1")).thenReturn(guest1);
 
         Consumer existingMigratedTo = createConsumerWithGuests();
