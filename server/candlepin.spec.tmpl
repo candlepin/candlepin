@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.1.16
+Version: 2.1.17
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,11 @@ fi
 
 #raw
 %changelog
+* Wed May 16 2018 Kevin Howell <khowell@redhat.com> 2.1.17-1
+- 1578039: Ensure getHost is always org-scoped (khowell@redhat.com)
+- 1471836: Unmapped guest pool status now points to relevant KB article
+  (nmoumoul@redhat.com)
+
 * Wed May 09 2018 Kevin Howell <khowell@redhat.com> 2.1.16-1
 - 1566217: Downgrade the logging when no jobs are cancelled
   (wpoteat@redhat.com)
