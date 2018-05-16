@@ -39,7 +39,7 @@ RESTEASY = [group('resteasy-jaxrs',
             'org.scannotation:scannotation:jar:1.0.3',
             'org.apache.httpcomponents:httpclient:jar:4.3.2',
             'org.apache.james:apache-mime4j:jar:0.6',
-            'javax.mail:mail:jar:1.4.4',
+            'javax.mail:mail:jar:1.4.7',
             'javax.ws.rs:javax.ws.rs-api:jar:2.1',
             'javax.json.bind:javax.json.bind-api:jar:1.0',
             'org.jboss.spec.javax.ws.rs:jboss-jaxrs-api_2.1_spec:jar:1.0.0.Final',
@@ -64,7 +64,8 @@ JACKSON = [group('jackson-annotations', 'jackson-core', 'jackson-databind',
                 :under=> "#{JACKSON_NS}.datatype",
                 :version => JACKSON_VERSION)]
 
-SUN_JAXB = 'com.sun.xml.bind:jaxb-impl:jar:2.1.12'
+SUN_JAXB = ['com.sun.xml.bind:jaxb-impl:jar:2.3.0',
+	    'com.sun.xml.bind:jaxb-core:jar:2.3.0']
 
 CORE_TESTING = [
   'junit:junit:jar:4.12',
@@ -114,7 +115,7 @@ HIBERNATE = [group('hibernate-core', 'hibernate-entitymanager', 'hibernate-c3p0'
              'asm:asm:jar:3.0',
              'cglib:cglib:jar:2.2',
              'org.javassist:javassist:jar:3.20.0-GA',
-             'com.fasterxml:classmate:jar:1.3.0',
+             'com.fasterxml:classmate:jar:1.3.1',
              'org.freemarker:freemarker:jar:2.3.15',
              'com.mchange:c3p0:jar:0.9.5.2',
              'com.mchange:mchange-commons-java:jar:0.2.11',

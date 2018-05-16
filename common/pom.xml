@@ -52,7 +52,7 @@
     <org.scannotation-scannotation.version>1.0.3</org.scannotation-scannotation.version>
     <org.apache.httpcomponents-httpclient.version>4.3.2</org.apache.httpcomponents-httpclient.version>
     <org.apache.james-apache-mime4j.version>0.6</org.apache.james-apache-mime4j.version>
-    <javax.mail-mail.version>1.4.4</javax.mail-mail.version>
+    <javax.mail-mail.version>1.4.7</javax.mail-mail.version>
     <javax.ws.rs-javax.ws.rs-api.version>2.1</javax.ws.rs-javax.ws.rs-api.version>
     <javax.json.bind-javax.json.bind-api.version>1.0</javax.json.bind-javax.json.bind-api.version>
     <org.jboss.spec.javax.ws.rs-jboss-jaxrs-api_2.1_spec.version>1.0.0.Final</org.jboss.spec.javax.ws.rs-jboss-jaxrs-api_2.1_spec.version>
