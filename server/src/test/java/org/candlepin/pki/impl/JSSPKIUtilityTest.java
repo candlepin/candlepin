@@ -52,6 +52,8 @@ import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 import org.junit.Before;
 import org.junit.Test;
+import org.mozilla.jss.netscape.security.x509.AuthorityKeyIdentifierExtension;
+import org.mozilla.jss.netscape.security.x509.KeyIdentifier;
 import org.mozilla.jss.netscape.security.x509.PKIXExtensions;
 import org.mozilla.jss.netscape.security.x509.X500Name;
 
@@ -71,6 +73,7 @@ import java.security.cert.X509CRLEntry;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateCrtKey;
 import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
 import java.security.spec.RSAPrivateCrtKeySpec;
 import java.security.spec.RSAPublicKeySpec;
 import java.time.LocalDate;
@@ -324,5 +327,20 @@ public class JSSPKIUtilityTest {
         }
 
         assertEquals(bcExpected.toString(), actual);
+    }
+
+    @Test
+    public void testCalculateAuthorityKeyIdentifier() throws Exception {
+        KeyPairGenerator gen = KeyPairGenerator.getInstance("RSA");
+        RSAPublicKey key = (RSAPublicKey) gen.generateKeyPair().getPublic();
+
+        AuthorityKeyIdentifier expectedAki = new JcaX509ExtensionUtils().createAuthorityKeyIdentifier(key);
+        AuthorityKeyIdentifierExtension actualAki = JSSPKIUtility.buildAuthorityKeyIdentifier(key);
+
+        byte[] expectedKeyIdentifier = expectedAki.getKeyIdentifier();
+        byte[] actualKeyIdentifier = ((KeyIdentifier) actualAki.get(AuthorityKeyIdentifierExtension.KEY_ID))
+            .getIdentifier();
+
+        assertArrayEquals(expectedKeyIdentifier, actualKeyIdentifier);
     }
 }

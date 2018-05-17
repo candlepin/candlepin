@@ -36,6 +36,8 @@ import org.mozilla.jss.asn1.SEQUENCE;
 import org.mozilla.jss.asn1.UTF8String;
 import org.mozilla.jss.netscape.security.extensions.ExtendedKeyUsageExtension;
 import org.mozilla.jss.netscape.security.extensions.NSCertTypeExtension;
+import org.mozilla.jss.netscape.security.util.BitArray;
+import org.mozilla.jss.netscape.security.util.DerInputStream;
 import org.mozilla.jss.netscape.security.util.DerValue;
 import org.mozilla.jss.netscape.security.util.ObjectIdentifier;
 import org.mozilla.jss.netscape.security.x509.AlgorithmId;
@@ -77,6 +79,7 @@ import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
 import java.security.KeyPair;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CRLException;
 import java.security.cert.CertificateEncodingException;
@@ -85,6 +88,7 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509CRL;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPrivateCrtKeySpec;
 import java.util.ArrayList;
@@ -316,7 +320,50 @@ public class JSSPKIUtility extends PKIUtility {
         }
     }
 
-    protected AuthorityKeyIdentifierExtension buildAuthorityKeyIdentifier(X509Certificate caCert)
+    /**
+     * Calculate the KeyIdentifier for an RSAPublicKey and place it in an AuthorityKeyIdentifier extension.
+     *
+     * Java encodes RSA public keys using the SubjectPublicKeyInfo type described in RFC 5280.
+     * <pre>
+     * SubjectPublicKeyInfo  ::=  SEQUENCE  {
+     *   algorithm            AlgorithmIdentifier,
+     *   subjectPublicKey     BIT STRING  }
+     *
+     * AlgorithmIdentifier  ::=  SEQUENCE  {
+     *   algorithm               OBJECT IDENTIFIER,
+     *   parameters              ANY DEFINED BY algorithm OPTIONAL  }
+     * </pre>
+     *
+     * A KeyIdentifier is a SHA-1 digest of the subjectPublicKey bit string from the ASN.1 above.
+     *
+     * @param key the RSAPublicKey to use
+     * @return an AuthorityKeyIdentifierExtension based on the key
+     * @throws IOException if we can't construct a MessageDigest object.
+     */
+    public static AuthorityKeyIdentifierExtension buildAuthorityKeyIdentifier(RSAPublicKey key)
+        throws IOException {
+        try {
+            MessageDigest d = MessageDigest.getInstance("SHA-1");
+
+            byte[] encodedKey = key.getEncoded();
+
+            DerInputStream s = new DerValue(encodedKey).toDerInputStream();
+            // Skip the first item in the sequence, AlgorithmIdentifier.
+            // The parameter, startLen, is required for skipSequence although it's unused.
+            s.skipSequence(0);
+            // Get the subjectPublicKey bit string
+            BitArray b = s.getUnalignedBitString();
+            byte[] digest = d.digest(b.toByteArray());
+
+            KeyIdentifier ki = new KeyIdentifier(digest);
+            return new AuthorityKeyIdentifierExtension(ki, null, null);
+        }
+        catch (NoSuchAlgorithmException e) {
+            throw new IOException("Could not find SHA1 implementation", e);
+        }
+    }
+
+    public static AuthorityKeyIdentifierExtension buildAuthorityKeyIdentifier(X509Certificate caCert)
         throws InvalidBERException, IOException {
         // The subject key identifier of the CA becomes the Authority Key Identifer of the CRL.
         byte[] extValue = caCert.getExtensionValue(PKIXExtensions.SubjectKey_Id.toString());
@@ -331,12 +378,9 @@ public class JSSPKIUtility extends PKIUtility {
         );
 
         if (ski == null) {
-            /* RFC 5280 mandates that this extension be present but sometimes it isn't.  If it's not
-             * we could still calculate the subject key identifier to use by taking the SHA1 digest
-             * of the public key, but that's harder than it sounds with JSS and all to support
-             * a cert that is malformed (plus it would require creating a malformed cert to use
-             * for testing), so I'm going to leave this unfinished until we really need it. */
-            throw new IOException("Could not find SubjectKeyIdentifier extension in CA");
+            /* If the SubjectPublicKey extension isn't available, we can calculate the value ourselves
+             * from the certificate's public key. */
+            return buildAuthorityKeyIdentifier((RSAPublicKey) caCert.getPublicKey());
         }
 
         /* RFC 5280 section 4.2.1.1 is a bit odd.  It states the AuthorityKeyIdentifier MAY contain
