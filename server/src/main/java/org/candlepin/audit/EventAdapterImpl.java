@@ -89,8 +89,8 @@ public class EventAdapterImpl implements EventAdapter {
             Content content = new Content();
             content.setType(MediaType.APPLICATION_XML_TYPE);
             content.setJAXBObject(e);
-            content.setText(e.getMessageText());
             entry.setContent(content);
+            entry.setSummary(e.getMessageText());
             feed.getEntries().add(entry);
         }
         // Use the most recent event as the feed's published time. Assumes events do not
