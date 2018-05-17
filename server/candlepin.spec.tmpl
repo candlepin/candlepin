@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.5.1
+Version: 2.5.2
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -220,6 +220,30 @@ fi
 
 #raw
 %changelog
+* Thu May 17 2018 Kevin Howell <khowell@redhat.com> 2.5.2-1
+- 1578968: candlepin atom feeds are missing the description field
+  (adarshvritant@gmail.com)
+- Updated dependencies for jaxb-impl, javax mail, fasterxml classmate
+  (adarshvritant@gmail.com)
+- 1578042: Ensure getHost is always org-scoped (khowell@redhat.com)
+- Removed ContentTypeHackFilter (adarshvritant@gmail.com)
+- Increase the default message re-delivery delays (mstead@redhat.com)
+- Maintain order of messages sent to Qpid (mstead@redhat.com)
+- 1550190: Fixed Artemis resend on error to prevent lost messages
+  (mstead@redhat.com)
+- 1546236: Properly handle connections when they are recreated
+  (mstead@redhat.com)
+- 1393072: Unmapped guest pool status now points to relevant KB article
+  (nmoumoul@redhat.com)
+- Upgrade resteasy to 3.5.1 (adarshvritant@gmail.com)
+- Make host cache CandlepinRequestScoped (khowell@redhat.com)
+- Make various components singletons (khowell@redhat.com)
+- Make I18nProvider a singleton (khowell@redhat.com)
+- Implemented DeletedConsumerDTO (nmoumoul@redhat.com)
+- Candlepin requires Tomcat 7 (wpoteat@redhat.com)
+- 1569611: Manifest import no longer fails when product changes
+  (adarshvritant@gmail.com)
+
 * Tue May 01 2018 Kevin Howell <khowell@redhat.com> 2.5.1-1
 - Added the RoleDTO and PermissionBlueprintDTO (crog@redhat.com)
 - 1517978: Jobs now respect owner-specific logging level where appropriate
