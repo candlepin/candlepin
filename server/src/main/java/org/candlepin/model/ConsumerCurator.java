@@ -970,7 +970,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             .add(Restrictions.eq("ownerId", owner.getId()))
             .add(Restrictions.eq("typeId", type.getId()))
             .createAlias("entitlements", "ent")
-            .setMaxResults(0)
             .setProjection(Projections.sum("ent.quantity"));
 
         Long result = (Long) c.uniqueResult();

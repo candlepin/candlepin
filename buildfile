@@ -94,7 +94,7 @@ JAVAX = ['org.hibernate.javax.persistence:hibernate-jpa-2.1-api:jar:1.0.0.Final'
          'javax.transaction:jta:jar:1.1']
 ANTLR = ['antlr:antlr:jar:2.7.7']
 
-EHCACHE = ['org.hibernate:hibernate-ehcache:jar:5.1.1.Final',
+EHCACHE = ['org.hibernate:hibernate-ehcache:jar:5.2.17.Final',
            'net.sf.ehcache:ehcache:jar:2.10.1',
            'org.ehcache:jcache:jar:1.0.0', 'javax.cache:cache-api:jar:1.0.0',
            'net.sf.ehcache:management-ehcache-v2:jar:2.10.1']
@@ -105,8 +105,8 @@ VALIDATOR = ['org.hibernate.validator:hibernate-validator:jar:6.0.7.Final',
 
 HIBERNATE = [group('hibernate-core', 'hibernate-entitymanager', 'hibernate-c3p0',
                    :under => 'org.hibernate',
-                   :version => '5.1.1.Final'),
-             'org.hibernate.common:hibernate-commons-annotations:jar:5.0.1.Final',
+                   :version => '5.2.17.Final'),
+             'org.hibernate.common:hibernate-commons-annotations:jar:5.0.2.Final',
              'org.hibernate:hibernate-tools:jar:3.2.4.GA',
              ANTLR,
              EHCACHE,
@@ -120,7 +120,7 @@ HIBERNATE = [group('hibernate-core', 'hibernate-entitymanager', 'hibernate-c3p0'
              'com.mchange:mchange-commons-java:jar:0.2.11',
              'dom4j:dom4j:jar:1.6.1',
              'org.jboss:jandex:jar:2.0.0.Final',
-              'org.jboss.logging:jboss-logging:jar:3.3.0.Final'
+             'org.jboss.logging:jboss-logging:jar:3.3.0.Final'
              ] + JAVAX
 
 POSTGRESQL = 'postgresql:postgresql:jar:9.0-801.jdbc4'

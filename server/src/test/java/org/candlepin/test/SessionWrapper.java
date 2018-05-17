@@ -16,39 +16,37 @@ package org.candlepin.test;
 
 import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
-import org.hibernate.FlushMode;
 import org.hibernate.Filter;
+import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
+import org.hibernate.IdentifierLoadAccess;
+import org.hibernate.Interceptor;
 import org.hibernate.LobHelper;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MultiIdentifierLoadAccess;
-import org.hibernate.IdentifierLoadAccess;
-import org.hibernate.Interceptor;
 import org.hibernate.NaturalIdLoadAccess;
-import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
-import org.hibernate.ScrollableResults;
 import org.hibernate.ScrollMode;
 import org.hibernate.Session;
 import org.hibernate.SessionEventListener;
-import org.hibernate.SessionFactory;
 import org.hibernate.SharedSessionBuilder;
 import org.hibernate.SimpleNaturalIdLoadAccess;
-import org.hibernate.SQLQuery;
 import org.hibernate.Transaction;
 import org.hibernate.TypeHelper;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.engine.jdbc.LobCreationContext;
+import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
+import org.hibernate.engine.spi.ActionQueue;
+import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.ExceptionConverter;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.engine.spi.NamedQueryDefinition;
-import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionEventListenerManager;
@@ -56,25 +54,45 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
+import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.ProcedureCall;
-import org.hibernate.resource.transaction.TransactionCoordinator;
+import org.hibernate.query.Query;
+import org.hibernate.query.spi.NativeQueryImplementor;
+import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.spi.ScrollableResultsImplementor;
+import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
+import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.stat.SessionStatistics;
-import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 import java.io.Serializable;
 import java.sql.Connection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TimeZone;
+import java.util.UUID;
 
-
+import javax.persistence.EntityGraph;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.FlushModeType;
+import javax.persistence.LockModeType;
+import javax.persistence.StoredProcedureQuery;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaDelete;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.CriteriaUpdate;
+import javax.persistence.criteria.Selection;
+import javax.persistence.metamodel.Metamodel;
 
 /**
  * The SessionWrapper is a utility class intended to be used in places where we need to spy on an
  * existing session instance, but are unable to due to the "final" nature of Hibernate's
  * SessionImpl class.
  */
-public class SessionWrapper implements Session, SessionImplementor {
+public class SessionWrapper implements SessionImplementor {
 
     protected final Session session;
     protected final SessionImplementor sessionImpl;
@@ -106,6 +124,11 @@ public class SessionWrapper implements Session, SessionImplementor {
         this.session.flush();
     }
 
+    @Override
+    public void setFlushMode(FlushModeType flushMode) {
+        this.sessionImpl.setFlushMode(flushMode);
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -118,8 +141,28 @@ public class SessionWrapper implements Session, SessionImplementor {
      * {@inheritDoc}
      */
     @Override
-    public FlushMode getFlushMode() {
+    public FlushModeType getFlushMode() {
         return this.session.getFlushMode();
+    }
+
+    @Override
+    public void lock(Object entity, LockModeType lockMode) {
+
+    }
+
+    @Override
+    public void lock(Object entity, LockModeType lockMode, Map<String, Object> properties) {
+
+    }
+
+    @Override
+    public void setHibernateFlushMode(FlushMode flushMode) {
+        this.sessionImpl.setHibernateFlushMode(flushMode);
+    }
+
+    @Override
+    public FlushMode getHibernateFlushMode() {
+        return sessionImpl.getHibernateFlushMode();
     }
 
     /**
@@ -142,8 +185,29 @@ public class SessionWrapper implements Session, SessionImplementor {
      * {@inheritDoc}
      */
     @Override
-    public SessionFactory getSessionFactory() {
-        return this.session.getSessionFactory();
+    public SessionFactoryImplementor getSessionFactory() {
+        return this.sessionImpl.getSessionFactory();
+    }
+
+    @Override
+    public boolean isFlushBeforeCompletionEnabled() {
+        return sessionImpl.isFlushBeforeCompletionEnabled();
+    }
+
+    @Override
+    public ActionQueue getActionQueue() {
+        return sessionImpl.getActionQueue();
+    }
+
+    @Override
+    public Object instantiate(EntityPersister entityPersister, Serializable serializable)
+        throws HibernateException {
+        return sessionImpl.instantiate(entityPersister, serializable);
+    }
+
+    @Override
+    public void forceFlush(EntityEntry entityEntry) throws HibernateException {
+
     }
 
     /**
@@ -210,12 +274,32 @@ public class SessionWrapper implements Session, SessionImplementor {
         return this.session.getIdentifier(object);
     }
 
+    @Override
+    public boolean contains(String s, Object o) {
+        return sessionImpl.contains(s, o);
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
     public boolean contains(Object object) {
         return this.session.contains(object);
+    }
+
+    @Override
+    public LockModeType getLockMode(Object entity) {
+        return sessionImpl.getLockMode(entity);
+    }
+
+    @Override
+    public void setProperty(String propertyName, Object value) {
+        sessionImpl.setProperty(propertyName, value);
+    }
+
+    @Override
+    public Map<String, Object> getProperties() {
+        return null;
     }
 
     /**
@@ -369,6 +453,38 @@ public class SessionWrapper implements Session, SessionImplementor {
     public void persist(Object object) {
         this.session.persist(object);
     }
+
+    @Override
+    public void remove(Object entity) {
+        sessionImpl.remove(entity);
+    }
+
+    @Override
+    public <T> T find(Class<T> entityClass, Object primaryKey) {
+        return sessionImpl.find(entityClass, primaryKey);
+    }
+
+    @Override
+    public <T> T find(Class<T> entityClass, Object primaryKey, Map<String, Object> properties) {
+        return find(entityClass, primaryKey, properties);
+    }
+
+    @Override
+    public <T> T find(Class<T> entityClass, Object primaryKey, LockModeType lockMode) {
+        return find(entityClass, primaryKey, lockMode);
+    }
+
+    @Override
+    public <T> T find(Class<T> entityClass, Object primaryKey, LockModeType lockMode,
+        Map<String, Object> properties) {
+        return find(entityClass, primaryKey, lockMode, properties);
+    }
+
+    @Override
+    public <T> T getReference(Class<T> entityClass, Object primaryKey) {
+        return sessionImpl.getReference(entityClass, primaryKey);
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -425,6 +541,21 @@ public class SessionWrapper implements Session, SessionImplementor {
         this.session.refresh(object);
     }
 
+    @Override
+    public void refresh(Object entity, Map<String, Object> properties) {
+
+    }
+
+    @Override
+    public void refresh(Object entity, LockModeType lockMode) {
+
+    }
+
+    @Override
+    public void refresh(Object entity, LockModeType lockMode, Map<String, Object> properties) {
+
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -470,7 +601,7 @@ public class SessionWrapper implements Session, SessionImplementor {
      */
     @Override
     public Query createFilter(Object collection, String queryString) {
-        return this.session.createFilter(collection, queryString);
+        return this.sessionImpl.createFilter(collection, queryString);
     }
 
     /**
@@ -479,6 +610,11 @@ public class SessionWrapper implements Session, SessionImplementor {
     @Override
     public void clear() {
         this.session.clear();
+    }
+
+    @Override
+    public void detach(Object entity) {
+        sessionImpl.detach(entity);
     }
 
     /**
@@ -771,20 +907,106 @@ public class SessionWrapper implements Session, SessionImplementor {
         return this.session.createCriteria(entityName, alias);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public Query createQuery(String queryString) {
-        return this.session.createQuery(queryString);
+    public Integer getJdbcBatchSize() {
+        return sessionImpl.getJdbcBatchSize();
+    }
+
+    @Override
+    public void setJdbcBatchSize(Integer integer) {
+        sessionImpl.setJdbcBatchSize(integer);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public SQLQuery createSQLQuery(String queryString) {
-        return this.session.createSQLQuery(queryString);
+    public QueryImplementor createQuery(String queryString) {
+        return this.sessionImpl.createQuery(queryString);
+    }
+
+    @Override
+    public <T> QueryImplementor<T> createQuery(String s, Class<T> aClass) {
+        return sessionImpl.createQuery(s, aClass);
+    }
+
+    @Override
+    public <T> QueryImplementor<T> createNamedQuery(String s, Class<T> aClass) {
+        return sessionImpl.createNamedQuery(s, aClass);
+    }
+
+    @Override
+    public QueryImplementor createNamedQuery(String s) {
+        return sessionImpl.createNamedQuery(s);
+    }
+
+    @Override
+    public NativeQueryImplementor createNativeQuery(String s) {
+        return sessionImpl.createNativeQuery(s);
+    }
+
+    @Override
+    public NativeQueryImplementor createNativeQuery(String s, Class aClass) {
+        return sessionImpl.createNativeQuery(s, aClass);
+    }
+
+    @Override
+    public NativeQueryImplementor createNativeQuery(String s, String s1) {
+        return sessionImpl.createNativeQuery(s, s1);
+    }
+
+    @Override
+    public StoredProcedureQuery createNamedStoredProcedureQuery(String name) {
+        return sessionImpl.createNamedStoredProcedureQuery(name);
+    }
+
+    @Override
+    public StoredProcedureQuery createStoredProcedureQuery(String procedureName) {
+        return sessionImpl.createNamedStoredProcedureQuery(procedureName);
+    }
+
+    @Override
+    public StoredProcedureQuery createStoredProcedureQuery(String procedureName, Class[] resultClasses) {
+        return sessionImpl.createStoredProcedureQuery(procedureName, resultClasses);
+    }
+
+    @Override
+    public StoredProcedureQuery createStoredProcedureQuery(String procedureName,
+        String... resultSetMappings) {
+        return sessionImpl.createStoredProcedureQuery(procedureName, resultSetMappings);
+    }
+
+    @Override
+    public void joinTransaction() {
+
+    }
+
+    @Override
+    public boolean isJoinedToTransaction() {
+        return false;
+    }
+
+    @Override
+    public <T> T unwrap(Class<T> cls) {
+        return null;
+    }
+
+    @Override
+    public Object getDelegate() {
+        return null;
+    }
+
+    @Override
+    public NativeQueryImplementor getNamedNativeQuery(String s) {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NativeQueryImplementor createSQLQuery(String queryString) {
+        return this.sessionImpl.createSQLQuery(queryString);
     }
 
     /**
@@ -823,8 +1045,8 @@ public class SessionWrapper implements Session, SessionImplementor {
      * {@inheritDoc}
      */
     @Override
-    public Query getNamedQuery(String queryName) {
-        return this.session.getNamedQuery(queryName);
+    public QueryImplementor getNamedQuery(String queryName) {
+        return this.sessionImpl.getNamedQuery(queryName);
     }
 
     /**
@@ -835,6 +1057,11 @@ public class SessionWrapper implements Session, SessionImplementor {
         return this.session.getTenantIdentifier();
     }
 
+    @Override
+    public UUID getSessionIdentifier() {
+        return null;
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -843,7 +1070,47 @@ public class SessionWrapper implements Session, SessionImplementor {
         return this.session.getTransaction();
     }
 
+    @Override
+    public EntityManagerFactory getEntityManagerFactory() {
+        return null;
+    }
+
+    @Override
+    public CriteriaBuilder getCriteriaBuilder() {
+        return null;
+    }
+
+    @Override
+    public Metamodel getMetamodel() {
+        return null;
+    }
+
+    @Override
+    public <T> EntityGraph<T> createEntityGraph(Class<T> rootType) {
+        return null;
+    }
+
+    @Override
+    public EntityGraph<?> createEntityGraph(String graphName) {
+        return null;
+    }
+
+    @Override
+    public EntityGraph<?> getEntityGraph(String graphName) {
+        return null;
+    }
+
+    @Override
+    public <T> List<EntityGraph<? super T>> getEntityGraphs(Class<T> entityClass) {
+        return null;
+    }
+
     // SessionImplementor methods
+
+    @Override
+    public JdbcSessionContext getJdbcSessionContext() {
+        return sessionImpl.getJdbcSessionContext();
+    }
 
     /**
      * {@inheritDoc}
@@ -877,12 +1144,9 @@ public class SessionWrapper implements Session, SessionImplementor {
         this.sessionImpl.setAutoClear(enabled);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public void disableTransactionAutoJoin() {
-        this.sessionImpl.disableTransactionAutoJoin();
+    public SessionImplementor getSession() {
+        return sessionImpl.getSession();
     }
 
     /**
@@ -891,6 +1155,16 @@ public class SessionWrapper implements Session, SessionImplementor {
     @Override
     public boolean isTransactionInProgress() {
         return this.sessionImpl.isTransactionInProgress();
+    }
+
+    @Override
+    public Transaction accessTransaction() {
+        return null;
+    }
+
+    @Override
+    public LockOptions getLockRequest(LockModeType lockModeType, Map<String, Object> map) {
+        return null;
     }
 
     /**
@@ -955,7 +1229,8 @@ public class SessionWrapper implements Session, SessionImplementor {
      * {@inheritDoc}
      */
     @Override
-    public ScrollableResults scroll(String query, QueryParameters queryParameters) throws HibernateException {
+    public ScrollableResultsImplementor scroll(String query, QueryParameters queryParameters)
+        throws HibernateException {
         return this.sessionImpl.scroll(query, queryParameters);
     }
 
@@ -963,7 +1238,7 @@ public class SessionWrapper implements Session, SessionImplementor {
      * {@inheritDoc}
      */
     @Override
-    public ScrollableResults scroll(Criteria criteria, ScrollMode scrollMode) {
+    public ScrollableResultsImplementor scroll(Criteria criteria, ScrollMode scrollMode) {
         return this.sessionImpl.scroll(criteria, scrollMode);
     }
 
@@ -1062,8 +1337,8 @@ public class SessionWrapper implements Session, SessionImplementor {
      * {@inheritDoc}
      */
     @Override
-    public ScrollableResults scrollCustomQuery(CustomQuery customQuery, QueryParameters queryParameters)
-        throws HibernateException {
+    public ScrollableResultsImplementor scrollCustomQuery(CustomQuery customQuery,
+        QueryParameters queryParameters) throws HibernateException {
         return this.sessionImpl.scrollCustomQuery(customQuery, queryParameters);
     }
 
@@ -1080,7 +1355,8 @@ public class SessionWrapper implements Session, SessionImplementor {
      * {@inheritDoc}
      */
     @Override
-    public ScrollableResults scroll(NativeSQLQuerySpecification spec, QueryParameters queryParameters) {
+    public ScrollableResultsImplementor scroll(NativeSQLQuerySpecification spec,
+        QueryParameters queryParameters) {
         return this.sessionImpl.scroll(spec, queryParameters);
     }
 
@@ -1121,8 +1397,59 @@ public class SessionWrapper implements Session, SessionImplementor {
      * {@inheritDoc}
      */
     @Override
-    public Query getNamedSQLQuery(String name) {
+    public NativeQueryImplementor getNamedSQLQuery(String name) {
         return this.sessionImpl.getNamedSQLQuery(name);
+    }
+
+    @Override
+    public <T> QueryImplementor<T> createQuery(CriteriaQuery<T> criteriaQuery) {
+        return null;
+    }
+
+    @Override
+    public QueryImplementor createQuery(CriteriaUpdate criteriaUpdate) {
+        return null;
+    }
+
+    @Override
+    public QueryImplementor createQuery(CriteriaDelete criteriaDelete) {
+        return null;
+    }
+
+    @Override
+    public <T> QueryImplementor<T> createQuery(String s, Class<T> aClass, Selection selection,
+        QueryOptions queryOptions) {
+        return null;
+    }
+
+    @Override
+    public void merge(String s, Object o, Map map) throws HibernateException {
+        sessionImpl.merge(s, o, map);
+    }
+
+    @Override
+    public void persist(String s, Object o, Map map) throws HibernateException {
+        sessionImpl.persist(s, o , map);
+    }
+
+    @Override
+    public void persistOnFlush(String s, Object o, Map map) {
+        sessionImpl.persistOnFlush(s, o, map);
+    }
+
+    @Override
+    public void refresh(String s, Object o, Map map) throws HibernateException {
+
+    }
+
+    @Override
+    public void delete(String s, Object o, boolean b, Set set) {
+
+    }
+
+    @Override
+    public void removeOrphanBeforeUpdates(String s, Object o) {
+
     }
 
     /**
@@ -1149,6 +1476,26 @@ public class SessionWrapper implements Session, SessionImplementor {
         return this.sessionImpl.getTransactionCoordinator();
     }
 
+    @Override
+    public void afterTransactionBegin() {
+
+    }
+
+    @Override
+    public void beforeTransactionCompletion() {
+
+    }
+
+    @Override
+    public void afterTransactionCompletion(boolean b, boolean b1) {
+
+    }
+
+    @Override
+    public void flushBeforeTransactionCompletion() {
+
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -1157,12 +1504,27 @@ public class SessionWrapper implements Session, SessionImplementor {
         return this.sessionImpl.getJdbcCoordinator();
     }
 
+    @Override
+    public JdbcServices getJdbcServices() {
+        return null;
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
     public boolean isClosed() {
         return this.sessionImpl.isClosed();
+    }
+
+    @Override
+    public void checkOpen(boolean b) {
+
+    }
+
+    @Override
+    public void markForRollbackOnly() {
+
     }
 
     /**
@@ -1189,20 +1551,9 @@ public class SessionWrapper implements Session, SessionImplementor {
         return this.sessionImpl.getLoadQueryInfluencers();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public Query createQuery(NamedQueryDefinition namedQueryDefinition) {
-        return this.sessionImpl.createQuery(namedQueryDefinition);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public SQLQuery createSQLQuery(NamedSQLQueryDefinition namedQueryDefinition) {
-        return this.sessionImpl.createSQLQuery(namedQueryDefinition);
+    public ExceptionConverter getExceptionConverter() {
+        return null;
     }
 
     /**
@@ -1223,13 +1574,28 @@ public class SessionWrapper implements Session, SessionImplementor {
         return this.sessionImpl.execute(callback);
     }
 
-    // WrapperOptionsContext methods
-
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public WrapperOptions getWrapperOptions() {
-        return this.sessionImpl.getWrapperOptions();
+    public boolean shouldAutoJoinTransaction() {
+        return false;
+    }
+
+    @Override
+    public boolean useStreamForLobBinding() {
+        return false;
+    }
+
+    @Override
+    public LobCreator getLobCreator() {
+        return null;
+    }
+
+    @Override
+    public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
+        return null;
+    }
+
+    @Override
+    public TimeZone getJdbcTimeZone() {
+        return null;
     }
 }

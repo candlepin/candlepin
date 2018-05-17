@@ -46,13 +46,13 @@
     <com.google.inject-guice.version>3.0</com.google.inject-guice.version>
     <aopalliance-aopalliance.version>1.0</aopalliance-aopalliance.version>
     <javax.inject-javax.inject.version>1</javax.inject-javax.inject.version>
-    <org.hibernate-hibernate-core.version>5.1.1.Final</org.hibernate-hibernate-core.version>
-    <org.hibernate-hibernate-entitymanager.version>5.1.1.Final</org.hibernate-hibernate-entitymanager.version>
-    <org.hibernate-hibernate-c3p0.version>5.1.1.Final</org.hibernate-hibernate-c3p0.version>
-    <org.hibernate.common-hibernate-commons-annotations.version>5.0.1.Final</org.hibernate.common-hibernate-commons-annotations.version>
+    <org.hibernate-hibernate-core.version>5.2.17.Final</org.hibernate-hibernate-core.version>
+    <org.hibernate-hibernate-entitymanager.version>5.2.17.Final</org.hibernate-hibernate-entitymanager.version>
+    <org.hibernate-hibernate-c3p0.version>5.2.17.Final</org.hibernate-hibernate-c3p0.version>
+    <org.hibernate.common-hibernate-commons-annotations.version>5.0.2.Final</org.hibernate.common-hibernate-commons-annotations.version>
     <org.hibernate-hibernate-tools.version>3.2.4.GA</org.hibernate-hibernate-tools.version>
     <antlr-antlr.version>2.7.7</antlr-antlr.version>
-    <org.hibernate-hibernate-ehcache.version>5.1.1.Final</org.hibernate-hibernate-ehcache.version>
+    <org.hibernate-hibernate-ehcache.version>5.2.17.Final</org.hibernate-hibernate-ehcache.version>
     <net.sf.ehcache-ehcache.version>2.10.1</net.sf.ehcache-ehcache.version>
     <org.ehcache-jcache.version>1.0.0</org.ehcache-jcache.version>
     <javax.cache-cache-api.version>1.0.0</javax.cache-cache-api.version>

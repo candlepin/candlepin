@@ -14,8 +14,7 @@
  */
 package org.candlepin.test;
 
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.TestingInterceptor;
 import org.candlepin.TestingModules;
@@ -27,10 +26,10 @@ import org.candlepin.auth.permissions.Permission;
 import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.CandlepinCommonTestConfig;
+import org.candlepin.dto.ModelTranslator;
 import org.candlepin.guice.CandlepinRequestScope;
 import org.candlepin.guice.TestPrincipalProviderSetter;
 import org.candlepin.junit.CandlepinLiquibaseResource;
-import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerial;
@@ -83,7 +82,6 @@ import com.google.inject.persist.PersistFilter;
 import com.google.inject.util.Modules;
 
 import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
-import org.hibernate.ejb.HibernateEntityManagerFactory;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.SessionFactoryImpl;
@@ -182,10 +180,7 @@ public class DatabaseTestFixture {
      */
     private static void insertValidationEventListeners(Injector inj) {
         Provider<EntityManagerFactory> emfProvider = inj.getProvider(EntityManagerFactory.class);
-        HibernateEntityManagerFactory hibernateEntityManagerFactory =
-            (HibernateEntityManagerFactory) emfProvider.get();
-        SessionFactoryImpl sessionFactoryImpl =
-            (SessionFactoryImpl) hibernateEntityManagerFactory.getSessionFactory();
+        SessionFactoryImpl sessionFactoryImpl = (SessionFactoryImpl) emfProvider.get();
         EventListenerRegistry registry = sessionFactoryImpl
             .getServiceRegistry()
             .getService(EventListenerRegistry.class);
