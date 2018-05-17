@@ -205,7 +205,7 @@ public class CrlFileUtil {
 
             // Note: This will break if we ever stop using RSA keys
             PrivateKey key = this.certificateReader.getCaKey();
-            X509CRLStreamWriter writer = new X509CRLStreamWriter(
+            X509CRLStreamWriter writer = new BouncyCastleX509CRLStreamWriter(
                 input, (RSAPrivateKey) key, this.certificateReader.getCACert());
 
             // Add new entries
