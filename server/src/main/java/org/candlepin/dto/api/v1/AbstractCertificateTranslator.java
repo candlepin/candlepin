@@ -15,37 +15,41 @@
 package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.TimestampedEntityTranslator;
 import org.candlepin.model.Certificate;
 
 
 
 /**
- * The CertificateTranslator provides translation from Certificate model objects to
- * CertificateDTOs for the API endpoints
+ * The AbstractCertificateTranslator provides translation from Certificate model objects to
+ * AbstractCertificateDTOs for the API endpoints
+ *
+ * @param <I>
+ *  The input entity type supported by this translator
+ *
+ * @param <O>
+ *  The output DTO type generated/managed by this translator
  */
-public class CertificateTranslator extends AbstractCertificateTranslator<Certificate, CertificateDTO> {
+public abstract class AbstractCertificateTranslator<I extends Certificate, O extends AbstractCertificateDTO>
+    extends TimestampedEntityTranslator<I, O> {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public CertificateDTO translate(Certificate source) {
-        return this.translate(null, source);
-    }
+    public abstract O translate(I source);
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public CertificateDTO translate(ModelTranslator translator, Certificate source) {
-        return source != null ? this.populate(translator, source, new CertificateDTO()) : null;
-    }
+    public abstract O translate(ModelTranslator translator, I source);
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public CertificateDTO populate(Certificate source, CertificateDTO destination) {
+    public O populate(I source, O destination) {
         return this.populate(null, source, destination);
     }
 
@@ -53,10 +57,19 @@ public class CertificateTranslator extends AbstractCertificateTranslator<Certifi
      * {@inheritDoc}
      */
     @Override
-    public CertificateDTO populate(ModelTranslator translator, Certificate source, CertificateDTO dest) {
+    public O populate(ModelTranslator translator, I source, O dest) {
         dest = super.populate(translator, source, dest);
 
-        // Intentionally left empty
+        dest.setId(source.getId());
+        dest.setKey(source.getKey());
+        dest.setCert(source.getCert());
+
+        if (translator != null) {
+            dest.setSerial(translator.translate(source.getSerial(), CertificateSerialDTO.class));
+        }
+        else {
+            dest.setSerial(null);
+        }
 
         return dest;
     }

@@ -25,16 +25,9 @@ import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.ContentManager;
 import org.candlepin.controller.ProductManager;
-import org.candlepin.model.ConsumerCurator;
-import org.candlepin.model.ConsumerTypeCurator;
-import org.candlepin.model.EntitlementCertificateCurator;
-import org.candlepin.model.EntitlementCurator;
+import org.candlepin.dto.api.v1.UeberCertificateDTO;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Role;
-import org.candlepin.model.RoleCurator;
-import org.candlepin.model.UeberCertificate;
 import org.candlepin.model.UeberCertificateCurator;
 import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.model.User;
@@ -44,7 +37,6 @@ import org.candlepin.util.ServiceLevelValidator;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
 
@@ -56,19 +48,11 @@ import javax.inject.Inject;
 public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
     private static final String OWNER_NAME = "Jar_Jar_Binks";
 
-    @Inject private OwnerCurator ownerCurator;
-    @Inject private ProductCurator productCurator;
-    @Inject private ConsumerCurator consumerCurator;
-    @Inject private ConsumerTypeCurator consumerTypeCurator;
-    @Inject private EntitlementCurator entitlementCurator;
-    @Inject private RoleCurator roleCurator;
-    @Inject private EntitlementCertificateCurator entCertCurator;
     @Inject private CandlepinPoolManager poolManager;
     @Inject private UeberCertificateGenerator ueberCertGenerator;
     @Inject private UeberCertificateCurator ueberCertCurator;
     @Inject private PermissionFactory permFactory;
     @Inject private ServiceLevelValidator serviceLevelValidator;
-    @Inject private I18n i18n;
     @Inject private ContentOverrideValidator contentOverrideValidator;
     @Inject private ProductManager productManager;
     @Inject private ContentManager contentManager;
@@ -93,15 +77,15 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
         or = new OwnerResource(
             ownerCurator, productCurator, null, consumerCurator, i18n, null, null, null,
             null, null, poolManager, null, null,
-            null, null, consumerTypeCurator, entCertCurator, entitlementCurator, ueberCertCurator,
-            ueberCertGenerator, null,  null, contentOverrideValidator, serviceLevelValidator, null, null,
-            null, null, null, this.modelTranslator);
+            null, null, consumerTypeCurator, entitlementCertificateCurator, entitlementCurator,
+            ueberCertCurator, ueberCertGenerator, null,  null, contentOverrideValidator,
+            serviceLevelValidator, null, null, null, null, null, this.modelTranslator);
     }
 
     @Test
     public void testUeberCertIsRegeneratedOnNextInvocation() throws Exception {
-        UeberCertificate firstCert = or.createUeberCertificate(principal, owner.getKey());
-        UeberCertificate secondCert = or.createUeberCertificate(principal, owner.getKey());
+        UeberCertificateDTO firstCert = or.createUeberCertificate(principal, owner.getKey());
+        UeberCertificateDTO secondCert = or.createUeberCertificate(principal, owner.getKey());
         assertTrue(firstCert.getId() != secondCert.getId());
     }
 
@@ -125,10 +109,10 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
 
     @Test
     public void certificateRetrievalReturnsCert() {
-        UeberCertificate generated = or.createUeberCertificate(principal, owner.getKey());
+        UeberCertificateDTO generated = or.createUeberCertificate(principal, owner.getKey());
         assertNotNull(generated);
 
-        UeberCertificate retrieved = or.getUeberCertificate(principal, owner.getKey());
+        UeberCertificateDTO retrieved = or.getUeberCertificate(principal, owner.getKey());
         assertNotNull(retrieved);
 
         assertEquals(generated, retrieved);

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2017 Red Hat, Inc.
+ * Copyright (c) 2009 - 2018 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -16,9 +16,7 @@ package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.model.Certificate;
-import org.candlepin.model.CertificateSerial;
-import org.candlepin.model.IdentityCertificate;
+import org.candlepin.model.UeberCertificate;
 
 import static org.junit.Assert.*;
 
@@ -29,60 +27,68 @@ import org.junit.runner.RunWith;
 
 
 /**
- * Test suite for the CertificateTranslator class
+ * Test suite for the UeberCertificateTranslator class
  */
 @RunWith(JUnitParamsRunner.class)
-public class CertificateTranslatorTest
-    extends AbstractTranslatorTest<Certificate, CertificateDTO, CertificateTranslator> {
+public class UeberCertificateTranslatorTest extends
+    AbstractTranslatorTest<UeberCertificate, UeberCertificateDTO, UeberCertificateTranslator> {
 
-    protected CertificateTranslator translator = new CertificateTranslator();
+    protected UeberCertificateTranslator translator = new UeberCertificateTranslator();
 
-    protected CertificateSerialTranslatorTest certificateTranslatorTest =
+    protected CertificateSerialTranslatorTest certSerialTranslatorTest =
         new CertificateSerialTranslatorTest();
+
+    protected OwnerTranslatorTest ownerTranslatorTest = new OwnerTranslatorTest();
 
     @Override
     protected void initModelTranslator(ModelTranslator modelTranslator) {
-        modelTranslator.registerTranslator(new CertificateSerialTranslator(),
-            CertificateSerial.class, CertificateSerialDTO.class);
+        modelTranslator.registerTranslator(this.translator,
+            UeberCertificate.class, UeberCertificateDTO.class);
 
-        modelTranslator.registerTranslator(this.translator, Certificate.class, CertificateDTO.class);
+        this.certSerialTranslatorTest.initModelTranslator(modelTranslator);
+        this.ownerTranslatorTest.initModelTranslator(modelTranslator);
     }
 
     @Override
-    protected CertificateTranslator initObjectTranslator() {
+    protected UeberCertificateTranslator initObjectTranslator() {
         return this.translator;
     }
 
     @Override
-    protected Certificate initSourceObject() {
-        IdentityCertificate cert = new IdentityCertificate();
+    protected UeberCertificate initSourceObject() {
+        UeberCertificate cert = new UeberCertificate();
 
         cert.setId("123");
         cert.setKey("cert_key");
         cert.setCert("cert_cert");
-        cert.setSerial(this.certificateTranslatorTest.initSourceObject());
+        cert.setSerial(this.certSerialTranslatorTest.initSourceObject());
+        cert.setOwner(this.ownerTranslatorTest.initSourceObject());
 
         return cert;
     }
 
     @Override
-    protected CertificateDTO initDestinationObject() {
+    protected UeberCertificateDTO initDestinationObject() {
         // Nothing fancy to do here.
-        return new CertificateDTO();
+        return new UeberCertificateDTO();
     }
 
     @Override
-    protected void verifyOutput(Certificate source, CertificateDTO dest, boolean childrenGenerated) {
+    protected void verifyOutput(UeberCertificate source, UeberCertificateDTO dest,
+        boolean childrenGenerated) {
+
         if (source != null) {
             assertEquals(source.getId(), dest.getId());
             assertEquals(source.getKey(), dest.getKey());
             assertEquals(source.getCert(), dest.getCert());
 
             if (childrenGenerated) {
-                this.certificateTranslatorTest.verifyOutput(source.getSerial(), dest.getSerial(), true);
+                this.certSerialTranslatorTest.verifyOutput(source.getSerial(), dest.getSerial(), true);
+                this.ownerTranslatorTest.verifyOutput(source.getOwner(), dest.getOwner(), true);
             }
             else {
                 assertNull(dest.getSerial());
+                assertNull(dest.getOwner());
             }
         }
         else {

@@ -15,21 +15,22 @@
 package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.model.Certificate;
+import org.candlepin.model.UeberCertificate;
 
 
 
 /**
- * The CertificateTranslator provides translation from Certificate model objects to
- * CertificateDTOs for the API endpoints
+ * The UeberCertificateTranslator provides translation from UeberCertificate model objects to
+ * UeberCertificateDTOs
  */
-public class CertificateTranslator extends AbstractCertificateTranslator<Certificate, CertificateDTO> {
+public class UeberCertificateTranslator
+    extends AbstractCertificateTranslator<UeberCertificate, UeberCertificateDTO> {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public CertificateDTO translate(Certificate source) {
+    public UeberCertificateDTO translate(UeberCertificate source) {
         return this.translate(null, source);
     }
 
@@ -37,15 +38,15 @@ public class CertificateTranslator extends AbstractCertificateTranslator<Certifi
      * {@inheritDoc}
      */
     @Override
-    public CertificateDTO translate(ModelTranslator translator, Certificate source) {
-        return source != null ? this.populate(translator, source, new CertificateDTO()) : null;
+    public UeberCertificateDTO translate(ModelTranslator translator, UeberCertificate source) {
+        return source != null ? this.populate(translator, source, new UeberCertificateDTO()) : null;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public CertificateDTO populate(Certificate source, CertificateDTO destination) {
+    public UeberCertificateDTO populate(UeberCertificate source, UeberCertificateDTO destination) {
         return this.populate(null, source, destination);
     }
 
@@ -53,10 +54,17 @@ public class CertificateTranslator extends AbstractCertificateTranslator<Certifi
      * {@inheritDoc}
      */
     @Override
-    public CertificateDTO populate(ModelTranslator translator, Certificate source, CertificateDTO dest) {
+    public UeberCertificateDTO populate(ModelTranslator translator, UeberCertificate source,
+        UeberCertificateDTO dest) {
+
         dest = super.populate(translator, source, dest);
 
-        // Intentionally left empty
+        if (translator != null) {
+            dest.setOwner(translator.translate(source.getOwner(), OwnerDTO.class));
+        }
+        else {
+            dest.setOwner(null);
+        }
 
         return dest;
     }
