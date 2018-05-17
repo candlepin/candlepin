@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2017 Red Hat, Inc.
+ * Copyright (c) 2009 - 2018 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -14,10 +14,6 @@
  */
 package org.candlepin.dto.api.v1;
 
-import org.candlepin.common.jackson.HateoasArrayExclude;
-import org.candlepin.common.jackson.HateoasInclude;
-
-import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.swagger.annotations.ApiModel;
@@ -33,13 +29,13 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 
 /**
- * A DTO representation of the UpstreamConsumer entity
+ * A DTO representation of an UpstreamConsumer received during import
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
-@ApiModel(parent = TimestampedCandlepinDTO.class, description = "DTO representing an upstream consumer")
-@JsonFilter("ApiHateoas")
-public class UpstreamConsumerDTO extends TimestampedCandlepinDTO<UpstreamConsumerDTO> {
+@ApiModel(parent = TimestampedCandlepinDTO.class,
+    description = "DTO representing an imported upstream consumer")
+public class ImportUpstreamConsumerDTO extends TimestampedCandlepinDTO<ImportUpstreamConsumerDTO> {
     public static final long serialVersionUID = 1L;
 
     protected String id;
@@ -53,49 +49,46 @@ public class UpstreamConsumerDTO extends TimestampedCandlepinDTO<UpstreamConsume
     protected CertificateDTO identityCert;
 
     /**
-     * Initializes a new UpstreamConsumerDTO instance with null values.
+     * Initializes a new ImportUpstreamConsumerDTO instance with null values.
      */
-    public UpstreamConsumerDTO() {
+    public ImportUpstreamConsumerDTO() {
         // Intentionally left empty
     }
 
     /**
-     * Initializes a new UpstreamConsumerDTO instance which is a shallow copy of the provided
+     * Initializes a new ImportUpstreamConsumerDTO instance which is a shallow copy of the provided
      * source entity.
      *
      * @param source
      *  The source entity to copy
      */
-    public UpstreamConsumerDTO(UpstreamConsumerDTO source) {
+    public ImportUpstreamConsumerDTO(ImportUpstreamConsumerDTO source) {
         super(source);
     }
 
-    @HateoasInclude
     public String getId() {
         return this.id;
     }
 
-    public UpstreamConsumerDTO setId(String id) {
+    public ImportUpstreamConsumerDTO setId(String id) {
         this.id = id;
         return this;
     }
 
-    @HateoasInclude
     public String getUuid() {
         return this.uuid;
     }
 
-    public UpstreamConsumerDTO setUuid(String uuid) {
+    public ImportUpstreamConsumerDTO setUuid(String uuid) {
         this.uuid = uuid;
         return this;
     }
 
-    @HateoasInclude
     public String getName() {
         return this.name;
     }
 
-    public UpstreamConsumerDTO setName(String name) {
+    public ImportUpstreamConsumerDTO setName(String name) {
         this.name = name;
         return this;
     }
@@ -104,7 +97,7 @@ public class UpstreamConsumerDTO extends TimestampedCandlepinDTO<UpstreamConsume
         return this.apiUrl;
     }
 
-    public UpstreamConsumerDTO setApiUrl(String apiUrl) {
+    public ImportUpstreamConsumerDTO setApiUrl(String apiUrl) {
         this.apiUrl = apiUrl;
         return this;
     }
@@ -113,7 +106,7 @@ public class UpstreamConsumerDTO extends TimestampedCandlepinDTO<UpstreamConsume
         return this.webUrl;
     }
 
-    public UpstreamConsumerDTO setWebUrl(String webUrl) {
+    public ImportUpstreamConsumerDTO setWebUrl(String webUrl) {
         this.webUrl = webUrl;
         return this;
     }
@@ -122,7 +115,7 @@ public class UpstreamConsumerDTO extends TimestampedCandlepinDTO<UpstreamConsume
         return this.ownerId;
     }
 
-    public UpstreamConsumerDTO setOwnerId(String ownerId) {
+    public ImportUpstreamConsumerDTO setOwnerId(String ownerId) {
         this.ownerId = ownerId;
         return this;
     }
@@ -133,20 +126,8 @@ public class UpstreamConsumerDTO extends TimestampedCandlepinDTO<UpstreamConsume
     }
 
     @JsonProperty("type")
-    public UpstreamConsumerDTO setConsumerType(ConsumerTypeDTO consumerType) {
+    public ImportUpstreamConsumerDTO setConsumerType(ConsumerTypeDTO consumerType) {
         this.consumerType = consumerType;
-        return this;
-    }
-
-    @JsonProperty("idCert")
-    @HateoasArrayExclude
-    public CertificateDTO getIdCertificate() {
-        return this.identityCert;
-    }
-
-    @JsonProperty("idCert")
-    public UpstreamConsumerDTO setIdCertificate(CertificateDTO identityCert) {
-        this.identityCert = identityCert;
         return this;
     }
 
@@ -154,7 +135,7 @@ public class UpstreamConsumerDTO extends TimestampedCandlepinDTO<UpstreamConsume
         return this.contentAccessMode;
     }
 
-    public UpstreamConsumerDTO setContentAccessMode(String contentAccessMode) {
+    public ImportUpstreamConsumerDTO setContentAccessMode(String contentAccessMode) {
         this.contentAccessMode = contentAccessMode;
         return this;
     }
@@ -164,7 +145,7 @@ public class UpstreamConsumerDTO extends TimestampedCandlepinDTO<UpstreamConsume
      */
     @Override
     public String toString() {
-        return String.format("UpstreamConsumerDTO [uuid: %s, name: %s, owner id: %s]",
+        return String.format("ImportUpstreamConsumerDTO [uuid: %s, name: %s, owner id: %s]",
             this.getUuid(), this.getName(), this.getOwnerId());
     }
 
@@ -177,8 +158,8 @@ public class UpstreamConsumerDTO extends TimestampedCandlepinDTO<UpstreamConsume
             return true;
         }
 
-        if (obj instanceof UpstreamConsumerDTO && super.equals(obj)) {
-            UpstreamConsumerDTO that = (UpstreamConsumerDTO) obj;
+        if (obj instanceof ImportUpstreamConsumerDTO && super.equals(obj)) {
+            ImportUpstreamConsumerDTO that = (ImportUpstreamConsumerDTO) obj;
 
             EqualsBuilder builder = new EqualsBuilder()
                 .append(this.getId(), that.getId())
@@ -188,7 +169,6 @@ public class UpstreamConsumerDTO extends TimestampedCandlepinDTO<UpstreamConsume
                 .append(this.getWebUrl(), that.getWebUrl())
                 .append(this.getOwnerId(), that.getOwnerId())
                 .append(this.getConsumerType(), that.getConsumerType())
-                .append(this.getIdCertificate(), that.getIdCertificate())
                 .append(this.getContentAccessMode(), that.getContentAccessMode());
 
             return builder.isEquals();
@@ -211,7 +191,6 @@ public class UpstreamConsumerDTO extends TimestampedCandlepinDTO<UpstreamConsume
             .append(this.getWebUrl())
             .append(this.getOwnerId())
             .append(this.getConsumerType())
-            .append(this.getIdCertificate())
             .append(this.getContentAccessMode());
 
         return builder.toHashCode();
@@ -221,14 +200,11 @@ public class UpstreamConsumerDTO extends TimestampedCandlepinDTO<UpstreamConsume
      * {@inheritDoc}
      */
     @Override
-    public UpstreamConsumerDTO clone() {
-        UpstreamConsumerDTO copy = super.clone();
+    public ImportUpstreamConsumerDTO clone() {
+        ImportUpstreamConsumerDTO copy = super.clone();
 
         ConsumerTypeDTO type = this.getConsumerType();
         copy.setConsumerType(type != null ? (ConsumerTypeDTO) type.clone() : null);
-
-        CertificateDTO cert = this.getIdCertificate();
-        copy.setIdCertificate(cert != null ? (CertificateDTO) cert.clone() : null);
 
         return copy;
     }
@@ -237,7 +213,7 @@ public class UpstreamConsumerDTO extends TimestampedCandlepinDTO<UpstreamConsume
      * {@inheritDoc}
      */
     @Override
-    public UpstreamConsumerDTO populate(UpstreamConsumerDTO source) {
+    public ImportUpstreamConsumerDTO populate(ImportUpstreamConsumerDTO source) {
         super.populate(source);
 
         this.setId(source.getId());
@@ -247,7 +223,6 @@ public class UpstreamConsumerDTO extends TimestampedCandlepinDTO<UpstreamConsume
         this.setWebUrl(source.getWebUrl());
         this.setOwnerId(source.getOwnerId());
         this.setConsumerType(source.getConsumerType());
-        this.setIdCertificate(source.getIdCertificate());
         this.setContentAccessMode(source.getContentAccessMode());
 
         return this;

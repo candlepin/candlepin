@@ -45,6 +45,7 @@ import org.candlepin.controller.ProductManager;
 import org.candlepin.dto.api.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.EntitlementDTO;
+import org.candlepin.dto.api.v1.ImportRecordDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.PoolDTO;
 import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
@@ -1308,9 +1309,11 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         when(manifestManager.importManifest(eq(owner), any(File.class), eq("test_file.zip"),
             any(ConflictOverrides.class))).thenReturn(ir);
 
-        ImportRecord response = thisOwnerResource.importManifest(owner.getKey(), new String [] {}, input);
+        ImportRecordDTO expected = this.modelTranslator.translate(ir, ImportRecordDTO.class);
+        ImportRecordDTO response = thisOwnerResource.importManifest(owner.getKey(), new String [] {}, input);
+
         assertNotNull(response);
-        assertEquals(ir, response);
+        assertEquals(expected, response);
     }
 
     @Test

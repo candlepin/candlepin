@@ -45,6 +45,7 @@ import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.EntitlementDTO;
 import org.candlepin.dto.api.v1.EnvironmentDTO;
 import org.candlepin.dto.api.v1.EventDTO;
+import org.candlepin.dto.api.v1.ImportRecordDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.PoolDTO;
 import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
@@ -1945,7 +1946,7 @@ public class OwnerResource {
         @ApiResponse(code = 404, message = "Owner not found"), @ApiResponse(code = 500, message = ""),
         @ApiResponse(code = 409, message = "") })
     @Deprecated
-    public ImportRecord importManifest(
+    public ImportRecordDTO importManifest(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @QueryParam("force") String[] overrideConflicts,
         MultipartInput input) {
@@ -1956,8 +1957,10 @@ public class OwnerResource {
 
         try {
             fileData = getArchiveFromResponse(input);
-            return manifestManager.importManifest(owner, fileData.getData(), fileData.getUploadedFilename(),
-                overrides);
+            ImportRecord record = manifestManager.importManifest(owner, fileData.getData(),
+                fileData.getUploadedFilename(), overrides);
+
+            return this.translator.translate(record, ImportRecordDTO.class);
         }
         catch (IOException e) {
             log.error("Reading error during importing", e);

@@ -32,14 +32,12 @@ public class PoolQuantityTranslatorTest extends
 
     protected PoolQuantityTranslator translator = new PoolQuantityTranslator();
 
-    protected PoolTranslatorTest poolTranslatorTest =
-        new PoolTranslatorTest();
+    protected PoolTranslatorTest poolTranslatorTest = new PoolTranslatorTest();
 
     @Override
     protected void initModelTranslator(ModelTranslator modelTranslator) {
         this.poolTranslatorTest.initModelTranslator(modelTranslator);
-        modelTranslator.registerTranslator(
-            this.translator, PoolQuantity.class, PoolQuantityDTO.class);
+        modelTranslator.registerTranslator(this.translator, PoolQuantity.class, PoolQuantityDTO.class);
     }
 
     @Override
@@ -60,8 +58,7 @@ public class PoolQuantityTranslatorTest extends
     }
 
     @Override
-    protected void verifyOutput(
-        PoolQuantity source, PoolQuantityDTO dest, boolean childrenGenerated) {
+    protected void verifyOutput(PoolQuantity source, PoolQuantityDTO dest, boolean childrenGenerated) {
         if (source != null) {
             assertEquals(source.getQuantity(), dest.getQuantity());
 
