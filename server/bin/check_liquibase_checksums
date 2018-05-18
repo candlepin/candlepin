@@ -1,0 +1,19 @@
+#!/usr/bin/env python
+import subprocess
+import sys
+
+VERSIONS = [
+    '3.1.0',  # specified in buildfile
+    '3.5.0',  # used by IT-PnT
+    '3.6.1',  # latest in Fedora
+]
+checkout_root = subprocess.check_output('buildr -s checkout_root', shell=True).strip()
+failed = False
+for version in VERSIONS:
+    try:
+        print('Running against liquibase {}...'.format(version))
+        subprocess.check_call('{checkout_root}/server/bin/liquibase_wrapper.groovy {version} {checkout_root}/server/bin/check_liquibase_checksums.groovy {checkout_root}/server/src/main/resources/db/changelog/changelog-update.xml 2> /dev/null'.format(version=version, checkout_root=checkout_root), shell=True)
+    except:
+        failed = True
+if failed:
+    sys.exit(1)
