@@ -14,6 +14,7 @@
  */
 package org.candlepin.test;
 
+import org.candlepin.bind.PoolOperationCallback;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
@@ -36,9 +37,10 @@ import java.util.Map;
 public class EnforcerForTesting implements Enforcer {
 
     @Override
-    public void postEntitlement(PoolManager manager, Consumer consumer, Owner owner, Map<String, Entitlement>
-        ent,
-        List<Pool> subPoolsForStackIds, boolean isUpdate, Map<String, PoolQuantity> poolQuantityMap) {
+    public PoolOperationCallback postEntitlement(PoolManager manager, Consumer consumer, Owner owner,
+        Map<String, Entitlement> ent, List<Pool> subPoolsForStackIds, boolean isUpdate,
+        Map<String, PoolQuantity> poolQuantityMap) {
+        return new PoolOperationCallback();
     }
 
     @Override

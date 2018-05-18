@@ -14,28 +14,24 @@
  */
 package org.candlepin.policy.js.entitlement;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyLong;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
+import org.candlepin.bind.PoolOperationCallback;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
-import org.candlepin.model.Product;
 import org.candlepin.model.PoolQuantity;
+import org.candlepin.model.Product;
 
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -60,13 +56,10 @@ public class PostEntitlementRulesTest extends EntitlementRulesTestFixture {
         poolQuantityMap.put(pool.getId(), new PoolQuantity(pool, 5));
         when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
         // Pool quantity should be virt_limit:
-        Class<List<Pool>> listClass = (Class<List<Pool>>) (Class) ArrayList.class;
-        ArgumentCaptor<List<Pool>> poolsArg = ArgumentCaptor.forClass(listClass);
-        when(poolManagerMock.createPools(poolsArg.capture())).thenReturn(new LinkedList<>());
-        enforcer.postEntitlement(poolManagerMock, consumer, owner, entitlements, null, false,
-            poolQuantityMap);
+        PoolOperationCallback poolOperationCallback = enforcer.postEntitlement(poolManagerMock,
+            consumer, owner, entitlements, null, false, poolQuantityMap);
 
-        List<Pool> pools = poolsArg.getValue();
+        List<Pool> pools = poolOperationCallback.getPoolCreates();
         assertEquals(1, pools.size());
         assertEquals(10L, pools.get(0).getQuantity().longValue());
     }
@@ -90,13 +83,10 @@ public class PostEntitlementRulesTest extends EntitlementRulesTestFixture {
 
         when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
         // Pool quantity should be virt_limit:
-        Class<List<Pool>> listClass = (Class<List<Pool>>) (Class) ArrayList.class;
-        ArgumentCaptor<List<Pool>> poolsArg = ArgumentCaptor.forClass(listClass);
-        when(poolManagerMock.createPools(poolsArg.capture())).thenReturn(new LinkedList<>());
-        enforcer.postEntitlement(poolManagerMock, consumer, owner, entitlements, null, false,
-            poolQuantityMap);
+        PoolOperationCallback poolOperationCallback = enforcer.postEntitlement(poolManagerMock,
+            consumer, owner, entitlements, null, false, poolQuantityMap);
 
-        List<Pool> pools = poolsArg.getValue();
+        List<Pool> pools = poolOperationCallback.getPoolCreates();
         assertEquals(2, pools.size());
         assertEquals(10L, pools.get(0).getQuantity().longValue());
         assertEquals(10L, pools.get(1).getQuantity().longValue());
@@ -114,14 +104,11 @@ public class PostEntitlementRulesTest extends EntitlementRulesTestFixture {
         Map<String, PoolQuantity> poolQuantityMap = new HashMap<>();
         poolQuantityMap.put(pool.getId(), new PoolQuantity(pool, 5));
 
-        Class<List<Pool>> listClass = (Class<List<Pool>>) (Class) ArrayList.class;
-        ArgumentCaptor<List<Pool>> poolsArg = ArgumentCaptor.forClass(listClass);
-        when(poolManagerMock.createPools(poolsArg.capture())).thenReturn(new LinkedList<>());
-        enforcer.postEntitlement(poolManagerMock, consumer, owner, entitlements, null, false,
-            poolQuantityMap);
+        PoolOperationCallback poolOperationCallback = enforcer.postEntitlement(poolManagerMock,
+            consumer, owner, entitlements, null, false, poolQuantityMap);
 
         // Pool quantity should be virt_limit:
-        List<Pool> pools = poolsArg.getValue();
+        List<Pool> pools = poolOperationCallback.getPoolCreates();
         assertEquals(1, pools.size());
         assertEquals(-1L, pools.get(0).getQuantity().longValue());
     }
@@ -144,14 +131,11 @@ public class PostEntitlementRulesTest extends EntitlementRulesTestFixture {
         poolQuantityMap.put(pool.getId(), new PoolQuantity(pool, 5));
         poolQuantityMap.put(pool2.getId(), new PoolQuantity(pool2, 5));
 
-        Class<List<Pool>> listClass = (Class<List<Pool>>) (Class) ArrayList.class;
-        ArgumentCaptor<List<Pool>> poolsArg = ArgumentCaptor.forClass(listClass);
-        when(poolManagerMock.createPools(poolsArg.capture())).thenReturn(new LinkedList<>());
-        enforcer.postEntitlement(poolManagerMock, consumer, owner, entitlements, null, false,
-            poolQuantityMap);
+        PoolOperationCallback poolOperationCallback = enforcer.postEntitlement(poolManagerMock,
+            consumer, owner, entitlements, null, false, poolQuantityMap);
 
         // Pool quantity should be virt_limit:
-        List<Pool> pools = poolsArg.getValue();
+        List<Pool> pools = poolOperationCallback.getPoolCreates();
         assertEquals(2, pools.size());
         assertEquals(-1L, pools.get(0).getQuantity().longValue());
         assertEquals(-1L, pools.get(1).getQuantity().longValue());
@@ -174,10 +158,10 @@ public class PostEntitlementRulesTest extends EntitlementRulesTestFixture {
             poolQuantityMap);
 
         verify(poolManagerMock, never()).createPools(any(List.class));
-        verify(poolManagerMock, never()).updatePoolQuantity(any(Pool.class), anyInt());
+        verify(poolManagerMock, never()).setPoolQuantity(any(Pool.class), anyInt());
 
         enforcer.postUnbind(consumer, poolManagerMock, e);
-        verify(poolManagerMock, never()).updatePoolQuantity(any(Pool.class), anyInt());
+        verify(poolManagerMock, never()).setPoolQuantity(any(Pool.class), anyInt());
         verify(poolManagerMock, never()).setPoolQuantity(any(Pool.class), anyLong());
     }
 
@@ -196,10 +180,10 @@ public class PostEntitlementRulesTest extends EntitlementRulesTestFixture {
         enforcer.postEntitlement(poolManagerMock, consumer, owner, entitlements, null, false,
             poolQuantityMap);
         verify(poolManagerMock, never()).createPools(any(List.class));
-        verify(poolManagerMock, never()).updatePoolQuantity(any(Pool.class), anyInt());
+        verify(poolManagerMock, never()).setPoolQuantity(any(Pool.class), anyInt());
 
         enforcer.postUnbind(consumer, poolManagerMock, e);
-        verify(poolManagerMock, never()).updatePoolQuantity(any(Pool.class), anyInt());
+        verify(poolManagerMock, never()).setPoolQuantity(any(Pool.class), anyInt());
         verify(poolManagerMock, never()).setPoolQuantity(any(Pool.class), anyLong());
     }
 }

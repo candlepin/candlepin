@@ -18,6 +18,7 @@ import org.candlepin.audit.Event;
 import org.candlepin.audit.EventBuilder;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
+import org.candlepin.bind.PoolOperationCallback;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
@@ -42,7 +43,6 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.ProductShare;
 import org.candlepin.model.ProductShareCurator;
-import org.candlepin.model.SourceSubscription;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.ValidationWarning;
@@ -527,45 +527,6 @@ public class EntitlementRules implements Enforcer {
         }
     }
 
-    protected void runPostEntitlement(PoolManager poolManager, Consumer consumer, Owner owner,
-        Map<String, Entitlement> entitlementMap, List<Pool> subPoolsForStackIds, boolean isUpdate,
-        Map<String, PoolQuantity> poolQuantityMap) {
-
-        Map<String, Map<String, String>> flatAttributeMaps = new HashMap<>();
-        Map<String, Entitlement> virtLimitEntitlements = new HashMap<>();
-
-        for (Entry<String, Entitlement> entry : entitlementMap.entrySet()) {
-            Entitlement entitlement = entry.getValue();
-            Map<String, String> attributes = PoolHelper.getFlattenedAttributes(entitlement.getPool());
-            if (attributes.containsKey("virt_limit")) {
-                virtLimitEntitlements.put(entry.getKey(), entitlement);
-                flatAttributeMaps.put(entry.getKey(), attributes);
-            }
-        }
-
-        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
-
-        // Perform pool management based on the attributes of the pool:
-        if (!virtLimitEntitlements.isEmpty()) {
-            /* Share and manifest consumers only need to compute postBindVirtLimit in hosted mode
-               because for both these types, of all the operations implemented in postBindVirtLimit today,
-               we only care about decrementing host bonus pool quantity and that is only implemented
-               in hosted mode. These checks are done further below, but doing this up-front to save
-                us some computation.
-             */
-            if (!(ctype.isType(ConsumerTypeEnum.SHARE) || ctype.isManifest()) ||
-                !config.getBoolean(ConfigProperties.STANDALONE)) {
-
-                postBindVirtLimit(poolManager, consumer, virtLimitEntitlements, flatAttributeMaps,
-                    subPoolsForStackIds, isUpdate, poolQuantityMap);
-            }
-        }
-
-        if (ctype.isType(ConsumerTypeEnum.SHARE) && !isUpdate) {
-            postBindShareCreate(poolManager, consumer, owner, entitlementMap);
-        }
-    }
-
     protected void runPostUnbind(PoolManager poolManager, Entitlement entitlement) {
         Pool pool = entitlement.getPool();
 
@@ -603,7 +564,8 @@ public class EntitlementRules implements Enforcer {
                     for (int idex = 0; idex < pools.size(); idex++) {
                         Pool derivedPool = pools.get(idex);
                         if (derivedPool.getAttributeValue(Pool.Attributes.DERIVED_POOL) != null) {
-                            poolManager.updatePoolQuantity(derivedPool, virtQuantity);
+                            poolManager.setPoolQuantity(derivedPool,
+                                derivedPool.adjustQuantity(virtQuantity));
                         }
                     }
                 }
@@ -627,15 +589,16 @@ public class EntitlementRules implements Enforcer {
         }
     }
 
-    private void postBindShareCreate(PoolManager poolManager, Consumer c, Owner sharingOwner,
-        Map<String, Entitlement> entitlementMap) {
+    private PoolOperationCallback postBindShareCreate(Consumer c, Owner sharingOwner,
+        Map<String, Entitlement> entitlementMap, Map<String, PoolQuantity> poolQuantityMap) {
         log.debug("Running post-bind share create");
 
         Owner recipient = ownerCurator.getByKey(c.getRecipientOwnerKey());
-        List<Pool> sharedPoolsToCreate = new ArrayList<>();
+        PoolOperationCallback poolOperationCallback = new PoolOperationCallback();
 
-        for (Entitlement entitlement: entitlementMap.values()) {
-            Pool sourcePool = entitlement.getPool();
+        for (String poolId: entitlementMap.keySet()) {
+            Pool sourcePool = poolQuantityMap.get(poolId).getPool();
+            Entitlement entitlement = entitlementMap.get(poolId);
             // resolve and copy all products
             // Handle any product creation/manipulation incurred by the share action
             Set<Product> allProducts = new HashSet<>();
@@ -678,7 +641,7 @@ public class EntitlementRules implements Enforcer {
                 sourcePool.getDerivedProvidedProducts(), resolvedProducts);
             sharedPool.setDerivedProvidedProducts(derivedProvidedProducts);
 
-            if (entitlement != null && entitlement.getPool() != null) {
+            if (entitlement != null) {
                 sharedPool.setSourceEntitlement(entitlement);
             }
 
@@ -688,7 +651,7 @@ public class EntitlementRules implements Enforcer {
              */
             String subscriptionId = sourcePool.getSubscriptionId();
             if (subscriptionId != null && !subscriptionId.isEmpty()) {
-                sharedPool.setSourceSubscription(new SourceSubscription(subscriptionId, entitlement.getId()));
+                poolOperationCallback.createSourceSubscription(sharedPool, subscriptionId, entitlement);
             }
 
             // Copy the pool's attributes
@@ -703,14 +666,9 @@ public class EntitlementRules implements Enforcer {
                 sharedPool.getBranding().add(new Branding(b.getProductId(), b.getType(),
                     b.getName()));
             }
-            sharedPoolsToCreate.add(sharedPool);
+            poolOperationCallback.addPoolToCreate(sharedPool);
         }
-
-        /* TODO Create temporary guest pool in OrgB */
-
-        if (CollectionUtils.isNotEmpty(sharedPoolsToCreate)) {
-            poolManager.createPools(sharedPoolsToCreate);
-        }
+        return poolOperationCallback;
     }
 
     private Set<Product> copySetFromResolved(Set<Product> products, Map<String, Product> resolvedProducts) {
@@ -821,10 +779,11 @@ public class EntitlementRules implements Enforcer {
         return resolvedProducts;
     }
 
-    private void postBindVirtLimit(PoolManager poolManager, Consumer consumer,
+    private PoolOperationCallback postBindVirtLimit(PoolManager poolManager, Consumer consumer,
         Map<String, Entitlement> entitlementMap, Map<String, Map<String, String>> attributeMaps,
         List<Pool> subPoolsForStackIds, boolean isUpdate, Map<String, PoolQuantity> poolQuantityMap) {
 
+        PoolOperationCallback poolOperationCallback = new PoolOperationCallback();
         Set<String> stackIdsThathaveSubPools = new HashSet<>();
         Set<String> alreadyCoveredStackIds = new HashSet<>();
         if (CollectionUtils.isNotEmpty(subPoolsForStackIds)) {
@@ -843,10 +802,11 @@ public class EntitlementRules implements Enforcer {
         boolean isStandalone = config.getBoolean(ConfigProperties.STANDALONE);
 
         List<Pool> createHostRestrictedPoolFor = new ArrayList<>();
-        List<Entitlement> decrementHostedBonusPoolQuantityFor = new ArrayList<>();
+        Map<String, Entitlement> decrementHostedBonusPoolQuantityFor = new HashMap<>();
 
-        for (Entitlement entitlement : entitlementMap.values()) {
-            Pool pool = entitlement.getPool();
+        for (Entry<String, Entitlement> entry : entitlementMap.entrySet()) {
+            Entitlement entitlement = entry.getValue();
+            Pool pool = poolQuantityMap.get(entry.getKey()).getPool();
             Map<String, String> attributes = attributeMaps.get(pool.getId());
             boolean hostLimited = "true".equals(attributes.get(Product.Attributes.HOST_LIMITED));
 
@@ -877,31 +837,34 @@ public class EntitlementRules implements Enforcer {
                 }
             }
             else {
-                decrementHostedBonusPoolQuantityFor.add(entitlement);
+                decrementHostedBonusPoolQuantityFor.put(entry.getKey(), entitlement);
             }
         }
 
         // Share consumers do not have host restricted pools
         if (CollectionUtils.isNotEmpty(createHostRestrictedPoolFor) && !type.isType(ConsumerTypeEnum.SHARE)) {
             log.debug("creating host restricted pools for: {}", createHostRestrictedPoolFor);
-            PoolHelper.createHostRestrictedPools(poolManager, consumer, createHostRestrictedPoolFor,
-                entitlementMap, attributeMaps, productCurator);
+            poolOperationCallback.appendCallback(PoolHelper.createHostRestrictedPools(poolManager, consumer,
+                createHostRestrictedPoolFor, entitlementMap, attributeMaps, productCurator));
         }
 
-        if (CollectionUtils.isNotEmpty(decrementHostedBonusPoolQuantityFor)) {
+        if (decrementHostedBonusPoolQuantityFor.size() > 0) {
             log.debug("adjustHostedBonusPoolQuantity for: {}", decrementHostedBonusPoolQuantityFor);
-            adjustHostedBonusPoolQuantity(poolManager, consumer, decrementHostedBonusPoolQuantityFor,
-                attributeMaps, poolQuantityMap);
+            poolOperationCallback.appendCallback(adjustHostedBonusPoolQuantity(poolManager, consumer,
+                decrementHostedBonusPoolQuantityFor, attributeMaps, poolQuantityMap, isUpdate));
         }
+        return poolOperationCallback;
     }
 
     /*
      * When distributors/share consumers bind to virt_limit pools in hosted, we need to go adjust the
      * quantity on the bonus pool, as those entitlements have now been exported to on-site or to the share.
      */
-    private void adjustHostedBonusPoolQuantity(PoolManager poolManager, Consumer consumer,
-        List<Entitlement> entitlements, Map<String, Map<String, String>> attributesMaps,
-        Map<String, PoolQuantity> poolQuantityMap) {
+    private PoolOperationCallback adjustHostedBonusPoolQuantity(PoolManager poolManager, Consumer consumer,
+        Map<String, Entitlement> entitlements, Map<String, Map<String, String>> attributesMaps,
+        Map<String, PoolQuantity> poolQuantityMap, boolean isUpdate) {
+
+        PoolOperationCallback poolOperationCallback = new PoolOperationCallback();
 
         ConsumerType type = this.consumerTypeCurator.getConsumerType(consumer);
 
@@ -909,13 +872,13 @@ public class EntitlementRules implements Enforcer {
             !config.getBoolean(ConfigProperties.STANDALONE);
 
         if (!consumerFactExpression) {
-            return;
+            return poolOperationCallback;
         }
 
         // pre-fetch subscription and respective pools in a batch
         Set<String> subscriptionIds = new HashSet<>();
-        for (Entitlement entitlement : entitlements) {
-            subscriptionIds.add(entitlement.getPool().getSubscriptionId());
+        for (String poolId : entitlements.keySet()) {
+            subscriptionIds.add(poolQuantityMap.get(poolId).getPool().getSubscriptionId());
         }
 
         List<Pool> subscriptionPools = poolManager.getBySubscriptionIds(consumer.getOwnerId(),
@@ -929,8 +892,10 @@ public class EntitlementRules implements Enforcer {
             subscriptionPoolMap.get(pool.getSubscriptionId()).add(pool);
         }
 
-        for (Entitlement entitlement : entitlements) {
-            Pool pool = entitlement.getPool();
+        for (Entry<String, Entitlement> entry: entitlements.entrySet()) {
+            String poolId = entry.getKey();
+            Entitlement entitlement = entry.getValue();
+            Pool pool = poolQuantityMap.get(poolId).getPool();
             Map<String, String> attributes = attributesMaps.get(pool.getId());
 
             boolean hostLimited = "true".equals(attributes.get(Product.Attributes.HOST_LIMITED));
@@ -953,7 +918,8 @@ public class EntitlementRules implements Enforcer {
                         for (int idex = 0; idex < pools.size(); idex++) {
                             Pool derivedPool = pools.get(idex);
                             if (derivedPool.getAttributeValue(Pool.Attributes.DERIVED_POOL) != null) {
-                                poolManager.updatePoolQuantity(derivedPool, -1L * virtQuantity);
+                                long adjust = derivedPool.adjustQuantity(-1L * virtQuantity);
+                                poolOperationCallback.setQuantityToPool(derivedPool, adjust);
                             }
                         }
                     }
@@ -964,6 +930,12 @@ public class EntitlementRules implements Enforcer {
                     // by export or share. A quantity of 0 will block future binds,
                     // whereas -1 does not.
                     Long notConsumedLocally = pool.getExported() + pool.getShared();
+
+                    // if this is a create, consider the current ent count also
+                    if (!isUpdate && (type.isType(ConsumerTypeEnum.SHARE) || type.isManifest())) {
+                        notConsumedLocally += entitlement.getQuantity();
+                    }
+
                     if (pool.getQuantity().equals(notConsumedLocally)) {
                         // getting all pools matching the sub id. Filtering out
                         // the 'parent'.
@@ -972,7 +944,7 @@ public class EntitlementRules implements Enforcer {
                             for (int idex = 0; idex < pools.size(); idex++) {
                                 Pool derivedPool = pools.get(idex);
                                 if (derivedPool.getAttributeValue(Pool.Attributes.DERIVED_POOL) != null) {
-                                    derivedPool = poolManager.setPoolQuantity(derivedPool, 0);
+                                    poolOperationCallback.setQuantityToPool(derivedPool, 0);
                                 }
                             }
                         }
@@ -980,22 +952,51 @@ public class EntitlementRules implements Enforcer {
                 }
             }
         }
-
+        return poolOperationCallback;
     }
 
-    public void postEntitlement(PoolManager poolManager, Consumer consumer, Owner owner,
-        Map<String, Entitlement> entitlements, List<Pool> subPoolsForStackIds, boolean isUpdate,
+    public PoolOperationCallback postEntitlement(PoolManager poolManager, Consumer consumer, Owner owner,
+        Map<String, Entitlement> entitlementMap, List<Pool> subPoolsForStackIds, boolean isUpdate,
         Map<String, PoolQuantity> poolQuantityMap) {
 
-        // TODO: Why are we calling a separate method here instead of just doing that method's work here?
+        Map<String, Map<String, String>> flatAttributeMaps = new HashMap<>();
+        Map<String, Entitlement> virtLimitEntitlements = new HashMap<>();
+        PoolOperationCallback poolOperationCallback = new PoolOperationCallback();
 
-        runPostEntitlement(poolManager,
-            consumer,
-            owner,
-            entitlements,
-            subPoolsForStackIds,
-            isUpdate,
-            poolQuantityMap);
+        for (Entry<String, Entitlement> entry : entitlementMap.entrySet()) {
+            Entitlement entitlement = entry.getValue();
+            Pool pool = poolQuantityMap.get(entry.getKey()).getPool();
+            Map<String, String> attributes = PoolHelper.getFlattenedAttributes(pool);
+            if (attributes.containsKey("virt_limit")) {
+                virtLimitEntitlements.put(entry.getKey(), entitlement);
+                flatAttributeMaps.put(entry.getKey(), attributes);
+            }
+        }
+
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
+
+        // Perform pool management based on the attributes of the pool:
+        if (!virtLimitEntitlements.isEmpty()) {
+            /* Share and manifest consumers only need to compute this method in hosted mode
+               because for both these types, of all the operations implemented in this method today,
+               we only care about decrementing host bonus pool quantity and that is only implemented
+               in hosted mode. These checks are done further below, but doing this up-front to save
+                us some computation.
+             */
+            if (!(ctype.isType(ConsumerTypeEnum.SHARE) || ctype.isManifest()) ||
+                !config.getBoolean(ConfigProperties.STANDALONE)) {
+
+                poolOperationCallback
+                    .appendCallback(postBindVirtLimit(poolManager, consumer, virtLimitEntitlements,
+                    flatAttributeMaps, subPoolsForStackIds, isUpdate, poolQuantityMap));
+            }
+        }
+
+        if (ctype.isType(ConsumerTypeEnum.SHARE) && !isUpdate) {
+            poolOperationCallback.appendCallback(
+                postBindShareCreate(consumer, owner, entitlementMap, poolQuantityMap));
+        }
+        return poolOperationCallback;
     }
 
     public void postUnbind(Consumer c, PoolManager poolManager, Entitlement ent) {

@@ -14,6 +14,7 @@
  */
 package org.candlepin.bind;
 
+import org.candlepin.common.exceptions.ServiceUnavailableException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.policy.EntitlementRefusedException;
@@ -22,6 +23,7 @@ import org.candlepin.policy.js.entitlement.Enforcer;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
+import org.hibernate.exception.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,6 +47,7 @@ public class BindChain {
         PreEntitlementRulesCheckOpFactory rulesCheckOpFactory,
         HandleEntitlementsOp handleEntitlementsOp,
         PostBindBonusPoolsOp postBindBonusPoolsOp,
+        CheckBonusPoolQuantitiesOp checkBonusPoolQuantitiesOp,
         HandleCertificatesOp handleCertificatesOp,
         ComplianceOp complianceOp,
         @Assisted Consumer consumer,
@@ -55,6 +58,7 @@ public class BindChain {
         operations.add(rulesCheckOpFactory.create(caller));
         operations.add(handleEntitlementsOp);
         operations.add(postBindBonusPoolsOp);
+        operations.add(checkBonusPoolQuantitiesOp);
         operations.add(handleCertificatesOp);
         operations.add(complianceOp);
     }
@@ -83,12 +87,18 @@ public class BindChain {
     private boolean execute(BindContext context) {
         for (BindOperation operation : operations) {
             log.debug("Starting execute of {}", operation.getClass().getSimpleName());
-            if (operation.execute(context)) {
-                log.debug("Finished execute of {}", operation.getClass().getSimpleName());
+            try {
+                if (operation.execute(context)) {
+                    log.debug("Finished execute of {}", operation.getClass().getSimpleName());
+                }
+                else {
+                    log.error("Skipped chain execute in operation {}", operation.getClass().getSimpleName());
+                    return false;
+                }
             }
-            else {
-                log.error("Skipped chain execute in operation {}", operation.getClass().getSimpleName());
-                return false;
+            catch (ConstraintViolationException e) {
+                throw new ServiceUnavailableException("Error during entitlement creation, potentially due " +
+                    "to concurrent requests", e);
             }
         }
         return true;

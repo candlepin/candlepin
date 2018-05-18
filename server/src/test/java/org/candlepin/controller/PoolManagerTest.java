@@ -42,7 +42,9 @@ import org.candlepin.bind.BindChain;
 import org.candlepin.bind.BindChainFactory;
 import org.candlepin.bind.BindContext;
 import org.candlepin.bind.BindContextFactory;
+import org.candlepin.bind.CheckBonusPoolQuantitiesOp;
 import org.candlepin.bind.ComplianceOp;
+import org.candlepin.bind.PoolOperationCallback;
 import org.candlepin.bind.HandleCertificatesOp;
 import org.candlepin.bind.HandleEntitlementsOp;
 import org.candlepin.bind.PostBindBonusPoolsOp;
@@ -264,7 +266,9 @@ public class PoolManagerTest {
     private void setupBindChain() {
         final HandleEntitlementsOp entitlementsOp =
             new HandleEntitlementsOp(mockPoolCurator, entitlementCurator);
-        final PostBindBonusPoolsOp postBindBonusPoolsOp = new PostBindBonusPoolsOp(manager);
+        final PostBindBonusPoolsOp postBindBonusPoolsOp = new PostBindBonusPoolsOp(manager,
+            consumerTypeCuratorMock, mockPoolCurator, enforcerMock);
+        final CheckBonusPoolQuantitiesOp checkBonusPoolQuantitiesOp = new CheckBonusPoolQuantitiesOp(manager);
         final HandleCertificatesOp certificatesOp = new HandleCertificatesOp(mockECGenerator, certCuratorMock,
             entitlementCurator);
         final ComplianceOp complianceOp = new ComplianceOp(complianceRules);
@@ -314,6 +318,7 @@ public class PoolManagerTest {
                         mockPreEntitlementRulesCheckFactory,
                         entitlementsOp,
                         postBindBonusPoolsOp,
+                        checkBonusPoolQuantitiesOp,
                         certificatesOp,
                         complianceOp,
                         consumer,
@@ -1125,6 +1130,8 @@ public class PoolManagerTest {
         when(enforcerMock.preEntitlement(any(Consumer.class), any(Pool.class), anyInt(),
             any(CallerType.class))).thenReturn(result);
 
+        when(enforcerMock.postEntitlement(eq(manager), any(Consumer.class), any(Owner.class), anyMap(),
+            anyList(), eq(false), anyMap())).thenReturn(new PoolOperationCallback());
         when(result.isSuccessful()).thenReturn(true);
 
         List<PoolQuantity> bestPools = new ArrayList<>();
@@ -1406,7 +1413,8 @@ public class PoolManagerTest {
 
         when(enforcerMock.preEntitlement(any(Consumer.class), any(Pool.class), anyInt(),
             any(CallerType.class))).thenReturn(result);
-
+        when(enforcerMock.postEntitlement(eq(manager), any(Consumer.class), any(Owner.class), anyMap(),
+            anyList(), eq(false), anyMap())).thenReturn(new PoolOperationCallback());
         when(result.isSuccessful()).thenReturn(true);
 
         List<PoolQuantity> bestPools = new ArrayList<>();
@@ -1894,6 +1902,8 @@ public class PoolManagerTest {
         when(mockPoolCurator.lockAndLoad(pool)).thenReturn(pool);
         when(enforcerMock.update(any(Consumer.class), any(Entitlement.class), any(Integer.class)))
             .thenReturn(new ValidationResult());
+        when(enforcerMock.postEntitlement(eq(manager), any(Consumer.class), any(Owner.class), anyMap(),
+            anyList(), eq(true), anyMap())).thenReturn(new PoolOperationCallback());
         when(mockPoolCurator.getOversubscribedBySubscriptionIds(any(String.class), anyMap()))
             .thenReturn(Collections.singletonList(derivedPool));
         when(mockPoolCurator.retrieveOrderedEntitlementsOf(anyListOf(Pool.class)))
@@ -1962,6 +1972,8 @@ public class PoolManagerTest {
         when(mockPoolCurator.lockAndLoad(pool)).thenReturn(pool);
         when(enforcerMock.update(any(Consumer.class), any(Entitlement.class), any(Integer.class)))
             .thenReturn(new ValidationResult());
+        when(enforcerMock.postEntitlement(eq(manager), any(Consumer.class), any(Owner.class), anyMap(),
+            anyList(), eq(true), anyMap())).thenReturn(new PoolOperationCallback());
         when(mockPoolCurator.getOversubscribedBySubscriptionIds(any(String.class), anyMap())).thenReturn(
             Arrays.asList(derivedPool, derivedPool2, derivedPool3));
         when(mockPoolCurator.retrieveOrderedEntitlementsOf(eq(Arrays.asList(derivedPool)))).thenReturn(

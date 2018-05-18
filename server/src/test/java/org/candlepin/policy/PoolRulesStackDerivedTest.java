@@ -24,6 +24,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.auth.UserPrincipal;
+import org.candlepin.bind.PoolOperationCallback;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
@@ -200,9 +201,9 @@ public class PoolRulesStackDerivedTest {
         Map<String, Map<String, String>> attributes = new HashMap<>();
         attributes.put(pool2.getId(), PoolHelper.getFlattenedAttributes(pool2));
         when(poolManagerMock.createPools(Matchers.anyListOf(Pool.class))).then(returnsFirstArg());
-        List<Pool> resPools = PoolHelper.createHostRestrictedPools(poolManagerMock, consumer, reqPools,
-            entitlements, attributes, productCurator);
-        stackDerivedPool = resPools.get(0);
+        PoolOperationCallback poolOperationCallback = PoolHelper.createHostRestrictedPools(poolManagerMock,
+            consumer, reqPools, entitlements, attributes, productCurator);
+        stackDerivedPool = poolOperationCallback.getPoolCreates().get(0);
 
         reqPools.clear();
         reqPools.add(pool4);
@@ -211,7 +212,7 @@ public class PoolRulesStackDerivedTest {
         attributes.clear();
         attributes.put(pool4.getId(), PoolHelper.getFlattenedAttributes(pool4));
         stackDerivedPool2 = PoolHelper.createHostRestrictedPools(poolManagerMock, consumer, reqPools,
-            entitlements, attributes, productCurator).get(0);
+            entitlements, attributes, productCurator).getPoolCreates().get(0);
     }
 
     private static int lastPoolId = 1;
@@ -395,11 +396,11 @@ public class PoolRulesStackDerivedTest {
         Class<Set<String>> listClass = (Class<Set<String>>) (Class) HashSet.class;
         ArgumentCaptor<Set<String>> arg = ArgumentCaptor.forClass(listClass);
 
-        when(cqmock.iterator()).thenReturn(stackedEnts.iterator());
+        when(cqmock.list()).thenReturn(stackedEnts);
         when(entCurMock.findByStackIds(eq(consumer), arg.capture())).thenReturn(cqmock);
 
         List<PoolUpdate> updates = poolRules.updatePoolsFromStack(consumer,
-            Arrays.asList(stackDerivedPool, stackDerivedPool2), false);
+            Arrays.asList(stackDerivedPool, stackDerivedPool2), null, false);
         Set<String> stackIds = arg.getValue();
         assertEquals(2, stackIds.size());
         assertThat(stackIds, hasItems(STACK, STACK + "3"));
