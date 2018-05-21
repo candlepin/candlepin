@@ -29,7 +29,6 @@ import org.apache.commons.codec.binary.Base64OutputStream;
 import org.apache.commons.io.IOUtils;
 import org.bouncycastle.asn1.x509.CRLReason;
 import org.bouncycastle.asn1.x509.TBSCertList.CRLEntry;
-import org.bouncycastle.crypto.CryptoException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -279,10 +278,6 @@ public class CrlFileUtil {
         catch (GeneralSecurityException e) {
             // This should never actually happen
             log.error("Unexpected security error occurred while retrieving CA key", e);
-        }
-        catch (CryptoException e) {
-            // Something went horribly wrong with the stream writer
-            log.error("Unexpected error occurred while writing new CRL file", e);
         }
         finally {
             for (Closeable stream : Arrays.asList(encoder, output, reaper, input)) {
