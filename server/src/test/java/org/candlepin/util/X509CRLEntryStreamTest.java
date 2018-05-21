@@ -75,7 +75,7 @@ public class X509CRLEntryStreamTest {
     public ExpectedException thrown = ExpectedException.none();
 
     @Parameterized.Parameters
-    public static Iterable<? extends Object> data() {
+    public static Iterable<Class> data() {
         return Arrays.asList(BouncyCastleX509CRLEntryStream.class, JSSX509CRLEntryStream.class);
     }
 
@@ -189,7 +189,7 @@ public class X509CRLEntryStreamTest {
     }
 
     @Test
-    public void testCRLwithoutUpdateTime() throws Exception {
+    public void testCRLWithoutUpdateTime() throws Exception {
         X509v2CRLBuilder crlBuilder = new X509v2CRLBuilder(issuer, new Date());
         AuthorityKeyIdentifier identifier = new JcaX509ExtensionUtils().createAuthorityKeyIdentifier
             (keyPair.getPublic());

@@ -44,15 +44,12 @@ import org.bouncycastle.asn1.x509.CertificateList;
 import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.asn1.x509.Extensions;
 import org.bouncycastle.asn1.x509.ExtensionsGenerator;
-import org.bouncycastle.asn1.x509.TBSCertList;
 import org.bouncycastle.asn1.x509.TBSCertList.CRLEntry;
 import org.bouncycastle.asn1.x509.Time;
 import org.bouncycastle.cert.X509CRLHolder;
 import org.bouncycastle.cert.X509v2CRLBuilder;
 import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
-import org.bouncycastle.crypto.CryptoException;
 import org.bouncycastle.crypto.DataLengthException;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.DefaultAlgorithmNameFinder;
 import org.bouncycastle.operator.DefaultSignatureAlgorithmIdentifierFinder;
@@ -70,11 +67,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigInteger;
-import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.PrivateKey;
-import java.security.Signature;
 import java.security.SignatureException;
 import java.security.cert.CRLException;
 import java.security.cert.CertificateEncodingException;
@@ -91,7 +84,8 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Implementation of X509CRLStreamWriter using BouncyCastle crypto provider.
+ * Implementation of X509CRLStreamWriter using BouncyCastle crypto provider.  This class <em>is not
+ * thread-safe</em>.
  *
  * The schema for an X509 CRL is described in
  * <a href="https://tools.ietf.org/html/rfc5280#section-5">section 5 of RFC 5280</a>
@@ -129,30 +123,22 @@ import java.util.concurrent.atomic.AtomicInteger;
  * }
  * </pre>
  */
-public class BouncyCastleX509CRLStreamWriter implements X509CRLStreamWriter {
-    private static final BouncyCastleProvider BC_PROVIDER = new BouncyCastleProvider();
-
+public class BouncyCastleX509CRLStreamWriter extends AbstractX509CRLStreamWriter {
     public static final Logger log = LoggerFactory.getLogger(BouncyCastleX509CRLStreamWriter.class);
 
-    private boolean locked = false;
     private boolean preScanned = false;
 
     private List<DERSequence> newEntries;
     private Set<BigInteger> deletedEntries;
 
-    private InputStream crlIn;
-
-    private Integer originalLength;
     private AtomicInteger count;
 
     private AlgorithmIdentifier signingAlg;
 
     private int deletedEntriesLength;
-    private Signature signer;
     private RSAPrivateKey key;
     private AuthorityKeyIdentifier aki;
 
-    private int newSigLength;
     private int oldSigLength;
 
     private boolean emptyCrl;
@@ -161,28 +147,27 @@ public class BouncyCastleX509CRLStreamWriter implements X509CRLStreamWriter {
     private byte[] newExtensions;
 
     public BouncyCastleX509CRLStreamWriter(File crlToChange, RSAPrivateKey key, X509Certificate ca)
-        throws CryptoException, IOException, NoSuchAlgorithmException, CertificateEncodingException {
+        throws IOException, NoSuchAlgorithmException, CertificateEncodingException {
         this(new BufferedInputStream(new FileInputStream(crlToChange)), key, ca);
     }
 
     public BouncyCastleX509CRLStreamWriter(InputStream crlToChange, RSAPrivateKey key, X509Certificate ca)
-        throws CryptoException, IOException, NoSuchAlgorithmException, CertificateEncodingException {
+        throws NoSuchAlgorithmException, CertificateEncodingException {
         this(crlToChange, key, new JcaX509ExtensionUtils().createAuthorityKeyIdentifier(ca));
     }
 
-
     public BouncyCastleX509CRLStreamWriter(File crlToChange, RSAPrivateKey key, RSAPublicKey pubKey)
-        throws CryptoException, IOException, InvalidKeyException, NoSuchAlgorithmException {
+        throws IOException, NoSuchAlgorithmException {
         this(new BufferedInputStream(new FileInputStream(crlToChange)), key, pubKey);
     }
 
     public BouncyCastleX509CRLStreamWriter(InputStream crlToChange, RSAPrivateKey key, RSAPublicKey pubKey)
-        throws CryptoException, IOException, InvalidKeyException, NoSuchAlgorithmException {
+        throws NoSuchAlgorithmException {
         this(crlToChange, key, new JcaX509ExtensionUtils().createAuthorityKeyIdentifier(pubKey));
     }
 
-    public BouncyCastleX509CRLStreamWriter(InputStream crlToChange,
-        RSAPrivateKey key, AuthorityKeyIdentifier aki) throws CryptoException, IOException {
+    public BouncyCastleX509CRLStreamWriter(InputStream crlToChange, RSAPrivateKey key,
+        AuthorityKeyIdentifier aki) {
         this.deletedEntries = new HashSet<>();
         this.deletedEntriesLength = 0;
 
@@ -196,23 +181,7 @@ public class BouncyCastleX509CRLStreamWriter implements X509CRLStreamWriter {
     }
 
     @Override
-    public X509CRLStreamWriter preScan(File crlToChange) throws IOException {
-        return preScan(crlToChange, null);
-    }
-
-    @Override
-    public X509CRLStreamWriter preScan(File crlToChange, CRLEntryValidator validator)
-        throws IOException {
-        return preScan(new BufferedInputStream(new FileInputStream(crlToChange)), validator);
-    }
-
-    @Override
-    public X509CRLStreamWriter preScan(InputStream crlToChange) throws IOException {
-        return preScan(crlToChange, null);
-    }
-
-    @Override
-    public synchronized X509CRLStreamWriter preScan(InputStream crlToChange, CRLEntryValidator validator)
+    public X509CRLStreamWriter preScan(InputStream crlToChange, CRLEntryValidator validator)
         throws IOException {
         if (locked) {
             throw new IllegalStateException("Cannot modify a locked stream.");
@@ -222,11 +191,9 @@ public class BouncyCastleX509CRLStreamWriter implements X509CRLStreamWriter {
             throw new IllegalStateException("preScan has already been run.");
         }
 
-        X509CRLEntryStream reaperStream = null;
         ASN1InputStream asn1In = null;
 
-        try {
-            reaperStream = new BouncyCastleX509CRLEntryStream(crlToChange);
+        try (X509CRLEntryStream reaperStream = new BouncyCastleX509CRLEntryStream(crlToChange)) {
             if (!reaperStream.hasNext()) {
                 emptyCrl = true;
                 preScanned = true;
@@ -234,7 +201,7 @@ public class BouncyCastleX509CRLStreamWriter implements X509CRLStreamWriter {
             }
 
             while (reaperStream.hasNext()) {
-                CRLEntry entry = TBSCertList.CRLEntry.getInstance(reaperStream.next().getEncoded());
+                CRLEntry entry = CRLEntry.getInstance(reaperStream.next().getEncoded());
                 if (validator != null && validator.shouldDelete(entry)) {
                     // Get the serial number
                     deletedEntries.add(entry.getUserCertificate().getValue());
@@ -298,9 +265,6 @@ public class BouncyCastleX509CRLStreamWriter implements X509CRLStreamWriter {
             throw new IOException("Could not build TBSCertList.CRLEntry", e);
         }
         finally {
-            if (reaperStream != null) {
-                reaperStream.close();
-            }
             IOUtils.closeQuietly(asn1In);
         }
         preScanned = true;
@@ -341,24 +305,13 @@ public class BouncyCastleX509CRLStreamWriter implements X509CRLStreamWriter {
     }
 
     @Override
-    public synchronized X509CRLStreamWriter lock() {
-        if (locked) {
-            throw new IllegalStateException("This stream is already locked.");
-        }
-
-        locked = true;
-        return this;
-    }
-
-    @Override
     public boolean hasChangesQueued() {
         return this.newEntries.size() > 0 || this.deletedEntries.size() > 0;
     }
 
+    @Override
     protected void writeToEmptyCrl(OutputStream out) throws IOException {
-        ASN1InputStream asn1in = null;
-        try {
-            asn1in = new ASN1InputStream(crlIn);
+        try (ASN1InputStream asn1in = new ASN1InputStream(crlIn)) {
             ASN1Sequence certListSeq = (ASN1Sequence) asn1in.readObject();
             CertificateList certList = CertificateList.getInstance(certListSeq);
             X509CRLHolder oldCrl = new X509CRLHolder(certList);
@@ -421,9 +374,6 @@ public class BouncyCastleX509CRLStreamWriter implements X509CRLStreamWriter {
                 throw new IOException("Could not sign CRL", e);
             }
         }
-        finally {
-            IOUtils.closeQuietly(asn1in);
-        }
     }
 
     @Override
@@ -444,7 +394,7 @@ public class BouncyCastleX509CRLStreamWriter implements X509CRLStreamWriter {
             return;
         }
 
-        originalLength = handleHeader(out);
+        Integer originalLength = handleHeader(out);
 
         int tag;
         int tagNo;
@@ -489,13 +439,7 @@ public class BouncyCastleX509CRLStreamWriter implements X509CRLStreamWriter {
         }
     }
 
-    /**
-     * This method updates the crlNumber and authorityKeyIdentifier extensions.  Any
-     * other extensions are copied over unchanged.
-     * @param obj
-     * @return
-     * @throws IOException
-     */
+    @Override
     @SuppressWarnings("rawtypes")
     protected byte[] updateExtensions(byte[] obj) throws IOException {
         ASN1TaggedObject taggedExts = (ASN1TaggedObject) new ASN1InputStream(obj).readObject();
@@ -540,6 +484,7 @@ public class BouncyCastleX509CRLStreamWriter implements X509CRLStreamWriter {
         return out.getEncoded();
     }
 
+    @Override
     @SuppressWarnings("checkstyle:methodlength")
     protected int handleHeader(OutputStream out) throws IOException {
         /* The length of an RSA signature is padded out to the length of the modulus
@@ -555,7 +500,7 @@ public class BouncyCastleX509CRLStreamWriter implements X509CRLStreamWriter {
          */
         byte[] dummySig = new byte[newSigBytes];
         Arrays.fill(dummySig, (byte) 0x00);
-        this.newSigLength = new DERBitString(dummySig).getEncoded().length;
+        int newSigLength = new DERBitString(dummySig).getEncoded().length;
 
         int addedEntriesLength = 0;
         for (ASN1Sequence s : newEntries) {
@@ -579,16 +524,16 @@ public class BouncyCastleX509CRLStreamWriter implements X509CRLStreamWriter {
 
         int tagNo;
         Date oldThisUpdate;
-        boolean signatureReplaced = false;
+        boolean signatureUnchanged = true;
         while (true) {
             int tag = readTag(crlIn, null);
             tagNo = readTagNumber(crlIn, tag, null);
 
             // The signatureAlgorithm in TBSCertList is the first sequence.  We'll hit it, replace it, and
             // then not worry with other sequences.
-            if (tagNo == SEQUENCE && !signatureReplaced) {
+            if (tagNo == SEQUENCE && signatureUnchanged) {
                 readAndReplaceSignatureAlgorithm(temp);
-                signatureReplaced = true;
+                signatureUnchanged = false;
             }
             else if (tagNo == GENERALIZED_TIME || tagNo == UTC_TIME) {
                 oldThisUpdate = readAndReplaceTime(temp, tagNo);
@@ -667,14 +612,13 @@ public class BouncyCastleX509CRLStreamWriter implements X509CRLStreamWriter {
         return oldRevokedCertsLength;
     }
 
+    @Override
     protected void readAndReplaceSignatureAlgorithm(OutputStream out) throws IOException {
         int originalLength = readLength(crlIn, null);
         byte[] oldBytes = new byte[originalLength];
         readFullyAndTrack(crlIn, oldBytes, null);
 
-        InputStream algIn = null;
-        try {
-            algIn = new ByteArrayInputStream(signingAlg.getEncoded());
+        try (InputStream algIn = new ByteArrayInputStream(signingAlg.getEncoded())) {
             // We're already at the V portion of the AlgorithmIdentifier TLV, so we need to get to the V
             // portion of our new AlgorithmIdentifier and compare it with the old V.
             int newTag = readTag(algIn, null);
@@ -693,29 +637,18 @@ public class BouncyCastleX509CRLStreamWriter implements X509CRLStreamWriter {
                     "AlgorithmIdentifier has changed lengths. DER corruption would result.");
             }
         }
-        finally {
-            IOUtils.closeQuietly(algIn);
-        }
 
         writeBytes(out, signingAlg.getEncoded());
     }
 
-    /**
-     * Write a new nextUpdate time that is the same amount of time ahead of the new thisUpdate
-     * time as the old nextUpdate was from the old thisUpdate.
-     *
-     * @param out
-     * @param tagNo
-     * @param oldThisUpdate
-     * @throws IOException
-     */
+    @Override
     protected void offsetNextUpdate(OutputStream out, int tagNo, Date oldThisUpdate)
         throws IOException {
         int originalLength = readLength(crlIn, null);
         byte[] oldBytes = new byte[originalLength];
         readFullyAndTrack(crlIn, oldBytes, null);
 
-        ASN1Object oldTime = null;
+        ASN1Object oldTime;
         if (tagNo == UTC_TIME) {
             ASN1TaggedObject t = new DERTaggedObject(UTC_TIME, new DEROctetString(oldBytes));
             oldTime = ASN1UTCTime.getInstance(t, false);
@@ -731,7 +664,7 @@ public class BouncyCastleX509CRLStreamWriter implements X509CRLStreamWriter {
         long delta = oldNextUpdate.getTime() - oldThisUpdate.getTime();
         Date newNextUpdate = new Date(new Date().getTime() + delta);
 
-        ASN1Object newTime = null;
+        ASN1Object newTime;
         if (tagNo == UTC_TIME) {
             newTime = new DERUTCTime(newNextUpdate);
         }
@@ -741,14 +674,7 @@ public class BouncyCastleX509CRLStreamWriter implements X509CRLStreamWriter {
         writeNewTime(out, newTime, originalLength);
     }
 
-    /**
-     * Replace a time in the ASN1 with the current time.
-     *
-     * @param out
-     * @param tagNo
-     * @return the time that was replaced
-     * @throws IOException
-     */
+    @Override
     protected Date readAndReplaceTime(OutputStream out, int tagNo) throws IOException {
         int originalLength = readLength(crlIn, null);
         byte[] oldBytes = new byte[originalLength];
@@ -771,21 +697,12 @@ public class BouncyCastleX509CRLStreamWriter implements X509CRLStreamWriter {
         return Time.getInstance(oldTime).getDate();
     }
 
-    /**
-     * Write a UTCTime or GeneralizedTime to an output stream.
-     *
-     * @param out
-     * @param newTime
-     * @param originalLength
-     * @throws IOException
-     */
+    @Override
     protected void writeNewTime(OutputStream out, ASN1Object newTime, int originalLength)
         throws IOException {
         byte[] newEncodedTime = newTime.getEncoded();
 
-        InputStream timeIn = null;
-        try {
-            timeIn = new ByteArrayInputStream(newEncodedTime);
+        try (InputStream timeIn = new ByteArrayInputStream(newEncodedTime)) {
             int newTag = readTag(timeIn, null);
             readTagNumber(timeIn, newTag, null);
             int newLength = readLength(timeIn, null);
@@ -798,112 +715,7 @@ public class BouncyCastleX509CRLStreamWriter implements X509CRLStreamWriter {
                     "the original length. DER corruption would result.");
             }
         }
-        finally {
-            IOUtils.closeQuietly(timeIn);
-        }
 
         writeBytes(out, newEncodedTime);
-    }
-
-    /**
-     * Echo tag without tracking and without signing.
-     *
-     * @param out
-     * @return tag value
-     * @throws IOException
-     */
-    protected int echoTag(OutputStream out) throws IOException {
-        return echoTag(out, null, null);
-    }
-
-    /**
-     * Echo tag and sign with existing RSADigestSigner.
-     *
-     * @param out
-     * @param i optional value to increment by the number of bytes read
-     * @return tag value
-     * @throws IOException
-     */
-    protected int echoTag(OutputStream out, AtomicInteger i) throws IOException {
-        return echoTag(out, i, signer);
-    }
-
-    protected int echoTag(OutputStream out, AtomicInteger i, Signature s) throws IOException {
-        int tag = readTag(crlIn, i);
-        int tagNo = readTagNumber(crlIn, tag, i);
-        writeTag(out, tag, tagNo, s);
-        return tagNo;
-    }
-
-    /**
-     * Echo length without tracking and without signing.
-     *
-     * @param out
-     * @return length value
-     * @throws IOException
-     */
-    protected int echoLength(OutputStream out) throws IOException {
-        return echoLength(out, null, null);
-    }
-
-    /**
-     * Echo length and sign with existing RSADigestSigner.
-     *
-     * @param out
-     * @param i optional value to increment by the number of bytes read
-     * @return length value
-     * @throws IOException
-     */
-    protected int echoLength(OutputStream out, AtomicInteger i) throws IOException {
-        return echoLength(out, i, signer);
-    }
-
-    protected int echoLength(OutputStream out, AtomicInteger i, Signature s) throws IOException {
-        int length = readLength(crlIn, i);
-        writeLength(out, length, s);
-        return length;
-    }
-
-    /**
-     * Echo value without tracking and without signing.
-     *
-     * @param out
-     * @param length
-     * @throws IOException
-     */
-    protected void echoValue(OutputStream out, int length) throws IOException {
-        echoValue(out, length, null, null);
-    }
-
-    /**
-     * Echo value and sign with existing RSADigestSigner.
-     *
-     * @param out
-     * @param length
-     * @param i optional value to increment by the number of bytes read
-     * @throws IOException
-     */
-    protected void echoValue(OutputStream out, int length, AtomicInteger i) throws IOException {
-        echoValue(out, length, i, signer);
-    }
-
-    protected void echoValue(OutputStream out, int length, AtomicInteger i, Signature s)
-        throws IOException {
-        byte[] item = new byte[length];
-        readFullyAndTrack(crlIn, item, i);
-        writeValue(out, item, s);
-    }
-
-    protected Signature createContentSigner(AlgorithmIdentifier signingAlg, PrivateKey key) throws
-        IOException {
-        String algorithm = new DefaultAlgorithmNameFinder().getAlgorithmName(signingAlg);
-        try {
-            Signature s = Signature.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
-            s.initSign(key);
-            return s;
-        }
-        catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchProviderException e) {
-            throw new IOException("Could not create Signature for " + algorithm, e);
-        }
     }
 }
