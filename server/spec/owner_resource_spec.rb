@@ -816,6 +816,9 @@ describe 'Owner Resource Owner Info Tests' do
     my_systems_owner_info['consumerGuestCounts']['physical'].should == 1
     my_systems_owner_info['consumerGuestCounts']['guest'].should == 2
 
+    my_systems_owner_info['entitlementsConsumedByType']['system'].should == 2
+    my_systems_owner_info['entitlementsConsumedByType']['person'].should == 0
+
     my_systems_owner_info['consumerCountsByComplianceStatus']['valid'].should == 1
     my_systems_owner_info['consumerCountsByComplianceStatus']['partial'].should == 1
     my_systems_owner_info['consumerCountsByComplianceStatus']['invalid'].should == 1

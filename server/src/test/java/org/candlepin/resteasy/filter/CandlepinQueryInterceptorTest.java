@@ -14,10 +14,10 @@
  */
 package org.candlepin.resteasy.filter;
 
-import static org.mockito.AdditionalAnswers.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
 import static org.junit.Assert.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.model.Owner;
@@ -28,24 +28,20 @@ import org.candlepin.test.SessionWrapper;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
-
 import com.google.inject.Provider;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Order;
-
 import org.jboss.resteasy.core.ServerResponse;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
 
 import java.io.IOException;
 import java.io.OutputStream;

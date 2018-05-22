@@ -15,7 +15,7 @@
 package org.candlepin.hibernate;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.usertype.UserType;
 
@@ -71,8 +71,7 @@ public class EmptyStringUserType implements UserType {
     }
 
     @Override
-    public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor si,
-        Object owner)
+    public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor si, Object owner)
         throws HibernateException, SQLException {
         String value = (String) StandardBasicTypes.STRING.nullSafeGet(rs, names[0], si);
         return (value == null) ? "" : value;
@@ -80,7 +79,7 @@ public class EmptyStringUserType implements UserType {
 
     @Override
     public void nullSafeSet(PreparedStatement st, Object value, int index,
-        SessionImplementor si)
+        SharedSessionContractImplementor si)
         throws HibernateException, SQLException {
         StandardBasicTypes.STRING.nullSafeSet(st, value, index, si);
     }

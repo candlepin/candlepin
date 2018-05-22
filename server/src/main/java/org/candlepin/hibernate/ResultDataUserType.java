@@ -28,7 +28,7 @@ import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.usertype.DynamicParameterizedType;
 import org.hibernate.usertype.UserType;
@@ -106,14 +106,16 @@ public class ResultDataUserType implements UserType, DynamicParameterizedType {
     }
 
     @Override
-    public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor session, Object owner)
+    public Object nullSafeGet(ResultSet rs, String[] names,
+        SharedSessionContractImplementor session, Object owner)
         throws HibernateException, SQLException {
         byte[] data = StandardBasicTypes.BINARY.nullSafeGet(rs, names[0], session);
         return deserialize(data);
     }
 
     @Override
-    public void nullSafeSet(PreparedStatement st, Object value, int index, SessionImplementor session)
+    public void nullSafeSet(PreparedStatement st, Object value, int index,
+        SharedSessionContractImplementor session)
         throws HibernateException, SQLException {
         StandardBasicTypes.BINARY.nullSafeSet(st, serializeJson(value), index, session);
     }
