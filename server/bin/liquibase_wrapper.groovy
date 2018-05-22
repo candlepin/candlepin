@@ -8,8 +8,23 @@ if (!(new File(candlepin_classes_path).exists())) {
   System.exit(1)
 }
 
+cli = new CliBuilder(usage: "liquibase_wrapper.groovy [wrapper_args...] <liquibase_version> <path_to_groovy_script> [script_args...]")
+cli.help('print this message')
+cli.cp(args:1, 'add a path to the classpath')
+options = cli.parse(args)
+
+if (options.help || options.arguments().size() < 2) {
+  cli.usage()
+  System.exit(0)
+}
+
+candlepin_resources_path = "$root/server/src/main/resources"
+if (options.cp) { // override the src/main/resources classpath
+  candlepin_resources_path = options.cp
+}
+
 classpath_entries = [
-  "$root/server/src/main/resources",
+  candlepin_resources_path,
   candlepin_classes_path,
   '/usr/share/java/postgresql-jdbc.jar',
   '/usr/share/java/mysql-connector-java.jar',
@@ -20,15 +35,11 @@ for (def path : classpath_entries) {
 }
 
 script_args = []
-if (args.length < 2) {
-  println('Usage: liquibase_wrapper.groovy <liquibase_version> <path_to_groovy_script> [script_args...]')
-  System.exit(1)
-}
-if (args.length > 2) {
-  script_args += args[2..-1]
+if (options.arguments().size() > 2) {
+  script_args += options.arguments()[2..-1]
 }
 
 Grape.grab(group:'org.yaml', module:'snakeyaml', version:'1.20')
-Grape.grab(group:'org.liquibase', module:'liquibase-core', version:args[0], transitive:true)
+Grape.grab(group:'org.liquibase', module:'liquibase-core', version:options.arguments()[0], transitive:true)
 
-run(new File(args[1]), script_args as String[])
+run(new File(options.arguments()[1]), script_args as String[])
