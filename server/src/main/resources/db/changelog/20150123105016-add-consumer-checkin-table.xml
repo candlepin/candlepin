@@ -10,6 +10,12 @@
     <include file="db/changelog/datatypes.xml"/>
 
     <changeSet id="20150123105016-1" author="dgoodwin">
+        <validCheckSum>7:a9eed77a221e620c3ee501b3ee0fe79b</validCheckSum>
+        <validCheckSum>7:b1ec78ebeb49675f013951bd3aa23b7c</validCheckSum>
+        <validCheckSum>7:c99a09927da77f3ab79e990d465703c3</validCheckSum>
+        <validCheckSum>8:1dee9c3540fb37911003e2ba6d0b962e</validCheckSum>
+        <validCheckSum>8:2b82a53d8ef0a60ace30b325705cf961</validCheckSum>
+        <validCheckSum>8:bd946921ef2986f716ebb135013938e1</validCheckSum>
         <comment>Add consumer checkin table.</comment>
         <createTable tableName="cp_consumer_checkin">
 

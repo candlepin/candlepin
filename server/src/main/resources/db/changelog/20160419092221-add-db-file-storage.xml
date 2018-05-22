@@ -16,6 +16,12 @@
     <property name="date.type" value="DATETIME" dbms="mysql"/>
 
     <changeSet id="20160419092221-1" author="mstead">
+        <validCheckSum>7:07aa73f9f3481fea2832f0e810673c25</validCheckSum>
+        <validCheckSum>7:08346f550770caed9ada2798ba73de55</validCheckSum>
+        <validCheckSum>7:8b59a9c4c9b7b3637f1d57e803117906</validCheckSum>
+        <validCheckSum>8:756fc94b83d004f24700f100d2b52fd4</validCheckSum>
+        <validCheckSum>8:7ec5b757d4db9429eba5c794392e8779</validCheckSum>
+        <validCheckSum>8:95c66aad2fedb93ebc076f8fc14543e9</validCheckSum>
         <comment>Add ManifestFileRecord object to track manifest data.</comment>
         <createTable tableName="cp_manifest_file_record">
             <column name="id" type="VARCHAR(32)">

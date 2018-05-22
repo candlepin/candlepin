@@ -10,6 +10,12 @@
     <include file="db/changelog/datatypes.xml"/>
 
     <changeSet id="20170202093945-1" author="mstead">
+        <validCheckSum>7:79ac826bd4948a21511294f7e3b514ad</validCheckSum>
+        <validCheckSum>7:bf481d682e3b25ea7c24e51dbcaebdbf</validCheckSum>
+        <validCheckSum>7:d7233bc6784f5002e23443f379cefebb</validCheckSum>
+        <validCheckSum>8:06527b41b71a12eedbd4e2b83b79c9d3</validCheckSum>
+        <validCheckSum>8:19e8392cc21281d20b63a3e5a666b279</validCheckSum>
+        <validCheckSum>8:382cb843b4bd8a2f1405f90c87642353</validCheckSum>
         <comment>Create cp_ueber_cert table</comment>
         <createTable tableName="cp_ueber_cert">
             <column name="id" type="VARCHAR(32)">
@@ -60,6 +66,8 @@
     </changeSet>
 
     <changeSet id="20170202093945-3" author="mstead" dbms="oracle">
+        <validCheckSum>7:2fd5ee53d1ac8510b3168bf2265d6a0d</validCheckSum>
+        <validCheckSum>8:5873675b6c018690a89d017744ff8512</validCheckSum>
         <comment>Add indexes for the foreign keys in oracle.</comment>
 
         <!-- Oracle automatically creates an index for the unique constraint -->

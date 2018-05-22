@@ -10,6 +10,12 @@
     <include file="db/changelog/datatypes.xml"/>
 
     <changeSet id="20140313155734-1" author="dgoodwin">
+        <validCheckSum>7:158d98c02779a45c6a734b758febd2bf</validCheckSum>
+        <validCheckSum>7:54d90768d1359a612b561ecdf7313529</validCheckSum>
+        <validCheckSum>7:ec2335a6b45f46ba54d37e307b363e71</validCheckSum>
+        <validCheckSum>8:2f1db39170abdcf593bafd4ceae44b87</validCheckSum>
+        <validCheckSum>8:b1436cec6fea027bbdd7328c96158201</validCheckSum>
+        <validCheckSum>8:ef6b3ad62e6d8d8e14515165c091a505</validCheckSum>
         <comment>Create the branding table.</comment>
         <createTable tableName="cp_branding">
             <column name="id" type="VARCHAR(32)">

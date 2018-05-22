@@ -32,7 +32,11 @@
     </changeSet>
 
     <changeSet id="20130425102131-2" author="wpoteat" dbms="oracle,postgresql">
+        <validCheckSum>7:05836cb0a73b10e287483121604da65f</validCheckSum>
+        <validCheckSum>7:70cb19f5d0f1ff233849e52325c8437b</validCheckSum>
         <validCheckSum>7:99cf6849e828630689bead090ccca338</validCheckSum>
+        <validCheckSum>8:a437eb7d1a39dffa626dea56f1a2e49e</validCheckSum>
+        <validCheckSum>8:b9963ed36c2fe1c67f56d785e3c83bf1</validCheckSum>
 
         <createTable tableName="cp_dist_version">
             <column name="id" type="VARCHAR(32)">
