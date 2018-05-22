@@ -95,14 +95,27 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
     }
 
     /**
+     * Fetches an owner by key securely by checking principal permissions.
+     *
+     * @param key owner's unique key to fetch.
+     * @return the owner whose key matches the one given.
+     */
+    @Transactional
+    public Owner getByKeySecure(String key) {
+        return (Owner) createSecureCriteria()
+            .add(Restrictions.eq("key", key))
+            .uniqueResult();
+    }
+
+    /**
+     * Fetches an owner by natural id (key). This method is non-secure.
+     *
      * @param key owner's unique key to fetch.
      * @return the owner whose key matches the one given.
      */
     @Transactional
     public Owner getByKey(String key) {
-        return (Owner) createSecureCriteria()
-            .add(Restrictions.eq("key", key))
-            .uniqueResult();
+        return this.currentSession().bySimpleNaturalId(Owner.class).load(key);
     }
 
     @Transactional

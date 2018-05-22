@@ -1689,7 +1689,6 @@ public class OwnerResource {
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found"),
         @ApiResponse(code = 202, message = "") })
     public JobDetail refreshPools(
-        // TODO: Can we verify with autocreate?
         @PathParam("owner_key") String ownerKey,
         @QueryParam("auto_create_owner") @DefaultValue("false") Boolean autoCreateOwner,
         @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {

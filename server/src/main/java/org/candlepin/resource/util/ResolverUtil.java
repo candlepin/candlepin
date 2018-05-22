@@ -19,10 +19,8 @@ import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerProductCurator;
-import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
 
@@ -78,14 +76,6 @@ public class ResolverUtil {
         return owner;
     }
 
-    public Product resolveProduct(Owner owner, Product product) {
-        String id = null;
-        if (product != null) {
-            id = product.getId();
-        }
-        return resolveProduct(owner, id);
-    }
-
     public Product resolveProduct(Owner owner, String productId) {
         if (productId == null) {
             throw new BadRequestException(
@@ -106,47 +96,6 @@ public class ResolverUtil {
         }
 
         return product;
-    }
-
-    public Pool resolvePool(Pool pool) {
-        // Impl note:
-        // We don't check that the subscription exists here, because it's entirely possible that it
-        // doesn't (i.e. during creation). We just need to make sure it's not null.
-        if (pool == null) {
-            throw new BadRequestException(i18n.tr("No subscription specified"));
-        }
-
-        // Ensure the owner is set and is valid
-        Owner owner = this.resolveOwner(pool.getOwner());
-        pool.setOwner(owner);
-
-        // Ensure the specified product(s) exists for the given owner
-        pool.setProduct(this.resolveProduct(owner, pool.getProduct()));
-
-        if (pool.getDerivedProduct() != null) {
-            pool.setDerivedProduct(this.resolveProduct(owner, pool.getDerivedProduct()));
-        }
-
-        HashSet<Product> presolved = new HashSet<>();
-
-        pool.populateAllTransientProvidedProducts(productCurator);
-        for (ProvidedProduct product : pool.getProvidedProductDtos()) {
-            // TODO: Maybe add UUID resolution as well?
-            presolved.add(resolveProduct(owner, product.getProductId()));
-        }
-
-        pool.setProvidedProducts(presolved);
-        presolved.clear();
-
-        for (ProvidedProduct product : pool.getDerivedProvidedProductDtos()) {
-            presolved.add(this.resolveProduct(owner, product.getProductId()));
-        }
-
-        pool.setDerivedProvidedProducts(presolved);
-
-        // TODO: Do we need to resolve Branding objects?
-
-        return pool;
     }
 
     public void validateProductData(ProductData dto, Owner owner, boolean allowNull) {
