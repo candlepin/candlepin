@@ -10,6 +10,12 @@
     <include file="db/changelog/datatypes.xml"/>
 
     <changeSet id="20140408160212-0" author="ckozak">
+        <validCheckSum>7:8e70cea87f3971b9b7f50c9ae10c028d</validCheckSum>
+        <validCheckSum>7:978385cef948bba92700cecb359dde3a</validCheckSum>
+        <validCheckSum>7:e6a78ebe3c03b038c1413ea3637690d6</validCheckSum>
+        <validCheckSum>8:522a3f9fd70c7f59f1f10370ea6f5b56</validCheckSum>
+        <validCheckSum>8:732083ed7d41e2fcc15db69bc8aa1add</validCheckSum>
+        <validCheckSum>8:e459150e4bc443d4479c833c05f4d84d</validCheckSum>
         <comment>Create source subscription table</comment>
 
         <createTable tableName="cp_pool_source_sub">

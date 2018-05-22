@@ -250,6 +250,8 @@
     <changeSet id="20161025103454-1" author="mstead">
         <validCheckSum>7:67265f7bbe46b62a789d326361adee32</validCheckSum>
         <validCheckSum>7:9b3c3db544862eaa6e7ff0cb9f9ef4b5</validCheckSum>
+        <validCheckSum>8:14b50077179cc361b889075c2b0806a2</validCheckSum>
+        <validCheckSum>8:c068dfb6b3bf42d4d0bfe5e1db14534d</validCheckSum>
 
         <comment>Clean out all ueber cert (debug cert) data to avoid manual cleanup.
                  This changeset will remove both the 0.9.54 (copied data) AND the

@@ -10,7 +10,12 @@
     <include file="db/changelog/datatypes.xml"/>
 
     <changeSet id="20130912153356" author="wpoteat">
+        <validCheckSum>7:5cc2a94b3815daa27c2fa47718d4f499</validCheckSum>
         <validCheckSum>7:69e9ff14c6d2da8962d4870401700340</validCheckSum>
+        <validCheckSum>7:94ed4e585fc79be1e42740634465e4e4</validCheckSum>
+        <validCheckSum>8:65ed1119a70acd4b8975eb6b8968db5f</validCheckSum>
+        <validCheckSum>8:b95e028bdf52bc7b889cb89660124eb9</validCheckSum>
+        <validCheckSum>8:c0ebfd668ddf91c9d6afb39715629d7d</validCheckSum>
         <createTable tableName="cp_import_upstream_consumer">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_imp_upstream_cnsmr_pkey"/>

@@ -10,6 +10,12 @@
     <include file="db/changelog/datatypes.xml"/>
 
     <changeSet id="20150820140403-1" author="dgoodwin">
+        <validCheckSum>7:316b7f97d051603e7c807ec2a12b5e0a</validCheckSum>
+        <validCheckSum>7:489efc048c93bc01b88dc88e5e6744ea</validCheckSum>
+        <validCheckSum>7:c39b5e252732b332557a1fc478044f93</validCheckSum>
+        <validCheckSum>8:3f03cb36c42dcb5c28b5601eb7284d85</validCheckSum>
+        <validCheckSum>8:590bfaaa11d0a4a6e9324d3d5c1ebb7a</validCheckSum>
+        <validCheckSum>8:cfbd6799af2ef2ce6892a4f0fbefde50</validCheckSum>
         <comment>revert to lastcheckin column</comment>
         <addColumn tableName="cp_consumer">
             <column name="lastcheckin" type="${timestamp.type}"/>

@@ -10,6 +10,12 @@
     <include file="db/changelog/datatypes.xml"/>
 
     <changeSet id="20161013145834-1" author="wpoteat">
+        <validCheckSum>7:26c6496e8df76f14cf3d585d06b1c7c6</validCheckSum>
+        <validCheckSum>7:ce5002991f3cb5fa4ed7dc31c97b70eb</validCheckSum>
+        <validCheckSum>7:d62c0661f81677585924fed7c86e6d76</validCheckSum>
+        <validCheckSum>8:1bef54fbfd88d043c2a4df389b284f78</validCheckSum>
+        <validCheckSum>8:73d44feaf877446697aa3e41dce6561e</validCheckSum>
+        <validCheckSum>8:73ea28468cd38d6cdcf78e32e10420fe</validCheckSum>
         <createTable tableName="cp_cont_access_cert">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_cont_access_cert_pkey"/>

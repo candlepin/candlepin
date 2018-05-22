@@ -9,8 +9,8 @@
 
 
     <changeSet id="20170220102027-1" author="crog">
-        <!-- Original checksum of this changeset prior to adding the populating SQL -->
-        <validCheckSum>7:bb7e778ce1c3821e649eaa7699c51f8e</validCheckSum>
+        <validCheckSum>7:da9ac9b551583e7a0771e6e808b383c0</validCheckSum>
+        <validCheckSum>8:badd9607b42d12265c76b93f3db8f16c</validCheckSum>
 
         <!-- On MySQL/MariaDB, we need to drop *all* foreign keys before we can drop our primary key -->
         <dropAllForeignKeyConstraints baseTableName="cp2_product_content"/>

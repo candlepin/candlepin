@@ -10,7 +10,12 @@
     <include file="db/changelog/datatypes.xml"/>
 
     <changeSet id="20131002150608" author="wpoteat">
+        <validCheckSum>7:4fcc284aadf64caa405d12392422361e</validCheckSum>
+        <validCheckSum>7:a2f883a6e6023245798758e43b9aa0dd</validCheckSum>
         <validCheckSum>7:bef3100eb209f06cd08332a032e87c3f</validCheckSum>
+        <validCheckSum>8:10c4ffec7e7137a437a8551d9bbccfe1</validCheckSum>
+        <validCheckSum>8:a036fe270c0ee2c882c32efe15fc34aa</validCheckSum>
+        <validCheckSum>8:b5c16ffcba14ae901dd6b326c1230938</validCheckSum>
         <comment>Consumer content overrides</comment>
         <createTable tableName="cp_consumer_content_override">
             <column name="id" type="VARCHAR(32)">

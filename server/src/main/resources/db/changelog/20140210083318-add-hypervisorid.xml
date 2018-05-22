@@ -10,6 +10,12 @@
     <include file="db/changelog/datatypes.xml"/>
 
     <changeSet id="20140210083318-0" author="ckozak">
+        <validCheckSum>7:773aa718029078d9e68141229f80091a</validCheckSum>
+        <validCheckSum>7:898d5c32c76ff2b2014cfe357904a10a</validCheckSum>
+        <validCheckSum>7:d7d931282412415b930c924c5281fecd</validCheckSum>
+        <validCheckSum>8:0f9ab10fc0d8b75b8180f8b1fd559c07</validCheckSum>
+        <validCheckSum>8:a7b4cdcfe22f1bbd57fc42a178a718de</validCheckSum>
+        <validCheckSum>8:e9a607faa296b5c34a336acc6dfa4656</validCheckSum>
         <comment>Add hypervisorId</comment>
         <createTable tableName="cp_consumer_hypervisor">
             <column name="id" type="VARCHAR(32)">
