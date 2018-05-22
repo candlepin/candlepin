@@ -18,10 +18,7 @@ package org.candlepin.audit;
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
 import org.candlepin.common.config.Configuration;
-import org.candlepin.config.ConfigProperties;
-import org.candlepin.controller.ModeManager;
-import org.candlepin.controller.SuspendModeTransitioner;
-import org.candlepin.model.CandlepinModeChange.Mode;
+import org.candlepin.controller.QpidStatusListener;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
@@ -54,7 +51,10 @@ import javax.naming.NamingException;
  * @author fnguyen
  *
  */
-public class QpidConnection {
+public class QpidConnection implements QpidStatusListener {
+
+    private static Logger log = LoggerFactory.getLogger(QpidConnection.class);
+
     /**
      * This connection factory is created only once upon startup,
      * it is configured using many options that we also allow user
@@ -80,13 +80,11 @@ public class QpidConnection {
      * do this using TopicPublisher
      */
     private Map<Target, Map<Type, TopicPublisher>> producerMap;
-    private static Logger log = LoggerFactory.getLogger(QpidConnection.class);
     private InitialContext ctx = null;
-    private STATUS connectionStatus = STATUS.JMS_OBJECTS_STALE;
     private QpidConfigBuilder config;
-    private SuspendModeTransitioner modeTransitioner;
-    private ModeManager modeManager;
     private Configuration candlepinConfig;
+
+    protected boolean isFlowStopped = false;
 
     /**
      * This class is a singleton, just in case that multiple threads
@@ -94,34 +92,12 @@ public class QpidConnection {
      */
     private static Object connectionLock = new Object();
 
-    /**
-     * Status of the connection as Candlepin sees it
-     * @author fnguyen
-     *
-     */
-    public enum STATUS {
-        CONNECTED,
-        /**
-         * Represents situation when connection to Qpid was disrupted.
-         * JMS objects becomes stale and need to be recreated as per
-         * JMS specification
-         */
-        JMS_OBJECTS_STALE
-    }
-
-    public void setConnectionStatus(STATUS connectionStatus) {
-        this.connectionStatus = connectionStatus;
-    }
-
     @Inject
-    public QpidConnection(QpidConfigBuilder config, SuspendModeTransitioner modeTransitioner,
-        ModeManager modeManager, Configuration candlepinConfiguration) {
+    public QpidConnection(QpidConfigBuilder config, Configuration candlepinConfiguration) {
         try {
             this.config = config;
-            this.modeTransitioner = modeTransitioner;
-            this.modeManager = modeManager;
             this.candlepinConfig = candlepinConfiguration;
-            ctx = new InitialContext(config.buildConfigurationProperties());
+            ctx = createInitialContext();
             connectionFactory = createConnectionFactory();
         }
         catch (NamingException e) {
@@ -141,17 +117,19 @@ public class QpidConnection {
      * @throws Exception
      */
     public void sendTextMessage(Target target, Type type, String msg) {
-        try {
-            /**
-             * When Candlepin is in NORMAL mode and at the same time the
-             * JMS objects are stale, it is necessary to recreate them.
-             */
-            if (connectionStatus == STATUS.JMS_OBJECTS_STALE &&
-                modeManager.getLastCandlepinModeChange().getMode() == Mode.NORMAL) {
-                log.debug("Recreating the stale JMS objects");
-                connect();
-            }
+        // Don't bother to try and send the message if we know the connection
+        // became unavailable or if the queue is FLOW_STOPPED. Throw and exception
+        // and let HornetQ attempt to resend it later.
+        if (connection == null) {
+            throw new RuntimeException("Message not sent: No connection to Qpid.");
+        }
 
+        if (this.isFlowStopped) {
+            throw new RuntimeException("Message not sent: Qpid queue is FLOW_STOPPED.");
+        }
+
+        try {
+            log.debug("Sending message to Qpid - {}:{}", target, type);
             Map<Type, TopicPublisher> m = this.producerMap.get(target);
             if (m != null) {
                 TopicPublisher tp = m.get(type);
@@ -159,14 +137,7 @@ public class QpidConnection {
             }
         }
         catch (Exception ex) {
-            log.error("Error sending text message");
-            connectionStatus = STATUS.JMS_OBJECTS_STALE;
-            if (candlepinConfig
-                .getBoolean(ConfigProperties.SUSPEND_MODE_ENABLED)) {
-                modeTransitioner.transitionAppropriately();
-            }
-
-            throw new RuntimeException("Error sending event to message bus", ex);
+            throw new RuntimeException("Error sending event to Qpid message bus", ex);
         }
     }
 
@@ -184,7 +155,6 @@ public class QpidConnection {
             Map<Target, Map<Type, TopicPublisher>> pm = new HashMap<>();
             buildAllTopicPublishers(pm);
             producerMap = pm;
-            connectionStatus = STATUS.CONNECTED;
         }
 
     }
@@ -206,8 +176,12 @@ public class QpidConnection {
      * Closes off all the resources held
      */
     public void close() {
-        connectionStatus = STATUS.JMS_OBJECTS_STALE;
+        closeConnection();
+        Util.closeSafely(this.ctx, "AMQPContext");
+        Util.closeSafely(this.connectionFactory, "AMQPConnectionFactory");
+    }
 
+    protected void closeConnection() {
         for (Entry<Target, Map<Type, TopicPublisher>> entry : this.producerMap.entrySet()) {
             for (Entry<Type, TopicPublisher> tpMap : entry.getValue().entrySet()) {
                 Util.closeSafely(tpMap.getValue(),
@@ -216,11 +190,14 @@ public class QpidConnection {
         }
         Util.closeSafely(this.session, "AMQPSession");
         Util.closeSafely(this.connection, "AMQPConnection");
-        Util.closeSafely(this.ctx, "AMQPContext");
-        Util.closeSafely(this.connectionFactory, "AMQPConnection");
+        this.connection = null;
     }
 
-    private AMQConnectionFactory createConnectionFactory()
+    protected InitialContext createInitialContext() throws NamingException {
+        return new InitialContext(config.buildConfigurationProperties());
+    }
+
+    protected AMQConnectionFactory createConnectionFactory()
         throws NamingException {
         log.debug("looking up QpidConnectionfactory");
 
@@ -248,7 +225,6 @@ public class QpidConnection {
         return connectionFactory;
     }
 
-
     /**
      * Creates new topic session on this connection. It is important to understand that when
      * Connection to Qpid fails, we need to reestablish all the JMS objects, as per JMS
@@ -269,6 +245,44 @@ public class QpidConnection {
      */
     public Topic lookupTopic(String name) throws NamingException {
         return (Topic) ctx.lookup(name);
+    }
+
+    /**
+     * Called each time the QpidStatusMonitor checks for a Qpid status update,
+     * and based on this change, updates the connection.
+     *
+     * @param oldStatus the status of Qpid on the previous update.
+     * @param newStatus the current status of Qpid.
+     */
+    @Override
+    public void onStatusUpdate(QpidStatus oldStatus, QpidStatus newStatus) {
+        // When the status changes to CONNECTED, rebuild the connection to Qpid.
+        // Since the connection went down, the JMS objects are stale, it is necessary
+        // to recreate them.
+        //
+        // NOTE: We do not shut down the connection when FLOW_STOPPED is detected as there is no
+        //       need to. Message sends are just blocked in that case as the connection is fine.
+        if (QpidStatus.CONNECTED.equals(newStatus) && QpidStatus.DOWN.equals(oldStatus)) {
+            log.info("Attempting to connect to QPID");
+            try {
+                connect();
+            }
+            catch (Exception e) {
+                throw new RuntimeException("Unable to connect to Qpid.", e);
+            }
+        }
+        else if (QpidStatus.DOWN.equals(newStatus) && !QpidStatus.DOWN.equals(oldStatus)) {
+            // If the connection changes to DOWN, close the existing connection to
+            // ensure that we don't leave a stale one open.
+            log.debug("Connection to Qpid was lost. Closing current connection.");
+            closeConnection();
+        }
+
+        // Qpid queue is in flow_stopped and will not accept any new messages
+        // until it catches up. Set the state so that we can use it to prevent
+        // sending messages until the state goes back to connected.
+        this.isFlowStopped = QpidStatus.FLOW_STOPPED.equals(newStatus);
+        log.debug("Qpid is flow stopped: {}", this.isFlowStopped);
     }
 
     /**
