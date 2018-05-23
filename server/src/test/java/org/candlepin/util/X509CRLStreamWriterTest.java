@@ -561,7 +561,11 @@ public class X509CRLStreamWriterTest {
 
     @Test
     public void testIncrementsExtensions() throws Exception {
-        File crlToChange = writeCRL(createCRL());
+        X509CRLHolder holder = createCRL();
+        File crlToChange = writeCRL(holder);
+
+        Extension e = holder.getExtension(Extension.cRLNumber);
+        ASN1Integer original = (ASN1Integer) e.getParsedValue().toASN1Primitive();
 
         X509CRLStreamWriter stream = fileConstructor.newInstance(crlToChange,
             (RSAPrivateKey) keyPair.getPrivate(), (RSAPublicKey) keyPair.getPublic());
@@ -574,9 +578,9 @@ public class X509CRLStreamWriterTest {
 
         byte[] val = changedCrl.getExtensionValue(Extension.cRLNumber.getId());
         DEROctetString s = (DEROctetString) DERTaggedObject.fromByteArray(val);
-        ASN1Integer i = (ASN1Integer) DERTaggedObject.fromByteArray(s.getOctets());
+        ASN1Integer actual = (ASN1Integer) DERTaggedObject.fromByteArray(s.getOctets());
 
-        assertTrue("CRL Number not incremented", i.getValue().compareTo(BigInteger.ONE) > 0);
+        assertEquals(original.getPositiveValue().add(BigInteger.ONE), actual.getValue());
     }
 
     @Test
