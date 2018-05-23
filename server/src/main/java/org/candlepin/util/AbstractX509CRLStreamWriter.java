@@ -16,10 +16,11 @@ package org.candlepin.util;
 
 import static org.candlepin.util.DERUtil.*;
 
-import org.bouncycastle.asn1.ASN1Object;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.operator.DefaultSignatureAlgorithmIdentifierFinder;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -41,6 +42,7 @@ public abstract class AbstractX509CRLStreamWriter implements X509CRLStreamWriter
     protected Signature signer;
     protected boolean locked = false;
     protected boolean preScanned = false;
+    protected String signingAlg;
 
     /**
      * Echo tag without tracking and without signing.
@@ -188,7 +190,34 @@ public abstract class AbstractX509CRLStreamWriter implements X509CRLStreamWriter
      */
     protected abstract int handleHeader(OutputStream out) throws IOException;
 
-    protected abstract void readAndReplaceSignatureAlgorithm(OutputStream out) throws IOException;
+    protected void readAndReplaceSignatureAlgorithm(OutputStream out) throws IOException {
+        int originalLength = readLength(crlIn, null);
+        byte[] oldBytes = new byte[originalLength];
+        readFullyAndTrack(crlIn, oldBytes, null);
+
+        byte[] algorithmId = new DefaultSignatureAlgorithmIdentifierFinder().find(signingAlg).getEncoded();
+        try (InputStream algIn = new ByteArrayInputStream(algorithmId)) {
+            // We're already at the V portion of the AlgorithmIdentifier TLV, so we need to get to the V
+            // portion of our new AlgorithmIdentifier and compare it with the old V.
+            int newTag = readTag(algIn, null);
+            readTagNumber(algIn, newTag, null);
+            int newLength = readLength(algIn, null);
+            byte[] newBytes = new byte[newLength];
+            readFullyAndTrack(algIn, newBytes, null);
+
+            /* If the signing algorithm has changed dramatically, give up.  For our use case we will always
+            have <something>WithRSA, which will yield AlgorithmIdentifiers of equal length.  If we had to
+            worry about going from SHA1WithRSA to SHA256WithECDSA or something like that, we would need to do
+            a lot more work to get everything lined up right since the ECDSA identifiers carry the name of the
+            elliptic curve used and other parameters while RSA has no parameters. */
+            if (originalLength != newLength) {
+                throw new IllegalStateException(
+                    "AlgorithmIdentifier has changed lengths. DER corruption would result.");
+            }
+        }
+
+        writeBytes(out, algorithmId);
+    }
 
     /**
      * Write a new nextUpdate time that is the same amount of time ahead of the new thisUpdate
@@ -212,14 +241,23 @@ public abstract class AbstractX509CRLStreamWriter implements X509CRLStreamWriter
      */
     protected abstract Date readAndReplaceTime(OutputStream out, int tagNo) throws IOException;
 
-     /**
-     * Write a UTCTime or GeneralizedTime to an output stream.
-     *
-     * @param out
-     * @param newTime
-     * @param originalLength
-     * @throws IOException in the event of a DER encoding error
-     */
-    protected abstract void writeNewTime(OutputStream out, ASN1Object newTime, int originalLength)
-        throws IOException;
+    protected void writeNewTime(OutputStream out, byte[] newEncodedTime, int originalLength)
+        throws IOException {
+
+        try (InputStream timeIn = new ByteArrayInputStream(newEncodedTime)) {
+            int newTag = readTag(timeIn, null);
+            readTagNumber(timeIn, newTag, null);
+            int newLength = readLength(timeIn, null);
+
+            /* If the length changes, it's going to create a discrepancy with the length
+             * reported in the TBSCertList sequence.  The length could change with the addition
+             * or removal of time zone information for example. */
+            if (newLength != originalLength) {
+                throw new IllegalStateException("Length of generated time does not match " +
+                    "the original length. DER corruption would result.");
+            }
+        }
+
+        writeBytes(out, newEncodedTime);
+    }
 }

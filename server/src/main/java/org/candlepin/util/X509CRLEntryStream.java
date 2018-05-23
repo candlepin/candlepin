@@ -86,15 +86,6 @@ public abstract class X509CRLEntryStream implements Closeable, Iterator<X509CRLE
     protected int revokedSeqBytes;
     protected AtomicInteger count;
 
-    // ASN1 tag values for these types.  See https://en.wikipedia.org/wiki/X.690
-    // Note that the tag value is only the 5 least significant bits in a tag byte.
-    // These constants exist in the crypto provider libraries but for the purposes of making this class
-    // provider independent, I'm defining them here.
-    protected final int GENERALIZED_TIME = 24;
-    protected final int UTC_TIME = 23;
-    protected final int SEQUENCE = 16;
-    protected final int OBJECT_IDENTIFIER = 6;
-
     /**
      * Construct a X509CRLStream.  <b>The underlying data in the stream parameter must
      * be in DER format</b>.  PEM format will not work because we need to operate

@@ -14,7 +14,6 @@
  */
 package org.candlepin.util;
 
-import static org.bouncycastle.asn1.BERTags.*;
 import static org.candlepin.util.DERUtil.*;
 
 import org.bouncycastle.asn1.ASN1BitString;
@@ -57,7 +56,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -129,8 +127,6 @@ public class BouncyCastleX509CRLStreamWriter extends AbstractX509CRLStreamWriter
     private Set<BigInteger> deletedEntries;
 
     private AtomicInteger count;
-
-    private AlgorithmIdentifier signingAlg;
 
     private int deletedEntriesLength;
     private RSAPrivateKey key;
@@ -218,11 +214,10 @@ public class BouncyCastleX509CRLStreamWriter extends AbstractX509CRLStreamWriter
                     if (seq.getObjectAt(0) instanceof ASN1ObjectIdentifier) {
                         // It's possible an algorithm has already been set using setSigningAlgorithm()
                         if (signingAlg == null) {
-                            signingAlg = AlgorithmIdentifier.getInstance(seq);
+                            signingAlg = new DefaultAlgorithmNameFinder()
+                                .getAlgorithmName(AlgorithmIdentifier.getInstance(seq));
                         }
-
-                        String algorithm = new DefaultAlgorithmNameFinder().getAlgorithmName(signingAlg);
-                        this.signer = createContentSigner(algorithm, key);
+                        this.signer = createContentSigner(signingAlg, key);
                     }
                 }
                 else if (o instanceof ASN1BitString) {
@@ -293,7 +288,7 @@ public class BouncyCastleX509CRLStreamWriter extends AbstractX509CRLStreamWriter
             throw new IllegalArgumentException("Only RSA is supported");
         }
 
-        signingAlg = new DefaultSignatureAlgorithmIdentifierFinder().find(algorithm);
+        signingAlg = algorithm;
     }
 
     @Override
@@ -353,12 +348,12 @@ public class BouncyCastleX509CRLStreamWriter extends AbstractX509CRLStreamWriter
             }
 
             if (signingAlg == null) {
-                signingAlg = oldCrl.toASN1Structure().getSignatureAlgorithm();
+                signingAlg = new DefaultAlgorithmNameFinder()
+                    .getAlgorithmName(oldCrl.toASN1Structure().getSignatureAlgorithm());
             }
 
             try {
-                String algorithm = new DefaultAlgorithmNameFinder().getAlgorithmName(signingAlg);
-                ContentSigner s = new JcaContentSignerBuilder(algorithm).build(key);
+                ContentSigner s = new JcaContentSignerBuilder(signingAlg).build(key);
                 X509CRLHolder newCrl = crlBuilder.build(s);
                 out.write(newCrl.getEncoded());
             }
@@ -420,7 +415,7 @@ public class BouncyCastleX509CRLStreamWriter extends AbstractX509CRLStreamWriter
                 out.write(newExtensions);
                 signer.update(newExtensions, 0, newExtensions.length);
             }
-            out.write(signingAlg.getEncoded());
+            out.write(new DefaultSignatureAlgorithmIdentifierFinder().find(signingAlg).getEncoded());
 
             byte[] signature = signer.sign();
             ASN1BitString signatureBits = new DERBitString(signature);
@@ -605,35 +600,6 @@ public class BouncyCastleX509CRLStreamWriter extends AbstractX509CRLStreamWriter
     }
 
     @Override
-    protected void readAndReplaceSignatureAlgorithm(OutputStream out) throws IOException {
-        int originalLength = readLength(crlIn, null);
-        byte[] oldBytes = new byte[originalLength];
-        readFullyAndTrack(crlIn, oldBytes, null);
-
-        try (InputStream algIn = new ByteArrayInputStream(signingAlg.getEncoded())) {
-            // We're already at the V portion of the AlgorithmIdentifier TLV, so we need to get to the V
-            // portion of our new AlgorithmIdentifier and compare it with the old V.
-            int newTag = readTag(algIn, null);
-            readTagNumber(algIn, newTag, null);
-            int newLength = readLength(algIn, null);
-            byte[] newBytes = new byte[newLength];
-            readFullyAndTrack(algIn, newBytes, null);
-
-            /* If the signing algorithm has changed dramatically, give up.  For our use case we will always
-            have <something>WithRSA, which will yield AlgorithmIdentifiers of equal length.  If we had to
-            worry about going from SHA1WithRSA to SHA256WithECDSA or something like that, we would need to do
-            a lot more work to get everything lined up right since the ECDSA identifiers carry the name of the
-            elliptic curve used and other parameters while RSA has no parameters. */
-            if (originalLength != newLength) {
-                throw new IllegalStateException(
-                    "AlgorithmIdentifier has changed lengths. DER corruption would result.");
-            }
-        }
-
-        writeBytes(out, signingAlg.getEncoded());
-    }
-
-    @Override
     protected void offsetNextUpdate(OutputStream out, int tagNo, Date oldThisUpdate)
         throws IOException {
         int originalLength = readLength(crlIn, null);
@@ -663,7 +629,7 @@ public class BouncyCastleX509CRLStreamWriter extends AbstractX509CRLStreamWriter
         else {
             newTime = new DERGeneralizedTime(newNextUpdate);
         }
-        writeNewTime(out, newTime, originalLength);
+        writeNewTime(out, newTime.getEncoded(), originalLength);
     }
 
     @Override
@@ -685,29 +651,8 @@ public class BouncyCastleX509CRLStreamWriter extends AbstractX509CRLStreamWriter
             newTime = new DERGeneralizedTime(new Date());
         }
 
-        writeNewTime(out, newTime, originalLength);
+        writeNewTime(out, newTime.getEncoded(), originalLength);
         return Time.getInstance(oldTime).getDate();
     }
 
-    @Override
-    protected void writeNewTime(OutputStream out, ASN1Object newTime, int originalLength)
-        throws IOException {
-        byte[] newEncodedTime = newTime.getEncoded();
-
-        try (InputStream timeIn = new ByteArrayInputStream(newEncodedTime)) {
-            int newTag = readTag(timeIn, null);
-            readTagNumber(timeIn, newTag, null);
-            int newLength = readLength(timeIn, null);
-
-            /* If the length changes, it's going to create a discrepancy with the length
-             * reported in the TBSCertList sequence.  The length could change with the addition
-             * or removal of time zone information for example. */
-            if (newLength != originalLength) {
-                throw new IllegalStateException("Length of generated time does not match " +
-                    "the original length. DER corruption would result.");
-            }
-        }
-
-        writeBytes(out, newEncodedTime);
-    }
 }
