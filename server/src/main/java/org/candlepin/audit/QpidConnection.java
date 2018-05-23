@@ -53,6 +53,8 @@ import javax.naming.NamingException;
  */
 public class QpidConnection implements QpidStatusListener {
 
+    private static Logger log = LoggerFactory.getLogger(QpidConnection.class);
+
     /**
      * This connection factory is created only once upon startup,
      * it is configured using many options that we also allow user
@@ -78,11 +80,11 @@ public class QpidConnection implements QpidStatusListener {
      * do this using TopicPublisher
      */
     private Map<Target, Map<Type, TopicPublisher>> producerMap;
-    private static Logger log = LoggerFactory.getLogger(QpidConnection.class);
     private InitialContext ctx = null;
-    private boolean isFlowStopped = false;
     private QpidConfigBuilder config;
     private Configuration candlepinConfig;
+
+    protected boolean isFlowStopped = false;
 
     /**
      * This class is a singleton, just in case that multiple threads
@@ -95,7 +97,7 @@ public class QpidConnection implements QpidStatusListener {
         try {
             this.config = config;
             this.candlepinConfig = candlepinConfiguration;
-            ctx = new InitialContext(config.buildConfigurationProperties());
+            ctx = createInitialContext();
             connectionFactory = createConnectionFactory();
         }
         catch (NamingException e) {
@@ -181,10 +183,10 @@ public class QpidConnection implements QpidStatusListener {
     public void close() {
         closeConnection();
         Util.closeSafely(this.ctx, "AMQPContext");
-        Util.closeSafely(this.connectionFactory, "AMQPConnection");
+        Util.closeSafely(this.connectionFactory, "AMQPConnectionFactory");
     }
 
-    private void closeConnection() {
+    protected void closeConnection() {
         for (Entry<Target, Map<Type, TopicPublisher>> entry : this.producerMap.entrySet()) {
             for (Entry<Type, TopicPublisher> tpMap : entry.getValue().entrySet()) {
                 Util.closeSafely(tpMap.getValue(),
@@ -196,7 +198,11 @@ public class QpidConnection implements QpidStatusListener {
         this.connection = null;
     }
 
-    private AMQConnectionFactory createConnectionFactory()
+    protected InitialContext createInitialContext() throws NamingException {
+        return new InitialContext(config.buildConfigurationProperties());
+    }
+
+    protected AMQConnectionFactory createConnectionFactory()
         throws NamingException {
         log.debug("looking up QpidConnectionfactory");
 
@@ -255,9 +261,13 @@ public class QpidConnection implements QpidStatusListener {
      */
     @Override
     public void onStatusUpdate(QpidStatus oldStatus, QpidStatus newStatus) {
-        if (QpidStatus.CONNECTED.equals(newStatus) && !QpidStatus.CONNECTED.equals(oldStatus)) {
-            // When the status changes to CONNECTED, rebuild the connection to QPID. Since the connection
-            // went down, the JMS objects are stale, it is necessary to recreate them.
+        // When the status changes to CONNECTED, rebuild the connection to Qpid.
+        // Since the connection went down, the JMS objects are stale, it is necessary
+        // to recreate them.
+        //
+        // NOTE: We do not shut down the connection when FLOW_STOPPED is detected as there is no
+        //       need to. Message sends are just blocked in that case as the connection is fine.
+        if (QpidStatus.CONNECTED.equals(newStatus) && QpidStatus.DOWN.equals(oldStatus)) {
             log.info("Attempting to connect to QPID");
             try {
                 connect();
