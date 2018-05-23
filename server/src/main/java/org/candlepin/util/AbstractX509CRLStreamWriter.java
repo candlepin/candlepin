@@ -17,9 +17,7 @@ package org.candlepin.util;
 import static org.candlepin.util.DERUtil.*;
 
 import org.bouncycastle.asn1.ASN1Object;
-import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.operator.DefaultAlgorithmNameFinder;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -42,6 +40,7 @@ public abstract class AbstractX509CRLStreamWriter implements X509CRLStreamWriter
     protected InputStream crlIn;
     protected Signature signer;
     protected boolean locked = false;
+    protected boolean preScanned = false;
 
     /**
      * Echo tag without tracking and without signing.
@@ -132,16 +131,15 @@ public abstract class AbstractX509CRLStreamWriter implements X509CRLStreamWriter
         writeValue(out, item, s);
     }
 
-    protected Signature createContentSigner(AlgorithmIdentifier signingAlg, PrivateKey key) throws
+    protected Signature createContentSigner(String signingAlg, PrivateKey key) throws
         IOException {
-        String algorithm = new DefaultAlgorithmNameFinder().getAlgorithmName(signingAlg);
         try {
-            Signature s = Signature.getInstance(algorithm, BouncyCastleProvider.PROVIDER_NAME);
+            Signature s = Signature.getInstance(signingAlg, BouncyCastleProvider.PROVIDER_NAME);
             s.initSign(key);
             return s;
         }
         catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchProviderException e) {
-            throw new IOException("Could not create Signature for " + algorithm, e);
+            throw new IOException("Could not create Signature for " + signingAlg, e);
         }
     }
 

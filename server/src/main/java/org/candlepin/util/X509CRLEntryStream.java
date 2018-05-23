@@ -87,6 +87,7 @@ public abstract class X509CRLEntryStream implements Closeable, Iterator<X509CRLE
     protected AtomicInteger count;
 
     // ASN1 tag values for these types.  See https://en.wikipedia.org/wiki/X.690
+    // Note that the tag value is only the 5 least significant bits in a tag byte.
     // These constants exist in the crypto provider libraries but for the purposes of making this class
     // provider independent, I'm defining them here.
     protected final int GENERALIZED_TIME = 24;
