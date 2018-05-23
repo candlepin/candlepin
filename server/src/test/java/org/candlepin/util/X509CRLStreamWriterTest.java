@@ -28,7 +28,6 @@ import org.bouncycastle.asn1.x509.AuthorityKeyIdentifier;
 import org.bouncycastle.asn1.x509.CRLNumber;
 import org.bouncycastle.asn1.x509.CRLReason;
 import org.bouncycastle.asn1.x509.Extension;
-import org.bouncycastle.asn1.x509.TBSCertList.CRLEntry;
 import org.bouncycastle.cert.X509CRLHolder;
 import org.bouncycastle.cert.X509v2CRLBuilder;
 import org.bouncycastle.cert.jcajce.JcaX509CRLConverter;
@@ -87,7 +86,7 @@ public class X509CRLStreamWriterTest {
     public ExpectedException thrown = ExpectedException.none();
 
     @Parameterized.Parameters
-    public static Iterable<? extends Object> data() {
+    public static Iterable<Class> data() {
         return Arrays.asList(BouncyCastleX509CRLStreamWriter.class);
     }
 
@@ -590,8 +589,8 @@ public class X509CRLStreamWriterTest {
 
         CRLEntryValidator validator = new CRLEntryValidator() {
             @Override
-            public boolean shouldDelete(CRLEntry entry) {
-                return entry.getUserCertificate().getValue().equals(new BigInteger("101"));
+            public boolean shouldDelete(X509CRLEntry entry) {
+                return entry.getSerialNumber().equals(new BigInteger("101"));
             }
         };
 

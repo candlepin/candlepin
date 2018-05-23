@@ -17,7 +17,6 @@ package org.candlepin.util;
 import static org.bouncycastle.asn1.BERTags.*;
 import static org.candlepin.util.DERUtil.*;
 
-import org.apache.commons.io.IOUtils;
 import org.bouncycastle.asn1.ASN1BitString;
 import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.ASN1Enumerated;
@@ -44,7 +43,6 @@ import org.bouncycastle.asn1.x509.CertificateList;
 import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.asn1.x509.Extensions;
 import org.bouncycastle.asn1.x509.ExtensionsGenerator;
-import org.bouncycastle.asn1.x509.TBSCertList.CRLEntry;
 import org.bouncycastle.asn1.x509.Time;
 import org.bouncycastle.cert.X509CRLHolder;
 import org.bouncycastle.cert.X509v2CRLBuilder;
@@ -71,6 +69,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
 import java.security.cert.CRLException;
 import java.security.cert.CertificateEncodingException;
+import java.security.cert.X509CRLEntry;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
@@ -125,8 +124,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class BouncyCastleX509CRLStreamWriter extends AbstractX509CRLStreamWriter {
     public static final Logger log = LoggerFactory.getLogger(BouncyCastleX509CRLStreamWriter.class);
-
-    private boolean preScanned = false;
 
     private List<DERSequence> newEntries;
     private Set<BigInteger> deletedEntries;
@@ -191,8 +188,6 @@ public class BouncyCastleX509CRLStreamWriter extends AbstractX509CRLStreamWriter
             throw new IllegalStateException("preScan has already been run.");
         }
 
-        ASN1InputStream asn1In = null;
-
         try (X509CRLEntryStream reaperStream = new BouncyCastleX509CRLEntryStream(crlToChange)) {
             if (!reaperStream.hasNext()) {
                 emptyCrl = true;
@@ -201,10 +196,9 @@ public class BouncyCastleX509CRLStreamWriter extends AbstractX509CRLStreamWriter
             }
 
             while (reaperStream.hasNext()) {
-                CRLEntry entry = CRLEntry.getInstance(reaperStream.next().getEncoded());
+                X509CRLEntry entry = reaperStream.next();
                 if (validator != null && validator.shouldDelete(entry)) {
-                    // Get the serial number
-                    deletedEntries.add(entry.getUserCertificate().getValue());
+                    deletedEntries.add(entry.getSerialNumber());
                     deletedEntriesLength += entry.getEncoded().length;
                 }
             }
@@ -216,7 +210,7 @@ public class BouncyCastleX509CRLStreamWriter extends AbstractX509CRLStreamWriter
              */
             byte[] oldExtensions = null;
             ASN1Primitive o;
-            asn1In = new ASN1InputStream(crlToChange);
+            ASN1InputStream asn1In = new ASN1InputStream(crlToChange);
             while ((o = asn1In.readObject()) != null) {
                 if (o instanceof ASN1Sequence) {
                     // Now we are at the signatureAlgorithm
@@ -227,7 +221,8 @@ public class BouncyCastleX509CRLStreamWriter extends AbstractX509CRLStreamWriter
                             signingAlg = AlgorithmIdentifier.getInstance(seq);
                         }
 
-                        this.signer = createContentSigner(signingAlg, key);
+                        String algorithm = new DefaultAlgorithmNameFinder().getAlgorithmName(signingAlg);
+                        this.signer = createContentSigner(algorithm, key);
                     }
                 }
                 else if (o instanceof ASN1BitString) {
@@ -263,9 +258,6 @@ public class BouncyCastleX509CRLStreamWriter extends AbstractX509CRLStreamWriter
         }
         catch (CRLException e) {
             throw new IOException("Could not build TBSCertList.CRLEntry", e);
-        }
-        finally {
-            IOUtils.closeQuietly(asn1In);
         }
         preScanned = true;
         return this;
