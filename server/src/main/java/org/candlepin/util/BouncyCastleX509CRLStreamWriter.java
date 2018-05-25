@@ -326,7 +326,10 @@ public class BouncyCastleX509CRLStreamWriter extends AbstractX509CRLStreamWriter
                     crlBuilder.addExtension(oid, ext.isCritical(), nextNumber);
                 }
                 else if (oid.equals(Extension.authorityKeyIdentifier)) {
-                    crlBuilder.addExtension(oid, ext.isCritical(), ext.getParsedValue());
+                    crlBuilder.addExtension(oid, ext.isCritical(), aki.toASN1Primitive());
+                }
+                else {
+                    crlBuilder.addExtension(ext.getExtnId(), ext.isCritical(), ext.getParsedValue());
                 }
             }
 
