@@ -114,7 +114,7 @@ public class X509CRLStreamWriterTest {
         generator.initialize(2048);
         keyPair = generator.generateKeyPair();
 
-        signer = new JcaContentSignerBuilder("SHA256WithRSAEncryption")
+        signer = new JcaContentSignerBuilder("SHA256withRSA")
             .setProvider(BC_PROVIDER)
             .build(keyPair.getPrivate());
 
@@ -131,7 +131,7 @@ public class X509CRLStreamWriterTest {
         /* With a CRL number of 127, incrementing it should cause the number of bytes in the length
          * portion of the TLV to increase by one.*/
         crlBuilder.addExtension(Extension.cRLNumber, false, new CRLNumber(new BigInteger("127")));
-        crlBuilder.addCRLEntry(new BigInteger("100"), new Date(), CRLReason.unspecified);
+        crlBuilder.addCRLEntry(new BigInteger("100"), new Date(), CRLReason.privilegeWithdrawn);
         return crlBuilder;
     }
 
@@ -349,7 +349,7 @@ public class X509CRLStreamWriterTest {
     @Test
     public void testAddEntryToCRLWithNoExtensions() throws Exception {
         X509v2CRLBuilder crlBuilder = new X509v2CRLBuilder(issuer, new Date());
-        crlBuilder.addCRLEntry(new BigInteger("100"), new Date(), CRLReason.unspecified);
+        crlBuilder.addCRLEntry(new BigInteger("100"), new Date(), CRLReason.privilegeWithdrawn);
         X509CRLHolder holder = crlBuilder.build(signer);
 
         File crlToChange = writeCRL(holder);
@@ -586,7 +586,7 @@ public class X509CRLStreamWriterTest {
     @Test
     public void testDeleteEntryFromCRL() throws Exception {
         X509v2CRLBuilder crlBuilder = createCRLBuilder();
-        crlBuilder.addCRLEntry(new BigInteger("101"), new Date(), CRLReason.unspecified);
+        crlBuilder.addCRLEntry(new BigInteger("101"), new Date(), CRLReason.privilegeWithdrawn);
         X509CRLHolder holder = crlBuilder.build(signer);
 
         File crlToChange = writeCRL(holder);
@@ -600,8 +600,9 @@ public class X509CRLStreamWriterTest {
 
         X509CRLStreamWriter stream = fileConstructor.newInstance(crlToChange,
             (RSAPrivateKey) keyPair.getPrivate(), (RSAPublicKey) keyPair.getPublic());
-        stream.add(new BigInteger("9000"), new Date(), 0);
+        stream.add(new BigInteger("9000"), new Date(), CRLReason.privilegeWithdrawn);
         stream.preScan(crlToChange, validator).lock();
+
         OutputStream o = new BufferedOutputStream(new FileOutputStream(outfile));
         stream.write(o);
         o.close();
@@ -674,7 +675,7 @@ public class X509CRLStreamWriterTest {
     public void testSignatureKeyChange() throws Exception {
         KeyPair differentKeyPair = generator.generateKeyPair();
 
-        ContentSigner otherSigner = new JcaContentSignerBuilder("SHA256WithRSAEncryption")
+        ContentSigner otherSigner = new JcaContentSignerBuilder("SHA256withRSA")
             .setProvider(BC_PROVIDER)
             .build(differentKeyPair.getPrivate());
 
@@ -718,7 +719,7 @@ public class X509CRLStreamWriterTest {
 
         X509CRLStreamWriter stream = fileConstructor.newInstance(crlToChange,
             (RSAPrivateKey) keyPair.getPrivate(), (RSAPublicKey) keyPair.getPublic());
-        stream.add(new BigInteger("9000"), new Date(), 0);
+        stream.add(new BigInteger("9000"), new Date(), CRLReason.privilegeWithdrawn);
 
         thrown.expect(IllegalStateException.class);
         thrown.expectMessage(
@@ -734,7 +735,7 @@ public class X509CRLStreamWriterTest {
     public void testUpgradesSignature() throws Exception {
         X509v2CRLBuilder crlBuilder = createCRLBuilder();
 
-        String signingAlg = "SHA1WithRSA";
+        String signingAlg = "SHA1withRSA";
         ContentSigner sha1Signer = new JcaContentSignerBuilder(signingAlg)
             .setProvider(BC_PROVIDER)
             .build(keyPair.getPrivate());
@@ -745,8 +746,8 @@ public class X509CRLStreamWriterTest {
 
         X509CRLStreamWriter stream = fileConstructor.newInstance(crlToChange,
             (RSAPrivateKey) keyPair.getPrivate(), (RSAPublicKey) keyPair.getPublic());
-        stream.setSigningAlgorithm("SHA256WithRSA");
-        stream.add(new BigInteger("9000"), new Date(), 0);
+        stream.setSigningAlgorithm("SHA256withRSA");
+        stream.add(new BigInteger("9000"), new Date(), CRLReason.privilegeWithdrawn);
         stream.preScan(crlToChange).lock();
         OutputStream o = new BufferedOutputStream(new FileOutputStream(outfile));
         stream.write(o);

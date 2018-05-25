@@ -30,7 +30,7 @@ import java.util.Set;
  * Interface for lower level PKI operations that require access to a provider's internals.
  */
 public interface ProviderBasedPKIUtility {
-    String SIGNATURE_ALGO = "SHA256WithRSA";
+    String SIGNATURE_ALGO = "SHA256withRSA";
 
     X509Certificate createX509Certificate(String dn, Set<X509ExtensionWrapper> extensions,
         Set<X509ByteExtensionWrapper> byteExtensions, Date startDate, Date endDate, KeyPair clientKeyPair,
