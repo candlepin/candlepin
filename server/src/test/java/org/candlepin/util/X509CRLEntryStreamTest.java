@@ -107,7 +107,7 @@ public class X509CRLEntryStreamTest {
         generator.initialize(2048);
         keyPair = generator.generateKeyPair();
 
-        signer = new JcaContentSignerBuilder("SHA256WithRSAEncryption")
+        signer = new JcaContentSignerBuilder("SHA256withRSA")
             .setProvider(BC_PROVIDER)
             .build(keyPair.getPrivate());
     }
