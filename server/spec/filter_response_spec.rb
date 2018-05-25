@@ -39,7 +39,7 @@ describe 'Response JSON Filtering' do
     newdict = hash_diff(consumer_full, consumer_filtered)
     # There should only be one changed key
     newdict.keys.size.should == 2
-    # there should be no or facts href in the new response
+    # there should be no facts or href in the new response
     newdict["href"][1].should == nil
     newdict["facts"][1].should == nil
   end
