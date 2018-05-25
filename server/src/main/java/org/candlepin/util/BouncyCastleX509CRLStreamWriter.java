@@ -518,11 +518,11 @@ public class BouncyCastleX509CRLStreamWriter extends AbstractX509CRLStreamWriter
 
             // The signatureAlgorithm in TBSCertList is the first sequence.  We'll hit it, replace it, and
             // then not worry with other sequences.
-            if (tagNo == SEQUENCE && signatureUnchanged) {
+            if (tagNo == SEQUENCE_TAG_NUM && signatureUnchanged) {
                 readAndReplaceSignatureAlgorithm(temp);
                 signatureUnchanged = false;
             }
-            else if (tagNo == GENERALIZED_TIME || tagNo == UTC_TIME) {
+            else if (tagNo == GENERALIZED_TIME_TAG_NUM || tagNo == UTC_TIME_TAG_NUM) {
                 oldThisUpdate = readAndReplaceTime(temp, tagNo);
                 break;
             }
@@ -537,7 +537,7 @@ public class BouncyCastleX509CRLStreamWriter extends AbstractX509CRLStreamWriter
         int tag = readTag(crlIn, null);
         tagNo = readTagNumber(crlIn, tag, null);
 
-        if (tagNo == GENERALIZED_TIME || tagNo == UTC_TIME) {
+        if (tagNo == GENERALIZED_TIME_TAG_NUM || tagNo == UTC_TIME_TAG_NUM) {
             /* It would be possible to take in a desired nextUpdate in the constructor
              * but I'm not sure if the added complexity is worth it.
              */
@@ -607,12 +607,12 @@ public class BouncyCastleX509CRLStreamWriter extends AbstractX509CRLStreamWriter
         readFullyAndTrack(crlIn, oldBytes, null);
 
         ASN1Object oldTime;
-        if (tagNo == UTC_TIME) {
-            ASN1TaggedObject t = new DERTaggedObject(UTC_TIME, new DEROctetString(oldBytes));
+        if (tagNo == UTC_TIME_TAG_NUM) {
+            ASN1TaggedObject t = new DERTaggedObject(UTC_TIME_TAG_NUM, new DEROctetString(oldBytes));
             oldTime = ASN1UTCTime.getInstance(t, false);
         }
         else {
-            ASN1TaggedObject t = new DERTaggedObject(GENERALIZED_TIME, new DEROctetString(oldBytes));
+            ASN1TaggedObject t = new DERTaggedObject(GENERALIZED_TIME_TAG_NUM, new DEROctetString(oldBytes));
             oldTime = ASN1GeneralizedTime.getInstance(t, false);
         }
 
@@ -623,7 +623,7 @@ public class BouncyCastleX509CRLStreamWriter extends AbstractX509CRLStreamWriter
         Date newNextUpdate = new Date(new Date().getTime() + delta);
 
         ASN1Object newTime;
-        if (tagNo == UTC_TIME) {
+        if (tagNo == UTC_TIME_TAG_NUM) {
             newTime = new DERUTCTime(newNextUpdate);
         }
         else {
@@ -640,13 +640,13 @@ public class BouncyCastleX509CRLStreamWriter extends AbstractX509CRLStreamWriter
 
         ASN1Object oldTime;
         ASN1Object newTime;
-        if (tagNo == UTC_TIME) {
-            ASN1TaggedObject t = new DERTaggedObject(UTC_TIME, new DEROctetString(oldBytes));
+        if (tagNo == UTC_TIME_TAG_NUM) {
+            ASN1TaggedObject t = new DERTaggedObject(UTC_TIME_TAG_NUM, new DEROctetString(oldBytes));
             oldTime = ASN1UTCTime.getInstance(t, false);
             newTime = new DERUTCTime(new Date());
         }
         else {
-            ASN1TaggedObject t = new DERTaggedObject(GENERALIZED_TIME, new DEROctetString(oldBytes));
+            ASN1TaggedObject t = new DERTaggedObject(GENERALIZED_TIME_TAG_NUM, new DEROctetString(oldBytes));
             oldTime = ASN1GeneralizedTime.getInstance(t, false);
             newTime = new DERGeneralizedTime(new Date());
         }

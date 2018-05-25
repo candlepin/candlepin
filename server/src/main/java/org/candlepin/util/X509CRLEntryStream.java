@@ -147,13 +147,13 @@ public abstract class X509CRLEntryStream implements Closeable, Iterator<X509CRLE
             byte[] item = new byte[length];
             readFullyAndTrack(s, item, count);
 
-        } while (tagNo != GENERALIZED_TIME && tagNo != UTC_TIME);
+        } while (tagNo != GENERALIZED_TIME_TAG_NUM && tagNo != UTC_TIME_TAG_NUM);
 
         tag = readTag(s, count);
         tagNo = readTagNumber(s, tag, count);
 
         // The nextUpdate item is optional.  If it's there, we trash it.
-        if (tagNo == GENERALIZED_TIME || tagNo == UTC_TIME) {
+        if (tagNo == GENERALIZED_TIME_TAG_NUM || tagNo == UTC_TIME_TAG_NUM) {
             int length = readLength(s, count);
             byte[] item = new byte[length];
             readFullyAndTrack(s, item, count);
@@ -161,7 +161,7 @@ public abstract class X509CRLEntryStream implements Closeable, Iterator<X509CRLE
             tagNo = readTagNumber(s, tag, count);
         }
 
-        if (tagNo != SEQUENCE) {
+        if (tagNo != SEQUENCE_TAG_NUM) {
             // If we aren't at a sequence, then the CRL is empty and we are either
             // at the crlExtensions or if there are no extensions, at the
             // signatureAlgorithm
@@ -184,7 +184,7 @@ public abstract class X509CRLEntryStream implements Closeable, Iterator<X509CRLE
             int tag = readTag(crlStream, count);
             int tagNo = readTagNumber(crlStream, tag, count);
 
-            if (tagNo == OBJECT_IDENTIFIER) {
+            if (tagNo == OBJECT_IDENTIFIER_TAG_NUM) {
                 // If our tag is an OID, it means we're in an empty CRL with no
                 // extensions.  We could potentially detect this by looking at the upcoming
                 // tag in hasNext(), but that screws up the stream for X509CRLStreamWriter because
