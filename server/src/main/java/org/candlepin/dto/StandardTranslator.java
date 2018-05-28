@@ -41,6 +41,10 @@ import org.candlepin.dto.api.v1.GuestIdDTO;
 import org.candlepin.dto.api.v1.GuestIdTranslator;
 import org.candlepin.dto.api.v1.HypervisorIdDTO;
 import org.candlepin.dto.api.v1.HypervisorIdTranslator;
+import org.candlepin.dto.api.v1.ImportRecordDTO;
+import org.candlepin.dto.api.v1.ImportRecordTranslator;
+import org.candlepin.dto.api.v1.ImportUpstreamConsumerDTO;
+import org.candlepin.dto.api.v1.ImportUpstreamConsumerTranslator;
 import org.candlepin.dto.api.v1.JobStatusDTO;
 import org.candlepin.dto.api.v1.JobStatusTranslator;
 import org.candlepin.dto.api.v1.PoolQuantityDTO;
@@ -72,6 +76,8 @@ import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.HypervisorId;
+import org.candlepin.model.ImportRecord;
+import org.candlepin.model.ImportUpstreamConsumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
@@ -133,6 +139,10 @@ public class StandardTranslator extends SimpleModelTranslator {
             new GuestIdTranslator(), GuestId.class, GuestIdDTO.class);
         this.registerTranslator(
             new HypervisorIdTranslator(), HypervisorId.class, HypervisorIdDTO.class);
+        this.registerTranslator(
+            new ImportRecordTranslator(), ImportRecord.class, ImportRecordDTO.class);
+        this.registerTranslator(new ImportUpstreamConsumerTranslator(),
+            ImportUpstreamConsumer.class, ImportUpstreamConsumerDTO.class);
         this.registerTranslator(
             new JobStatusTranslator(), JobStatus.class, JobStatusDTO.class);
         this.registerTranslator(
