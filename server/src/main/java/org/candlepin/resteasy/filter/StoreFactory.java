@@ -92,7 +92,7 @@ public class StoreFactory {
 
         @Override
         public Owner lookup(String key) {
-            return this.ownerCurator.getByKey(key);
+            return this.ownerCurator.getByKeySecure(key);
         }
 
         @Override

@@ -16,7 +16,6 @@ package org.candlepin.resource;
 
 import org.apache.commons.lang3.StringUtils;
 import org.candlepin.auth.Verify;
-import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
@@ -208,7 +207,6 @@ public class OwnerProductResource {
     @GET
     @Path("/{product_id}")
     @Produces(MediaType.APPLICATION_JSON)
-    @SecurityHole
     public ProductDTO getProduct(
         @Verify(Owner.class) @PathParam("owner_key") String ownerKey,
         @PathParam("product_id") String productId) {
@@ -224,7 +222,6 @@ public class OwnerProductResource {
     @GET
     @Path("/{product_id}/certificate")
     @Produces(MediaType.APPLICATION_JSON)
-    @SecurityHole
     @Transactional
     public ProductCertificateDTO getProductCertificate(
         @PathParam("owner_key") String ownerKey,

@@ -29,6 +29,7 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.hibernate.annotations.GenericGenerator;
 
 import io.swagger.annotations.ApiModelProperty;
+import org.hibernate.annotations.NaturalId;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -85,6 +86,7 @@ public class Owner extends AbstractHibernateObject<Owner>
     @Column(name = "account", nullable = false, unique = true)
     @Size(max = 255)
     @NotNull
+    @NaturalId
     private String key;
 
     @Column(nullable = false)

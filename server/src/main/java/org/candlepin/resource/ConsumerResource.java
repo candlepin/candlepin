@@ -688,7 +688,14 @@ public class ConsumerResource {
         Consumer consumer = null;
         if (ownerKey != null && dto.getFact("system_uuid") != null &&
             !"true".equalsIgnoreCase(dto.getFact("virt.is_guest"))) {
+
             Owner owner = ownerCurator.getByKey(ownerKey);
+            if (!principal.canAccess(owner, SubResource.CONSUMERS, Access.CREATE)) {
+                throw new ForbiddenException(
+                    i18n.tr("User \"{0}\" does not have access to create consumers in org \"{1}\"",
+                    principal.getName(), owner.getKey()));
+            }
+
             if (owner != null) {
                 consumer = consumerCurator.getHypervisor(dto.getFact("system_uuid"), owner);
                 if (consumer != null) {
@@ -698,15 +705,6 @@ public class ConsumerResource {
                 }
             }
         }
-        if (consumer == null) {
-            consumer = new Consumer();
-        }
-
-        if (dto.getUuid() != null) {
-            consumer.setUuid(dto.getUuid());
-        }
-        consumer.setOwner(ownerCurator.getByKey(ownerKey));
-        populateEntity(consumer, dto);
 
         if (dto.getType() == null) {
             throw new BadRequestException(i18n.tr("Unit type must be specified."));
