@@ -8,6 +8,8 @@
     <suppress files="[\\/]src[\\/]test[\\/].*" id="JavadocTypeMain" />
     <suppress files="[\\/]src[\\/]test[\\/].*" id="JavadocMethodMain" />
     <suppress files="[\\/]src[\\/]test[\\/].*" id="JavadocVariableMain" />
+    <!-- Allow use of BouncyCastle classes in our tests -->
+    <suppress files="[\\/]src[\\/]test[\\/].*" id="IllegalImportBouncyCastle" />
 
     <suppress files="[\\/]src[\\/]main[\\/].*" id="JavadocTypeTest" />
     <suppress files="[\\/]src[\\/]main[\\/].*" id="JavadocMethodTest" />
