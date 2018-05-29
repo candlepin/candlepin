@@ -10,6 +10,12 @@
     <include file="db/changelog/datatypes.xml"/>
 
     <changeSet id="20170224113816-1" author="awood">
+        <validCheckSum>7:016bbe196d32bdfc75c6cd9739a9ba36</validCheckSum>
+        <validCheckSum>7:71c4e5655cd7367735599132848156b9</validCheckSum>
+        <validCheckSum>7:fe517192b036eb166ce1de6ee3e05675</validCheckSum>
+        <validCheckSum>8:22c931934e0203dddfb89def470240b7</validCheckSum>
+        <validCheckSum>8:34fc02202cdd38c2948aa04e3c9e0c00</validCheckSum>
+        <validCheckSum>8:41e10c3c7a19c680e6ab84b611b0f1b4</validCheckSum>
         <comment>Add ProductShare table</comment>
         <createTable tableName="cp2_product_shares">
             <column name="id" type="varchar(32)">

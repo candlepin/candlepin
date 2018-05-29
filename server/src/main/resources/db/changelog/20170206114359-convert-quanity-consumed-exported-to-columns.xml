@@ -24,7 +24,10 @@
         0);"/>
 
     <changeSet id="20170206114359-1" author="wpoteat, crog, jiri" dbms="postgresql, oracle, mysql, hsqldb">
-        <validCheckSum>7:506efa873b8eb83ddc5971b6fb110753</validCheckSum>
+        <validCheckSum>7:248546ded951c8210448b83e2f167efe</validCheckSum>
+        <validCheckSum>7:be3fcc0546632846b17fe5cd4435c3bf</validCheckSum>
+        <validCheckSum>8:462a5b369ddd75b5625e2a3ecec343e6</validCheckSum>
+        <validCheckSum>8:b1c9653e27653b7f02f6997643b885b2</validCheckSum>
 
         <preConditions onFail="MARK_RAN">
             <not><columnExists tableName="cp_pool" columnName="quantity_exported"/></not>

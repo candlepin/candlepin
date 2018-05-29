@@ -10,6 +10,12 @@
     <include file="db/changelog/datatypes.xml"/>
 
     <changeSet id="20130722140547" author="wpoteat">
+        <validCheckSum>7:006ee3dba5d99df3da9c6f318815a610</validCheckSum>
+        <validCheckSum>7:483f4f799cb4955a143d3fb79c1506c6</validCheckSum>
+        <validCheckSum>7:51675f89ddff4bb5da44fdf2d214a1ab</validCheckSum>
+        <validCheckSum>8:1e8715fe9425746d1ec6ccb0d506c42c</validCheckSum>
+        <validCheckSum>8:7adafd93071bd44106818026ec83c1b6</validCheckSum>
+        <validCheckSum>8:ab847dff598b986fdf0e53cda5a3f80c</validCheckSum>
         <comment>CDN record</comment>
         <createTable tableName="cp_cdn">
             <column name="id" type="VARCHAR(32)">
@@ -40,6 +46,12 @@
     </changeSet>
 
     <changeSet author="wpoteat" id="20130722140547-2">
+        <validCheckSum>7:4ff292b0387562514b6238916e367b7d</validCheckSum>
+        <validCheckSum>7:9314a208d7c646475f64c09818a2e6ce</validCheckSum>
+        <validCheckSum>7:932b91625e84b50a9ffd38342e6dd698</validCheckSum>
+        <validCheckSum>8:4745fd585dc6909a41e86400d6dfdf2d</validCheckSum>
+        <validCheckSum>8:482e5b97251060f4b1b7bca01b818e07</validCheckSum>
+        <validCheckSum>8:6fffdbdb8cb5b7e358e8b43d1eef2b7a</validCheckSum>
         <createTable tableName="cp_cdn_certificate">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_cdn_certificate_pkey"/>

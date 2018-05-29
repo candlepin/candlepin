@@ -24,7 +24,12 @@
 
 
     <changeSet id="20170718095058-1" author="vrjain, crog">
-      <validCheckSum>7:5cf3a796a8dab98ed2114db716715bff</validCheckSum>
+      <validCheckSum>7:5494d3a96b8e4205ce7993d2c2b96e29</validCheckSum>
+      <validCheckSum>7:65a81a9ed61eca97c087f8518499e247</validCheckSum>
+      <validCheckSum>7:8850f008ea669aded02fe31c9538c134</validCheckSum>
+      <validCheckSum>8:01fffed045e8c0124bace18aa8ce5ac6</validCheckSum>
+      <validCheckSum>8:0d79b60dc1f5a189bdff9c7ffb381388</validCheckSum>
+      <validCheckSum>8:f5a809c22012bfccf3849f3c5a5744c8</validCheckSum>
 
       <comment>
         Purge orphaned pools

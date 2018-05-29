@@ -11,6 +11,11 @@
 
 
     <changeSet id="20130501152202-1" author="alikins" dbms="oracle,postgresql">
+        <validCheckSum>7:75a2f97f5bab86b5a9a2e2dbe7691846</validCheckSum>
+        <validCheckSum>7:9f23549e635ccba246d3932a9dc5a40d</validCheckSum>
+        <validCheckSum>7:a8a8479ea5703b60cf9ef21459bae983</validCheckSum>
+        <validCheckSum>8:10f008f90f3f4c11f178257c9b82b74a</validCheckSum>
+        <validCheckSum>8:9bde88c6c0b0e6b7adcc2c05cd69f1e2</validCheckSum>
         <comment>Add a cp_content_arch for content/arch mapping</comment>
         <createTable tableName="cp_arch">
 
@@ -27,6 +32,10 @@
 
     <changeSet id="20130501152202-2" author="alikins" dbms="oracle,postgresql">
         <validCheckSum>7:21a6dfe6c97700d58f1f8149007b7d7b</validCheckSum>
+        <validCheckSum>7:3b4602097ebfc5c75e3244fab603acbd</validCheckSum>
+        <validCheckSum>7:4b694f84dc22cb635c07172d6fa01f4c</validCheckSum>
+        <validCheckSum>8:e802d727014f0a83e6fc0301f3bf4aaf</validCheckSum>
+        <validCheckSum>8:fdc944d6f8749658e5a0c613cd374f6c</validCheckSum>
 
         <createTable tableName="cp_content_arch">
             <column name="content_id" type="VARCHAR(255)">
