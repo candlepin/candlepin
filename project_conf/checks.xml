@@ -188,6 +188,14 @@
       <!-- Ban Junit 3 namespace -->
       <property name="illegalPkgs" value="junit"/>
     </module>
+
+    <!-- This module should be suppressed in our test classes since we use BouncyCastle there to compare
+    our results against what BouncyCastle calculates -->
+    <module name="IllegalImport">
+      <property name="id" value="IllegalImportBouncyCastle"/>
+      <property name="illegalPkgs" value="org.bouncycastle"/>
+    </module>
+
     <module name="RedundantImport"/>
     <module name="UnusedImports"/>
     <module name="ImportOrder">
