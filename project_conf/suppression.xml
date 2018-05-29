@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE suppressions PUBLIC
+    "-//Puppy Crawl//DTD Suppressions 1.2//EN"
+    "http://checkstyle.sourceforge.net/dtds/suppressions_1_2.dtd">
+
+<suppressions>
+    <suppress files="[\\/]src[\\/]test[\\/].*" id="JavadocTypeMain" />
+    <suppress files="[\\/]src[\\/]test[\\/].*" id="JavadocMethodMain" />
+    <suppress files="[\\/]src[\\/]test[\\/].*" id="JavadocVariableMain" />
+
+    <suppress files="[\\/]src[\\/]main[\\/].*" id="JavadocTypeTest" />
+    <suppress files="[\\/]src[\\/]main[\\/].*" id="JavadocMethodTest" />
+    <suppress files="[\\/]src[\\/]main[\\/].*" id="JavadocVariableTest" />
+</suppressions>
+
+<!-- vim: set expandtab sts=2 sw=2 ai: -->
