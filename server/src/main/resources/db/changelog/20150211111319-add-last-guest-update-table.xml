@@ -10,6 +10,12 @@
     <include file="db/changelog/datatypes.xml"/>
 
     <changeSet id="20150211111319-1" author="dgoodwin">
+        <validCheckSum>7:43a5396dcaa9c3dd6dbc41138e4b73ad</validCheckSum>
+        <validCheckSum>7:5b0f0f9c2016ebe7e605a03474d3706b</validCheckSum>
+        <validCheckSum>7:e527a46a648419347f2cd72acf3e2aec</validCheckSum>
+        <validCheckSum>8:1a30dbd7d465ae92ef395634ac91f7ad</validCheckSum>
+        <validCheckSum>8:4c32e67d69dc3ecbb6aed0421668c56b</validCheckSum>
+        <validCheckSum>8:93c0436f18c2337a723eeb008cf41987</validCheckSum>
         <comment>add last guest update table</comment>
 
         <!-- See http://www.liquibase.org/documentation/changes/index.html -->
@@ -36,9 +42,8 @@
     </changeSet>
 
     <changeSet id="20150211111319-2" author="dgoodwin">
-        <!-- Checksums for current state (top) and the state dated Feb 25, 2015 -->
-        <validCheckSum>7:25f5368fe0a7bce4784403b0dd79a5ed</validCheckSum>
         <validCheckSum>7:1cec9823accc46e660334425b7c5393b</validCheckSum>
+        <validCheckSum>8:fbefb0063913f7b1bcd799a5ec8235d5</validCheckSum>
 
         <comment>Populate guest ID checkins table with current values.</comment>
 

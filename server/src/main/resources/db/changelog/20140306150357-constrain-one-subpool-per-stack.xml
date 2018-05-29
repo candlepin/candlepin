@@ -10,6 +10,12 @@
     <include file="db/changelog/datatypes.xml"/>
 
     <changeSet id="20140306150357-0" author="ckozak">
+        <validCheckSum>7:91d9151f61b108d92d5ad81163e56c71</validCheckSum>
+        <validCheckSum>7:d9ac0fb627e24719a716912ad4a3d156</validCheckSum>
+        <validCheckSum>7:dc60ea882d84442bd84f349d08f15144</validCheckSum>
+        <validCheckSum>8:6c3e4d59a0fa2902f7f401b15c93a546</validCheckSum>
+        <validCheckSum>8:7ea10bde79203b958a6fef50d4860f41</validCheckSum>
+        <validCheckSum>8:b946da32ce510c1b4913f7bb2f787da7</validCheckSum>
         <comment>Constrain one subpool per stack to avoid concurrency problems</comment>
 
         <createTable tableName="cp_pool_source_stack">

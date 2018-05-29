@@ -8,8 +8,9 @@
 
 
     <changeSet id="20140317115036" author="ckozak">
-        <!-- This a valid state for this changeset; often appears this way in dumps from Satellite -->
+        <validCheckSum>7:33574c04acead7abc463faca77adb9f8</validCheckSum>
         <validCheckSum>7:ceb9b38d059a57332a2b9799299663fe</validCheckSum>
+        <validCheckSum>8:430cefe493aba0ec0784ba15aa919b58</validCheckSum>
 
         <comment>Index cp_consumer_facts on cp_consumer_id</comment>
         <createIndex indexName="consumer_fact_consumer_id_idx"

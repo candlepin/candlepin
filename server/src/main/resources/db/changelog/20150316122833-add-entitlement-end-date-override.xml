@@ -10,6 +10,12 @@
     <include file="db/changelog/datatypes.xml"/>
 
     <changeSet id="20150316122833-1" author="dgoodwin">
+        <validCheckSum>7:427c7fad9fe2b2035f8e82aeeccee966</validCheckSum>
+        <validCheckSum>7:adf93b47681e5d3608e745ee9dde18ff</validCheckSum>
+        <validCheckSum>7:f192671aef38fc1879c4a1202274fbc8</validCheckSum>
+        <validCheckSum>8:213d247a9087b7a6734f1dd453327835</validCheckSum>
+        <validCheckSum>8:29524ce2e46c01c1bd55a20bac714d62</validCheckSum>
+        <validCheckSum>8:886a5fd0b4adfafadf07dbfbf19e22a0</validCheckSum>
         <comment>add entitlement end date override</comment>
         <!-- See http://www.liquibase.org/documentation/changes/index.html -->
         <addColumn tableName="cp_entitlement">

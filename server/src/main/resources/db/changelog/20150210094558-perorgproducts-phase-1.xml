@@ -11,6 +11,12 @@
 
     <!-- cp2_products -->
     <changeSet id="20150210094558-01" author="crog">
+        <validCheckSum>7:3b5c6ab60babe2b14041b1e9355768eb</validCheckSum>
+        <validCheckSum>7:521255dcec24c26cd102a90e3e2a6a3c</validCheckSum>
+        <validCheckSum>7:6c56c1413ca32c71ada3853fe8b78490</validCheckSum>
+        <validCheckSum>8:2002795fb3d908f98c8dd520bfe32d92</validCheckSum>
+        <validCheckSum>8:f81658c53b38bbc2ecec915e742ac6fe</validCheckSum>
+        <validCheckSum>8:f9943a99c69749407633008b5b20d8d0</validCheckSum>
         <createTable tableName="cp2_products">
             <column name="uuid" type="varchar(32)">
                 <constraints primaryKey="true" primaryKeyName="cp2_products_pk"/>
@@ -93,6 +99,12 @@
 
     <!-- cp2_content -->
     <changeSet id="20150210094558-06" author="crog">
+        <validCheckSum>7:261f3361d263fcc0fd03ca6df110e82f</validCheckSum>
+        <validCheckSum>7:6d4b9b816ac3c17e67e8dc89c168164e</validCheckSum>
+        <validCheckSum>7:ba5d4d94e05c2542eaa6cadb2934444b</validCheckSum>
+        <validCheckSum>8:06fb37b1b3bf9a064adc5f016a07022a</validCheckSum>
+        <validCheckSum>8:e4232deafda37c711fcdac50376d2247</validCheckSum>
+        <validCheckSum>8:edbf8b23a52254856cdfaf24bbeb81ab</validCheckSum>
         <createTable tableName="cp2_content">
             <column name="uuid" type="varchar(32)">
                 <constraints primaryKey="true" primaryKeyName="cp2_content_pk"/>
@@ -170,6 +182,12 @@
 
     <!-- cp2_environment_content -->
     <changeSet id="20150210094558-10" author="crog">
+        <validCheckSum>7:b653132fefa3377dcbd7f6acca51ab36</validCheckSum>
+        <validCheckSum>7:d9ca85d0efaefa77bacc1bfbd94b1371</validCheckSum>
+        <validCheckSum>7:f8280ee48be35a7361829280037fc89f</validCheckSum>
+        <validCheckSum>8:6c10522bc78e7597aeb80838869e50ec</validCheckSum>
+        <validCheckSum>8:9ffd91eb69b2a05539b7b2aacb5dd4b6</validCheckSum>
+        <validCheckSum>8:d5f447c6162c26164ebfd8720ef8a0d8</validCheckSum>
         <createTable tableName="cp2_environment_content">
             <column name="id" type="varchar(32)">
                 <constraints primaryKey="true" primaryKeyName="cp2_environment_content_pk"/>
@@ -207,6 +225,12 @@
 
     <!-- cp2_installed_products -->
     <changeSet id="20150210094558-12" author="crog">
+        <validCheckSum>7:0e091ea99dc9dd997e2efadf0db4f988</validCheckSum>
+        <validCheckSum>7:c94b7a5eaab7269a8539ac09c2ba5c70</validCheckSum>
+        <validCheckSum>7:e6fb4be524be85359dce9d1016400388</validCheckSum>
+        <validCheckSum>8:6076c5a2371d88bfa8be13b12f6752db</validCheckSum>
+        <validCheckSum>8:bd790ff239d0ff173f02a3895232b8bc</validCheckSum>
+        <validCheckSum>8:c846433d74d537e0c59ad4e4937fcb46</validCheckSum>
         <createTable tableName="cp2_installed_products">
             <column name="id" type="varchar(32)">
                 <constraints primaryKey="true" primaryKeyName="cp2_installed_products_pk"/>
@@ -295,6 +319,12 @@
 
     <!-- cp2_product_attributes -->
     <changeSet id="20150210094558-18" author="crog">
+        <validCheckSum>7:3211d75204d019af23fc73b09e806f76</validCheckSum>
+        <validCheckSum>7:61a67e6bba4d6e860dca4cc01435e6b3</validCheckSum>
+        <validCheckSum>7:cb0d09e1d86fdde69470d11c0cfc166e</validCheckSum>
+        <validCheckSum>8:1289f3879a10f0c31ee579616f15fc76</validCheckSum>
+        <validCheckSum>8:7b3ff3d0fd4a0ba50bc696ce48bc58f9</validCheckSum>
+        <validCheckSum>8:8af7ebdb88dd20f8f2d8aa2de069ba65</validCheckSum>
         <createTable tableName="cp2_product_attributes">
             <column name="id" type="varchar(32)">
                 <constraints primaryKey="true" primaryKeyName="cp2_product_attributes_pk"/>
@@ -320,6 +350,12 @@
 
     <!-- cp2_product_certificates -->
     <changeSet id="20150210094558-19" author="crog">
+        <validCheckSum>7:45db9a72f519910f48c226943d315c2f</validCheckSum>
+        <validCheckSum>7:8d1fa50559873b9a57641971dd5946ab</validCheckSum>
+        <validCheckSum>7:efd42f929d8e7bcca98bc9972daa1eaa</validCheckSum>
+        <validCheckSum>8:17cbaa5cdde5d751c015128865da625e</validCheckSum>
+        <validCheckSum>8:491d6601d211b8a9dd7f982b737ea27d</validCheckSum>
+        <validCheckSum>8:c4db7e4e19ed09ae2d09a4b30c9477a1</validCheckSum>
         <createTable tableName="cp2_product_certificates">
             <column name="id" type="varchar(32)">
                 <constraints primaryKey="true" primaryKeyName="cp2_product_certificates_pk"/>
@@ -347,6 +383,12 @@
 
     <!-- cp2_product_content -->
     <changeSet id="20150210094558-20" author="crog">
+        <validCheckSum>7:11006e34c609f944943a1a1ded518f93</validCheckSum>
+        <validCheckSum>7:64c2e96eebb7b0219a08917ef46057a9</validCheckSum>
+        <validCheckSum>7:9b4f6922ffa2afb88e2be9f7e422452e</validCheckSum>
+        <validCheckSum>8:494b16b757a1f4c1ac92693be85b847a</validCheckSum>
+        <validCheckSum>8:7944400be7df32fa03c5ab68a1e8bf22</validCheckSum>
+        <validCheckSum>8:d6796720698ace24a36b4ef75c5c83d5</validCheckSum>
         <createTable tableName="cp2_product_content">
             <column name="product_uuid" type="varchar(32)">
                 <constraints
@@ -480,6 +522,12 @@
 
     <!-- cp2_pool_source_sub -->
     <changeSet id="20150210094558-33" author="crog">
+        <validCheckSum>7:191c60333258d3c40206bd52151f6873</validCheckSum>
+        <validCheckSum>7:21380b6acb1ec04519b40aecd4da5415</validCheckSum>
+        <validCheckSum>7:b1b2037cd3ee111accd28c419ad4d219</validCheckSum>
+        <validCheckSum>8:6208ec5fa82dcd0897530d4e1e6ad0cf</validCheckSum>
+        <validCheckSum>8:824bbcee945dbbb611755e0eb248d700</validCheckSum>
+        <validCheckSum>8:83c14e247d30927647c495c1519d765e</validCheckSum>
         <createTable tableName="cp2_pool_source_sub">
             <column name="id" type="varchar(32)">
                 <constraints primaryKey="true" primaryKeyName="cp2_pool_source_sub_pk"/>
