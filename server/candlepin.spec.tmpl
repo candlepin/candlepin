@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.3.7
+Version: 2.3.8
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,11 @@ fi
 
 #raw
 %changelog
+* Tue May 29 2018 Kevin Howell <khowell@redhat.com> 2.3.8-1
+- 1582607: Added missing JsonFilter annotation to the DTOs (crog@redhat.com)
+- 1576868: Update liquibase checksums (khowell@redhat.com)
+- 1578040: Ensure getHost is always org-scoped (khowell@redhat.com)
+
 * Mon May 14 2018 Kevin Howell <khowell@redhat.com> 2.3.7-1
 - Make host cache CandlepinRequestScoped (khowell@redhat.com)
 - Make various components singletons (khowell@redhat.com)
