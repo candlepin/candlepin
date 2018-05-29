@@ -29,6 +29,7 @@ import org.candlepin.util.Util;
 import com.google.inject.Inject;
 
 import org.bouncycastle.asn1.ASN1Encodable;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.DERUTF8String;
@@ -171,7 +172,7 @@ public class BouncyCastlePKIUtility extends PKIUtility {
                 // Bouncycastle hates null values. So, set them to blank
                 // if they are null
                 String value = wrapper.getValue() == null ? "" :  wrapper.getValue();
-                certGen.addExtension(wrapper.toASN1Primitive(), wrapper.isCritical(),
+                certGen.addExtension(new ASN1ObjectIdentifier(wrapper.getOid()), wrapper.isCritical(),
                     new DERUTF8String(value));
             }
         }
@@ -182,7 +183,7 @@ public class BouncyCastlePKIUtility extends PKIUtility {
                 // if they are null
                 byte[] value = wrapper.getValue() == null ? new byte[0] :
                     wrapper.getValue();
-                certGen.addExtension(wrapper.toASN1Primitive(), wrapper.isCritical(),
+                certGen.addExtension(new ASN1ObjectIdentifier(wrapper.getOid()), wrapper.isCritical(),
                     new DEROctetString(value));
             }
         }
