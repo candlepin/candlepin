@@ -34,6 +34,9 @@
 
 <module name="Checker">
   <module name="SuppressWarningsFilter"/>
+  <module name="SuppressionFilter">
+    <property name="file" value="project_conf/suppression.xml"/>
+  </module>
 
   <module name="RegexpSingleline">
      <property name="format" value="\s+$"/>
@@ -68,7 +71,7 @@
        to ANT properties. In this case it uses the ${basedir} property
        to allow Checkstyle to be run from any directory within a project.
      -->
-    <property name="headerFile" value="${checkstyle.header.file}" />
+    <property name="headerFile" value="project_conf/HEADER.txt" />
     <!-- The copyright date line gets checked by the RegexpHeader module -->
     <property name="ignoreLines" value="2"/>
   </module>
@@ -102,7 +105,7 @@
        caches information about files that have checked ok; used to avoid
        repeated checks of the same files
      -->
-    <property name="cacheFile" value="${checkstyle.cache.file}"/>
+    <property name="cacheFile" value="./target/checkstyle.cache.src"/>
     <property name="tabWidth" value="4"/>
 
     <!--
@@ -206,20 +209,45 @@
        #######################################################################
      -->
     <module name="JavadocType">
-      <property name="scope" value="${javadoc.type.scope}" />
+      <property name="id" value="JavadocTypeMain" />
+      <property name="scope" value="package" />
+    </module>
+    <module name="JavadocType">
+      <property name="id" value="JavadocTypeTest" />
+      <property name="scope" value="nothing" />
     </module>
     <module name="JavadocMethod">
-      <property name="scope" value="${javadoc.method.scope}" />
+      <property name="id" value="JavadocMethodMain"/>
+      <property name="scope" value="public" />
       <property name="allowUndeclaredRTE" value="true" />
-      <property name="allowThrowsTagsForSubclasses" value="${javadoc.lazy}" />
-      <property name="allowMissingParamTags" value="${javadoc.missing.param}" />
-      <property name="allowMissingThrowsTags" value="${javadoc.lazy}" />
-      <property name="allowMissingReturnTag" value="${javadoc.lazy}" />
+      <property name="allowThrowsTagsForSubclasses" value="false" />
+      <property name="allowMissingParamTags" value="true" />
+      <property name="allowMissingThrowsTags" value="true" />
+      <property name="allowMissingReturnTag" value="false" />
       <property name="allowMissingPropertyJavadoc" value="true" />
       <property name="allowMissingJavadoc" value="true" />
     </module>
+    <module name="JavadocMethod">
+      <property name="id" value="JavadocMethodTest"/>
+      <property name="scope" value="nothing" />
+      <property name="allowUndeclaredRTE" value="true" />
+      <property name="allowThrowsTagsForSubclasses" value="true" />
+      <property name="allowMissingParamTags" value="true" />
+      <property name="allowMissingThrowsTags" value="true" />
+      <property name="allowMissingReturnTag" value="true" />
+      <property name="allowMissingPropertyJavadoc" value="true" />
+      <property name="allowMissingJavadoc" value="true" />
+    </module>
+
     <module name="JavadocVariable">
-      <property name="scope" value="${javadoc.var.scope}" />
+      <property name="id" value="JavadocVariableMain"/>
+      <property name="scope" value="package" />
+      <property name="severity" value="ignore"/>
+    </module>
+
+    <module name="JavadocVariable">
+      <property name="id" value="JavadocVariableTest"/>
+      <property name="scope" value="nothing" />
       <property name="severity" value="ignore"/>
     </module>
 
@@ -331,3 +359,5 @@
     <module name="org.candlepin.checks.ResourceSwaggerCheck"/>
   </module>
 </module>
+
+<!-- vim: set expandtab sts=2 sw=2 ai: -->
