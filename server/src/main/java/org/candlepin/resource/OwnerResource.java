@@ -49,6 +49,7 @@ import org.candlepin.dto.api.v1.ImportRecordDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.PoolDTO;
 import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
+import org.candlepin.dto.api.v1.UeberCertificateDTO;
 import org.candlepin.model.Branding;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
@@ -2086,9 +2087,12 @@ public class OwnerResource {
     @ApiResponses({
         @ApiResponse(code = 404, message = "Owner not found"),
         @ApiResponse(code = 400, message = "") })
-    public UeberCertificate createUeberCertificate(@Context Principal principal,
+    public UeberCertificateDTO createUeberCertificate(@Context Principal principal,
         @Verify(Owner.class) @PathParam("owner_key") String ownerKey) {
-        return ueberCertGenerator.generate(ownerKey, principal);
+
+        UeberCertificate ueberCert = ueberCertGenerator.generate(ownerKey, principal);
+
+        return this.translator.translate(ueberCert, UeberCertificateDTO.class);
     }
 
     /**
@@ -2104,7 +2108,7 @@ public class OwnerResource {
     @ApiOperation(notes = "Retrieves the Ueber Entitlement Certificate",
         value = "Get Ueber Entitlement Certificate")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
-    public UeberCertificate getUeberCertificate(@Context Principal principal,
+    public UeberCertificateDTO getUeberCertificate(@Context Principal principal,
         @Verify(Owner.class) @PathParam("owner_key") String ownerKey) {
 
         Owner owner = this.findOwnerByKey(ownerKey);
@@ -2114,7 +2118,7 @@ public class OwnerResource {
                 "uber certificate for owner {0} was not found. Please generate one.", owner.getKey()));
         }
 
-        return ueberCert;
+        return this.translator.translate(ueberCert, UeberCertificateDTO.class);
     }
 
     /**

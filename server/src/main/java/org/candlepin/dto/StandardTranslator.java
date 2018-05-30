@@ -53,6 +53,8 @@ import org.candlepin.dto.api.v1.ProductCertificateDTO;
 import org.candlepin.dto.api.v1.ProductCertificateTranslator;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.dto.api.v1.ProductTranslator;
+import org.candlepin.dto.api.v1.UeberCertificateDTO;
+import org.candlepin.dto.api.v1.UeberCertificateTranslator;
 import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
 import org.candlepin.dto.api.v1.UpstreamConsumerTranslator;
 import org.candlepin.dto.shim.ContentDTOTranslator;
@@ -84,6 +86,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
+import org.candlepin.model.UeberCertificate;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.dto.ContentData;
@@ -157,6 +160,8 @@ public class StandardTranslator extends SimpleModelTranslator {
             new ProductTranslator(), Product.class, ProductDTO.class);
         this.registerTranslator(
             new ProductCertificateTranslator(), ProductCertificate.class, ProductCertificateDTO.class);
+        this.registerTranslator(
+            new UeberCertificateTranslator(), UeberCertificate.class, UeberCertificateDTO.class);
         this.registerTranslator(
             new UpstreamConsumerTranslator(), UpstreamConsumer.class, UpstreamConsumerDTO.class);
 

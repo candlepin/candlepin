@@ -48,6 +48,7 @@ import org.candlepin.dto.api.v1.EntitlementDTO;
 import org.candlepin.dto.api.v1.ImportRecordDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.PoolDTO;
+import org.candlepin.dto.api.v1.UeberCertificateDTO;
 import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
@@ -1654,8 +1655,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         when(oc.getByKey(eq("admin"))).thenReturn(owner);
         when(ucg.generate(eq(owner.getKey()), eq(principal))).thenReturn(entCert);
 
-        UeberCertificate result = resource.createUeberCertificate(principal, owner.getKey());
-        assertEquals(entCert, result);
+        UeberCertificateDTO expected = this.modelTranslator.translate(entCert, UeberCertificateDTO.class);
+        UeberCertificateDTO result = resource.createUeberCertificate(principal, owner.getKey());
+        assertEquals(expected, result);
     }
 
     @Test
@@ -1679,9 +1681,11 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             null, this.modelTranslator);
 
         when(ucg.generate(eq(owner.getKey()), eq(principal))).thenReturn(entCert);
-        UeberCertificate result = resource.createUeberCertificate(principal, owner.getKey());
 
-        assertEquals(entCert, result);
+        UeberCertificateDTO expected = this.modelTranslator.translate(entCert, UeberCertificateDTO.class);
+        UeberCertificateDTO result = resource.createUeberCertificate(principal, owner.getKey());
+
+        assertEquals(expected, result);
     }
 
 }
