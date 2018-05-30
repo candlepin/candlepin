@@ -522,7 +522,9 @@ public class BouncyCastleX509CRLStreamWriter extends AbstractX509CRLStreamWriter
             // The signatureAlgorithm in TBSCertList is the first sequence.  We'll hit it, replace it, and
             // then not worry with other sequences.
             if (tagNo == SEQUENCE_TAG_NUM && signatureUnchanged) {
-                readAndReplaceSignatureAlgorithm(temp);
+                AlgorithmIdentifier algorithmId =
+                    new DefaultSignatureAlgorithmIdentifierFinder().find(signingAlg);
+                readAndReplaceSignatureAlgorithm(temp, algorithmId.getEncoded());
                 signatureUnchanged = false;
             }
             else if (tagNo == GENERALIZED_TIME_TAG_NUM || tagNo == UTC_TIME_TAG_NUM) {

@@ -17,7 +17,6 @@ package org.candlepin.util;
 import static org.candlepin.util.DERUtil.*;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.operator.DefaultSignatureAlgorithmIdentifierFinder;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
@@ -190,12 +189,11 @@ public abstract class AbstractX509CRLStreamWriter implements X509CRLStreamWriter
      */
     protected abstract int handleHeader(OutputStream out) throws IOException;
 
-    protected void readAndReplaceSignatureAlgorithm(OutputStream out) throws IOException {
+    protected void readAndReplaceSignatureAlgorithm(OutputStream out, byte[] algorithmId) throws IOException {
         int originalLength = readLength(crlIn, null);
         byte[] oldBytes = new byte[originalLength];
         readFullyAndTrack(crlIn, oldBytes, null);
 
-        byte[] algorithmId = new DefaultSignatureAlgorithmIdentifierFinder().find(signingAlg).getEncoded();
         try (InputStream algIn = new ByteArrayInputStream(algorithmId)) {
             // We're already at the V portion of the AlgorithmIdentifier TLV, so we need to get to the V
             // portion of our new AlgorithmIdentifier and compare it with the old V.

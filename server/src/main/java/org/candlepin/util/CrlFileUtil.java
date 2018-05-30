@@ -27,7 +27,6 @@ import com.google.inject.persist.Transactional;
 import org.apache.commons.codec.binary.Base64InputStream;
 import org.apache.commons.codec.binary.Base64OutputStream;
 import org.apache.commons.io.IOUtils;
-import org.bouncycastle.asn1.x509.CRLReason;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,6 +68,11 @@ import java.util.regex.Pattern;
 @Singleton
 public class CrlFileUtil {
     private static final Logger log = LoggerFactory.getLogger(CrlFileUtil.class);
+
+    // See https://tools.ietf.org/html/rfc5280#section-5.3.1
+    // An alternative here would be to use java.security.cert.CRLReason.PRIVILEGE_WITHDRAWN.ordinal(); we have
+    // to call ordinal because the JDK CRLReason class is an enum.
+    private static final int PRIVILEGE_WITHDRAWN = 9;
 
     private static final Pattern CRL_HEADER_PATTERN = Pattern.compile("^(-+)BEGIN (.+)\\1$");
     private static final Pattern CRL_FOOTER_PATTERN = Pattern.compile("^(-+)END (.+)\\1$");
@@ -211,7 +215,8 @@ public class CrlFileUtil {
             if (revoke != null) {
                 Date now = new Date();
                 for (BigInteger serial : revoke) {
-                    writer.add(serial, now, CRLReason.privilegeWithdrawn);
+
+                    writer.add(serial, now, PRIVILEGE_WITHDRAWN);
                 }
             }
 
