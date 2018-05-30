@@ -351,7 +351,7 @@ public class JSSPKIUtility extends PKIUtility {
             // Skip the first item in the sequence, AlgorithmIdentifier.
             // The parameter, startLen, is required for skipSequence although it's unused.
             s.skipSequence(0);
-            // Get the subjectPublicKey bit string
+            // Get the key's bit string
             BitArray b = s.getUnalignedBitString();
             byte[] digest = d.digest(b.toByteArray());
 
