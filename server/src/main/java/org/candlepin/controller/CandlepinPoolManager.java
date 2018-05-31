@@ -73,6 +73,7 @@ import org.candlepin.util.Util;
 import org.candlepin.util.Traceable;
 import org.candlepin.util.TraceableParam;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
@@ -96,8 +97,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-
-
+import java.util.stream.Collectors;
 
 /**
  * PoolManager
@@ -2148,6 +2148,7 @@ public class CandlepinPoolManager implements PoolManager {
                 log.info("Revoking {} entitlements...", entitlements.size());
                 this.entitlementCurator.batchDelete(entitlements);
                 this.entitlementCurator.flush();
+                this.entitlementCurator.batchDetach(entitlements);
                 log.info("Entitlements successfully revoked");
             }
             else {
@@ -2262,17 +2263,26 @@ public class CandlepinPoolManager implements PoolManager {
                     this.enforcer.postUnbind(entitlement.getConsumer(), this, entitlement);
                 }
 
-                // Recalculate status for affected consumers
-                log.info("Recomputing status for {} consumers", consumerStackedEnts.size());
-                int i = 0;
-                for (Consumer consumer : consumerStackedEnts.keySet()) {
-                    this.complianceRules.getStatus(consumer);
+                /* Save the consumer IDs and then detach all the keys in the consumerStackEnts map.
+                 * Otherwise during the status calculations, the facts proxy objects objects will be resolved
+                 * and the memory use will grow linearly with the number of consumers instead of remaining
+                 * constant as we calculate the status of each consumer.  See BZ 1584259 */
+                List<String> consumers = consumerStackedEnts.keySet().stream()
+                    .map(Consumer::getId)
+                    .collect(Collectors.toList());
+                this.consumerCurator.batchDetach(consumerStackedEnts.keySet());
 
-                    if (++i % 1000 == 0) {
-                        this.consumerCurator.flush();
+                log.info("Recomputing status for {} consumers", consumers.size());
+
+                // Recalculate status for affected consumers
+                for (List<String> subList : Lists.partition(consumers, 1000)) {
+                    for (String consumerId : subList) {
+                        Consumer consumer = consumerCurator.find(consumerId);
+                        this.complianceRules.getStatus(consumer);
+                        this.consumerCurator.detach(consumer);
                     }
+                    this.consumerCurator.flush();
                 }
-                this.consumerCurator.flush();
 
                 log.info("All statuses recomputed");
             }
