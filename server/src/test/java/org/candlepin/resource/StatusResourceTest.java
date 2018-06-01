@@ -21,13 +21,13 @@ import org.candlepin.cache.CandlepinCache;
 import org.candlepin.cache.StatusCache;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.controller.ModeManager;
+import org.candlepin.dto.api.v1.StatusDTO;
 import org.candlepin.model.CandlepinModeChange;
 import org.candlepin.model.CandlepinModeChange.Mode;
 import org.candlepin.model.CandlepinModeChange.Reason;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
-import org.candlepin.model.Status;
 import org.candlepin.policy.js.JsRunnerProvider;
 
 import org.junit.Before;
@@ -85,7 +85,7 @@ public class StatusResourceTest {
         ps.println("release=${release}");
         StatusResource sr = new StatusResource(rulesCurator, config, jsProvider, candlepinCache,
             modeManager);
-        Status s = sr.status();
+        StatusDTO s = sr.status();
         ps.close();
         assertNotNull(s);
         assertEquals("${release}", s.getRelease());
@@ -100,7 +100,7 @@ public class StatusResourceTest {
         ps.println("foo");
         StatusResource sr = new StatusResource(rulesCurator, config, jsProvider, candlepinCache,
             modeManager);
-        Status s = sr.status();
+        StatusDTO s = sr.status();
         ps.close();
         assertNotNull(s);
         assertEquals("Unknown", s.getRelease());
@@ -117,7 +117,7 @@ public class StatusResourceTest {
         when(rulesCurator.getUpdatedFromDB()).thenThrow(new RuntimeException());
         StatusResource sr = new StatusResource(rulesCurator, config, jsProvider, candlepinCache,
             modeManager);
-        Status s = sr.status();
+        StatusDTO s = sr.status();
         ps.close();
         assertNotNull(s);
         assertEquals("${release}", s.getRelease());
@@ -141,7 +141,7 @@ public class StatusResourceTest {
         ps.println("release=${release}");
         StatusResource sr = new StatusResource(rulesCurator, config, jsProvider, candlepinCache,
             modeManager);
-        Status s = sr.status();
+        StatusDTO s = sr.status();
         ps.close();
 
         // make sure we did not log anything which indicates

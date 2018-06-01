@@ -21,10 +21,11 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.common.util.VersionUtil;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.ModeManager;
+import org.candlepin.dto.api.v1.StatusDTO;
+import org.candlepin.guice.CandlepinCapabilities;
 import org.candlepin.model.CandlepinModeChange;
-import org.candlepin.model.CandlepinModeChange.Mode;
+import org.candlepin.model.Rules.RulesSourceEnum;
 import org.candlepin.model.RulesCurator;
-import org.candlepin.model.Status;
 import org.candlepin.policy.js.JsRunnerProvider;
 
 import com.google.inject.Inject;
@@ -109,9 +110,10 @@ public class StatusResource {
     @ApiOperation(value = "Status", notes = "Returns status of the server", authorizations = {})
     @Produces({ MediaType.APPLICATION_JSON})
     @SecurityHole(noAuth = true, anon = true)
-    public Status status() {
+    public StatusDTO status() {
         StatusCache statusCache = candlepinCache.getStatusCache();
-        Status cached = statusCache.getStatus();
+        StatusDTO cached = statusCache.getStatus();
+
         if (cached != null) {
             return cached;
         }
@@ -122,6 +124,7 @@ public class StatusResource {
          * been moved to GET /status/db.
          */
         boolean good = true;
+
         try {
             rulesCurator.getUpdatedFromDB();
         }
@@ -131,16 +134,31 @@ public class StatusResource {
         }
 
         CandlepinModeChange modeChange = modeManager.getLastCandlepinModeChange();
+        CandlepinModeChange.Mode mode = modeChange.getMode();
+        CandlepinModeChange.Reason modeChangeReason = modeChange.getReason();
 
-        if (modeChange.getMode() != Mode.NORMAL) {
+        if (mode != CandlepinModeChange.Mode.NORMAL) {
             good = false;
         }
 
-        Status status = new Status(good, version, release, standalone,
-            jsProvider.getRulesVersion(), jsProvider.getRulesSource(),
-            modeChange.getMode(), modeChange.getReason(), modeChange.getChangeTime());
+        CandlepinCapabilities caps = CandlepinCapabilities.getCapabilities();
+
+        RulesSourceEnum rulesSource = jsProvider.getRulesSource();
+
+        StatusDTO status = new StatusDTO()
+            .setResult(good)
+            .setVersion(version)
+            .setRelease(release)
+            .setStandalone(standalone)
+            .setRulesVersion(jsProvider.getRulesVersion())
+            .setRulesSource(rulesSource != null ? rulesSource.toString() : null)
+            .setMode(mode != null ? mode.toString() : null)
+            .setModeReason(modeChangeReason != null ? modeChangeReason.toString() : null)
+            .setModeChangeTime(modeChange.getChangeTime())
+            .setManagerCapabilities(caps);
 
         statusCache.setStatus(status);
+
         return status;
     }
 }

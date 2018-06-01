@@ -33,7 +33,6 @@ import org.candlepin.config.DatabaseConfigFactory;
 import org.candlepin.controller.QpidStatusMonitor;
 import org.candlepin.controller.SuspendModeTransitioner;
 import org.candlepin.logging.LoggerContextListener;
-import org.candlepin.model.Status;
 import org.candlepin.pinsetter.core.PinsetterContextListener;
 import org.candlepin.pki.impl.BouncyCastleProviderLoader;
 import org.candlepin.resteasy.ResourceLocatorMap;
@@ -66,9 +65,6 @@ import io.swagger.converter.ModelConverters;
 import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.nio.charset.Charset;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -218,19 +214,20 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
 
         // if amqp is enabled, close all connections.
         if (config.getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED)) {
-            Util.closeSafely(injector.getInstance(AMQPBusPublisher.class),
-                "AMQPBusPublisher");
+            Util.closeSafely(injector.getInstance(AMQPBusPublisher.class), "AMQPBusPublisher");
         }
     }
 
     protected void setCapabilities(Configuration config) {
-        Set<String> blacklistedSet = config.getSet(ConfigProperties.HIDDEN_CAPABILITIES,
-            Collections.<String>emptySet());
-        Set<String> exposedSet = new HashSet<>(Arrays.asList(Status.DEFAULT_CAPABILITIES));
-        exposedSet.removeAll(blacklistedSet);
+        CandlepinCapabilities capabilities = new CandlepinCapabilities();
 
-        Status.setAvailableCapabilities(exposedSet.toArray(new String[exposedSet.size()]));
-        log.info("Candlepin will show support for {}", Status.getAvailableCapabilities());
+        Set<String> blacklistedSet = config.getSet(ConfigProperties.HIDDEN_CAPABILITIES, null);
+        if (blacklistedSet != null) {
+            capabilities.removeAll(blacklistedSet);
+        }
+
+        CandlepinCapabilities.setCapabilities(capabilities);
+        log.info("Candlepin will show support for the following capabilities: {}", capabilities);
     }
 
     protected Configuration readConfiguration(ServletContext context)
