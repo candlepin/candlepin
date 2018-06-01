@@ -21,14 +21,13 @@ import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.JobStatusDTO;
+import org.candlepin.dto.api.v1.SchedulerStatusDTO;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.JobCurator;
-import org.candlepin.model.SchedulerStatus;
 import org.candlepin.pinsetter.core.PinsetterException;
 import org.candlepin.pinsetter.core.PinsetterKernel;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.pinsetter.core.model.JobStatus.JobState;
-import org.candlepin.util.ElementTransformer;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
@@ -145,20 +144,15 @@ public class JobResource {
         }
 
         return this.translator.translateQuery(
-            statuses.transform(new ElementTransformer<JobStatus, JobStatus>() {
-                @Override
-                public JobStatus transform(JobStatus jobStatus) {
-                    return jobStatus.cloakResultData(true);
-                }
-            }), JobStatusDTO.class);
+            statuses.transform(jobStatus -> jobStatus.cloakResultData(true)), JobStatusDTO.class);
     }
 
     @ApiOperation(notes = "Retrieves the Scheduler Status", value = "getSchedulerStatus")
     @GET
     @Path("scheduler")
     @Produces(MediaType.APPLICATION_JSON)
-    public SchedulerStatus getSchedulerStatus() {
-        SchedulerStatus ss = new SchedulerStatus();
+    public SchedulerStatusDTO getSchedulerStatus() {
+        SchedulerStatusDTO ss = new SchedulerStatusDTO();
         try {
             ss.setRunning(pk.getSchedulerStatus());
         }
@@ -175,7 +169,7 @@ public class JobResource {
     @Path("scheduler")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public SchedulerStatus setSchedulerStatus(boolean running) {
+    public SchedulerStatusDTO setSchedulerStatus(boolean running) {
         try {
             if (running) {
                 pk.unpauseScheduler();
