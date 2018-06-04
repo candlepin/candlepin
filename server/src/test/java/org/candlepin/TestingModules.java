@@ -51,8 +51,10 @@ import org.candlepin.pinsetter.core.GuiceJobFactory;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
 import org.candlepin.pinsetter.core.PinsetterTriggerListener;
 import org.candlepin.pinsetter.tasks.CertificateRevocationListTask;
+import org.candlepin.pki.BouncyCastlePrivateKeyReader;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.PKIUtility;
+import org.candlepin.pki.PrivateKeyReader;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.BouncyCastlePKIUtility;
 import org.candlepin.pki.impl.DefaultSubjectKeyIdentifierWriter;
@@ -284,6 +286,7 @@ public class TestingModules {
             bind(Enforcer.class).to(EnforcerForTesting.class); // .to(JavascriptEnforcer.class);
             bind(SubjectKeyIdentifierWriter.class).to(DefaultSubjectKeyIdentifierWriter.class);
             bind(PKIUtility.class).to(BouncyCastlePKIUtility.class).asEagerSingleton();
+            bind(PrivateKeyReader.class).to(BouncyCastlePrivateKeyReader.class);
             bind(CertificateReader.class).to(CertificateReaderForTesting.class).asEagerSingleton();
             bind(SubscriptionServiceAdapter.class).to(ImportSubscriptionServiceAdapter.class);
             bind(OwnerServiceAdapter.class).to(DefaultOwnerServiceAdapter.class);

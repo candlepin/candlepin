@@ -16,8 +16,9 @@ package org.candlepin.test;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.MapConfiguration;
-import org.candlepin.pki.CertificateReader;
+import org.candlepin.pki.BouncyCastlePrivateKeyReader;
 import org.candlepin.pki.PrivateKeyReader;
+import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.impl.BouncyCastleProviderLoader;
 
 import org.junit.Assert;
@@ -43,7 +44,7 @@ public class CertificateReaderForTesting extends CertificateReader {
     @Inject
     public CertificateReaderForTesting(Configuration config, PrivateKeyReader reader)
         throws CertificateException, IOException {
-        super(new MapConfiguration(), new PrivateKeyReader());
+        super(new MapConfiguration(), new BouncyCastlePrivateKeyReader());
     }
 
     @Override

@@ -12,13 +12,11 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.pki.impl;
+package org.candlepin.pki;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.pki.CertificateReader;
-import org.candlepin.pki.PrivateKeyReader;
 
 import org.junit.Test;
 
@@ -44,6 +42,6 @@ public class CertificateReaderTest {
                     put(ConfigProperties.CA_KEY_PASSWORD, "password");
                 }
             });
-        new CertificateReader(config, new PrivateKeyReader());
+        new CertificateReader(config, new BouncyCastlePrivateKeyReader());
     }
 }
