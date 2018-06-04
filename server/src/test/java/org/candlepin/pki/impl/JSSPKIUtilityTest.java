@@ -19,7 +19,9 @@ import static org.junit.Assert.*;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.pki.BouncyCastlePrivateKeyReader;
 import org.candlepin.pki.CertificateReader;
+import org.candlepin.pki.PrivateKeyReader;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509CRLEntryWrapper;
@@ -110,6 +112,7 @@ public class JSSPKIUtilityTest {
             binder.bind(CertificateReader.class).to(CertificateReaderForTesting.class);
             binder.bind(SubjectKeyIdentifierWriter.class).to(DefaultSubjectKeyIdentifierWriter.class);
             binder.bind(JSSPKIUtility.class);
+            binder.bind(PrivateKeyReader.class).to(BouncyCastlePrivateKeyReader.class);
         };
         injector = Guice.createInjector(pkiModule);
         injector.injectMembers(this);

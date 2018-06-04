@@ -30,25 +30,41 @@ import org.bouncycastle.pkcs.jcajce.JcePKCSPBEInputDecryptorProviderBuilder;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.lang.reflect.Constructor;
 import java.security.PrivateKey;
 import java.security.Provider;
+import java.util.Arrays;
 
 /**
  * Test PrivateKeyReader
  */
+@RunWith(Parameterized.class)
 public class PrivateKeyReaderTest {
     private static final Provider BC_PROVIDER = new BouncyCastleProvider();
     private static final char[] PASSWORD = "password".toCharArray();
 
     private ClassLoader cl;
 
+    private final Constructor<? extends PrivateKeyReader> constructor;
+
     @Before
     public void setUp() {
         cl = PrivateKeyReaderTest.class.getClassLoader();
+    }
+
+    @Parameterized.Parameters
+    public static Iterable<Class> data() {
+        return Arrays.asList(BouncyCastlePrivateKeyReader.class);
+    }
+
+    public PrivateKeyReaderTest(Class<? extends PrivateKeyReader> clazz) throws Exception {
+        this.constructor = clazz.getConstructor();
     }
 
     @Test
@@ -58,7 +74,7 @@ public class PrivateKeyReaderTest {
             InputStream keyStream = cl.getResourceAsStream(keyFile);
             Reader expectedReader = new InputStreamReader(cl.getResourceAsStream(keyFile));
         ) {
-            PrivateKey actualKey = new PrivateKeyReader().read(keyStream, null);
+            PrivateKey actualKey = constructor.newInstance().read(keyStream, null);
             PrivateKeyInfo expected = (PrivateKeyInfo) new PEMParser(expectedReader).readObject();
             PrivateKey expectedKey = new JcaPEMKeyConverter()
                 .setProvider(BC_PROVIDER)
@@ -78,7 +94,7 @@ public class PrivateKeyReaderTest {
             InputStream keyStream = cl.getResourceAsStream(keyFile);
             Reader expectedReader = new InputStreamReader(cl.getResourceAsStream(keyFile));
         ) {
-            PrivateKey actualKey = new PrivateKeyReader().read(keyStream, "password");
+            PrivateKey actualKey = constructor.newInstance().read(keyStream, "password");
 
             PKCS8EncryptedPrivateKeyInfo expected =
                 (PKCS8EncryptedPrivateKeyInfo) new PEMParser(expectedReader).readObject();
@@ -102,7 +118,7 @@ public class PrivateKeyReaderTest {
             InputStream keyStream = cl.getResourceAsStream(keyFile);
             Reader expectedReader = new InputStreamReader(cl.getResourceAsStream(keyFile));
         ) {
-            PrivateKey actualKey = new PrivateKeyReader().read(keyStream, null);
+            PrivateKey actualKey = constructor.newInstance().read(keyStream, null);
             PEMKeyPair expected = (PEMKeyPair) new PEMParser(expectedReader).readObject();
             PrivateKey expectedKey = new JcaPEMKeyConverter()
                 .setProvider(BC_PROVIDER)
@@ -119,7 +135,7 @@ public class PrivateKeyReaderTest {
             InputStream keyStream = cl.getResourceAsStream(keyFile);
             Reader expectedReader = new InputStreamReader(cl.getResourceAsStream(keyFile));
         ) {
-            PrivateKey actualKey = new PrivateKeyReader().read(keyStream, "password");
+            PrivateKey actualKey = constructor.newInstance().read(keyStream, "password");
             PEMEncryptedKeyPair expected = (PEMEncryptedKeyPair) new PEMParser(expectedReader).readObject();
 
             PEMDecryptorProvider provider = new JcePEMDecryptorProviderBuilder()
