@@ -16,8 +16,6 @@ package org.candlepin.util;
 
 import static org.candlepin.util.DERUtil.*;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -25,9 +23,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.Signature;
 import java.util.Date;
@@ -132,18 +127,6 @@ public abstract class AbstractX509CRLStreamWriter implements X509CRLStreamWriter
         writeValue(out, item, s);
     }
 
-    protected Signature createContentSigner(String signingAlg, PrivateKey key) throws
-        IOException {
-        try {
-            Signature s = Signature.getInstance(signingAlg, BouncyCastleProvider.PROVIDER_NAME);
-            s.initSign(key);
-            return s;
-        }
-        catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchProviderException e) {
-            throw new IOException("Could not create Signature for " + signingAlg, e);
-        }
-    }
-
     @Override
     public X509CRLStreamWriter preScan(File crlToChange) throws IOException {
         return preScan(crlToChange, null);
@@ -169,6 +152,8 @@ public abstract class AbstractX509CRLStreamWriter implements X509CRLStreamWriter
         locked = true;
         return this;
     }
+
+    protected abstract Signature createContentSigner(String signingAlg, PrivateKey key) throws IOException;
 
     protected abstract void writeToEmptyCrl(OutputStream out) throws IOException;
 

@@ -18,7 +18,6 @@ import static org.candlepin.util.DERUtil.*;
 
 import org.candlepin.pki.impl.JSSPKIUtility;
 
-import org.bouncycastle.asn1.ASN1InputStream;
 import org.mozilla.jss.asn1.ASN1Util;
 import org.mozilla.jss.asn1.ASN1Value;
 import org.mozilla.jss.asn1.BIT_STRING;
@@ -59,7 +58,10 @@ import java.io.OutputStream;
 import java.math.BigInteger;
 import java.nio.channels.FileChannel;
 import java.security.GeneralSecurityException;
+import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.Signature;
 import java.security.SignatureException;
 import java.security.cert.CRLException;
 import java.security.cert.X509CRLEntry;
@@ -669,6 +671,20 @@ public class JSSX509CRLStreamWriter extends AbstractX509CRLStreamWriter {
         return oldTime;
     }
 
+    protected Signature createContentSigner(String signingAlg, PrivateKey key) throws
+        IOException {
+        try {
+            /* Don't use the JSS provider here.  It wants a org.mozilla.jss.crypto.PrivateKey which has to be
+             * created through a token (PKCS11 or otherwise). */
+            Signature s = Signature.getInstance(signingAlg);
+            s.initSign(key);
+            return s;
+        }
+        catch (InvalidKeyException | NoSuchAlgorithmException e) {
+            throw new IOException("Could not create Signature for " + signingAlg, e);
+        }
+    }
+
     /**
      * Find the longest length we can expect to see in a stream.
      *
@@ -699,8 +715,7 @@ public class JSSX509CRLStreamWriter extends AbstractX509CRLStreamWriter {
     }
 
     private byte[] streamToBytes(InputStream s) throws IOException {
-        // FIXME use findLimit
-        int bytesLeft = new ASN1InputStream(s).available(); //findLimit(s);
+        int bytesLeft = findLimit(s);
         byte[] bytes = new byte[bytesLeft];
         DataInputStream dis = new DataInputStream(s);
         dis.readFully(bytes);

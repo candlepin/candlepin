@@ -16,6 +16,8 @@ package org.candlepin.util;
 
 import static org.candlepin.util.DERUtil.*;
 
+import org.candlepin.pki.impl.BouncyCastleProviderLoader;
+
 import org.bouncycastle.asn1.ASN1BitString;
 import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.ASN1Enumerated;
@@ -63,7 +65,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigInteger;
+import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.Signature;
 import java.security.SignatureException;
 import java.security.cert.CRLException;
 import java.security.cert.CertificateEncodingException;
@@ -660,4 +665,16 @@ public class BouncyCastleX509CRLStreamWriter extends AbstractX509CRLStreamWriter
         return Time.getInstance(oldTime).getDate();
     }
 
+    @Override
+    protected Signature createContentSigner(String signingAlg, PrivateKey key) throws
+        IOException {
+        try {
+            Signature s = Signature.getInstance(signingAlg, BouncyCastleProviderLoader.BC_PROVIDER);
+            s.initSign(key);
+            return s;
+        }
+        catch (InvalidKeyException | NoSuchAlgorithmException e) {
+            throw new IOException("Could not create Signature for " + signingAlg, e);
+        }
+    }
 }
