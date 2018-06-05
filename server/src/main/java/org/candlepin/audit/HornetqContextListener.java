@@ -117,6 +117,8 @@ public class HornetqContextListener {
             settings.put("#", pagingConfig);
             config.setAddressesSettings(settings);
 
+            config.setConnectionTTLOverride(86400000L); // 24 hours
+
             hornetqServer = new HornetQServerImpl(config);
         }
         try {
@@ -184,6 +186,8 @@ public class HornetqContextListener {
 
             ServerLocator locator = HornetQClient.createServerLocatorWithoutHA(
                 new TransportConfiguration(InVMConnectorFactory.class.getName()));
+
+            locator.setReconnectAttempts(-1);
 
             ClientSessionFactory factory =  locator.createSessionFactory();
             ClientSession session = factory.createSession(true, true);
