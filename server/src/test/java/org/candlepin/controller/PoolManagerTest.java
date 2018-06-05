@@ -1276,6 +1276,10 @@ public class PoolManagerTest {
         when(cqmock.list()).thenReturn(Collections.<Pool>emptyList());
         when(mockPoolCurator.getPoolsBySubscriptionIds(anyList())).thenReturn(cqmock);
 
+        CandlepinQuery<Consumer> cqmock2 = mock(CandlepinQuery.class);
+        when(cqmock2.list()).thenReturn(Collections.<Consumer>emptyList());
+        when(consumerCuratorMock.getConsumers(anyCollection())).thenReturn(cqmock2);
+
         this.manager.getRefresher(mockSubAdapter, mockOwnerAdapter).add(owner).run();
 
         verify(mockPoolCurator).batchDelete(eq(pools), anyCollectionOf(String.class));
