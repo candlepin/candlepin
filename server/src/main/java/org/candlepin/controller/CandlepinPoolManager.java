@@ -2238,8 +2238,7 @@ public class CandlepinPoolManager implements PoolManager {
 
                 // Recalculate status for affected consumers
                 for (List<String> subList : Lists.partition(consumers, 1000)) {
-                    for (String consumerId : subList) {
-                        Consumer consumer = consumerCurator.find(consumerId);
+                    for (Consumer consumer : this.consumerCurator.getConsumers(subList).list()) {
                         this.complianceRules.getStatus(consumer);
                         this.consumerCurator.detach(consumer);
                     }
