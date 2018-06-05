@@ -293,6 +293,28 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         return (Consumer) criteria.uniqueResult();
     }
 
+    /**
+     * Fetches consumers with the specified IDs. If a consumer does not exist for a given ID, no
+     * matching consumer object will be returned, nor will an exception be thrown. As such, the
+     * number of consumer objects fetched may be lower than the number of consumer IDs provided.
+     *
+     * @param consumerIds
+     *  A collection of consumer IDs specifying the consumers to fetch
+     *
+     * @return
+     *  A query to fetch the consumers with the specified consumer IDs
+     */
+    public CandlepinQuery<Consumer> getConsumers(Collection<String> consumerIds) {
+        if (consumerIds != null && !consumerIds.isEmpty()) {
+            DetachedCriteria criteria = DetachedCriteria.forClass(Consumer.class)
+                .add(CPRestrictions.in("id", consumerIds));
+
+            return this.cpQueryFactory.<Consumer>buildQuery(this.currentSession(), criteria);
+        }
+
+        return this.cpQueryFactory.<Consumer>buildQuery();
+    }
+
     @SuppressWarnings("unchecked")
     @Transactional
     public CandlepinQuery<Consumer> listByOwner(Owner owner) {
