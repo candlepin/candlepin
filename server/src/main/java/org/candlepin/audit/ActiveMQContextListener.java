@@ -138,6 +138,8 @@ public class ActiveMQContextListener {
             config.setJournalBufferSize_AIO(largeMsgSize);
             config.setJournalBufferSize_NIO(largeMsgSize);
 
+            config.setConnectionTTLOverride(86400000L); // 24 hours
+
             activeMQServer = new EmbeddedActiveMQ();
             activeMQServer.setConfiguration(config);
         }
@@ -312,6 +314,8 @@ public class ActiveMQContextListener {
 
             ServerLocator locator = ActiveMQClient.createServerLocatorWithoutHA(
                 new TransportConfiguration(InVMConnectorFactory.class.getName()));
+
+            locator.setReconnectAttempts(-1);
 
             ClientSessionFactory factory =  locator.createSessionFactory();
             ClientSession session = factory.createSession(true, true);
