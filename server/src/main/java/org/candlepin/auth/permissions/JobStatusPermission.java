@@ -28,17 +28,19 @@ import org.hibernate.criterion.Restrictions;
 import java.util.List;
 
 /**
- * Allows users/consumers access to any JobStatus from jobs that they
- * created/initiated.
+ * Determines users and consumers specific access to JobStatus.
+ *
+ * Users can view all jobs in their org, but only cancel jobs they started.
+ * Consumers can view and cancel jobs they started, but only those.
  *
  */
-public class CheckJobStatusPermission extends TypedPermission<JobStatus> {
+public class JobStatusPermission extends TypedPermission<JobStatus> {
 
     private String principalName;
     private String principalType;
     private List<String> allowedOrgIds;
 
-    public CheckJobStatusPermission(PrincipalData principalData, List<String> allowedOrgIds) {
+    public JobStatusPermission(PrincipalData principalData, List<String> allowedOrgIds) {
         this.principalName = principalData.getName();
         this.principalType = principalData.getType();
         this.allowedOrgIds = allowedOrgIds;
@@ -82,9 +84,7 @@ public class CheckJobStatusPermission extends TypedPermission<JobStatus> {
 
     @Override
     public boolean canAccessTarget(JobStatus target, SubResource subResource, Access required) {
-        boolean requiredAccessMet = Access.READ_ONLY.provides(required);
-        boolean principalNameMatch = principalName != null && principalName.equals(target.getPrincipalName());
-
+        boolean principalNameMatch = target.getPrincipalName().equals(principalName);
         String ownerId = target.getOwnerId();
         boolean ownerOk = ownerId != null && allowedOrgIds.contains(ownerId);
 
@@ -99,11 +99,20 @@ public class CheckJobStatusPermission extends TypedPermission<JobStatus> {
         }
 
         if ("user".equalsIgnoreCase(principalType)) {
-            // Org was OK, but only allow a user to view consumer's status.
-            return true;
+            // A user can only cancel the job if it started it
+            if (principalNameMatch) {
+                return Access.ALL.provides(required);
+            }
+            else {
+                return Access.READ_ONLY.provides(required);
+            }
+        }
+        else if ("consumer".equalsIgnoreCase(principalType)) {
+            // if this is a consumer it must match the principle name access
+            return Access.ALL.provides(required) && principalNameMatch;
         }
 
-        return requiredAccessMet && principalNameMatch;
+        return false;
     }
 
 }
