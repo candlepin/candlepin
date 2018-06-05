@@ -548,6 +548,16 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         }
     }
 
+    public void detach(E entity) {
+        getEntityManager().detach(entity);
+    }
+
+    public void batchDetach(Collection<E> entities) {
+        for (E entity : entities) {
+            detach(entity);
+        }
+    }
+
     @Transactional
     public void bulkDeleteTransactional(Collection<E> entities) {
         this.bulkDelete(entities);
