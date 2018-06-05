@@ -190,16 +190,150 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         return cSkuAndSubIdAndContract;
     }
 
+    private List<Consumer> getConsumersDirect() {
+        return this.getEntityManager()
+            .createQuery("select c from Consumer as c", Consumer.class)
+            .getResultList();
+    }
+
     @Test
     public void normalCreate() {
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
         consumerCurator.create(consumer);
 
-        List<Consumer> results = this.getEntityManager()
-            .createQuery("select c from Consumer as c", Consumer.class)
-            .getResultList();
+        List<Consumer> results = this.getConsumersDirect();
 
         assertEquals(1, results.size());
+    }
+
+    @Test
+    public void testGetConsumersNoConsumers() {
+        List<Consumer> expected = this.getConsumersDirect();
+        assertTrue(expected.isEmpty());
+
+        List<String> cids = Arrays.asList("c1", "c2", "c3");
+        List<Consumer> actual = consumerCurator.getConsumers(cids).list();
+        assertTrue(actual.isEmpty());
+    }
+
+    @Test
+    public void testGetConsumersThreeConsumers() {
+        Consumer c1 = new Consumer("c1", "u1", owner, ct);
+        Consumer c2 = new Consumer("c2", "u1", owner, ct);
+        Consumer c3 = new Consumer("c3", "u1", owner, ct);
+        consumerCurator.create(c1);
+        consumerCurator.create(c2);
+        consumerCurator.create(c3);
+        consumerCurator.flush();
+
+        List<Consumer> expected = this.getConsumersDirect();
+        assertEquals(3, expected.size());
+        assertTrue(expected.contains(c1));
+        assertTrue(expected.contains(c2));
+        assertTrue(expected.contains(c3));
+
+        List<String> cids = Arrays.asList(c1.getId(), c2.getId(), c3.getId());
+        List<Consumer> actual = consumerCurator.getConsumers(cids).list();
+        assertEquals(3, actual.size());
+        assertTrue(actual.contains(c1));
+        assertTrue(actual.contains(c2));
+        assertTrue(actual.contains(c3));
+    }
+
+    @Test
+    public void testGetConsumersFetchThreeOfFiveConsumers() {
+        Consumer c1 = new Consumer("c1", "u1", owner, ct);
+        Consumer c2 = new Consumer("c2", "u1", owner, ct);
+        Consumer c3 = new Consumer("c3", "u1", owner, ct);
+        Consumer c4 = new Consumer("c4", "u1", owner, ct);
+        Consumer c5 = new Consumer("c5", "u1", owner, ct);
+        consumerCurator.create(c1);
+        consumerCurator.create(c2);
+        consumerCurator.create(c3);
+        consumerCurator.create(c4);
+        consumerCurator.create(c5);
+        consumerCurator.flush();
+
+        List<Consumer> expected = this.getConsumersDirect();
+        assertEquals(5, expected.size());
+        assertTrue(expected.contains(c1));
+        assertTrue(expected.contains(c2));
+        assertTrue(expected.contains(c3));
+        assertTrue(expected.contains(c4));
+        assertTrue(expected.contains(c5));
+
+        List<String> cids = Arrays.asList(c1.getId(), c3.getId(), c5.getId());
+        List<Consumer> actual = consumerCurator.getConsumers(cids).list();
+        assertEquals(3, actual.size());
+        assertTrue(actual.contains(c1));
+        assertTrue(actual.contains(c3));
+        assertTrue(actual.contains(c5));
+        assertFalse(actual.contains(c2));
+        assertFalse(actual.contains(c4));
+    }
+
+    @Test
+    public void testGetConsumersFetchLessThanRequested() {
+        Consumer c1 = new Consumer("c1", "u1", owner, ct);
+        Consumer c2 = new Consumer("c2", "u1", owner, ct);
+        Consumer c3 = new Consumer("c3", "u1", owner, ct);
+        consumerCurator.create(c1);
+        consumerCurator.create(c2);
+        consumerCurator.create(c3);
+        consumerCurator.flush();
+
+        List<Consumer> expected = this.getConsumersDirect();
+        assertEquals(3, expected.size());
+        assertTrue(expected.contains(c1));
+        assertTrue(expected.contains(c2));
+        assertTrue(expected.contains(c3));
+
+        List<String> cids = Arrays.asList(c1.getId(), c2.getId(), c3.getId(), "c4", "c5");
+        List<Consumer> actual = consumerCurator.getConsumers(cids).list();
+        assertEquals(3, actual.size());
+        assertTrue(actual.contains(c1));
+        assertTrue(actual.contains(c2));
+        assertTrue(actual.contains(c3));
+    }
+
+    @Test
+    public void testGetConsumersNullInput() {
+        Consumer c1 = new Consumer("c1", "u1", owner, ct);
+        Consumer c2 = new Consumer("c2", "u1", owner, ct);
+        Consumer c3 = new Consumer("c3", "u1", owner, ct);
+        consumerCurator.create(c1);
+        consumerCurator.create(c2);
+        consumerCurator.create(c3);
+        consumerCurator.flush();
+
+        List<Consumer> expected = this.getConsumersDirect();
+        assertEquals(3, expected.size());
+        assertTrue(expected.contains(c1));
+        assertTrue(expected.contains(c2));
+        assertTrue(expected.contains(c3));
+
+        List<Consumer> actual = consumerCurator.getConsumers(null).list();
+        assertEquals(0, actual.size());
+    }
+
+    @Test
+    public void testGetConsumersEmptyInput() {
+        Consumer c1 = new Consumer("c1", "u1", owner, ct);
+        Consumer c2 = new Consumer("c2", "u1", owner, ct);
+        Consumer c3 = new Consumer("c3", "u1", owner, ct);
+        consumerCurator.create(c1);
+        consumerCurator.create(c2);
+        consumerCurator.create(c3);
+        consumerCurator.flush();
+
+        List<Consumer> expected = this.getConsumersDirect();
+        assertEquals(3, expected.size());
+        assertTrue(expected.contains(c1));
+        assertTrue(expected.contains(c2));
+        assertTrue(expected.contains(c3));
+
+        List<Consumer> actual = consumerCurator.getConsumers(new LinkedList()).list();
+        assertEquals(0, actual.size());
     }
 
     @Test
