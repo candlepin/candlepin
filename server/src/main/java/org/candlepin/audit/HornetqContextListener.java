@@ -152,6 +152,8 @@ public class HornetqContextListener {
             config.setJournalBufferSize_AIO(largeMsgSize);
             config.setJournalBufferSize_NIO(largeMsgSize);
 
+            config.setConnectionTTLOverride(86400000L); // 24 hours
+
             hornetqServer = new EmbeddedHornetQ();
             hornetqServer.setConfiguration(config);
         }
@@ -235,6 +237,8 @@ public class HornetqContextListener {
 
             ServerLocator locator = HornetQClient.createServerLocatorWithoutHA(
                 new TransportConfiguration(InVMConnectorFactory.class.getName()));
+
+            locator.setReconnectAttempts(-1);
 
             ClientSessionFactory factory =  locator.createSessionFactory();
             ClientSession session = factory.createSession(true, true);
