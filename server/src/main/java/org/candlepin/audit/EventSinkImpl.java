@@ -94,6 +94,7 @@ public class EventSinkImpl implements EventSink {
         ServerLocator locator = ActiveMQClient.createServerLocatorWithoutHA(
             new TransportConfiguration(InVMConnectorFactory.class.getName()));
         locator.setMinLargeMessageSize(largeMsgSize);
+        locator.setReconnectAttempts(-1);
         return locator.createSessionFactory();
     }
 
