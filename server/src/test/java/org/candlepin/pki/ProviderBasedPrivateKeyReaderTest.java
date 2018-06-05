@@ -42,20 +42,20 @@ import java.security.Provider;
 import java.util.Arrays;
 
 /**
- * Test PrivateKeyReader
+ * Test ProviderBasedPrivateKeyReader
  */
 @RunWith(Parameterized.class)
-public class PrivateKeyReaderTest {
+public class ProviderBasedPrivateKeyReaderTest {
     private static final Provider BC_PROVIDER = new BouncyCastleProvider();
     private static final char[] PASSWORD = "password".toCharArray();
 
     private ClassLoader cl;
 
-    private final Constructor<? extends PrivateKeyReader> constructor;
+    private final Constructor<? extends ProviderBasedPrivateKeyReader> constructor;
 
     @Before
     public void setUp() {
-        cl = PrivateKeyReaderTest.class.getClassLoader();
+        cl = ProviderBasedPrivateKeyReaderTest.class.getClassLoader();
     }
 
     @Parameterized.Parameters
@@ -63,7 +63,8 @@ public class PrivateKeyReaderTest {
         return Arrays.asList(BouncyCastlePrivateKeyReader.class);
     }
 
-    public PrivateKeyReaderTest(Class<? extends PrivateKeyReader> clazz) throws Exception {
+    public ProviderBasedPrivateKeyReaderTest(Class<? extends ProviderBasedPrivateKeyReader> clazz)
+        throws Exception {
         this.constructor = clazz.getConstructor();
     }
 

@@ -44,9 +44,9 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 
 /**
- * Implementation of PrivateKeyReader using BouncyCastle as the crypto provider.
+ * Implementation of ProviderBasedPrivateKeyReader using BouncyCastle as the crypto provider.
  */
-public class BouncyCastlePrivateKeyReader extends PrivateKeyReader {
+public class BouncyCastlePrivateKeyReader extends ProviderBasedPrivateKeyReader {
     @Override
     protected PrivateKeyPemParser pkcS8EncryptedPrivateKeyPemParser() {
         return new PKCS8EncryptedPrivateKeyPemParser();
