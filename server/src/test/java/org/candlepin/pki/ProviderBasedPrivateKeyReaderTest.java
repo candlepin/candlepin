@@ -60,7 +60,7 @@ public class ProviderBasedPrivateKeyReaderTest {
 
     @Parameterized.Parameters
     public static Iterable<Class> data() {
-        return Arrays.asList(BouncyCastlePrivateKeyReader.class);
+        return Arrays.asList(BouncyCastlePrivateKeyReader.class, JSSPrivateKeyReader.class);
     }
 
     public ProviderBasedPrivateKeyReaderTest(Class<? extends ProviderBasedPrivateKeyReader> clazz)
@@ -131,12 +131,20 @@ public class ProviderBasedPrivateKeyReaderTest {
 
     @Test
     public void testReadEncryptedPKCS1() throws Exception {
-        String keyFile = "keys/pkcs1-aes256-encrypted.pem";
+        openPKCS1("keys/pkcs1-aes256-encrypted.pem", "password");
+    }
+
+    @Test
+    public void testRead3DESEncryptedPKCS1() throws Exception {
+        openPKCS1("keys/pkcs1-des-encrypted.pem", "password");
+    }
+
+    private void openPKCS1(String keyFile, String password) throws Exception {
         try (
             InputStream keyStream = cl.getResourceAsStream(keyFile);
             Reader expectedReader = new InputStreamReader(cl.getResourceAsStream(keyFile));
         ) {
-            PrivateKey actualKey = constructor.newInstance().read(keyStream, "password");
+            PrivateKey actualKey = constructor.newInstance().read(keyStream, password);
             PEMEncryptedKeyPair expected = (PEMEncryptedKeyPair) new PEMParser(expectedReader).readObject();
 
             PEMDecryptorProvider provider = new JcePEMDecryptorProviderBuilder()

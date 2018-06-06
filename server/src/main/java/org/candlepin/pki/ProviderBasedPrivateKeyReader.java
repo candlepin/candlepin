@@ -14,14 +14,27 @@
  */
 package org.candlepin.pki;
 
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Hex;
+
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.security.InvalidKeyException;
+import java.security.Key;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPrivateKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.crypto.EncryptedPrivateKeyInfo;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
 
 /**
  * Class used to read a private key from a PKCS1 or PKCS8 file.  Inspired by the PemReader
@@ -132,14 +145,85 @@ public abstract class ProviderBasedPrivateKeyReader implements PrivateKeyReader 
             case "PRIVATE KEY":
                 return pkcS8PrivateKeyPemParser().decode(pem, null, null);
             case "ENCRYPTED PRIVATE KEY":
-                return pkcS8EncryptedPrivateKeyPemParser().decode(pem, password, null);
+                return pkcs8EncryptedPrivateKeyPemParser().decode(pem, password, null);
             default:
                 throw new IOException("Unrecognized type: " + type);
         }
     }
 
-    protected abstract PrivateKeyPemParser pkcS8EncryptedPrivateKeyPemParser();
-    protected abstract PrivateKeyPemParser pkcS8PrivateKeyPemParser();
     protected abstract PrivateKeyPemParser pkcs1EncryptedPrivateKeyPemParser();
     protected abstract PrivateKeyPemParser pkcs1PrivateKeyPemParser();
+
+    protected PrivateKeyPemParser pkcS8PrivateKeyPemParser() {
+        return new PKCS8PrivateKeyPemParser();
+    };
+
+    /**
+     * Read a PKCS8 key file
+     */
+    protected static class PKCS8PrivateKeyPemParser implements PrivateKeyPemParser {
+        @Override
+        public RSAPrivateKey decode(byte[] der, String password, Map<String, String> headers)
+            throws IOException {
+            try {
+                PKCS8EncodedKeySpec kspec = new PKCS8EncodedKeySpec(der);
+                KeyFactory kf = KeyFactory.getInstance("RSA");
+                return (RSAPrivateKey) kf.generatePrivate(kspec);
+            }
+            catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+                throw new IOException("Could not read key", e);
+            }
+        }
+    }
+
+    protected PrivateKeyPemParser pkcs8EncryptedPrivateKeyPemParser() {
+        return new PKCS8EncryptedPrivateKeyPemParser();
+    }
+
+    /**
+     * Read an encrypted PKCS8.  This does not work currently due to
+     * https://bugs.openjdk.java.net/browse/JDK-8076999
+     */
+    protected static class PKCS8EncryptedPrivateKeyPemParser implements PrivateKeyPemParser {
+        @Override
+        public RSAPrivateKey decode(byte[] der, String password, Map<String, String> headers)
+            throws IOException {
+            try {
+                // PBE stands for password based encryption
+                PBEKeySpec pbeKeySpec = new PBEKeySpec(getPassword(password));
+                EncryptedPrivateKeyInfo encryptedInfo = new EncryptedPrivateKeyInfo(der);
+                SecretKeyFactory skf = SecretKeyFactory.getInstance(encryptedInfo.getAlgName());
+                Key secret = skf.generateSecret(pbeKeySpec);
+                PKCS8EncodedKeySpec pkcsSpec = encryptedInfo.getKeySpec(secret);
+                KeyFactory kf = KeyFactory.getInstance("RSA");
+                return (RSAPrivateKey) kf.generatePrivate(pkcsSpec);
+            }
+            catch (NoSuchAlgorithmException | InvalidKeySpecException | InvalidKeyException e) {
+                throw new IOException("Could not read key", e);
+            }
+        }
+    }
+
+    /**
+     * Abstract class to look at the DEK-Info header in the OpenSSL style of encrypted key files.
+     */
+    protected abstract static class AbstractPKCS1EncryptedPrivateKeyPemParser implements PrivateKeyPemParser {
+        protected String algoName = null;
+        protected byte[] iv = null;
+
+        protected void readHeaders(Map<String, String> headers) throws IOException {
+            for (Map.Entry<String, String> header : headers.entrySet()) {
+                if (header.getKey().equals("DEK-Info")) {
+                    int index = header.getValue().indexOf(',');
+                    algoName = header.getValue().substring(0, index);
+                    try {
+                        iv = Hex.decodeHex(header.getValue().substring(index + 1).toCharArray());
+                    }
+                    catch (DecoderException e) {
+                        throw new IOException("Could not read key", e);
+                    }
+                }
+            }
+        }
+    }
 }
