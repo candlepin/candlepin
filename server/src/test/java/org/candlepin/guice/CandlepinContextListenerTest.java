@@ -30,7 +30,6 @@ import org.candlepin.common.config.ConfigurationPrefixes;
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.junit.CandlepinLiquibaseResource;
-import org.candlepin.model.Status;
 import org.candlepin.pinsetter.core.PinsetterContextListener;
 
 import com.google.inject.AbstractModule;
@@ -46,7 +45,6 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -55,6 +53,8 @@ import java.util.concurrent.ScheduledExecutorService;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
+
+
 
 /**
  * CandlepinContextListenerTest
@@ -127,13 +127,13 @@ public class CandlepinContextListenerTest {
         listener.contextInitialized(evt);
         verify(hqlistener).contextInitialized(any(Injector.class));
         verify(pinlistener).contextInitialized();
-        verify(ctx).setAttribute(
-            eq(CandlepinContextListener.CONFIGURATION_NAME), eq(config));
+        verify(ctx).setAttribute(eq(CandlepinContextListener.CONFIGURATION_NAME), eq(config));
         verify(configRead).verify(eq(ctx));
 
-        Set<String> displayedCapabilities = new HashSet<>(Arrays.asList(Status.getAvailableCapabilities()));
-        Set<String> expectedCapabilities = new HashSet<>(Arrays.asList(Status.DEFAULT_CAPABILITIES));
-        assertEquals(expectedCapabilities, displayedCapabilities);
+        CandlepinCapabilities expected = new CandlepinCapabilities();
+        CandlepinCapabilities actual = CandlepinCapabilities.getCapabilities();
+
+        assertEquals(expected, actual);
     }
 
     @Test
@@ -146,12 +146,12 @@ public class CandlepinContextListenerTest {
         prepareForInitialization();
         listener.contextInitialized(evt);
 
-        Set<String> expectedCapabilities = new HashSet<>(Arrays.asList(Status.DEFAULT_CAPABILITIES));
-        expectedCapabilities.remove("cores");
-        expectedCapabilities.remove("ram");
+        CandlepinCapabilities expected = new CandlepinCapabilities();
+        expected.removeAll(testSet);
 
-        Set<String> displayedCapabilities = new HashSet<>(Arrays.asList(Status.getAvailableCapabilities()));
-        assertEquals(expectedCapabilities, displayedCapabilities);
+        CandlepinCapabilities actual = CandlepinCapabilities.getCapabilities();
+
+        assertEquals(expected, actual);
     }
 
     @Test

@@ -12,12 +12,13 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-
 package org.candlepin.cache;
 
-import org.candlepin.model.Status;
+import org.candlepin.dto.api.v1.StatusDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+
 
 /**
  * Caches a {@link org.candlepin.model.Status} for 5 seconds.
@@ -30,14 +31,14 @@ public class StatusCache {
     private static final int STATUS_CACHE_TTL = 5000;
 
     /** Cached status object; Will be discarded after STATUS_CACHE_TTL milliseconds */
-    private static volatile Status cachedStatus;
+    private static volatile StatusDTO cachedStatus;
 
 
     /**
      * Gets the current Status in the cache.
      * @return the current {@link Status}, null if it has not yet been set.
      */
-    public Status getStatus() {
+    public StatusDTO getStatus() {
         synchronized (LOCK) {
             // Check if we can return our cached status
             if (cachedStatus != null && cachedStatus.getTimeUTC() != null) {
@@ -62,7 +63,7 @@ public class StatusCache {
      *
      * @param status the Status to set.
      */
-    public void setStatus(Status status) {
+    public void setStatus(StatusDTO status) {
         synchronized (LOCK) {
             cachedStatus = status;
         }

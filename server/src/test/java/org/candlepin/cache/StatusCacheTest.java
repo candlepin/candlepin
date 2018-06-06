@@ -17,9 +17,7 @@ package org.candlepin.cache;
 
 import static org.junit.Assert.*;
 
-import org.candlepin.model.CandlepinModeChange;
-import org.candlepin.model.Rules;
-import org.candlepin.model.Status;
+import org.candlepin.dto.api.v1.StatusDTO;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -44,9 +42,11 @@ public class StatusCacheTest {
     @Test
     public void setAndGet() {
         StatusCache cache = new StatusCache();
-        Status status = new Status(true, "2.0", "2.0", false, "4.2",
-            Rules.RulesSourceEnum.DATABASE, CandlepinModeChange.Mode.NORMAL,
-            CandlepinModeChange.Reason.STARTUP, new Date());
+
+        StatusDTO status = new StatusDTO()
+            .setResult(true)
+            .setTimeUTC(new Date());
+
         cache.setStatus(status);
         assertEquals(status, cache.getStatus());
     }
@@ -54,9 +54,11 @@ public class StatusCacheTest {
     @Test
     public void testExpiresAfter5Seconds() throws Exception {
         StatusCache cache = new StatusCache();
-        Status status = new Status(true, "2.0", "2.0", false, "4.2",
-            Rules.RulesSourceEnum.DATABASE, CandlepinModeChange.Mode.NORMAL,
-            CandlepinModeChange.Reason.STARTUP, new Date());
+
+        StatusDTO status = new StatusDTO()
+            .setResult(true)
+            .setTimeUTC(new Date());
+
         cache.setStatus(status);
         assertEquals(status, cache.getStatus());
         Thread.sleep(6000L);
@@ -66,9 +68,10 @@ public class StatusCacheTest {
     @Test
     public void multipleInstancesShareSameStatus() {
         StatusCache cache1 = new StatusCache();
-        Status status = new Status(true, "2.0", "2.0", false, "4.2",
-            Rules.RulesSourceEnum.DATABASE, CandlepinModeChange.Mode.NORMAL,
-            CandlepinModeChange.Reason.STARTUP, new Date());
+        StatusDTO status = new StatusDTO()
+            .setResult(true)
+            .setTimeUTC(new Date());
+
         cache1.setStatus(status);
 
         StatusCache cache2 = new StatusCache();
