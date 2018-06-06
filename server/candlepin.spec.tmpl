@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.5.2
+Version: 2.5.3
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -220,6 +220,24 @@ fi
 
 #raw
 %changelog
+* Wed Jun 06 2018 Kevin Howell <khowell@redhat.com> 2.5.3-1
+- Moved Status from the model package to the DTO package (crog@redhat.com)
+- Added bulk consumer fetching to ConsumerCurator (crog@redhat.com)
+- 1570064: Two changes to make ActiveMQ clients more resilient:
+  (nmoumoul@redhat.com)
+- 1584259: Detach consumers from persistence context to avoid OOM
+  (awood@redhat.com)
+- Renamed and moved SchedulerStatus to the dto package (nmoumoul@redhat.com)
+- Added the UeberCertificateDTO and translator (crog@redhat.com)
+- 1581873: Added missing JsonFilter annotation to the DTOs (crog@redhat.com)
+- Added the ImportRecordDTO and ImportUpstreamConsumerDTO (crog@redhat.com)
+- 1572669: Update liquibase checksums (khowell@redhat.com)
+- Converted Owner.key to a hibernate @NaturalId (nmoumoul@redhat.com)
+- Upgrade hibernate to 5.2.17 (adarshvritant@gmail.com)
+- 1578967: Fixed edge case that was causing Qpid connections to remain open
+  (mstead@redhat.com)
+- Implement PostBindBonusPool preProcess lock-lessly (adarshvritant@gmail.com)
+
 * Thu May 17 2018 Kevin Howell <khowell@redhat.com> 2.5.2-1
 - 1578968: candlepin atom feeds are missing the description field
   (adarshvritant@gmail.com)
