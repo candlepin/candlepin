@@ -14,8 +14,6 @@
  */
 package org.candlepin.pki;
 
-import org.apache.commons.codec.DecoderException;
-import org.apache.commons.codec.binary.Hex;
 import org.bouncycastle.asn1.ASN1Integer;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -24,39 +22,20 @@ import org.bouncycastle.openssl.PEMDecryptorProvider;
 import org.bouncycastle.openssl.jcajce.JcePEMDecryptorProviderBuilder;
 import org.bouncycastle.operator.OperatorCreationException;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.security.InvalidKeyException;
-import java.security.Key;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.RSAPrivateCrtKeySpec;
 import java.util.Enumeration;
 import java.util.Map;
-
-import javax.crypto.EncryptedPrivateKeyInfo;
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.PBEKeySpec;
 
 /**
  * Implementation of ProviderBasedPrivateKeyReader using BouncyCastle as the crypto provider.
  */
 public class BouncyCastlePrivateKeyReader extends ProviderBasedPrivateKeyReader {
-    @Override
-    protected PrivateKeyPemParser pkcS8EncryptedPrivateKeyPemParser() {
-        return new PKCS8EncryptedPrivateKeyPemParser();
-    }
-
-    @Override
-    protected PrivateKeyPemParser pkcS8PrivateKeyPemParser() {
-        return new PKCS8PrivateKeyPemParser();
-    }
-
     @Override
     protected PrivateKeyPemParser pkcs1EncryptedPrivateKeyPemParser() {
         return new PKCS1EncryptedPrivateKeyPemParser();
@@ -67,47 +46,6 @@ public class BouncyCastlePrivateKeyReader extends ProviderBasedPrivateKeyReader 
         return new PKCS1PrivateKeyPemParser();
     }
 
-    /**
-     * Read an encrypted PKCS8.  This does not work currently due to
-     * https://bugs.openjdk.java.net/browse/JDK-8076999
-     */
-    private static class PKCS8EncryptedPrivateKeyPemParser implements PrivateKeyPemParser {
-        @Override
-        public RSAPrivateKey decode(byte[] der, String password, Map<String, String> headers)
-            throws IOException {
-            try {
-                FileOutputStream fos = new FileOutputStream(new File("/tmp/xyz.der"));
-                fos.write(der);
-
-                // PBE stands for password based encryption
-                PBEKeySpec pbeKeySpec = new PBEKeySpec(getPassword(password));
-                EncryptedPrivateKeyInfo encryptedInfo = new EncryptedPrivateKeyInfo(der);
-                SecretKeyFactory skf = SecretKeyFactory.getInstance(encryptedInfo.getAlgName());
-                Key secret = skf.generateSecret(pbeKeySpec);
-                PKCS8EncodedKeySpec pkcsSpec = encryptedInfo.getKeySpec(secret);
-                KeyFactory kf = KeyFactory.getInstance("RSA");
-                return (RSAPrivateKey) kf.generatePrivate(pkcsSpec);
-            }
-            catch (NoSuchAlgorithmException | InvalidKeySpecException | InvalidKeyException e) {
-                throw new IOException("Could not read key", e);
-            }
-        }
-    }
-
-    private static class PKCS8PrivateKeyPemParser implements PrivateKeyPemParser {
-        @Override
-        public RSAPrivateKey decode(byte[] der, String password, Map<String, String> headers)
-            throws IOException {
-            try {
-                PKCS8EncodedKeySpec kspec = new PKCS8EncodedKeySpec(der);
-                KeyFactory kf = KeyFactory.getInstance("RSA");
-                return (RSAPrivateKey) kf.generatePrivate(kspec);
-            }
-            catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-                throw new IOException("Could not read key", e);
-            }
-        }
-    }
 
     /**
      * Read an OpenSSL created RSA key.  For unencrypted RSA keys, OpenSSL uses the PKCS1 format defined in
@@ -122,8 +60,7 @@ public class BouncyCastlePrivateKeyReader extends ProviderBasedPrivateKeyReader 
             Enumeration asn1 = seq.getObjects();
 
             BigInteger version = ((ASN1Integer) asn1.nextElement()).getValue();
-            if (version.intValue() != 0 && version.intValue() != 1)
-            {
+            if (version.intValue() != 0 && version.intValue() != 1) {
                 throw new IllegalArgumentException("wrong version for RSA private key");
             }
 
@@ -175,26 +112,12 @@ public class BouncyCastlePrivateKeyReader extends ProviderBasedPrivateKeyReader 
      * Note this class uses BouncyCastle to do the decryption and should be replaced if we switch crypto
      * providers.
      */
-    private static class PKCS1EncryptedPrivateKeyPemParser implements PrivateKeyPemParser {
+    private static class PKCS1EncryptedPrivateKeyPemParser extends
+        AbstractPKCS1EncryptedPrivateKeyPemParser {
         @Override
         public RSAPrivateKey decode(byte[] data, String password, Map<String, String> headers)
             throws IOException {
-
-            String algoName = null;
-            byte[] iv = null;
-
-            for (Map.Entry<String, String> header : headers.entrySet()) {
-                if (header.getKey().equals("DEK-Info")) {
-                    int index = header.getValue().indexOf(',');
-                    algoName = header.getValue().substring(0, index);
-                    try {
-                        iv = Hex.decodeHex(header.getValue().substring(index + 1).toCharArray());
-                    }
-                    catch (DecoderException e) {
-                        throw new IOException("Could not read key", e);
-                    }
-                }
-            }
+            readHeaders(headers);  // prime the algoName and iv class fields
 
             if (algoName == null || iv == null) {
                 throw new IOException("Could not read key headers");
