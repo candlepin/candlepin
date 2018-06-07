@@ -14,7 +14,6 @@
  */
 package org.candlepin.service.impl;
 
-import static org.candlepin.pki.impl.BouncyCastleProviderLoader.*;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -51,7 +50,7 @@ import org.candlepin.model.dto.Subscription;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
-import org.candlepin.pki.impl.BouncyCastleProviderLoader;
+import org.candlepin.pki.impl.JSSProviderLoader;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.CertificateSizeException;
 import org.candlepin.util.Util;
@@ -186,7 +185,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     };
 
     static {
-        BouncyCastleProviderLoader.addProvider();
+        JSSProviderLoader.addProvider();
     }
 
     @BeforeClass
@@ -199,7 +198,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
         try {
             reader = new PEMParser(new InputStreamReader(keyStream));
             keyPair = new JcaPEMKeyConverter()
-                .setProvider(BC_PROVIDER)
                 .getKeyPair((PEMKeyPair) reader.readObject());
         }
         finally {

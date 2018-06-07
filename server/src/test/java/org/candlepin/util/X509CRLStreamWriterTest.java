@@ -87,7 +87,7 @@ public class X509CRLStreamWriterTest {
 
     @Parameterized.Parameters
     public static Iterable<Class> data() {
-        return Arrays.asList(BouncyCastleX509CRLStreamWriter.class, JSSX509CRLStreamWriter.class);
+        return Arrays.asList(JSSX509CRLStreamWriter.class);
     }
 
     private X500Name issuer;

@@ -60,7 +60,7 @@ public class ProviderBasedPrivateKeyReaderTest {
 
     @Parameterized.Parameters
     public static Iterable<Class> data() {
-        return Arrays.asList(BouncyCastlePrivateKeyReader.class, JSSPrivateKeyReader.class);
+        return Arrays.asList(JSSPrivateKeyReader.class);
     }
 
     public ProviderBasedPrivateKeyReaderTest(Class<? extends ProviderBasedPrivateKeyReader> clazz)

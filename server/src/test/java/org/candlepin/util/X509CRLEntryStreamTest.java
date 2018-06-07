@@ -76,7 +76,7 @@ public class X509CRLEntryStreamTest {
 
     @Parameterized.Parameters
     public static Iterable<Class> data() {
-        return Arrays.asList(BouncyCastleX509CRLEntryStream.class, JSSX509CRLEntryStream.class);
+        return Arrays.asList(JSSX509CRLEntryStream.class);
     }
 
     private File derFile;

@@ -42,6 +42,6 @@ public class CertificateReaderTest {
                     put(ConfigProperties.CA_KEY_PASSWORD, "password");
                 }
             });
-        new CertificateReader(config, new BouncyCastlePrivateKeyReader());
+        new CertificateReader(config, new JSSPrivateKeyReader());
     }
 }
