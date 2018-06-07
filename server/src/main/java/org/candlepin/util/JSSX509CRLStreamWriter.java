@@ -18,6 +18,8 @@ import static org.candlepin.util.DERUtil.*;
 
 import org.candlepin.pki.impl.JSSPKIUtility;
 
+import com.google.common.io.ByteStreams;
+
 import org.mozilla.jss.asn1.ASN1Util;
 import org.mozilla.jss.asn1.ASN1Value;
 import org.mozilla.jss.asn1.BIT_STRING;
@@ -47,16 +49,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigInteger;
-import java.nio.channels.FileChannel;
 import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -207,7 +206,7 @@ public class JSSX509CRLStreamWriter extends AbstractX509CRLStreamWriter {
              */
             byte[] oldExtensions = null;
 
-            byte[] remainingCrl = streamToBytes(crlToChange);
+            byte[] remainingCrl = ByteStreams.toByteArray(crlToChange);
             DerInputStream derIn = new DerInputStream(remainingCrl);
 
             while (derIn.available() > 0) {
@@ -296,7 +295,7 @@ public class JSSX509CRLStreamWriter extends AbstractX509CRLStreamWriter {
 
     @Override
     protected void writeToEmptyCrl(OutputStream out) throws IOException {
-        byte[] oldCrlbytes = streamToBytes(crlIn);
+        byte[] oldCrlbytes = ByteStreams.toByteArray(crlIn);
         Date nextUpdate;
         CRLExtensions newExts;
         X500Name issuer;
@@ -671,6 +670,7 @@ public class JSSX509CRLStreamWriter extends AbstractX509CRLStreamWriter {
         return oldTime;
     }
 
+    @Override
     protected Signature createContentSigner(String signingAlg, PrivateKey key) throws
         IOException {
         try {
@@ -684,42 +684,4 @@ public class JSSX509CRLStreamWriter extends AbstractX509CRLStreamWriter {
             throw new IOException("Could not create Signature for " + signingAlg, e);
         }
     }
-
-    /**
-     * Find the longest length we can expect to see in a stream.
-     *
-     * @param in the InputStream to examine
-     * @return the length or MAX_VALUE
-     * @throws IOException in the event of stream read errors
-     */
-    protected int findLimit(InputStream in) throws IOException {
-        // Most of this code is cribbed from BouncyCastle's StreamUtil.
-        if (in instanceof ByteArrayInputStream || in instanceof BufferedInputStream) {
-            return in.available();
-        }
-        else if (in instanceof FileInputStream) {
-            FileChannel channel = ((FileInputStream) in).getChannel();
-            // I'm unsure why a null chanel maps to MAX_VALUE but that's what was in the original
-            long size = (channel != null) ? channel.size() : Integer.MAX_VALUE;
-
-            if (size < Integer.MAX_VALUE) {
-                return (int) size;
-            }
-        }
-
-        long maxMemory = Runtime.getRuntime().maxMemory();
-        if (maxMemory > Integer.MAX_VALUE) {
-            return Integer.MAX_VALUE;
-        }
-        return (int) maxMemory;
-    }
-
-    private byte[] streamToBytes(InputStream s) throws IOException {
-        int bytesLeft = findLimit(s);
-        byte[] bytes = new byte[bytesLeft];
-        DataInputStream dis = new DataInputStream(s);
-        dis.readFully(bytes);
-        return bytes;
-    }
-
 }
