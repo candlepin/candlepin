@@ -16,10 +16,10 @@ package org.candlepin.test;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.MapConfiguration;
-import org.candlepin.pki.BouncyCastlePrivateKeyReader;
+import org.candlepin.pki.JSSPrivateKeyReader;
 import org.candlepin.pki.PrivateKeyReader;
 import org.candlepin.pki.CertificateReader;
-import org.candlepin.pki.impl.BouncyCastleProviderLoader;
+import org.candlepin.pki.impl.JSSProviderLoader;
 
 import org.junit.Assert;
 
@@ -38,13 +38,13 @@ import javax.inject.Inject;
  */
 public class CertificateReaderForTesting extends CertificateReader {
     static {
-        BouncyCastleProviderLoader.addProvider();
+        JSSProviderLoader.addProvider();
     }
 
     @Inject
     public CertificateReaderForTesting(Configuration config, PrivateKeyReader reader)
         throws CertificateException, IOException {
-        super(new MapConfiguration(), new BouncyCastlePrivateKeyReader());
+        super(new MapConfiguration(), new JSSPrivateKeyReader());
     }
 
     @Override

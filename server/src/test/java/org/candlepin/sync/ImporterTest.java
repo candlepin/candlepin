@@ -56,7 +56,7 @@ import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.ProviderBasedPKIUtility;
-import org.candlepin.pki.impl.BouncyCastleProviderLoader;
+import org.candlepin.pki.impl.JSSProviderLoader;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.sync.Importer.ImportFile;
@@ -122,7 +122,7 @@ public class ImporterTest {
     private ModelTranslator translator;
 
     static {
-        BouncyCastleProviderLoader.addProvider();
+        JSSProviderLoader.addProvider();
     }
 
     @Before

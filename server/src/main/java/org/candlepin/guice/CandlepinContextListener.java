@@ -116,7 +116,6 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
     public void contextInitialized(ServletContextEvent sce) {
         log.info("Candlepin initializing context.");
 
-//        BouncyCastleProviderLoader.addProvider();
         JSSProviderLoader.addProvider();
 
         I18nManager.getInstance().setDefaultLocale(Locale.US);
