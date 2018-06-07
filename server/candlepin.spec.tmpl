@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.1.17
+Version: 2.1.18
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,13 @@ fi
 
 #raw
 %changelog
+* Thu Jun 07 2018 Kevin Howell <khowell@redhat.com> 2.1.18-1
+- Added bulk consumer fetching to ConsumerCurator (crog@redhat.com)
+- 1571425: Two changes to make HornetQ clients more resilient
+  (nmoumoul@redhat.com)
+- 1584256: Detach consumers from persistence context to avoid OOM
+  (awood@redhat.com)
+
 * Wed May 16 2018 Kevin Howell <khowell@redhat.com> 2.1.17-1
 - 1578039: Ensure getHost is always org-scoped (khowell@redhat.com)
 - 1471836: Unmapped guest pool status now points to relevant KB article
