@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-04-06 11:02-0400\n"
+"POT-Creation-Date: 2018-06-07 15:56-0400\n"
 "PO-Revision-Date: 2017-10-18 11:33-0400\n"
 "Last-Translator: John Sefler <jsefler@redhat.com>\n"
 "Language-Team: Malayalam\n"
@@ -20,7 +20,7 @@ msgstr ""
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: common/src/main/java/org/candlepin/common/exceptions/mappers/BadRequestExceptionMapper.java:73
-#: server/src/main/java/org/candlepin/guice/I18nProvider.java:86
+#: server/src/main/java/org/candlepin/guice/I18nProvider.java:84
 msgid "Bad Request"
 msgstr "തെറ്റായ ആവശ്യം"
 
@@ -412,19 +412,19 @@ msgstr ""
 msgid "Auto-attach is disabled for owner \"{0}\"."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/controller/Entitler.java:264
-#: server/src/main/java/org/candlepin/controller/Entitler.java:502
+#: server/src/main/java/org/candlepin/controller/Entitler.java:262
+#: server/src/main/java/org/candlepin/controller/Entitler.java:500
 msgid ""
 "Development units may only be used on hosted servers and with orgs that have "
 "active subscriptions."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/controller/Entitler.java:473
+#: server/src/main/java/org/candlepin/controller/Entitler.java:471
 #, java-format
 msgid "SKU product not available to this development unit: \"{0}\""
 msgstr ""
 
-#: server/src/main/java/org/candlepin/controller/Entitler.java:479
+#: server/src/main/java/org/candlepin/controller/Entitler.java:477
 #, java-format
 msgid "Installed product not available to this development unit: \"{0}\""
 msgstr ""
@@ -469,7 +469,7 @@ msgid ""
 msgstr ""
 
 #: server/src/main/java/org/candlepin/hostedtest/HostedTestSubscriptionResource.java:296
-#: server/src/main/java/org/candlepin/model/EntitlementCurator.java:424
+#: server/src/main/java/org/candlepin/model/EntitlementCurator.java:426
 #: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:158
 #, java-format
 msgid "Product with ID \"{0}\" could not be found."
@@ -489,23 +489,23 @@ msgstr ""
 msgid "Content with ID \"{0}\" could not be found."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/model/AbstractHibernateCurator.java:770
+#: server/src/main/java/org/candlepin/model/AbstractHibernateCurator.java:780
 msgid "Request failed due to concurrent modification, please re-try."
 msgstr "ഒരേ സമയത്തുള്ള മാറ്റം വരുത്തലുകള്‍ കാരണം ആവശ്യപ്പെട്ടതു് പരാജയപ്പെട്ടു."
 
-#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:626
+#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:634
 #, java-format
 msgid "The system with UUID {0} is a virtual guest. It does not have guests."
 msgstr "യുയുഐഡി {0} ഉള്ള സിസ്റ്റം ഒരു വിര്‍ച്ച്വല്‍ ഗസ്റ്റാകുന്നു. ഇതിനു് ഗസ്റ്റുകള്‍ ലഭ്യമല്ല."
 
-#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:750
-#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:759
+#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:758
+#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:768
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:169
 #, java-format
 msgid "Unit with ID \"{0}\" could not be found."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/model/RulesCurator.java:108
+#: server/src/main/java/org/candlepin/model/RulesCurator.java:111
 msgid "No rules file found in the database"
 msgstr "ഡേറ്റാബെയ്സില്‍ നിയമ ഫയല്‍ ലഭ്യമായില്ല"
 
@@ -521,7 +521,7 @@ msgstr ""
 msgid "Problem generating ueber cert for owner {0}"
 msgstr "{0} ഉടമസ്ഥനുള്ള ueber cert ലഭ്യമാക്കുന്നതില്‍ പ്രശ്നമുണ്ടു്"
 
-#: server/src/main/java/org/candlepin/model/activationkeys/ActivationKeyCurator.java:72
+#: server/src/main/java/org/candlepin/model/activationkeys/ActivationKeyCurator.java:75
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:1461
 #, java-format
 msgid "ActivationKey with id {0} could not be found."
@@ -621,19 +621,19 @@ msgstr ""
 msgid "{0} COVERAGE PROBLEM.  Supports {1} of {2}"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:331
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:296
 #, java-format
 msgid "Subscriptions for {0} expired on: {1}"
 msgstr "{0}-നുള്ള സബ്സ്ക്രിപ്ഷനുകളുടെ കാലാവധി കഴിഞ്ഞിരിയ്ക്കുന്നു: {1}"
 
-#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:419
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:384
 #, java-format
 msgid "\"{0}\" Should contain name, priority and at least one attribute"
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:433
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:398
 msgid "second parameter should be the priority number."
 msgstr "രണ്ടാമത്തെ പരാമീറ്ററായിരിയ്ക്കണം മുന്‍ഗണനാ നമ്പര്‍."
 
@@ -1018,61 +1018,61 @@ msgstr "{0} യൂണിറ്റ് പരിഷ്കരിയ്ക്കു�
 msgid "Environment with ID \"{0}\" could not be found."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1676
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1678
 #: server/src/main/java/org/candlepin/resource/GuestIdResource.java:312
 #, java-format
 msgid "Cannot unregister {0} {1} because: {2}"
 msgstr "{0} {1} അണ്‍രജിസ്ടര്‍ ചെയ്യുവാന്‍ സാധ്യമല്ല, കാരണം: {2}"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1735
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1738
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1781
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1794
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1797
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1907
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1910
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1737
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1740
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1783
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1796
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1799
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1909
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1912
 msgid "Cannot retrieve content access certificate"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1761
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1763
 msgid "Content access body can not be requested for a share consumer"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1767
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1769
 msgid "Content access mode does not allow this request."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1840
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1842
 msgid "Unable to create entitlement certificate archive"
 msgstr "എന്റൈറ്റില്‍മെന്റ് സര്‍ട്ടിഫിക്കേറ്റ് ആര്‍ക്കൈവ് തയ്യാറാക്കുവാന്‍ സാധ്യമല്ല"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1923
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1925
 msgid "Share consumers must be bound to a specific pool"
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1936
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1938
 msgid "Cannot bind by multiple parameters."
 msgstr "അനവധി പരമീറ്ററുകള്‍ അനുസരിച്ചു് ബൈന്‍ഡ് ചെയ്യുവാന്‍ സാധ്യമല്ല."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author anipeter
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1940
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1942
 msgid "Cannot specify a quantity when auto-binding."
 msgstr "ഓട്ടോ-ബൈന്‍ഡിങ് ചെയ്യുമ്പോള്‍ വ്യാപ്തി നല്‍കുവാന്‍ സാധ്യമല്ല."
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2054
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2056
 #, java-format
 msgid "Ignoring request to auto-attach. It is disabled for org \"{0}\"."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2101
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2103
 msgid "Owner has autobind disabled."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2136
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2247
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2138
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2249
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:199
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:238
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:257
@@ -1082,44 +1082,39 @@ msgstr ""
 msgid "Entitlement with ID \"{0}\" could not be found."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2270
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2272
 #, java-format
 msgid "Entitlement Certificate with serial number \"{0}\" could not be found."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2292
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2294
 #, java-format
 msgid "No entitlements for consumer \"{0}\" with pool id \"{1}\""
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2399
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2458
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2507
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2401
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2460
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2509
 msgid "Can not export manifest of a share consumer"
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2409
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2411
 msgid "Unable to create export archive"
 msgstr "എക്സ്പോര്‍ട്ട് ആര്‍ക്കൈവ് തയ്യാറാക്കുവാന്‍ സാധ്യമല്ല"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2632
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2634
 #, java-format
 msgid "Problem regenerating ID cert for unit {0}"
 msgstr "യൂണിറ്റ് {0}-നുള്ള ഐഡി സര്‍ട്ട് തയ്യാറാക്കുന്നതില്‍ പ്രശ്നം"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2676
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2678
 #, java-format
 msgid "The system with UUID {0} is not a virtual guest."
 msgstr "യുയുഐഡി {0} ഉള്ള സിസ്റ്റം ഒരു വിര്‍ച്ച്വല്‍ ഗസ്റ്റല്ല."
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2690
-msgid ""
-"This host is under a different organization that you do not have access to"
-msgstr ""
-
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2772
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2763
 #, java-format
 msgid "Deletion record for hypervisor \"{0}\" not found."
 msgstr ""
@@ -1879,39 +1874,39 @@ msgstr "ആര്‍ക്കൈവ് {0} ശരിയായി കമ്പ്
 msgid "Not allowed to override values for: {0}"
 msgstr "ഇതിനുള്ള മൂല്ല്യങ്ങള്‍ മാറ്റവാന്‍ അനുവാദമില്ല: {0}"
 
-#: server/src/main/java/org/candlepin/util/PropertyValidator.java:77
+#: server/src/main/java/org/candlepin/util/PropertyValidator.java:79
 #, java-format
 msgid "The {0} name \"{1}\" must not exceed {2} characters in length"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/util/PropertyValidator.java:84
+#: server/src/main/java/org/candlepin/util/PropertyValidator.java:86
 #, java-format
 msgid "The value for {0} \"{1}\" must not exceed {2} characters in length"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/util/PropertyValidator.java:105
+#: server/src/main/java/org/candlepin/util/PropertyValidator.java:107
 #, java-format
 msgid "The {0} \"{1}\" must be an integer value"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/util/PropertyValidator.java:124
-#: server/src/main/java/org/candlepin/util/PropertyValidator.java:129
+#: server/src/main/java/org/candlepin/util/PropertyValidator.java:126
+#: server/src/main/java/org/candlepin/util/PropertyValidator.java:131
 #, java-format
 msgid "The {0} \"{1}\" must be a positive, integer value"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/util/PropertyValidator.java:148
+#: server/src/main/java/org/candlepin/util/PropertyValidator.java:150
 #, java-format
 msgid "The {0} \"{1}\" must be a long-integer value"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/util/PropertyValidator.java:167
-#: server/src/main/java/org/candlepin/util/PropertyValidator.java:172
+#: server/src/main/java/org/candlepin/util/PropertyValidator.java:169
+#: server/src/main/java/org/candlepin/util/PropertyValidator.java:174
 #, java-format
 msgid "The {0} \"{1}\" must be a positive, long-integer value"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/util/PropertyValidator.java:191
+#: server/src/main/java/org/candlepin/util/PropertyValidator.java:193
 #, java-format
 msgid "The {0} \"{1}\" must be a Boolean value"
 msgstr ""
