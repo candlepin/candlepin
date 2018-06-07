@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 0.9.54.26
+Version: 0.9.54.27
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,10 @@ fi
 
 #raw
 %changelog
+* Thu Jun 07 2018 Kevin Howell <khowell@redhat.com> 0.9.54.27-1
+- 1571423: Two changes to make HornetQ clients more resilient
+  (nmoumoul@redhat.com)
+
 * Thu Dec 07 2017 Kevin Howell <khowell@redhat.com> 0.9.54.26-1
 - 1519900: Added a per-org products migration validation Liquibase task
   (crog@redhat.com)
