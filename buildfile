@@ -119,7 +119,7 @@ HIBERNATE = [group('hibernate-core', 'hibernate-entitymanager', 'hibernate-c3p0'
               'org.jboss.logging:jboss-logging:jar:3.3.0.Final'
              ] + JAVAX
 
-POSTGRESQL = 'postgresql:postgresql:jar:9.0-801.jdbc4'
+POSTGRESQL = 'org.postgresql:postgresql:jar:42.2.2'
 
 SWAGGER = [group('swagger-jaxrs', 'swagger-core','swagger-models','swagger-annotations',
                      :under => 'io.swagger',
