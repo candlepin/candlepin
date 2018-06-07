@@ -15,6 +15,7 @@
 package org.candlepin.policy.js.compliance;
 
 import org.candlepin.model.Entitlement;
+import org.candlepin.util.DateRange;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
 
@@ -58,7 +59,7 @@ public class ComplianceStatus {
 
     public ComplianceStatus(Date date) {
         this();
-        this.date = date;
+        this.setDate(date);
     }
 
     /**
@@ -66,6 +67,10 @@ public class ComplianceStatus {
      */
     public Map<String, Set<Entitlement>> getCompliantProducts() {
         return compliantProducts;
+    }
+
+    public void setDate(Date date) {
+        this.date = date;
     }
 
     /**

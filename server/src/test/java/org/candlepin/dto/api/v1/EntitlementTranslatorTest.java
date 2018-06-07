@@ -35,12 +35,24 @@ import static org.junit.Assert.assertNull;
 public class EntitlementTranslatorTest extends
     AbstractTranslatorTest<Entitlement, EntitlementDTO, EntitlementTranslator> {
 
-    protected EntitlementTranslator translator = new EntitlementTranslator();
+    protected EntitlementTranslator translator;;
 
     private OwnerTranslatorTest ownerTranslatorTest = new OwnerTranslatorTest();
     private CertificateTranslatorTest certificateTranslatorTest = new CertificateTranslatorTest();
     private PoolTranslatorTest poolTranslatorTest = new PoolTranslatorTest();
     private ConsumerTranslatorTest consumerTranslatorTest = new ConsumerTranslatorTest();
+
+
+    @Override
+    protected EntitlementTranslator initObjectTranslator() {
+        this.ownerTranslatorTest.initObjectTranslator();
+        this.certificateTranslatorTest.initObjectTranslator();
+        this.poolTranslatorTest.initObjectTranslator();
+        this.consumerTranslatorTest.initObjectTranslator();
+
+        this.translator = new EntitlementTranslator();
+        return this.translator;
+    }
 
     @Override
     protected void initModelTranslator(ModelTranslator modelTranslator) {
@@ -50,11 +62,6 @@ public class EntitlementTranslatorTest extends
         this.consumerTranslatorTest.initModelTranslator(modelTranslator);
 
         modelTranslator.registerTranslator(this.translator, Entitlement.class, EntitlementDTO.class);
-    }
-
-    @Override
-    protected EntitlementTranslator initObjectTranslator() {
-        return this.translator;
     }
 
     @Override

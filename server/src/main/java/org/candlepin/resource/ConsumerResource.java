@@ -45,6 +45,7 @@ import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.CapabilityDTO;
 import org.candlepin.dto.api.v1.CertificateDTO;
+import org.candlepin.dto.api.v1.ComplianceStatusDTO;
 import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.ConsumerInstalledProductDTO;
 import org.candlepin.dto.api.v1.EntitlementDTO;
@@ -2697,20 +2698,26 @@ public class ConsumerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}/compliance")
     @Transactional
-    public ComplianceStatus getComplianceStatus(
+    public ComplianceStatusDTO getComplianceStatus(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid,
         @ApiParam("Date to get compliance information for, default is now.")
         @QueryParam("on_date") String onDate) {
+
+        ComplianceStatus status = null;
+
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(uuid);
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
 
         Date date = ResourceDateParser.parseDateString(onDate);
         if (ctype.isType(ConsumerTypeEnum.SHARE)) {
             logShareConsumerRequestWarning("fetch compliance", consumer);
-            return new ComplianceStatus(date);
+            status = new ComplianceStatus(date);
+        }
+        else {
+            status = this.complianceRules.getStatus(consumer, date);
         }
 
-        return this.complianceRules.getStatus(consumer, date);
+        return this.translator.translate(status, ComplianceStatusDTO.class);
     }
 
     @ApiOperation(notes = "Retrieves a Compliance Status list for a list of Consumers",
@@ -2719,10 +2726,10 @@ public class ConsumerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/compliance")
     @Transactional
-    public Map<String, ComplianceStatus> getComplianceStatusList(
+    public Map<String, ComplianceStatusDTO> getComplianceStatusList(
         @QueryParam("uuid") @Verify(value = Consumer.class, nullable = true) List<String> uuids) {
 
-        Map<String, ComplianceStatus> results = new HashMap<>();
+        Map<String, ComplianceStatusDTO> results = new HashMap<>();
 
         if (uuids != null && !uuids.isEmpty()) {
             for (Consumer consumer : consumerCurator.findByUuids(uuids)) {
@@ -2736,7 +2743,8 @@ public class ConsumerResource {
                 else {
                     status = complianceRules.getStatus(consumer, null);
                 }
-                results.put(consumer.getUuid(), status);
+
+                results.put(consumer.getUuid(), this.translator.translate(status, ComplianceStatusDTO.class));
             }
         }
 

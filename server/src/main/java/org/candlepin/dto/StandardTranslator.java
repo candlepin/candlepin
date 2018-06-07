@@ -27,6 +27,10 @@ import org.candlepin.dto.api.v1.CertificateDTO;
 import org.candlepin.dto.api.v1.CertificateSerialDTO;
 import org.candlepin.dto.api.v1.CertificateSerialTranslator;
 import org.candlepin.dto.api.v1.CertificateTranslator;
+import org.candlepin.dto.api.v1.ComplianceReasonDTO;
+import org.candlepin.dto.api.v1.ComplianceReasonTranslator;
+import org.candlepin.dto.api.v1.ComplianceStatusDTO;
+import org.candlepin.dto.api.v1.ComplianceStatusTranslator;
 import org.candlepin.dto.api.v1.ConsumerInstalledProductDTO;
 import org.candlepin.dto.api.v1.ConsumerInstalledProductTranslator;
 import org.candlepin.dto.api.v1.ContentDTO;
@@ -92,6 +96,8 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.pinsetter.core.model.JobStatus;
+import org.candlepin.policy.js.compliance.ComplianceReason;
+import org.candlepin.policy.js.compliance.ComplianceStatus;
 
 import com.google.inject.Inject;
 
@@ -119,6 +125,10 @@ public class StandardTranslator extends SimpleModelTranslator {
             new CertificateSerialTranslator(), CertificateSerial.class, CertificateSerialDTO.class);
         this.registerTranslator(
             new CertificateTranslator(), Certificate.class, CertificateDTO.class);
+        this.registerTranslator(
+            new ComplianceReasonTranslator(), ComplianceReason.class, ComplianceReasonDTO.class);
+        this.registerTranslator(
+            new ComplianceStatusTranslator(), ComplianceStatus.class, ComplianceStatusDTO.class);
         this.registerTranslator(
             new org.candlepin.dto.api.v1.ConsumerTranslator(
             consumerTypeCurator, environmentCurator, ownerCurator),

@@ -43,6 +43,7 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.api.v1.CertificateDTO;
 import org.candlepin.dto.api.v1.ConsumerDTO;
+import org.candlepin.dto.api.v1.ComplianceStatusDTO;
 import org.candlepin.dto.api.v1.ConsumerTypeDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.model.CandlepinQuery;
@@ -680,7 +681,7 @@ public class ConsumerResourceTest {
         when(mockComplianceRules.getStatus(any(Consumer.class), any(Date.class)))
             .thenReturn(status);
 
-        Map<String, ComplianceStatus> results = consumerResource.getComplianceStatusList(uuids);
+        Map<String, ComplianceStatusDTO> results = consumerResource.getComplianceStatusList(uuids);
         assertEquals(2, results.size());
         assertTrue(results.containsKey(c.getUuid()));
         assertTrue(results.containsKey(c2.getUuid()));

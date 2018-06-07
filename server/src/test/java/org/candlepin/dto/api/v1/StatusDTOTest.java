@@ -36,8 +36,6 @@ import java.util.Set;
 public class StatusDTOTest extends AbstractDTOTest<StatusDTO> {
 
     protected Map<String, Object> values;
-    protected OwnerDTOTest ownerDTOTest = new OwnerDTOTest();
-    protected EnvironmentDTOTest environmentDTOTest = new EnvironmentDTOTest();
 
     public StatusDTOTest() {
         super(StatusDTO.class);

@@ -349,11 +349,14 @@ public class EntitlementDTO extends TimestampedCandlepinDTO<EntitlementDTO> impl
      */
     @Override
     public String toString() {
+        PoolDTO pool = this.getPool();
+        ConsumerDTO consumer = this.getConsumer();
+
         return String.format("EntitlementDTO [id: %s, product id: %s, pool id: %s, consumer uuid: %s]",
-            this.id,
-            this.pool != null ? pool.getProductId() : null,
-            this.pool != null ? pool.getId() : null,
-            this.consumer != null ? consumer.getUuid() : null);
+            this.getId(),
+            pool != null ? pool.getProductId() : null,
+            pool != null ? pool.getId() : null,
+            consumer != null ? consumer.getUuid() : null);
     }
 
     /**

@@ -39,8 +39,8 @@ public abstract class AbstractTranslatorTest<S, D, T extends ObjectTranslator<S,
     public void init() {
         this.modelTranslator = new SimpleModelTranslator();
 
-        this.initModelTranslator(this.modelTranslator);
         this.translator = this.initObjectTranslator();
+        this.initModelTranslator(this.modelTranslator);
         this.source = this.initSourceObject();
         this.dest = this.initDestinationObject();
     }
