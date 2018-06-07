@@ -88,7 +88,7 @@
     <org.mozilla-rhino.version>1.7R3</org.mozilla-rhino.version>
     <com.sun.xml.bind-jaxb-impl.version>2.1.12</com.sun.xml.bind-jaxb-impl.version>
     <org.candlepin-candlepin-common.version>1.0.23</org.candlepin-candlepin-common.version>
-    <postgresql-postgresql.version>9.0-801.jdbc4</postgresql-postgresql.version>
+    <org.postgresql-postgresql.version>42.2.2</org.postgresql-postgresql.version>
     <mysql-mysql-connector-java.version>5.1.26</mysql-mysql-connector-java.version>
     <org.hsqldb-hsqldb.version>2.3.2</org.hsqldb-hsqldb.version>
   </properties>
@@ -898,9 +898,9 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>postgresql</groupId>
+      <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
-      <version>${postgresql-postgresql.version}</version>
+      <version>${org.postgresql-postgresql.version}</version>
       <exclusions>
         <exclusion>
           <groupId>*</groupId>

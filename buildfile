@@ -98,7 +98,7 @@ HIBERNATE = [group('hibernate-core', 'hibernate-entitymanager', 'hibernate-c3p0'
              'dom4j:dom4j:jar:1.6.1',
              'org.jboss.logging:jboss-logging:jar:3.1.1.GA'] + JAVAX
 
-POSTGRESQL = 'postgresql:postgresql:jar:9.0-801.jdbc4'
+POSTGRESQL = 'org.postgresql:postgresql:jar:42.2.2'
 
 MYSQL = 'mysql:mysql-connector-java:jar:5.1.26'
 
