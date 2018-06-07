@@ -106,7 +106,7 @@
     <com.fasterxml.jackson.dataformat-jackson-dataformat-yaml.version>2.4.5</com.fasterxml.jackson.dataformat-jackson-dataformat-yaml.version>
     <com.fasterxml.jackson.dataformat-jackson-dataformat-xml.version>2.4.5</com.fasterxml.jackson.dataformat-jackson-dataformat-xml.version>
     <org.candlepin-candlepin-common.version>2.0.3</org.candlepin-candlepin-common.version>
-    <postgresql-postgresql.version>9.0-801.jdbc4</postgresql-postgresql.version>
+    <org.postgresql-postgresql.version>42.2.2</org.postgresql-postgresql.version>
     <mysql-mysql-connector-java.version>5.1.26</mysql-mysql-connector-java.version>
     <org.hsqldb-hsqldb.version>2.3.2</org.hsqldb-hsqldb.version>
   </properties>
@@ -1114,9 +1114,9 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>postgresql</groupId>
+      <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
-      <version>${postgresql-postgresql.version}</version>
+      <version>${org.postgresql-postgresql.version}</version>
       <exclusions>
         <exclusion>
           <groupId>*</groupId>
