@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
+import java.util.Date;
 import java.util.Map;
 
 import javax.ws.rs.GET;
@@ -43,10 +44,11 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+
+
 /**
  * Status Resource
  */
-
 @Path("/status")
 @Api("status")
 public class StatusResource {
@@ -155,7 +157,8 @@ public class StatusResource {
             .setMode(mode != null ? mode.toString() : null)
             .setModeReason(modeChangeReason != null ? modeChangeReason.toString() : null)
             .setModeChangeTime(modeChange.getChangeTime())
-            .setManagerCapabilities(caps);
+            .setManagerCapabilities(caps)
+            .setTimeUTC(new Date());
 
         statusCache.setStatus(status);
 
