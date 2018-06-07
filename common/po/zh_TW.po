@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-05-16 09:48-0400\n"
+"POT-Creation-Date: 2018-06-07 14:28-0400\n"
 "PO-Revision-Date: 2017-11-10 09:11+0000\n"
 "Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
 "Language-Team: Chinese (Traditional, Taiwan)\n"
@@ -381,29 +381,29 @@ msgstr "嘗試取得 OAuth 單位金鑰時發生了錯誤"
 msgid "Subscription pool(s) {0} do not exist."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:374
+#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:373
 #: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:58
 msgid "No owner specified, or owner lacks identifying information"
 msgstr "未指定擁有者，或產品沒有可供辨識的擁有者"
 
-#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:383
+#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:382
 #: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:66
 #, java-format
 msgid "Unable to find an owner with the key \"{0}\""
 msgstr "找不到擁有金鑰 \"{0}\" 的擁有者"
 
-#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:391
+#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:390
 #: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:74
 #, java-format
 msgid "Unable to find an owner with the ID \"{0}\""
 msgstr "找不到 ID 為 \"{0}\" 的擁有者"
 
-#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:1532
+#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:1531
 #, java-format
 msgid "Subscription pool {0} do not exist."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:1870
+#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:1869
 msgid ""
 "Unmapped guest entitlement expired without establishing a host/guest mapping."
 msgstr "未對應的客座端權利已過期，而沒有建立主機 / 客座端對應。"
@@ -490,17 +490,17 @@ msgstr "找不到金鑰為 {0} 的擁有者。"
 msgid "Content with ID \"{0}\" could not be found."
 msgstr "找不到 ID 為 {0} 的內容。"
 
-#: server/src/main/java/org/candlepin/model/AbstractHibernateCurator.java:758
+#: server/src/main/java/org/candlepin/model/AbstractHibernateCurator.java:768
 msgid "Request failed due to concurrent modification, please re-try."
 msgstr "因為同步修改導致需求失敗，請再試一次。"
 
-#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:539
+#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:561
 #, java-format
 msgid "The system with UUID {0} is a virtual guest. It does not have guests."
 msgstr "系統（UUID {0}）是虛擬客座端，不具有客座端。"
 
-#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:663
-#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:672
+#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:685
+#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:694
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:158
 #, java-format
 msgid "Unit with ID \"{0}\" could not be found."

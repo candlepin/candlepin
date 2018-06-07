@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-05-16 09:48-0400\n"
+"POT-Creation-Date: 2018-06-07 14:28-0400\n"
 "PO-Revision-Date: 2017-11-20 03:53+0000\n"
 "Last-Translator: eukim <eukim@redhat.com>\n"
 "Language-Team: Korean\n"
@@ -385,29 +385,29 @@ msgstr "OAuth 장치 키를 가져오는 도중 오류 발생  "
 msgid "Subscription pool(s) {0} do not exist."
 msgstr "서브스크립션 풀 {0}이/가 존재하지 않습니다."
 
-#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:374
+#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:373
 #: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:58
 msgid "No owner specified, or owner lacks identifying information"
 msgstr "소유자가 지정되어 있지 않거나 소유자 ID 정보가 없습니다"
 
-#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:383
+#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:382
 #: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:66
 #, java-format
 msgid "Unable to find an owner with the key \"{0}\""
 msgstr "키 \"{0}\"로/으로 소유자를 찾을 수 없습니다"
 
-#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:391
+#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:390
 #: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:74
 #, java-format
 msgid "Unable to find an owner with the ID \"{0}\""
 msgstr "ID \"{0}\"로/으로 소유자를 찾을 수 없습니다"
 
-#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:1532
+#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:1531
 #, java-format
 msgid "Subscription pool {0} do not exist."
 msgstr "서브스크립션 풀 {0}이/가 존재하지 않습니다."
 
-#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:1870
+#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:1869
 msgid ""
 "Unmapped guest entitlement expired without establishing a host/guest mapping."
 msgstr ""
@@ -500,18 +500,18 @@ msgstr "키 \"{0}\"의 소유자를 찾을 수 없습니다."
 msgid "Content with ID \"{0}\" could not be found."
 msgstr " ID ''{0}''의 컨텐츠를 찾을 수 없습니다."
 
-#: server/src/main/java/org/candlepin/model/AbstractHibernateCurator.java:758
+#: server/src/main/java/org/candlepin/model/AbstractHibernateCurator.java:768
 msgid "Request failed due to concurrent modification, please re-try."
 msgstr "동시에 변경하여 요청이 실패했습니다. 다시 시도하십시오."
 
-#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:539
+#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:561
 #, java-format
 msgid "The system with UUID {0} is a virtual guest. It does not have guests."
 msgstr ""
 "UUID {0}을 갖는 시스템은 가상 게스트입니다. 이는 게스트를 갖을 수 없습니다."
 
-#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:663
-#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:672
+#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:685
+#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:694
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:158
 #, java-format
 msgid "Unit with ID \"{0}\" could not be found."
