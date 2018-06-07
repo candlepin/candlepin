@@ -76,11 +76,11 @@ import org.candlepin.pinsetter.tasks.JobCleaner;
 import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
 import org.candlepin.pinsetter.tasks.SweepBarJob;
 import org.candlepin.pinsetter.tasks.UnpauseJob;
-import org.candlepin.pki.BouncyCastlePrivateKeyReader;
+import org.candlepin.pki.JSSPrivateKeyReader;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.PrivateKeyReader;
 import org.candlepin.pki.CertificateReader;
-import org.candlepin.pki.impl.BouncyCastlePKIUtility;
+import org.candlepin.pki.impl.JSSPKIUtility;
 import org.candlepin.policy.criteria.CriteriaRules;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
@@ -205,9 +205,9 @@ public class CandlepinModule extends AbstractModule {
 
         configureJPA();
 
-        bind(PKIUtility.class).to(BouncyCastlePKIUtility.class).asEagerSingleton();
+        bind(PKIUtility.class).to(JSSPKIUtility.class).asEagerSingleton();
         bind(CertificateReader.class).asEagerSingleton();
-        bind(PrivateKeyReader.class).to(BouncyCastlePrivateKeyReader.class);
+        bind(PrivateKeyReader.class).to(JSSPrivateKeyReader.class);
         bind(X509ExtensionUtil.class);
         bind(ResolverUtil.class);
         bind(GuestMigration.class);

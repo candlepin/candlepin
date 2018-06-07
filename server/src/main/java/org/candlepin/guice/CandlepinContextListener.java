@@ -33,7 +33,6 @@ import org.candlepin.controller.SuspendModeTransitioner;
 import org.candlepin.logging.LoggerContextListener;
 import org.candlepin.model.Status;
 import org.candlepin.pinsetter.core.PinsetterContextListener;
-import org.candlepin.pki.impl.BouncyCastleProviderLoader;
 import org.candlepin.pki.impl.JSSProviderLoader;
 import org.candlepin.resteasy.ResourceLocatorMap;
 import org.candlepin.swagger.CandlepinSwaggerModelConverter;
@@ -119,7 +118,7 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
     public void contextInitialized(ServletContextEvent sce) {
         log.info("Candlepin initializing context.");
 
-        BouncyCastleProviderLoader.addProvider();
+//        BouncyCastleProviderLoader.addProvider();
         JSSProviderLoader.addProvider();
 
         I18nManager.getInstance().setDefaultLocale(Locale.US);

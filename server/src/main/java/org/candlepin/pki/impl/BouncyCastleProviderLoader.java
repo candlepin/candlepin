@@ -18,17 +18,11 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import java.security.Security;
 
-/** When this class is loaded, the Bouncy Castle provider will be installed into the JVM.  The
- * provider can also be added via a call to a static method if needed in a test for example.  The
- * addProvider() method can be called more than once without ill effect (-1 will be returned if the provider
- * is already installed).
- * */
+/** When the addProvider method is called, the Bouncy Castle provider will be installed into the JVM.  The
+  * The addProvider() method can be called more than once without ill effect (-1 will be returned if
+  * the provider is already installed). */
 public class BouncyCastleProviderLoader {
     public static final BouncyCastleProvider BC_PROVIDER = new BouncyCastleProvider();
-
-    static {
-        addProvider();
-    }
 
     private BouncyCastleProviderLoader() {
         // static methods only
