@@ -276,6 +276,8 @@ public class JSSPKIUtility extends ProviderBasedPKIUtility {
 
             GeneralNames generalNames = new GeneralNames(akiName);
             altNames.setGeneralNames(generalNames);
+
+            certExtensions.add(altNames);
         }
         catch (InvalidBERException | GeneralNamesException e) {
             throw new IOException("Could not construct certificate extensions", e);
