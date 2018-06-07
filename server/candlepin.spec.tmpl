@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.4.0
+Version: 2.4.1
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,24 @@ fi
 
 #raw
 %changelog
+* Thu Jun 07 2018 Kevin Howell <khowell@redhat.com> 2.4.1-1
+- Updating the pom files for the guava update (mstead@redhat.com)
+- Added bulk consumer fetching to ConsumerCurator (crog@redhat.com)
+- 1571426: Two changes to make ActiveMQ clients more resilient
+  (nmoumoul@redhat.com)
+- 1584258: Detach consumers from persistence context to avoid OOM
+  (awood@redhat.com)
+- 1582204: Added missing JsonFilter annotation to the DTOs (crog@redhat.com)
+- 1579387: Fixed edge case that was causing Qpid connections to remain open
+  (mstead@redhat.com)
+- 1579855: Properly handle connections when they are recreated
+  (mstead@redhat.com)
+- 1578041: Ensure getHost is always org-scoped (khowell@redhat.com)
+- Make host cache CandlepinRequestScoped (khowell@redhat.com)
+- Make various components singletons (khowell@redhat.com)
+- Make I18nProvider a singleton (khowell@redhat.com)
+- 1576870: Checksum issues in liquibase script (wpoteat@redhat.com)
+
 * Fri Apr 13 2018 Kevin Howell <khowell@redhat.com> 2.4.0-1
 - Begin 2.4 hotfix branch
 
