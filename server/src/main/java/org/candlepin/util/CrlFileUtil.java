@@ -26,6 +26,7 @@ import com.google.inject.persist.Transactional;
 import org.apache.commons.codec.binary.Base64InputStream;
 import org.apache.commons.codec.binary.Base64OutputStream;
 import org.apache.commons.io.IOUtils;
+import org.mozilla.jss.asn1.InvalidBERException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -207,8 +208,17 @@ public class CrlFileUtil {
 
             // Note: This will break if we ever stop using RSA keys
             PrivateKey key = this.certificateReader.getCaKey();
-            X509CRLStreamWriter writer = new BouncyCastleX509CRLStreamWriter(
-                input, (RSAPrivateKey) key, this.certificateReader.getCACert());
+            X509CRLStreamWriter writer;
+            try {
+                writer = new JSSX509CRLStreamWriter(
+                    input,
+                    (RSAPrivateKey) key,
+                    this.certificateReader.getCACert()
+                );
+            }
+            catch (InvalidBERException e) {
+                throw new IOException("Could not read DER", e);
+            }
 
             // Add new entries
             if (revoke != null) {
