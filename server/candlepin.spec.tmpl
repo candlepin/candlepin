@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.5.3
+Version: 2.5.4
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -220,6 +220,9 @@ fi
 
 #raw
 %changelog
+* Thu Jun 07 2018 Kevin Howell <khowell@redhat.com> 2.5.4-1
+- Updating the pom files for the guava update (mstead@redhat.com)
+
 * Wed Jun 06 2018 Kevin Howell <khowell@redhat.com> 2.5.3-1
 - Moved Status from the model package to the DTO package (crog@redhat.com)
 - Added bulk consumer fetching to ConsumerCurator (crog@redhat.com)
