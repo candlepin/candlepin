@@ -19,7 +19,7 @@ import static org.candlepin.pki.impl.BouncyCastleProviderLoader.*;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.pki.CertificateReader;
-import org.candlepin.pki.PKIUtility;
+import org.candlepin.pki.ProviderBasedPKIUtility;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509CRLEntryWrapper;
@@ -73,14 +73,14 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * The default {@link PKIUtility} for Candlepin.
+ * The default {@link ProviderBasedPKIUtility} for Candlepin.
  * This class implements methods to create X509 Certificates, X509 CRLs, encode
  * objects in PEM format (for saving to the db or sending to the client), and
  * decode raw ASN.1 DER values (as read from a Certificate/CRL).
  *
  * All code that imports bouncycastle should live in this module.
  *
- * (March 24, 2011) Notes on implementing a PKIUtility with NSS/JSS:
+ * (March 24, 2011) Notes on implementing a ProviderBasedPKIUtility with NSS/JSS:
  *
  * JSS provides classes and functions to generate X509Certificates (see CertificateInfo,
  * for example).
@@ -96,7 +96,7 @@ import java.util.Set;
  * have to use the raw ASN.1 libraries to build up our own properly formatted CRL DER
  * representation, then PEM encode it.
  */
-public class BouncyCastlePKIUtility extends PKIUtility {
+public class BouncyCastlePKIUtility extends ProviderBasedPKIUtility {
     private static Logger log = LoggerFactory.getLogger(BouncyCastlePKIUtility.class);
 
     @Inject
