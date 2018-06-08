@@ -55,6 +55,7 @@ import org.candlepin.model.ProductCurator;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.pki.PKIUtility;
+import org.candlepin.pki.ProviderBasedPKIUtility;
 import org.candlepin.pki.impl.BouncyCastleProviderLoader;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -444,7 +445,7 @@ public class ImporterTest {
     @Test
     public void testImportZipSigAndEmptyConsumerZip()
         throws Exception {
-        PKIUtility pki = mock(PKIUtility.class);
+        PKIUtility pki = mock(ProviderBasedPKIUtility.class);
         Importer i = new Importer(null, null, null, null, null, null, null,
             pki, config, null, null, null, i18n,
             null, null, su, null, this.mockSubReconciler, this.ec, this.translator);

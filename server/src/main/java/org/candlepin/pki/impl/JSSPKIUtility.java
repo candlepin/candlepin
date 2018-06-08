@@ -17,7 +17,7 @@ package org.candlepin.pki.impl;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.pki.CertificateReader;
-import org.candlepin.pki.PKIUtility;
+import org.candlepin.pki.ProviderBasedPKIUtility;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509CRLEntryWrapper;
@@ -102,7 +102,7 @@ import javax.inject.Inject;
 /**
  * PKI utility that uses the JSS crypto provider
  */
-public class JSSPKIUtility extends PKIUtility {
+public class JSSPKIUtility extends ProviderBasedPKIUtility {
     public static final byte[] LINE_SEPARATOR = String.format("%n").getBytes();
     public static final String SIGNING_ALG_ID = "SHA256withRSA";
 
