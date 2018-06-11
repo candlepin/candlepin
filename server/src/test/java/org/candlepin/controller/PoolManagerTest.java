@@ -1980,12 +1980,8 @@ public class PoolManagerTest {
             anyList(), eq(true), anyMap())).thenReturn(new PoolOperationCallback());
         when(mockPoolCurator.getOversubscribedBySubscriptionIds(any(String.class), anyMap())).thenReturn(
             Arrays.asList(derivedPool, derivedPool2, derivedPool3));
-        when(mockPoolCurator.retrieveOrderedEntitlementsOf(eq(Arrays.asList(derivedPool)))).thenReturn(
-            Arrays.asList(derivedEnt, derivedEnt2));
-        when(mockPoolCurator.retrieveOrderedEntitlementsOf(eq(Arrays.asList(derivedPool2)))).thenReturn(
-            Arrays.asList(derivedEnt3));
-        when(mockPoolCurator.retrieveOrderedEntitlementsOf(eq(Arrays.asList(derivedPool3)))).thenReturn(
-            new ArrayList<>());
+        when(mockPoolCurator.retrieveOrderedEntitlementsOf(eq(Arrays.asList(derivedPool, derivedPool2))))
+            .thenReturn(Arrays.asList(derivedEnt, derivedEnt2, derivedEnt3));
         Collection<Pool> overPools = new ArrayList<Pool>(){{ add(derivedPool); add(derivedPool2); }};
         when(mockPoolCurator.lockAndLoad(any(Collection.class))).thenReturn(overPools);
         when(mockPoolCurator.lockAndLoad(eq(derivedPool))).thenReturn(derivedPool);

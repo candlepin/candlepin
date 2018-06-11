@@ -17,6 +17,7 @@ package org.candlepin.model;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.pinsetter.tasks.HypervisorUpdateJob.HypervisorList;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.util.FactValidator;
 import org.candlepin.util.Util;
@@ -694,6 +695,68 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
         for (Consumer consumer : this.getHypervisorsBulk(hypervisorIds, owner.getId())) {
             hypervisorMap.add(consumer.getHypervisorId().getHypervisorId(), consumer);
+        }
+
+        return hypervisorMap;
+    }
+
+    /**
+     * Lookup all registered consumers matching one of the given hypervisor IDs.
+     *
+     * Results are returned as a map of hypervisor ID to the consumer record created.
+     * If a hypervisor ID is not in the map, this indicates the hypervisor consumer does
+     * not exist, i.e. it is new and needs to be created.
+     *
+     * This is an unsecured query, manually limited to an owner by the parameter given.
+     * @param owner Owner to limit results to.
+     * @param hypervisorIds Collection of hypervisor IDs as reported by the virt fabric.
+     *
+     * @return VirtConsumerMap of hypervisor ID to it's consumer, or null if none exists.
+     */
+    @Transactional
+    public VirtConsumerMap getHostConsumersMap(Owner owner, HypervisorList hypervisorIds) {
+        VirtConsumerMap hypervisorMap = new VirtConsumerMap();
+
+        Map<String, HypervisorId> systemUuidHypervisorMap = new HashMap<>();
+        List<String> remainingHypervisorIds = new LinkedList<>();
+        for (Consumer consumer : hypervisorIds.getHypervisors()) {
+            if (consumer.hasFact("dmi.system.uuid")) {
+                systemUuidHypervisorMap.put(consumer.getFact("dmi.system.uuid"), consumer.getHypervisorId());
+            }
+            remainingHypervisorIds.add(consumer.getHypervisorId().getHypervisorId());
+        }
+        List<String> consumerIds = new LinkedList<>();
+
+        if (!systemUuidHypervisorMap.isEmpty()) {
+            String sql = "select id from cp_consumer " +
+                "inner join cp_consumer_facts " +
+                "on cp_consumer.id = cp_consumer_facts.cp_consumer_id " +
+                "where cp_consumer_facts.mapkey = 'dmi.system.uuid' and " +
+                "lower(cp_consumer_facts.element) in (:uuids) " +
+                "and cp_consumer.owner_id = :ownerid " +
+                "order by cp_consumer.updated desc";
+
+            Iterable<List<String>> blocks = Iterables.partition(systemUuidHypervisorMap.keySet(),
+                getInBlockSize());
+            Query query = this.currentSession()
+                .createSQLQuery(sql)
+                .setParameter("ownerid", owner.getId());
+
+            for (List<String> block : blocks) {
+                query.setParameterList("uuids", block);
+                consumerIds.addAll(query.list());
+            }
+        }
+
+        for (Consumer consumer: this.getConsumers(consumerIds)) {
+            HypervisorId hypervisorId = systemUuidHypervisorMap.get(consumer.getFact("dmi.system.uuid"));
+            hypervisorMap.add(hypervisorId.getHypervisorId(), consumer);
+            remainingHypervisorIds.remove(hypervisorId.getHypervisorId());
+        }
+        if (!remainingHypervisorIds.isEmpty()) {
+            for (Consumer consumer : this.getHypervisorsBulk(remainingHypervisorIds, owner.getId())) {
+                hypervisorMap.add(consumer.getHypervisorId().getHypervisorId(), consumer);
+            }
         }
 
         return hypervisorMap;
