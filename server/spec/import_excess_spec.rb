@@ -36,6 +36,8 @@ describe 'Import Update', :serial => true do
     all_pools = @user.list_pools :owner => @import_owner.id
     all_pools.size.should == 3
 
+    # Sleep to create a gap between when the manifest was initially imported
+    sleep 1
     # Now lets import
     updated_export = @exporter.create_candlepin_export_update()
     @cp.import(@import_owner['key'], updated_export.export_filename)
