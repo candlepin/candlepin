@@ -16,11 +16,14 @@ package org.candlepin.dto;
 
 import static org.junit.Assert.*;
 
-import junitparams.JUnitParamsRunner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import junitparams.JUnitParamsRunner;
 
 
 
@@ -29,6 +32,7 @@ import org.junit.runner.RunWith;
  */
 @RunWith(JUnitParamsRunner.class)
 public abstract class AbstractTranslatorTest<S, D, T extends ObjectTranslator<S, D>> {
+    protected static Logger log = LoggerFactory.getLogger(AbstractTranslatorTest.class);
 
     protected ModelTranslator modelTranslator;
     protected T translator;

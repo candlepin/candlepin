@@ -35,8 +35,6 @@ import static org.junit.Assert.assertNull;
 public class EntitlementTranslatorTest extends
     AbstractTranslatorTest<Entitlement, EntitlementDTO, EntitlementTranslator> {
 
-    protected EntitlementTranslator translator;;
-
     private OwnerTranslatorTest ownerTranslatorTest = new OwnerTranslatorTest();
     private CertificateTranslatorTest certificateTranslatorTest = new CertificateTranslatorTest();
     private PoolTranslatorTest poolTranslatorTest = new PoolTranslatorTest();

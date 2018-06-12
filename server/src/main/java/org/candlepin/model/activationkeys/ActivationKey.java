@@ -318,6 +318,7 @@ public class ActivationKey extends AbstractHibernateObject<ActivationKey> implem
                 break;
             }
         }
+
         this.getPools().remove(toRemove);
     }
 

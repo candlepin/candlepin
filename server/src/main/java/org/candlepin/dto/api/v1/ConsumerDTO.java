@@ -48,6 +48,8 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+
+
 /**
  * A DTO representation of the Consumer entity
  */

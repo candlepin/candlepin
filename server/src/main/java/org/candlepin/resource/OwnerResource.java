@@ -42,6 +42,7 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.v1.BrandingDTO;
 import org.candlepin.dto.api.v1.ConsumerDTO;
+import org.candlepin.dto.api.v1.ContentOverrideDTO;
 import org.candlepin.dto.api.v1.EntitlementDTO;
 import org.candlepin.dto.api.v1.EnvironmentDTO;
 import org.candlepin.dto.api.v1.EventDTO;
@@ -615,8 +616,7 @@ public class OwnerResource {
                 entity.setContentOverrides(new HashSet<>());
             }
             else {
-                for (ActivationKeyDTO.ActivationKeyContentOverrideDTO overrideDTO :
-                    dto.getContentOverrides()) {
+                for (ContentOverrideDTO overrideDTO : dto.getContentOverrides()) {
                     if (overrideDTO != null) {
                         entity.addContentOverride(
                             new ActivationKeyContentOverride(entity, overrideDTO.getContentLabel(),
@@ -1211,7 +1211,7 @@ public class OwnerResource {
         }
 
         if (dto.getContentOverrides() != null) {
-            contentOverrideValidator.validateDTOs(dto.getContentOverrides());
+            contentOverrideValidator.validate(dto.getContentOverrides());
         }
 
         Owner owner = findOwnerByKey(ownerKey);

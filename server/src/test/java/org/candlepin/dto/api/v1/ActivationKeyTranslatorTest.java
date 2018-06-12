@@ -14,9 +14,12 @@
  */
 package org.candlepin.dto.api.v1;
 
+import static org.junit.Assert.*;
+
 import junitparams.JUnitParamsRunner;
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.model.ContentOverride;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.Release;
@@ -25,9 +28,13 @@ import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.junit.runner.RunWith;
 
-import java.util.HashSet;
+import org.apache.commons.lang.builder.EqualsBuilder;
 
-import static org.junit.Assert.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+
+
 
 /**
  * Test suite for the ActivationKeyTranslator class
@@ -36,19 +43,24 @@ import static org.junit.Assert.*;
 public class ActivationKeyTranslatorTest extends
     AbstractTranslatorTest<ActivationKey, ActivationKeyDTO, ActivationKeyTranslator> {
 
-    protected ActivationKeyTranslator translator = new ActivationKeyTranslator();
-
     protected OwnerTranslatorTest ownerTranslatorTest = new OwnerTranslatorTest();
+    protected ContentOverrideTranslatorTest overrideTranslatorTest = new ContentOverrideTranslatorTest();
+
+    @Override
+    protected ActivationKeyTranslator initObjectTranslator() {
+        this.ownerTranslatorTest.initObjectTranslator();
+        this.overrideTranslatorTest.initObjectTranslator();
+
+        this.translator = new ActivationKeyTranslator();
+        return this.translator;
+    }
 
     @Override
     protected void initModelTranslator(ModelTranslator modelTranslator) {
         this.ownerTranslatorTest.initModelTranslator(modelTranslator);
-        modelTranslator.registerTranslator(this.translator, ActivationKey.class, ActivationKeyDTO.class);
-    }
+        this.overrideTranslatorTest.initModelTranslator(modelTranslator);
 
-    @Override
-    protected ActivationKeyTranslator initObjectTranslator() {
-        return this.translator;
+        modelTranslator.registerTranslator(this.translator, ActivationKey.class, ActivationKeyDTO.class);
     }
 
     @Override
@@ -62,15 +74,34 @@ public class ActivationKeyTranslatorTest extends
         source.setServiceLevel("key-service-level");
         source.setAutoAttach(true);
 
-        Product prod = new Product();
-        prod.setId("prod-1-id");
-        source.setProducts(new HashSet<>());
-        source.addProduct(prod);
 
-        Pool pool = new Pool();
-        pool.setId("pool-1-id");
-        source.setPools(new HashSet<>());
-        source.addPool(pool, 1L);
+        Set<Product> products = new HashSet<>();
+        Set<ActivationKeyPool> akpools = new HashSet<>();
+        Set<ActivationKeyContentOverride> overrides = new HashSet<>();
+
+        for (int i = 0; i < 3; ++i) {
+            Product product = new Product();
+            product.setId("test_prod-" + i);
+
+            Pool pool = new Pool();
+            pool.setId("test_pool-" + i);
+
+            ActivationKeyPool akp = new ActivationKeyPool(source, pool, 1L);
+
+            ActivationKeyContentOverride override = new ActivationKeyContentOverride();
+            override.setKey(source);
+            override.setContentLabel("test_content_label-" + i);
+            override.setName("test_name-" + i);
+            override.setValue("test_value-" + i);
+
+            products.add(product);
+            akpools.add(akp);
+            overrides.add(override);
+        }
+
+        source.setProducts(products);
+        source.setPools(akpools);
+        source.setContentOverrides(overrides);
 
         return source;
     }
@@ -89,20 +120,39 @@ public class ActivationKeyTranslatorTest extends
             assertEquals(source.getServiceLevel(), dest.getServiceLevel());
             assertEquals(source.isAutoAttach(), dest.isAutoAttach());
 
-            if (childrenGenerated) {
-                this.ownerTranslatorTest
-                        .verifyOutput(source.getOwner(), dest.getOwner(), true);
+            // Check product IDs
+            Collection<Product> products = source.getProducts();
+            Collection<String> productIds = dest.getProductIds();
 
-                for (Product prod : source.getProducts()) {
-                    for (String prodDto : dest.getProductIds()) {
+            if (products != null) {
+                assertNotNull(productIds);
+                assertEquals(products.size(), productIds.size());
 
-                        assertNotNull(prodDto);
+                for (Product product : products) {
+                    assertNotNull(product);
+                    assertNotNull(product.getId());
 
-                        if (prodDto.equals(prod.getId())) {
-                            // Nothing else to assert on, since prodDto only holds the product id.
-                        }
-                    }
+                    assertTrue(productIds.contains(product.getId()));
                 }
+            }
+            else {
+                assertNull(productIds);
+            }
+
+            // Check release version
+            Release releaseSource = source.getReleaseVer();
+            String releaseDestination = dest.getReleaseVersion();
+
+            if (releaseSource != null) {
+                assertEquals(releaseSource.getReleaseVer(), releaseDestination);
+            }
+            else {
+                assertNull(releaseDestination);
+            }
+
+            // Check nested DTOs
+            if (childrenGenerated) {
+                this.ownerTranslatorTest.verifyOutput(source.getOwner(), dest.getOwner(), true);
 
                 for (ActivationKeyPool akPool : source.getPools()) {
                     for (ActivationKeyDTO.ActivationKeyPoolDTO akPoolDto : dest.getPools()) {
@@ -115,34 +165,41 @@ public class ActivationKeyTranslatorTest extends
                     }
                 }
 
-                for (ActivationKeyContentOverride akOverride : source.getContentOverrides()) {
-                    for (ActivationKeyDTO.ActivationKeyContentOverrideDTO akOverrideDto :
-                        dest.getContentOverrides()) {
+                // Check content overrides
+                Collection<? extends ContentOverride> overrides = source.getContentOverrides();
+                Collection<ContentOverrideDTO> overrideDTOs = dest.getContentOverrides();
 
-                        assertNotNull(akOverrideDto);
+                if (overrides != null) {
+                    int matches = 0;
+                    assertNotNull(overrideDTOs);
+                    assertEquals(overrides.size(), overrideDTOs.size());
 
-                        if (akOverrideDto.getName().equals(akOverride.getName())) {
-                            assertEquals(akOverrideDto.getContentLabel(), akOverride.getContentLabel());
-                            assertEquals(akOverrideDto.getValue(), akOverride.getValue());
+                    for (ContentOverride override : overrides) {
+                        assertNotNull(override);
+
+                        for (ContentOverrideDTO odto : overrideDTOs) {
+                            assertNotNull(odto);
+
+                            EqualsBuilder builder = new EqualsBuilder()
+                                .append(override.getContentLabel(), odto.getContentLabel())
+                                .append(override.getName(), odto.getName());
+
+                            if (builder.isEquals()) {
+                                this.overrideTranslatorTest.verifyOutput(override, odto, true);
+                                ++matches;
+                            }
                         }
                     }
-                }
 
-                Release releaseSource = source.getReleaseVer();
-                String releaseDestination = dest.getReleaseVersion();
-                if (releaseSource != null) {
-                    assertEquals(releaseSource.getReleaseVer(), releaseDestination);
+                    assertEquals(overrides.size(), matches);
                 }
                 else {
-                    assertNull(releaseDestination);
+                    assertNull(overrideDTOs);
                 }
             }
             else {
                 assertNull(dest.getOwner());
-                assertNull(dest.getProductIds());
                 assertNull(dest.getPools());
-                assertNull(dest.getContentOverrides());
-                assertNull(dest.getReleaseVersion());
             }
         }
         else {

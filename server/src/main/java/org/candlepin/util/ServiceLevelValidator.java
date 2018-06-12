@@ -32,10 +32,7 @@ import java.util.Set;
 
 
 /**
- * ContentOverrideValidator utility class used to validate
- * ContentOverride and its subclasses.  Includes column length
- * checking and overrideRules to check against blacklisted
- * name overrides
+ * ServiceLevelValidator utility class used to validate service levels.
  */
 public class ServiceLevelValidator {
 

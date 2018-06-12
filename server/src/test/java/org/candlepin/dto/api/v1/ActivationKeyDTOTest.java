@@ -14,6 +14,9 @@
  */
 package org.candlepin.dto.api.v1;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import org.candlepin.dto.AbstractDTOTest;
 import org.junit.Test;
 
@@ -23,8 +26,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+
 
 /**
  * Test suite for the ActivationKeyDTO class
@@ -72,11 +74,11 @@ public class ActivationKeyDTOTest extends AbstractDTOTest<ActivationKeyDTO> {
         productDTOs.add(productDTO);
         this.values.put("ProductDTOs", productDTOs);
 
-        Set<ActivationKeyDTO.ActivationKeyContentOverrideDTO> overrides = new HashSet<>();
-        overrides.add(new ActivationKeyDTO.ActivationKeyContentOverrideDTO(
-            "test-contentLabel-override",
-            "test-name-override",
-            "test-value-override"));
+        Set<ContentOverrideDTO> overrides = new HashSet<>();
+        overrides.add(new ContentOverrideDTO()
+            .setContentLabel("test-contentLabel-override")
+            .setName("test-name-override")
+            .setValue("test-value-override"));
         this.values.put("ContentOverrides", overrides);
     }
 
@@ -269,11 +271,10 @@ public class ActivationKeyDTOTest extends AbstractDTOTest<ActivationKeyDTO> {
     public void testRemoveContentOverrideWithAbsentContentOverride() {
         ActivationKeyDTO dto = new ActivationKeyDTO();
 
-        ActivationKeyDTO.ActivationKeyContentOverrideDTO override =
-            new ActivationKeyDTO.ActivationKeyContentOverrideDTO(
-            "test-contentLabel-override-3",
-            "test-name-override-3",
-            "test-value-override-3");
+        ContentOverrideDTO override = new ContentOverrideDTO()
+            .setContentLabel("test-contentLabel-override-3")
+            .setName("test-name-override-3")
+            .setValue("test-value-override-3");
         assertFalse(dto.removeContentOverride(override));
 
         dto.setContentOverrides(new HashSet<>());
@@ -284,18 +285,17 @@ public class ActivationKeyDTOTest extends AbstractDTOTest<ActivationKeyDTO> {
     public void testRemoveContentOverrideWithPresentContentOverride() {
         ActivationKeyDTO dto = new ActivationKeyDTO();
 
-        Set<ActivationKeyDTO.ActivationKeyContentOverrideDTO> overrides = new HashSet<>();
-        overrides.add(new ActivationKeyDTO.ActivationKeyContentOverrideDTO(
-            "test-contentLabel-override-4",
-            "test-name-override-4",
-            "test-value-override-4"));
+        Set<ContentOverrideDTO> overrides = new HashSet<>();
+        overrides.add(new ContentOverrideDTO()
+            .setContentLabel("test-contentLabel-override-4")
+            .setName("test-name-override-4")
+            .setValue("test-value-override-4"));
         dto.setContentOverrides(overrides);
 
-        ActivationKeyDTO.ActivationKeyContentOverrideDTO override =
-            new ActivationKeyDTO.ActivationKeyContentOverrideDTO(
-            "test-contentLabel-override-4",
-            "test-name-override-4",
-            "test-value-override-4");
+        ContentOverrideDTO override = new ContentOverrideDTO()
+            .setContentLabel("test-contentLabel-override-4")
+            .setName("test-name-override-4")
+            .setValue("test-value-override-4");
 
         assertTrue(dto.removeContentOverride(override));
     }
@@ -310,11 +310,11 @@ public class ActivationKeyDTOTest extends AbstractDTOTest<ActivationKeyDTO> {
     public void testAddContentOverrideWithAbsentContentOverride() {
         ActivationKeyDTO dto = new ActivationKeyDTO();
 
-        ActivationKeyDTO.ActivationKeyContentOverrideDTO override =
-            new ActivationKeyDTO.ActivationKeyContentOverrideDTO(
-            "test-contentLabel-override-5",
-            "test-name-override-5",
-            "test-value-override-5");
+        ContentOverrideDTO override = new ContentOverrideDTO()
+            .setContentLabel("test-contentLabel-override-5")
+            .setName("test-name-override-5")
+            .setValue("test-value-override-5");
+
         assertTrue(dto.addContentOverride(override));
     }
 
@@ -322,18 +322,17 @@ public class ActivationKeyDTOTest extends AbstractDTOTest<ActivationKeyDTO> {
     public void testAddContentOverrideWithPresentContentOverride() {
         ActivationKeyDTO dto = new ActivationKeyDTO();
 
-        ActivationKeyDTO.ActivationKeyContentOverrideDTO override =
-            new ActivationKeyDTO.ActivationKeyContentOverrideDTO(
-            "test-contentLabel-override-6",
-            "test-name-override-6",
-            "test-value-override-6");
+        ContentOverrideDTO override = new ContentOverrideDTO()
+            .setContentLabel("test-contentLabel-override-6")
+            .setName("test-name-override-6")
+            .setValue("test-value-override-6");
         assertTrue(dto.addContentOverride(override));
 
-        ActivationKeyDTO.ActivationKeyContentOverrideDTO override2 =
-            new ActivationKeyDTO.ActivationKeyContentOverrideDTO(
-            "test-contentLabel-override-6",
-            "test-name-override-6",
-            "test-value-override-6");
+        ContentOverrideDTO override2 = new ContentOverrideDTO()
+            .setContentLabel("test-contentLabel-override-6")
+            .setName("test-name-override-6")
+            .setValue("test-value-override-6");
+
         assertFalse(dto.addContentOverride(override2));
     }
 

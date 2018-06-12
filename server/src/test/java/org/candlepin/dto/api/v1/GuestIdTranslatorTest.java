@@ -27,12 +27,13 @@ import junitparams.JUnitParamsRunner;
 import java.util.HashMap;
 import java.util.Map;
 
+
+
 /**
  * Test suite for the GuestIdTranslator class
  */
 @RunWith(JUnitParamsRunner.class)
-public class GuestIdTranslatorTest extends
-    AbstractTranslatorTest<GuestId, GuestIdDTO, GuestIdTranslator> {
+public class GuestIdTranslatorTest extends AbstractTranslatorTest<GuestId, GuestIdDTO, GuestIdTranslator> {
 
     protected GuestIdTranslator guestIdTranslator = new GuestIdTranslator();
 

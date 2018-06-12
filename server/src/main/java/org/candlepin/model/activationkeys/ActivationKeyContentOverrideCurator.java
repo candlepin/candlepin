@@ -14,27 +14,25 @@
  */
 package org.candlepin.model.activationkeys;
 
-import org.candlepin.model.ContentOverride;
 import org.candlepin.model.ContentOverrideCurator;
 
 import javax.inject.Singleton;
+
+
 
 /**
  * ActivationKeyContentOverrideCurator
  */
 @Singleton
-public class ActivationKeyContentOverrideCurator
-    extends ContentOverrideCurator<ActivationKeyContentOverride, ActivationKey> {
+public class ActivationKeyContentOverrideCurator extends
+    ContentOverrideCurator<ActivationKeyContentOverride, ActivationKey> {
 
     protected ActivationKeyContentOverrideCurator() {
         super(ActivationKeyContentOverride.class, "key");
     }
 
     @Override
-    protected ActivationKeyContentOverride createWithParent(
-        ContentOverride override, ActivationKey parent) {
-        ActivationKeyContentOverride newOverride = new ActivationKeyContentOverride(
-            parent, override.getContentLabel(), override.getName(), override.getValue());
-        return this.create(newOverride);
+    protected ActivationKeyContentOverride createOverride() {
+        return new ActivationKeyContentOverride();
     }
 }

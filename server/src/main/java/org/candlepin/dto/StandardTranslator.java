@@ -35,6 +35,8 @@ import org.candlepin.dto.api.v1.ConsumerInstalledProductDTO;
 import org.candlepin.dto.api.v1.ConsumerInstalledProductTranslator;
 import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.ContentTranslator;
+import org.candlepin.dto.api.v1.ContentOverrideDTO;
+import org.candlepin.dto.api.v1.ContentOverrideTranslator;
 import org.candlepin.dto.api.v1.DeletedConsumerDTO;
 import org.candlepin.dto.api.v1.DeletedConsumerTranslator;
 import org.candlepin.dto.api.v1.EnvironmentDTO;
@@ -75,6 +77,7 @@ import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Content;
+import org.candlepin.model.ContentOverride;
 import org.candlepin.model.DeletedConsumer;
 import org.candlepin.model.DistributorVersion;
 import org.candlepin.model.Entitlement;
@@ -141,6 +144,8 @@ public class StandardTranslator extends SimpleModelTranslator {
             ConsumerType.class, org.candlepin.dto.api.v1.ConsumerTypeDTO.class);
         this.registerTranslator(
             new ContentTranslator(), Content.class, ContentDTO.class);
+        this.registerTranslator(
+            new ContentOverrideTranslator(), ContentOverride.class, ContentOverrideDTO.class);
         this.registerTranslator(
             new DeletedConsumerTranslator(), DeletedConsumer.class, DeletedConsumerDTO.class);
         this.registerTranslator(

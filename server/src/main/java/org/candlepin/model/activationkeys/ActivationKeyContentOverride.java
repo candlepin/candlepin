@@ -35,7 +35,8 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @DiscriminatorValue("activation_key")
-public class ActivationKeyContentOverride extends ContentOverride {
+public class ActivationKeyContentOverride extends
+    ContentOverride<ActivationKeyContentOverride, ActivationKey> {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = true)
@@ -71,5 +72,14 @@ public class ActivationKeyContentOverride extends ContentOverride {
      */
     public void setKey(ActivationKey key) {
         this.key = key;
+    }
+
+    public ActivationKeyContentOverride setParent(ActivationKey parent) {
+        this.setKey(parent);
+        return this;
+    }
+
+    public ActivationKey getParent() {
+        return this.getKey();
     }
 }

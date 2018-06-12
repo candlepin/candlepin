@@ -1,4 +1,4 @@
-// Version: 5.26
+// Version: 5.27
 
 /*
  * Default Candlepin rule set.
@@ -3361,10 +3361,13 @@ var PoolType = {
 }
 
 /**
- * Namespace for determining ability to override a specific content set
- *  value
+ * Namespace for determining ability to override a specific content set value
  *
  * The list of disallowed value names are listed in this method
+ *
+ * DEPRECATED:
+ *  This functionality has been moved to ContentOverrideValidator as of Candlepin 2.5.5. This method
+ *  will no longer be called by Candlepin and is considered deprecated.
  */
 var Override = {
     get_override_context: function() {

@@ -251,7 +251,7 @@ public class ConsumerContentOverrideCuratorTest extends DatabaseTestFixture {
             "test-repo", "remaining-override", "remaining"));
         consumerContentOverrideCurator.removeByName(consumer, "test-repo", "gpgcheck");
         List<ConsumerContentOverride> remaining =
-            consumerContentOverrideCurator.getList(consumer);
+            consumerContentOverrideCurator.getList(consumer).list();
         assertEquals(1, remaining.size());
         assertEquals("remaining-override", remaining.get(0).getName());
     }
@@ -264,7 +264,7 @@ public class ConsumerContentOverrideCuratorTest extends DatabaseTestFixture {
             "test-repo", "remaining-override", "remaining"));
         consumerContentOverrideCurator.removeByName(consumer, "test-repo", "GpGChecK");
         List<ConsumerContentOverride> remaining =
-            consumerContentOverrideCurator.getList(consumer);
+            consumerContentOverrideCurator.getList(consumer).list();
         assertEquals(1, remaining.size());
         assertEquals("remaining-override", remaining.get(0).getName());
     }
@@ -279,7 +279,7 @@ public class ConsumerContentOverrideCuratorTest extends DatabaseTestFixture {
             "should-remain", "remaining", "true"));
         consumerContentOverrideCurator.removeByContentLabel(consumer, "test-repo");
         List<ConsumerContentOverride> remaining =
-            consumerContentOverrideCurator.getList(consumer);
+            consumerContentOverrideCurator.getList(consumer).list();
         assertEquals(1, remaining.size());
         assertEquals("should-remain", remaining.get(0).getContentLabel());
         assertEquals("remaining", remaining.get(0).getName());
@@ -297,7 +297,7 @@ public class ConsumerContentOverrideCuratorTest extends DatabaseTestFixture {
             "another-test-repo", "gpgcheck", "0"));
         consumerContentOverrideCurator.removeByParent(consumer);
 
-        assertTrue(consumerContentOverrideCurator.getList(consumer).isEmpty());
-        assertEquals(1, consumerContentOverrideCurator.getList(consumer2).size());
+        assertTrue(consumerContentOverrideCurator.getList(consumer).list().isEmpty());
+        assertEquals(1, consumerContentOverrideCurator.getList(consumer2).list().size());
     }
 }
