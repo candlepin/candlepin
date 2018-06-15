@@ -1,3 +1,0 @@
-#!/bin/bash
-BIN_DIR="$(buildr -s checkout_root 2> /dev/null)/server/bin"
-groovy $BIN_DIR/liquibase_wrapper.groovy 3.5.0 $BIN_DIR/liquibase_main.groovy "$@"
