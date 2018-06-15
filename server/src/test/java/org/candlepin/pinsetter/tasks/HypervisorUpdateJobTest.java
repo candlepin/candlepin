@@ -18,6 +18,7 @@ import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.auth.Principal;
@@ -134,8 +135,8 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
         JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal, null);
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
-        when(consumerCurator.getHostConsumersMap(eq(owner), any(Set.class)))
-            .thenReturn(new VirtConsumerMap());
+        when(consumerCurator.getHostConsumersMap(eq(owner),
+            any(HypervisorUpdateJob.HypervisorList.class))).thenReturn(new VirtConsumerMap());
 
         HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator,
             consumerTypeCurator, consumerResource, i18n, subAdapter, complianceRules);
@@ -152,8 +153,8 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
             "createReporterId");
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
-        when(consumerCurator.getHostConsumersMap(eq(owner), any(Set.class))).thenReturn(
-            new VirtConsumerMap());
+        when(consumerCurator.getHostConsumersMap(eq(owner),
+            any(HypervisorUpdateJob.HypervisorList.class))).thenReturn(new VirtConsumerMap());
 
         HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerTypeCurator,
             consumerResource, i18n, subAdapter, complianceRules);
@@ -172,7 +173,8 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
         hypervisor.setHypervisorId(new HypervisorId(hypervisorId));
         VirtConsumerMap vcm = new VirtConsumerMap();
         vcm.add(hypervisorId, hypervisor);
-        when(consumerCurator.getHostConsumersMap(eq(owner), any(Set.class))).thenReturn(vcm);
+        when(consumerCurator.getHostConsumersMap(eq(owner),
+            any(HypervisorUpdateJob.HypervisorList.class))).thenReturn(vcm);
 
         JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal, null);
         JobExecutionContext ctx = mock(JobExecutionContext.class);
@@ -194,7 +196,8 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
         hypervisor.setHypervisorId(new HypervisorId(hypervisorId));
         VirtConsumerMap vcm = new VirtConsumerMap();
         vcm.add(hypervisorId, hypervisor);
-        when(consumerCurator.getHostConsumersMap(eq(owner), any(Set.class))).thenReturn(vcm);
+        when(consumerCurator.getHostConsumersMap(eq(owner),
+            any(HypervisorUpdateJob.HypervisorList.class))).thenReturn(vcm);
 
         JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal,
             "updateReporterId");
@@ -206,6 +209,43 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
         injector.injectMembers(job);
         job.execute(ctx);
         assertEquals("updateReporterId", hypervisor.getHypervisorId().getReporterId());
+    }
+
+    @Test
+    public void hypervisorIdIsOverridenDuringHypervisorReportTest() throws JobExecutionException {
+        when(ownerCurator.getByKey(eq("joe"))).thenReturn(owner);
+        Consumer hypervisor = new Consumer();
+        hypervisor.setFact(Consumer.Facts.SYSTEM_UUID, "myUuid");
+        String hypervisorId = "existing_hypervisor_id";
+        hypervisor.setHypervisorId(new HypervisorId(hypervisorId));
+        VirtConsumerMap vcm = new VirtConsumerMap();
+        vcm.add(hypervisorId, hypervisor);
+        when(consumerCurator.getHostConsumersMap(eq(owner),
+            any(HypervisorUpdateJob.HypervisorList.class))).thenReturn(vcm);
+
+        hypervisorJson =
+            "{\"hypervisors\":" +
+                "[{" +
+                "\"name\" : \"hypervisor_999\"," +
+                "\"hypervisorId\" : {\"hypervisorId\":\"expectedHypervisorId\"}," +
+                "\"guestIds\" : [{\"guestId\" : \"guestId_1_999\"}]," +
+                "\"facts\" : {\"dmi.system.uuid\" : \"myUuid\"}" +
+                "}]}";
+
+        JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal, null);
+        JobExecutionContext ctx = mock(JobExecutionContext.class);
+        when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
+
+        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerTypeCurator,
+            consumerResource, i18n, subAdapter, complianceRules);
+        injector.injectMembers(job);
+        job.execute(ctx);
+
+        ArgumentCaptor<Consumer> consumerCaptor = ArgumentCaptor.forClass(Consumer.class);
+        verify(consumerCurator).update(consumerCaptor.capture(), eq(false));
+
+        Consumer argument = consumerCaptor.getValue();
+        assertEquals("expectedhypervisorid", argument.getHypervisorId().getHypervisorId());
     }
 
     @Test
@@ -222,8 +262,8 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
         JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal, null);
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
-        when(consumerCurator.getHostConsumersMap(eq(owner), any(Set.class)))
-            .thenReturn(new VirtConsumerMap());
+        when(consumerCurator.getHostConsumersMap(eq(owner),
+            any(HypervisorUpdateJob.HypervisorList.class))).thenReturn(new VirtConsumerMap());
 
         HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerTypeCurator,
             consumerResource, i18n, subAdapter, complianceRules);
@@ -250,7 +290,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
 
-        when(consumerCurator.getHostConsumersMap(eq(owner), any(Set.class)))
+        when(consumerCurator.getHostConsumersMap(eq(owner), any(HypervisorUpdateJob.HypervisorList.class)))
             .thenReturn(new VirtConsumerMap());
 
         HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerTypeCurator,
