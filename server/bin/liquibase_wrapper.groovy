@@ -7,6 +7,10 @@ if (!(new File(candlepin_classes_path).exists())) {
   println('Candlepin classes not found. Please do a build first.')
   System.exit(1)
 }
+// copy classes to a tempdir (without copying liquibase files) so we can reference src/main/resources without dupes
+def tempdir = 'mktemp -d'.execute().text.trim()
+"cp -R ${candlepin_classes_path}/org ${tempdir}".execute()
+candlepin_classes_path = tempdir
 
 cli = new CliBuilder(usage: "liquibase_wrapper.groovy [wrapper_args...] <liquibase_version> <path_to_groovy_script> [script_args...]")
 cli.help('print this message')
@@ -40,6 +44,8 @@ if (options.arguments().size() > 2) {
 }
 
 Grape.grab(group:'org.yaml', module:'snakeyaml', version:'1.20')
-Grape.grab(group:'org.liquibase', module:'liquibase-core', version:options.arguments()[0], transitive:true)
+Grape.grab(group:'org.liquibase', module:'liquibase-core', version:options.arguments()[0], transitive:false)
+Grape.grab(group:'org.slf4j', module:'slf4j-nop', version: '1.7.22')
 
 run(new File(options.arguments()[1]), script_args as String[])
+"rm -rf ${tempdir}".execute()

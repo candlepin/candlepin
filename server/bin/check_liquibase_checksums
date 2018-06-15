@@ -74,12 +74,15 @@ all_checksums, all_bad, all_without_validCheckSum = load_checksums('/tmp/candlep
 if args.base:
     # calculate original checksums for comparison
     print('Calculating checksums for {}, for comparison...'.format(args.base))
+    original_dir = os.getcwd()
+    os.chdir(checkout_root)
     subprocess.check_call(' '.join([
         'git archive {base}',
         '--prefix /tmp/candlepin-liquibase-base/',
-        os.path.relpath(os.path.join(checkout_root, 'server/src/main/resources')),
+        'server/src/main/resources',
         '| tar -Px'
     ]).format(base=args.base), shell=True)
+    os.chdir(original_dir)
     calculate_checksums(results_dir='/tmp/candlepin-liquibase-base-results',
                         extra_classpath='/tmp/candlepin-liquibase-base/server/src/main/resources')
     base_checksums, _, _ = load_checksums('/tmp/candlepin-liquibase-base-results')
