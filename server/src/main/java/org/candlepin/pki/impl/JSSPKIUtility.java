@@ -386,11 +386,14 @@ public class JSSPKIUtility extends ProviderBasedPKIUtility {
         }
 
         /* RFC 5280 section 4.2.1.1 is a bit odd.  It states the AuthorityKeyIdentifier MAY contain
-         * a KeyIdentifier, GeneralNames, or CertificateSerialNumber.  The KeyIdentifier is mandatory for
+         * a KeyIdentifier or the issuer name and CertificateSerialNumber.  The KeyIdentifier is mandatory for
          * non-self-signed certificates, but there is no additional guidance about when or why one should
-         * provide the GeneralNames or CertificateSerialNumber.  I've found at least one place,
-         * https://www.v13.gr/blog/?p=293, that explicitly recommends against giving them.  Plus in our old
-         * crypto code that used BouncyCastle, we were not providing these values, so I'm leaving them out.
+         * provide the issuer name or CertificateSerialNumber.  I've found at least one place,
+         * https://www.v13.gr/blog/?p=293, that explicitly recommends against giving them.  Also,
+         * the semantics around the issuer field in this extension can be very confusing
+         * (see https://www.openssl.org/docs/faq.html#USER14).  Our old crypto code that used BouncyCastle
+         * did include the issuer and serial number along with the key identifier, but I think it's best if
+         * we leave it out.
          */
         KeyIdentifier ki = new KeyIdentifier(ski.toByteArray());
         return new AuthorityKeyIdentifierExtension(ki, null, null);
