@@ -20,7 +20,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
-import org.candlepin.policy.js.compliance.DateRange;
+import org.candlepin.util.DateRange;
 
 import com.google.inject.Inject;
 

@@ -46,10 +46,10 @@ import org.candlepin.policy.js.JsRunnerRequestCache;
 import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
-import org.candlepin.policy.js.compliance.DateRange;
 import org.candlepin.policy.js.compliance.StatusReasonMessageGenerator;
 import org.candlepin.test.TestUtil;
 import org.candlepin.test.MockResultIterator;
+import org.candlepin.util.DateRange;
 import org.candlepin.util.Util;
 
 import com.google.inject.Provider;
