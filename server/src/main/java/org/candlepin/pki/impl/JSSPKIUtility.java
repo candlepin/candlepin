@@ -262,22 +262,15 @@ public class JSSPKIUtility extends ProviderBasedPKIUtility {
              * https://tools.ietf.org/html/rfc6125#section-6.4.4
              */
             // Not critical by default and should *not* be critical since the subject field isn't empty
-            SubjectAlternativeNameExtension altNames = new SubjectAlternativeNameExtension();
-            GeneralName[] akiName;
-            if (alternateName == null) {
-                akiName = new GeneralName[1];
-            }
-            else {
-                akiName = new GeneralName[2];
+            if (alternateName != null) {
+                SubjectAlternativeNameExtension altNames = new SubjectAlternativeNameExtension();
+                GeneralName[] akiName = new GeneralName[2];
+                akiName[0] = new GeneralName(new X500Name(dn));
                 akiName[1] = new GeneralName(new X500Name("CN=" + alternateName));
+                GeneralNames generalNames = new GeneralNames(akiName);
+                altNames.setGeneralNames(generalNames);
+                certExtensions.add(altNames);
             }
-
-            akiName[0] = new GeneralName(new X500Name(dn));
-
-            GeneralNames generalNames = new GeneralNames(akiName);
-            altNames.setGeneralNames(generalNames);
-
-            certExtensions.add(altNames);
         }
         catch (InvalidBERException | GeneralNamesException e) {
             throw new IOException("Could not construct certificate extensions", e);
