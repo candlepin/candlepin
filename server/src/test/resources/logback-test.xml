@@ -18,6 +18,9 @@
   <logger name="org.hibernate.event.internal.DefaultPersistEventListener" level="TRACE"/>
 -->
 
+  <!-- Silence the hibernate Criteria deprecation warnings. -->
+  <logger name="org.hibernate.orm.deprecation" level="DEBUG" additivity="false"/>
+
   <root level="WARN">
     <appender-ref ref="RootAppender"/>
   </root>
