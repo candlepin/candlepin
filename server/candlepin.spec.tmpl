@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.1.18
+Version: 2.1.19
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,11 @@ fi
 
 #raw
 %changelog
+* Tue Jun 19 2018 Kevin Howell <khowell@redhat.com> 2.1.19-1
+- Switch to SHA256WithRSA from SHA1WithRSA. (awood@redhat.com)
+- Allow user to change signing algorithms. (awood@redhat.com)
+- 1592447: Convert Candlepin to use Bouncy Castle 1.59. (awood@redhat.com)
+
 * Thu Jun 07 2018 Kevin Howell <khowell@redhat.com> 2.1.18-1
 - Added bulk consumer fetching to ConsumerCurator (crog@redhat.com)
 - 1571425: Two changes to make HornetQ clients more resilient
