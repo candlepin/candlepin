@@ -29,10 +29,10 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Branding;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
-import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificateCurator;
@@ -52,8 +52,8 @@ import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.dto.ContentData;
-import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.ProductContentData;
+import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.pinsetter.core.PinsetterKernel;
 import org.candlepin.policy.EntitlementRefusedException;
@@ -70,9 +70,9 @@ import org.candlepin.policy.js.pool.PoolUpdate;
 import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
-import org.candlepin.util.Util;
 import org.candlepin.util.Traceable;
 import org.candlepin.util.TraceableParam;
+import org.candlepin.util.Util;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -649,10 +649,8 @@ public class CandlepinPoolManager implements PoolManager {
             // quantity has changed. delete any excess entitlements from pool
             // the quantity has not yet been expressed on the pool itself
             if (updatedPool.getQuantityChanged()) {
-                RevocationOp revPlan = new RevocationOp(this.poolCurator, this.consumerTypeCurator,
-                    Collections.singletonList(existingPool));
-
-                Set<Pool> deletedPools = revPlan.execute(this);
+                Set<Pool> deletedPools = revokeEntitlementsFromOverflowingPools(Collections.singletonList
+                    (existingPool));
                 if (deletedPools != null) {
                     for (Pool pool : deletedPools) {
                         existingUndeletedPoolIds.remove(pool.getId());
@@ -695,6 +693,41 @@ public class CandlepinPoolManager implements PoolManager {
 
         // Return entitlement IDs in need regeneration
         return entitlementsToRegen;
+    }
+
+    Set<Pool> revokeEntitlementsFromOverflowingPools(List<Pool> pools) {
+        Collection<Pool> overflowing =
+            pools.stream().filter(Pool::isOverflowing).collect(Collectors.toList());
+        if (overflowing.isEmpty()) {
+            return null;
+        }
+        List<Entitlement> entitlementsToRevoke = new ArrayList<>();
+        overflowing = poolCurator.lockAndLoad(overflowing);
+
+        List<Entitlement> overFlowingEnts = this.poolCurator.retrieveOrderedEntitlementsOf(overflowing);
+        Map<String, List<Entitlement>> entMap = new HashMap<>();
+        for (Entitlement entitlement : overFlowingEnts) {
+            entMap.computeIfAbsent(entitlement.getPool().getId(), k -> new ArrayList<>()).add(entitlement);
+        }
+
+        for (Pool pool : overflowing) {
+            // we then start revoking the existing entitlements
+            List<Entitlement> entitlements = entMap.get(pool.getId());
+            long newConsumed = pool.getConsumed();
+
+            // deletes ents in order of date since we retrieved and put them in the map in order.
+            for (Entitlement ent : entitlements) {
+                if (newConsumed > pool.getQuantity()) {
+                    entitlementsToRevoke.add(ent);
+                    newConsumed -= ent.getQuantity();
+                }
+                else {
+                    break;
+                }
+            }
+        }
+        // revoke the entitlements amassed above
+        return revokeEntitlements(new ArrayList<>(entitlementsToRevoke));
     }
 
     /**
@@ -1685,7 +1718,7 @@ public class CandlepinPoolManager implements PoolManager {
      * This method will pull the bonus pools from a physical and make sure that
      *  the bonus pools are not over-consumed.
      *
-     * @param owner
+     * @param ownerId
      * @param entitlements
      */
     public void checkBonusPoolQuantities(String ownerId,
@@ -1709,8 +1742,7 @@ public class CandlepinPoolManager implements PoolManager {
             }
         }
 
-        RevocationOp rp = new RevocationOp(this.poolCurator, this.consumerTypeCurator, derivedPools);
-        rp.execute(this);
+        revokeEntitlementsFromOverflowingPools(derivedPools);
     }
 
     @Override

@@ -26,6 +26,7 @@ import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Product.Attributes;
+import org.candlepin.pinsetter.tasks.HypervisorUpdateJob;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -43,6 +44,7 @@ import java.lang.reflect.Field;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -985,6 +987,52 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         assertEquals(consumer2.getId(), hypervisorMap.get(hypervisorId2).getId());
     }
 
+    @Test
+    public void testGetHypervisorConsumerMapWithFacts() {
+        String hypervisorId1 = "Hypervisor";
+        Consumer consumer1 = new Consumer("testConsumer", "testUser", owner, ct);
+        consumer1.setFact("dmi.system.uuid", "blah");
+        HypervisorId hypervisorId = new HypervisorId(hypervisorId1);
+        hypervisorId.setOwner(owner);
+        consumer1.setHypervisorId(hypervisorId);
+        consumer1 = consumerCurator.create(consumer1);
+
+        HypervisorUpdateJob.HypervisorList list = new HypervisorUpdateJob.HypervisorList();
+        list.setConsumers(Collections.singletonList(consumer1));
+
+        VirtConsumerMap hypervisorMap = consumerCurator.getHostConsumersMap(owner, list);
+        assertEquals(1, hypervisorMap.size());
+        assertEquals(consumer1, hypervisorMap.get(hypervisorId1));
+    }
+
+    @Test
+    public void testGetHypervisorConsumerMapWithFactsAndHypervisorId() {
+        // first consumer set with only the fact, not the hypervisor
+        String hypervisorId1 = "Hypervisor";
+        Consumer consumer1 = new Consumer("testConsumer", "testUser", owner, ct);
+        consumer1.setFact("dmi.system.uuid", "blah");
+        consumer1 = consumerCurator.create(consumer1);
+
+        // next consumer set with the hypervisor, not the fact
+        String hypervisorId2 = "hypervisor2";
+        Consumer consumer2 = new Consumer("testConsumer2", "testUser2", owner, ct);
+        HypervisorId hypervisorId2Obj = new HypervisorId(hypervisorId2);
+        hypervisorId2Obj.setOwner(owner);
+        consumer2.setHypervisorId(hypervisorId2Obj);
+        consumer2 = consumerCurator.create(consumer2);
+
+        // hypervisor report will have both the hypervisor and the fact
+        HypervisorId hypervisorId1Obj = new HypervisorId(hypervisorId1);
+        hypervisorId1Obj.setOwner(owner);
+        consumer1.setHypervisorId(hypervisorId1Obj);
+        HypervisorUpdateJob.HypervisorList list = new HypervisorUpdateJob.HypervisorList();
+        list.setConsumers(Arrays.asList(consumer1, consumer2));
+
+        VirtConsumerMap hypervisorMap = consumerCurator.getHostConsumersMap(owner, list);
+        assertEquals(2, hypervisorMap.size());
+        assertEquals(consumer1, hypervisorMap.get(hypervisorId1));
+        assertEquals(consumer2, hypervisorMap.get(hypervisorId2));
+    }
     @Test
     public void testGetHypervisorsBulk() {
         String hypervisorid = "hypervisor";

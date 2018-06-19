@@ -577,13 +577,13 @@ public class ConsumerResource {
         }
 
         if (dto.getHypervisorId() == null &&
-            dto.getFact("system_uuid") != null &&
+            dto.getFact("dmi.system.uuid") != null &&
             !"true".equals(dto.getFact("virt.is_guest")) &&
             entity.getOwnerId() != null) {
             HypervisorId hypervisorId = new HypervisorId(
                 entity,
                 ownerCurator.findOwnerById(entity.getOwnerId()),
-                dto.getFact("system_uuid"));
+                dto.getFact("dmi.system.uuid"));
             entity.setHypervisorId(hypervisorId);
         }
 
@@ -687,7 +687,7 @@ public class ConsumerResource {
 
         // fix for duplicate hypervisor/consumer problem
         Consumer consumer = null;
-        if (ownerKey != null && dto.getFact("system_uuid") != null &&
+        if (ownerKey != null && dto.getFact("dmi.system.uuid") != null &&
             !"true".equalsIgnoreCase(dto.getFact("virt.is_guest"))) {
 
             Owner owner = ownerCurator.getByKey(ownerKey);
@@ -698,7 +698,7 @@ public class ConsumerResource {
             }
 
             if (owner != null) {
-                consumer = consumerCurator.getHypervisor(dto.getFact("system_uuid"), owner);
+                consumer = consumerCurator.getHypervisor(dto.getFact("dmi.system.uuid"), owner);
                 if (consumer != null) {
                     consumer.setIdCert(generateIdCert(consumer, false));
                     this.updateConsumer(consumer.getUuid(), dto, principal);
