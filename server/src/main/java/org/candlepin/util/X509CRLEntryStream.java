@@ -14,12 +14,10 @@
  */
 package org.candlepin.util;
 
-import static org.bouncycastle.asn1.DERTags.*;
+import static org.bouncycastle.asn1.BERTags.*;
 import static org.candlepin.util.DERUtil.*;
 
-import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.x509.TBSCertList.CRLEntry;
-import org.bouncycastle.jce.provider.X509CRLEntryObject;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
@@ -85,7 +83,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * See https://en.wikipedia.org/wiki/X.690 and http://luca.ntop.org/Teaching/Appunti/asn1.html
  * for reference on ASN1 and DER encoding.
  */
-public class X509CRLEntryStream implements Closeable, Iterator<X509CRLEntryObject> {
+public class X509CRLEntryStream implements Closeable, Iterator<CRLEntry> {
     private InputStream crlStream;
 
     private int revokedSeqBytes;
@@ -144,7 +142,7 @@ public class X509CRLEntryStream implements Closeable, Iterator<X509CRLEntryObjec
         // Now we are actually at the values within the TBSCertList sequence.
         // Read the CRL metadata and trash it.  We get to the thisUpdate item
         // and then break out.
-        int tagNo = NULL;
+        int tagNo;
         while (true) {
             tag = readTag(s, count);
             tagNo = readTagNumber(s, tag, count);
@@ -183,7 +181,7 @@ public class X509CRLEntryStream implements Closeable, Iterator<X509CRLEntryObjec
         return readLength(s, count);
     }
 
-    public X509CRLEntryObject next() {
+    public CRLEntry next() {
         try {
             // Strip the tag for the revokedCertificate entry
             int tag = readTag(crlStream, count);
@@ -215,12 +213,10 @@ public class X509CRLEntryStream implements Closeable, Iterator<X509CRLEntryObjec
              * X509CRLEntryObject for the X509CRLStreamWriter, so we're kind of stuck
              * with it.
              */
-            DERSequence obj = (DERSequence) DERSequence.fromByteArray(reconstructed.toByteArray());
+            byte[] obj = reconstructed.toByteArray();
             reconstructed.close();
 
-            CRLEntry crlEntry = new CRLEntry(obj);
-
-            return new X509CRLEntryObject(crlEntry);
+            return CRLEntry.getInstance(obj);
         }
         catch (IOException e) {
             throw new RuntimeException(e);

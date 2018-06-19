@@ -14,11 +14,12 @@
  */
 package org.candlepin.pki.impl;
 
+import static org.candlepin.pki.impl.BouncyCastleProviderLoader.*;
+
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.pki.PKIReader;
 import org.candlepin.pki.PKIUtility;
-import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509CRLEntryWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
@@ -33,18 +34,27 @@ import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.DERUTF8String;
 import org.bouncycastle.asn1.misc.MiscObjectIdentifiers;
 import org.bouncycastle.asn1.misc.NetscapeCertType;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x509.AuthorityKeyIdentifier;
 import org.bouncycastle.asn1.x509.CRLNumber;
 import org.bouncycastle.asn1.x509.CRLReason;
 import org.bouncycastle.asn1.x509.ExtendedKeyUsage;
+import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.asn1.x509.GeneralName;
 import org.bouncycastle.asn1.x509.GeneralNames;
 import org.bouncycastle.asn1.x509.KeyPurposeId;
 import org.bouncycastle.asn1.x509.KeyUsage;
-import org.bouncycastle.asn1.x509.X509Extensions;
-import org.bouncycastle.openssl.PEMWriter;
-import org.bouncycastle.x509.X509V2CRLGenerator;
-import org.bouncycastle.x509.X509V3CertificateGenerator;
-import org.bouncycastle.x509.extension.AuthorityKeyIdentifierStructure;
+import org.bouncycastle.asn1.x509.SubjectKeyIdentifier;
+import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
+import org.bouncycastle.cert.X509v2CRLBuilder;
+import org.bouncycastle.cert.X509v3CertificateBuilder;
+import org.bouncycastle.cert.jcajce.JcaX509CRLConverter;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
+import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
+import org.bouncycastle.operator.ContentSigner;
+import org.bouncycastle.operator.OperatorCreationException;
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,8 +71,6 @@ import java.security.cert.X509Certificate;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
-
-import javax.security.auth.x500.X500Principal;
 
 /**
  * The default {@link PKIUtility} for Candlepin.
@@ -92,15 +100,12 @@ import javax.security.auth.x500.X500Principal;
  * See also {@link BouncyCastlePKIReader} for more notes on using NSS/JSS, and a note
  * about not using bouncycastle as the JSSE provider.
  */
-@SuppressWarnings("deprecation")
 public class BouncyCastlePKIUtility extends PKIUtility {
     private static Logger log = LoggerFactory.getLogger(BouncyCastlePKIUtility.class);
 
     @Inject
-    public BouncyCastlePKIUtility(PKIReader reader,
-        SubjectKeyIdentifierWriter subjectKeyWriter,
-        Configuration config) {
-        super(reader, subjectKeyWriter, config);
+    public BouncyCastlePKIUtility(PKIReader reader, Configuration config) {
+        super(reader, config);
     }
 
     @Override
@@ -110,18 +115,16 @@ public class BouncyCastlePKIUtility extends PKIUtility {
         KeyPair clientKeyPair, BigInteger serialNumber, String alternateName)
         throws GeneralSecurityException, IOException {
 
-        X509V3CertificateGenerator certGen = new X509V3CertificateGenerator();
         X509Certificate caCert = reader.getCACert();
-        // set cert fields
-        certGen.setSerialNumber(serialNumber);
-        certGen.setIssuerDN(caCert.getSubjectX500Principal());
-        certGen.setNotBefore(startDate);
-        certGen.setNotAfter(endDate);
+        byte[] publicKeyEncoded = clientKeyPair.getPublic().getEncoded();
 
-        X500Principal subjectPrincipal = new X500Principal(dn);
-        certGen.setSubjectDN(subjectPrincipal);
-        certGen.setPublicKey(clientKeyPair.getPublic());
-        certGen.setSignatureAlgorithm(SIGNATURE_ALGO);
+        X509v3CertificateBuilder certGen = new X509v3CertificateBuilder(
+            X500Name.getInstance(caCert.getSubjectX500Principal().getEncoded()),
+            serialNumber,
+            startDate,
+            endDate,
+            new X500Name(dn),
+            SubjectPublicKeyInfo.getInstance(publicKeyEncoded));
 
         // set key usage - required for proper x509 function
         KeyUsage keyUsage = new KeyUsage(KeyUsage.digitalSignature |
@@ -131,16 +134,18 @@ public class BouncyCastlePKIUtility extends PKIUtility {
         NetscapeCertType certType = new NetscapeCertType(
             NetscapeCertType.sslClient | NetscapeCertType.smime);
 
-        certGen.addExtension(MiscObjectIdentifiers.netscapeCertType.toString(),
+        certGen.addExtension(MiscObjectIdentifiers.netscapeCertType,
             false, certType);
-        certGen.addExtension(X509Extensions.KeyUsage.toString(), false,
+        certGen.addExtension(Extension.keyUsage, false,
             keyUsage);
 
-        certGen.addExtension(X509Extensions.AuthorityKeyIdentifier, false,
-            new AuthorityKeyIdentifierStructure(caCert));
-        certGen.addExtension(X509Extensions.SubjectKeyIdentifier, false,
-            subjectKeyWriter.getSubjectKeyIdentifier(clientKeyPair, extensions));
-        certGen.addExtension(X509Extensions.ExtendedKeyUsage, false,
+        JcaX509ExtensionUtils extentionUtil = new JcaX509ExtensionUtils();
+        AuthorityKeyIdentifier aki = extentionUtil.createAuthorityKeyIdentifier(caCert);
+        certGen.addExtension(Extension.authorityKeyIdentifier, false, aki.getEncoded());
+
+        SubjectKeyIdentifier ski = extentionUtil.createSubjectKeyIdentifier(clientKeyPair.getPublic());
+        certGen.addExtension(Extension.subjectKeyIdentifier, false, ski.getEncoded());
+        certGen.addExtension(Extension.extendedKeyUsage, false,
             new ExtendedKeyUsage(KeyPurposeId.id_kp_clientAuth));
 
         // Add an additional alternative name if provided.
@@ -159,8 +164,8 @@ public class BouncyCastlePKIUtility extends PKIUtility {
             GeneralName subject = new GeneralName(GeneralName.directoryName, dn);
             GeneralName name = new GeneralName(GeneralName.directoryName, "CN=" + alternateName);
             ASN1Encodable[] altNameArray = {subject, name};
-            GeneralNames altNames = new GeneralNames(new DERSequence(altNameArray));
-            certGen.addExtension(X509Extensions.SubjectAlternativeName, false, altNames);
+            GeneralNames altNames = GeneralNames.getInstance(new DERSequence(altNameArray));
+            certGen.addExtension(Extension.subjectAlternativeName, false, altNames);
         }
 
         if (extensions != null) {
@@ -168,7 +173,7 @@ public class BouncyCastlePKIUtility extends PKIUtility {
                 // Bouncycastle hates null values. So, set them to blank
                 // if they are null
                 String value = wrapper.getValue() == null ? "" :  wrapper.getValue();
-                certGen.addExtension(wrapper.getOid(), wrapper.isCritical(),
+                certGen.addExtension(wrapper.toASN1Primitive(), wrapper.isCritical(),
                     new DERUTF8String(value));
             }
         }
@@ -179,37 +184,58 @@ public class BouncyCastlePKIUtility extends PKIUtility {
                 // if they are null
                 byte[] value = wrapper.getValue() == null ? new byte[0] :
                     wrapper.getValue();
-                certGen.addExtension(wrapper.getOid(), wrapper.isCritical(),
+                certGen.addExtension(wrapper.toASN1Primitive(), wrapper.isCritical(),
                     new DEROctetString(value));
             }
         }
 
+        JcaContentSignerBuilder builder = new JcaContentSignerBuilder(SIGNATURE_ALGO)
+            .setProvider(BC_PROVIDER);
+        ContentSigner signer;
+        try {
+            signer = builder.build(reader.getCaKey());
+        }
+        catch (OperatorCreationException e) {
+            throw new IOException(e);
+        }
+
         // Generate the certificate
-        return certGen.generate(reader.getCaKey());
+        return new JcaX509CertificateConverter().getCertificate(certGen.build(signer));
     }
 
     @Override
     public X509CRL createX509CRL(List<X509CRLEntryWrapper> entries, BigInteger crlNumber) {
-
         try {
             X509Certificate caCert = reader.getCACert();
-            X509V2CRLGenerator generator = new X509V2CRLGenerator();
-            generator.setIssuerDN(caCert.getIssuerX500Principal());
-            generator.setThisUpdate(new Date());
+            X509v2CRLBuilder generator = new X509v2CRLBuilder(
+                X500Name.getInstance(caCert.getIssuerX500Principal().getEncoded()),
+                new Date()
+            );
             generator.setNextUpdate(
                 Util.addDaysToDt(config.getInt(ConfigProperties.CRL_NEXT_UPDATE_DELTA)));
-            generator.setSignatureAlgorithm(SIGNATURE_ALGO);
             // add all the CRL entries.
             for (X509CRLEntryWrapper entry : entries) {
                 generator.addCRLEntry(entry.getSerialNumber(), entry.getRevocationDate(),
                     CRLReason.privilegeWithdrawn);
             }
             log.info("Completed adding CRL numbers to the certificate.");
-            generator.addExtension(X509Extensions.AuthorityKeyIdentifier,
-                false, new AuthorityKeyIdentifierStructure(caCert));
-            generator.addExtension(X509Extensions.CRLNumber, false,
-                new CRLNumber(crlNumber));
-            return generator.generate(reader.getCaKey());
+
+            JcaX509ExtensionUtils extentionUtil = new JcaX509ExtensionUtils();
+            AuthorityKeyIdentifier aki = extentionUtil.createAuthorityKeyIdentifier(caCert);
+            generator.addExtension(Extension.authorityKeyIdentifier, false, aki.getEncoded());
+            generator.addExtension(Extension.cRLNumber, false, new CRLNumber(crlNumber));
+
+            JcaContentSignerBuilder builder = new JcaContentSignerBuilder(SIGNATURE_ALGO).setProvider(
+                BC_PROVIDER);
+            ContentSigner signer;
+            try {
+                signer = builder.build(reader.getCaKey());
+            }
+            catch (OperatorCreationException e) {
+                throw new IOException(e);
+            }
+
+            return new JcaX509CRLConverter().getCRL(generator.build(signer));
         }
         catch (Exception e) {
             throw new RuntimeException(e);
@@ -218,7 +244,7 @@ public class BouncyCastlePKIUtility extends PKIUtility {
 
     private void writePemEncoded(Object obj, OutputStream out) throws IOException {
         OutputStreamWriter oswriter = new OutputStreamWriter(out);
-        PEMWriter writer = new PEMWriter(oswriter);
+        JcaPEMWriter writer = new JcaPEMWriter(oswriter);
         writer.writeObject(obj);
         writer.flush();
         // We're hoping close does nothing more than a flush and super.close() here

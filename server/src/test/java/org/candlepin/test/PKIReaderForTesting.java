@@ -14,10 +14,14 @@
  */
 package org.candlepin.test;
 
-import org.candlepin.pki.PKIReader;
+import static org.candlepin.pki.impl.BouncyCastleProviderLoader.BC_PROVIDER;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.openssl.PEMReader;
+import org.candlepin.pki.PKIReader;
+import org.candlepin.pki.impl.BouncyCastleProviderLoader;
+
+import org.bouncycastle.openssl.PEMKeyPair;
+import org.bouncycastle.openssl.PEMParser;
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,7 +29,6 @@ import java.io.InputStreamReader;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PrivateKey;
-import java.security.Security;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -35,9 +38,8 @@ import java.util.Set;
  * PKIReaderForTesting
  */
 public class PKIReaderForTesting implements PKIReader {
-
     static {
-        Security.addProvider(new BouncyCastleProvider());
+        BouncyCastleProviderLoader.addProvider();
     }
 
     @Override
@@ -52,11 +54,13 @@ public class PKIReaderForTesting implements PKIReader {
     public PrivateKey getCaKey() throws IOException, GeneralSecurityException {
         InputStream keyStream = this.getClass().getClassLoader().getResourceAsStream("test-ca.key");
 
-        PEMReader reader = null;
+        PEMParser reader = null;
         KeyPair keyPair = null;
         try {
-            reader = new PEMReader(new InputStreamReader(keyStream));
-            keyPair = (KeyPair) reader.readObject();
+            reader = new PEMParser(new InputStreamReader(keyStream));
+            keyPair = new JcaPEMKeyConverter()
+                .setProvider(BC_PROVIDER)
+                .getKeyPair((PEMKeyPair) reader.readObject());
         }
         finally {
             if (reader != null) {

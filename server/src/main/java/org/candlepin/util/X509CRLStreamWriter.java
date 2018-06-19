@@ -14,52 +14,49 @@
  */
 package org.candlepin.util;
 
-import static org.bouncycastle.asn1.DERTags.*;
+import static org.bouncycastle.asn1.BERTags.*;
 import static org.candlepin.util.DERUtil.*;
 
 import org.apache.commons.io.IOUtils;
+import org.bouncycastle.asn1.ASN1BitString;
 import org.bouncycastle.asn1.ASN1EncodableVector;
+import org.bouncycastle.asn1.ASN1Enumerated;
+import org.bouncycastle.asn1.ASN1GeneralizedTime;
 import org.bouncycastle.asn1.ASN1InputStream;
+import org.bouncycastle.asn1.ASN1Integer;
+import org.bouncycastle.asn1.ASN1Object;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.ASN1OctetString;
+import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.ASN1Sequence;
+import org.bouncycastle.asn1.ASN1TaggedObject;
+import org.bouncycastle.asn1.ASN1UTCTime;
 import org.bouncycastle.asn1.DERBitString;
-import org.bouncycastle.asn1.DEREnumerated;
 import org.bouncycastle.asn1.DERGeneralizedTime;
-import org.bouncycastle.asn1.DERInteger;
-import org.bouncycastle.asn1.DERObject;
-import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.DERTaggedObject;
-import org.bouncycastle.asn1.DERTags;
 import org.bouncycastle.asn1.DERUTCTime;
-import org.bouncycastle.asn1.nist.NISTObjectIdentifiers;
-import org.bouncycastle.asn1.oiw.OIWObjectIdentifiers;
-import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
+import org.bouncycastle.asn1.x509.AuthorityKeyIdentifier;
 import org.bouncycastle.asn1.x509.CRLReason;
 import org.bouncycastle.asn1.x509.CertificateList;
+import org.bouncycastle.asn1.x509.Extension;
+import org.bouncycastle.asn1.x509.Extensions;
+import org.bouncycastle.asn1.x509.ExtensionsGenerator;
+import org.bouncycastle.asn1.x509.TBSCertList.CRLEntry;
 import org.bouncycastle.asn1.x509.Time;
-import org.bouncycastle.asn1.x509.X509Extension;
-import org.bouncycastle.asn1.x509.X509Extensions;
 import org.bouncycastle.cert.X509CRLHolder;
 import org.bouncycastle.cert.X509v2CRLBuilder;
+import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
 import org.bouncycastle.crypto.CryptoException;
 import org.bouncycastle.crypto.DataLengthException;
-import org.bouncycastle.crypto.Digest;
-import org.bouncycastle.crypto.digests.MD4Digest;
-import org.bouncycastle.crypto.digests.MD5Digest;
-import org.bouncycastle.crypto.digests.SHA1Digest;
-import org.bouncycastle.crypto.digests.SHA224Digest;
-import org.bouncycastle.crypto.digests.SHA256Digest;
-import org.bouncycastle.crypto.digests.SHA384Digest;
-import org.bouncycastle.crypto.params.RSAKeyParameters;
-import org.bouncycastle.crypto.signers.RSADigestSigner;
-import org.bouncycastle.jce.provider.X509CRLEntryObject;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.operator.ContentSigner;
-import org.bouncycastle.operator.DefaultDigestAlgorithmIdentifierFinder;
+import org.bouncycastle.operator.DefaultAlgorithmNameFinder;
+import org.bouncycastle.operator.DefaultSignatureAlgorithmIdentifierFinder;
 import org.bouncycastle.operator.OperatorCreationException;
-import org.bouncycastle.operator.bc.BcRSAContentSignerBuilder;
-import org.bouncycastle.x509.extension.AuthorityKeyIdentifierStructure;
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,8 +70,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigInteger;
 import java.security.InvalidKeyException;
-import java.security.cert.CRLException;
-import java.security.cert.CertificateParsingException;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
@@ -85,7 +83,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import java.util.Vector;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -128,6 +125,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  * </pre>
  */
 public class X509CRLStreamWriter {
+    private static final BouncyCastleProvider BC_PROVIDER = new BouncyCastleProvider();
+
     public static final Logger log = LoggerFactory.getLogger(X509CRLStreamWriter.class);
 
     private boolean locked = false;
@@ -142,12 +141,11 @@ public class X509CRLStreamWriter {
     private AtomicInteger count;
 
     private AlgorithmIdentifier signingAlg;
-    private AlgorithmIdentifier digestAlg;
 
     private int deletedEntriesLength;
-    private RSADigestSigner signer;
+    private ContentSigner signer;
     private RSAPrivateKey key;
-    private AuthorityKeyIdentifierStructure akiStructure;
+    private AuthorityKeyIdentifier aki;
 
     private int newSigLength;
     private int oldSigLength;
@@ -158,28 +156,28 @@ public class X509CRLStreamWriter {
     private byte[] newExtensions;
 
     public X509CRLStreamWriter(File crlToChange, RSAPrivateKey key, X509Certificate ca)
-        throws CryptoException, IOException, CertificateParsingException {
+        throws CryptoException, IOException, NoSuchAlgorithmException, CertificateEncodingException {
         this(new BufferedInputStream(new FileInputStream(crlToChange)), key, ca);
     }
 
     public X509CRLStreamWriter(InputStream crlToChange, RSAPrivateKey key, X509Certificate ca)
-        throws CryptoException, IOException, CertificateParsingException {
-        this(crlToChange, key, new AuthorityKeyIdentifierStructure(ca));
+        throws CryptoException, IOException, NoSuchAlgorithmException, CertificateEncodingException {
+        this(crlToChange, key, new JcaX509ExtensionUtils().createAuthorityKeyIdentifier(ca));
     }
 
 
     public X509CRLStreamWriter(File crlToChange, RSAPrivateKey key, RSAPublicKey pubKey)
-        throws CryptoException, IOException, InvalidKeyException {
+        throws CryptoException, IOException, InvalidKeyException, NoSuchAlgorithmException {
         this(new BufferedInputStream(new FileInputStream(crlToChange)), key, pubKey);
     }
 
     public X509CRLStreamWriter(InputStream crlToChange, RSAPrivateKey key, RSAPublicKey pubKey)
-        throws CryptoException, IOException, InvalidKeyException {
-        this(crlToChange, key, new AuthorityKeyIdentifierStructure(pubKey));
+        throws CryptoException, IOException, InvalidKeyException, NoSuchAlgorithmException {
+        this(crlToChange, key, new JcaX509ExtensionUtils().createAuthorityKeyIdentifier(pubKey));
     }
 
     public X509CRLStreamWriter(InputStream crlToChange,
-        RSAPrivateKey key, AuthorityKeyIdentifierStructure akiStructure)
+        RSAPrivateKey key, AuthorityKeyIdentifier aki)
         throws CryptoException, IOException {
         this.deletedEntries = new HashSet<BigInteger>();
         this.deletedEntriesLength = 0;
@@ -189,23 +187,8 @@ public class X509CRLStreamWriter {
 
         this.count = new AtomicInteger();
 
-        /* The length of an RSA signature is padded out to the length of the modulus
-         * in bytes.  See http://stackoverflow.com/questions/6658728/rsa-signature-size
-         *
-         * If the original CRL was signed with a 2048 bit key and someone sends in a
-         * 4096 bit key, we need to account for the discrepancy.
-         */
-        int newSigBytes = key.getModulus().bitLength() / 8;
-
-        /* Now we need a byte array to figure out how long the new signature will
-         * be when encoded.
-         */
-        byte[] dummySig = new byte[newSigBytes];
-        Arrays.fill(dummySig, (byte) 0x00);
-        this.newSigLength = new DERBitString(dummySig).getDEREncoded().length;
-
         this.key = key;
-        this.akiStructure = akiStructure;
+        this.aki = aki;
     }
 
     public X509CRLStreamWriter preScan(File crlToChange) throws IOException {
@@ -236,23 +219,19 @@ public class X509CRLStreamWriter {
 
         try {
             reaperStream = new X509CRLEntryStream(crlToChange);
-            try {
-                if (!reaperStream.hasNext()) {
-                    emptyCrl = true;
-                    preScanned = true;
-                    return this;
-                }
-
-                while (reaperStream.hasNext()) {
-                    X509CRLEntryObject entry = reaperStream.next();
-                    if (validator != null && validator.shouldDelete(entry)) {
-                        deletedEntries.add(entry.getSerialNumber());
-                        deletedEntriesLength += entry.getEncoded().length;
-                    }
-                }
+            if (!reaperStream.hasNext()) {
+                emptyCrl = true;
+                preScanned = true;
+                return this;
             }
-            catch (CRLException e) {
-                throw new IOException("Could not read CRL entry", e);
+
+            while (reaperStream.hasNext()) {
+                CRLEntry entry = reaperStream.next();
+                if (validator != null && validator.shouldDelete(entry)) {
+                    // Get the serial number
+                    deletedEntries.add(entry.getUserCertificate().getValue());
+                    deletedEntriesLength += entry.getEncoded().length;
+                }
             }
 
             /* At this point, crlToChange is at the point where the crlExtensions would
@@ -261,36 +240,36 @@ public class X509CRLStreamWriter {
              * extensions in all CRLs issued.
              */
             byte[] oldExtensions = null;
-            DERObject o;
+            ASN1Primitive o;
             asn1In = new ASN1InputStream(crlToChange);
             while ((o = asn1In.readObject()) != null) {
-                if (o instanceof DERSequence) {
+                if (o instanceof ASN1Sequence) {
                     // Now we are at the signatureAlgorithm
-                    DERSequence seq = (DERSequence) o;
-                    if (seq.getObjectAt(0) instanceof DERObjectIdentifier) {
-                        signingAlg = new AlgorithmIdentifier(seq);
-                        digestAlg = new DefaultDigestAlgorithmIdentifierFinder().find(signingAlg);
+                    ASN1Sequence seq = (ASN1Sequence) o;
+                    if (seq.getObjectAt(0) instanceof ASN1ObjectIdentifier) {
+                        // It's possible an algorithm has already been set using setSigningAlgorithm()
+                        if (signingAlg == null) {
+                            signingAlg = AlgorithmIdentifier.getInstance(seq);
+                        }
 
                         try {
                             // Build the signer
-                            this.signer = new RSADigestSigner(createDigest(digestAlg));
-                            signer.init(true, new RSAKeyParameters(
-                                true, key.getModulus(), key.getPrivateExponent()));
+                            this.signer = createContentSigner(signingAlg, key);
                         }
-                        catch (CryptoException e) {
+                        catch (OperatorCreationException e) {
                             throw new IOException(
-                                "Could not create RSADigest signer for " + digestAlg.getAlgorithm());
+                                "Could not create ContentSigner for " + signingAlg.getAlgorithm());
                         }
                     }
                 }
-                else if (o instanceof DERBitString) {
-                    oldSigLength = o.getDEREncoded().length;
+                else if (o instanceof ASN1BitString) {
+                    oldSigLength = o.getEncoded().length;
                 }
                 else {
                     if (oldExtensions != null) {
                         throw new IllegalStateException("Already read in CRL extensions.");
                     }
-                    oldExtensions = ((DERTaggedObject) o).getDEREncoded();
+                    oldExtensions = o.getEncoded();
                 }
             }
 
@@ -330,26 +309,40 @@ public class X509CRLStreamWriter {
      * @param serial
      * @param date
      * @param reason
+     * @throws IOException if an entry fails to generate
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public void add(BigInteger serial, Date date, int reason) {
+    public void add(BigInteger serial, Date date, int reason) throws IOException {
         if (locked) {
             throw new IllegalStateException("Cannot add to a locked stream.");
         }
 
         ASN1EncodableVector v = new ASN1EncodableVector();
 
-        v.add(new DERInteger(serial));
+        v.add(new ASN1Integer(serial));
         v.add(new Time(date));
 
-        CRLReason crlReason = new CRLReason(reason);
-        Vector extOids = new Vector();
-        Vector extValues = new Vector();
-        extOids.addElement(X509Extension.reasonCode);
-        extValues.addElement(new X509Extension(false, new DEROctetString(crlReason.getDEREncoded())));
-        v.add(new X509Extensions(extOids, extValues));
+        CRLReason crlReason = CRLReason.getInstance(new ASN1Enumerated(reason));
+        ExtensionsGenerator generator = new ExtensionsGenerator();
+        generator.addExtension(Extension.reasonCode, false, crlReason);
+        v.add(generator.generate());
 
         newEntries.add(new DERSequence(v));
+    }
+
+    /**
+     * Allow the user to change the signing algorithm used.  Only RSA based algorithms are supported.
+     */
+    public void setSigningAlgorithm(String algorithm) {
+        if (locked) {
+            throw new IllegalStateException("This stream is already locked.");
+        }
+
+        if (!algorithm.toLowerCase().contains("rsa")) {
+            throw new IllegalArgumentException("Only RSA is supported");
+        }
+
+        signingAlg = new DefaultSignatureAlgorithmIdentifierFinder().find(algorithm);
     }
 
     /**
@@ -374,8 +367,8 @@ public class X509CRLStreamWriter {
         ASN1InputStream asn1in = null;
         try {
             asn1in = new ASN1InputStream(crlIn);
-            DERSequence certListSeq = (DERSequence) asn1in.readObject();
-            CertificateList certList = new CertificateList(certListSeq);
+            ASN1Sequence certListSeq = (ASN1Sequence) asn1in.readObject();
+            CertificateList certList = CertificateList.getInstance(certListSeq);
             X509CRLHolder oldCrl = new X509CRLHolder(certList);
 
             X509v2CRLBuilder crlBuilder = new X509v2CRLBuilder(oldCrl.getIssuer(), new Date());
@@ -390,47 +383,45 @@ public class X509CRLStreamWriter {
 
             for (Object o : oldCrl.getExtensionOIDs()) {
                 ASN1ObjectIdentifier oid = (ASN1ObjectIdentifier) o;
-                X509Extension ext = oldCrl.getExtension(oid);
+                Extension ext = oldCrl.getExtension(oid);
 
-                if (oid.equals(X509Extension.cRLNumber)) {
-                    DEROctetString octet = (DEROctetString) ext.getValue().getDERObject();
-                    DERInteger currentNumber = (DERInteger) DERTaggedObject.fromByteArray(octet.getOctets());
-                    DERInteger nextNumber = new DERInteger(currentNumber.getValue().add(BigInteger.ONE));
+                if (oid.equals(Extension.cRLNumber)) {
+                    ASN1OctetString octet = ext.getExtnValue();
+                    ASN1Integer currentNumber = (ASN1Integer) new ASN1InputStream(octet.getOctets())
+                        .readObject();
+                    ASN1Integer nextNumber = new ASN1Integer(currentNumber.getValue().add(BigInteger.ONE));
 
                     crlBuilder.addExtension(oid, ext.isCritical(), nextNumber);
                 }
-                else if (oid.equals(X509Extension.authorityKeyIdentifier)) {
-                    crlBuilder.addExtension(oid, ext.isCritical(),
-                        new AuthorityKeyIdentifierStructure(ext.getValue().getDEREncoded()));
+                else if (oid.equals(Extension.authorityKeyIdentifier)) {
+                    crlBuilder.addExtension(oid, ext.isCritical(), ext.getParsedValue());
                 }
             }
 
             for (DERSequence entry : newEntries) {
                 // XXX: This is all a bit messy considering the user already passed in the serial, date
                 // and reason.
-                BigInteger serial = ((DERInteger) entry.getObjectAt(0)).getValue();
+                BigInteger serial = ((ASN1Integer) entry.getObjectAt(0)).getValue();
                 Date revokeDate = ((Time) entry.getObjectAt(1)).getDate();
                 int reason = CRLReason.unspecified;
                 if (entry.size() == 3) {
-                    X509Extensions extensions = (X509Extensions) entry.getObjectAt(2);
-                    X509Extension reasonExt = extensions.getExtension(X509Extension.reasonCode);
+                    Extensions extensions = (Extensions) entry.getObjectAt(2);
+                    Extension reasonExt = extensions.getExtension(Extension.reasonCode);
 
                     if (reasonExt != null) {
-                        reason = ((DEREnumerated) reasonExt.getParsedValue()).getValue().intValue();
+                        reason = ((ASN1Enumerated) reasonExt.getParsedValue()).getValue().intValue();
                     }
                 }
                 crlBuilder.addCRLEntry(serial, revokeDate, reason);
             }
 
-            RSAKeyParameters keyParams = new RSAKeyParameters(
-                true, key.getModulus(), key.getPrivateExponent());
-
-            signingAlg = oldCrl.toASN1Structure().getSignatureAlgorithm();
-            digestAlg = new DefaultDigestAlgorithmIdentifierFinder().find(signingAlg);
+            if (signingAlg == null) {
+                signingAlg = oldCrl.toASN1Structure().getSignatureAlgorithm();
+            }
 
             ContentSigner s;
             try {
-                s = new BcRSAContentSignerBuilder(signingAlg, digestAlg).build(keyParams);
+                s = createContentSigner(signingAlg, key);
                 X509CRLHolder newCrl = crlBuilder.build(s);
                 out.write(newCrl.getEncoded());
             }
@@ -480,7 +471,8 @@ public class X509CRLStreamWriter {
             byte[] entryBytes = new byte[length];
             readFullyAndTrack(crlIn, entryBytes, count);
 
-            DERInteger serial = (DERInteger) DERInteger.fromByteArray(entryBytes);
+            // We only need the serial number and not the rest of the stuff in the entry
+            ASN1Integer serial = (ASN1Integer) new ASN1InputStream(entryBytes).readObject();
 
             if (deletedEntriesLength == 0 || !deletedEntries.contains(serial.getValue())) {
                 writeTag(out, tag, tagNo, signer);
@@ -490,26 +482,23 @@ public class X509CRLStreamWriter {
         }
 
         // Write the new entries into the new CRL
-        for (DERSequence entry : newEntries) {
-            writeBytes(out, entry.getDEREncoded(), signer);
+        for (ASN1Sequence entry : newEntries) {
+            writeBytes(out, entry.getEncoded(), signer);
         }
 
         // Copy the old extensions over
         if (newExtensions != null) {
             out.write(newExtensions);
-            signer.update(newExtensions, 0, newExtensions.length);
+            signer.getOutputStream().write(newExtensions, 0, newExtensions.length);
         }
-        out.write(signingAlg.getDEREncoded());
+        out.write(signingAlg.getEncoded());
 
         try {
-            byte[] signature = signer.generateSignature();
-            DERBitString signatureBits = new DERBitString(signature);
-            out.write(signatureBits.getDEREncoded());
+            byte[] signature = signer.getSignature();
+            ASN1BitString signatureBits = new DERBitString(signature);
+            out.write(signatureBits.getEncoded());
         }
         catch (DataLengthException e) {
-            throw new IOException("Could not sign", e);
-        }
-        catch (CryptoException e) {
             throw new IOException("Could not sign", e);
         }
     }
@@ -517,42 +506,42 @@ public class X509CRLStreamWriter {
     /**
      * This method updates the crlNumber and authorityKeyIdentifier extensions.  Any
      * other extensions are copied over unchanged.
-     * @param extensions
+     * @param obj
      * @return
      * @throws IOException
      */
     @SuppressWarnings("rawtypes")
     protected byte[] updateExtensions(byte[] obj) throws IOException {
-        DERTaggedObject taggedExts = (DERTaggedObject) DERTaggedObject.fromByteArray(obj);
-        DERSequence seq = (DERSequence) taggedExts.getObject();
+        ASN1TaggedObject taggedExts = (ASN1TaggedObject) new ASN1InputStream(obj).readObject();
+        ASN1Sequence seq = (ASN1Sequence) taggedExts.getObject();
         ASN1EncodableVector modifiedExts = new ASN1EncodableVector();
 
         // Now we need to read the extensions and find the CRL number and increment it,
         // and determine if its length changed.
         Enumeration objs = seq.getObjects();
         while (objs.hasMoreElements()) {
-            DERSequence ext = (DERSequence) objs.nextElement();
-            DERObjectIdentifier oid = (DERObjectIdentifier) ext.getObjectAt(0);
-            if (X509Extension.cRLNumber.equals(oid)) {
-                DEROctetString s = (DEROctetString) ext.getObjectAt(1);
-                DERInteger i = (DERInteger) DERTaggedObject.fromByteArray(s.getOctets());
-                DERInteger newCrlNumber = new DERInteger(i.getValue().add(BigInteger.ONE));
+            ASN1Sequence ext = (ASN1Sequence) objs.nextElement();
+            ASN1ObjectIdentifier oid = (ASN1ObjectIdentifier) ext.getObjectAt(0);
+            if (Extension.cRLNumber.equals(oid)) {
+                ASN1OctetString s = (ASN1OctetString) ext.getObjectAt(1);
+                ASN1Integer i = (ASN1Integer) new ASN1InputStream(s.getOctets()).readObject();
+                ASN1Integer newCrlNumber = new ASN1Integer(i.getValue().add(BigInteger.ONE));
 
-                X509Extension newNumberExt =
-                    new X509Extension(false, new DEROctetString(newCrlNumber.getDEREncoded()));
+                Extension newNumberExt = new Extension(
+                    Extension.cRLNumber, false, new DEROctetString(newCrlNumber.getEncoded()));
 
                 ASN1EncodableVector crlNumber = new ASN1EncodableVector();
-                crlNumber.add(X509Extension.cRLNumber);
-                crlNumber.add(newNumberExt.getValue());
+                crlNumber.add(Extension.cRLNumber);
+                crlNumber.add(newNumberExt.getExtnValue());
                 modifiedExts.add(new DERSequence(crlNumber));
             }
-            else if (X509Extension.authorityKeyIdentifier.equals(oid)) {
-                X509Extension newAuthorityKeyExt =
-                    new X509Extension(false, new DEROctetString(akiStructure.getDEREncoded()));
+            else if (Extension.authorityKeyIdentifier.equals(oid)) {
+                Extension newAuthorityKeyExt = new Extension(Extension.authorityKeyIdentifier, false, aki
+                    .getEncoded());
 
                 ASN1EncodableVector aki = new ASN1EncodableVector();
-                aki.add(X509Extension.authorityKeyIdentifier);
-                aki.add(newAuthorityKeyExt.getValue());
+                aki.add(Extension.authorityKeyIdentifier);
+                aki.add(newAuthorityKeyExt.getExtnValue());
                 modifiedExts.add(new DERSequence(aki));
             }
             else {
@@ -560,15 +549,30 @@ public class X509CRLStreamWriter {
             }
         }
 
-        DERSequence seqOut = new DERSequence(modifiedExts);
-        DERTaggedObject out = new DERTaggedObject(true, 0, seqOut);
-        return out.getDEREncoded();
+        ASN1Sequence seqOut = new DERSequence(modifiedExts);
+        ASN1TaggedObject out = new DERTaggedObject(true, 0, seqOut);
+        return out.getEncoded();
     }
 
     protected int handleHeader(OutputStream out) throws IOException {
+        /* The length of an RSA signature is padded out to the length of the modulus
+         * in bytes.  See http://stackoverflow.com/questions/6658728/rsa-signature-size
+         *
+         * If the original CRL was signed with a 2048 bit key and someone sends in a
+         * 4096 bit key, we need to account for the discrepancy.
+         */
+        int newSigBytes = key.getModulus().bitLength() / 8;
+
+        /* Now we need a byte array to figure out how long the new signature will
+         * be when encoded.
+         */
+        byte[] dummySig = new byte[newSigBytes];
+        Arrays.fill(dummySig, (byte) 0x00);
+        this.newSigLength = new DERBitString(dummySig).getEncoded().length;
+
         int addedEntriesLength = 0;
-        for (DERSequence s : newEntries) {
-            addedEntriesLength += s.getDEREncoded().length;
+        for (ASN1Sequence s : newEntries) {
+            addedEntriesLength += s.getEncoded().length;
         }
 
         int topTag = readTag(crlIn, null);
@@ -586,13 +590,20 @@ public class X509CRLStreamWriter {
          */
         ByteArrayOutputStream temp = new ByteArrayOutputStream();
 
-        int tagNo = DERTags.NULL;
-        Date oldThisUpdate = null;
+        int tagNo;
+        Date oldThisUpdate;
+        boolean signatureReplaced = false;
         while (true) {
             int tag = readTag(crlIn, null);
             tagNo = readTagNumber(crlIn, tag, null);
 
-            if (tagNo == GENERALIZED_TIME || tagNo == UTC_TIME) {
+            // The signatureAlgorithm in TBSCertList is the first sequence.  We'll hit it, replace it, and
+            // then not worry with other sequences.
+            if (tagNo == SEQUENCE && !signatureReplaced) {
+                readAndReplaceSignatureAlgorithm(temp);
+                signatureReplaced = true;
+            }
+            else if (tagNo == GENERALIZED_TIME || tagNo == UTC_TIME) {
                 oldThisUpdate = readAndReplaceTime(temp, tagNo);
                 break;
             }
@@ -617,7 +628,6 @@ public class X509CRLStreamWriter {
         else {
             writeTag(temp, tag, tagNo);
         }
-
 
         /* Much like throwing a stone into a pond, as one sequence increases in
          * length the change can ripple out to parent sequences as more bytes are
@@ -659,10 +669,43 @@ public class X509CRLStreamWriter {
         byte[] header = temp.toByteArray();
         temp.close();
         out.write(header);
-        signer.update(header, 0, header.length);
+        signer.getOutputStream().write(header, 0, header.length);
 
         writeLength(out, newRevokedCertsLength, signer);
         return oldRevokedCertsLength;
+    }
+
+    protected void readAndReplaceSignatureAlgorithm(OutputStream out) throws IOException {
+        int originalLength = readLength(crlIn, null);
+        byte[] oldBytes = new byte[originalLength];
+        readFullyAndTrack(crlIn, oldBytes, null);
+
+        InputStream algIn = null;
+        try {
+            algIn = new ByteArrayInputStream(signingAlg.getEncoded());
+            // We're already at the V portion of the AlgorithmIdentifier TLV, so we need to get to the V
+            // portion of our new AlgorithmIdentifier and compare it with the old V.
+            int newTag = readTag(algIn, null);
+            readTagNumber(algIn, newTag, null);
+            int newLength = readLength(algIn, null);
+            byte[] newBytes = new byte[newLength];
+            readFullyAndTrack(algIn, newBytes, null);
+
+            /* If the signing algorithm has changed dramatically, give up.  For our use case we will always
+            have <something>WithRSA, which will yield AlgorithmIdentifiers of equal length.  If we had to
+            worry about going from SHA1WithRSA to SHA256WithECDSA or something like that, we would need to do
+            a lot more work to get everything lined up right since the ECDSA identifiers carry the name of the
+            elliptic curve used and other parameters while RSA has no parameters. */
+            if (originalLength != newLength) {
+                throw new IllegalStateException(
+                    "AlgorithmIdentifier has changed lengths. DER corruption would result.");
+            }
+        }
+        finally {
+            IOUtils.closeQuietly(algIn);
+        }
+
+        writeBytes(out, signingAlg.getEncoded());
     }
 
     /**
@@ -680,23 +723,23 @@ public class X509CRLStreamWriter {
         byte[] oldBytes = new byte[originalLength];
         readFullyAndTrack(crlIn, oldBytes, null);
 
-        DERObject oldTime = null;
+        ASN1Object oldTime = null;
         if (tagNo == UTC_TIME) {
-            DERTaggedObject t = new DERTaggedObject(UTC_TIME, new DEROctetString(oldBytes));
-            oldTime = DERUTCTime.getInstance(t, false);
+            ASN1TaggedObject t = new DERTaggedObject(UTC_TIME, new DEROctetString(oldBytes));
+            oldTime = ASN1UTCTime.getInstance(t, false);
         }
         else {
-            DERTaggedObject t = new DERTaggedObject(GENERALIZED_TIME, new DEROctetString(oldBytes));
-            oldTime = DERGeneralizedTime.getInstance(t, false);
+            ASN1TaggedObject t = new DERTaggedObject(GENERALIZED_TIME, new DEROctetString(oldBytes));
+            oldTime = ASN1GeneralizedTime.getInstance(t, false);
         }
 
         /* Determine the time between the old thisUpdate and old nextUpdate and add it
         /* to the new nextUpdate. */
-        Date oldNextUpdate = new Time(oldTime).getDate();
+        Date oldNextUpdate = Time.getInstance(oldTime).getDate();
         long delta = oldNextUpdate.getTime() - oldThisUpdate.getTime();
         Date newNextUpdate = new Date(new Date().getTime() + delta);
 
-        DERObject newTime = null;
+        ASN1Object newTime = null;
         if (tagNo == UTC_TIME) {
             newTime = new DERUTCTime(newNextUpdate);
         }
@@ -719,21 +762,21 @@ public class X509CRLStreamWriter {
         byte[] oldBytes = new byte[originalLength];
         readFullyAndTrack(crlIn, oldBytes, null);
 
-        DERObject oldTime = null;
-        DERObject newTime = null;
+        ASN1Object oldTime;
+        ASN1Object newTime;
         if (tagNo == UTC_TIME) {
-            DERTaggedObject t = new DERTaggedObject(UTC_TIME, new DEROctetString(oldBytes));
-            oldTime = DERUTCTime.getInstance(t, false);
+            ASN1TaggedObject t = new DERTaggedObject(UTC_TIME, new DEROctetString(oldBytes));
+            oldTime = ASN1UTCTime.getInstance(t, false);
             newTime = new DERUTCTime(new Date());
         }
         else {
-            DERTaggedObject t = new DERTaggedObject(GENERALIZED_TIME, new DEROctetString(oldBytes));
-            oldTime = DERGeneralizedTime.getInstance(t, false);
+            ASN1TaggedObject t = new DERTaggedObject(GENERALIZED_TIME, new DEROctetString(oldBytes));
+            oldTime = ASN1GeneralizedTime.getInstance(t, false);
             newTime = new DERGeneralizedTime(new Date());
         }
 
         writeNewTime(out, newTime, originalLength);
-        return new Time(oldTime).getDate();
+        return Time.getInstance(oldTime).getDate();
     }
 
     /**
@@ -744,9 +787,9 @@ public class X509CRLStreamWriter {
      * @param originalLength
      * @throws IOException
      */
-    protected void writeNewTime(OutputStream out, DERObject newTime, int originalLength)
+    protected void writeNewTime(OutputStream out, ASN1Object newTime, int originalLength)
         throws IOException {
-        byte[] newEncodedTime = newTime.getDEREncoded();
+        byte[] newEncodedTime = newTime.getEncoded();
 
         InputStream timeIn = null;
         try {
@@ -760,7 +803,7 @@ public class X509CRLStreamWriter {
              * or removal of time zone information for example. */
             if (newLength != originalLength) {
                 throw new IllegalStateException("Length of generated time does not match " +
-                    "the original length. Corruption would result.");
+                    "the original length. DER corruption would result.");
             }
         }
         finally {
@@ -793,7 +836,7 @@ public class X509CRLStreamWriter {
         return echoTag(out, i, signer);
     }
 
-    protected int echoTag(OutputStream out, AtomicInteger i, RSADigestSigner s) throws IOException {
+    protected int echoTag(OutputStream out, AtomicInteger i, ContentSigner s) throws IOException {
         int tag = readTag(crlIn, i);
         int tagNo = readTagNumber(crlIn, tag, i);
         writeTag(out, tag, tagNo, s);
@@ -823,7 +866,7 @@ public class X509CRLStreamWriter {
         return echoLength(out, i, signer);
     }
 
-    protected int echoLength(OutputStream out, AtomicInteger i, RSADigestSigner s) throws IOException {
+    protected int echoLength(OutputStream out, AtomicInteger i, ContentSigner s) throws IOException {
         int length = readLength(crlIn, i);
         writeLength(out, length, s);
         return length;
@@ -852,41 +895,17 @@ public class X509CRLStreamWriter {
         echoValue(out, length, i, signer);
     }
 
-    protected void echoValue(OutputStream out, int length, AtomicInteger i, RSADigestSigner s)
+    protected void echoValue(OutputStream out, int length, AtomicInteger i, ContentSigner s)
         throws IOException {
         byte[] item = new byte[length];
         readFullyAndTrack(crlIn, item, i);
         writeValue(out, item, s);
     }
 
-    protected static Digest createDigest(AlgorithmIdentifier digAlg) throws CryptoException {
-        Digest dig;
-
-        if (digAlg.getAlgorithm().equals(OIWObjectIdentifiers.idSHA1)) {
-            dig = new SHA1Digest();
-        }
-        else if (digAlg.getAlgorithm().equals(NISTObjectIdentifiers.id_sha224)) {
-            dig = new SHA224Digest();
-        }
-        else if (digAlg.getAlgorithm().equals(NISTObjectIdentifiers.id_sha256)) {
-            dig = new SHA256Digest();
-        }
-        else if (digAlg.getAlgorithm().equals(NISTObjectIdentifiers.id_sha384)) {
-            dig = new SHA384Digest();
-        }
-        else if (digAlg.getAlgorithm().equals(NISTObjectIdentifiers.id_sha512)) {
-            dig = new SHA384Digest();
-        }
-        else if (digAlg.getAlgorithm().equals(PKCSObjectIdentifiers.md5)) {
-            dig = new MD5Digest();
-        }
-        else if (digAlg.getAlgorithm().equals(PKCSObjectIdentifiers.md4)) {
-            dig = new MD4Digest();
-        }
-        else {
-            throw new CryptoException("Cannot recognize digest.");
-        }
-
-        return dig;
+    protected ContentSigner createContentSigner(AlgorithmIdentifier signingAlg, PrivateKey key) throws
+        OperatorCreationException {
+        String algorithm = new DefaultAlgorithmNameFinder().getAlgorithmName(signingAlg);
+        JcaContentSignerBuilder builder = new JcaContentSignerBuilder(algorithm).setProvider(BC_PROVIDER);
+        return builder.build(key);
     }
 }

@@ -14,20 +14,10 @@
  */
 package org.candlepin.sync;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.audit.EventSink;
 import org.candlepin.common.config.MapConfiguration;
@@ -59,7 +49,7 @@ import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.impl.BouncyCastlePKIUtility;
-import org.candlepin.pki.impl.DefaultSubjectKeyIdentifierWriter;
+import org.candlepin.pki.impl.BouncyCastleProviderLoader;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.sync.Importer.ImportFile;
@@ -68,7 +58,6 @@ import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -88,7 +77,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Reader;
 import java.net.URISyntaxException;
-import java.security.Security;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -120,6 +108,10 @@ public class ImporterTest {
     private SyncUtils su;
     private ProductCurator pc;
     private SubscriptionReconciler mockSubReconciler;
+
+    static {
+        BouncyCastleProviderLoader.addProvider();
+    }
 
     @Before
     public void init() throws URISyntaxException, IOException {
@@ -687,9 +679,7 @@ public class ImporterTest {
 
     @Test
     public void importConsumer() throws Exception {
-        Security.addProvider(new BouncyCastleProvider());
-        PKIUtility pki = new BouncyCastlePKIUtility(null,
-            new DefaultSubjectKeyIdentifierWriter(), null);
+        PKIUtility pki = new BouncyCastlePKIUtility(null, null);
 
         OwnerCurator oc = mock(OwnerCurator.class);
         ConsumerType type = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);

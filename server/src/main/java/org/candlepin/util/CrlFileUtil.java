@@ -28,8 +28,8 @@ import org.apache.commons.codec.binary.Base64InputStream;
 import org.apache.commons.codec.binary.Base64OutputStream;
 import org.apache.commons.io.IOUtils;
 import org.bouncycastle.asn1.x509.CRLReason;
+import org.bouncycastle.asn1.x509.TBSCertList.CRLEntry;
 import org.bouncycastle.crypto.CryptoException;
-import org.bouncycastle.jce.provider.X509CRLEntryObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -221,14 +221,17 @@ public class CrlFileUtil {
             // or we could miss cases where we have entries to remove, but nothing to add.
             if (unrevoke != null && !unrevoke.isEmpty()) {
                 writer.preScan(reaper, new CRLEntryValidator() {
-                    public boolean shouldDelete(X509CRLEntryObject entry) {
-                        return unrevoke.contains(entry.getSerialNumber());
+                    public boolean shouldDelete(CRLEntry entry) {
+                        BigInteger certSerial = entry.getUserCertificate().getValue();
+                        return unrevoke.contains(certSerial);
                     }
                 });
             }
             else {
                 writer.preScan(reaper);
             }
+
+            writer.setSigningAlgorithm(PKIUtility.SIGNATURE_ALGO);
 
             // Verify we actually have work to do now
             if (writer.hasChangesQueued()) {
