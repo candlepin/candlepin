@@ -33,6 +33,7 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.CandlepinException;
 import org.candlepin.common.exceptions.ForbiddenException;
+import org.candlepin.common.exceptions.GoneException;
 import org.candlepin.common.exceptions.IseException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.paging.Page;
@@ -157,6 +158,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import javax.inject.Provider;
+import javax.persistence.OptimisticLockException;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -1650,7 +1652,10 @@ public class ConsumerResource {
     }
 
     @ApiOperation(notes = "Removes a Consumer", value = "deleteConsumer")
-    @ApiResponses({ @ApiResponse(code = 403, message = ""), @ApiResponse(code = 404, message = "") })
+    @ApiResponses({
+        @ApiResponse(code = 403, message = "Invalid access rights to unregister the Consumer."),
+        @ApiResponse(code = 404, message = "Target consumer does not exist."),
+        @ApiResponse(code = 410, message = "Target consumer was already deleted.")})
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}")
@@ -1662,7 +1667,27 @@ public class ConsumerResource {
         log.debug("Deleting consumer_uuid {}", uuid);
 
         Consumer toDelete = consumerCurator.findByUuid(uuid);
-        this.consumerCurator.lock(toDelete);
+        // The consumer may have already been deleted if multiple requests come in at the same time.
+        // NOTE: The Verify on the Consumer class should handle cases where a 404 should be thrown
+        //       for a consumer that has never existed.
+        if (toDelete == null) {
+            throw new GoneException(i18n.tr("Consumer with UUID {0} was already deleted.", uuid));
+        }
+
+        try {
+            this.consumerCurator.lock(toDelete);
+        }
+        catch (OptimisticLockException e) {
+            DeletedConsumer deleted = deletedConsumerCurator.findByConsumerUuid(uuid);
+            if (deleted != null) {
+                log.debug("The consumer with UUID {} was deleted while waiting for lock.");
+                throw new GoneException(
+                    i18n.tr("Consumer with UUID {0} was already deleted.", uuid));
+            }
+            // Could have just been an update that caused the exception. In that case,
+            // just rethrow the exception.
+            throw e;
+        }
 
         try {
             // We're about to delete this consumer; no need to regen/dirty its dependent
