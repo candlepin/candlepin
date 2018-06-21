@@ -12,6 +12,9 @@
   <logger name="org.hibernate.id.UUIDHexGenerator" level="ERROR"/>
   <logger name="liquibase" level="ERROR"/>
 
+  <!-- Silence the hibernate deprecation warnings -->
+  <logger name="org.hibernate.orm.deprecation" level="DEBUG" additivity="false"/>
+  
 <!--
   <logger name="org.hibernate.SQL" level="DEBUG"/>
   <logger name="org.hibernate.type" level="TRACE"/>

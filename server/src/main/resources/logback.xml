@@ -46,6 +46,9 @@
          our usage of Qpid -->
     <logger name="org.apache.qpid.transport.network.security.ssl.SSLUtil" level="ERROR"/>
 
+    <!-- Silence the hibernate deprecation warnings -->
+    <logger name="org.hibernate.orm.deprecation" level="DEBUG" additivity="false"/>
+
     <root level="WARN">
         <appender-ref ref="CandlepinAppender" />
         <appender-ref ref="ErrorAppender" />
