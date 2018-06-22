@@ -55,7 +55,6 @@ public class ConsumerTranslatorTest extends
     protected ConsumerTypeCurator mockConsumerTypeCurator;
     protected EnvironmentCurator mockEnvironmentCurator;
     private OwnerCurator mockOwnerCurator;
-    protected ConsumerTranslator translator;
 
     protected CertificateTranslatorTest certificateTranslatorTest = new CertificateTranslatorTest();
     protected ConsumerTypeTranslatorTest consumerTypeTranslatorTest = new ConsumerTypeTranslatorTest();
@@ -69,6 +68,15 @@ public class ConsumerTranslatorTest extends
 
     @Override
     protected ConsumerTranslator initObjectTranslator() {
+        this.certificateTranslatorTest.initObjectTranslator();
+        this.consumerTypeTranslatorTest.initObjectTranslator();
+        this.ownerTranslatorTest.initObjectTranslator();
+        this.environmentTranslatorTest.initObjectTranslator();
+        this.cipTranslatorTest.initObjectTranslator();
+        this.capabilityTranslatorTest.initObjectTranslator();
+        this.hypervisorIdTranslatorTest.initObjectTranslator();
+        this.guestIdTranslatorTest.initObjectTranslator();
+
         this.mockConsumerTypeCurator = mock(ConsumerTypeCurator.class);
         this.mockEnvironmentCurator = mock(EnvironmentCurator.class);
         this.mockOwnerCurator = mock(OwnerCurator.class);

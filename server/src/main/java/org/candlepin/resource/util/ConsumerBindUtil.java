@@ -175,9 +175,9 @@ public class ConsumerBindUtil {
 
     private void handleActivationKeyOverrides(Consumer consumer,
         Set<ActivationKeyContentOverride> overrides) {
+
         for (ActivationKeyContentOverride akco : overrides) {
-            ConsumerContentOverride consumerOverride =
-                akco.buildConsumerContentOverride(consumer);
+            ConsumerContentOverride consumerOverride = akco.buildConsumerContentOverride(consumer);
             this.consumerContentOverrideCurator.addOrUpdate(consumer, consumerOverride);
         }
     }

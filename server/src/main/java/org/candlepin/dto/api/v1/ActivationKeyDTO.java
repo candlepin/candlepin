@@ -27,10 +27,13 @@ import org.candlepin.jackson.SingleValueWrapSerializer;
 import org.candlepin.jackson.SingleValueWrapDeserializer;
 import org.candlepin.util.SetView;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+
+
 
 /**
  * A DTO representation of the ActivationKey entity
@@ -96,79 +99,6 @@ public class ActivationKeyDTO extends TimestampedCandlepinDTO<ActivationKeyDTO> 
     }
 
     /**
-     * Join object DTO for joining the activation key to content overrides
-     */
-    public static class ActivationKeyContentOverrideDTO {
-        protected final String contentLabel;
-        protected final String name;
-        protected final String value;
-
-        @JsonCreator
-        public ActivationKeyContentOverrideDTO(
-            @JsonProperty("contentLabel") String contentLabel,
-            @JsonProperty("name") String name,
-            @JsonProperty("value") String value) {
-            if (contentLabel == null || contentLabel.isEmpty()) {
-                throw new IllegalArgumentException("contentLabel is null or empty");
-            }
-
-            if (name == null || name.isEmpty()) {
-                throw new IllegalArgumentException("name is null or empty");
-            }
-
-            if (value == null || value.isEmpty()) {
-                throw new IllegalArgumentException("value is null or empty");
-            }
-
-            this.contentLabel = contentLabel;
-            this.name = name;
-            this.value = value;
-        }
-
-        public String getContentLabel() {
-            return this.contentLabel;
-        }
-
-        public String getName() {
-            return this.name;
-        }
-
-        public String getValue() {
-            return this.value;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == this) {
-                return true;
-            }
-
-            if (obj instanceof ActivationKeyContentOverrideDTO) {
-                ActivationKeyContentOverrideDTO that = (ActivationKeyContentOverrideDTO) obj;
-
-                EqualsBuilder builder = new EqualsBuilder()
-                    .append(this.getContentLabel(), that.getContentLabel())
-                    .append(this.getName(), that.getName())
-                    .append(this.getValue(), that.getValue());
-
-                return builder.isEquals();
-            }
-
-            return false;
-        }
-
-        @Override
-        public int hashCode() {
-            HashCodeBuilder builder = new HashCodeBuilder(37, 7)
-                .append(this.getContentLabel())
-                .append(this.getName())
-                .append(this.getValue());
-
-            return builder.toHashCode();
-        }
-    }
-
-    /**
      * Serialization utility class for wrapping the 'releaseVer' field in a JSON object.
      */
     private static class ReleaseVersionWrapSerializer extends SingleValueWrapSerializer {
@@ -214,8 +144,8 @@ public class ActivationKeyDTO extends TimestampedCandlepinDTO<ActivationKeyDTO> 
     private Boolean autoAttach;
     private Set<ActivationKeyPoolDTO> pools;
 
-    private Set<String> products;
-    private Set<ActivationKeyContentOverrideDTO> contentOverrides;
+    private Set<String> productIds;
+    private Set<ContentOverrideDTO> contentOverrides;
 
     /**
      * Initializes a new ActivationKeyDTO instance with null values.
@@ -413,26 +343,23 @@ public class ActivationKeyDTO extends TimestampedCandlepinDTO<ActivationKeyDTO> 
      * @return
      *  a reference to this DTO object
      */
-    public ActivationKeyDTO setPools(Set<ActivationKeyPoolDTO> pools) {
+    public ActivationKeyDTO setPools(Collection<ActivationKeyPoolDTO> pools) {
         if (pools != null) {
-            if (this.pools == null) {
-                this.pools = new HashSet<>();
-            }
-            else {
-                this.pools.clear();
-            }
+            this.pools = new HashSet<>();
 
             for (ActivationKeyPoolDTO dto : pools) {
                 if (dto == null || dto.getPoolId() == null || dto.getPoolId().isEmpty()) {
-                    throw new IllegalArgumentException("collection contains null or incomplete pools");
+                    throw new IllegalArgumentException(
+                        "collection contains null or incomplete activation key pools");
                 }
 
-                this.pools.add(new ActivationKeyPoolDTO(dto.getPoolId(), dto.getQuantity()));
+                this.pools.add(dto);
             }
         }
         else {
             this.pools = null;
         }
+
         return this;
     }
 
@@ -495,6 +422,7 @@ public class ActivationKeyDTO extends TimestampedCandlepinDTO<ActivationKeyDTO> 
                 return true;
             }
         }
+
         return false;
     }
 
@@ -535,40 +463,36 @@ public class ActivationKeyDTO extends TimestampedCandlepinDTO<ActivationKeyDTO> 
     @JsonSerialize(contentUsing = ProductWrapSerializer.class)
     @JsonProperty("products")
     public Set<String> getProductIds() {
-        return this.products != null ? new SetView<>(this.products) : null;
+        return this.productIds != null ? new SetView<>(this.productIds) : null;
     }
 
     /**
      * Adds the given collection of product IDs to this ActivationKey DTO.
      *
-     * @param products
-     *  A set of product IDs to attach to this DTO, or null to clear the existing ones
+     * @param productIds
+     *  A collection of product IDs to attach to this DTO, or null to clear the existing ones
      *
      * @return
      *  A reference to this DTO
      */
     @JsonDeserialize(contentUsing = ProductWrapDeserializer.class)
     @JsonProperty("products")
-    public ActivationKeyDTO setProductIds(Set<String> products) {
-        if (products != null) {
-            if (this.products == null) {
-                this.products = new HashSet<>();
-            }
-            else {
-                this.products.clear();
-            }
+    public ActivationKeyDTO setProductIds(Collection<String> productIds) {
+        if (productIds != null) {
+            this.productIds = new HashSet<>();
 
-            for (String dto : products) {
-                if (dto == null || dto.isEmpty()) {
-                    throw new IllegalArgumentException("collection contains null or incomplete product IDs");
+            for (String pid : productIds) {
+                if (pid == null || pid.isEmpty()) {
+                    throw new IllegalArgumentException("productIds contains null or empty product IDs");
                 }
-            }
 
-            this.products.addAll(products);
+                this.productIds.add(pid);
+            }
         }
         else {
-            this.products = null;
+            this.productIds = null;
         }
+
         return this;
     }
 
@@ -590,17 +514,11 @@ public class ActivationKeyDTO extends TimestampedCandlepinDTO<ActivationKeyDTO> 
             throw new IllegalArgumentException("productId is null");
         }
 
-        if (this.products == null) {
+        if (this.productIds == null) {
             return false;
         }
 
-        for (String candidate : this.getProductIds()) {
-            if (productId.equals(candidate)) {
-                this.getProductIds().remove(candidate);
-                return true;
-            }
-        }
-        return false;
+        return this.productIds.remove(productId);
     }
 
     /**
@@ -621,17 +539,11 @@ public class ActivationKeyDTO extends TimestampedCandlepinDTO<ActivationKeyDTO> 
             throw new IllegalArgumentException("productId is null");
         }
 
-        if (this.products == null) {
+        if (this.productIds == null) {
             return false;
         }
 
-        for (String candidate : this.getProductIds()) {
-            if (productId.equals(candidate)) {
-                return true;
-            }
-        }
-
-        return false;
+        return this.productIds.contains(productId);
     }
 
     /**
@@ -652,11 +564,11 @@ public class ActivationKeyDTO extends TimestampedCandlepinDTO<ActivationKeyDTO> 
             throw new IllegalArgumentException("productId is null or empty");
         }
 
-        if (this.products == null) {
-            this.products = new HashSet<>();
+        if (this.productIds == null) {
+            this.productIds = new HashSet<>();
         }
 
-        return this.products.add(productId);
+        return this.productIds.add(productId);
     }
 
     /**
@@ -671,7 +583,7 @@ public class ActivationKeyDTO extends TimestampedCandlepinDTO<ActivationKeyDTO> 
      *  the content overrides associated with this key,
      *  or null if the content overrideshave not yet been defined
      */
-    public Set<ActivationKeyContentOverrideDTO> getContentOverrides() {
+    public Set<ContentOverrideDTO> getContentOverrides() {
         return this.contentOverrides != null ? new SetView<>(this.contentOverrides) : null;
     }
 
@@ -688,29 +600,25 @@ public class ActivationKeyDTO extends TimestampedCandlepinDTO<ActivationKeyDTO> 
      * @return
      *  a reference to this DTO
      */
-    public ActivationKeyDTO setContentOverrides(Set<ActivationKeyContentOverrideDTO> contentOverrides) {
-        if (contentOverrides != null) {
-            if (this.contentOverrides == null) {
-                this.contentOverrides = new HashSet<>();
-            }
-            else {
-                this.contentOverrides.clear();
-            }
+    public ActivationKeyDTO setContentOverrides(
+        Collection<ContentOverrideDTO> contentOverrides) {
 
-            for (ActivationKeyContentOverrideDTO dto : contentOverrides) {
+        if (contentOverrides != null) {
+            this.contentOverrides = new HashSet<>();
+
+            for (ContentOverrideDTO dto : contentOverrides) {
                 if (isNullOrIncomplete(dto)) {
                     throw new IllegalArgumentException("collection contains null " +
                         "or incomplete content override");
                 }
 
-                this.contentOverrides.add(
-                    new ActivationKeyContentOverrideDTO(
-                    dto.getContentLabel(), dto.getName(), dto.getValue()));
+                this.contentOverrides.add(dto);
             }
         }
         else {
             this.contentOverrides = null;
         }
+
         return this;
     }
 
@@ -722,7 +630,7 @@ public class ActivationKeyDTO extends TimestampedCandlepinDTO<ActivationKeyDTO> 
      *  True if the content override DTO(s) was removed; false otherwise.
      */
     @JsonIgnore
-    public boolean removeContentOverride(ActivationKeyContentOverrideDTO contentOverrideDto) {
+    public boolean removeContentOverride(ContentOverrideDTO contentOverrideDto) {
         if (contentOverrideDto == null) {
             throw new IllegalArgumentException("contentOverrideDto is null");
         }
@@ -731,9 +639,9 @@ public class ActivationKeyDTO extends TimestampedCandlepinDTO<ActivationKeyDTO> 
             return false;
         }
 
-        List<ActivationKeyContentOverrideDTO> remove = new LinkedList<>();
+        List<ContentOverrideDTO> remove = new LinkedList<>();
 
-        for (ActivationKeyContentOverrideDTO candidate : this.getContentOverrides()) {
+        for (ContentOverrideDTO candidate : this.getContentOverrides()) {
             if (candidate.getContentLabel().equals(contentOverrideDto.getContentLabel()) &&
                 candidate.getName().equals(contentOverrideDto.getName())) {
                 remove.add(candidate);
@@ -751,7 +659,7 @@ public class ActivationKeyDTO extends TimestampedCandlepinDTO<ActivationKeyDTO> 
      * @return true if this content override DTO was not already contained in this activation key DTO.
      */
     @JsonIgnore
-    public boolean addContentOverride(ActivationKeyContentOverrideDTO contentOverrideDto) {
+    public boolean addContentOverride(ContentOverrideDTO contentOverrideDto) {
         if (isNullOrIncomplete(contentOverrideDto)) {
             throw new IllegalArgumentException("contentOverrideDto is null or incomplete");
         }
@@ -763,7 +671,7 @@ public class ActivationKeyDTO extends TimestampedCandlepinDTO<ActivationKeyDTO> 
         return this.contentOverrides.add(contentOverrideDto);
     }
 
-    private boolean isNullOrIncomplete(ActivationKeyContentOverrideDTO contentOverrideDto) {
+    private boolean isNullOrIncomplete(ContentOverrideDTO contentOverrideDto) {
         return contentOverrideDto == null ||
             contentOverrideDto.getContentLabel() == null || contentOverrideDto.getContentLabel().isEmpty() ||
             contentOverrideDto.getName() == null || contentOverrideDto.getName().isEmpty() ||
@@ -846,10 +754,25 @@ public class ActivationKeyDTO extends TimestampedCandlepinDTO<ActivationKeyDTO> 
         ActivationKeyDTO copy = (ActivationKeyDTO) super.clone();
 
         OwnerDTO owner = this.getOwner();
-        copy.owner = owner != null ? owner.clone() : null;
-        copy.pools = this.getPools();
-        copy.products = this.getProductIds();
-        copy.contentOverrides = this.getContentOverrides();
+        copy.setOwner(owner != null ? owner.clone() : null);
+
+        Collection<ActivationKeyPoolDTO> pools = this.getPools();
+        copy.setPools(null);
+        if (pools != null) {
+            copy.setPools(pools);
+        }
+
+        Collection<String> productIds = this.getProductIds();
+        copy.setProductIds(null);
+        if (productIds != null) {
+            copy.setProductIds(productIds);
+        }
+
+        Collection<ContentOverrideDTO> overrides = this.getContentOverrides();
+        copy.setContentOverrides(null);
+        if (overrides != null) {
+            copy.setContentOverrides(overrides);
+        }
 
         return copy;
     }

@@ -14,19 +14,22 @@
  */
 package org.candlepin.util;
 
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
-import org.candlepin.dto.api.v1.ActivationKeyDTO;
-import org.candlepin.model.ContentOverride;
-import org.candlepin.policy.js.override.OverrideRules;
+import org.candlepin.config.ConfigProperties;
+import org.candlepin.dto.api.v1.ContentOverrideDTO;
 
 import com.google.inject.Inject;
 
-import org.apache.commons.lang.StringUtils;
 import org.xnap.commons.i18n.I18n;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+
+
 
 /**
  * ContentOverrideValidator utility class used to validate
@@ -36,42 +39,99 @@ import java.util.Set;
  */
 public class ContentOverrideValidator {
 
-    private static final int MAX_COL_LENGTH = 255;
-    private I18n i18n;
-    private OverrideRules overrideRules;
+    public static final int MAX_VALUE_LENGTH = 255;
+    public static final Set<String> DEFAULT_BLACKLIST = Collections.<String>unmodifiableSet(
+        new HashSet<String>(Arrays.asList("", "name", "label")));
+    public static final Set<String> HOSTED_BLACKLIST = Collections.<String>unmodifiableSet(
+        new HashSet<String>(Arrays.asList("", "name", "label", "baseurl")));
+
+
+    protected final Set<String> blacklist;
+
+    protected Configuration config;
+    protected I18n i18n;
 
     @Inject
-    public ContentOverrideValidator(I18n i18n, OverrideRules overrideRules) {
+    public ContentOverrideValidator(Configuration config, I18n i18n) {
+        this.config = config;
         this.i18n = i18n;
-        this.overrideRules = overrideRules;
-    }
 
-    public void validate(Collection<? extends ContentOverride> overrides) {
-        Set<String> invalidOverrides = new HashSet<>();
-        for (ContentOverride override : overrides) {
-            if (!overrideRules.canOverrideForConsumer(override.getName())) {
-                invalidOverrides.add(override.getName());
-            }
+        if (config.getBoolean(ConfigProperties.STANDALONE, true)) {
+            this.blacklist = DEFAULT_BLACKLIST;
         }
-        if (!invalidOverrides.isEmpty()) {
-            String error = i18n.tr("Not allowed to override values for: {0}",
-                StringUtils.join(invalidOverrides, ", "));
-            throw new BadRequestException(error);
+        else {
+            this.blacklist = HOSTED_BLACKLIST;
         }
     }
 
-    public void validateDTOs(Collection<ActivationKeyDTO.ActivationKeyContentOverrideDTO> overrides) {
-        Set<String> invalidOverrides = new HashSet<>();
-        for (ActivationKeyDTO.ActivationKeyContentOverrideDTO override : overrides) {
-            if (!overrideRules.canOverrideForConsumer(override.getName())) {
-                invalidOverrides.add(override.getName());
-            }
-        }
+    @SuppressWarnings("checkstyle:JavadocMethod")
+    /**
+     * Validates the given ContentOverrideDTO instances, checking that the overridden properties
+     * aren't protected and both the property name and value are short enough to fit in the
+     * database. If any of the overrides are invalid, this method throws an exception.
+     *
+     * @param overrides
+     *  A collection of ContentOverrideDTO instances to validate
+     *
+     * @throws BadRequestException
+     *  if the collection of overrides contains an invalid override
+     */
+    public void validate(Collection<? extends ContentOverrideDTO> overrides) {
+        if (overrides != null) {
+            Set<String> invalidLabels = new HashSet<>();
+            Set<String> invalidProps = new HashSet<>();
+            Set<String> invalidValues = new HashSet<>();
 
-        if (!invalidOverrides.isEmpty()) {
-            String error = i18n.tr("Not allowed to override values for: {0}",
-                StringUtils.join(invalidOverrides, ", "));
-            throw new BadRequestException(error);
+            for (ContentOverrideDTO override : overrides) {
+                if  (override != null) {
+                    String label = override.getContentLabel();
+                    String name = override.getName();
+                    String value = override.getValue();
+
+                    if (label == null || label.length() == 0 || label.length() > MAX_VALUE_LENGTH) {
+                        invalidLabels.add(label != null ? label : "null");
+                    }
+
+                    if (name == null || this.blacklist.contains(name.toLowerCase()) ||
+                        name.length() > MAX_VALUE_LENGTH) {
+
+                        invalidProps.add(name != null ? name : "null");
+                    }
+
+                    if (value == null || value.length() == 0 || value.length() > MAX_VALUE_LENGTH) {
+                        invalidValues.add(value != null ? value : "null");
+                    }
+                }
+            }
+
+            if (!invalidLabels.isEmpty() || !invalidProps.isEmpty() || !invalidValues.isEmpty()) {
+                StringBuilder builder = new StringBuilder();
+
+                if (!invalidLabels.isEmpty()) {
+                    builder.append(i18n.tr("The following content labels are invalid: {0}",
+                        String.join(", ", invalidLabels)));
+                }
+
+                if (!invalidProps.isEmpty()) {
+                    if (builder.length() > 0) {
+                        builder.append('\n');
+                    }
+
+                    builder.append(i18n.tr("The following content properties cannot be overridden: {0}",
+                        String.join(", ", invalidProps)));
+                }
+
+                if (!invalidValues.isEmpty()) {
+                    if (builder.length() > 0) {
+                        builder.append('\n');
+                    }
+
+                    builder.append(i18n.tr("The following override values are invalid: {0}",
+                        String.join(", ", invalidValues)));
+                }
+
+                throw new BadRequestException(builder.toString());
+            }
         }
     }
 }

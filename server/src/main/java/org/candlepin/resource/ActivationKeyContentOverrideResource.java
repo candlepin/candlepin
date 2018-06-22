@@ -15,6 +15,7 @@
 package org.candlepin.resource;
 
 import org.candlepin.common.exceptions.BadRequestException;
+import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverrideCurator;
@@ -38,8 +39,8 @@ import io.swagger.annotations.Authorization;
 @Path("/activation_keys/{activation_key_id}/content_overrides")
 @Api(value = "activation_keys", authorizations = { @Authorization("basic") })
 public class ActivationKeyContentOverrideResource extends
-    ContentOverrideResource<ActivationKeyContentOverride, ActivationKeyContentOverrideCurator,
-    ActivationKey> {
+    ContentOverrideResource<ActivationKeyContentOverride,
+    ActivationKeyContentOverrideCurator, ActivationKey> {
 
     private ActivationKeyCurator activationKeyCurator;
 
@@ -49,13 +50,12 @@ public class ActivationKeyContentOverrideResource extends
      * @param parentPath
      */
     @Inject
-    public ActivationKeyContentOverrideResource(
-        ActivationKeyContentOverrideCurator contentOverrideCurator,
-        ActivationKeyCurator activationKeyCurator,
-        ContentOverrideValidator contentOverrideValidator, I18n i18n) {
+    public ActivationKeyContentOverrideResource(I18n i18n, ActivationKeyContentOverrideCurator akcoCurator,
+        ActivationKeyCurator akCurator, ContentOverrideValidator validator, ModelTranslator translator) {
 
-        super(contentOverrideCurator, contentOverrideValidator, i18n, "activation_key_id");
-        this.activationKeyCurator = activationKeyCurator;
+        super(i18n, akcoCurator, translator, validator);
+
+        this.activationKeyCurator = akCurator;
     }
 
     @Override
@@ -71,6 +71,16 @@ public class ActivationKeyContentOverrideResource extends
         }
 
         return key;
+    }
+
+    @Override
+    protected String getParentPath() {
+        return "activation_key_id";
+    }
+
+    @Override
+    protected ActivationKeyContentOverride createOverride() {
+        return new ActivationKeyContentOverride();
     }
 
 }

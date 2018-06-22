@@ -26,17 +26,25 @@ import javax.persistence.InheritanceType;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import javax.xml.bind.annotation.XmlTransient;
+
+
 
 /**
- * ContentOverride abstract class to share code between
- * different override types, consumer and activation key for now
+ * ContentOverride abstract class to share code between different override types, consumer and
+ * activation key for now
+ *
+ * @param <T>
+ *  The type of this content override
+ *
+ * @param <P>
+ *  The type of the parent or containing entity
  */
 @Entity
 @Table(name = ContentOverride.DB_TABLE)
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorFormula("case when key_id is null then 'consumer' ELSE 'activation_key' end")
-public class ContentOverride extends AbstractHibernateObject {
+public abstract class ContentOverride<T extends ContentOverride, P extends AbstractHibernateObject> extends
+    AbstractHibernateObject<T> {
 
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp_content_override";
@@ -62,6 +70,7 @@ public class ContentOverride extends AbstractHibernateObject {
     private String value;
 
     public ContentOverride() {
+        // Intentionally left empty
     }
 
     public ContentOverride(String contentLabel, String name, String value) {
@@ -70,7 +79,6 @@ public class ContentOverride extends AbstractHibernateObject {
         this.setValue(value);
     }
 
-    @XmlTransient
     public String getId() {
         return id;
     }
@@ -88,7 +96,7 @@ public class ContentOverride extends AbstractHibernateObject {
     }
 
     public void setName(String name) {
-        this.name = name;
+        this.name = name != null ? name.toLowerCase() : null;
     }
 
     public String getName() {
@@ -101,5 +109,18 @@ public class ContentOverride extends AbstractHibernateObject {
 
     public String getValue() {
         return value;
+    }
+
+    public abstract T setParent(P parent);
+
+    public abstract P getParent();
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return String.format("ContentOverride [content: %s, name: %s, value: %s]",
+            this.getContentLabel(), this.getName(), this.getValue());
     }
 }

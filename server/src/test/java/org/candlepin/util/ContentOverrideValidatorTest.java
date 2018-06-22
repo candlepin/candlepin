@@ -14,129 +14,325 @@
  */
 package org.candlepin.util;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+import static org.mockito.Matchers.*;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.dto.api.v1.ActivationKeyDTO;
-import org.candlepin.jackson.ProductCachedSerializationModule;
-import org.candlepin.model.ContentOverride;
-import org.candlepin.model.ProductCurator;
-import org.candlepin.model.Rules;
-import org.candlepin.model.RulesCurator;
-import org.candlepin.policy.js.JsRunnerProvider;
-import org.candlepin.policy.js.JsRunnerRequestCache;
-import org.candlepin.policy.js.RulesObjectMapper;
-import org.candlepin.policy.js.override.OverrideRules;
+import org.candlepin.dto.api.v1.ContentOverrideDTO;
 import org.candlepin.test.DatabaseTestFixture;
-
-import com.google.inject.Provider;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
-import org.xnap.commons.i18n.I18n;
+import org.junit.runner.RunWith;
 
-import java.io.InputStream;
-import java.util.Date;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
+
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
-import javax.inject.Inject;
+
 
 /**
  * ContentOverrideValidatorTest
  */
+@RunWith(JUnitParamsRunner.class)
 public class ContentOverrideValidatorTest extends DatabaseTestFixture  {
-    @Inject  private I18n i18n;
-    private RulesCurator rulesCuratorMock;
-    @Mock
-    private Provider<JsRunnerRequestCache> cacheProvider;
-    @Mock
-    private JsRunnerRequestCache cache;
-    @Mock private ProductCurator mockProductCurator;
-    private Configuration config;
 
+    private Configuration config;
     private ContentOverrideValidator validator;
-    private OverrideRules overrideRules;
-    private JsRunnerProvider provider;
 
     @Before
     public void setupTest() {
-        InputStream is = this.getClass().getResourceAsStream(
-            RulesCurator.DEFAULT_RULES_FILE);
-        rulesCuratorMock = mock(RulesCurator.class);
-        config = mock(Configuration.class);
-        cacheProvider = mock(Provider.class);
-        cache = mock(JsRunnerRequestCache.class);
-        Rules rules = new Rules(Util.readFile(is));
-        when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
-        when(rulesCuratorMock.getRules()).thenReturn(rules);
-        when(cacheProvider.get()).thenReturn(cache);
-        provider = new JsRunnerProvider(rulesCuratorMock, cacheProvider);
-        overrideRules = new OverrideRules(provider.get(), config,
-                new RulesObjectMapper(new ProductCachedSerializationModule(mockProductCurator)));
-        validator = new ContentOverrideValidator(i18n, overrideRules);
+        this.config = mock(Configuration.class);
+        this.validator = new ContentOverrideValidator(this.config, this.i18n);
+    }
+
+    private List<ContentOverrideDTO> buildOverridesList(int count) {
+        List<ContentOverrideDTO> overrides = new LinkedList<>();
+
+        for (int i = 0; i < count; ++i) {
+            overrides.add(new ContentOverrideDTO()
+                .setContentLabel("test_label-" + i)
+                .setName("test_name-" + i)
+                .setValue("test_value-" + i));
+        }
+
+        return overrides;
     }
 
     @Test
-    public void testValidateValidCollection() {
-        List<ContentOverride> overrides = new LinkedList<>();
-        overrides.add(new ContentOverride("label", "testname", "value"));
-        overrides.add(new ContentOverride("other label", "other name", "other value"));
+    public void testValidateWithValidCollection() {
+        List<ContentOverrideDTO> overrides = this.buildOverridesList(3);
 
-        validator.validate(overrides);
+        this.validator.validate(overrides);
     }
 
     @Test
-    public void testValidateCollectionBothInvalid() {
-        when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
-        List<ContentOverride> overrides = new LinkedList<>();
-        overrides.add(new ContentOverride("label", "baseurl", "value"));
-        overrides.add(new ContentOverride("other label", "name", "other value"));
-
-        try {
-            validator.validate(overrides);
-            fail("Expected exception \"BadRequestException\" was not thrown.");
-        }
-        catch (BadRequestException bre) {
-            assertTrue(bre.getMessage().matches(
-                "^Not allowed to override values for: (?:baseurl, name|name, baseurl)"
-            ));
-        }
+    public void testValidateWithValidEmptyCollection() {
+        this.validator.validate(new LinkedList<>());
     }
 
     @Test
-    public void testValidateDTOsValidCollection() {
-        List<ActivationKeyDTO.ActivationKeyContentOverrideDTO> overrideDTOs = new LinkedList<>();
-        overrideDTOs.add(new ActivationKeyDTO.ActivationKeyContentOverrideDTO("label", "testname", "value"));
-        overrideDTOs.add(new ActivationKeyDTO.ActivationKeyContentOverrideDTO(
-            "other label", "other name", "other value"));
-
-        validator.validateDTOs(overrideDTOs);
+    public void testValidateWithValidNullCollection() {
+        this.validator.validate(null);
     }
 
-    @Test
-    public void testValidateDTOsCollectionBothInvalid() {
-        when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
-        List<ActivationKeyDTO.ActivationKeyContentOverrideDTO> overrideDTOs = new LinkedList<>();
-        overrideDTOs.add(new ActivationKeyDTO.ActivationKeyContentOverrideDTO("label", "baseurl", "value"));
-        overrideDTOs.add(new ActivationKeyDTO.ActivationKeyContentOverrideDTO(
-            "other label", "name", "other value"));
+    @Test(expected = BadRequestException.class)
+    public void testValidateWithNullContentLabel() {
+        List<ContentOverrideDTO> overrides = this.buildOverridesList(3);
 
-        try {
-            validator.validateDTOs(overrideDTOs);
-            fail("Expected exception \"BadRequestException\" was not thrown.");
+        // We expect this invocation to pass
+        this.validator.validate(overrides);
+
+        // Add our invalid override...
+        ContentOverrideDTO invalid = new ContentOverrideDTO()
+            .setContentLabel(null)
+            .setName("test_name-x")
+            .setValue("test_value-x");
+
+        overrides.add(invalid);
+
+        // This should fail now
+        this.validator.validate(overrides);
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testValidateWithEmptyContentLabel() {
+        List<ContentOverrideDTO> overrides = this.buildOverridesList(3);
+
+        // We expect this invocation to pass
+        this.validator.validate(overrides);
+
+        // Add our invalid override...
+        ContentOverrideDTO invalid = new ContentOverrideDTO()
+            .setContentLabel("")
+            .setName("test_name-x")
+            .setValue("test_value-x");
+
+        overrides.add(invalid);
+
+        // This should fail now
+        this.validator.validate(overrides);
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testValidateWithLongContentLabel() {
+        List<ContentOverrideDTO> overrides = this.buildOverridesList(3);
+
+        // We expect this invocation to pass
+        this.validator.validate(overrides);
+
+        // Add our invalid override...
+        StringBuilder builder = new StringBuilder();
+        while (builder.length() < ContentOverrideValidator.MAX_VALUE_LENGTH) {
+            builder.append("longstring");
         }
-        catch (BadRequestException bre) {
-            assertTrue(bre.getMessage().matches(
-                "^Not allowed to override values for: (?:baseurl, name|name, baseurl)"
-            ));
+
+        ContentOverrideDTO invalid = new ContentOverrideDTO()
+            .setContentLabel(builder.toString())
+            .setName("test_name-x")
+            .setValue("test_value-x");
+
+        overrides.add(invalid);
+
+        // This should fail now
+        this.validator.validate(overrides);
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testValidateWithNullPropertyName() {
+        List<ContentOverrideDTO> overrides = this.buildOverridesList(3);
+
+        // We expect this invocation to pass
+        this.validator.validate(overrides);
+
+        // Add our invalid override...
+        ContentOverrideDTO invalid = new ContentOverrideDTO()
+            .setContentLabel("test_label-x")
+            .setName(null)
+            .setValue("test_value-x");
+
+        overrides.add(invalid);
+
+        // This should fail now
+        this.validator.validate(overrides);
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testValidateWithEmptyPropertyName() {
+        List<ContentOverrideDTO> overrides = this.buildOverridesList(3);
+
+        // We expect this invocation to pass
+        this.validator.validate(overrides);
+
+        // Add our invalid override...
+        ContentOverrideDTO invalid = new ContentOverrideDTO()
+            .setContentLabel("test_label-x")
+            .setName("")
+            .setValue("test_value-x");
+
+        overrides.add(invalid);
+
+        // This should fail now
+        this.validator.validate(overrides);
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testValidateWithLongPropertyName() {
+        List<ContentOverrideDTO> overrides = this.buildOverridesList(3);
+
+        // We expect this invocation to pass
+        this.validator.validate(overrides);
+
+        // Add our invalid override...
+        StringBuilder builder = new StringBuilder();
+        while (builder.length() < ContentOverrideValidator.MAX_VALUE_LENGTH) {
+            builder.append("longstring");
         }
+
+        ContentOverrideDTO invalid = new ContentOverrideDTO()
+            .setContentLabel("test_label-x")
+            .setName(builder.toString())
+            .setValue("test_value-x");
+
+        overrides.add(invalid);
+
+        // This should fail now
+        this.validator.validate(overrides);
+    }
+
+    /**
+     * Property generator for the ValidateWithInvalidPropertyNameStandalone test
+     */
+    protected Object[] invalidStandaloneProperties() {
+        Set<String> properties = ContentOverrideValidator.DEFAULT_BLACKLIST;
+
+        List<Object[]> output = new LinkedList<>();
+
+        for (String property : properties) {
+            output.add(new Object[] { property });
+            output.add(new Object[] { property.toUpperCase() });
+        }
+
+        return output.toArray();
+    }
+
+    @Test(expected = BadRequestException.class)
+    @Parameters(method = "invalidStandaloneProperties")
+    public void testValidateWithInvalidPropertyNameStandalone(String property) {
+        // Set our config mock to look like it's in standalone mode
+        when(this.config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(true);
+        when(this.config.getBoolean(eq(ConfigProperties.STANDALONE), anyBoolean())).thenReturn(true);
+
+        ContentOverrideValidator validator = new ContentOverrideValidator(this.config, this.i18n);
+
+        ContentOverrideDTO invalid = new ContentOverrideDTO()
+            .setContentLabel("test_label-x")
+            .setName(property)
+            .setValue("test_value-x");
+
+        // This should fail
+        validator.validate(Arrays.asList(invalid));
+    }
+
+    /**
+     * Property generator for the ValidateWithInvalidPropertyNameHosted test
+     */
+    protected Object[] invalidHostedProperties() {
+        Set<String> properties = ContentOverrideValidator.HOSTED_BLACKLIST;
+
+        List<Object[]> output = new LinkedList<>();
+
+        for (String property : properties) {
+            output.add(new Object[] { property });
+            output.add(new Object[] { property.toUpperCase() });
+        }
+
+        return output.toArray();
+    }
+
+    @Test(expected = BadRequestException.class)
+    @Parameters(method = "invalidHostedProperties")
+    public void testValidateWithInvalidPropertyNameHosted(String property) {
+        // Set our config mock to look like it's in standalone mode
+        when(this.config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
+        when(this.config.getBoolean(eq(ConfigProperties.STANDALONE), anyBoolean())).thenReturn(false);
+
+        ContentOverrideValidator validator = new ContentOverrideValidator(this.config, this.i18n);
+
+        ContentOverrideDTO invalid = new ContentOverrideDTO()
+            .setContentLabel("test_label-x")
+            .setName(property)
+            .setValue("test_value-x");
+
+        // This should fail
+        validator.validate(Arrays.asList(invalid));
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testValidateWithNullOverrideValue() {
+        List<ContentOverrideDTO> overrides = this.buildOverridesList(3);
+
+        // We expect this invocation to pass
+        this.validator.validate(overrides);
+
+        // Add our invalid override...
+        ContentOverrideDTO invalid = new ContentOverrideDTO()
+            .setContentLabel("test_label-x")
+            .setName("test_name-x")
+            .setValue(null);
+
+        overrides.add(invalid);
+
+        // This should fail now
+        this.validator.validate(overrides);
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testValidateWithEmptyOverrideValue() {
+        List<ContentOverrideDTO> overrides = this.buildOverridesList(3);
+
+        // We expect this invocation to pass
+        this.validator.validate(overrides);
+
+        // Add our invalid override...
+        ContentOverrideDTO invalid = new ContentOverrideDTO()
+            .setContentLabel("test_label-x")
+            .setName("test_name-x")
+            .setValue("");
+
+        overrides.add(invalid);
+
+        // This should fail now
+        this.validator.validate(overrides);
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testValidateWithLongOverrideValue() {
+        List<ContentOverrideDTO> overrides = this.buildOverridesList(3);
+
+        // We expect this invocation to pass
+        this.validator.validate(overrides);
+
+        // Add our invalid override...
+        StringBuilder builder = new StringBuilder();
+        while (builder.length() < ContentOverrideValidator.MAX_VALUE_LENGTH) {
+            builder.append("longstring");
+        }
+
+        ContentOverrideDTO invalid = new ContentOverrideDTO()
+            .setContentLabel("test_label-x")
+            .setName("test_name-x")
+            .setValue(builder.toString());
+
+        overrides.add(invalid);
+
+        // This should fail now
+        this.validator.validate(overrides);
     }
 }

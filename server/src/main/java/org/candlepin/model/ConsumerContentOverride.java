@@ -22,7 +22,8 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.xml.bind.annotation.XmlTransient;
+
+
 
 /**
  * ConsumerContentOverride
@@ -31,7 +32,7 @@ import javax.xml.bind.annotation.XmlTransient;
  */
 @Entity
 @DiscriminatorValue("consumer")
-public class ConsumerContentOverride extends ContentOverride {
+public class ConsumerContentOverride extends ContentOverride<ConsumerContentOverride, Consumer> {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @ForeignKey(name = "fk_consumer_content_consumer")
@@ -43,8 +44,7 @@ public class ConsumerContentOverride extends ContentOverride {
 
     }
 
-    public ConsumerContentOverride(Consumer consumer,
-        String contentLabel, String name, String value) {
+    public ConsumerContentOverride(Consumer consumer, String contentLabel, String name, String value) {
         super(contentLabel, name, value);
         this.setConsumer(consumer);
     }
@@ -53,25 +53,27 @@ public class ConsumerContentOverride extends ContentOverride {
         this.consumer = consumer;
     }
 
-    @XmlTransient
     public Consumer getConsumer() {
         return consumer;
     }
 
+    public ConsumerContentOverride setParent(Consumer parent) {
+        this.setConsumer(parent);
+        return this;
+    }
+
+    public Consumer getParent() {
+        return this.getConsumer();
+    }
+
     public String toString() {
-        StringBuffer result = new StringBuffer();
-        result.append("[consumer=");
-        result.append(consumer.getUuid());
-        result.append(", ");
-        result.append("content=");
-        result.append(this.getContentLabel());
-        result.append(", ");
-        result.append("name=");
-        result.append(this.getName());
-        result.append(", ");
-        result.append("value=");
-        result.append(this.getValue());
-        return result.toString();
+        Consumer consumer = this.getConsumer();
+
+        return String.format("ConsumerContentOverride [consumer: %s, content: %s, name: %s, value: %s]",
+            consumer != null ? consumer.getUuid() : null,
+            this.getContentLabel(),
+            this.getName(),
+            this.getValue());
     }
 
 }

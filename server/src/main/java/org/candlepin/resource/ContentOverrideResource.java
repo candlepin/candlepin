@@ -19,11 +19,13 @@ import org.candlepin.auth.Principal;
 import org.candlepin.auth.SubResource;
 import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.common.exceptions.ForbiddenException;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.ContentOverrideDTO;
 import org.candlepin.model.AbstractHibernateObject;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.ContentOverride;
 import org.candlepin.model.ContentOverrideCurator;
 import org.candlepin.util.ContentOverrideValidator;
-
 import com.google.inject.persist.Transactional;
 
 import org.apache.commons.lang.StringUtils;
@@ -40,6 +42,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
+
+
 /**
  * Abstraction of the API Gateway for Content Overrides
  *
@@ -47,29 +51,36 @@ import javax.ws.rs.core.UriInfo;
  * @param <Curator> curator class for the ContentOverride type
  * @param <Parent> parent of the content override, Consumer or ActivationKey for example
  */
-public abstract class ContentOverrideResource<T extends ContentOverride,
+public abstract class ContentOverrideResource<T extends ContentOverride<T, Parent>,
     Curator extends ContentOverrideCurator<T, Parent>,
     Parent extends AbstractHibernateObject> {
 
-    protected Curator contentOverrideCurator;
-    protected ContentOverrideValidator contentOverrideValidator;
-    protected String parentPath;
     protected I18n i18n;
+    protected Curator curator;
+    protected ModelTranslator translator;
+    protected ContentOverrideValidator validator;
 
-    public ContentOverrideResource(Curator contentOverrideCurator,
-        ContentOverrideValidator contentOverrideValidator,
-        I18n i18n, String parentPath) {
-        this.contentOverrideCurator = contentOverrideCurator;
-        this.contentOverrideValidator = contentOverrideValidator;
-        this.parentPath = parentPath;
+    public ContentOverrideResource(I18n i18n, Curator curator, ModelTranslator translator,
+        ContentOverrideValidator validator) {
+
         this.i18n = i18n;
+        this.curator = curator;
+        this.translator = translator;
+        this.validator = validator;
     }
 
     protected abstract Parent findParentById(String parentId);
 
-    protected String getParentPath() {
-        return parentPath;
-    }
+    protected abstract String getParentPath();
+
+    /**
+     * Creates an empty/default override, to be completed by the caller.
+     *
+     * @return
+     *  An empty/default ContentOverride instance
+     */
+    protected abstract T createOverride();
+
 
     /**
      * Adds a Content Override to a Principal
@@ -86,18 +97,53 @@ public abstract class ContentOverrideResource<T extends ContentOverride,
     @Produces(MediaType.APPLICATION_JSON)
     @Transactional
     @SecurityHole
-    public List<T> addContentOverrides(
+    public CandlepinQuery<ContentOverrideDTO> addContentOverrides(
         @Context UriInfo info,
         @Context Principal principal,
-        List<ContentOverride> entries) {
-        String parentId = info.getPathParameters().getFirst(this.getParentPath());
+        List<ContentOverrideDTO> entries) {
 
+        // Validate our input
+        this.validator.validate(entries);
+
+        // Fetch the "parent" content override object...
+        String parentId = info.getPathParameters().getFirst(this.getParentPath());
         Parent parent = this.verifyAndGetParent(parentId, principal, Access.ALL);
-        contentOverrideValidator.validate(entries);
-        for (ContentOverride entry : entries) {
-            contentOverrideCurator.addOrUpdate(parent, entry);
+
+        try {
+            for (ContentOverrideDTO dto : entries) {
+                T override = this.curator.retrieve(parent, dto.getContentLabel(), dto.getName());
+
+                // We're counting on Hibernate to do our batching for us here...
+                if (override != null) {
+                    override.setValue(dto.getValue());
+                    this.curator.merge(override);
+                }
+                else {
+                    override = this.createOverride();
+
+                    override.setParent(parent);
+                    override.setContentLabel(dto.getContentLabel());
+                    override.setName(dto.getName());
+                    override.setValue(dto.getValue());
+
+                    this.curator.create(override);
+                }
+            }
         }
-        return contentOverrideCurator.getList(parent);
+        catch (RuntimeException e) {
+            // Make sure we clear all pending changes, since we don't want to risk storing only a
+            // portion of the changes.
+            this.curator.clear();
+
+            // Re-throw the exception
+            throw e;
+        }
+
+        // Hibernate typically persists automatically before executing a query against a table with
+        // pending changes, but if it doesn't, we can add a flush here to make sure this outputs the
+        // correct values
+        CandlepinQuery<T> query = this.curator.getList(parent);
+        return this.translator.translateQuery(query, ContentOverrideDTO.class);
     }
 
     /**
@@ -115,38 +161,37 @@ public abstract class ContentOverrideResource<T extends ContentOverride,
     @Produces(MediaType.APPLICATION_JSON)
     @Transactional
     @SecurityHole
-    public List<T> deleteContentOverrides(
+    public CandlepinQuery<ContentOverrideDTO> deleteContentOverrides(
         @Context UriInfo info,
         @Context Principal principal,
-        List<ContentOverride> entries) {
+        List<ContentOverrideDTO> entries) {
 
         String parentId = info.getPathParameters().getFirst(this.getParentPath());
         Parent parent = this.verifyAndGetParent(parentId, principal, Access.ALL);
 
         if (entries.size() == 0) {
-            contentOverrideCurator.removeByParent(parent);
+            this.curator.removeByParent(parent);
         }
         else {
-            for (ContentOverride entry : entries) {
-                String label = entry.getContentLabel();
+            for (ContentOverrideDTO dto : entries) {
+                String label = dto.getContentLabel();
                 if (StringUtils.isBlank(label)) {
-                    contentOverrideCurator.removeByParent(parent);
+                    this.curator.removeByParent(parent);
                 }
                 else {
-                    String name = entry.getName();
+                    String name = dto.getName();
                     if (StringUtils.isBlank(name)) {
-                        contentOverrideCurator.removeByContentLabel(
-                            parent, entry.getContentLabel());
+                        this.curator.removeByContentLabel(parent, dto.getContentLabel());
                     }
                     else {
-                        contentOverrideCurator.removeByName(parent,
-                            entry.getContentLabel(), name);
+                        this.curator.removeByName(parent, dto.getContentLabel(), name);
                     }
                 }
             }
         }
 
-        return contentOverrideCurator.getList(parent);
+        CandlepinQuery<T> query = this.curator.getList(parent);
+        return this.translator.translateQuery(query, ContentOverrideDTO.class);
     }
 
     /**
@@ -163,22 +208,26 @@ public abstract class ContentOverrideResource<T extends ContentOverride,
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @SecurityHole
-    public List<T> getContentOverrideList(
+    public CandlepinQuery<ContentOverrideDTO> getContentOverrideList(
         @Context UriInfo info,
         @Context Principal principal) {
+
         String parentId = info.getPathParameters().getFirst(this.getParentPath());
         Parent parent = this.verifyAndGetParent(parentId, principal, Access.READ_ONLY);
-        return contentOverrideCurator.getList(parent);
+
+        CandlepinQuery<T> query = this.curator.getList(parent);
+        return this.translator.translateQuery(query, ContentOverrideDTO.class);
     }
 
     private Parent verifyAndGetParent(String parentId, Principal principal, Access access) {
         // Throws exception if criteria block the id
         Parent result = this.findParentById(parentId);
+
         // Now that we know it exists, verify access level
         if (!principal.canAccess(result, SubResource.NONE, access)) {
-            String error = "Insufficient permissions";
-            throw new ForbiddenException(i18n.tr(error));
+            throw new ForbiddenException(i18n.tr("Insufficient permissions"));
         }
+
         return result;
     }
 }

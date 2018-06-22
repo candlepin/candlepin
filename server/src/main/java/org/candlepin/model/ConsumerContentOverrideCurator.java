@@ -20,18 +20,15 @@ import javax.inject.Singleton;
  * ConsumerContentOverrideCurator
  */
 @Singleton
-public class ConsumerContentOverrideCurator
-    extends ContentOverrideCurator<ConsumerContentOverride, Consumer> {
+public class ConsumerContentOverrideCurator extends
+    ContentOverrideCurator<ConsumerContentOverride, Consumer> {
 
     public ConsumerContentOverrideCurator() {
         super(ConsumerContentOverride.class, "consumer");
     }
 
     @Override
-    protected ConsumerContentOverride createWithParent(
-        ContentOverride override, Consumer parent) {
-        ConsumerContentOverride newOverride = new ConsumerContentOverride(
-            parent, override.getContentLabel(), override.getName(), override.getValue());
-        return this.create(newOverride);
+    protected ConsumerContentOverride createOverride() {
+        return new ConsumerContentOverride();
     }
 }

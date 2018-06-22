@@ -14,6 +14,10 @@
  */
 package org.candlepin.dto.manifest.v1;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.Certificate;
@@ -25,9 +29,7 @@ import org.candlepin.model.EntitlementCertificate;
 import java.util.Date;
 import java.util.HashSet;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+
 
 /**
  * Test suite for the EntitlementTranslator (manifest import/export) class.
@@ -35,13 +37,10 @@ import static org.junit.Assert.assertNull;
 public class EntitlementTranslatorTest extends
     AbstractTranslatorTest<Entitlement, EntitlementDTO, EntitlementTranslator> {
 
-    protected EntitlementTranslator translator;
-
     private OwnerTranslatorTest ownerTranslatorTest = new OwnerTranslatorTest();
     private CertificateTranslatorTest certificateTranslatorTest = new CertificateTranslatorTest();
     private PoolTranslatorTest poolTranslatorTest = new PoolTranslatorTest();
     private ConsumerTranslatorTest consumerTranslatorTest = new ConsumerTranslatorTest();
-
 
     @Override
     protected EntitlementTranslator initObjectTranslator() {
@@ -51,7 +50,6 @@ public class EntitlementTranslatorTest extends
         this.consumerTranslatorTest.initObjectTranslator();
 
         this.translator = new EntitlementTranslator();
-
         return this.translator;
     }
 

@@ -19,6 +19,7 @@ import io.swagger.annotations.ApiModel;
 import org.candlepin.dto.TimestampedCandlepinDTO;
 
 
+
 /**
  * The CertificateDTO is a DTO representing most Candlepin certificates presented to the API.
  * (exceptions include ProductCertificate which has its own DTO).
@@ -26,7 +27,6 @@ import org.candlepin.dto.TimestampedCandlepinDTO;
 @ApiModel(parent = TimestampedCandlepinDTO.class, description = "DTO representing a certificate")
 public class CertificateDTO extends AbstractCertificateDTO<CertificateDTO> {
     public static final long serialVersionUID = 1L;
-
 
     /**
      * Initializes a new CertificateDTO instance with null values.
@@ -56,5 +56,4 @@ public class CertificateDTO extends AbstractCertificateDTO<CertificateDTO> {
         return String.format("CertificateDTO [id: %s, key: %s, serial id: %s]",
             this.getId(), this.getKey(), serial != null ? serial.getId() : null);
     }
-
 }

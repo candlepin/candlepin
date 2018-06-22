@@ -16,9 +16,12 @@ package org.candlepin.model;
 
 import com.google.inject.persist.Transactional;
 
+import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 
 import java.util.List;
+
+
 
 /**
  * ContentOverrideCurator
@@ -26,9 +29,8 @@ import java.util.List;
  * @param <T> ContentOverride type
  * @param <Parent> parent of the content override, Consumer or ActivationKey for example
  */
-public abstract class ContentOverrideCurator
-    <T extends ContentOverride, Parent extends AbstractHibernateObject>
-    extends AbstractHibernateCurator<T> {
+public abstract class ContentOverrideCurator<T extends ContentOverride<T, Parent>,
+    Parent extends AbstractHibernateObject> extends AbstractHibernateCurator<T> {
 
     private String parentAttr;
 
@@ -41,10 +43,11 @@ public abstract class ContentOverrideCurator
     }
 
     @SuppressWarnings("unchecked")
-    public List<T> getList(Parent parent) {
-        return currentSession()
-            .createCriteria(this.entityType())
-            .add(Restrictions.eq(parentAttr, parent)).list();
+    public CandlepinQuery<T> getList(Parent parent) {
+        DetachedCriteria criteria = DetachedCriteria.forClass(this.entityType())
+            .add(Restrictions.eq(parentAttr, parent));
+
+        return this.cpQueryFactory.<T>buildQuery(this.currentSession(), criteria);
     }
 
     public void removeByName(Parent parent, String contentLabel, String name) {
@@ -52,7 +55,9 @@ public abstract class ContentOverrideCurator
             .createCriteria(this.entityType())
             .add(Restrictions.eq(parentAttr, parent))
             .add(Restrictions.eq("contentLabel", contentLabel))
-            .add(Restrictions.eq("name", name).ignoreCase()).list();
+            .add(Restrictions.eq("name", name).ignoreCase())
+            .list();
+
         for (T cco : overrides) {
             delete(cco);
         }
@@ -62,7 +67,9 @@ public abstract class ContentOverrideCurator
         List<T> overrides = currentSession()
             .createCriteria(this.entityType())
             .add(Restrictions.eq(parentAttr, parent))
-            .add(Restrictions.eq("contentLabel", contentLabel)).list();
+            .add(Restrictions.eq("contentLabel", contentLabel))
+            .list();
+
         for (T cco : overrides) {
             delete(cco);
         }
@@ -71,63 +78,65 @@ public abstract class ContentOverrideCurator
     public void removeByParent(Parent parent) {
         List<T> overrides = currentSession()
             .createCriteria(this.entityType())
-            .add(Restrictions.eq(parentAttr, parent)).list();
+            .add(Restrictions.eq(parentAttr, parent))
+            .list();
+
         for (T cco : overrides) {
             delete(cco);
         }
     }
 
-    public T retrieve(Parent parent, String contentLabel,
-        String name) {
-        return (T) currentSession()
-            .createCriteria(this.entityType())
-            .add(Restrictions.eq(parentAttr, parent))
-            .add(Restrictions.eq("contentLabel", contentLabel))
-            .add(Restrictions.eq("name", name).ignoreCase())
-            .setMaxResults(1).uniqueResult();
-    }
+    public T retrieve(Parent parent, String contentLabel, String name) {
+        if (parent != null && contentLabel != null && name != null) {
+            return (T) currentSession()
+                .createCriteria(this.entityType())
+                .add(Restrictions.eq(parentAttr, parent))
+                .add(Restrictions.eq("contentLabel", contentLabel))
+                .add(Restrictions.eq("name", name.toLowerCase()))
+                .setMaxResults(1)
+                .uniqueResult();
+        }
 
-    /* (non-Javadoc)
-     * @see org.candlepin.model.AbstractHibernateCurator#create(
-     *      org.candlepin.model.Persisted)
-     */
-    @Override
-    @Transactional
-    public T create(T override) {
-        sanitize(override);
-        return super.create(override);
-    }
-
-    /* (non-Javadoc)
-     * @see org.candlepin.model.AbstractHibernateCurator#merge(
-     *     org.candlepin.model.Persisted)
-     */
-    @Override
-    @Transactional
-    public T merge(T override) {
-        sanitize(override);
-        return super.merge(override);
+        return null;
     }
 
     @Transactional
     public T addOrUpdate(Parent parent, ContentOverride override) {
-        sanitize(override);
-        T current = this.retrieve(parent,
-            override.getContentLabel(), override.getName());
+        if (parent == null) {
+            throw new IllegalArgumentException("parent is null");
+        }
+
+        if (override == null) {
+            throw new IllegalArgumentException("override is null");
+        }
+
+        T current = this.retrieve(parent, override.getContentLabel(), override.getName());
+
         if (current != null) {
             current.setValue(override.getValue());
-            this.merge(current);
-            return current;
+
+            current = this.merge(current);
         }
-        return this.createWithParent(override, parent);
+        else {
+            current = this.createOverride();
+
+            current.setParent(parent);
+            current.setContentLabel(override.getContentLabel());
+            current.setName(override.getName());
+            current.setValue(override.getValue());
+
+            current = this.create(current);
+        }
+
+        return current;
     }
 
-    private void sanitize(ContentOverride override) {
-        // Always make sure that the name is lowercase.
-        if (override.getName() != null && !override.getName().isEmpty()) {
-            override.setName(override.getName().toLowerCase());
-        }
-    }
+    /**
+     * Creates an empty/default override, to be completed by the caller.
+     *
+     * @return
+     *  An empty/default ContentOverride instance
+     */
+    protected abstract T createOverride();
 
-    protected abstract T createWithParent(ContentOverride override, Parent parent);
 }

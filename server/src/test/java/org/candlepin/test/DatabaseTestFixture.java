@@ -35,6 +35,7 @@ import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
@@ -69,6 +70,7 @@ import org.candlepin.model.RoleCurator;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.UserCurator;
 import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.model.activationkeys.ActivationKeyContentOverrideCurator;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.resteasy.ResourceLocatorMap;
 import org.candlepin.util.DateSource;
@@ -130,9 +132,11 @@ public class DatabaseTestFixture {
     protected Configuration config;
 
     @Inject protected ActivationKeyCurator activationKeyCurator;
+    @Inject protected ActivationKeyContentOverrideCurator activationKeyContentOverrideCurator;
     @Inject protected CdnCurator cdnCurator;
     @Inject protected ConsumerCurator consumerCurator;
     @Inject protected ConsumerTypeCurator consumerTypeCurator;
+    @Inject protected ConsumerContentOverrideCurator consumerContentOverrideCurator;
     @Inject protected CertificateSerialCurator certSerialCurator;
     @Inject protected ContentCurator contentCurator;
     @Inject protected EntitlementCurator entitlementCurator;
@@ -349,7 +353,14 @@ public class DatabaseTestFixture {
 
     // Entity creation methods
     protected ActivationKey createActivationKey(Owner owner) {
-        return TestUtil.createActivationKey(owner, null);
+        ActivationKey key = new ActivationKey();
+
+        key.setOwner(owner);
+        key.setName("A Test Key");
+        key.setServiceLevel("TestLevel");
+        key.setDescription("A test description for the test key.");
+
+        return this.activationKeyCurator.create(key);
     }
 
     public Role createAdminRole(Owner owner) {
