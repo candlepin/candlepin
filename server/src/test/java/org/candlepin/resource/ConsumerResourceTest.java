@@ -31,6 +31,7 @@ import org.candlepin.auth.SubResource;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
+import org.candlepin.common.exceptions.GoneException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.controller.CandlepinPoolManager;
@@ -51,6 +52,8 @@ import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.DeletedConsumer;
+import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCurator;
@@ -108,6 +111,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.OptimisticLockException;
 import javax.ws.rs.core.Response;
 
 /**
@@ -141,6 +145,7 @@ public class ConsumerResourceTest {
     @Mock private ConsumerEnricher consumerEnricher;
     @Mock private ConsumerTypeCurator mockConsumerTypeCurator;
     @Mock private DefaultContentAccessCertServiceAdapter mockContentAccessCertService;
+    @Mock private DeletedConsumerCurator mockDeletedConsumerCurator;
 
     @Before
     public void setUp() {
@@ -877,6 +882,63 @@ public class ConsumerResourceTest {
         cr.exportDataAsync(null, consumer.getUuid(), cdn.getLabel(), "prefix", cdn.getUrl(), extParams);
         verify(manifestManager).generateManifestAsync(eq(consumer.getUuid()), eq(cdn.getLabel()),
             eq("prefix"), eq(cdn.getUrl()), any(Map.class));
+    }
+
+    @Test(expected = GoneException.class)
+    public void deleteConsumerThrowsGoneExceptionIfConsumerDoesNotExistOnInitialLookup() {
+        String targetConsumerUuid = "my-test-consumer";
+        when(mockedConsumerCurator.findByUuid(eq(targetConsumerUuid))).thenReturn(null);
+
+        UserPrincipal uap = mock(UserPrincipal.class);
+        when(uap.canAccess(any(Object.class), any(SubResource.class), any(Access.class)))
+            .thenReturn(Boolean.TRUE);
+
+        ConsumerResource consumerResource = new ConsumerResource(
+            mockedConsumerCurator, mockConsumerTypeCurator, null, null, null, null, null, null, i18n, null,
+            null, null, null, null, null, null, mockedOwnerCurator, null, null, null,
+            mockDeletedConsumerCurator, null, null, this.config, null, null,
+            null, null, null, null, this.factValidator, null, consumerEnricher);
+
+        consumerResource.deleteConsumer(targetConsumerUuid, uap);
+    }
+
+    @Test(expected = GoneException.class)
+    public void deleteConsuemrThrowsGoneExceptionWhenLockAquisitionFailsDueToConsumerAlreadyDeleted() {
+        Consumer consumer = createConsumer();
+        when(mockedConsumerCurator.findByUuid(eq(consumer.getUuid()))).thenReturn(consumer);
+        when(mockedConsumerCurator.lock(eq(consumer))).thenThrow(OptimisticLockException.class);
+        when(mockDeletedConsumerCurator.findByConsumerUuid(eq(consumer.getUuid())))
+            .thenReturn(new DeletedConsumer());
+
+        UserPrincipal uap = mock(UserPrincipal.class);
+        when(uap.canAccess(any(Object.class), any(SubResource.class), any(Access.class)))
+            .thenReturn(Boolean.TRUE);
+
+        ConsumerResource consumerResource = new ConsumerResource(
+            mockedConsumerCurator, mockConsumerTypeCurator, null, null, null, null, null, null, i18n, null,
+            null, null, null, null, null, null, mockedOwnerCurator, null, null, null,
+            mockDeletedConsumerCurator, null, null, this.config, null, null,
+            null, null, null, null, this.factValidator, null, consumerEnricher);
+        consumerResource.deleteConsumer(consumer.getUuid(), uap);
+    }
+
+    @Test(expected = OptimisticLockException.class)
+    public void deleteConsuemrReThrowsOLEWhenLockAquisitionFailsWithoutConsumerHavingBeenDeleted() {
+        Consumer consumer = createConsumer();
+        when(mockedConsumerCurator.findByUuid(eq(consumer.getUuid()))).thenReturn(consumer);
+        when(mockedConsumerCurator.lock(eq(consumer))).thenThrow(OptimisticLockException.class);
+        when(mockDeletedConsumerCurator.findByConsumerUuid(eq(consumer.getUuid()))).thenReturn(null);
+
+        UserPrincipal uap = mock(UserPrincipal.class);
+        when(uap.canAccess(any(Object.class), any(SubResource.class), any(Access.class)))
+            .thenReturn(Boolean.TRUE);
+
+        ConsumerResource consumerResource = new ConsumerResource(
+            mockedConsumerCurator, mockConsumerTypeCurator, null, null, null, null, null, null, i18n, null,
+            null, null, null, null, null, null, mockedOwnerCurator, null, null, null,
+            mockDeletedConsumerCurator, null, null, this.config, null, null,
+            null, null, null, null, this.factValidator, null, consumerEnricher);
+        consumerResource.deleteConsumer(consumer.getUuid(), uap);
     }
 
 }
