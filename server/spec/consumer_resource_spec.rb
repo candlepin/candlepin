@@ -1139,6 +1139,44 @@ describe 'Consumer Resource' do
     consumer_client.unbind_entitlement(ent2.id)
     @cp.get_consumer(consumer['uuid'])['entitlementCount'].should == 0
   end
+
+  it 'concurrent unregister should return 404 or 410 when consumer is deleted by another request' do
+    consumer = @user1.register(random_string("a_test_consumer"))
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+
+    total_threads = 50
+    t_count = 0;
+    unexpected_exceptions = []
+    expected_exceptions = []
+    threads = []
+    total_threads.times do
+      t = Thread.new do
+        begin
+          @user1.unregister(consumer['uuid'])
+        rescue RestClient::ResourceNotFound => rnf
+          # Expected and OK.
+          expected_exceptions << rnf
+        rescue RestClient::Gone => gone
+          expected_exceptions << gone
+        rescue Exception => e
+          # Unexpected - report it.
+          unexpected_exceptions << e
+        end
+        t_count = t_count + 1
+      end
+      threads << t
+    end
+
+    threads.each { |thread| thread.join}
+    t_count.should == total_threads
+    unexpected_exceptions.should be_empty
+    expected_exceptions.should_not be_empty
+
+    # Note: 404 can be returned in cases where a request was made after the initial deletion.
+    #       With a large number of requests, we should expect 1 or more of each.
+    expected_exceptions.each { |e| e.should be_an(RestClient::Gone) | be_an(RestClient::ResourceNotFound) }
+  end
+
 end
 
 describe 'Consumer Resource Consumer Fact Filter Tests' do
@@ -1176,4 +1214,5 @@ describe 'Consumer Resource Consumer Fact Filter Tests' do
     consumers.length.should == 1
     consumers[0]['uuid'].should == odd_consumer['uuid']
   end
+
 end
