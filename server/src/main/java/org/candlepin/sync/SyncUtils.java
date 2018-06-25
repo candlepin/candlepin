@@ -27,6 +27,7 @@ import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair;
 import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 import com.google.inject.Inject;
 
@@ -47,6 +48,7 @@ class SyncUtils {
         if (!baseDir.exists() && !baseDir.mkdirs()) {
             throw new IseException("Unable to create base dir for sync: " + baseDir);
         }
+
         File tmp = File.createTempFile(baseName, Long.toString(System.nanoTime()), baseDir);
 
         if (!tmp.delete()) {
@@ -75,11 +77,15 @@ class SyncUtils {
         mapper.setAnnotationIntrospector(pair);
         mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
+        // Add support for new JDK8 features
+        mapper.registerModule(new Jdk8Module());
+
         // Filter specific things we do not want exported:
         SimpleFilterProvider filterProvider = new SimpleFilterProvider();
         filterProvider.setFailOnUnknownId(false);
         filterProvider = filterProvider.addFilter("EntitlementFilter",
             SimpleBeanPropertyFilter.serializeAllExcept("consumer"));
+
         mapper.setFilterProvider(filterProvider);
         mapper.registerModule(productCachedModule);
 

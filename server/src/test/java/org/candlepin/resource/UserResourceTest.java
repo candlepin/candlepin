@@ -14,10 +14,7 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
@@ -26,21 +23,25 @@ import org.candlepin.auth.permissions.OwnerPermission;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
 import org.candlepin.auth.permissions.UsernameConsumersPermission;
+import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.dto.api.v1.OwnerDTO;
+import org.candlepin.dto.api.v1.UserDTO;
 import org.candlepin.model.Owner;
 import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.Role;
-import org.candlepin.model.RoleCurator;
 import org.candlepin.model.User;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
+import org.candlepin.util.Util;
 
 import org.junit.Test;
 
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -50,33 +51,123 @@ import javax.inject.Inject;
  * UserResourceTest
  */
 public class UserResourceTest extends DatabaseTestFixture {
-    @Inject private RoleCurator roleCurator;
-    @Inject private UserResource userResource;
+    @Inject private UserResource resource;
 
     @Test
-    public void testLookupUser() {
+    public void testCreateUser() {
+        UserDTO dto = new UserDTO()
+            .setUsername("test-user")
+            .setPassword("banana")
+            .setSuperAdmin(true);
 
-        User user = new User();
-        user.setUsername("henri");
-        user.setPassword("password");
+        User existing = this.userCurator.findByLogin(dto.getUsername());
+        assertNull(existing);
 
-        userResource.createUser(user);
-        User u = userResource.getUserInfo("henri");
+        UserDTO output = this.resource.createUser(dto);
 
-        assertEquals(user.getId(), u.getId());
+        assertNotNull(output);
+        assertEquals(dto.getUsername(), output.getUsername());
+        assertEquals(dto.isSuperAdmin(), output.isSuperAdmin());
+
+        // We better not be exposing this, ever.
+        assertNull(output.getPassword());
+
+        // Verify we actually created a user
+        existing = this.userCurator.findByLogin(dto.getUsername());
+
+        assertNotNull(existing);
+        assertEquals(dto.getUsername(), existing.getUsername());
+        assertEquals(Util.hash(dto.getPassword()), existing.getPassword());
+        assertEquals(dto.isSuperAdmin(), existing.isSuperAdmin());
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testCreateUserNoUsername() {
+        UserDTO dto = new UserDTO()
+            .setPassword("banana")
+            .setSuperAdmin(true);
+
+        UserDTO output = this.resource.createUser(dto);
     }
 
     @Test
-    public void testDeleteUser() {
-
+    public void testLookupUser() {
         User user = new User();
-        user.setUsername("henri");
-        user.setPassword("password");
+        user.setUsername("test-user");
+        user.setPassword("banana");
+        user.setSuperAdmin(true);
 
-        userResource.createUser(user);
+        this.userCurator.create(user);
 
-        userResource.deleteUser("henri");
-        assertNull(userResource.getUserInfo("henri"));
+        UserDTO output = this.resource.getUserInfo(user.getUsername());
+
+        assertNotNull(output);
+        assertEquals(output.getUsername(), user.getUsername());
+        assertEquals(output.isSuperAdmin(), user.isSuperAdmin());
+
+        // We better not be exposing this, ever.
+        assertNull(output.getPassword());
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void testLookupUserDoesntExist() {
+        User user = new User();
+        user.setUsername("test-user");
+        user.setPassword("banana");
+        user.setSuperAdmin(true);
+
+        this.userCurator.create(user);
+
+        UserDTO output = this.resource.getUserInfo("no such user");
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testLookupUserNullUsername() {
+        User user = new User();
+        user.setUsername("test-user");
+        user.setPassword("banana");
+        user.setSuperAdmin(true);
+
+        this.userCurator.create(user);
+
+        UserDTO output = this.resource.getUserInfo(null);
+    }
+
+    // test lookup doesn't exist
+    // test lookup bad input
+
+    @Test
+    public void testListAllUsers() {
+        int userCount = 5;
+
+        for (int i = 0; i < userCount; ++i) {
+            User user = new User();
+            user.setUsername("test-user-" + i);
+            user.setPassword("banana");
+            user.setSuperAdmin(true);
+
+            this.userCurator.create(user);
+        }
+
+        Stream<UserDTO> response = this.resource.list();
+
+        assertNotNull(response);
+
+        List<UserDTO> users = response.collect(Collectors.toList());
+
+        assertEquals(userCount, users.size());
+
+        for (UserDTO user : users) {
+            assertNotNull(user);
+
+            assertNotNull(user.getUsername());
+            assertTrue(user.getUsername().startsWith("test-user-"));
+
+            // This better be null
+            assertNull(user.getPassword());
+
+            assertTrue(user.isSuperAdmin());
+        }
     }
 
     @Test
@@ -84,10 +175,11 @@ public class UserResourceTest extends DatabaseTestFixture {
         User user = new User();
         user.setUsername("dummyuser" + TestUtil.randomInt());
         user.setPassword("password");
-        userResource.createUser(user);
 
-        Owner owner1 = createOwner();
-        Owner owner2 = createOwner();
+        this.userCurator.create(user);
+
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
 
         Role owner1Role = new Role(owner1.getKey() + " role");
         Role owner2Role = new Role(owner2.getKey() + " role");
@@ -105,11 +197,11 @@ public class UserResourceTest extends DatabaseTestFixture {
 
         // Requesting the list of owners for this user should assume ALL, and not
         // return owner2:
-        Iterable<Owner> response = userResource.listUsersOwners(user.getUsername(), userPrincipal);
-        List<Owner> owners = new LinkedList<>();
-        for (Object entity : response) {
-            owners.add((Owner) entity);
-        }
+        Stream<OwnerDTO> response = this.resource.listUsersOwners(user.getUsername(), userPrincipal);
+
+        assertNotNull(response);
+
+        List<OwnerDTO> owners = response.collect(Collectors.toList());
 
         assertEquals(1, owners.size());
         assertEquals(owner1.getKey(), owners.get(0).getKey());
@@ -120,7 +212,8 @@ public class UserResourceTest extends DatabaseTestFixture {
         User user = new User();
         user.setUsername("dummyuser" + TestUtil.randomInt());
         user.setPassword("password");
-        userResource.createUser(user);
+
+        this.userCurator.create(user);
 
         Owner owner1 = createOwner();
 
@@ -134,61 +227,123 @@ public class UserResourceTest extends DatabaseTestFixture {
         perms.add(new UsernameConsumersPermission(user, owner1));
         Principal userPrincipal = new UserPrincipal(user.getUsername(), perms, false);
 
-        Iterable<Owner> response = userResource.listUsersOwners(user.getUsername(), userPrincipal);
-        List<Owner> owners = new LinkedList<>();
-        for (Object entity : response) {
-            owners.add((Owner) entity);
-        }
+        Stream<OwnerDTO> response = this.resource.listUsersOwners(user.getUsername(), userPrincipal);
+        assertNotNull(response);
+
+        List<OwnerDTO> owners = response.collect(Collectors.toList());
 
         assertEquals(1, owners.size());
         assertEquals(owner1.getKey(), owners.get(0).getKey());
     }
 
     @Test
-    public void testListAllUsers() {
-
+    public void testDeleteUser() {
         User user = new User();
-        user.setUsername("henri");
-        user.setPassword("password");
+        user.setUsername("test-user");
+        user.setPassword("banana");
+        user.setSuperAdmin(true);
 
-        userResource.createUser(user);
-        List<User> users = userResource.list();
+        this.userCurator.create(user);
 
-        assertTrue("length should be 1", users.size() == 1);
+        this.resource.deleteUser(user.getUsername());
+
+        User existing = this.userCurator.findByLogin(user.getUsername());
+        assertNull(existing);
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void testDeleteUserNotFound() {
+        User user = new User();
+        user.setUsername("test-user");
+        user.setPassword("banana");
+        user.setSuperAdmin(true);
+
+        this.userCurator.create(user);
+
+        this.resource.deleteUser("no such user");
     }
 
     @Test
-    public void testUpdateUsers() {
-
+    public void testUpdateUserChangeUsername() {
         User user = new User();
-        user.setUsername("henri");
-        user.setPassword("password");
-        userResource.createUser(user);
+        user.setUsername("test-user");
+        user.setPassword("banana");
+        user.setSuperAdmin(false);
 
-        User update = new User();
-        update.setUsername("Luke");
-        update.setHashedPassword("Skywalker");
-        update.setSuperAdmin(true);
+        this.userCurator.create(user);
 
-        User updated = userResource.updateUser("henri", update);
+        UserDTO update = new UserDTO()
+            .setUsername("Luke");
 
-        assertEquals("Luke", updated.getUsername());
-        assertEquals("Skywalker", updated.getHashedPassword());
-        assertTrue(updated.isSuperAdmin());
+        UserDTO result = this.resource.updateUser("test-user", update);
+
+        assertEquals("Luke", result.getUsername());
+        assertFalse(result.isSuperAdmin());
+
+        // Output should always be null here, so we'll use the direct object to verify
+        assertNull(result.getPassword());
+
+        user = this.userCurator.get(user.getId());
+        assertNotNull(user);
+        assertEquals(Util.hash("banana"), user.getPassword());
     }
 
     @Test
+    public void testUpdateUserChangePassword() {
+        User user = new User();
+        user.setUsername("test-user");
+        user.setPassword("banana");
+        user.setSuperAdmin(false);
+
+        this.userCurator.create(user);
+
+        UserDTO update = new UserDTO()
+            .setPassword("Skywalker");
+
+        UserDTO result = this.resource.updateUser("test-user", update);
+
+        assertEquals("test-user", result.getUsername());
+        assertFalse(result.isSuperAdmin());
+
+        // Output should always be null here, so we'll use the direct object to verify
+        assertNull(result.getPassword());
+
+        user = this.userCurator.get(user.getId());
+        assertNotNull(user);
+        assertEquals(Util.hash("Skywalker"), user.getPassword());
+    }
+
+    @Test
+    public void testUpdateUserChangeSuperAdmin() {
+        User user = new User();
+        user.setUsername("test-user");
+        user.setPassword("banana");
+        user.setSuperAdmin(false);
+
+        this.userCurator.create(user);
+
+        UserDTO update = new UserDTO()
+            .setSuperAdmin(true);
+
+        UserDTO result = this.resource.updateUser("test-user", update);
+
+        assertEquals("test-user", result.getUsername());
+        assertTrue(result.isSuperAdmin());
+
+        // Output should always be null here, so we'll use the direct object to verify
+        assertNull(result.getPassword());
+
+        user = this.userCurator.get(user.getId());
+        assertNotNull(user);
+        assertEquals(Util.hash("banana"), user.getPassword());
+    }
+
+    @Test(expected = NotFoundException.class)
     public void testUpdateUsersNoLogin() {
-        try {
-            User user = new User();
-            user.setUsername("henri");
-            user.setPassword("password");
-            userResource.updateUser("JarJarIsMyCopilot", user);
-        }
-        catch (NotFoundException e) {
-            // this is exptected
-            return;
-        }
-        fail("No exception was thrown");
+        UserDTO dto = new UserDTO()
+            .setUsername("henri")
+            .setPassword("password");
+
+        this.resource.updateUser("JarJarIsMyCopilot", dto);
     }
 }

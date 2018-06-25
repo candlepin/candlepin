@@ -45,12 +45,13 @@ import io.swagger.jackson.TypeNameResolver;
 import io.swagger.models.Model;
 import io.swagger.models.properties.Property;
 
+
+
 /**
  * Class adopted from https://github.com/swagger-api. Converters are Swagger
  * extension points.
  *
  * @author fnguyen
- *
  */
 public abstract class AbstractModelConverter implements ModelConverter {
     protected final ObjectMapper pMapper;
@@ -74,9 +75,9 @@ public abstract class AbstractModelConverter implements ModelConverter {
                 context.insertAnnotationIntrospector(new SwaggerAnnotationIntrospector());
             }
         });
+
         pMapper = mapper;
         pIntr = mapper.getSerializationConfig().getAnnotationIntrospector();
-
     }
 
     protected static Comparator<Property> getPropertyComparator() {
