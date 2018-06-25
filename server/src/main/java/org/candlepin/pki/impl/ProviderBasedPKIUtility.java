@@ -12,9 +12,15 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.pki;
+package org.candlepin.pki.impl;
 
 import org.candlepin.common.config.Configuration;
+import org.candlepin.pki.CertificateReader;
+import org.candlepin.pki.PKIUtility;
+import org.candlepin.pki.SubjectKeyIdentifierWriter;
+import org.candlepin.pki.X509ByteExtensionWrapper;
+import org.candlepin.pki.X509CRLEntryWrapper;
+import org.candlepin.pki.X509ExtensionWrapper;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +55,11 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * ProviderBasedPKIUtility
+ * ProviderBasedPKIUtility is an abstract class implementing functionality in PKIUtility that only relies
+ * on JCA classes and interfaces.  Any method that requires access to an underlying cryptographic provider
+ * is declared abstract.  If we ever switch cryptographic providers again, it should just be a matter of
+ * extending this class, implementing required methods with the new provider, and changing some Guice
+ * bindings.
  */
 public abstract class ProviderBasedPKIUtility implements PKIUtility {
     private static Logger log = LoggerFactory.getLogger(ProviderBasedPKIUtility.class);

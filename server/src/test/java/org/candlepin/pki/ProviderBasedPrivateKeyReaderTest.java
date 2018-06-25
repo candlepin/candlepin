@@ -16,6 +16,9 @@ package org.candlepin.pki;
 
 import static org.junit.Assert.*;
 
+import org.candlepin.pki.impl.JSSPrivateKeyReader;
+import org.candlepin.pki.impl.ProviderBasedPrivateKeyReader;
+
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMDecryptorProvider;

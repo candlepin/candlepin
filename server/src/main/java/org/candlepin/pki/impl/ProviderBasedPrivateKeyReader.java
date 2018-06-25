@@ -12,7 +12,9 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.pki;
+package org.candlepin.pki.impl;
+
+import org.candlepin.pki.PrivateKeyReader;
 
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
@@ -39,6 +41,12 @@ import javax.crypto.spec.PBEKeySpec;
 /**
  * Class used to read a private key from a PKCS1 or PKCS8 file.  Inspired by the PemReader
  * and PEMParser classes in BouncyCastle (which is licensed under an equivalent to the MIT license).
+ *
+ * This class is an abstract class implementing functionality in PrivateKeyReader interface that only relies
+ * on JCA classes and interfaces.  Any method that requires access to an underlying cryptographic provider
+ * is declared abstract.  If we ever switch cryptographic providers again, it should just be a matter of
+ * extending this class, implementing required methods with the new provider, and changing some Guice
+ * bindings.
  */
 public abstract class ProviderBasedPrivateKeyReader implements PrivateKeyReader {
     private static final String BEGIN = "-----BEGIN ";
