@@ -76,7 +76,7 @@ import org.candlepin.pinsetter.tasks.JobCleaner;
 import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
 import org.candlepin.pinsetter.tasks.SweepBarJob;
 import org.candlepin.pinsetter.tasks.UnpauseJob;
-import org.candlepin.pki.JSSPrivateKeyReader;
+import org.candlepin.pki.impl.JSSPrivateKeyReader;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.PrivateKeyReader;
 import org.candlepin.pki.CertificateReader;
