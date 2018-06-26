@@ -236,13 +236,26 @@ public class HypervisorUpdateJob extends KingpinJob {
             // TODO Need to ensure that we retrieve existing guestIds from the DB before continuing.
 
             // Maps virt hypervisor ID to registered consumer for that hypervisor, should one exist:
-            VirtConsumerMap hypervisorConsumersMap = consumerCurator.getHostConsumersMap(owner, hosts);
+            VirtConsumerMap hypervisorKnownConsumersMap =
+                consumerCurator.getHostConsumersMap(owner, hypervisors);
+            Map<String, Consumer> systemUuidKnownConsumersMap = new HashMap<>();
+            for (Consumer consumer : hypervisorKnownConsumersMap.getConsumers()) {
+                if (consumer.hasFact(Consumer.Facts.SYSTEM_UUID)) {
+                    systemUuidKnownConsumersMap.put(consumer.getFact(Consumer.Facts.SYSTEM_UUID), consumer);
+                }
+            }
+
             Map<String, GuestId> guestIds = consumerCurator.getGuestIdMap(guests, owner);
 
-
             for (String hypervisorId : hosts) {
-                Consumer knownHost = hypervisorConsumersMap.get(hypervisorId);
                 Consumer incoming = syncGuestIds(incomingHosts.get(hypervisorId), guestIds);
+                Consumer knownHost = hypervisorKnownConsumersMap.get(hypervisorId);
+                // HypervisorId might be different in candlepin
+                if (knownHost == null && incoming.hasFact(Consumer.Facts.SYSTEM_UUID) &&
+                    systemUuidKnownConsumersMap.get(incoming.getFact(Consumer.Facts.SYSTEM_UUID)) != null) {
+                    knownHost = systemUuidKnownConsumersMap.get(incoming.getFact(Consumer.Facts.SYSTEM_UUID));
+                }
+
                 Consumer reportedOnConsumer = null;
 
                 if (knownHost == null) {
@@ -264,12 +277,19 @@ public class HypervisorUpdateJob extends KingpinJob {
                             guestMigration.migrate(false);
                         }
 
-                        hypervisorConsumersMap.add(hypervisorId, newHost);
+                        hypervisorKnownConsumersMap.add(hypervisorId, newHost);
                         result.created(newHost);
                         reportedOnConsumer = newHost;
                     }
                 }
                 else {
+                    boolean hypervisorIdUpdated = false;
+                    if (knownHost.getHypervisorId() != null && !hypervisorId.equalsIgnoreCase(knownHost
+                        .getHypervisorId().getHypervisorId())) {
+                        hypervisorIdUpdated = true;
+                        knownHost.setHypervisorId(incoming.getHypervisorId());
+                    }
+
                     reportedOnConsumer = knownHost;
                     if (jobReporterId != null && knownHost.getHypervisorId() != null &&
                         hypervisorId.equalsIgnoreCase(knownHost.getHypervisorId().getHypervisorId()) &&
@@ -290,7 +310,8 @@ public class HypervisorUpdateJob extends KingpinJob {
 
                     boolean factsUpdated = consumerResource.checkForFactsUpdate(knownHost, incoming);
 
-                    if (factsUpdated || guestMigration.isMigrationPending() || typeUpdated) {
+                    if (factsUpdated || guestMigration.isMigrationPending() || typeUpdated ||
+                        hypervisorIdUpdated) {
                         knownHost.setLastCheckin(new Date());
                         guestMigration.migrate(false);
                         result.updated(knownHost);
@@ -312,7 +333,7 @@ public class HypervisorUpdateJob extends KingpinJob {
                 }
             }
 
-            for (Consumer consumer : hypervisorConsumersMap.getConsumers()) {
+            for (Consumer consumer : hypervisorKnownConsumersMap.getConsumers()) {
                 consumer = result.wasCreated(consumer) ?
                     consumerCurator.create(consumer, false) :
                     consumerCurator.update(consumer, false);

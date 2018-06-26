@@ -85,6 +85,14 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     public static final int MAX_LENGTH_OF_CONSUMER_NAME = 255;
 
+    /**
+     * Commonly used/recognized consumer facts
+     */
+    public static final class Facts {
+
+        public static final String SYSTEM_UUID = "dmi.system.uuid";
+    }
+
     @Id
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
@@ -408,7 +416,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     }
 
     public boolean hasFact(String fact) {
-        return facts.containsKey(fact);
+        return facts != null && facts.containsKey(fact);
     }
 
     /**
