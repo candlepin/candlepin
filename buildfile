@@ -43,8 +43,6 @@ RESTEASY = [group('resteasy-jaxrs',
             'org.eclipse.microprofile.rest.client:microprofile-rest-client-api:jar:1.0.1',
             'org.reactivestreams:reactive-streams:jar:1.0.0.final']
 
-
-
 JACKSON_NS = "com.fasterxml.jackson"
 JACKSON_VERSION = "2.9.4"
 JACKSON = [group('jackson-annotations', 'jackson-core', 'jackson-databind',
@@ -58,7 +56,10 @@ JACKSON = [group('jackson-annotations', 'jackson-core', 'jackson-databind',
                  :version => JACKSON_VERSION),
            group('jackson-datatype-hibernate5',
                 :under=> "#{JACKSON_NS}.datatype",
-                :version => JACKSON_VERSION)]
+                :version => JACKSON_VERSION),
+           group('jackson-datatype-jdk8',
+               :under=> "#{JACKSON_NS}.datatype",
+               :version => JACKSON_VERSION)]
 
 SUN_JAXB = ['com.sun.xml.bind:jaxb-impl:jar:2.3.0',
 	    'com.sun.xml.bind:jaxb-core:jar:2.3.0']

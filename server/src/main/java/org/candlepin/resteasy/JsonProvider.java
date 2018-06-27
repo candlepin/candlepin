@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.jaxrs.cfg.Annotations;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
@@ -63,6 +64,10 @@ public class JsonProvider extends JacksonJsonProvider {
         super(Annotations.JACKSON, Annotations.JAXB);
 
         ObjectMapper mapper = _mapperConfig.getDefaultMapper();
+
+        // Add the JDK8 module to support new goodies, like streams
+        mapper.registerModule(new Jdk8Module());
+
         Hibernate5Module hbm = new Hibernate5Module();
         hbm.enable(Hibernate5Module.Feature.FORCE_LAZY_LOADING);
         mapper.registerModule(hbm);

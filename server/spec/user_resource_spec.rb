@@ -12,11 +12,11 @@ describe 'User Resource' do
     @user_cp = user_client(@test_owner, @username)
   end
 
-  it "should return a 410 for deleting an unknown user" do
+  it "should return a 404 when deleting an unknown user" do
     # Try listing for the test user:
     lambda {
       @cp.delete_user(random_string('unknown-user'))
-    }.should raise_exception(RestClient::Gone)
+    }.should raise_exception(RestClient::ResourceNotFound)
   end
 
   it "should return a 409 for creating an existing user" do

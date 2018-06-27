@@ -19,8 +19,12 @@ import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SubResource;
 import org.candlepin.auth.Verify;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.OwnerDTO;
+import org.candlepin.dto.api.v1.UserDTO;
+import org.candlepin.dto.api.v1.RoleDTO;
 import org.candlepin.common.exceptions.ConflictException;
-import org.candlepin.common.exceptions.GoneException;
+import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
@@ -32,10 +36,13 @@ import com.google.inject.Inject;
 
 import org.xnap.commons.i18n.I18n;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -57,6 +64,8 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Authorization;
 
+
+
 /**
  * UserResource
  */
@@ -67,29 +76,66 @@ public class UserResource {
     private UserServiceAdapter userService;
     private I18n i18n;
     private OwnerCurator ownerCurator;
+    private ModelTranslator modelTranslator;
+
 
     @Inject
-    public UserResource(UserServiceAdapter userService, I18n i18n, OwnerCurator ownerCurator) {
+    public UserResource(UserServiceAdapter userService, I18n i18n, OwnerCurator ownerCurator,
+        ModelTranslator modelTranslator) {
 
         this.userService = userService;
         this.i18n = i18n;
         this.ownerCurator = ownerCurator;
+        this.modelTranslator = modelTranslator;
+    }
+
+    /**
+     * Fetches the user for a given username, or throws a NotFoundException if the username cannot
+     * be found.
+     *
+     * @param username
+     *  The username of the user to fetch
+     *
+     * @throws NotFoundException
+     *  if a user for the given username cannot be found
+     *
+     * @throws BadRequestException
+     *  if the given user is null or empty
+     *
+     * @return
+     *  The user for the given username
+     */
+    protected User fetchUserByUsername(String username) {
+        if (username == null || username.isEmpty()) {
+            throw new BadRequestException(this.i18n.tr("username is null or empty"));
+        }
+
+        User user = this.userService.findByLogin(username);
+        if (user == null) {
+            throw new NotFoundException(this.i18n.tr("User not found: {0}", username));
+        }
+
+        return user;
     }
 
     @ApiOperation(notes = "Retrieves a list of Users", value = "list")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<User> list() {
-        return userService.listUsers();
+    public Stream<UserDTO> list() {
+        Collection<User> users = userService.listUsers();
+
+        return users != null ?
+            users.stream().map(this.modelTranslator.getStreamMapper(User.class, UserDTO.class)) :
+            null;
     }
 
     @ApiOperation(notes = "Retrieves a single User", value = "getUserInfo")
+    @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 404, message = "") })
     @GET
     @Path("/{username}")
     @Produces(MediaType.APPLICATION_JSON)
-    public User getUserInfo(@PathParam("username")
-        @Verify(User.class) String username) {
-        return userService.findByLogin(username);
+    public UserDTO getUserInfo(@PathParam("username") @Verify(User.class) String username) {
+        return this.modelTranslator.translate(this.fetchUserByUsername(username), UserDTO.class);
     }
 
     /*
@@ -97,16 +143,18 @@ public class UserResource {
      * full view of a role, use /roles/ instead.
      */
     @ApiOperation(notes = "Retrieves a list of Roles by User", value = "getUserRoles")
+    @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 404, message = "") })
     @GET
     @Path("/{username}/roles")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Role> getUserRoles(@PathParam("username")
-        @Verify(User.class) String username) {
-        User myUser = userService.findByLogin(username);
+    public Stream<RoleDTO> getUserRoles(@PathParam("username") @Verify(User.class) String username) {
+        User user = this.fetchUserByUsername(username);
+
         List<Role> roles = new LinkedList<>();
         Set<User> s = new HashSet<>();
-        s.add(myUser);
-        for (Role r : myUser.getRoles()) {
+        s.add(user);
+
+        for (Role r : user.getRoles()) {
             // Copy onto a detached role object so we can omit users list, which could
             // technically leak information here.
             Role copy = new Role(r.getName());
@@ -115,7 +163,8 @@ public class UserResource {
             copy.setUsers(s);
             roles.add(copy);
         }
-        return roles;
+
+        return roles.stream().map(this.modelTranslator.getStreamMapper(Role.class, RoleDTO.class));
     }
 
     @ApiOperation(notes = "Creates a User", value = "createUser")
@@ -125,47 +174,74 @@ public class UserResource {
         @ApiImplicitParam(name = "user", paramType = "body", required = true,
         dataType = "org.candlepin.model.User$UserCreationRequest")
     })
+    @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 409, message = "") })
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public User createUser(@ApiParam(hidden = true) User user) {
-        if (userService.findByLogin(user.getUsername()) != null) {
-            throw new ConflictException("user " + user.getUsername() + " already exists");
+    public UserDTO createUser(@ApiParam(hidden = true) UserDTO dto) {
+        if (dto == null) {
+            throw new BadRequestException(this.i18n.tr("user data is null or empty"));
         }
-        return userService.createUser(user);
+
+        if (userService.findByLogin(dto.getUsername()) != null) {
+            throw new ConflictException(this.i18n.tr("User already exists: {0}", dto.getUsername()));
+        }
+
+        User user = new User();
+
+        if (dto.getUsername() == null) {
+            throw new BadRequestException(this.i18n.tr("Username not specified"));
+        }
+
+        user.setUsername(dto.getUsername());
+
+        if (dto.getPassword() != null) {
+            user.setPassword(dto.getPassword());
+        }
+
+        user.setSuperAdmin(dto.isSuperAdmin() != null ? dto.isSuperAdmin() : false);
+
+        return this.modelTranslator.translate(userService.createUser(user), UserDTO.class);
     }
 
     @ApiOperation(notes = "Updates a User", value = "updateUser")
-    @ApiResponses({ @ApiResponse(code = 404, message = "") })
+    @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 404, message = "") })
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{username}")
-    public User updateUser(@PathParam("username")
-        @Verify(User.class) String username,
-        @ApiParam(name = "user", required = true) User user) {
+    public UserDTO updateUser(
+        @PathParam("username") @Verify(User.class) String username,
+        @ApiParam(name = "user", required = true) UserDTO dto) {
 
         // Note, to change the username, the old username needs to be provided.
-        if (userService.findByLogin(username) == null) {
-            throw new NotFoundException(i18n.tr("User {0} does not exist", username));
+        User user = this.fetchUserByUsername(username);
+
+        // Apparently we allow anything to change here...???
+        if (dto.getUsername() != null) {
+            user.setUsername(dto.getUsername());
         }
-        return userService.updateUser(user);
+
+        if (dto.getPassword() != null) {
+            user.setPassword(dto.getPassword());
+        }
+
+        if (dto.isSuperAdmin() != null) {
+            user.setSuperAdmin(dto.isSuperAdmin());
+        }
+
+        return this.modelTranslator.translate(userService.updateUser(user), UserDTO.class);
     }
 
-
     @ApiOperation(notes = "Removes a User", value = "deleteUser")
-    @ApiResponses({ @ApiResponse(code = 410, message = "") })
+    @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 404, message = "") })
     @DELETE
     @Path("/{username}")
     @Produces(MediaType.APPLICATION_JSON)
     public void deleteUser(@PathParam("username") String username) {
-        User user = userService.findByLogin(username);
-        if (user == null) {
-            throw new GoneException(i18n.tr("User {0} not found", username), username);
-        }
-        else {
-            userService.deleteUser(user);
-        }
+        User user = this.fetchUserByUsername(username);
+
+        userService.deleteUser(user);
     }
 
     @ApiOperation(notes = "Retrieve a list of owners the user can register systems to. " +
@@ -178,15 +254,17 @@ public class UserResource {
     @GET
     @Path("/{username}/owners")
     @Produces(MediaType.APPLICATION_JSON)
-    public Iterable<Owner> listUsersOwners(
+    public Stream<OwnerDTO> listUsersOwners(
         @PathParam("username") @Verify(User.class) String username,
         @Context Principal principal) {
 
         User user = userService.findByLogin(username);
 
-        return user.isSuperAdmin() ?
-            this.ownerCurator.listAll() :
-            user.getOwners(SubResource.CONSUMERS, Access.CREATE);
+        Stream<Owner> stream = user.isSuperAdmin() ?
+            StreamSupport.stream(this.ownerCurator.listAll().spliterator(), false) :
+            user.getOwners(SubResource.CONSUMERS, Access.CREATE).stream();
+
+        return stream.map(this.modelTranslator.getStreamMapper(Owner.class, OwnerDTO.class));
     }
 
 }

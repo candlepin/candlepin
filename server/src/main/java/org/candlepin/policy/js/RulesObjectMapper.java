@@ -28,6 +28,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 import com.google.inject.Inject;
 
@@ -84,8 +85,10 @@ public class RulesObjectMapper {
         Hibernate5Module hbm = new Hibernate5Module();
         hbm.enable(Hibernate5Module.Feature.FORCE_LAZY_LOADING);
 
+        mapper.registerModule(new Jdk8Module());
         mapper.registerModule(hbm);
         mapper.registerModule(poolCachedSerializationModule);
+
         // Very important for deployments so new rules files can return additional
         // properties that this current server doesn't know how to serialize, but still
         // shouldn't fail on.

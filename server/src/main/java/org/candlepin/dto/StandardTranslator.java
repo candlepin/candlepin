@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2017 Red Hat, Inc.
+ * Copyright (c) 2009 - 2018 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -53,16 +53,22 @@ import org.candlepin.dto.api.v1.ImportUpstreamConsumerDTO;
 import org.candlepin.dto.api.v1.ImportUpstreamConsumerTranslator;
 import org.candlepin.dto.api.v1.JobStatusDTO;
 import org.candlepin.dto.api.v1.JobStatusTranslator;
+import org.candlepin.dto.api.v1.PermissionBlueprintDTO;
+import org.candlepin.dto.api.v1.PermissionBlueprintTranslator;
 import org.candlepin.dto.api.v1.PoolQuantityDTO;
 import org.candlepin.dto.api.v1.PoolQuantityTranslator;
 import org.candlepin.dto.api.v1.ProductCertificateDTO;
 import org.candlepin.dto.api.v1.ProductCertificateTranslator;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.dto.api.v1.ProductTranslator;
+import org.candlepin.dto.api.v1.RoleDTO;
+import org.candlepin.dto.api.v1.RoleTranslator;
 import org.candlepin.dto.api.v1.UeberCertificateDTO;
 import org.candlepin.dto.api.v1.UeberCertificateTranslator;
 import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
 import org.candlepin.dto.api.v1.UpstreamConsumerTranslator;
+import org.candlepin.dto.api.v1.UserDTO;
+import org.candlepin.dto.api.v1.UserTranslator;
 import org.candlepin.dto.shim.ContentDTOTranslator;
 import org.candlepin.dto.shim.ContentDataTranslator;
 import org.candlepin.dto.shim.ProductDTOTranslator;
@@ -89,12 +95,15 @@ import org.candlepin.model.ImportRecord;
 import org.candlepin.model.ImportUpstreamConsumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
+import org.candlepin.model.Role;
 import org.candlepin.model.UeberCertificate;
 import org.candlepin.model.UpstreamConsumer;
+import org.candlepin.model.User;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductData;
@@ -167,6 +176,8 @@ public class StandardTranslator extends SimpleModelTranslator {
             new org.candlepin.dto.api.v1.OwnerTranslator(),
             Owner.class, org.candlepin.dto.api.v1.OwnerDTO.class);
         this.registerTranslator(
+            new PermissionBlueprintTranslator(), PermissionBlueprint.class, PermissionBlueprintDTO.class);
+        this.registerTranslator(
             new org.candlepin.dto.api.v1.PoolTranslator(),
             Pool.class, org.candlepin.dto.api.v1.PoolDTO.class);
         this.registerTranslator(
@@ -176,9 +187,13 @@ public class StandardTranslator extends SimpleModelTranslator {
         this.registerTranslator(
             new ProductCertificateTranslator(), ProductCertificate.class, ProductCertificateDTO.class);
         this.registerTranslator(
+            new RoleTranslator(), Role.class, RoleDTO.class);
+        this.registerTranslator(
             new UeberCertificateTranslator(), UeberCertificate.class, UeberCertificateDTO.class);
         this.registerTranslator(
             new UpstreamConsumerTranslator(), UpstreamConsumer.class, UpstreamConsumerDTO.class);
+        this.registerTranslator(
+            new UserTranslator(), User.class, UserDTO.class);
 
         // Event translators
         /////////////////////////////////////////////
