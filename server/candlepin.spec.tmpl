@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.5.4
+Version: 2.5.5
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -220,6 +220,23 @@ fi
 
 #raw
 %changelog
+* Fri Jun 29 2018 Kevin Howell <khowell@redhat.com> 2.5.5-1
+- Updated UserResource to use UserDTOs instead of User entities
+  (crog@redhat.com)
+- 1314902: ENT-555 use dmi.system.uuid to reconcile hypervisors
+  (adarshvritant@gmail.com)
+- Added the ContentOverrideDTO and ContentOverrideTranslator (crog@redhat.com)
+- Silence all hibernate deprecation warnings (mstead@redhat.com)
+- 1582510: Properly handle concurrent unregister requests (mstead@redhat.com)
+- Remove revoke op (adarshvritant@gmail.com)
+- Added DTOs for ComplianceStatus and ComplianceReason (crog@redhat.com)
+- 1510920: Allow consumer to cancel jobs started by consumer
+  (wpoteat@redhat.com)
+- Add a sleep to fix failing spec test against mysql (mstead@redhat.com)
+- Upgraded postgresql-jdbc driver to the latest (mstead@redhat.com)
+- 1588202: Fixed status endpoint not setting the timeUTC field
+  (crog@redhat.com)
+
 * Thu Jun 07 2018 Kevin Howell <khowell@redhat.com> 2.5.4-1
 - Updating the pom files for the guava update (mstead@redhat.com)
 
