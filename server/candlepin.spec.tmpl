@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.4.1
+Version: 2.4.2
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,10 @@ fi
 
 #raw
 %changelog
+* Fri Jun 29 2018 Kevin Howell <khowell@redhat.com> 2.4.2-1
+- 1584715: Properly handle concurrent unregister requests (mstead@redhat.com)
+- Add a sleep to fix failing spec test against mysql (mstead@redhat.com)
+
 * Thu Jun 07 2018 Kevin Howell <khowell@redhat.com> 2.4.1-1
 - Updating the pom files for the guava update (mstead@redhat.com)
 - Added bulk consumer fetching to ConsumerCurator (crog@redhat.com)
