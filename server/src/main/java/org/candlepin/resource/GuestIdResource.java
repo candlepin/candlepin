@@ -146,8 +146,8 @@ public class GuestIdResource {
             throw new IllegalArgumentException("the guestId dto is null");
         }
 
-        guestId.setId(dto.getId() != null ? dto.getId() : null);
-        guestId.setGuestId(dto.getGuestId() != null ? dto.getGuestId() : null);
+        guestId.setId(dto.getId());
+        guestId.setGuestId(dto.getGuestId());
         if (dto.getAttributes() != null) {
             guestId.setAttributes(dto.getAttributes());
         }

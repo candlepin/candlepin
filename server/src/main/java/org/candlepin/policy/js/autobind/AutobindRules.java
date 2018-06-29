@@ -16,6 +16,7 @@ package org.candlepin.policy.js.autobind;
 
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.rules.v1.ConsumerDTO;
+import org.candlepin.dto.rules.v1.GuestIdDTO;
 import org.candlepin.dto.rules.v1.OwnerDTO;
 import org.candlepin.dto.rules.v1.PoolDTO;
 import org.candlepin.model.Consumer;
@@ -24,6 +25,7 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
+import org.candlepin.model.GuestId;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
@@ -49,7 +51,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-
+import java.util.stream.Stream;
 
 
 /**
@@ -120,6 +122,10 @@ public class AutobindRules {
             poolDTOs.add(this.translator.translate(pool, PoolDTO.class));
         }
 
+        Stream<GuestIdDTO> guestIdStream = consumer.getGuestIds() == null ? Stream.empty() :
+            consumer.getGuestIds().stream()
+            .map(this.translator.getStreamMapper(GuestId.class, GuestIdDTO.class));
+
         // Provide objects for the script:
         JsonJsContext args = new JsonJsContext(mapper);
         args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
@@ -132,7 +138,7 @@ public class AutobindRules {
         args.put("compliance", compliance);
         args.put("exemptList", exemptLevels);
         args.put("considerDerived", considerDerived);
-        args.put("guestIds", consumer.getGuestIds());
+        args.put("guestIds", guestIdStream);
 
         // Convert the JSON returned into a Map object:
         Map<String, Integer> result = null;
