@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2017 Red Hat, Inc.
+ * Copyright (c) 2009 - 2018 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -12,17 +12,17 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.dto.api.v1;
+package org.candlepin.dto.rules.v1;
 
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.TimestampedEntityTranslator;
+import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.GuestId;
 
 /**
  * The GuestIdTranslator provides translation from GuestId model objects to
- * GuestIdDTOs
+ * GuestIdDTOs for the Rules framework
  */
-public class GuestIdTranslator extends TimestampedEntityTranslator<GuestId, GuestIdDTO> {
+public class GuestIdTranslator implements ObjectTranslator<GuestId, GuestIdDTO> {
 
     /**
      * {@inheritDoc}
@@ -53,7 +53,13 @@ public class GuestIdTranslator extends TimestampedEntityTranslator<GuestId, Gues
      */
     @Override
     public GuestIdDTO populate(ModelTranslator translator, GuestId source, GuestIdDTO dest) {
-        dest = super.populate(translator, source, dest);
+        if (source == null) {
+            throw new IllegalArgumentException("source is null");
+        }
+
+        if (dest == null) {
+            throw new IllegalArgumentException("destination is null");
+        }
 
         dest.setId(source.getId());
         dest.setGuestId(source.getGuestId());

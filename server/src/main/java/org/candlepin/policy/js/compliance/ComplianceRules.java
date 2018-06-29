@@ -18,6 +18,7 @@ import org.candlepin.audit.EventSink;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.rules.v1.ConsumerDTO;
 import org.candlepin.dto.rules.v1.EntitlementDTO;
+import org.candlepin.dto.rules.v1.GuestIdDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
@@ -25,6 +26,7 @@ import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.GuestId;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsonJsContext;
 import org.candlepin.policy.js.RuleExecutionException;
@@ -39,7 +41,6 @@ import org.slf4j.LoggerFactory;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 
@@ -160,6 +161,10 @@ public class ComplianceRules {
             consumer.getEntitlements() != null ? consumer.getEntitlements().stream() : Stream.empty())
                 .map(this.translator.getStreamMapper(Entitlement.class, EntitlementDTO.class));
 
+        Stream<GuestIdDTO> guestIdStream = consumer.getGuestIds() == null ? Stream.empty() :
+            consumer.getGuestIds().stream()
+                .map(this.translator.getStreamMapper(GuestId.class, GuestIdDTO.class));
+
         // Do not calculate compliance status for distributors and shares. It is prohibitively
         // expensive and meaningless
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
@@ -169,12 +174,12 @@ public class ComplianceRules {
 
         JsonJsContext args = new JsonJsContext(mapper);
         args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
-        args.put("entitlements", entStream.collect(Collectors.toSet()));
+        args.put("entitlements", entStream);
         args.put("ondate", date);
         args.put("calculateCompliantUntil", calculateCompliantUntil);
         args.put("calculateProductComplianceDateRanges", calculateProductComplianceDateRanges);
         args.put("log", log, false);
-        args.put("guestIds", consumer.getGuestIds());
+        args.put("guestIds", guestIdStream);
 
         // Convert the JSON returned into a ComplianceStatus object:
         String json = jsRules.runJsFunction(String.class, "get_status", args);
@@ -231,28 +236,37 @@ public class ComplianceRules {
             entsToConsider.stream()
                 .map(this.translator.getStreamMapper(Entitlement.class, EntitlementDTO.class));
 
+        Stream<GuestIdDTO> guestIdStream = consumer.getGuestIds() == null ? Stream.empty() :
+            consumer.getGuestIds().stream()
+                .map(this.translator.getStreamMapper(GuestId.class, GuestIdDTO.class));
+
         JsonJsContext args = new JsonJsContext(mapper);
         args.put("stack_id", stackId);
         args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
-        args.put("entitlements", entStream.collect(Collectors.toSet()));
+        args.put("entitlements", entStream);
         args.put("log", log, false);
-        args.put("guestIds", consumer.getGuestIds());
+        args.put("guestIds", guestIdStream);
 
         return jsRules.runJsFunction(Boolean.class, "is_stack_compliant", args);
     }
 
+    @SuppressWarnings("checkstyle:indentation")
     public boolean isEntitlementCompliant(Consumer consumer, Entitlement ent, Date onDate) {
         List<Entitlement> ents = entCurator.listByConsumerAndDate(consumer, onDate).list();
 
         Stream<EntitlementDTO> entStream = ents == null ? Stream.empty() :
             ents.stream().map(this.translator.getStreamMapper(Entitlement.class, EntitlementDTO.class));
 
+        Stream<GuestIdDTO> guestIdStream = consumer.getGuestIds() == null ? Stream.empty() :
+            consumer.getGuestIds().stream()
+                .map(this.translator.getStreamMapper(GuestId.class, GuestIdDTO.class));
+
         JsonJsContext args = new JsonJsContext(mapper);
         args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
         args.put("entitlement", this.translator.translate(ent, EntitlementDTO.class));
-        args.put("entitlements", entStream.collect(Collectors.toSet()));
+        args.put("entitlements", entStream);
         args.put("log", log, false);
-        args.put("guestIds", consumer.getGuestIds());
+        args.put("guestIds", guestIdStream);
 
         return jsRules.runJsFunction(Boolean.class, "is_ent_compliant", args);
     }

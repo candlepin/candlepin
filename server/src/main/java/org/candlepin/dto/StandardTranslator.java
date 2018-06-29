@@ -267,6 +267,9 @@ public class StandardTranslator extends SimpleModelTranslator {
             new org.candlepin.dto.rules.v1.EntitlementTranslator(),
             Entitlement.class, org.candlepin.dto.rules.v1.EntitlementDTO.class);
         this.registerTranslator(
+            new org.candlepin.dto.rules.v1.GuestIdTranslator(),
+            GuestId.class, org.candlepin.dto.rules.v1.GuestIdDTO.class);
+        this.registerTranslator(
             new org.candlepin.dto.rules.v1.OwnerTranslator(),
             Owner.class, org.candlepin.dto.rules.v1.OwnerDTO.class);
         this.registerTranslator(

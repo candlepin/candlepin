@@ -17,9 +17,11 @@ package org.candlepin.policy.js.quantity;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.rules.v1.ConsumerDTO;
 import org.candlepin.dto.rules.v1.EntitlementDTO;
+import org.candlepin.dto.rules.v1.GuestIdDTO;
 import org.candlepin.dto.rules.v1.PoolDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.GuestId;
 import org.candlepin.model.Pool;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsonJsContext;
@@ -35,7 +37,6 @@ import org.slf4j.LoggerFactory;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 
@@ -69,11 +70,15 @@ public class QuantityRules {
                 .filter(ent -> ent.isValidOnDate(date))
                 .map(this.translator.getStreamMapper(Entitlement.class, EntitlementDTO.class));
 
+        Stream<GuestIdDTO> guestIdStream = c.getGuestIds() == null ? Stream.empty() :
+            c.getGuestIds().stream()
+                .map(this.translator.getStreamMapper(GuestId.class, GuestIdDTO.class));
+
         args.put("consumer", this.translator.translate(c, ConsumerDTO.class));
         args.put("pool", this.translator.translate(p, PoolDTO.class));
-        args.put("validEntitlements", entStream.collect(Collectors.toSet()));
+        args.put("validEntitlements", entStream);
         args.put("log", log, false);
-        args.put("guestIds", c.getGuestIds());
+        args.put("guestIds", guestIdStream);
 
         String json = jsRules.runJsFunction(String.class, "get_suggested_quantity", args);
         SuggestedQuantity dto = mapper.toObject(json, SuggestedQuantity.class);
@@ -106,11 +111,15 @@ public class QuantityRules {
                 .filter(ent -> ent.isValidOnDate(date))
                 .map(this.translator.getStreamMapper(Entitlement.class, EntitlementDTO.class));
 
-        args.put("pools", poolStream.collect(Collectors.toSet()));
+        Stream<GuestIdDTO> guestIdStream = c.getGuestIds() == null ? Stream.empty() :
+            c.getGuestIds().stream()
+                .map(this.translator.getStreamMapper(GuestId.class, GuestIdDTO.class));
+
+        args.put("pools", poolStream);
         args.put("consumer", this.translator.translate(c, ConsumerDTO.class));
-        args.put("validEntitlements", entStream.collect(Collectors.toSet()));
+        args.put("validEntitlements", entStream);
         args.put("log", log, false);
-        args.put("guestIds", c.getGuestIds());
+        args.put("guestIds", guestIdStream);
 
         String json = jsRules.runJsFunction(String.class, "get_suggested_quantities", args);
         Map<String, SuggestedQuantity> resultMap;
