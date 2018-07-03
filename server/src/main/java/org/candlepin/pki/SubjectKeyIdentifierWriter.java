@@ -16,7 +16,6 @@ package org.candlepin.pki;
 
 import org.bouncycastle.asn1.ASN1Encoding;
 import org.bouncycastle.asn1.DEROctetString;
-import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
 
 import java.io.IOException;
 import java.security.KeyPair;
@@ -31,7 +30,7 @@ import java.util.Set;
  * extension so it may be necessary to hijack the extension as an alternative communications channel.
  */
 public interface SubjectKeyIdentifierWriter {
-     /**
+    /**
      * This method returns the SubjectKeyIdentifier extension that will be written into a certificate.
      *
      * @param clientKeyPair
@@ -40,14 +39,12 @@ public interface SubjectKeyIdentifierWriter {
      * @throws IOException thrown if error reading cert
      * @throws NoSuchAlgorithmException thrown if JcaX509ExtensionUtils can't be created
      */
-    default byte[] getSubjectKeyIdentifier(KeyPair clientKeyPair, Set<X509ExtensionWrapper> extensions)
-            throws IOException, NoSuchAlgorithmException {
-        return new JcaX509ExtensionUtils().createSubjectKeyIdentifier(clientKeyPair.getPublic()).getEncoded();
-    }
+    byte[] getSubjectKeyIdentifier(KeyPair clientKeyPair, Set<X509ExtensionWrapper> extensions)
+        throws IOException, NoSuchAlgorithmException;
 
-    default byte[] toOctetString(byte[] bytes_to_encode) throws IOException {
-        DEROctetString octetStr = new DEROctetString(bytes_to_encode);
-        return octetStr.getEncoded(ASN1Encoding.DER);
+    default byte[] toOctetString(byte[] bytesToEncode) throws IOException {
+        DEROctetString octetStr = new DEROctetString(bytesToEncode);
+        return octetStr.getEncoded();
     }
 
 }
