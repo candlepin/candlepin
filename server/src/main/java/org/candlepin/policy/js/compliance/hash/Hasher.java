@@ -15,10 +15,14 @@
 
 package org.candlepin.policy.js.compliance.hash;
 
-import org.apache.commons.codec.digest.DigestUtils;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.charset.Charset;
 import java.util.Collection;
 
 /**
@@ -28,19 +32,28 @@ public class Hasher {
     private static Logger log = LoggerFactory.getLogger(Hasher.class);
     private StringBuilder sink;
 
+    // Trivia: the second seed is the seventh Mersenne prime
+    private static final HashFunction HASH_FUNCTION = Hashing.concatenating(
+        Hashing.murmur3_128(),
+        Hashing.murmur3_128(524287)
+    );
+
     public Hasher() {
         sink = new StringBuilder();
     }
 
     /**
-     * Products an SHA256 hash of anything that was put into this hasher.
+     * Produces two concatenated Murmur3 hashes of anything that was put into this hasher to produce a 256
+     * bit digest.  We concatenate two 128 bit digests for legacy reasons: previously we used SHA256 which
+     * produced a 256 bit digest and I wanted to maintain continuity in the digest size.
      *
-     * @return an SHA256 hex string
+     * @return a 256 bit hex string
      */
     public String hash() {
         String data = sink.toString();
-        log.debug(data);
-        return DigestUtils.sha256Hex(data);
+        log.debug("Hashing {}", data);
+        HashCode c = HASH_FUNCTION.newHasher().putString(data, Charset.defaultCharset()).hash();
+        return c.toString();
     }
 
     /**
