@@ -16,6 +16,7 @@ package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.TimestampedCandlepinDTO;
 import org.candlepin.util.SetView;
+import org.candlepin.service.model.ContentInfo;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -59,7 +60,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @ApiModel(parent = TimestampedCandlepinDTO.class, description = "DTO representing a certificate")
 @XmlRootElement
-public class ContentDTO extends TimestampedCandlepinDTO<ContentDTO> {
+public class ContentDTO extends TimestampedCandlepinDTO<ContentDTO> implements ContentInfo {
     public static final long serialVersionUID = 1L;
 
     @ApiModelProperty(example = "ff808081554a3e4101554a3e9033005d")
@@ -421,6 +422,14 @@ public class ContentDTO extends TimestampedCandlepinDTO<ContentDTO> {
      */
     public Collection<String> getModifiedProductIds() {
         return this.modifiedProductIds != null ? new SetView(this.modifiedProductIds) : null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Collection<String> getRequiredProductIds() {
+        return this.getModifiedProductIds();
     }
 
     /**

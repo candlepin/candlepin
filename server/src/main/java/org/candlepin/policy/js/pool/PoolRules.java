@@ -26,7 +26,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceSubscription;
-import org.candlepin.model.dto.Subscription;
+import org.candlepin.service.model.SubscriptionInfo;
 
 import com.google.inject.Inject;
 
@@ -91,11 +91,11 @@ public class PoolRules {
         return result;
     }
 
-    public List<Pool> createAndEnrichPools(Subscription sub) {
+    public List<Pool> createAndEnrichPools(SubscriptionInfo sub) {
         return createAndEnrichPools(sub, new LinkedList<>());
     }
 
-    public List<Pool> createAndEnrichPools(Subscription sub, List<Pool> existingPools) {
+    public List<Pool> createAndEnrichPools(SubscriptionInfo sub, List<Pool> existingPools) {
         Pool pool = this.poolManager.convertToMasterPool(sub);
         return createAndEnrichPools(pool, existingPools);
     }

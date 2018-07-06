@@ -22,6 +22,7 @@ import org.candlepin.model.User;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.stream.Collectors;
 
 
 
@@ -66,22 +67,28 @@ public class RoleTranslator extends TimestampedEntityTranslator<Role, RoleDTO> {
         dest.setName(source.getName());
 
         if (translator != null) {
+            // Users
             Collection<User> users = source.getUsers();
-            dest.setUsers(Collections.<UserDTO>emptyList());
 
             if (users != null) {
-                for (User user : users) {
-                    dest.addUser(translator.translate(user, UserDTO.class));
-                }
+                dest.setUsers(users.stream()
+                    .map(translator.getStreamMapper(User.class, UserDTO.class))
+                    .collect(Collectors.toList()));
+            }
+            else {
+                dest.setUsers(Collections.<UserDTO>emptyList());
             }
 
+            // Permissions
             Collection<PermissionBlueprint> permissions = source.getPermissions();
-            dest.setPermissions(Collections.<PermissionBlueprintDTO>emptyList());
 
             if (permissions != null) {
-                for (PermissionBlueprint permission : permissions) {
-                    dest.addPermission(translator.translate(permission, PermissionBlueprintDTO.class));
-                }
+                dest.setPermissions(permissions.stream()
+                    .map(translator.getStreamMapper(PermissionBlueprint.class, PermissionBlueprintDTO.class))
+                    .collect(Collectors.toList()));
+            }
+            else {
+                dest.setPermissions(Collections.<PermissionBlueprintDTO>emptyList());
             }
         }
         else {

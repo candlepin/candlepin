@@ -296,6 +296,8 @@ public class JobCuratorTest extends DatabaseTestFixture {
     @Test
     public void findByPrincipalNameRestrictsConsumerToOwnJobs() {
         Owner owner = new Owner("ducks");
+        owner.setId("duck-owner");
+
         Consumer consumer = TestUtil.createConsumer(owner);
 
         JobStatus job = newJobStatus().principalName(consumer.getUuid()).owner(owner.getKey()).create();

@@ -586,6 +586,7 @@ public class Importer {
         final String contentAccessMode = StringUtils.isEmpty(consumer.getContentAccessMode()) ?
             ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE :
             consumer.getContentAccessMode();
+
         SubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(importSubs);
         OwnerServiceAdapter ownerAdapter = new OwnerServiceAdapter() {
             @Override

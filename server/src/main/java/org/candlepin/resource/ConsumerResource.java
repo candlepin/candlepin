@@ -90,7 +90,6 @@ import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Release;
-import org.candlepin.model.User;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.pinsetter.tasks.EntitleByProductsJob;
@@ -115,6 +114,7 @@ import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
+import org.candlepin.service.model.UserInfo;
 import org.candlepin.sync.ExportCreationException;
 import org.candlepin.util.FactValidator;
 import org.candlepin.util.PropertyValidationException;
@@ -762,7 +762,9 @@ public class ConsumerResource {
         }
 
         Consumer consumerToCreate = new Consumer();
+
         consumerToCreate.setOwner(owner);
+
         populateEntity(consumerToCreate, consumer);
         consumerToCreate.setType(type);
 
@@ -1031,7 +1033,7 @@ public class ConsumerResource {
     private void verifyPersonConsumer(ConsumerDTO consumer, ConsumerType type, Owner owner, String username,
         Principal principal) {
 
-        User user = null;
+        UserInfo user = null;
         try {
             user = userService.findByLogin(username);
         }
@@ -1040,7 +1042,7 @@ public class ConsumerResource {
         }
 
         if (user == null) {
-            throw new NotFoundException(i18n.tr("User with ID \"{0}\" could not be found."));
+            throw new NotFoundException(this.i18n.tr("User not found: {0}", username));
         }
 
         // When registering person consumers we need to be sure the username
@@ -1052,7 +1054,7 @@ public class ConsumerResource {
 
         // TODO: Refactor out type specific checks?
         if (type.isType(ConsumerTypeEnum.PERSON)) {
-            Consumer existing = consumerCurator.findByUser(user);
+            Consumer existing = consumerCurator.findByUsername(user.getUsername());
 
             if (existing != null &&
                 this.consumerTypeCurator.getConsumerType(existing).isType(ConsumerTypeEnum.PERSON)) {
@@ -1890,8 +1892,8 @@ public class ConsumerResource {
             // I hate double negatives, but if they have accepted all
             // terms, we want comeToTerms to be true.
             long subTermsStart = System.currentTimeMillis();
-            if (subAdapter.hasUnacceptedSubscriptionTerms(owner)) {
 
+            if (subAdapter.hasUnacceptedSubscriptionTerms(owner.getKey())) {
                 return Response.serverError().build();
             }
 

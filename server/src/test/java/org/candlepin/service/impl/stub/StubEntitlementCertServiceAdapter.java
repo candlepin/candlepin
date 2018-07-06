@@ -23,7 +23,7 @@ import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
-import org.candlepin.service.BaseEntitlementCertServiceAdapter;
+import org.candlepin.service.impl.BaseEntitlementCertServiceAdapter;
 
 import com.google.inject.Inject;
 

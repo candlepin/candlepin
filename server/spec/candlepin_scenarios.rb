@@ -166,7 +166,7 @@ module CandlepinMethods
     @users << user
 
     role = @cp.create_role(random_string('testrole'), perms)
-    @cp.add_role_user(role['id'], username)
+    @cp.add_role_user(role['name'], username)
 
     return Candlepin.new(username, password)
   end
@@ -181,7 +181,7 @@ module CandlepinMethods
     # Create a role for user to administer the given owner:
     perm = readonly ? 'READ_ONLY' : 'ALL'
     role = create_role(nil, owner['key'], perm)
-    @cp.add_role_user(role['id'], user['username'])
+    @cp.add_role_user(role['name'], user['username'])
     return user
   end
 

@@ -14,11 +14,13 @@
  */
 package org.candlepin.service;
 
+import org.candlepin.service.model.ConsumerInfo;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
-import org.candlepin.model.Consumer;
+
 
 /**
  * <p>This adapter provides a hook for allowing the extension of what is
@@ -55,7 +57,7 @@ public interface ExportExtensionAdapter {
      * @param extensionData data passed via the ext query param when the initial request was made.
      * @throws IOException if there were any issues creating the extension files.
      */
-    void extendManifest(File extensionDir, Consumer targetConsumer, Map<String, String> extensionData)
+    void extendManifest(File extensionDir, ConsumerInfo targetConsumer, Map<String, String> extensionData)
         throws IOException;
 
 }

@@ -89,6 +89,10 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 
+// TODO: FIXME: Rewrite this test to not be so reliant upon mocks. It's making things incredibly brittle and
+// wasting dev time tracking down non-issues when a mock silently fails because the implementation changes.
+
+
 /**
  * ExporterTest
  */
@@ -238,7 +242,7 @@ public class ExporterTest {
         when(pki.getSHA256WithRSAHash(any(InputStream.class))).thenReturn("signature".getBytes());
         when(rc.getRules()).thenReturn(mrules);
         when(consumer.getEntitlements()).thenReturn(entitlements);
-        when(psa.getProductCertificate(any(Owner.class), any(String.class))).thenReturn(pcert);
+        when(psa.getProductCertificate(any(String.class), any(String.class))).thenReturn(pcert);
         when(pprov.get()).thenReturn(principal);
         when(principal.getUsername()).thenReturn("testUser");
         idcert.setSerial(new CertificateSerial(10L, new Date()));
@@ -262,6 +266,9 @@ public class ExporterTest {
         when(emptyIteratorMock.iterator()).thenReturn(Arrays.asList().iterator());
         when(cdnc.listAll()).thenReturn(emptyIteratorMock);
         when(ctc.listAll()).thenReturn(emptyIteratorMock);
+
+        when(consumer.getOwnerId()).thenReturn(owner.getId());
+        when(oc.findOwnerById(eq(owner.getId()))).thenReturn(owner);
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ece, ecsa, pe, psa,

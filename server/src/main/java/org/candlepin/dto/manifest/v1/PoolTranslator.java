@@ -71,7 +71,7 @@ public class PoolTranslator implements ObjectTranslator<Pool, PoolDTO> {
         }
 
         dest.setId(source.getId());
-        dest.setType(source.getType().toString());
+        dest.setType(source.getType() != null ? source.getType().name() : null);
         dest.setActiveSubscription(source.getActiveSubscription());
         dest.setQuantity(source.getQuantity());
         dest.setStartDate(source.getStartDate());

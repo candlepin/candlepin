@@ -17,6 +17,7 @@ package org.candlepin.model;
 import org.candlepin.common.jackson.HateoasArrayExclude;
 import org.candlepin.common.jackson.HateoasInclude;
 import org.candlepin.jackson.StringTrimmingConverter;
+import org.candlepin.service.model.ConsumerInfo;
 import org.candlepin.util.Util;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
@@ -50,6 +51,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.MapKeyColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
@@ -78,7 +80,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @Table(name = Consumer.DB_TABLE)
 @JsonFilter("ConsumerFilter")
 public class Consumer extends AbstractHibernateObject implements Linkable, Owned, Named, ConsumerProperty,
-    Eventful {
+    Eventful, ConsumerInfo {
 
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp_consumer";
@@ -89,7 +91,6 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
      * Commonly used/recognized consumer facts
      */
     public static final class Facts {
-
         public static final String SYSTEM_UUID = "dmi.system.uuid";
     }
 
@@ -229,14 +230,15 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @Column(name = "annotations", length = 4194304)
     private String annotations;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id", insertable = false, updatable = false)
+    private Owner owner;
+
     public Consumer(String name, String userName, Owner owner, ConsumerType type) {
         this();
 
         this.name = name;
         this.username = userName;
-        if (owner != null) {
-            this.ownerId = owner.getId();
-        }
         this.facts = new HashMap<>();
         this.installedProducts = new HashSet<>();
         this.guestIds = new ArrayList<>();
@@ -246,6 +248,10 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
         if (type != null) {
             this.setType(type);
+        }
+
+        if (owner != null) {
+            this.setOwner(owner);
         }
     }
 
@@ -381,18 +387,29 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         return ownerId;
     }
 
-    public void setOwnerId(String ownerId) {
-        this.ownerId = ownerId;
+    /**
+     * Fetches the owner of this consumer, if the owner ID is set. This may perform a lazy lookup of the
+     * owner, and should generally be avoided if the owner ID is sufficient.
+     *
+     * @return
+     *  The owner of this consumer, if the owner ID is populated; null otherwise.
+     */
+    @Override
+    @JsonIgnore
+    public Owner getOwner() {
+        return this.owner;
     }
 
-    /**
-     * Associates an owner to this Consumer.
-     * @param owner owner to associate to this Consumer.
-     */
-    public void setOwner(Owner owner) {
-        if (owner != null) {
-            this.ownerId = owner.getId();
+    @JsonIgnore
+    public Consumer setOwner(Owner owner) {
+        if (owner == null || owner.getId() == null) {
+            throw new IllegalArgumentException("owner is null or lacks an ID");
         }
+
+        this.owner = owner;
+        this.ownerId = owner.getId();
+
+        return this;
     }
 
     @Override

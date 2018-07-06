@@ -14,6 +14,8 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.service.model.BrandingInfo;
+
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.hibernate.annotations.GenericGenerator;
@@ -38,7 +40,7 @@ import javax.validation.constraints.Size;
  */
 @Entity
 @Table(name = Branding.DB_TABLE)
-public class Branding extends AbstractHibernateObject<Branding> {
+public class Branding extends AbstractHibernateObject<Branding> implements BrandingInfo {
 
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp_branding";
@@ -89,6 +91,7 @@ public class Branding extends AbstractHibernateObject<Branding> {
      * client. Candlepin will always send down the brand mapping for a subscription, the
      * client is responsible for determining if it should be applied or not, and how.
      */
+    @Override
     public String getProductId() {
         return productId;
     }
@@ -100,6 +103,7 @@ public class Branding extends AbstractHibernateObject<Branding> {
     /**
      * @return The brand name to be applied.
      */
+    @Override
     public String getName() {
         return name;
     }
@@ -113,6 +117,7 @@ public class Branding extends AbstractHibernateObject<Branding> {
      * @return The type of this branding. (i.e. "OS") Clients use this value to determine
      * what action should be taken with the branding information.
      */
+    @Override
     public String getType() {
         return type;
     }

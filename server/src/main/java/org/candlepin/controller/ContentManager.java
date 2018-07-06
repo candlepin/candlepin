@@ -29,6 +29,7 @@ import org.candlepin.model.ProductCurator;
 import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.ProductContentData;
+import org.candlepin.service.model.ContentInfo;
 import org.candlepin.util.Traceable;
 import org.candlepin.util.TraceableParam;
 import org.candlepin.util.Util;
@@ -353,7 +354,7 @@ public class ContentManager {
     @Transactional
     @Traceable
     public ImportResult<Content> importContent(@TraceableParam("owner") Owner owner,
-        Map<String, ContentData> contentData, Set<String> importedProductIds) {
+        Map<String, ? extends ContentInfo> contentData, Set<String> importedProductIds) {
 
         if (owner == null) {
             throw new IllegalArgumentException("owner is null");
@@ -378,9 +379,9 @@ public class ContentManager {
         // - Divide imported products into sets of updates and creates
         log.debug("Fetching existing content for update...");
         for (Content content : this.ownerContentCurator.getContentByIds(owner, contentData.keySet())) {
-            ContentData update = contentData.get(content.getId());
+            ContentInfo update = contentData.get(content.getId());
 
-            if (!this.isChangedBy(content, update)) {
+            if (content.isLocked() && !this.isChangedBy(content, update)) {
                 // This content won't be changing, so we'll just pretend it's not being imported at all
                 skippedContent.put(content.getId(), content);
                 continue;
@@ -392,12 +393,15 @@ public class ContentManager {
             sourceContent.put(content.getId(), content);
             content = this.applyContentChanges((Content) content.clone(), update);
 
+            // Prevent this content from being changed by our API
+            content.setLocked(true);
+
             updatedContent.put(content.getId(), content);
             contentVersions.put(content.getId(), content.getEntityVersion());
         }
 
         log.debug("Validating new content...");
-        for (ContentData update : contentData.values()) {
+        for (ContentInfo update : contentData.values()) {
             if (!skippedContent.containsKey(update.getId()) && !updatedContent.containsKey(update.getId())) {
                 // Ensure content is minimally populated
                 if (update.getId() == null || update.getType() == null || update.getLabel() == null ||
@@ -406,6 +410,9 @@ public class ContentManager {
                 }
 
                 Content content = this.applyContentChanges(new Content(update.getId()), update);
+
+                // Prevent this content from being changed by our API
+                content.setLocked(true);
 
                 createdContent.put(content.getId(), content);
                 contentVersions.put(content.getId(), content.getEntityVersion());
@@ -764,7 +771,7 @@ public class ContentManager {
         }
 
         if (dto.getMetadataExpiration() != null &&
-            !dto.getMetadataExpiration().equals(entity.getMetadataExpire())) {
+            !dto.getMetadataExpiration().equals(entity.getMetadataExpiration())) {
 
             return true;
         }
@@ -800,7 +807,7 @@ public class ContentManager {
      * @return
      *  true if this content would be changed by the given DTO; false otherwise
      */
-    public static boolean isChangedBy(Content entity, ContentData dto) {
+    public static boolean isChangedBy(Content entity, ContentInfo dto) {
         if (dto.getId() != null && !dto.getId().equals(entity.getId())) {
             return true;
         }
@@ -837,7 +844,9 @@ public class ContentManager {
             return true;
         }
 
-        if (dto.getMetadataExpire() != null && !dto.getMetadataExpire().equals(entity.getMetadataExpire())) {
+        if (dto.getMetadataExpiration() != null &&
+            !dto.getMetadataExpiration().equals(entity.getMetadataExpiration())) {
+
             return true;
         }
 
@@ -845,13 +854,9 @@ public class ContentManager {
             return true;
         }
 
-        if (dto.isLocked() != null && !dto.isLocked().equals(entity.isLocked())) {
-            return true;
-        }
-
-        Collection<String> modifiedProductIds = dto.getModifiedProductIds();
-        if (modifiedProductIds != null &&
-            !Util.collectionsAreEqual(entity.getModifiedProductIds(), modifiedProductIds)) {
+        Collection<String> requiredProductIds = dto.getRequiredProductIds();
+        if (requiredProductIds != null &&
+            !Util.collectionsAreEqual(entity.getRequiredProductIds(), requiredProductIds)) {
 
             return true;
         }
@@ -916,7 +921,7 @@ public class ContentManager {
         }
 
         if (update.getMetadataExpiration() != null) {
-            entity.setMetadataExpire(update.getMetadataExpiration());
+            entity.setMetadataExpiration(update.getMetadataExpiration());
         }
 
         if (update.getModifiedProductIds() != null) {
@@ -949,7 +954,7 @@ public class ContentManager {
      * @return
      *  The updated product entity
      */
-    private Content applyContentChanges(Content entity, ContentData update) {
+    private Content applyContentChanges(Content entity, ContentInfo update) {
         if (entity == null) {
             throw new IllegalArgumentException("entity is null");
         }
@@ -990,20 +995,16 @@ public class ContentManager {
             entity.setGpgUrl(update.getGpgUrl());
         }
 
-        if (update.getMetadataExpire() != null) {
-            entity.setMetadataExpire(update.getMetadataExpire());
+        if (update.getMetadataExpiration() != null) {
+            entity.setMetadataExpiration(update.getMetadataExpiration());
         }
 
-        if (update.getModifiedProductIds() != null) {
-            entity.setModifiedProductIds(update.getModifiedProductIds());
+        if (update.getRequiredProductIds() != null) {
+            entity.setModifiedProductIds(update.getRequiredProductIds());
         }
 
         if (update.getArches() != null) {
             entity.setArches(update.getArches());
-        }
-
-        if (update.isLocked() != null) {
-            entity.setLocked(update.isLocked());
         }
 
         return entity;

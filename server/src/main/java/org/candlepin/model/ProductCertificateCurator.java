@@ -45,7 +45,6 @@ import javax.inject.Singleton;
 public class ProductCertificateCurator extends AbstractHibernateCurator<ProductCertificate> {
     private static Logger log = LoggerFactory.getLogger(ProductCertificateCurator.class);
 
-
     private PKIUtility pki;
     private X509ExtensionUtil extensionUtil;
 

@@ -108,7 +108,7 @@ public class ProductImporterTest {
         ContentDTO c = created.getProductContent().iterator().next().getContent();
 
         // Metadata expiry should be overridden to 0 on import:
-        assertEquals(new Long(1), c.getMetadataExpire());
+        assertEquals(new Long(1), c.getMetadataExpiration());
     }
 
     @Test
@@ -126,7 +126,7 @@ public class ProductImporterTest {
     // Returns the Content object added
     private Content addContentTo(Product product) {
         Content content = TestUtil.createContent("100130", "content_name");
-        content.setMetadataExpire(1000L);
+        content.setMetadataExpiration(1000L);
 
         product.addContent(content, true);
 
@@ -137,7 +137,7 @@ public class ProductImporterTest {
     private Content addNoVendorContentTo(Product product) {
         Content content = TestUtil.createContent("100130", "name");
         content.setVendor("");
-        content.setMetadataExpire(1000L);
+        content.setMetadataExpiration(1000L);
 
         product.addContent(content, true);
 

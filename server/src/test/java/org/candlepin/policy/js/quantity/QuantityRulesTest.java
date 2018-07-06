@@ -106,7 +106,7 @@ public class QuantityRulesTest {
         quantityRules = new QuantityRules(provider.get(), new RulesObjectMapper(
             new ProductCachedSerializationModule(productCurator)), translator);
 
-        owner = new Owner("Test Owner " + TestUtil.randomInt());
+        owner = TestUtil.createOwner();
         product = TestUtil.createProduct();
         pool = TestUtil.createPool(owner, product);
         pool.setId("fakepoolid");

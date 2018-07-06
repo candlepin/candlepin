@@ -15,6 +15,7 @@
 package org.candlepin.model;
 
 import org.candlepin.model.dto.ProductContentData;
+import org.candlepin.service.model.ProductContentInfo;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -39,7 +40,8 @@ import javax.xml.bind.annotation.XmlTransient;
  */
 @Entity
 @Table(name = ProductContent.DB_TABLE)
-public class ProductContent extends AbstractHibernateObject {
+public class ProductContent extends AbstractHibernateObject implements ProductContentInfo {
+
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp2_product_content";
 
@@ -90,6 +92,7 @@ public class ProductContent extends AbstractHibernateObject {
     /**
      * @return the content
      */
+    @Override
     public Content getContent() {
         return content;
     }
@@ -119,7 +122,8 @@ public class ProductContent extends AbstractHibernateObject {
     /**
      * @return the enabled
      */
-    public boolean isEnabled() {
+    @Override
+    public Boolean isEnabled() {
         return enabled;
     }
 

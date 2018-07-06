@@ -14,11 +14,11 @@
  */
 package org.candlepin.model;
 
-import com.google.inject.persist.Transactional;
-
 import org.hibernate.criterion.Restrictions;
 
 import javax.inject.Singleton;
+
+
 
 /**
  *
@@ -44,20 +44,6 @@ public class UserCurator extends AbstractHibernateCurator<User> {
     public Long getUserCount() {
         return (Long) currentSession().createQuery("select count(*) from User").
             iterate().next();
-    }
-
-    @Transactional
-    public User update(User user) {
-        User existingUser = this.get(user.getId());
-        if (existingUser == null) {
-            return create(user);
-        }
-
-        existingUser.setHashedPassword(user.getHashedPassword());
-        existingUser.setSuperAdmin(user.isSuperAdmin());
-        existingUser.setUsername(user.getUsername());
-        this.save(existingUser);
-        return existingUser;
     }
 
 }

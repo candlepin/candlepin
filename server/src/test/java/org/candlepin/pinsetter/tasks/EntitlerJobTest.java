@@ -58,7 +58,7 @@ import java.util.Locale;
 /**
  * EntitlerJobTest
  */
-public class EntitlerJobTest extends BaseJobTest{
+public class EntitlerJobTest extends BaseJobTest {
 
     private String consumerUuid;
     private Consumer consumer;
@@ -74,7 +74,10 @@ public class EntitlerJobTest extends BaseJobTest{
 
         ConsumerType ctype = new ConsumerType("system");
         ctype.setId("test-ctype");
+
         owner = new Owner("test-owner");
+        owner.setId("test-owner-id");
+
         consumer = new Consumer("Test Consumer", "test-consumer", owner, ctype);
         consumer.setUuid(consumerUuid);
         e = mock(Entitler.class);

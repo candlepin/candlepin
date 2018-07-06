@@ -62,7 +62,7 @@ public class ContentDTOTranslatorTest extends
         source.setRequiredTags("test_value");
         source.setReleaseVersion("test_value");
         source.setGpgUrl("test_value");
-        source.setMetadataExpire(1234L);
+        source.setMetadataExpiration(1234L);
         source.setModifiedProductIds(Arrays.asList("1", "2", "3"));
         source.setArches("test_value");
 
@@ -91,7 +91,7 @@ public class ContentDTOTranslatorTest extends
             assertEquals(source.getRequiredTags(), dto.getRequiredTags());
             assertEquals(source.getReleaseVersion(), dto.getReleaseVersion());
             assertEquals(source.getGpgUrl(), dto.getGpgUrl());
-            assertEquals(source.getMetadataExpire(), dto.getMetadataExpire());
+            assertEquals(source.getMetadataExpiration(), dto.getMetadataExpiration());
             assertEquals(source.getModifiedProductIds(), dto.getModifiedProductIds());
             assertEquals(source.getArches(), dto.getArches());
         }

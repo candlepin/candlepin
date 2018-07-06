@@ -77,7 +77,7 @@ public class ContentDataTranslator implements ObjectTranslator<ContentData, Cont
         dest.setRequiredTags(source.getRequiredTags());
         dest.setReleaseVersion(source.getReleaseVersion());
         dest.setGpgUrl(source.getGpgUrl());
-        dest.setMetadataExpiration(source.getMetadataExpire());
+        dest.setMetadataExpiration(source.getMetadataExpiration());
         dest.setModifiedProductIds(source.getModifiedProductIds());
         dest.setArches(source.getArches());
         dest.setLocked(source.isLocked());

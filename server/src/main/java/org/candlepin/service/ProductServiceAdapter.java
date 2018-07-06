@@ -14,9 +14,8 @@
  */
 package org.candlepin.service;
 
-import org.candlepin.model.Owner;
-import org.candlepin.model.ProductCertificate;
-import org.candlepin.model.dto.ProductData;
+import org.candlepin.service.model.CertificateInfo;
+import org.candlepin.service.model.ProductInfo;
 
 import java.util.Collection;
 
@@ -44,21 +43,22 @@ public interface ProductServiceAdapter {
      * If the ids param is null or empty, an empty list of products will be
      * returned.
      *
-     * @param owner the owner/org in which to search for products
+     * @param ownerKey the owner/org in which to search for products
      * @param ids list of product ids
      * @return list of products matching the given string IDs,
      *         empty list if none were found.
      */
-    Collection<ProductData> getProductsByIds(Owner owner, Collection<String> ids);
+    Collection<? extends ProductInfo> getProductsByIds(String ownerKey, Collection<String> ids);
 
     /**
      * Gets the certificate that defines the given product, creating one
      * if necessary. If the implementation does not support product certificates
      * for some reason, null can be returned instead of creating a new one.
      *
-     * @param owner the owner/org in which to search for products
+     * @param ownerKey the owner/org in which to search for products
      * @param productId the ID of the source product of the certificate
      * @return the stored or created {@link ProductCertificate}
      */
-    ProductCertificate getProductCertificate(Owner owner, String productId);
+    CertificateInfo getProductCertificate(String ownerKey, String productId);
+
 }

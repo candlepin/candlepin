@@ -14,6 +14,7 @@
  */
 package org.candlepin.auth;
 
+import org.candlepin.auth.permissions.PermissionFactory;
 import org.candlepin.common.exceptions.CandlepinException;
 import org.candlepin.common.exceptions.NotAuthorizedException;
 import org.candlepin.common.exceptions.ServiceUnavailableException;
@@ -38,8 +39,10 @@ public class BasicAuth extends UserAuth {
     private static Logger log = LoggerFactory.getLogger(BasicAuth.class);
 
     @Inject
-    BasicAuth(UserServiceAdapter userServiceAdapter, Provider<I18n> i18n) {
-        super(userServiceAdapter, i18n);
+    BasicAuth(UserServiceAdapter userServiceAdapter, Provider<I18n> i18nProvider,
+        PermissionFactory permissionFactory) {
+
+        super(userServiceAdapter, i18nProvider, permissionFactory);
     }
 
     @Override
@@ -68,7 +71,7 @@ public class BasicAuth extends UserAuth {
                     return principal;
                 }
                 else {
-                    throw new NotAuthorizedException(i18n.get().tr("Invalid Credentials"));
+                    throw new NotAuthorizedException(i18nProvider.get().tr("Invalid Credentials"));
                 }
             }
         }
@@ -82,7 +85,7 @@ public class BasicAuth extends UserAuth {
             if (log.isDebugEnabled()) {
                 log.debug("Error getting principal " + e);
             }
-            throw new ServiceUnavailableException(i18n.get().tr("Error contacting user service"));
+            throw new ServiceUnavailableException(i18nProvider.get().tr("Error contacting user service"));
         }
         return null;
     }

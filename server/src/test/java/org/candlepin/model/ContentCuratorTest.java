@@ -54,7 +54,7 @@ public class ContentCuratorTest extends DatabaseTestFixture {
 
         updates.setRequiredTags("required-tags");
         updates.setReleaseVersion("releaseVer");
-        updates.setMetadataExpire(new Long(1));
+        updates.setMetadataExpiration(new Long(1));
         updates.setModifiedProductIds(new HashSet<String>() { { add("productIdOne"); } });
     }
 
@@ -74,7 +74,7 @@ public class ContentCuratorTest extends DatabaseTestFixture {
         assertEquals(toBeUpdated.getContentUrl(), updates.getContentUrl());
         assertEquals(toBeUpdated.getRequiredTags(), updates.getRequiredTags());
         assertEquals(toBeUpdated.getReleaseVersion(), updates.getReleaseVersion());
-        assertEquals(toBeUpdated.getMetadataExpire(), updates.getMetadataExpire());
+        assertEquals(toBeUpdated.getMetadataExpiration(), updates.getMetadataExpiration());
         assertEquals(toBeUpdated.getModifiedProductIds(), updates.getModifiedProductIds());
         assertEquals(toBeUpdated.getArches(), updates.getArches());
     }

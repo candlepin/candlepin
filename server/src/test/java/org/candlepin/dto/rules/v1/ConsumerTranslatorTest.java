@@ -132,7 +132,7 @@ public class ConsumerTranslatorTest extends
             if (childrenGenerated) {
                 ConsumerType ctype = this.mockConsumerTypeCurator.getConsumerType(source);
 
-                assertEquals(source.getOwnerId(), dest.getOwner().getId());
+                assertEquals(source.getOwnerId(), dest.getOwner() != null ? dest.getOwner().getId() : null);
                 this.consumerTypeTranslatorTest.verifyOutput(ctype, dest.getType(), true);
 
                 if (source.getInstalledProducts() != null) {

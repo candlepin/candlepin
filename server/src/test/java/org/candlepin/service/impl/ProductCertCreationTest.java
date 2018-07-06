@@ -14,21 +14,24 @@
  */
 package org.candlepin.service.impl;
 
+import static org.junit.Assert.*;
+
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.service.ProductServiceAdapter;
+import org.candlepin.service.model.CertificateInfo;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import javax.inject.Inject;
+
+
 
 /**
  * DefaultProductServiceAdapterTest
@@ -43,16 +46,16 @@ public class ProductCertCreationTest extends DatabaseTestFixture {
 
     @Test
     public void hasCert() {
-        ProductCertificate cert = createDummyCert();
+        CertificateInfo cert = createDummyCert();
 
-        Assert.assertTrue(cert.getCert().length() > 0);
+        assertTrue(cert.getCertificate().length() > 0);
     }
 
     @Test
     public void hasKey() {
-        ProductCertificate cert = createDummyCert();
+        CertificateInfo cert = createDummyCert();
 
-        Assert.assertTrue(cert.getKey().length() > 0);
+        assertTrue(cert.getKey().length() > 0);
     }
 
     @Test
@@ -60,8 +63,10 @@ public class ProductCertCreationTest extends DatabaseTestFixture {
         Owner owner = TestUtil.createOwner("Example-Corporation");
         Product product = this.createProduct("50", "Test Product", "Standard", "1", "x86_64", "Base");
 
-        ProductCertificate cert = this.createCert(owner, product);
-        Assert.assertEquals(product, cert.getProduct());
+        CertificateInfo cert = this.createCert(owner, product);
+        assertNotNull(cert);
+        assertNotNull(cert.getKey());
+        assertNotNull(cert.getCertificate());
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -72,18 +77,23 @@ public class ProductCertCreationTest extends DatabaseTestFixture {
         createCert(owner, product);
     }
 
-    private ProductCertificate createDummyCert() {
+    private CertificateInfo createDummyCert() {
         Owner owner = TestUtil.createOwner("Example-Corporation");
         Product product = this.createProduct("50", "Test Product", "Standard", "1", "x86_64", "Base");
         return createCert(owner, product);
     }
 
-    private ProductCertificate createCert(Owner owner, Product product) {
+    private CertificateInfo createCert(Owner owner, Product product) {
+        owner.setId(null);
+        product.setUuid(null);
+
         this.ownerCurator.create(owner);
         this.productCurator.create(product);
         this.ownerProductCurator.mapProductToOwner(product, owner);
 
-        return this.productAdapter.getProductCertificate(owner, product.getId());
+        CertificateInfo out = this.productAdapter.getProductCertificate(owner.getKey(), product.getId());
+
+        return out;
     }
 
     private Product createProduct(String productId, String name, String variant, String version, String arch,

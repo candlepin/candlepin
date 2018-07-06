@@ -15,7 +15,9 @@
 package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.TimestampedCandlepinDTO;
+import org.candlepin.util.ListView;
 import org.candlepin.util.Util;
+import org.candlepin.service.model.RoleInfo;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -23,9 +25,12 @@ import io.swagger.annotations.ApiModelProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 
@@ -34,7 +39,7 @@ import java.util.Map;
  * A DTO representation of the Role entity
  */
 @ApiModel(parent = TimestampedCandlepinDTO.class, description = "Role information for a given role")
-public class RoleDTO extends TimestampedCandlepinDTO<RoleDTO> {
+public class RoleDTO extends TimestampedCandlepinDTO<RoleDTO> implements RoleInfo {
 
     public static final long serialVersionUID = 1L;
 
@@ -45,7 +50,7 @@ public class RoleDTO extends TimestampedCandlepinDTO<RoleDTO> {
     @ApiModelProperty(required = false)
     protected Map<String, UserDTO> users;
     @ApiModelProperty(required = false)
-    protected Map<String, PermissionBlueprintDTO> permissions;
+    protected List<PermissionBlueprintDTO> permissions;
 
     /**
      * Initializes a new RoleDTO instance with null values.
@@ -132,15 +137,15 @@ public class RoleDTO extends TimestampedCandlepinDTO<RoleDTO> {
             throw new IllegalArgumentException("user is null");
         }
 
-        if (user.getId() == null) {
-            throw new IllegalArgumentException("user is incomplete");
+        if (user.getUsername() == null) {
+            throw new IllegalArgumentException("user does not have a valid username");
         }
 
         if (this.users == null) {
             this.users = new HashMap<>();
         }
 
-        UserDTO previous = this.users.put(user.getId(), user);
+        UserDTO previous = this.users.put(user.getUsername(), user);
         return previous != user;
     }
 
@@ -162,32 +167,32 @@ public class RoleDTO extends TimestampedCandlepinDTO<RoleDTO> {
             throw new IllegalArgumentException("user is null");
         }
 
-        if (user.getId() == null) {
-            throw new IllegalArgumentException("user is incomplete");
+        if (user.getUsername() == null) {
+            throw new IllegalArgumentException("user does not have a valid username");
         }
 
-        return this.removeUser(user.getId());
+        return this.removeUser(user.getUsername());
     }
 
     /**
      * Removes any user from this role with the specified user ID. If no matching user has been
      * added, no change is made to this role.
      *
-     * @param userId
+     * @param username
      *  The ID of the user to remove from this role
      *
      * @throws IllegalArgumentException
-     *  if userId is null
+     *  if username is null
      *
      * @return
      *  true if a user with the specified ID was found and removed successfully; false otherwise
      */
-    public boolean removeUser(String userId) {
-        if (userId == null) {
-            throw new IllegalArgumentException("userId is null");
+    public boolean removeUser(String username) {
+        if (username == null) {
+            throw new IllegalArgumentException("username is null");
         }
 
-        return this.users != null && this.users.remove(userId) != null;
+        return this.users != null && this.users.remove(username) != null;
     }
 
     /**
@@ -217,8 +222,6 @@ public class RoleDTO extends TimestampedCandlepinDTO<RoleDTO> {
      *  a reference to this DTO
      */
     public RoleDTO setUsers(Collection<UserDTO> users) {
-
-
         if (users != null) {
             this.users = new HashMap<>();
 
@@ -232,7 +235,6 @@ public class RoleDTO extends TimestampedCandlepinDTO<RoleDTO> {
 
         return this;
     }
-
 
     /**
      * Adds the specified permission to this role. The permission cannot be null and must have a
@@ -252,16 +254,24 @@ public class RoleDTO extends TimestampedCandlepinDTO<RoleDTO> {
             throw new IllegalArgumentException("permission is null");
         }
 
-        if (permission.getId() == null) {
-            throw new IllegalArgumentException("permission is incomplete");
-        }
-
         if (this.permissions == null) {
-            this.permissions = new HashMap<>();
+            this.permissions = new ArrayList<>();
         }
 
-        PermissionBlueprintDTO previous = this.permissions.put(permission.getId(), permission);
-        return previous != permission;
+        // If the incoming permission has an ID, check if we already have a matching ID
+        if (permission.getId() != null) {
+            Iterator<PermissionBlueprintDTO> iterator = this.permissions.iterator();
+
+            while (iterator.hasNext()) {
+                PermissionBlueprintDTO existing = iterator.next();
+
+                if (permission.getId().equals(existing.getId())) {
+                    iterator.remove();
+                }
+            }
+        }
+
+        return this.permissions.add(permission);
     }
 
     /**
@@ -282,11 +292,19 @@ public class RoleDTO extends TimestampedCandlepinDTO<RoleDTO> {
             throw new IllegalArgumentException("permission is null");
         }
 
-        if (permission.getId() == null) {
-            throw new IllegalArgumentException("permission is incomplete");
+        if (this.permissions != null) {
+            // Attempt direct object removal first
+            if (this.permissions.remove(permission)) {
+                return true;
+            }
+
+            // Try to remove by permission ID instead
+            if (permission.getId() != null) {
+                return this.removePermission(permission.getId());
+            }
         }
 
-        return this.removePermission(permission.getId());
+        return false;
     }
 
     /**
@@ -308,7 +326,22 @@ public class RoleDTO extends TimestampedCandlepinDTO<RoleDTO> {
             throw new IllegalArgumentException("permissionId is null");
         }
 
-        return this.permissions != null && this.permissions.remove(permissionId) != null;
+        boolean removed = false;
+
+        if (this.permissions != null) {
+            Iterator<PermissionBlueprintDTO> iterator = this.permissions.iterator();
+
+            while (iterator.hasNext()) {
+                PermissionBlueprintDTO existing = iterator.next();
+
+                if (permissionId.equals(existing.getId())) {
+                    iterator.remove();
+                    removed = true;
+                }
+            }
+        }
+
+        return removed;
     }
 
     /**
@@ -323,7 +356,7 @@ public class RoleDTO extends TimestampedCandlepinDTO<RoleDTO> {
      *  permissions have not been set
      */
     public Collection<PermissionBlueprintDTO> getPermissions() {
-        return this.permissions != null ? this.permissions.values() : null;
+        return this.permissions != null ? new ListView(this.permissions) : null;
     }
 
     /**
@@ -341,7 +374,7 @@ public class RoleDTO extends TimestampedCandlepinDTO<RoleDTO> {
      */
     public RoleDTO setPermissions(Collection<PermissionBlueprintDTO> permissions) {
         if (permissions != null) {
-            this.permissions = new HashMap<>();
+            this.permissions = new ArrayList<>();
 
             for (PermissionBlueprintDTO permission : permissions) {
                 this.addPermission(permission);
@@ -390,8 +423,8 @@ public class RoleDTO extends TimestampedCandlepinDTO<RoleDTO> {
                             return 0;
                         }
 
-                        return c1 != null && c2 != null && c1.getId() != null ?
-                            c1.getId().compareTo(c2.getId()) :
+                        return c1 != null && c2 != null && c1.getUsername() != null ?
+                            c1.getUsername().compareTo(c2.getUsername()) :
                             1;
                     }
                 });
@@ -429,7 +462,8 @@ public class RoleDTO extends TimestampedCandlepinDTO<RoleDTO> {
 
         if (users != null) {
             for (UserDTO dto : users) {
-                usersHash += 31 * (dto != null && dto.getId() != null ? dto.getId().hashCode() : 0);
+                usersHash += 31 *
+                    (dto != null && dto.getUsername() != null ? dto.getUsername().hashCode() : 0);
             }
         }
 

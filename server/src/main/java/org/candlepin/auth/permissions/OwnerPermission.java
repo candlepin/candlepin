@@ -47,12 +47,10 @@ public class OwnerPermission implements Permission, Serializable {
     }
 
     @Override
-    public boolean canAccess(Object target, SubResource subResource,
-        Access requiredAccess) {
+    public boolean canAccess(Object target, SubResource subResource, Access requiredAccess) {
         if (target instanceof Owned) {
             // First make sure the owner matches:
-            if (owner.getId().equals(((Owned) target).getOwnerId()) &&
-                access.provides(requiredAccess)) {
+            if (owner.getId().equals(((Owned) target).getOwnerId()) && access.provides(requiredAccess)) {
                 return true;
             }
         }

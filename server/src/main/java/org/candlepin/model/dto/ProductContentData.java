@@ -16,6 +16,7 @@ package org.candlepin.model.dto;
 
 import org.candlepin.model.Content;
 import org.candlepin.model.ProductContent;
+import org.candlepin.service.model.ProductContentInfo;
 
 import io.swagger.annotations.ApiModel;
 
@@ -44,7 +45,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @ApiModel(parent = CandlepinDTO.class)
 @XmlRootElement
-public class ProductContentData implements Cloneable, Serializable {
+public class ProductContentData implements Cloneable, Serializable, ProductContentInfo {
     public static final long serialVersionUID = 1L;
 
     private ContentData content;

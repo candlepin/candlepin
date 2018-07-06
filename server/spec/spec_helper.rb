@@ -15,7 +15,7 @@ module CleanupHooks
   end
 
   def cleanup_after
-    @roles.reverse_each { |r| @cp.delete_role r['id'] }
+    @roles.reverse_each { |r| @cp.delete_role r['name'] }
     @owners.reverse_each { |owner| @cp.delete_owner(owner['key'], true, true) }
     @users.reverse_each { |user| @cp.delete_user user['username'] }
     @dist_versions.reverse_each { |dist_version| @cp.delete_distributor_version dist_version['id'] }
@@ -28,7 +28,7 @@ module CleanupHooks
 
     if !@cp.get_status()['standalone']
       begin
-        @cp.delete('/hostedtest/subscriptions/', {}, nil, true)
+        @cp.delete('/hostedtest/', {}, nil, true)
       rescue RestClient::ResourceNotFound
         puts "skipping hostedtest cleanup"
       end

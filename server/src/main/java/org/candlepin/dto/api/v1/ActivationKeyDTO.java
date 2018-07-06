@@ -14,18 +14,21 @@
  */
 package org.candlepin.dto.api.v1;
 
+import org.candlepin.dto.TimestampedCandlepinDTO;
+import org.candlepin.jackson.SingleValueWrapSerializer;
+import org.candlepin.jackson.SingleValueWrapDeserializer;
+import org.candlepin.util.SetView;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
 import io.swagger.annotations.ApiModel;
+
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.candlepin.dto.TimestampedCandlepinDTO;
-import org.candlepin.jackson.SingleValueWrapSerializer;
-import org.candlepin.jackson.SingleValueWrapDeserializer;
-import org.candlepin.util.SetView;
 
 import java.util.Collection;
 import java.util.HashSet;

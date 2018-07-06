@@ -241,24 +241,24 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         content = createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
             CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL, CONTENT_GPG_URL, ARCH_LABEL);
-        content.setMetadataExpire(CONTENT_METADATA_EXPIRE);
+        content.setMetadataExpiration(CONTENT_METADATA_EXPIRE);
         content.setRequiredTags(REQUIRED_TAGS);
 
         kickstartContent = createContent(CONTENT_NAME, CONTENT_ID_KICKSTART,
             CONTENT_LABEL, CONTENT_TYPE_KICKSTART, CONTENT_VENDOR, CONTENT_URL,
             CONTENT_GPG_URL, ARCH_LABEL);
-        kickstartContent.setMetadataExpire(CONTENT_METADATA_EXPIRE);
+        kickstartContent.setMetadataExpiration(CONTENT_METADATA_EXPIRE);
         kickstartContent.setRequiredTags(REQUIRED_TAGS);
 
         fileContent = createContent(CONTENT_NAME, CONTENT_ID_FILE, CONTENT_LABEL,
             CONTENT_TYPE_FILE, CONTENT_VENDOR, CONTENT_URL, CONTENT_GPG_URL, ARCH_LABEL);
-        fileContent.setMetadataExpire(CONTENT_METADATA_EXPIRE);
+        fileContent.setMetadataExpiration(CONTENT_METADATA_EXPIRE);
         fileContent.setRequiredTags(REQUIRED_TAGS);
 
         unknownTypeContent = createContent(CONTENT_NAME, CONTENT_ID_UNKNOWN, CONTENT_LABEL,
             CONTENT_TYPE_UNKNOWN, CONTENT_VENDOR, CONTENT_URL_UNKNOWN_TYPE,
             CONTENT_GPG_URL, ARCH_LABEL);
-        unknownTypeContent.setMetadataExpire(CONTENT_METADATA_EXPIRE);
+        unknownTypeContent.setMetadataExpiration(CONTENT_METADATA_EXPIRE);
         unknownTypeContent.setRequiredTags(REQUIRED_TAGS);
 
         String emptyArches = "";
@@ -516,7 +516,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         assertTrue(encodedContent.containsKey(CONTENT_METADATA_EXPIRE.toString()));
 
         // Nullify this, and make sure it's not there.
-        content.setMetadataExpire(null);
+        content.setMetadataExpiration(null);
         contentExtensions = extensionUtil.contentExtensions(
             product.getProductContent(), "", new HashMap<>(), entitlement.getConsumer(), product);
         encodedContent = getEncodedContent(contentExtensions);

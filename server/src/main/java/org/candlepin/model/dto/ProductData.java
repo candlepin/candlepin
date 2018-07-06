@@ -19,6 +19,7 @@ import org.candlepin.jackson.CandlepinLegacyAttributeSerializer;
 import org.candlepin.model.Content;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
+import org.candlepin.service.model.ProductInfo;
 import org.candlepin.util.MapView;
 import org.candlepin.util.SetView;
 
@@ -62,7 +63,7 @@ import javax.xml.bind.annotation.XmlTransient;
  */
 @ApiModel(parent = CandlepinDTO.class, description = "Product information for a given sku or product")
 @XmlRootElement
-public class ProductData extends CandlepinDTO {
+public class ProductData extends CandlepinDTO implements ProductInfo {
     public static final long serialVersionUID = 1L;
 
     @ApiModelProperty(example = "ff808081554a3e4101554a3e9033005d")

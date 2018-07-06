@@ -20,6 +20,8 @@ import org.candlepin.model.Owner;
 
 import org.hibernate.criterion.Criterion;
 
+
+
 /**
  *
  */

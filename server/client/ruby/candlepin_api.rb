@@ -393,43 +393,45 @@ class Candlepin
   # TODO: drop perms here too?
   def create_role(name, perms=nil)
     perms ||= []
+
     role = {
       :name => name,
       :permissions => perms,
     }
+
     post("/roles", {}, role)
   end
 
-  def update_role(role)
-    put("/roles/#{role['id']}", {}, role)
+  def update_role(role_name, role)
+    put("/roles/#{role_name}", {}, role)
   end
 
-  def delete_role(roleid)
-    delete("/roles/#{roleid}")
+  def delete_role(role_name)
+    delete("/roles/#{role_name}")
   end
 
-  def add_role_user(role_id, username)
-    post("/roles/#{role_id}/users/#{username}")
+  def add_role_user(role_name, username)
+    post("/roles/#{role_name}/users/#{username}")
   end
 
-  def delete_role_user(role_id, username)
-    delete("/roles/#{role_id}/users/#{username}")
+  def delete_role_user(role_name, username)
+    delete("/roles/#{role_name}/users/#{username}")
   end
 
-  def add_role_permission(role_id, permission)
-    post("/roles/#{role_id}/permissions", {}, permission)
+  def add_role_permission(role_name, permission)
+    post("/roles/#{role_name}/permissions", {}, permission)
   end
 
-  def delete_role_permission(role_id, permission_id)
-    delete("/roles/#{role_id}/permissions/#{permission_id}")
+  def delete_role_permission(role_name, permission_id)
+    delete("/roles/#{role_name}/permissions/#{permission_id}")
   end
 
   def list_roles
     get("/roles")
   end
 
-  def get_role(role_id)
-    get("/roles/#{role_id}")
+  def get_role(role_name)
+    get("/roles/#{role_name}")
   end
 
   def delete_user(username)

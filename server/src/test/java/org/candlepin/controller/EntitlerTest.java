@@ -15,6 +15,7 @@
 package org.candlepin.controller;
 
 import static org.junit.Assert.*;
+import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
@@ -25,6 +26,7 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -47,6 +49,7 @@ import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
 import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.service.ProductServiceAdapter;
+import org.candlepin.service.model.ProductInfo;
 import org.candlepin.test.TestUtil;
 
 import org.junit.Before;
@@ -72,6 +75,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+
+// TODO: FIXME: Rewrite this test to not be so reliant upon mocks. It's making things incredibly brittle and
+// wasting dev time tracking down non-issues when a mock silently fails because the implementation changes.
 
 
 /**
@@ -117,6 +123,9 @@ public class EntitlerTest {
             I18nFactory.READ_PROPERTIES | I18nFactory.FALLBACK
         );
         translator = new EntitlementRulesTranslator(i18n);
+
+        doAnswer(returnsFirstArg()).when(productCurator).create(any(Product.class));
+        doAnswer(returnsFirstArg()).when(productCurator).merge(any(Product.class));
 
         entitler = new Entitler(pm, cc, i18n, ef, sink, translator, entitlementCurator, config,
             ownerProductCurator, ownerCurator, poolCurator, productCurator, productManager, productAdapter,
@@ -519,7 +528,9 @@ public class EntitlerTest {
     @Test
     public void testUnmappedGuestRevocation() throws Exception {
         Owner owner1 = new Owner("o1");
+        owner1.setId("o1-id");
         Owner owner2 = new Owner("o2");
+        owner2.setId("o2-id");
 
         Product product1 = TestUtil.createProduct();
         Product product2 = TestUtil.createProduct();
@@ -584,7 +595,7 @@ public class EntitlerTest {
 
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
         when(poolCurator.hasActiveEntitlementPools(eq(owner.getId()), any(Date.class))).thenReturn(true);
-        when(productAdapter.getProductsByIds(eq(owner), any(List.class))).thenReturn(devProdDTOs);
+        when(productAdapter.getProductsByIds(eq(owner.getKey()), any(List.class))).thenReturn(devProdDTOs);
 
         this.mockProducts(owner, p);
         this.mockProductImport(owner, p);
@@ -615,7 +626,7 @@ public class EntitlerTest {
 
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(true);
         when(poolCurator.hasActiveEntitlementPools(eq(owner.getId()), any(Date.class))).thenReturn(true);
-        when(productAdapter.getProductsByIds(any(Owner.class), any(List.class))).thenReturn(devProdDTOs);
+        when(productAdapter.getProductsByIds(any(String.class), any(List.class))).thenReturn(devProdDTOs);
         when(ownerProductCurator.getProductById(eq(owner), eq(p.getId()))).thenReturn(p);
 
         AutobindData ad = new AutobindData(devSystem, owner);
@@ -635,7 +646,7 @@ public class EntitlerTest {
 
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
         when(poolCurator.hasActiveEntitlementPools(eq(owner.getId()), any(Date.class))).thenReturn(false);
-        when(productAdapter.getProductsByIds(any(Owner.class), any(List.class))).thenReturn(devProdDTOs);
+        when(productAdapter.getProductsByIds(any(String.class), any(List.class))).thenReturn(devProdDTOs);
         when(ownerProductCurator.getProductById(eq(owner), eq(p.getId()))).thenReturn(p);
 
         AutobindData ad = new AutobindData(devSystem, owner);
@@ -643,7 +654,7 @@ public class EntitlerTest {
     }
 
     private void mockUpdateProduct(final Product product, Owner owner) {
-        when(productManager.updateProduct(any(ProductData.class), eq(owner), anyBoolean()))
+        when(productManager.updateProduct(any(ProductDTO.class), eq(owner), anyBoolean()))
             .thenAnswer(new Answer<Product>() {
                 @Override
                 public Product answer(InvocationOnMock invocation) throws Throwable {
@@ -673,7 +684,7 @@ public class EntitlerTest {
 
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
         when(poolCurator.hasActiveEntitlementPools(eq(owner.getId()), any(Date.class))).thenReturn(true);
-        when(productAdapter.getProductsByIds(any(Owner.class), any(List.class))).thenReturn(devProdDTOs);
+        when(productAdapter.getProductsByIds(any(String.class), any(List.class))).thenReturn(devProdDTOs);
         when(ownerProductCurator.getProductById(eq(owner), eq(p.getId()))).thenReturn(p);
         when(ownerProductCurator.getProductById(eq(owner), eq(ip.getId()))).thenReturn(ip);
 
@@ -713,7 +724,7 @@ public class EntitlerTest {
 
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
         when(poolCurator.hasActiveEntitlementPools(eq(owner.getId()), any(Date.class))).thenReturn(true);
-        when(productAdapter.getProductsByIds(any(Owner.class), any(List.class))).thenReturn(devProdDTOs);
+        when(productAdapter.getProductsByIds(any(String.class), any(List.class))).thenReturn(devProdDTOs);
 
         this.mockProducts(owner, p, ip1, ip2);
         this.mockProductImport(owner, p, ip1, ip2);
@@ -741,7 +752,7 @@ public class EntitlerTest {
         devSystem.setFact("dev_sku", p1.getId());
         devSystem.addInstalledProduct(new ConsumerInstalledProduct(p2));
         devSystem.addInstalledProduct(new ConsumerInstalledProduct(p3));
-        when(productAdapter.getProductsByIds(eq(owner), any(List.class))).thenReturn(devProdDTOs);
+        when(productAdapter.getProductsByIds(eq(owner.getKey()), any(List.class))).thenReturn(devProdDTOs);
 
         this.mockProducts(owner, p1, p2, p3);
         this.mockProductImport(owner, p1, p2, p3);
@@ -769,7 +780,7 @@ public class EntitlerTest {
         Consumer devSystem = TestUtil.createConsumer(owner);
         devSystem.setFact("dev_sku", p1.getId());
 
-        when(productAdapter.getProductsByIds(eq(owner), any(List.class))).thenReturn(devProdDTOs);
+        when(productAdapter.getProductsByIds(eq(owner.getKey()), any(List.class))).thenReturn(devProdDTOs);
         mockUpdateProduct(p1, owner);
 
         this.mockContentImport(owner, Collections.<String, Content>emptyMap());
@@ -779,13 +790,13 @@ public class EntitlerTest {
                 @Override
                 public ImportResult<Product> answer(InvocationOnMock invocation) throws Throwable {
                     Object[] args = invocation.getArguments();
-                    Map<String, ProductData> productData = (Map<String, ProductData>) args[1];
+                    Map<String, ProductInfo> productData = (Map<String, ProductInfo>) args[1];
                     ImportResult<Product> importResult = new ImportResult<>();
                     Map<String, Product> output = importResult.getCreatedEntities();
 
                     // We need to copy the attributes from the product data to the product to
                     // simulate a proper update.
-                    for (ProductData pdata : productData.values()) {
+                    for (ProductInfo pdata : productData.values()) {
                         if (pdata != null) {
                             if (p1.getId().equals(pdata.getId())) {
                                 p1.clearAttributes();

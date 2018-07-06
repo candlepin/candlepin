@@ -15,6 +15,9 @@
 package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.TimestampedCandlepinDTO;
+import org.candlepin.service.model.PermissionBlueprintInfo;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -44,7 +47,8 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
  * </pre>
  */
 @ApiModel(parent = TimestampedCandlepinDTO.class, description = "User information for a given user")
-public class PermissionBlueprintDTO extends TimestampedCandlepinDTO<PermissionBlueprintDTO> {
+public class PermissionBlueprintDTO extends TimestampedCandlepinDTO<PermissionBlueprintDTO>
+    implements PermissionBlueprintInfo {
 
     @ApiModelProperty(required = true, example = "ff808081554a3e4101554a3e9033005d")
     protected String id;
@@ -147,6 +151,15 @@ public class PermissionBlueprintDTO extends TimestampedCandlepinDTO<PermissionBl
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    @JsonIgnore
+    public String getTypeName() {
+        return this.getType();
+    }
+
+    /**
      * Sets or clears the type for this permission.
      *
      * @param type
@@ -169,6 +182,15 @@ public class PermissionBlueprintDTO extends TimestampedCandlepinDTO<PermissionBl
      */
     public String getAccess() {
         return this.access;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @JsonIgnore
+    public String getAccessLevel() {
+        return this.getAccess();
     }
 
     /**

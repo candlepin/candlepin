@@ -31,6 +31,7 @@ import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ResultIterator;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.service.UniqueIdGenerator;
+import org.candlepin.service.model.CertificateInfo;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.X509ExtensionUtil;
 
@@ -43,6 +44,11 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.List;
+
+
+// TODO: FIXME: Rewrite this test to not be so reliant upon mocks. It's making things incredibly brittle and
+// wasting dev time tracking down non-issues when a mock silently fails because the implementation changes.
+
 
 /**
  * DefaultProductServiceAdapterTest
@@ -77,13 +83,13 @@ public class DefaultProductServiceAdapterTest {
         CandlepinQuery<Product> ccmock = mock(CandlepinQuery.class);
         ResultIterator<Product> iterator = mock(ResultIterator.class);
 
-        when(opc.getProductsByIds(any(Owner.class), anyCollection())).thenReturn(ccmock);
+        when(opc.getProductsByIdsUsingOwnerKey(any(String.class), anyCollection())).thenReturn(ccmock);
         when(ccmock.iterate(anyInt(), anyBoolean())).thenReturn(iterator);
 
         ids.add(someid);
 
-        dpsa.getProductsByIds(o, ids);
-        verify(opc).getProductsByIds(eq(o), eq(ids));
+        dpsa.getProductsByIds(o.getKey(), ids);
+        verify(opc).getProductsByIdsUsingOwnerKey(eq(o.getKey()), eq(ids));
     }
 
     @Test
@@ -92,10 +98,10 @@ public class DefaultProductServiceAdapterTest {
         Product product = TestUtil.createProduct("test_product");
         ProductCertificate cert = mock(ProductCertificate.class);
 
-        when(opc.getProductById(eq(owner), eq(product.getId()))).thenReturn(product);
+        when(opc.getProductByIdUsingOwnerKey(eq(owner.getKey()), eq(product.getId()))).thenReturn(product);
         doReturn(cert).when(pcc).findForProduct(eq(product));
 
-        ProductCertificate result = dpsa.getProductCertificate(owner, product.getId());
+        CertificateInfo result = dpsa.getProductCertificate(owner.getKey(), product.getId());
         verify(pcc, never()).create(eq(cert));
 
         assertEquals(cert, result);
@@ -107,7 +113,7 @@ public class DefaultProductServiceAdapterTest {
         Product product = TestUtil.createProduct("test_product");
         ProductCertificate cert = mock(ProductCertificate.class);
 
-        when(opc.getProductById(eq(owner), eq(product.getId()))).thenReturn(product);
+        when(opc.getProductByIdUsingOwnerKey(eq(owner.getKey()), eq(product.getId()))).thenReturn(product);
         doAnswer(returnsFirstArg()).when(pcc).create(any(ProductCertificate.class));
         doReturn(null).when(pcc).findForProduct(eq(product));
 
@@ -115,9 +121,8 @@ public class DefaultProductServiceAdapterTest {
         when(pki.generateNewKeyPair()).thenReturn(kp);
         when(pki.getPemEncoded(any(Key.class))).thenReturn("junk".getBytes());
 
-        ProductCertificate result = dpsa.getProductCertificate(owner, product.getId());
+        CertificateInfo result = dpsa.getProductCertificate(owner.getKey(), product.getId());
         assertNotNull(result);
-        assertEquals(product, result.getProduct());
     }
 
     // can't mock a final class, so create a dummy one

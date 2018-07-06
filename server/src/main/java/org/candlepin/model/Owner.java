@@ -18,6 +18,7 @@ import org.candlepin.common.jackson.HateoasInclude;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.resteasy.InfoProperty;
 import org.candlepin.service.ContentAccessCertServiceAdapter;
+import org.candlepin.service.model.OwnerInfo;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -65,7 +66,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @Table(name = Owner.DB_TABLE)
 @JsonFilter("OwnerFilter")
 public class Owner extends AbstractHibernateObject<Owner>
-    implements Serializable, Linkable, Owned, Named, Eventful {
+    implements Serializable, Linkable, Owned, Named, Eventful, OwnerInfo {
 
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp_owner";
@@ -283,12 +284,11 @@ public class Owner extends AbstractHibernateObject<Owner>
     /**
      * Add a consumer to this owner
      *
-     * @param c consumer for this owner.
+     * @param consumer consumer for this owner.
      */
-    public void addConsumer(Consumer c) {
-        c.setOwner(this);
-        this.consumers.add(c);
-
+    public void addConsumer(Consumer consumer) {
+        consumer.setOwner(this);
+        this.consumers.add(consumer);
     }
 
     /**

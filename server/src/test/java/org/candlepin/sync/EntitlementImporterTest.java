@@ -95,6 +95,8 @@ public class EntitlementImporterTest {
     @Before
     public void init() {
         this.owner = new Owner();
+        this.owner.setId("test-owner-id");
+
         this.translator = new StandardTranslator(mockConsumerTypeCurator,
             mockEnvironmentCurator,
             ownerCurator);
@@ -140,8 +142,7 @@ public class EntitlementImporterTest {
         derivedProvidedProducts.add(new Product(derivedProvided1));
 
         Pool pool = TestUtil.createPool(
-            owner, parentProduct, new HashSet<>(), derivedProduct, new HashSet<>(), 3
-        );
+            owner, parentProduct, new HashSet<>(), derivedProduct, new HashSet<>(), 3);
 
         pool.setProvidedProducts(providedProducts);
         pool.setDerivedProvidedProducts(derivedProvidedProducts);
@@ -197,11 +198,11 @@ public class EntitlementImporterTest {
         for (Product p : products) {
             productsById.put(p.getId(), this.translator.translate(p, ProductDTO.class));
         }
+
         return productsById;
     }
 
-    protected EntitlementCertificate createEntitlementCertificate(String key,
-        String cert) {
+    protected EntitlementCertificate createEntitlementCertificate(String key, String cert) {
         EntitlementCertificate toReturn = new EntitlementCertificate();
         CertificateSerial certSerial = new CertificateSerial(new Date());
         certSerial.setCollected(true);
@@ -210,6 +211,7 @@ public class EntitlementImporterTest {
         toReturn.setKeyAsBytes(key.getBytes());
         toReturn.setCertAsBytes(cert.getBytes());
         toReturn.setSerial(certSerial);
+
         return toReturn;
     }
 }

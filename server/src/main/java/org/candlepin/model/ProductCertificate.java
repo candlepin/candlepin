@@ -76,4 +76,15 @@ public class ProductCertificate extends AbstractCertificate {
     public void setProduct(Product product) {
         this.product = product;
     }
+
+    /**
+     * Always returns null
+     *
+     * @return
+     *  null
+     */
+    @Override
+    public CertificateSerial getSerial() {
+        return null;
+    }
 }

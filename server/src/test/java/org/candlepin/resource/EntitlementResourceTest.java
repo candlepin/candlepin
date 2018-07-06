@@ -93,6 +93,7 @@ public class EntitlementResourceTest {
             poolManager, i18n, entitler, entRules, messageTranslator, modelTranslator);
 
         owner = new Owner("admin");
+        owner.setId("admin-id");
 
         ConsumerType ctype = TestUtil.createConsumerType();
         this.mockConsumerType(ctype);

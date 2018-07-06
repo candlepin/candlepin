@@ -72,6 +72,17 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
             .uniqueResult();
     }
 
+    @Transactional
+    public Product getProductByIdUsingOwnerKey(String ownerKey, String productId) {
+        return (Product) this.createSecureCriteria()
+            .createAlias("owner", "owner")
+            .createAlias("product", "product")
+            .setProjection(Projections.property("product"))
+            .add(Restrictions.eq("owner.key", ownerKey))
+            .add(Restrictions.eq("product.id", productId))
+            .uniqueResult();
+    }
+
     public CandlepinQuery<Owner> getOwnersByProduct(Product product) {
         return this.getOwnersByProduct(product.getId());
     }
@@ -203,6 +214,35 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
 
         return this.cpQueryFactory.<Product>buildQuery();
     }
+
+    public CandlepinQuery<Product> getProductsByIdsUsingOwnerKey(String ownerKey,
+        Collection<String> productIds) {
+
+        if (productIds == null || productIds.isEmpty()) {
+            return this.cpQueryFactory.<Product>buildQuery();
+        }
+
+        // Impl note: See getOwnersByProduct for details on why we're doing this in two queries.
+        Session session = this.currentSession();
+
+        List<String> uuids = session.createCriteria(OwnerProduct.class)
+            .createAlias("owner", "owner")
+            .createAlias("product", "product")
+            .add(Restrictions.eq("owner.key", ownerKey))
+            .add(CPRestrictions.in("product.id", productIds))
+            .setProjection(Projections.property("product.uuid"))
+            .list();
+
+        if (uuids != null && !uuids.isEmpty()) {
+            DetachedCriteria criteria = this.createSecureDetachedCriteria(Product.class, null)
+                .add(CPRestrictions.in("uuid", uuids));
+
+            return this.cpQueryFactory.<Product>buildQuery(session, criteria);
+        }
+
+        return this.cpQueryFactory.<Product>buildQuery();
+    }
+
 
     @Transactional
     public long getOwnerCount(Product product) {

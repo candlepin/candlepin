@@ -25,6 +25,7 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -94,7 +95,7 @@ public abstract class X509Util {
             boolean include = true;
             if (pc.getContent().getModifiedProductIds().size() > 0) {
                 include = false;
-                Set<String> prodIds = pc.getContent().getModifiedProductIds();
+                Collection<String> prodIds = pc.getContent().getModifiedProductIds();
                 // If consumer has an entitlement to just one of the modified products,
                 // we will include this content set:
                 for (String prodId : prodIds) {

@@ -14,6 +14,8 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.service.model.RoleInfo;
+
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 
@@ -38,7 +40,7 @@ import javax.validation.constraints.Size;
  */
 @Entity
 @Table(name = Role.DB_TABLE)
-public class Role extends AbstractHibernateObject implements Linkable {
+public class Role extends AbstractHibernateObject implements Linkable, RoleInfo {
 
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp_role";
@@ -118,6 +120,18 @@ public class Role extends AbstractHibernateObject implements Linkable {
         this.users = users;
     }
 
+    public void clearUsers() {
+        Set<User> cleared = this.users;
+
+        if (cleared != null) {
+            this.users = new HashSet<>();
+
+            for (User user : cleared) {
+                user.removeRole(this);
+            }
+        }
+    }
+
     public void addUser(User u) {
         if (this.users.add(u)) {
             u.addRole(this);
@@ -130,6 +144,10 @@ public class Role extends AbstractHibernateObject implements Linkable {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public Set<PermissionBlueprint> getPermissions() {
         return permissions;
     }
@@ -141,5 +159,9 @@ public class Role extends AbstractHibernateObject implements Linkable {
     public void addPermission(PermissionBlueprint p) {
         this.permissions.add(p);
         p.setRole(this);
+    }
+
+    public void clearPermissions() {
+        this.permissions.clear();
     }
 }

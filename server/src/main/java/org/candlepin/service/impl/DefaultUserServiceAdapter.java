@@ -14,74 +14,187 @@
  */
 package org.candlepin.service.impl;
 
+import org.candlepin.auth.Access;
+import org.candlepin.auth.SubResource;
+import org.candlepin.auth.permissions.Permission;
+import org.candlepin.auth.permissions.PermissionFactory;
+import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.PermissionBlueprint;
+import org.candlepin.model.PermissionBlueprintCurator;
 import org.candlepin.model.Role;
 import org.candlepin.model.RoleCurator;
 import org.candlepin.model.User;
 import org.candlepin.model.UserCurator;
 import org.candlepin.service.UserServiceAdapter;
+import org.candlepin.service.model.OwnerInfo;
+import org.candlepin.service.model.PermissionBlueprintInfo;
+import org.candlepin.service.model.RoleInfo;
+import org.candlepin.service.model.UserInfo;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+
+
 
 /**
  * A {@link UserServiceAdapter} implementation backed by a {@link UserCurator}
  * for user creation and persistence.
  */
 public class DefaultUserServiceAdapter implements UserServiceAdapter {
+    private static Logger log = LoggerFactory.getLogger(DefaultUserServiceAdapter.class);
 
     private UserCurator userCurator;
     private RoleCurator roleCurator;
+    private PermissionBlueprintCurator permissionCurator;
+    private OwnerCurator ownerCurator;
+    private PermissionFactory permissionFactory;
 
     @Inject
-    public DefaultUserServiceAdapter(UserCurator userCurator, RoleCurator roleCurator) {
+    public DefaultUserServiceAdapter(UserCurator userCurator, RoleCurator roleCurator,
+        PermissionBlueprintCurator permissionCurator, OwnerCurator ownerCurator,
+        PermissionFactory permissionFactory) {
+
         this.userCurator = userCurator;
         this.roleCurator = roleCurator;
+        this.permissionCurator = permissionCurator;
+        this.ownerCurator = ownerCurator;
+        this.permissionFactory = permissionFactory;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public User createUser(User user) {
-        return this.userCurator.create(user);
+    public UserInfo createUser(UserInfo user) {
+        if (user == null) {
+            throw new IllegalArgumentException("user is null");
+        }
+
+        if (user.getUsername() == null || user.getUsername().isEmpty()) {
+            throw new IllegalArgumentException("Username is null or empty");
+        }
+
+        if (this.userCurator.findByLogin(user.getUsername()) != null) {
+            throw new IllegalStateException("User already exists: " + user.getUsername());
+        }
+
+        User entity = new User();
+
+        entity.setUsername(user.getUsername());
+        entity.setHashedPassword(user.getHashedPassword());
+        entity.setSuperAdmin(user.isSuperAdmin() != null ? user.isSuperAdmin() : false);
+
+        // Convert roles
+        if (user.getRoles() != null) {
+            for (RoleInfo role : user.getRoles()) {
+                // If this ends up being a bottleneck, we can optimize this a tad by bulking this lookup
+                Role roleEntity = this.roleCurator.getByName(role.getName());
+
+                if (roleEntity == null) {
+                    throw new IllegalStateException("Role does not exist: " + role.getName());
+                }
+
+                entity.addRole(roleEntity);
+            }
+        }
+
+        entity = this.userCurator.create(entity);
+
+        return entity;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public User updateUser(User user) {
-        return userCurator.update(user);
+    public UserInfo updateUser(String username, UserInfo user) {
+        if (user == null) {
+            throw new IllegalArgumentException("user is null");
+        }
+
+        if (username == null || username.isEmpty()) {
+            throw new IllegalArgumentException("username is null or empty");
+        }
+
+        User entity = this.userCurator.findByLogin(username);
+        if (entity == null) {
+            throw new IllegalStateException("User does not exist: " + username);
+        }
+
+        // If the username is changing, verify that the new username isn't already in use
+        if (user.getUsername() != null && !username.equals(user.getUsername()) &&
+            this.userCurator.findByLogin(user.getUsername()) != null) {
+
+            throw new IllegalStateException("Username already in use: " + user.getUsername());
+        }
+
+        // Check if the inbound entity is not the same instance we would update here. If it is,
+        // we have nothing to do, so we'll just skip everything.
+        if (entity != user) {
+            Set<Role> roles = null;
+
+            // Convert roles
+            if (user.getRoles() != null) {
+                roles = new HashSet<>();
+
+                for (RoleInfo role : user.getRoles()) {
+                    // If this ends up being a bottleneck, we can optimize this a tad by bulking this lookup
+                    Role roleEntity = this.roleCurator.getByName(role.getName());
+
+                    if (roleEntity == null) {
+                        throw new IllegalStateException("Role does not exist: " + role.getName());
+                    }
+
+                    roles.add(roleEntity);
+                }
+            }
+
+            // If our sub-objects validated, set the rest of the properties now
+            if (user.getUsername() != null) {
+                entity.setUsername(user.getUsername());
+            }
+
+            if (user.getHashedPassword() != null) {
+                entity.setHashedPassword(user.getHashedPassword());
+            }
+
+            if (user.isSuperAdmin() != null) {
+                entity.setSuperAdmin(user.isSuperAdmin());
+            }
+
+            if (roles != null) {
+                entity.clearRoles();
+                for (Role role : roles) {
+                    entity.addRole(role);
+                }
+            }
+        }
+
+        return this.userCurator.merge(entity);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public List<User> listUsers() {
+    public List<? extends UserInfo> listUsers() {
         return this.userCurator.listAll().list();
     }
 
-
-    @Override
-    public List<Role> listRoles() {
-        return roleCurator.listAll().list();
-    }
-
-    @Override
-    public Role createRole(Role role) {
-        Set<User> actualUsers = new HashSet<>();
-
-        for (User user : role.getUsers()) {
-            User actualUser = findByLogin(user.getUsername());
-            actualUsers.add(actualUser);
-        }
-        role.setUsers(actualUsers);
-
-        for (PermissionBlueprint permission : role.getPermissions()) {
-            permission.setRole(role);
-        }
-
-        this.roleCurator.create(role);
-        return role;
-    }
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean validateUser(String username, String password) {
         User user = this.userCurator.findByLogin(username);
@@ -94,51 +207,374 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
         return false;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public void deleteUser(User user) {
-        for (Role r : user.getRoles()) {
-            user.removeRole(r);
+    public void deleteUser(String username) {
+        User entity = this.userCurator.findByLogin(username);
+
+        if (entity != null) {
+            entity.clearRoles();
+            this.userCurator.delete(entity);
         }
-        userCurator.delete(user);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public User findByLogin(String login) {
+    public UserInfo findByLogin(String login) {
         return userCurator.findByLogin(login);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public void deleteRole(String roleId) {
-        Role r = roleCurator.get(roleId);
-        roleCurator.delete(r);
+    public Collection<? extends OwnerInfo> getAccessibleOwners(String username) {
+        if (username == null) {
+            throw new IllegalArgumentException("username is null");
+        }
+
+        User entity = this.userCurator.findByLogin(username);
+        if (entity == null) {
+            throw new IllegalStateException("User does not exist: " + username);
+        }
+
+        if (entity.isSuperAdmin() != null && entity.isSuperAdmin()) {
+            // Super admins can see everything
+            return this.ownerCurator.listAll().list();
+        }
+        else {
+            // We need to pair this down to just accessible owners...
+            Collection<Permission> permissions = this.permissionFactory.createUserPermissions(entity);
+            Set<OwnerInfo> owners = new HashSet<>();
+
+            for (Permission permission : permissions) {
+                if (permission.canAccess(permission.getOwner(), SubResource.CONSUMERS, Access.CREATE)) {
+                    owners.add(permission.getOwner());
+                }
+            }
+
+            return owners;
+        }
     }
 
-    @Override
-    public Role updateRole(Role r) {
-//        Set<OwnerPermission> newPermissions = new HashSet<OwnerPermission>();
-//        for (OwnerPermission incomingPerm : r.getPermissions()) {
-//            newPermissions.add(this.permCurator.findOrCreate(
-//                incomingPerm.getOwner(), incomingPerm.getAccess()));
-//        }
-//        r.getPermissions().clear();
-//        r.getPermissions().addAll(newPermissions);
-        return roleCurator.merge(r);
+    /**
+     * Resolves the owner represented by a given OwnerInfo instance. If the owner cannot be
+     * resolved, this method throws an exception.
+     *
+     * @throws IllegalStateException
+     *  if the provided OwnerInfo does not represent a valid owner
+     *
+     * @return
+     *  The Owner instance represented by the provided OwnerInfo
+     */
+    private Owner resolveOwnerInfo(OwnerInfo ownerInfo) {
+        if (ownerInfo != null) {
+            Owner owner = this.ownerCurator.getByKey(ownerInfo.getKey());
+
+            if (owner == null) {
+                throw new IllegalStateException("No such owner: " + ownerInfo.getKey());
+            }
+
+            return owner;
+        }
+
+        return null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public Role getRole(String roleId) {
-        return roleCurator.get(roleId);
+    public RoleInfo createRole(RoleInfo role) {
+        if (role == null) {
+            throw new IllegalArgumentException("role is null");
+        }
+
+        if (role.getName() == null || role.getName().isEmpty()) {
+            throw new IllegalArgumentException("Role name is null or empty");
+        }
+
+        if (this.roleCurator.getByName(role.getName()) != null) {
+            throw new IllegalStateException("Role already exists: " + role.getName());
+        }
+
+        Role entity = new Role();
+
+        entity.setName(role.getName());
+
+        if (role.getUsers() != null) {
+            for (UserInfo user : role.getUsers()) {
+                User userEntity = this.userCurator.findByLogin(user.getUsername());
+
+                if (userEntity == null) {
+                    throw new IllegalStateException("User does not exist: " + user.getUsername());
+                }
+
+                entity.addUser(userEntity);
+            }
+        }
+
+        if (role.getPermissions() != null) {
+            for (PermissionBlueprintInfo permission : role.getPermissions()) {
+                PermissionBlueprint pentity = new PermissionBlueprint(null, null, null);
+
+                if (permission.getOwner() == null) {
+                    throw new IllegalArgumentException("Permission does not define an owner: " + permission);
+                }
+
+                pentity.setOwner(this.resolveOwnerInfo(permission.getOwner()));
+
+                pentity.setType(permission.getTypeName() != null ?
+                    PermissionType.valueOf(permission.getTypeName()) :
+                    null);
+
+                pentity.setAccess(permission.getAccessLevel() != null ?
+                    Access.valueOf(permission.getAccessLevel()) :
+                    null);
+
+                entity.addPermission(pentity);
+
+                log.debug("CREATE -- PERMISSION ROLE: {}", pentity.getRole());
+            }
+        }
+
+        return this.roleCurator.create(entity);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public void addUserToRole(Role role, User user) {
-        role.addUser(user);
-        roleCurator.merge(role);
+    public RoleInfo updateRole(String roleName, RoleInfo role) {
+        if (role == null) {
+            throw new IllegalArgumentException("role is null");
+        }
+
+        if (roleName == null || roleName.isEmpty()) {
+            throw new IllegalArgumentException("Role name is null or empty");
+        }
+
+        Role entity = this.roleCurator.getByName(roleName);
+        if (entity == null) {
+            throw new IllegalStateException("Role does not exist: " + roleName);
+        }
+
+        // If the role name is changing, verify that the new role name isn't already in use
+        if (role.getName() != null && !roleName.equals(role.getName()) &&
+            this.roleCurator.getByName(role.getName()) != null) {
+
+            throw new IllegalStateException("Role name already in use: " + role.getName());
+        }
+
+        // Check if the inbound entity is not the same instance we would update here. If it is,
+        // we have nothing to do, so we'll just skip everything.
+        if (entity != role) {
+            Set<User> users = null;
+            Set<PermissionBlueprint> permissions = null;
+
+            if (role.getUsers() != null) {
+                users = new HashSet<>();
+
+                for (UserInfo user : role.getUsers()) {
+                    User userEntity = this.userCurator.findByLogin(user.getUsername());
+
+                    if (userEntity == null) {
+                        throw new IllegalStateException("User does not exist: " + user.getUsername());
+                    }
+
+                    users.add(userEntity);
+                }
+            }
+
+            if (role.getPermissions() != null) {
+                permissions = new HashSet<>();
+
+                for (PermissionBlueprintInfo permission : role.getPermissions()) {
+                    PermissionBlueprint pentity = new PermissionBlueprint(null, null, null);
+
+                    if (permission.getOwner() == null) {
+                        throw new IllegalArgumentException("Permission does not define an owner: " +
+                            permission);
+                    }
+
+                    pentity.setOwner(this.resolveOwnerInfo(permission.getOwner()));
+
+                    pentity.setType(permission.getTypeName() != null ?
+                        PermissionType.valueOf(permission.getTypeName()) :
+                        null);
+
+                    pentity.setAccess(permission.getAccessLevel() != null ?
+                        Access.valueOf(permission.getAccessLevel()) :
+                        null);
+
+                    permissions.add(pentity);
+                }
+            }
+
+            // If everything validated, update the entity now:
+            if (role.getName() != null) {
+                entity.setName(role.getName());
+            }
+
+            if (users != null) {
+                entity.clearUsers();
+                for (User user : users) {
+                    entity.addUser(user);
+                }
+            }
+
+            if (permissions != null) {
+                entity.clearPermissions();
+                for (PermissionBlueprint permission : permissions) {
+                    entity.addPermission(permission);
+                }
+
+                // Impl note: Orphan removal should handle the cleanup of the old permissions for us
+            }
+        }
+
+        return this.roleCurator.merge(entity);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public void removeUserFromRole(Role role, User user) {
-        role.removeUser(user);
-        roleCurator.merge(role);
+    public RoleInfo addUserToRole(String roleName, String username) {
+        Role roleEntity = this.roleCurator.getByName(roleName);
+        if (roleEntity == null) {
+            throw new IllegalStateException("Role does not exist: " + roleName);
+        }
+
+        User userEntity = this.userCurator.findByLogin(username);
+        if (userEntity == null) {
+            throw new IllegalStateException("User does not exist: " + username);
+        }
+
+        roleEntity.addUser(userEntity);
+        return this.roleCurator.merge(roleEntity);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public RoleInfo removeUserFromRole(String roleName, String username) {
+        Role roleEntity = this.roleCurator.getByName(roleName);
+        if (roleEntity == null) {
+            throw new IllegalStateException("Role does not exist: " + roleName);
+        }
+
+        User userEntity = this.userCurator.findByLogin(username);
+        if (userEntity == null) {
+            throw new IllegalStateException("User does not exist: " + username);
+        }
+
+        roleEntity.removeUser(userEntity);
+        return this.roleCurator.merge(roleEntity);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public RoleInfo addPermissionToRole(String roleName, PermissionBlueprintInfo permission) {
+        Role roleEntity = this.roleCurator.getByName(roleName);
+        if (roleEntity == null) {
+            throw new IllegalStateException("Role does not exist: " + roleName);
+        }
+
+        PermissionBlueprint pentity = new PermissionBlueprint(null, null, null);
+
+        if (permission.getOwner() == null) {
+            throw new IllegalArgumentException("Permission does not define an owner: " +
+                permission);
+        }
+
+        pentity.setOwner(this.resolveOwnerInfo(permission.getOwner()));
+        pentity.setType(PermissionType.valueOf(permission.getTypeName()));
+
+        if (permission.getAccessLevel() != null) {
+            pentity.setAccess(Access.valueOf(permission.getAccessLevel()));
+        }
+
+        roleEntity.addPermission(pentity);
+
+        return this.roleCurator.merge(roleEntity);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public RoleInfo removePermissionFromRole(String roleName, String permissionId) {
+        Role roleEntity = this.roleCurator.getByName(roleName);
+        if (roleEntity == null) {
+            throw new IllegalStateException("Role does not exist: " + roleName);
+        }
+
+        if (permissionId == null) {
+            throw new IllegalArgumentException("permissionId is null");
+        }
+
+        if (roleEntity.getPermissions() != null) {
+            boolean removed = false;
+
+            Set<PermissionBlueprint> permissions = roleEntity.getPermissions();
+            Iterator<PermissionBlueprint> iterator = permissions.iterator();
+
+            while (iterator.hasNext()) {
+                PermissionBlueprint permission = iterator.next();
+
+                if (permissionId.equals(permission.getId())) {
+                    iterator.remove();
+
+                    permission.setRole(null);
+                    this.permissionCurator.delete(permission);
+
+                    removed = true;
+                }
+            }
+
+            if (removed) {
+                roleEntity.setPermissions(permissions);
+                roleEntity = this.roleCurator.merge(roleEntity);
+            }
+        }
+
+        return roleEntity;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void deleteRole(String role) {
+        Role entity = this.roleCurator.getByName(role);
+
+        if (entity != null) {
+            entity.clearUsers();
+            this.roleCurator.delete(entity);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public RoleInfo getRole(String roleName) {
+        return this.roleCurator.getByName(roleName);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<? extends RoleInfo> listRoles() {
+        return this.roleCurator.listAll().list();
     }
 }

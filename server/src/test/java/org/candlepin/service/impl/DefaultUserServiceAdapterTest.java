@@ -24,12 +24,14 @@ import static org.mockito.Mockito.when;
 
 import org.candlepin.auth.Access;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.PermissionBlueprintCurator;
 import org.candlepin.model.Role;
 import org.candlepin.model.RoleCurator;
 import org.candlepin.model.User;
 import org.candlepin.model.UserCurator;
 import org.candlepin.service.UserServiceAdapter;
+import org.candlepin.service.model.RoleInfo;
+import org.candlepin.service.model.UserInfo;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
@@ -48,9 +50,7 @@ import javax.inject.Inject;
  * DefaultUserServiceAdapterTest
  */
 public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
-    @Inject private OwnerCurator ownerCurator;
-    @Inject private RoleCurator roleCurator;
-    @Inject private UserCurator userCurator;
+    @Inject protected PermissionBlueprintCurator permissionCurator;
 
     private DefaultUserServiceAdapter service;
     private Owner owner;
@@ -60,7 +60,8 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
     public void init() throws Exception {
         super.init();
         this.owner = ownerCurator.create(new Owner("default_owner"));
-        this.service = new DefaultUserServiceAdapter(userCurator, roleCurator);
+        this.service = new DefaultUserServiceAdapter(userCurator, roleCurator, permissionCurator,
+            ownerCurator, permissionFactory);
     }
 
     @Test
@@ -74,7 +75,7 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
     public void testFindAllUsers() {
         User user = new User("test_user", "mypassword");
         this.service.createUser(user);
-        List<User> users = this.service.listUsers();
+        List<? extends UserInfo> users = this.service.listUsers();
         assertTrue("The size of the list should be 1", users.size() == 1);
         assertEquals("test_user", users.get(0).getUsername());
     }
@@ -126,7 +127,7 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
         this.service.createUser(user);
 
         Assert.assertTrue(
-            this.service.findByLogin("regular_user").getRoles().contains(Access.ALL));
+            this.service.findByLogin("regular_user").getRoles().contains(Access.ALL.name()));
     }
 
     @Test
@@ -138,14 +139,14 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
         this.service.createUser(user);
 
         Assert.assertTrue(
-            this.service.findByLogin("super_admin").getRoles().contains(Access.ALL));
+            this.service.findByLogin("super_admin").getRoles().contains(Access.ALL.name()));
     }
 
     @Test
     public void deletionValidationFail() {
         User user = new User("guy", "pass");
-        user = this.service.createUser(user);
-        this.service.deleteUser(user);
+        UserInfo created = this.service.createUser(user);
+        this.service.deleteUser(user.getUsername());
 
         Assert.assertFalse(this.service.validateUser("guy", "pass"));
     }
@@ -155,10 +156,11 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
         User u = mock(User.class);
         UserCurator curator = mock(UserCurator.class);
         RoleCurator roleCurator = mock(RoleCurator.class);
-        UserServiceAdapter dusa = new DefaultUserServiceAdapter(curator, roleCurator);
+        UserServiceAdapter dusa = new DefaultUserServiceAdapter(curator, roleCurator, permissionCurator,
+            ownerCurator, permissionFactory);
         when(curator.findByLogin(anyString())).thenReturn(u);
 
-        User foo = dusa.findByLogin("foo");
+        UserInfo foo = dusa.findByLogin("foo");
         assertNotNull(foo);
         assertEquals(foo, u);
     }
@@ -169,9 +171,9 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
         roleCurator.create(adminRole);
         User user = new User("testuser", "password");
         service.createUser(user);
-        service.addUserToRole(adminRole, user);
-        adminRole = service.getRole(adminRole.getId());
-        assertEquals(1, adminRole.getUsers().size());
+        service.addUserToRole(adminRole.getName(), user.getUsername());
+        RoleInfo updated = service.getRole(adminRole.getName());
+        assertEquals(1, updated.getUsers().size());
     }
 
     @Test
@@ -180,11 +182,11 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
         roleCurator.create(adminRole);
         User user = new User("testuser", "password");
         service.createUser(user);
-        service.addUserToRole(adminRole, user);
-        service.deleteUser(user);
+        service.addUserToRole(adminRole.getName(), user.getUsername());
+        service.deleteUser(user.getUsername());
 
-        adminRole = service.getRole(adminRole.getId());
-        assertEquals(0, adminRole.getUsers().size());
+        RoleInfo updated = service.getRole(adminRole.getName());
+        assertEquals(0, updated.getUsers().size());
     }
 
     @Test
@@ -194,9 +196,121 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
         user.setUsername("JarJar");
         user.setHashedPassword("Binks");
         user.setSuperAdmin(false);
-        User updated = service.updateUser(user);
+        UserInfo updated = service.updateUser(user.getUsername(), user);
         assertEquals("JarJar", updated.getUsername());
         assertEquals("Binks", updated.getHashedPassword());
         assertFalse(updated.isSuperAdmin());
     }
+
+
+    // @Test
+    // public void testGetAccessibleOwners() {
+    //     String username = "TESTUSER";
+    //     String password = "sekretpassword";
+    //     Owner owner1 = new Owner("owner1", "owner one");
+    //     Owner owner2 = new Owner("owner2", "owner two");
+    //     User user = new User(username, password);
+
+    //     Set<Owner> owners = user.getOwners(null, Access.ALL);
+    //     assertEquals(0, owners.size());
+    //     user.addPermissions(new TestPermission(owner1));
+    //     user.addPermissions(new TestPermission(owner2));
+
+    //     // Adding the new permissions should give us access
+    //     // to both new owners
+    //     owners = user.getOwners(null, Access.ALL);
+    //     assertEquals(2, owners.size());
+    // }
+
+    // @Test
+    // public void testGetAccessibleOwnersCoversCreateConsumers() {
+    //     String username = "TESTUSER";
+    //     String password = "sekretpassword";
+    //     Owner owner1 = new Owner("owner1", "owner one");
+    //     Owner owner2 = new Owner("owner2", "owner two");
+    //     User user = new User(username, password);
+
+    //     Set<Owner> owners = user.getOwners(null, Access.ALL);
+    //     assertEquals(0, owners.size());
+    //     user.addPermissions(new TestPermission(owner1));
+    //     user.addPermissions(new TestPermission(owner2));
+
+    //     // This is the check we do in API call, make sure owner admins show up as
+    //     // having perms to create consumers as well:
+    //     owners = user.getOwners(SubResource.CONSUMERS, Access.CREATE);
+    //     assertEquals(2, owners.size());
+    // }
+
+    // @Test
+    // public void testGetAccessibleOwnersNonOwnerPerm() {
+    //     String username = "TESTUSER";
+    //     String password = "sekretpassword";
+    //     Owner owner1 = new Owner("owner1", "owner one");
+    //     Owner owner2 = new Owner("owner2", "owner two");
+    //     User user = new User(username, password);
+
+    //     Set<Owner> owners = user.getOwners(null, Access.ALL);
+    //     assertEquals(0, owners.size());
+    //     user.addPermissions(new OtherPermission(owner1));
+    //     user.addPermissions(new OtherPermission(owner2));
+
+    //     // Adding the new permissions should not give us access
+    //     // to either of the new owners
+    //     owners = user.getOwners(null, Access.ALL);
+    //     assertEquals(0, owners.size());
+    // }
+
+    // private class TestPermission implements Permission {
+
+    //     private Owner owner;
+
+    //     public TestPermission(Owner o) {
+    //         owner = o;
+    //     }
+
+    //     @Override
+    //     public boolean canAccess(Object target, SubResource subResource,
+    //         Access access) {
+    //         if (target instanceof Owner) {
+    //             Owner targetOwner = (Owner) target;
+    //             return targetOwner.getKey().equals(this.getOwner().getKey());
+    //         }
+    //         return false;
+    //     }
+
+    //     @Override
+    //     public Criterion getCriteriaRestrictions(Class entityClass) {
+    //         return null;
+    //     }
+
+    //     @Override
+    //     public Owner getOwner() {
+    //         return owner;
+    //     }
+    // }
+
+    // private class OtherPermission implements Permission {
+
+    //     private Owner owner;
+
+    //     public OtherPermission(Owner o) {
+    //         owner = o;
+    //     }
+
+    //     @Override
+    //     public boolean canAccess(Object target, SubResource subResource,
+    //         Access access) {
+    //         return false;
+    //     }
+
+    //     @Override
+    //     public Criterion getCriteriaRestrictions(Class entityClass) {
+    //         return null;
+    //     }
+
+    //     @Override
+    //     public Owner getOwner() {
+    //         return owner;
+    //     }
+    // }
 }

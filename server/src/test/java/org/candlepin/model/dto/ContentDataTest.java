@@ -223,17 +223,17 @@ public class ContentDataTest {
     }
 
     @Test
-    public void testGetSetMetadataExpire() {
+    public void testGetSetMetadataExpiration() {
         ContentData dto = new ContentData();
         Long input = 12345L;
 
-        Long output = dto.getMetadataExpire();
+        Long output = dto.getMetadataExpiration();
         assertNull(output);
 
-        ContentData output2 = dto.setMetadataExpire(input);
+        ContentData output2 = dto.setMetadataExpiration(input);
         assertSame(output2, dto);
 
-        output = dto.getMetadataExpire();
+        output = dto.getMetadataExpiration();
         assertEquals(input, output);
     }
 
@@ -365,10 +365,10 @@ public class ContentDataTest {
             new Object[] { "RequiredTags", "test_value", "alt_value" },
             new Object[] { "ReleaseVersion", "test_value", "alt_value" },
             new Object[] { "GpgUrl", "test_value", "alt_value" },
-            new Object[] { "MetadataExpire", 1234L, 5678L },
+            new Object[] { "MetadataExpiration", 1234L, 5678L },
             new Object[] { "ModifiedProductIds", Arrays.asList("1", "2", "3"), Arrays.asList("4", "5", "6") },
             new Object[] { "Arches", "test_value", "alt_value" },
-            new Object[] { "Locked", Boolean.TRUE, Boolean.FALSE }
+            new Object[] { "Locked", Boolean.TRUE, false }
         };
     }
 
@@ -473,7 +473,12 @@ public class ContentDataTest {
 
         // Verify only the specified field was set
         for (Method method : ContentData.class.getDeclaredMethods()) {
-            if (method.getName().matches("^(get|is)\\w+")) {
+            if (method.getName().matches("^(get|is)\\w+") &&
+                !method.getName().equals("getRequiredProductIds")) {
+
+                // The getRequiredProductIds method is a special case that would require large architectural
+                // changes to these tests to handle properly. Basically, it's just another
+
                 Object output = method.invoke(base, null);
 
                 if (method.getName().equals(accessor.getName())) {
@@ -504,7 +509,7 @@ public class ContentDataTest {
             new Object[] { "RequiredTags", "test_value", null },
             new Object[] { "ReleaseVersion", "test_value", null },
             new Object[] { "GpgUrl", "test_value", null },
-            new Object[] { "MetadataExpire", 1234L, null },
+            new Object[] { "MetadataExpiration", 1234L, null },
             new Object[] { "ModifiedProductIds", Arrays.asList("1", "2", "3"), Arrays.asList() },
             new Object[] { "Arches", "test_value", null },
             new Object[] { "Locked", Boolean.TRUE, false }

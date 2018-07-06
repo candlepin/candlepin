@@ -21,6 +21,8 @@ import org.candlepin.model.Owner;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Restrictions;
 
+
+
 /**
  * ConsumerOrgHypervisorPermission
  * Permission allowing consumers to check in hypervisors for their owner.
@@ -42,8 +44,7 @@ public class ConsumerOrgHypervisorPermission extends TypedPermission<Owner> {
     }
 
     @Override
-    public boolean canAccessTarget(Owner target, SubResource subResource,
-        Access required) {
+    public boolean canAccessTarget(Owner target, SubResource subResource, Access required) {
         return subResource.equals(SubResource.HYPERVISOR) &&
             Access.READ_ONLY.provides(required) &&
             this.owner.getKey().equals(target.getKey());
@@ -54,6 +55,7 @@ public class ConsumerOrgHypervisorPermission extends TypedPermission<Owner> {
         if (entityClass.equals(Owner.class)) {
             return Restrictions.eq("key", owner.getKey());
         }
+
         return null;
     }
 
