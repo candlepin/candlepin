@@ -14,7 +14,6 @@
  */
 package org.candlepin.pki;
 
-import org.bouncycastle.asn1.ASN1Encoding;
 import org.bouncycastle.asn1.DEROctetString;
 
 import java.io.IOException;
