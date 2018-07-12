@@ -2028,7 +2028,7 @@
     </changeSet>
     <changeSet author="awood" id="1413225753032-290">
         <comment>
-            Add the default quartz lock columns.
+             Add the default quartz lock columns. 
         </comment>
         <insert tableName="QRTZ_LOCKS">
             <column name="LOCK_NAME" value="TRIGGER_ACCESS"/>

@@ -116,6 +116,9 @@ public class ConsumerTranslatorTest extends
         consumer.setUsername("consumer_user_name");
         consumer.setEntitlementStatus("consumer_ent_status");
         consumer.setServiceLevel("consumer_service_level");
+        consumer.setRole("consumer_role");
+        consumer.setUsage("consumer_usage");
+        consumer.setSystemPurposeStatus("consumer_system_purpose_status");
         consumer.setReleaseVer(new Release("releaseVer"));
         consumer.setOwner(owner);
         consumer.setEnvironment(environment);
@@ -135,6 +138,12 @@ public class ConsumerTranslatorTest extends
             facts.put("fact-" + i, "value-" + i);
         }
         consumer.setFacts(facts);
+
+        Set<String> addOns = new HashSet<>();
+        for (int i = 0; i < 5; i++) {
+            addOns.add("add-on-" + i);
+        }
+        consumer.setAddOns(addOns);
 
         Set<ConsumerInstalledProduct> installedProducts = new HashSet<>();
         for (int i = 0; i < 5; ++i) {
@@ -191,6 +200,10 @@ public class ConsumerTranslatorTest extends
             assertEquals(source.getUsername(), dest.getUsername());
             assertEquals(source.getEntitlementStatus(), dest.getEntitlementStatus());
             assertEquals(source.getServiceLevel(), dest.getServiceLevel());
+            assertEquals(source.getRole(), dest.getRole());
+            assertEquals(source.getUsage(), dest.getUsage());
+            assertEquals(source.getAddOns(), dest.getAddOns());
+            assertEquals(source.getSystemPurposeStatus(), dest.getSystemPurposeStatus());
             assertEquals(source.getEntitlementCount(), (long) dest.getEntitlementCount());
             assertEquals(source.getFacts(), dest.getFacts());
             assertEquals(source.getLastCheckin(), dest.getLastCheckin());

@@ -502,6 +502,7 @@ public class ConsumerResource {
      * @throws IllegalArgumentException
      *  if either entity or dto are null
      */
+    @SuppressWarnings("checkstyle:methodlength")
     protected void populateEntity(Consumer entity, ConsumerDTO dto) {
         if (entity == null) {
             throw new IllegalArgumentException("the consumer model entity is null");
@@ -535,12 +536,16 @@ public class ConsumerResource {
             entity.setServiceLevel(dto.getServiceLevel());
         }
 
-        if (dto.getOffering() != null) {
-            entity.setOffering(dto.getOffering());
+        if (dto.getRole() != null) {
+            entity.setRole(dto.getRole());
         }
 
         if (dto.getUsage() != null) {
             entity.setUsage(dto.getUsage());
+        }
+
+        if (dto.getAddOns() != null) {
+            entity.setAddOns(dto.getAddOns());
         }
 
         if (dto.getReleaseVersion() != null) {
@@ -1370,28 +1375,7 @@ public class ConsumerResource {
             changesMade = true;
         }
 
-        // Allow optional setting of the service level attribute:
-        String level = updated.getServiceLevel();
-        if (level != null && !level.equals(toUpdate.getServiceLevel())) {
-            log.info("   Updating consumer service level setting.");
-            consumerBindUtil.validateServiceLevel(toUpdate.getOwnerId(), level);
-            toUpdate.setServiceLevel(level);
-            changesMade = true;
-        }
-
-        String offering = updated.getOffering();
-        if (offering != null && !offering.equals(toUpdate.getOffering())) {
-            log.info("   Updating offering setting.");
-            toUpdate.setOffering(offering);
-            changesMade = true;
-        }
-
-        String usage = updated.getUsage();
-        if (usage != null && !usage.equals(toUpdate.getUsage())) {
-            log.info("   Updating usage setting.");
-            toUpdate.setUsage(usage);
-            changesMade = true;
-        }
+        changesMade = updateSystemPurposeData(updated, toUpdate) || changesMade;
 
         String environmentId = updated.getEnvironment() == null ? null : updated.getEnvironment().getId();
         if (environmentId != null && (toUpdate.getEnvironmentId() == null ||
@@ -1464,6 +1448,39 @@ public class ConsumerResource {
             sink.queueEvent(event);
         }
 
+        return changesMade;
+    }
+
+    private boolean updateSystemPurposeData(ConsumerDTO updated, Consumer toUpdate) {
+        boolean changesMade = false;
+        // Allow optional setting of the service level attribute:
+        String level = updated.getServiceLevel();
+        if (level != null && !level.equals(toUpdate.getServiceLevel())) {
+            log.info("   Updating consumer service level setting.");
+            consumerBindUtil.validateServiceLevel(toUpdate.getOwnerId(), level);
+            toUpdate.setServiceLevel(level);
+            changesMade = true;
+        }
+
+        String role = updated.getRole();
+        if (role != null && !role.equals(toUpdate.getRole())) {
+            log.info("   Updating role setting.");
+            toUpdate.setRole(role);
+            changesMade = true;
+        }
+
+        String usage = updated.getUsage();
+        if (usage != null && !usage.equals(toUpdate.getUsage())) {
+            log.info("   Updating usage setting.");
+            toUpdate.setUsage(usage);
+            changesMade = true;
+        }
+
+        if (updated.getAddOns() != null && !updated.getAddOns().equals(toUpdate.getAddOns())) {
+            log.info("   Updating system purpose add ons.");
+            toUpdate.setAddOns(updated.getAddOns());
+            changesMade = true;
+        }
         return changesMade;
     }
 
