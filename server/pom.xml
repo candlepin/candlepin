@@ -30,8 +30,8 @@
     <org.apache.mina-mina-core.version>1.0.1</org.apache.mina-mina-core.version>
     <org.apache.mina-mina-filter-ssl.version>1.0.1</org.apache.mina-mina-filter-ssl.version>
     <geronimo-spec-geronimo-spec-jms.version>1.1-rc4</geronimo-spec-geronimo-spec-jms.version>
-    <org.bouncycastle-bcpkix-jdk15on.version>1.59</org.bouncycastle-bcpkix-jdk15on.version>
-    <org.bouncycastle-bcprov-jdk15on.version>1.59</org.bouncycastle-bcprov-jdk15on.version>
+    <org.bouncycastle-bcpkix-jdk15on.version>1.60</org.bouncycastle-bcpkix-jdk15on.version>
+    <org.bouncycastle-bcprov-jdk15on.version>1.60</org.bouncycastle-bcprov-jdk15on.version>
     <com.google.guava-guava.version>25.1-jre</com.google.guava-guava.version>
     <commons-codec-commons-codec.version>1.4</commons-codec-commons-codec.version>
     <commons-collections-commons-collections.version>3.2.2</commons-collections-commons-collections.version>
