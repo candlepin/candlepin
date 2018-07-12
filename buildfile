@@ -148,7 +148,7 @@ GETTEXT_COMMONS = 'com.googlecode.gettext-commons:gettext-commons:jar:0.9.8'
 
 BOUNCYCASTLE = group('bcpkix-jdk15on', 'bcprov-jdk15on',
                      :under => 'org.bouncycastle',
-                     :version => '1.59')
+                     :version => '1.60')
 
 SERVLET = 'javax.servlet:servlet-api:jar:2.5'
 
