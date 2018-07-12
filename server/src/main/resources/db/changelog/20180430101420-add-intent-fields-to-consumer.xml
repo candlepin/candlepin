@@ -7,13 +7,60 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
     <changeSet id="20180430101420-1" author="vrjain">
-        <comment> add-intent-fields-to-consumer</comment>
+        <comment> Add system purpose role column to cp_consumer</comment>
         <addColumn tableName="cp_consumer">
-            <column name="offering" type="VARCHAR(255)"/>
+            <column name="sp_role" type="VARCHAR(255)"/>
         </addColumn>
+    </changeSet>
+
+    <changeSet id="20180430101420-2" author="vrjain">
+        <comment> Add system purpose usage column to cp_consumer</comment>
         <addColumn tableName="cp_consumer">
-            <column name="intent_usage" type="VARCHAR(255)"/>
+            <column name="sp_usage" type="VARCHAR(255)"/>
         </addColumn>
+    </changeSet>
+
+    <changeSet id="20180430101420-3" author="mstead">
+        <comment>Add system-purpose status column to cp_consumer.</comment>
+        <addColumn tableName="cp_consumer">
+            <column name="sp_status" type="VARCHAR(32)" />
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20180430101420-4" author="mstead">
+        <comment>Add system purpose status hash column to consumer</comment>
+        <addColumn tableName="cp_consumer">
+            <column name="sp_status_hash" type="VARCHAR(64)" />
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20180430101420-5" author="mstead">
+        <comment>Add required table to store a consumer's system purpose addons.</comment>
+        <createTable tableName="cp_sp_add_on">
+            <column name="consumer_id" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="add_on" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20180430101420-6" author="mstead">
+        <comment>Add a foreign key reference to consumer.</comment>
+        <addForeignKeyConstraint constraintName="cp_consumer_add_on_fk"
+                                 onDelete="CASCADE"
+                                 baseTableName="cp_sp_add_on"
+                                 baseColumnNames="consumer_id"
+                                 referencedTableName="cp_consumer"
+                                 referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="20180430101420-7" author="mstead">
+        <comment>Add index on add_on column since it is used when removing addons.</comment>
+        <createIndex indexName="idx_add_on" tableName="cp_sp_add_on" unique="false">
+            <column name="add_on"/>
+        </createIndex>
     </changeSet>
 
 </databaseChangeLog>

@@ -79,7 +79,8 @@ class Candlepin
               environment=nil, capabilities=[], hypervisor_id=nil,
               content_tags=[], created_date=nil, last_checkin_date=nil,
               annotations=nil, recipient_owner_key=nil, user_agent=nil,
-              entitlement_count=0, id_cert=nil, offering=nil, usage=nil)
+              entitlement_count=0, id_cert=nil, serviceLevel=nil, role=nil, usage=nil,
+              addOns=[])
 
     consumer = {
       :type => {:label => type},
@@ -87,6 +88,7 @@ class Candlepin
       :facts => facts,
       :installedProducts => installedProducts,
       :contentTags => content_tags,
+      :addOns => addOns,
     }
 
     consumer[:capabilities] = capabilities.collect { |name| {'name' => name} } if capabilities
@@ -100,7 +102,8 @@ class Candlepin
     consumer[:entitlementCount] = entitlement_count if entitlement_count
     consumer[:idCert] = id_cert if id_cert
 
-    consumer[:offering] = offering if offering
+    consumer[:serviceLevel] = serviceLevel if serviceLevel
+    consumer[:role] = role if role
     consumer[:usage] = usage if usage
 
     params = {}
@@ -187,8 +190,9 @@ class Candlepin
     consumer[:guestIds] = params[:guestIds] if params[:guestIds]
     consumer[:autoheal] = params[:autoheal] if params.has_key?(:autoheal)
     consumer[:serviceLevel] = params[:serviceLevel] if params.has_key?(:serviceLevel)
-    consumer[:offering] = params[:offering] if params.has_key?(:offering)
+    consumer[:role] = params[:role] if params.has_key?(:role)
     consumer[:usage] = params[:usage] if params.has_key?(:usage)
+    consumer[:addOns] = params[:addOns] if params.has_key?(:addOns)
     consumer[:capabilities] = params[:capabilities].collect { |name| {'name' => name} } if params[:capabilities]
     consumer[:hypervisorId] = {:hypervisorId => params[:hypervisorId]} if params[:hypervisorId]
     consumer['contentAccessMode'] = params['contentAccessMode'] if params.key?('contentAccessMode')
