@@ -14,6 +14,8 @@
  */
 package org.candlepin.pki;
 
+import org.bouncycastle.asn1.DEROctetString;
+
 import java.io.IOException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
@@ -38,4 +40,10 @@ public interface SubjectKeyIdentifierWriter {
      */
     byte[] getSubjectKeyIdentifier(KeyPair clientKeyPair, Set<X509ExtensionWrapper> extensions)
         throws IOException, NoSuchAlgorithmException;
+
+    default byte[] toOctetString(byte[] bytesToEncode) throws IOException {
+        DEROctetString octetStr = new DEROctetString(bytesToEncode);
+        return octetStr.getEncoded();
+    }
+
 }
