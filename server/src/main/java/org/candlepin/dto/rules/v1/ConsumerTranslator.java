@@ -87,6 +87,9 @@ public class ConsumerTranslator extends TimestampedEntityTranslator<Consumer, Co
         dest.setUuid(source.getUuid())
             .setUsername(source.getUsername())
             .setServiceLevel(source.getServiceLevel())
+            .setRole(source.getRole())
+            .setUsage(source.getUsage())
+            .setAddOns(source.getAddOns())
             .setFacts(source.getFacts());
 
         // Process nested objects if we have a ModelTranslator to use to the translation...

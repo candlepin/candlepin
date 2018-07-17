@@ -59,10 +59,18 @@ public class ConsumerDTOTest extends AbstractDTOTest<ConsumerDTO> {
             capabilityDTOS.add("capability-" + i);
         }
 
+        Set<String> addOns = new HashSet<>();
+        for (int i = 0; i < 5; ++i) {
+            addOns.add("Add-On-" + i);
+        }
+
         this.values = new HashMap<>();
         this.values.put("Uuid", "test-uuid");
         this.values.put("Username", "test-user-name");
         this.values.put("ServiceLevel", "test-service-level");
+        this.values.put("Usage", "test-usage");
+        this.values.put("Role", "test-role");
+        this.values.put("AddOns", addOns);
         this.values.put("Owner", this.ownerDTOTest.getPopulatedDTOInstance());
         this.values.put("Facts", facts);
         this.values.put("InstalledProducts", installedProducts);
