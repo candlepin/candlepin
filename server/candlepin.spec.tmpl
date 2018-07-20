@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.4.2
+Version: 2.4.3
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,10 @@ fi
 
 #raw
 %changelog
+* Fri Jul 20 2018 Kevin Howell <khowell@redhat.com> 2.4.3-1
+- ENT-711: Update candlepin to use BouncyCastle 1.60.
+  (jhnidek@redhat.com)
+
 * Fri Jun 29 2018 Kevin Howell <khowell@redhat.com> 2.4.2-1
 - 1584715: Properly handle concurrent unregister requests (mstead@redhat.com)
 - Add a sleep to fix failing spec test against mysql (mstead@redhat.com)
