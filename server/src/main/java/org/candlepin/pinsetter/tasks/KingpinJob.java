@@ -132,7 +132,13 @@ public abstract class KingpinJob implements Job {
          *  sort this out and throw a specific exception to indicate a retry is an option.
          */
         catch (PersistenceException e) {
-            refireCheck(context, e);
+            if (!context.getJobDetail().getKey().getName().startsWith("hypervisor")) {
+                refireCheck(context, e);
+            }
+            else {
+                log.debug("Hypervisor job failure");
+                throw new JobExecutionException(e, false);
+            }
             if (eventSink != null) {
                 eventSink.rollback();
             }
