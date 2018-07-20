@@ -37,7 +37,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class Status {
     public static final String[] DEFAULT_CAPABILITIES = { "cores", "ram", "instance_multiplier",
         "derived_product", "cert_v3", "guest_limit", "vcpu", "hypervisors_async", "storage_band",
-        "remove_by_pool_id", "batch_bind", "org_level_content_access" };
+        "remove_by_pool_id", "batch_bind", "org_level_content_access", "syspurpose" };
 
     private static String[] availableCapabilities = DEFAULT_CAPABILITIES;
 
