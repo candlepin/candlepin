@@ -162,10 +162,6 @@ public class GuestMigration {
         return this;
     }
 
-    private List<GuestId> getAddedGuestIds(Consumer existing, List<GuestId> incomingIds) {
-        return getDifferenceInGuestIds(incomingIds, existing);
-    }
-
     private List<GuestId> getRemovedGuestIds(Consumer existingConsumer, List<GuestId> incomingIds) {
         List<GuestId> existingIds = (existingConsumer.getGuestIds() == null) ? new ArrayList<>() :
             new ArrayList<>(existingConsumer.getGuestIds());
@@ -174,19 +170,25 @@ public class GuestMigration {
             incomingIds = new ArrayList<>();
         }
 
+        // The incomingId list is expected to be a *complete* list of guest IDs.  Therefore, any id on our
+        // consumer that is not on the list of incoming IDs is an ID that needs to be removed.
         List<GuestId> removedGuests = new ArrayList<>(existingIds);
         removedGuests.removeAll(incomingIds);
         return removedGuests;
     }
 
-    private List<GuestId> getDifferenceInGuestIds(List<GuestId> incomingIds, Consumer existingConsumer) {
-        List<GuestId> ids1 = incomingIds == null ? new ArrayList<>() : new ArrayList<>(incomingIds);
-        List<GuestId> ids2 = existingConsumer.getGuestIds() == null ? new ArrayList<>() :
+    private List<GuestId> getAddedGuestIds(Consumer existingConsumer, List<GuestId> incomingIds) {
+        List<GuestId> existingIds = (existingConsumer.getGuestIds() == null) ? new ArrayList<>() :
             new ArrayList<>(existingConsumer.getGuestIds());
 
-        List<GuestId> removedGuests = new ArrayList<>(ids1);
-        removedGuests.removeAll(ids2);
-        return removedGuests;
+        if (incomingIds == null) {
+            incomingIds = new ArrayList<>();
+        }
+
+        // Any id on our list of incoming IDs that's not one of the current IDs should be considered new
+        List<GuestId> addedGuests = new ArrayList<>(incomingIds);
+        addedGuests.removeAll(existingIds);
+        return addedGuests;
     }
 
     public String toString() {
