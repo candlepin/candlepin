@@ -166,17 +166,16 @@ public class GuestMigration {
         return getDifferenceInGuestIds(incomingIds, existing);
     }
 
-    private List<GuestId> getRemovedGuestIds(Consumer existing, List<GuestId> incomingIds) {
-        return getDifferenceInGuestIds(existing, incomingIds);
-    }
-
-    private List<GuestId> getDifferenceInGuestIds(Consumer existingConsumer, List<GuestId> incomingIds) {
-        List<GuestId> ids1 = existingConsumer.getGuestIds() == null ? new ArrayList<>() :
+    private List<GuestId> getRemovedGuestIds(Consumer existingConsumer, List<GuestId> incomingIds) {
+        List<GuestId> existingIds = (existingConsumer.getGuestIds() == null) ? new ArrayList<>() :
             new ArrayList<>(existingConsumer.getGuestIds());
-        List<GuestId> ids2 = incomingIds == null ? new ArrayList<>() : new ArrayList<>(incomingIds);
 
-        List<GuestId> removedGuests = new ArrayList<>(ids1);
-        removedGuests.removeAll(ids2);
+        if (incomingIds == null) {
+            incomingIds = new ArrayList<>();
+        }
+
+        List<GuestId> removedGuests = new ArrayList<>(existingIds);
+        removedGuests.removeAll(incomingIds);
         return removedGuests;
     }
 
