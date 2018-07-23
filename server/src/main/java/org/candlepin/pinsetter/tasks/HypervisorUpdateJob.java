@@ -227,7 +227,7 @@ public class HypervisorUpdateJob extends KingpinJob {
             String json = decompress(data);
             HypervisorList hypervisors = (HypervisorList) Util.fromJson(json, HypervisorList.class);
             log.debug("Hypervisor consumers for create/update: {}", hypervisors.getHypervisors().size());
-            log.debug("Updating hypervisor consumers for org {0}", ownerKey);
+            log.debug("Updating hypervisor consumers for org {}", ownerKey);
 
             Set<String> hosts = new HashSet<>();
             Set<String> guests = new HashSet<>();
@@ -246,7 +246,6 @@ public class HypervisorUpdateJob extends KingpinJob {
             }
 
             Map<String, GuestId> guestIds = consumerCurator.getGuestIdMap(guests, owner);
-
             for (String hypervisorId : hosts) {
                 Consumer incoming = syncGuestIds(incomingHosts.get(hypervisorId), guestIds);
                 Consumer knownHost = hypervisorKnownConsumersMap.get(hypervisorId);
