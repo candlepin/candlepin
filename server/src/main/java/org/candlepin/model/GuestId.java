@@ -193,4 +193,8 @@ public class GuestId extends AbstractHibernateObject implements Owned, Named, Co
         }
         return null;
     }
+
+    public String toString() {
+        return "GuestID " + getGuestId();
+    }
 }
