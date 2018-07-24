@@ -247,7 +247,7 @@ public class HypervisorUpdateJob extends KingpinJob {
 
             Map<String, GuestId> guestIds = consumerCurator.getGuestIdMap(guests, owner);
             for (String hypervisorId : hosts) {
-                Consumer incoming = syncGuestIds(incomingHosts.get(hypervisorId), guestIds);
+                Consumer incoming = incomingHosts.get(hypervisorId);
                 Consumer knownHost = hypervisorKnownConsumersMap.get(hypervisorId);
                 // HypervisorId might be different in candlepin
                 if (knownHost == null && incoming.hasFact(Consumer.Facts.SYSTEM_UUID) &&
@@ -485,32 +485,6 @@ public class HypervisorUpdateJob extends KingpinJob {
             incHypervisorId = incHypervisorId.substring(0, max);
         }
         return incHypervisorId;
-    }
-
-    /**
-     * Updates the GuestId objects on the incoming consumer with those found in the DB by the same guest id.
-     * This allows us to update the existing guestIds directly, and avoid duplicates.
-     * @param incoming
-     * @param guestIdMap
-     * @return
-     */
-    private Consumer syncGuestIds(Consumer incoming, Map<String, GuestId> guestIdMap) {
-        List<GuestId> current = incoming.getGuestIds();
-        List<GuestId> updated = new ArrayList<>(current.size());
-
-        for (GuestId gid : current) {
-            GuestId persisted = guestIdMap.get(gid.getGuestId());
-
-            if (persisted != null) {
-                updated.add(persisted);
-            }
-            else {
-                updated.add(gid);
-            }
-        }
-
-        incoming.setGuestIds(updated);
-        return incoming;
     }
 
     /**
