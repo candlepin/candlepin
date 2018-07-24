@@ -674,11 +674,16 @@ describe 'Hypervisor Resource', :type => :virt do
       guest_id_list.each do |guest|
           guestIds << {'guestId' => guest}
       end
-      json = {"hypervisors" => ["name" => name,
-                                "hypervisorId" =>
-                                    {"hypervisorId" => hypervisor_id},
-                                "guestIds" => guestIds,
-                                "facts" => {"test_fact" => "fact_value"}]}
+      json = {
+          "hypervisors" => [
+              {
+                  "name" => name,
+                  "hypervisorId" => {"hypervisorId" => hypervisor_id},
+                  "guestIds" => guestIds,
+                  "facts" => {"test_fact" => "fact_value" }
+              }
+          ]
+      }
       return json.to_json
   end
 
@@ -739,6 +744,12 @@ describe 'Hypervisor Resource', :type => :virt do
     job_detail['state'].should == 'FINISHED'
     job_detail['result'].should_not be_nil
     return job_detail
+  end
+
+  def send_host_guest_mapping(owner, client, mapping, create=true, reporter_id=nil)
+    job_detail = JSON.parse(client.hypervisor_update(owner['key'], mapping, create, reporter_id))
+    wait_for_job(job_detail['id'], 60)
+    return @cp.get_job(job_detail['id'], true)
   end
 
   def create_virtwho_client(user)
@@ -864,6 +875,67 @@ describe 'Hypervisor Resource', :type => :virt do
 
     # The guests host limited entitlement should be gone
     guest_client.list_entitlements().length.should == 0
+  end
+
+  it 'should allow existing guest to be migrated to an existing host - async' do
+    owner = create_owner random_string('test_owner1')
+    user = user_client(owner, random_string("user"))
+    virtwho = create_virtwho_client(user)
+
+    host1_name = random_string('host1')
+
+    uuid1 = random_string('system.uuid')
+    guests = [{:guestId => uuid1}]
+    guest_id_to_migrate = random_string('system.uuid')
+
+    before_migration = {
+        "hypervisors" => [
+            {
+                "name" => 'host_1',
+                "hypervisorId" => {"hypervisorId" => 'hypervisor_id_1'},
+                "guestIds" => [
+                    {'guestId' => uuid1}
+                ],
+                "facts" => {"test_fact" => "fact_value" }
+            },
+            {
+                "name" => "host_2",
+                "hypervisorId" => {"hypervisorId" => 'hypervisor_id_2'},
+                "guestIds" => [
+                    {'guestId' => guest_id_to_migrate}
+                ],
+                "facts" => {"test_fact" => "fact_value" }
+            }
+        ]
+    }
+
+    job_detail = send_host_guest_mapping(owner, user, before_migration.to_json())
+    job_detail["state"].should == "FINISHED"
+
+    after_migration = {
+        "hypervisors" => [
+            {
+                "name" => host1_name,
+                "hypervisorId" => {"hypervisorId" => 'hypervisor_id_1'},
+                "guestIds" => [
+                    {'guestId' => uuid1},
+                    {'guestId' => guest_id_to_migrate}
+                ],
+                "facts" => {"test_fact" => "fact_value" }
+            },
+            {
+                "name" => "host_2",
+                "hypervisorId" => {"hypervisorId" => 'hypervisor_id_2'},
+                "guestIds" => [
+
+                ],
+                "facts" => {"test_fact" => "fact_value" }
+            }
+        ]
+    }
+
+    job_detail = send_host_guest_mapping(owner, user, after_migration.to_json())
+    job_detail["state"].should == "FINISHED"
   end
 
   it 'should raise bad request exception if owner has autobind disabled' do
