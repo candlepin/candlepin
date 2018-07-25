@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.4.3
+Version: 2.4.4
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,19 @@ fi
 
 #raw
 %changelog
+* Wed Jul 25 2018 Kevin Howell <khowell@redhat.com> 2.4.4-1
+- 1608033: Remove method that leads to persistence errors (awood@redhat.com)
+- Add toString for GuestId and correct typo in logging statement.
+  (awood@redhat.com)
+- Refactor confusing method and add comments to explain it. (awood@redhat.com)
+- Refactor method with a confusing name and signature. (awood@redhat.com)
+- Do not refire HypervisorUpdateJobs on persistence failure (mstead@redhat.com)
+- 1598851: Hypervisor checkins now return HypervisorUpdateResultDTO (ENT-709) -
+  Created HypervisorUpdateResultDTO, HypervisorConsumerDTO &
+  HypervisorConsumerTranslator. - Both sync & async checkins now return a
+  HypervisorUpdateResultDTO, which contains the data: 'name' 'uuid' 'owner' ->
+  'key' (nmoumoul@redhat.com)
+
 * Fri Jul 20 2018 Kevin Howell <khowell@redhat.com> 2.4.3-1
 - ENT-711: Update candlepin to use BouncyCastle 1.60.
   (jhnidek@redhat.com)
