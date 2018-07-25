@@ -228,7 +228,7 @@ public class HypervisorUpdateJob extends KingpinJob {
             String json = decompress(data);
             HypervisorList hypervisors = (HypervisorList) Util.fromJson(json, HypervisorList.class);
             log.debug("Hypervisor consumers for create/update: {}", hypervisors.getHypervisors().size());
-            log.debug("Updating hypervisor consumers for org {0}", ownerKey);
+            log.debug("Updating hypervisor consumers for org {}", ownerKey);
 
             Set<String> hosts = new HashSet<>();
             Set<String> guests = new HashSet<>();
@@ -238,12 +238,10 @@ public class HypervisorUpdateJob extends KingpinJob {
 
             // Maps virt hypervisor ID to registered consumer for that hypervisor, should one exist:
             VirtConsumerMap hypervisorConsumersMap = consumerCurator.getHostConsumersMap(owner, hosts);
-            Map<String, GuestId> guestIds = consumerCurator.getGuestIdMap(guests, owner);
-
 
             for (String hypervisorId : hosts) {
                 Consumer knownHost = hypervisorConsumersMap.get(hypervisorId);
-                Consumer incoming = syncGuestIds(incomingHosts.get(hypervisorId), guestIds);
+                Consumer incoming = incomingHosts.get(hypervisorId);
                 Consumer reportedOnConsumer = null;
 
                 if (knownHost == null) {
@@ -467,32 +465,6 @@ public class HypervisorUpdateJob extends KingpinJob {
             incHypervisorId = incHypervisorId.substring(0, max);
         }
         return incHypervisorId;
-    }
-
-    /**
-     * Updates the GuestId objects on the incoming consumer with those found in the DB by the same guest id.
-     * This allows us to update the existing guestIds directly, and avoid duplicates.
-     * @param incoming
-     * @param guestIdMap
-     * @return
-     */
-    private Consumer syncGuestIds(Consumer incoming, Map<String, GuestId> guestIdMap) {
-        List<GuestId> current = incoming.getGuestIds();
-        List<GuestId> updated = new ArrayList<>(current.size());
-
-        for (GuestId gid : current) {
-            GuestId persisted = guestIdMap.get(gid.getGuestId());
-
-            if (persisted != null) {
-                updated.add(persisted);
-            }
-            else {
-                updated.add(gid);
-            }
-        }
-
-        incoming.setGuestIds(updated);
-        return incoming;
     }
 
     /**
