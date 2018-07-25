@@ -19,6 +19,8 @@ import static org.quartz.JobBuilder.*;
 import org.candlepin.auth.Principal;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.filter.LoggingFilter;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.HypervisorConsumerDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
@@ -33,7 +35,7 @@ import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.resource.ConsumerResource;
-import org.candlepin.resource.dto.HypervisorUpdateResultUuids;
+import org.candlepin.dto.api.v1.HypervisorUpdateResultDTO;
 import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.Util;
@@ -85,6 +87,7 @@ public class HypervisorUpdateJob extends KingpinJob {
     private ConsumerType hypervisorType;
     private SubscriptionServiceAdapter subAdapter;
     private ComplianceRules complianceRules;
+    private ModelTranslator translator;
 
     public static final String CREATE = "create";
     public static final String REPORTER_ID = "reporter_id";
@@ -95,14 +98,14 @@ public class HypervisorUpdateJob extends KingpinJob {
     @Inject
     public HypervisorUpdateJob(OwnerCurator ownerCurator, ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator, ConsumerResource consumerResource, I18n i18n,
-        SubscriptionServiceAdapter subAdapter,
-        ComplianceRules complianceRules) {
+        SubscriptionServiceAdapter subAdapter, ComplianceRules complianceRules, ModelTranslator translator) {
         this.ownerCurator = ownerCurator;
         this.consumerCurator = consumerCurator;
         this.consumerResource = consumerResource;
         this.i18n = i18n;
         this.subAdapter = subAdapter;
         this.complianceRules = complianceRules;
+        this.translator = translator;
 
         this.hypervisorType = consumerTypeCurator.lookupByLabel(ConsumerTypeEnum.HYPERVISOR.getLabel(), true);
     }
@@ -204,7 +207,7 @@ public class HypervisorUpdateJob extends KingpinJob {
             Principal principal = (Principal) map.get(PRINCIPAL);
             String jobReporterId = map.getString(REPORTER_ID);
 
-            HypervisorUpdateResultUuids result = new HypervisorUpdateResultUuids();
+            HypervisorUpdateResultDTO result = new HypervisorUpdateResultDTO();
 
             Owner owner = ownerCurator.lookupByKey(ownerKey);
             if (owner == null) {
@@ -245,7 +248,7 @@ public class HypervisorUpdateJob extends KingpinJob {
 
                 if (knownHost == null) {
                     if (!create) {
-                        result.failed(hypervisorId,
+                        result.addFailed(hypervisorId,
                             "Unable to find hypervisor with id " + hypervisorId + " in org " + ownerKey);
                     }
                     else {
@@ -263,7 +266,7 @@ public class HypervisorUpdateJob extends KingpinJob {
                         }
 
                         hypervisorConsumersMap.add(hypervisorId, newHost);
-                        result.created(newHost);
+                        result.addCreated(this.translator.translate(newHost, HypervisorConsumerDTO.class));
                         reportedOnConsumer = newHost;
                     }
                 }
@@ -291,10 +294,11 @@ public class HypervisorUpdateJob extends KingpinJob {
                     if (factsUpdated || guestMigration.isMigrationPending() || typeUpdated) {
                         knownHost.setLastCheckin(new Date());
                         guestMigration.migrate(false);
-                        result.updated(knownHost);
+                        result.addUpdated(this.translator.translate(knownHost, HypervisorConsumerDTO.class));
                     }
                     else {
-                        result.unchanged(knownHost);
+                        result.addUnchanged(
+                            this.translator.translate(knownHost, HypervisorConsumerDTO.class));
                     }
                 }
                 // update reporter id if it changed
@@ -311,7 +315,8 @@ public class HypervisorUpdateJob extends KingpinJob {
             }
 
             for (Consumer consumer : hypervisorConsumersMap.getConsumers()) {
-                consumer = result.wasCreated(consumer) ?
+                consumer = result.wasCreated(
+                    this.translator.translate(consumer, HypervisorConsumerDTO.class)) ?
                     consumerCurator.create(consumer, false) :
                     consumerCurator.update(consumer, false);
             }

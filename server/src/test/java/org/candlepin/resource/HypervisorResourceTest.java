@@ -33,6 +33,8 @@ import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.api.v1.GuestIdDTO;
+import org.candlepin.dto.api.v1.HypervisorConsumerDTO;
+import org.candlepin.dto.api.v1.HypervisorUpdateResultDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
@@ -50,7 +52,6 @@ import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
-import org.candlepin.resource.dto.HypervisorCheckInResult;
 import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resource.util.GuestMigration;
@@ -75,6 +76,7 @@ import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -231,24 +233,21 @@ public class HypervisorResourceTest {
             .thenReturn(new VirtConsumerMap());
 
         when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
+        when(ownerCurator.findOwnerById(any(String.class))).thenReturn(owner);
         when(principal.canAccess(eq(owner), eq(SubResource.CONSUMERS), eq(Access.CREATE)))
             .thenReturn(true);
         when(idCertService.generateIdentityCert(any(Consumer.class)))
             .thenReturn(new IdentityCertificate());
 
-        HypervisorCheckInResult result = hypervisorResource.hypervisorUpdate(
+        HypervisorUpdateResultDTO result = hypervisorResource.hypervisorUpdate(
             hostGuestMap, principal, owner.getKey(), true);
 
-        Set<Consumer> created = result.getCreated();
+        Collection<HypervisorConsumerDTO> created = result.getCreated();
         assertEquals(1, created.size());
 
-        Consumer c1 = created.iterator().next();
-        assertEquals("test-host", c1.getHypervisorId().getHypervisorId());
-        assertEquals(2, c1.getGuestIds().size());
-        assertEquals("GUEST_A", c1.getGuestIds().get(0).getGuestId());
-        assertEquals("GUEST_B", c1.getGuestIds().get(1).getGuestId());
-        assertEquals("x86_64", c1.getFact("uname.machine"));
-        assertEquals(this.hypervisorType.getId(), c1.getTypeId());
+        HypervisorConsumerDTO c1 = created.iterator().next();
+        assertEquals("test-host", c1.getName());
+        assertEquals("admin", c1.getOwner().getKey());
     }
 
     private VirtConsumerMap mockHypervisorConsumerMap(String hypervisorId, Consumer c) {
@@ -270,27 +269,32 @@ public class HypervisorResourceTest {
         o.setId("owner-id");
         Consumer existing = new Consumer();
         existing.setUuid("test-host");
+        existing.setName("test-host-name");
         existing.setOwner(o);
         existing.addGuestId(new GuestId("GUEST_A"));
         existing.setType(this.hypervisorType);
 
         when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
+        when(ownerCurator.findOwnerById(any(String.class))).thenReturn(owner);
         // Force update
         when(consumerCurator.getHostConsumersMap(any(Owner.class), any(Set.class)))
             .thenReturn(mockHypervisorConsumerMap(hypervisorId, existing));
         when(consumerCurator.getGuestConsumersMap(any(String.class), any(Set.class)))
             .thenReturn(new VirtConsumerMap());
 
-        HypervisorCheckInResult result = hypervisorResource.hypervisorUpdate(
+        HypervisorUpdateResultDTO result = hypervisorResource.hypervisorUpdate(
             hostGuestMap, principal, owner.getKey(), true);
 
-        List<Consumer> updated = new ArrayList<>(result.getUpdated());
+        List<HypervisorConsumerDTO> updated = new ArrayList<>(result.getUpdated());
         assertEquals(1, updated.size());
 
-        Consumer c1 = updated.get(0);
+        HypervisorConsumerDTO c1 = updated.get(0);
         assertEquals("test-host", c1.getUuid());
-        assertEquals(1, c1.getGuestIds().size());
-        assertEquals("GUEST_B", c1.getGuestIds().get(0).getGuestId());
+        assertEquals("test-host-name", c1.getName());
+        assertEquals("owner-id", c1.getOwner().getKey());
+
+        assertEquals(1, existing.getGuestIds().size());
+        assertEquals("GUEST_B", existing.getGuestIds().get(0).getGuestId());
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked", "deprecation" })
@@ -321,7 +325,7 @@ public class HypervisorResourceTest {
         when(consumerCurator.create(any(Consumer.class)))
             .thenThrow(exception);
 
-        HypervisorCheckInResult result = hypervisorResource.hypervisorUpdate(
+        HypervisorUpdateResultDTO result = hypervisorResource.hypervisorUpdate(
             hostGuestMap, principal, owner.getKey(), true);
 
         List<String> failures = new ArrayList<>(result.getFailedUpdate());
@@ -351,10 +355,10 @@ public class HypervisorResourceTest {
         when(idCertService.generateIdentityCert(any(Consumer.class)))
             .thenReturn(new IdentityCertificate());
 
-        HypervisorCheckInResult result = hypervisorResource.hypervisorUpdate(
+        HypervisorUpdateResultDTO result = hypervisorResource.hypervisorUpdate(
             hostGuestMap, principal, owner.getKey(), false);
 
-        assertEquals(0, result.getCreated().size());
+        assertEquals(null, result.getCreated());
         assertEquals(1, result.getFailedUpdate().size());
 
         String failed = result.getFailedUpdate().iterator().next();
@@ -381,6 +385,7 @@ public class HypervisorResourceTest {
             TestUtil.createGuestIdDTO("GUEST_D"))));
 
         when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
+        when(ownerCurator.findOwnerById(any(String.class))).thenReturn(owner);
 
         when(consumerCurator.getHostConsumersMap(any(Owner.class), any(Set.class)))
             .thenReturn(new VirtConsumerMap());
@@ -393,24 +398,27 @@ public class HypervisorResourceTest {
         when(idCertService.generateIdentityCert(any(Consumer.class)))
             .thenReturn(new IdentityCertificate());
 
-        HypervisorCheckInResult result = hypervisorResource.hypervisorUpdate(
+        HypervisorUpdateResultDTO result = hypervisorResource.hypervisorUpdate(
             hostGuestMap, principal, owner.getKey(), true);
         assertNotNull(result);
         assertEquals(1, result.getCreated().size());
 
-        List<Consumer> created = new ArrayList<>(result.getCreated());
-        assertEquals("hypervisor_a", created.get(0).getHypervisorId().getHypervisorId());
+        List<HypervisorConsumerDTO> created = new ArrayList<>(result.getCreated());
+        assertEquals("HYPERVISOR_A", created.get(0).getName());
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked", "deprecation" })
     @Test
     public void ensureEmptyGuestIdsAreIgnored() throws Exception {
         Owner owner = new Owner("admin");
+        owner.setId("test-id");
+        owner.setKey("test-key");
 
         Map<String, List<GuestIdDTO>> hostGuestMap = new HashMap<>();
         hostGuestMap.put("HYPERVISOR_A", new ArrayList(
             Arrays.asList(TestUtil.createGuestIdDTO("GUEST_A"), TestUtil.createGuestIdDTO(""))));
         when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
+        when(ownerCurator.findOwnerById(any(String.class))).thenReturn(owner);
 
         when(consumerCurator.getHostConsumersMap(any(Owner.class), any(Set.class)))
             .thenReturn(new VirtConsumerMap());
@@ -423,25 +431,28 @@ public class HypervisorResourceTest {
         when(idCertService.generateIdentityCert(any(Consumer.class)))
             .thenReturn(new IdentityCertificate());
 
-        HypervisorCheckInResult result = hypervisorResource.hypervisorUpdate(
+        HypervisorUpdateResultDTO result = hypervisorResource.hypervisorUpdate(
             hostGuestMap, principal, owner.getKey(), true);
         assertNotNull(result);
         assertNotNull(result.getCreated());
 
-        List<Consumer> created = new ArrayList<>(result.getCreated());
+        List<HypervisorConsumerDTO> created = new ArrayList<>(result.getCreated());
         assertEquals(1, created.size());
-        List<GuestId> gids = created.get(0).getGuestIds();
-        assertEquals(1, gids.size());
+        assertEquals(1, hostGuestMap.get("HYPERVISOR_A").size());
+        assertEquals("GUEST_A", hostGuestMap.get("HYPERVISOR_A").get(0).getGuestId());
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked", "deprecation" })
     @Test
     public void treatNullGuestListsAsEmptyGuestLists() throws Exception {
         Owner owner = new Owner("admin");
+        owner.setId("test-id");
+        owner.setKey("test-key");
 
         Map<String, List<GuestIdDTO>> hostGuestMap = new HashMap<>();
         hostGuestMap.put("HYPERVISOR_A", null);
         when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
+        when(ownerCurator.findOwnerById(any(String.class))).thenReturn(owner);
 
         when(consumerCurator.getHostConsumersMap(any(Owner.class), any(Set.class)))
             .thenReturn(new VirtConsumerMap());
@@ -453,14 +464,13 @@ public class HypervisorResourceTest {
         when(idCertService.generateIdentityCert(any(Consumer.class)))
             .thenReturn(new IdentityCertificate());
 
-        HypervisorCheckInResult result = hypervisorResource.hypervisorUpdate(
+        HypervisorUpdateResultDTO result = hypervisorResource.hypervisorUpdate(
             hostGuestMap, principal, owner.getKey(), true);
         assertNotNull(result);
         assertNotNull(result.getCreated());
-        List<Consumer> created = new ArrayList<>(result.getCreated());
+        List<HypervisorConsumerDTO> created = new ArrayList<>(result.getCreated());
         assertEquals(1, created.size());
-        List<GuestId> gids = created.get(0).getGuestIds();
-        assertEquals(0, gids.size());
+        assertEquals(0, hostGuestMap.get("HYPERVISOR_A").size());
     }
 
     @Test

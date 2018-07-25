@@ -24,6 +24,8 @@ import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.GuestIdDTO;
+import org.candlepin.dto.api.v1.HypervisorConsumerDTO;
+import org.candlepin.dto.api.v1.HypervisorUpdateResultDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
@@ -35,7 +37,6 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.pinsetter.tasks.HypervisorUpdateJob;
-import org.candlepin.resource.dto.HypervisorCheckInResult;
 import org.candlepin.resource.util.GuestMigration;
 
 import com.google.inject.Inject;
@@ -130,7 +131,7 @@ public class HypervisorResource {
     @Transactional
     @UpdateConsumerCheckIn
     @SuppressWarnings("checkstyle:indentation")
-    public HypervisorCheckInResult hypervisorUpdate(
+    public HypervisorUpdateResultDTO hypervisorUpdate(
         Map<String, List<GuestIdDTO>> hostGuestDTOMap, @Context Principal principal,
         @QueryParam("owner") @Verify(value = Owner.class,
             require = Access.READ_ONLY,
@@ -191,7 +192,7 @@ public class HypervisorResource {
             log.warn("Ignoring {} empty/null guest id(s).", emptyGuestIdCount);
         }
 
-        HypervisorCheckInResult result = new HypervisorCheckInResult();
+        HypervisorUpdateResultDTO result = new HypervisorUpdateResultDTO();
         for (Entry<String, List<GuestIdDTO>> hostEntry : hostGuestDTOMap.entrySet()) {
             String hypervisorId = hostEntry.getKey();
             // Treat null guest list as an empty list.
@@ -212,7 +213,7 @@ public class HypervisorResource {
                 if (hypervisorConsumersMap.get(hypervisorId) == null) {
                     if (!createMissing) {
                         log.info("Unable to find hypervisor with id {} in org {}", hypervisorId, ownerKey);
-                        result.failed(hypervisorId, i18n.tr(
+                        result.addFailed(hypervisorId, i18n.tr(
                             "Unable to find hypervisor in org \"{0}\"", ownerKey));
                         continue;
                     }
@@ -236,18 +237,18 @@ public class HypervisorResource {
                 consumer.setLastCheckin(now);
                 // Populate the result with the processed consumer.
                 if (hostConsumerCreated) {
-                    result.created(consumer);
+                    result.addCreated(this.translator.translate(consumer, HypervisorConsumerDTO.class));
                 }
                 else if (guestIdsUpdated || updatedType) {
-                    result.updated(consumer);
+                    result.addUpdated(this.translator.translate(consumer, HypervisorConsumerDTO.class));
                 }
                 else {
-                    result.unchanged(consumer);
+                    result.addUnchanged(this.translator.translate(consumer, HypervisorConsumerDTO.class));
                 }
             }
             catch (Exception e) {
                 log.error("Hypervisor checkin failed", e);
-                result.failed(hypervisorId, e.getMessage());
+                result.addFailed(hypervisorId, e.getMessage());
             }
         }
         log.info("Summary of hypervisor checkin by principal \"{}\": {}", principal, result);
