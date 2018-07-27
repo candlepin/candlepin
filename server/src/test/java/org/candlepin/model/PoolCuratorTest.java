@@ -402,6 +402,26 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertEquals(pool, results.get(0));
     }
 
+    @Test
+    public void testFetchEntitledConsumerUuids() {
+        Consumer c1 = createMockConsumer(owner, false);
+        Entitlement e1 = new Entitlement(pool, c1, owner, 1);
+        String id1 = Util.generateDbUUID();
+        e1.setId(id1);
+        entitlementCurator.create(e1);
+
+        Consumer c2 = createMockConsumer(owner, false);
+        Entitlement e2 = new Entitlement(pool, c2, owner, 1);
+        String id2 = Util.generateDbUUID();
+        e2.setId(id2);
+        entitlementCurator.create(e2);
+
+        Set<String> actual = new HashSet<>(poolCurator.listEntitledConsumerUuids(pool.getId()));
+        Set<String> expected = new HashSet<>();
+        expected.add(c1.getUuid());
+        expected.add(c2.getUuid());
+        assertEquals(expected, actual);
+    }
 
     @Test
     public void requiresHostIsCaseInsensitive() {

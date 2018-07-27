@@ -48,7 +48,6 @@ import org.hibernate.type.StringType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -92,14 +91,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         this.consumerTypeCurator = consumerTypeCurator;
     }
 
-    @Override
-    @Transactional
-    public Pool find(Serializable id) {
-        Pool pool = super.find(id);
-        return pool;
-    }
-
-    /**
+   /**
      * Returns list of pools owned by the given Owner.
      * @param owner Owner to filter
      * @return pools owned by the given Owner.
@@ -328,6 +320,15 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             activeOn, filters, pageRequest, postFilter, addFuture, onlyFuture, after);
     }
 
+    @Transactional
+    public List<String> listEntitledConsumerUuids(String poolId) {
+        return createSecureCriteria("pool")
+            .add(Restrictions.eq("pool.id", poolId))
+            .createAlias("entitlements", "entitlements", JoinType.INNER_JOIN)
+            .createAlias("entitlements.consumer", "consumer", JoinType.INNER_JOIN)
+            .setProjection(Projections.property("consumer.uuid"))
+            .list();
+    }
     /**
      * List entitlement pools.
      *
