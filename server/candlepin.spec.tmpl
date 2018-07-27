@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.3.8
+Version: 2.3.9
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,16 @@ fi
 
 #raw
 %changelog
+* Fri Jul 27 2018 Kevin Howell <khowell@redhat.com> 2.3.9-1
+- 1600695: Remove method that leads to persistence errors (awood@redhat.com)
+- Add toString for GuestId and correct typo in logging statement.
+  (awood@redhat.com)
+- Refactor confusing method and add comments to explain it. (awood@redhat.com)
+- Refactor method with a confusing name and signature. (awood@redhat.com)
+- Do not refire HypervisorUpdateJobs on persistence failure (mstead@redhat.com)
+- ENT-616: Update SubjectKeyIdentifierWriter for isolation [2.3] (#2052)
+  (aparadka@redhat.com)
+
 * Tue May 29 2018 Kevin Howell <khowell@redhat.com> 2.3.8-1
 - 1582607: Added missing JsonFilter annotation to the DTOs (crog@redhat.com)
 - 1576868: Update liquibase checksums (khowell@redhat.com)
