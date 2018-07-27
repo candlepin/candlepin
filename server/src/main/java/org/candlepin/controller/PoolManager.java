@@ -125,6 +125,8 @@ public interface PoolManager {
 
     List<Pool> secureGet(Collection<String> poolId);
 
+    List<String> listEntitledConsumerUuids(String poolId);
+
     List<Pool> getBySubscriptionId(Owner owner, String id);
 
     List<Pool> getBySubscriptionIds(String ownerId, Collection<String> id);
