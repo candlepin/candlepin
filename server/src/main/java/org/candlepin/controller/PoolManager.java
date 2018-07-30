@@ -123,6 +123,8 @@ public interface PoolManager {
 
     Pool find(String poolId);
 
+    List<String> listEntitledConsumerUuids(String poolId);
+
     List<Pool> secureFind(Collection<String> poolId);
 
     List<Pool> lookupBySubscriptionId(Owner owner, String id);
