@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.4.4
+Version: 2.4.5
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,10 @@ fi
 
 #raw
 %changelog
+* Mon Jul 30 2018 Kevin Howell <khowell@redhat.com> 2.4.5-1
+- 1608426: API call to get list of consumer UUIDs entitled from a pool
+  (awood@redhat.com)
+
 * Wed Jul 25 2018 Kevin Howell <khowell@redhat.com> 2.4.4-1
 - 1608033: Remove method that leads to persistence errors (awood@redhat.com)
 - Add toString for GuestId and correct typo in logging statement.
