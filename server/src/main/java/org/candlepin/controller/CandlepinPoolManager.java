@@ -1073,6 +1073,11 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     @Override
+    public List<String> listEntitledConsumerUuids(String poolId) {
+        return this.poolCurator.listEntitledConsumerUuids(poolId);
+    }
+
+    @Override
     public List<Pool> secureGet(Collection<String> poolIds) {
         if (CollectionUtils.isNotEmpty(poolIds)) {
             return this.poolCurator.listAllByIds(poolIds).list();

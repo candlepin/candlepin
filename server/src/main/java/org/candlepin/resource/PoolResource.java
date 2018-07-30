@@ -286,6 +286,17 @@ public class PoolResource {
         return this.translator.translate(pool.getCdn(), CdnDTO.class);
     }
 
+    @ApiOperation(
+        notes = "Retrieve a list of Consumer UUIDs attached to a pool.  Available only to superadmins",
+        value = "listEntitledConsumerUuids")
+    @ApiResponses({ @ApiResponse(code = 400, message = "") })
+    @GET
+    @Path("{pool_id}/entitlements/consumer_uuids")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<String> listEntitledConsumerUuids(@PathParam("pool_id") String id) {
+        return poolManager.listEntitledConsumerUuids(id);
+    }
+
     @ApiOperation(notes = "Retrieve a list of Entitlements for a Pool", value = "getPoolEntitlements")
     @ApiResponses({ @ApiResponse(code = 400, message = "") })
     @GET

@@ -320,6 +320,15 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             activeOn, filters, pageRequest, postFilter, addFuture, onlyFuture, after);
     }
 
+    @Transactional
+    public List<String> listEntitledConsumerUuids(String poolId) {
+        return createSecureCriteria("pool")
+            .add(Restrictions.eq("pool.id", poolId))
+            .createAlias("entitlements", "entitlements", JoinType.INNER_JOIN)
+            .createAlias("entitlements.consumer", "consumer", JoinType.INNER_JOIN)
+            .setProjection(Projections.property("consumer.uuid"))
+            .list();
+    }
     /**
      * List entitlement pools.
      *
