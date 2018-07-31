@@ -140,8 +140,22 @@ describe 'Job Status' do
   end
 
   it 'should allow user to cancel a job it initiated' do
+    @cp.set_scheduler_status(false)
     job = @user.autoheal_org(@owner['key'])
+    #make sure we see a job waiting to go
+    joblist = @cp.list_jobs(@owner['key'])
+    expect(joblist.find { |j| j['id'] == job['id'] }['state']).to eq('CREATED')
+
     @user.cancel_job(job['id'])
+    #make sure we see a job canceled
+    joblist = @cp.list_jobs(@owner['key'])
+    expect(joblist.find { |j| j['id'] == job['id'] }['state']).to eq('CANCELED')
+
+    @cp.set_scheduler_status(true)
+    sleep 1 #let the job queue drain..
+    #make sure job didn't flip to FINISHED
+    joblist = @cp.list_jobs(@owner['key'])
+    expect(joblist.find { |j| j['id'] == job['id'] }['state']).to eq('CANCELED')
   end
 
   it 'should not allow user to cancel a job it did not initiate' do
