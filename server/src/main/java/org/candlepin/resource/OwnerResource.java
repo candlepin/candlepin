@@ -48,6 +48,7 @@ import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.EnvironmentDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.PoolDTO;
+import org.candlepin.dto.api.v1.SystemPurposeAttributesDTO;
 import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
 import org.candlepin.model.Branding;
 import org.candlepin.model.CandlepinQuery;
@@ -78,6 +79,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.Release;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceSubscription;
+import org.candlepin.model.SystemPurposeAttributeType;
 import org.candlepin.model.UeberCertificate;
 import org.candlepin.model.UeberCertificateCurator;
 import org.candlepin.model.UeberCertificateGenerator;
@@ -139,9 +141,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
@@ -2054,6 +2059,38 @@ public class OwnerResource {
         Owner owner = findOwnerByKey(ownerKey);
 
         return this.importRecordCurator.findRecords(owner);
+    }
+
+    @ApiOperation(notes = "Retrieves the system purpose settings available to an owner", value =
+        "getSyspurpose")
+    @ApiResponses({@ApiResponse(code = 404, message = "Owner not found")})
+    @GET
+    @Path("{owner_key}/system_purpose")
+    @Produces(MediaType.APPLICATION_JSON)
+    public SystemPurposeAttributesDTO getSyspurpose(
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
+        Owner owner = findOwnerByKey(ownerKey);
+        List<Product> products = ownerProductCurator.getProductsByOwner(owner).list();
+
+        Map<String, Set<String>> dtoMap = new HashMap<>();
+        Arrays.stream(SystemPurposeAttributeType.values())
+            .forEach(x -> dtoMap.put(x.toString(), new LinkedHashSet<>()));
+
+        for (Product p : products) {
+            for (SystemPurposeAttributeType type : SystemPurposeAttributeType.values()) {
+                String purposeValue = p.getAttributeValue(type.toString());
+                Set<String> purposes = new LinkedHashSet<>();
+                if (purposeValue != null) {
+                    purposes = new LinkedHashSet<>(Arrays.asList(purposeValue.split("\\s*,\\s*")));
+                }
+                dtoMap.get(type.toString()).addAll(purposes);
+            }
+        }
+
+        SystemPurposeAttributesDTO dto = new SystemPurposeAttributesDTO();
+        dto.setOwner(translator.translate(owner, OwnerDTO.class));
+        dto.setSystemPurposeAttributes(dtoMap);
+        return dto;
     }
 
     /**
