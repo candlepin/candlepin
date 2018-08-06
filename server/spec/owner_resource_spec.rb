@@ -589,6 +589,22 @@ describe 'Owner Resource' do
     # output for owners, so we don't need to verify their presence.
   end
 
+  it 'accepts system purpose attributes' do
+    owner_key = random_string("owner")
+    @cp.create_owner(owner_key)
+
+    product = create_product(random_string("p1"), random_string("Product1"),
+      {
+        :owner => owner_key,
+        :attributes => {:usage => "Development", :role => "Server"}
+      }
+    )
+    create_pool_and_subscription(owner_key, product.id, 10, [], '', '', '', nil, nil, true)
+    res = @cp.get_owner_syspurpose(owner_key)
+    expect(res["owner"]["key"]).to eq(owner_key)
+    expect(res["systemPurposeAttributes"]["usage"]).to include("Development")
+    expect(res["systemPurposeAttributes"]["role"]).to include("Server")
+  end
 end
 
 describe 'Owner Resource Pool Filter Tests' do

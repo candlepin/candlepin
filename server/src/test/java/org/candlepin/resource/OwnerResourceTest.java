@@ -48,6 +48,7 @@ import org.candlepin.dto.api.v1.EntitlementDTO;
 import org.candlepin.dto.api.v1.ImportRecordDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.PoolDTO;
+import org.candlepin.dto.api.v1.SystemPurposeAttributesDTO;
 import org.candlepin.dto.api.v1.UeberCertificateDTO;
 import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
 import org.candlepin.model.CandlepinQuery;
@@ -60,11 +61,13 @@ import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Role;
+import org.candlepin.model.SystemPurposeAttributeType;
 import org.candlepin.model.UeberCertificate;
 import org.candlepin.model.UeberCertificateCurator;
 import org.candlepin.model.UeberCertificateGenerator;
@@ -104,6 +107,7 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -1686,6 +1690,51 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         UeberCertificateDTO result = resource.createUeberCertificate(principal, owner.getKey());
 
         assertEquals(expected, result);
+    }
+
+    @Test
+    public void testReturnSysPurposeValuesForOwner() throws Exception {
+        Owner owner = TestUtil.createOwner();
+        OwnerCurator oc = mock(OwnerCurator.class);
+        OwnerProductCurator opc = mock(OwnerProductCurator.class);
+
+        OwnerResource resource = new OwnerResource(oc, null, null, null, null, null, null, null, null, null,
+            null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+            null, null, opc, this.modelTranslator
+        );
+
+        when(oc.getByKey(eq(owner.getKey()))).thenReturn(owner);
+
+        CandlepinQuery mockQuery = mock(CandlepinQuery.class);
+        when(opc.getProductsByOwner(eq(owner))).thenReturn(mockQuery);
+
+        Product p1 = TestUtil.createProduct();
+        Product p2 = TestUtil.createProduct();
+        Product p3 = TestUtil.createProduct();
+
+        p1.setAttribute(SystemPurposeAttributeType.ADDONS.toString(), "hello, world");
+        p2.setAttribute(SystemPurposeAttributeType.ADDONS.toString(), "hello, earth");
+        p3.setAttribute(SystemPurposeAttributeType.ADDONS.toString(), "earth, world");
+
+        p1.setAttribute(SystemPurposeAttributeType.USAGE.toString(), "production");
+        p2.setAttribute(SystemPurposeAttributeType.USAGE.toString(), "production");
+        p3.setAttribute(SystemPurposeAttributeType.USAGE.toString(), "development");
+
+        List<Product> dummyProducts = new ArrayList<>(Arrays.asList(p1, p2, p3));
+        when(mockQuery.list()).thenReturn(dummyProducts);
+
+        SystemPurposeAttributesDTO result = resource.getSyspurpose(owner.getKey());
+
+        assertEquals(modelTranslator.translate(owner, OwnerDTO.class), result.getOwner());
+        Set<String> addons =
+            result.getSystemPurposeAttributes().get(SystemPurposeAttributeType.ADDONS.toString());
+        Set<String> expectedAddOns = new HashSet<>(Arrays.asList("hello", "earth", "world"));
+        assertEquals(expectedAddOns, addons);
+
+        Set<String> usage =
+            result.getSystemPurposeAttributes().get(SystemPurposeAttributeType.USAGE.toString());
+        Set<String> expectedUsage = new HashSet<>(Arrays.asList("production", "development"));
+        assertEquals(expectedUsage, usage);
     }
 
 }
