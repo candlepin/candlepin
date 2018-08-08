@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2017 Red Hat, Inc.
+ * Copyright (c) 2009 - 2018 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -47,6 +47,12 @@ import org.candlepin.dto.api.v1.ProductCertificateDTO;
 import org.candlepin.dto.api.v1.ProductCertificateTranslator;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.dto.api.v1.ProductTranslator;
+import org.candlepin.dto.api.v1.RoleDTO;
+import org.candlepin.dto.api.v1.RoleTranslator;
+import org.candlepin.dto.api.v1.SystemPurposeComplianceStatusDTO;
+import org.candlepin.dto.api.v1.SystemPurposeComplianceStatusTranslator;
+import org.candlepin.dto.api.v1.UeberCertificateDTO;
+import org.candlepin.dto.api.v1.UeberCertificateTranslator;
 import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
 import org.candlepin.dto.api.v1.UpstreamConsumerTranslator;
 import org.candlepin.dto.shim.ContentDTOTranslator;
@@ -79,6 +85,7 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.pinsetter.core.model.JobStatus;
+import org.candlepin.policy.SystemPurposeComplianceStatus;
 
 import com.google.inject.Inject;
 
@@ -141,6 +148,9 @@ public class StandardTranslator extends SimpleModelTranslator {
             new ProductTranslator(), Product.class, ProductDTO.class);
         this.registerTranslator(
             new ProductCertificateTranslator(), ProductCertificate.class, ProductCertificateDTO.class);
+        this.registerTranslator(
+            new SystemPurposeComplianceStatusTranslator(), SystemPurposeComplianceStatus.class,
+            SystemPurposeComplianceStatusDTO.class);
         this.registerTranslator(
             new UpstreamConsumerTranslator(), UpstreamConsumer.class, UpstreamConsumerDTO.class);
 

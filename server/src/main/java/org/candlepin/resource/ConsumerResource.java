@@ -53,6 +53,7 @@ import org.candlepin.dto.api.v1.GuestIdDTO;
 import org.candlepin.dto.api.v1.HypervisorIdDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.PoolQuantityDTO;
+import org.candlepin.dto.api.v1.SystemPurposeComplianceStatusDTO;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.Certificate;
@@ -93,6 +94,8 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.pinsetter.tasks.EntitleByProductsJob;
 import org.candlepin.pinsetter.tasks.EntitlerJob;
+import org.candlepin.policy.SystemPurposeComplianceRules;
+import org.candlepin.policy.SystemPurposeComplianceStatus;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.consumer.ConsumerRules;
@@ -207,6 +210,7 @@ public class ConsumerResource {
     private ActivationKeyCurator activationKeyCurator;
     private Entitler entitler;
     private ComplianceRules complianceRules;
+    private SystemPurposeComplianceRules systemPurposeComplianceRules;
     private DeletedConsumerCurator deletedConsumerCurator;
     private EnvironmentCurator environmentCurator;
     private DistributorVersionCurator distributorVersionCurator;
@@ -235,8 +239,8 @@ public class ConsumerResource {
         EventAdapter eventAdapter, UserServiceAdapter userService, PoolManager poolManager,
         ConsumerRules consumerRules, OwnerCurator ownerCurator,
         ActivationKeyCurator activationKeyCurator, Entitler entitler,
-        ComplianceRules complianceRules, DeletedConsumerCurator deletedConsumerCurator,
-        EnvironmentCurator environmentCurator,
+        ComplianceRules complianceRules, SystemPurposeComplianceRules systemPurposeComplianceRules,
+        DeletedConsumerCurator deletedConsumerCurator, EnvironmentCurator environmentCurator,
         DistributorVersionCurator distributorVersionCurator,
         Configuration config, ContentCurator contentCurator,
         CdnCurator cdnCurator, CalculatedAttributesUtil calculatedAttributesUtil,
@@ -269,6 +273,7 @@ public class ConsumerResource {
         this.activationKeyCurator = activationKeyCurator;
         this.entitler = entitler;
         this.complianceRules = complianceRules;
+        this.systemPurposeComplianceRules = systemPurposeComplianceRules;
         this.deletedConsumerCurator = deletedConsumerCurator;
         this.environmentCurator = environmentCurator;
         this.distributorVersionCurator = distributorVersionCurator;
@@ -844,6 +849,8 @@ public class ConsumerResource {
             // Don't allow complianceRules to update entitlementStatus, because we're about to perform
             // an update unconditionally.
             complianceRules.getStatus(consumerToCreate, null, false, false);
+            systemPurposeComplianceRules.getStatus(consumerToCreate, consumerToCreate.getEntitlements(),
+                null, false, false);
             consumerCurator.update(consumerToCreate);
 
             log.info("Consumer {} created in org {}",
@@ -1443,6 +1450,7 @@ public class ConsumerResource {
 
             // this should update compliance on toUpdate, but not call the curator
             complianceRules.getStatus(toUpdate, null, false, false);
+            systemPurposeComplianceRules.getStatus(toUpdate, toUpdate.getEntitlements(), null, false, false);
 
             Event event = eventBuilder.setEventData(toUpdate).buildEvent();
             sink.queueEvent(event);
@@ -2754,6 +2762,28 @@ public class ConsumerResource {
         }
 
         return this.complianceRules.getStatus(consumer, date);
+    }
+
+    @ApiOperation(notes = "Retrieves the System Purpose Compliance Status of a Consumer.", value =
+        "getSystemPurposeComplianceStatus")
+    @ApiResponses({ @ApiResponse(code = 404, message = "") })
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{consumer_uuid}/purpose_compliance")
+    @Transactional
+    public SystemPurposeComplianceStatusDTO getSystemPurposeComplianceStatus(
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid,
+        @ApiParam("Date to get compliance information for, default is now.")
+        @QueryParam("on_date") String onDate) {
+
+        SystemPurposeComplianceStatus status = null;
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(uuid);
+        Date date = ResourceDateParser.parseDateString(onDate);
+        date = date != null ? date : new Date();
+        List<Entitlement> entitlements = entitlementCurator.listByConsumerAndDate(consumer, date).list();
+        status = this.systemPurposeComplianceRules.getStatus(consumer, entitlements, null, true, true);
+
+        return this.translator.translate(status, SystemPurposeComplianceStatusDTO.class);
     }
 
     @ApiOperation(notes = "Retrieves a Compliance Status list for a list of Consumers",

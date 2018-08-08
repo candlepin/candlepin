@@ -70,6 +70,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.model.dto.Subscription;
+import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.js.activationkey.ActivationKeyRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
@@ -148,6 +149,7 @@ public class ConsumerResourceTest {
     @Mock private PoolManager mockPoolManager;
     @Mock private EntitlementCurator mockEntitlementCurator;
     @Mock private ComplianceRules mockComplianceRules;
+    @Mock private SystemPurposeComplianceRules mockSystemPurposeComplianceRules;
     @Mock private ServiceLevelValidator mockServiceLevelValidator;
     @Mock private ActivationKeyRules mockActivationKeyRules;
     @Mock private EventFactory eventFactory;
@@ -178,6 +180,45 @@ public class ConsumerResourceTest {
 
         testMigration = new GuestMigration(mockConsumerCurator);
         migrationProvider = Providers.of(testMigration);
+
+        consumerResource = new ConsumerResource(
+            mockConsumerCurator,
+            mockConsumerTypeCurator,
+            null,
+            mockSubscriptionServiceAdapter,
+            mockOwnerServiceAdapter,
+            mockEntitlementCurator,
+            mockIdentityCertServiceAdapter,
+            mockEntitlementCertServiceAdapter,
+            i18n,
+            mockSink,
+            eventFactory,
+            null,
+            null,
+            userServiceAdapter,
+            mockPoolManager,
+            null,
+            mockOwnerCurator,
+            mockActivationKeyCurator,
+            mockEntitler,
+            mockComplianceRules,
+            mockDeletedConsumerCurator,
+            null,
+            null,
+            config,
+            null,
+            mockCdnCurator,
+            null,
+            consumerBindUtil,
+            mockManifestManager,
+            mockContentAccessCertService,
+            factValidator,
+            new ConsumerTypeValidator(mockConsumerTypeCurator, i18n),
+            consumerEnricher,
+            migrationProvider,
+            translator);
+
+        mockedConsumerResource = Mockito.spy(consumerResource);
     }
 
     protected ConsumerType mockConsumerType(ConsumerType ctype) {

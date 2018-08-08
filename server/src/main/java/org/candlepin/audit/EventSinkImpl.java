@@ -23,6 +23,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Rules;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.dto.Subscription;
+import org.candlepin.policy.SystemPurposeComplianceStatus;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -269,6 +270,11 @@ public class EventSinkImpl implements EventSink {
 
     @Override
     public void emitCompliance(Consumer consumer, ComplianceStatus compliance) {
+        queueEvent(eventFactory.complianceCreated(consumer, compliance));
+    }
+
+    @Override
+    public void emitCompliance(Consumer consumer, SystemPurposeComplianceStatus compliance) {
         queueEvent(eventFactory.complianceCreated(consumer, compliance));
     }
 }

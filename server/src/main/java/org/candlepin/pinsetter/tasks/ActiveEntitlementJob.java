@@ -16,6 +16,7 @@ package org.candlepin.pinsetter.tasks;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 
 import com.google.inject.Inject;
@@ -35,11 +36,14 @@ public class ActiveEntitlementJob extends KingpinJob {
 
     private ConsumerCurator consumerCurator;
     private ComplianceRules complianceRules;
+    private SystemPurposeComplianceRules systemPurposeComplianceRules;
 
     @Inject
-    public ActiveEntitlementJob(ConsumerCurator consumerCurator, ComplianceRules complianceRules) {
+    public ActiveEntitlementJob(ConsumerCurator consumerCurator, ComplianceRules complianceRules,
+        SystemPurposeComplianceRules systemPurposeComplianceRules) {
         this.consumerCurator = consumerCurator;
         this.complianceRules = complianceRules;
+        this.systemPurposeComplianceRules = systemPurposeComplianceRules;
     }
 
     @Override
@@ -49,6 +53,7 @@ public class ActiveEntitlementJob extends KingpinJob {
         for (String id : ids) {
             Consumer c = consumerCurator.find(id);
             complianceRules.getStatus(c);
+            systemPurposeComplianceRules.getStatus(c, c.getEntitlements(), null, true, true);
         }
     }
 }
