@@ -971,6 +971,16 @@ class Candlepin
     get(query, params)
   end
 
+  def get_purpose_compliance(consumer_id=nil, on_date=nil)
+    consumer_id ||= @uuid
+    query = "/consumers/#{consumer_id}/purpose_compliance"
+
+    params = {}
+    params[:on_date] = on_date if on_date
+
+    get(query, params)
+  end
+
   def get_consumer_host(consumer_id=nil)
     consumer_id ||= @uuid
     get("/consumers/#{consumer_id}/host")
