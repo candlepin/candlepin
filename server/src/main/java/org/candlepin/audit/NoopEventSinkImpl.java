@@ -20,6 +20,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Rules;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.dto.manifest.v1.SubscriptionDTO;
+import org.candlepin.policy.SystemPurposeComplianceStatus;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 
 import org.slf4j.Logger;
@@ -110,6 +111,11 @@ public class NoopEventSinkImpl implements EventSink {
     @Override
     public void emitCompliance(Consumer consumer, ComplianceStatus compliance) {
         log.debug("emitCompliance: ComplianceStatus: {}", compliance);
+    }
+
+    @Override
+    public void emitCompliance(Consumer consumer, SystemPurposeComplianceStatus compliance) {
+        log.debug("emitCompliance: SystemPurposeComplianceStatus: {}", compliance);
     }
 
     @Override
