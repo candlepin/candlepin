@@ -18,6 +18,8 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.PoolQuantity;
+import org.candlepin.policy.SystemPurposeComplianceRules;
+import org.candlepin.policy.SystemPurposeComplianceStatus;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 
@@ -33,10 +35,15 @@ public class ComplianceOp implements BindOperation {
 
     ComplianceRules complianceRules;
     ComplianceStatus status;
+    SystemPurposeComplianceRules systemPurposeComplianceRules;
+    SystemPurposeComplianceStatus systemPurposeComplianceStatus;
+
 
     @Inject
-    public ComplianceOp(ComplianceRules rules) {
+    public ComplianceOp(ComplianceRules rules,
+        SystemPurposeComplianceRules systemPurposeComplianceRules) {
         this.complianceRules = rules;
+        this.systemPurposeComplianceRules = systemPurposeComplianceRules;
     }
 
     /**
@@ -61,6 +68,14 @@ public class ComplianceOp implements BindOperation {
             false,
             false,
             false);
+
+        systemPurposeComplianceStatus = systemPurposeComplianceRules.getStatus(
+            consumer,
+            consumer.getEntitlements(),
+            entitlementMap.values(),
+            false,
+            false);
+
         for (Map.Entry<String, Entitlement> entry: entitlementMap.entrySet()) {
             PoolQuantity pq = poolQuantityMap.get(entry.getKey());
             entry.getValue().setPool(null);
@@ -81,6 +96,7 @@ public class ComplianceOp implements BindOperation {
 
         if (!ctype.isManifest()) {
             complianceRules.applyStatus(consumer, status, false);
+            systemPurposeComplianceRules.applyStatus(consumer, systemPurposeComplianceStatus, false);
         }
 
         return true;

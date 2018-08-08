@@ -58,6 +58,7 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.pinsetter.core.PinsetterKernel;
 import org.candlepin.policy.EntitlementRefusedException;
+import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.activationkey.ActivationKeyRules;
@@ -130,6 +131,7 @@ public class CandlepinPoolManager implements PoolManager {
     private EntitlementCertificateCurator entitlementCertificateCurator;
     private EntitlementCertificateGenerator ecGenerator;
     private ComplianceRules complianceRules;
+    private SystemPurposeComplianceRules systemPurposeComplianceRules;
     private ProductCurator productCurator;
     private ProductManager productManager;
     private AutobindRules autobindRules;
@@ -163,6 +165,7 @@ public class CandlepinPoolManager implements PoolManager {
         EntitlementCertificateCurator entitlementCertCurator,
         EntitlementCertificateGenerator ecGenerator,
         ComplianceRules complianceRules,
+        SystemPurposeComplianceRules systemPurposeComplianceRules,
         AutobindRules autobindRules,
         ActivationKeyRules activationKeyRules,
         ProductCurator productCurator,
@@ -189,6 +192,7 @@ public class CandlepinPoolManager implements PoolManager {
         this.entitlementCertificateCurator = entitlementCertCurator;
         this.ecGenerator = ecGenerator;
         this.complianceRules = complianceRules;
+        this.systemPurposeComplianceRules = systemPurposeComplianceRules;
         this.productCurator = productCurator;
         this.autobindRules = autobindRules;
         this.activationKeyRules = activationKeyRules;
@@ -1640,6 +1644,8 @@ public class CandlepinPoolManager implements PoolManager {
          * of the consumer type.
          */
         complianceRules.getStatus(consumer, null, false, false);
+        // Note: a quantity change should *not* need a system purpose compliance recalculation. if that is
+        // not true any more, we should update that here.
         consumerCurator.update(consumer);
         poolCurator.flush();
 
@@ -1895,6 +1901,7 @@ public class CandlepinPoolManager implements PoolManager {
             }
 
             complianceRules.getStatus(consumer);
+            systemPurposeComplianceRules.getStatus(consumer, consumer.getEntitlements(), null, true, true);
         }
 
         consumerCurator.flush();
@@ -2294,6 +2301,8 @@ public class CandlepinPoolManager implements PoolManager {
                 for (List<String> subList : Lists.partition(consumers, 1000)) {
                     for (Consumer consumer : this.consumerCurator.getConsumers(subList).list()) {
                         this.complianceRules.getStatus(consumer);
+                        this.systemPurposeComplianceRules.getStatus(consumer, consumer.getEntitlements(),
+                            null, true, true);
                         this.consumerCurator.detach(consumer);
                     }
                     this.consumerCurator.flush();
