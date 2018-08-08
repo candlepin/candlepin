@@ -65,6 +65,8 @@ import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.dto.api.v1.ProductTranslator;
 import org.candlepin.dto.api.v1.RoleDTO;
 import org.candlepin.dto.api.v1.RoleTranslator;
+import org.candlepin.dto.api.v1.SystemPurposeComplianceStatusDTO;
+import org.candlepin.dto.api.v1.SystemPurposeComplianceStatusTranslator;
 import org.candlepin.dto.api.v1.UeberCertificateDTO;
 import org.candlepin.dto.api.v1.UeberCertificateTranslator;
 import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
@@ -110,6 +112,7 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.pinsetter.core.model.JobStatus;
+import org.candlepin.policy.SystemPurposeComplianceStatus;
 import org.candlepin.policy.js.compliance.ComplianceReason;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 
@@ -192,6 +195,9 @@ public class StandardTranslator extends SimpleModelTranslator {
             new ProductCertificateTranslator(), ProductCertificate.class, ProductCertificateDTO.class);
         this.registerTranslator(
             new RoleTranslator(), Role.class, RoleDTO.class);
+        this.registerTranslator(
+            new SystemPurposeComplianceStatusTranslator(), SystemPurposeComplianceStatus.class,
+            SystemPurposeComplianceStatusDTO.class);
         this.registerTranslator(
             new UeberCertificateTranslator(), UeberCertificate.class, UeberCertificateDTO.class);
         this.registerTranslator(
