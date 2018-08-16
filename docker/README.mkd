@@ -29,13 +29,8 @@ in order to stop and clean up existing running containers, as well as invoking t
 options.  This script will mount your current development checkout of candlepin (this repo) into `/candlepin-dev/`
 and bring up a database at hostname `db` on the running container
 
-NOTE: the oracle image has SELINUX issues. In order to overcome these, please install the included policy via
-```bash
-sudo semodule -i oraclecontainer.pp
-```
-
 By default the `test` script will run candlepin against a postgres database.  You can change this behavior with the
-`-o`, `-m`, or `-p` flags which will use oracle, mysql, or postgres respectively. To change the default permanently,
+`-m` or `-p` flags which will use mysql or postgres respectively. To change the default permanently,
 run the `switch-defaults` script.
 
 To run multiple candlepin containers simultaneously, give each invocation of `test` a unique name with the `-n` flag.
@@ -46,8 +41,8 @@ Some useful invocations of the `test` command:
 # run only unit tests
 ./test -c '/usr/bin/cp-test -u'
 
-# screw tests, give me a shell and an oracle db
-./test -o -c '/bin/bash'
+# screw tests, give me a shell and a mysql db
+./test -m -c '/bin/bash'
 
 # run mysql and postgres tests at the same time
 ./test -m -n "my_mysql_tests"
@@ -72,5 +67,3 @@ be able to use an off the shelf solution for the databases. The advantages of th
   * Only changes to the `docker/candlepin-base` or candlepin updates in brew (for the `docker/candlepin-rhel*` folders) would require a rebuild
   * This saves tons of space on our build machines.
 
-We will somewhat have to maintain the oracle DB as oracle does not allow any versions of oracle to be published publicly in a container.
-We are, however, using their public scripts to build the container.

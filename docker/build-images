@@ -3,7 +3,6 @@
 unset CDPATH
 SCRIPT_NAME=$( basename "$0" )
 SCRIPT_HOME=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-ORACLE_BINARY='oracle-xe-11.2.0-1.0.x86_64.rpm.zip'
 CURRENT_DIR=$PWD
 
 # defaults
@@ -66,17 +65,6 @@ get_image_names() {
   python -c 'import yaml,sys;y=yaml.safe_load(sys.stdin); print " ".join(y["services"].keys())' < $SCRIPT_HOME/docker-compose-build.yml
 }
 
-# get oracle binary
-update_oracle_binary() {
-  if [[ "${IMAGE:-$(get_image_names)}" =~ "oracle" ]]; then
-    cd $SCRIPT_HOME
-    if ( ! sha1sum -c oracle/oracle-xe.zip.sha1 ); then
-      wget -O $SCRIPT_HOME/oracle/$ORACLE_BINARY http://auto-services.usersys.redhat.com/rhsm/$ORACLE_BINARY
-    fi
-    cd -
-  fi
-}
-
 # tags a docker image with a version
 tag_images() {
   TAG_IMAGES=${IMAGE:-$(get_image_names)}
@@ -87,7 +75,6 @@ tag_images() {
 }
 
 echo "Building images..."
-update_oracle_binary
 cd $SCRIPT_HOME
 docker-compose -f docker-compose-build.yml build $BUILD_ARGS $IMAGE && tag_images
 evalrc $? "Build not successful."
