@@ -23,6 +23,7 @@ import org.candlepin.policy.js.compliance.ComplianceStatus;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -92,15 +93,15 @@ public class ComplianceStatusTranslator implements ObjectTranslator<ComplianceSt
             Map<String, Set<Entitlement>> partialStacks = source.getPartialStacks();
 
             if (compliantProducts != null) {
-                compliantProducts.values().parallelStream().forEach(entitlements::addAll);
+                compliantProducts.values().forEach(entitlements::addAll);
             }
 
             if (pcProducts != null) {
-                pcProducts.values().parallelStream().forEach(entitlements::addAll);
+                pcProducts.values().forEach(entitlements::addAll);
             }
 
             if (partialStacks != null) {
-                partialStacks.values().parallelStream().forEach(entitlements::addAll);
+                partialStacks.values().forEach(entitlements::addAll);
             }
 
             // TODO: Use the bulk translation once available
@@ -121,8 +122,8 @@ public class ComplianceStatusTranslator implements ObjectTranslator<ComplianceSt
             // TODO: Convert this over to the bulk DTO translation once that's available
             Set<ComplianceReason> reasons = source.getReasons();
             if (reasons != null) {
-                destination.setReasons(reasons.parallelStream()
-                    .filter(e -> e != null)
+                destination.setReasons(reasons.stream()
+                    .filter(Objects::nonNull)
                     .map(e -> translator.translate(e, ComplianceReasonDTO.class))
                     .collect(Collectors.toSet()));
             }
@@ -160,8 +161,8 @@ public class ComplianceStatusTranslator implements ObjectTranslator<ComplianceSt
 
             for (Map.Entry<String, Set<Entitlement>> entry : sourceMap.entrySet()) {
                 if (entry.getValue() != null) {
-                    output.put(entry.getKey(), entry.getValue().parallelStream()
-                        .filter(e -> e != null)
+                    output.put(entry.getKey(), entry.getValue().stream()
+                        .filter(Objects::nonNull)
                         .map(e -> dtos.get(e.getId()))
                         .collect(Collectors.toSet()));
                 }
