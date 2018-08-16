@@ -1382,6 +1382,12 @@ public class ConsumerResource {
             log.info("Updating environment to: {}", environmentId);
             toUpdate.setEnvironment(e);
 
+            // reset content access cert
+            Owner owner = ownerCurator.findOwnerById(toUpdate.getOwnerId());
+            if (ContentAccessCertServiceAdapter.ORG_ENV_ACCESS_MODE.equals(owner.getContentAccessMode())) {
+                toUpdate.setContentAccessCert(null);
+                contentAccessCertService.removeContentAccessCert(toUpdate);
+            }
             // lazily regenerate certs, so the client can still work
             poolManager.regenerateCertificatesOf(toUpdate, true);
             changesMade = true;
