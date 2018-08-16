@@ -39,6 +39,7 @@ import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.ConsumerInstalledProductDTO;
 import org.candlepin.dto.api.v1.EnvironmentDTO;
 import org.candlepin.dto.api.v1.GuestIdDTO;
+import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCapability;
 import org.candlepin.model.ConsumerCurator;
@@ -145,7 +146,7 @@ public class ConsumerResourceUpdateTest {
         this.resource = new ConsumerResource(this.consumerCurator,
             this.consumerTypeCurator, null, this.subscriptionService, this.ownerService, null,
             this.idCertService, null, this.i18n, this.sink, this.eventFactory, null, null,
-            this.userService, poolManager, null, null,
+            this.userService, poolManager, null, ownerCurator,
             this.activationKeyCurator, this.entitler, this.complianceRules,
             this.deletedConsumerCurator, this.environmentCurator, null,
             config, null, null, null, this.consumerBindUtil,
@@ -764,9 +765,14 @@ public class ConsumerResourceUpdateTest {
         Consumer existing = getFakeConsumer();
 
         ConsumerDTO updated = new ConsumerDTO();
+        Owner owner = createOwner();
+        OwnerDTO ownerDTO = new OwnerDTO();
+        ownerDTO.setId(owner.getId());
         updated.setEnvironment(translator.translate(changedEnvironment, EnvironmentDTO.class));
+        updated.setOwner(new OwnerDTO());
 
         when(environmentCurator.find(changedEnvironment.getId())).thenReturn(changedEnvironment);
+        when(ownerCurator.findOwnerById(eq(owner.getId()))).thenReturn(owner);
 
         resource.updateConsumer(existing.getUuid(), updated, principal);
 
