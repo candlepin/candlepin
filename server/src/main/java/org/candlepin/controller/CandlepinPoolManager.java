@@ -31,7 +31,6 @@ import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
-import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
@@ -1656,21 +1655,10 @@ public class CandlepinPoolManager implements PoolManager {
         // we might have changed the bonus pool quantities, revoke ents if needed.
         checkBonusPoolQuantities(consumer.getOwnerId(), entMap);
 
-        // if shared ents, update shared pool quantity
-        if (ctype != null && ctype.isType(ConsumerTypeEnum.SHARE)) {
-            pool.setShared(pool.getShared() + change);
-            List<Pool> sharedPools = poolCurator.listBySourceEntitlement(entitlement).list();
-
-            for (Pool p : sharedPools) {
-                setPoolQuantity(p, entitlement.getQuantity().longValue());
-            }
-        }
-        else {
-            this.entitlementCurator.markEntitlementsDirty(Arrays.asList(entitlement.getId()));
-        }
+        this.entitlementCurator.markEntitlementsDirty(Arrays.asList(entitlement.getId()));
 
         /*
-         * If the consumer is not a distributor or share, check consumer's new compliance
+         * If the consumer is not a distributor, check consumer's new compliance
          * status and save. the getStatus call does that internally.
          * all consumer's entitlement count are updated though, so we need to update irrespective
          * of the consumer type.
@@ -1877,13 +1865,8 @@ public class CandlepinPoolManager implements PoolManager {
             Consumer consumer = ent.getConsumer();
             ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
 
-            if (ctype != null) {
-                if (ctype.isManifest()) {
-                    pool.setExported(pool.getExported() - entQuantity);
-                }
-                else if (ctype.isType(ConsumerTypeEnum.SHARE)) {
-                    pool.setShared(pool.getShared() - entQuantity);
-                }
+            if (ctype != null  && ctype.isManifest()) {
+                pool.setExported(pool.getExported() - entQuantity);
             }
 
             consumer.setEntitlementCount(consumer.getEntitlementCount() - entQuantity);
@@ -2575,7 +2558,6 @@ public class CandlepinPoolManager implements PoolManager {
     public void recalculatePoolQuantitiesForOwner(Owner owner) {
         poolCurator.calculateConsumedForOwnersPools(owner);
         poolCurator.calculateExportedForOwnersPools(owner);
-        poolCurator.calculateSharedForOwnerPools(owner);
     }
 
     /**
@@ -2599,7 +2581,6 @@ public class CandlepinPoolManager implements PoolManager {
         return pool != null &&
             pool.getSourceSubscription() != null &&
             !pool.getType().isDerivedType() &&
-            !pool.isCreatedByShare() &&
             (pool.getUpstreamPoolId() != null || !this.config.getBoolean(ConfigProperties.STANDALONE, true));
     }
 }

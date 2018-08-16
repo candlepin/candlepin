@@ -107,7 +107,6 @@ public class ConsumerTranslator extends TimestampedEntityTranslator<Consumer, Co
             .setCanActivate(source.isCanActivate())
             .setContentTags(source.getContentTags())
             .setAutoheal(source.isAutoheal())
-            .setRecipientOwnerKey(source.getRecipientOwnerKey())
             .setAnnotations(source.getAnnotations())
             .setContentAccessMode(source.getContentAccessMode());
 

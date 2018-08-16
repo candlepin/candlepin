@@ -105,7 +105,6 @@ public class ConsumerDTOTest extends AbstractDTOTest<ConsumerDTO> {
         this.values.put("HypervisorId", hypervisorIdDTOTest.getPopulatedDTOInstance());
         this.values.put("ContentTags", contentTags);
         this.values.put("Autoheal", Boolean.TRUE);
-        this.values.put("RecipientOwnerKey", "test-recipient-owner");
         this.values.put("Annotations", "test-annotations");
         this.values.put("ContentAccessMode", "test-content-access-mode");
         this.values.put("Type", type);

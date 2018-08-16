@@ -73,8 +73,6 @@ public class PoolDTOTest extends AbstractDTOTest<PoolDTO> {
         this.values.put("Type", Pool.PoolType.NORMAL.toString());
         this.values.put("Owner", owner);
         this.values.put("ActiveSubscription", true);
-        this.values.put("CreatedByShare", true);
-        this.values.put("HasSharedAncestor", true);
         this.values.put("SourceEntitlement", entitlement);
         this.values.put("Quantity", 1L);
         this.values.put("StartDate", new Date());
@@ -91,7 +89,6 @@ public class PoolDTOTest extends AbstractDTOTest<PoolDTO> {
         this.values.put("OrderNumber", "2993");
         this.values.put("Consumed", 5L);
         this.values.put("Exported", 4L);
-        this.values.put("Shared", 3L);
 
         Set<BrandingDTO> brandingSet = new HashSet<>();
         brandingSet.add(branding);

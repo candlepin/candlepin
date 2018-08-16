@@ -44,7 +44,6 @@ public class PoolDTOTest extends AbstractDTOTest<PoolDTO> {
 
         this.values = new HashMap<>();
         this.values.put("Id", "test-id");
-        this.values.put("HasSharedAncestor", true);
         this.values.put("Quantity", 1L);
         this.values.put("StartDate", new Date());
         this.values.put("EndDate", new Date());

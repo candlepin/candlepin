@@ -601,10 +601,6 @@ public class ConsumerResource {
             entity.setContentAccessMode(dto.getContentAccessMode());
         }
 
-        if (dto.getRecipientOwnerKey() != null) {
-            entity.setRecipientOwnerKey(dto.getRecipientOwnerKey());
-        }
-
         if (dto.getAnnotations() != null) {
             entity.setAnnotations(dto.getAnnotations());
         }
@@ -751,24 +747,7 @@ public class ConsumerResource {
 
         validateViaConsumerType(consumer, type, keys, owner, userName, principal);
 
-        if (type.isType(ConsumerTypeEnum.SHARE)) {
-            // Share consumers do not need identity certificates so refuse to create them.
-            identityCertCreation = false;
-            validateShareConsumer(consumer, principal, keys);
-            // if there exists a share consumer between the two orgs, return it.
-            Consumer existingShareConsumer = consumerCurator.getSharingConsumer(owner, consumer
-                .getRecipientOwnerKey());
-            if (existingShareConsumer != null) {
-                return existingShareConsumer;
-            }
-            consumer.setAutoheal(false);
-        }
-        else {
-            consumer.setAutoheal(true); // this is the default
-            if (StringUtils.isNotEmpty(consumer.getRecipientOwnerKey())) {
-                throw new BadRequestException(i18n.tr("Only share consumers can specify recipient owners"));
-            }
-        }
+        consumer.setAutoheal(true); // this is the default
 
         if (consumer.getServiceLevel() == null) {
             consumer.setServiceLevel("");
@@ -778,8 +757,7 @@ public class ConsumerResource {
         this.sanitizeConsumerFacts(consumer);
 
         // If no service level was specified, and the owner has a default set, use it:
-        if (consumer.getServiceLevel().equals("") && owner.getDefaultServiceLevel() != null &&
-            !type.isType(ConsumerTypeEnum.SHARE)) {
+        if (consumer.getServiceLevel().equals("") && owner.getDefaultServiceLevel() != null) {
             consumer.setServiceLevel(owner.getDefaultServiceLevel());
         }
 
@@ -788,9 +766,7 @@ public class ConsumerResource {
         populateEntity(consumerToCreate, consumer);
         consumerToCreate.setType(type);
 
-        if (!type.isType(ConsumerTypeEnum.SHARE)) {
-            consumerToCreate.setCanActivate(subAdapter.canActivateSubscription(consumerToCreate));
-        }
+        consumerToCreate.setCanActivate(subAdapter.canActivateSubscription(consumerToCreate));
 
         HypervisorId hvsrId = consumerToCreate.getHypervisorId();
         if (hvsrId != null && hvsrId.getHypervisorId() != null && !hvsrId.getHypervisorId().isEmpty()) {
@@ -845,88 +821,6 @@ public class ConsumerResource {
         catch (Exception e) {
             log.error("Problem creating unit:", e);
             throw new BadRequestException(i18n.tr("Problem creating unit {0}", consumer));
-        }
-    }
-
-    /**
-     * Validate any updates performed on a share consumer
-     * @param oldShare the consumer being updated
-     * @param newShare the consumer posted to the resource method
-     * @param principal the principal performing the operation
-     * @throws BadRequestException if any validations fail
-     */
-    private void validateShareConsumerUpdate(Consumer oldShare, ConsumerDTO newShare, Principal principal)
-        throws BadRequestException {
-        String oldRecipient = oldShare.getRecipientOwnerKey();
-        String newRecipient = newShare.getRecipientOwnerKey();
-
-        if (oldRecipient == null) {
-            throw new BadRequestException(
-                i18n.tr("A consumer cannot be converted to a share type once it has been created"));
-        }
-
-        if (newRecipient == null) {
-            throw new BadRequestException(
-                i18n.tr("A share consumer cannot be converted to a non share type once it has been created"));
-        }
-
-        if (!oldRecipient.equals(newRecipient)) {
-            throw new BadRequestException(
-                i18n.tr("The share recipient cannot be modified once the share has been created"));
-        }
-        validateShareConsumer(newShare, principal, Collections.<ActivationKey>emptyList());
-    }
-    /**
-     * Ensure that certain fields remain unset when creating a share consumer.
-     * @param consumer the consumer to validate
-     * @param principal the principal performing the operation
-     * @param keys any provided activation keys
-     * @throws BadRequestException if any validations fail
-     */
-    private void validateShareConsumer(ConsumerDTO consumer, Principal principal, List<ActivationKey> keys)
-        throws BadRequestException {
-        if (keys.size() > 0) {
-            throw new BadRequestException(
-                i18n.tr("A unit type of \"share\" cannot be used with activation keys"));
-        }
-        if (StringUtils.isNotBlank(consumer.getServiceLevel())) {
-            throw new BadRequestException(i18n.tr("A unit type of \"share\" cannot have a service level"));
-        }
-        if (StringUtils.isNotBlank(consumer.getReleaseVersion())) {
-            throw new BadRequestException(i18n.tr("A unit type of \"share\" cannot have a release version"));
-        }
-        if (CollectionUtils.isNotEmpty(consumer.getInstalledProducts())) {
-            throw new BadRequestException(i18n.tr("A unit type of \"share\" cannot have installed products"));
-        }
-        if (StringUtils.isNotBlank(consumer.getContentAccessMode())) {
-            throw new BadRequestException(
-                i18n.tr("A unit type of \"share\" cannot have a content access mode"));
-        }
-        if (consumer.getGuestIds() != null && !consumer.getGuestIds().isEmpty()) {
-            throw new BadRequestException(i18n.tr("A unit type of \"share\" cannot have guest IDs"));
-        }
-        if (consumer.getHypervisorId() != null) {
-            throw new BadRequestException(i18n.tr("A unit type of \"share\" cannot have a hypervisor ID"));
-        }
-        if (consumer.getRecipientOwnerKey() == null) {
-            throw new BadRequestException(
-                i18n.tr("A unit type of \"share\" must specify a recipient org key"));
-        }
-        if (consumer.isGuest()) {
-            throw new BadRequestException(i18n.tr("A unit type of \"share\" cannot be a virtual guest"));
-        }
-
-        String recipient = consumer.getRecipientOwnerKey();
-        Owner recipientOwner = ownerCurator.getByKey(recipient);
-        if (recipientOwner == null) {
-            throw new NotFoundException(i18n.tr("owner with key: {0} was not found.", recipient));
-        }
-
-        // Check permissions for current principal on the recipient owner
-        if (!principal.canAccess(recipientOwner, SubResource.ENTITLEMENTS, Access.CREATE)) {
-            log.warn("User {} does not have access to create shares to org {}", principal
-                .getPrincipalName(), recipient);
-            throw new NotFoundException(i18n.tr("owner with key: {0} was not found.", recipient));
         }
     }
 
@@ -1284,10 +1178,6 @@ public class ConsumerResource {
         this.sanitizeConsumerFacts(dto);
 
         ConsumerType toUpdateType = this.consumerTypeCurator.getConsumerType(toUpdate);
-
-        if (toUpdateType.isType(ConsumerTypeEnum.SHARE)) {
-            validateShareConsumerUpdate(toUpdate, dto, principal);
-        }
 
         GuestMigration guestMigration = migrationProvider.get();
         guestMigration.buildMigrationManifest(dto, toUpdate);
@@ -1716,11 +1606,6 @@ public class ConsumerResource {
         sink.queueEvent(event);
     }
 
-    private void logShareConsumerRequestWarning(String api, Consumer consumer) {
-        log.warn("skipping {} request for share consumer {} of org {} and of recipient org {}",
-            api, consumer.getUuid(), consumer.getOwnerId(), consumer.getRecipientOwnerKey());
-    }
-
     @ApiOperation(notes = "Retrieves a list of Entitlement Certificates for the Consumer",
         value = "getEntitlementCertificates")
     @ApiResponses({ @ApiResponse(code = 404, message = "") })
@@ -1735,11 +1620,6 @@ public class ConsumerResource {
         log.debug("Getting client certificates for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
-
-        if (ctype.isType(ConsumerTypeEnum.SHARE)) {
-            logShareConsumerRequestWarning("cert fetch", consumer);
-            return new ArrayList<>();
-        }
 
         revokeOnGuestMigration(consumer);
         poolManager.regenerateDirtyEntitlements(consumer);
@@ -1786,11 +1666,6 @@ public class ConsumerResource {
         log.debug("Getting content access certificate for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
-
-        if (ctype.isType(ConsumerTypeEnum.SHARE)) {
-            throw new BadRequestException(
-                i18n.tr("Content access body can not be requested for a share consumer"));
-        }
 
         Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
         String cam = owner.getContentAccessMode();
@@ -1844,11 +1719,6 @@ public class ConsumerResource {
 
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
-
-        if (ctype.isType(ConsumerTypeEnum.SHARE)) {
-            logShareConsumerRequestWarning("cert export", consumer);
-            return null;
-        }
 
         revokeOnGuestMigration(consumer);
         Set<Long> serialSet = this.extractSerials(serials);
@@ -1914,11 +1784,6 @@ public class ConsumerResource {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
 
-        if (ctype.isType(ConsumerTypeEnum.SHARE)) {
-            logShareConsumerRequestWarning("cert serial fetch", consumer);
-            return new ArrayList<>();
-        }
-
         revokeOnGuestMigration(consumer);
         poolManager.regenerateDirtyEntitlements(consumer);
 
@@ -1949,10 +1814,6 @@ public class ConsumerResource {
         short parameters = 0;
 
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
-
-        if (ctype.isType(ConsumerTypeEnum.SHARE) && StringUtils.isBlank(poolIdString)) {
-            throw new BadRequestException(i18n.tr("Share consumers must be bound to a specific pool"));
-        }
 
         if (poolIdString != null) {
             parameters++;
@@ -2029,8 +1890,7 @@ public class ConsumerResource {
             // I hate double negatives, but if they have accepted all
             // terms, we want comeToTerms to be true.
             long subTermsStart = System.currentTimeMillis();
-            if (!ctype.isType(ConsumerTypeEnum.SHARE) &&
-                subAdapter.hasUnacceptedSubscriptionTerms(owner)) {
+            if (subAdapter.hasUnacceptedSubscriptionTerms(owner)) {
 
                 return Response.serverError().build();
             }
@@ -2376,11 +2236,6 @@ public class ConsumerResource {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
 
-        if (ctype.isType(ConsumerTypeEnum.SHARE)) {
-            logShareConsumerRequestWarning("cert regen", consumer);
-            return;
-        }
-
         if (entitlementId != null) {
             Entitlement e = verifyAndLookupEntitlement(entitlementId);
             poolManager.regenerateCertificatesOf(e, lazyRegen);
@@ -2424,10 +2279,6 @@ public class ConsumerResource {
 
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
-
-        if (ctype.isType(ConsumerTypeEnum.SHARE)) {
-            throw new BadRequestException(i18n.tr("Can not export manifest of a share consumer"));
-        }
 
         try {
             File archive = manifestManager.generateManifest(consumerUuid, cdnLabel, webAppPrefix, apiUrl,
@@ -2484,10 +2335,6 @@ public class ConsumerResource {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
 
-        if (ctype.isType(ConsumerTypeEnum.SHARE)) {
-            throw new BadRequestException(i18n.tr("Can not export manifest of a share consumer"));
-        }
-
         Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
 
         return manifestManager.generateManifestAsync(consumerUuid, owner, cdnLabel, webAppPrefix,
@@ -2533,9 +2380,6 @@ public class ConsumerResource {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
 
-        if (ctype.isType(ConsumerTypeEnum.SHARE)) {
-            throw new BadRequestException(i18n.tr("Can not export manifest of a share consumer"));
-        }
         // *******************************************************************************
         // NOTE: If changing the path or parameters of this end point, be sure to update
         // the HREF generation in ConsumerResource.buildAsyncDownloadManifestHref.
@@ -2589,12 +2433,7 @@ public class ConsumerResource {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(uuid);
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
 
-        if (ctype.isType(ConsumerTypeEnum.SHARE)) {
-            logShareConsumerRequestWarning("regenerate identity certificate", consumer);
-        }
-        else {
-            consumer = regenerateIdentityCertificate(consumer);
-        }
+        consumer = regenerateIdentityCertificate(consumer);
         return translator.translate(consumer, ConsumerDTO.class);
     }
 
@@ -2740,13 +2579,7 @@ public class ConsumerResource {
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
 
         Date date = ResourceDateParser.parseDateString(onDate);
-        if (ctype.isType(ConsumerTypeEnum.SHARE)) {
-            logShareConsumerRequestWarning("fetch compliance", consumer);
-            status = new ComplianceStatus(date);
-        }
-        else {
-            status = this.complianceRules.getStatus(consumer, date);
-        }
+        status = this.complianceRules.getStatus(consumer, date);
 
         return this.translator.translate(status, ComplianceStatusDTO.class);
     }
@@ -2767,13 +2600,7 @@ public class ConsumerResource {
                 ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
                 ComplianceStatus status;
 
-                if (ctype.isType(ConsumerTypeEnum.SHARE)) {
-                    logShareConsumerRequestWarning("fetch compliance", consumer);
-                    status = new ComplianceStatus(null);
-                }
-                else {
-                    status = complianceRules.getStatus(consumer, null);
-                }
+                status = complianceRules.getStatus(consumer, null);
 
                 results.put(consumer.getUuid(), this.translator.translate(status, ComplianceStatusDTO.class));
             }

@@ -1,4 +1,4 @@
-// Version: 5.27
+// Version: 5.28
 
 /*
  * Default Candlepin rule set.
@@ -336,11 +336,6 @@ function get_pool_priority(pool, consumer) {
     // better still if host_specific
     if (pool.getAttribute(REQUIRES_HOST_ATTRIBUTE) !== null) {
         priority += 150;
-    }
-
-    // Decrease the priority of shared pools slightly so that non-shared pools will get consumed first.
-    if (pool.hasSharedAncestor) {
-        priority -= 10;
     }
 
     /*

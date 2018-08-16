@@ -227,14 +227,6 @@ public class EntitlementImporter {
                 poolEntity.setActiveSubscription(poolDTO.isActiveSubscription());
             }
 
-            if (poolDTO.isCreatedByShare() != null) {
-                poolEntity.setCreatedByShare(poolDTO.isCreatedByShare());
-            }
-
-            if (poolDTO.hasSharedAncestor() != null) {
-                poolEntity.setHasSharedAncestor(poolDTO.hasSharedAncestor());
-            }
-
             if (poolDTO.getRestrictedToUsername() != null) {
                 poolEntity.setRestrictedToUsername(poolDTO.getRestrictedToUsername());
             }
@@ -245,10 +237,6 @@ public class EntitlementImporter {
 
             if (poolDTO.getExported() != null) {
                 poolEntity.setExported(poolDTO.getExported());
-            }
-
-            if (poolDTO.getShared() != null) {
-                poolEntity.setShared(poolDTO.getShared());
             }
 
             if (poolDTO.getStackId() != null && poolDTO.getSourceStackId() != null) {

@@ -95,7 +95,6 @@ class Candlepin
     consumer[:created] = created_date if created_date
     consumer[:lastCheckin] = last_checkin_date if last_checkin_date
     consumer[:annotations] = annotations if annotations
-    consumer[:recipientOwnerKey] = recipient_owner_key if recipient_owner_key
 
     #note: ent count and id_cert are added to demonstrate erroneous input
     consumer[:entitlementCount] = entitlement_count if entitlement_count
@@ -188,7 +187,6 @@ class Candlepin
     consumer[:capabilities] = params[:capabilities].collect { |name| {'name' => name} } if params[:capabilities]
     consumer[:hypervisorId] = {:hypervisorId => params[:hypervisorId]} if params[:hypervisorId]
     consumer['contentAccessMode'] = params['contentAccessMode'] if params.key?('contentAccessMode')
-    consumer['recipientOwnerKey'] = params[':recipientOwnerKey'] if params.key?(':recipientOwnerKey')
     consumer[:environment] = params[:environment] if params.key?(:environment)
 
     path = get_path("consumers")

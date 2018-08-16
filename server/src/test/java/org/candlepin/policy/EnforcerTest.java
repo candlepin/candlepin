@@ -14,12 +14,9 @@
  */
 package org.candlepin.policy;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
@@ -38,7 +35,6 @@ import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.model.ProductShareCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunner;
@@ -88,7 +84,6 @@ public class EnforcerTest extends DatabaseTestFixture {
     @Mock private OwnerCurator mockOwnerCurator;
     @Mock private OwnerProductCurator mockOwnerProductCurator;
     @Mock private EnvironmentCurator mockEnvironmentCurator;
-    @Mock private ProductShareCurator mockProductShareCurator;
     @Mock private ProductManager mockProductManager;
     @Mock private EventSink mockEventSink;
     @Mock private EventFactory mockEventFactory;
@@ -134,7 +129,7 @@ public class EnforcerTest extends DatabaseTestFixture {
             new DateSourceForTesting(2010, 1, 1), jsRules, i18n, config, consumerCurator, consumerTypeCurator,
             mockProductCurator,
             new RulesObjectMapper(new ProductCachedSerializationModule(mockProductCurator)),
-            mockOwnerCurator, mockOwnerProductCurator, mockProductShareCurator, mockProductManager,
+            mockOwnerCurator, mockOwnerProductCurator, mockProductManager,
             mockEventSink, mockEventFactory, translator
         );
     }

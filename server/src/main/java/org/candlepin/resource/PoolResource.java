@@ -261,11 +261,6 @@ public class PoolResource {
             throw new BadRequestException(i18n.tr("Cannot delete bonus pools, as they are auto generated"));
         }
 
-        if (pool.isCreatedByShare()) {
-            throw new BadRequestException(i18n.tr("Cannot delete shared pools, This should be triggered by" +
-                " deleting the share entitlement instead"));
-        }
-
         poolManager.deletePools(Collections.singleton(pool));
     }
 

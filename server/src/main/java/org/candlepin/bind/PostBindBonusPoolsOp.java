@@ -17,7 +17,6 @@ package org.candlepin.bind;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
-import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
@@ -81,10 +80,10 @@ public class PostBindBonusPoolsOp implements BindOperation {
             entitlement.setPool(poolQuantities.get(poolId).getPool());
         }
 
-        // Manifest and Share consumers should not contribute to the sharing org's stack,
+        // Manifest consumers should not contribute to the sharing org's stack,
         // as these consumer types should not have created a stack derived pool in the first place.
         // Therefore, we do not need to check if any stack derived pools need updating
-        if (!stackIds.isEmpty() && !ctype.isType(ConsumerTypeEnum.SHARE) && !ctype.isManifest()) {
+        if (!stackIds.isEmpty() && !ctype.isManifest()) {
             subPoolsForStackIds = poolCurator.getSubPoolForStackIds(consumer, stackIds);
             if (CollectionUtils.isNotEmpty(subPoolsForStackIds)) {
                 poolManager.updatePoolsFromStackWithoutDeletingStack(consumer,

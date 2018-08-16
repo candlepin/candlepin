@@ -64,7 +64,6 @@ import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.model.ProductShareCurator;
 import org.candlepin.model.Role;
 import org.candlepin.model.RoleCurator;
 import org.candlepin.model.SourceSubscription;
@@ -156,7 +155,6 @@ public class DatabaseTestFixture {
     @Inject protected PoolCurator poolCurator;
     @Inject protected RoleCurator roleCurator;
     @Inject protected UserCurator userCurator;
-    @Inject protected ProductShareCurator productShareCurator;
 
     @Inject protected ResourceLocatorMap locatorMap;
     @Inject protected ModelTranslator modelTranslator;
