@@ -164,6 +164,35 @@ describe 'Content Access' do
     json_body['products'][0]['content'].length.should == 0
   end
 
+  it "environment change shows in content access cert" do
+    env1 = @user.create_environment(@owner['key'], random_string('testenv1'),
+                                    "My Test Env 1", "For test systems only.")
+    env2 = @user.create_environment(@owner['key'], random_string('testenv2'),
+                                    "My Test Env 2", "For test systems only.")
+
+    consumer = @user.register(random_string('consumer'), :system, nil,
+                              {'system.certificate_version' => '3.3'},nil, nil, [], [], env1['id'])
+    consumer['environment'].should_not be_nil
+    consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+    certs = consumer_cp.list_certificates
+    certs.length.should == 1
+    value = (extension_from_cert(certs[0]['cert'], "1.3.6.1.4.1.2312.9.7"))
+    urls = []
+    urls[0] = '/' + @owner['key'] + '/' + env1['name']
+    are_content_urls_present(value, urls).should == true
+
+    consumer_cp.update_consumer({:environment => env2})
+    changed_consumer = consumer_cp.get_consumer();
+    changed_consumer.environment['id'].should == env2.id
+
+    certs = consumer_cp.list_certificates
+    certs.length.should == 1
+    value = (extension_from_cert(certs[0]['cert'], "1.3.6.1.4.1.2312.9.7"))
+    urls = []
+    urls[0] = '/' + @owner['key'] + '/' + env2['name']
+    are_content_urls_present(value, urls).should == true
+  end
+
   it "can remove the content access certificate from the consumer when org content access mode removed" do
       skip("candlepin running in standalone mode") unless is_hosted?
       @consumer = consumer_client(@user, @consumername, type=:system, username=nil, facts= {'system.certificate_version' => '3.3'})

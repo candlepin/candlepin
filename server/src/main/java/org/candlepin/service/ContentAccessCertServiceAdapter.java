@@ -43,4 +43,5 @@ public interface ContentAccessCertServiceAdapter {
      */
     ContentAccessCertificate getCertificate(Consumer consumer) throws GeneralSecurityException, IOException;
     boolean hasCertChangedSince(Consumer consumer, Date date);
+    void removeContentAccessCert(Consumer consumer);
 }
