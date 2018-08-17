@@ -716,6 +716,7 @@ public class ConsumerResourceUpdateTest {
 
         Consumer updated = new Consumer();
         updated.setEnvironment(changedEnvironment);
+        updated.setOwner(existing.getOwner());
 
         when(environmentCurator.find(changedEnvironment.getId())).thenReturn(changedEnvironment);
 

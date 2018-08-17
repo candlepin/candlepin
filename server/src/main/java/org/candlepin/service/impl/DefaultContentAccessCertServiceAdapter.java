@@ -174,6 +174,15 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         return result;
     }
 
+    @Transactional
+    public void removeContentAccessCert(Consumer consumer) {
+        if (consumer.getContentAccessCert() == null) {
+            return;
+        }
+        contentAccessCertificateCurator.delete(consumer.getContentAccessCert());
+        consumer.setContentAccessCert(null);
+    }
+
     public boolean hasCertChangedSince(Consumer consumer, Date date) {
         if (date == null) {
             return true;

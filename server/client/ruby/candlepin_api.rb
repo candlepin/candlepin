@@ -166,6 +166,7 @@ class Candlepin
     consumer[:hypervisorId] = {:hypervisorId => params[:hypervisorId]} if params[:hypervisorId]
     consumer['contentAccessMode'] = params['contentAccessMode'] if params.key?('contentAccessMode')
     consumer['recipientOwnerKey'] = params[':recipientOwnerKey'] if params.key?(':recipientOwnerKey')
+    consumer[:environment] = params[:environment] if params.key?(:environment)
 
     path = get_path("consumers")
     put("#{path}/#{uuid}", {}, consumer)
