@@ -16,6 +16,7 @@
 package org.candlepin.policy.js.compliance.hash;
 
 import org.candlepin.model.Consumer;
+import org.candlepin.policy.SystemPurposeComplianceStatus;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 
 /**
@@ -38,6 +39,18 @@ public class ComplianceStatusHasher extends Hasher {
             HashableStringGenerators.ENTITLEMENT_SET_ENTRY);
         putCollection(status.getPartialStacks().entrySet(), HashableStringGenerators.ENTITLEMENT_SET_ENTRY);
         putCollection(status.getReasons(), HashableStringGenerators.COMPLIANCE_REASON);
+        putObject(consumer, HashableStringGenerators.CONSUMER);
+    }
+
+    public ComplianceStatusHasher(Consumer consumer, SystemPurposeComplianceStatus status) {
+        putCollection(status.getCompliantRole().keySet(), HashableStringGenerators.STRING);
+        putObject(status.getNonCompliantRole(), HashableStringGenerators.STRING);
+        putCollection(status.getCompliantAddOns().keySet(), HashableStringGenerators.STRING);
+        putCollection(status.getNonCompliantAddOns(), HashableStringGenerators.STRING);
+        putCollection(status.getCompliantSLA().keySet() , HashableStringGenerators.STRING);
+        putCollection(status.getNonPreferredSLA().keySet() , HashableStringGenerators.STRING);
+        putCollection(status.getCompliantUsage().keySet() , HashableStringGenerators.STRING);
+        putCollection(status.getNonPreferredUsage().keySet() , HashableStringGenerators.STRING);
         putObject(consumer, HashableStringGenerators.CONSUMER);
     }
 

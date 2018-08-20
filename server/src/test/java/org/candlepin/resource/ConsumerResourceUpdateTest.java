@@ -57,6 +57,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
+import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.resource.dto.AutobindData;
@@ -114,6 +115,7 @@ public class ConsumerResourceUpdateTest {
     @Mock private ActivationKeyCurator activationKeyCurator;
     @Mock private PoolManager poolManager;
     @Mock private ComplianceRules complianceRules;
+    @Mock private SystemPurposeComplianceRules systemPurposeComplianceRules;
     @Mock private Entitler entitler;
     @Mock private DeletedConsumerCurator deletedConsumerCurator;
     @Mock private EnvironmentCurator environmentCurator;
@@ -146,7 +148,7 @@ public class ConsumerResourceUpdateTest {
             this.consumerTypeCurator, null, this.subscriptionService, this.ownerService, null,
             this.idCertService, null, this.i18n, this.sink, this.eventFactory, null, null,
             this.userService, poolManager, null, null,
-            this.activationKeyCurator, this.entitler, this.complianceRules,
+            this.activationKeyCurator, this.entitler, this.complianceRules, this.systemPurposeComplianceRules,
             this.deletedConsumerCurator, this.environmentCurator, null,
             config, null, null, null, this.consumerBindUtil,
             null, null, new FactValidator(config, this.i18nProvider),

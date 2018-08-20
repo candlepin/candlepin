@@ -85,6 +85,7 @@ import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.pinsetter.core.PinsetterKernel;
 import org.candlepin.policy.EntitlementRefusedException;
+import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.activationkey.ActivationKeyRules;
@@ -160,6 +161,7 @@ public class PoolManagerTest {
     @Mock private EventFactory eventFactory;
     @Mock private EventBuilder eventBuilder;
     @Mock private ComplianceRules complianceRules;
+    @Mock private SystemPurposeComplianceRules systemPurposeComplianceRules;
     @Mock private ActivationKeyRules activationKeyRules;
     @Mock private ContentManager mockContentManager;
     @Mock private OwnerCurator mockOwnerCurator;
@@ -203,10 +205,10 @@ public class PoolManagerTest {
         this.manager = spy(new CandlepinPoolManager(
             mockPoolCurator, mockEventSink, eventFactory, mockConfig, enforcerMock, poolRulesMock,
             entitlementCurator, consumerCuratorMock, consumerTypeCuratorMock, certCuratorMock,
-            mockECGenerator, complianceRules, autobindRules, activationKeyRules, mockProductCurator,
-            mockProductManager, mockContentManager, mockOwnerContentCurator, mockOwnerCurator,
-            mockOwnerProductCurator, mockOwnerManager, pinsetterKernel, i18n, mockBindChainFactory
-        ));
+            mockECGenerator, complianceRules, systemPurposeComplianceRules, autobindRules,
+            activationKeyRules, mockProductCurator, mockProductManager, mockContentManager,
+            mockOwnerContentCurator, mockOwnerCurator, mockOwnerProductCurator, mockOwnerManager,
+            pinsetterKernel, i18n, mockBindChainFactory));
 
         setupBindChain();
 
@@ -271,7 +273,7 @@ public class PoolManagerTest {
         final CheckBonusPoolQuantitiesOp checkBonusPoolQuantitiesOp = new CheckBonusPoolQuantitiesOp(manager);
         final HandleCertificatesOp certificatesOp = new HandleCertificatesOp(mockECGenerator, certCuratorMock,
             entitlementCurator);
-        final ComplianceOp complianceOp = new ComplianceOp(complianceRules);
+        final ComplianceOp complianceOp = new ComplianceOp(complianceRules, systemPurposeComplianceRules);
 
         when(mockPreEntitlementRulesCheckFactory.create(
             any(CallerType.class)))
