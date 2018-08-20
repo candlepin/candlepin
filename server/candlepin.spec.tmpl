@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.1.21
+Version: 2.1.22
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,10 @@ fi
 
 #raw
 %changelog
+* Mon Aug 20 2018 Kevin Howell <khowell@redhat.com> 2.1.22-1
+- 1618493: Ensure environment change shows in content access certificate
+  (wpoteat@redhat.com)
+
 * Wed Jul 18 2018 Kevin Howell <khowell@redhat.com> 2.1.21-1
 - ENT-711: Update candlepin to use BouncyCastle 1.60.
   (jhnidek@redhat.com)
