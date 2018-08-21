@@ -2544,6 +2544,7 @@ public class CandlepinPoolManager implements PoolManager {
         return filteredPools;
     }
 
+    @Transactional
     public void recalculatePoolQuantitiesForOwner(Owner owner) {
         poolCurator.calculateConsumedForOwnersPools(owner);
         poolCurator.calculateExportedForOwnersPools(owner);
