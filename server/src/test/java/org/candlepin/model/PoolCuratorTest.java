@@ -278,6 +278,10 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     public void availablePoolsCanNotBeFilteredByOverriddenAttribute() throws Exception {
         Date activeDate = TestUtil.createDate(2000, 3, 2);
 
+        Product product = TestUtil.createProduct();
+        product.setAttribute(Pool.Attributes.VIRT_ONLY, "true");
+        createProduct(product, owner);
+
         Pool pool1 = createPool(owner, product, 100L,
             activeDate, TestUtil.createDate(2005, 3, 2));
         poolCurator.create(pool1);
@@ -288,7 +292,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         // This product value should be overridden by the pool attr. Note that this product is used
         // by both pools, so its attributes will be reflected in both. Also note that only pool2 is
         // overriding the value.
-        pool2.getProduct().setAttribute(Product.Attributes.VIRT_ONLY, "true");
         pool2.setAttribute(Product.Attributes.VIRT_ONLY, "false");
         poolCurator.create(pool2);
 

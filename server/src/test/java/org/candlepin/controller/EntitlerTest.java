@@ -49,7 +49,6 @@ import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
 import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.service.ProductServiceAdapter;
-import org.candlepin.service.model.ProductInfo;
 import org.candlepin.test.TestUtil;
 
 import org.junit.Before;
@@ -769,57 +768,5 @@ public class EntitlerTest {
         assertEquals(2, created.getProvidedProducts().size());
         assertEquals("Premium", created.getProduct().getAttributeValue(Product.Attributes.SUPPORT_LEVEL));
         assertEquals(1L, created.getQuantity().longValue());
-    }
-
-    @Test
-    public void testCreatedDevSkuWithNoSla() {
-        Owner owner = TestUtil.createOwner("o");
-        List<ProductData> devProdDTOs = new ArrayList<>();
-        final Product p1 = TestUtil.createProduct("dev-product", "Dev Product");
-        devProdDTOs.add(p1.toDTO());
-        Consumer devSystem = TestUtil.createConsumer(owner);
-        devSystem.setFact("dev_sku", p1.getId());
-
-        when(productAdapter.getProductsByIds(eq(owner.getKey()), any(List.class))).thenReturn(devProdDTOs);
-        mockUpdateProduct(p1, owner);
-
-        this.mockContentImport(owner, Collections.<String, Content>emptyMap());
-
-        when(productManager.importProducts(eq(owner), any(Map.class), any(Map.class)))
-            .thenAnswer(new Answer<ImportResult<Product>>() {
-                @Override
-                public ImportResult<Product> answer(InvocationOnMock invocation) throws Throwable {
-                    Object[] args = invocation.getArguments();
-                    Map<String, ProductInfo> productData = (Map<String, ProductInfo>) args[1];
-                    ImportResult<Product> importResult = new ImportResult<>();
-                    Map<String, Product> output = importResult.getCreatedEntities();
-
-                    // We need to copy the attributes from the product data to the product to
-                    // simulate a proper update.
-                    for (ProductInfo pdata : productData.values()) {
-                        if (pdata != null) {
-                            if (p1.getId().equals(pdata.getId())) {
-                                p1.clearAttributes();
-                                if (pdata.getAttributes() != null) {
-                                    p1.setAttributes(pdata.getAttributes());
-                                }
-
-                                output.put(p1.getId(), p1);
-                            }
-                            else {
-                                Product product = new Product(pdata.getId(), pdata.getName());
-                                // Do we care about this product? Probably not.
-                                output.put(product.getId(), product);
-                            }
-                        }
-                    }
-
-                    return importResult;
-                }
-            });
-
-        Pool created = entitler.assembleDevPool(devSystem, owner, devSystem.getFact("dev_sku"));
-        assertEquals(entitler.DEFAULT_DEV_SLA,
-            created.getProduct().getAttributeValue(Product.Attributes.SUPPORT_LEVEL));
     }
 }

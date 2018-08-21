@@ -67,11 +67,14 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
         }
     }
 
+    AbstractHibernateCurator<Owner> testOwnerCurator;
     AbstractHibernateCurator<Content> testContentCurator;
 
     @Before
     public void setup() {
         this.testContentCurator = new TestHibernateCurator<>(Content.class);
+        this.testOwnerCurator = new TestHibernateCurator<>(Owner.class);
+        this.injectMembers(this.testOwnerCurator);
         this.injectMembers(this.testContentCurator);
     }
 
@@ -397,15 +400,14 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testLockAndLoadSingleEntityRefreshRetainsFlushedChanged() {
-        Owner owner = this.createOwner();
-        Content content = this.createContent("c1", "content-1", owner);
+        Owner owner = this.createOwner("c1", "owner-1");
 
         // Verify that a flush will make the change persistent
-        content.setName("changed_name");
-        testContentCurator.merge(content);
-        testContentCurator.flush();
-        this.testContentCurator.lockAndLoad(content);
-        assertEquals("changed_name", content.getName());
+        owner.setDisplayName("changed_name");
+        testOwnerCurator.merge(owner);
+        testOwnerCurator.flush();
+        testOwnerCurator.lockAndLoad(owner);
+        assertEquals("changed_name", owner.getDisplayName());
     }
 
     @Test
@@ -458,15 +460,13 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testLockAndLoadSingleEntityByIdRefreshRetainsFlushedChanged() {
-        Owner owner = this.createOwner();
-        Content content = this.createContent("c1", "content-1", owner);
-
+        Owner owner = this.createOwner("fooOwner", "displayName");
+        owner.setDisplayName("changed_name");
         // Verify that a flush will make the change persistent
-        content.setName("changed_name");
-        testContentCurator.merge(content);
-        testContentCurator.flush();
-        this.testContentCurator.lockAndLoadById(content.getUuid());
-        assertEquals("changed_name", content.getName());
+        testOwnerCurator.merge(owner);
+        testOwnerCurator.flush();
+        this.testOwnerCurator.lockAndLoadById(owner.getId());
+        assertEquals("changed_name", owner.getName());
     }
 
     @Test
@@ -519,15 +519,14 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testLockAndLoadSingleEntityByClassAndIdRefreshRetainsFlushedChanged() {
-        Owner owner = this.createOwner();
-        Content content = this.createContent("c1", "content-1", owner);
+        Owner owner = this.createOwner("o1", "owner-1");
 
         // Verify that a flush will make the change persistent
-        content.setName("changed_name");
-        testContentCurator.merge(content);
-        testContentCurator.flush();
-        this.testContentCurator.lockAndLoadById(Content.class, content.getUuid());
-        assertEquals("changed_name", content.getName());
+        owner.setDisplayName("changed_name");
+        testOwnerCurator.merge(owner);
+        testOwnerCurator.flush();
+        this.testOwnerCurator.lockAndLoadById(Owner.class, owner.getId());
+        assertEquals("changed_name", owner.getName());
     }
 
     @Test
@@ -613,29 +612,28 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testLockAndLoadMultiEntityRefreshRetainsFlushedChanged() {
-        Owner owner = this.createOwner();
-        Content content1 = this.createContent("c1", "content-1", owner);
-        Content content2 = this.createContent("c2", "content-2", owner);
-        Content content3 = this.createContent("c3", "content-3", owner);
+        Owner owner1 = this.createOwner("o1", "owner-1");
+        Owner owner2 = this.createOwner("o2", "owner-2");
+        Owner owner3 = this.createOwner("o3", "owner-3");
 
         // Verify that a flush will make the change persistent
-        content1.setName("name change 1");
-        content2.setName("name change 2");
-        content3.setName("name change 3");
-        this.testContentCurator.merge(content1);
-        this.testContentCurator.merge(content2);
-        this.testContentCurator.merge(content3);
-        this.testContentCurator.flush();
+        owner1.setDisplayName("name change 1");
+        owner2.setDisplayName("name change 2");
+        owner3.setDisplayName("name change 3");
+        this.testOwnerCurator.merge(owner1);
+        this.testOwnerCurator.merge(owner2);
+        this.testOwnerCurator.merge(owner3);
+        this.testOwnerCurator.flush();
 
-        Collection<Content> output = this.testContentCurator.lockAndLoad(Arrays.asList(content1, content3));
+        Collection<Owner> output = this.testOwnerCurator.lockAndLoad(Arrays.asList(owner1, owner3));
 
         assertEquals(2, output.size());
-        assertTrue(output.contains(content1));
-        assertFalse(output.contains(content2));
-        assertTrue(output.contains(content3));
-        assertEquals("name change 1", content1.getName());
-        assertEquals("name change 2", content2.getName());
-        assertEquals("name change 3", content3.getName());
+        assertTrue(output.contains(owner1));
+        assertFalse(output.contains(owner2));
+        assertTrue(output.contains(owner3));
+        assertEquals("name change 1", owner1.getDisplayName());
+        assertEquals("name change 2", owner2.getDisplayName());
+        assertEquals("name change 3", owner3.getDisplayName());
     }
 
     @Test
@@ -753,30 +751,29 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testLockAndLoadMultiEntityByIdsRefreshRetainsFlushedChanged() {
-        Owner owner = this.createOwner();
-        Content content1 = this.createContent("c1", "content-1", owner);
-        Content content2 = this.createContent("c2", "content-2", owner);
-        Content content3 = this.createContent("c3", "content-3", owner);
+        Owner owner1 = this.createOwner("o1", "owner-1");
+        Owner owner2 = this.createOwner("o2", "owner-2");
+        Owner owner3 = this.createOwner("o3", "owner-3");
 
         // Verify that a flush will make the change persistent
-        content1.setName("name change 1");
-        content2.setName("name change 2");
-        content3.setName("name change 3");
-        this.testContentCurator.merge(content1);
-        this.testContentCurator.merge(content2);
-        this.testContentCurator.merge(content3);
-        this.testContentCurator.flush();
+        owner1.setDisplayName("name change 1");
+        owner2.setDisplayName("name change 2");
+        owner3.setDisplayName("name change 3");
+        this.testOwnerCurator.merge(owner1);
+        this.testOwnerCurator.merge(owner2);
+        this.testOwnerCurator.merge(owner3);
+        this.testOwnerCurator.flush();
 
-        Collection<String> input = Arrays.asList(content1.getUuid(), content3.getUuid());
-        Collection<Content> output = this.testContentCurator.lockAndLoadByIds(input);
+        Collection<String> input = Arrays.asList(owner1.getId(), owner3.getId());
+        Collection<Owner> output = this.testOwnerCurator.lockAndLoadByIds(input);
 
         assertEquals(2, output.size());
-        assertTrue(output.contains(content1));
-        assertFalse(output.contains(content2));
-        assertTrue(output.contains(content3));
-        assertEquals("name change 1", content1.getName());
-        assertEquals("name change 2", content2.getName());
-        assertEquals("name change 3", content3.getName());
+        assertTrue(output.contains(owner1));
+        assertFalse(output.contains(owner2));
+        assertTrue(output.contains(owner3));
+        assertEquals("name change 1", owner1.getDisplayName());
+        assertEquals("name change 2", owner2.getDisplayName());
+        assertEquals("name change 3", owner3.getDisplayName());
     }
 
     @Test
@@ -897,30 +894,29 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testLockAndLoadMultiEntityByClassAndIdsRefreshRetainsFlushedChanged() {
-        Owner owner = this.createOwner();
-        Content content1 = this.createContent("c1", "content-1", owner);
-        Content content2 = this.createContent("c2", "content-2", owner);
-        Content content3 = this.createContent("c3", "content-3", owner);
+        Owner owner1 = this.createOwner("o1", "owner-1");
+        Owner owner2 = this.createOwner("o2", "owner-2");
+        Owner owner3 = this.createOwner("o3", "owner-3");
 
         // Verify that a flush will make the change persistent
-        content1.setName("name change 1");
-        content2.setName("name change 2");
-        content3.setName("name change 3");
-        this.testContentCurator.merge(content1);
-        this.testContentCurator.merge(content2);
-        this.testContentCurator.merge(content3);
-        this.testContentCurator.flush();
+        owner1.setDisplayName("name change 1");
+        owner2.setDisplayName("name change 2");
+        owner3.setDisplayName("name change 3");
+        this.testOwnerCurator.merge(owner1);
+        this.testOwnerCurator.merge(owner2);
+        this.testOwnerCurator.merge(owner3);
+        this.testOwnerCurator.flush();
 
-        Collection<String> input = Arrays.asList(content1.getUuid(), content3.getUuid());
-        Collection<Content> output = this.testContentCurator.lockAndLoadByIds(Content.class, input);
+        Collection<String> input = Arrays.asList(owner1.getId(), owner3.getId());
+        Collection<Owner> output = this.testOwnerCurator.lockAndLoadByIds(Owner.class, input);
 
         assertEquals(2, output.size());
-        assertTrue(output.contains(content1));
-        assertFalse(output.contains(content2));
-        assertTrue(output.contains(content3));
-        assertEquals("name change 1", content1.getName());
-        assertEquals("name change 2", content2.getName());
-        assertEquals("name change 3", content3.getName());
+        assertTrue(output.contains(owner1));
+        assertFalse(output.contains(owner2));
+        assertTrue(output.contains(owner3));
+        assertEquals("name change 1", owner1.getDisplayName());
+        assertEquals("name change 2", owner2.getDisplayName());
+        assertEquals("name change 3", owner3.getDisplayName());
     }
 
     @Test
