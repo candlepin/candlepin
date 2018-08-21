@@ -38,28 +38,13 @@ setup_postgres() {
     retry 20 "postgres" pg_isready -h db
 }
 
-test_oracle_connection() {
-  ! ( (
-  sqlplus -s "sys/password@//$db_host/XE as sysdba"<<EOF
-select 1 from dual;
-EOF
-  ) | grep -q ERROR )
-}
-
-setup_oracle() {
-  local db_host="${DBHOSTNAME:-localhost}"
-  retry 60 "oracle" test_oracle_connection
-  echo "USE_ORACLE=\"1\"" >> /root/.candlepinrc
-}
-
 setup_database() {
   # normalize the flags with true/false
   USING_MYSQL=${USING_MYSQL:-'false'}
   USING_POSTGRES=${USING_POSTGRES:-'false'}
-  USING_ORACLE=${USING_ORACLE:-'false'}
 
   # set a default
-  if [ $USING_MYSQL = false ] && [ $USING_POSTGRES = false ] && [ $USING_ORACLE = false ]; then
+  if [ $USING_MYSQL = false ] && [ $USING_POSTGRES = false ]; then
     # mysql for now
     USING_MYSQL=true
   fi
@@ -68,7 +53,5 @@ setup_database() {
     setup_mysql
   elif [ $USING_POSTGRES = true ]; then
     setup_postgres
-  elif [ $USING_ORACLE = true ]; then
-    setup_oracle
   fi
 }

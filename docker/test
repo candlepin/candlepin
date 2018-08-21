@@ -13,7 +13,6 @@ OPTIONS:
               default: $TEST_CMD
   -m        use mysql
   -n NAME   Sets the project name for the docker-compose run
-  -o        use oracle
   -p        use postgres
 
 USAGE
@@ -25,7 +24,6 @@ while getopts ":bc:dmn:op" opt; do
     m) COMPOSE_ARGS="-f $DIR/docker-compose-mysql.yml";
        chcon -Rt svirt_sandbox_file_t $DIR/mysql.cnf;;
     n) PROJ_NAME="-p $OPTARG";;
-    o) COMPOSE_ARGS="-f $DIR/docker-compose-oracle.yml";;
     p) COMPOSE_ARGS="-f $DIR/docker-compose-postgres.yml";;
     \?)
       echo "Invalid option: -$OPTARG" >&2
