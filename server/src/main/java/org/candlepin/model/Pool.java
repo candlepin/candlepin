@@ -19,15 +19,14 @@ import org.candlepin.jackson.CandlepinAttributeDeserializer;
 import org.candlepin.jackson.CandlepinLegacyAttributeSerializer;
 import org.candlepin.util.DateSource;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import org.apache.commons.lang.StringUtils;
-
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cascade;
@@ -63,7 +62,6 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
-import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -222,12 +220,6 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
 
     private Boolean activeSubscription;
 
-    @Column(name = "created_by_share")
-    private Boolean createdByShare;
-
-    @Column(name = "has_shared_ancestor")
-    private Boolean hasSharedAncestor;
-
     /** Indicates this pool was created as a result of granting an entitlement.
      * Allows us to know that we need to clean this pool up if that entitlement
      * if ever revoked. */
@@ -334,11 +326,6 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
     @NotNull
     private Long exported;
 
-    @Column(name = "quantity_shared")
-    @NotNull
-    @Min(0)
-    private Long shared;
-
     @OneToMany
     @JoinTable(name = "cp_pool_branding",
         joinColumns = @JoinColumn(name = "pool_id"),
@@ -407,8 +394,6 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
 
     public Pool() {
         this.activeSubscription = Boolean.TRUE;
-        this.createdByShare = Boolean.FALSE;
-        this.hasSharedAncestor = Boolean.FALSE;
         this.providedProducts = new HashSet<>();
         this.derivedProvidedProducts = new HashSet<>();
         this.attributes = new HashMap<>();
@@ -432,7 +417,6 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
 
         this.setExported(0L);
         this.setConsumed(0L);
-        this.setShared(0L);
     }
 
     public Pool(Owner ownerIn, Product product, Collection<Product> providedProducts,
@@ -538,20 +522,6 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
         // Even though this is calculated at DB fetch time, we allow
         // setting it for changes in a single transaction
         this.exported = exported;
-    }
-
-    /**
-     * @return the quantity of entitlements in this pool shared to another org.
-     */
-    public Long getShared() {
-        return (shared == null) ? 0 : shared;
-    }
-
-    /**
-     * @param shared the number to set the share count to
-     */
-    public void setShared(Long shared) {
-        this.shared = shared;
     }
 
     /**
@@ -933,41 +903,6 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
         this.activeSubscription = activeSubscription;
     }
 
-    /**
-     * @return true if this pool was created because of a share.
-     */
-    public Boolean isCreatedByShare() {
-        return createdByShare;
-    }
-
-    /**
-     * @param createdByShare
-     */
-    public void setCreatedByShare(Boolean createdByShare) {
-        this.createdByShare = createdByShare;
-    }
-
-    /**
-     * Checks if this pool or its ancestors were created as a result of a share.
-     *
-     * @return true if this pool or its parent was created because of a share.
-     */
-    @JsonProperty
-    public Boolean hasSharedAncestor() {
-        return hasSharedAncestor;
-    }
-
-    /**
-     * Sets whether or not this pool or any of its ancestors were created as a result of
-     * a share.
-     *
-     * @param hasSharedAncestor
-     *  true if this pool or any of its ancestors were created as a result of a share
-     */
-    public void setHasSharedAncestor(Boolean hasSharedAncestor) {
-        this.hasSharedAncestor = hasSharedAncestor;
-    }
-
     public String toString() {
         return String.format("Pool [id=%s, type=%s, product=%s, productName=%s, quantity=%s]",
             this.getId(), this.getType(), this.getProductId(), this.getProductName(), this.getQuantity());
@@ -1318,11 +1253,6 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
      * @return pool type
      */
     public PoolType getType() {
-
-        // shared pools must behave exactly like the pools they would in the sharing org.
-        if (isCreatedByShare()) {
-            return getSourceEntitlement().getPool().getType();
-        }
 
         if (hasAttribute(Attributes.DERIVED_POOL)) {
             if (hasAttribute(Attributes.UNMAPPED_GUESTS_ONLY)) {

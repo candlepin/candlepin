@@ -20,10 +20,9 @@ import org.candlepin.dto.rules.v1.ConsumerDTO;
 import org.candlepin.dto.rules.v1.EntitlementDTO;
 import org.candlepin.dto.rules.v1.GuestIdDTO;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerType;
-import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
-import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.GuestId;
@@ -165,10 +164,10 @@ public class ComplianceRules {
             consumer.getGuestIds().stream()
                 .map(this.translator.getStreamMapper(GuestId.class, GuestIdDTO.class));
 
-        // Do not calculate compliance status for distributors and shares. It is prohibitively
+        // Do not calculate compliance status for distributors. It is prohibitively
         // expensive and meaningless
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
-        if (ctype != null && (ctype.isManifest() || ctype.isType(ConsumerTypeEnum.SHARE))) {
+        if (ctype != null && (ctype.isManifest())) {
             return new ComplianceStatus(new Date());
         }
 

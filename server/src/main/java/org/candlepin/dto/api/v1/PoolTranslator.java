@@ -67,8 +67,6 @@ public class PoolTranslator extends TimestampedEntityTranslator<Pool, PoolDTO> {
         dest.setId(source.getId());
         dest.setType(source.getType().toString());
         dest.setActiveSubscription(source.getActiveSubscription());
-        dest.setCreatedByShare(source.isCreatedByShare());
-        dest.setHasSharedAncestor(source.hasSharedAncestor());
         dest.setQuantity(source.getQuantity());
         dest.setStartDate(source.getStartDate());
         dest.setEndDate(source.getEndDate());
@@ -79,7 +77,6 @@ public class PoolTranslator extends TimestampedEntityTranslator<Pool, PoolDTO> {
         dest.setOrderNumber(source.getOrderNumber());
         dest.setConsumed(source.getConsumed());
         dest.setExported(source.getExported());
-        dest.setShared(source.getShared());
         dest.setCalculatedAttributes(source.getCalculatedAttributes());
         dest.setUpstreamPoolId(source.getUpstreamPoolId());
         dest.setUpstreamEntitlementId(source.getUpstreamEntitlementId());

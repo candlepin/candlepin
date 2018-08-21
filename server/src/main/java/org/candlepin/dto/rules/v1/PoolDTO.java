@@ -106,7 +106,6 @@ public class PoolDTO extends CandlepinDTO<PoolDTO> {
     }
 
     private String id;
-    private Boolean hasSharedAncestor;
     private Long quantity;
     private Date startDate;
     private Date endDate;
@@ -160,30 +159,6 @@ public class PoolDTO extends CandlepinDTO<PoolDTO> {
      */
     public PoolDTO setId(String id) {
         this.id = id;
-        return this;
-    }
-
-    /**
-     * Checks if this pool or its ancestors were created as a result of a share.
-     *
-     * @return true if this pool or its parent was created because of a share.
-     */
-    @JsonProperty
-    public Boolean hasSharedAncestor() {
-        return hasSharedAncestor;
-    }
-
-    /**
-     * Sets whether or not this pool or any of its ancestors were created as
-     * a result of a share.
-     *
-     * @param hasSharedAncestor
-     *  true if this pool or any of its ancestors were created as a result of a share.
-     *
-     * @return a reference to this PoolDTO object.
-     */
-    public PoolDTO setHasSharedAncestor(Boolean hasSharedAncestor) {
-        this.hasSharedAncestor = hasSharedAncestor;
         return this;
     }
 
@@ -670,7 +645,6 @@ public class PoolDTO extends CandlepinDTO<PoolDTO> {
 
             EqualsBuilder builder = new EqualsBuilder()
                 .append(this.getId(), that.getId())
-                .append(this.hasSharedAncestor(), that.hasSharedAncestor())
                 .append(this.getQuantity(), that.getQuantity())
                 .append(this.getStartDate(), that.getStartDate())
                 .append(this.getEndDate(), that.getEndDate())
@@ -699,7 +673,6 @@ public class PoolDTO extends CandlepinDTO<PoolDTO> {
 
         HashCodeBuilder builder = new HashCodeBuilder(37, 7)
             .append(this.getId())
-            .append(this.hasSharedAncestor())
             .append(this.getQuantity())
             .append(this.getStartDate())
             .append(this.getEndDate())
@@ -744,7 +717,6 @@ public class PoolDTO extends CandlepinDTO<PoolDTO> {
         super.populate(source);
 
         this.setId(source.getId());
-        this.setHasSharedAncestor(source.hasSharedAncestor());
         this.setQuantity(source.getQuantity());
         this.setStartDate(source.getStartDate());
         this.setEndDate(source.getEndDate());

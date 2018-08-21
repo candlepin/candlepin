@@ -109,8 +109,6 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> {
     private String type;
     private OwnerDTO owner;
     private Boolean activeSubscription;
-    private Boolean createdByShare;
-    private Boolean hasSharedAncestor;
     private EntitlementDTO sourceEntitlement;
     private Long quantity;
 
@@ -121,7 +119,6 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> {
     private String orderNumber;
     private Long consumed;
     private Long exported;
-    private Long shared;
 
     private Set<BrandingDTO> branding;
 
@@ -259,51 +256,6 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> {
      */
     public PoolDTO setActiveSubscription(Boolean activeSubscription) {
         this.activeSubscription = activeSubscription;
-        return this;
-    }
-
-    /**
-     * Returns true if this pool was created because of a share, false otherwise.
-     *
-     * @return true if this pool was created because of a share, false otherwise.
-     */
-    public Boolean isCreatedByShare() {
-        return createdByShare;
-    }
-
-    /**
-     * Set if this pool was created because of a share or not.
-     *
-     * @param createdByShare set if this pool was created because of a share or not.
-     *
-     * @return a reference to this PoolDTO object.
-     */
-    public PoolDTO setCreatedByShare(Boolean createdByShare) {
-        this.createdByShare = createdByShare;
-        return this;
-    }
-
-    /**
-     * Checks if this pool or its ancestors were created as a result of a share.
-     *
-     * @return true if this pool or its parent was created because of a share.
-     */
-    @JsonProperty
-    public Boolean hasSharedAncestor() {
-        return hasSharedAncestor;
-    }
-
-    /**
-     * Sets whether or not this pool or any of its ancestors were created as
-     * a result of a share.
-     *
-     * @param hasSharedAncestor
-     *  true if this pool or any of its ancestors were created as a result of a share.
-     *
-     * @return a reference to this PoolDTO object.
-     */
-    public PoolDTO setHasSharedAncestor(Boolean hasSharedAncestor) {
-        this.hasSharedAncestor = hasSharedAncestor;
         return this;
     }
 
@@ -644,27 +596,6 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> {
      */
     public PoolDTO setExported(Long exported) {
         this.exported = exported;
-        return this;
-    }
-
-    /**
-     * Returns the quantity of entitlements in this pool shared to another org.
-     *
-     * @return the quantity of entitlements in this pool shared to another org.
-     */
-    public Long getShared() {
-        return shared;
-    }
-
-    /**
-     * Sets the quantity of entitlements in this pool shared to another org.
-     *
-     * @param shared the number to set the share count to
-     *
-     * @return a reference to this PoolDTO object.
-     */
-    public PoolDTO setShared(Long shared) {
-        this.shared = shared;
         return this;
     }
 
@@ -1369,8 +1300,6 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> {
                 .append(this.getType(), that.getType())
                 .append(thisOwnerId, thatOwnerId)
                 .append(this.isActiveSubscription(), that.isActiveSubscription())
-                .append(this.isCreatedByShare(), that.isCreatedByShare())
-                .append(this.hasSharedAncestor(), that.hasSharedAncestor())
                 .append(thisSourceEntitlementId, thatSourceEntitlementId)
                 .append(this.getQuantity(), that.getQuantity())
                 .append(this.getStartDate(), that.getStartDate())
@@ -1382,7 +1311,6 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> {
                 .append(this.getOrderNumber(), that.getOrderNumber())
                 .append(this.getConsumed(), that.getConsumed())
                 .append(this.getExported(), that.getExported())
-                .append(this.getShared(), that.getShared())
                 .append(this.getBranding(), that.getBranding())
                 .append(this.getCalculatedAttributes(), that.getCalculatedAttributes())
                 .append(this.getUpstreamPoolId(), that.getUpstreamPoolId())
@@ -1421,8 +1349,6 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> {
             .append(this.getType())
             .append(this.getOwner() != null ? this.getOwner().getId() : null)
             .append(this.isActiveSubscription())
-            .append(this.isCreatedByShare())
-            .append(this.hasSharedAncestor())
             .append(this.getSourceEntitlement() != null ? this.getSourceEntitlement().getId() : null)
             .append(this.getQuantity())
             .append(this.getStartDate())
@@ -1434,7 +1360,6 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> {
             .append(this.getOrderNumber())
             .append(this.getConsumed())
             .append(this.getExported())
-            .append(this.getShared())
             .append(this.getBranding())
             .append(this.getCalculatedAttributes())
             .append(this.getUpstreamPoolId())
@@ -1500,8 +1425,6 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> {
         this.setType(source.getType());
         this.setOwner(source.getOwner());
         this.setActiveSubscription(source.isActiveSubscription());
-        this.setCreatedByShare(source.isCreatedByShare());
-        this.setHasSharedAncestor(source.hasSharedAncestor());
         this.setSourceEntitlement(source.getSourceEntitlement());
         this.setQuantity(source.getQuantity());
         this.setStartDate(source.getStartDate());
@@ -1513,7 +1436,6 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> {
         this.setOrderNumber(source.getOrderNumber());
         this.setConsumed(source.getConsumed());
         this.setExported(source.getExported());
-        this.setShared(source.getShared());
         this.setBranding(source.getBranding());
         this.setCalculatedAttributes(source.getCalculatedAttributes());
         this.setUpstreamPoolId(source.getUpstreamPoolId());

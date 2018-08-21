@@ -106,8 +106,7 @@ public class PoolHelper {
                     productCurator.getPoolProvidedProductsCached(pool),
                     sourceEntitlements.get(pool.getId()),
                     consumer,
-                    pool,
-                    pool.hasSharedAncestor());
+                    pool);
             }
             else {
                 // If a derived product is on the pool, we want to define the
@@ -128,8 +127,7 @@ public class PoolHelper {
                     productCurator.getPoolDerivedProvidedProductsCached(pool),
                     sourceEntitlements.get(pool.getId()),
                     consumer,
-                    pool,
-                    pool.hasSharedAncestor());
+                    pool);
             }
 
             consumerSpecificPool.setAttribute(Pool.Attributes.REQUIRES_HOST, consumer.getUuid());
@@ -236,7 +234,7 @@ public class PoolHelper {
             sourcePool.getStartDate(), sourcePool.getEndDate(),
             sourcePool.getContractNumber(), sourcePool.getAccountNumber(),
             sourcePool.getOrderNumber(), new HashSet<>(), sourceEntitlement,
-            sourceConsumer, sourcePool, sourcePool.hasSharedAncestor());
+            sourceConsumer, sourcePool);
 
         SourceSubscription srcSub = sourcePool.getSourceSubscription();
         if (srcSub != null && srcSub.getSubscriptionId() != null) {
@@ -269,7 +267,7 @@ public class PoolHelper {
     private static Pool createPool(Product product, Owner owner, String quantity, Date startDate,
         Date endDate, String contractNumber, String accountNumber, String orderNumber,
         Set<Product> providedProducts, Entitlement sourceEntitlement, Consumer sourceConsumer,
-        Pool sourcePool, Boolean hasSharedAncestor) {
+        Pool sourcePool) {
 
         Long q = Pool.parseQuantity(quantity);
 
@@ -299,7 +297,6 @@ public class PoolHelper {
 
         // temp - we need a way to specify this on the product
         pool.setAttribute(Pool.Attributes.REQUIRES_CONSUMER_TYPE, "system");
-        pool.setHasSharedAncestor(hasSharedAncestor);
 
         return pool;
     }

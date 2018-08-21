@@ -67,7 +67,6 @@ public class PoolTranslator implements ObjectTranslator<Pool, PoolDTO> {
         }
 
         dest.setId(source.getId());
-        dest.setHasSharedAncestor(source.hasSharedAncestor());
         dest.setQuantity(source.getQuantity());
         dest.setStartDate(source.getStartDate());
         dest.setEndDate(source.getEndDate());

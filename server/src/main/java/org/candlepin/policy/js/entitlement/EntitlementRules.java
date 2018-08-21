@@ -14,8 +14,6 @@
  */
 package org.candlepin.policy.js.entitlement;
 
-import org.candlepin.audit.Event;
-import org.candlepin.audit.EventBuilder;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.bind.PoolOperationCallback;
@@ -27,11 +25,9 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.rules.v1.ConsumerDTO;
 import org.candlepin.dto.rules.v1.EntitlementDTO;
 import org.candlepin.dto.rules.v1.PoolDTO;
-import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
-import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
@@ -41,8 +37,6 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.model.ProductShare;
-import org.candlepin.model.ProductShareCurator;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.ValidationWarning;
@@ -66,7 +60,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -94,7 +87,6 @@ public class EntitlementRules implements Enforcer {
     private RulesObjectMapper objectMapper;
     private OwnerCurator ownerCurator;
     private OwnerProductCurator ownerProductCurator;
-    private ProductShareCurator shareCurator;
     private ProductManager productManager;
     private EventSink eventSink;
     private EventFactory eventFactory;
@@ -107,7 +99,7 @@ public class EntitlementRules implements Enforcer {
         JsRunner jsRules, I18n i18n, Configuration config, ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator, ProductCurator productCurator, RulesObjectMapper mapper,
         OwnerCurator ownerCurator, OwnerProductCurator ownerProductCurator,
-        ProductShareCurator productShareCurator, ProductManager productManager, EventSink eventSink,
+        ProductManager productManager, EventSink eventSink,
         EventFactory eventFactory, ModelTranslator translator) {
 
         this.jsRules = jsRules;
@@ -120,7 +112,6 @@ public class EntitlementRules implements Enforcer {
         this.objectMapper = mapper;
         this.ownerCurator = ownerCurator;
         this.ownerProductCurator = ownerProductCurator;
-        this.shareCurator = productShareCurator;
         this.productManager = productManager;
         this.eventSink = eventSink;
         this.eventFactory = eventFactory;
@@ -167,49 +158,40 @@ public class EntitlementRules implements Enforcer {
 
         /* This document describes the java script portion of the pre entitlement rules check:
          * http://www.candlepinproject.org/docs/candlepin/pre_entitlement_rules_check.html
-         * As described in the document, none of the checks are related to share binds, so we
-         * skip that step for share consumers.
          */
-        if (!ctype.isType(ConsumerTypeEnum.SHARE)) {
-            Stream<EntitlementDTO> entStream = consumer.getEntitlements() == null ? Stream.empty() :
-                consumer.getEntitlements().stream()
-                    .map(this.translator.getStreamMapper(Entitlement.class, EntitlementDTO.class));
+        Stream<EntitlementDTO> entStream = consumer.getEntitlements() == null ? Stream.empty() :
+            consumer.getEntitlements().stream()
+                .map(this.translator.getStreamMapper(Entitlement.class, EntitlementDTO.class));
 
 
-            JsonJsContext args = new JsonJsContext(objectMapper);
-            args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
-            args.put("hostConsumer", this.translator.translate(host, ConsumerDTO.class));
-            args.put("consumerEntitlements", entStream.collect(Collectors.toSet()));
-            args.put("standalone", config.getBoolean(ConfigProperties.STANDALONE));
-            args.put("poolQuantities", entitlementPoolQuantities);
-            args.put("caller", caller.getLabel());
-            args.put("log", log, false);
+        JsonJsContext args = new JsonJsContext(objectMapper);
+        args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
+        args.put("hostConsumer", this.translator.translate(host, ConsumerDTO.class));
+        args.put("consumerEntitlements", entStream.collect(Collectors.toSet()));
+        args.put("standalone", config.getBoolean(ConfigProperties.STANDALONE));
+        args.put("poolQuantities", entitlementPoolQuantities);
+        args.put("caller", caller.getLabel());
+        args.put("log", log, false);
 
-            String json = jsRules.runJsFunction(String.class, "validate_pools_batch", args);
+        String json = jsRules.runJsFunction(String.class, "validate_pools_batch", args);
 
-            TypeReference<Map<String, ValidationResult>> typeref =
-                new TypeReference<Map<String, ValidationResult>>() {};
-            try {
-                resultMap = objectMapper.toObject(json, typeref);
-                for (PoolQuantity poolQuantity : entitlementPoolQuantities) {
-                    if (!resultMap.containsKey(poolQuantity.getPool().getId())) {
-                        resultMap.put(poolQuantity.getPool().getId(), new ValidationResult());
-                        log.info("no result returned for pool: {}", poolQuantity.getPool());
-                    }
-
+        TypeReference<Map<String, ValidationResult>> typeref =
+            new TypeReference<Map<String, ValidationResult>>() {};
+        try {
+            resultMap = objectMapper.toObject(json, typeref);
+            for (PoolQuantity poolQuantity : entitlementPoolQuantities) {
+                if (!resultMap.containsKey(poolQuantity.getPool().getId())) {
+                    resultMap.put(poolQuantity.getPool().getId(), new ValidationResult());
+                    log.info("no result returned for pool: {}", poolQuantity.getPool());
                 }
+
             }
-            catch (Exception e) {
-                throw new RuleExecutionException(e);
-            }
+        }
+        catch (Exception e) {
+            throw new RuleExecutionException(e);
         }
 
         for (PoolQuantity poolQuantity : entitlementPoolQuantities) {
-            if (ctype.isType(ConsumerTypeEnum.SHARE)) {
-                ValidationResult result = new ValidationResult();
-                resultMap.put(poolQuantity.getPool().getId(), result);
-                validatePoolSharingEligibility(result, poolQuantity.getPool());
-            }
             finishValidation(resultMap.get(poolQuantity.getPool().getId()),
                 poolQuantity.getPool(), poolQuantity.getQuantity());
         }
@@ -225,45 +207,36 @@ public class EntitlementRules implements Enforcer {
 
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
 
-        if (!ctype.isType(ConsumerTypeEnum.SHARE)) {
-            Stream<PoolDTO> poolStream = pools == null ? Stream.empty() :
-                pools.stream().map(this.translator.getStreamMapper(Pool.class, PoolDTO.class));
+        Stream<PoolDTO> poolStream = pools == null ? Stream.empty() :
+            pools.stream().map(this.translator.getStreamMapper(Pool.class, PoolDTO.class));
 
-            Stream<EntitlementDTO> entStream = consumer.getEntitlements() == null ? Stream.empty() :
-                consumer.getEntitlements().stream()
-                    .map(this.translator.getStreamMapper(Entitlement.class, EntitlementDTO.class));
+        Stream<EntitlementDTO> entStream = consumer.getEntitlements() == null ? Stream.empty() :
+            consumer.getEntitlements().stream()
+                .map(this.translator.getStreamMapper(Entitlement.class, EntitlementDTO.class));
 
-            args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
-            args.put("hostConsumer", this.translator.translate(getHost(consumer), ConsumerDTO.class));
-            args.put("consumerEntitlements", entStream.collect(Collectors.toSet()));
-            args.put("standalone", config.getBoolean(ConfigProperties.STANDALONE));
-            args.put("pools", poolStream.collect(Collectors.toSet()));
-            args.put("caller", CallerType.LIST_POOLS.getLabel());
-            args.put("log", log, false);
+        args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
+        args.put("hostConsumer", this.translator.translate(getHost(consumer), ConsumerDTO.class));
+        args.put("consumerEntitlements", entStream.collect(Collectors.toSet()));
+        args.put("standalone", config.getBoolean(ConfigProperties.STANDALONE));
+        args.put("pools", poolStream.collect(Collectors.toSet()));
+        args.put("caller", CallerType.LIST_POOLS.getLabel());
+        args.put("log", log, false);
 
-            String json = jsRules.runJsFunction(String.class, "validate_pools_list", args);
-            TypeReference<Map<String, ValidationResult>> typeref =
-                new TypeReference<Map<String, ValidationResult>>() {};
+        String json = jsRules.runJsFunction(String.class, "validate_pools_list", args);
+        TypeReference<Map<String, ValidationResult>> typeref =
+            new TypeReference<Map<String, ValidationResult>>() {};
 
-            try {
-                resultMap = objectMapper.toObject(json, typeref);
-            }
-            catch (Exception e) {
-                throw new RuleExecutionException(e);
-            }
+        try {
+            resultMap = objectMapper.toObject(json, typeref);
+        }
+        catch (Exception e) {
+            throw new RuleExecutionException(e);
         }
 
         List<Pool> filteredPools = new LinkedList<>();
         for (Pool pool : pools) {
             ValidationResult result;
-            if (ctype.isType(ConsumerTypeEnum.SHARE)) {
-                result = new ValidationResult();
-                resultMap.put(pool.getId(), result);
-                validatePoolSharingEligibility(result, pool);
-            }
-            else {
-                result = resultMap.get(pool.getId());
-            }
+            result = resultMap.get(pool.getId());
             finishValidation(result, pool, 1);
 
             if (result.isSuccessful() && (!result.hasWarnings() || showAll)) {
@@ -305,7 +278,7 @@ public class EntitlementRules implements Enforcer {
 
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
 
-        if (!ctype.isManifest() && !ctype.isType(ConsumerTypeEnum.SHARE)) {
+        if (!ctype.isManifest()) {
             Pool pool = entitlement.getPool();
             // multi ent check
             if (!"yes".equalsIgnoreCase(pool.getProductAttributeValue(Pool.Attributes.MULTI_ENTITLEMENT)) &&
@@ -419,18 +392,6 @@ public class EntitlementRules implements Enforcer {
         int quantity) {
         if (!pool.entitlementsAvailable(quantity)) {
             result.addError(EntitlementRulesTranslator.PoolErrorKeys.NO_ENTITLEMENTS_AVAILABLE);
-        }
-    }
-
-    protected void validatePoolSharingEligibility(ValidationResult result, Pool pool) {
-        if (pool.getType() == Pool.PoolType.UNMAPPED_GUEST) {
-            result.addError(EntitlementRulesTranslator.PoolErrorKeys.SHARING_UNMAPPED_GUEST_POOL);
-        }
-        else if (pool.getType() == Pool.PoolType.DEVELOPMENT) {
-            result.addError(EntitlementRulesTranslator.PoolErrorKeys.SHARING_DEVELOPMENT_POOL);
-        }
-        else if (pool.isCreatedByShare()) {
-            result.addError(EntitlementRulesTranslator.PoolErrorKeys.SHARING_A_SHARE);
         }
     }
 
@@ -589,196 +550,6 @@ public class EntitlementRules implements Enforcer {
         }
     }
 
-    private PoolOperationCallback postBindShareCreate(Consumer c, Owner sharingOwner,
-        Map<String, Entitlement> entitlementMap, Map<String, PoolQuantity> poolQuantityMap) {
-        log.debug("Running post-bind share create");
-
-        Owner recipient = ownerCurator.getByKey(c.getRecipientOwnerKey());
-        PoolOperationCallback poolOperationCallback = new PoolOperationCallback();
-
-        for (String poolId: entitlementMap.keySet()) {
-            Pool sourcePool = poolQuantityMap.get(poolId).getPool();
-            Entitlement entitlement = entitlementMap.get(poolId);
-            // resolve and copy all products
-            // Handle any product creation/manipulation incurred by the share action
-            Set<Product> allProducts = new HashSet<>();
-            allProducts.add(sourcePool.getProduct());
-            if (sourcePool.getProvidedProducts() != null) {
-                allProducts.addAll(sourcePool.getProvidedProducts());
-            }
-            if (sourcePool.getDerivedProduct() != null) {
-                allProducts.add(sourcePool.getDerivedProduct());
-            }
-            if (sourcePool.getDerivedProvidedProducts() != null) {
-                allProducts.addAll(sourcePool.getDerivedProvidedProducts());
-            }
-            Map<String, Product> resolvedProducts =
-                resolveProductShares(sharingOwner, recipient, allProducts);
-            Product product = resolvedProducts.get(sourcePool.getProduct().getId());
-
-            Set<Product> providedProducts = copySetFromResolved(sourcePool.getProvidedProducts(),
-                resolvedProducts);
-            Long q = Long.valueOf(entitlement.getQuantity());
-            // endDateOverride doesnt really apply here , this is just for posterity.
-            Date endDate = (entitlement.getEndDateOverride() == null) ?
-                sourcePool.getEndDate() : entitlement.getEndDateOverride();
-            Pool sharedPool = new Pool(
-                recipient,
-                product,
-                providedProducts,
-                q,
-                sourcePool.getStartDate(),
-                endDate,
-                sourcePool.getContractNumber(),
-                sourcePool.getAccountNumber(),
-                sourcePool.getOrderNumber()
-            );
-            if (sourcePool.getDerivedProduct() != null) {
-                Product derivedProduct = resolvedProducts.get(sourcePool.getDerivedProduct().getId());
-                sharedPool.setDerivedProduct(derivedProduct);
-            }
-            Set<Product> derivedProvidedProducts = copySetFromResolved(
-                sourcePool.getDerivedProvidedProducts(), resolvedProducts);
-            sharedPool.setDerivedProvidedProducts(derivedProvidedProducts);
-
-            if (entitlement != null) {
-                sharedPool.setSourceEntitlement(entitlement);
-            }
-
-            /* Since we set the source entitlement id as the subscription sub key for
-               entitlement derived pools, it makes sense to do the same for share pools,
-               as share pools are also entitlement derived, sort of.
-             */
-            String subscriptionId = sourcePool.getSubscriptionId();
-            if (subscriptionId != null && !subscriptionId.isEmpty()) {
-                poolOperationCallback.createSourceSubscription(sharedPool, subscriptionId, entitlement);
-            }
-
-            // Copy the pool's attributes
-            for (Entry<String, String> entry : sourcePool.getAttributes().entrySet()) {
-                sharedPool.setAttribute(entry.getKey(), entry.getValue());
-            }
-            sharedPool.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
-            sharedPool.setCreatedByShare(Boolean.TRUE);
-            sharedPool.setHasSharedAncestor(Boolean.TRUE);
-
-            for (Branding b : sourcePool.getBranding()) {
-                sharedPool.getBranding().add(new Branding(b.getProductId(), b.getType(),
-                    b.getName()));
-            }
-            poolOperationCallback.addPoolToCreate(sharedPool);
-        }
-        return poolOperationCallback;
-    }
-
-    private Set<Product> copySetFromResolved(Set<Product> products, Map<String, Product> resolvedProducts) {
-        Set<Product> result = new HashSet<>();
-        if (products != null) {
-            for (Product product : products) {
-                result.add(resolvedProducts.get(product.getId()));
-            }
-        }
-        return result;
-    }
-
-    private Map<String, Product> resolveProductShares(Owner sharingOwner, Owner recipient,
-        Set<Product> products) {
-        Map<String, Product> sharedProductsIdMap = new HashMap<>();
-        Map<String, Product> sharedProductsUuidMap = new HashMap<>();
-        Map<String, Product> resolvedProducts = new HashMap<>();
-        List<Event> events = new LinkedList<>();
-        List<ProductShare> sharesToDelete = new LinkedList<>();
-        List<ProductShare> sharesToCreate = new LinkedList<>();
-        Map<String, ProductShare> existingSharesMap = new HashMap<>();
-        Map<String, String> productRefsToUpdate = new HashMap<>();
-
-        for (Product product: products) {
-            sharedProductsIdMap.put(product.getId(), product);
-            sharedProductsUuidMap.put(product.getUuid(), product);
-        }
-
-        List<Product> recipientProducts = ownerProductCurator.getProductsByIds(
-            recipient, sharedProductsIdMap.keySet()).list();
-
-        for (Product product: recipientProducts) {
-            Map<String, Product> conflictedRecipientProducts = new HashMap<>();
-            if (sharedProductsUuidMap.containsKey(product.getUuid())) {
-                // Recipient has a product with the same ID already.  If they are the same instance
-                // use then nothing needs doing.  Everything is already in place.
-                resolvedProducts.put(product.getId(), product);
-                log.debug("Owner {} has the same product {} as the sharer {}",
-                    recipient.getKey(), product.getId(), sharingOwner.getKey());
-            }
-            else {
-                // The recipient and owner have two products with the same ID but they are different
-                // instances since their uuids do not match.
-                conflictedRecipientProducts.put(product.getId(), product);
-            }
-
-            if (conflictedRecipientProducts.size() > 0) {
-                List<ProductShare> existingShares = shareCurator.findProductSharesByRecipient(
-                    recipient, conflictedRecipientProducts.keySet());
-
-                for (ProductShare pShare: existingShares) {
-                    existingSharesMap.put(pShare.getProduct().getId(), pShare);
-                }
-            }
-
-            for (String id: conflictedRecipientProducts.keySet()) {
-                if (!existingSharesMap.containsKey(id)) {
-                    // If the recipient's product isn't from a share, let the recipient just continue to
-                    // use its existing product definition.
-                    log.debug("Owner {} already has product {} defined that is not a share",
-                        recipient.getKey(), id);
-                    resolvedProducts.put(id, conflictedRecipientProducts.get(id));
-                }
-                else {
-                    // If the recipient's product is a share then two owners are sharing into the same
-                    // recipient and we must resolve the conflict.
-                    Product sharingOwnerProduct = sharedProductsIdMap.get(id);
-                    Product existingProduct = conflictedRecipientProducts.get(id);
-                    ProductShare existingShare = existingSharesMap.get(id);
-                    log.debug("Owner {} already has a share for Product {} from owner {}. Solving conflict.",
-                        recipient.getKey(), id, existingShare.getOwner());
-
-                    EventBuilder builder = eventFactory.getEventBuilder(
-                        Event.Target.PRODUCT, Event.Type.MODIFIED);
-                    builder.setEventData(existingProduct);
-                    sharesToDelete.add(existingShare);
-                    sharesToCreate.add(new ProductShare(sharingOwner, sharingOwnerProduct, recipient));
-                    // Now we need to reconcile all of recipient's pools that were using the old product.
-                    Product resolvedProduct = productManager.updateProduct(
-                        sharingOwnerProduct.toDTO(), recipient, true);
-                    builder.setEventData(resolvedProduct);
-                    resolvedProducts.put(resolvedProduct.getId(), resolvedProduct);
-                    events.add(builder.buildEvent());
-                }
-            }
-
-        }
-
-        Set<String> idsNonExisting = new HashSet<>(sharedProductsIdMap.keySet());
-        idsNonExisting.removeAll(resolvedProducts.keySet());
-
-        for (String id: idsNonExisting) {
-            // The recipient doesn't have a definition for the product at all.  Link the recipient
-            // and product and create a record of a share.
-            log.debug("Linking product {} from owner {} to owner {} as product share",
-                id, sharingOwner.getKey(), recipient.getKey());
-            Product sharedProduct = sharedProductsIdMap.get(id);
-            ownerProductCurator.mapProductToOwner(sharedProduct, recipient);
-            sharesToCreate.add(new ProductShare(sharingOwner, sharedProduct, recipient));
-            resolvedProducts.put(id, sharedProduct);
-        }
-
-        shareCurator.bulkDelete(sharesToDelete);
-        shareCurator.saveOrUpdateAll(sharesToCreate, false, false);
-        for (Event event: events) {
-            eventSink.queueEvent(event);
-        }
-        return resolvedProducts;
-    }
-
     private PoolOperationCallback postBindVirtLimit(PoolManager poolManager, Consumer consumer,
         Map<String, Entitlement> entitlementMap, Map<String, Map<String, String>> attributeMaps,
         List<Pool> subPoolsForStackIds, boolean isUpdate, Map<String, PoolQuantity> poolQuantityMap) {
@@ -796,8 +567,7 @@ public class EntitlementRules implements Enforcer {
 
         ConsumerType type = this.consumerTypeCurator.getConsumerType(consumer);
 
-        boolean consumerFactExpression = !type.isManifest() && !type.isType(ConsumerTypeEnum.SHARE) &&
-            !consumer.isGuest();
+        boolean consumerFactExpression = !type.isManifest() && !consumer.isGuest();
 
         boolean isStandalone = config.getBoolean(ConfigProperties.STANDALONE);
 
@@ -841,8 +611,7 @@ public class EntitlementRules implements Enforcer {
             }
         }
 
-        // Share consumers do not have host restricted pools
-        if (CollectionUtils.isNotEmpty(createHostRestrictedPoolFor) && !type.isType(ConsumerTypeEnum.SHARE)) {
+        if (CollectionUtils.isNotEmpty(createHostRestrictedPoolFor)) {
             log.debug("creating host restricted pools for: {}", createHostRestrictedPoolFor);
             poolOperationCallback.appendCallback(PoolHelper.createHostRestrictedPools(poolManager, consumer,
                 createHostRestrictedPoolFor, entitlementMap, attributeMaps, productCurator));
@@ -868,8 +637,8 @@ public class EntitlementRules implements Enforcer {
 
         ConsumerType type = this.consumerTypeCurator.getConsumerType(consumer);
 
-        boolean consumerFactExpression = (type.isManifest() || type.isType(ConsumerTypeEnum.SHARE)) &&
-            !config.getBoolean(ConfigProperties.STANDALONE);
+        boolean consumerFactExpression = type.isManifest() && !config.getBoolean(ConfigProperties
+            .STANDALONE);
 
         if (!consumerFactExpression) {
             return poolOperationCallback;
@@ -927,12 +696,12 @@ public class EntitlementRules implements Enforcer {
                 else {
                     // if the bonus pool is unlimited, then the quantity needs
                     // to go to 0 when the physical pool is exhausted completely
-                    // by export or share. A quantity of 0 will block future binds,
+                    // by export. A quantity of 0 will block future binds,
                     // whereas -1 does not.
-                    Long notConsumedLocally = pool.getExported() + pool.getShared();
+                    Long notConsumedLocally = pool.getExported();
 
                     // if this is a create, consider the current ent count also
-                    if (!isUpdate && (type.isType(ConsumerTypeEnum.SHARE) || type.isManifest())) {
+                    if (!isUpdate && (type.isManifest())) {
                         notConsumedLocally += entitlement.getQuantity();
                     }
 
@@ -977,14 +746,13 @@ public class EntitlementRules implements Enforcer {
 
         // Perform pool management based on the attributes of the pool:
         if (!virtLimitEntitlements.isEmpty()) {
-            /* Share and manifest consumers only need to compute this method in hosted mode
+            /* manifest consumers only need to compute this method in hosted mode
                because for both these types, of all the operations implemented in this method today,
                we only care about decrementing host bonus pool quantity and that is only implemented
                in hosted mode. These checks are done further below, but doing this up-front to save
                 us some computation.
              */
-            if (!(ctype.isType(ConsumerTypeEnum.SHARE) || ctype.isManifest()) ||
-                !config.getBoolean(ConfigProperties.STANDALONE)) {
+            if (!(ctype.isManifest()) || !config.getBoolean(ConfigProperties.STANDALONE)) {
 
                 poolOperationCallback
                     .appendCallback(postBindVirtLimit(poolManager, consumer, virtLimitEntitlements,
@@ -992,10 +760,6 @@ public class EntitlementRules implements Enforcer {
             }
         }
 
-        if (ctype.isType(ConsumerTypeEnum.SHARE) && !isUpdate) {
-            poolOperationCallback.appendCallback(
-                postBindShareCreate(consumer, owner, entitlementMap, poolQuantityMap));
-        }
         return poolOperationCallback;
     }
 

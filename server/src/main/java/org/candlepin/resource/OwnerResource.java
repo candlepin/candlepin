@@ -1037,12 +1037,6 @@ public class OwnerResource {
         Owner owner = findOwnerByKey(ownerKey);
         Event event = eventFactory.ownerDeleted(owner);
 
-        if (!force && consumerCurator.doesShareConsumerExist(owner)) {
-            throw new BadRequestException(
-                i18n.tr("owner \"{0}\" cannot be deleted while there is a share consumer. " +
-                    "You may use \"force\" to bypass.", owner.getKey()));
-        }
-
         try {
             ownerManager.cleanupAndDelete(owner, revoke);
         }
@@ -1810,11 +1804,6 @@ public class OwnerResource {
             throw new BadRequestException(i18n.tr("Cannot update bonus pools, as they are auto generated"));
         }
 
-        if (currentPool.isCreatedByShare()) {
-            throw new BadRequestException(i18n.tr("Cannot update shared pools, This should be triggered " +
-                "by updating the share entitlement instead"));
-        }
-
         Pool newPool = new Pool();
         this.populateEntity(newPool, newPoolDTO);
 
@@ -1829,8 +1818,6 @@ public class OwnerResource {
         newPool.setDerivedProduct(currentPool.getDerivedProduct());
 
         // Forcefully set fields we don't allow the client to change.
-        newPool.setCreatedByShare(currentPool.isCreatedByShare());
-        newPool.setHasSharedAncestor(currentPool.hasSharedAncestor());
         newPool.setSourceSubscription(currentPool.getSourceSubscription());
         newPool.setContractNumber(currentPool.getContractNumber());
         newPool.setAccountNumber(currentPool.getAccountNumber());

@@ -43,9 +43,8 @@ import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.api.v1.CertificateDTO;
-import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.ComplianceStatusDTO;
-import org.candlepin.dto.api.v1.ConsumerTypeDTO;
+import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Cdn;
@@ -341,47 +340,6 @@ public class ConsumerResourceTest {
 
     protected Consumer createConsumer() {
         return this.createConsumer(null, null);
-    }
-
-    @Test
-    public void testValidateShareConsumerRequiresRecipientFact() {
-        ConsumerType share = this.mockConsumerType(new ConsumerType(ConsumerTypeEnum.SHARE));
-        ConsumerTypeDTO shareDto = this.translator.translate(share, ConsumerTypeDTO.class);
-        OwnerDTO ownerDTO = createOwnerDTO("test-owner");
-        ConsumerDTO c = createConsumerDTO("test-consumer", "test-user", ownerDTO, shareDto);
-
-        UserPrincipal uap = mock(UserPrincipal.class);
-        when(uap.canAccess(any(Object.class), any(SubResource.class), any(Access.class)))
-            .thenReturn(Boolean.TRUE);
-        c.setFact("foo", "bar");
-
-        thrown.expect(BadRequestException.class);
-        thrown.expectMessage("must specify a recipient org");
-        consumerResource.create(c, uap, "test-user", "test-owner", null, false);
-    }
-
-    @Test
-    public void testValidateShareConsumerRequiresRecipientPermissions() {
-        ConsumerType share = this.mockConsumerType(new ConsumerType(ConsumerTypeEnum.SHARE));
-        ConsumerTypeDTO shareDto = this.translator.translate(share, ConsumerTypeDTO.class);
-
-        OwnerDTO ownerDto = createOwnerDTO("test-owner");
-
-        ConsumerDTO c = createConsumerDTO("test-consumer", "test-user", ownerDto, shareDto);
-
-        UserPrincipal uap = mock(UserPrincipal.class);
-        when(uap.canAccess(any(Object.class), any(SubResource.class), any(Access.class)))
-            .thenReturn(Boolean.TRUE);
-
-        Owner o2 = createOwner();
-        c.setRecipientOwnerKey(o2.getKey());
-
-        when(uap.canAccess(eq(o2), eq(SubResource.ENTITLEMENTS), eq(Access.CREATE)))
-            .thenReturn(Boolean.FALSE);
-
-        thrown.expect(NotFoundException.class);
-        thrown.expectMessage("owner with key");
-        consumerResource.create(c, uap, "test-user", "test-owner", null, false);
     }
 
     @Test

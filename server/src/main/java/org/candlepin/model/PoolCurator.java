@@ -1293,7 +1293,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
         if (ids != null && !ids.isEmpty()) {
             DetachedCriteria criteria = this.createSecureDetachedCriteria(Pool.class, null)
-                .add(Restrictions.eq("hasSharedAncestor", Boolean.FALSE))
                 .add(CPRestrictions.in("id", ids))
                 .addOrder(Order.asc("id"));
 
@@ -1315,7 +1314,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
             if (ids != null && !ids.isEmpty()) {
                 DetachedCriteria criteria = this.createSecureDetachedCriteria(Pool.class, null)
-                    .add(Restrictions.eq("hasSharedAncestor", Boolean.FALSE))
                     .add(CPRestrictions.in("id", ids))
                     .addOrder(Order.asc("id"));
 
@@ -1842,28 +1840,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             .executeUpdate();
 
         log.debug("CDN removed from {} pools: {}", updated, cdn);
-    }
-
-    @Transactional
-    public void calculateSharedForOwnerPools(Owner owner) {
-        String stmt = "update Pool p set p.shared = coalesce(" +
-            "(select sum(ent.quantity) FROM Entitlement ent, Consumer cons, ConsumerType ctype " +
-            "where ent.pool.id = p.id and ent.consumer.id = cons.id and cons.typeId = ctype.id " +
-            "and ctype.label = 'share'), 0) where p.owner = :owner";
-
-        Query q = currentSession().createQuery(stmt);
-        q.setParameter("owner", owner);
-        q.executeUpdate();
-    }
-
-    @Transactional
-    public List<Pool> listSharedPoolsOf(Pool pool) {
-        return listByCriteria(currentSession().createCriteria(Pool.class)
-            .createAlias("sourceEntitlement", "se")
-            .createAlias("se.pool", "sep")
-            .add(Restrictions.eq("createdByShare", Boolean.TRUE))
-            .add(Restrictions.eq("se.pool", pool))
-            .addOrder(Order.desc("created")));
     }
 
     /**

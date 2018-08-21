@@ -20,28 +20,6 @@ describe 'Consumer Resource' do
     @consumer2 = consumer_client(@user2, random_string("consumer2"))
   end
 
-  it 'should not allow setting recipient owner on non share consumers' do
-    expect do
-      @user2.register(
-        random_string('orgBShare'),
-        :system,
-        nil,
-        {},
-        nil,
-        @owner2['key'],
-        [],
-        [],
-        nil,
-        [],
-        nil,
-        [],
-        nil,
-        nil,
-        nil,
-        @owner2['key'])
-    end.to raise_error(RestClient::BadRequest)
-  end
-
   it 'should not allow setting entitlement count on register' do
      consumer = @user2.register(
         random_string('newConsumer'),

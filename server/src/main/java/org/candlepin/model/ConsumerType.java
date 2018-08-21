@@ -45,7 +45,7 @@ public class ConsumerType extends AbstractHibernateObject<ConsumerType> {
      */
     public enum ConsumerTypeEnum {
         SYSTEM("system", false), PERSON("person", false), DOMAIN("domain", false),
-        CANDLEPIN("candlepin", true), HYPERVISOR("hypervisor", false), SHARE("share", false);
+        CANDLEPIN("candlepin", true), HYPERVISOR("hypervisor", false);
 
         private final String label;
         private final boolean manifest;

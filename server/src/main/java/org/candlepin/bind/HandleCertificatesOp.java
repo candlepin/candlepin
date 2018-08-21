@@ -15,7 +15,6 @@
 package org.candlepin.bind;
 
 import org.candlepin.controller.EntitlementCertificateGenerator;
-import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
@@ -63,25 +62,23 @@ public class HandleCertificatesOp implements BindOperation {
      */
     @Override
     public boolean preProcess(BindContext context) {
-        if (!context.getConsumerType().isType(ConsumerTypeEnum.SHARE)) {
-            List<String> poolIds = new LinkedList<>();
-            Map<String, Product> products = new HashMap<>();
-            Map<String, PoolQuantity> poolQuantities = context.getPoolQuantities();
+        List<String> poolIds = new LinkedList<>();
+        Map<String, Product> products = new HashMap<>();
+        Map<String, PoolQuantity> poolQuantities = context.getPoolQuantities();
 
-            for (PoolQuantity poolQuantity : poolQuantities.values()) {
-                Pool pool = poolQuantity.getPool();
-                products.put(pool.getId(), pool.getProduct());
-                poolIds.add(pool.getId());
-            }
-
-            certs = ecGenerator.generateEntitlementCertificates(context.getConsumer(),
-                products,
-                poolQuantities,
-                context.getEntitlementMap(),
-                false);
-
-            modifyingEnts = this.eCurator.getDependentEntitlementIdsForPools(context.getConsumer(), poolIds);
+        for (PoolQuantity poolQuantity : poolQuantities.values()) {
+            Pool pool = poolQuantity.getPool();
+            products.put(pool.getId(), pool.getProduct());
+            poolIds.add(pool.getId());
         }
+
+        certs = ecGenerator.generateEntitlementCertificates(context.getConsumer(),
+            products,
+            poolQuantities,
+            context.getEntitlementMap(),
+            false);
+
+        modifyingEnts = this.eCurator.getDependentEntitlementIdsForPools(context.getConsumer(), poolIds);
 
         return true;
     }
@@ -92,17 +89,15 @@ public class HandleCertificatesOp implements BindOperation {
      */
     @Override
     public boolean execute(BindContext context) {
-        if (!context.getConsumerType().isType(ConsumerTypeEnum.SHARE)) {
-            Map<String, Entitlement> ents = context.getEntitlementMap();
-            for (Entitlement ent: ents.values()) {
-                EntitlementCertificate cert = certs.get(ent.getPool().getId());
-                ent.getCertificates().add(cert);
-                cert.setEntitlement(ent);
-            }
-            ecCurator.saveAll(certs.values(), false, false);
-            eCurator.saveOrUpdateAll(ents.values(), false, false);
-            this.ecGenerator.regenerateCertificatesByEntitlementIds(modifyingEnts, true);
+        Map<String, Entitlement> ents = context.getEntitlementMap();
+        for (Entitlement ent: ents.values()) {
+            EntitlementCertificate cert = certs.get(ent.getPool().getId());
+            ent.getCertificates().add(cert);
+            cert.setEntitlement(ent);
         }
+        ecCurator.saveAll(certs.values(), false, false);
+        eCurator.saveOrUpdateAll(ents.values(), false, false);
+        this.ecGenerator.regenerateCertificatesByEntitlementIds(modifyingEnts, true);
         return true;
     }
 }

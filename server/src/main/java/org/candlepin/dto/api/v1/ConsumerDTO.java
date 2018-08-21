@@ -78,7 +78,6 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
     protected HypervisorIdDTO hypervisorId;
     protected Set<String> contentTags;
     protected Boolean autoheal;
-    protected String recipientOwnerKey;
     protected String annotations;
     protected String contentAccessMode;
     protected ConsumerTypeDTO type;
@@ -629,27 +628,6 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
     }
 
     /**
-     * Retrieves the recipient owner key field of this ConsumerDTO object.
-     *
-     * @return the recipient owner key of the consumer, or null if it has not yet been defined
-     */
-    public String getRecipientOwnerKey() {
-        return recipientOwnerKey;
-    }
-
-    /**
-     * Sets the recipient owner key to set on this ConsumerDTO object.
-     *
-     * @param recipientOwnerKey the recipient owner key to set on this ConsumerDTO object.
-     *
-     * @return a reference to this DTO object.
-     */
-    public ConsumerDTO setRecipientOwnerKey(String recipientOwnerKey) {
-        this.recipientOwnerKey = recipientOwnerKey;
-        return this;
-    }
-
-    /**
      * Retrieves the annotations field of this ConsumerDTO object.
      *
      * @return the annotations of the consumer, or null if it has not yet been defined
@@ -905,7 +883,6 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
                 .append(thisHypervisorId, thatHypervisorId)
                 .append(this.getContentTags(), that.getContentTags())
                 .append(this.getAutoheal(), that.getAutoheal())
-                .append(this.getRecipientOwnerKey(), that.getRecipientOwnerKey())
                 .append(this.getAnnotations(), that.getAnnotations())
                 .append(this.getContentAccessMode(), that.getContentAccessMode())
                 .append(this.getType(), that.getType())
@@ -947,7 +924,6 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
             .append(hypervisorId)
             .append(this.getContentTags())
             .append(this.getAutoheal())
-            .append(this.getRecipientOwnerKey())
             .append(this.getAnnotations())
             .append(this.getContentAccessMode())
             .append(this.getType())
@@ -1013,7 +989,6 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
         this.setHypervisorId(source.getHypervisorId());
         this.setContentTags(source.getContentTags());
         this.setAutoheal(source.getAutoheal());
-        this.setRecipientOwnerKey(source.getRecipientOwnerKey());
         this.setAnnotations(source.getAnnotations());
         this.setContentAccessMode(source.getContentAccessMode());
         this.setType(source.getType());

@@ -16,7 +16,6 @@ package org.candlepin.bind;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
-import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Pool;
@@ -87,9 +86,6 @@ public class HandleEntitlementsOp implements BindOperation {
 
             if (ctype.isManifest()) {
                 pool.setExported(pool.getExported() + quantity);
-            }
-            else if (ctype.isType(ConsumerTypeEnum.SHARE)) {
-                pool.setShared(pool.getShared() + quantity);
             }
 
             consumer.addEntitlement(ent);

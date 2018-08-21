@@ -14,11 +14,10 @@
  */
 package org.candlepin.policy.js.entitlement;
 
-import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
@@ -42,7 +41,6 @@ import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.model.ProductShareCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.dto.Subscription;
@@ -100,8 +98,6 @@ public class EntitlementRulesTestFixture {
     @Mock
     private OwnerCurator ownerCurator;
     @Mock
-    protected ProductShareCurator productShareCurator;
-    @Mock
     protected ProductManager productManager;
     @Mock
     protected EventSink eventSink;
@@ -146,7 +142,6 @@ public class EntitlementRulesTestFixture {
             new RulesObjectMapper(new ProductCachedSerializationModule(productCurator)),
             ownerCurator,
             ownerProductCuratorMock,
-            productShareCurator,
             productManager,
             eventSink,
             eventFactory,

@@ -103,8 +103,6 @@ public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, Po
         source.setSourceSubscription(sourceSubscription);
 
         source.setActiveSubscription(true);
-        source.setCreatedByShare(false);
-        source.setHasSharedAncestor(true);
 
         source.setQuantity(1L);
         source.setStartDate(new Date());
@@ -120,7 +118,6 @@ public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, Po
         source.setOrderNumber("555");
         source.setConsumed(6L);
         source.setExported(7L);
-        source.setShared(8L);
 
         Map<String, String> calculatedAttributes = new HashMap<>();
         calculatedAttributes.put("calc-attribute-key-3", "calc-attribute-value-3");
@@ -179,8 +176,6 @@ public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, Po
             assertEquals(source.getId(), dest.getId());
             assertEquals(source.getType().toString(), dest.getType());
             assertEquals(source.getActiveSubscription(), dest.isActiveSubscription());
-            assertEquals(source.isCreatedByShare(), dest.isCreatedByShare());
-            assertEquals(source.hasSharedAncestor(), dest.hasSharedAncestor());
             assertEquals(source.getQuantity(), dest.getQuantity());
             assertEquals(source.getStartDate(), dest.getStartDate());
             assertEquals(source.getEndDate(), dest.getEndDate());
@@ -191,7 +186,6 @@ public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, Po
             assertEquals(source.getOrderNumber(), dest.getOrderNumber());
             assertEquals(source.getConsumed(), dest.getConsumed());
             assertEquals(source.getExported(), dest.getExported());
-            assertEquals(source.getShared(), dest.getShared());
             assertEquals(source.getCalculatedAttributes(), dest.getCalculatedAttributes());
             assertEquals(source.getUpstreamPoolId(), dest.getUpstreamPoolId());
             assertEquals(source.getUpstreamEntitlementId(), dest.getUpstreamEntitlementId());

@@ -54,8 +54,6 @@ public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, Po
         Pool source = new Pool();
         source.setId("pool-id");
 
-        source.setHasSharedAncestor(true);
-
         source.setQuantity(1L);
         source.setStartDate(new Date());
         source.setEndDate(new Date());
@@ -103,7 +101,6 @@ public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, Po
     protected void verifyOutput(Pool source, PoolDTO dest, boolean childrenGenerated) {
         if (source != null) {
             assertEquals(source.getId(), dest.getId());
-            assertEquals(source.hasSharedAncestor(), dest.hasSharedAncestor());
             assertEquals(source.getQuantity(), dest.getQuantity());
             assertEquals(source.getStartDate(), dest.getStartDate());
             assertEquals(source.getEndDate(), dest.getEndDate());

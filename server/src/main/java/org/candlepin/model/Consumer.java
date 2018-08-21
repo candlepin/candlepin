@@ -221,12 +221,6 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     private String contentAccessMode;
 
     /**
-     * Identifies the share recipient owner
-     */
-    @Column(name = "recipient_owner_key")
-    private String recipientOwnerKey;
-
-    /**
      * Length of field is required by hypersonic in the unit tests only
      *
      * 4194304 bytes = 4 MB
@@ -814,14 +808,6 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     public void setContentAccessMode(String contentAccessMode) {
         this.contentAccessMode = contentAccessMode;
-    }
-
-    public String getRecipientOwnerKey() {
-        return recipientOwnerKey;
-    }
-
-    public void setRecipientOwnerKey(String recipientOwnerKey) {
-        this.recipientOwnerKey = recipientOwnerKey;
     }
 
 }

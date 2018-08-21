@@ -124,7 +124,6 @@ public class ConsumerTranslatorTest extends
         consumer.setCanActivate(Boolean.TRUE);
         consumer.setHypervisorId(hypervisorIdTranslatorTest.initSourceObject());
         consumer.setAutoheal(Boolean.TRUE);
-        consumer.setRecipientOwnerKey("test_recipient_owner_key");
         consumer.setAnnotations("test_annotations");
         consumer.setContentAccessMode("test_content_access_mode");
         consumer.setIdCert((IdentityCertificate) this.certificateTranslatorTest.initSourceObject());
@@ -197,7 +196,6 @@ public class ConsumerTranslatorTest extends
             assertEquals(source.isCanActivate(), dest.isCanActivate());
             assertEquals(source.getContentTags(), dest.getContentTags());
             assertEquals(source.isAutoheal(), dest.getAutoheal());
-            assertEquals(source.getRecipientOwnerKey(), dest.getRecipientOwnerKey());
             assertEquals(source.getAnnotations(), dest.getAnnotations());
             assertEquals(source.getContentAccessMode(), dest.getContentAccessMode());
 
