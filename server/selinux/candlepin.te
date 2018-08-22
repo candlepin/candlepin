@@ -77,6 +77,7 @@ require {
     type candlepin_etc_certs_ca_cert_r_t;
     type httpd_t;
     type tomcat_t;
+    type postgresql_port_t;
     class file { read getattr open };
 }
 
@@ -96,3 +97,4 @@ allow tomcat_t candlepin_var_lib_t:dir { manage_dir_perms };
 allow tomcat_t candlepin_var_lib_t:file { manage_file_perms };
 allow tomcat_t candlepin_var_log_t:dir { manage_dir_perms };
 allow tomcat_t candlepin_var_log_t:file { manage_file_perms };
+allow tomcat_t postgresql_port_t:tcp_socket name_connect;
