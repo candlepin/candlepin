@@ -379,8 +379,8 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         return ownerId;
     }
 
-    public String setOwnerId(String ownerId) {
-        return ownerId;
+    public void setOwnerId(String ownerId) {
+        this.ownerId = ownerId;
     }
 
     /**
