@@ -60,6 +60,10 @@ else
     $SUDO openssl req -new -x509 -days $CA_CERT_DAYS -key $CA_KEY -out $CA_CERT -subj "/CN=$HOSTNAME/C=US/L=Raleigh/"
     $SUDO su -c "echo -n "password" > $KEYSTORE_PASSWORD"
     $SUDO openssl pkcs12 -export -in $CA_CERT -inkey $CA_KEY -out $KEYSTORE -name tomcat -CAfile $CA_CERT -caname root -chain -password file:$KEYSTORE_PASSWORD
+
+    # Tomcat 8.5+ requires the cert be separate from the key when used as both a keystore and a trust store
+    $SUDO keytool -keystore $KEYSTORE -noprompt -importcert -storepass:file $KEYSTORE_PASSWORD -alias candlepin_ca -file $CA_CERT
+
     $SUDO cp $CA_REDHAT_CERT $CA_UPSTREAM_CERT
     $SUDO chmod a+r $KEYSTORE
 fi
