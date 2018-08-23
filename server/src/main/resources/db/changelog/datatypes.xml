@@ -6,16 +6,16 @@
 
     <property name="timestamp.type" value="TIMESTAMP WITHOUT TIME ZONE" dbms="postgresql,hsqldb"/>
     <property name="timestamp.type" value="TIMESTAMP" dbms="oracle"/>
-    <property name="timestamp.type" value="DATETIME" dbms="mysql"/>
+    <property name="timestamp.type" value="DATETIME" dbms="mysql,mariadb"/>
 
     <property name="date.type" value="TIMESTAMP WITHOUT TIME ZONE" dbms="postgresql,hsqldb"/>
     <property name="date.type" value="TIMESTAMP" dbms="oracle"/>
-    <property name="date.type" value="DATETIME" dbms="mysql"/>
+    <property name="date.type" value="DATETIME" dbms="mysql,mariadb"/>
 
-    <property name="serial.type" value="BIGINT" dbms="oracle,mysql,hsqldb"/>
+    <property name="serial.type" value="BIGINT" dbms="oracle,mysql,mariadb,hsqldb"/>
     <property name="serial.type" value="int8" dbms="postgresql"/>
 
-    <property name="cert.type" value="BLOB" dbms="oracle,mysql,hsqldb"/>
+    <property name="cert.type" value="BLOB" dbms="oracle,mysql,mariadb,hsqldb"/>
     <property name="cert.type" value="bytea" dbms="postgresql"/>
 </databaseChangeLog>
 

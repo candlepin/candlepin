@@ -95,14 +95,14 @@
     <!-- MYSQL QUERIES -->
 
     <property
-        dbms="mysql"
+        dbms="mysql,mariadb"
         name="delete_stray_ueber_consumers"
         value="delete c from cp_consumer c
                left outer join cp_entitlement e on e.consumer_id = c.id
                where c.name = 'ueber_cert_consumer' and e.id is null;"/>
 
     <property
-        dbms="mysql"
+        dbms="mysql,mariadb"
         name="delete_stray_ueber_subs"
         value="delete s from cp_subscription s
                inner join cp_product p on s.product_id = p.id
@@ -110,7 +110,7 @@
                where p.name LIKE '%_ueber_product' and pool.id is null;"/>
 
     <property
-        dbms="mysql"
+        dbms="mysql,mariadb"
         name="delete_stray_ueber_content"
         value="delete c from cp_content c
                inner join cp_product_content pc on pc.content_id=c.id
@@ -119,7 +119,7 @@
                where p.name LIKE '%_ueber_product' and pool.id is null;"/>
 
     <property
-        dbms="mysql"
+        dbms="mysql,mariadb"
         name="delete_stray_ueber_owner_content_2_0"
         value="delete oc from cp2_owner_content oc
                inner join cp2_content c on c.uuid=oc.content_uuid
@@ -129,7 +129,7 @@
                where p.name LIKE '%ueber_product' and pool.id is null;"/>
 
     <property
-        dbms="mysql"
+        dbms="mysql,mariadb"
         name="delete_stray_ueber_content_2_0"
         value="delete c from cp2_content c
                inner join cp2_product_content pc on pc.content_uuid=c.uuid
@@ -138,14 +138,14 @@
                where p.name LIKE '%ueber_product' and pool.id is null;"/>
 
     <property
-        dbms="mysql"
+        dbms="mysql,mariadb"
         name="delete_stray_ueber_products"
         value="delete p from cp_product p
                left outer join cp_pool pool on pool.product_id_old = p.id
                where p.name LIKE '%ueber%' and pool.id is null;"/>
 
     <property
-        dbms="mysql"
+        dbms="mysql,mariadb"
         name="delete_stray_ueber_owner_product_2_0"
         value="delete op from cp2_owner_products op
                inner join cp2_products p on p.uuid=op.product_uuid
@@ -153,7 +153,7 @@
                where p.name LIKE '%ueber_product' and pool.id is null;"/>
 
     <property
-        dbms="mysql"
+        dbms="mysql,mariadb"
         name="delete_stray_ueber_product_2_0"
         value="delete p from cp2_products p
                left outer join cp_pool pool on pool.product_uuid=p.uuid

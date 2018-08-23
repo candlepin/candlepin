@@ -9,11 +9,11 @@
     <!-- Postgres automatically maps blob type to bytea so we must use oid to map -->
     <!-- to java.sql.Blob type which gives us streaming capabilities.             -->
     <property name="data.type" value="oid" dbms="postgresql" />
-    <property name="data.type" value="longblob" dbms="mysql" />
+    <property name="data.type" value="longblob" dbms="mysql,mariadb" />
     <property name="data.type" value="blob" dbms="oracle,hsqldb" />
 
     <property name="date.type" value="TIMESTAMP WITHOUT TIME ZONE" dbms="postgresql,oracle,hsqldb"/>
-    <property name="date.type" value="DATETIME" dbms="mysql"/>
+    <property name="date.type" value="DATETIME" dbms="mysql,mariadb"/>
 
     <changeSet id="20160419092221-1" author="mstead">
         <validCheckSum>7:07aa73f9f3481fea2832f0e810673c25</validCheckSum>

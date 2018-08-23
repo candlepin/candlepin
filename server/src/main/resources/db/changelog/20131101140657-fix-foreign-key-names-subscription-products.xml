@@ -12,7 +12,7 @@
         <dropForeignKeyConstraint baseTableName="cp_subscription_products" constraintName="fk_product_id" />
         <dropForeignKeyConstraint baseTableName="cp_subscription_products" constraintName="fk_subscription_id" />
     </changeSet>
-    <changeSet id="20131101140657-1" author="bkearney" dbms="mysql">
+    <changeSet id="20131101140657-1" author="bkearney" dbms="mysql,mariadb">
         <comment>Add back in the correct foreign key names based on https://bugzilla.redhat.com/show_bug.cgi?id=984090</comment>
         <addForeignKeyConstraint baseColumnNames="subscription_id" baseTableName="cp_subscription_products" constraintName="fk_subscription_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_subscription" />
         <addForeignKeyConstraint baseColumnNames="product_id" baseTableName="cp_subscription_products" constraintName="fk_product_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" />

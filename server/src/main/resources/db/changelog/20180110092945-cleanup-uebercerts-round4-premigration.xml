@@ -44,38 +44,38 @@
 
     <!-- MySQL Queries -->
     <property
-            dbms="mysql"
+            dbms="mysql,mariadb"
             name="round4_premigration_cleanup_ueber_subs"
             value="delete s from cp_subscription s inner join cp_product p on s.product_id = p.id where p.name LIKE '%_ueber_product';" />
 
     <property
-            dbms="mysql"
+            dbms="mysql,mariadb"
             name="round4_premigration_cleanup_ueber_ent_certs"
             value="delete ec from cp_ent_certificate ec inner join cp_entitlement e on ec.entitlement_id = e.id inner join cp_pool p on e.pool_id = p.id where p.productname like '%_ueber_product';" />
 
     <property
-            dbms="mysql"
+            dbms="mysql,mariadb"
             name="round4_premigration_cleanup_ueber_ents"
             value="delete e from cp_entitlement e inner join cp_pool p on e.pool_id = p.id where p.productname like '%_ueber_product';" />
 
     <property
-            dbms="mysql"
+            dbms="mysql,mariadb"
             name="round4_premigration_cleanup_ueber_pools"
             value="delete p from cp_pool p where p.productname like '%_ueber_product';" />
 
     <property
-            dbms="mysql"
+            dbms="mysql,mariadb"
             name="round4_premigration_cleanup_ueber_content"
             value="delete c from cp_content c
                inner join cp_product_content pc on pc.content_id=c.id inner join cp_product p on p.id=pc.product_id where p.name LIKE '%_ueber_product';" />
 
     <property
-            dbms="mysql"
+            dbms="mysql,mariadb"
             name="round4_premigration_cleanup_ueber_products"
             value="delete p from cp_product p where p.name LIKE '%_ueber_product';" />
 
     <property
-            dbms="mysql"
+            dbms="mysql,mariadb"
             name="round4_premigration_cleanup_ueber_consumers"
             value="delete c from cp_consumer c where c.name = 'ueber_cert_consumer';" />
 

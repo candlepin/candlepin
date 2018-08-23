@@ -64,7 +64,7 @@
             referencesUniqueColumn="false"/>
     </changeSet>
 
-    <changeSet id="20140408160212-1" author="ckozak" dbms="mysql,postgresql">
+    <changeSet id="20140408160212-1" author="ckozak" dbms="mysql,mariadb,postgresql">
         <comment>Index new table on pool_id, oracle has already done this</comment>
 
         <createIndex indexName="idx_sourcesub_pool_fk" tableName="cp_pool_source_sub" unique="false">

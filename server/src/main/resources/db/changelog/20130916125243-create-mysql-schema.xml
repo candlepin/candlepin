@@ -6,7 +6,7 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
-    <property name="now" value="NOW()" dbms="mysql"/>
+    <property name="now" value="NOW()" dbms="mysql,mariadb"/>
 
     <!--
       On Unix-like systems, MySQL table names are case sensitive, so we need to use all capitals with the Quartz
@@ -28,7 +28,7 @@
 
            Here is an example of how to handle things:
 
-           <changeSet author="awood" id="123" dbms="mysql">
+           <changeSet author="awood" id="123" dbms="mysql,mariadb">
               <createTable tableName="cp_consumer_type">
                  <column name="x" type="NULLABLE_TS"/>
                  <column name="y" type="TIMESTAMP">
@@ -41,7 +41,7 @@
               </modifySql>
            </changeSet>
     -->
-    <changeSet author="awood" id="1379350211813-1-1" dbms="mysql">
+    <changeSet author="awood" id="1379350211813-1-1" dbms="mysql,mariadb">
         <createTable tableName="cp_activation_key">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_activation_key_pkey"/>
@@ -56,7 +56,7 @@
             </column>
         </createTable>
     </changeSet>
-     <changeSet author="awood (generated)" id="1379350211813-1" dbms="mysql">
+     <changeSet author="awood (generated)" id="1379350211813-1" dbms="mysql,mariadb">
         <createTable tableName="cp_activationkey_pool">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_activationkey_pool_pkey"/>
@@ -74,7 +74,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-2" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-2" dbms="mysql,mariadb">
         <createTable tableName="cp_cert_serial">
             <column name="id" type="BIGINT">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_cert_serial_pkey"/>
@@ -90,7 +90,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-3" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-3" dbms="mysql,mariadb">
         <createTable tableName="cp_certificate">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_certificate_pkey"/>
@@ -106,7 +106,7 @@
             <column name="serial_id" type="BIGINT"/>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-4" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-4" dbms="mysql,mariadb">
         <createTable tableName="cp_consumer">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_consumer_pkey"/>
@@ -136,7 +136,7 @@
             <column name="releasever" type="VARCHAR(255)"/>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-5" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-5" dbms="mysql,mariadb">
         <createTable tableName="cp_consumer_capability">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_consumer_capability_pkey"/>
@@ -149,7 +149,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-6" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-6" dbms="mysql,mariadb">
         <createTable tableName="cp_consumer_facts">
             <column name="cp_consumer_id" type="VARCHAR(32)">
                 <constraints nullable="false"/>
@@ -160,7 +160,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-7" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-7" dbms="mysql,mariadb">
         <createTable tableName="cp_consumer_guests">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_consumer_guests_pkey"/>
@@ -175,7 +175,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-8" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-8" dbms="mysql,mariadb">
         <createTable tableName="cp_consumer_type">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_consumer_type_pkey"/>
@@ -190,7 +190,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-9" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-9" dbms="mysql,mariadb">
         <createTable tableName="cp_content">
             <column name="id" type="VARCHAR(255)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_content_pkey"/>
@@ -217,7 +217,7 @@
             <column name="arches" type="VARCHAR(255)"/>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-10" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-10" dbms="mysql,mariadb">
         <createTable tableName="cp_content_modified_products">
             <column name="cp_content_id" type="VARCHAR(255)">
                 <constraints nullable="false"/>
@@ -225,7 +225,7 @@
             <column name="element" type="VARCHAR(255)"/>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-11" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-11" dbms="mysql,mariadb">
         <createTable tableName="cp_deleted_consumers">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_deleted_consumers_pkey"/>
@@ -242,7 +242,7 @@
             <column name="owner_displayname" type="VARCHAR(255)"/>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-12" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-12" dbms="mysql,mariadb">
         <createTable tableName="cp_dist_version">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_dist_version_pkey"/>
@@ -257,7 +257,7 @@
             <column name="updated" type="DATETIME"/>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-13" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-13" dbms="mysql,mariadb">
         <createTable tableName="cp_dist_version_capability">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_dist_vrsn_capability_pkey"/>
@@ -270,7 +270,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-14" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-14" dbms="mysql,mariadb">
         <createTable tableName="cp_ent_certificate">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_ent_certificate_pkey"/>
@@ -289,7 +289,7 @@
             <column name="serial_id" type="BIGINT"/>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-15" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-15" dbms="mysql,mariadb">
         <createTable tableName="cp_entitlement">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_entitlement_pkey"/>
@@ -307,7 +307,7 @@
             <column defaultValueBoolean="false" name="dirty" type="BOOLEAN"/>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-16" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-16" dbms="mysql,mariadb">
         <createTable tableName="cp_env_content">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_env_content_pkey"/>
@@ -323,7 +323,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-17" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-17" dbms="mysql,mariadb">
         <createTable tableName="cp_environment">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_environment_pkey"/>
@@ -339,7 +339,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-18" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-18" dbms="mysql,mariadb">
         <createTable tableName="cp_event">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_event_pkey"/>
@@ -366,7 +366,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-19" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-19" dbms="mysql,mariadb">
         <createTable tableName="cp_export_metadata">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_export_metadata_pkey"/>
@@ -382,7 +382,7 @@
             <column name="owner_id" type="VARCHAR(32)"/>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-20" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-20" dbms="mysql,mariadb">
         <createTable tableName="cp_id_cert">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_id_cert_pkey"/>
@@ -398,7 +398,7 @@
             <column name="serial_id" type="BIGINT"/>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-21" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-21" dbms="mysql,mariadb">
         <createTable tableName="cp_import_record">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_import_record_pkey"/>
@@ -414,7 +414,7 @@
             <column name="file_name" type="VARCHAR(255)"/>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-22" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-22" dbms="mysql,mariadb">
         <createTable tableName="cp_installed_products">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_installed_products_pkey"/>
@@ -432,7 +432,7 @@
             <column name="product_arch" type="VARCHAR(63)"/>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-23" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-23" dbms="mysql,mariadb">
         <createTable tableName="cp_job">
             <column name="id" type="VARCHAR(255)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_job_pkey"/>
@@ -449,7 +449,7 @@
             <column name="targettype" type="INTEGER"/>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-24" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-24" dbms="mysql,mariadb">
         <createTable tableName="cp_key_pair">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_key_pair_pkey"/>
@@ -460,7 +460,7 @@
             <column name="publickey" type="BLOB"/>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-25" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-25" dbms="mysql,mariadb">
         <createTable tableName="cp_owner">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_owner_pkey"/>
@@ -479,7 +479,7 @@
             <column name="upstream_id" type="VARCHAR(32)"/>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-26" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-26" dbms="mysql,mariadb">
         <createTable tableName="cp_owner_permission">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_owner_permission_pkey"/>
@@ -495,7 +495,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-27" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-27" dbms="mysql,mariadb">
         <createTable tableName="cp_pool">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_pool_pkey"/>
@@ -535,7 +535,7 @@
             <column name="sourceconsumer_id" type="VARCHAR(32)"/>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-28" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-28" dbms="mysql,mariadb">
         <createTable tableName="cp_pool_attribute">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_pool_attribute_pkey"/>
@@ -551,7 +551,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-29" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-29" dbms="mysql,mariadb">
         <createTable tableName="cp_pool_products">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_pool_products_pkey"/>
@@ -568,7 +568,7 @@
             <column name="dtype" type="VARCHAR(30)"/>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-30" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-30" dbms="mysql,mariadb">
         <createTable tableName="cp_product">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_product_pkey"/>
@@ -581,7 +581,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-31" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-31" dbms="mysql,mariadb">
         <createTable tableName="cp_product_attribute">
             <column name="id" type="VARCHAR(255)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_product_attribute_pkey"/>
@@ -597,7 +597,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-32" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-32" dbms="mysql,mariadb">
         <createTable tableName="cp_product_certificate">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_product_certificate_pkey"/>
@@ -615,7 +615,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-33" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-33" dbms="mysql,mariadb">
         <createTable tableName="cp_product_content">
             <column name="product_id" type="VARCHAR(32)">
                 <constraints nullable="false"/>
@@ -628,7 +628,7 @@
             <column name="updated" type="DATETIME"/>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-34" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-34" dbms="mysql,mariadb">
         <createTable tableName="cp_product_dependent_products">
             <column name="cp_product_id" type="VARCHAR(32)">
                 <constraints nullable="false"/>
@@ -636,7 +636,7 @@
             <column name="element" type="VARCHAR(255)"/>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-35" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-35" dbms="mysql,mariadb">
         <createTable tableName="cp_product_pool_attribute">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_product_pool_attribute_pkey"/>
@@ -656,7 +656,7 @@
             <column name="dtype" type="VARCHAR(30)"/>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-36" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-36" dbms="mysql,mariadb">
         <createTable tableName="cp_product_reliance">
             <column name="parent_product_id" type="VARCHAR(32)">
                 <constraints nullable="false"/>
@@ -666,7 +666,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-37" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-37" dbms="mysql,mariadb">
         <createTable tableName="cp_role">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_role_pkey"/>
@@ -678,7 +678,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-38" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-38" dbms="mysql,mariadb">
         <createTable tableName="cp_role_users">
             <column name="role_id" type="VARCHAR(32)">
                 <constraints nullable="false"/>
@@ -688,7 +688,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-39" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-39" dbms="mysql,mariadb">
         <createTable tableName="cp_rules">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_rules_pkey"/>
@@ -701,7 +701,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-40" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-40" dbms="mysql,mariadb">
         <createTable tableName="cp_stat_history">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_stat_history_pkey"/>
@@ -719,7 +719,7 @@
             <column name="value_type" type="VARCHAR(255)"/>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-41" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-41" dbms="mysql,mariadb">
         <createTable tableName="cp_sub_derivedprods">
             <column name="subscription_id" type="VARCHAR(32)">
                 <constraints nullable="false"/>
@@ -729,7 +729,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-42" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-42" dbms="mysql,mariadb">
         <createTable tableName="cp_subscription">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_subscription_pkey"/>
@@ -762,7 +762,7 @@
             <column name="derivedproduct_id" type="VARCHAR(255)"/>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-43" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-43" dbms="mysql,mariadb">
         <createTable tableName="cp_subscription_products">
             <column name="subscription_id" type="VARCHAR(32)">
                 <constraints nullable="false"/>
@@ -772,7 +772,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-44" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-44" dbms="mysql,mariadb">
         <createTable tableName="cp_upstream_consumer">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_upstream_consumer_pkey"/>
@@ -796,7 +796,7 @@
             <column name="prefix_url_api" type="VARCHAR(255)"/>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-45" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-45" dbms="mysql,mariadb">
         <createTable tableName="cp_user">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_user_pkey"/>
@@ -812,7 +812,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-46" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-46" dbms="mysql,mariadb">
         <createTable tableName="QRTZ_BLOB_TRIGGERS">
             <column name="trigger_name" type="VARCHAR(200)">
                 <constraints nullable="false"/>
@@ -826,7 +826,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-47" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-47" dbms="mysql,mariadb">
         <createTable tableName="QRTZ_CALENDARS">
             <column name="calendar_name" type="VARCHAR(200)">
                 <constraints nullable="false"/>
@@ -839,7 +839,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-48" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-48" dbms="mysql,mariadb">
         <createTable tableName="QRTZ_CRON_TRIGGERS">
             <column name="trigger_name" type="VARCHAR(200)">
                 <constraints nullable="false"/>
@@ -856,7 +856,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-49" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-49" dbms="mysql,mariadb">
         <createTable tableName="QRTZ_FIRED_TRIGGERS">
             <column name="entry_id" type="VARCHAR(95)">
                 <constraints nullable="false"/>
@@ -889,7 +889,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-50" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-50" dbms="mysql,mariadb">
         <createTable tableName="QRTZ_JOB_DETAILS">
             <column name="job_name" type="VARCHAR(200)">
                 <constraints nullable="false"/>
@@ -915,7 +915,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-51" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-51" dbms="mysql,mariadb">
         <createTable tableName="QRTZ_LOCKS">
             <column name="lock_name" type="VARCHAR(40)">
                 <constraints nullable="false"/>
@@ -925,7 +925,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-52" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-52" dbms="mysql,mariadb">
         <createTable tableName="QRTZ_PAUSED_TRIGGER_GRPS">
             <column name="trigger_group" type="VARCHAR(200)">
                 <constraints nullable="false"/>
@@ -935,7 +935,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-53" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-53" dbms="mysql,mariadb">
         <createTable tableName="QRTZ_SCHEDULER_STATE">
             <column name="instance_name" type="VARCHAR(200)">
                 <constraints nullable="false"/>
@@ -951,7 +951,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-54" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-54" dbms="mysql,mariadb">
         <createTable tableName="QRTZ_SIMPLE_TRIGGERS">
             <column name="trigger_name" type="VARCHAR(200)">
                 <constraints nullable="false"/>
@@ -973,7 +973,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-55" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-55" dbms="mysql,mariadb">
         <createTable tableName="QRTZ_SIMPROP_TRIGGERS">
             <column name="sched_name" type="VARCHAR(120)">
                 <constraints nullable="false"/>
@@ -997,7 +997,7 @@
             <column name="bool_prop_2" type="BOOLEAN"/>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-56" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-56" dbms="mysql,mariadb">
         <createTable tableName="QRTZ_TRIGGERS">
             <column name="trigger_name" type="VARCHAR(200)">
                 <constraints nullable="false"/>
@@ -1033,366 +1033,366 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-57" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-57" dbms="mysql,mariadb">
         <addPrimaryKey columnNames="cp_consumer_id, mapkey" constraintName="cp_consumer_facts_pkey" tableName="cp_consumer_facts"/>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-58" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-58" dbms="mysql,mariadb">
         <addPrimaryKey columnNames="product_id, content_id" constraintName="cp_product_content_pkey" tableName="cp_product_content"/>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-59" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-59" dbms="mysql,mariadb">
         <addPrimaryKey columnNames="role_id, user_id" constraintName="cp_role_users_pkey" tableName="cp_role_users"/>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-60" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-60" dbms="mysql,mariadb">
         <addPrimaryKey columnNames="subscription_id, product_id" constraintName="cp_subscription_products_pkey" tableName="cp_subscription_products"/>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-61" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-61" dbms="mysql,mariadb">
         <addPrimaryKey columnNames="sched_name, trigger_name, trigger_group" constraintName="qrtz_blob_triggers_pkey" tableName="QRTZ_BLOB_TRIGGERS"/>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-62" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-62" dbms="mysql,mariadb">
         <addPrimaryKey columnNames="sched_name, calendar_name" constraintName="qrtz_calendars_pkey" tableName="QRTZ_CALENDARS"/>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-63" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-63" dbms="mysql,mariadb">
         <addPrimaryKey columnNames="sched_name, trigger_name, trigger_group" constraintName="qrtz_cron_triggers_pkey" tableName="QRTZ_CRON_TRIGGERS"/>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-64" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-64" dbms="mysql,mariadb">
         <addPrimaryKey columnNames="sched_name, entry_id" constraintName="qrtz_fired_triggers_pkey" tableName="QRTZ_FIRED_TRIGGERS"/>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-65" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-65" dbms="mysql,mariadb">
         <addPrimaryKey columnNames="sched_name, job_name, job_group" constraintName="qrtz_job_details_pkey" tableName="QRTZ_JOB_DETAILS"/>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-66" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-66" dbms="mysql,mariadb">
         <addPrimaryKey columnNames="sched_name, lock_name" constraintName="qrtz_locks_pkey" tableName="QRTZ_LOCKS"/>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-67" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-67" dbms="mysql,mariadb">
         <addPrimaryKey columnNames="sched_name, trigger_group" constraintName="qrtz_paused_trigger_grps_pkey" tableName="QRTZ_PAUSED_TRIGGER_GRPS"/>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-68" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-68" dbms="mysql,mariadb">
         <addPrimaryKey columnNames="sched_name, instance_name" constraintName="qrtz_scheduler_state_pkey" tableName="QRTZ_SCHEDULER_STATE"/>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-69" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-69" dbms="mysql,mariadb">
         <addPrimaryKey columnNames="sched_name, trigger_name, trigger_group" constraintName="qrtz_simple_triggers_pkey" tableName="QRTZ_SIMPLE_TRIGGERS"/>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-70" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-70" dbms="mysql,mariadb">
         <addPrimaryKey columnNames="sched_name, trigger_name, trigger_group" constraintName="qrtz_simprop_triggers_pkey" tableName="QRTZ_SIMPROP_TRIGGERS"/>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-71" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-71" dbms="mysql,mariadb">
         <addPrimaryKey columnNames="sched_name, trigger_name, trigger_group" constraintName="qrtz_triggers_pkey" tableName="QRTZ_TRIGGERS"/>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-72" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-72" dbms="mysql,mariadb">
         <addUniqueConstraint columnNames="key_id, pool_id" constraintName="cp_ak_pool_key_id_pool_id_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_activationkey_pool"/>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-73" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-73" dbms="mysql,mariadb">
         <addUniqueConstraint columnNames="uuid" constraintName="cp_consumer_uuid_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_consumer"/>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-74" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-74" dbms="mysql,mariadb">
         <addUniqueConstraint columnNames="label" constraintName="cp_consumer_type_label_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_consumer_type"/>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-75" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-75" dbms="mysql,mariadb">
         <addUniqueConstraint columnNames="label" constraintName="cp_content_label_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_content"/>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-76" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-76" dbms="mysql,mariadb">
         <addUniqueConstraint columnNames="consumer_uuid" constraintName="cp_dltd_cnsmrs_cnsmr_uuid_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_deleted_consumers"/>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-77" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-77" dbms="mysql,mariadb">
         <addUniqueConstraint columnNames="name" constraintName="cp_dist_version_name_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_dist_version"/>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-78" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-78" dbms="mysql,mariadb">
         <addUniqueConstraint columnNames="environment_id, contentid" constraintName="cp_env_cnt_env_id_cntid_ky" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_env_content"/>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-79" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-79" dbms="mysql,mariadb">
         <addUniqueConstraint columnNames="owner_id, name" constraintName="cp_env_owner_id_name_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_environment"/>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-80" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-80" dbms="mysql,mariadb">
         <addUniqueConstraint columnNames="account" constraintName="cp_owner_account_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_owner"/>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-81" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-81" dbms="mysql,mariadb">
         <addUniqueConstraint columnNames="id, subscriptionid, subscriptionsubkey" constraintName="cp_pool_subid_subsubkey_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_pool"/>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-82" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-82" dbms="mysql,mariadb">
         <addUniqueConstraint columnNames="name" constraintName="cp_role_name_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_role"/>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-83" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-83" dbms="mysql,mariadb">
         <addUniqueConstraint columnNames="username" constraintName="cp_user_username_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_user"/>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-84" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-84" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="key_id" baseTableName="cp_activationkey_pool" constraintName="fk_activation_key_pool_k" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_activation_key" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-85" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-85" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="pool_id" baseTableName="cp_activationkey_pool" constraintName="fk_activation_key_pool_p" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_pool" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-86" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-86" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="serial_id" baseTableName="cp_certificate" constraintName="fk16370c54b9410fc" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_cert_serial" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-87" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-87" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="consumer_idcert_id" baseTableName="cp_consumer" constraintName="fk58205388a0b39916" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_id_cert" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-88" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-88" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="environment_id" baseTableName="cp_consumer" constraintName="fk_consumer_env" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_environment" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-89" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-89" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="keypair_id" baseTableName="cp_consumer" constraintName="fk5820538861936445" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_key_pair" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-90" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-90" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_consumer" constraintName="fk_consumer_owner" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-91" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-91" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="type_id" baseTableName="cp_consumer" constraintName="fk_consumer_consumer_type" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer_type" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-92" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-92" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="consumer_id" baseTableName="cp_consumer_capability" constraintName="fk_cnsmr_capability_cnsmr" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-93" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-93" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="cp_consumer_id" baseTableName="cp_consumer_facts" constraintName="fk278ce810390317d" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-94" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-94" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="consumer_id" baseTableName="cp_consumer_guests" constraintName="fk_consumer_guests" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-95" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-95" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="cp_content_id" baseTableName="cp_content_modified_products" constraintName="fkc93d6a8232912b37" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_content" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-96" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-96" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="dist_version_id" baseTableName="cp_dist_version_capability" constraintName="fk_dist_vrsn_capability" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_dist_version" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-97" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-97" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="entitlement_id" baseTableName="cp_ent_certificate" constraintName="fk_cert_entitlement" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_entitlement" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-98" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-98" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="serial_id" baseTableName="cp_ent_certificate" constraintName="fke76508714b9410fc" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_cert_serial" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-99" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-99" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="consumer_id" baseTableName="cp_entitlement" constraintName="fk_entitlement_consumer" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-100" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-100" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_entitlement" constraintName="fk_entitlement_owner" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-101" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-101" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="pool_id" baseTableName="cp_entitlement" constraintName="fk_entitlement_pool" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_pool" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-102" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-102" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="environment_id" baseTableName="cp_env_content" constraintName="fk_env_content_env" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_environment" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-103" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-103" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_environment" constraintName="fk_env_owner" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-104" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-104" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_export_metadata" constraintName="fkf06f6b8872cc5ca5" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-105" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-105" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="serial_id" baseTableName="cp_id_cert" constraintName="fk456324f64b9410fc" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_cert_serial" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-106" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-106" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_import_record" constraintName="fk9349dd972cc5ca5" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-107" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-107" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="consumer_id" baseTableName="cp_installed_products" constraintName="fk_installed_product" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-108" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-108" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="parent_owner" baseTableName="cp_owner" constraintName="fkf93e9c616343755c" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-109" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-109" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="upstream_id" baseTableName="cp_owner" constraintName="fk_upstream_consumer_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_upstream_consumer" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-110" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-110" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_owner_permission" constraintName="fk_permission_owner" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-111" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-111" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="role_id" baseTableName="cp_owner_permission" constraintName="fk_permission_role" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_role" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-112" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-112" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_pool" constraintName="fk_pool_owner" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-113" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-113" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="sourceentitlement_id" baseTableName="cp_pool" constraintName="fk_pool_source_entitlement" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_entitlement" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-114" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-114" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="pool_id" baseTableName="cp_pool_attribute" constraintName="fk_pool_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_pool" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-115" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-115" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="pool_id" baseTableName="cp_pool_products" constraintName="fk_pool_provided_product" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_pool" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-116" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-116" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="product_id" baseTableName="cp_product_attribute" constraintName="fk_product_attrib_product_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-117" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-117" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="product_id" baseTableName="cp_product_certificate" constraintName="fk_cert_product" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-118" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-118" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="content_id" baseTableName="cp_product_content" constraintName="fkce093157574ef825" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_content" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-119" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-119" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="product_id" baseTableName="cp_product_content" constraintName="fkce09315764dd9c65" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-120" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-120" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="cp_product_id" baseTableName="cp_product_dependent_products" constraintName="fk9ef75306401fcf77" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-121" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-121" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="pool_id" baseTableName="cp_product_pool_attribute" constraintName="fk_prdct_pool_attrib_pool_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_pool" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-122" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-122" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="parent_product_id" baseTableName="cp_product_reliance" constraintName="fk_product_reliance" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-123" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-123" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="role_id" baseTableName="cp_role_users" constraintName="fk_user_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_role" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-124" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-124" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="cp_role_users" constraintName="fk_role_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_user" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-125" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-125" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="certificate_id" baseTableName="cp_subscription" constraintName="fk27d80fafd8564fd9" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_certificate" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-126" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-126" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="derivedproduct_id" baseTableName="cp_subscription" constraintName="fk_sub_derivedprod" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-127" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-127" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_subscription" constraintName="fk_subscription_owner" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-128" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-128" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="product_id" baseTableName="cp_subscription" constraintName="fk_subscription_product" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-129" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-129" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="product_id" baseTableName="cp_subscription_products" constraintName="fk_subscription_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-130" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-130" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="subscription_id" baseTableName="cp_subscription_products" constraintName="fk_product_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_subscription" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-131" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-131" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="consumer_idcert_id" baseTableName="cp_upstream_consumer" constraintName="fk54b0f288a0b39916" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_id_cert" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-132" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-132" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="type_id" baseTableName="cp_upstream_consumer" constraintName="fk_upstream_consumer_type" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer_type" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-133" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-133" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="sched_name, trigger_name, trigger_group" baseTableName="QRTZ_BLOB_TRIGGERS" constraintName="qrtz_blob_trg_name_fkey" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="sched_name, trigger_name, trigger_group" referencedTableName="QRTZ_TRIGGERS" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-134" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-134" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="sched_name, trigger_name, trigger_group" baseTableName="QRTZ_CRON_TRIGGERS" constraintName="qrtz_cron_trg_name_fkey" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="sched_name, trigger_name, trigger_group" referencedTableName="QRTZ_TRIGGERS" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-135" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-135" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="sched_name, trigger_name, trigger_group" baseTableName="QRTZ_SIMPLE_TRIGGERS" constraintName="qrtz_simple_trg_name_fkey" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="sched_name, trigger_name, trigger_group" referencedTableName="QRTZ_TRIGGERS" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-136" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-136" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="sched_name, trigger_name, trigger_group" baseTableName="QRTZ_SIMPROP_TRIGGERS" constraintName="qrtz_simprop_trg_name_fkey" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="sched_name, trigger_name, trigger_group" referencedTableName="QRTZ_TRIGGERS" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-137" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-137" dbms="mysql,mariadb">
         <addForeignKeyConstraint baseColumnNames="sched_name, job_name, job_group" baseTableName="QRTZ_TRIGGERS" constraintName="qrtz_triggers_job_name_fkey" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="sched_name, job_name, job_group" referencedTableName="QRTZ_JOB_DETAILS" />
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-138" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-138" dbms="mysql,mariadb">
         <createIndex indexName="cp_cnsmr_guests_guest_id_idx" tableName="cp_consumer_guests" unique="false">
             <column name="guest_id"/>
         </createIndex>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-139" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-139" dbms="mysql,mariadb">
         <createIndex indexName="cp_dltd_cnsmrs_owner_id_idx" tableName="cp_deleted_consumers" unique="false">
             <column name="owner_id"/>
         </createIndex>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-140" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-140" dbms="mysql,mariadb">
         <createIndex indexName="cp_event_consumerid_idx" tableName="cp_event" unique="false">
             <column name="consumerid"/>
         </createIndex>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-141" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-141" dbms="mysql,mariadb">
         <createIndex indexName="cp_event_ownerid_idx" tableName="cp_event" unique="false">
             <column name="ownerid"/>
         </createIndex>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-142" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-142" dbms="mysql,mariadb">
         <createIndex indexName="cp_pool_productid_idx" tableName="cp_pool" unique="false">
             <column name="productid"/>
         </createIndex>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-143" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-143" dbms="mysql,mariadb">
         <createIndex indexName="cp_pool_subscriptionid_idx" tableName="cp_pool" unique="false">
             <column name="subscriptionid"/>
         </createIndex>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-144" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-144" dbms="mysql,mariadb">
         <createIndex indexName="cp_stat_history_owner_id_idx" tableName="cp_stat_history" unique="false">
             <column name="owner_id"/>
         </createIndex>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-145" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-145" dbms="mysql,mariadb">
         <createIndex indexName="cp_subs_upstream_pool_id_idx" tableName="cp_subscription" unique="false">
             <column name="upstream_pool_id"/>
         </createIndex>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-146" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-146" dbms="mysql,mariadb">
         <createIndex indexName="idx_qrtz_ft_inst_job_req_rcvry" tableName="QRTZ_FIRED_TRIGGERS" unique="false">
             <column name="sched_name"/>
             <column name="instance_name"/>
             <column name="requests_recovery"/>
         </createIndex>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-147" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-147" dbms="mysql,mariadb">
         <createIndex indexName="idx_qrtz_ft_j_g" tableName="QRTZ_FIRED_TRIGGERS" unique="false">
             <column name="sched_name"/>
             <column name="job_name"/>
             <column name="job_group"/>
         </createIndex>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-148" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-148" dbms="mysql,mariadb">
         <createIndex indexName="idx_qrtz_ft_jg" tableName="QRTZ_FIRED_TRIGGERS" unique="false">
             <column name="sched_name"/>
             <column name="job_group"/>
         </createIndex>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-149" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-149" dbms="mysql,mariadb">
         <createIndex indexName="idx_qrtz_ft_t_g" tableName="QRTZ_FIRED_TRIGGERS" unique="false">
             <column name="sched_name"/>
             <column name="trigger_name"/>
             <column name="trigger_group"/>
         </createIndex>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-150" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-150" dbms="mysql,mariadb">
         <createIndex indexName="idx_qrtz_ft_tg" tableName="QRTZ_FIRED_TRIGGERS" unique="false">
             <column name="sched_name"/>
             <column name="trigger_group"/>
         </createIndex>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-151" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-151" dbms="mysql,mariadb">
         <createIndex indexName="idx_qrtz_ft_trig_inst_name" tableName="QRTZ_FIRED_TRIGGERS" unique="false">
             <column name="sched_name"/>
             <column name="instance_name"/>
         </createIndex>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-152" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-152" dbms="mysql,mariadb">
         <createIndex indexName="idx_qrtz_j_grp" tableName="QRTZ_JOB_DETAILS" unique="false">
             <column name="sched_name"/>
             <column name="job_group"/>
         </createIndex>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-153" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-153" dbms="mysql,mariadb">
         <createIndex indexName="idx_qrtz_j_req_recovery" tableName="QRTZ_JOB_DETAILS" unique="false">
             <column name="sched_name"/>
             <column name="requests_recovery"/>
         </createIndex>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-154" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-154" dbms="mysql,mariadb">
         <createIndex indexName="idx_qrtz_t_c" tableName="QRTZ_TRIGGERS" unique="false">
             <column name="sched_name"/>
             <column name="calendar_name"/>
         </createIndex>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-155" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-155" dbms="mysql,mariadb">
         <createIndex indexName="idx_qrtz_t_g" tableName="QRTZ_TRIGGERS" unique="false">
             <column name="sched_name"/>
             <column name="trigger_group"/>
         </createIndex>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-156" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-156" dbms="mysql,mariadb">
         <createIndex indexName="idx_qrtz_t_jg" tableName="QRTZ_TRIGGERS" unique="false">
             <column name="sched_name"/>
             <column name="job_group"/>
         </createIndex>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-157" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-157" dbms="mysql,mariadb">
         <createIndex indexName="idx_qrtz_t_n_g_state" tableName="QRTZ_TRIGGERS" unique="false">
             <column name="sched_name"/>
             <column name="trigger_group"/>
             <column name="trigger_state"/>
         </createIndex>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-158" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-158" dbms="mysql,mariadb">
         <createIndex indexName="idx_qrtz_t_n_state" tableName="QRTZ_TRIGGERS" unique="false">
             <column name="sched_name"/>
             <column name="trigger_name"/>
@@ -1400,27 +1400,27 @@
             <column name="trigger_state"/>
         </createIndex>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-159" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-159" dbms="mysql,mariadb">
         <createIndex indexName="idx_qrtz_t_next_fire_time" tableName="QRTZ_TRIGGERS" unique="false">
             <column name="sched_name"/>
             <column name="next_fire_time"/>
         </createIndex>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-160" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-160" dbms="mysql,mariadb">
         <createIndex indexName="idx_qrtz_t_nft_misfire" tableName="QRTZ_TRIGGERS" unique="false">
             <column name="sched_name"/>
             <column name="misfire_instr"/>
             <column name="next_fire_time"/>
         </createIndex>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-161" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-161" dbms="mysql,mariadb">
         <createIndex indexName="idx_qrtz_t_nft_st" tableName="QRTZ_TRIGGERS" unique="false">
             <column name="sched_name"/>
             <column name="trigger_state"/>
             <column name="next_fire_time"/>
         </createIndex>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-162" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-162" dbms="mysql,mariadb">
         <createIndex indexName="idx_qrtz_t_nft_st_misfire" tableName="QRTZ_TRIGGERS" unique="false">
             <column name="sched_name"/>
             <column name="misfire_instr"/>
@@ -1428,7 +1428,7 @@
             <column name="trigger_state"/>
         </createIndex>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-163" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-163" dbms="mysql,mariadb">
         <createIndex indexName="idx_qrtz_t_nft_st_misfire_grp" tableName="QRTZ_TRIGGERS" unique="false">
             <column name="sched_name"/>
             <column name="misfire_instr"/>
@@ -1437,13 +1437,13 @@
             <column name="trigger_state"/>
         </createIndex>
     </changeSet>
-    <changeSet author="awood (generated)" id="1379350211813-164" dbms="mysql">
+    <changeSet author="awood (generated)" id="1379350211813-164" dbms="mysql,mariadb">
         <createIndex indexName="idx_qrtz_t_state" tableName="QRTZ_TRIGGERS" unique="false">
             <column name="sched_name"/>
             <column name="trigger_state"/>
         </createIndex>
     </changeSet>
-    <changeSet author="awood" id="1379350211813-165" dbms="mysql">
+    <changeSet author="awood" id="1379350211813-165" dbms="mysql,mariadb">
         <comment>Add the default quartz lock columns.</comment>
         <insert tableName="QRTZ_LOCKS">
             <column name="LOCK_NAME" value="TRIGGER_ACCESS"/>
@@ -1466,7 +1466,7 @@
             <column name="SCHED_NAME" value="TestScheduler"/>
         </insert>
     </changeSet>
-    <changeSet author="awood" id="1379350211813-166" dbms="mysql">
+    <changeSet author="awood" id="1379350211813-166" dbms="mysql,mariadb">
         <comment>Insert the default consumer types.</comment>
         <insert tableName="cp_consumer_type">
             <column name="id" value="1000"/>
@@ -1511,7 +1511,7 @@
             <column name="updated" valueDate="${now}"/>
         </insert>
     </changeSet>
-    <changeSet author="awood" id="1379350211813-167" dbms="mysql">
+    <changeSet author="awood" id="1379350211813-167" dbms="mysql,mariadb">
         <preConditions onFail="MARK_RAN">
             <changeLogPropertyDefined property="community" value="True"/>
         </preConditions>
@@ -1531,7 +1531,7 @@
             <column name="updated" valueDate="${now}"/>
         </insert>
     </changeSet>
-    <changeSet author="awood" id="1379350211813-168" dbms="mysql">
+    <changeSet author="awood" id="1379350211813-168" dbms="mysql,mariadb">
         <preConditions onFail="MARK_RAN">
             <changeLogPropertyDefined property="community" value="False"/>
         </preConditions>
@@ -1551,7 +1551,7 @@
             <column name="updated" valueDate="${now}"/>
         </insert>
     </changeSet>
-    <changeSet author="awood" id="1379350211813-169" dbms="mysql">
+    <changeSet author="awood" id="1379350211813-169" dbms="mysql,mariadb">
         <comment>Insert the current list of known distributor versions</comment>
         <insert tableName="cp_dist_version">
             <column name="id" value="1000"/>
@@ -1617,7 +1617,7 @@
             <column name="name" value="instance_multiplier"/>
         </insert>
     </changeSet>
-    <changeSet author="awood" id="1379350211813-170" dbms="mysql">
+    <changeSet author="awood" id="1379350211813-170" dbms="mysql,mariadb">
         <comment>Add the derived product distributor version capability for SAM-1.3 and Satellite-6.0</comment>
             <insert tableName="cp_dist_version_capability">
                 <column name="id" value="1008"/>
@@ -1630,7 +1630,7 @@
                 <column name="name" value="derived_product"/>
             </insert>
     </changeSet>
-    <changeSet author="awood" id="1379350211813-171" dbms="mysql">
+    <changeSet author="awood" id="1379350211813-171" dbms="mysql,mariadb">
         <comment>Add the cert_v3 capability to SAM 1.3 and Satellite 6.0</comment>
         <insert tableName="cp_dist_version_capability">
             <column name="id" value="1010"/>
@@ -1643,7 +1643,7 @@
             <column name="name" value="cert_v3"/>
         </insert>
     </changeSet>
-    <changeSet author="awood" id="1379350211813-172" dbms="mysql">
+    <changeSet author="awood" id="1379350211813-172" dbms="mysql,mariadb">
         <comment>Create Satellite version 5.6 capabilities</comment>
         <insert tableName="cp_dist_version">
             <column name="id" value="1004"/>
@@ -1678,7 +1678,7 @@
             <column name="name" value="derived_product"/>
         </insert>
     </changeSet>
-    <changeSet author="dgoodwin" id="1379350211813-173" dbms="mysql">
+    <changeSet author="dgoodwin" id="1379350211813-173" dbms="mysql,mariadb">
         <comment>Record cdn id in subscription information when specified</comment>
         <addColumn tableName="cp_subscription">
             <column name="cdn_id" type="varchar(32)"/>

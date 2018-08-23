@@ -6,7 +6,7 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
-    <changeSet id="20150416090438-1" author="wpoteat" dbms="mysql">
+    <changeSet id="20150416090438-1" author="wpoteat" dbms="mysql,mariadb">
         <comment>Use LONGBLOB instead of BLOB for job_data column.</comment>
         <modifyDataType tableName="QRTZ_JOB_DETAILS"
             columnName="job_data"

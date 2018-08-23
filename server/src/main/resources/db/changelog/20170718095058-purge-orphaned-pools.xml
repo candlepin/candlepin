@@ -51,7 +51,7 @@
         with temporary tables and deletions.
       </comment>
 
-      <sql dbms="mysql">
+      <sql dbms="mysql,mariadb">
         DROP TABLE IF EXISTS tmp_orphaned_pools;
         CREATE TABLE IF NOT EXISTS tmp_orphaned_pools (pool_id varchar(32) PRIMARY KEY);
 

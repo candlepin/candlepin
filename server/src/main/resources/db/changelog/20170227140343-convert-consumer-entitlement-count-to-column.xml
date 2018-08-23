@@ -7,13 +7,13 @@
     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
     <property
-        dbms="postgresql, mysql, oracle"
+        dbms="postgresql, mysql,mariadb, oracle"
         name="fill_in_entitlement_count_value"
         value="UPDATE cp_consumer SET entitlement_count = coalesce(
             (SELECT sum(cp_entitlement.quantity)
                 FROM cp_entitlement WHERE cp_entitlement.consumer_id = cp_consumer.id), 0);"/>
 
-     <changeSet id="20170227140343-1" author="wpoteat, crog, jiri" dbms="postgresql, mysql, oracle, hsqldb">
+     <changeSet id="20170227140343-1" author="wpoteat, crog, jiri" dbms="postgresql, mysql,mariadb, oracle, hsqldb">
         <validCheckSum>7:90bafef558a7b01ec7bba9af76e75da4</validCheckSum>
         <validCheckSum>7:e2516110fc76f234ff4316992e308778</validCheckSum>
         <validCheckSum>8:32d1bea45d59f9f847d7503edb139f3d</validCheckSum>
@@ -29,7 +29,7 @@
                   <constraints nullable="false"/>
              </column>
          </addColumn>
-         <sql dbms="postgresql, mysql, oracle">${fill_in_entitlement_count_value}</sql>
+         <sql dbms="postgresql, mysql,mariadb, oracle">${fill_in_entitlement_count_value}</sql>
          <rollback>
              alter table cp_consumer drop column if exists entitlement_count;
          </rollback>

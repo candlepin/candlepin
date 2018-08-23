@@ -6,10 +6,10 @@
     xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
-    <property dbms="postgresql, mysql" name="unrevoked_value" value="false"/>
+    <property dbms="postgresql, mysql,mariadb" name="unrevoked_value" value="false"/>
     <property dbms="oracle" name="unrevoked_value" value="0"/>
 
-    <property dbms="postgresql, mysql" name="revoked_value" value="true"/>
+    <property dbms="postgresql, mysql,mariadb" name="revoked_value" value="true"/>
     <property dbms="oracle" name="revoked_value" value="1"/>
 
     <changeSet id="20170301083925-1" author="mstead">
@@ -23,7 +23,7 @@
             based on existence of entitlement certificates.
         </comment>
 
-        <sql dbms="postgresql, oracle, mysql">
+        <sql dbms="postgresql, oracle, mysql,mariadb">
             UPDATE cp_cert_serial cs SET revoked = ${revoked_value}
                 WHERE revoked = ${unrevoked_value}
                 AND NOT EXISTS (SELECT 1 FROM cp_ent_certificate ec WHERE ec.serial_id = cs.id)
