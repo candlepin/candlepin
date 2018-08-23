@@ -17,7 +17,10 @@ package org.candlepin.resource;
 import org.candlepin.auth.Principal;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.DistributorVersionDTO;
 import org.candlepin.model.DistributorVersion;
+import org.candlepin.model.DistributorVersionCapability;
 import org.candlepin.model.DistributorVersionCurator;
 
 import com.google.inject.Inject;
@@ -25,7 +28,10 @@ import com.google.inject.Inject;
 import org.apache.commons.lang.StringUtils;
 import org.xnap.commons.i18n.I18n;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -55,29 +61,82 @@ public class DistributorVersionResource {
 
     private I18n i18n;
     private DistributorVersionCurator curator;
+    private ModelTranslator translator;
 
     @Inject
-    public DistributorVersionResource(I18n i18n,
-        DistributorVersionCurator curator) {
+    public DistributorVersionResource(I18n i18n, DistributorVersionCurator curator,
+        ModelTranslator translator) {
+
         this.i18n = i18n;
         this.curator = curator;
+        this.translator = translator;
+    }
+
+    /**
+     * Populates the specified entity with data from the provided DTO. This method will not set the
+     * ID, key, upstream consumer, content access mode list or content access mode fields.
+     *
+     * @param entity
+     *  The entity instance to populate
+     *
+     * @param dto
+     *  The DTO containing the data with which to populate the entity
+     *
+     * @throws IllegalArgumentException
+     *  if either entity or dto are null
+     */
+    protected void populateEntity(DistributorVersion entity, DistributorVersionDTO dto) {
+        if (entity == null) {
+            throw new IllegalArgumentException("the distributor version model entity is null");
+        }
+
+        if (dto == null) {
+            throw new IllegalArgumentException("the distributor version dto is null");
+        }
+
+        if (dto.getDisplayName() != null) {
+            entity.setDisplayName(dto.getDisplayName());
+        }
+
+        if (dto.getName() != null) {
+            entity.setName(dto.getName());
+        }
+
+        if (dto.getCapabilities() != null) {
+            if (dto.getCapabilities().isEmpty()) {
+                entity.setCapabilities(Collections.emptySet());
+            }
+            else {
+                entity.setCapabilities(dto.getCapabilities()
+                    .stream()
+                    .map(capability -> new DistributorVersionCapability(entity, capability.getName()))
+                    .collect(Collectors.toSet()));
+            }
+        }
+
     }
 
     @ApiOperation(notes = "Retrieves list of Distributor Versions", value = "getVersions")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<DistributorVersion> getVersions(
+    public Stream<DistributorVersionDTO> getVersions(
         @QueryParam("name_search") String nameSearch,
         @QueryParam("capability") String capability,
         @Context Principal principal) {
 
+        List<DistributorVersion> versions;
         if (!StringUtils.isBlank(nameSearch)) {
-            return curator.findByNameSearch(nameSearch);
+            versions = curator.findByNameSearch(nameSearch);
         }
-        if (!StringUtils.isBlank(capability)) {
-            return curator.findByCapability(capability);
+        else if (!StringUtils.isBlank(capability)) {
+            versions = curator.findByCapability(capability);
         }
-        return curator.findAll();
+        else {
+            versions = curator.findAll();
+        }
+
+        return versions.stream().map(
+            this.translator.getStreamMapper(DistributorVersion.class, DistributorVersionDTO.class));
     }
 
     @ApiOperation(notes = "Deletes a Distributor Version", value = "delete")
@@ -97,16 +156,18 @@ public class DistributorVersionResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public DistributorVersion create(
-        @ApiParam(name = "distributorVersion", required = true) DistributorVersion dv,
+    public DistributorVersionDTO create(
+        @ApiParam(name = "distributorVersion", required = true) DistributorVersionDTO dto,
         @Context Principal principal) {
-        DistributorVersion existing = curator.findByName(dv.getName());
+        DistributorVersion existing = curator.findByName(dto.getName());
         if (existing != null) {
             throw new BadRequestException(
                 i18n.tr("A distributor version with name {0} " +
-                        "already exists", dv.getName()));
+                        "already exists", dto.getName()));
         }
-        return curator.create(dv);
+        DistributorVersion toCreate = new DistributorVersion();
+        populateEntity(toCreate, dto);
+        return this.translator.translate(curator.create(toCreate), DistributorVersionDTO.class);
     }
 
     @ApiOperation(notes = "Updates a Distributor Version", value = "update")
@@ -114,22 +175,25 @@ public class DistributorVersionResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{id}")
-    public DistributorVersion update(@PathParam("id") String id,
-        @ApiParam(name = "distributorVersion", required = true) DistributorVersion dv,
+    public DistributorVersionDTO update(@PathParam("id") String id,
+        @ApiParam(name = "distributorVersion", required = true) DistributorVersionDTO dto,
         @Context Principal principal) {
         DistributorVersion existing = verifyAndLookupDistributorVersion(id);
-        existing.setDisplayName(dv.getDisplayName());
-        existing.setCapabilities(dv.getCapabilities());
+        existing.setDisplayName(dto.getDisplayName());
+        existing.setCapabilities(dto.getCapabilities()
+            .stream()
+            .map(capability -> new DistributorVersionCapability(existing, capability.getName()))
+            .collect(Collectors.toSet()));
+
         curator.merge(existing);
-        return existing;
+        return this.translator.translate(existing, DistributorVersionDTO.class);
     }
 
     private DistributorVersion verifyAndLookupDistributorVersion(String id) {
         DistributorVersion dv = curator.findById(id);
 
         if (dv == null) {
-            throw new NotFoundException(i18n.tr("No such distributor version: {0}",
-                id));
+            throw new NotFoundException(i18n.tr("No such distributor version: {0}", id));
         }
         return dv;
     }
