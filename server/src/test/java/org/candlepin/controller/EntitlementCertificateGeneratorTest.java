@@ -38,12 +38,14 @@ import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceSubscription;
+import org.candlepin.service.ContentAccessCertServiceAdapter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.test.TestUtil;
 
@@ -82,6 +84,8 @@ public class EntitlementCertificateGeneratorTest {
     @Mock private EventSink mockEventSink;
     @Mock private EventFactory mockEventFactory;
     @Mock private ProductCurator mockProductCurator;
+    @Mock private ContentAccessCertServiceAdapter mockCertServiceAdapter;
+    @Mock private OwnerCurator mockOwnerCurator;
 
     @Captor private ArgumentCaptor<Map<String, Entitlement>> entMapCaptor;
     @Captor private ArgumentCaptor<Map<String, Product>> productMapCaptor;
@@ -93,15 +97,16 @@ public class EntitlementCertificateGeneratorTest {
     public void init() throws Exception {
         this.ecGenerator = new EntitlementCertificateGenerator(
             this.mockEntCertCurator, this.mockEntCertAdapter, this.mockEntitlementCurator,
-            this.mockPoolCurator, this.mockEventSink, this.mockEventFactory, this.mockProductCurator
-        );
+            this.mockPoolCurator, this.mockEventSink, this.mockEventFactory, this.mockProductCurator,
+            this.mockCertServiceAdapter, this.mockOwnerCurator);
     }
 
     @Test
     public void testGenerateEntitlementCertificate() throws GeneralSecurityException, IOException {
         this.ecGenerator = new EntitlementCertificateGenerator(this.mockEntCertCurator,
                 this.mockEntCertAdapter, this.mockEntitlementCurator, this.mockPoolCurator,
-                this.mockEventSink, this.mockEventFactory, this.mockProductCurator);
+                this.mockEventSink, this.mockEventFactory, this.mockProductCurator,
+                this.mockCertServiceAdapter, this.mockOwnerCurator);
         Consumer consumer = mock(Consumer.class);
         Pool pool = mock(Pool.class);
         Product product = mock(Product.class);
@@ -124,7 +129,8 @@ public class EntitlementCertificateGeneratorTest {
     public void testGenerateEntitlementCertificates() throws GeneralSecurityException, IOException {
         this.ecGenerator = new EntitlementCertificateGenerator(this.mockEntCertCurator,
             this.mockEntCertAdapter, this.mockEntitlementCurator, this.mockPoolCurator,
-            this.mockEventSink, this.mockEventFactory, this.mockProductCurator);
+            this.mockEventSink, this.mockEventFactory, this.mockProductCurator,
+                this.mockCertServiceAdapter, this.mockOwnerCurator);
         Consumer consumer = mock(Consumer.class);
         Product product = mock(Product.class);
         Entitlement entitlement = mock(Entitlement.class);
@@ -321,8 +327,12 @@ public class EntitlementCertificateGeneratorTest {
     public void testLazyRegenerateForConsumer() {
         Entitlement entitlement = new Entitlement();
         Consumer consumer = new Consumer();
+        Owner owner = new Owner();
+        owner.setId("test-owner");
+        consumer.setOwner(owner);
         consumer.addEntitlement(entitlement);
 
+        when(mockOwnerCurator.findOwnerById(eq("test-owner"))).thenReturn(owner);
         this.ecGenerator.regenerateCertificatesOf(consumer, true);
 
         assertTrue(entitlement.isDirty());

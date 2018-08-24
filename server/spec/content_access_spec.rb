@@ -193,6 +193,23 @@ describe 'Content Access' do
     are_content_urls_present(value, urls).should == true
   end
 
+  it "refresh command results in new content access cert" do
+    consumer = @user.register(random_string('consumer'), :system, nil, {'system.certificate_version' => '3.3'})
+    consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+    old_certs = consumer_cp.list_certificates()
+    old_certs.length.should == 1
+    type = extension_from_cert(old_certs[0]['cert'], "1.3.6.1.4.1.2312.9.8")
+    type.should == 'OrgLevel'
+    consumer_cp.regenerate_entitlement_certificates()
+    new_certs = consumer_cp.list_certificates()
+    old_certs.size.should == new_certs.size
+    type = extension_from_cert(new_certs[0]['cert'], "1.3.6.1.4.1.2312.9.8")
+    type.should == 'OrgLevel'
+    old_ids = old_certs.map { |cert| cert['serial']['id']}
+    new_ids = new_certs.map { |cert| cert['serial']['id']}
+    (old_ids & new_ids).size.should == 0
+  end
+
   it "can remove the content access certificate from the consumer when org content access mode removed" do
       skip("candlepin running in standalone mode") unless is_hosted?
       @consumer = consumer_client(@user, @consumername, type=:system, username=nil, facts= {'system.certificate_version' => '3.3'})
@@ -246,7 +263,7 @@ describe 'Content Access' do
   end
 
 
- it "does update exisitng content access cert content when product data changes" do
+ it "does update exisiting content access cert content when product data changes" do
       @consumer = consumer_client(@user, @consumername, type=:system, username=nil, facts= {'system.certificate_version' => '3.3'})
       certs = @consumer.list_certificates
       certs.length.should == 1
