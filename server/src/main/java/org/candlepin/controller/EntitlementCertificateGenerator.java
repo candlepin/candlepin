@@ -23,11 +23,13 @@ import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.service.ContentAccessCertServiceAdapter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.util.CertificateSizeException;
 import org.candlepin.version.CertVersionConflictException;
@@ -64,6 +66,8 @@ public class EntitlementCertificateGenerator {
 
     private EntitlementCertificateCurator entitlementCertificateCurator;
     private EntitlementCertServiceAdapter entCertServiceAdapter;
+    private ContentAccessCertServiceAdapter contentAccessCertServiceAdapter;
+    private OwnerCurator ownerCurator;
     private EntitlementCurator entitlementCurator;
     private PoolCurator poolCurator;
     private ProductCurator productCurator;
@@ -75,10 +79,13 @@ public class EntitlementCertificateGenerator {
     public EntitlementCertificateGenerator(EntitlementCertificateCurator entitlementCertificateCurator,
         EntitlementCertServiceAdapter entCertServiceAdapter, EntitlementCurator entitlementCurator,
         PoolCurator poolCurator, EventSink eventSink, EventFactory eventFactory,
-        ProductCurator productCurator) {
+        ProductCurator productCurator, ContentAccessCertServiceAdapter contentAccessCertServiceAdapter,
+        OwnerCurator ownerCurator) {
 
         this.entitlementCertificateCurator = entitlementCertificateCurator;
         this.entCertServiceAdapter = entCertServiceAdapter;
+        this.contentAccessCertServiceAdapter = contentAccessCertServiceAdapter;
+        this.ownerCurator = ownerCurator;
         this.entitlementCurator = entitlementCurator;
         this.poolCurator = poolCurator;
 
@@ -268,6 +275,12 @@ public class EntitlementCertificateGenerator {
             consumer.getEntitlements().size(), consumer
         );
 
+        // we need to clear the content access cert on regenerate
+        Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
+        if (ContentAccessCertServiceAdapter.ORG_ENV_ACCESS_MODE.equals(
+            owner.getContentAccessMode())) {
+            contentAccessCertServiceAdapter.removeContentAccessCert(consumer);
+        }
         // TODO - Assumes only 1 entitlement certificate exists per entitlement
         this.regenerateCertificatesOf(consumer.getEntitlements(), lazy);
     }
