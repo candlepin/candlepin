@@ -21,6 +21,7 @@ import static org.mockito.Mockito.when;
 
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
+import org.candlepin.dto.rules.v1.SuggestedQuantityDTO;
 import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
@@ -146,7 +147,7 @@ public class QuantityRulesTest {
     @Test
     public void testNonMultiEntitlementPool() {
         pool.getProduct().setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "no");
-        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(pool,
+        SuggestedQuantityDTO suggested = quantityRules.getSuggestedQuantity(pool,
             TestUtil.createConsumer(), new Date());
         assertEquals(new Long(1), suggested.getSuggested());
     }
@@ -156,10 +157,10 @@ public class QuantityRulesTest {
         pool.getProduct().setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "no");
         List<Pool> pools = new LinkedList<>();
         pools.add(pool);
-        Map<String, SuggestedQuantity> results = quantityRules.getSuggestedQuantities(
+        Map<String, SuggestedQuantityDTO> results = quantityRules.getSuggestedQuantities(
             pools, TestUtil.createConsumer(), new Date());
         assertTrue(results.containsKey(pool.getId()));
-        SuggestedQuantity suggested = results.get(pool.getId());
+        SuggestedQuantityDTO suggested = results.get(pool.getId());
         assertEquals(new Long(1), suggested.getSuggested());
     }
 
@@ -167,7 +168,7 @@ public class QuantityRulesTest {
     public void testPhysicalDefaultToNumSocketsBySocketCount() {
         consumer.setFact(SOCKET_FACT, "4");
         pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
-        SuggestedQuantity suggested =
+        SuggestedQuantityDTO suggested =
             quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(new Long(2), suggested.getSuggested());
     }
@@ -176,7 +177,7 @@ public class QuantityRulesTest {
     public void testPhysicalRoundsUp() {
         consumer.setFact(SOCKET_FACT, "4");
         pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "3");
-        SuggestedQuantity suggested =
+        SuggestedQuantityDTO suggested =
             quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(new Long(2), suggested.getSuggested());
     }
@@ -194,7 +195,7 @@ public class QuantityRulesTest {
 
         consumer.setEntitlements(ents);
 
-        SuggestedQuantity suggested =
+        SuggestedQuantityDTO suggested =
             quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(new Long(2), suggested.getSuggested());
     }
@@ -204,7 +205,7 @@ public class QuantityRulesTest {
         consumer.setFact(IS_VIRT, "true");
         consumer.setFact(CORES_FACT, "8");
         pool.getProduct().setAttribute(VCPU_ATTRIBUTE, "4");
-        SuggestedQuantity suggested =
+        SuggestedQuantityDTO suggested =
             quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(new Long(2), suggested.getSuggested());
     }
@@ -216,7 +217,7 @@ public class QuantityRulesTest {
         consumer.setFact(IS_VIRT, "true");
         consumer.setFact(SOCKET_FACT, "4");
         pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
-        SuggestedQuantity suggested =
+        SuggestedQuantityDTO suggested =
             quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(new Long(1), suggested.getSuggested());
     }
@@ -228,7 +229,7 @@ public class QuantityRulesTest {
         consumer.setFact(IS_VIRT, "true");
         consumer.setFact(SOCKET_FACT, "4");
         consumer.setFact(CORES_FACT, "8");
-        SuggestedQuantity suggested =
+        SuggestedQuantityDTO suggested =
             quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(new Long(1), suggested.getSuggested());
     }
@@ -238,7 +239,7 @@ public class QuantityRulesTest {
         consumer.setFact(IS_VIRT, "true");
         consumer.setFact(CORES_FACT, "8");
         pool.getProduct().setAttribute(VCPU_ATTRIBUTE, "6");
-        SuggestedQuantity suggested =
+        SuggestedQuantityDTO suggested =
             quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(new Long(2), suggested.getSuggested());
     }
@@ -257,7 +258,7 @@ public class QuantityRulesTest {
 
         consumer.setEntitlements(ents);
 
-        SuggestedQuantity suggested =
+        SuggestedQuantityDTO suggested =
             quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(new Long(2), suggested.getSuggested());
     }
@@ -267,7 +268,7 @@ public class QuantityRulesTest {
         consumer.setFact(SOCKET_FACT, "8");
         pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
         pool.setQuantity(new Long(-1));
-        SuggestedQuantity suggested =
+        SuggestedQuantityDTO suggested =
             quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(new Long(4), suggested.getSuggested());
     }
@@ -278,7 +279,7 @@ public class QuantityRulesTest {
         consumer.setFact(SOCKET_FACT, "4");
         pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
 
-        SuggestedQuantity suggested =
+        SuggestedQuantityDTO suggested =
             quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(new Long(2), suggested.getSuggested());
         assertEquals(new Long(1), suggested.getIncrement());
@@ -291,7 +292,7 @@ public class QuantityRulesTest {
         pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
         pool.getProduct().setAttribute(INSTANCE_ATTRIBUTE, "2");
 
-        SuggestedQuantity suggested =
+        SuggestedQuantityDTO suggested =
             quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(new Long(4), suggested.getSuggested());
         assertEquals(new Long(2), suggested.getIncrement());
@@ -304,7 +305,7 @@ public class QuantityRulesTest {
         pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
         pool.getProduct().setAttribute(INSTANCE_ATTRIBUTE, "2");
 
-        SuggestedQuantity suggested =
+        SuggestedQuantityDTO suggested =
             quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(new Long(2), suggested.getSuggested());
         assertEquals(new Long(2), suggested.getIncrement());
@@ -317,7 +318,7 @@ public class QuantityRulesTest {
         pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "1");
         pool.getProduct().setAttribute(INSTANCE_ATTRIBUTE, "2");
 
-        SuggestedQuantity suggested =
+        SuggestedQuantityDTO suggested =
             quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(new Long(2), suggested.getSuggested());
         assertEquals(new Long(2), suggested.getIncrement());
@@ -331,7 +332,7 @@ public class QuantityRulesTest {
         pool.getProduct().setAttribute(INSTANCE_ATTRIBUTE, "2");
 
         pool.setQuantity(4L);
-        SuggestedQuantity suggested =
+        SuggestedQuantityDTO suggested =
             quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(new Long(4), suggested.getSuggested());
         assertEquals(new Long(2), suggested.getIncrement());
@@ -345,7 +346,7 @@ public class QuantityRulesTest {
         pool.getProduct().setAttribute(INSTANCE_ATTRIBUTE, "2");
 
         pool.setQuantity(3L);
-        SuggestedQuantity suggested =
+        SuggestedQuantityDTO suggested =
             quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(new Long(2), suggested.getSuggested());
         assertEquals(new Long(2), suggested.getIncrement());
@@ -360,7 +361,7 @@ public class QuantityRulesTest {
         pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
         pool.getProduct().setAttribute(INSTANCE_ATTRIBUTE, "2");
 
-        SuggestedQuantity suggested =
+        SuggestedQuantityDTO suggested =
             quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(new Long(1), suggested.getSuggested());
         assertEquals(new Long(1), suggested.getIncrement());
@@ -372,7 +373,7 @@ public class QuantityRulesTest {
         consumer.setFact(SOCKET_FACT, "4");
         pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
 
-        SuggestedQuantity suggested =
+        SuggestedQuantityDTO suggested =
             quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(new Long(2), suggested.getSuggested());
     }
@@ -394,7 +395,7 @@ public class QuantityRulesTest {
 
         consumer.setEntitlements(ents);
 
-        SuggestedQuantity suggested =
+        SuggestedQuantityDTO suggested =
             quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(new Long(2), suggested.getSuggested());
     }
@@ -413,7 +414,7 @@ public class QuantityRulesTest {
 
         consumer.setEntitlements(ents);
 
-        SuggestedQuantity suggested =
+        SuggestedQuantityDTO suggested =
             quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(new Long(0), suggested.getSuggested());
     }
@@ -434,7 +435,7 @@ public class QuantityRulesTest {
 
         consumer.setEntitlements(ents);
 
-        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(
+        SuggestedQuantityDTO suggested = quantityRules.getSuggestedQuantity(
             pool, consumer, TestUtil.createDate(2010, 1, 1));
         assertEquals(new Long(2), suggested.getSuggested());
     }
@@ -463,7 +464,7 @@ public class QuantityRulesTest {
         ents.add(currentEntitlement);
         consumer.setEntitlements(ents);
 
-        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(
+        SuggestedQuantityDTO suggested = quantityRules.getSuggestedQuantity(
             currentPool, consumer, TestUtil.createDate(2010, 6, 1));
         assertEquals(new Long(0), suggested.getSuggested());
 
@@ -499,7 +500,7 @@ public class QuantityRulesTest {
 
         consumer.setEntitlements(ents);
 
-        SuggestedQuantity suggested =
+        SuggestedQuantityDTO suggested =
             quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(new Long(4), suggested.getSuggested());
     }
@@ -525,7 +526,7 @@ public class QuantityRulesTest {
         Calendar c = Calendar.getInstance();
         c.setTime(pool.getEndDate());
         Date futureDate = TestUtil.createDate(c.get(Calendar.YEAR) + 1, 1, 1);
-        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(pool, consumer, futureDate);
+        SuggestedQuantityDTO suggested = quantityRules.getSuggestedQuantity(pool, consumer, futureDate);
         assertEquals(new Long(4), suggested.getSuggested());
     }
 
@@ -554,7 +555,7 @@ public class QuantityRulesTest {
         consumer.addEntitlement(toAdd);
 
         // Ensure the 2 attached entitlements do not cause the suggested quantity to change
-        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(pool, consumer, new Date());
+        SuggestedQuantityDTO suggested = quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(new Long(4), suggested.getSuggested());
     }
 
@@ -574,7 +575,7 @@ public class QuantityRulesTest {
         pool.getProduct().setAttribute(GUEST_LIMIT_ATTRIBUTE, "4");
         pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
         pool.setQuantity(new Long(-1));
-        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(pool, consumer, new Date());
+        SuggestedQuantityDTO suggested = quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(new Long(4), suggested.getSuggested());
     }
 
@@ -592,7 +593,7 @@ public class QuantityRulesTest {
         ctype.setManifest(true);
         when(consumerTypeCurator.getConsumerType(eq(dist))).thenReturn(ctype);
 
-        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(pool, dist, new Date());
+        SuggestedQuantityDTO suggested = quantityRules.getSuggestedQuantity(pool, dist, new Date());
         assertEquals(new Long(1), suggested.getSuggested());
         assertEquals(new Long(1), suggested.getIncrement());
     }

@@ -19,6 +19,7 @@ import org.candlepin.dto.rules.v1.ConsumerDTO;
 import org.candlepin.dto.rules.v1.EntitlementDTO;
 import org.candlepin.dto.rules.v1.GuestIdDTO;
 import org.candlepin.dto.rules.v1.PoolDTO;
+import org.candlepin.dto.rules.v1.SuggestedQuantityDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.GuestId;
@@ -62,7 +63,7 @@ public class QuantityRules {
     }
 
     @SuppressWarnings("checkstyle:indentation")
-    public SuggestedQuantity getSuggestedQuantity(Pool p, Consumer c, Date date) {
+    public SuggestedQuantityDTO getSuggestedQuantity(Pool p, Consumer c, Date date) {
         JsonJsContext args = new JsonJsContext(mapper);
 
         Stream<EntitlementDTO> entStream = c.getEntitlements() == null ? Stream.empty() :
@@ -81,8 +82,7 @@ public class QuantityRules {
         args.put("guestIds", guestIdStream);
 
         String json = jsRules.runJsFunction(String.class, "get_suggested_quantity", args);
-        SuggestedQuantity dto = mapper.toObject(json, SuggestedQuantity.class);
-        return dto;
+        return mapper.toObject(json, SuggestedQuantityDTO.class);
     }
 
 
@@ -100,7 +100,7 @@ public class QuantityRules {
      * @return suggested quantities for all pools requested
      */
     @SuppressWarnings("checkstyle:indentation")
-    public Map<String, SuggestedQuantity> getSuggestedQuantities(List<Pool> pools, Consumer c, Date date) {
+    public Map<String, SuggestedQuantityDTO> getSuggestedQuantities(List<Pool> pools, Consumer c, Date date) {
         JsonJsContext args = new JsonJsContext(mapper);
 
         Stream<PoolDTO> poolStream = pools == null ? Stream.empty() :
@@ -122,9 +122,9 @@ public class QuantityRules {
         args.put("guestIds", guestIdStream);
 
         String json = jsRules.runJsFunction(String.class, "get_suggested_quantities", args);
-        Map<String, SuggestedQuantity> resultMap;
-        TypeReference<Map<String, SuggestedQuantity>> typeref =
-            new TypeReference<Map<String, SuggestedQuantity>>() {};
+        Map<String, SuggestedQuantityDTO> resultMap;
+        TypeReference<Map<String, SuggestedQuantityDTO>> typeref =
+            new TypeReference<Map<String, SuggestedQuantityDTO>>() {};
 
         try {
             resultMap = mapper.toObject(json, typeref);

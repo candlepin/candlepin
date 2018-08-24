@@ -18,7 +18,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolComplianceType;
 import org.candlepin.policy.js.quantity.QuantityRules;
-import org.candlepin.policy.js.quantity.SuggestedQuantity;
+import org.candlepin.dto.rules.v1.SuggestedQuantityDTO;
 
 import com.google.inject.Inject;
 
@@ -80,11 +80,11 @@ public class CalculatedAttributesUtil {
         if (c == null) {
             return;
         }
-        Map<String, SuggestedQuantity> results = quantityRules.getSuggestedQuantities(
+        Map<String, SuggestedQuantityDTO> results = quantityRules.getSuggestedQuantities(
             poolList, c, date);
 
         for (Pool p : poolList) {
-            SuggestedQuantity suggested = results.get(p.getId());
+            SuggestedQuantityDTO suggested = results.get(p.getId());
 
             Map<String, String> attrMap = p.getCalculatedAttributes();
             if (attrMap == null) {

@@ -32,7 +32,7 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.candlepin.policy.js.quantity.QuantityRules;
-import org.candlepin.policy.js.quantity.SuggestedQuantity;
+import org.candlepin.dto.rules.v1.SuggestedQuantityDTO;
 import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.util.ServiceLevelValidator;
 import org.candlepin.version.CertVersionConflictException;
@@ -212,7 +212,7 @@ public class ConsumerBindUtil {
         // suggested quantity on the start date
         Date onDate = now.before(pool.getStartDate()) ?
             pool.getStartDate() : now;
-        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(pool,
+        SuggestedQuantityDTO suggested = quantityRules.getSuggestedQuantity(pool,
             consumer, onDate);
         int quantity = Math.max(suggested.getIncrement().intValue(),
             suggested.getSuggested().intValue());

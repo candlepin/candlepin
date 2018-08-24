@@ -26,7 +26,7 @@ import org.candlepin.model.Pool.PoolComplianceType;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.policy.js.quantity.QuantityRules;
-import org.candlepin.policy.js.quantity.SuggestedQuantity;
+import org.candlepin.dto.rules.v1.SuggestedQuantityDTO;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
@@ -95,10 +95,10 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
             assertTrue(attrs.containsKey("compliance_type"));
         }
 
-        SuggestedQuantity suggested = new SuggestedQuantity();
+        SuggestedQuantityDTO suggested = new SuggestedQuantityDTO();
         suggested.setSuggested(1L);
         suggested.setIncrement(1L);
-        Map<String, SuggestedQuantity> suggestedMap = new HashMap<>();
+        Map<String, SuggestedQuantityDTO> suggestedMap = new HashMap<>();
         suggestedMap.put(pool1.getId(), suggested);
         when(quantityRules.getSuggestedQuantities(any(List.class),
             any(Consumer.class), any(Date.class))).
@@ -147,10 +147,10 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
         Pool pool2 = createPool(owner1, product2, 500L,
             TestUtil.createDate(2000, 1, 1), TestUtil.createDate(3000, 1, 1));
 
-        SuggestedQuantity suggested = new SuggestedQuantity();
+        SuggestedQuantityDTO suggested = new SuggestedQuantityDTO();
         suggested.setSuggested(1L);
         suggested.setIncrement(12L);
-        Map<String, SuggestedQuantity> suggestedMap = new HashMap<>();
+        Map<String, SuggestedQuantityDTO> suggestedMap = new HashMap<>();
         suggestedMap.put(pool2.getId(), suggested);
         when(quantityRules.getSuggestedQuantities(any(List.class),
             any(Consumer.class), any(Date.class))).
