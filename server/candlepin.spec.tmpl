@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 0.9.54.27
+Version: 0.9.54.28
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,10 @@ fi
 
 #raw
 %changelog
+* Fri Aug 24 2018 Kevin Howell <khowell@redhat.com> 0.9.54.28-1
+- Updated gen-certs for compatibility with Tomcat 8.5+ (crog@redhat.com)
+- 1616420: selinux - allow tomcat to connect to postgres (khowell@redhat.com)
+
 * Thu Jun 07 2018 Kevin Howell <khowell@redhat.com> 0.9.54.27-1
 - 1571423: Two changes to make HornetQ clients more resilient
   (nmoumoul@redhat.com)
