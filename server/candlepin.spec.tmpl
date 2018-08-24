@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.4.5
+Version: 2.4.6
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,15 @@ fi
 
 #raw
 %changelog
+* Fri Aug 24 2018 Kevin Howell <khowell@redhat.com> 2.4.6-1
+- Updated gen-certs for compatibility with Tomcat 8.5+ (crog@redhat.com)
+- setOwnerId incorrect (wpoteat@redhat.com)
+- 1618492: Ensure environment change shows in content access certificate
+  (wpoteat@redhat.com)
+- 1616417: selinux - allow tomcat to connect to postgres (khowell@redhat.com)
+- 1618391: Manifest import no longer fails when product changes
+  (adarshvritant@gmail.com)
+
 * Mon Jul 30 2018 Kevin Howell <khowell@redhat.com> 2.4.5-1
 - 1608426: API call to get list of consumer UUIDs entitled from a pool
   (awood@redhat.com)
