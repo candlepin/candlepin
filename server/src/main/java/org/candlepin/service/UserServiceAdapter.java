@@ -14,10 +14,14 @@
  */
 package org.candlepin.service;
 
-import org.candlepin.model.Role;
-import org.candlepin.model.User;
+import org.candlepin.service.model.OwnerInfo;
+import org.candlepin.service.model.PermissionBlueprintInfo;
+import org.candlepin.service.model.RoleInfo;
+import org.candlepin.service.model.UserInfo;
 
-import java.util.List;
+import java.util.Collection;
+
+
 
 /**
  * UserServiceAdapter
@@ -34,28 +38,44 @@ public interface UserServiceAdapter {
     boolean validateUser(String username, String password) throws Exception;
 
     // User life cycle
-    User createUser(User user);
+    UserInfo createUser(UserInfo user);
 
-    User updateUser(User user);
+    UserInfo updateUser(String username, UserInfo user);
 
-    void deleteUser(User user);
+    void deleteUser(String username);
 
-    User findByLogin(String login);
+    UserInfo findByLogin(String username);
 
-    List<User> listUsers();
+    Collection<? extends UserInfo> listUsers();
 
-    Role createRole(Role r);
+    /**
+     * Fetches a collection of owners to which the specified user is allowed to register.
+     *
+     * @param username
+     *  The username of the user to check
+     *
+     * @return
+     *  a collection of owners to which the user is allowed to register
+     */
+    Collection<? extends OwnerInfo> getAccessibleOwners(String username);
 
-    Role updateRole(Role r);
+    // Roles
+    RoleInfo createRole(RoleInfo role);
 
-    void addUserToRole(Role role, User user);
+    RoleInfo updateRole(String roleName, RoleInfo role);
 
-    void removeUserFromRole(Role role, User user);
+    RoleInfo addUserToRole(String roleName, String username);
 
-    void deleteRole(String roleId);
+    RoleInfo removeUserFromRole(String roleName, String username);
 
-    Role getRole(String roleId);
+    RoleInfo addPermissionToRole(String roleName, PermissionBlueprintInfo permission);
 
-    List<Role> listRoles();
+    RoleInfo removePermissionFromRole(String roleName, String permissionId);
+
+    void deleteRole(String roleName);
+
+    RoleInfo getRole(String roleName);
+
+    Collection<? extends RoleInfo> listRoles();
 
 }

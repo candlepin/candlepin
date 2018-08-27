@@ -70,10 +70,11 @@ public class EventTranslator implements ObjectTranslator<Event, EventDTO> {
         destination.setPrincipalStore(source.getPrincipalStore());
         destination.setReferenceId(source.getReferenceId());
         destination.setTimestamp(source.getTimestamp());
-        destination.setType(source.getType() != null ? source.getType().toString() : null);
-        destination.setTarget(source.getTarget() != null ? source.getTarget().toString() : null);
+        destination.setType(source.getType() != null ? source.getType().name() : null);
+        destination.setTarget(source.getTarget() != null ? source.getTarget().name() : null);
         destination.setReferenceType(source.getReferenceType() != null ?
-            source.getReferenceType().toString() : null);
+            source.getReferenceType().name() :
+            null);
         destination.setEventData(source.getEventData());
 
         if (modelTranslator != null) {

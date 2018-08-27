@@ -17,19 +17,20 @@ package org.candlepin.controller;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.dto.Subscription;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
+import org.candlepin.service.model.OwnerInfo;
+import org.candlepin.service.model.SubscriptionInfo;
 
 import com.google.inject.persist.UnitOfWork;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -98,18 +99,20 @@ public class Refresher {
         // If products were specified on the refresher, lookup any subscriptions
         // using them, regardless of organization, and trigger a refresh for those
         // specific subscriptions.
-        Set<Subscription> subscriptions = new HashSet<>();
+        Set<SubscriptionInfo> subscriptions = new HashSet<>();
         for (Product product : products) {
             // TODO: This adapter call is not implemented in prod, and cannot be. We plan
             // to fix this whole code path in near future by looking for pools using the
             // given products to be refreshed.
-            List<Subscription> subs = subAdapter.getSubscriptions(product.toDTO());
+            Collection<? extends SubscriptionInfo> subs = subAdapter
+                .getSubscriptionsByProductId(product.getId());
+
             log.debug("Will refresh {} subscriptions in all orgs using product: ",
                 subs.size(), product.getId());
 
             if (log.isDebugEnabled()) {
-                for (Subscription s : subs) {
-                    Owner so = s.getOwner();
+                for (SubscriptionInfo s : subs) {
+                    OwnerInfo so = s.getOwner();
 
                     if (so == null || so.getKey() == null) {
                         log.debug("  Received a subscription without a well-defined owner: {}", s.getId());
@@ -125,10 +128,10 @@ public class Refresher {
             subscriptions.addAll(subs);
         }
 
-        for (Subscription subscription : subscriptions) {
+        for (SubscriptionInfo subscription : subscriptions) {
             // drop any subs for owners in our owners list. we'll get them with the full
             // refreshPools call.
-            Owner so = subscription.getOwner();
+            OwnerInfo so = subscription.getOwner();
 
             // This probably shouldn't ever happen, but let's make sure it doesn't anyway.
             if (so == null || so.getKey() == null) {

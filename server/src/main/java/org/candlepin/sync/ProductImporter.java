@@ -72,7 +72,7 @@ public class ProductImporter {
                 //
                 // We know this is a standalone server due to the fact that import is
                 // being used, so there is no need to guard this behavior.
-                content.setMetadataExpire(1L);
+                content.setMetadataExpiration(1L);
             }
         }
 

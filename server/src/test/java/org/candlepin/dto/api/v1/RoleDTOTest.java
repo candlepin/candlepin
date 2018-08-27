@@ -46,6 +46,7 @@ public class RoleDTOTest extends AbstractDTOTest<RoleDTO> {
         for (int i = 0; i < 5; ++i) {
             UserDTO user = new UserDTO();
             user.setId("test-user-" + i);
+            user.setUsername(user.getId());
 
             PermissionBlueprintDTO permission = new PermissionBlueprintDTO();
             permission.setId("test-perm-" + i);
@@ -86,9 +87,11 @@ public class RoleDTOTest extends AbstractDTOTest<RoleDTO> {
 
         UserDTO user1 = new UserDTO();
         user1.setId("test-user-1");
+        user1.setUsername(user1.getId());
 
         UserDTO user2 = new UserDTO();
         user2.setId("test-user-2");
+        user2.setUsername(user2.getId());
 
         Collection<UserDTO> users = dto.getUsers();
         assertNull(users);
@@ -118,6 +121,7 @@ public class RoleDTOTest extends AbstractDTOTest<RoleDTO> {
 
         UserDTO user = new UserDTO();
         user.setId("test-user");
+        user.setUsername(user.getId());
 
         Collection<UserDTO> users = dto.getUsers();
         assertNull(users);
@@ -196,6 +200,7 @@ public class RoleDTOTest extends AbstractDTOTest<RoleDTO> {
 
         UserDTO user = new UserDTO();
         user.setId("test-user");
+        user.setUsername(user.getId());
 
         Collection<UserDTO> users = dto.getUsers();
         assertNull(users);
@@ -265,6 +270,7 @@ public class RoleDTOTest extends AbstractDTOTest<RoleDTO> {
 
         UserDTO user = new UserDTO();
         user.setId("test-user");
+        user.setUsername(user.getId());
 
         Collection<UserDTO> users = dto.getUsers();
         assertNull(users);

@@ -133,6 +133,9 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
         // Create owner w/upstream consumer
         Owner owner1 = TestUtil.createOwner();
         Owner owner2 = TestUtil.createOwner();
+        owner1.setId(null);
+        owner2.setId(null);
+
         ConsumerType type = this.createConsumerType();
         UpstreamConsumer uc1 = new UpstreamConsumer("uc1", null, type, "uc1");
         UpstreamConsumer uc2 = new UpstreamConsumer("uc2", null, type, "uc2");

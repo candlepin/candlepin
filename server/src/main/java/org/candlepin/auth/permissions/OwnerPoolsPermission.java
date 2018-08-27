@@ -25,7 +25,7 @@ import org.hibernate.criterion.Criterion;
  */
 public class OwnerPoolsPermission extends TypedPermission<Owner> {
 
-    private Owner owner;
+    private final Owner owner;
 
     public OwnerPoolsPermission(Owner owner) {
         this.owner = owner;
@@ -38,8 +38,7 @@ public class OwnerPoolsPermission extends TypedPermission<Owner> {
     }
 
     @Override
-    public boolean canAccessTarget(Owner target, SubResource subResource,
-        Access required) {
+    public boolean canAccessTarget(Owner target, SubResource subResource, Access required) {
         return target.getKey().equals(owner.getKey()) &&
             (subResource.equals(SubResource.POOLS) ||
                 subResource.equals(SubResource.SUBSCRIPTIONS)) &&

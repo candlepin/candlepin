@@ -42,6 +42,7 @@ public class ConsumerPrincipalTest {
     public void init() {
         o = mock(Owner.class);
         when(o.getKey()).thenReturn("donaldduck");
+        when(o.getId()).thenReturn("dd-owner-id");
 
         consumer = mock(Consumer.class);
         when(consumer.getUuid()).thenReturn("consumer-uuid");
@@ -93,7 +94,10 @@ public class ConsumerPrincipalTest {
         ConsumerType ctype = new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM);
         ctype.setId("test-ctype");
 
-        Consumer c = new Consumer("Test Consumer", "test-consumer", new Owner("o1"), ctype);
+        Owner newOwner = new Owner("o1");
+        newOwner.setId("o1-id");
+
+        Consumer c = new Consumer("Test Consumer", "test-consumer", newOwner, ctype);
         ConsumerPrincipal cp = new ConsumerPrincipal(c, o);
         assertFalse(principal.equals(cp));
     }

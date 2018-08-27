@@ -18,6 +18,7 @@ import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
+import org.candlepin.auth.permissions.PermissionFactory;
 import org.candlepin.model.User;
 import org.candlepin.service.UserServiceAdapter;
 
@@ -45,6 +46,7 @@ public class TrustedUserAuthTest {
     @Mock private HttpHeaders mockHeaders;
     @Mock private UserServiceAdapter userService;
     @Mock private Provider<I18n> mockI18n;
+    @Mock private PermissionFactory mockPermissionFactory;
     private TrustedUserAuth auth;
 
     private static final String USERNAME = "myusername";
@@ -64,7 +66,8 @@ public class TrustedUserAuthTest {
         when(request.getHttpHeaders()).thenReturn(mockHeaders);
         I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         when(mockI18n.get()).thenReturn(i18n);
-        this.auth = new TrustedUserAuth(userService, mockI18n);
+
+        this.auth = new TrustedUserAuth(userService, mockI18n, mockPermissionFactory);
     }
 
     @Test

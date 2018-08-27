@@ -14,6 +14,7 @@
  */
 package org.candlepin.auth;
 
+import org.candlepin.auth.permissions.PermissionFactory;
 import org.candlepin.common.resteasy.auth.AuthUtil;
 import org.candlepin.service.UserServiceAdapter;
 
@@ -31,15 +32,16 @@ import javax.inject.Provider;
  * This should be used only if the environment is known to be secure
  */
 public class TrustedUserAuth extends UserAuth {
+    private static Logger log = LoggerFactory.getLogger(TrustedUserAuth.class);
 
     public static final String USER_HEADER = "cp-user";
     public static final String LOOKUP_PERMISSIONS_HEADER = "cp-lookup-permissions";
 
-    private static Logger log = LoggerFactory.getLogger(TrustedUserAuth.class);
-
     @Inject
-    TrustedUserAuth(UserServiceAdapter userServiceAdaper, Provider<I18n> i18n) {
-        super(userServiceAdaper, i18n);
+    TrustedUserAuth(UserServiceAdapter userServiceAdaper, Provider<I18n> i18n,
+        PermissionFactory permissionFactory) {
+
+        super(userServiceAdaper, i18n, permissionFactory);
     }
 
     public Principal getPrincipal(HttpRequest httpRequest) {

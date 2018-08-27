@@ -305,7 +305,7 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
 
     @Test(expected = IllegalStateException.class)
     public void testMapContentToOwnerUnmappedOwner() {
-        Owner owner = TestUtil.createOwner();
+        Owner owner = new Owner("unmapped");
         Content content = this.createContent();
 
         this.ownerContentCurator.mapContentToOwner(content, owner);

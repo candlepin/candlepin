@@ -380,7 +380,7 @@ public class ConsumerResourceTest {
         CandlepinPoolManager poolManager = new CandlepinPoolManager(
             null, null, null, this.config, null, null, mockEntitlementCurator,
             mockConsumerCurator, mockConsumerTypeCurator, null, null, null, null, mockActivationKeyRules,
-            null, null, null, null, null, null, null, null, null, null
+            null, null, null, null, null, null, null, null, null, null, null
         );
         ConsumerResource consumerResource = new ConsumerResource(
             mockConsumerCurator, mockConsumerTypeCurator, null, null, null, mockEntitlementCurator, null,
@@ -490,7 +490,7 @@ public class ConsumerResourceTest {
         Consumer c = createConsumer(o);
         String[] prodIds = {"notthere"};
 
-        when(mockSubscriptionServiceAdapter.hasUnacceptedSubscriptionTerms(eq(o))).thenReturn(false);
+        when(mockSubscriptionServiceAdapter.hasUnacceptedSubscriptionTerms(eq(o.getKey()))).thenReturn(false);
         when(mockConsumerCurator.verifyAndLookupConsumerWithEntitlements(eq("fakeConsumer"))).thenReturn(c);
         when(mockEntitler.bindByProducts(any(AutobindData.class))).thenReturn(null);
         when(mockOwnerCurator.findOwnerById(eq(o.getId()))).thenReturn(o);
@@ -511,7 +511,7 @@ public class ConsumerResourceTest {
 
         when(mockOwnerCurator.findOwnerById(eq(o.getId()))).thenReturn(o);
         when(cip.getProductId()).thenReturn("product-foo");
-        when(mockSubscriptionServiceAdapter.hasUnacceptedSubscriptionTerms(eq(o))).thenReturn(false);
+        when(mockSubscriptionServiceAdapter.hasUnacceptedSubscriptionTerms(eq(o.getKey()))).thenReturn(false);
         when(cc.verifyAndLookupConsumerWithEntitlements(eq(c.getUuid()))).thenReturn(c);
 
         String dtStr = "2011-09-26T18:10:50.184081+00:00";

@@ -86,6 +86,7 @@ public class TestUtil {
 
     public static Owner createOwner(String key, String name) {
         Owner owner = new Owner(key, name);
+        owner.setId(key + "-id");
         return owner;
     }
 
@@ -128,7 +129,7 @@ public class TestUtil {
      * @return Consumer
      */
     public static Consumer createConsumer() {
-        return createConsumer(createConsumerType(), new Owner("Test Owner " + randomInt()));
+        return createConsumer(createConsumerType(), createOwner("Test Owner " + randomInt()));
     }
 
     public static Consumer createDistributor() {
@@ -214,7 +215,7 @@ public class TestUtil {
             content.setRequiredTags(dto.getRequiredTags());
             content.setReleaseVersion(dto.getReleaseVersion());
             content.setGpgUrl(dto.getGpgUrl());
-            content.setMetadataExpire(dto.getMetadataExpiration());
+            content.setMetadataExpiration(dto.getMetadataExpiration());
             content.setModifiedProductIds(dto.getModifiedProductIds());
             content.setArches(dto.getArches());
             content.setLocked(dto.isLocked());
@@ -237,7 +238,7 @@ public class TestUtil {
             content.setRequiredTags(cdata.getRequiredTags());
             content.setReleaseVersion(cdata.getReleaseVersion());
             content.setGpgUrl(cdata.getGpgUrl());
-            content.setMetadataExpire(cdata.getMetadataExpire());
+            content.setMetadataExpiration(cdata.getMetadataExpiration());
             content.setModifiedProductIds(cdata.getModifiedProductIds());
             content.setArches(cdata.getArches());
             content.setLocked(cdata.isLocked());

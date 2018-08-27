@@ -18,6 +18,8 @@ import org.candlepin.dto.CandlepinDTO;
 import org.candlepin.dto.TimestampedCandlepinDTO;
 import org.candlepin.jackson.CandlepinAttributeDeserializer;
 import org.candlepin.jackson.CandlepinLegacyAttributeSerializer;
+import org.candlepin.service.model.ProductInfo;
+import org.candlepin.service.model.ProductContentInfo;
 import org.candlepin.util.MapView;
 import org.candlepin.util.SetView;
 import org.candlepin.util.Util;
@@ -66,13 +68,15 @@ import javax.xml.bind.annotation.XmlTransient;
  */
 @ApiModel(parent = CandlepinDTO.class, description = "Product information for a given sku or product")
 @XmlRootElement
-public class ProductDTO extends TimestampedCandlepinDTO<ProductDTO> {
+public class ProductDTO extends TimestampedCandlepinDTO<ProductDTO> implements ProductInfo {
     public static final long serialVersionUID = 1L;
 
     /**
      * Join object DTO for joining products to content
      */
-    public static class ProductContentDTO extends CandlepinDTO<ProductContentDTO> {
+    public static class ProductContentDTO extends CandlepinDTO<ProductContentDTO>
+        implements ProductContentInfo {
+
         protected final ContentDTO content;
         protected Boolean enabled;
 

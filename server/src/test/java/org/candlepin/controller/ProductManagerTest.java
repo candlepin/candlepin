@@ -104,8 +104,9 @@ public class ProductManagerTest extends DatabaseTestFixture {
     public void testUpdateProductNoChange() {
         Owner owner = this.createOwner("test-owner", "Test Owner");
         Product product = this.createProduct("p1", "prod1", owner);
+        ProductDTO dto = this.modelTranslator.translate(product, ProductDTO.class);
 
-        Product output = this.productManager.updateProduct(product.toDTO(), owner, true);
+        Product output = this.productManager.updateProduct(dto, owner, true);
 
         assertEquals(output.getUuid(), product.getUuid());
         assertEquals(output, product);

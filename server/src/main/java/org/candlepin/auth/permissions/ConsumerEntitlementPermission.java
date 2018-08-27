@@ -41,8 +41,7 @@ public class ConsumerEntitlementPermission extends TypedPermission<Entitlement> 
     }
 
     @Override
-    public boolean canAccessTarget(Entitlement target, SubResource subResource,
-        Access required) {
+    public boolean canAccessTarget(Entitlement target, SubResource subResource, Access required) {
         return target.getConsumer().getUuid().equals(consumer.getUuid());
     }
 

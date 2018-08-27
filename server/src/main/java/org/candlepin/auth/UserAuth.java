@@ -14,14 +14,18 @@
  */
 package org.candlepin.auth;
 
+import org.candlepin.auth.permissions.PermissionFactory;
+
 import org.candlepin.common.exceptions.BadRequestException;
-import org.candlepin.model.User;
 import org.candlepin.service.UserServiceAdapter;
+import org.candlepin.service.model.UserInfo;
 
 import org.xnap.commons.i18n.I18n;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
+
+
 
 /**
  * UserAuth
@@ -29,31 +33,34 @@ import javax.inject.Provider;
 public abstract class UserAuth implements AuthProvider {
 
     protected UserServiceAdapter userServiceAdapter;
-    protected Provider<I18n> i18n;
+    protected Provider<I18n> i18nProvider;
+    protected PermissionFactory permissionFactory;
 
     @Inject
-    public UserAuth(UserServiceAdapter userServiceAdapter, Provider<I18n> i18n) {
+    public UserAuth(UserServiceAdapter userServiceAdapter, Provider<I18n> i18nProvider,
+        PermissionFactory permissionFactory) {
+
         this.userServiceAdapter = userServiceAdapter;
-        this.i18n = i18n;
+        this.i18nProvider = i18nProvider;
+        this.permissionFactory = permissionFactory;
     }
 
     /**
      * Creates a user principal for a given username
      */
     protected Principal createPrincipal(String username) {
-        User user = userServiceAdapter.findByLogin(username);
+        UserInfo user = this.userServiceAdapter.findByLogin(username);
+
         if (user == null) {
-            throw new BadRequestException("user " + username + " not found");
+            throw new BadRequestException(this.i18nProvider.get().tr("User not found: {0}", username));
         }
 
-        if (user.isSuperAdmin()) {
-            return new UserPrincipal(username, null, true);
-        }
-        else {
-            Principal principal = new UserPrincipal(username, user.getPermissions(), false);
-
-            return principal;
-        }
+        // TODO: This creates a lot of object churn. We should probably update this later in a way
+        // that can do permission checking without creating piles of objects that we just throw away
+        // without ever using them in the general case.
+        return user.isSuperAdmin() != null && user.isSuperAdmin() ?
+            new UserPrincipal(username, null, true) :
+            new UserPrincipal(username, this.permissionFactory.createUserPermissions(user), false);
     }
 
 }

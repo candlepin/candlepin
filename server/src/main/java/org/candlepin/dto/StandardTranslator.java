@@ -55,8 +55,10 @@ import org.candlepin.dto.api.v1.ImportUpstreamConsumerDTO;
 import org.candlepin.dto.api.v1.ImportUpstreamConsumerTranslator;
 import org.candlepin.dto.api.v1.JobStatusDTO;
 import org.candlepin.dto.api.v1.JobStatusTranslator;
+import org.candlepin.dto.api.v1.OwnerInfoTranslator;
 import org.candlepin.dto.api.v1.PermissionBlueprintDTO;
 import org.candlepin.dto.api.v1.PermissionBlueprintTranslator;
+import org.candlepin.dto.api.v1.PermissionBlueprintInfoTranslator;
 import org.candlepin.dto.api.v1.PoolQuantityDTO;
 import org.candlepin.dto.api.v1.PoolQuantityTranslator;
 import org.candlepin.dto.api.v1.ProductCertificateDTO;
@@ -65,12 +67,14 @@ import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.dto.api.v1.ProductTranslator;
 import org.candlepin.dto.api.v1.RoleDTO;
 import org.candlepin.dto.api.v1.RoleTranslator;
+import org.candlepin.dto.api.v1.RoleInfoTranslator;
 import org.candlepin.dto.api.v1.UeberCertificateDTO;
 import org.candlepin.dto.api.v1.UeberCertificateTranslator;
 import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
 import org.candlepin.dto.api.v1.UpstreamConsumerTranslator;
 import org.candlepin.dto.api.v1.UserDTO;
 import org.candlepin.dto.api.v1.UserTranslator;
+import org.candlepin.dto.api.v1.UserInfoTranslator;
 import org.candlepin.dto.shim.ContentDTOTranslator;
 import org.candlepin.dto.shim.ContentDataTranslator;
 import org.candlepin.dto.shim.ProductDTOTranslator;
@@ -112,6 +116,10 @@ import org.candlepin.model.dto.ProductData;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.policy.js.compliance.ComplianceReason;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
+import org.candlepin.service.model.OwnerInfo;
+import org.candlepin.service.model.PermissionBlueprintInfo;
+import org.candlepin.service.model.RoleInfo;
+import org.candlepin.service.model.UserInfo;
 
 import com.google.inject.Inject;
 
@@ -183,7 +191,12 @@ public class StandardTranslator extends SimpleModelTranslator {
             new org.candlepin.dto.api.v1.OwnerTranslator(),
             Owner.class, org.candlepin.dto.api.v1.OwnerDTO.class);
         this.registerTranslator(
+            new OwnerInfoTranslator(), OwnerInfo.class, org.candlepin.dto.api.v1.OwnerDTO.class);
+        this.registerTranslator(
             new PermissionBlueprintTranslator(), PermissionBlueprint.class, PermissionBlueprintDTO.class);
+        this.registerTranslator(
+            new PermissionBlueprintInfoTranslator(),
+            PermissionBlueprintInfo.class, PermissionBlueprintDTO.class);
         this.registerTranslator(
             new org.candlepin.dto.api.v1.PoolTranslator(),
             Pool.class, org.candlepin.dto.api.v1.PoolDTO.class);
@@ -196,11 +209,15 @@ public class StandardTranslator extends SimpleModelTranslator {
         this.registerTranslator(
             new RoleTranslator(), Role.class, RoleDTO.class);
         this.registerTranslator(
+            new RoleInfoTranslator(), RoleInfo.class, RoleDTO.class);
+        this.registerTranslator(
             new UeberCertificateTranslator(), UeberCertificate.class, UeberCertificateDTO.class);
         this.registerTranslator(
             new UpstreamConsumerTranslator(), UpstreamConsumer.class, UpstreamConsumerDTO.class);
         this.registerTranslator(
             new UserTranslator(), User.class, UserDTO.class);
+        this.registerTranslator(
+            new UserInfoTranslator(), UserInfo.class, UserDTO.class);
 
         // Event translators
         /////////////////////////////////////////////

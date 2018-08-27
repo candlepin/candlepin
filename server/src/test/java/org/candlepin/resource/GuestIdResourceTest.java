@@ -105,7 +105,7 @@ public class GuestIdResourceTest {
             this.ownerCurator);
 
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        owner = new Owner("test-owner", "Test Owner");
+        owner = TestUtil.createOwner();
         ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         ct.setId("test-system-ctype");
 

@@ -32,6 +32,7 @@ import org.candlepin.policy.js.pool.PoolUpdate;
 import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
+import org.candlepin.service.model.SubscriptionInfo;
 
 import java.util.Collection;
 import java.util.Date;
@@ -52,7 +53,7 @@ public interface PoolManager {
      * @param sub
      * @return the newly created Pool(s)
      */
-    List<Pool> createAndEnrichPools(Subscription sub);
+    List<Pool> createAndEnrichPools(SubscriptionInfo sub);
 
     /**
      * Create any pools that need to be created for the given pool.
@@ -64,7 +65,7 @@ public interface PoolManager {
 
     Pool createAndEnrichPools(Pool pool, List<Pool> existingPools);
 
-    Pool convertToMasterPool(Subscription subscription);
+    Pool convertToMasterPool(SubscriptionInfo subscription);
 
     /**
      * Applies changes to the given pool to itself and any of its derived pools. This may result in

@@ -148,7 +148,7 @@ public class EntitlementRulesTestFixture {
             translator
         );
 
-        owner = new Owner();
+        owner = TestUtil.createOwner();
 
         consumerType = this.mockConsumerType(new ConsumerType(ConsumerTypeEnum.SYSTEM));
         consumer = new Consumer("test consumer", "test user", owner, consumerType);

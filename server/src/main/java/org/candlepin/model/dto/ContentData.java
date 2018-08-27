@@ -15,6 +15,7 @@
 package org.candlepin.model.dto;
 
 import org.candlepin.model.Content;
+import org.candlepin.service.model.ContentInfo;
 import org.candlepin.util.SetView;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -59,7 +60,7 @@ import javax.xml.bind.annotation.XmlTransient;
  */
 @ApiModel(parent = CandlepinDTO.class)
 @XmlRootElement
-public class ContentData extends CandlepinDTO {
+public class ContentData extends CandlepinDTO implements ContentInfo {
     public static final long serialVersionUID = 1L;
 
     @ApiModelProperty(example = "ff808081554a3e4101554a3e9033005d")
@@ -446,7 +447,7 @@ public class ContentData extends CandlepinDTO {
      *  the metadata expiration of the content, or null if the metadata expiration has not yet been
      *  defined
      */
-    public Long getMetadataExpire() {
+    public Long getMetadataExpiration() {
         return this.metadataExpire;
     }
 
@@ -460,7 +461,7 @@ public class ContentData extends CandlepinDTO {
      * @return
      *  a reference to this DTO
      */
-    public ContentData setMetadataExpire(Long metadataExpire) {
+    public ContentData setMetadataExpiration(Long metadataExpire) {
         this.metadataExpire = metadataExpire;
         return this;
     }
@@ -475,6 +476,14 @@ public class ContentData extends CandlepinDTO {
      */
     public Collection<String> getModifiedProductIds() {
         return this.modifiedProductIds != null ? new SetView(this.modifiedProductIds) : null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Collection<String> getRequiredProductIds() {
+        return this.getModifiedProductIds();
     }
 
     /**
@@ -526,7 +535,7 @@ public class ContentData extends CandlepinDTO {
      * existing modified product IDs will be cleared before assigning the given product IDs.
      *
      * @param modifiedProductIds
-     *  A collection of product IDs to be modified by the content content, or null to clear the
+     *  A collection of product IDs to be modified by the content, or null to clear the
      *  existing modified product IDs
      *
      * @return
@@ -548,6 +557,20 @@ public class ContentData extends CandlepinDTO {
         }
 
         return this;
+    }
+
+    /**
+     * New name for the old setModifiedProductIds method.
+     *
+     * @param requiredProductIds
+     *  A collection of product IDs to be required by the content, or null to clear the
+     *  existing required product IDs
+     *
+     * @return
+     *  a reference to this DTO
+     */
+    public ContentData setRequiredProductIds(Collection<String> requiredProductIds) {
+        return this.setModifiedProductIds(requiredProductIds);
     }
 
     /**
@@ -697,7 +720,7 @@ public class ContentData extends CandlepinDTO {
         this.requiredTags = source.getRequiredTags();
         this.releaseVer = source.getReleaseVersion();
         this.gpgUrl = source.getGpgUrl();
-        this.metadataExpire = source.getMetadataExpire();
+        this.metadataExpire = source.getMetadataExpiration();
         this.arches = source.getArches();
         this.locked = source.isLocked();
 
@@ -735,7 +758,7 @@ public class ContentData extends CandlepinDTO {
         this.requiredTags = source.getRequiredTags();
         this.releaseVer = source.getReleaseVersion();
         this.gpgUrl = source.getGpgUrl();
-        this.metadataExpire = source.getMetadataExpire();
+        this.metadataExpire = source.getMetadataExpiration();
         this.arches = source.getArches();
         this.locked = source.isLocked();
 

@@ -15,6 +15,10 @@
 package org.candlepin.model;
 
 import org.candlepin.util.Util;
+import org.candlepin.service.model.CertificateSerialInfo;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.math.BigInteger;
 import java.util.Date;
@@ -31,7 +35,8 @@ import javax.validation.constraints.NotNull;
  */
 @Entity
 @Table(name = CertificateSerial.DB_TABLE)
-public class CertificateSerial extends AbstractHibernateObject<CertificateSerial> {
+public class CertificateSerial extends AbstractHibernateObject<CertificateSerial>
+    implements CertificateSerialInfo {
 
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp_cert_serial";
@@ -82,36 +87,39 @@ public class CertificateSerial extends AbstractHibernateObject<CertificateSerial
     }
 
     /**
-     * @return the revoked
+     * {@inheritDoc}
      */
-    public boolean isRevoked() {
+    @Override
+    public Boolean isRevoked() {
         return revoked;
     }
 
     /**
      * @param isRevoked whether or not this serial is revoked.
      */
-    public void setRevoked(boolean isRevoked) {
-        this.revoked = isRevoked;
+    public void setRevoked(Boolean isRevoked) {
+        this.revoked = isRevoked != null ? isRevoked : false;
     }
 
     /**
-     * @return the collected
+     * {@inheritDoc}
      */
-    public boolean isCollected() {
+    @Override
+    public Boolean isCollected() {
         return collected;
     }
 
     /**
      * @param collected the collected to set
      */
-    public void setCollected(boolean collected) {
-        this.collected = collected;
+    public void setCollected(Boolean collected) {
+        this.collected = collected != null ? collected : false;
     }
 
     /**
-     * @return the expiration
+     * {@inheritDoc}
      */
+    @Override
     public Date getExpiration() {
         return expiration;
     }
@@ -132,12 +140,22 @@ public class CertificateSerial extends AbstractHibernateObject<CertificateSerial
             this.getId(), this.getSerial(), date, this.isCollected(), this.isRevoked());
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public BigInteger getSerial() {
         return this.getId() != null ? BigInteger.valueOf(this.getId()) : null;
     }
 
+    @JsonProperty
     public void setSerial(Long serial) {
         this.id = serial;
+    }
+
+    @JsonIgnore
+    public void setSerial(BigInteger serial) {
+        this.setId(serial != null ? serial.longValueExact() : null);
     }
 
 }

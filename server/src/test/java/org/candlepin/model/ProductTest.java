@@ -40,21 +40,6 @@ import javax.inject.Inject;
 public class ProductTest extends DatabaseTestFixture {
     @Inject private OwnerCurator ownerCurator;
 
-    @Test
-    public void testLockStateAffectsEquality() {
-        Owner owner = new Owner("Example-Corporation");
-        Product p1 = new Product("test-prod", "test-prod-name", "variant", "1.0.0", "x86", "type");
-        Product p2 = new Product("test-prod", "test-prod-name", "variant", "1.0.0", "x86", "type");
-
-        assertEquals(p1, p2);
-
-        p2.setLocked(true);
-        assertNotEquals(p1, p2);
-
-        p1.setLocked(true);
-        assertEquals(p1, p2);
-    }
-
     protected Object[][] getValuesForEqualityAndReplication() {
         Map<String, String> attributes1 = new HashMap<>();
         attributes1.put("a1", "v1");
@@ -99,7 +84,7 @@ public class ProductTest extends DatabaseTestFixture {
             new Object[] { "ProductContent", productContent1, productContent2 },
             new Object[] { "DependentProductIds", Arrays.asList("1", "2", "3"), Arrays.asList("4", "5") },
             // new Object[] { "Href", "test_value", null },
-            new Object[] { "Locked", Boolean.TRUE, false }
+            // new Object[] { "Locked", Boolean.TRUE, false }
         };
     }
 

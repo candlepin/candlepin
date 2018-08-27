@@ -100,7 +100,12 @@ def create_role(cp, new_role)
 
   print "role_name: #{role_name}\n"
   perms.each do |perm|
-    print "\t owner: #{perm['owner']}\n"
+    # convert owner key to owner objects
+    if (perm['owner'].is_a? String)
+      perm['owner'] = { :key => perm['owner'] }
+    end
+
+    print "\t owner: #{perm['owner']['key']}\n"
     print "\t access: #{perm['access']}\n"
   end
 
@@ -108,9 +113,8 @@ def create_role(cp, new_role)
 
   users.each do |user|
     print "\t user: #{user['username']}\n"
-    cp.add_role_user(role['id'], user['username'])
+    cp.add_role_user(role['name'], user['username'])
   end
-
 end
 
 thread_pool = ThreadPool.new(5)

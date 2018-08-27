@@ -443,7 +443,7 @@ public class ContentDTO extends TimestampedCandlepinDTO<ContentDTO> {
      *  the metadata expiration of the content, or null if the metadata expiration has not yet been
      *  defined
      */
-    public Long getMetadataExpire() {
+    public Long getMetadataExpiration() {
         return this.metadataExpire;
     }
 
@@ -457,7 +457,7 @@ public class ContentDTO extends TimestampedCandlepinDTO<ContentDTO> {
      * @return
      *  a reference to this DTO
      */
-    public ContentDTO setMetadataExpire(Long metadataExpire) {
+    public ContentDTO setMetadataExpiration(Long metadataExpire) {
         this.metadataExpire = metadataExpire;
         return this;
     }
@@ -487,7 +487,7 @@ public class ContentDTO extends TimestampedCandlepinDTO<ContentDTO> {
                 .append(this.getRequiredTags(), that.getRequiredTags())
                 .append(this.getReleaseVersion(), that.getReleaseVersion())
                 .append(this.getGpgUrl(), that.getGpgUrl())
-                .append(this.getMetadataExpire(), that.getMetadataExpire())
+                .append(this.getMetadataExpiration(), that.getMetadataExpiration())
 
                 .append(this.getModifiedProductIds(), that.getModifiedProductIds())
                 .append(this.getArches(), that.getArches());
@@ -512,7 +512,7 @@ public class ContentDTO extends TimestampedCandlepinDTO<ContentDTO> {
             .append(this.getRequiredTags())
             .append(this.getReleaseVersion())
             .append(this.getGpgUrl())
-            .append(this.getMetadataExpire())
+            .append(this.getMetadataExpiration())
             .append(this.getModifiedProductIds())
             .append(this.getArches());
 
@@ -554,7 +554,7 @@ public class ContentDTO extends TimestampedCandlepinDTO<ContentDTO> {
         this.setRequiredTags(source.getRequiredTags());
         this.setReleaseVersion(source.getReleaseVersion());
         this.setGpgUrl(source.getGpgUrl());
-        this.setMetadataExpire(source.getMetadataExpire());
+        this.setMetadataExpiration(source.getMetadataExpiration());
         this.setModifiedProductIds(source.getModifiedProductIds());
         this.setArches(source.getArches());
 

@@ -68,7 +68,7 @@ describe 'User Resource' do
     }]
 
     new_role = @cp.create_role(random_string('testrole'), new_perm)
-    @cp.add_role_user(new_role['id'], alice)
+    @cp.add_role_user(new_role['name'], alice)
 
     #make sure we see the extra role
     roles = alice_cp.get_user_roles(alice)
@@ -77,7 +77,7 @@ describe 'User Resource' do
     bob = random_string 'user'
     bob_cp = user_client(@test_owner, bob)
 
-    @cp.add_role_user(new_role['id'], bob)
+    @cp.add_role_user(new_role['name'], bob)
     roles = bob_cp.get_user_roles(bob)
     roles.size.should == 2
     roles.each { |role|
@@ -85,7 +85,7 @@ describe 'User Resource' do
     }
 
     #admin should see both users on the role obj (note the different API call)
-    userlist = @cp.get_role(new_role['id'])['users']
+    userlist = @cp.get_role(new_role['name'])['users']
     userlist.select { |u| u['username'] == alice }.should_not be_empty
     userlist.select { |u| u['username'] == bob }.should_not be_empty
 

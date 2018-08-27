@@ -14,7 +14,12 @@
  */
 package org.candlepin.dto.api.v1;
 
+import static org.junit.Assert.*;
+
 import org.candlepin.dto.AbstractDTOTest;
+import org.candlepin.util.Util;
+
+import org.junit.Test;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -35,7 +40,7 @@ public class UserDTOTest extends AbstractDTOTest<UserDTO> {
         this.values = new HashMap<>();
         this.values.put("Id", "test-id");
         this.values.put("Username", "test-username");
-        this.values.put("Password", "test-password");
+        this.values.put("HashedPassword", "test-password-hash");
         this.values.put("SuperAdmin", true);
         this.values.put("Created", new Date());
         this.values.put("Updated", new Date());
@@ -56,5 +61,33 @@ public class UserDTOTest extends AbstractDTOTest<UserDTO> {
     protected Object getOutputValueForAccessor(String field, Object input) {
         // Nothing to do here
         return input;
+    }
+
+    @Test
+    public void testPasswordHashing() {
+        UserDTO dto = new UserDTO();
+        assertNull(dto.getHashedPassword());
+
+        String password = "my_password";
+        String hashed = Util.hash(password);
+
+        // This should result in a hashed password
+        dto.setPassword(password);
+
+        assertEquals(hashed, dto.getHashedPassword());
+    }
+
+    @Test
+    public void testPasswordReset() {
+        UserDTO dto = new UserDTO();
+        assertNull(dto.getHashedPassword());
+
+        String password = "my_password";
+
+        dto.setPassword(password);
+        assertNotNull(dto.getHashedPassword());
+
+        dto.setPassword(null);
+        assertNull(dto.getHashedPassword());
     }
 }

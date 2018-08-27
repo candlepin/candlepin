@@ -23,6 +23,7 @@ import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.OwnerPermission;
 import org.candlepin.auth.permissions.Permission;
+import org.candlepin.auth.permissions.PermissionFactory;
 import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.CandlepinCommonTestConfig;
@@ -155,6 +156,8 @@ public class DatabaseTestFixture {
     @Inject protected PoolCurator poolCurator;
     @Inject protected RoleCurator roleCurator;
     @Inject protected UserCurator userCurator;
+
+    @Inject protected PermissionFactory permissionFactory;
 
     @Inject protected ResourceLocatorMap locatorMap;
     @Inject protected ModelTranslator modelTranslator;
@@ -523,6 +526,8 @@ public class DatabaseTestFixture {
 
     protected Owner createOwner(String key, String name) {
         Owner owner = TestUtil.createOwner(key, name);
+        owner.setId(null);
+
         this.ownerCurator.create(owner);
 
         return owner;

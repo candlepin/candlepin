@@ -141,6 +141,7 @@ describe 'System admins with read-only on org' do
         :owner => {:key => @owner['key']},
       }
     ]
+
     @username = random_string 'user'
     @user_cp = user_client_with_perms(@username, 'password', perms)
 

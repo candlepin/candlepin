@@ -47,6 +47,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -415,8 +416,8 @@ public class X509V3ExtensionUtil extends X509Util {
             }
 
             // Include metadata expiry if specified on the content
-            if (pc.getContent().getMetadataExpire() != null) {
-                content.setMetadataExpire(pc.getContent().getMetadataExpire());
+            if (pc.getContent().getMetadataExpiration() != null) {
+                content.setMetadataExpiration(pc.getContent().getMetadataExpiration());
             }
 
             // Include required tags if specified on the content set
@@ -450,7 +451,7 @@ public class X509V3ExtensionUtil extends X509Util {
             boolean include = true;
             if (pc.getContent().getModifiedProductIds().size() > 0) {
                 include = false;
-                Set<String> prodIds = pc.getContent().getModifiedProductIds();
+                Collection<String> prodIds = pc.getContent().getModifiedProductIds();
                 // If consumer has an entitlement to just one of the modified products,
                 // we will include this content set
                 for (String prodId : prodIds) {

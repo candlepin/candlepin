@@ -76,7 +76,7 @@ public class UserTranslatorTest extends AbstractTranslatorTest<User, UserDTO, Us
             // Under no circumstance should we be copying over the password field on translation.
             // This should always be null on the DTO.
             assertNotNull(source.getPassword());
-            assertNull(dest.getPassword());
+            assertNull(dest.getHashedPassword());
         }
         else {
             assertNull(dest);

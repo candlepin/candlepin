@@ -48,13 +48,12 @@ public class KatelloUserServiceAdapterTest {
     @Test(expected = UnsupportedOperationException.class)
     public void updateUser() throws Exception {
         User user = mock(User.class);
-        kusa.updateUser(user);
+        kusa.updateUser("username", user);
     }
 
     @Test(expected = UnsupportedOperationException.class)
     public void deleteUser() throws Exception {
-        User user = mock(User.class);
-        kusa.deleteUser(user);
+        kusa.deleteUser("username");
     }
 
     @Test(expected = UnsupportedOperationException.class)
@@ -76,7 +75,7 @@ public class KatelloUserServiceAdapterTest {
     @Test(expected = UnsupportedOperationException.class)
     public void updateRole() throws Exception {
         Role r = mock(Role.class);
-        kusa.updateRole(r);
+        kusa.updateRole("role name", r);
     }
 
     @Test(expected = UnsupportedOperationException.class)
@@ -86,16 +85,12 @@ public class KatelloUserServiceAdapterTest {
 
     @Test(expected = UnsupportedOperationException.class)
     public void addUserToRole() throws Exception {
-        Role r = mock(Role.class);
-        User user = mock(User.class);
-        kusa.addUserToRole(r, user);
+        kusa.addUserToRole("role name", "username");
     }
 
     @Test(expected = UnsupportedOperationException.class)
     public void removeUserFromRole() throws Exception {
-        Role r = mock(Role.class);
-        User user = mock(User.class);
-        kusa.removeUserFromRole(r, user);
+        kusa.removeUserFromRole("role name", "username");
     }
 
     @Test(expected = UnsupportedOperationException.class)

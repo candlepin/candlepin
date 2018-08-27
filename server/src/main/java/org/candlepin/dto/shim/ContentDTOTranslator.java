@@ -80,7 +80,7 @@ public class ContentDTOTranslator implements ObjectTranslator<ContentDTO, Conten
         dest.setRequiredTags(source.getRequiredTags());
         dest.setReleaseVersion(source.getReleaseVersion());
         dest.setGpgUrl(source.getGpgUrl());
-        dest.setMetadataExpire(source.getMetadataExpire());
+        dest.setMetadataExpiration(source.getMetadataExpiration());
         dest.setArches(source.getArches());
         dest.setModifiedProductIds(source.getModifiedProductIds());
 

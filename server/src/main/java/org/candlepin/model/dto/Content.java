@@ -110,7 +110,7 @@ public class Content {
     /**
      * @param metadataExpire
      */
-    public void setMetadataExpire(Long metadataExpire) {
+    public void setMetadataExpiration(Long metadataExpire) {
         this.metadataExpire = metadataExpire;
     }
 

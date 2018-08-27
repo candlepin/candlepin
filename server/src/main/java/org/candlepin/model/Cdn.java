@@ -14,6 +14,8 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.service.model.CdnInfo;
+
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.CascadeType;
@@ -31,6 +33,8 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+
+
 /**
  * Represents an Content Delivery Network
  */
@@ -38,7 +42,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = Cdn.DB_TABLE, uniqueConstraints = {@UniqueConstraint(columnNames = {"label"})})
-public class Cdn extends AbstractHibernateObject {
+public class Cdn extends AbstractHibernateObject implements CdnInfo {
 
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp_cdn";
@@ -97,6 +101,10 @@ public class Cdn extends AbstractHibernateObject {
         this.id = id;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public String getLabel() {
         return label;
     }
@@ -105,6 +113,10 @@ public class Cdn extends AbstractHibernateObject {
         this.label = label;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public String getName() {
         return name;
     }
@@ -113,6 +125,10 @@ public class Cdn extends AbstractHibernateObject {
         this.name = name;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public String getUrl() {
         return url;
     }
@@ -121,6 +137,10 @@ public class Cdn extends AbstractHibernateObject {
         this.url = url;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public CdnCertificate getCertificate() {
         return cert;
     }

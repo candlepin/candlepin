@@ -66,8 +66,8 @@ public class PermissionBlueprintTranslator extends
         Access access = source.getAccess();
 
         dest.setId(source.getId());
-        dest.setType(type != null ? type.toString() : null);
-        dest.setAccess(access != null ? access.toString() : null);
+        dest.setType(type != null ? type.name() : null);
+        dest.setAccess(access != null ? access.name() : null);
 
         if (translator != null) {
             dest.setOwner(translator.translate(source.getOwner(), OwnerDTO.class));

@@ -22,13 +22,11 @@ import org.junit.Test;
 import java.security.cert.CertPath;
 import java.security.cert.CertPathValidator;
 import java.security.cert.CertPathValidatorException;
-import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.security.cert.PKIXParameters;
 import java.security.cert.TrustAnchor;
 import java.security.cert.X509Certificate;
 import java.util.Collections;
-import java.util.LinkedList;
 
 /**
  * some useful sources of certificate-related information:
@@ -52,19 +50,16 @@ public class SSLCertTest {
     public void setUp() throws Exception {
         certificateFactory = CertificateFactory.getInstance("X.509");
 
-        certificatePath = (X509Certificate) certificateFactory
-            .generateCertificate(getClass()
-                .getResourceAsStream("certchain.crt"));
+        certificatePath = (X509Certificate) certificateFactory.generateCertificate(
+            getClass().getResourceAsStream("certchain.crt"));
 
-        selfSignedCertificate = (X509Certificate) certificateFactory
-            .generateCertificate(getClass().getResourceAsStream(
-                "selfsigned.crt"));
+        selfSignedCertificate = (X509Certificate) certificateFactory.generateCertificate(
+            getClass().getResourceAsStream("selfsigned.crt"));
 
-        caCertificate = (X509Certificate) certificateFactory
-            .generateCertificate(getClass().getResourceAsStream("ca.crt"));
+        caCertificate = (X509Certificate) certificateFactory.generateCertificate(
+            getClass().getResourceAsStream("ca.crt"));
 
-        TrustAnchor anchor = new TrustAnchor(caCertificate,
-            null);
+        TrustAnchor anchor = new TrustAnchor(caCertificate, null);
         PKIXparams = new PKIXParameters(Collections.singleton(anchor));
         PKIXparams.setRevocationEnabled(false);
     }
@@ -73,17 +68,12 @@ public class SSLCertTest {
     @Test
     public void validCertificateShouldPassVerification() throws Exception {
         CertPathValidator cpv = CertPathValidator.getInstance("PKIX");
-        CertPath cp = certificateFactory
-            .generateCertPath(new LinkedList<Certificate>() {
-                {
-                    add(certificatePath);
-                }
-            });
+        CertPath cp = certificateFactory.generateCertPath(Collections.singletonList(certificatePath));
+
         // PKIXCertPathValidatorResult result = (PKIXCertPathValidatorResult)
         cpv.validate(cp, PKIXparams);
 
-        assertEquals(
-            "CN=Robert Paulson, OU=org unit, O=org, L=Halifax, ST=NS, C=CA",
+        assertEquals("CN=Robert Paulson, OU=org unit, O=org, L=Halifax, ST=NS, C=CA",
             certificatePath.getSubjectDN().getName());
     }
 
@@ -91,12 +81,8 @@ public class SSLCertTest {
     @Test(expected = CertPathValidatorException.class)
     public void invalidCertificateShouldFailVerification() throws Exception {
         CertPathValidator cpv = CertPathValidator.getInstance("PKIX");
-        CertPath cp = certificateFactory
-            .generateCertPath(new LinkedList<Certificate>() {
-                {
-                    add(selfSignedCertificate);
-                }
-            });
+        CertPath cp = certificateFactory.generateCertPath(Collections.singletonList(selfSignedCertificate));
+
         //PKIXCertPathValidatorResult result = (PKIXCertPathValidatorResult)
         cpv.validate(cp, PKIXparams);
     }

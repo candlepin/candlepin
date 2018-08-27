@@ -53,14 +53,14 @@ public class ContentTest extends DatabaseTestFixture {
 
         content.setModifiedProductIds(modifiedProductIds);
         Long metadataExpire = new Long(60 * 60 * 24);
-        content.setMetadataExpire(metadataExpire);
+        content.setMetadataExpiration(metadataExpire);
 
         contentCurator.create(content);
 
         Content lookedUp = contentCurator.get(content.getUuid());
         assertEquals(content.getContentUrl(), lookedUp.getContentUrl());
         assertThat(lookedUp.getModifiedProductIds(), hasItem("ProductB"));
-        assertEquals(metadataExpire, lookedUp.getMetadataExpire());
+        assertEquals(metadataExpire, lookedUp.getMetadataExpiration());
     }
 
     @Test
@@ -101,21 +101,6 @@ public class ContentTest extends DatabaseTestFixture {
         assertEquals(newName, content.getName());
     }
 
-    @Test
-    public void testLockStateAffectsEquality() {
-        Owner owner = new Owner("Example-Corporation");
-        Content c1 = TestUtil.createContent("test_content-1");
-        Content c2 = TestUtil.createContent("test_content-1");
-
-        assertEquals(c1, c2);
-
-        c2.setLocked(true);
-        assertNotEquals(c1, c2);
-
-        c1.setLocked(true);
-        assertEquals(c1, c2);
-    }
-
     protected Object[][] getValuesForEqualityAndReplication() {
         return new Object[][] {
             new Object[] { "Id", "test_value", "alt_value" },
@@ -127,10 +112,10 @@ public class ContentTest extends DatabaseTestFixture {
             new Object[] { "RequiredTags", "test_value", "alt_value" },
             new Object[] { "ReleaseVersion", "test_value", "alt_value" },
             new Object[] { "GpgUrl", "test_value", "alt_value" },
-            new Object[] { "MetadataExpire", 1234L, 5678L },
+            new Object[] { "MetadataExpiration", 1234L, 5678L },
             new Object[] { "ModifiedProductIds", Arrays.asList("1", "2", "3"), Arrays.asList("4", "5", "6") },
-            new Object[] { "Arches", "test_value", "alt_value" },
-            new Object[] { "Locked", Boolean.TRUE, Boolean.FALSE }
+            new Object[] { "Arches", "test_value", "alt_value" }
+            // new Object[] { "Locked", Boolean.TRUE, Boolean.FALSE }
         };
     }
 

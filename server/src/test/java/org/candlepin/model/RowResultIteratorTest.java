@@ -17,7 +17,6 @@ package org.candlepin.model;
 import static org.junit.Assert.*;
 
 import org.candlepin.test.DatabaseTestFixture;
-import org.candlepin.test.TestUtil;
 
 import org.hibernate.ScrollMode;
 import org.hibernate.Session;
@@ -43,7 +42,7 @@ public class RowResultIteratorTest extends DatabaseTestFixture {
 
     @Test
     public void testHasNextWithElements() {
-        this.ownerCurator.create(TestUtil.createOwner());
+        this.createOwner();
         Query query = this.session.createQuery("SELECT o FROM Owner o");
 
         RowResultIterator iterator = new RowResultIterator(query.scroll(ScrollMode.FORWARD_ONLY));
@@ -72,12 +71,9 @@ public class RowResultIteratorTest extends DatabaseTestFixture {
 
     @Test
     public void testNextWithElements() {
-        Owner owner1 = TestUtil.createOwner();
-        Owner owner2 = TestUtil.createOwner();
-        Owner owner3 = TestUtil.createOwner();
-        this.ownerCurator.create(owner1);
-        this.ownerCurator.create(owner2);
-        this.ownerCurator.create(owner3);
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+        Owner owner3 = this.createOwner();
 
         Query query = this.session.createQuery("SELECT o FROM Owner o");
 
@@ -117,7 +113,7 @@ public class RowResultIteratorTest extends DatabaseTestFixture {
 
     @Test(expected = UnsupportedOperationException.class)
     public void testRemoveAlwaysFails() {
-        this.ownerCurator.create(TestUtil.createOwner());
+        this.createOwner();
         Query query = this.session.createQuery("SELECT o FROM Owner o");
 
         RowResultIterator iterator = new RowResultIterator(query.scroll(ScrollMode.FORWARD_ONLY));

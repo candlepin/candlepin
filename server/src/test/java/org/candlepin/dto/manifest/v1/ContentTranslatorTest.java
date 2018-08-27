@@ -52,7 +52,7 @@ public class ContentTranslatorTest extends
         Content source = new Content();
 
         source.setUuid("test_value");
-        source.setMetadataExpire(3L);
+        source.setMetadataExpiration(3L);
         source.setId("test_value");
         source.setType("test_value");
         source.setLabel("test_value");
@@ -81,7 +81,7 @@ public class ContentTranslatorTest extends
             // childrenGenerated flag
 
             assertEquals(source.getUuid(), dto.getUuid());
-            assertEquals(source.getMetadataExpire(), dto.getMetadataExpire());
+            assertEquals(source.getMetadataExpiration(), dto.getMetadataExpiration());
             assertEquals(source.getId(), dto.getId());
             assertEquals(source.getType(), dto.getType());
             assertEquals(source.getLabel(), dto.getLabel());

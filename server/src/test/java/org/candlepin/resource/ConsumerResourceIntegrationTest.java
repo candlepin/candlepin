@@ -73,6 +73,7 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Calendar;
 import java.util.HashSet;
 import java.util.List;
@@ -141,7 +142,9 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         ownerAdminRole.addUser(someuser);
         roleCurator.create(ownerAdminRole);
 
-        List<Permission> perms = permFactory.createPermissions(someuser, ownerAdminRole.getPermissions());
+        Collection<Permission> perms = permFactory.createPermissions(someuser,
+            ownerAdminRole.getPermissions());
+
         principal = new UserPrincipal(USER_NAME, perms, false);
         setupPrincipal(principal);
 

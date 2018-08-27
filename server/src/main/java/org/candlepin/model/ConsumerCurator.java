@@ -244,12 +244,24 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      */
     @Transactional
     public Consumer findByUser(User user) {
+        return user != null ? this.findByUsername(user.getUsername()) : null;
+    }
+
+    /**
+     * Candlepin supports the notion of a user being a consumer. When in effect
+     * a consumer will exist in the system who is tied to a particular user.
+     *
+     * @param username the username to use to find a consumer
+     * @return Consumer for this user if one exists, null otherwise.
+     */
+    @Transactional
+    public Consumer findByUsername(String username) {
         ConsumerType person = consumerTypeCurator
             .getByLabel(ConsumerType.ConsumerTypeEnum.PERSON.getLabel());
 
         if (person != null) {
             return (Consumer) createSecureCriteria()
-                .add(Restrictions.eq("username", user.getUsername()))
+                .add(Restrictions.eq("username", username))
                 .add(Restrictions.eq("typeId", person.getId())).uniqueResult();
         }
 
@@ -406,7 +418,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         // everywhere else, and just blindly copying everything over.
         existingConsumer.setFacts(updatedConsumer.getFacts());
         existingConsumer.setName(updatedConsumer.getName());
-        existingConsumer.setOwnerId(updatedConsumer.getOwnerId());
+        existingConsumer.setOwner(updatedConsumer.getOwner());
         existingConsumer.setTypeId(updatedConsumer.getTypeId());
         existingConsumer.setUuid(updatedConsumer.getUuid());
 
@@ -416,6 +428,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
         return existingConsumer;
     }
+
     /**
      * Modifies the last check in and persists the entity. Make sure that the data
      * is refreshed before using this method.

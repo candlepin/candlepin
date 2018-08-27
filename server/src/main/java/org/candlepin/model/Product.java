@@ -17,6 +17,7 @@ package org.candlepin.model;
 import org.candlepin.jackson.CandlepinAttributeDeserializer;
 import org.candlepin.jackson.CandlepinLegacyAttributeSerializer;
 import org.candlepin.model.dto.ProductData;
+import org.candlepin.service.model.ProductInfo;
 import org.candlepin.util.ListView;
 import org.candlepin.util.MapView;
 import org.candlepin.util.SetView;
@@ -81,7 +82,9 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = Product.DB_TABLE)
-public class Product extends AbstractHibernateObject implements SharedEntity, Linkable, Cloneable, Eventful {
+public class Product extends AbstractHibernateObject implements SharedEntity, Linkable, Cloneable, Eventful,
+    ProductInfo {
+
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp2_products";
 
@@ -1051,7 +1054,6 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
                 .append(this.id, that.id)
                 .append(this.name, that.name)
                 .append(this.multiplier, that.multiplier)
-                .append(this.locked, that.locked)
                 .append(this.attributes, that.attributes)
                 .isEquals();
 
@@ -1096,7 +1098,6 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             .append(this.id)
             .append(this.name)
             .append(this.multiplier)
-            .append(this.locked)
             .append(this.attributes);
 
         // Impl note:

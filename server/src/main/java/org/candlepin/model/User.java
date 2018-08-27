@@ -14,10 +14,7 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.auth.Access;
-import org.candlepin.auth.SubResource;
-import org.candlepin.auth.permissions.Permission;
-import org.candlepin.auth.permissions.PermissionFactory;
+import org.candlepin.service.model.UserInfo;
 import org.candlepin.util.Util;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -37,13 +34,14 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
-import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
+
 
 /**
  * Represents the user.
@@ -54,7 +52,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = User.DB_TABLE)
-public class User extends AbstractHibernateObject {
+public class User extends AbstractHibernateObject implements UserInfo {
 
     /**
      * This class only exists so that Swagger can generate a separate model.  Users are not
@@ -123,19 +121,8 @@ public class User extends AbstractHibernateObject {
     @NotNull
     private boolean superAdmin;
 
-    /*
-     * Users are also used as a return value from a UserServiceAdapter, which does not
-     * necessarily mean they are stored in our database. We allow permissions to be added
-     * to the user for this situation, so other adapters do not have to fake roles and
-     * permission blueprints. See getPermissions for behavior when a user has both roles
-     * and permissions.
-     */
-    @Transient
-    private Set<Permission> permissions;
-
     public User() {
         this.roles = new HashSet<>();
-        this.permissions = new HashSet<>();
     }
 
     public User(String login, String password) {
@@ -213,27 +200,6 @@ public class User extends AbstractHibernateObject {
     }
 
     /**
-     * Looks up permissions to find associated owners. We return any owner we find
-     * on a permission, regardless of permission type or access level. You can use this
-     * API call to list the owners a user should be able to see or use in some capacity.
-     *
-     * @return associated owners
-     */
-    @XmlTransient
-    public Set<Owner> getOwners(SubResource sub, Access accessLevel) {
-        Set<Owner> owners = new HashSet<>();
-        if (sub == null) {
-            sub = SubResource.NONE;
-        }
-        for (Permission p : this.getPermissions()) {
-            if (p.canAccess(p.getOwner(), sub, accessLevel)) {
-                owners.add(p.getOwner());
-            }
-        }
-        return owners;
-    }
-
-    /**
      * @return the roles
      */
     @XmlTransient
@@ -254,32 +220,24 @@ public class User extends AbstractHibernateObject {
     }
 
     /**
-     * Full list of permissions for this user.
-     *
-     * Includes those from roles stored in the database, as well as those explicitly added
-     * by the user service adapter.
-     *
-     * @return full list of permissions for this user.
+     * Clears any existing roles for this user.
      */
-    @XmlTransient
-    public Set<Permission> getPermissions() {
-        PermissionFactory permFactory = new PermissionFactory();
-        Set<Permission> perms = new HashSet<>();
-        for (Role r : getRoles()) {
-            perms.addAll(permFactory.createPermissions(this, r.getPermissions()));
-        }
-        perms.addAll(this.permissions);
-        return perms;
-    }
+    public void clearRoles() {
+        Set<Role> cleared = this.roles;
 
-    public void addPermissions(Permission permission) {
-        this.permissions.add(permission);
+        if (cleared != null) {
+            this.roles = new HashSet<>();
+
+            for (Role role : cleared) {
+                role.removeUser(this);
+            }
+        }
     }
 
     /**
      * @return if the user has the SUPER_ADMIN role
      */
-    public boolean isSuperAdmin() {
+    public Boolean isSuperAdmin() {
         return superAdmin;
     }
 

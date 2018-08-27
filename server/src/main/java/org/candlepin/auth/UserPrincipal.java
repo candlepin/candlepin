@@ -36,8 +36,7 @@ public class UserPrincipal extends Principal {
      *
      * @param username
      */
-    public UserPrincipal(String username, Collection<Permission> permissions,
-        Boolean admin) {
+    public UserPrincipal(String username, Collection<Permission> permissions, boolean admin) {
         this.username = username;
         this.admin = admin;
 
@@ -134,11 +133,7 @@ public class UserPrincipal extends Principal {
 
     @Override
     public boolean canAccess(Object target, SubResource subResource, Access access) {
-        if (this.admin) {
-            return true;
-        }
-
-        return super.canAccess(target, subResource, access);
+        return this.hasFullAccess() || super.canAccess(target, subResource, access);
     }
 
 }

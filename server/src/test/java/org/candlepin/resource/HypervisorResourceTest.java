@@ -259,14 +259,16 @@ public class HypervisorResourceTest {
     @SuppressWarnings({ "rawtypes", "unchecked", "deprecation" })
     @Test
     public void hypervisorCheckInUpdatesGuestIdsWhenHostConsumerExists() throws Exception {
-        Owner owner = new Owner("owner-id", "Owner Id");
+        Owner owner = new Owner("owner-key-1", "Owner Name 1");
+        owner.setId("owner-id-1");
 
         Map<String, List<GuestIdDTO>> hostGuestMap = new HashMap<>();
         String hypervisorId = "test-host";
         hostGuestMap.put(hypervisorId, new ArrayList(Arrays.asList(TestUtil.createGuestIdDTO("GUEST_B"))));
 
-        Owner o = new Owner("owner-id", "Owner ID");
-        o.setId("owner-id");
+        Owner o = new Owner("owner-key-2", "Owner Name 2");
+        o.setId("owner-id-2");
+
         Consumer existing = new Consumer();
         existing.setUuid("test-host");
         existing.setName("test-host-name");
@@ -291,7 +293,7 @@ public class HypervisorResourceTest {
         HypervisorConsumerDTO c1 = updated.get(0);
         assertEquals("test-host", c1.getUuid());
         assertEquals("test-host-name", c1.getName());
-        assertEquals("owner-id", c1.getOwner().getKey());
+        assertEquals("owner-key-1", c1.getOwner().getKey());
 
         assertEquals(1, existing.getGuestIds().size());
         assertEquals("GUEST_B", existing.getGuestIds().get(0).getGuestId());
@@ -301,6 +303,7 @@ public class HypervisorResourceTest {
     @Test
     public void hypervisorCheckInReportsFailuresOnCreateFailure() throws Exception {
         Owner owner = new Owner("admin");
+        owner.setId("admin-id");
 
         Map<String, List<GuestIdDTO>> hostGuestMap = new HashMap<>();
         String expectedHostVirtId = "test-host-id";
@@ -337,6 +340,7 @@ public class HypervisorResourceTest {
     @Test
     public void checkInCreatesNoNewConsumerWhenCreateIsFalse() throws Exception {
         Owner owner = new Owner("admin");
+        owner.setId("admin-id");
 
         Map<String, List<GuestIdDTO>> hostGuestMap = new HashMap<>();
         hostGuestMap.put("test-host", new ArrayList(Arrays.asList(TestUtil.createGuestIdDTO("GUEST_A"),
@@ -376,7 +380,7 @@ public class HypervisorResourceTest {
     @Test
     public void ensureEmptyHypervisorIdsAreIgnored() throws Exception {
         Owner owner = new Owner("admin");
-        owner.setId("test-id");
+        owner.setId("admin-id");
 
         Map<String, List<GuestIdDTO>> hostGuestMap = new HashMap<>();
         hostGuestMap.put("", new ArrayList(Arrays.asList(TestUtil.createGuestIdDTO("GUEST_A"),
@@ -476,6 +480,7 @@ public class HypervisorResourceTest {
     @Test
     public void ensureFailureWhenAutobindIsDisabledOnOwner() {
         Owner owner = new Owner("test_admin");
+        owner.setId("admin-id");
         owner.setAutobindDisabled(true);
 
         Map<String, List<GuestIdDTO>> hostGuestMap = new HashMap<>();

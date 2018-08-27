@@ -19,7 +19,7 @@ import org.candlepin.auth.SubResource;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
-import org.candlepin.model.User;
+import org.candlepin.service.model.UserInfo;
 
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Restrictions;
@@ -38,18 +38,17 @@ import java.io.Serializable;
 public class UsernameConsumersPermission implements Permission, Serializable {
     private static final long serialVersionUID = 571612156736570455L;
 
-    private final User user;
+    private final UserInfo user;
     private final Owner owner;
 
-    public UsernameConsumersPermission(User u, Owner o) {
-        this.user = u;
-        this.owner = o;
+    public UsernameConsumersPermission(UserInfo user, Owner owner) {
+        this.user = user;
+        this.owner = owner;
     }
 
 
     @Override
     public boolean canAccess(Object target, SubResource subResource, Access required) {
-
         // Implied full access to the relevant Consumers:
         if (target.getClass().equals(Consumer.class)) {
             return ((Consumer) target).getOwnerId().equals(owner.getId()) &&
@@ -62,8 +61,7 @@ public class UsernameConsumersPermission implements Permission, Serializable {
 
         // Implied create access to the owner's consumers collection, which includes
         // read as well:
-        if (target.getClass().equals(Owner.class) &&
-            subResource.equals(SubResource.CONSUMERS) &&
+        if (target.getClass().equals(Owner.class) && subResource.equals(SubResource.CONSUMERS) &&
             Access.CREATE.provides(required)) {
             return true;
         }
@@ -85,6 +83,7 @@ public class UsernameConsumersPermission implements Permission, Serializable {
         if (entityClass.equals(Consumer.class)) {
             return Restrictions.eq("username", user.getUsername());
         }
+
         return null;
     }
 

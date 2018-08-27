@@ -23,7 +23,6 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.test.DatabaseTestFixture;
-import org.candlepin.test.TestUtil;
 import org.junit.Test;
 
 import java.util.Date;
@@ -67,8 +66,7 @@ public class CdnManagerTest extends DatabaseTestFixture {
     public void deleteCdnUpdatesPoolAssociation() {
         Cdn cdn = createCdn("MyTestCdn");
 
-        Owner owner = TestUtil.createOwner();
-        ownerCurator.create(owner);
+        Owner owner = this.createOwner();
 
         Product product = createProduct(owner);
         Pool pool = createPool(owner, product);

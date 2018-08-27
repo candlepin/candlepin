@@ -16,6 +16,7 @@ package org.candlepin.model;
 
 import org.candlepin.auth.Access;
 import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
+import org.candlepin.service.model.PermissionBlueprintInfo;
 
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
@@ -33,6 +34,8 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlTransient;
 
+
+
 /**
  * A representation of a permission to be stored in the database. Used by the
  * PermissionFactory to determine which actual Java class to create, and any relevant
@@ -43,7 +46,7 @@ import javax.xml.bind.annotation.XmlTransient;
  */
 @Entity
 @Table(name = PermissionBlueprint.DB_TABLE)
-public class PermissionBlueprint extends AbstractHibernateObject {
+public class PermissionBlueprint extends AbstractHibernateObject implements PermissionBlueprintInfo {
 
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp_permission";
@@ -101,13 +104,23 @@ public class PermissionBlueprint extends AbstractHibernateObject {
         return access;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @XmlTransient
+    public String getAccessLevel() {
+        Access access = this.getAccess();
+        return access != null ? access.name() : null;
+    }
+
     public void setAccess(Access access) {
         this.access = access;
     }
 
     @XmlTransient
     public Role getRole() {
-        return role;
+        return this.role;
     }
 
     public void setRole(Role role) {
@@ -119,6 +132,16 @@ public class PermissionBlueprint extends AbstractHibernateObject {
      */
     public PermissionType getType() {
         return type;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @XmlTransient
+    public String getTypeName() {
+        PermissionType type = this.getType();
+        return type != null ? type.name() : null;
     }
 
     public void setType(PermissionType type) {

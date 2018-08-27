@@ -16,6 +16,7 @@ package org.candlepin.model;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
+import org.hibernate.NonUniqueResultException;
 import org.hibernate.criterion.Restrictions;
 
 
@@ -35,9 +36,17 @@ public class CdnCurator extends AbstractHibernateCurator<Cdn> {
      * @return CDN whose label matches the given value.
      */
     public Cdn getByLabel(String label) {
-        return (Cdn) currentSession().createCriteria(Cdn.class)
-            .add(Restrictions.eq("label", label))
-            .uniqueResult();
+        // TODO: This is dangerous. We're expecting a unique result, but there is no guarantee the
+        // label will be unique. The DB schema should be updated to prevent this on the input side.
+
+        try {
+            return (Cdn) currentSession().createCriteria(Cdn.class)
+                .add(Restrictions.eq("label", label))
+                .uniqueResult();
+        }
+        catch (NonUniqueResultException e) {
+            throw new IllegalStateException("Multiple CDN instances found with the same label: " + label);
+        }
     }
 
     /**

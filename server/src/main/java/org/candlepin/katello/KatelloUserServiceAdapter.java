@@ -14,11 +14,15 @@
  */
 package org.candlepin.katello;
 
-import org.candlepin.model.Role;
-import org.candlepin.model.User;
 import org.candlepin.service.UserServiceAdapter;
+import org.candlepin.service.model.OwnerInfo;
+import org.candlepin.service.model.PermissionBlueprintInfo;
+import org.candlepin.service.model.RoleInfo;
+import org.candlepin.service.model.UserInfo;
 
-import java.util.List;
+import java.util.Collection;
+
+
 
 /**
  * KatelloUserServiceAdapter
@@ -31,68 +35,82 @@ import java.util.List;
 public class KatelloUserServiceAdapter implements UserServiceAdapter {
 
     @Override
-    public boolean validateUser(String username, String password)
-        throws Exception {
+    public boolean validateUser(String username, String password) throws Exception {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public User createUser(User user) {
+    public UserInfo createUser(UserInfo user) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public User updateUser(User user) {
+    public UserInfo updateUser(String username, UserInfo user) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void deleteUser(User user) {
+    public void deleteUser(String username) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public User findByLogin(String login) {
+    public UserInfo findByLogin(String username) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public List<User> listUsers() {
+    public Collection<? extends UserInfo> listUsers() {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Role createRole(Role r) {
+    public Collection<? extends OwnerInfo> getAccessibleOwners(String username) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Role updateRole(Role r) {
+    public RoleInfo createRole(RoleInfo role) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void addUserToRole(Role role, User user) {
+    public RoleInfo updateRole(String roleName, RoleInfo role) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void removeUserFromRole(Role role, User user) {
+    public RoleInfo addUserToRole(String roleName, String username) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void deleteRole(String roleId) {
+    public RoleInfo removeUserFromRole(String roleName, String username) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Role getRole(String roleId) {
+    public RoleInfo addPermissionToRole(String roleName, PermissionBlueprintInfo permission) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public List<Role> listRoles() {
+    public RoleInfo removePermissionFromRole(String roleName, String permissionId) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void deleteRole(String roleName) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public RoleInfo getRole(String roleName) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Collection<? extends RoleInfo> listRoles() {
         throw new UnsupportedOperationException();
     }
 

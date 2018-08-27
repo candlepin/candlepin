@@ -36,6 +36,7 @@ public class OwnerTest extends DatabaseTestFixture {
         String prefix = "PhredPrefix";
 
         Owner o = TestUtil.createOwner(ownerName);
+        o.setId(null);
         o.setContentPrefix(prefix);
         ownerCurator.create(o);
 

@@ -23,7 +23,14 @@ import java.util.Date;
 
 /**
  * Interface to the Certificate Service.
+ *
+ * @deprecated
+ *  This adapter is not implemented by anyone else and makes use of direct model objects. If the
+ *  adapter is still needed in the future, this interface should be redefined to no longer use
+ *  Candlepin-internal model objects, and minimize the number of adapter views or DTOs as input
+ *  parameters.
  */
+@Deprecated
 public interface ContentAccessCertServiceAdapter {
 
     // If we ever have a need for more modes, these should move to a proper enum

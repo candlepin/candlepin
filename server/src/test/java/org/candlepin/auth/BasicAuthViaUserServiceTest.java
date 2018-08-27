@@ -19,6 +19,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.auth.permissions.OwnerPermission;
+import org.candlepin.auth.permissions.PermissionFactory;
 import org.candlepin.common.exceptions.NotAuthorizedException;
 import org.candlepin.model.Owner;
 import org.candlepin.model.User;
@@ -55,6 +56,7 @@ public class BasicAuthViaUserServiceTest {
     @Mock private UserServiceAdapter userService;
     @Mock private Injector injector;
     @Mock private Provider<I18n> mockI18n;
+    @Mock private PermissionFactory mockPermissionFactory;
     private BasicAuth auth;
 
     @Before
@@ -72,7 +74,8 @@ public class BasicAuthViaUserServiceTest {
 
         I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         when(mockI18n.get()).thenReturn(i18n);
-        this.auth = new BasicAuth(userService, mockI18n);
+
+        this.auth = new BasicAuth(userService, mockI18n, mockPermissionFactory);
     }
 
     /**

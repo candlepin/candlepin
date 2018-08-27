@@ -242,6 +242,8 @@ public class SimpleModelTranslator implements ModelTranslator {
 
         ObjectTranslator<I, O> translator = null;
 
+        // TODO: This is broken for finding nearest output. Output cannot be less specific than
+        // specified; it can only get more specific.
         Class outputKey = this.findNearestMappedClass(outputClass, this.translators.keySet());
         if (outputKey != null) {
             Map<Class, ObjectTranslator> inputMappings = this.translators.get(outputKey);

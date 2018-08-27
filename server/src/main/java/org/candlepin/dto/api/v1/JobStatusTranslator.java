@@ -64,7 +64,7 @@ public class JobStatusTranslator extends TimestampedEntityTranslator<JobStatus, 
             .setResultData(source.getResultData())
             .setStartTime(source.getStartTime())
             .setFinishTime(source.getFinishTime())
-            .setState(source.getState() != null ? source.getState().toString() : null)
+            .setState(source.getState() != null ? source.getState().name() : null)
             .setTargetId(source.getTargetId())
             .setTargetType(source.getTargetType())
             .setDone(source.isDone());

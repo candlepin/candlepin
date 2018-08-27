@@ -65,7 +65,7 @@ public class ImportRecordTranslator extends TimestampedEntityTranslator<ImportRe
         dest.setGeneratedDate(source.getGeneratedDate());
 
         ImportRecord.Status status = source.getStatus();
-        dest.setStatus(status != null ? status.toString() : null);
+        dest.setStatus(status != null ? status.name() : null);
 
         // Process nested objects if we have a ModelTranslator to use to the translation...
         if (translator != null) {

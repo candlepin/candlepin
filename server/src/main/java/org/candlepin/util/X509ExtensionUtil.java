@@ -275,10 +275,10 @@ public class X509ExtensionUtil  extends X509Util{
                 (enabled) ? "1" : "0"));
 
             // Include metadata expiry if specified on the content:
-            if (pc.getContent().getMetadataExpire() != null) {
+            if (pc.getContent().getMetadataExpiration() != null) {
                 toReturn.add(new X509ExtensionWrapper(contentOid + "." +
                     OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_METADATA_EXPIRE),
-                    false, pc.getContent().getMetadataExpire().toString()));
+                    false, pc.getContent().getMetadataExpiration().toString()));
             }
 
             // Include required tags if specified on the content set:

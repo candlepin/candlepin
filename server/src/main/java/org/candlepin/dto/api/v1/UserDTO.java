@@ -15,6 +15,8 @@
 package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.TimestampedCandlepinDTO;
+import org.candlepin.service.model.UserInfo;
+import org.candlepin.util.Util;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -24,6 +26,8 @@ import io.swagger.annotations.ApiModelProperty;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
+
+import java.util.Collection;
 
 
 
@@ -41,7 +45,7 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
  * </pre>
  */
 @ApiModel(parent = TimestampedCandlepinDTO.class, description = "User information for a given user")
-public class UserDTO extends TimestampedCandlepinDTO<UserDTO> {
+public class UserDTO extends TimestampedCandlepinDTO<UserDTO> implements UserInfo {
 
     @ApiModelProperty(required = true, example = "ff808081554a3e4101554a3e9033005d")
     protected String id;
@@ -79,7 +83,7 @@ public class UserDTO extends TimestampedCandlepinDTO<UserDTO> {
 
         this.setId(source.getId());
         this.setUsername(source.getUsername());
-        this.setPassword(source.getPassword());
+        this.setHashedPassword(source.getHashedPassword());
         this.setSuperAdmin(source.isSuperAdmin());
 
         return this;
@@ -115,6 +119,7 @@ public class UserDTO extends TimestampedCandlepinDTO<UserDTO> {
      * @return
      *  This user's username, or null if the username has not been set
      */
+    @Override
     public String getUsername() {
         return this.username;
     }
@@ -134,8 +139,8 @@ public class UserDTO extends TimestampedCandlepinDTO<UserDTO> {
     }
 
     /**
-     * Fetches the password set for this user. If the password hasn't been set, this method returns
-     * null.
+     * Fetches the hashed password set for this user. If the password hasn't been set, this method
+     * returns null.
      * <p></p>
      * <strong>
      *  Note that for obvious reasons, this will not be serialized for output under any sane
@@ -143,15 +148,32 @@ public class UserDTO extends TimestampedCandlepinDTO<UserDTO> {
      * </strong>
      *
      * @return
-     *  The password set for this user, or null if the password hasn't been set.
+     *  The hashed password set for this user, or null if the password hasn't been set.
      */
+    @Override
     @JsonIgnore
-    public String getPassword() {
+    public String getHashedPassword() {
         return this.password;
     }
 
     /**
-     * Sets or clears the plain-text password to use for this user.
+     * Sets or clears the hashed password to use for this user.
+     *
+     * @param hash
+     *  The password hash to set for this user, or null to clear any previously set password
+     *
+     * @return
+     *  a reference to this DTO
+     */
+    @JsonIgnore
+    public UserDTO setHashedPassword(String hash) {
+        this.password = hash;
+        return this;
+    }
+
+    /**
+     * Sets or clears the plain-text password to use for this user. The password will be stored as
+     * a hash, and will be be retrievable in plain-text from this instance once set.
      *
      * @param password
      *  The password, in plain text, to set for this user, or null to clear any previously set
@@ -162,16 +184,7 @@ public class UserDTO extends TimestampedCandlepinDTO<UserDTO> {
      */
     @JsonProperty
     public UserDTO setPassword(String password) {
-        // Impl note:
-        // While this would be a horrid practice in any other language, in Java, there's not a whole
-        // lot we can do about this. As soon as the plain-text password is in the JVM, we have no
-        // way of guaranteeing a (shadow) copy of that variable won't be stored in the garbage
-        // collector or whatever goofy optimization mapping Java is doing under the hood.
-        // As such, what is typically a very unsafe practice in most languages is par for the course
-        // here in Java land. This is really not a great deal worse than instantly hashing it as we
-        // do in the User entity given how it was used.
-
-        this.password = password;
+        this.password = password != null ? Util.hash(password) : null;
         return this;
     }
 
@@ -183,6 +196,7 @@ public class UserDTO extends TimestampedCandlepinDTO<UserDTO> {
      *  A boolean value representing this user's super admin status, or null if the super admin
      *  status has not been defined
      */
+    @Override
     public Boolean isSuperAdmin() {
         return this.superAdmin;
     }
@@ -203,6 +217,19 @@ public class UserDTO extends TimestampedCandlepinDTO<UserDTO> {
     }
 
     /**
+     * Always returns null.
+     *
+     * @return null
+     */
+    @Override
+    @JsonIgnore
+    public Collection<RoleDTO> getRoles() {
+        // We don't export roles, nor do we allow them to be provided via API. This is only present
+        // for compatibility with the UserInfo interface.
+        return null;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -217,7 +244,7 @@ public class UserDTO extends TimestampedCandlepinDTO<UserDTO> {
             EqualsBuilder builder = new EqualsBuilder()
                 .append(this.getId(), that.getId())
                 .append(this.getUsername(), that.getUsername())
-                .append(this.getPassword(), that.getPassword())
+                .append(this.getHashedPassword(), that.getHashedPassword())
                 .append(this.isSuperAdmin(), that.isSuperAdmin());
 
             return builder.isEquals();
@@ -235,7 +262,7 @@ public class UserDTO extends TimestampedCandlepinDTO<UserDTO> {
             .append(super.hashCode())
             .append(this.getId())
             .append(this.getUsername())
-            .append(this.getPassword())
+            .append(this.getHashedPassword())
             .append(this.isSuperAdmin());
 
         return builder.toHashCode();

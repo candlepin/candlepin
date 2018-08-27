@@ -64,8 +64,7 @@ public class CertificateTest extends DatabaseTestFixture {
 
         SubscriptionsCertificate certificate = createSubCert("key", "cert");
         certificateCurator.create(certificate);
-        SubscriptionsCertificate lookedUp = certificateCurator.get(certificate
-            .getId());
+        SubscriptionsCertificate lookedUp = certificateCurator.get(certificate.getId());
 
         assertNotNull(lookedUp);
         assertEquals(certificate.getId(), lookedUp.getId());

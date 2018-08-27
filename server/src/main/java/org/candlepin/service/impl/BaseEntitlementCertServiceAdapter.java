@@ -12,13 +12,16 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.service;
+package org.candlepin.service.impl;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
+import org.candlepin.service.EntitlementCertServiceAdapter;
 
 import java.util.List;
+
+
 
 /**
  * BaseEntitlementCertServiceAdapter
@@ -26,8 +29,7 @@ import java.util.List;
  * Shared base class for all entitlement cert service adapters. Because we store the
  * certs in most cases, some functionality is common to all.
  */
-public abstract class BaseEntitlementCertServiceAdapter implements
-    EntitlementCertServiceAdapter {
+public abstract class BaseEntitlementCertServiceAdapter implements EntitlementCertServiceAdapter {
 
     protected EntitlementCertificateCurator entCertCurator;
 

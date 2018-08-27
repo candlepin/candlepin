@@ -58,7 +58,7 @@ public class ContentTranslator extends TimestampedEntityTranslator<Content, Cont
         destination = super.populate(translator, source, destination);
 
         destination.setUuid(source.getUuid());
-        destination.setMetadataExpire(source.getMetadataExpire());
+        destination.setMetadataExpiration(source.getMetadataExpiration());
         destination.setId(source.getId());
         destination.setType(source.getType());
         destination.setLabel(source.getLabel());
