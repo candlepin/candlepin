@@ -16,9 +16,12 @@ package org.candlepin.policy.js.compliance;
 
 import org.candlepin.audit.EventSink;
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.rules.v1.ComplianceReasonDTO;
+import org.candlepin.dto.rules.v1.ComplianceStatusDTO;
 import org.candlepin.dto.rules.v1.ConsumerDTO;
 import org.candlepin.dto.rules.v1.EntitlementDTO;
 import org.candlepin.dto.rules.v1.GuestIdDTO;
+import org.candlepin.dto.rules.v1.PoolDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
@@ -26,6 +29,8 @@ import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.GuestId;
+import org.candlepin.model.Pool;
+import org.candlepin.model.Product;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsonJsContext;
 import org.candlepin.policy.js.RuleExecutionException;
@@ -38,8 +43,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 
@@ -183,7 +195,9 @@ public class ComplianceRules {
         // Convert the JSON returned into a ComplianceStatus object:
         String json = jsRules.runJsFunction(String.class, "get_status", args);
         try {
-            ComplianceStatus status = mapper.toObject(json, ComplianceStatus.class);
+            ComplianceStatusDTO statusDTO = mapper.toObject(json, ComplianceStatusDTO.class);
+            ComplianceStatus status = new ComplianceStatus();
+            populateEntity(status, statusDTO);
 
             for (ComplianceReason reason : status.getReasons()) {
                 generator.setMessage(consumer, reason, status.getDate());
@@ -275,5 +289,227 @@ public class ComplianceRules {
         return hasher.hash();
     }
 
+
+    /**
+     * Populates an entity that is to be created with data from the provided DTO.
+     *
+     * @param entity
+     *  The entity instance to populate
+     *
+     * @param dto
+     *  The DTO containing the data with which to populate the entity
+     *
+     * @throws IllegalArgumentException
+     *  if either entity or dto are null
+     */
+    @SuppressWarnings("checkstyle:methodlength")
+    protected void populateEntity(ComplianceStatus entity, ComplianceStatusDTO dto) {
+        if (entity == null) {
+            throw new IllegalArgumentException("entity is null");
+        }
+
+        if (dto == null) {
+            throw new IllegalArgumentException("dto is null");
+        }
+
+        if (dto.getDate() != null) {
+            entity.setDate(dto.getDate());
+        }
+
+        if (dto.getCompliantUntil() != null) {
+            entity.setCompliantUntil(dto.getCompliantUntil());
+        }
+
+        if (dto.getNonCompliantProducts() != null) {
+            dto.getNonCompliantProducts().forEach(entity::addNonCompliantProduct);
+        }
+
+        if (dto.getProductComplianceDateRanges() != null) {
+            dto.getProductComplianceDateRanges().forEach(entity::addProductComplianceDateRange);
+        }
+
+        if (dto.getReasons() != null) {
+            if (dto.getReasons().isEmpty()) {
+                entity.setReasons(Collections.emptySet());
+            }
+            else {
+                Set<ComplianceReason> reasons = new HashSet<>();
+                for (ComplianceReasonDTO reasonDTO : dto.getReasons()) {
+                    if (reasonDTO != null) {
+                        ComplianceReason reason = new ComplianceReason();
+                        reason.setKey(reasonDTO.getKey());
+                        reason.setMessage(reasonDTO.getMessage());
+                        reason.setAttributes(reasonDTO.getAttributes());
+                        reasons.add(reason);
+                    }
+                }
+                entity.setReasons(reasons);
+            }
+        }
+
+        Set<EntitlementDTO> entitlementDTOs = new HashSet<>();
+        Map<String, Entitlement> translated = new HashMap<>();
+
+        Map<String, Set<EntitlementDTO>> compliantProductDTOs = dto.getCompliantProducts();
+        Map<String, Set<EntitlementDTO>> pcProductDTOs = dto.getPartiallyCompliantProducts();
+        Map<String, Set<EntitlementDTO>> partialStackDTOs = dto.getPartialStacks();
+
+        if (compliantProductDTOs != null) {
+            compliantProductDTOs.values().forEach(entitlementDTOs::addAll);
+        }
+
+        if (pcProductDTOs != null) {
+            pcProductDTOs.values().forEach(entitlementDTOs::addAll);
+        }
+
+        if (partialStackDTOs != null) {
+            partialStackDTOs.values().forEach(entitlementDTOs::addAll);
+        }
+
+        for (EntitlementDTO entitlementDTO : entitlementDTOs) {
+            Entitlement entitlementModel = new Entitlement();
+
+            if (entitlementDTO.getId() != null) {
+                entitlementModel.setId(entitlementDTO.getId());
+            }
+
+            if (entitlementDTO.getEndDate() != null) {
+                entitlementModel.setEndDate(entitlementDTO.getEndDate());
+            }
+
+            if (entitlementDTO.getStartDate() != null) {
+                entitlementModel.setStartDate(entitlementDTO.getStartDate());
+            }
+
+            if (entitlementDTO.getQuantity() != null) {
+                entitlementModel.setQuantity(entitlementDTO.getQuantity());
+            }
+
+            PoolDTO poolDTO = entitlementDTO.getPool();
+            if (poolDTO != null) {
+                Pool pool = new Pool();
+
+                if (poolDTO.getId() != null) {
+                    pool.setId(poolDTO.getId());
+                }
+
+                if (poolDTO.getQuantity() != null) {
+                    pool.setQuantity(poolDTO.getQuantity());
+                }
+
+                if (poolDTO.getStartDate() != null) {
+                    pool.setStartDate(poolDTO.getStartDate());
+                }
+
+                if (poolDTO.getEndDate() != null) {
+                    pool.setEndDate(poolDTO.getEndDate());
+                }
+
+                if (poolDTO.getConsumed() != null) {
+                    pool.setConsumed(poolDTO.getConsumed());
+                }
+
+                if (poolDTO.getRestrictedToUsername() != null) {
+                    pool.setRestrictedToUsername(poolDTO.getRestrictedToUsername());
+                }
+
+                if (poolDTO.getProductId() != null) {
+                    pool.setProductId(poolDTO.getProductId());
+                }
+
+                if (poolDTO.getDerivedProductId() != null) {
+                    pool.setDerivedProductId(poolDTO.getDerivedProductId());
+                }
+
+                if (poolDTO.getAttributes() != null) {
+                    pool.setAttributes(poolDTO.getAttributes());
+                }
+
+                if (poolDTO.getProductAttributes() != null) {
+                    pool.setProductAttributes(poolDTO.getProductAttributes());
+                }
+
+                if (poolDTO.getProvidedProducts() != null) {
+                    if (poolDTO.getProvidedProducts().isEmpty()) {
+                        pool.setProvidedProducts(Collections.emptySet());
+                    }
+                    else {
+                        Set<Product> products = new HashSet<>();
+                        for (PoolDTO.ProvidedProductDTO providedProductDTO : poolDTO.getProvidedProducts()) {
+                            if (providedProductDTO != null) {
+                                Product newProd = new Product();
+                                newProd.setId(providedProductDTO.getProductId());
+                                newProd.setName(providedProductDTO.getProductName());
+                                products.add(newProd);
+                            }
+                        }
+                        pool.setProvidedProducts(products);
+                    }
+                }
+
+                if (poolDTO.getDerivedProvidedProducts() != null) {
+                    if (poolDTO.getDerivedProvidedProducts().isEmpty()) {
+                        pool.setDerivedProvidedProducts(Collections.emptySet());
+                    }
+                    else {
+                        Set<Product> derivedProducts = new HashSet<>();
+                        for (PoolDTO.ProvidedProductDTO derivedProvidedProductDTO :
+                            poolDTO.getDerivedProvidedProducts()) {
+                            if (derivedProvidedProductDTO != null) {
+                                Product newDerivedProd = new Product();
+                                newDerivedProd.setId(derivedProvidedProductDTO.getProductId());
+                                newDerivedProd.setName(derivedProvidedProductDTO.getProductName());
+                                derivedProducts.add(newDerivedProd);
+                            }
+                        }
+                        pool.setDerivedProvidedProducts(derivedProducts);
+                    }
+                }
+
+                entitlementModel.setPool(pool);
+            }
+
+            translated.put(entitlementModel.getId(), entitlementModel);
+        }
+
+        // Rebuild the translated maps
+        entity.setCompliantProducts(this.translateEntitlementMap(compliantProductDTOs, translated));
+        entity.setPartiallyCompliantProducts(this.translateEntitlementMap(pcProductDTOs, translated));
+        entity.setPartialStacks(this.translateEntitlementMap(partialStackDTOs, translated));
+    }
+
+    /**
+     * Rebuilds a translated map of entitlement sets from the DTO map and given mapping of
+     * translated entitlement model objects.
+     *
+     * @param sourceMap
+     *  The source mapping of product ID to entitlementDTO set
+     *
+     * @param entities
+     *  A mapping of entitlement ID to entitlement model object to use for rebuilding the entitlement map
+     *
+     * @return
+     *  The rebuilt and translated entitlement map, or null if the source map is null
+     */
+    private Map<String, Set<Entitlement>> translateEntitlementMap(Map<String, Set<EntitlementDTO>> sourceMap,
+        Map<String, Entitlement> entities) {
+
+        Map<String, Set<Entitlement>> output = null;
+
+        if (sourceMap != null) {
+            output = new HashMap<>();
+
+            for (Map.Entry<String, Set<EntitlementDTO>> entry : sourceMap.entrySet()) {
+                if (entry.getValue() != null) {
+                    output.put(entry.getKey(), entry.getValue().stream()
+                        .filter(Objects::nonNull)
+                        .map(e -> entities.get(e.getId()))
+                        .collect(Collectors.toSet()));
+                }
+            }
+        }
+
+        return output;
+    }
 
 }

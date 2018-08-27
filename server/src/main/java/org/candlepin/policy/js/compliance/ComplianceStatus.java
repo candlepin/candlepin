@@ -69,6 +69,21 @@ public class ComplianceStatus {
         return compliantProducts;
     }
 
+    public void setCompliantProducts(Map<String, Set<Entitlement>> compliantProducts) {
+        if (compliantProducts != null) {
+            if (this.compliantProducts == null) {
+                this.compliantProducts = new HashMap<>();
+            }
+            else {
+                this.compliantProducts.clear();
+            }
+            this.compliantProducts.putAll(compliantProducts);
+        }
+        else {
+            this.compliantProducts = null;
+        }
+    }
+
     public void setDate(Date date) {
         this.date = date;
     }
@@ -104,6 +119,21 @@ public class ComplianceStatus {
         return partiallyCompliantProducts;
     }
 
+    public void setPartiallyCompliantProducts(Map<String, Set<Entitlement>> partiallyCompliantProducts) {
+        if (partiallyCompliantProducts != null) {
+            if (this.partiallyCompliantProducts == null) {
+                this.partiallyCompliantProducts = new HashMap<>();
+            }
+            else {
+                this.partiallyCompliantProducts.clear();
+            }
+            this.partiallyCompliantProducts.putAll(partiallyCompliantProducts);
+        }
+        else {
+            this.partiallyCompliantProducts = null;
+        }
+    }
+
     public void addPartiallyCompliantProduct(String productId, Entitlement entitlement) {
         if (!partiallyCompliantProducts.containsKey(productId)) {
             partiallyCompliantProducts.put(productId, new HashSet<>());
@@ -130,6 +160,21 @@ public class ComplianceStatus {
         return partialStacks;
     }
 
+    public void setPartialStacks(Map<String, Set<Entitlement>> partialStacks) {
+        if (partialStacks != null) {
+            if (this.partialStacks == null) {
+                this.partialStacks = new HashMap<>();
+            }
+            else {
+                this.partialStacks.clear();
+            }
+            this.partialStacks.putAll(partialStacks);
+        }
+        else {
+            this.partialStacks = null;
+        }
+    }
+
     public void addPartialStack(String stackId, Entitlement entitlement) {
         if (!partialStacks.containsKey(stackId)) {
             partialStacks.put(stackId, new HashSet<>());
@@ -140,6 +185,12 @@ public class ComplianceStatus {
 
     public Map<String, DateRange> getProductComplianceDateRanges() {
         return this.productComplianceDateRanges;
+    }
+
+    public void addProductComplianceDateRange(String productId, DateRange dateRange) {
+        if (!productComplianceDateRanges.containsKey(productId)) {
+            productComplianceDateRanges.put(productId, dateRange);
+        }
     }
 
     public Date getCompliantUntil() {
