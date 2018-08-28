@@ -43,7 +43,7 @@
     <include file="db/changelog/20130725093910-add-source-consumer-to-pool.xml"/>
     <include file="db/changelog/20130829085043-add-sat-5.6-dist-version.xml"/>
     <include file="db/changelog/20130904120007-remove-ent-date-copies.xml"/>
-    <include file="db/changelog/20130916125243-create-mysql-schema.xml"/>
+    <include file="db/changelog/20130916125243-create-mysql,mariadb-schema.xml"/>
     <include file="db/changelog/20130912153356-create-import-upstream-consumer.xml"/>
     <include file="db/changelog/20130920132949-add-delete-cascade-pool-products.xml"/>
     <include file="db/changelog/20131002150608-consumer-content-override.xml"/>
@@ -57,9 +57,9 @@
     <include file="db/changelog/20131126095353-add-guest-attributes.xml"/>
     <include file="db/changelog/20140114145843-add-jobquery-index.xml"/>
     <include file="db/changelog/20140115110932-add-overrides-and-release-to-actkey.xml"/>
-    <include file="db/changelog/20140205152431-fix-mysql-datetimes.xml"/>
-    <include file="db/changelog/20140206083156-fix-mysql-rules-column-type.xml"/>
-    <include file="db/changelog/20140211110052-mysql-longblobs.xml"/>
+    <include file="db/changelog/20140205152431-fix-mysql,mariadb-datetimes.xml"/>
+    <include file="db/changelog/20140206083156-fix-mysql,mariadb-rules-column-type.xml"/>
+    <include file="db/changelog/20140211110052-mysql,mariadb-longblobs.xml"/>
     <include file="db/changelog/20140224154022-cascade-content-deletion.xml"/>
     <include file="db/changelog/20140210083318-add-hypervisorid.xml"/>
     <include file="db/changelog/20140226200158-add-hypervisorid-index.xml"/>
@@ -84,7 +84,7 @@
     <include file="db/changelog/20180110092945-cleanup-uebercerts-round4-premigration.xml"/>
     <include file="db/changelog/20150210094558-perorgproducts-phase-1.xml"/>
     <include file="db/changelog/20150401140006-add-pool-type-to-db.xml"/>
-    <include file="db/changelog/20150416090438-mysql-quartz-longblob.xml"/>
+    <include file="db/changelog/20150416090438-mysql,mariadb-quartz-longblob.xml"/>
     <include file="db/changelog/20150424150412-add-owner-id-to-jobstatus.xml"/>
     <include file="db/changelog/20150430115844-job-status-result-data.xml"/>
     <include file="db/changelog/20150615155037-add-consumer-annotations.xml"/>

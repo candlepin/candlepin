@@ -41,7 +41,7 @@
         <addForeignKeyConstraint baseColumnNames="derivedpool_id" baseTableName="cp_pool_source_stack" constraintName="fk_sourcestack_pool" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_pool" referencesUniqueColumn="false"/>   
     </changeSet>
 
-    <changeSet id="20140306150357-1" author="ckozak" dbms="mysql,postgresql">
+    <changeSet id="20140306150357-1" author="ckozak" dbms="mysql,mariadb,postgresql">
         <comment>Index cp_pool_source_stack.derivedpool_id.  oracle already does this</comment>
         <createIndex indexName="idx_sourcestack_pool_fk" tableName="cp_pool_source_stack" unique="false">
             <column name="derivedpool_id"/>

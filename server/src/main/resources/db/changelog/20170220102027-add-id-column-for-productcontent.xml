@@ -22,7 +22,7 @@
         </addColumn>
 
         <!-- We need to populate the ID column before we designate it as a primary key -->
-        <sql dbms="mysql">
+        <sql dbms="mysql,mariadb">
             UPDATE cp2_product_content SET id=REPLACE(UUID(), '-', '')
         </sql>
 

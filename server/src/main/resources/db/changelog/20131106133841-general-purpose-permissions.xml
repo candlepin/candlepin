@@ -7,7 +7,7 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
 
-    <property name="access.type" value="INTEGER" dbms="postgresql,mysql"/>
+    <property name="access.type" value="INTEGER" dbms="postgresql,mysql,mariadb"/>
     <property name="access.type" value="java.sql.Types.INTEGER" dbms="oracle"/>
 
     <changeSet id="20131106133841" author="dgoodwin">

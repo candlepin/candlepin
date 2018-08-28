@@ -36,7 +36,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="wpoteat" id="20140916131808-3" dbms="mysql">
+    <changeSet author="wpoteat" id="20140916131808-3" dbms="mysql,mariadb">
         <createTable tableName="cp_activationkey_product">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_activationkey_product_pkey"/>

@@ -6,7 +6,7 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
-    <changeSet id="20171020150559-1" author="awood" dbms="mysql,postgresql,hsqldb">
+    <changeSet id="20171020150559-1" author="awood" dbms="mysql,mariadb,postgresql,hsqldb">
         <validCheckSum>7:3079b8651ea5111832baec09b2add77e</validCheckSum>
         <validCheckSum>7:34b116c4ac1794421c8f955001fee798</validCheckSum>
         <validCheckSum>8:f79e34dabbe6a42eb9c7b7aa7d52247b</validCheckSum>

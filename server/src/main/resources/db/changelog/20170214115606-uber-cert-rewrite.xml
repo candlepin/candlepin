@@ -91,7 +91,7 @@
     <!-- ********************************************************************* -->
     <!-- *** MySQL cleanup                                                  ** -->
     <!-- ********************************************************************* -->
-    <changeSet id="20170214115606-3" dbms="mysql" author="mstead">
+    <changeSet id="20170214115606-3" dbms="mysql,mariadb" author="mstead">
         <comment>Cleanup all ueber data so that the new style ueber certs can be used.</comment>
 
         <!-- Delete ueber entitlement certificates -->
@@ -149,7 +149,7 @@
         <sql>delete c from cp_consumer c where name like 'ueber_cert_consumer';</sql>
     </changeSet>
 
-    <changeSet id="20170214115606-4" dbms="mysql" author="mstead">
+    <changeSet id="20170214115606-4" dbms="mysql,mariadb" author="mstead">
         <comment>Delete the UeberConsumer consumer type as it is no longer used.</comment>
         <sql>delete t from cp_consumer_type t where t.label='uebercert';</sql>
     </changeSet>

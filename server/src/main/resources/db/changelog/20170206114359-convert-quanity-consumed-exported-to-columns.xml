@@ -7,13 +7,13 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
     <property
-      dbms="postgresql, oracle, mysql"
+      dbms="postgresql, oracle, mysql,mariadb"
       name="fill_in_quantity_consumed_value"
       value="UPDATE cp_pool SET quantity_consumed = coalesce(
         (SELECT sum(cp_entitlement.quantity) FROM cp_entitlement WHERE cp_entitlement.pool_id = cp_pool.id), 0);"/>
 
     <property
-      dbms="postgresql,oracle, mysql"
+      dbms="postgresql,oracle, mysql,mariadb"
       name="fill_in_quantity_exported_value"
       value="UPDATE cp_pool SET quantity_exported = coalesce(
         (SELECT sum(cp_entitlement.quantity) FROM cp_entitlement
@@ -23,7 +23,7 @@
           AND cp_entitlement.pool_id = cp_pool.id),
         0);"/>
 
-    <changeSet id="20170206114359-1" author="wpoteat, crog, jiri" dbms="postgresql, oracle, mysql, hsqldb">
+    <changeSet id="20170206114359-1" author="wpoteat, crog, jiri" dbms="postgresql, oracle, mysql,mariadb, hsqldb">
         <validCheckSum>7:248546ded951c8210448b83e2f167efe</validCheckSum>
         <validCheckSum>7:be3fcc0546632846b17fe5cd4435c3bf</validCheckSum>
         <validCheckSum>8:462a5b369ddd75b5625e2a3ecec343e6</validCheckSum>
@@ -42,8 +42,8 @@
                  <constraints nullable="false"/>
             </column>
         </addColumn>
-        <sql dbms="postgresql, oracle, mysql">${fill_in_quantity_consumed_value}</sql>
-        <sql dbms="postgresql, oracle, mysql">${fill_in_quantity_exported_value}</sql>
+        <sql dbms="postgresql, oracle, mysql,mariadb">${fill_in_quantity_consumed_value}</sql>
+        <sql dbms="postgresql, oracle, mysql,mariadb">${fill_in_quantity_exported_value}</sql>
         <rollback>
             alter table cp_pool drop column if exists quantity_consumed;
             alter table cp_pool drop column if exists quantity_exported;

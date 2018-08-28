@@ -8,7 +8,7 @@
 
     <property name="quantity.type" value="BIGINT" dbms="oracle"/>
     <property name="quantity.type" value="int8" dbms="postgresql"/>
-    <property name="quantity.type" value="BIGINT" dbms="mysql"/>
+    <property name="quantity.type" value="BIGINT" dbms="mysql,mariadb"/>
 
     <changeSet id="20131025150828" author="ckozak">
         <comment>remove non null constraint from activation key pool quantity</comment>

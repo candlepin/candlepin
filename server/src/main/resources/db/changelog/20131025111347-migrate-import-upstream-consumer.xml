@@ -48,7 +48,7 @@
             UPDATE cp_import_record set upstream_id = id 
        </sql>
     </changeSet>
-    <changeSet id="20131025111347-3" author="wpoteat"  dbms="oracle, mysql">
+    <changeSet id="20131025111347-3" author="wpoteat"  dbms="oracle, mysql,mariadb">
         <preConditions onFail="MARK_RAN">
             <not>
                 <foreignKeyConstraintExists foreignKeyName="fk_imp_upstream_cnsmr_id" foreignKeyTableName="cp_import_record" />

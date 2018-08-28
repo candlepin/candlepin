@@ -23,7 +23,7 @@
         </createIndex>
     </changeSet>
 
-    <changeSet id="20161025100925-2" author="awood" dbms="mysql,oracle,hsqldb">
+    <changeSet id="20161025100925-2" author="awood" dbms="mysql,mariadb,oracle,hsqldb">
         <comment>Remove unique content name constraint</comment>
 
         <dropUniqueConstraint
