@@ -16,6 +16,7 @@ package org.candlepin.policy.js.activationkey;
 
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.rules.v1.ActivationKeyDTO;
 import org.candlepin.dto.rules.v1.PoolDTO;
 import org.candlepin.model.Pool;
 import org.candlepin.model.activationkeys.ActivationKey;
@@ -58,7 +59,7 @@ public class ActivationKeyRules {
 
     public ValidationResult runPreActKey(ActivationKey key, Pool pool, Long quantity) {
         JsonJsContext args = new JsonJsContext(mapper);
-        args.put("key", key);
+        args.put("key", this.translator.translate(key, ActivationKeyDTO.class));
         args.put("pool", this.translator.translate(pool, PoolDTO.class));
         args.put("quantity", quantity);
         args.put("log", log, false);
