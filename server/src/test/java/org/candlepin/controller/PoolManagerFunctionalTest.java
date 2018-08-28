@@ -463,6 +463,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         ActivationKey ak = new ActivationKey();
         Pool akpool = new Pool();
+        akpool.setId("test-id");
         akpool.setAttribute(Pool.Attributes.PHYSICAL_ONLY, "true");
         ak.addPool(akpool, 1L);
         Page<List<Pool>> results = poolManager.listAvailableEntitlementPools(
