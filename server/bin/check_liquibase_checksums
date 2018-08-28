@@ -1,0 +1,152 @@
+#!/usr/bin/env python
+import argparse
+import glob
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+
+VERSIONS = [
+    '3.1.0',  # specified in buildfile
+    '3.5.0',  # used by IT-PnT
+    '3.6.1',  # latest in Fedora
+]
+
+parser = argparse.ArgumentParser(description='Check and optionally fix liquibase validCheckSum')
+parser.add_argument('--fix', action='store_true', help='Fix the checksums in-place')
+parser.add_argument('--base', help='Base commit to compare against')
+args = parser.parse_args()
+
+checkout_root = subprocess.check_output('buildr -s checkout_root', shell=True).strip()
+
+def calculate_checksums(results_dir=None, extra_classpath=None):
+    failed = False
+    if results_dir:
+        try:
+            shutil.rmtree(results_dir)
+        except OSError:
+            pass
+        os.mkdir(results_dir)
+    for version in VERSIONS:
+        try:
+            print('Running against liquibase {}...'.format(version))
+            check_args = [
+                '{checkout_root}/server/bin/liquibase_wrapper.groovy',
+            ]
+            if extra_classpath:
+                check_args.extend([
+                    '-cp',
+                    extra_classpath
+                ])
+            check_args.extend([
+                '{version}',
+                '{checkout_root}/server/bin/check_liquibase_checksums.groovy',
+                '{checkout_root}/server/src/main/resources/db/changelog/changelog-update.xml',
+            ])
+            if results_dir:
+                check_args.append(results_dir + '/{version}.checksums.json')
+            subprocess.check_call(' '.join(check_args).format(version=version, checkout_root=checkout_root), shell=True)
+        except subprocess.CalledProcessError:
+            failed = True
+    return failed
+
+def load_checksums(base_dir):
+    all_checksums = {}
+    all_bad = set()
+    all_without_validCheckSum = set()
+    for path in glob.glob('{}/*.checksums.json'.format(base_dir)):
+        with open(path) as checksums_json:
+            changeset_checksums = json.loads(checksums_json.read())
+            all_bad.update(changeset_checksums['bad'])
+            all_without_validCheckSum.update(changeset_checksums['without_validCheckSum'])
+            for changeset, checksums in changeset_checksums['checksums'].items():
+                if changeset not in all_checksums:
+                    all_checksums[changeset] = set()
+                for checksum in checksums:
+                    all_checksums[changeset].add(checksum)
+    return all_checksums, all_bad, all_without_validCheckSum
+
+failed = calculate_checksums(results_dir='/tmp/candlepin-liquibase')
+all_checksums, all_bad, all_without_validCheckSum = load_checksums('/tmp/candlepin-liquibase')
+
+if args.base:
+    # calculate original checksums for comparison
+    print('Calculating checksums for {}, for comparison...'.format(args.base))
+    original_dir = os.getcwd()
+    os.chdir(checkout_root)
+    subprocess.check_call(' '.join([
+        'git archive {base}',
+        '--prefix /tmp/candlepin-liquibase-base/',
+        'server/src/main/resources',
+        '| tar -Px'
+    ]).format(base=args.base), shell=True)
+    os.chdir(original_dir)
+    calculate_checksums(results_dir='/tmp/candlepin-liquibase-base-results',
+                        extra_classpath='/tmp/candlepin-liquibase-base/server/src/main/resources')
+    base_checksums, _, _ = load_checksums('/tmp/candlepin-liquibase-base-results')
+
+    # compare set of checksums
+    for changeset, checksums in base_checksums.items():
+        if changeset in all_without_validCheckSum and checksums != all_checksums[changeset]:
+            print('Checksums for {} mismatch between HEAD and {}, validCheckSum needs to be added!'.format(changeset, args.base))
+            all_bad.add(changeset)
+            failed = True
+
+if failed:
+    if not args.fix:
+        sys.exit(1)
+else:
+    sys.exit(0)
+
+
+def add_checksums(full_changeset_id, checksums):
+    # XXX this method is a giant hack, but works well enough, results should be reviewed and tested anyways
+    relative_path, changeset_id, _ = full_changeset_id.split('::')
+    filename = subprocess.check_output('find -name {} | head -n 1'.format(os.path.basename(relative_path)), shell=True).strip()
+
+    with open(filename, 'r') as original:
+        original_text = original.readlines()
+
+    # find line with ID
+    for line in original_text:
+        if changeset_id in line:
+            changeset_start = original_text.index(line)
+            break
+
+    if full_changeset_id in all_without_validCheckSum:
+        changeset_start_line = original_text[changeset_start]
+        lines = [changeset_start_line.rstrip()]
+        spaces_count = len(re.match('^ *', changeset_start_line).group(0))
+        indentation = ' ' * (spaces_count + 4)
+        for checksum in sorted(checksums):
+            lines.append('{}<validCheckSum>{}</validCheckSum>'.format(indentation, checksum))
+        original_text[changeset_start] = '\n'.join(lines)
+    else:
+        # skip to first validChecksum entry
+        consuming = False
+        for offset, line in enumerate(original_text[changeset_start:]):
+            index = offset + changeset_start
+            if '<validCheckSum>' in line:
+                if not consuming:
+                    new_lines = []
+                    for checksum in sorted(checksums):
+                        new_line = re.sub('<validCheckSum>.*</validCheckSum>', '<validCheckSum>{}</validCheckSum>'.format(checksum), line).rstrip()
+                        new_lines.append(new_line)
+                    new_line = '\n'.join(new_lines)
+                    original_text[index] = new_line
+                    consuming = True
+                else:
+                    original_text[index] = None
+            elif consuming:
+                consuming = False
+                break
+    with open(filename, 'w') as original:
+        original.write('\n'.join([line.rstrip() for line in original_text if line is not None]))
+        original.write('\n')
+
+
+for changeset in all_bad:
+    add_checksums(changeset, all_checksums[changeset])
+
