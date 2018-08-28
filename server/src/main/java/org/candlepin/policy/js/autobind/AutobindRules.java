@@ -15,6 +15,7 @@
 package org.candlepin.policy.js.autobind;
 
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.rules.v1.ComplianceStatusDTO;
 import org.candlepin.dto.rules.v1.ConsumerDTO;
 import org.candlepin.dto.rules.v1.GuestIdDTO;
 import org.candlepin.dto.rules.v1.OwnerDTO;
@@ -135,7 +136,7 @@ public class AutobindRules {
         args.put("pools", poolDTOs.toArray());
         args.put("products", productIds);
         args.put("log", log, false);
-        args.put("compliance", compliance);
+        args.put("compliance", this.translator.translate(compliance, ComplianceStatusDTO.class));
         args.put("exemptList", exemptLevels);
         args.put("considerDerived", considerDerived);
         args.put("guestIds", guestIdStream);

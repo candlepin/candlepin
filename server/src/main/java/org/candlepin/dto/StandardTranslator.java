@@ -282,6 +282,12 @@ public class StandardTranslator extends SimpleModelTranslator {
         // Rules framework translators
         /////////////////////////////////////////////
         this.registerTranslator(
+            new org.candlepin.dto.rules.v1.ComplianceReasonTranslator(),
+            ComplianceReason.class, org.candlepin.dto.rules.v1.ComplianceReasonDTO.class);
+        this.registerTranslator(
+            new org.candlepin.dto.rules.v1.ComplianceStatusTranslator(),
+            ComplianceStatus.class, org.candlepin.dto.rules.v1.ComplianceStatusDTO.class);
+        this.registerTranslator(
             new org.candlepin.dto.rules.v1.ConsumerTranslator(consumerTypeCurator, ownerCurator),
             Consumer.class, org.candlepin.dto.rules.v1.ConsumerDTO.class);
         this.registerTranslator(
