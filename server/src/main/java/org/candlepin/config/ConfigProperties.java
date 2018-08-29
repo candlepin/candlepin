@@ -68,7 +68,11 @@ public class ConfigProperties {
      * key unchanged for compatibility reasons.
      */
     public static final String ACTIVEMQ_ENABLED = "candlepin.audit.hornetq.enable";
-    public static final String ACTIVEMQ_BASE_DIR = "candlepin.audit.hornetq.base_dir";
+
+    public static final String ACTIVEMQ_EMBEDDED = "candlepin.audit.hornetq.embedded";
+    public static final String ACTIVEMQ_BROKER_URL = "candlepin.audit.hornetq.broker_url";
+    public static final String ACTIVEMQ_SERVER_CONFIG_PATH = "candlepin.audit.hornetq.config_path";
+
     /**
      * This number is large message size. Any message
      * that is bigger than this number is regarded as large.
@@ -79,60 +83,6 @@ public class ConfigProperties {
      * messages and you do not want to run out of disk space.
      */
     public static final String ACTIVEMQ_LARGE_MSG_SIZE = "candlepin.audit.hornetq.large_msg_size";
-
-    /**
-     * Setting number of server threads that will be
-     * created for ActiveMQ. -1 means that default value
-     * will be used.
-     */
-    public static final String ACTIVEMQ_MAX_SCHEDULED_THREADS =
-        "candlepin.audit.hornetq.max_scheduled_threads";
-    public static final String ACTIVEMQ_MAX_THREADS = "candlepin.audit.hornetq.max_threads";
-    /**
-     * This can be either BLOCK or PAGE. When set to PAGE then
-     * ActiveMQ will keep only up to ACTIVEMQ_MAX_QUEUE_SIZE
-     * kilobytes of queue messages in memory. Anything above
-     * ACTIVEMQ_MAX_QUEUE_SIZE will be paged to a hard disk.
-     * When set to BLOCK then after reaching
-     * ACTIVEMQ_MAX_QUEUE_SIZE, all the producers will be blocked until
-     * the queues are freed up by consumers. Thus, BLOCK
-     * may be dangerous when consumers fail, because
-     * producers will timeout.
-     */
-    public static final String ACTIVEMQ_ADDRESS_FULL_POLICY = "candlepin.audit.hornetq.address_full_policy";
-    public static final String ACTIVEMQ_MAX_QUEUE_SIZE = "candlepin.audit.hornetq.max_queue_size";
-    /**
-     * This is applicable only for PAGE setting of ACTIVEMQ_ADDRESS_FULL_POLICY.
-     */
-    public static final String ACTIVEMQ_MAX_PAGE_SIZE = "candlepin.audit.hornetq.max_page_size";
-
-    /**
-     * For more on Artemis redelivery delays, see:
-     * https://activemq.apache.org/artemis/docs/2.4.0/undelivered-messages.html
-     */
-
-    /**
-     * The number of milliseconds to wait before redelivering failed messages to the listeners.
-     */
-    public static final String ACTIVEMQ_REDELIVERY_DELAY = "candlepin.audit.hornetq.redelivery_delay";
-
-    /**
-     * The maximum number of milliseconds to wait before redelivering failed messages to the listeners.
-     */
-    public static final String ACTIVEMQ_MAX_REDELIVERY_DELAY = "candlepin.audit.hornetq.max_redelivery_delay";
-
-    /**
-     * A multiplier allowing the redelivery delay to increase to ACTIVEMQ_MAX_REDELIVERY_DELAY
-     * after each attempt to deliver a message.
-     */
-    public static final String ACTIVEMQ_REDELIVERY_MULTIPLIER =
-        "candlepin.audit.hornetq.redelivery_multiplier";
-
-    /**
-     * The maximum number of redelivery attempts that should be made.
-     */
-    public static final String ACTIVEMQ_MAX_DELIVERY_ATTEMPTS =
-        "candlepin.audit.hornetq.max_delivery_attempts";
 
     public static final String AUDIT_LISTENERS = "candlepin.audit.listeners";
     public static final String AUDIT_LOG_FILE = "candlepin.audit.log_file";
@@ -324,22 +274,12 @@ public class ConfigProperties {
             this.put(ACTIVATION_DEBUG_PREFIX, "");
 
             this.put(ACTIVEMQ_ENABLED, "true");
-            this.put(ACTIVEMQ_BASE_DIR, "/var/lib/candlepin/activemq-artemis");
+            this.put(ACTIVEMQ_EMBEDDED, "true");
+            // By default, connect to embedded artemis (InVM)
+            this.put(ACTIVEMQ_BROKER_URL, "vm://0");
+            // By default use the broker.xml file that is packaged in the war.
+            this.put(ACTIVEMQ_SERVER_CONFIG_PATH, "");
             this.put(ACTIVEMQ_LARGE_MSG_SIZE, Integer.toString(100 * 1024));
-
-            this.put(ACTIVEMQ_MAX_THREADS, "-1");
-            this.put(ACTIVEMQ_MAX_SCHEDULED_THREADS, "-1");
-            this.put(ACTIVEMQ_ADDRESS_FULL_POLICY, "PAGE");
-            this.put(ACTIVEMQ_MAX_QUEUE_SIZE, "10");
-            this.put(ACTIVEMQ_MAX_PAGE_SIZE, "1");
-
-            // Re-deliver after 15 minutes on first failure.
-            this.put(ACTIVEMQ_REDELIVERY_DELAY, "30000");
-            // Maximum re-delivery delay of 1 hour.
-            this.put(ACTIVEMQ_MAX_REDELIVERY_DELAY, "3600000");
-            this.put(ACTIVEMQ_REDELIVERY_MULTIPLIER, "2");
-            // By default, never stop delivery attempts.
-            this.put(ACTIVEMQ_MAX_DELIVERY_ATTEMPTS, "0");
 
             this.put(AUDIT_LISTENERS,
                 "org.candlepin.audit.DatabaseListener," +
@@ -459,8 +399,5 @@ public class ConfigProperties {
             this.put(MANIFEST_CLEANER_JOB_MAX_AGE_IN_MINUTES, "1440");
         }
     };
-
-
-
 
 }

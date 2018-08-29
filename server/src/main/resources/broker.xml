@@ -1,0 +1,111 @@
+<?xml version='1.0' encoding="UTF-8"?>
+<!--
+  Copyright (c) 2009 - 2018 Red Hat, Inc.
+
+  This software is licensed to you under the GNU General Public License,
+  version 2 (GPLv2). There is NO WARRANTY for this software, express or
+  implied, including the implied warranties of MERCHANTABILITY or FITNESS
+  FOR A PARTICULAR PURPOSE. You should have received a copy of GPLv2
+  along with this software; if not, see
+  http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
+
+  Red Hat trademarks are not licensed under GPLv2. No permission is
+  granted to use or replicate Red Hat trademarks that are incorporated
+  in this software or its documentation.
+-->
+
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:activemq" xsi:schemaLocation="urn:activemq /schema/artemis-server.xsd">
+    <core xmlns="urn:activemq:core">
+
+
+        <acceptors>
+            <acceptor name="in-vm">vm://0</acceptor>
+            <!-- <acceptor name="netty">tcp://localhost:61617</acceptor> -->
+        </acceptors>
+
+        <security-enabled>false</security-enabled>
+
+        <!-- Silence warnings on server startup -->
+        <cluster-user></cluster-user>
+        <cluster-password></cluster-password>
+
+        <persistence-enabled>true</persistence-enabled>
+        <journal-type>NIO</journal-type>
+        <create-bindings-dir>true</create-bindings-dir>
+        <create-journal-dir>true</create-journal-dir>
+        <bindings-directory>/var/lib/candlepin/activemq-artemis/bindings</bindings-directory>
+        <journal-directory>/var/lib/candlepin/activemq-artemis/journal</journal-directory>
+        <large-messages-directory>/var/lib/candlepin/activemq-artemis/largemsgs</large-messages-directory>
+        <paging-directory>/var/lib/candlepin/activemq-artemis/paging</paging-directory>
+        <journal-buffer-size>102400</journal-buffer-size>
+
+        <!-- Use default thread pool max sizes as defined by Artemis. -->
+        <!-- Uncomment to customize.                                  -->
+        <!-- <thread-pool-max-size>30</thread-pool-max-size> -->
+        <!-- <scheduled-thread-pool-max-size>5</scheduled-thread-pool-max-size> -->
+
+        <!-- 24 Hours -->
+        <connection-ttl-override>86400000</connection-ttl-override>
+
+        <addresses>
+            <address name="event.default">
+                <multicast>
+                    <queue name="event.org.candlepin.audit.DatabaseListener" />
+                    <queue name="event.org.candlepin.audit.LoggingListener" />
+                    <queue name="event.org.candlepin.audit.ActivationListener" />
+                </multicast>
+            </address>
+            <address name="event.qpid">
+                <multicast>
+                    <queue name="event.org.candlepin.audit.AMQPBusPublisher" />
+                </multicast>
+            </address>
+        </addresses>
+
+        <address-settings>
+            <address-setting match="event.default">
+                <auto-create-queues>true</auto-create-queues>
+                <max-size-bytes>10485760</max-size-bytes>
+
+                <address-full-policy>PAGE</address-full-policy>
+                <page-size-bytes>1048576</page-size-bytes>
+
+                <!--
+                    Configure message redelivery. We set the maximum number of times that a message should
+                    be redelivered to 0 so that messages will remain in the queue and will never get sent
+                    to the dead letter queue. Since candlepin does not currently set up, or use, a dead
+                    letter queue, any messages sent there will be lost. We need to prevent this.
+                -->
+                <redelivery-delay>30000</redelivery-delay>
+                <max-redelivery-delay>3600000</max-redelivery-delay>
+                <redelivery-delay-multiplier>2</redelivery-delay-multiplier>
+                <max-delivery-attempts>0</max-delivery-attempts>
+            </address-setting>
+            <address-setting match="event.default">
+                <auto-create-queues>true</auto-create-queues>
+                <max-size-bytes>10485760</max-size-bytes>
+
+                <address-full-policy>PAGE</address-full-policy>
+                <page-size-bytes>1048576</page-size-bytes>
+
+                <!--
+                    When qpid is enabled we want the message to be set to be redelivered right away
+                    so that it goes right back to the top of the queue. When there's an issue with
+                    Qpid, the receiver will shut down the Consumer and the messages will remain in
+                    order.
+                -->
+                <redelivery-delay>0</redelivery-delay>
+                <max-delivery-attempts>1</max-delivery-attempts>
+            </address-setting>
+        </address-settings>
+
+        <diverts>
+            <divert name="qpid_divert">
+                <exclusive>false</exclusive>
+                <address>event.default</address>
+                <forwarding-address>event.qpid</forwarding-address>
+            </divert>
+        </diverts>
+
+    </core>
+</configuration>

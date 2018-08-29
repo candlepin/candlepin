@@ -75,39 +75,13 @@ public class EventMessageReceiverTest {
         fail("Should have thrown ActiveMQException");
     }
 
-    @Test(expected = ActiveMQException.class)
-    public void shouldThrowExceptionWhenQueueCreationFails() throws Exception {
-        doThrow(new ActiveMQException(ActiveMQExceptionType.DISCONNECTED))
-            .when(clientSession).createQueue(anyString(), anyString(), eq(true));
-
-        new EventMessageReceiver(eventListener, clientSessionFactory, new ObjectMapper());
-        verify(clientSession, never()).createConsumer(anyString()); //should not be invoked
-        verify(clientSession, never()).start();
-    }
-
     @Test
-    public void shouldCreateNewConsumerWhenQueueExistsOnRegisterListenerCall()
-        throws Exception {
-        doThrow(new ActiveMQException(ActiveMQExceptionType.QUEUE_EXISTS))
-            .when(clientSession).createQueue(anyString(), anyString());
-
+    public void shouldCreateNewConsumer() throws Exception {
         EventMessageReceiver receiver = new EventMessageReceiver(eventListener, clientSessionFactory,
             new ObjectMapper());
 
         verify(clientSession).createConsumer(anyString());
         verify(clientConsumer).setMessageHandler(eq(receiver));
-        verify(clientSession).start();
-    }
-
-    @Test
-    public void shouldCreateNewConsumerWhenQueueDoesNotExistOnRegisterListenerCall()
-        throws Exception {
-        new EventMessageReceiver(eventListener, clientSessionFactory, new ObjectMapper());
-
-        //make sure queue is created.
-        verify(clientSession).createQueue(anyString(), anyString(), eq(true));
-        verify(clientSession).createConsumer(anyString());
-        verify(clientConsumer).setMessageHandler(any(EventMessageReceiver.class));
         verify(clientSession).start();
     }
 
