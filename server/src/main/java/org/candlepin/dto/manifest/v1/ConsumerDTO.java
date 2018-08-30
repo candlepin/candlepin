@@ -14,7 +14,6 @@
  */
 package org.candlepin.dto.manifest.v1;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.candlepin.dto.CandlepinDTO;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -24,7 +23,6 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 /**
  * A DTO representation of the Consumer entity as used by the manifest import/export API.
  */
-@JsonIgnoreProperties(ignoreUnknown = false)
 public class ConsumerDTO extends CandlepinDTO<ConsumerDTO> {
     public static final long serialVersionUID = 1L;
 
