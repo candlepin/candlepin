@@ -79,7 +79,7 @@ public class CertificateTranslatorTest extends
         if (source != null) {
             assertEquals(source.getId(), dest.getId());
             assertEquals(source.getKey(), dest.getKey());
-            assertEquals(source.getCert(), dest.getCert());
+            assertEquals(source.getCert(), dest.getCertificate());
             assertEquals(source.getUpdated(), dest.getUpdated());
             assertEquals(source.getCreated(), dest.getCreated());
 

@@ -86,6 +86,9 @@ public class EventBuilder {
                 event.setTargetName(((Named) entity).getName());
             }
 
+            // TODO: FIXME:
+            // This is entirely useless. Our owner APIs expect the owner key, not the ID, so
+            // providing the ID does very little for event consumers.
             if (entity instanceof Owned) {
                 String ownerId = ((Owned) entity).getOwnerId();
 

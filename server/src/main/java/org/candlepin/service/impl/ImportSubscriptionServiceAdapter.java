@@ -16,11 +16,10 @@
 package org.candlepin.service.impl;
 
 import org.candlepin.common.exceptions.ServiceUnavailableException;
-import org.candlepin.model.dto.Subscription;
+import org.candlepin.dto.manifest.v1.ProductDTO;
+import org.candlepin.dto.manifest.v1.SubscriptionDTO;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.model.ConsumerInfo;
-import org.candlepin.service.model.ProductInfo;
-import org.candlepin.service.model.SubscriptionInfo;
 
 import org.xnap.commons.i18n.I18n;
 
@@ -40,33 +39,33 @@ import java.util.Map;
  */
 public class ImportSubscriptionServiceAdapter implements SubscriptionServiceAdapter {
 
-    private List<Subscription> subscriptions;
-    private Map<String, Subscription> subsBySubId = new HashMap<>();
+    private List<SubscriptionDTO> subscriptions;
+    private Map<String, SubscriptionDTO> subsBySubId = new HashMap<>();
     @Inject private I18n i18n;
 
     public ImportSubscriptionServiceAdapter() {
         this(new LinkedList<>());
     }
 
-    public ImportSubscriptionServiceAdapter(List<Subscription> subs) {
+    public ImportSubscriptionServiceAdapter(List<SubscriptionDTO> subs) {
         this.subscriptions = subs;
-        for (Subscription sub : this.subscriptions) {
+        for (SubscriptionDTO sub : this.subscriptions) {
             subsBySubId.put(sub.getId(), sub);
         }
     }
 
     @Override
-    public Collection<? extends SubscriptionInfo> getSubscriptions() {
+    public Collection<SubscriptionDTO> getSubscriptions() {
         return subscriptions;
     }
 
     @Override
-    public SubscriptionInfo getSubscription(String subscriptionId) {
+    public SubscriptionDTO getSubscription(String subscriptionId) {
         return this.subsBySubId.get(subscriptionId);
     }
 
     @Override
-    public Collection<? extends SubscriptionInfo> getSubscriptions(String ownerKey) {
+    public Collection<? extends SubscriptionDTO> getSubscriptions(String ownerKey) {
         return subscriptions;
     }
 
@@ -76,17 +75,17 @@ public class ImportSubscriptionServiceAdapter implements SubscriptionServiceAdap
     }
 
     @Override
-    public Collection<? extends SubscriptionInfo> getSubscriptionsByProductId(String productId) {
-        List<SubscriptionInfo> subs = new LinkedList<>();
+    public Collection<? extends SubscriptionDTO> getSubscriptionsByProductId(String productId) {
+        List<SubscriptionDTO> subs = new LinkedList<>();
 
         if (productId != null) {
-            for (SubscriptionInfo sub : this.subscriptions) {
+            for (SubscriptionDTO sub : this.subscriptions) {
                 if (productId.equals(sub.getProduct().getId())) {
                     subs.add(sub);
                     continue;
                 }
 
-                for (ProductInfo p : sub.getProvidedProducts()) {
+                for (ProductDTO p : sub.getProvidedProducts()) {
                     if (productId.equals(p.getId())) {
                         subs.add(sub);
                         break;

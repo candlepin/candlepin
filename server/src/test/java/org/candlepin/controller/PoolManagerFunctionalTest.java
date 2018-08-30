@@ -24,6 +24,10 @@ import org.candlepin.audit.Event;
 import org.candlepin.audit.EventSink;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
+import org.candlepin.dto.manifest.v1.BrandingDTO;
+import org.candlepin.dto.manifest.v1.OwnerDTO;
+import org.candlepin.dto.manifest.v1.ProductDTO;
+import org.candlepin.dto.manifest.v1.SubscriptionDTO;
 import org.candlepin.model.Branding;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
@@ -38,7 +42,6 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.Product;
 import org.candlepin.model.activationkeys.ActivationKey;
-import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
@@ -93,7 +96,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     private Product provisioning;
     private Product socketLimitedProduct;
 
-    private Subscription sub4;
+    private SubscriptionDTO sub4;
 
     private ConsumerType systemType;
 
@@ -139,39 +142,56 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         productCurator.create(monitoring);
         productCurator.create(provisioning);
 
-        List<Subscription> subscriptions = new LinkedList<>();
-
+        List<SubscriptionDTO> subscriptions = new LinkedList<>();
         ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
 
-        Subscription sub1 = TestUtil.createSubscription(o, virtHost, new HashSet<>());
+        SubscriptionDTO sub1 = new SubscriptionDTO();
         sub1.setId(Util.generateDbUUID());
+        sub1.setOwner(this.modelTranslator.translate(o, OwnerDTO.class));
+        sub1.setProduct(this.modelTranslator.translate(virtHost, ProductDTO.class));
         sub1.setQuantity(5L);
         sub1.setStartDate(new Date());
         sub1.setEndDate(TestUtil.createDate(3020, 12, 12));
-        sub1.setModified(new Date());
+        sub1.setLastModified(new Date());
 
-        Subscription sub2 = TestUtil.createSubscription(o, virtHostPlatform, new HashSet<>());
+        SubscriptionDTO sub2 = new SubscriptionDTO();
         sub2.setId(Util.generateDbUUID());
+        sub2.setOwner(this.modelTranslator.translate(o, OwnerDTO.class));
+        sub2.setProduct(this.modelTranslator.translate(virtHostPlatform, ProductDTO.class));
         sub2.setQuantity(5L);
         sub2.setStartDate(new Date());
         sub2.setEndDate(TestUtil.createDate(3020, 12, 12));
-        sub2.setModified(new Date());
+        sub2.setLastModified(new Date());
 
-        Subscription sub3 = TestUtil.createSubscription(o, monitoring, new HashSet<>());
+        SubscriptionDTO sub3 = new SubscriptionDTO();
         sub3.setId(Util.generateDbUUID());
+        sub3.setOwner(this.modelTranslator.translate(o, OwnerDTO.class));
+        sub3.setProduct(this.modelTranslator.translate(monitoring, ProductDTO.class));
         sub3.setQuantity(5L);
         sub3.setStartDate(new Date());
         sub3.setEndDate(TestUtil.createDate(3020, 12, 12));
-        sub3.setModified(new Date());
+        sub3.setLastModified(new Date());
 
-        sub4 = TestUtil.createSubscription(o, provisioning, new HashSet<>());
+        sub4 = new SubscriptionDTO();
         sub4.setId(Util.generateDbUUID());
+        sub4.setOwner(this.modelTranslator.translate(o, OwnerDTO.class));
+        sub4.setProduct(this.modelTranslator.translate(provisioning, ProductDTO.class));
         sub4.setQuantity(5L);
         sub4.setStartDate(new Date());
         sub4.setEndDate(TestUtil.createDate(3020, 12, 12));
-        sub4.setModified(new Date());
-        sub4.getBranding().add(new Branding("product1", "type1", "branding1"));
-        sub4.getBranding().add(new Branding("product2", "type2", "branding2"));
+        sub4.setLastModified(new Date());
+
+        BrandingDTO brand1 = new BrandingDTO();
+        brand1.setName("branding1");
+        brand1.setType("type1");
+        brand1.setProductId("product1");
+
+        BrandingDTO brand2 = new BrandingDTO();
+        brand2.setName("branding2");
+        brand2.setType("type2");
+        brand2.setProductId("product2");
+
+        sub4.setBranding(Arrays.asList(brand1, brand2));
 
         subscriptions.add(sub1);
         subscriptions.add(sub2);
@@ -336,14 +356,16 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         productCurator.create(modifier);
         this.ownerContentCurator.mapContentToOwner(content, this.o);
 
-        List<Subscription> subscriptions = new LinkedList<>();
+        List<SubscriptionDTO> subscriptions = new LinkedList<>();
         ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
 
-        Subscription sub = TestUtil.createSubscription(o, modifier, new HashSet<>());
+        SubscriptionDTO sub = new SubscriptionDTO();
         sub.setQuantity(5L);
+        sub.setOwner(this.modelTranslator.translate(o, OwnerDTO.class));
+        sub.setProduct(this.modelTranslator.translate(modifier, ProductDTO.class));
         sub.setStartDate(new Date());
         sub.setEndDate(TestUtil.createDate(3020, 12, 12));
-        sub.setModified(new Date());
+        sub.setLastModified(new Date());
 
         sub.setId(Util.generateDbUUID());
 
@@ -384,16 +406,17 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         productCurator.create(product1);
         productCurator.create(product2);
 
-        List<Subscription> subscriptions = new LinkedList<>();
-        ImportSubscriptionServiceAdapter subAdapter
-            = new ImportSubscriptionServiceAdapter(subscriptions);
+        List<SubscriptionDTO> subscriptions = new LinkedList<>();
+        ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
 
-        Subscription subscription = TestUtil.createSubscription(o, product1, new HashSet<>());
+        SubscriptionDTO subscription = new SubscriptionDTO();
         subscription.setId(Util.generateDbUUID());
+        subscription.setOwner(this.modelTranslator.translate(o, OwnerDTO.class));
+        subscription.setProduct(this.modelTranslator.translate(product1, ProductDTO.class));
         subscription.setQuantity(5L);
         subscription.setStartDate(new Date());
         subscription.setEndDate(TestUtil.createDate(3020, 12, 12));
-        subscription.setModified(new Date());
+        subscription.setLastModified(new Date());
 
         subscriptions.add(subscription);
 
@@ -404,7 +427,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         assertEquals(1, pools.size());
 
         // now alter the product behind the sub, and make sure the pool is also updated
-        subscription.setProduct(product2.toDTO());
+        subscription.setProduct(this.modelTranslator.translate(product2, ProductDTO.class));
 
         // set up initial pool
         poolManager.getRefresher(subAdapter, ownerAdapter).add(o).run();

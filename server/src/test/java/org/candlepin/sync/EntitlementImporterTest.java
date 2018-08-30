@@ -23,9 +23,11 @@ import static org.mockito.Mockito.when;
 import org.candlepin.audit.EventSink;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
+import org.candlepin.dto.manifest.v1.CertificateSerialDTO;
 import org.candlepin.dto.manifest.v1.ConsumerDTO;
 import org.candlepin.dto.manifest.v1.EntitlementDTO;
 import org.candlepin.dto.manifest.v1.ProductDTO;
+import org.candlepin.dto.manifest.v1.SubscriptionDTO;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerial;
@@ -42,7 +44,6 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.model.dto.Subscription;
 import org.candlepin.test.TestUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -158,14 +159,14 @@ public class EntitlementImporterTest {
         Map<String, ProductDTO> productsById = buildProductCache(
             parentProduct, provided1, derivedProduct, derivedProvided1);
 
-        Subscription sub = importer.importObject(om, reader, owner,
-            productsById, consumerDTO.getUuid(), meta);
+        SubscriptionDTO sub = importer.importObject(
+            om, reader, owner, productsById, consumerDTO.getUuid(), meta);
 
         assertEquals(pool.getId(), sub.getUpstreamPoolId());
         assertEquals(consumer.getUuid(), sub.getUpstreamConsumerId());
         assertEquals(ent.getId(), sub.getUpstreamEntitlementId());
 
-        assertEquals(owner, sub.getOwner());
+        assertEquals(owner.getKey(), sub.getOwner().getKey());
         assertEquals(ent.getStartDate(), sub.getStartDate());
         assertEquals(ent.getEndDate(), sub.getEndDate());
 
@@ -175,16 +176,16 @@ public class EntitlementImporterTest {
 
         assertEquals(ent.getQuantity().intValue(), sub.getQuantity().intValue());
 
-        assertEquals(parentProduct.toDTO(), sub.getProduct());
+        assertEquals(parentProduct.getId(), sub.getProduct().getId());
         assertEquals(providedProducts.size(), sub.getProvidedProducts().size());
         assertEquals(provided1.getId(), sub.getProvidedProducts().iterator().next().getId());
 
-        assertEquals(derivedProduct.toDTO(), sub.getDerivedProduct());
+        assertEquals(derivedProduct.getId(), sub.getDerivedProduct().getId());
         assertEquals(1, sub.getDerivedProvidedProducts().size());
         assertEquals(derivedProvided1.getId(), sub.getDerivedProvidedProducts().iterator().next().getId());
 
         assertNotNull(sub.getCertificate());
-        CertificateSerial serial = sub.getCertificate().getSerial();
+        CertificateSerialDTO serial = sub.getCertificate().getSerial();
         assertEquals(cert.getSerial().isCollected(), serial.isCollected());
         assertEquals(cert.getSerial().getExpiration(), serial.getExpiration());
         assertEquals(cert.getSerial().getCreated(), serial.getCreated());

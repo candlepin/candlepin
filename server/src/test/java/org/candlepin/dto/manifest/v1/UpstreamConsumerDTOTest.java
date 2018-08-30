@@ -40,7 +40,7 @@ public class UpstreamConsumerDTOTest extends AbstractDTOTest<UpstreamConsumerDTO
         CertificateDTO cert = new CertificateDTO();
         cert.setId("123");
         cert.setKey("cert_key");
-        cert.setCert("cert_cert");
+        cert.setCertificate("cert_cert");
         cert.setSerial(new CertificateSerialDTO());
 
         this.values = new HashMap<>();

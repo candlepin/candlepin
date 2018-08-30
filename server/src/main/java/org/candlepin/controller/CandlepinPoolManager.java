@@ -853,7 +853,10 @@ public class CandlepinPoolManager implements PoolManager {
                         CertificateSerialInfo serialInfo = certInfo.getSerial();
                         CertificateSerial serial = new CertificateSerial();
 
-                        serial.setSerial(serialInfo.getSerial());
+                        // Impl note:
+                        // We don't set the ID or serial here, as we generate the ID automagically,
+                        // and the serial is currently implemented as an alias for the ID.
+
                         serial.setRevoked(serialInfo.isRevoked());
                         serial.setCollected(serialInfo.isCollected());
                         serial.setExpiration(serialInfo.getExpiration());
@@ -884,7 +887,10 @@ public class CandlepinPoolManager implements PoolManager {
                 CertificateSerialInfo serialInfo = certInfo.getSerial();
                 CertificateSerial serial = new CertificateSerial();
 
-                serial.setSerial(serialInfo.getSerial());
+                // Impl note:
+                // We don't set the ID or serial here, as we generate the ID automagically, and the
+                // serial is currently implemented as an alias for the ID.
+
                 serial.setRevoked(serialInfo.isRevoked());
                 serial.setCollected(serialInfo.isCollected());
                 serial.setExpiration(serialInfo.getExpiration());

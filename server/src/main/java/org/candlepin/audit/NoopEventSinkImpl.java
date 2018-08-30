@@ -19,7 +19,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Rules;
 import org.candlepin.model.activationkeys.ActivationKey;
-import org.candlepin.model.dto.Subscription;
+import org.candlepin.dto.manifest.v1.SubscriptionDTO;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 
 import org.slf4j.Logger;
@@ -93,7 +93,7 @@ public class NoopEventSinkImpl implements EventSink {
     }
 
     @Override
-    public void emitSubscriptionExpired(Subscription subscription) {
+    public void emitSubscriptionExpired(SubscriptionDTO subscription) {
         log.debug("emitSubscriptionExpired:" + subscription);
     }
 

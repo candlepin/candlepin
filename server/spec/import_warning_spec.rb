@@ -47,6 +47,10 @@ describe 'Import Warning', :serial => true do
     fileText = File.read(entitlement_file)
     entitlement = JSON.parse(fileText)
     entitlement['pool']['endDate'] = (Date.today - 1).strftime
+
+    # Update the entitlement's date for consistency
+    entitlement['endDate'] = entitlement['pool']['endDate']
+
     File.write(entitlement_file, entitlement.to_json)
 
     # create a consumer_export.zip from scratch with the updated file

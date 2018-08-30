@@ -50,7 +50,7 @@ public class ContentDTOTest extends AbstractDTOTest<ContentDTO> {
         this.values.put("RequiredTags", "test_value");
         this.values.put("ReleaseVersion", "test_value");
         this.values.put("GpgUrl", "test_value");
-        this.values.put("ModifiedProductIds", Arrays.asList("1", "2", "3"));
+        this.values.put("RequiredProductIds", Arrays.asList("1", "2", "3"));
         this.values.put("Arches", "test_value");
         this.values.put("Created", new Date());
         this.values.put("Updated", new Date());
@@ -74,60 +74,60 @@ public class ContentDTOTest extends AbstractDTOTest<ContentDTO> {
     }
 
     @Test
-    public void testAddModifiedProducts() {
+    public void testAddRequiredProducts() {
         ContentDTO dto = new ContentDTO();
-        dto.setModifiedProductIds(Arrays.asList("1", "2"));
-        assertEquals(new HashSet<>(Arrays.asList("1", "2")), dto.getModifiedProductIds());
+        dto.setRequiredProductIds(Arrays.asList("1", "2"));
+        assertEquals(new HashSet<>(Arrays.asList("1", "2")), dto.getRequiredProductIds());
 
-        dto.addModifiedProductId("3");
-        assertEquals(new HashSet<>(Arrays.asList("1", "2", "3")), dto.getModifiedProductIds());
+        dto.addRequiredProductId("3");
+        assertEquals(new HashSet<>(Arrays.asList("1", "2", "3")), dto.getRequiredProductIds());
     }
 
     @Test
-    public void testAddModifiedProductsNoChange() {
+    public void testAddRequiredProductsNoChange() {
         ContentDTO dto = new ContentDTO();
-        dto.setModifiedProductIds(Arrays.asList("1", "2"));
-        assertEquals(new HashSet<>(Arrays.asList("1", "2")), dto.getModifiedProductIds());
+        dto.setRequiredProductIds(Arrays.asList("1", "2"));
+        assertEquals(new HashSet<>(Arrays.asList("1", "2")), dto.getRequiredProductIds());
 
-        dto.addModifiedProductId("2");
-        assertEquals(new HashSet<>(Arrays.asList("1", "2")), dto.getModifiedProductIds());
+        dto.addRequiredProductId("2");
+        assertEquals(new HashSet<>(Arrays.asList("1", "2")), dto.getRequiredProductIds());
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testAddModifiedProductsWithNullValue() {
+    public void testAddRequiredProductsWithNullValue() {
         ContentDTO dto = new ContentDTO();
-        dto.setModifiedProductIds(Arrays.asList("1", "2"));
-        assertEquals(new HashSet<>(Arrays.asList("1", "2")), dto.getModifiedProductIds());
+        dto.setRequiredProductIds(Arrays.asList("1", "2"));
+        assertEquals(new HashSet<>(Arrays.asList("1", "2")), dto.getRequiredProductIds());
 
-        dto.addModifiedProductId(null);
+        dto.addRequiredProductId(null);
     }
 
     @Test
-    public void testRemoveModifiedProducts() {
+    public void testRemoveRequiredProducts() {
         ContentDTO dto = new ContentDTO();
-        dto.setModifiedProductIds(Arrays.asList("1", "2"));
-        assertEquals(new HashSet<>(Arrays.asList("1", "2")), dto.getModifiedProductIds());
+        dto.setRequiredProductIds(Arrays.asList("1", "2"));
+        assertEquals(new HashSet<>(Arrays.asList("1", "2")), dto.getRequiredProductIds());
 
-        dto.removeModifiedProductId("3");
-        assertEquals(new HashSet<>(Arrays.asList("1", "2")), dto.getModifiedProductIds());
+        dto.removeRequiredProductId("3");
+        assertEquals(new HashSet<>(Arrays.asList("1", "2")), dto.getRequiredProductIds());
     }
 
     @Test
-    public void testRemoveModifiedProductsNoChange() {
+    public void testRemoveRequiredProductsNoChange() {
         ContentDTO dto = new ContentDTO();
-        dto.setModifiedProductIds(Arrays.asList("1", "2"));
-        assertEquals(new HashSet<>(Arrays.asList("1", "2")), dto.getModifiedProductIds());
+        dto.setRequiredProductIds(Arrays.asList("1", "2"));
+        assertEquals(new HashSet<>(Arrays.asList("1", "2")), dto.getRequiredProductIds());
 
-        dto.removeModifiedProductId("3");
-        assertEquals(new HashSet<>(Arrays.asList("1", "2")), dto.getModifiedProductIds());
+        dto.removeRequiredProductId("3");
+        assertEquals(new HashSet<>(Arrays.asList("1", "2")), dto.getRequiredProductIds());
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testRemoveModifiedProductsWithNullValue() {
+    public void testRemoveRequiredProductsWithNullValue() {
         ContentDTO dto = new ContentDTO();
-        dto.setModifiedProductIds(Arrays.asList("1", "2"));
-        assertEquals(new HashSet<>(Arrays.asList("1", "2")), dto.getModifiedProductIds());
+        dto.setRequiredProductIds(Arrays.asList("1", "2"));
+        assertEquals(new HashSet<>(Arrays.asList("1", "2")), dto.getRequiredProductIds());
 
-        dto.removeModifiedProductId(null);
+        dto.removeRequiredProductId(null);
     }
 }

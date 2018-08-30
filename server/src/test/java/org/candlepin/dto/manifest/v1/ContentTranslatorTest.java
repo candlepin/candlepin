@@ -91,7 +91,7 @@ public class ContentTranslatorTest extends
             assertEquals(source.getRequiredTags(), dto.getRequiredTags());
             assertEquals(source.getReleaseVersion(), dto.getReleaseVersion());
             assertEquals(source.getGpgUrl(), dto.getGpgUrl());
-            assertEquals(source.getModifiedProductIds(), dto.getModifiedProductIds());
+            assertEquals(source.getModifiedProductIds(), dto.getRequiredProductIds());
             assertEquals(source.getArches(), dto.getArches());
         }
         else {

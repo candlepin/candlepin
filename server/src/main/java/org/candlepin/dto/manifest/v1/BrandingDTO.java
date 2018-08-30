@@ -14,9 +14,11 @@
  */
 package org.candlepin.dto.manifest.v1;
 
+import org.candlepin.dto.TimestampedCandlepinDTO;
+import org.candlepin.service.model.BrandingInfo;
+
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.candlepin.dto.TimestampedCandlepinDTO;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -28,7 +30,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
  * for the manifest import/export framework.
  */
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class BrandingDTO extends TimestampedCandlepinDTO<BrandingDTO> {
+public class BrandingDTO extends TimestampedCandlepinDTO<BrandingDTO> implements BrandingInfo {
 
     public static final long serialVersionUID = 1L;
 

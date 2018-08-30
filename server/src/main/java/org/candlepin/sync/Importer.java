@@ -25,6 +25,7 @@ import org.candlepin.dto.manifest.v1.ConsumerDTO;
 import org.candlepin.dto.manifest.v1.ConsumerTypeDTO;
 import org.candlepin.dto.manifest.v1.DistributorVersionDTO;
 import org.candlepin.dto.manifest.v1.ProductDTO;
+import org.candlepin.dto.manifest.v1.SubscriptionDTO;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.ConsumerType;
@@ -43,7 +44,6 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.UpstreamConsumer;
-import org.candlepin.model.dto.Subscription;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.service.ContentAccessCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -233,10 +233,10 @@ public class Importer {
         record.setUpstreamConsumer(createImportUpstreamConsumer(owner, null));
         record.setFileName(filename);
 
-        List<Subscription> subscriptions = (List<Subscription>) data.get("subscriptions");
+        List<SubscriptionDTO> subscriptions = (List<SubscriptionDTO>) data.get("subscriptions");
         boolean activeSubscriptionFound = false, expiredSubscriptionFound = false;
         Date currentDate = new Date();
-        for (Subscription subscription : subscriptions) {
+        for (SubscriptionDTO subscription : subscriptions) {
             if (subscription.getEndDate() == null || subscription.getEndDate().after(currentDate)) {
                 activeSubscriptionFound = true;
             }
@@ -245,6 +245,7 @@ public class Importer {
                 sink.emitSubscriptionExpired(subscription);
             }
         }
+
         String msg = i18n.tr("{0} file imported successfully.", owner.getKey());
         if (!forcedConflicts.isEmpty()) {
             msg = i18n.tr("{0} file imported forcibly.", owner.getKey());
@@ -421,7 +422,7 @@ public class Importer {
             File rulesFile = new File(consumerExportDir, ImportFile.RULES_FILE.fileName());
             importFiles.put(ImportFile.RULES_FILE.fileName(), rulesFile);
 
-            List<Subscription> importSubs = importObjects(owner, importFiles, overrides);
+            List<SubscriptionDTO> importSubs = importObjects(owner, importFiles, overrides);
             Meta m = mapper.readValue(importFiles.get(ImportFile.META.fileName()), Meta.class);
 
             result.put("subscriptions", importSubs);
@@ -468,7 +469,7 @@ public class Importer {
     @Transactional(rollbackOn = {IOException.class, ImporterException.class,
         RuntimeException.class, ImportConflictException.class})
     // WARNING: Keep this method public, otherwise @Transactional is ignored:
-    public List<Subscription> importObjects(Owner owner, Map<String, File> importFiles,
+    public List<SubscriptionDTO> importObjects(Owner owner, Map<String, File> importFiles,
         ConflictOverrides overrides) throws IOException, ImporterException {
         ownerCurator.lock(owner);
 
@@ -564,7 +565,7 @@ public class Importer {
         // If the consumer has no entitlements, this products directory will end up empty.
         // This also implies there will be no entitlements to import.
         Meta meta = mapper.readValue(metadata, Meta.class);
-        List<Subscription> importSubs;
+        List<SubscriptionDTO> importSubs;
         if (importFiles.get(ImportFile.PRODUCTS.fileName()) != null) {
             ProductImporter importer = new ProductImporter();
 
@@ -578,8 +579,7 @@ public class Importer {
         else {
             log.warn("No products found to import, skipping product import.");
             log.warn("No entitlements in manifest, removing all subscriptions for owner.");
-            importSubs = importEntitlements(owner, new HashSet<>(), new File[]{},
-                consumer.getUuid(), meta);
+            importSubs = importEntitlements(owner, new HashSet<>(), new File[]{}, consumer.getUuid(), meta);
         }
 
         // Setup our import subscription adapter with the subscriptions imported:
@@ -726,8 +726,8 @@ public class Importer {
         return productsToImport;
     }
 
-    protected List<Subscription> importEntitlements(Owner owner, Set<ProductDTO> products, File[] entitlements,
-        String consumerUuid, Meta meta)
+    protected List<SubscriptionDTO> importEntitlements(Owner owner, Set<ProductDTO> products,
+        File[] entitlements, String consumerUuid, Meta meta)
         throws IOException, SyncDataFormatException {
 
         log.debug("Importing entitlements for owner: {}", owner);
@@ -744,7 +744,7 @@ public class Importer {
             productsById.put(product.getId(), product);
         }
 
-        List<Subscription> subscriptionsToImport = new ArrayList<>();
+        List<SubscriptionDTO> subscriptionsToImport = new ArrayList<>();
         for (File entitlement : entitlements) {
             Reader reader = null;
             try {

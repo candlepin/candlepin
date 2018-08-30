@@ -20,12 +20,14 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.dto.manifest.v1.OwnerDTO;
+import org.candlepin.dto.manifest.v1.ProductDTO;
+import org.candlepin.dto.manifest.v1.SubscriptionDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.service.OwnerServiceAdapter;
@@ -42,10 +44,11 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 
 import javax.inject.Inject;
+
+
 
 /**
  * ConsumerResourceVirtEntitlementTest
@@ -75,7 +78,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
 
     @Before
     public void setUp() {
-        List<Subscription> subscriptions = new ArrayList<>();
+        List<SubscriptionDTO> subscriptions = new ArrayList<>();
         subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
 
         manifestType = consumerTypeCurator.create(
@@ -97,12 +100,14 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
         productLimit.setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes");
         productLimit = this.createProduct(productLimit, owner);
 
-        Subscription limitSub = TestUtil.createSubscription(owner, productLimit, new HashSet<>());
+        SubscriptionDTO limitSub = new SubscriptionDTO();
         limitSub.setId(Util.generateDbUUID());
+        limitSub.setOwner(this.modelTranslator.translate(owner, OwnerDTO.class));
+        limitSub.setProduct(this.modelTranslator.translate(productLimit, ProductDTO.class));
         limitSub.setQuantity(10L);
         limitSub.setStartDate(TestUtil.createDate(2010, 1, 1));
         limitSub.setEndDate(TestUtil.createDate(2020, 1, 1));
-        limitSub.setModified(TestUtil.createDate(2000, 1, 1));
+        limitSub.setLastModified(TestUtil.createDate(2000, 1, 1));
         subscriptions.add(limitSub);
 
         limitPools = poolManager.createAndEnrichPools(limitSub);
@@ -113,12 +118,14 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
         productUnlimit.setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes");
         productUnlimit = this.createProduct(productUnlimit, owner);
 
-        Subscription unlimitSub = TestUtil.createSubscription(owner, productUnlimit, new HashSet<>());
+        SubscriptionDTO unlimitSub = new SubscriptionDTO();
         unlimitSub.setId(Util.generateDbUUID());
+        unlimitSub.setOwner(this.modelTranslator.translate(owner, OwnerDTO.class));
+        unlimitSub.setProduct(this.modelTranslator.translate(productUnlimit, ProductDTO.class));
         unlimitSub.setQuantity(10L);
         unlimitSub.setStartDate(TestUtil.createDate(2010, 1, 1));
         unlimitSub.setEndDate(TestUtil.createDate(2020, 1, 1));
-        unlimitSub.setModified(TestUtil.createDate(2000, 1, 1));
+        unlimitSub.setLastModified(TestUtil.createDate(2000, 1, 1));
         subscriptions.add(unlimitSub);
 
         unlimitPools = poolManager.createAndEnrichPools(unlimitSub);
