@@ -152,8 +152,6 @@ public class ActiveMQContextListener {
             config.setJournalBufferSize_AIO(largeMsgSize);
             config.setJournalBufferSize_NIO(largeMsgSize);
 
-            config.setConnectionTTLOverride(86400000L); // 24 hours
-
             activeMQServer = new EmbeddedActiveMQ();
             activeMQServer.setConfiguration(config);
         }
