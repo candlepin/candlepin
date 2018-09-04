@@ -14,6 +14,7 @@
  */
 package org.candlepin.resteasy;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.jackson.DynamicPropertyFilter;
 import org.candlepin.common.jackson.HateoasBeanPropertyFilter;
@@ -77,6 +78,7 @@ public class JsonProvider extends JacksonJsonProvider {
         dateModule.addSerializer(Date.class, new DateSerializer());
         mapper.registerModule(dateModule);
         mapper.registerModule(productCachedModules);
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         configureHateoasObjectMapper(mapper, indentJson);
         setMapper(mapper);
     }

@@ -16,6 +16,7 @@ package org.candlepin.model;
 
 import static org.junit.Assert.*;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import org.candlepin.common.jackson.DynamicPropertyFilter;
 import org.candlepin.common.jackson.HateoasBeanPropertyFilter;
 import org.candlepin.controller.CandlepinPoolManager;
@@ -89,6 +90,7 @@ public class PoolTest extends DatabaseTestFixture {
         filterProvider = filterProvider.addFilter("OwnerFilter", new HateoasBeanPropertyFilter());
         filterProvider.setDefaultFilter(new DynamicPropertyFilter());
         this.mapper.setFilters(filterProvider);
+        this.mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
         beginTransaction();
 

@@ -27,7 +27,6 @@ import org.candlepin.model.SubscriptionsCertificate;
 import org.candlepin.service.model.SubscriptionInfo;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -54,7 +53,6 @@ import javax.xml.bind.annotation.XmlTransient;
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
-@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonFilter("DefaultFilter")
 public class Subscription extends CandlepinDTO implements Owned, Named, Eventful, SubscriptionInfo {
     private static Logger log = LoggerFactory.getLogger(Subscription.class);

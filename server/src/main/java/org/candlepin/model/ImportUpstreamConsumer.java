@@ -17,7 +17,6 @@ package org.candlepin.model;
 import org.candlepin.common.jackson.HateoasInclude;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
@@ -42,7 +41,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = ImportUpstreamConsumer.DB_TABLE)
-@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonFilter("ApiHateoas")
 public class ImportUpstreamConsumer extends AbstractHibernateObject {
 
