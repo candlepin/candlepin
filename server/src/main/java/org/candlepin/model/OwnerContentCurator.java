@@ -78,7 +78,7 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
         //  2. Because the initial query is not rearranged, we are actually pulling a collection of
         //     join objects, so filtering/sorting via CandlepinQuery is incorrect or broken
         //  3. The second query Hibernate performs uses the IN operator without any protection for
-        //     the MySQL/MariaDB or Oracle element limits.
+        //     the MySQL/MariaDB element limits.
         String jpql = "SELECT oc.owner.id FROM OwnerContent oc WHERE oc.content.id = :content_id";
 
         List<String> ids = this.getEntityManager()

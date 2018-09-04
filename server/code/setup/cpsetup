@@ -158,14 +158,6 @@ class CertSetup(object):
         run_command_with_sudo('chmod a+r %s' % self.keystore)
 
 
-class OracleConf(object):
-    def __init__(self, options):
-        self.options = options
-        self.dialect = "org.candlepin.hibernate.Oracle10gDialectFollowOnLockingOff"
-        self.driver = "oracle.jdbc.OracleDriver"
-        self.jdbc_url = "jdbc:oracle:thin:@//%s" % self.options.db
-
-
 class PostgresqlConf(object):
     def __init__(self, options):
         self.options = options
@@ -198,10 +190,7 @@ def write_candlepin_conf(options):
 
     print("Writing configuration file")
 
-    if options.oracle:
-        dbconf = OracleConf(options)
-    else:
-        dbconf = PostgresqlConf(options)
+    dbconf = PostgresqlConf(options)
 
     f = open(CANDLEPIN_CONF, 'w')
     f.write('jpa.config.hibernate.dialect=%s\n' % dbconf.dialect)
@@ -244,23 +233,10 @@ def main(argv):
     parser.add_option("-p", "--password",
                   dest="password", default="candlepin",
                   help="Database password. Defaults to 'candlepin'")
-    parser.add_option("--oracle",
-                  action="store_true", dest="oracle", default=False,
-                  help="set up Candlepin to run against Oracle")
-    parser.add_option("--oracle-user",
-                  dest="oracle_user", default="sys",
-                  help="Oracle DBA user. Defaults to 'sys'")
-    parser.add_option("--oracle-password",
-                  dest="oracle_password",
-                  help="Oracle DBA password")
     parser.add_option("--skip-service", dest="skip_service", action="store_true",
         default=False, help="Skip attempting to stop/restart tomcat service.")
 
     (options, args) = parser.parse_args()
-
-    if options.oracle and not options.oracle_password:
-        print("ERROR: Please provide the DBA password.")
-        sys.exit(1)
 
     # Stop tomcat before we wipe the DB otherwise you get errors from pg
     tsetup = TomcatSetup('/etc/' + TOMCAT, options.keystorepwd)
@@ -279,10 +255,6 @@ def main(argv):
 
     if options.schema_only:
         command = " ".join([command, "--schema-only"])
-
-    if options.oracle:
-        command = " ".join([command, "--oracle --oracle-user %s --oracle-password %s" %
-            (options.oracle_user, options.oracle_password)])
 
     if options.dbhost:
         command = " ".join([command, "--dbhost %s" % options.dbhost])

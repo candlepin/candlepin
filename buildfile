@@ -140,8 +140,6 @@ DB = [POSTGRESQL, MYSQL]
 HSQLDB = 'org.hsqldb:hsqldb:jar:2.3.2'
 HSQLDB_OLD = 'org.hsqldb:hsqldb:jar:1.8.0.10'
 
-ORACLE = ['com.oracle:ojdbc6:jar:11.2.0', 'org.quartz-scheduler:quartz-oracle:jar:2.1.5']
-
 COMMONS = ['commons-codec:commons-codec:jar:1.4',
            'commons-collections:commons-collections:jar:3.2.2',
            'commons-io:commons-io:jar:1.4',
@@ -401,11 +399,7 @@ define "candlepin" do
     compile.with(project('common'))
     compile.with(LOGDRIVER, LOG4J_BRIDGE) if use_logdriver
 
-    if Buildr.environment == 'oracle'
-      compile.with(ORACLE)
-    else
-      compile.with(DB)
-    end
+    compile.with(DB)
 
     ### Testing
     test.setup do |task|

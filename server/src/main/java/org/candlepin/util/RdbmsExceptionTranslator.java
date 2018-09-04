@@ -79,8 +79,6 @@ public class RdbmsExceptionTranslator {
                 cve.getSQLState().equals("23505")) {
                 return true;
             }
-
-            //TODO add Oracle
         }
         return false;
     }

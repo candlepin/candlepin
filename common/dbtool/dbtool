@@ -153,56 +153,6 @@ class MysqlInstance():
         run_command(["mysqladmin", "--user=%s"%self.username, "--password=%s" %self.password, "--force", "drop", dbname])
 
 
-# Similar to PostgresInstance. Main difference here is that 
-# you must use special user+password to create database
-class OracleInstance():
-    def __init__(self, oracle_user, oracle_password):
-        self.jdbc_prefix = "jdbc:oracle:thin:@//%s" 
-        self.oracle_user = oracle_user
-        self.oracle_password = oracle_password
-    
-    def get_driver_class(self):
-        return "oracle.jdbc.OracleDriver";
-    
-    def runSql(self, dbname, sql):
-        connect_string = "%s/%s@//%s as sysdba" % (self.oracle_user, self.oracle_password, dbname)
-        print(connect_string)
-        
-        _, out = run_command(["sqlplus", "-S",connect_string], sql)        
-        
-        # SQL*Plus doesn't write to stderr apparently
-        if "ERROR" in out:
-            sys.stderr.write("\n########## ERROR ############\n")
-            sys.stderr.write("Error communicating with Oracle: %s\n" % out)
-            raise Exception("Error running command")
-        return out
-    
-    #Warning this code should be more complicated maybe to locate more jdbc jars
-    def get_jdbc_classpath(self):
-        return "/usr/lib/oracle/11.2/client64/lib/ojdbc6.jar";
-    
-    def get_jdbc_url(self, dbname):
-        return "jdbc:oracle:thin:@//%s" % dbname
-        
-    def create(self, dbname):
-        out = self.runSql("select 'user exists' from all_users where username='%s';" % dbname.upper())
-        if 'user exists' in out:
-            print("%s user already exists.  Skipping..." % dbname)
-            return
-
-        print("Creating %s database" % dbname)
-        out = self.runSql('create user %s identified by %s default tablespace users;' %
-            (dbname, self.oracle_password))
-        print(out)
-        
-        out = self.runSql('grant dba to %s;' % dbname)
-        print(out)
-
-    def drop(self, dbname):
-        print("Dropping %s database" % dbname)
-        out = self.runSql('drop user %s cascade;' % dbname)
-        print(out)
-
 # Helper method for Candlepin objects
 def classpath_for_war(warName):
         cp_items=[];
@@ -286,7 +236,6 @@ def main(cmd_args):
             help="The database port to use (optional)")
     
     parser.add_option_group(group)
-  
     
     parser.add_option("--community",
             action="store_true", default=False,
@@ -296,9 +245,9 @@ def main(cmd_args):
     parser.add_option("--database-type",
             type="choice",
             default="Postgres",
-            choices=["Postgres", "Oracle", "Mysql"],
+            choices=["Postgres", "Mysql"],
             dest="database_type",
-            help="Type of the database to run against. Valid values are: Postgres, Mysql, Oracle. Defaults to Postgres")
+            help="Type of the database to run against. Valid values are: Postgres, Mysql. Defaults to Postgres")
     
     parser.add_option("--product",
             dest="product",
@@ -307,18 +256,6 @@ def main(cmd_args):
             choices=["candlepin"],
             help="Product. Valid values are: candlepin.")
         
-    groupOracle = OptionGroup(parser, "Oracle specific options")
-
-    groupOracle.add_option("--oracle-user",
-            dest="oracle_user", default="sys",
-            help="Oracle DBA user. This user is used to create database. Defaults to 'sys'")
-    
-    groupOracle.add_option("--oracle-password",
-            dest="oracle_password",
-            help="Oracle DBA password. ")
-    
-    parser.add_option_group(groupOracle);
-    
     (options, args) = parser.parse_args(cmd_args)
     
     if not options.action:
@@ -334,12 +271,6 @@ def main(cmd_args):
     if options.dbname is None:
         options.dbname = product.default_db_name()
                 
-    if options.database_type=="Oracle":
-        if (not options.oracle_password):
-            raise Exception("When using Oracle database, you must specify --oracle-password, possibly --oracle-user (but this defaults to sys)")
-        dbinstance = OracleInstance(options.oracle_user, 
-                                    options.oracle_password)
-        
     if options.database_type=="Postgres":
         dbinstance = PostgresInstance(options.dbuser, 
                                       options.dbpassword,

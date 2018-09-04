@@ -73,51 +73,27 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
         if (rows > 0) {
             StringBuilder builder, rowbuilder;
 
-            if (!this.database.getDatabaseProductName().matches(".*(?i:oracle).*")) {
-                rowbuilder = new StringBuilder(2 + cols.length * 2);
+            rowbuilder = new StringBuilder(2 + cols.length * 2);
 
-                rowbuilder.append('(');
-                for (int i = 0; i < cols.length; ++i) {
-                    rowbuilder.append("?,");
-                }
-                rowbuilder.deleteCharAt(rowbuilder.length() - 1).append(')');
-
-                builder = new StringBuilder(15 + 20 * cols.length + table.length() +
-                    (2 + cols.length * 3) * rows);
-
-                builder.append("INSERT INTO ").append(table).append('(');
-                for (String column : cols) {
-                    builder.append(column).append(',');
-                }
-                builder.deleteCharAt(builder.length() - 1).append(") VALUES");
-
-                for (int i = 0; i < rows; ++i) {
-                    builder.append(rowbuilder).append(',');
-                }
-                builder.deleteCharAt(builder.length() - 1);
+            rowbuilder.append('(');
+            for (int i = 0; i < cols.length; ++i) {
+                rowbuilder.append("?,");
             }
-            else {
-                rowbuilder = new StringBuilder(20 * cols.length + table.length());
+            rowbuilder.deleteCharAt(rowbuilder.length() - 1).append(')');
 
-                rowbuilder.append("INTO ").append(table).append('(');
-                for (String column : cols) {
-                    rowbuilder.append(column).append(',');
-                }
-                rowbuilder.deleteCharAt(rowbuilder.length() - 1).append(") VALUES(");
-                for (int i = 0; i < cols.length; ++i) {
-                    rowbuilder.append("?,");
-                }
-                rowbuilder.deleteCharAt(rowbuilder.length() - 1).append(") ");
+            builder = new StringBuilder(15 + 20 * cols.length + table.length() +
+                (2 + cols.length * 3) * rows);
 
-                builder = new StringBuilder(30 + (20 * cols.length + table.length()) * rows);
-                builder.append("INSERT ALL ");
-
-                for (int i = 0; i < rows; ++i) {
-                    builder.append(rowbuilder);
-                }
-
-                builder.append("SELECT 1 FROM DUAL");
+            builder.append("INSERT INTO ").append(table).append('(');
+            for (String column : cols) {
+                builder.append(column).append(',');
             }
+            builder.deleteCharAt(builder.length() - 1).append(") VALUES");
+
+            for (int i = 0; i < rows; ++i) {
+                builder.append(rowbuilder).append(',');
+            }
+            builder.deleteCharAt(builder.length() - 1);
 
             return this.connection.prepareStatement(builder.toString());
         }
