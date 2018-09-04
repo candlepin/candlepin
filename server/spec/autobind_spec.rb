@@ -125,58 +125,166 @@ describe 'Autobind On Owner' do
     @cp.list_owner_pools(owner_key).length.should == 8
   end
 
-  it 'favors non-shared pools' do
-    prod = create_product(random_string('prod'), random_string('prod'), {
-      :owner => owner_key,
-      :attributes => {}
-    })
+  it 'should attach to addon pool when product is not installed' do
+    product1 = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:addons => "addon1"},
+                               :owner => owner_key})
+    p1 = create_pool_and_subscription(owner_key, product1.id)
+    product2 = create_product(random_string('product'),
+                              random_string('product'),
+                              {:owner => owner_key})
+    p2 = create_pool_and_subscription(owner_key, product2.id)
 
-    orgB = random_string('orgB')
-    create_owner(orgB)
+    installed = [
+        {'productId' => product2.id, 'productName' => product2['name']}]
 
-    shared_pool = create_pool_and_subscription(owner_key, prod['id'])
-    share_consumer = @cp.register(
-      random_string('orgBShare'),
-      :share,
-      nil,
-      {},
-      nil,
-      owner_key,
-      [],
-      [],
-      nil,
-      [],
-      nil,
-      [],
-      nil,
-      nil,
-      nil,
-      orgB
-    )
+    consumer = @cp.register(
+        random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, nil, [],
+        nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, ['addon1'])
+    status = @cp.get_purpose_compliance(consumer['uuid'])
+    status['status'].should == 'invalid'
+    status['nonCompliantAddOns'].include?('addon1').should == true
 
-    # Create the shared pool in Org B first since all else being equal Candlepin
-    # will pick an earlier expiring pool in autobind.
-    @cp.consume_pool(shared_pool['id'], :uuid => share_consumer['uuid'])
-    sleep 1
+    @cp.consume_product(nil, {:uuid => consumer.uuid})
+    entitlements = @cp.list_entitlements(:uuid => consumer.uuid)
+    entitlements.size.should == 2
+    # print ("entitlements: " + entitlements.inspect())
+    status = @cp.get_purpose_compliance(consumer.uuid)
+    status['status'].should == 'valid'
+    status['nonCompliantAddOns'].size.should == 0
+    status['compliantAddOns']['addon1'][0]['pool']['id'].should == p1.id
+  end
 
-    pools = @cp.list_owner_pools(orgB)
-    expect(pools.size).to eq(1)
-    orgBshared_pool = pools.first
+  it 'should attach to role pool when product is not installed' do
+    product1 = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:roles => "role1"},
+                               :owner => owner_key})
+    p1 = create_pool_and_subscription(owner_key, product1.id)
+    product2 = create_product(random_string('product'),
+                              random_string('product'),
+                              {:owner => owner_key})
+    p2 = create_pool_and_subscription(owner_key, product2.id)
 
-    orgBconsumer = @cp.register(
-      random_string('orgBConsumer'),
-      :system,
-      nil,
-      {},
-      'admin',
-      orgB
-    )
+    installed = [
+        {'productId' => product2.id, 'productName' => product2['name']}]
 
-    # OrgB now has a shared pool and an unshared pool for prod
-    pool = create_pool_and_subscription(orgB, prod['id'])
-    ent = @cp.consume_product(prod['id'], :uuid => orgBconsumer['uuid'])
+    consumer = @cp.register(
+        random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, nil, [],
+        nil, [], nil, nil, nil, nil, nil, 0, nil, nil, 'role1', nil, [])
+    status = @cp.get_purpose_compliance(consumer['uuid'])
+    status['status'].should == 'invalid'
+    status['nonCompliantRole'].include?('role1').should == true
 
-    expect(ent.first['pool']['id']).to_not eq(orgBshared_pool['id'])
-    expect(ent.first['pool']['id']).to eq(pool['id'])
+    @cp.consume_product(nil, {:uuid => consumer.uuid})
+    entitlements = @cp.list_entitlements(:uuid => consumer.uuid)
+    entitlements.size.should == 2
+    # print ("entitlements: " + entitlements.inspect())
+    status = @cp.get_purpose_compliance(consumer.uuid)
+    status['status'].should == 'valid'
+    status['nonCompliantRole'].should be_nil
+    status['compliantRole']['role1'][0]['pool']['id'].should == p1.id
+  end
+
+  it 'pool with role should have priority over pool without' do
+    mkt_product1 = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:roles => "role1"},
+                               :owner => owner_key})
+    mkt_product2 = create_product(random_string('product'),
+                              random_string('product'),
+                              {:owner => owner_key})
+    eng_product = create_product(random_string('product'),
+                                 random_string('product'),
+                                 {:owner => owner_key})
+    p1 = create_pool_and_subscription(owner_key, mkt_product1.id, 10, [eng_product.id])
+    p2 = create_pool_and_subscription(owner_key, mkt_product2.id, 10, [eng_product.id])
+
+    installed = [
+        {'productId' => eng_product.id, 'productName' => eng_product['name']}]
+
+    consumer = @cp.register(
+        random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, nil, [],
+        nil, [], nil, nil, nil, nil, nil, 0, nil, nil, 'role1', nil, [])
+    status = @cp.get_purpose_compliance(consumer['uuid'])
+    status['status'].should == 'invalid'
+    status['nonCompliantRole'].include?('role1').should == true
+
+    @cp.consume_product(nil, {:uuid => consumer.uuid})
+    entitlements = @cp.list_entitlements(:uuid => consumer.uuid)
+    entitlements.size.should == 1
+    # print ("entitlements: " + entitlements.inspect())
+    status = @cp.get_purpose_compliance(consumer.uuid)
+    status['status'].should == 'valid'
+    status['nonCompliantRole'].should be_nil
+    status['compliantRole']['role1'][0]['pool']['id'].should == p1.id
+  end
+
+  it 'pool with addon should have priority over pool without' do
+    mkt_product1 = create_product(random_string('product'),
+                                  random_string('product'),
+                                  {:attributes => {:addons => "addon1"},
+                                   :owner => owner_key})
+    mkt_product2 = create_product(random_string('product'),
+                                  random_string('product'),
+                                  {:owner => owner_key})
+    eng_product = create_product(random_string('product'),
+                                 random_string('product'),
+                                 {:owner => owner_key})
+    p1 = create_pool_and_subscription(owner_key, mkt_product1.id, 10, [eng_product.id])
+    p2 = create_pool_and_subscription(owner_key, mkt_product2.id, 10, [eng_product.id])
+
+    installed = [
+        {'productId' => eng_product.id, 'productName' => eng_product['name']}]
+
+    consumer = @cp.register(
+        random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, nil, [],
+        nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, ['addon1'])
+    status = @cp.get_purpose_compliance(consumer['uuid'])
+    status['status'].should == 'invalid'
+    status['nonCompliantAddOns'].include?('addon1').should == true
+
+    @cp.consume_product(nil, {:uuid => consumer.uuid})
+    entitlements = @cp.list_entitlements(:uuid => consumer.uuid)
+    entitlements.size.should == 1
+    # print ("entitlements: " + entitlements.inspect())
+    status = @cp.get_purpose_compliance(consumer.uuid)
+    status['status'].should == 'valid'
+    status['nonCompliantAddOns'].size.should == 0
+    status['compliantAddOns']['addon1'][0]['pool']['id'].should == p1.id
+  end
+
+  it 'should attach more than on addon pool when needed' do
+    product1 = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:addons => "addon1"},
+                               :owner => owner_key})
+    p1 = create_pool_and_subscription(owner_key, product1.id)
+    product2 = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:addons => "addon2"},
+                              :owner => owner_key})
+    p2 = create_pool_and_subscription(owner_key, product2.id)
+
+    installed = [
+        {'productId' => product2.id, 'productName' => product2['name']}]
+
+    consumer = @cp.register(
+        random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, nil, [],
+        nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, ['addon1','addon2'])
+    status = @cp.get_purpose_compliance(consumer['uuid'])
+    status['status'].should == 'invalid'
+    status['nonCompliantAddOns'].include?('addon1').should == true
+
+    @cp.consume_product(nil, {:uuid => consumer.uuid})
+    entitlements = @cp.list_entitlements(:uuid => consumer.uuid)
+    entitlements.size.should == 2
+    # print ("entitlements: " + entitlements.inspect())
+    status = @cp.get_purpose_compliance(consumer.uuid)
+    status['status'].should == 'valid'
+    status['nonCompliantAddOns'].size.should == 0
+    status['compliantAddOns']['addon1'][0]['pool']['id'].should == p1.id
+    status['compliantAddOns']['addon2'][0]['pool']['id'].should == p2.id
   end
 end

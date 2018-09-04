@@ -1263,6 +1263,8 @@ public class CandlepinPoolManager implements PoolManager {
 
         for (Pool pool : allOwnerPools) {
             boolean providesProduct = false;
+            boolean matchesAddOns = false;
+            boolean matchesRole = false;
             // Would parse the int here, but it can be 'unlimited'
             // and we only need to check that it's non-zero
             if (pool.getProduct().hasAttribute(Product.Attributes.VIRT_LIMIT) &&
@@ -1304,9 +1306,32 @@ public class CandlepinPoolManager implements PoolManager {
                         }
                     }
                 }
+
+                if (!providesProduct) {
+                    Set<String> consumerAddOns = host.getAddOns() != null ?
+                        host.getAddOns() : new HashSet<>();
+                    String[] prodAddOns = pool.getProductAttributeValue(Product.Attributes.ADDONS) != null ?
+                        pool.getProductAttributeValue(Product.Attributes.ADDONS).split(",") : new String[]{};
+                    for (String addon : prodAddOns) {
+                        if (consumerAddOns.contains(addon)) {
+                            matchesAddOns = true;
+                            break;
+                        }
+                    }
+                    String consumerRole = host.getRole() != null ?
+                        host.getRole() : "";
+                    String[] prodRoles = pool.getProductAttributeValue(Product.Attributes.ROLES) != null ?
+                        pool.getProductAttributeValue(Product.Attributes.ROLES).split(",") : new String[]{};
+                    for (String prodRole : prodRoles) {
+                        if (consumerRole.equalsIgnoreCase(prodRole)) {
+                            matchesRole = true;
+                            break;
+                        }
+                    }
+                }
             }
 
-            if (providesProduct) {
+            if (providesProduct || matchesAddOns || matchesRole) {
                 ValidationResult result = enforcer.preEntitlement(host, pool, 1, CallerType.BEST_POOLS);
 
                 if (result.hasErrors() || result.hasWarnings()) {
@@ -1449,6 +1474,9 @@ public class CandlepinPoolManager implements PoolManager {
 
         for (Pool pool : allOwnerPools) {
             boolean providesProduct = false;
+            boolean matchesAddOns = false;
+            boolean matchesRole = false;
+
             // We want to complete partial stacks if possible, even if they do not provide any products
             Product poolProduct = pool.getProduct();
             String stackingId = poolProduct.getAttributeValue(Product.Attributes.STACKING_ID);
@@ -1478,9 +1506,32 @@ public class CandlepinPoolManager implements PoolManager {
                         }
                     }
                 }
+
+                if (!providesProduct) {
+                    Set<String> consumerAddOns = consumer.getAddOns() != null ?
+                        consumer.getAddOns() : new HashSet<>();
+                    String[] prodAddOns = pool.getProductAttributeValue(Product.Attributes.ADDONS) != null ?
+                        pool.getProductAttributeValue(Product.Attributes.ADDONS).split("\\s*,\\s*") :
+                        new String[]{};
+                    for (String addon : prodAddOns) {
+                        if (consumerAddOns.contains(addon)) {
+                            matchesAddOns = true;
+                            break;
+                        }
+                    }
+                    String consumerRole = consumer.getRole() != null ?  consumer.getRole() : "";
+                    String[] prodRoles = pool.getProductAttributeValue(Product.Attributes.ROLES) != null ?
+                        pool.getProductAttributeValue(Product.Attributes.ROLES).split(",") :
+                        new String[]{};
+                    for (String prodRole : prodRoles) {
+                        if (consumerRole.equalsIgnoreCase(prodRole)) {
+                            matchesRole = true;
+                        }
+                    }
+                }
             }
 
-            if (providesProduct) {
+            if (providesProduct || matchesAddOns || matchesRole) {
                 ValidationResult result = enforcer.preEntitlement(consumer, pool, 1, CallerType.BEST_POOLS);
 
                 if (result.hasErrors() || result.hasWarnings()) {
