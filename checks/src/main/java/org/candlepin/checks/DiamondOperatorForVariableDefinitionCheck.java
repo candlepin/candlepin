@@ -23,7 +23,7 @@ import com.puppycrawl.tools.checkstyle.api.TokenTypes;
  * and licensed under the LGPL v2.1.
  *
  * This Check highlights variable definition statements where <a href=
- * "http://docs.oracle.com/javase/7/docs/technotes/guides/language/type-inference-generic-instance-creation.html">
+ * "https://www.javaworld.com/article/2074080/core-java/jdk-7--the-diamond-operator.html">
  * diamond operator</a> could be used.<br>
  * <b>Rationale</b>: using diamond operator (introduced in Java 1.7) leads to shorter code<br>
  * and better code readability. It is suggested by Oracle that the diamond primarily using<br>
@@ -75,10 +75,10 @@ public class DiamondOperatorForVariableDefinitionCheck extends AbstractCheck {
                 final DetailAST varDefArguments = getFirstTypeArgumentsToken(variableDefNodeType);
 
                 // generics has to be on left side
-                if (varDefArguments != null
-                    && newNode.getLastChild().getType() != TokenTypes.OBJBLOCK
+                if (varDefArguments != null &&
+                    newNode.getLastChild().getType() != TokenTypes.OBJBLOCK &&
                     // arrays can not be generics
-                    && newNode.findFirstToken(TokenTypes.ARRAY_DECLARATOR) == null) {
+                    newNode.findFirstToken(TokenTypes.ARRAY_DECLARATOR) == null) {
                     final DetailAST typeArgs = getFirstTypeArgumentsToken(newNode);
 
                     if (varDefArguments.equalsTree(typeArgs)) {

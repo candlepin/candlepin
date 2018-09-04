@@ -39,25 +39,21 @@ import org.candlepin.test.DatabaseTestFixture;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
-import com.google.inject.Provides;
 
 import org.jboss.resteasy.core.ResourceMethodInvoker;
 import org.jboss.resteasy.core.interception.PostMatchContainerRequestContext;
 import org.jboss.resteasy.mock.MockHttpRequest;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import org.jukito.JukitoRunner;
-import org.jukito.TestSingleton;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.runners.MockitoJUnitRunner;
 
 import java.lang.reflect.Method;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ResourceInfo;
@@ -65,30 +61,27 @@ import javax.ws.rs.container.ResourceInfo;
 /**
  * AuthInterceptorTest
  */
-@RunWith(JukitoRunner.class)
+@RunWith(MockitoJUnitRunner.class)
 public class AuthenticationFilterTest extends DatabaseTestFixture {
     @Inject private DeletedConsumerCurator deletedConsumerCurator;
-    @Inject private Provider<UserServiceAdapter> usaProvider;
     @Inject private Injector injector;
 
     @Mock private HttpServletRequest mockHttpServletRequest;
     @Mock private ContainerRequestContext mockRequestContext;
     @Mock private CandlepinSecurityContext mockSecurityContext;
     @Mock private ResourceInfo mockInfo;
+    @Mock private UserServiceAdapter usa;
 
-    private UserServiceAdapter usa;
     private AuthenticationFilter interceptor;
     private MockHttpRequest mockReq;
 
+    @Override
     protected Module getGuiceOverrideModule() {
         return new AuthInterceptorTestModule();
     }
 
     @Before
     public void setUp() throws Exception {
-        MockitoAnnotations.initMocks(this);
-        usa = usaProvider.get();
-
         Class clazz = FakeResource.class;
         when(mockInfo.getResourceClass()).thenReturn(clazz);
 
@@ -249,17 +242,12 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
         }
     }
 
-    private static class AuthInterceptorTestModule extends AbstractModule {
+    private class AuthInterceptorTestModule extends AbstractModule {
         @Override
         protected void configure() {
             bind(PermissionFactory.class).toInstance(mock(PermissionFactory.class));
             bind(ConsumerCurator.class).toInstance(mock(ConsumerCurator.class));
-        }
-
-        @Provides
-        @TestSingleton
-        protected UserServiceAdapter getAdapter() {
-            return mock(UserServiceAdapter.class);
+            bind(UserServiceAdapter.class).toInstance(usa);
         }
     }
 }

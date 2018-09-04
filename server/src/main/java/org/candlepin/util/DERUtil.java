@@ -14,14 +14,14 @@
  */
 package org.candlepin.util;
 
-import org.bouncycastle.operator.ContentSigner;
-import org.bouncycastle.util.io.Streams;
-
 import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.security.Signature;
+import java.security.SignatureException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -31,6 +31,41 @@ public class DERUtil {
     private DERUtil() {
         // No instances allowed
     }
+
+    // ASN1 tag values for these types.  See https://en.wikipedia.org/wiki/X.690
+    // Note that the tag value is only the 5 least significant bits in a tag byte.
+    // These constants exist in the crypto provider libraries but for the purposes of making
+    // some of our code provider independent, I'm defining them here.
+    public static final int BOOLEAN_TAG_NUM            = 0x01;
+    public static final int INTEGER_TAG_NUM            = 0x02;
+    public static final int BIT_STRING_TAG_NUM         = 0x03;
+    public static final int OCTET_STRING_TAG_NUM       = 0x04;
+    public static final int NULL_TAG_NUM               = 0x05;
+    public static final int OBJECT_IDENTIFIER_TAG_NUM  = 0x06;
+    public static final int EXTERNAL_TAG_NUM           = 0x08;
+    public static final int ENUMERATED_TAG_NUM         = 0x0a; // decimal 10
+    public static final int SEQUENCE_TAG_NUM           = 0x10; // decimal 16
+    public static final int SEQUENCE_OF_TAG_NUM        = 0x10; // used to model a SEQUENCE of the same type.
+    public static final int SET_TAG_NUM                = 0x11; // decimal 17
+    public static final int SET_OF_TAG_NUM             = 0x11; // used to model a SET of the same type.
+
+    public static final int NUMERIC_STRING_TAG_NUM     = 0x12; // decimal 18
+    public static final int PRINTABLE_STRING_TAG_NUM   = 0x13; // decimal 19
+    public static final int T61_STRING_TAG_NUM         = 0x14; // decimal 20
+    public static final int VIDEOTEX_STRING_TAG_NUM    = 0x15; // decimal 21
+    public static final int IA5_STRING_TAG_NUM         = 0x16; // decimal 22
+    public static final int UTC_TIME_TAG_NUM           = 0x17; // decimal 23
+    public static final int GENERALIZED_TIME_TAG_NUM   = 0x18; // decimal 24
+    public static final int GRAPHIC_STRING_TAG_NUM     = 0x19; // decimal 25
+    public static final int VISIBLE_STRING_TAG_NUM     = 0x1a; // decimal 26
+    public static final int GENERAL_STRING_TAG_NUM     = 0x1b; // decimal 27
+    public static final int UNIVERSAL_STRING_TAG_NUM   = 0x1c; // decimal 28
+    public static final int BMP_STRING_TAG_NUM         = 0x1e; // decimal 30
+    public static final int UTF8_STRING_TAG_NUM        = 0x0c; // decimal 12
+
+    public static final int CONSTRUCTED_TYPE           = 0x20; // decimal 32
+    public static final int APPLICATION_TYPE           = 0x40; // decimal 64
+    public static final int CONTEXT_SPECIFIC_TYPE      = 0x80; // decimal 128
 
     /**
      * When the length of an ASN1 encoded value changes then the number of bytes representing
@@ -66,12 +101,11 @@ public class DERUtil {
      * @param count the counter to modify.  Can be null.
      * @throws IOException if the stream cannot provide the number of required bytes
      */
-    public static void readFullyAndTrack(InputStream s, byte[] bytes,
-        AtomicInteger count) throws IOException {
-        if (Streams.readFully(s, bytes) != bytes.length) {
-            throw new EOFException("EOF encountered in middle of object");
-        }
-
+    public static void readFullyAndTrack(InputStream s, byte[] bytes, AtomicInteger count)
+        throws IOException {
+        DataInputStream stream = new DataInputStream(s);
+        // Throws an EOFException if we can't read the full bytes.length
+        stream.readFully(bytes);
         if (count != null) {
             count.addAndGet(bytes.length);
         }
@@ -251,41 +285,40 @@ public class DERUtil {
      * @param length
      * @throws IOException if something goes wrong
      */
-    public static void writeLength(OutputStream out, int length, ContentSigner signer) throws IOException {
-        OutputStream signerStream = null;
+    public static void writeLength(OutputStream out, int length, Signature signer) throws IOException {
+        try {
+            if (length > 127) {
+                int size = 1;
+                int val = length;
 
-        if (signer != null) {
-            signerStream = signer.getOutputStream();
-        }
+                while ((val >>>= 8) != 0) {
+                    size++;
+                }
 
-        if (length > 127) {
-            int size = 1;
-            int val = length;
-
-            while ((val >>>= 8) != 0) {
-                size++;
-            }
-
-            byte b = (byte) (size | 0x80);
-            out.write(b);
-            if (signerStream != null) {
-                signerStream.write(b);
-            }
-
-            for (int i = (size - 1) * 8; i >= 0; i -= 8) {
-                b = (byte) (length >> i);
+                byte b = (byte) (size | 0x80);
                 out.write(b);
-                if (signerStream != null) {
-                    signerStream.write(b);
+                if (signer != null) {
+                    signer.update(b);
+                }
+
+                for (int i = (size - 1) * 8; i >= 0; i -= 8) {
+                    b = (byte) (length >> i);
+                    out.write(b);
+                    if (signer != null) {
+                        signer.update(b);
+                    }
+                }
+            }
+            else {
+                byte b = (byte) length;
+                out.write(b);
+                if (signer != null) {
+                    signer.update(b);
                 }
             }
         }
-        else {
-            byte b = (byte) length;
-            out.write(b);
-            if (signerStream != null) {
-                signerStream.write(b);
-            }
+        catch (SignatureException e) {
+            throw new IOException("Could not update signer", e);
         }
     }
 
@@ -293,17 +326,17 @@ public class DERUtil {
         writeTag(out, tag, tagNo, null);
     }
 
-    public static void writeTag(OutputStream out, int tag, int tagNo, ContentSigner signer) throws
+    public static void writeTag(OutputStream out, int tag, int tagNo, Signature signer) throws
         IOException {
-        OutputStream signerStream = null;
-        if (signer != null) {
-            signerStream = signer.getOutputStream();
-        }
-
         int rebuiltTag = rebuildTag(tag, tagNo);
         out.write(rebuiltTag);
-        if (signerStream != null) {
-            signerStream.write((byte) rebuiltTag);
+        if (signer != null) {
+            try {
+                signer.update((byte) rebuiltTag);
+            }
+            catch (SignatureException e) {
+                throw new IOException("Could not update signer", e);
+            }
         }
     }
 
@@ -316,7 +349,7 @@ public class DERUtil {
         writeBytes(out, value, null);
     }
 
-    public static void writeValue(OutputStream out, byte[] value, ContentSigner signer) throws IOException {
+    public static void writeValue(OutputStream out, byte[] value, Signature signer) throws IOException {
         writeBytes(out, value, signer);
     }
 
@@ -333,15 +366,15 @@ public class DERUtil {
         writeBytes(out, value, null);
     }
 
-    public static void writeBytes(OutputStream out, byte[] value, ContentSigner signer) throws IOException {
-        OutputStream signerStream = null;
-        if (signer != null) {
-            signerStream = signer.getOutputStream();
-        }
-
+    public static void writeBytes(OutputStream out, byte[] value, Signature signer) throws IOException {
         out.write(value);
-        if (signerStream != null) {
-            signerStream.write(value, 0, value.length);
+        if (signer != null) {
+            try {
+                signer.update(value, 0, value.length);
+            }
+            catch (SignatureException e) {
+                throw new IOException("Could not update signer", e);
+            }
         }
     }
 }
