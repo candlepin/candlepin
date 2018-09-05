@@ -255,7 +255,6 @@ public class ExporterTest {
         KeyPair keyPair = createKeyPair();
         when(consumer.getKeyPair()).thenReturn(keyPair);
         when(pki.getPemEncoded(keyPair.getPrivateKey())).thenReturn("privateKey".getBytes());
-        when(pki.getPemEncoded(keyPair.getPublicKey())).thenReturn("publicKey".getBytes());
 
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
         when(cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
@@ -321,7 +320,6 @@ public class ExporterTest {
         KeyPair keyPair = createKeyPair();
         when(consumer.getKeyPair()).thenReturn(keyPair);
         when(pki.getPemEncoded(keyPair.getPrivateKey())).thenReturn("privateKey".getBytes());
-        when(pki.getPemEncoded(keyPair.getPublicKey())).thenReturn("publicKey".getBytes());
 
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
         when(cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
@@ -359,7 +357,6 @@ public class ExporterTest {
         KeyPair keyPair = createKeyPair();
         when(consumer.getKeyPair()).thenReturn(keyPair);
         when(pki.getPemEncoded(keyPair.getPrivateKey())).thenReturn("privateKey".getBytes());
-        when(pki.getPemEncoded(keyPair.getPublicKey())).thenReturn("publicKey".getBytes());
 
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
         when(cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
@@ -411,7 +408,6 @@ public class ExporterTest {
         KeyPair keyPair = createKeyPair();
         when(consumer.getKeyPair()).thenReturn(keyPair);
         when(pki.getPemEncoded(keyPair.getPrivateKey())).thenReturn("privateKey".getBytes());
-        when(pki.getPemEncoded(keyPair.getPublicKey())).thenReturn("publicKey".getBytes());
 
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
         when(cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
@@ -464,7 +460,6 @@ public class ExporterTest {
         KeyPair keyPair = createKeyPair();
         when(consumer.getKeyPair()).thenReturn(keyPair);
         when(pki.getPemEncoded(keyPair.getPrivateKey())).thenReturn("privateKey".getBytes());
-        when(pki.getPemEncoded(keyPair.getPublicKey())).thenReturn("publicKey".getBytes());
         when(consumer.getUuid()).thenReturn("8auuid");
         when(consumer.getName()).thenReturn("consumer_name");
         when(consumer.getContentAccessMode()).thenReturn("access_mode");
@@ -519,7 +514,6 @@ public class ExporterTest {
         KeyPair keyPair = createKeyPair();
         when(consumer.getKeyPair()).thenReturn(keyPair);
         when(pki.getPemEncoded(keyPair.getPrivateKey())).thenReturn("privateKey".getBytes());
-        when(pki.getPemEncoded(keyPair.getPublicKey())).thenReturn("publicKey".getBytes());
         when(consumer.getUuid()).thenReturn("8auuid");
         when(consumer.getName()).thenReturn("consumer_name");
         when(consumer.getTypeId()).thenReturn(ctype.getId());

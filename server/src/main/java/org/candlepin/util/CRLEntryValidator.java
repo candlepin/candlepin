@@ -14,12 +14,12 @@
  */
 package org.candlepin.util;
 
-import org.bouncycastle.asn1.x509.TBSCertList.CRLEntry;
+import java.security.cert.X509CRLEntry;
 
 /**
  * Simple validatpr class used by X509CRLStreamWriter to see whether to remove an
  * existing entry or not.
  */
 public interface CRLEntryValidator {
-    boolean shouldDelete(CRLEntry entry);
+    boolean shouldDelete(X509CRLEntry entry);
 }

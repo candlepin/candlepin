@@ -52,10 +52,12 @@ import org.candlepin.pinsetter.core.PinsetterJobListener;
 import org.candlepin.pinsetter.core.PinsetterTriggerListener;
 import org.candlepin.pinsetter.tasks.CertificateRevocationListTask;
 import org.candlepin.pki.CertificateReader;
+import org.candlepin.pki.impl.JSSPrivateKeyReader;
 import org.candlepin.pki.PKIUtility;
+import org.candlepin.pki.PrivateKeyReader;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
-import org.candlepin.pki.impl.BouncyCastlePKIUtility;
 import org.candlepin.pki.impl.DefaultSubjectKeyIdentifierWriter;
+import org.candlepin.pki.impl.JSSPKIUtility;
 import org.candlepin.policy.criteria.CriteriaRules;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
@@ -139,8 +141,9 @@ import javax.validation.MessageInterpolator;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 
-
-
+/**
+ * Guice modules for unit testing
+ */
 public class TestingModules {
     private TestingModules() {
         // This class is just a container for various Guice Modules used during testing
@@ -282,7 +285,8 @@ public class TestingModules {
             bind(DateSource.class).to(DateSourceForTesting.class).asEagerSingleton();
             bind(Enforcer.class).to(EnforcerForTesting.class); // .to(JavascriptEnforcer.class);
             bind(SubjectKeyIdentifierWriter.class).to(DefaultSubjectKeyIdentifierWriter.class);
-            bind(PKIUtility.class).to(BouncyCastlePKIUtility.class);
+            bind(PKIUtility.class).to(JSSPKIUtility.class).asEagerSingleton();
+            bind(PrivateKeyReader.class).to(JSSPrivateKeyReader.class);
             bind(CertificateReader.class).to(CertificateReaderForTesting.class).asEagerSingleton();
             bind(SubscriptionServiceAdapter.class).to(ImportSubscriptionServiceAdapter.class);
             bind(OwnerServiceAdapter.class).to(DefaultOwnerServiceAdapter.class);

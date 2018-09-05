@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2012 Red Hat, Inc.
+ * Copyright (c) 2009 - 2018 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -14,10 +14,7 @@
  */
 package org.candlepin.util;
 
-import static org.bouncycastle.asn1.BERTags.*;
 import static org.candlepin.util.DERUtil.*;
-
-import org.bouncycastle.asn1.x509.TBSCertList.CRLEntry;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
@@ -26,6 +23,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.cert.X509CRLEntry;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -83,11 +81,10 @@ import java.util.concurrent.atomic.AtomicInteger;
  * See https://en.wikipedia.org/wiki/X.690 and http://luca.ntop.org/Teaching/Appunti/asn1.html
  * for reference on ASN1 and DER encoding.
  */
-public class X509CRLEntryStream implements Closeable, Iterator<CRLEntry> {
-    private InputStream crlStream;
-
-    private int revokedSeqBytes;
-    private AtomicInteger count;
+public abstract class X509CRLEntryStream implements Closeable, Iterator<X509CRLEntry> {
+    protected InputStream crlStream;
+    protected int revokedSeqBytes;
+    protected AtomicInteger count;
 
     /**
      * Construct a X509CRLStream.  <b>The underlying data in the stream parameter must
@@ -143,23 +140,20 @@ public class X509CRLEntryStream implements Closeable, Iterator<CRLEntry> {
         // Read the CRL metadata and trash it.  We get to the thisUpdate item
         // and then break out.
         int tagNo;
-        while (true) {
+        do {
             tag = readTag(s, count);
             tagNo = readTagNumber(s, tag, count);
             int length = readLength(s, count);
             byte[] item = new byte[length];
             readFullyAndTrack(s, item, count);
 
-            if (tagNo == GENERALIZED_TIME || tagNo == UTC_TIME) {
-                break;
-            }
-        }
+        } while (tagNo != GENERALIZED_TIME_TAG_NUM && tagNo != UTC_TIME_TAG_NUM);
 
         tag = readTag(s, count);
         tagNo = readTagNumber(s, tag, count);
 
         // The nextUpdate item is optional.  If it's there, we trash it.
-        if (tagNo == GENERALIZED_TIME || tagNo == UTC_TIME) {
+        if (tagNo == GENERALIZED_TIME_TAG_NUM || tagNo == UTC_TIME_TAG_NUM) {
             int length = readLength(s, count);
             byte[] item = new byte[length];
             readFullyAndTrack(s, item, count);
@@ -167,7 +161,7 @@ public class X509CRLEntryStream implements Closeable, Iterator<CRLEntry> {
             tagNo = readTagNumber(s, tag, count);
         }
 
-        if (tagNo != SEQUENCE) {
+        if (tagNo != SEQUENCE_TAG_NUM) {
             // If we aren't at a sequence, then the CRL is empty and we are either
             // at the crlExtensions or if there are no extensions, at the
             // signatureAlgorithm
@@ -181,13 +175,16 @@ public class X509CRLEntryStream implements Closeable, Iterator<CRLEntry> {
         return readLength(s, count);
     }
 
-    public CRLEntry next() {
+    protected abstract X509CRLEntry getX509CRLEntry(byte[] obj) throws IOException;
+
+    @Override
+    public X509CRLEntry next() {
         try {
             // Strip the tag for the revokedCertificate entry
             int tag = readTag(crlStream, count);
             int tagNo = readTagNumber(crlStream, tag, count);
 
-            if (tagNo == OBJECT_IDENTIFIER) {
+            if (tagNo == OBJECT_IDENTIFIER_TAG_NUM) {
                 // If our tag is an OID, it means we're in an empty CRL with no
                 // extensions.  We could potentially detect this by looking at the upcoming
                 // tag in hasNext(), but that screws up the stream for X509CRLStreamWriter because
@@ -202,7 +199,7 @@ public class X509CRLEntryStream implements Closeable, Iterator<CRLEntry> {
             readFullyAndTrack(crlStream, entry, count);
 
             ByteArrayOutputStream reconstructed = new ByteArrayOutputStream();
-            // An ASN1 SEQUENCE tag is 0x30
+            // An ASN1 SEQUENCE tag byte is 0x30
             reconstructed.write(0x30);
             writeLength(reconstructed, entryLength);
             reconstructed.write(entry);
@@ -216,13 +213,14 @@ public class X509CRLEntryStream implements Closeable, Iterator<CRLEntry> {
             byte[] obj = reconstructed.toByteArray();
             reconstructed.close();
 
-            return CRLEntry.getInstance(obj);
+            return getX509CRLEntry(obj);
         }
         catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
+    @Override
     public boolean hasNext() {
         return revokedSeqBytes > count.get();
     }

@@ -28,7 +28,6 @@ import org.bouncycastle.asn1.x509.AuthorityKeyIdentifier;
 import org.bouncycastle.asn1.x509.CRLNumber;
 import org.bouncycastle.asn1.x509.CRLReason;
 import org.bouncycastle.asn1.x509.Extension;
-import org.bouncycastle.asn1.x509.TBSCertList.CRLEntry;
 import org.bouncycastle.cert.X509CRLHolder;
 import org.bouncycastle.cert.X509v2CRLBuilder;
 import org.bouncycastle.cert.jcajce.JcaX509CRLConverter;
@@ -45,6 +44,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -54,6 +55,7 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.lang.reflect.Constructor;
 import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -70,7 +72,10 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
-
+/**
+ * Test implementations of X509CRLStreamWriter
+ */
+@RunWith(Parameterized.class)
 public class X509CRLStreamWriterTest {
     private static final BouncyCastleProvider BC_PROVIDER = new BouncyCastleProvider();
 
@@ -80,12 +85,26 @@ public class X509CRLStreamWriterTest {
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
+    @Parameterized.Parameters
+    public static Iterable<Class> data() {
+        return Arrays.asList(JSSX509CRLStreamWriter.class);
+    }
+
     private X500Name issuer;
     private ContentSigner signer;
     private KeyPair keyPair;
     private File outfile;
 
     private KeyPairGenerator generator;
+
+    private final Constructor<? extends X509CRLStreamWriter> fileConstructor;
+    private final Constructor<? extends X509CRLStreamWriter> streamConstructor;
+
+    public X509CRLStreamWriterTest(Class<? extends X509CRLStreamWriter> clazz) throws NoSuchMethodException {
+        this.fileConstructor = clazz.getConstructor(File.class, RSAPrivateKey.class, RSAPublicKey.class);
+        this.streamConstructor = clazz.getConstructor(InputStream.class, RSAPrivateKey.class,
+            RSAPublicKey.class);
+    }
 
     @Before
     public void setUp() throws Exception {
@@ -95,7 +114,7 @@ public class X509CRLStreamWriterTest {
         generator.initialize(2048);
         keyPair = generator.generateKeyPair();
 
-        signer = new JcaContentSignerBuilder("SHA256WithRSAEncryption")
+        signer = new JcaContentSignerBuilder("SHA256withRSA")
             .setProvider(BC_PROVIDER)
             .build(keyPair.getPrivate());
 
@@ -112,7 +131,7 @@ public class X509CRLStreamWriterTest {
         /* With a CRL number of 127, incrementing it should cause the number of bytes in the length
          * portion of the TLV to increase by one.*/
         crlBuilder.addExtension(Extension.cRLNumber, false, new CRLNumber(new BigInteger("127")));
-        crlBuilder.addCRLEntry(new BigInteger("100"), new Date(), CRLReason.unspecified);
+        crlBuilder.addCRLEntry(new BigInteger("100"), new Date(), CRLReason.privilegeWithdrawn);
         return crlBuilder;
     }
 
@@ -126,7 +145,6 @@ public class X509CRLStreamWriterTest {
         FileUtils.writeByteArrayToFile(crlToChange, crl.getEncoded());
         return crlToChange;
     }
-
 
     private X509CRL readCRL() throws Exception {
         return readCRL(keyPair.getPublic());
@@ -147,8 +165,9 @@ public class X509CRLStreamWriterTest {
     public void testHandlesExtensions() throws Exception {
         File crlToChange = writeCRL(createCRL());
 
-        X509CRLStreamWriter stream = new X509CRLStreamWriter(crlToChange,
-            (RSAPrivateKey) keyPair.getPrivate(), (RSAPublicKey) keyPair.getPublic());
+        X509CRLStreamWriter stream = fileConstructor.newInstance(
+            crlToChange, (RSAPrivateKey) keyPair.getPrivate(), (RSAPublicKey) keyPair.getPublic());
+
         stream.preScan(crlToChange).lock();
         OutputStream o = new BufferedOutputStream(new FileOutputStream(outfile));
         stream.write(o);
@@ -174,10 +193,8 @@ public class X509CRLStreamWriterTest {
         InputStream keyStream = classLoader.getResourceAsStream("real.key");
 
         InputStreamReader keyReader = new InputStreamReader(keyStream);
-        PEMParser reader = null;
 
-        try {
-            reader = new PEMParser(keyReader);
+        try (PEMParser reader = new PEMParser(keyReader)) {
 
             Object pemObj = reader.readObject();
             if (pemObj == null) {
@@ -193,15 +210,10 @@ public class X509CRLStreamWriterTest {
                 throw new RuntimeException("Unexpected CA key object: " + pemObj.getClass().getName());
             }
         }
-        finally {
-            if (reader != null) {
-                reader.close();
-            }
-        }
 
         File outfile = new File(folder.getRoot(), "new.crl");
-        X509CRLStreamWriter stream = new X509CRLStreamWriter(crl,
-            (RSAPrivateKey) keyPair.getPrivate(), (RSAPublicKey) keyPair.getPublic());
+        X509CRLStreamWriter stream = streamConstructor.newInstance(
+            crl, (RSAPrivateKey) keyPair.getPrivate(), (RSAPublicKey) keyPair.getPublic());
 
         // Add enough items to cause the number of length bytes to change
         Set<BigInteger> newSerials = new HashSet<>(Arrays.asList(
@@ -258,8 +270,8 @@ public class X509CRLStreamWriterTest {
         File crlToChange = writeCRL(holder);
 
         File outfile = new File(folder.getRoot(), "new.crl");
-        X509CRLStreamWriter stream = new X509CRLStreamWriter(crlToChange,
-            (RSAPrivateKey) keyPair.getPrivate(), (RSAPublicKey) keyPair.getPublic());
+        X509CRLStreamWriter stream = fileConstructor.newInstance(
+            crlToChange, (RSAPrivateKey) keyPair.getPrivate(), (RSAPublicKey) keyPair.getPublic());
 
         // Add enough items to cause the number of length bytes to change
         Set<BigInteger> newSerials = new HashSet<>(Arrays.asList(
@@ -297,8 +309,8 @@ public class X509CRLStreamWriterTest {
         File crlToChange = writeCRL(createCRL());
 
         File outfile = new File(folder.getRoot(), "new.crl");
-        X509CRLStreamWriter stream = new X509CRLStreamWriter(crlToChange,
-            (RSAPrivateKey) keyPair.getPrivate(), (RSAPublicKey) keyPair.getPublic());
+        X509CRLStreamWriter stream = fileConstructor.newInstance(
+            crlToChange, (RSAPrivateKey) keyPair.getPrivate(), (RSAPublicKey) keyPair.getPublic());
 
         Set<BigInteger> expected = new HashSet<>();
         expected.add(new BigInteger("100"));
@@ -337,14 +349,14 @@ public class X509CRLStreamWriterTest {
     @Test
     public void testAddEntryToCRLWithNoExtensions() throws Exception {
         X509v2CRLBuilder crlBuilder = new X509v2CRLBuilder(issuer, new Date());
-        crlBuilder.addCRLEntry(new BigInteger("100"), new Date(), CRLReason.unspecified);
+        crlBuilder.addCRLEntry(new BigInteger("100"), new Date(), CRLReason.privilegeWithdrawn);
         X509CRLHolder holder = crlBuilder.build(signer);
 
         File crlToChange = writeCRL(holder);
 
         File outfile = new File(folder.getRoot(), "new.crl");
-        X509CRLStreamWriter stream = new X509CRLStreamWriter(crlToChange,
-            (RSAPrivateKey) keyPair.getPrivate(), (RSAPublicKey) keyPair.getPublic());
+        X509CRLStreamWriter stream = fileConstructor.newInstance(
+            crlToChange, (RSAPrivateKey) keyPair.getPrivate(), (RSAPublicKey) keyPair.getPublic());
 
         Set<BigInteger> expected = new HashSet<>();
         expected.add(new BigInteger("100"));
@@ -399,8 +411,8 @@ public class X509CRLStreamWriterTest {
         File crlToChange = writeCRL(holder);
 
         File outfile = new File(folder.getRoot(), "new.crl");
-        X509CRLStreamWriter stream = new X509CRLStreamWriter(crlToChange,
-            (RSAPrivateKey) keyPair.getPrivate(), (RSAPublicKey) keyPair.getPublic());
+        X509CRLStreamWriter stream = fileConstructor.newInstance(
+            crlToChange, (RSAPrivateKey) keyPair.getPrivate(), (RSAPublicKey) keyPair.getPublic());
 
         // Add enough items to cause the number of length bytes to change
         Set<BigInteger> newSerials = new HashSet<>(Arrays.asList(
@@ -435,11 +447,11 @@ public class X509CRLStreamWriterTest {
 
         long changedCrlUpdateDelta =
             changedCrl.getNextUpdate().getTime() - changedCrl.getThisUpdate().getTime();
+        long expectedUpdateDelta = oneHourHence.getTime() - oneHourAgo.getTime();
 
-        long changedCrlExpectedDelta = oneHourHence.getTime() - oneHourAgo.getTime();
-
-        // We allow a bit of leeway here to address any slowdown that may occur during the test.
-        assertTrue(Math.abs(changedCrlExpectedDelta - changedCrlUpdateDelta) < 250);
+        // Allow for a little fuzz between the expected and actual value due to timing issues that can occur
+        assertThat(Math.abs(changedCrlUpdateDelta - expectedUpdateDelta),
+            OrderingComparison.lessThanOrEqualTo(250L));
         assertThat(changedCrl.getThisUpdate(), OrderingComparison.greaterThan(originalCrl.getThisUpdate()));
 
         assertEquals(newSerials, discoveredSerials);
@@ -469,8 +481,8 @@ public class X509CRLStreamWriterTest {
         File crlToChange = writeCRL(holder);
 
         File outfile = new File(folder.getRoot(), "new.crl");
-        X509CRLStreamWriter stream = new X509CRLStreamWriter(crlToChange,
-            (RSAPrivateKey) keyPair.getPrivate(), (RSAPublicKey) keyPair.getPublic());
+        X509CRLStreamWriter stream = fileConstructor.newInstance(
+            crlToChange, (RSAPrivateKey) keyPair.getPrivate(), (RSAPublicKey) keyPair.getPublic());
 
         // Add enough items to cause the number of length bytes to change
         Set<BigInteger> newSerials = new HashSet<>(Arrays.asList(
@@ -506,7 +518,7 @@ public class X509CRLStreamWriterTest {
             generator.initialize(size);
             KeyPair differentKeyPair = generator.generateKeyPair();
 
-            X509CRLStreamWriter stream = new X509CRLStreamWriter(crlToChange,
+            X509CRLStreamWriter stream = fileConstructor.newInstance(crlToChange,
                 (RSAPrivateKey) differentKeyPair.getPrivate(), (RSAPublicKey) differentKeyPair.getPublic());
             stream.preScan(crlToChange).lock();
             OutputStream o = new BufferedOutputStream(new FileOutputStream(outfile));
@@ -549,9 +561,13 @@ public class X509CRLStreamWriterTest {
 
     @Test
     public void testIncrementsExtensions() throws Exception {
-        File crlToChange = writeCRL(createCRL());
+        X509CRLHolder holder = createCRL();
+        File crlToChange = writeCRL(holder);
 
-        X509CRLStreamWriter stream = new X509CRLStreamWriter(crlToChange,
+        Extension e = holder.getExtension(Extension.cRLNumber);
+        ASN1Integer original = (ASN1Integer) e.getParsedValue().toASN1Primitive();
+
+        X509CRLStreamWriter stream = fileConstructor.newInstance(crlToChange,
             (RSAPrivateKey) keyPair.getPrivate(), (RSAPublicKey) keyPair.getPublic());
         stream.preScan(crlToChange).lock();
         OutputStream o = new BufferedOutputStream(new FileOutputStream(outfile));
@@ -562,30 +578,31 @@ public class X509CRLStreamWriterTest {
 
         byte[] val = changedCrl.getExtensionValue(Extension.cRLNumber.getId());
         DEROctetString s = (DEROctetString) DERTaggedObject.fromByteArray(val);
-        ASN1Integer i = (ASN1Integer) DERTaggedObject.fromByteArray(s.getOctets());
+        ASN1Integer actual = (ASN1Integer) DERTaggedObject.fromByteArray(s.getOctets());
 
-        assertTrue("CRL Number not incremented", i.getValue().compareTo(BigInteger.ONE) > 0);
+        assertEquals(original.getPositiveValue().add(BigInteger.ONE), actual.getValue());
     }
 
     @Test
     public void testDeleteEntryFromCRL() throws Exception {
         X509v2CRLBuilder crlBuilder = createCRLBuilder();
-        crlBuilder.addCRLEntry(new BigInteger("101"), new Date(), CRLReason.unspecified);
+        crlBuilder.addCRLEntry(new BigInteger("101"), new Date(), CRLReason.privilegeWithdrawn);
         X509CRLHolder holder = crlBuilder.build(signer);
 
         File crlToChange = writeCRL(holder);
 
         CRLEntryValidator validator = new CRLEntryValidator() {
             @Override
-            public boolean shouldDelete(CRLEntry entry) {
-                return entry.getUserCertificate().getValue().equals(new BigInteger("101"));
+            public boolean shouldDelete(X509CRLEntry entry) {
+                return entry.getSerialNumber().equals(new BigInteger("101"));
             }
         };
 
-        X509CRLStreamWriter stream = new X509CRLStreamWriter(crlToChange,
+        X509CRLStreamWriter stream = fileConstructor.newInstance(crlToChange,
             (RSAPrivateKey) keyPair.getPrivate(), (RSAPublicKey) keyPair.getPublic());
-        stream.add(new BigInteger("9000"), new Date(), 0);
+        stream.add(new BigInteger("9000"), new Date(), CRLReason.privilegeWithdrawn);
         stream.preScan(crlToChange, validator).lock();
+
         OutputStream o = new BufferedOutputStream(new FileOutputStream(outfile));
         stream.write(o);
         o.close();
@@ -612,7 +629,7 @@ public class X509CRLStreamWriterTest {
 
         Thread.sleep(1000);
 
-        X509CRLStreamWriter stream = new X509CRLStreamWriter(crlToChange,
+        X509CRLStreamWriter stream = fileConstructor.newInstance(crlToChange,
             (RSAPrivateKey) keyPair.getPrivate(), (RSAPublicKey) keyPair.getPublic());
         stream.preScan(crlToChange).lock();
         OutputStream o = new BufferedOutputStream(new FileOutputStream(outfile));
@@ -640,7 +657,7 @@ public class X509CRLStreamWriterTest {
 
         Thread.sleep(1000);
 
-        X509CRLStreamWriter stream = new X509CRLStreamWriter(crlToChange,
+        X509CRLStreamWriter stream = fileConstructor.newInstance(crlToChange,
             (RSAPrivateKey) keyPair.getPrivate(), (RSAPublicKey) keyPair.getPublic());
         stream.preScan(crlToChange).lock();
         OutputStream o = new BufferedOutputStream(new FileOutputStream(outfile));
@@ -658,7 +675,7 @@ public class X509CRLStreamWriterTest {
     public void testSignatureKeyChange() throws Exception {
         KeyPair differentKeyPair = generator.generateKeyPair();
 
-        ContentSigner otherSigner = new JcaContentSignerBuilder("SHA256WithRSAEncryption")
+        ContentSigner otherSigner = new JcaContentSignerBuilder("SHA256withRSA")
             .setProvider(BC_PROVIDER)
             .build(differentKeyPair.getPrivate());
 
@@ -667,7 +684,7 @@ public class X509CRLStreamWriterTest {
 
         File crlToChange = writeCRL(holder);
 
-        X509CRLStreamWriter stream = new X509CRLStreamWriter(crlToChange,
+        X509CRLStreamWriter stream = fileConstructor.newInstance(crlToChange,
             (RSAPrivateKey) keyPair.getPrivate(), (RSAPublicKey) keyPair.getPublic());
         stream.preScan(crlToChange).lock();
         OutputStream o = new BufferedOutputStream(new FileOutputStream(outfile));
@@ -682,7 +699,7 @@ public class X509CRLStreamWriterTest {
     public void testUnlockedThrowsException() throws Exception {
         File crlToChange = writeCRL(createCRL());
 
-        X509CRLStreamWriter stream = new X509CRLStreamWriter(crlToChange,
+        X509CRLStreamWriter stream = fileConstructor.newInstance(crlToChange,
             (RSAPrivateKey) keyPair.getPrivate(), (RSAPublicKey) keyPair.getPublic());
         stream.add(new BigInteger("9000"), new Date(), 0);
 
@@ -700,9 +717,9 @@ public class X509CRLStreamWriterTest {
     public void testUnscannedThrowsException() throws Exception {
         File crlToChange = writeCRL(createCRL());
 
-        X509CRLStreamWriter stream = new X509CRLStreamWriter(crlToChange,
+        X509CRLStreamWriter stream = fileConstructor.newInstance(crlToChange,
             (RSAPrivateKey) keyPair.getPrivate(), (RSAPublicKey) keyPair.getPublic());
-        stream.add(new BigInteger("9000"), new Date(), 0);
+        stream.add(new BigInteger("9000"), new Date(), CRLReason.privilegeWithdrawn);
 
         thrown.expect(IllegalStateException.class);
         thrown.expectMessage(
@@ -718,7 +735,7 @@ public class X509CRLStreamWriterTest {
     public void testUpgradesSignature() throws Exception {
         X509v2CRLBuilder crlBuilder = createCRLBuilder();
 
-        String signingAlg = "SHA1WithRSA";
+        String signingAlg = "SHA1withRSA";
         ContentSigner sha1Signer = new JcaContentSignerBuilder(signingAlg)
             .setProvider(BC_PROVIDER)
             .build(keyPair.getPrivate());
@@ -727,10 +744,10 @@ public class X509CRLStreamWriterTest {
 
         File crlToChange = writeCRL(holder);
 
-        X509CRLStreamWriter stream = new X509CRLStreamWriter(crlToChange,
+        X509CRLStreamWriter stream = fileConstructor.newInstance(crlToChange,
             (RSAPrivateKey) keyPair.getPrivate(), (RSAPublicKey) keyPair.getPublic());
-        stream.setSigningAlgorithm("SHA256WithRSA");
-        stream.add(new BigInteger("9000"), new Date(), 0);
+        stream.setSigningAlgorithm("SHA256withRSA");
+        stream.add(new BigInteger("9000"), new Date(), CRLReason.privilegeWithdrawn);
         stream.preScan(crlToChange).lock();
         OutputStream o = new BufferedOutputStream(new FileOutputStream(outfile));
         stream.write(o);

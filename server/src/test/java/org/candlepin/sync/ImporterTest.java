@@ -55,8 +55,8 @@ import org.candlepin.model.ProductCurator;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.pki.PKIUtility;
-import org.candlepin.pki.impl.BouncyCastlePKIUtility;
-import org.candlepin.pki.impl.BouncyCastleProviderLoader;
+import org.candlepin.pki.impl.ProviderBasedPKIUtility;
+import org.candlepin.pki.impl.JSSProviderLoader;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.sync.Importer.ImportFile;
@@ -122,7 +122,7 @@ public class ImporterTest {
     private ModelTranslator translator;
 
     static {
-        BouncyCastleProviderLoader.addProvider();
+        JSSProviderLoader.addProvider();
     }
 
     @Before
@@ -445,7 +445,7 @@ public class ImporterTest {
     @Test
     public void testImportZipSigAndEmptyConsumerZip()
         throws Exception {
-        PKIUtility pki = mock(PKIUtility.class);
+        PKIUtility pki = mock(ProviderBasedPKIUtility.class);
         Importer i = new Importer(null, null, null, null, null, null, null,
             pki, config, null, null, null, i18n,
             null, null, su, null, this.mockSubReconciler, this.ec, this.translator);
@@ -728,8 +728,6 @@ public class ImporterTest {
 
     @Test
     public void importConsumer() throws Exception {
-        PKIUtility pki = new BouncyCastlePKIUtility(null, null, null);
-
         OwnerCurator oc = mock(OwnerCurator.class);
         ConsumerType type = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
         type.setId("test-ctype");
@@ -738,7 +736,7 @@ public class ImporterTest {
 
         Importer i = new Importer(consumerTypeCurator, null, null, oc,
             mock(IdentityCertificateCurator.class), null, null,
-            pki, null, null, mock(CertificateSerialCurator.class), null, i18n,
+            null, null, null, mock(CertificateSerialCurator.class), null, i18n,
             null, null, su, null, this.mockSubReconciler, this.ec, this.translator);
         File[] upstream = createUpstreamFiles();
         Owner owner = new Owner("admin", "Admin Owner");

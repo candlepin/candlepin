@@ -14,7 +14,6 @@
  */
 package org.candlepin.service.impl;
 
-import static org.candlepin.pki.impl.BouncyCastleProviderLoader.*;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -51,8 +50,7 @@ import org.candlepin.model.dto.Subscription;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
-import org.candlepin.pki.impl.BouncyCastlePKIUtility;
-import org.candlepin.pki.impl.BouncyCastleProviderLoader;
+import org.candlepin.pki.impl.JSSProviderLoader;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.CertificateSizeException;
 import org.candlepin.util.Util;
@@ -88,8 +86,8 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
-import java.security.Key;
 import java.security.KeyPair;
+import java.security.PrivateKey;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
@@ -187,7 +185,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     };
 
     static {
-        BouncyCastleProviderLoader.addProvider();
+        JSSProviderLoader.addProvider();
     }
 
     @BeforeClass
@@ -200,7 +198,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
         try {
             reader = new PEMParser(new InputStreamReader(keyStream));
             keyPair = new JcaPEMKeyConverter()
-                .setProvider(BC_PROVIDER)
                 .getKeyPair((PEMKeyPair) reader.readObject());
         }
         finally {
@@ -1675,11 +1672,10 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     @Test
     public void testDetachedEntitlementDataNotAddedToCertV1() throws Exception {
-        KeyPair keyPair = new BouncyCastlePKIUtility(null, null, null).generateNewKeyPair();
         when(keyPairCurator.getConsumerKeyPair(any(Consumer.class))).thenReturn(keyPair);
 
         when(mockedPKI.getPemEncoded(any(X509Certificate.class))).thenReturn("".getBytes());
-        when(mockedPKI.getPemEncoded(any(Key.class))).thenReturn("".getBytes());
+        when(mockedPKI.getPemEncoded(any(PrivateKey.class))).thenReturn("".getBytes());
 
         final CertificateSerial serial = mock(CertificateSerial.class);
         when(serial.getId()).thenReturn(1L);
