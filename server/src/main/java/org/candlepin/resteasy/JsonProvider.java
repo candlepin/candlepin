@@ -16,9 +16,6 @@ package org.candlepin.resteasy;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import org.candlepin.common.config.Configuration;
-import org.candlepin.common.jackson.DynamicPropertyFilter;
-import org.candlepin.common.jackson.HateoasBeanPropertyFilter;
-import org.candlepin.common.jackson.MultiFilter;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.jackson.DateSerializer;
 import org.candlepin.jackson.ProductCachedSerializationModule;
@@ -30,7 +27,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair;
 import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.jaxrs.cfg.Annotations;
@@ -73,40 +69,25 @@ public class JsonProvider extends JacksonJsonProvider {
         hbm.enable(Hibernate5Module.Feature.FORCE_LAZY_LOADING);
         mapper.registerModule(hbm);
 
+        // Setup date serialization configuration
         SimpleModule dateModule = new SimpleModule("DateModule", new Version(1, 0, 0, null, null, null));
-        // Ensure our DateSerializer is used for all Date objects
         dateModule.addSerializer(Date.class, new DateSerializer());
         mapper.registerModule(dateModule);
-        mapper.registerModule(productCachedModules);
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        configureHateoasObjectMapper(mapper, indentJson);
-        setMapper(mapper);
-    }
-
-    private void configureHateoasObjectMapper(ObjectMapper mapper, boolean indentJson) {
         mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
-        if (indentJson) {
-            mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
-        }
-
-        SimpleFilterProvider filterProvider = new SimpleFilterProvider();
-        filterProvider = filterProvider.addFilter("ConsumerFilter",
-            new MultiFilter(new HateoasBeanPropertyFilter(), new DynamicPropertyFilter()));
-        filterProvider = filterProvider.addFilter("EntitlementFilter",
-            new MultiFilter(new HateoasBeanPropertyFilter(), new DynamicPropertyFilter()));
-        filterProvider = filterProvider.addFilter("OwnerFilter",
-            new MultiFilter(new HateoasBeanPropertyFilter(), new DynamicPropertyFilter()));
-        filterProvider = filterProvider.addFilter("GuestFilter",
-            new MultiFilter(new HateoasBeanPropertyFilter(), new DynamicPropertyFilter()));
-        filterProvider.setDefaultFilter(new DynamicPropertyFilter());
-        filterProvider.setFailOnUnknownId(false);
-        mapper.setFilterProvider(filterProvider);
+        mapper.registerModule(productCachedModules);
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
         AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
         AnnotationIntrospector secondary = new JaxbAnnotationIntrospector(mapper.getTypeFactory());
         AnnotationIntrospector pair = new AnnotationIntrospectorPair(primary, secondary);
         mapper.setAnnotationIntrospector(pair);
+
+        if (indentJson) {
+            mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+        }
+
+        setMapper(mapper);
     }
 }
 

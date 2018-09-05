@@ -17,8 +17,6 @@ package org.candlepin.policy.js.compliance;
 import org.candlepin.model.Entitlement;
 import org.candlepin.util.DateRange;
 
-import com.fasterxml.jackson.annotation.JsonFilter;
-
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -33,7 +31,6 @@ import java.util.Set;
  * Represents the compliance status for a given consumer. Carries information
  * about which products are fully entitled, not entitled, or partially entitled. (stacked)
  */
-@JsonFilter("ComplianceFilter")
 public class ComplianceStatus {
     public static final String GREEN = "valid";
     public static final String YELLOW = "partial";

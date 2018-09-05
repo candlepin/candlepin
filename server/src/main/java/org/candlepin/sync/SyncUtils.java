@@ -25,8 +25,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair;
 import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
-import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
-import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 import com.google.inject.Inject;
@@ -79,14 +77,6 @@ class SyncUtils {
 
         // Add support for new JDK8 features
         mapper.registerModule(new Jdk8Module());
-
-        // Filter specific things we do not want exported:
-        SimpleFilterProvider filterProvider = new SimpleFilterProvider();
-        filterProvider.setFailOnUnknownId(false);
-        filterProvider = filterProvider.addFilter("EntitlementFilter",
-            SimpleBeanPropertyFilter.serializeAllExcept("consumer"));
-
-        mapper.setFilterProvider(filterProvider);
         mapper.registerModule(productCachedModule);
 
         if (config != null) {

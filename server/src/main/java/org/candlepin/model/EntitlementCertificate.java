@@ -14,8 +14,6 @@
  */
 package org.candlepin.model;
 
-import com.fasterxml.jackson.annotation.JsonFilter;
-
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
@@ -40,7 +38,6 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = EntitlementCertificate.DB_TABLE)
-@JsonFilter("EntitlementCertificateFilter")
 public class EntitlementCertificate extends RevocableCertificate<EntitlementCertificate> {
 
     /** Name of the table backing this object in the database */

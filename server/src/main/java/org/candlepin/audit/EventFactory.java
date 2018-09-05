@@ -19,9 +19,7 @@ import com.google.common.collect.ImmutableMap;
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
 import org.candlepin.common.exceptions.IseException;
-import org.candlepin.common.jackson.HateoasBeanPropertyFilter;
 import org.candlepin.guice.PrincipalProvider;
-import org.candlepin.jackson.PoolEventFilter;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.GuestId;
@@ -36,8 +34,6 @@ import com.fasterxml.jackson.databind.AnnotationIntrospector;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair;
 import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
-import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
-import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
@@ -65,26 +61,6 @@ public class EventFactory {
         this.principalProvider = principalProvider;
 
         mapper = new ObjectMapper();
-
-        // When serializing entity JSON for events, we want to use a reduced number
-        // of fields nested objects, so enable the event and API HATEOAS filters:
-        SimpleFilterProvider filterProvider = new SimpleFilterProvider();
-        filterProvider.setFailOnUnknownId(false);
-        filterProvider = filterProvider.addFilter("PoolFilter", new PoolEventFilter());
-        filterProvider = filterProvider.addFilter("ConsumerFilter", new HateoasBeanPropertyFilter());
-        filterProvider = filterProvider.addFilter("EntitlementFilter", new HateoasBeanPropertyFilter());
-        filterProvider = filterProvider.addFilter("OwnerFilter", new HateoasBeanPropertyFilter());
-        filterProvider = filterProvider.addFilter("IdentityCertificateFilter",
-            SimpleBeanPropertyFilter.serializeAllExcept("cert", "key"));
-        filterProvider = filterProvider.addFilter("EntitlementCertificateFilter",
-            SimpleBeanPropertyFilter.serializeAllExcept("cert", "key"));
-        filterProvider = filterProvider.addFilter("PoolAttributeFilter",
-            SimpleBeanPropertyFilter.serializeAllExcept("created", "updated", "id"));
-        filterProvider = filterProvider.addFilter("ProductPoolAttributeFilter",
-            SimpleBeanPropertyFilter.serializeAllExcept("created", "updated", "productId", "id"));
-        filterProvider = filterProvider.addFilter("SubscriptionCertificateFilter",
-            SimpleBeanPropertyFilter.serializeAllExcept("cert", "key"));
-        mapper.setFilterProvider(filterProvider);
 
         Hibernate5Module hbm = new Hibernate5Module();
         hbm.enable(Hibernate5Module.Feature.FORCE_LAZY_LOADING);

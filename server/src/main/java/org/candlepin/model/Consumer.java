@@ -20,7 +20,6 @@ import org.candlepin.jackson.StringTrimmingConverter;
 import org.candlepin.service.model.ConsumerInfo;
 import org.candlepin.util.Util;
 
-import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -78,7 +77,6 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = Consumer.DB_TABLE)
-@JsonFilter("ConsumerFilter")
 public class Consumer extends AbstractHibernateObject implements Linkable, Owned, Named, ConsumerProperty,
     Eventful, ConsumerInfo {
 

@@ -20,7 +20,6 @@ import org.candlepin.resteasy.InfoProperty;
 import org.candlepin.service.ContentAccessCertServiceAdapter;
 import org.candlepin.service.model.OwnerInfo;
 
-import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import org.apache.commons.lang.ArrayUtils;
@@ -64,7 +63,6 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = Owner.DB_TABLE)
-@JsonFilter("OwnerFilter")
 public class Owner extends AbstractHibernateObject<Owner>
     implements Serializable, Linkable, Owned, Named, Eventful, OwnerInfo {
 

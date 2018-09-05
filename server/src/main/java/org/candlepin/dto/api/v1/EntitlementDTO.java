@@ -14,7 +14,6 @@
  */
 package org.candlepin.dto.api.v1;
 
-import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
@@ -42,7 +41,6 @@ import java.util.Set;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @ApiModel(parent = TimestampedCandlepinDTO.class, description = "DTO representing an entitlement")
-@JsonFilter("EntitlementFilter")
 public class EntitlementDTO extends TimestampedCandlepinDTO<EntitlementDTO> implements LinkableDTO {
 
     private static final long serialVersionUID = 1L;

@@ -16,8 +16,6 @@ package org.candlepin.model;
 
 import org.candlepin.common.jackson.HateoasInclude;
 
-import com.fasterxml.jackson.annotation.JsonFilter;
-
 import org.hibernate.annotations.BatchSize;
 
 import java.util.Date;
@@ -59,7 +57,6 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = Entitlement.DB_TABLE)
-@JsonFilter("EntitlementFilter")
 public class Entitlement extends AbstractHibernateObject<Entitlement>
     implements Linkable, Owned, Named, ConsumerProperty, Comparable<Entitlement>, Eventful {
 

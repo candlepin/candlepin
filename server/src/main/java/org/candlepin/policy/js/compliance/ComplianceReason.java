@@ -14,8 +14,6 @@
  */
 package org.candlepin.policy.js.compliance;
 
-import com.fasterxml.jackson.annotation.JsonFilter;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,7 +22,6 @@ import javax.xml.bind.annotation.XmlTransient;
 /**
  * ComplianceReason
  */
-@JsonFilter("ComplianceReasonFilter")
 public class ComplianceReason {
     /** Commonly used/recognized attributes */
     public static final class Attributes {
