@@ -35,6 +35,8 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 
+
+
 /**
  * Test suite for the ComplianceStatusTranslator class
  */
@@ -42,7 +44,6 @@ public class SystemPurposeComplianceStatusTranslatorTest extends
     AbstractTranslatorTest<SystemPurposeComplianceStatus, SystemPurposeComplianceStatusDTO,
     SystemPurposeComplianceStatusTranslator> {
 
-    protected SystemPurposeComplianceStatusTranslator translator;
     protected EntitlementTranslator entitlementTranslator;
     protected PoolTranslator poolTranslator;
     private Injector injector;
@@ -50,27 +51,25 @@ public class SystemPurposeComplianceStatusTranslatorTest extends
 
     @Override
     protected SystemPurposeComplianceStatusTranslator initObjectTranslator() {
-
-
         Configuration config = mock(Configuration.class);
         injector = Guice.createInjector(
             new TestingModules.MockJpaModule(),
             new TestingModules.StandardTest(config),
             new TestingModules.ServletEnvironmentModule()
         );
-        i18n = injector.getInstance(I18n.class);
+
+        this.i18n = injector.getInstance(I18n.class);
         this.entitlementTranslator = new EntitlementTranslator();
         this.poolTranslator = new PoolTranslator();
 
-        this.translator = new SystemPurposeComplianceStatusTranslator();
-        return this.translator;
+        return new SystemPurposeComplianceStatusTranslator();
     }
 
     @Override
-    protected void initModelTranslator(ModelTranslator translator) {
-        translator.registerTranslator(entitlementTranslator, Entitlement.class, EntitlementDTO.class);
-        translator.registerTranslator(poolTranslator, Pool.class, PoolDTO.class);
-        translator.registerTranslator(this.translator, SystemPurposeComplianceStatus.class,
+    protected void initModelTranslator(ModelTranslator modelTranslator) {
+        modelTranslator.registerTranslator(entitlementTranslator, Entitlement.class, EntitlementDTO.class);
+        modelTranslator.registerTranslator(poolTranslator, Pool.class, PoolDTO.class);
+        modelTranslator.registerTranslator(this.translator, SystemPurposeComplianceStatus.class,
             SystemPurposeComplianceStatusDTO.class);
     }
 

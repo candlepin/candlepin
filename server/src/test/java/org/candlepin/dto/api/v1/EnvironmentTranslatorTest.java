@@ -38,18 +38,26 @@ import java.util.Set;
 public class EnvironmentTranslatorTest extends
     AbstractTranslatorTest<Environment, EnvironmentDTO, EnvironmentTranslator> {
 
-    protected ContentTranslator contentTranslator = new ContentTranslator();
     protected EnvironmentTranslator environmentTranslator = new EnvironmentTranslator();
+
     protected ContentTranslatorTest contentTranslatorTest = new ContentTranslatorTest();
     protected OwnerTranslatorTest ownerTranslatorTest = new OwnerTranslatorTest();
 
     @Override
+    public void init() {
+        this.contentTranslatorTest.init();
+        this.ownerTranslatorTest.init();
+
+        super.init();
+    }
+
+    @Override
     protected void initModelTranslator(ModelTranslator modelTranslator) {
-        ownerTranslatorTest.initModelTranslator(modelTranslator);
-        modelTranslator.registerTranslator(this.contentTranslator, Content.class, ContentDTO.class);
-        modelTranslator.registerTranslator(this.environmentTranslator,
-            Environment.class,
-            EnvironmentDTO.class);
+        this.contentTranslatorTest.initModelTranslator(modelTranslator);
+        this.ownerTranslatorTest.initModelTranslator(modelTranslator);
+
+        modelTranslator.registerTranslator(
+            this.environmentTranslator, Environment.class, EnvironmentDTO.class);
     }
 
     @Override
@@ -73,6 +81,7 @@ public class EnvironmentTranslatorTest extends
             EnvironmentContent environmentContent = new EnvironmentContent(source, content, true);
             environmentContents.add(environmentContent);
         }
+
         source.setEnvironmentContent(environmentContents);
         return source;
     }

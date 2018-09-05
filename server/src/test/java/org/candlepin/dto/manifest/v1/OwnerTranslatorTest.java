@@ -35,20 +35,26 @@ import java.util.Date;
 public class OwnerTranslatorTest extends
     AbstractTranslatorTest<Owner, OwnerDTO, OwnerTranslator> {
 
-    protected OwnerTranslator translator = new OwnerTranslator();
-
     protected UpstreamConsumerTranslatorTest upstreamConsumerTranslatorTest =
         new UpstreamConsumerTranslatorTest();
 
     @Override
-    protected void initModelTranslator(ModelTranslator modelTranslator) {
-        this.upstreamConsumerTranslatorTest.initModelTranslator(modelTranslator);
-        modelTranslator.registerTranslator(this.translator, Owner.class, OwnerDTO.class);
+    public void init() {
+        this.upstreamConsumerTranslatorTest.init();
+
+        super.init();
     }
 
     @Override
     protected OwnerTranslator initObjectTranslator() {
-        return this.translator;
+        return new OwnerTranslator();
+    }
+
+    @Override
+    protected void initModelTranslator(ModelTranslator modelTranslator) {
+        this.upstreamConsumerTranslatorTest.initModelTranslator(modelTranslator);
+
+        modelTranslator.registerTranslator(this.translator, Owner.class, OwnerDTO.class);
     }
 
     @Override

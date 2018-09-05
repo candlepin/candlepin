@@ -56,6 +56,16 @@ public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, Po
     private CertificateTranslatorTest certificateTranslatorTest = new CertificateTranslatorTest();
 
     @Override
+    public void init() {
+        this.ownerTranslatorTest.init();
+        this.productTranslatorTest.init();
+        this.brandingTranslatorTest.init();
+        this.certificateTranslatorTest.init();
+
+        super.init();
+    }
+
+    @Override
     protected void initModelTranslator(ModelTranslator modelTranslator) {
         this.ownerTranslatorTest.initModelTranslator(modelTranslator);
         this.productTranslatorTest.initModelTranslator(modelTranslator);

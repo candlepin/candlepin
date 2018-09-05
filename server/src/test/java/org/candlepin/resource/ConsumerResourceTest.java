@@ -58,6 +58,7 @@ import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCurator;
@@ -158,12 +159,21 @@ public class ConsumerResourceTest {
     @Mock private ConsumerEnricher consumerEnricher;
     @Mock private ConsumerTypeCurator mockConsumerTypeCurator;
     @Mock private DefaultContentAccessCertServiceAdapter mockContentAccessCertService;
-    @Mock private EventSink sink;
+    @Mock private EventSink mockSink;
     @Mock private EnvironmentCurator mockEnvironmentCurator;
+    @Mock private IdentityCertServiceAdapter mockIdentityCertServiceAdapter;
+    @Mock private ActivationKeyCurator mockActivationKeyCurator;
+    @Mock private Entitler mockEntitler;
+    @Mock private ManifestManager mockManifestManager;
+    @Mock private CdnCurator mockCdnCurator;
+    @Mock private UserServiceAdapter userServiceAdapter;
+    @Mock private DeletedConsumerCurator mockDeletedConsumerCurator;
 
     private GuestMigration testMigration;
     private Provider<GuestMigration> migrationProvider;
     private ModelTranslator translator;
+    private ConsumerResource consumerResource;
+    private ConsumerResource mockedConsumerResource;
 
 
     @Before
@@ -202,6 +212,7 @@ public class ConsumerResourceTest {
             mockActivationKeyCurator,
             mockEntitler,
             mockComplianceRules,
+            mockSystemPurposeComplianceRules,
             mockDeletedConsumerCurator,
             null,
             null,
@@ -334,7 +345,7 @@ public class ConsumerResourceTest {
         ConsumerResource consumerResource = new ConsumerResource(
             mockConsumerCurator, mockConsumerTypeCurator, null, null, null, mockEntitlementCurator, null,
             mockEntitlementCertServiceAdapter, i18n, null, null, null, null,
-            null, mockPoolManager, null, mockOwnerCurator, null, null, null,
+            null, mockPoolManager, null, mockOwnerCurator, null, null, null, null,
             null, null, null, new CandlepinCommonTestConfig(), null, null, null,
             consumerBindUtil, null, null, factValidator,
             null, consumerEnricher, migrationProvider, translator);
@@ -366,7 +377,7 @@ public class ConsumerResourceTest {
         ConsumerResource consumerResource = new ConsumerResource(
             mockConsumerCurator, mockConsumerTypeCurator, null, null, null, mockEntitlementCurator, null,
             mockEntitlementCertServiceAdapter, i18n, null, null, null, null,
-            null, mockPoolManager, null, mockOwnerCurator, null, null, null,
+            null, mockPoolManager, null, mockOwnerCurator, null, null, null, null,
             null, null, null, new CandlepinCommonTestConfig(), null, null, null,
             consumerBindUtil, null, null, factValidator,
             null, consumerEnricher, migrationProvider, translator);
@@ -405,7 +416,7 @@ public class ConsumerResourceTest {
         ConsumerResource consumerResource = new ConsumerResource(
             mockConsumerCurator, mockConsumerTypeCurator, null, null, null, mockEntitlementCurator, null,
             mockEntitlementCertServiceAdapter, null, null, null, null, null, null, mockPoolManager, null,
-            null, null, null, null, null, null, null, this.config, null, null, null, consumerBindUtil,
+            null, null, null, null, null, null, null, null, this.config, null, null, null, consumerBindUtil,
             null, mockContentAccessCertService, this.factValidator, null, consumerEnricher,
             migrationProvider, translator);
 
@@ -434,14 +445,14 @@ public class ConsumerResourceTest {
 
         CandlepinPoolManager poolManager = new CandlepinPoolManager(
             null, null, null, this.config, null, null, mockEntitlementCurator,
-            mockConsumerCurator, mockConsumerTypeCurator, null, null, null, null, mockActivationKeyRules,
-            null, null, null, null, null, null, null, null, null, null
+            mockConsumerCurator, mockConsumerTypeCurator, null, null, null, null, null,
+            mockActivationKeyRules, null, null, null, null, null, null, null, null, null, null
         );
 
         ConsumerResource consumerResource = new ConsumerResource(
             mockConsumerCurator, mockConsumerTypeCurator, null, null, null, mockEntitlementCurator, null,
             mockEntitlementCertServiceAdapter, null, null, null, null, null, null,
-            poolManager, null, null, null, null, null, null, null, null,
+            poolManager, null, null, null, null, null, null, null, null, null,
             this.config, null, null, null, consumerBindUtil,
             null, null, this.factValidator, null, consumerEnricher, migrationProvider, translator);
 
@@ -473,7 +484,7 @@ public class ConsumerResourceTest {
         CandlepinPoolManager mgr = mock(CandlepinPoolManager.class);
         ConsumerResource cr = new ConsumerResource(mockConsumerCurator, mockConsumerTypeCurator,
             null, mockSubscriptionServiceAdapter, this.mockOwnerServiceAdapter, null, null, null, null,
-            null, null, null, null, null, mgr, null, null, null, null, null, null, null, null,
+            null, null, null, null, null, mgr, null, null, null, null, null, null, null, null, null,
             this.config, null, null, null, consumerBindUtil, null, null, this.factValidator,
             null, consumerEnricher, migrationProvider, translator);
 
@@ -498,7 +509,7 @@ public class ConsumerResourceTest {
 
         ConsumerResource cr = new ConsumerResource(mockConsumerCurator, mockConsumerTypeCurator, null,
             null, null, null, mockIdSvc, null, null, sink, eventFactory, null, null,
-            null, null, null, mockOwnerCurator, null, null, null, null,
+            null, null, null, mockOwnerCurator, null, null, null, null, null,
             null, null, this.config, null, null, null, consumerBindUtil,
             null, null, this.factValidator, null, consumerEnricher, migrationProvider, translator);
 
@@ -532,7 +543,7 @@ public class ConsumerResourceTest {
 
         ConsumerResource cr = new ConsumerResource(mockConsumerCurator, mockConsumerTypeCurator,
             null, ssa, this.mockOwnerServiceAdapter, null, mockIdSvc, null, null, sink, eventFactory,
-            null, null, null, null, null, mockOwnerCurator, null, null, rules, null,
+            null, null, null, null, null, mockOwnerCurator, null, null, rules, null, null,
             null, null, this.config, null, null, null, consumerBindUtil,
             null, null, this.factValidator, null, consumerEnricher, migrationProvider, translator);
 
@@ -554,7 +565,7 @@ public class ConsumerResourceTest {
 
         ConsumerResource cr = new ConsumerResource(mockConsumerCurator, mockConsumerTypeCurator,
             null, ssa, this.mockOwnerServiceAdapter, null, null, null, null, null, null, null, null, null,
-            null, null, mockOwnerCurator, null, null, rules, null, null, null,
+            null, null, mockOwnerCurator, null, null, rules, null, null, null, null,
             this.config, null, null, null, consumerBindUtil,
             null, null, this.factValidator, null, consumerEnricher, migrationProvider, translator);
 
@@ -582,7 +593,7 @@ public class ConsumerResourceTest {
 
         ConsumerResource cr = new ConsumerResource(null, mockConsumerTypeCurator, null,
             null, null, null, null, null, i18n, null, null, null, null,
-            null, null, null, mockOwnerCurator, akc, null, null, null, null,
+            null, null, null, mockOwnerCurator, akc, null, null, null, null, null,
             null, this.config, null, null, null, consumerBindUtil,
             null, null, this.factValidator, null, consumerEnricher, migrationProvider, translator);
 
@@ -605,7 +616,7 @@ public class ConsumerResourceTest {
         when(mockOwnerCurator.findOwnerById(eq(o.getId()))).thenReturn(o);
         ConsumerResource cr = new ConsumerResource(cc, mockConsumerTypeCurator,
             null, sa, this.mockOwnerServiceAdapter, null, null, null, i18n, null, null, null, null, null,
-            null, null, mockOwnerCurator, null, e, null, null, null, null,
+            null, null, mockOwnerCurator, null, e, null, null, null, null, null,
             this.config, null, null, null, consumerBindUtil,
             null, null, this.factValidator, null, consumerEnricher, migrationProvider, translator);
 
@@ -632,7 +643,7 @@ public class ConsumerResourceTest {
 
         ConsumerResource cr = new ConsumerResource(cc, mockConsumerTypeCurator, null, sa,
             this.mockOwnerServiceAdapter, null, null, null, null, null, null, null, null, null, null,
-            null, mockOwnerCurator, null, e, null, null, null, null,
+            null, mockOwnerCurator, null, e, null, null, null, null, null,
             this.config, null, null, null, consumerBindUtil,
             null, null, this.factValidator, null, consumerEnricher, migrationProvider, translator);
 
@@ -654,7 +665,7 @@ public class ConsumerResourceTest {
 
         ConsumerResource consumerResource = new ConsumerResource(mockConsumerCurator, mockConsumerTypeCurator,
             null, null, null, mockEntitlementCurator, null, null, i18n, null, null, null,
-            null, null, null, null, null, null, null, null, null, null,
+            null, null, null, null, null, null, null, null, null, null, null,
             null, this.config, null, null, null, consumerBindUtil,
             null, null, this.factValidator, null, consumerEnricher, migrationProvider, translator);
 
@@ -677,7 +688,7 @@ public class ConsumerResourceTest {
 
         ConsumerResource consumerResource = new ConsumerResource(mockConsumerCurator, mockConsumerTypeCurator,
             null, null, null, mockEntitlementCurator, null, null, i18n, null, null, null,
-            null, null, null, null, null, null, null, null, null, null,
+            null, null, null, null, null, null, null, null, null, null, null,
             null, this.config, null, null, null, consumerBindUtil,
             null, null, this.factValidator, null, consumerEnricher, migrationProvider, translator);
 
@@ -688,7 +699,7 @@ public class ConsumerResourceTest {
     public void testBindMultipleParams() throws Exception {
         ConsumerResource consumerResource = new ConsumerResource(mockConsumerCurator, mockConsumerTypeCurator,
             null, null, null, null, null, null, i18n, null, null, null,
-            null, null, null, null, null, null, null, null, null, null,
+            null, null, null, null, null, null, null, null, null, null, null,
             null, this.config, null, null, null, consumerBindUtil,
             null, null, this.factValidator, null, consumerEnricher, migrationProvider, translator);
 
@@ -705,7 +716,7 @@ public class ConsumerResourceTest {
 
         ConsumerResource consumerResource = new ConsumerResource(mockConsumerCurator, mockConsumerTypeCurator,
             null, null, null, null, null, null, i18n, null, null, null,
-            null, null, null, null, null, null, null, null, null, null,
+            null, null, null, null, null, null, null, null, null, null, null,
             null, this.config, null, null, null, consumerBindUtil,
             null, null, this.factValidator, null, consumerEnricher, migrationProvider, translator);
 
@@ -726,7 +737,7 @@ public class ConsumerResourceTest {
 
         ConsumerResource consumerResource = new ConsumerResource(mockConsumerCurator, mockConsumerTypeCurator,
             null, null, null, null, null, null, i18n, null, null, null,
-            null, null, null, null, null, null, null, null, null, null,
+            null, null, null, null, null, null, null, null, null, null, null,
             null, this.config, null, null, null, consumerBindUtil,
             null, null, this.factValidator, null, consumerEnricher, migrationProvider, translator);
 
@@ -761,7 +772,7 @@ public class ConsumerResourceTest {
 
         ConsumerResource cr = new ConsumerResource(mockConsumerCurator, mockConsumerTypeCurator, null,
             null, null, null, null, null, i18n, null, null, null, null,
-            usa, null,  null, mockOwnerCurator, null, null, null, null, null,
+            usa, null,  null, mockOwnerCurator, null, null, null, null, null, null,
             null, this.config, null, null, null, consumerBindUtil,
             null, null, this.factValidator, null, consumerEnricher, migrationProvider, translator);
 
@@ -795,8 +806,9 @@ public class ConsumerResourceTest {
     ConsumerResource createConsumerResource(OwnerCurator oc) {
         ConsumerResource consumerResource = new ConsumerResource(
             null, mockConsumerTypeCurator, null, null, null, null, null, null, i18n, null, null, null,
-            null, null, null, null, oc, null, null, null, null, null, null, this.config, null, null, null,
-            null, null, null, this.factValidator, null, consumerEnricher, migrationProvider, translator);
+            null, null, null, null, oc, null, null, null, null, null, null, null, this.config, null, null,
+            null, null, null, null, this.factValidator, null, consumerEnricher, migrationProvider,
+            translator);
 
         return consumerResource;
     }
@@ -828,7 +840,7 @@ public class ConsumerResourceTest {
         ConsumerResource cr = new ConsumerResource(mockConsumerCurator, mockConsumerTypeCurator, null,
             null, null, null, null,
             null, i18n, null, null, null, null, null, null, null, null, null, null, mockComplianceRules,
-            null, null, null, this.config, null, null, null, consumerBindUtil, null, null,
+            null, null, null, null, this.config, null, null, null, consumerBindUtil, null, null,
             this.factValidator, null, consumerEnricher, migrationProvider, translator);
 
         Map<String, ComplianceStatus> results = cr.getComplianceStatusList(uuids);
@@ -842,7 +854,7 @@ public class ConsumerResourceTest {
         when(mockConsumerCurator.doesConsumerExist(any(String.class))).thenReturn(true);
         ConsumerResource cr = new ConsumerResource(mockConsumerCurator, mockConsumerTypeCurator,
             null, null, null, null, null, null, i18n, null, null, null,
-            null, null, null, null, null, null, null, mockComplianceRules,
+            null, null, null, null, null, null, null, mockComplianceRules, null,
             null, null, null, this.config, null, null, null, consumerBindUtil,
             null, null, this.factValidator, null, consumerEnricher, migrationProvider, translator);
 
@@ -855,7 +867,7 @@ public class ConsumerResourceTest {
         ConsumerResource cr = new ConsumerResource(mockConsumerCurator, mockConsumerTypeCurator,
             null, null, null, null, null,
             null, i18n, null, null, null, null, null, null, null, null, null, null, mockComplianceRules,
-            null, null, null, this.config, null, null, null, consumerBindUtil, null, null,
+            null, null, null, null, this.config, null, null, null, consumerBindUtil, null, null,
             this.factValidator, null, consumerEnricher, migrationProvider, translator);
 
         cr.consumerExists("uuid");
@@ -865,7 +877,7 @@ public class ConsumerResourceTest {
     public void testFetchAllConsumers() {
         ConsumerResource cr = new ConsumerResource(
             null, mockConsumerTypeCurator, null, null, null, null, null, null, i18n, null, null, null, null,
-            null, null, null,
+            null, null, null, null,
             null, null, null, null, null, null, null, this.config, null, null, null, null, null,
             null, this.factValidator, null, consumerEnricher, migrationProvider, translator);
 
@@ -877,7 +889,7 @@ public class ConsumerResourceTest {
         ModelTranslator mockTranslator = mock(ModelTranslator.class);
         ConsumerResource cr = new ConsumerResource(
             mockConsumerCurator, mockConsumerTypeCurator, null, null, null, null, null, null, i18n, null,
-            null, null, null,
+            null, null, null, null,
             null, null, null, null, null, null, null, null, null, null, this.config, null, null, null, null,
             null, null, this.factValidator, new ConsumerTypeValidator(null, null),
             consumerEnricher, migrationProvider, mockTranslator);
@@ -901,8 +913,8 @@ public class ConsumerResourceTest {
         ConsumerResource cr = new ConsumerResource(
             mockConsumerCurator, mockConsumerTypeCurator, null, null, null, null, null, null, i18n, null,
             null, null, null,
-            null, null, null, mockOwnerCurator, null, null, null, null, null, null, this.config, null, null,
-            null, null, null, null, this.factValidator,
+            null, null, null, mockOwnerCurator, null, null, null, null, null, null, null, this.config, null,
+            null, null, null, null, null, this.factValidator,
             null, consumerEnricher, migrationProvider, translator);
 
         ArrayList<Consumer> consumers = new ArrayList<>();
@@ -924,7 +936,7 @@ public class ConsumerResourceTest {
     public void testFetchAllConsumersForEmptyUUIDs() {
         ConsumerResource cr = new ConsumerResource(
             mockConsumerCurator, mockConsumerTypeCurator, null, null, null, null, null, null, i18n, null,
-            null, null, null,
+            null, null, null, null,
             null, null, null, null, null, null, null, null, null, null, this.config, null, null, null, null,
             null, null, this.factValidator, null, consumerEnricher, migrationProvider, translator);
 
@@ -936,7 +948,7 @@ public class ConsumerResourceTest {
         ModelTranslator mockTranslator = mock(ModelTranslator.class);
         ConsumerResource cr = new ConsumerResource(
             mockConsumerCurator, mockConsumerTypeCurator, null, null, null, null, null, null, i18n, null,
-            null, null, null,
+            null, null, null, null,
             null, null, null, null, null, null, null, null, null, null, this.config, null, null, null, null,
             null, null, this.factValidator, new ConsumerTypeValidator(null, null),
             consumerEnricher, migrationProvider, mockTranslator);
@@ -970,7 +982,7 @@ public class ConsumerResourceTest {
         ConsumerResource consumerResource = Mockito.spy(new ConsumerResource(
             mockConsumerCurator, mockConsumerTypeCurator, null, null, null, mockEntitlementCurator, null,
             mockEntitlementCertServiceAdapter, null, null, null, null, null, null, mockPoolManager, null,
-            null, null, null, null, null, null, null, this.config, null, null, null, consumerBindUtil,
+            null, null, null, null, null, null, null, null, this.config, null, null, null, consumerBindUtil,
             null, mockContentAccessCertService, this.factValidator, null, consumerEnricher,
             migrationProvider, translator));
 
@@ -994,7 +1006,7 @@ public class ConsumerResourceTest {
         ConsumerResource consumerResource = Mockito.spy(new ConsumerResource(
             mockConsumerCurator, mockConsumerTypeCurator, null, null, null, mockEntitlementCurator, null,
             mockEntitlementCertServiceAdapter, null, null, null, null, null, null, mockPoolManager, null,
-            null, null, null, null, null, null, null, this.config, null, null, null, consumerBindUtil,
+            null, null, null, null, null, null, null, null, this.config, null, null, null, consumerBindUtil,
             null, mockContentAccessCertService, this.factValidator, null, consumerEnricher,
             migrationProvider, translator));
 
@@ -1015,8 +1027,8 @@ public class ConsumerResourceTest {
         ConsumerResource consumerResource = new ConsumerResource(
             mockConsumerCurator, mockConsumerTypeCurator, null, null, null, null, null, null, i18n, null,
             null, null, null,
-            null, null, null, mockOwnerCurator, null, null, null, null, null, null, this.config, null, null,
-            null, null, manifestManager, null, this.factValidator, null, consumerEnricher,
+            null, null, null, mockOwnerCurator, null, null, null, null, null, null, null, this.config, null,
+            null, null, null, manifestManager, null, this.factValidator, null, consumerEnricher,
             migrationProvider, translator);
 
         try {
@@ -1035,7 +1047,7 @@ public class ConsumerResourceTest {
         ConsumerResource cr = new ConsumerResource(
             mockConsumerCurator, mockConsumerTypeCurator, null, null, null, null, null, null, i18n, null,
             null, null, null,
-            null, null, null, mockOwnerCurator, null, null, null, null, null, null, this.config, null,
+            null, null, null, mockOwnerCurator, null, null, null, null, null, null, null, this.config, null,
             mockCdnCurator, null, null, manifestManager, null, this.factValidator, null,
             consumerEnricher, migrationProvider, translator);
 

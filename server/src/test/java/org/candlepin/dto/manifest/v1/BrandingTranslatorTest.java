@@ -29,16 +29,14 @@ import static org.junit.Assert.assertNull;
 public class BrandingTranslatorTest extends
     AbstractTranslatorTest<Branding, BrandingDTO, BrandingTranslator> {
 
-    protected BrandingTranslator translator = new BrandingTranslator();
+    @Override
+    protected BrandingTranslator initObjectTranslator() {
+        return new BrandingTranslator();
+    }
 
     @Override
     protected void initModelTranslator(ModelTranslator modelTranslator) {
         modelTranslator.registerTranslator(this.translator, Branding.class, BrandingDTO.class);
-    }
-
-    @Override
-    protected BrandingTranslator initObjectTranslator() {
-        return this.translator;
     }
 
     @Override

@@ -2241,7 +2241,7 @@ public class CandlepinPoolManager implements PoolManager {
                                         subPools.size(), consumer);
 
                                     this.poolRules.updatePoolsFromStack(
-                                        consumer, subPools, null, alreadyDeletedPoolIds, true);
+                                        consumer, subPools, alreadyDeletedPoolIds, true);
                                 }
                             }
                         }
@@ -2274,7 +2274,7 @@ public class CandlepinPoolManager implements PoolManager {
                 for (Consumer consumer : consumerStackedEnts.keySet()) {
                     this.complianceRules.getStatus(consumer);
                     this.systemPurposeComplianceRules.getStatus(consumer, consumer.getEntitlements(),
-                            null, true, true);
+                        null, true, true);
                     if (++i % 1000 == 0) {
                         this.consumerCurator.flush();
                     }
