@@ -16,8 +16,6 @@ package org.candlepin.model.dto;
 
 import org.candlepin.model.AbstractHibernateObject;
 
-import com.fasterxml.jackson.annotation.JsonFilter;
-
 import java.util.Date;
 import java.io.Serializable;
 
@@ -26,7 +24,6 @@ import java.io.Serializable;
 /**
  * The CandlepinDTO class provides common properties and functionality common to many DTOs.
  */
-@JsonFilter("DefaultFilter")
 public abstract class CandlepinDTO implements Cloneable, Serializable {
     public static final long serialVersionUID = 1L;
 

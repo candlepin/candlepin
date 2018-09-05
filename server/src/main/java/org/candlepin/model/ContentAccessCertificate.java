@@ -14,8 +14,6 @@
  */
 package org.candlepin.model;
 
-import com.fasterxml.jackson.annotation.JsonFilter;
-
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.Column;
@@ -38,7 +36,6 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_cont_access_cert")
-@JsonFilter("ContentAccessCertificateFilter")
 public class ContentAccessCertificate extends RevocableCertificate<ContentAccessCertificate> {
 
     @Id

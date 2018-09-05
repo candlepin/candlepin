@@ -23,7 +23,6 @@ import org.candlepin.util.ListView;
 import org.candlepin.util.MapView;
 import org.candlepin.util.SetView;
 
-import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -56,7 +55,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 @ApiModel(parent = TimestampedCandlepinDTO.class, description = "DTO representing an upstream consumer")
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
-@JsonFilter("ConsumerFilter")
 public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements LinkableDTO {
     public static final long serialVersionUID = 1L;
 

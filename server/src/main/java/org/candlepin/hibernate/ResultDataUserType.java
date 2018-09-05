@@ -23,7 +23,6 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair;
 import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
-import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 
@@ -77,12 +76,6 @@ public class ResultDataUserType implements UserType, DynamicParameterizedType {
         AnnotationIntrospector secondary = new JaxbAnnotationIntrospector(mapper.getTypeFactory());
         AnnotationIntrospector pair = new AnnotationIntrospectorPair(primary, secondary);
         mapper.setAnnotationIntrospector(pair);
-
-        SimpleFilterProvider filterProvider = new SimpleFilterProvider();
-
-        // We're not going to want any of the JSON filters like DynamicPropertyFilter that we apply elsewhere
-        filterProvider.setFailOnUnknownId(false);
-        mapper.setFilterProvider(filterProvider);
     }
 
     @Override

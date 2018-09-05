@@ -17,8 +17,6 @@ package org.candlepin.model;
 import org.candlepin.common.jackson.HateoasArrayExclude;
 import org.candlepin.common.jackson.HateoasInclude;
 
-import com.fasterxml.jackson.annotation.JsonFilter;
-
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.ForeignKey;
@@ -56,7 +54,6 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = GuestId.DB_TABLE)
-@JsonFilter("GuestFilter")
 public class GuestId extends AbstractHibernateObject implements Owned, Named, ConsumerProperty, Eventful {
 
     /** Name of the table backing this object in the database */

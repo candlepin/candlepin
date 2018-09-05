@@ -16,7 +16,6 @@ package org.candlepin.model;
 
 import org.candlepin.model.dto.CandlepinDTO;
 
-import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
@@ -40,7 +39,6 @@ import javax.xml.bind.annotation.XmlType;
  */
 @MappedSuperclass
 @XmlType(name = "CandlepinObject")
-@JsonFilter("DefaultFilter")
 public abstract class AbstractHibernateObject<T extends AbstractHibernateObject>
     implements Persisted, Serializable, TimestampedEntity<T> {
 

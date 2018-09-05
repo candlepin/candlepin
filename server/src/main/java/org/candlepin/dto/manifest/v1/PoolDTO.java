@@ -15,7 +15,6 @@
 package org.candlepin.dto.manifest.v1;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -44,14 +43,12 @@ import java.util.Set;
  */
 @XmlRootElement(name = "pool")
 @XmlAccessorType(XmlAccessType.PROPERTY)
-@JsonFilter("PoolFilter")
 public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> {
     public static final long serialVersionUID = 1L;
 
     /**
      * Internal DTO object for ProvidedProduct
      */
-    @JsonFilter("ProvidedProductFilter")
     public static class ProvidedProductDTO {
         private final String productId;
         private final String productName;

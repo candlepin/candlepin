@@ -14,7 +14,6 @@
  */
 package org.candlepin.dto.manifest.v1;
 
-import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -39,7 +38,6 @@ import java.util.Set;
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
-@JsonFilter("EntitlementFilter")
 public class EntitlementDTO extends TimestampedCandlepinDTO<EntitlementDTO> {
 
     private static final long serialVersionUID = 1L;

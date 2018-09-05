@@ -20,7 +20,6 @@ import org.candlepin.jackson.CandlepinLegacyAttributeSerializer;
 import org.candlepin.service.model.SubscriptionInfo;
 import org.candlepin.util.DateSource;
 
-import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -79,7 +78,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = Pool.DB_TABLE)
-@JsonFilter("PoolFilter")
 public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named, Comparable<Pool>,
     Eventful, SubscriptionInfo {
 

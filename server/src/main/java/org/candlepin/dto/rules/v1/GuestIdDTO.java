@@ -19,8 +19,6 @@ import org.candlepin.common.jackson.HateoasInclude;
 import org.candlepin.dto.CandlepinDTO;
 import org.candlepin.util.MapView;
 
-import com.fasterxml.jackson.annotation.JsonFilter;
-
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
@@ -36,7 +34,6 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
-@JsonFilter("GuestFilter")
 public class GuestIdDTO extends CandlepinDTO<GuestIdDTO> {
     public static final long serialVersionUID = 1L;
 

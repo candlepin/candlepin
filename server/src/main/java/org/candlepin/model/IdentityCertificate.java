@@ -14,8 +14,6 @@
  */
 package org.candlepin.model;
 
-import com.fasterxml.jackson.annotation.JsonFilter;
-
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.Column;
@@ -37,7 +35,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = IdentityCertificate.DB_TABLE)
-@JsonFilter("IdentityCertificateFilter")
 public class IdentityCertificate extends RevocableCertificate<IdentityCertificate> {
 
     /** Name of the table backing this object in the database */

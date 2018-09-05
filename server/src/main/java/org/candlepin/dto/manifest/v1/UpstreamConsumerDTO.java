@@ -17,7 +17,6 @@ package org.candlepin.dto.manifest.v1;
 import org.candlepin.common.jackson.HateoasArrayExclude;
 import org.candlepin.common.jackson.HateoasInclude;
 
-import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -33,7 +32,6 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
-@JsonFilter("ApiHateoas")
 public class UpstreamConsumerDTO extends TimestampedCandlepinDTO<UpstreamConsumerDTO> {
     public static final long serialVersionUID = 1L;
 
