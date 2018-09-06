@@ -66,7 +66,7 @@ public class EntitlementDTOTest  extends AbstractDTOTest<EntitlementDTO> {
         CertificateDTO certificate = new CertificateDTO();
         certificate.setId("cert-id");
         certificate.setKey("cert-key");
-        certificate.setCert("cert");
+        certificate.setCertificate("cert");
         certificate.setSerial(new CertificateSerialDTO());
         certs.add(certificate);
 
@@ -107,7 +107,7 @@ public class EntitlementDTOTest  extends AbstractDTOTest<EntitlementDTO> {
         CertificateDTO certDTO = new CertificateDTO();
         certDTO.setId("cert-id-1");
         certDTO.setKey("cert-key-1");
-        certDTO.setCert("cert-cert-1");
+        certDTO.setCertificate("cert-cert-1");
         certDTO.setSerial(new CertificateSerialDTO());
         assertTrue(dto.addCertificate(certDTO));
     }
@@ -119,14 +119,14 @@ public class EntitlementDTOTest  extends AbstractDTOTest<EntitlementDTO> {
         CertificateDTO certDTO = new CertificateDTO();
         certDTO.setId("cert-id-2");
         certDTO.setKey("cert-key-2");
-        certDTO.setCert("cert-cert-2");
+        certDTO.setCertificate("cert-cert-2");
         certDTO.setSerial(new CertificateSerialDTO());
         assertTrue(dto.addCertificate(certDTO));
 
         CertificateDTO certDTO2 = new CertificateDTO();
         certDTO2.setId("cert-id-2");
         certDTO2.setKey("cert-key-2");
-        certDTO2.setCert("cert-cert-2");
+        certDTO2.setCertificate("cert-cert-2");
         certDTO2.setSerial(new CertificateSerialDTO());
         assertFalse(dto.addCertificate(certDTO2));
     }
@@ -144,7 +144,7 @@ public class EntitlementDTOTest  extends AbstractDTOTest<EntitlementDTO> {
         CertificateDTO certDTO = new CertificateDTO();
         certDTO.setId("");
         certDTO.setKey("cert-key-3");
-        certDTO.setCert("cert-cert-3");
+        certDTO.setCertificate("cert-cert-3");
         certDTO.setSerial(new CertificateSerialDTO());
         dto.addCertificate(certDTO);
     }
@@ -156,7 +156,7 @@ public class EntitlementDTOTest  extends AbstractDTOTest<EntitlementDTO> {
         CertificateDTO certDTO = new CertificateDTO();
         certDTO.setId("cert-id-4");
         certDTO.setKey("");
-        certDTO.setCert("cert-cert-4");
+        certDTO.setCertificate("cert-cert-4");
         certDTO.setSerial(new CertificateSerialDTO());
         dto.addCertificate(certDTO);
     }
@@ -168,7 +168,7 @@ public class EntitlementDTOTest  extends AbstractDTOTest<EntitlementDTO> {
         CertificateDTO certDTO = new CertificateDTO();
         certDTO.setId("cert-id-5");
         certDTO.setKey("cert-key-5");
-        certDTO.setCert("");
+        certDTO.setCertificate("");
         certDTO.setSerial(new CertificateSerialDTO());
         dto.addCertificate(certDTO);
     }
@@ -180,7 +180,7 @@ public class EntitlementDTOTest  extends AbstractDTOTest<EntitlementDTO> {
         CertificateDTO certDTO = new CertificateDTO();
         certDTO.setId("cert-id-6");
         certDTO.setKey("cert-key-6");
-        certDTO.setCert("cert-cert-6");
+        certDTO.setCertificate("cert-cert-6");
         certDTO.setSerial(null);
         dto.addCertificate(certDTO);
     }

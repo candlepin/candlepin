@@ -37,7 +37,7 @@ public class ImporterUtilsTest {
     @Before
     public void setUp() {
         certDTO = new CertificateDTO();
-        certDTO.setCert("test-cert");
+        certDTO.setCertificate("test-cert");
         certDTO.setKey("test-key");
         certDTO.setUpdated(new Date());
         certDTO.setCreated(new Date());
@@ -57,7 +57,7 @@ public class ImporterUtilsTest {
 
         ImporterUtils.populateEntity(certEntity, certDTO);
 
-        assertEquals(certDTO.getCert(), certEntity.getCert());
+        assertEquals(certDTO.getCertificate(), certEntity.getCert());
         assertEquals(certDTO.getKey(), certEntity.getKey());
         assertEquals(certDTO.getUpdated(), certEntity.getUpdated());
         assertEquals(certDTO.getCreated(), certEntity.getCreated());

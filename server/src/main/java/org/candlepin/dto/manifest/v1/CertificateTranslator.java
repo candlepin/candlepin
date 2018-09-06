@@ -59,7 +59,7 @@ public class CertificateTranslator extends TimestampedEntityTranslator<Certifica
 
         dest.setId(source.getId());
         dest.setKey(source.getKey());
-        dest.setCert(source.getCert());
+        dest.setCertificate(source.getCert());
 
         if (translator != null) {
             dest.setSerial(translator.translate(source.getSerial(), CertificateSerialDTO.class));

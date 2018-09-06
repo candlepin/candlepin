@@ -30,6 +30,7 @@ import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.manifest.v1.ConsumerDTO;
 import org.candlepin.dto.manifest.v1.ConsumerTypeDTO;
 import org.candlepin.dto.manifest.v1.OwnerDTO;
+import org.candlepin.dto.manifest.v1.SubscriptionDTO;
 import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.ConsumerType;
@@ -656,7 +657,7 @@ public class ImporterTest {
         Importer i = new Importer(consumerTypeCurator, pc, ri, oc, null, null, pm,
             null, config, emc, null, null, i18n,
             null, null, su, null, this.mockSubReconciler, this.ec, this.translator);
-        List<Subscription> subscriptions = i.importObjects(owner, importFiles, co);
+        List<SubscriptionDTO> subscriptions = i.importObjects(owner, importFiles, co);
 
         assertEquals(1, subscriptions.size());
         assertEquals("prodId", subscriptions.get(0).getProduct().getId());
@@ -878,8 +879,8 @@ public class ImporterTest {
 
         Meta meta = new Meta("1.0", new Date(), "test-user", "candlepin", "testcdn");
 
-        List<Subscription> subscriptions = new ArrayList<>();
-        Subscription subscription = new Subscription();
+        List<SubscriptionDTO> subscriptions = new ArrayList<>();
+        SubscriptionDTO subscription = new SubscriptionDTO();
         subscriptions.add(subscription);
 
         Map<String, Object> data = new HashMap<>();
@@ -967,13 +968,13 @@ public class ImporterTest {
             null, null, su, importRecordCurator, this.mockSubReconciler, this.ec, this.translator);
 
         Map<String, Object> data = new HashMap<>();
-        List<Subscription> subscriptions = new ArrayList<>();
-        Subscription subscription1 = new Subscription();
+        List<SubscriptionDTO> subscriptions = new ArrayList<>();
+        SubscriptionDTO subscription1 = new SubscriptionDTO();
         //expires tomorrow
         subscription1.setEndDate(new Date((new Date()).getTime() + (1000 * 60 * 60 * 24)));
         subscriptions.add(subscription1);
 
-        Subscription subscription2 = new Subscription();
+        SubscriptionDTO subscription2 = new SubscriptionDTO();
         //expires yesterday
         subscription2.setEndDate(new Date((new Date()).getTime() - (1000 * 60 * 60 * 24)));
         subscriptions.add(subscription2);
@@ -1000,13 +1001,13 @@ public class ImporterTest {
             null, null, su, importRecordCurator, this.mockSubReconciler, this.ec, this.translator);
 
         Map<String, Object> data = new HashMap<>();
-        data.put("subscriptions", new ArrayList<Subscription>());
+        data.put("subscriptions", new ArrayList<SubscriptionDTO>());
 
         ImportRecord record = importer.recordImportSuccess(owner, data, new ConflictOverrides(), "test.zip");
         assertEquals(ImportRecord.Status.SUCCESS_WITH_WARNING, record.getStatus());
         assertEquals(owner.getKey() + " file imported successfully." +
             "No active subscriptions found in the file.", record.getStatusMessage());
-        verify(eventSinkMock, never()).emitSubscriptionExpired(any(Subscription.class));
+        verify(eventSinkMock, never()).emitSubscriptionExpired(any(SubscriptionDTO.class));
         verify(importRecordCurator).create(eq(record));
     }
 

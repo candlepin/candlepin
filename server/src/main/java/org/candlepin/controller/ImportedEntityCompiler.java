@@ -157,7 +157,6 @@ public class ImportedEntityCompiler {
                         "discarding previous: {} => {}, {}", product.getId(), existing, product);
                 }
 
-                log.debug("ADDING PRODUCT: {}", product);
                 this.products.put(product.getId(), product);
 
                 // Add any content attached to this product...

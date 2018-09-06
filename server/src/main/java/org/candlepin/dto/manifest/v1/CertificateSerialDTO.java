@@ -17,6 +17,7 @@ package org.candlepin.dto.manifest.v1;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.candlepin.dto.TimestampedCandlepinDTO;
+import org.candlepin.service.model.CertificateSerialInfo;
 
 import java.math.BigInteger;
 import java.util.Date;
@@ -25,7 +26,9 @@ import java.util.Date;
 /**
  * A DTO representation of the CertificateSerial entity as used by the manifest import/export framework.
  */
-public class CertificateSerialDTO extends TimestampedCandlepinDTO<CertificateSerialDTO> {
+public class CertificateSerialDTO extends TimestampedCandlepinDTO<CertificateSerialDTO>
+    implements CertificateSerialInfo {
+
     public static final long serialVersionUID = 1L;
 
     protected Long id;
