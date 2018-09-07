@@ -1,0 +1,11 @@
+
+module artemisservice 1.0;
+
+require {
+	type var_lib_t;
+	type init_t;
+	class file { execute execute_no_trans };
+}
+
+#============= init_t ==============
+allow init_t var_lib_t:file { execute execute_no_trans };

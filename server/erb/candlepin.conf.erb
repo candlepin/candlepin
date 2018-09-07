@@ -18,6 +18,7 @@ log4j.logger.net.rkbloom.logdriver.LogPreparedStatement=DEBUG
 log4j.logger.net.rkbloom.logdriver.LogStatement=DEBUG
 log4j.logger.net.rkbloom.logdriver.LogCallableStatement=DEBUG
 log4j.logger.net.rkbloom.logdriver.LogConnection=DEBUG
+
 <%- end -%>
 jpa.config.hibernate.connection.driver_class=<%= _.driver_class %>
 jpa.config.hibernate.connection.url=<%= _.jdbc_url %>
@@ -41,10 +42,16 @@ _.amqp_enabled = ENV.key?('qpid') ? ENV['qpid'] : false
 candlepin.amqp.enable=<%= amqp_enabled || _.amqp_enabled %>
 candlepin.amqp.connect=<%= amqp_server || "tcp://localhost:5671?ssl='true'&ssl_cert_alias='candlepin'" %>
 
-<%- if hidden_resources -%>
-candlepin.hidden_resources=<%= hidden_resources %>
+<%- if ENV['external_broker'] -%>
+candlepin.audit.hornetq.embedded=false
+candlepin.audit.hornetq.broker_url=tcp://localhost:61617
+
 <%- end -%>
 
+<%- if hidden_resources -%>
+candlepin.hidden_resources=<%= hidden_resources %>
+
+<%- end -%>
 # uncomment to enable debug logging in candlepin.log:
 #log4j.logger.org.candlepin=DEBUG
 

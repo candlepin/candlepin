@@ -45,6 +45,8 @@ dataSources/
 **/target/
 **/target-eclipse/
 **/bin/qpid/keys
+**/bin/artemis/*.pp
+**/bin/artemis/*.mod
 
 buildconf/builder/config/local
 client.crt
