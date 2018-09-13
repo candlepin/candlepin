@@ -45,8 +45,7 @@ dataSources/
 **/target/
 **/target-eclipse/
 **/bin/qpid/keys
-**/bin/artemis/*.pp
-**/bin/artemis/*.mod
+**/bin/artemis/selinux
 
 buildconf/builder/config/local
 client.crt

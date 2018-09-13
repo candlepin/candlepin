@@ -35,6 +35,42 @@ DEFAULT_VERSION = "2.4.0"
 INSTALL_DIR = "/opt"
 BROKER_ROOT = "/var/lib/artemis"
 
+SELINUX_BUILD_DIR = os.path.join(BASE_DIR, "selinux")
+SERVICE_FILE_PATH = "/usr/lib/systemd/system/artemis.service"
+SERVICE_FILE_TEMPLATE = \
+"""
+[Unit]
+Description=Apache ActiveMQ Artemis
+Requires=network.target
+After=network.target
+
+[Service]
+User=artemis
+Group=artemis
+PIDFile=/var/lib/artemis/%s/data/artemis.pid
+ExecStart=/var/lib/artemis/%s/bin/artemis-service start
+ExecStop=/var/lib/artemis/%s/bin/artemis-service stop
+ExecReload=/var/lib/artemis/%s/bin/artemis-service restart
+Restart=always
+
+[Install]
+WantedBy=mult-user.target
+"""
+
+SELINUX_TEMPLATE = \
+"""
+module artemis 1.0;
+
+require {
+    type var_lib_t;
+	type init_t;
+	class file { execute execute_no_trans };
+}
+
+#============= init_t ==============
+allow init_t var_lib_t:file { execute execute_no_trans };
+"""
+
 @contextmanager
 def open_xml(filename):
     """libxml2 does not handle cleaning up memory automatically. This
@@ -111,7 +147,7 @@ def call(cmd, error_msg, allow_failure=False):
         if not allow_failure and ret:
             raise RuntimeError(error_msg)
 
-def install_artemis_service():
+def install_artemis_service(broker_name):
     logger.info("Setting up artemis service.")
 
     logger.debug("    Creating artemis user.")
@@ -121,19 +157,30 @@ def install_artemis_service():
     call("sudo chown -R artemis:artemis %s" % BROKER_ROOT, "Failed to set permissions for artemis user.")
 
     logger.debug("    Installing artemis service file.")
-    shutil.copy("%s/artemis.service" % BASE_DIR, "/usr/lib/systemd/system/")
+    with open(SERVICE_FILE_PATH, "w+") as te:
+        te.write(SERVICE_FILE_TEMPLATE % (broker_name, broker_name, broker_name, broker_name))
+
     logger.debug("    Reloading systemd daemons.")
     call("sudo systemctl daemon-reload", "Failed to reload systemd daemons.")
 
-    logger.debug("    Setting up SELinux policy.")
-    call("checkmodule -M -m -o %s/artemisservice.mod %s/artemisservice.te" % (BASE_DIR, BASE_DIR),
-         "Failed to compile SELinux module for artemis service.")
-    call("semodule_package -m %s/artemisservice.mod -o %s/artemisservice.pp" % (BASE_DIR, BASE_DIR),
-         "Failed to package SELinux module for artemis service.")
-    call("sudo semodule -vr artemisservice", "", allow_failure=True)
-    call("sudo semodule -vi %s/artemisservice.pp" % BASE_DIR,
-         "Failed to load SELinux policy for artemis service")
+    setup_selinux()
 
+def setup_selinux():
+    logger.debug("    Setting up SELinux policy.")
+
+    if not os.path.exists(SELINUX_BUILD_DIR):
+        os.mkdir(SELINUX_BUILD_DIR)
+
+    with open("%s/artemis.te" % SELINUX_BUILD_DIR, "w+") as te:
+        te.write(SELINUX_TEMPLATE)
+
+    call("checkmodule -M -m -o %s/artemis.mod %s/artemis.te" % (SELINUX_BUILD_DIR, SELINUX_BUILD_DIR),
+         "Failed to compile SELinux module for artemis service.")
+    call("semodule_package -m %s/artemis.mod -o %s/artemis.pp" % (SELINUX_BUILD_DIR, SELINUX_BUILD_DIR),
+         "Failed to package SELinux module for artemis service.")
+    call("sudo semodule -vr artemis", "", allow_failure=True)
+    call("sudo semodule -vi %s/artemis.pp" % SELINUX_BUILD_DIR,
+         "Failed to load SELinux policy for artemis service")
 
 # Default broker_data_dir is relative to the broker instance.
 def modify_broker_xml(broker_xml_path, broker_data_dir):
@@ -201,12 +248,21 @@ def cleanup(version, install_dir, broker_root):
 
 def uninstall_service():
     call("sudo semodule -vr artemisservice", "", allow_failure=True)
-    to_delete = ["%s/artemisservice.mod" % BASE_DIR,
-                 "%s/artemisservice.pp" % BASE_DIR,
-                 "/usr/lib/systemd/system/artemis.service"]
+    # to_delete = ["%s/artemisservice.mod" % BASE_DIR,
+    #              "%s/artemisservice.pp" % BASE_DIR,
+    #              "/usr/lib/systemd/system/artemis.service"]
+    #
+    # for next_file in to_delete:
+    #     if os.path.exists(next_file): os.remove(next_file)
 
-    for next_file in to_delete:
-        if os.path.exists(next_file): os.remove(next_file)
+    if os.path.exists(SERVICE_FILE_PATH):
+        call("sudo systemctl disable artemis", "Failed to disable artemis service", allow_failure=True)
+        os.remove(SERVICE_FILE_PATH)
+    call("sudo systemctl daemon-reload", "Failed to reload systemd daemons.")
+    call("sudo systemctl reset-failed", "Failed to reset failed services.")
+
+    if os.path.exists(SELINUX_BUILD_DIR):
+        shutil.rmtree(SELINUX_BUILD_DIR)
 
 def parse_options():
     usage = "usage: %prog"
@@ -240,7 +296,7 @@ def main():
     logger.info("Installing Artemis...")
     artemis_path = install_artemis(options.version, INSTALL_DIR)
     broker_path = create_broker(artemis_path, BROKER_ROOT, options.broker_name)
-    install_artemis_service()
+    install_artemis_service(options.broker_name)
     update_broker_config(broker_path, options.broker_config, options.broker_data_dir)
     logger.info("Artemis was successfully installed!")
 
