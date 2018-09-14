@@ -14,8 +14,6 @@
  */
 package org.candlepin.audit;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.common.collect.ImmutableMap;
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
 import org.candlepin.common.exceptions.IseException;
@@ -29,9 +27,12 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Rules;
 import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.policy.SystemPurposeComplianceStatus;
 import org.candlepin.policy.js.compliance.ComplianceReason;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.dto.manifest.v1.SubscriptionDTO;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.AnnotationIntrospector;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair;
@@ -41,12 +42,14 @@ import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -238,7 +241,27 @@ public class EventFactory {
         }
         catch (JsonProcessingException e) {
             log.error("Error while building JSON for compliance.created event.", e);
-            throw new IseException("Error while building JSON for compliance.created event.");
+            throw new IseException("Error while building JSON for compliance.created event.", e);
+        }
+    }
+
+    public Event complianceCreated(Consumer consumer, SystemPurposeComplianceStatus compliance) {
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put("status", compliance.getStatus());
+        eventData.put("reasons", Collections.unmodifiableSet(compliance.getReasons()));
+        try {
+            String eventDataJson = mapper.writeValueAsString(eventData);
+            // Instead of an internal db id, compliance.created events now use
+            // UUID for the 'consumerId' and 'entityId' fields, since Katello
+            // is concerned only with the consumer UUID field.
+            return new Event(Event.Type.CREATED, Target.SYSTEM_PURPOSE_COMPLIANCE,
+                consumer.getName(), principalProvider.get(), consumer.getOwnerId(), consumer.getUuid(),
+                consumer.getUuid(), eventDataJson, null, null);
+        }
+        catch (JsonProcessingException e) {
+            log.error("Error while building JSON for system purpose compliance.created event.", e);
+            throw new IseException("Error while building JSON for system purpose compliance.created event.",
+                e);
         }
     }
 }

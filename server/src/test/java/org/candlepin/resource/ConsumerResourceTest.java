@@ -71,6 +71,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.model.dto.Subscription;
+import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.js.activationkey.ActivationKeyRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
@@ -151,6 +152,7 @@ public class ConsumerResourceTest {
     @Mock private PoolManager mockPoolManager;
     @Mock private EntitlementCurator mockEntitlementCurator;
     @Mock private ComplianceRules mockComplianceRules;
+    @Mock private SystemPurposeComplianceRules mockSystemPurposeComplianceRules;
     @Mock private ServiceLevelValidator mockServiceLevelValidator;
     @Mock private ActivationKeyRules mockActivationKeyRules;
     @Mock private EventFactory eventFactory;
@@ -212,6 +214,7 @@ public class ConsumerResourceTest {
             mockActivationKeyCurator,
             mockEntitler,
             mockComplianceRules,
+            mockSystemPurposeComplianceRules,
             mockDeletedConsumerCurator,
             null,
             null,
@@ -379,13 +382,13 @@ public class ConsumerResourceTest {
 
         CandlepinPoolManager poolManager = new CandlepinPoolManager(
             null, null, null, this.config, null, null, mockEntitlementCurator,
-            mockConsumerCurator, mockConsumerTypeCurator, null, null, null, null, mockActivationKeyRules,
-            null, null, null, null, null, null, null, null, null, null, null
+            mockConsumerCurator, mockConsumerTypeCurator, null, null, null, null, null,
+            mockActivationKeyRules, null, null, null, null, null, null, null, null, null, null, null
         );
         ConsumerResource consumerResource = new ConsumerResource(
             mockConsumerCurator, mockConsumerTypeCurator, null, null, null, mockEntitlementCurator, null,
             mockEntitlementCertServiceAdapter, null, null, null, null, null, null,
-            poolManager, null, null, null, null, null, null, null, null,
+            poolManager, null, null, null, null, null, null, null, null, null,
             this.config, null, null, null, consumerBindUtil,
             null, null, this.factValidator, null, consumerEnricher, migrationProvider, translator);
 

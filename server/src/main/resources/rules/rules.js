@@ -38,6 +38,10 @@ function pool_type_name_space() {
     return PoolType;
 }
 
+function test_name_space() {
+    return TestNamespace;
+}
+
 // consumer types
 var SYSTEM_TYPE = "system";
 var HYPERVISOR_TYPE = "hypervisor";
@@ -273,6 +277,43 @@ function createPool(pool) {
         }
         return this.derived_product_list;
     };
+
+    // Returns a list of values the pool has for the provided product attribute.
+    // The argument is the name of any of the syspurpose attributes, as well as 'products'.
+    pool.retrievePoolAttributeValues = function (attribute) {
+        var poolSet = [];
+        if (attribute === 'products') {
+            if (this.hasDerived()) {
+                this.derivedProducts().forEach(function(prod) {
+                    if (prod !== undefined && prod !== null) {
+                        poolSet.push(prod);
+                    }
+                });
+            }
+            else {
+                this.products().forEach(function(prod) {
+                    if (prod !== undefined && prod !== null) {
+                        poolSet.push(prod);
+                    }
+                });
+            }
+            return poolSet;
+        }
+
+        if (!this.productAttributes || !this.getProductAttribute(attribute)) {
+            return poolSet;
+        }
+        else {
+            if (attribute === 'addons' || attribute === 'roles') {
+                poolSet = this.getProductAttribute(attribute).split(',');
+            }
+            else if (attribute === 'support_level' || attribute === 'usage') {
+                poolSet = [this.getProductAttribute(attribute)];
+            }
+        }
+        return poolSet;
+    };
+
     return pool;
 }
 
@@ -309,6 +350,98 @@ function createActivationKey(key) {
     return key;
 }
 
+function createConsumer(consumer, compliance) {
+
+    consumer.contextCompliance = compliance;
+
+    /*
+     * Returns an Array object which contains one or more attribute values for the specified attribute.
+     */
+    consumer.retrieveConsumerSpecifiedAttributeValues = function (attribute) {
+        var consumer_specified = [];
+        if (attribute === 'products') {
+            var product_ids = [];
+
+            if (!this.installedProducts) {
+                return product_ids;
+            }
+
+            this.installedProducts.forEach(function(prod) {
+                product_ids.push(prod.productId);
+            });
+            consumer_specified = product_ids;
+        }
+        else if (attribute === 'addons') {
+            if (!this.addOns) {
+                return [];
+            }
+            consumer_specified = this.addOns;
+        }
+        else if (attribute === 'roles') {
+            if (!this.role) {
+                return [];
+            }
+            consumer_specified = [this.role];
+        }
+        else if (attribute === 'usage') {
+            if (!this.usage) {
+                return [];
+            }
+            consumer_specified = [this.usage];
+        }
+        else if (attribute === 'support_level') {
+            if (!this.serviceLevel) {
+                return [];
+            }
+            consumer_specified = [this.serviceLevel];
+        }
+
+        return consumer_specified;
+    };
+
+    consumer.retrieveConsumerSatisfiedAttributeValues = function(attribute) {
+        // Assuming that the list of satisfied products are the ones that are compliant already.
+        if (attribute === 'products') {
+            return Object.keys(this.contextCompliance.compliantProducts);
+        }
+
+        var listOfProductMaps = [];
+        listOfProductMaps.push(this.contextCompliance.compliantProducts);
+        listOfProductMaps.push(this.contextCompliance.partiallyCompliantProducts);
+        listOfProductMaps.push(this.contextCompliance.partialStacks);
+
+        var attr_list = [];
+        listOfProductMaps.forEach(function(productMap) {
+            Object.keys(productMap).forEach(function(productId) {
+                var setOfEntitlements = productMap[productId];
+                setOfEntitlements.forEach(function(entitlement) {
+                    var attr_value = entitlement.pool.getProductAttribute(attribute);
+                    var exists = false;
+                    for (var i = 0 ; i < attr_list.length ; i++) {
+                        if (Utils.equalsIgnoreCase(attr_list[i], attr_value)) {
+                            exists = true;
+                            break;
+                        }
+                    }
+
+                    if (!exists && attr_value) {
+                        attr_list.push(attr_value);
+                    }
+                });
+            });
+        });
+        return attr_list;
+    };
+
+    consumer.retrieveConsumerUnsatisfiedAttributeValues = function(attribute) {
+        var consumer_satisfied_values = this.retrieveConsumerSatisfiedAttributeValues(attribute);
+        var consumer_specified_values = this.retrieveConsumerSpecifiedAttributeValues(attribute);
+        return Utils.difference(consumer_specified_values, consumer_satisfied_values);
+    };
+
+    return consumer;
+}
+
 /*
  * Creates an object that represents the entitlement that would be created
  * by a given pool.  Uses the maximum quantity available.
@@ -325,7 +458,69 @@ function get_mock_ent_for_pool(pool, consumer) {
 }
 
 function get_pool_priority(pool, consumer) {
+    log.debug("Calculating pool priority for pool " + pool.id + "...");
+    // start with a default
     var priority = 100;
+
+    // list of syspurpose attributes and their corresponding weights.
+    var attrs = {
+        'products': 20,
+        'roles': 10,
+        'addons': 5,
+        'support_level': 3,
+        'usage': 1
+    };
+
+    var matchesPurpose = false;
+    Object.keys(attrs).forEach(function(attr) {
+        var specifiedSet = consumer.retrieveConsumerSpecifiedAttributeValues(attr);
+        var unsatisfiedSet = consumer.retrieveConsumerUnsatisfiedAttributeValues(attr);
+        var poolSet = pool.retrievePoolAttributeValues(attr);
+        log.debug("Number of values found for attribute '" + attr + "': specifiedSet: " + specifiedSet.length + ", unsatisfiedSet: "
+            + unsatisfiedSet.length + ", poolSet: " + poolSet.length);
+
+        var attrScore = 0;
+        var match_rule_score = 0;
+        var null_rule_score = 0;
+        var mismatch_rule_score = 0;
+
+        if (unsatisfiedSet.length === 0 && poolSet.length === 0) {
+            null_rule_score = 0.1;
+        }
+
+        if (unsatisfiedSet.length > 0) {
+            match_rule_score = Utils.intersection(unsatisfiedSet, poolSet).length / unsatisfiedSet.length;
+        }
+
+        if (specifiedSet.length > 0 && poolSet.length > 0) {
+            mismatch_rule_score = (Utils.difference(specifiedSet, poolSet).length / specifiedSet.length) * -0.5;
+        }
+
+        attrScore = (null_rule_score + match_rule_score + mismatch_rule_score) * attrs[attr];
+
+        if (attrScore != 0) {
+            log.debug("evaluating " + attr + " with weight " + attrs[attr]);
+            if (null_rule_score != 0) {
+                log.debug("null rule score: " + null_rule_score);
+            }
+            if (match_rule_score != 0) {
+                log.debug("match rule score: " + match_rule_score);
+                matchesPurpose = true;
+            }
+            if (mismatch_rule_score != 0) {
+                log.debug("mismatch rule score: " + mismatch_rule_score);
+            }
+
+            log.debug("final score = " + attrScore);
+        }
+        priority += attrScore;
+    });
+
+    // increment to give more weightage to syspurpose fields
+    if (matchesPurpose) {
+        priority += 450;
+        log.debug("incrementing syspurpose score by 450");
+    }
 
     // use virt only if possible
     // if the consumer is not virt, the pool will have been filtered out
@@ -371,10 +566,49 @@ function get_pool_priority(pool, consumer) {
             }
         }
     }
-
+    log.debug("Final priority score: " + priority);
     return priority;
 }
 
+/*
+ * Returns true if the following are all true:
+ * - the pool's SLA is non-null, non-empty and not in the exempt list.
+ * - at least one of these is non-null and non-empty: SLA override, consumer's SLA, owner's default SLA.
+ * - the pool's SLA matches either the SLA override, the consumer's SLA, or the owner's default SLA
+ *   (Order of priority is: SLA override > consumer's SLA > owner's default SLA.)
+ *
+ * False otherwise.
+ */
+function should_pool_be_prioritized_for_sla(context, pool) {
+    var poolSLA = pool.getProductAttribute('support_level');
+
+    log.debug("context.serviceLevelOverride: " + context.serviceLevelOverride);
+    var consumerSLA = context.serviceLevelOverride;
+    if (!consumerSLA || consumerSLA == "") {
+        consumerSLA = context.consumer.serviceLevel;
+            if (!consumerSLA || consumerSLA == "") {
+                consumerSLA = context.owner.defaultServiceLevel;
+            }
+    }
+
+    if (!is_pool_sla_null_or_exempt(context, poolSLA) &&
+        consumerSLA && consumerSLA !== "" &&
+        Utils.equalsIgnoreCase(consumerSLA, poolSLA)) {
+        return true;
+    }
+    return false;
+}
+
+/*
+ * Returns true if the pool's SLA is null or empty, or is included in the exempt list; false otherwise.
+ */
+function is_pool_sla_null_or_exempt(context, poolSLA) {
+    if (!poolSLA || poolSLA === "") {
+        return true;
+    }
+
+    return isLevelExempt(poolSLA, context.exemptList);
+}
 
 /* Utility functions */
 function contains(a, obj) {
@@ -1864,7 +2098,7 @@ var Autobind = {
      * have to know if it's a stack, single entitlement, etc... It is either valid
      * or not, and provides products.
      */
-    create_entitlement_group: function(stackable, stack_id, installed_ids, consumer, attached_ents, consider_derived) {
+    create_entitlement_group: function(stackable, stack_id, installed_ids, consumer, attached_ents, consider_derived, context) {
         return {
             pools: [],
             stackable: stackable,
@@ -2109,6 +2343,7 @@ var Autobind = {
                 if (!this.stackable) {
                     return;
                 }
+
                 // Sort pools such that we preserve virt_only and host_requires if possible
                 this.pools.sort(this.compare_pools);
                 var temp = null;
@@ -2309,23 +2544,9 @@ var Autobind = {
             }
         }
 
+        context.consumer = createConsumer(context.consumer, context.compliance);
+
         return context;
-    },
-
-    /*
-     * Only use pools that match the consumer SLA or SLA override, if set
-     */
-    is_pool_sla_valid: function(context, pool, consumerSLA) {
-        var poolSLA = pool.getProductAttribute('support_level');
-        var poolSLAExempt = isLevelExempt(pool.getProductAttribute('support_level'), context.exemptList);
-
-        if (poolSLA && poolSLA != "" && !poolSLAExempt &&
-            consumerSLA && consumerSLA != "" &&
-            !Utils.equalsIgnoreCase(consumerSLA, poolSLA)) {
-            log.debug("Skipping pool " + pool.id + " since SLA does not match that of the consumer.");
-            return false;
-        }
-        return true;
     },
 
     /*
@@ -2354,6 +2575,80 @@ var Autobind = {
         return true;
     },
 
+    /*
+     * The pool is valid if any of these is true:
+     *  - The pool's SLA is null or in the exempt list.
+     *  - The pool's SLA is non-null, non-exempt, and the consumer does not have any existing entitlements.
+     *  - The pool's SLA is non-null, non-exempt, and the consumer has existing entitlements,
+     *    but none of their products has an SLA.
+     *  - The pool's SLA is non-null, non-exempt, and the consumer has existing entitlements,
+     *    and at least one of them has a product with a non-null SLA that matches the pool SLA.
+     *
+     * The pool is invalid if this is true:
+     *  - The pool's SLA is non-null, non-exempt, and the consumer has existing entitlements,
+     *    and one or more of those have products with non-null SLAs,
+     *    but those SLAs do not match with the pool's SLA.
+     */
+    is_pool_sla_valid: function(context, pool) {
+        var poolSLA = pool.getProductAttribute('support_level');
+
+        if (is_pool_sla_null_or_exempt(context, poolSLA)) {
+            return true;
+        }
+
+        var consumer_entitlement_slas = this.get_slas_of_existing_consumer_entitlements_from_compliance_status(context);
+        if (consumer_entitlement_slas.length <= 0) {
+            return true;
+        }
+
+        var is_valid = false;
+        for (i = 0 ; i < consumer_entitlement_slas.length ; i++) {
+            if (Utils.equalsIgnoreCase(poolSLA, consumer_entitlement_slas[i])) {
+                is_valid = true;
+                break;
+            }
+        }
+
+        if (!is_valid) {
+            log.debug("Skipping pool " + pool.id +
+            " since SLA is non-null, non-exempt, and does not match any of the consumer's entitlements' SLAs.");
+        }
+        return is_valid;
+    },
+
+    /*
+     * Traverses the ComplianceStatus object's product maps to find and return a list of
+     * the consumer's entitlements' SLAs. Null SLAs are not returned.
+     */
+    get_slas_of_existing_consumer_entitlements_from_compliance_status: function(context) {
+        var listOfProductMaps = [];
+        listOfProductMaps.push(context.compliance.compliantProducts);
+        listOfProductMaps.push(context.compliance.partiallyCompliantProducts);
+        listOfProductMaps.push(context.compliance.partialStacks);
+
+        var sla_list = [];
+        listOfProductMaps.forEach(function(productMap) {
+            Object.keys(productMap).forEach(function(productId) {
+                var setOfEntitlements = productMap[productId];
+                setOfEntitlements.forEach(function(entitlement) {
+                    var sla = entitlement.pool.getProductAttribute('support_level');
+                    var exists = false;
+                    for (i = 0 ; i < sla_list.length ; i++) {
+                        if (Utils.equalsIgnoreCase(sla_list[i], sla)) {
+                            exists = true;
+                            break;
+                        }
+                    }
+
+                    if (!exists && sla) {
+                        sla_list.push(sla);
+                    }
+                });
+            });
+        });
+        return sla_list;
+    },
+
     is_pool_not_empty: function(pool) {
         if (pool.currently_available > 0) {
             return true;
@@ -2362,25 +2657,8 @@ var Autobind = {
         return false;
     },
 
-    /*
-     * Gets the sla of the consumer, unless serviceLevelOverride is set, in which
-     * case we use that.
-     */
-    get_consumer_sla: function(context) {
-        log.debug("context.serviceLevelOverride: " + context.serviceLevelOverride);
-        var consumerSLA = context.serviceLevelOverride;
-        if (!consumerSLA || consumerSLA == "") {
-            consumerSLA = context.consumer.serviceLevel;
-                if (!consumerSLA || consumerSLA == "") {
-                    consumerSLA = context.owner.defaultServiceLevel;
-                }
-        }
-        return consumerSLA;
-    },
-
     // returns all pools that can be attached to this consumer
     get_valid_pools: function(context) {
-        var consumerSLA = this.get_consumer_sla(context);
         var isGuest = Utils.isGuest(context.consumer);
         var consumerArch = ARCH_FACT in context.consumer.facts ?
                 context.consumer.facts[ARCH_FACT] : null;
@@ -2398,7 +2676,7 @@ var Autobind = {
              */
             if (this.is_pool_arch_valid(context, pool, consumerArch) &&
                     this.is_pool_virt_valid(pool, isGuest) &&
-                    this.is_pool_sla_valid(context, pool, consumerSLA) &&
+                    this.is_pool_sla_valid(context, pool) &&
                     pool_not_empty) {
                 valid_pools.push(pool);
             }
@@ -2409,7 +2687,7 @@ var Autobind = {
     /*
      * Builds entitlement group objects that allow us to treat stacks and individual entitlements the same
      */
-    build_entitlement_groups: function(valid_pools, installed, consumer, attached_ents, consider_derived) {
+    build_entitlement_groups: function(valid_pools, installed, consumer, attached_ents, consider_derived, context) {
         var ent_groups = [];
         for (var i = 0; i < valid_pools.length; i++) {
             var pool = valid_pools[i];
@@ -2427,13 +2705,13 @@ var Autobind = {
                 }
                 // If the pool is stackable, and not part of an existing entitlement group, create a new group and add it
                 if (!found) {
-                    var new_ent_group = this.create_entitlement_group(true, stack_id, installed, consumer, attached_ents, consider_derived);
+                    var new_ent_group = this.create_entitlement_group(true, stack_id, installed, consumer, attached_ents, consider_derived, context);
                     new_ent_group.add_pool(pool);
                     ent_groups.push(new_ent_group);
                 }
             } else {
                 //if the entitlement is not stackable, create a new stack group for it
-                var new_ent_group = this.create_entitlement_group(false, "", installed, consumer, attached_ents, consider_derived);
+                var new_ent_group = this.create_entitlement_group(false, "", installed, consumer, attached_ents, consider_derived, context);
                 new_ent_group.add_pool(pool);
                 ent_groups.push(new_ent_group);
             }
@@ -2624,7 +2902,7 @@ var Autobind = {
                 installed.splice(installed.indexOf(prod), 1);
             }
         }
-        var ent_groups = this.build_entitlement_groups(valid_pools, installed, context.consumer, attached_ents, context.considerDerived);
+        var ent_groups = this.build_entitlement_groups(valid_pools, installed, context.consumer, attached_ents, context.considerDerived, context);
         log.debug("Total ent groups: " + ent_groups.length);
 
         var valid_groups = [];
@@ -3515,5 +3793,92 @@ var Utils = {
 
     isMultiEnt: function(pool) {
         return Utils.equalsIgnoreCase(pool.getProductAttribute(MULTI_ENTITLEMENT_ATTRIBUTE), "yes");
+    },
+
+    /*
+     * Returns an array with all the items in array1, that are not included in array2.
+     */
+    difference: function(array1, array2) {
+        var diffArray = array1.slice();
+
+        array2.forEach(function(elem) {
+            var index = diffArray.indexOf(elem);
+            if(index >= 0) {
+                diffArray.splice(index, 1);
+            }
+        });
+        return diffArray;
+    },
+
+    /*
+     * Returns an array with all the items in array1, that are also included in array2.
+     */
+    intersection: function(array1, array2) {
+        var temp = [];
+
+        array1.forEach(function(elem) {
+            if(array2.indexOf(elem) >= 0) {
+                temp.push(elem);
+            }
+        });
+
+        return temp;
+    }
+
+}
+
+/*
+ * This namespace contains utility methods strictly used for testing.
+ */
+var TestNamespace = {
+
+    /*
+     * Utility method for testing that wraps around the get_pool_priority method without
+     * having to invoke the whole auto-attach call stack (select_pools).
+     */
+    get_pool_priority_test: function() {
+        var context = TestNamespace.create_get_pool_priority_context();
+        return get_pool_priority(context.pool, context.consumer);
+    },
+
+    create_get_pool_priority_context: function() {
+        var context = JSON.parse(json_context);
+
+        // Also need to convert all pools reported in compliance.
+        var compliance = context.compliance;
+
+        // Create the pools for all entitlement maps in compliance.
+        // The number of entitlements should be relatively small.
+        var createPoolsFor = ["partialStacks",
+                              "partiallyCompliantProducts",
+                              "compliantProducts"];
+
+        for (var i = 0; i < createPoolsFor.length; i++) {
+            var nextMapAttrName = createPoolsFor[i];
+            var nextMap = compliance[nextMapAttrName];
+            for (var key in nextMap) {
+                var ents = nextMap[key];
+                for (var entIdx = 0; entIdx < ents.length; entIdx++) {
+                    ents[entIdx].pool = createPool(ents[entIdx].pool);
+                }
+            }
+        }
+
+        var pool = createPool(context.pool);
+        if (pool.quantity == -1) {
+            // In the unlimited case, we need at most the number required to cover the system
+            pool.currently_available = Quantity.get_suggested_pool_quantity(pool, context.consumer, []);
+            // Can use an empty list here because global attributes don't necessarily change quantity
+        } else {
+            pool.currently_available = pool.getAvailable();
+        }
+        // If the pool is not multi-entitlable, only one may be used
+        if (pool.currently_available > 0 && !Utils.isMultiEnt(pool)) {
+            pool.currently_available = 1;
+        }
+
+        context.consumer = createConsumer(context.consumer, context.compliance);
+
+        return context;
     }
 }
