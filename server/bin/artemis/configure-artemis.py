@@ -18,10 +18,10 @@ import os
 import subprocess
 import libxml2
 import shutil
-import tarfile
 from contextlib import contextmanager
 from optparse import OptionParser
 import logging
+import urllib2
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger('configure-artemis')
@@ -112,10 +112,10 @@ def extract_artemis(basedir, path_to_file):
     file_path = os.path.join(basedir, filename)
     logger.info("Extracting Artemis package...")
     if not os.path.exists(file_path):
-        logger.debug("Extracting %s to %s" % (filename, basedir))
-        tar = tarfile.open(path_to_file, "r:gz")
-        tar.extractall(path=basedir)
-        tar.close()
+        logger.debug("Extracting %s to %s" % (path_to_file, basedir))
+        # Could use tarfile lib here but it appears to have an issue
+        # extracting the entire archive in older versions of the lib.
+        call("sudo tar xvzf %s -C %s" % (path_to_file, basedir), "Failed to extract artemis package.")
     else:
         logger.debug("File already extracted.")
     return file_path
@@ -140,7 +140,7 @@ def create_broker(artemis_install_path, broker_root_path, broker_name):
     return broker_path
 
 def call(cmd, error_msg, allow_failure=False):
-    logger.debug("Calling %s" % cmd)
+    logger.debug("Calling '%s'" % cmd)
     with open(os.devnull, 'w') as dnull:
         std_out = None if is_debug() else dnull
         ret = subprocess.call(cmd.split(" "), stdout=std_out, stderr=subprocess.STDOUT)
