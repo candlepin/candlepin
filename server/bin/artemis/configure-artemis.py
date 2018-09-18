@@ -163,6 +163,9 @@ def install_artemis_service(broker_name):
     logger.debug("    Reloading systemd daemons.")
     call("sudo systemctl daemon-reload", "Failed to reload systemd daemons.")
 
+    logger.debug("    Enabling artemis service.")
+    call("sudo systemctl enable artemis", "Failed to enable artemis service")
+
     setup_selinux()
 
 def setup_selinux():
