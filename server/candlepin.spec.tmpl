@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.4.6
+Version: 2.4.7
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,10 @@ fi
 
 #raw
 %changelog
+* Wed Sep 19 2018 Kevin Howell <khowell@redhat.com> 2.4.7-1
+- 1628595: Update epoch on Java requirement (khowell@redhat.com)
+- 1624447: Do not set connection-ttl-override (khowell@redhat.com)
+
 * Fri Aug 24 2018 Kevin Howell <khowell@redhat.com> 2.4.6-1
 - Updated gen-certs for compatibility with Tomcat 8.5+ (crog@redhat.com)
 - setOwnerId incorrect (wpoteat@redhat.com)
