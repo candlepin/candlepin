@@ -40,7 +40,7 @@ public class CertificateDTOTest extends AbstractDTOTest<CertificateDTO> {
         this.values = new HashMap<>();
         this.values.put("Id", "test-id");
         this.values.put("Key", "test-key");
-        this.values.put("Cert", "test-cert");
+        this.values.put("Certificate", "test-cert");
         this.values.put("Serial", serial);
         this.values.put("Created", new Date());
         this.values.put("Updated", new Date());

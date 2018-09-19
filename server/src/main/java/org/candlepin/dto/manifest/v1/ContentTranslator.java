@@ -68,7 +68,7 @@ public class ContentTranslator extends TimestampedEntityTranslator<Content, Cont
         destination.setRequiredTags(source.getRequiredTags());
         destination.setReleaseVersion(source.getReleaseVersion());
         destination.setGpgUrl(source.getGpgUrl());
-        destination.setModifiedProductIds(source.getModifiedProductIds());
+        destination.setRequiredProductIds(source.getModifiedProductIds());
         destination.setArches(source.getArches());
 
         return destination;

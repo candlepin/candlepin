@@ -54,7 +54,7 @@ class ImporterUtils {
         }
 
         entity.setKey(dto.getKey());
-        entity.setCert(dto.getCert());
+        entity.setCert(dto.getCertificate());
         entity.setUpdated(dto.getUpdated());
         entity.setCreated(dto.getCreated());
 

@@ -31,29 +31,40 @@ import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
-import org.bouncycastle.util.io.Streams;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
-import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.lang.reflect.Constructor;
 import java.math.BigInteger;
 import java.net.URL;
+import java.nio.file.Files;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509CRL;
 import java.security.cert.X509CRLEntry;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
-
+/**
+ * Test implementations of X509CRLEntryStream
+ */
+@RunWith(Parameterized.class)
 public class X509CRLEntryStreamTest {
     private static final BouncyCastleProvider BC_PROVIDER = new BouncyCastleProvider();
 
@@ -63,6 +74,11 @@ public class X509CRLEntryStreamTest {
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
+    @Parameterized.Parameters
+    public static Iterable<Class> data() {
+        return Arrays.asList(JSSX509CRLEntryStream.class);
+    }
+
     private File derFile;
     private File pemFile;
 
@@ -70,13 +86,19 @@ public class X509CRLEntryStreamTest {
     private ContentSigner signer;
     private KeyPair keyPair;
 
+    private final Constructor<? extends X509CRLEntryStream> fileConstructor;
+
+    public X509CRLEntryStreamTest(Class<? extends X509CRLEntryStream> clazz) throws NoSuchMethodException {
+        this.fileConstructor = clazz.getConstructor(File.class);
+    }
+
     @Before
     public void setUp() throws Exception {
-        URL url = X509CRLEntryStreamTest.class.getClassLoader().getResource("crl.der");
-        derFile = new File(url.getFile());
+        URL url = this.getClass().getClassLoader().getResource("crl.der");
+        derFile = new File(Objects.requireNonNull(url).getFile());
 
-        url = X509CRLEntryStreamTest.class.getClassLoader().getResource("crl.pem");
-        pemFile = new File(url.getFile());
+        url = this.getClass().getClassLoader().getResource("crl.pem");
+        pemFile = new File(Objects.requireNonNull(url).getFile());
 
         issuer = new X500Name("CN=Test Issuer");
 
@@ -85,7 +107,7 @@ public class X509CRLEntryStreamTest {
         generator.initialize(2048);
         keyPair = generator.generateKeyPair();
 
-        signer = new JcaContentSignerBuilder("SHA256WithRSAEncryption")
+        signer = new JcaContentSignerBuilder("SHA256withRSA")
             .setProvider(BC_PROVIDER)
             .build(keyPair.getPrivate());
     }
@@ -96,28 +118,26 @@ public class X509CRLEntryStreamTest {
 
     @Test
     public void testIterateOverSerials() throws Exception {
-        InputStream referenceStream = new FileInputStream(derFile);
         CertificateFactory cf = CertificateFactory.getInstance("X.509");
-        X509CRL referenceCrl = (X509CRL) cf.generateCRL(referenceStream);
-
         Set<BigInteger> referenceSerials = new HashSet<>();
-
-        for (X509CRLEntry entry : referenceCrl.getRevokedCertificates()) {
-            referenceSerials.add(entry.getSerialNumber());
+        try (
+            InputStream referenceStream = new FileInputStream(derFile);
+        ) {
+            X509CRL referenceCrl = (X509CRL) cf.generateCRL(referenceStream);
+            for (X509CRLEntry entry : referenceCrl.getRevokedCertificates()) {
+                referenceSerials.add(entry.getSerialNumber());
+            }
         }
 
-        X509CRLEntryStream stream = new X509CRLEntryStream(derFile);
-        try {
+        try (
+            X509CRLEntryStream stream = fileConstructor.newInstance(derFile);
+        ) {
             Set<BigInteger> streamedSerials = new HashSet<>();
             while (stream.hasNext()) {
-                streamedSerials.add(getSerial(stream.next()));
+                streamedSerials.add(stream.next().getSerialNumber());
             }
 
             assertEquals(referenceSerials, streamedSerials);
-        }
-        finally {
-            referenceStream.close();
-            stream.close();
         }
     }
 
@@ -135,17 +155,15 @@ public class X509CRLEntryStreamTest {
         File noUpdateTimeCrl = new File(folder.getRoot(), "test.crl");
         FileUtils.writeByteArrayToFile(noUpdateTimeCrl, holder.getEncoded());
 
-        X509CRLEntryStream stream = new X509CRLEntryStream(noUpdateTimeCrl);
-        try {
+        try (
+            X509CRLEntryStream stream = fileConstructor.newInstance(noUpdateTimeCrl);
+        ) {
             Set<BigInteger> streamedSerials = new HashSet<>();
             while (stream.hasNext()) {
-                streamedSerials.add(getSerial(stream.next()));
+                streamedSerials.add(stream.next().getSerialNumber());
             }
 
             assertEquals(0, streamedSerials.size());
-        }
-        finally {
-            stream.close();
         }
     }
 
@@ -158,23 +176,20 @@ public class X509CRLEntryStreamTest {
         File noUpdateTimeCrl = new File(folder.getRoot(), "test.crl");
         FileUtils.writeByteArrayToFile(noUpdateTimeCrl, holder.getEncoded());
 
-        X509CRLEntryStream stream = new X509CRLEntryStream(noUpdateTimeCrl);
-
         thrown.expect(IllegalStateException.class);
         thrown.expectMessage(matchesPattern("v1.*"));
 
-        try {
+        try (
+            X509CRLEntryStream stream = fileConstructor.newInstance(noUpdateTimeCrl);
+        ) {
             while (stream.hasNext()) {
                 stream.next();
             }
         }
-        finally {
-            stream.close();
-        }
     }
 
     @Test
-    public void testCRLwithoutUpdateTime() throws Exception {
+    public void testCRLWithoutUpdateTime() throws Exception {
         X509v2CRLBuilder crlBuilder = new X509v2CRLBuilder(issuer, new Date());
         AuthorityKeyIdentifier identifier = new JcaX509ExtensionUtils().createAuthorityKeyIdentifier
             (keyPair.getPublic());
@@ -188,56 +203,61 @@ public class X509CRLEntryStreamTest {
         File noUpdateTimeCrl = new File(folder.getRoot(), "test.crl");
         FileUtils.writeByteArrayToFile(noUpdateTimeCrl, holder.getEncoded());
 
-        X509CRLEntryStream stream = new X509CRLEntryStream(noUpdateTimeCrl);
-        try {
+
+        try (
+            X509CRLEntryStream stream = fileConstructor.newInstance(noUpdateTimeCrl);
+        ) {
             Set<BigInteger> streamedSerials = new HashSet<>();
             while (stream.hasNext()) {
-                streamedSerials.add(getSerial(stream.next()));
+                streamedSerials.add(stream.next().getSerialNumber());
             }
 
             assertEquals(1, streamedSerials.size());
             assertTrue(streamedSerials.contains(new BigInteger("100")));
-        }
-        finally {
-            stream.close();
         }
     }
 
     @Test
     public void testPemReadThroughBase64Stream() throws Exception {
         /* NB: Base64InputStream only takes base64.  The "-----BEGIN X509 CRL-----" and
-         * corresponding footer must be removed.  Luckily in Base64InputStream stops the
-         * minute it sees a padding character and our test file has some padding.  Thus,
-         * we don't need to worry about removing the footer.  If the Base64 file didn't
-         * require padding, I'm not sure what happens so the footer should be removed
-         * somehow for real uses */
+         * corresponding footer must be removed. */
+        List<String> lines = Files.readAllLines(pemFile.toPath());
+        int from = lines.indexOf("-----BEGIN X509 CRL-----") + 1;
+        int to  = lines.indexOf("-----END X509 CRL-----");
 
-        InputStream referenceStream = new BufferedInputStream(new FileInputStream(pemFile));
-        byte[] header = "-----BEGIN X509 CRL-----".getBytes("ASCII");
-        Streams.readFully(referenceStream, header);
+        List<String> b64Lines = lines.stream()
+            .skip(from)
+            .limit(to - from)
+            .collect(Collectors.toList());
 
-        referenceStream = new Base64InputStream(referenceStream);
-        CertificateFactory cf = CertificateFactory.getInstance("X.509");
-        X509CRL referenceCrl = (X509CRL) cf.generateCRL(referenceStream);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        for (String line : b64Lines) {
+            baos.write(line.getBytes());
+        }
+        byte[] b64Bytes = baos.toByteArray();
 
         Set<BigInteger> referenceSerials = new HashSet<>();
+        try (
+            InputStream b64Stream = new Base64InputStream(new ByteArrayInputStream(b64Bytes));
+        ) {
 
-        for (X509CRLEntry entry : referenceCrl.getRevokedCertificates()) {
-            referenceSerials.add(entry.getSerialNumber());
+            CertificateFactory cf = CertificateFactory.getInstance("X.509");
+            X509CRL referenceCrl = (X509CRL) cf.generateCRL(b64Stream);
+
+            for (X509CRLEntry entry : referenceCrl.getRevokedCertificates()) {
+                referenceSerials.add(entry.getSerialNumber());
+            }
         }
 
-        X509CRLEntryStream stream = new X509CRLEntryStream(derFile);
-        try {
+        try (
+            X509CRLEntryStream stream = fileConstructor.newInstance(derFile);
+        ) {
             Set<BigInteger> streamedSerials = new HashSet<>();
             while (stream.hasNext()) {
-                streamedSerials.add(getSerial(stream.next()));
+                streamedSerials.add(stream.next().getSerialNumber());
             }
 
             assertEquals(referenceSerials, streamedSerials);
-        }
-        finally {
-            referenceStream.close();
-            stream.close();
         }
     }
 }

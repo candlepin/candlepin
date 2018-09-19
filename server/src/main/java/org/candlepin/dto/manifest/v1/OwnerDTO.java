@@ -15,6 +15,8 @@
 package org.candlepin.dto.manifest.v1;
 
 import org.candlepin.common.jackson.HateoasInclude;
+import org.candlepin.dto.TimestampedCandlepinDTO;
+import org.candlepin.service.model.OwnerInfo;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -22,12 +24,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.candlepin.dto.TimestampedCandlepinDTO;
 
 import java.util.Date;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+
+
 
 /**
  * A DTO representation of the Owner entity as used by the manifest import/export mechanism.
@@ -35,7 +38,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @JsonFilter("OwnerFilter")
-public class OwnerDTO extends TimestampedCandlepinDTO<OwnerDTO> {
+public class OwnerDTO extends TimestampedCandlepinDTO<OwnerDTO> implements OwnerInfo {
     public static final long serialVersionUID = 1L;
 
     protected String id;

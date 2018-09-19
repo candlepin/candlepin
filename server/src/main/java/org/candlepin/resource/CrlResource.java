@@ -84,7 +84,7 @@ public class CrlResource {
             // Create an empty CRL if we didn't have anything to write
             if (!crlFile.exists() || crlFile.length() < 1) {
                 pkiUtility.writePemEncoded(
-                    pkiUtility.createX509CRL(new LinkedList<>(), BigInteger.ZERO),
+                    pkiUtility.createX509CRL(new LinkedList<>(), BigInteger.ONE),
                     new FileOutputStream(crlFile)
                 );
             }

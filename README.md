@@ -122,6 +122,54 @@ This plugin is discussed in detail at
   swagger-codegen to automatically generate client bindings.  The task can
   be subdivided with `buildr swagger:json` and `buildr swagger:client`.
 
+## JSS
+
+Our crypto functions are provided by [JSS](https://github.com/dogtagpki/jss)
+which is not available in the normal Maven repositories.  I put it in a Maven
+repository we control on fedorapeople.org, but here is the process I use in case
+anyone needs to replicate it.  The example commands use version 4.5.0 and
+Fedora 28.  Change those values as appropriate.
+
+* Download the latest SRPM [from
+  Fedora](https://src.fedoraproject.org/rpms/jss/releases).
+* Build the SRPM in mock for that version of Fedora.
+  ```
+  mock -r fedora-28-x86_64 jss-4.5.0-1.fc28.src.rpm
+  ```
+* Copy the rebuilt RPM from `/var/lib/mock/fedora-28-x86_64/result` (where Mock
+  drops the results of its build)
+* Explode the RPM using rpm2cpio.
+  ```
+  rpm2cpio jss-4.5.0-1.fc28.src.rpm | cpio -idmv
+  ```
+* Install the JAR file from the exploded RPM into your Maven repository. Make
+  sure the version and path are correct.
+  ```
+  mvn install:install-file -Dpackaging=jar -DgroupId=org.mozilla
+  -Dversion=4.5.0 -DartifactId=jss -Dfile=/tmp/jss/usr/lib/java/jss4.jar
+  ```
+* Explode the SRPM into `/tmp/jss`. This will give you a source tarball.
+  ```
+  rpm2cpio jss-4.5.0-1.fc28.src.rpm |  cpio -idmv
+  ```
+* Extract the source tarball.
+  ```
+  tar xzvf jss-4.5.0.tar.gz
+  ```
+* Go into the source directory and create a source jar.
+  ```
+  cd jss-4.5.0 && jar cvf jss-4.5.0-sources.jar org
+  ```
+* Install the sources jar
+  ```
+  mvn install:install-file -Dpackaging=jar -DgroupId=org.mozilla -Dversion=4.5.0 -DartifactId=jss -Dfile=jss-4.5.0-sources.jar -Dclassifier=sources
+  ```
+* Now rsync everything under `~/.m2/repository/org/mozilla/jss` to the Maven
+  repository.
+  ```
+  rsync -avz ~/.m2/repository/org/mozilla/jss/ fedorapeople.org:public_html/ivy/candlepin/org/mozilla/jss
+  ```
+
 ## Miscellaneous
 * `buildr syntastic` creates `.syntastic_class_path` for the Vim Syntastic plugin
 * `buildr pom` creates a `pom.xml` file with the project dependencies in it

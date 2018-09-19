@@ -284,10 +284,7 @@ public class TestUtil {
 
     public static Product createProduct() {
         int random = randomInt();
-        return createProduct(
-            String.valueOf(random),
-            "test-product-" + random
-        );
+        return createProduct(String.valueOf(random), "test-product-" + random);
     }
 
     public static Product createProduct(ProductDTO dto) {

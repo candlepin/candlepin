@@ -1074,6 +1074,7 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> implements Linkabl
         else {
             this.providedProducts = null;
         }
+
         return this;
     }
 

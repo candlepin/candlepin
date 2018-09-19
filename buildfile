@@ -140,7 +140,7 @@ DB = [POSTGRESQL, MYSQL]
 HSQLDB = 'org.hsqldb:hsqldb:jar:2.3.2'
 HSQLDB_OLD = 'org.hsqldb:hsqldb:jar:1.8.0.10'
 
-COMMONS = ['commons-codec:commons-codec:jar:1.4',
+COMMONS = ['commons-codec:commons-codec:jar:1.11',
            'commons-collections:commons-collections:jar:3.2.2',
            'commons-io:commons-io:jar:1.4',
            'commons-lang:commons-lang:jar:2.5']
@@ -153,6 +153,8 @@ GETTEXT_COMMONS = 'com.googlecode.gettext-commons:gettext-commons:jar:0.9.8'
 BOUNCYCASTLE = group('bcpkix-jdk15on', 'bcprov-jdk15on',
                      :under => 'org.bouncycastle',
                      :version => '1.60')
+
+JSS = ['org.mozilla:jss:jar:4.5.0', 'ldapjdk:ldapjdk:jar:4.19']
 
 SERVLET = 'javax.servlet:servlet-api:jar:2.5'
 
@@ -375,6 +377,7 @@ define "candlepin" do
 
     ### Building
     compile_classpath = [
+      ACTIVEMQ,
       AMQP,
       BOUNCYCASTLE,
       COLLECTIONS,
@@ -382,7 +385,7 @@ define "candlepin" do
       GETTEXT_COMMONS,
       GUICE,
       HIBERNATE,
-      ACTIVEMQ,
+      JSS,
       JACKSON,
       LIQUIBASE,
       LOGGING,

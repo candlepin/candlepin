@@ -15,7 +15,10 @@
 package org.candlepin.dto.manifest.v1;
 
 import org.candlepin.dto.TimestampedCandlepinDTO;
+import org.candlepin.service.model.ContentInfo;
 import org.candlepin.util.SetView;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -32,7 +35,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * DTO representing the content data exposed to the manifest import/export framework.
  */
 @XmlRootElement
-public class ContentDTO extends TimestampedCandlepinDTO<ContentDTO> {
+public class ContentDTO extends TimestampedCandlepinDTO<ContentDTO> implements ContentInfo {
     public static final long serialVersionUID = 1L;
 
     protected String id;
@@ -44,7 +47,7 @@ public class ContentDTO extends TimestampedCandlepinDTO<ContentDTO> {
     protected String requiredTags;
     protected String releaseVer;
     protected String gpgUrl;
-    protected Set<String> modifiedProductIds;
+    protected Set<String> requiredProductIds;
     protected String arches;
     protected Long metadataExpire;
     protected String uuid;
@@ -326,15 +329,11 @@ public class ContentDTO extends TimestampedCandlepinDTO<ContentDTO> {
     }
 
     /**
-     * Retrieves the collection of IDs representing products that are modified by this content. If
-     * the modified product IDs have not yet been defined, this method returns null.
-     *
-     * @return
-     *  the modified product IDs of the content, or null if the modified product IDs have not yet
-     *  been defined
+     * {@inheritDoc}
      */
-    public Collection<String> getModifiedProductIds() {
-        return this.modifiedProductIds != null ? new SetView(this.modifiedProductIds) : null;
+    @Override
+    public Collection<String> getRequiredProductIds() {
+        return this.requiredProductIds != null ? new SetView(this.requiredProductIds) : null;
     }
 
     /**
@@ -347,16 +346,16 @@ public class ContentDTO extends TimestampedCandlepinDTO<ContentDTO> {
      * @return
      *  true if the product ID was added successfully; false otherwise
      */
-    public boolean addModifiedProductId(String productId) {
+    public boolean addRequiredProductId(String productId) {
         if (productId == null) {
             throw new IllegalArgumentException("productId is null");
         }
 
-        if (this.modifiedProductIds == null) {
-            this.modifiedProductIds = new HashSet<String>();
+        if (this.requiredProductIds == null) {
+            this.requiredProductIds = new HashSet<String>();
         }
 
-        return this.modifiedProductIds.add(productId);
+        return this.requiredProductIds.add(productId);
     }
 
     /**
@@ -373,38 +372,39 @@ public class ContentDTO extends TimestampedCandlepinDTO<ContentDTO> {
      * @return
      *  true if the product ID was removed successfully; false otherwise
      */
-    public boolean removeModifiedProductId(String productId) {
+    public boolean removeRequiredProductId(String productId) {
         if (productId == null) {
             throw new IllegalArgumentException("productId is null");
         }
 
-        return this.modifiedProductIds != null ? this.modifiedProductIds.remove(productId) : false;
+        return this.requiredProductIds != null ? this.requiredProductIds.remove(productId) : false;
     }
 
     /**
      * Sets the modified product IDs for the content represented by this DTO. Any previously
      * existing modified product IDs will be cleared before assigning the given product IDs.
      *
-     * @param modifiedProductIds
+     * @param requiredProductIds
      *  A collection of product IDs to be modified by the content content, or null to clear the
      *  existing modified product IDs
      *
      * @return
      *  a reference to this DTO
      */
-    public ContentDTO setModifiedProductIds(Collection<String> modifiedProductIds) {
-        if (modifiedProductIds != null) {
-            if (this.modifiedProductIds == null) {
-                this.modifiedProductIds = new HashSet<String>();
+    @JsonProperty("modifiedProductIds")
+    public ContentDTO setRequiredProductIds(Collection<String> requiredProductIds) {
+        if (requiredProductIds != null) {
+            if (this.requiredProductIds == null) {
+                this.requiredProductIds = new HashSet<String>();
             }
             else {
-                this.modifiedProductIds.clear();
+                this.requiredProductIds.clear();
             }
 
-            this.modifiedProductIds.addAll(modifiedProductIds);
+            this.requiredProductIds.addAll(requiredProductIds);
         }
         else {
-            this.modifiedProductIds = null;
+            this.requiredProductIds = null;
         }
 
         return this;
@@ -489,7 +489,7 @@ public class ContentDTO extends TimestampedCandlepinDTO<ContentDTO> {
                 .append(this.getGpgUrl(), that.getGpgUrl())
                 .append(this.getMetadataExpiration(), that.getMetadataExpiration())
 
-                .append(this.getModifiedProductIds(), that.getModifiedProductIds())
+                .append(this.getRequiredProductIds(), that.getRequiredProductIds())
                 .append(this.getArches(), that.getArches());
 
             return builder.isEquals();
@@ -513,7 +513,7 @@ public class ContentDTO extends TimestampedCandlepinDTO<ContentDTO> {
             .append(this.getReleaseVersion())
             .append(this.getGpgUrl())
             .append(this.getMetadataExpiration())
-            .append(this.getModifiedProductIds())
+            .append(this.getRequiredProductIds())
             .append(this.getArches());
 
         return builder.toHashCode();
@@ -523,7 +523,7 @@ public class ContentDTO extends TimestampedCandlepinDTO<ContentDTO> {
     public ContentDTO clone() {
         ContentDTO copy = super.clone();
 
-        copy.setModifiedProductIds(this.getModifiedProductIds());
+        copy.setRequiredProductIds(this.getRequiredProductIds());
 
         return copy;
     }
@@ -555,7 +555,7 @@ public class ContentDTO extends TimestampedCandlepinDTO<ContentDTO> {
         this.setReleaseVersion(source.getReleaseVersion());
         this.setGpgUrl(source.getGpgUrl());
         this.setMetadataExpiration(source.getMetadataExpiration());
-        this.setModifiedProductIds(source.getModifiedProductIds());
+        this.setRequiredProductIds(source.getRequiredProductIds());
         this.setArches(source.getArches());
 
         return this;

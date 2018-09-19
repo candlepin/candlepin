@@ -26,9 +26,7 @@ import com.google.inject.persist.Transactional;
 import org.apache.commons.codec.binary.Base64InputStream;
 import org.apache.commons.codec.binary.Base64OutputStream;
 import org.apache.commons.io.IOUtils;
-import org.bouncycastle.asn1.x509.CRLReason;
-import org.bouncycastle.asn1.x509.TBSCertList.CRLEntry;
-import org.bouncycastle.crypto.CryptoException;
+import org.mozilla.jss.asn1.InvalidBERException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,6 +47,7 @@ import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.security.cert.X509CRL;
+import java.security.cert.X509CRLEntry;
 import java.security.interfaces.RSAPrivateKey;
 import java.util.Arrays;
 import java.util.ArrayList;
@@ -69,6 +68,11 @@ import java.util.regex.Pattern;
 @Singleton
 public class CrlFileUtil {
     private static final Logger log = LoggerFactory.getLogger(CrlFileUtil.class);
+
+    // See https://tools.ietf.org/html/rfc5280#section-5.3.1
+    // An alternative here would be to use java.security.cert.CRLReason.PRIVILEGE_WITHDRAWN.ordinal(); we have
+    // to call ordinal because the JDK CRLReason class is an enum.
+    private static final int PRIVILEGE_WITHDRAWN = 9;
 
     private static final Pattern CRL_HEADER_PATTERN = Pattern.compile("^(-+)BEGIN (.+)\\1$");
     private static final Pattern CRL_FOOTER_PATTERN = Pattern.compile("^(-+)END (.+)\\1$");
@@ -204,14 +208,24 @@ public class CrlFileUtil {
 
             // Note: This will break if we ever stop using RSA keys
             PrivateKey key = this.certificateReader.getCaKey();
-            X509CRLStreamWriter writer = new X509CRLStreamWriter(
-                input, (RSAPrivateKey) key, this.certificateReader.getCACert());
+            X509CRLStreamWriter writer;
+            try {
+                writer = new JSSX509CRLStreamWriter(
+                    input,
+                    (RSAPrivateKey) key,
+                    this.certificateReader.getCACert()
+                );
+            }
+            catch (InvalidBERException e) {
+                throw new IOException("Could not read DER", e);
+            }
 
             // Add new entries
             if (revoke != null) {
                 Date now = new Date();
                 for (BigInteger serial : revoke) {
-                    writer.add(serial, now, CRLReason.privilegeWithdrawn);
+
+                    writer.add(serial, now, PRIVILEGE_WITHDRAWN);
                 }
             }
 
@@ -219,8 +233,8 @@ public class CrlFileUtil {
             // or we could miss cases where we have entries to remove, but nothing to add.
             if (unrevoke != null && !unrevoke.isEmpty()) {
                 writer.preScan(reaper, new CRLEntryValidator() {
-                    public boolean shouldDelete(CRLEntry entry) {
-                        BigInteger certSerial = entry.getUserCertificate().getValue();
+                    public boolean shouldDelete(X509CRLEntry entry) {
+                        BigInteger certSerial = entry.getSerialNumber();
                         return unrevoke.contains(certSerial);
                     }
                 });
@@ -278,10 +292,6 @@ public class CrlFileUtil {
         catch (GeneralSecurityException e) {
             // This should never actually happen
             log.error("Unexpected security error occurred while retrieving CA key", e);
-        }
-        catch (CryptoException e) {
-            // Something went horribly wrong with the stream writer
-            log.error("Unexpected error occurred while writing new CRL file", e);
         }
         finally {
             for (Closeable stream : Arrays.asList(encoder, output, reaper, input)) {

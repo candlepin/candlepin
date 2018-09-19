@@ -14,28 +14,21 @@
  */
 package org.candlepin.test;
 
-import static org.candlepin.pki.impl.BouncyCastleProviderLoader.BC_PROVIDER;
-
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.MapConfiguration;
-import org.candlepin.pki.CertificateReader;
-import org.candlepin.pki.impl.BouncyCastleProviderLoader;
+import org.candlepin.pki.impl.JSSPrivateKeyReader;
 import org.candlepin.pki.PrivateKeyReader;
+import org.candlepin.pki.CertificateReader;
+import org.candlepin.pki.impl.JSSProviderLoader;
 
-import org.bouncycastle.openssl.PEMKeyPair;
-import org.bouncycastle.openssl.PEMParser;
-import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.junit.Assert;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.security.KeyPair;
-import java.security.PrivateKey;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAPrivateKey;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -45,13 +38,13 @@ import javax.inject.Inject;
  */
 public class CertificateReaderForTesting extends CertificateReader {
     static {
-        BouncyCastleProviderLoader.addProvider();
+        JSSProviderLoader.addProvider();
     }
 
     @Inject
     public CertificateReaderForTesting(Configuration config, PrivateKeyReader reader)
         throws CertificateException, IOException {
-        super(new MapConfiguration(), new PrivateKeyReader());
+        super(new MapConfiguration(), new JSSPrivateKeyReader());
     }
 
     @Override
@@ -65,30 +58,16 @@ public class CertificateReaderForTesting extends CertificateReader {
     }
 
     @Override
-    protected PrivateKey readPrivateKey(PrivateKeyReader reader) throws FileNotFoundException {
-        InputStream keyStream = this.getClass().getClassLoader().getResourceAsStream("test-ca.key");
-
-        KeyPair keyPair = null;
-        try (
-            PEMParser parser = new PEMParser(new InputStreamReader(keyStream));
-        ) {
-            keyPair = new JcaPEMKeyConverter()
-                .setProvider(BC_PROVIDER)
-                .getKeyPair((PEMKeyPair) parser.readObject());
-        }
-        catch (IOException e) {
-            Assert.fail("Could not load private key");
-        }
-
-        return keyPair.getPrivate();
+    protected RSAPrivateKey readPrivateKey(PrivateKeyReader reader) throws IOException {
+        InputStream keyStream = this.getClass().getClassLoader().getResourceAsStream(getKeyFileName());
+        return reader.read(keyStream, null);
     }
 
     @Override
     protected X509Certificate loadCACertificate(String path) {
         X509Certificate ca = null;
         try (
-            InputStream caStream =
-                CertificateReaderForTesting.class.getClassLoader().getResourceAsStream("test-ca.crt");
+            InputStream caStream = this.getClass().getClassLoader().getResourceAsStream(getCAFileName());
         ) {
             ca = (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(caStream);
         }
@@ -96,6 +75,14 @@ public class CertificateReaderForTesting extends CertificateReader {
             Assert.fail("Could not load CA certificate");
         }
         return ca;
+    }
+
+    public String getCAFileName() {
+        return "test-ca.crt";
+    }
+
+    public String getKeyFileName() {
+        return "test-ca.key";
     }
 
     @Override

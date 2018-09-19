@@ -65,7 +65,7 @@ public class PoolDTOTest extends AbstractDTOTest<PoolDTO> {
         CertificateDTO cert = new CertificateDTO();
         cert.setId("cert-id");
         cert.setKey("cert-key");
-        cert.setCert("cert-cert");
+        cert.setCertificate("cert-cert");
         cert.setSerial(new CertificateSerialDTO());
 
         this.values = new HashMap<>();

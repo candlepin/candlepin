@@ -17,20 +17,21 @@ package org.candlepin.sync;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-import java.util.Arrays;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
-
 import org.candlepin.audit.EventSink;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
+import org.candlepin.dto.manifest.v1.ContentDTO;
+import org.candlepin.dto.manifest.v1.OwnerDTO;
+import org.candlepin.dto.manifest.v1.ProductDTO;
+import org.candlepin.dto.manifest.v1.ProductDTO.ProductContentDTO;
+import org.candlepin.dto.manifest.v1.SubscriptionDTO;
+import org.candlepin.model.Branding;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.Content;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EnvironmentCurator;
@@ -39,19 +40,30 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolCurator;
+import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.model.dto.ProductData;
-import org.candlepin.model.dto.Subscription;
-import org.candlepin.test.TestUtil;
+import org.candlepin.model.SourceSubscription;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.util.Arrays;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.stream.Collectors;
+
+
 
 /**
  * EntitlementImporterTest
@@ -69,6 +81,7 @@ public class SubscriptionReconcilerTest {
     @Mock private EntitlementCurator ec;
 
     private Owner owner;
+    private OwnerDTO ownerDto;
     private EntitlementImporter importer;
     private I18n i18n;
     private int index = 1;
@@ -79,12 +92,113 @@ public class SubscriptionReconcilerTest {
     @Before
     public void init() {
         this.owner = new Owner();
+        this.ownerDto = new OwnerDTO();
+
         this.reconciler = new SubscriptionReconciler(this.poolCurator);
         this.translator = new StandardTranslator(new ConsumerTypeCurator(), new EnvironmentCurator(),
             new OwnerCurator());
 
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         this.importer = new EntitlementImporter(certSerialCurator, cdnCurator, i18n, pc, ec, translator);
+    }
+
+
+    public Content convertFromDTO(ContentDTO dto) {
+        Content content = null;
+
+        if (dto != null) {
+            content = new Content();
+
+            content.setId(dto.getId());
+            content.setName(dto.getName());
+            content.setType(dto.getType());
+            content.setLabel(dto.getLabel());
+            content.setVendor(dto.getVendor());
+            content.setContentUrl(dto.getContentUrl());
+            content.setRequiredTags(dto.getRequiredTags());
+            content.setReleaseVersion(dto.getReleaseVersion());
+            content.setGpgUrl(dto.getGpgUrl());
+            content.setMetadataExpiration(dto.getMetadataExpiration());
+            content.setModifiedProductIds(dto.getRequiredProductIds());
+            content.setArches(dto.getArches());
+        }
+
+        return content;
+    }
+
+    public Product convertFromDTO(ProductDTO dto) {
+        Product product = null;
+
+        if (dto != null) {
+            product = new Product(dto.getId(), dto.getName());
+
+            product.setUuid(dto.getUuid());
+            product.setMultiplier(dto.getMultiplier());
+            product.setAttributes(dto.getAttributes());
+
+            if (dto.getProductContent() != null) {
+                for (ProductContentDTO pcd : dto.getProductContent()) {
+                    if (pcd != null) {
+                        Content content = convertFromDTO(pcd.getContent());
+
+                        if (content != null) {
+                            product.addContent(content, pcd.isEnabled() != null ? pcd.isEnabled() : true);
+                        }
+                    }
+                }
+            }
+
+            product.setDependentProductIds(dto.getDependentProductIds());
+        }
+
+        return product;
+    }
+
+    public Pool convertFromDTO(SubscriptionDTO sub) {
+        Product product = convertFromDTO(sub.getProduct());
+        Product derivedProduct = convertFromDTO(sub.getDerivedProduct());
+
+        List<Product> providedProducts = new LinkedList<>();
+        if (sub.getProvidedProducts() != null) {
+            for (ProductDTO pdata : sub.getProvidedProducts()) {
+                if (pdata != null) {
+                    providedProducts.add(convertFromDTO(pdata));
+                }
+            }
+        }
+
+        List<Product> derivedProvidedProducts = new LinkedList<>();
+        if (sub.getDerivedProvidedProducts() != null) {
+            for (ProductDTO pdata : sub.getDerivedProvidedProducts()) {
+                if (pdata != null) {
+                    derivedProvidedProducts.add(convertFromDTO(pdata));
+                }
+            }
+        }
+
+        Pool pool = new Pool(this.owner, product, providedProducts, sub.getQuantity(),
+            sub.getStartDate(), sub.getEndDate(), sub.getContractNumber(), sub.getAccountNumber(),
+            sub.getOrderNumber());
+
+        pool.setDerivedProduct(derivedProduct);
+        pool.setDerivedProvidedProducts(derivedProvidedProducts);
+
+        if (sub.getId() != null) {
+            pool.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
+        }
+
+        pool.setUpstreamPoolId(sub.getUpstreamPoolId());
+        pool.setUpstreamConsumerId(sub.getUpstreamConsumerId());
+        pool.setUpstreamEntitlementId(sub.getUpstreamEntitlementId());
+
+        if (sub.getBranding() != null) {
+            pool.setBranding(pool.getBranding().stream()
+                .filter(elem -> elem != null)
+                .map(elem -> new Branding(elem.getProductId(), elem.getType(), elem.getName()))
+                .collect(Collectors.toSet()));
+        }
+
+        return pool;
     }
 
     /*
@@ -96,10 +210,10 @@ public class SubscriptionReconcilerTest {
      * TODO: Might be worth switching from copying data of a subscription to just creating
      * the local pool with params.
      */
-    private List<Pool> createPoolsFor(Subscription ... subs) {
+    private List<Pool> createPoolsFor(SubscriptionDTO ... subs) {
         List<Pool> pools = new LinkedList<>();
-        for (Subscription sub : subs) {
-            pools.add(TestUtil.copyFromSub(sub));
+        for (SubscriptionDTO sub : subs) {
+            pools.add(convertFromDTO(sub));
         }
 
         // Mock these pools as the return value for the owner:
@@ -114,13 +228,13 @@ public class SubscriptionReconcilerTest {
     /*
      * Verify that a subscription ended up with the upstream data we expect.
      */
-    private void assertUpstream(Subscription sub, String subId) {
+    private void assertUpstream(SubscriptionDTO sub, String subId) {
         assertEquals(subId, sub.getId());
     }
 
     @Test
     public void oneExistsUnchanged() {
-        Subscription testSub1 = createSubscription(owner, "test-prod-1", "up1", "ue1", "uc1", 25);
+        SubscriptionDTO testSub1 = createSubscription(ownerDto, "test-prod-1", "up1", "ue1", "uc1", 25);
         createPoolsFor(testSub1);
 
         reconciler.reconcile(owner, Arrays.asList(testSub1));
@@ -130,8 +244,8 @@ public class SubscriptionReconcilerTest {
 
     @Test
     public void oneExistsOneNew() {
-        Subscription testSub2 = createSubscription(owner, "test-prod-1", "up1", "ue2", "uc1", 20);
-        Subscription testSub3 = createSubscription(owner, "test-prod-1", "up1", "ue3", "uc1", 15);
+        SubscriptionDTO testSub2 = createSubscription(ownerDto, "test-prod-1", "up1", "ue2", "uc1", 20);
+        SubscriptionDTO testSub3 = createSubscription(ownerDto, "test-prod-1", "up1", "ue3", "uc1", 15);
 
         createPoolsFor(testSub2);
 
@@ -142,8 +256,8 @@ public class SubscriptionReconcilerTest {
 
     @Test
     public void testTwoExistOneRemoved() {
-        Subscription testSub2 = createSubscription(owner, "test-prod-1", "up1", "ue2", "uc1", 20);
-        Subscription testSub3 = createSubscription(owner, "test-prod-1", "up1", "ue3", "uc1", 15);
+        SubscriptionDTO testSub2 = createSubscription(ownerDto, "test-prod-1", "up1", "ue2", "uc1", 20);
+        SubscriptionDTO testSub3 = createSubscription(ownerDto, "test-prod-1", "up1", "ue3", "uc1", 15);
 
         createPoolsFor(testSub2, testSub3);
 
@@ -153,10 +267,10 @@ public class SubscriptionReconcilerTest {
 
     @Test
     public void testThreeExistThreeNewOneDifferent() {
-        Subscription testSub2 = createSubscription(owner, "test-prod-1", "up1", "ue2", "uc1", 20);
-        Subscription testSub3 = createSubscription(owner, "test-prod-1", "up1", "ue3", "uc1", 15);
-        Subscription testSub4 = createSubscription(owner, "test-prod-1", "up1", "ue4", "uc1", 10);
-        Subscription testSub5 = createSubscription(owner, "test-prod-1", "up1", "ue5", "uc1", 5);
+        SubscriptionDTO testSub2 = createSubscription(ownerDto, "test-prod-1", "up1", "ue2", "uc1", 20);
+        SubscriptionDTO testSub3 = createSubscription(ownerDto, "test-prod-1", "up1", "ue3", "uc1", 15);
+        SubscriptionDTO testSub4 = createSubscription(ownerDto, "test-prod-1", "up1", "ue4", "uc1", 10);
+        SubscriptionDTO testSub5 = createSubscription(ownerDto, "test-prod-1", "up1", "ue5", "uc1", 5);
 
         createPoolsFor(testSub2, testSub3, testSub4);
 
@@ -169,13 +283,12 @@ public class SubscriptionReconcilerTest {
 
     @Test
     public void testThreeExistThreeNewSameQuantitiesNewConsumer() {
-        Subscription testSub3 = createSubscription(owner, "test-prod-1", "up1", "ue3", "uc1", 15);
-        Subscription testSub4 = createSubscription(owner, "test-prod-1", "up1", "ue4", "uc1", 10);
-        Subscription testSub5 = createSubscription(owner, "test-prod-1", "up1", "ue5", "uc1", 5);
-        Subscription testSub6 = createSubscription(owner, "test-prod-1", "up1", "ue6", "uc2", 15);
-        Subscription testSub7 = createSubscription(owner, "test-prod-1", "up1", "ue7", "uc2", 10);
-        Subscription testSub8 = createSubscription(owner, "test-prod-1", "up1", "ue8", "uc2", 5);
-
+        SubscriptionDTO testSub3 = createSubscription(ownerDto, "test-prod-1", "up1", "ue3", "uc1", 15);
+        SubscriptionDTO testSub4 = createSubscription(ownerDto, "test-prod-1", "up1", "ue4", "uc1", 10);
+        SubscriptionDTO testSub5 = createSubscription(ownerDto, "test-prod-1", "up1", "ue5", "uc1", 5);
+        SubscriptionDTO testSub6 = createSubscription(ownerDto, "test-prod-1", "up1", "ue6", "uc2", 15);
+        SubscriptionDTO testSub7 = createSubscription(ownerDto, "test-prod-1", "up1", "ue7", "uc2", 10);
+        SubscriptionDTO testSub8 = createSubscription(ownerDto, "test-prod-1", "up1", "ue8", "uc2", 5);
 
         createPoolsFor(testSub3, testSub4, testSub5);
 
@@ -187,11 +300,11 @@ public class SubscriptionReconcilerTest {
 
     @Test
     public void testThreeExistTwoNewQuantityMatchNewConsumer() {
-        Subscription testSub3 = createSubscription(owner, "test-prod-1", "up1", "ue3", "uc1", 15);
-        Subscription testSub4 = createSubscription(owner, "test-prod-1", "up1", "ue4", "uc1", 10);
-        Subscription testSub5 = createSubscription(owner, "test-prod-1", "up1", "ue5", "uc1", 5);
-        Subscription testSub6 = createSubscription(owner, "test-prod-1", "up1", "ue6", "uc2", 15);
-        Subscription testSub8 = createSubscription(owner, "test-prod-1", "up1", "ue8", "uc2", 5);
+        SubscriptionDTO testSub3 = createSubscription(ownerDto, "test-prod-1", "up1", "ue3", "uc1", 15);
+        SubscriptionDTO testSub4 = createSubscription(ownerDto, "test-prod-1", "up1", "ue4", "uc1", 10);
+        SubscriptionDTO testSub5 = createSubscription(ownerDto, "test-prod-1", "up1", "ue5", "uc1", 5);
+        SubscriptionDTO testSub6 = createSubscription(ownerDto, "test-prod-1", "up1", "ue6", "uc2", 15);
+        SubscriptionDTO testSub8 = createSubscription(ownerDto, "test-prod-1", "up1", "ue8", "uc2", 5);
 
         createPoolsFor(testSub3, testSub4, testSub5);
 
@@ -202,11 +315,11 @@ public class SubscriptionReconcilerTest {
 
     @Test
     public void testTwoExistThreeNewConsumer() {
-        Subscription testSub3 = createSubscription(owner, "test-prod-1", "up1", "ue3", "uc1", 15);
-        Subscription testSub4 = createSubscription(owner, "test-prod-1", "up1", "ue4", "uc1", 10);
-        Subscription testSub6 = createSubscription(owner, "test-prod-1", "up1", "ue6", "uc2", 15);
-        Subscription testSub7 = createSubscription(owner, "test-prod-1", "up1", "ue7", "uc2", 10);
-        Subscription testSub8 = createSubscription(owner, "test-prod-1", "up1", "ue8", "uc2", 5);
+        SubscriptionDTO testSub3 = createSubscription(ownerDto, "test-prod-1", "up1", "ue3", "uc1", 15);
+        SubscriptionDTO testSub4 = createSubscription(ownerDto, "test-prod-1", "up1", "ue4", "uc1", 10);
+        SubscriptionDTO testSub6 = createSubscription(ownerDto, "test-prod-1", "up1", "ue6", "uc2", 15);
+        SubscriptionDTO testSub7 = createSubscription(ownerDto, "test-prod-1", "up1", "ue7", "uc2", 10);
+        SubscriptionDTO testSub8 = createSubscription(ownerDto, "test-prod-1", "up1", "ue8", "uc2", 5);
 
         createPoolsFor(testSub3, testSub4);
 
@@ -218,12 +331,12 @@ public class SubscriptionReconcilerTest {
 
     @Test
     public void testThreeExistOldThreeNew() {
-        Subscription testSub3 = createSubscription(owner, "test-prod-1", "up1", "ue3", "uc1", 15);
-        Subscription testSub4 = createSubscription(owner, "test-prod-1", "up1", "ue4", "uc1", 10);
-        Subscription testSub5 = createSubscription(owner, "test-prod-1", "up1", "ue5", "uc1", 5);
-        Subscription testSub9 = createSubscription(owner, "test-prod-1", "up1", "", "", 15);
-        Subscription testSub10 = createSubscription(owner, "test-prod-1", "up1", "", "", 10);
-        Subscription testSub11 = createSubscription(owner, "test-prod-1", "up1", "", "", 5);
+        SubscriptionDTO testSub3 = createSubscription(ownerDto, "test-prod-1", "up1", "ue3", "uc1", 15);
+        SubscriptionDTO testSub4 = createSubscription(ownerDto, "test-prod-1", "up1", "ue4", "uc1", 10);
+        SubscriptionDTO testSub5 = createSubscription(ownerDto, "test-prod-1", "up1", "ue5", "uc1", 5);
+        SubscriptionDTO testSub9 = createSubscription(ownerDto, "test-prod-1", "up1", "", "", 15);
+        SubscriptionDTO testSub10 = createSubscription(ownerDto, "test-prod-1", "up1", "", "", 10);
+        SubscriptionDTO testSub11 = createSubscription(ownerDto, "test-prod-1", "up1", "", "", 5);
 
         createPoolsFor(testSub9, testSub10, testSub11);
 
@@ -235,12 +348,12 @@ public class SubscriptionReconcilerTest {
 
     @Test
     public void testQuantMatchAllLower() {
-        Subscription testSub1 = createSubscription(owner, "test-prod-1", "up1", "ue1", "uc1", 25);
-        Subscription testSub2 = createSubscription(owner, "test-prod-1", "up1", "ue2", "uc1", 20);
-        Subscription testSub3 = createSubscription(owner, "test-prod-1", "up1", "ue3", "uc1", 15);
-        Subscription testSub12 = createSubscription(owner, "test-prod-1", "up1", "ue12", "uc3", 23);
-        Subscription testSub13 = createSubscription(owner, "test-prod-1", "up1", "ue13", "uc3", 17);
-        Subscription testSub14 = createSubscription(owner, "test-prod-1", "up1", "ue14", "uc3", 10);
+        SubscriptionDTO testSub1 = createSubscription(ownerDto, "test-prod-1", "up1", "ue1", "uc1", 25);
+        SubscriptionDTO testSub2 = createSubscription(ownerDto, "test-prod-1", "up1", "ue2", "uc1", 20);
+        SubscriptionDTO testSub3 = createSubscription(ownerDto, "test-prod-1", "up1", "ue3", "uc1", 15);
+        SubscriptionDTO testSub12 = createSubscription(ownerDto, "test-prod-1", "up1", "ue12", "uc3", 23);
+        SubscriptionDTO testSub13 = createSubscription(ownerDto, "test-prod-1", "up1", "ue13", "uc3", 17);
+        SubscriptionDTO testSub14 = createSubscription(ownerDto, "test-prod-1", "up1", "ue14", "uc3", 10);
 
         createPoolsFor(testSub1, testSub2, testSub3);
 
@@ -254,12 +367,12 @@ public class SubscriptionReconcilerTest {
 
     @Test
     public void testQuantMatchMix() {
-        Subscription testSub2 = createSubscription(owner, "test-prod-1", "up1", "ue2", "uc1", 20);
-        Subscription testSub3 = createSubscription(owner, "test-prod-1", "up1", "ue3", "uc1", 15);
-        Subscription testSub4 = createSubscription(owner, "test-prod-1", "up1", "ue4", "uc1", 10);
-        Subscription testSub5 = createSubscription(owner, "test-prod-1", "up1", "ue5", "uc1", 5);
-        Subscription testSub12 = createSubscription(owner, "test-prod-1", "up1", "ue12", "uc3", 23);
-        Subscription testSub14 = createSubscription(owner, "test-prod-1", "up1", "ue14", "uc3", 10);
+        SubscriptionDTO testSub2 = createSubscription(ownerDto, "test-prod-1", "up1", "ue2", "uc1", 20);
+        SubscriptionDTO testSub3 = createSubscription(ownerDto, "test-prod-1", "up1", "ue3", "uc1", 15);
+        SubscriptionDTO testSub4 = createSubscription(ownerDto, "test-prod-1", "up1", "ue4", "uc1", 10);
+        SubscriptionDTO testSub5 = createSubscription(ownerDto, "test-prod-1", "up1", "ue5", "uc1", 5);
+        SubscriptionDTO testSub12 = createSubscription(ownerDto, "test-prod-1", "up1", "ue12", "uc3", 23);
+        SubscriptionDTO testSub14 = createSubscription(ownerDto, "test-prod-1", "up1", "ue14", "uc3", 10);
 
         createPoolsFor(testSub2, testSub3, testSub4, testSub5);
 
@@ -271,9 +384,9 @@ public class SubscriptionReconcilerTest {
 
     @Test
     public void testQuantMatchAllSame() {
-        Subscription testSub3 = createSubscription(owner, "test-prod-1", "up1", "ue3", "uc1", 15);
-        Subscription testSub15 = createSubscription(owner, "test-prod-1", "up1", "ue15", "uc1", 15);
-        Subscription testSub16 = createSubscription(owner, "test-prod-1", "up1", "ue16", "uc1", 15);
+        SubscriptionDTO testSub3 = createSubscription(ownerDto, "test-prod-1", "up1", "ue3", "uc1", 15);
+        SubscriptionDTO testSub15 = createSubscription(ownerDto, "test-prod-1", "up1", "ue15", "uc1", 15);
+        SubscriptionDTO testSub16 = createSubscription(ownerDto, "test-prod-1", "up1", "ue16", "uc1", 15);
 
         createPoolsFor(testSub3, testSub15);
 
@@ -286,20 +399,20 @@ public class SubscriptionReconcilerTest {
 
     @Test
     public void testMultiPools() {
-        Subscription testSub1 = createSubscription(owner, "test-prod-1", "up1", "ue1", "uc1", 25);
-        Subscription testSub2 = createSubscription(owner, "test-prod-1", "up1", "ue2", "uc1", 20);
-        Subscription testSub3 = createSubscription(owner, "test-prod-1", "up1", "ue3", "uc1", 15);
-        Subscription testSub4 = createSubscription(owner, "test-prod-1", "up1", "ue4", "uc1", 10);
-        Subscription testSub5 = createSubscription(owner, "test-prod-1", "up1", "ue5", "uc1", 5);
-        Subscription testSub20 = createSubscription(owner, "test-prod-1", "up2", "ue20", "uc1", 25);
-        Subscription testSub21 = createSubscription(owner, "test-prod-1", "up2", "ue21", "uc1", 20);
-        Subscription testSub22 = createSubscription(owner, "test-prod-1", "up2", "ue22", "uc1", 15);
-        Subscription testSub24 = createSubscription(owner, "test-prod-1", "up2", "ue24", "uc1", 5);
-        Subscription testSub30 = createSubscription(owner, "test-prod-1", "up3", "ue30", "uc1", 25);
-        Subscription testSub31 = createSubscription(owner, "test-prod-1", "up3", "ue31", "uc1", 20);
-        Subscription testSub32 = createSubscription(owner, "test-prod-1", "up3", "ue32", "uc1", 15);
-        Subscription testSub33 = createSubscription(owner, "test-prod-1", "up3", "ue33", "uc1", 10);
-        Subscription testSub34 = createSubscription(owner, "test-prod-1", "up3", "ue34", "uc1", 5);
+        SubscriptionDTO testSub1 = createSubscription(ownerDto, "test-prod-1", "up1", "ue1", "uc1", 25);
+        SubscriptionDTO testSub2 = createSubscription(ownerDto, "test-prod-1", "up1", "ue2", "uc1", 20);
+        SubscriptionDTO testSub3 = createSubscription(ownerDto, "test-prod-1", "up1", "ue3", "uc1", 15);
+        SubscriptionDTO testSub4 = createSubscription(ownerDto, "test-prod-1", "up1", "ue4", "uc1", 10);
+        SubscriptionDTO testSub5 = createSubscription(ownerDto, "test-prod-1", "up1", "ue5", "uc1", 5);
+        SubscriptionDTO testSub20 = createSubscription(ownerDto, "test-prod-1", "up2", "ue20", "uc1", 25);
+        SubscriptionDTO testSub21 = createSubscription(ownerDto, "test-prod-1", "up2", "ue21", "uc1", 20);
+        SubscriptionDTO testSub22 = createSubscription(ownerDto, "test-prod-1", "up2", "ue22", "uc1", 15);
+        SubscriptionDTO testSub24 = createSubscription(ownerDto, "test-prod-1", "up2", "ue24", "uc1", 5);
+        SubscriptionDTO testSub30 = createSubscription(ownerDto, "test-prod-1", "up3", "ue30", "uc1", 25);
+        SubscriptionDTO testSub31 = createSubscription(ownerDto, "test-prod-1", "up3", "ue31", "uc1", 20);
+        SubscriptionDTO testSub32 = createSubscription(ownerDto, "test-prod-1", "up3", "ue32", "uc1", 15);
+        SubscriptionDTO testSub33 = createSubscription(ownerDto, "test-prod-1", "up3", "ue33", "uc1", 10);
+        SubscriptionDTO testSub34 = createSubscription(ownerDto, "test-prod-1", "up3", "ue34", "uc1", 5);
 
         createPoolsFor(testSub1, testSub2, testSub3, testSub4, testSub5, testSub20, testSub21, testSub22,
             testSub24);
@@ -320,15 +433,15 @@ public class SubscriptionReconcilerTest {
         assertUpstream(testSub34, testSub34.getId());
     }
 
-    private Subscription createSubscription(Owner daOwner, String productId,
+    private SubscriptionDTO createSubscription(OwnerDTO daOwner, String productId,
         String poolId, String entId, String conId, long quantity) {
 
-        ProductData pdata = new ProductData();
-        pdata.setId(productId);
-        pdata.setName(productId);
+        ProductDTO productDTO = new ProductDTO();
+        productDTO.setId(productId);
+        productDTO.setName(productId);
 
-        Subscription sub = new Subscription();
-        sub.setProduct(pdata);
+        SubscriptionDTO sub = new SubscriptionDTO();
+        sub.setProduct(productDTO);
         sub.setUpstreamPoolId(poolId);
         sub.setUpstreamEntitlementId(entId);
         sub.setUpstreamConsumerId(conId);
@@ -339,8 +452,7 @@ public class SubscriptionReconcilerTest {
         return sub;
     }
 
-    protected EntitlementCertificate createEntitlementCertificate(String key,
-        String cert) {
+    protected EntitlementCertificate createEntitlementCertificate(String key, String cert) {
         EntitlementCertificate toReturn = new EntitlementCertificate();
         CertificateSerial certSerial = new CertificateSerial(new Date());
         certSerial.setCollected(true);

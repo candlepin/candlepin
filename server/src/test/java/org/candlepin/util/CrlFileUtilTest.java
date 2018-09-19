@@ -26,7 +26,6 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 
 import org.apache.commons.io.IOUtils;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeMatcher;
 import org.junit.After;
@@ -57,8 +56,6 @@ import javax.inject.Inject;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class CrlFileUtilTest {
-
-    private static final BouncyCastleProvider BC_PROVIDER = new BouncyCastleProvider();
     private CrlFileUtil cfu;
 
     @Inject private CertificateReader certificateReader;
@@ -225,7 +222,7 @@ public class CrlFileUtilTest {
             try {
                 in = new BufferedInputStream(new FileInputStream(f));
                 x509crl = (X509CRL) CertificateFactory.getInstance("X.509").generateCRL(in);
-                x509crl.verify(certificateReader.getCACert().getPublicKey(), BC_PROVIDER.PROVIDER_NAME);
+                x509crl.verify(certificateReader.getCACert().getPublicKey());
                 Set<BigInteger> s = new HashSet<>();
 
                 for (X509CRLEntry entry : x509crl.getRevokedCertificates()) {

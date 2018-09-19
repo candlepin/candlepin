@@ -29,9 +29,9 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Rules;
 import org.candlepin.model.activationkeys.ActivationKey;
-import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.js.compliance.ComplianceReason;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
+import org.candlepin.dto.manifest.v1.SubscriptionDTO;
 import com.fasterxml.jackson.databind.AnnotationIntrospector;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair;
@@ -209,7 +209,7 @@ public class EventFactory {
             .buildEvent();
     }
 
-    public Event subscriptionExpired(Subscription subscription) {
+    public Event subscriptionExpired(SubscriptionDTO subscription) {
         return getEventBuilder(Target.SUBSCRIPTION, Type.EXPIRED)
              .setEventData(subscription)
              .buildEvent();

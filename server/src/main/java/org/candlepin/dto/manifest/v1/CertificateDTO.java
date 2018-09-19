@@ -17,13 +17,17 @@ package org.candlepin.dto.manifest.v1;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.candlepin.dto.TimestampedCandlepinDTO;
+import org.candlepin.service.model.CertificateInfo;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 
 
 /**
  * The CertificateDTO is a DTO representing most Candlepin certificates
  * as used by the manifest import/export framework.
  */
-public class CertificateDTO extends TimestampedCandlepinDTO<CertificateDTO> {
+public class CertificateDTO extends TimestampedCandlepinDTO<CertificateDTO> implements CertificateInfo {
     public static final long serialVersionUID = 1L;
 
     protected String id;
@@ -67,11 +71,13 @@ public class CertificateDTO extends TimestampedCandlepinDTO<CertificateDTO> {
         return this;
     }
 
-    public String getCert() {
+    @Override
+    @JsonProperty("cert")
+    public String getCertificate() {
         return this.cert;
     }
 
-    public CertificateDTO setCert(String cert) {
+    public CertificateDTO setCertificate(String cert) {
         this.cert = cert;
         return this;
     }
@@ -111,7 +117,7 @@ public class CertificateDTO extends TimestampedCandlepinDTO<CertificateDTO> {
             EqualsBuilder builder = new EqualsBuilder()
                 .append(this.getId(), that.getId())
                 .append(this.getKey(), that.getKey())
-                .append(this.getCert(), that.getCert())
+                .append(this.getCertificate(), that.getCertificate())
                 .append(this.getSerial(), that.getSerial());
 
             return builder.isEquals();
@@ -129,7 +135,7 @@ public class CertificateDTO extends TimestampedCandlepinDTO<CertificateDTO> {
             .append(super.hashCode())
             .append(this.getId())
             .append(this.getKey())
-            .append(this.getCert())
+            .append(this.getCertificate())
             .append(this.getSerial());
 
         return builder.toHashCode();
@@ -157,7 +163,7 @@ public class CertificateDTO extends TimestampedCandlepinDTO<CertificateDTO> {
 
         this.setId(source.getId());
         this.setKey(source.getKey());
-        this.setCert(source.getCert());
+        this.setCertificate(source.getCertificate());
         this.setSerial(source.getSerial());
 
         return this;
