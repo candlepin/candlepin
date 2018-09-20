@@ -16,6 +16,8 @@ package org.candlepin.pinsetter.tasks;
 
 import static org.quartz.JobBuilder.*;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.candlepin.auth.Principal;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.filter.LoggingFilter;
@@ -80,6 +82,10 @@ import java.util.zip.InflaterInputStream;
 public class HypervisorUpdateJob extends KingpinJob {
 
     private static Logger log = LoggerFactory.getLogger(HypervisorUpdateJob.class);
+
+    // Reuse this instance of ObjectMapper since they are expensive to create.
+    private static ObjectMapper mapper = configureObjectMapper();
+
     private OwnerCurator ownerCurator;
     private ConsumerCurator consumerCurator;
     private ConsumerResource consumerResource;
@@ -106,7 +112,6 @@ public class HypervisorUpdateJob extends KingpinJob {
         this.subAdapter = subAdapter;
         this.complianceRules = complianceRules;
         this.translator = translator;
-
         this.hypervisorType = consumerTypeCurator.getByLabel(ConsumerTypeEnum.HYPERVISOR.getLabel(), true);
     }
 
@@ -228,7 +233,7 @@ public class HypervisorUpdateJob extends KingpinJob {
 
             byte[] data = (byte[]) map.get(DATA);
             String json = decompress(data);
-            HypervisorList hypervisors = (HypervisorList) Util.fromJson(json, HypervisorList.class);
+            HypervisorList hypervisors = mapper.readValue(json, HypervisorList.class);
             log.debug("Hypervisor consumers for create/update: {}", hypervisors.getHypervisors().size());
             log.debug("Updating hypervisor consumers for org {}", ownerKey);
 
@@ -514,5 +519,11 @@ public class HypervisorUpdateJob extends KingpinJob {
         consumerCurator.updateLastCheckin(consumer, now);
         consumer.setLastCheckin(now);
         return consumer;
+    }
+
+    private static ObjectMapper configureObjectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        return mapper;
     }
 }

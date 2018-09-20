@@ -4,10 +4,7 @@ APP_DB_NAME="candlepin"
 MAX_STARTUP_WAIT_TIME=30
 
 gendb() {
-    if [ "$USE_ORACLE" == "1" ]; then
-        init_oracle_jdbc $APP_DB_NAME
-        [ -z "$DBPASSWORD" ] && DBPASSWORD="$APP_DB_NAME"
-    elif [ "$USE_MYSQL" == "1" ]; then
+    if [ "$USE_MYSQL" == "1" ]; then
         init_mysql_jdbc $APP_DB_NAME
     else
         init_postgresql_jdbc $APP_DB_NAME
@@ -16,9 +13,7 @@ gendb() {
     if [ "$GENDB" == "1" ]; then
         MESSAGE="Generating New Database"
         CHANGELOG="changelog-create.xml"
-        if [ "$USE_ORACLE" == "1" ]; then
-            recreate_oracle $APP_DB_NAME $DBUSER
-        elif [ "$USE_MYSQL" == "1" ]; then
+        if [ "$USE_MYSQL" == "1" ]; then
             recreate_mysql $APP_DB_NAME $DBUSER
         else
             recreate_postgresql $APP_DB_NAME $DBUSER
@@ -140,7 +135,6 @@ OPTIONS:
   -t          import test data
   -T          import minimal test data, some owners, users, and roles
   -H          include test resources for hosted mode
-  -o          use Oracle
   -l          use Logdriver
   -m          use MySQL
   -a          auto-deploy a generated candlepin.conf
@@ -198,7 +192,6 @@ while getopts ":fqgtTHolmavd:" opt; do
         q  ) QPID="qpid";;
         t  ) TESTDATA="1";;
         T  ) TESTDATA="MIN";;
-        o  ) USE_ORACLE="1";;
         l  ) LOGDRIVER="logdriver";;
         m  ) USE_MYSQL="1";;
         a  ) AUTOCONF="1";;
@@ -209,11 +202,6 @@ while getopts ":fqgtTHolmavd:" opt; do
 done
 
 shift $(($OPTIND - 1))
-
-if [ "$USE_ORACLE" == "1" -a "$USE_MYSQL" == "1" ]; then
-    err_msg "You can't use Oracle and MySQL at the same time."
-    exit 1
-fi
 
 if [ $(id -u) -ne 0 ]; then
     if ( command -v sudo >/dev/null 2>&1 ) then
@@ -319,10 +307,7 @@ else
 fi
 
 
-if [ "$USE_ORACLE" == "1" ]; then
-    info_msg "Building with Oracle JDBC jar"
-    ENV_BUILDR="oracle"
-elif [ "$USE_MYSQL" == "1" ]; then
+if [ "$USE_MYSQL" == "1" ]; then
     ENV_BUILDR="mysql"
 else
     # "development" is the default buildr environment.  It has been aliased to the postgresql environment
