@@ -47,14 +47,6 @@ public class DatabaseConfigFactory {
         QUERY_PARAMETER_LIMIT, "32000"
     );
 
-    public static final Map<String, String> ORACLE_CONFIG = ImmutableMap.of(
-        // Oracle has a hard limit of 1000
-        IN_OPERATOR_BLOCK_SIZE, "1000",
-        CASE_OPERATOR_BLOCK_SIZE, "100",
-        BATCH_BLOCK_SIZE, "500",
-        QUERY_PARAMETER_LIMIT, "32000"
-    );
-
     private DatabaseConfigFactory() {
         // Utility class
     }
@@ -64,8 +56,7 @@ public class DatabaseConfigFactory {
      */
     public enum SupportedDatabase {
         POSTGRESQL("postgresql", POSTGRESQL_CONFIG),
-        MYSQL("mysql", MYSQL_CONFIG),
-        ORACLE("oracle", ORACLE_CONFIG);
+        MYSQL("mysql", MYSQL_CONFIG);
 
         private final String label;
         private final Map<String, String> settings;

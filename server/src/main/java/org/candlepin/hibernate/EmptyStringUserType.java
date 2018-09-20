@@ -31,6 +31,12 @@ import java.sql.Types;
  * reasons uses the empty string to represent no service level.  Since Oracle
  * stores empty strings as nulls, we need to convert the null back to an empty
  * string when we load the service level from the database.
+ *
+ * For a time we were attempting to future-proof by remaining compatible with (if
+ * not fully supporting) Oracle.  As of August 2018, the mandate to remain Oracle compatible
+ * is gone, but I am electing to keep this class so that our data storage strategy remains
+ * consistent across Candlepin versions.  I don't want the situation where Candlepin X does store
+ * string but Candlepin X+1 does not.
  */
 public class EmptyStringUserType implements UserType {
     @Override

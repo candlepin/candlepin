@@ -118,51 +118,7 @@ class DbToolTest(unittest.TestCase):
                                           , "dddd"])
         
     
-    def testing_ora(self):
-        return dbtool.OracleInstance("orafilip", "orapass"); 
-  
-    def test_OracleInstance_jdbc_url(self):
-        ora = self.testing_ora();
-        self.assertEqual(ora.get_jdbc_url("db"), "jdbc:oracle:thin:@//db");
-    
-    @patch("dbtool.run_command")     
-    def test_OracleInstance_runSql(self,m_run_command):
-        ora = self.testing_ora();
-        m_run_command.return_value= (0, "no problem!")
-        ora.runSql("oradb", "some long sql")
-        m_run_command.assert_called_with(['sqlplus', '-S', 'orafilip/orapass@//oradb as sysdba'], "some long sql")
-        
-    @patch("dbtool.run_command")     
-    def test_OracleInstance_runSql_error(self,m_run_command):
-        ora = self.testing_ora();
-        m_run_command.return_value = (0, "big big ERROR")
-        with self.assertRaises(Exception):
-            ora.runSql("oradb", "some long sql")
-
-
-    @patch("dbtool.OracleInstance.runSql")             
-    def test_OracleInstance_create(self,m_run_sql):
-        ora = self.testing_ora();
-        m_run_sql.return_value = ""
-        ora.create("dbtocreate")
-        m_run_sql.assert_any_call("select 'user exists' from all_users where username='DBTOCREATE';")
-        m_run_sql.assert_any_call("create user dbtocreate identified by orapass default tablespace users;")
-        m_run_sql.assert_any_call("grant dba to dbtocreate;")
-        
-    @patch("dbtool.OracleInstance.runSql")             
-    def test_OracleInstance_create_fails(self,m_run_sql):
-        ora = self.testing_ora();
-        m_run_sql.return_value = "user exists"
-        ora.create("dbtocreate")
-        m_run_sql.assert_called_once_with("select 'user exists' from all_users where username='DBTOCREATE';")
-        
-    @patch("dbtool.OracleInstance.runSql")      
-    def test_OracleInstance_drop(self,m_run_sql):
-        ora = self.testing_ora();
-        ora.drop("dbtodrop")
-        m_run_sql.assert_called_with("drop user dbtodrop cascade;")           
-                  
-    
+   
     @patch("dbtool.run_command")      
     def test_MysqlInstance_drop(self,m_run_command):
         mysql = dbtool.MysqlInstance("filip","secret")
@@ -218,33 +174,12 @@ class DbToolTest(unittest.TestCase):
             m_liquibase_wrapper.assert_called_with("candlepin", None, "some cp:jdbccp", "dbinstance.driver", "dbinstance.jdbcurl", False)
             m_liquibase_wrapper.return_value.migrate.assert_called_with("db/changelog/changelog-create.xml");
 
-
-    @patch("dbtool.LiquibaseWrapper")
-    @patch("dbtool.OracleInstance")
-    @patch("dbtool.Candlepin")  
-    def test_tool_cp_oracle_success(self, m_candlepin,  m_oracle_instance, m_liquibase_wrapper):
-        m_candlepin.return_value = self.product_mock();
-        m_oracle_instance.return_value= self.dbinstance_mock();
-        
-        dbtool.main(["--oracle-user", "orauser", "--database-type", "Oracle", "--oracle-password", "orapass" ,"-d","candlepindb","--product", "candlepin", "-u", "candlepinuser","-p", "secret", "--action", "create"])
-        m_oracle_instance.assert_called_with("orauser", "orapass")
-        m_oracle_instance.return_value.create.assert_called_with("candlepindb")
-        m_liquibase_wrapper.assert_called_with("candlepinuser", "secret", "some cp:jdbccp", "dbinstance.driver", "dbinstance.jdbcurl", False)
-        m_liquibase_wrapper.return_value.migrate.assert_called_with("createclog");
-
     def test_bad_arg_list_should_raise_exception(self):
         with self.assertRaisesRegex(Exception, "You must specify product using --product switch"):
             dbtool.main([])
         
         with self.assertRaisesRegex(Exception, "You must specify action using --action switch"):
             dbtool.main(["--product", "candlepin"])
-        
-        invalid_oracle_arglists=[["--product", "candlepin", "--action", "create","--database-type", "Oracle","--oracle-user", "XX"],
-                                 ["--product", "candlepin", "--action", "create","--database-type", "Oracle"]]
-        
-        for invalid_oracle_args in invalid_oracle_arglists:
-            with self.assertRaisesRegex(Exception, "When using Oracle database, you must specify --oracle-password, possibly --oracle-user"):
-                dbtool.main(invalid_oracle_args)    
     
     @patch("dbtool.LiquibaseWrapper")
     @patch("dbtool.PostgresInstance")

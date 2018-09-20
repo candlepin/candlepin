@@ -107,49 +107,6 @@ class DbSetup(object):
         print output
 
 
-class OracleSetup(DbSetup):
-    def __init__(self, username, password, db, community, verbose, oracle_user, oracle_password):
-        super(OracleSetup, self).__init__(username, password, db, community, verbose)
-        self.jdbc_jar = "/usr/lib/oracle/11.2/client64/lib/ojdbc6.jar"
-        self.driver_class = "oracle.jdbc.OracleDriver"
-        self.jdbc_url = "jdbc:oracle:thin:@//%s" % db
-        self.oracle_user = oracle_user
-        self.oracle_password = oracle_password
-
-    def _runSql(self, sql):
-        connect_string = "%s/%s@//%s as sysdba" % (self.oracle_user, self.oracle_password, self.db)
-        session = Popen(['sqlplus', '-S', connect_string], stdin=PIPE, stdout=PIPE, stderr=PIPE)
-        session.stdin.write(sql)
-        out, err = session.communicate()
-
-        # SQL*Plus doesn't write to stderr apparently
-        if "ERROR" in out:
-            sys.stderr.write("\n########## ERROR ############\n")
-            sys.stderr.write("Error communicating with Oracle: %s\n" % out)
-            raise Exception("Error running command")
-
-        return out
-
-    def create(self):
-        out = self._runSql("select 'user exists' from all_users where username='%s';" % self.username.upper())
-        if 'user exists' in out:
-            print("%s user already exists.  Skipping..." % self.username)
-            return
-
-        print("Creating Candlepin database")
-        out = self._runSql('create user %s identified by %s default tablespace users;' %
-            (self.username, self.password))
-        print out
-
-        out = self._runSql('grant dba to %s;' % self.username)
-        print out
-
-    def drop(self):
-        print("Dropping Candlepin database")
-        out = self._runSql('drop user %s cascade;' % self.username)
-        print out
-
-
 class PostgresqlSetup(DbSetup):
     def __init__(self, host, port, username, password, db, community, verbose):
         super(PostgresqlSetup, self).__init__(username, password, db, community, verbose)
@@ -247,32 +204,11 @@ if __name__ == "__main__":
             dest="community",
             help="true if used in a community fashion")
 
-    parser.add_option("--oracle",
-            action="store_true", default=False,
-            dest="oracle",
-            help="run against an Oracle installation")
-
-    parser.add_option("--oracle-user",
-            dest="oracle_user", default="sys",
-            help="Oracle DBA user. Defaults to 'sys'")
-
-    parser.add_option("--oracle-password",
-            dest="oracle_password",
-            help="Oracle DBA password")
-
     parser.add_option("--verbose",
             dest="verbose", action="store_true", default=False,
             help="enables verbose logging/output")
 
     (options, args) = parser.parse_args()
-
-    if options.oracle:
-        if not options.oracle_password:
-            print("ERROR: Please provide the DBA password.")
-            sys.exit(1)
-        if not options.dbpassword:
-            print("ERROR: Please provide a password for the Candlepin database user.")
-            sys.exit(1)
 
     if (not options.create and not options.update and not options.validate):
         print("ERROR: Please specify --create, --update or --validate.")
@@ -294,12 +230,8 @@ if __name__ == "__main__":
         print("ERROR: --drop can not be used with --schema-only")
         sys.exit(1)
 
-    if options.oracle:
-        dbsetup = OracleSetup(options.dbuser, options.dbpassword, options.db, options.community,
-            options.verbose, options.oracle_user, options.oracle_password)
-    else:
-        dbsetup = PostgresqlSetup(options.dbhost, options.dbport, options.dbuser, options.dbpassword,
-            options.db, options.community, options.verbose)
+    dbsetup = PostgresqlSetup(options.dbhost, options.dbport, options.dbuser, options.dbpassword,
+        options.db, options.community, options.verbose)
 
     if options.create:
         if options.drop:
