@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.5.5
+Version: 2.5.6
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -221,6 +221,104 @@ fi
 
 #raw
 %changelog
+* Fri Sep 21 2018 Kevin Howell <khowell@redhat.com> 2.5.6-1
+- Remove Status object obviated by merge from master (awood@redhat.com)
+- Update auto attach to allow for addons and role (wpoteat@redhat.com)
+- Bug fix: added syspurpose to list in capabilities. (jhnidek@redhat.com)
+- Compute system purpose compliance (adarshvritant@gmail.com)
+- Ignore unknown JSON properties in checkin data (mstead@redhat.com)
+- ENT-716 Implemented syspurpose prioritization (nmoumoul@redhat.com)
+- syspurpose capability (wpoteat@redhat.com)
+- Added system purpose to rules ConsumerDTO (mstead@redhat.com)
+- Create/Update Consumer now updates syspurpose data (mstead@redhat.com)
+- [Intent] Dont filter pools based on SLA on auto-attach, but prioritize
+  (#1973) (nmoumoul@redhat.com)
+- Accept new intent fields from clients (adarshvritant@gmail.com)
+- 1628594: Update epoch on Java requirement (khowell@redhat.com)
+- Add LICENSE back to server dir (khowell@redhat.com)
+- Removed the v1 DTO shims from manifest import and export (crog@redhat.com)
+- Remove Oracle related code. (awood@redhat.com)
+- 1624446: Do not set connection-ttl-override (khowell@redhat.com)
+- ENT-113 Replace @JsonIgnoreProperties with ObjectMapper config
+  (nmoumoul@redhat.com)
+- Correct over-zealous search and replace. (awood@redhat.com)
+- ENT-109 Implemented ActivationKeyDTO for Rules (nmoumoul@redhat.com)
+- 1606395: Get system purpose attributes for an owner. (awood@redhat.com)
+- ENT-456 Implemented ComplianceStatusDTO for Rules (nmoumoul@redhat.com)
+- Several updates and changes to the service adapters (crog@redhat.com)
+- ENT-102 Moved SuggestedQuantity to the rules dto package
+  (nmoumoul@redhat.com)
+- Newer versions of mariadb don't recognize dbms="mysql" (wpoteat@redhat.com)
+- ENT-92 Implemented DistributorVersionDTO for the API (nmoumoul@redhat.com)
+- Updated gen-certs for compatibility with Tomcat 8.5+ (crog@redhat.com)
+- setOwnerId incorrect (wpoteat@redhat.com)
+- Revoke multi org implementation (#2072) (adarshvritant@gmail.com)
+- 1618491: Allow entitlement refresh to refresh content access cert
+  (wpoteat@redhat.com)
+- 1616408: selinux - allow tomcat to connect to postgres (khowell@redhat.com)
+- 1618491: Ensure environment change shows in content access certificate
+  (wpoteat@redhat.com)
+- Remove use of parallelStream when not necessary. (awood@redhat.com)
+- Fix issue with intermittent rspec test failure. (awood@redhat.com)
+- 1608427: API call to get list of consumer UUIDs entitled from a pool
+  (awood@redhat.com)
+- 1608034: Remove method that leads to persistence errors (awood@redhat.com)
+- Add toString for GuestId and correct typo in logging statement.
+  (awood@redhat.com)
+- Refactor confusing method and add comments to explain it. (awood@redhat.com)
+- Refactor method with a confusing name and signature. (awood@redhat.com)
+- Do not refire HypervisorUpdateJobs on persistence failure (mstead@redhat.com)
+- 1598850: Hypervisor checkins now return HypervisorUpdateResultDTO (ENT-709)
+  (nmoumoul@redhat.com)
+- ENT-711: Update candlepin to use BouncyCastle 1.60. (jhnidek@redhat.com)
+- Remove unused import (awood@redhat.com)
+- Switch hashing algorithms from SHA-256 to Murmur3 for compliance hash
+  (awood@redhat.com)
+- ENT-616: Update SubjectKeyIdentifierWriter for isolation [m] (#2050)
+  (aparadka@redhat.com)
+- ENT-111 Implemented & applied GuestIdDTO for Rules (nmoumoul@redhat.com)
+- Move crypto imlementation classes to appropriate package. (awood@redhat.com)
+- Do not create SubjectAltName extension when unnecessary. (awood@redhat.com)
+- Update comment on AuthorityKeyIdentifier extension. (awood@redhat.com)
+- Remove all classes using BouncyCastle (awood@redhat.com)
+- Switch to using JSS in CrlFileUtil (awood@redhat.com)
+- Switch to using JSS as crypto provider. (awood@redhat.com)
+- Correct issue where SubjectAltNames were not added to certificate.
+  (awood@redhat.com)
+- Add JSS implementation of PrivateKeyReader. (awood@redhat.com)
+- Rename ProviderBasedPrivateKeyReader interface. (awood@redhat.com)
+- Rename ProviderBasedPKIUtility interface. (awood@redhat.com)
+- Move crypto provider specific PEM reader code into separate classes.
+  (awood@redhat.com)
+- Move crypto provider specific code out of abstract class. (awood@redhat.com)
+- Pull out more assorted BouncyCastle calls. (awood@redhat.com)
+- Restrict BouncyCastle imports from non-BouncyCastle related code
+  (awood@redhat.com)
+- Edit CRLs in a streaming fashion using JSS. (awood@redhat.com)
+- Fix error in how extensions are written to an empty CRL. (awood@redhat.com)
+- Change signing algorithm string and revocation reason (awood@redhat.com)
+- Use local DER tag constants. (awood@redhat.com)
+- Make CRL streaming unit test condition more strict. (awood@redhat.com)
+- Move more functionality up into AbstractX509CRLStreamWriter.
+  (awood@redhat.com)
+- Remove more references to BouncyCastle version of CRLEntry.
+  (awood@redhat.com)
+- Create abstract class for X509CRLEntryStream with common DER functions
+  (awood@redhat.com)
+- Calculate KeyIdentifiers for RSA public keys. (awood@redhat.com)
+- Make X509CRLStreamWriter an interface. (awood@redhat.com)
+- JSS implementation of X509CRLEntryStream. (awood@redhat.com)
+- Separate crypto provider specifics in X509CRLEntryStream. (awood@redhat.com)
+- Add unit test for custom extensions in JSS. (awood@redhat.com)
+- Add JSS as a cryptographic provider. (awood@redhat.com)
+- Allow for a little fuzz in comparison due to timing issues in unit test
+  (awood@redhat.com)
+- Start CRL number at 1 consistently across Candlepin. (awood@redhat.com)
+- Update commons-codec to latest version. (awood@redhat.com)
+- Use version 3 X.509 certificates during testing. (awood@redhat.com)
+- Move BouncyCastle specific methods into self-contained class
+  (awood@redhat.com)
+
 * Fri Jun 29 2018 Kevin Howell <khowell@redhat.com> 2.5.5-1
 - Updated UserResource to use UserDTOs instead of User entities
   (crog@redhat.com)
