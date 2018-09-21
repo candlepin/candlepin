@@ -214,54 +214,47 @@ if [ $(id -u) -ne 0 ]; then
     fi
 fi
 
-if [ "$JBOSS_HOME" != "" ]; then
-    # we're using JBOSS AS
-    isrpm $JBOSS_HOME
+# use tomcat 6, unless it doesnt exist and tomcat does
+TC=tomcat6
+TC_VERSION=6
 
-    if [ "$?" -ne 0 ]; then
-        START="$JBOSS_HOME/bin/run.sh 2>&1 > console.log &"
-        STOP="$JBOSS_HOME/bin/shutdown.sh --shutdown"
-        DEPLOY="$JBOSS_HOME/server/default/deploy/"
-    else
-        START="$SUDO /sbin/service jbossas start"
-        STOP="$SUDO /sbin/service jbossas stop"
-        DEPLOY="$JBOSS_HOME/server/default/deploy/"
-    fi
+if ( [ -f /usr/sbin/tomcat ] && (! [ -f /usr/sbin/tomcat6 ] ) );
+then
+    TC=tomcat
 
-    CONTAINER_CONF_DIR="$JBOSS_HOME/conf"
-    CLEAN="$JBOSS_HOME/server/default/deploy/candlepin*"
-else
-    # use tomcat 6, unless it doesnt exist and tomcat does
-    TC=tomcat6
-    if ( [ -f /usr/sbin/tomcat ] && (! [ -f /usr/sbin/tomcat6 ] ) );
-    then
-        TC=tomcat
-    fi
-    if [ -z $TC_HOME ]; then
-        TC_HOME=/var/lib/$TC
-    fi
-
-    isrpm $TC_HOME
-
-    if [ "$?" -ne 0 ]; then
-        START="$TC_HOME/bin/catalina.sh jpda start"
-        STOP="$TC_HOME/bin/catalina.sh stop"
-        CONTAINER_CONF_DIR="$TC_HOME/conf"
-    else
-        START="$SUDO /sbin/service $TC start"
-        STOP="$SUDO /sbin/service $TC stop"
-        CONTAINER_CONF_DIR="/etc/$TC"
-    fi
-
-    # Check if we're in a container using supervisord instead:
-    if [ "$SUPERVISOR" == "1" ]; then
-        START="supervisorctl start tomcat"
-        STOP="supervisorctl stop tomcat"
-    fi
-
-    DEPLOY="$TC_HOME/webapps/candlepin.war"
-    CLEAN="$TC_HOME/webapps/candlepin/"
+    # Determine which Tomcat version we're using
+    TC_VERSION=$(rpm -q tomcat | grep -oP "(?<=^tomcat-)[0-9]+\.[0-9]+")
 fi
+
+if [ -z $TC_HOME ]; then
+    TC_HOME=/var/lib/$TC
+fi
+
+info_msg "Configuring Tomcat $TC_VERSION found at $TC_HOME"
+
+isrpm $TC_HOME
+if [ "$?" -ne 0 ]; then
+    START="$TC_HOME/bin/catalina.sh jpda start"
+    STOP="$TC_HOME/bin/catalina.sh stop"
+    CONTAINER_CONF_DIR="$TC_HOME/conf"
+else
+    START="$SUDO /sbin/service $TC start"
+    STOP="$SUDO /sbin/service $TC stop"
+    CONTAINER_CONF_DIR="/etc/$TC"
+fi
+
+# Check if we're in a container using supervisord instead:
+if [ "$SUPERVISOR" == "1" ]; then
+    START="supervisorctl start tomcat"
+    STOP="supervisorctl stop tomcat"
+fi
+
+DEPLOY="$TC_HOME/webapps/candlepin.war"
+CLEAN="$TC_HOME/webapps/candlepin/"
+
+
+
+
 
 # stop the appserver
 eval $STOP
@@ -306,7 +299,7 @@ bash $SELF_DIR/gen-certs $GEN_CERTS_ARGS
 update_keystore
 
 # update server.xml
-$SUDO python $PROJECT_DIR/bin/update-server-xml.py $CONTAINER_CONF_DIR
+$SUDO python $PROJECT_DIR/bin/update-server-xml.py --tomcat-version $TC_VERSION $CONTAINER_CONF_DIR
 
 create_var_lib_candlepin
 create_var_log_candlepin
