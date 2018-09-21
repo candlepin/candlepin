@@ -13,6 +13,59 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)-7s %(message)s")
 logger = logging.getLogger('update_server_xml')
 
 
+
+def compare_nodes(cnode, nnode):
+    """Compares the two nodes and checks for differences in attributes or children.
+    Returns True if the nodes differ, False otherwise."""
+
+    logger.debug("Comparing nodes: %s and %s" % (cnode.name, nnode.name))
+
+    # Check if the nodes have different names...
+    if cnode.name != nnode.name:
+        logger.debug("Node names differ: %s != %s" % (cnode.name, nnode.name))
+        return True
+
+    # Compare attributes immediately present on both nodes...
+    cattribs = {}
+    nattribs = {}
+
+    if cnode.properties:
+        cattribs = { np.name: np.content for np in cnode.properties if np.type == "attribute" }
+
+    if nnode.properties:
+        nattribs = { np.name: np.content for np in nnode.properties if np.type == "attribute" }
+
+    if cattribs != nattribs:
+        logger.debug("Attributes differ: %s != %s" % (cattribs, nattribs))
+        return True
+
+    # Compare children...
+    # Impl note: depending on order is "safe" here, since a different order implies something changed
+    # either in what this config editor generates, or the end-user has modified the server.xml
+    cchildren = []
+    nchildren = []
+
+    if cnode.children:
+        for child in cnode.children:
+            cchildren.append(child)
+
+    if nnode.children:
+        for child in nnode.children:
+            nchildren.append(child)
+
+    if len(cchildren) != len(nchildren):
+        return True
+
+    for i in range(0, len(cchildren)):
+        if compare_nodes(cchildren[i], nchildren[i]):
+            logger.debug("Children differ: %s != %s" % (cchildren[i].name, nchildren[i].name))
+            return True
+
+    # The things we care about line up, no difference
+    logger.debug("Nodes are the same")
+    return False
+
+
 @contextmanager
 def open_xml(filename):
     """libxml2 does not handle cleaning up memory automatically. This
@@ -58,26 +111,21 @@ class AbstractBaseEditor(object):
             node.setProp(k, v)
 
     def _is_different(self, node):
-        current_attributes = {}
-        for property in node.properties:
-            if property.type == "attribute":
-                current_attributes[property.name] = property.content
-        return node.name != self.new_node.name or current_attributes != dict(self.attributes)
+        return compare_nodes(node, self.new_node)
 
     def _update(self, existing_nodes):
         different_nodes = filter(self._is_different, existing_nodes)
-        for match in different_nodes:
-            logger.info("Editing %s on line %s" % (match.name, match.lineNo()))
-            for property in match.properties:
-                if property.type == "attribute":
-                    property.unlinkNode()
-                    property.freeNode()
 
-            self._add_attributes(match, self.attributes)
+        for match in different_nodes:
+            logger.info("Editing node \"%s\" on line %s" % (match.name, match.lineNo()))
+            match.addPrevSibling(self.new_node)
+            match.unlinkNode()
+            match.freeNode()
 
     def _create(self, parent):
-        logger.info("Creating %s under %s on line %s" % (self.new_node, parent.name, parent.lineNo()))
-        self._add_attributes(self.new_node, self.attributes)
+        logger.info("Creating node \"%s\" under \"%s\" on line %s" % (self.new_node.name, parent.name, parent.lineNo()))
+        logger.debug("New node: %s" % (self.new_node))
+
         first_child = parent.firstElementChild()
         if first_child:
             # Insert the new node at the top so the output doesn't look like rubbish
@@ -90,7 +138,7 @@ class AbstractBaseEditor(object):
 
     def _delete(self, existing_nodes, parent):
         for match in existing_nodes:
-            logger.info("Deleting %s on line %s" % (match.name, match.lineNo()))
+            logger.info("Deleting node \"%s\" on line %s" % (match.name, match.lineNo()))
             comment_node = libxml2.newComment(" Removed by update-server-xml.py: %s " % str(match))
             match.addNextSibling(comment_node)
             match.unlinkNode()
@@ -100,8 +148,7 @@ class AbstractBaseEditor(object):
         insertion_points = self.doc.xpathEval(self.parent_xpath)
         for parent in insertion_points:
             existing_nodes = parent.xpathEval(self.search_xpath)
-            logger.debug("Found %d nodes matching %s under %s" %
-                    (len(existing_nodes), self.search_xpath, self.parent_xpath))
+            logger.debug("Found %d nodes matching %s under \"%s\"" % (len(existing_nodes), self.search_xpath, self.parent_xpath))
             if existing_nodes:
                 self._update(existing_nodes)
             else:
@@ -111,17 +158,16 @@ class AbstractBaseEditor(object):
         removal_points = self.doc.xpathEval(self.parent_xpath)
         for parent in removal_points:
             existing_nodes = parent.xpathEval(self.search_xpath)
-            logger.debug("Found %d nodes matching %s under %s" %
-                    (len(existing_nodes), self.search_xpath, self.parent_xpath))
+            logger.debug("Found %d nodes matching %s under \"%s\"" % (len(existing_nodes), self.search_xpath, self.parent_xpath))
             if existing_nodes:
                 self._delete(existing_nodes, parent)
 
 
-class SslContextEditor(AbstractBaseEditor):
+class LegacySSLContextEditor(AbstractBaseEditor):
     def __init__(self, *args, **kwargs):
-        super(SslContextEditor, self).__init__(*args, **kwargs)
+        super(LegacySSLContextEditor, self).__init__(*args, **kwargs)
         self.port = "8443"
-        self._element = libxml2.newNode("Connector")
+        self._element = self._build_node()
 
     @property
     def parent_xpath(self):
@@ -137,16 +183,24 @@ class SslContextEditor(AbstractBaseEditor):
 
     @property
     def attributes(self):
+        # We manually add the attributes below, so we don't want to return anything here.
+        return []
+
+    def _build_node(self):
         ciphers = ",".join([
-            "SSL_RSA_WITH_3DES_EDE_CBC_SHA,TLS_RSA_WITH_AES_256_CBC_SHA",
-            "TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA,TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA",
-            "TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA,TLS_ECDH_RSA_WITH_AES_128_CBC_SHA",
-            "TLS_ECDH_RSA_WITH_AES_256_CBC_SHA,TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",
+            "SSL_RSA_WITH_3DES_EDE_CBC_SHA",
+            "TLS_RSA_WITH_AES_256_CBC_SHA",
+            "TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA",
+            "TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA",
+            "TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA",
+            "TLS_ECDH_RSA_WITH_AES_128_CBC_SHA",
+            "TLS_ECDH_RSA_WITH_AES_256_CBC_SHA",
+            "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",
         ])
 
-        # This is a list of tuples instead of a dict so we can preserve the attribute
-        # ordering.  OrderedDict didn't get added until 2.7.
-        return [
+        # Setup our node configuration
+        connector = libxml2.newNode("Connector")
+        self._add_attributes(connector, [
             ("port", self.port),
             ("protocol", "HTTP/1.1"),
             ("SSLEnabled", "true"),
@@ -165,7 +219,98 @@ class SslContextEditor(AbstractBaseEditor):
             ("keystoreType", "PKCS12"),
             ("ciphers", ciphers),
             ("truststorePass", "password"),
-        ]
+        ])
+
+        # Return our top-level node
+        return connector
+
+
+# <Connector protocol="HTTP/1.1" SSLEnabled="true" maxThreads="150" scheme="https" secure="true" port="8443">
+#   <SSLHostConfig certificateVerification="optional" protocols="+TLSv1,+TLSv1.1,+TLSv1.2" sslProtocol="TLS" truststoreFile="conf/keystore" truststorePassword="password" truststoreType="JKS" ciphers="SSL_RSA_WITH_3DES_EDE_CBC_SHA,TLS_RSA_WITH_AES_256_CBC_SHA,TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA,TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA,TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA,TLS_ECDH_RSA_WITH_AES_128_CBC_SHA,TLS_ECDH_RSA_WITH_AES_256_CBC_SHA,TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA">
+
+#     <Certificate certificateKeystoreFile="conf/keystore" certificateKeystorePassword="password" certificateKeystoreType="JKS" />
+#   </SSLHostConfig>
+# </Connector>
+
+class SSLContextEditor(AbstractBaseEditor):
+    def __init__(self, *args, **kwargs):
+        super(SSLContextEditor, self).__init__(*args, **kwargs)
+        self.port = "8443"
+        self._element = self._build_node()
+
+    @property
+    def parent_xpath(self):
+        return "/Server/Service"
+
+    @property
+    def search_xpath(self):
+        return "./Connector[@port='%s']" % self.port
+
+    @property
+    def new_node(self):
+        return self._element
+
+    @property
+    def attributes(self):
+        # We manually add the attributes below, so we don't want to return anything here.
+        return []
+
+    def _build_node(self):
+        ciphers = ",".join([
+            "SSL_RSA_WITH_3DES_EDE_CBC_SHA",
+            "TLS_RSA_WITH_AES_256_CBC_SHA",
+            "TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA",
+            "TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA",
+            "TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA",
+            "TLS_ECDH_RSA_WITH_AES_128_CBC_SHA",
+            "TLS_ECDH_RSA_WITH_AES_256_CBC_SHA",
+            "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",
+        ])
+
+        # Setup our node configuration
+        connector = libxml2.newNode("Connector")
+        self._add_attributes(connector, [
+            ("port", self.port),
+            ("protocol", "HTTP/1.1"),
+            ("SSLEnabled", "true"),
+            ("maxThreads", "150"),
+            ("scheme", "https"),
+            ("secure", "true"),
+        ])
+
+        sslconfig = libxml2.newNode("SSLHostConfig")
+        self._add_attributes(sslconfig, [
+            ("certificateVerification", "optional"),
+            # Note SSLv3 is not included, to avoid poodle
+            # For the time being, TLSv1 needs to stay enabled in Satellite deployments to support
+            # existing python-rhsm based clients (RHEL5).
+            ("protocols", "+TLSv1,+TLSv1.1,+TLSv1.2"),
+            ("sslProtocol", "TLS"),
+            ("truststoreFile", "conf/keystore"),
+            ("truststorePassword", "password"),
+            ("truststoreType", "JKS"),
+            ("ciphers", ciphers),
+        ])
+
+        certificate = libxml2.newNode("Certificate")
+        self._add_attributes(certificate, [
+            ("certificateKeystoreFile", "conf/keystore"),
+            ("certificateKeystorePassword", "password"),
+            ("certificateKeystoreType", "JKS"),
+        ])
+
+        # Put it all together
+        # The libxml2 bindings don't provide an obvious way to output indented XML, so we fake
+        # it here to make it mostly human-readable.
+        connector.addChild(libxml2.newText("\n  "))
+        connector.addChild(sslconfig)
+        connector.addChild(libxml2.newText("\n"))
+        sslconfig.addChild(libxml2.newText("\n    "))
+        sslconfig.addChild(certificate)
+        sslconfig.addChild(libxml2.newText("\n  "))
+
+        # Return our top-level node
+        return connector
 
 
 class AccessValveEditor(AbstractBaseEditor):
@@ -173,6 +318,7 @@ class AccessValveEditor(AbstractBaseEditor):
         super(AccessValveEditor, self).__init__(*args, **kwargs)
         self.access_valve_class = "org.apache.catalina.valves.AccessLogValve"
         self._element = libxml2.newNode("Valve")
+        self._add_attributes(self._element, self.attributes)
 
     @property
     def parent_xpath(self):
@@ -238,12 +384,23 @@ def parse_options():
             help="print results to stdout instead of writing to files.")
     parser.add_option("--debug", action="store_true", default=False,
             help="print debug output")
+    parser.add_option("--tomcat-version", action="store", default=None, type=str, dest="tc_version",
+            help="specify a Tomcat version to target")
 
     (options, args) = parser.parse_args()
     if len(args) != 1:
         parser.error("You must provide a Tomcat configuration directory")
+
     return (options, args)
 
+def parse_tc_version(version):
+    if not version:
+        return None
+
+    try:
+        return [int(vchunk) for vchunk in version.split(".")]
+    except ValueError:
+        return None
 
 def make_backup_config(conf_dir):
     logger.info("Backing up current server.xml")
@@ -256,10 +413,18 @@ def main():
         logger.setLevel(logging.DEBUG)
     conf_dir = args[0]
     make_backup_config(conf_dir)
+
+    # Determine which SSLContextEditor we need...
+    tversion = parse_tc_version(options.tc_version)
+    if not tversion or len(tversion) < 1 or tversion[0] > 8 or (tversion[0] == 8 and tversion[1] >= 5):
+        ssl_editor_target = SSLContextEditor
+    else:
+        ssl_editor_target = LegacySSLContextEditor
+
     xml_file = os.path.join(conf_dir, "server.xml")
     logger.debug("Opening %s" % xml_file)
     with open_xml(xml_file) as doc:
-        SslContextEditor(doc).insert()
+        ssl_editor_target(doc).insert()
         AccessValveEditor(doc).insert()
         AprListenerDeleter(doc).remove()
 
