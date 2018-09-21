@@ -24,6 +24,7 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
@@ -43,6 +44,7 @@ import org.candlepin.model.SourceSubscription;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.JsRunnerRequestCache;
+import org.candlepin.policy.js.JsonJsContext;
 import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.policy.js.autobind.AutobindRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
@@ -57,8 +59,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -88,6 +93,9 @@ public class AutobindRulesTest {
     private Consumer consumer;
     private String productId = "a-product";
     private ModelTranslator translator;
+    private JsRunner jsRules;
+    private RulesObjectMapper mapper;
+    private static Logger log = LoggerFactory.getLogger(AutobindRules.class);
 
     private static final String HIGHEST_QUANTITY_PRODUCT = "QUANTITY001";
     private Map<String, String> activeGuestAttrs;
@@ -104,11 +112,12 @@ public class AutobindRulesTest {
         when(rulesCurator.getRules()).thenReturn(rules);
         when(rulesCurator.getUpdated()).thenReturn(TestDateUtil.date(2010, 1, 1));
         when(cacheProvider.get()).thenReturn(cache);
-        JsRunner jsRules = new JsRunnerProvider(rulesCurator, cacheProvider).get();
+        jsRules = new JsRunnerProvider(rulesCurator, cacheProvider).get();
+        mapper =  new RulesObjectMapper(new ProductCachedSerializationModule(mockProductCurator));
 
         translator = new StandardTranslator(consumerTypeCurator, environmentCurator, mockOwnerCurator);
         autobindRules = new AutobindRules(jsRules, mockProductCurator, consumerTypeCurator, mockOwnerCurator,
-            new RulesObjectMapper(new ProductCachedSerializationModule(mockProductCurator)), translator);
+           mapper, translator);
 
         owner = new Owner();
         owner.setId(TestUtil.randomString());
@@ -365,9 +374,11 @@ public class AutobindRulesTest {
         return pool;
     }
 
-
+    /*
+     * This test assumes that the consumer does not have any existing entitlements.
+     */
     @Test
-    public void ensureSelectBestPoolsFiltersPoolsBySLAWhenConsumerHasSLASet() {
+    public void selectBestPoolsDoesNotFilterPoolsBySLAWhenConsumerHasSLASet() {
         // Create Premium SLA prod
         String slaPremiumProdId = "premium-sla-product";
         Product slaPremiumProduct = TestUtil.createProduct(slaPremiumProdId, "Product with SLA Premium");
@@ -396,20 +407,26 @@ public class AutobindRulesTest {
         pools.add(slaPremiumPool);
         pools.add(slaStandardPool);
 
-        // SLA filtering only occurs when consumer has SLA set.
         consumer.setServiceLevel("Premium");
+
+        // The consumer does not have any existing entitlements.
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
             new String[]{ productId, slaPremiumProdId, slaStandardProdId},
             pools, compliance, null, new HashSet<>(), false);
 
-        assertEquals(2, bestPools.size());
+        assertEquals(3, bestPools.size());
         assertTrue(bestPools.contains(new PoolQuantity(slaPremiumPool, 1)));
+        assertTrue(bestPools.contains(new PoolQuantity(slaStandardPool, 1)));
+        // Also, check pool with no sla is not filtered (as always)
         assertTrue(bestPools.contains(new PoolQuantity(noSLAPool, 1)));
     }
 
+    /*
+     * This test assumes that the consumer does not have any existing entitlements.
+     */
     @Test
-    public void ensureSelectBestPoolsFiltersPoolsBySLAWhenOrgHasSLASet() {
+    public void selectBestPoolsDoesNotFilterPoolsBySLAWhenOrgHasDefaultSLASet() {
         // Create Premium SLA prod
         String slaPremiumProdId = "premium-sla-product";
         Product slaPremiumProduct = TestUtil.createProduct(slaPremiumProdId, "Product with SLA Permium");
@@ -438,17 +455,1244 @@ public class AutobindRulesTest {
         pools.add(slaPremiumPool);
         pools.add(slaStandardPool);
 
-        // SLA filtering only occurs when consumer has SLA set.
         consumer.setServiceLevel("");
+        // The Org default SLA is set
         owner.setDefaultServiceLevel("Premium");
+
+        // The consumer does not have any existing entitlements.
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
             new String[]{ productId, slaPremiumProdId, slaStandardProdId},
             pools, compliance, null, new HashSet<>(), false);
 
-        assertEquals(2, bestPools.size());
+        assertEquals(3, bestPools.size());
         assertTrue(bestPools.contains(new PoolQuantity(slaPremiumPool, 1)));
+        assertTrue(bestPools.contains(new PoolQuantity(slaStandardPool, 1)));
+        // Also, check pool with no sla is not filtered (as always)
         assertTrue(bestPools.contains(new PoolQuantity(noSLAPool, 1)));
+    }
+
+    /*
+     * This test assumes that the consumer does not have any existing entitlements.
+     */
+    @Test
+    public void selectBestPoolsDoesNotFilterPoolsBySLAWhenSLAOverrideIsSet() {
+        // Create Premium SLA prod
+        String slaPremiumProdId = "premium-sla-product";
+        Product slaPremiumProduct = TestUtil.createProduct(slaPremiumProdId, "Product with SLA Permium");
+        slaPremiumProduct.setAttribute(Product.Attributes.SUPPORT_LEVEL, "Premium");
+
+        Pool slaPremiumPool = TestUtil.createPool(owner, slaPremiumProduct);
+        slaPremiumPool.setId("pool-with-premium-sla");
+        slaPremiumPool.getProduct().setAttribute(Product.Attributes.SUPPORT_LEVEL, "Premium");
+
+        // Create Standard SLA Product
+        String slaStandardProdId = "standard-sla-product";
+        Product slaStandardProduct = TestUtil.createProduct(slaStandardProdId, "Product with SLA Standard");
+        slaStandardProduct.setAttribute(Product.Attributes.SUPPORT_LEVEL, "Standard");
+
+        Pool slaStandardPool = TestUtil.createPool(owner, slaStandardProduct);
+        slaStandardPool.setId("pool-with-standard-sla");
+        slaStandardPool.getProduct().setAttribute(Product.Attributes.SUPPORT_LEVEL, "Standard");
+
+        // Create a product with no SLA.
+        Product noSLAProduct = TestUtil.createProduct(productId, "A test product");
+        Pool noSLAPool = TestUtil.createPool(owner, noSLAProduct);
+        noSLAPool.setId("pool-1");
+
+        List<Pool> pools = new LinkedList<>();
+        pools.add(noSLAPool);
+        pools.add(slaPremiumPool);
+        pools.add(slaStandardPool);
+
+        consumer.setServiceLevel("Premium");
+        // We have the SLA Override set
+        String slaOverride = "Standard";
+
+        // The consumer does not have any existing entitlements.
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{ productId, slaPremiumProdId, slaStandardProdId},
+            pools, compliance, slaOverride, new HashSet<>(), false);
+
+        assertEquals(3, bestPools.size());
+        assertTrue(bestPools.contains(new PoolQuantity(slaPremiumPool, 1)));
+        assertTrue(bestPools.contains(new PoolQuantity(slaStandardPool, 1)));
+        // Also, check pool with no sla is not filtered (as always)
+        assertTrue(bestPools.contains(new PoolQuantity(noSLAPool, 1)));
+    }
+
+    @Test
+    public void selectBestPoolsDoesNotFilterPoolsBySLAWhenConsumerHasNonNullMatchingEntitlementSLAs() {
+        // Create Premium SLA prod
+        String slaPremiumProdId = "premium-sla-product";
+        Product slaPremiumProduct = TestUtil.createProduct(slaPremiumProdId, "Product with SLA Permium");
+        slaPremiumProduct.setAttribute(Product.Attributes.SUPPORT_LEVEL, "Premium");
+
+        Pool slaPremiumPool = TestUtil.createPool(owner, slaPremiumProduct);
+        slaPremiumPool.setId("pool-with-premium-sla");
+        slaPremiumPool.getProduct().setAttribute(Product.Attributes.SUPPORT_LEVEL, "Premium");
+
+        // Create a product with no SLA.
+        Product noSLAProduct = TestUtil.createProduct(productId, "A test product");
+        Pool noSLAPool = TestUtil.createPool(owner, noSLAProduct);
+        noSLAPool.setId("pool-1");
+
+        List<Pool> pools = new LinkedList<>();
+        pools.add(noSLAPool);
+        pools.add(slaPremiumPool);
+
+        // The consumer has set their SLA to Premium, and also has an existing entitlement with Premium SLA
+        // which means the pool with Premium SLA should not be filtered.
+        consumer.setServiceLevel("Premium");
+        Entitlement entitlementWithPremiumSLA = new Entitlement();
+        entitlementWithPremiumSLA.setPool(slaPremiumPool);
+        compliance.addCompliantProduct("2432", entitlementWithPremiumSLA);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{ productId, slaPremiumProdId },
+            pools, compliance, null, new HashSet<>(), false);
+
+        assertEquals(2, bestPools.size());
+        // The Premium SLA pool should NOT have gotten filtered because the customer had
+        // existing entitlements that included one with a Premium SLA.
+        assertTrue(bestPools.contains(new PoolQuantity(slaPremiumPool, 1)));
+        // Also, check pool with no sla is not filtered (as always)
+        assertTrue(bestPools.contains(new PoolQuantity(noSLAPool, 1)));
+    }
+
+    @Test
+    @SuppressWarnings("checkstyle:LineLength")
+    public void selectBestPoolsFiltersPoolsBySLAWhenConsumerHasNonNullNonMatchingEntitlementSLAsAndConsumerSLAIsUsed() {
+        // Create Premium SLA prod
+        String slaPremiumProdId = "premium-sla-product";
+        Product slaPremiumProduct = TestUtil.createProduct(slaPremiumProdId, "Product with SLA Permium");
+        slaPremiumProduct.setAttribute(Product.Attributes.SUPPORT_LEVEL, "Premium");
+
+        Pool slaPremiumPool = TestUtil.createPool(owner, slaPremiumProduct);
+        slaPremiumPool.setId("pool-with-premium-sla");
+        slaPremiumPool.getProduct().setAttribute(Product.Attributes.SUPPORT_LEVEL, "Premium");
+
+        // Create Standard SLA Product
+        String slaStandardProdId = "standard-sla-product";
+        Product slaStandardProduct = TestUtil.createProduct(slaStandardProdId, "Product with SLA Standard");
+        slaStandardProduct.setAttribute(Product.Attributes.SUPPORT_LEVEL, "Standard");
+
+        Pool slaStandardPool = TestUtil.createPool(owner, slaStandardProduct);
+        slaStandardPool.setId("pool-with-standard-sla");
+        slaStandardPool.getProduct().setAttribute(Product.Attributes.SUPPORT_LEVEL, "Standard");
+
+        // Create a product with no SLA.
+        Product noSLAProduct = TestUtil.createProduct(productId, "A test product");
+        Pool noSLAPool = TestUtil.createPool(owner, noSLAProduct);
+        noSLAPool.setId("pool-1");
+
+        List<Pool> pools = new LinkedList<>();
+        pools.add(noSLAPool);
+        pools.add(slaPremiumPool);
+        // ^ A Standard SLA pool is not in the list of candidate pools.
+
+        // The consumer has set their SLA to Premium, and also has an existing entitlement with Standard SLA
+        // which means the pool with Premium SLA SHOULD get filtered.
+        consumer.setServiceLevel("Premium");
+        Entitlement entitlementWithStandardSLA = new Entitlement();
+        entitlementWithStandardSLA.setPool(slaStandardPool);
+        compliance.addPartiallyCompliantProduct("b4b4b4", entitlementWithStandardSLA);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{ productId, slaStandardProdId},
+            pools, compliance, null, new HashSet<>(), false);
+
+        assertEquals(1, bestPools.size());
+        // The Premium SLA pool should get filtered because the customer had existing entitlements that
+        // did not include one with a Premium SLA.
+        assertFalse(bestPools.contains(new PoolQuantity(slaPremiumPool, 1)));
+        // Also, check pool with no sla is not filtered (as always)
+        assertTrue(bestPools.contains(new PoolQuantity(noSLAPool, 1)));
+    }
+
+    @Test
+    @SuppressWarnings("checkstyle:LineLength")
+    public void selectBestPoolsFiltersPoolsBySLAWhenConsumerWithSLAHasNonNullNonMatchingEntitlementSLAsAndOverrideSLAIsUsed() {
+        // Create Premium SLA prod
+        String slaPremiumProdId = "premium-sla-product";
+        Product slaPremiumProduct = TestUtil.createProduct(slaPremiumProdId, "Product with SLA Permium");
+        slaPremiumProduct.setAttribute(Product.Attributes.SUPPORT_LEVEL, "Premium");
+
+        Pool slaPremiumPool = TestUtil.createPool(owner, slaPremiumProduct);
+        slaPremiumPool.setId("pool-with-premium-sla");
+        slaPremiumPool.getProduct().setAttribute(Product.Attributes.SUPPORT_LEVEL, "Premium");
+
+        // Create Standard SLA Product
+        String slaStandardProdId = "standard-sla-product";
+        Product slaStandardProduct = TestUtil.createProduct(slaStandardProdId, "Product with SLA Standard");
+        slaStandardProduct.setAttribute(Product.Attributes.SUPPORT_LEVEL, "Standard");
+
+        Pool slaStandardPool = TestUtil.createPool(owner, slaStandardProduct);
+        slaStandardPool.setId("pool-with-standard-sla");
+        slaStandardPool.getProduct().setAttribute(Product.Attributes.SUPPORT_LEVEL, "Standard");
+
+        // Create Sub-Standard SLA Product
+        String slaSubStandardProdId = "sub-standard-sla-product";
+        Product slaSubStandardProduct = TestUtil.createProduct(slaSubStandardProdId, "Product with SLA Sub-Standard");
+        slaSubStandardProduct.setAttribute(Product.Attributes.SUPPORT_LEVEL, "Sub-Standard");
+
+        Pool slaSubStandardPool = TestUtil.createPool(owner, slaSubStandardProduct);
+        slaSubStandardPool.setId("pool-with-sub-standard-sla");
+        slaSubStandardPool.getProduct().setAttribute(Product.Attributes.SUPPORT_LEVEL, "Sub-Standard");
+
+        // Create a product with no SLA.
+        Product noSLAProduct = TestUtil.createProduct(productId, "A test product");
+        Pool noSLAPool = TestUtil.createPool(owner, noSLAProduct);
+        noSLAPool.setId("pool-1");
+
+        List<Pool> pools = new LinkedList<>();
+        pools.add(noSLAPool);
+        pools.add(slaPremiumPool);
+        pools.add(slaSubStandardPool);
+        // ^ A Standard SLA pool is not in the list of candidate pools.
+
+        // The consumer has set their SLA to Premium, but will be ignored because we specify an override SLA,
+        // and also the consumer has an existing entitlement with Standard SLA
+        // which means the candidate pools with Premium SLA and Sub-Standard SLA SHOULD BOTH get filtered.
+        consumer.setServiceLevel("Premium");
+        Entitlement entitlementWithStandardSLA = new Entitlement();
+        entitlementWithStandardSLA.setPool(slaStandardPool);
+        compliance.addPartiallyCompliantProduct("b4b4b4", entitlementWithStandardSLA);
+
+        String overrideSLA = "Sub-Standard";
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{ productId, slaStandardProdId},
+            pools, compliance, overrideSLA, new HashSet<>(), false);
+
+        assertEquals(1, bestPools.size());
+        // Both The Premium SLA and Sub-Standard SLA pools should get filtered
+        // because the customer had existing entitlements that
+        // did not include one with a Premium or Sub-Standard SLA.
+        assertFalse(bestPools.contains(new PoolQuantity(slaPremiumPool, 1)));
+        assertFalse(bestPools.contains(new PoolQuantity(slaSubStandardPool, 1)));
+        // Also, check pool with no sla is not filtered (as always)
+        assertTrue(bestPools.contains(new PoolQuantity(noSLAPool, 1)));
+    }
+
+    @Test
+    @SuppressWarnings("checkstyle:LineLength")
+    public void selectBestPoolsFiltersPoolsBySLAWhenConsumerWithSLAHasNonNullNonMatchingEntitlementSLAsAndOwnerDefaultSLAIsUsed() {
+        // Create Premium SLA prod
+        String slaPremiumProdId = "premium-sla-product";
+        Product slaPremiumProduct = TestUtil.createProduct(slaPremiumProdId, "Product with SLA Permium");
+        slaPremiumProduct.setAttribute(Product.Attributes.SUPPORT_LEVEL, "Premium");
+
+        Pool slaPremiumPool = TestUtil.createPool(owner, slaPremiumProduct);
+        slaPremiumPool.setId("pool-with-premium-sla");
+        slaPremiumPool.getProduct().setAttribute(Product.Attributes.SUPPORT_LEVEL, "Premium");
+
+        // Create Standard SLA Product
+        String slaStandardProdId = "standard-sla-product";
+        Product slaStandardProduct = TestUtil.createProduct(slaStandardProdId, "Product with SLA Standard");
+        slaStandardProduct.setAttribute(Product.Attributes.SUPPORT_LEVEL, "Standard");
+
+        Pool slaStandardPool = TestUtil.createPool(owner, slaStandardProduct);
+        slaStandardPool.setId("pool-with-standard-sla");
+        slaStandardPool.getProduct().setAttribute(Product.Attributes.SUPPORT_LEVEL, "Standard");
+
+        // Create a product with no SLA.
+        Product noSLAProduct = TestUtil.createProduct(productId, "A test product");
+        Pool noSLAPool = TestUtil.createPool(owner, noSLAProduct);
+        noSLAPool.setId("pool-1");
+
+        List<Pool> pools = new LinkedList<>();
+        pools.add(noSLAPool);
+        pools.add(slaPremiumPool);
+        // ^ A Standard SLA pool is not in the list of candidate pools.
+
+        // The consumer has set their SLA to nothing, so it will be ignored in favor of the
+        // owner default SLA which is set to Premium,
+        // but the consumer also has an existing entitlement with Standard SLA
+        // which means the candidate pool with Premium SLA SHOULD get filtered.
+        consumer.setServiceLevel("");
+        owner.setDefaultServiceLevel("Premium");
+        Entitlement entitlementWithStandardSLA = new Entitlement();
+        entitlementWithStandardSLA.setPool(slaStandardPool);
+        compliance.addPartiallyCompliantProduct("b4b4b4", entitlementWithStandardSLA);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{ productId, slaStandardProdId},
+            pools, compliance, null, new HashSet<>(), false);
+
+        assertEquals(1, bestPools.size());
+        // The Premium SLA pool should get filtered because the customer had existing entitlements that
+        // did not include one with a Premium SLA.
+        assertFalse(bestPools.contains(new PoolQuantity(slaPremiumPool, 1)));
+        // Also, check pool with no sla is not filtered (as always)
+        assertTrue(bestPools.contains(new PoolQuantity(noSLAPool, 1)));
+    }
+
+    @Test
+    public void selectBestPoolsDoesNotFilterPoolsBySLAWhenConsumerHasOnlyNullEntitlementSLAs() {
+        // Create Premium SLA prod
+        String slaPremiumProdId = "premium-sla-product";
+        Product slaPremiumProduct = TestUtil.createProduct(slaPremiumProdId, "Product with SLA Permium");
+        slaPremiumProduct.setAttribute(Product.Attributes.SUPPORT_LEVEL, "Premium");
+
+        Pool slaPremiumPool = TestUtil.createPool(owner, slaPremiumProduct);
+        slaPremiumPool.setId("pool-with-premium-sla");
+        slaPremiumPool.getProduct().setAttribute(Product.Attributes.SUPPORT_LEVEL, "Premium");
+
+        // Create Standard SLA Product
+        String slaStandardProdId = "standard-sla-product";
+        Product slaStandardProduct = TestUtil.createProduct(slaStandardProdId, "Product with SLA Standard");
+        slaStandardProduct.setAttribute(Product.Attributes.SUPPORT_LEVEL, "Standard");
+
+        Pool slaStandardPool = TestUtil.createPool(owner, slaStandardProduct);
+        slaStandardPool.setId("pool-with-standard-sla");
+        slaStandardPool.getProduct().setAttribute(Product.Attributes.SUPPORT_LEVEL, "Standard");
+
+        // Create a product with no SLA.
+        Product noSLAProduct = TestUtil.createProduct(productId, "A test product");
+        Pool noSLAPool = TestUtil.createPool(owner, noSLAProduct);
+        noSLAPool.setId("pool-with-NO-sla-1");
+
+        // Create another product with no SLA.
+        String noSLAProdId2 = "no-sla-product2";
+        Product noSLAProduct2 = TestUtil.createProduct(noSLAProdId2, "A test product 2");
+        Pool noSLAPool2 = TestUtil.createPool(owner, noSLAProduct2);
+        noSLAPool2.setId("pool-with-NO-sla-2");
+
+        List<Pool> pools = new LinkedList<>();
+        pools.add(noSLAPool);
+        pools.add(slaPremiumPool);
+        pools.add(slaStandardPool);
+
+        // The consumer has set their SLA to Premium, and also has an existing entitlement with no SLA
+        // which means no pools should get filtered.
+        consumer.setServiceLevel("Premium");
+        Entitlement entitlementWithNoSLA = new Entitlement();
+        entitlementWithNoSLA.setPool(noSLAPool2);
+        compliance.addPartiallyCompliantProduct("b4b4b4", entitlementWithNoSLA);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{ productId, slaStandardProdId, slaPremiumProdId },
+            pools, compliance, null, new HashSet<>(), false);
+
+        assertEquals(3, bestPools.size());
+        // Check that no pools were filtered, since the customer has an existing entitlement with a null SLA.
+        assertTrue(bestPools.contains(new PoolQuantity(slaPremiumPool, 1)));
+        assertTrue(bestPools.contains(new PoolQuantity(slaStandardPool, 1)));
+        // Also, check pool with no sla is not filtered (as always)
+        assertTrue(bestPools.contains(new PoolQuantity(noSLAPool, 1)));
+    }
+
+    private Product createSysPurposeProduct(String id, String roles, String addons, String supportLevel,
+        String usage) {
+
+        Product prod = new Product();
+
+        if (id != null) {
+            prod.setId(id);
+        }
+
+        if (supportLevel != null) {
+            prod.setAttribute(Product.Attributes.SUPPORT_LEVEL, supportLevel);
+        }
+
+        if (usage != null) {
+            prod.setAttribute(Product.Attributes.USAGE, usage);
+        }
+
+        if (roles != null) {
+            prod.setAttribute(Product.Attributes.ROLES, roles);
+        }
+
+        if (addons != null) {
+            prod.setAttribute(Product.Attributes.ADDONS, addons);
+        }
+
+        return prod;
+    }
+
+    @Test
+    public void testSysPurposePoolPriorityCompliantRoleNonCompliantAddon() throws NoSuchMethodException {
+        Product product69 = new Product();
+        product69.setId("non-compliant-69");
+        Product product82 = new Product();
+        product82.setId("non-compliant-82");
+
+        // Consumer specified syspurpose attributes:
+        consumer.setRole("RHEL Server");
+        Set<String> addons = new HashSet<>();
+        addons.add("RHEL EUS");
+        consumer.setAddOns(addons);
+
+
+        // Consumer satisfied syspurpose attributes:
+        Product productWithRoleSatisfied = createSysPurposeProduct("compliant-product1", "RHEL Server",
+            null, null, null);
+        Pool poolThatSatisfiesRole = new Pool();
+        poolThatSatisfiesRole.setProduct(productWithRoleSatisfied);
+        Entitlement entitlementThatSatisfiesRole = new Entitlement();
+        entitlementThatSatisfiesRole.setPool(poolThatSatisfiesRole);
+        compliance.addCompliantProduct("compliant-product1", entitlementThatSatisfiesRole);
+
+        // Candidate pools:
+        Product prod1 = createSysPurposeProduct(null, "RHEL Server", "RHEL EUS", null, "Production");
+        Pool p1 = TestUtil.createPool(owner, prod1);
+        p1.setId("p1");
+        p1.addProvidedProduct(product69);
+
+        Product prod2 = createSysPurposeProduct(null, null, "RHEL EUS", null, null);
+        Pool p2 = TestUtil.createPool(owner, prod2);
+        p2.setId("p2");
+
+        Product prod3 = createSysPurposeProduct(null, "JBoss", "RHEL EUS", null, null);
+        Pool p3 = TestUtil.createPool(owner, prod3);
+        p3.setId("p3");
+        p3.addProvidedProduct(product82);
+
+        jsRules.reinitTo("test_name_space");
+        JsonJsContext args = new JsonJsContext(mapper);
+        args.put("log", log, false);
+        args.put("consumer", consumer);
+        args.put("compliance", compliance);
+
+        args.put("pool", p1);
+        Double p1Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        args.put("pool", p2);
+        Double p2Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        args.put("pool", p3);
+        Double p3Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        assertTrue("Pool p2 should have a higher priority than pool p1.",
+            p2Priority > p1Priority);
+
+        assertTrue("Pool p1 should have a higher priority than pool p3.",
+            p1Priority > p3Priority);
+    }
+
+    @Test
+    public void testSysPurposePoolPriorityNonCompliantRoleAndAddon() throws NoSuchMethodException {
+        Product product69 = new Product();
+        product69.setId("non-compliant-69");
+        Product product82 = new Product();
+        product82.setId("non-compliant-82");
+
+        // Consumer specified syspurpose attributes:
+        consumer.setRole("RHEL Server");
+        Set<String> addons = new HashSet<>();
+        addons.add("RHEL EUS");
+        consumer.setAddOns(addons);
+
+        // --- No satisfied syspurpose attributes on the consumer ---
+
+        // Candidate pools:
+        Product prod1 = createSysPurposeProduct(null, "RHEL Server", "RHEL EUS", null, "Production");
+        Pool p1 = TestUtil.createPool(owner, prod1);
+        p1.setId("p1");
+        p1.addProvidedProduct(product69);
+
+        Product prod2 = createSysPurposeProduct(null, null, "RHEL EUS", null, null);
+        Pool p2 = TestUtil.createPool(owner, prod2);
+        p2.setId("p2");
+
+        Product prod3 = createSysPurposeProduct(null, "JBoss", "RHEL EUS", null, null);
+        Pool p3 = TestUtil.createPool(owner, prod3);
+        p3.setId("p3");
+        p3.addProvidedProduct(product82);
+
+        jsRules.reinitTo("test_name_space");
+        JsonJsContext args = new JsonJsContext(mapper);
+        args.put("log", log, false);
+        args.put("consumer", consumer);
+        args.put("compliance", compliance);
+
+        args.put("pool", p1);
+        Double p1Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        args.put("pool", p2);
+        Double p2Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        args.put("pool", p3);
+        Double p3Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        assertTrue("Pool p1 should have a higher priority than pool p2.",
+            p1Priority > p2Priority);
+
+        assertTrue("Pool p2 should have a higher priority than pool p3.",
+            p2Priority > p3Priority);
+    }
+
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testSysPurposePoolPriorityUseCase1RoleMatch() throws NoSuchMethodException {
+        Product product69 = new Product();
+        product69.setId("non-compliant-69");
+        Product product89 = new Product();
+        product89.setId("non-compliant-89");
+        Product product100 = new Product();
+        product100.setId("non-compliant-100");
+
+        // Consumer specified syspurpose attributes:
+        consumer.setRole("Satellite");
+
+        // --- No satisfied syspurpose attributes on the consumer ---
+
+        // Candidate pools:
+        Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", "Smart Management", null, null);
+        Pool RH00009 = TestUtil.createPool(owner, prodRH00009);
+        RH00009.setId("RH00009");
+        RH00009.addProvidedProduct(product69);
+
+        Product prodMCT1650 = createSysPurposeProduct(null, "Satellite", null, null, null);
+        Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
+        MCT1650.setId("MCT1650");
+        MCT1650.addProvidedProduct(product69);
+        MCT1650.addProvidedProduct(product89);
+        MCT1650.addProvidedProduct(product100);
+
+        jsRules.reinitTo("test_name_space");
+        JsonJsContext args = new JsonJsContext(mapper);
+        args.put("log", log, false);
+        args.put("consumer", consumer);
+        args.put("compliance", compliance);
+
+        args.put("pool", RH00009);
+        Double RH00009Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        args.put("pool", MCT1650);
+        Double MCT1650Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        assertTrue("Pool MCT1650 should have a higher priority than pool RH00009.",
+            MCT1650Priority > RH00009Priority);
+    }
+
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testSysPurposePoolPriorityUseCase2RoleMatch() throws NoSuchMethodException {
+        Product product69 = new Product();
+        product69.setId("non-compliant-69");
+        Product product89 = new Product();
+        product89.setId("non-compliant-89");
+        Product product100 = new Product();
+        product100.setId("non-compliant-100");
+
+        // Consumer specified syspurpose attributes:
+        consumer.setRole("RHEL Server");
+
+        // --- No satisfied syspurpose attributes on the consumer ---
+
+        // Candidate pools:
+        Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", "Smart Management", null, null);
+        Pool RH00009 = TestUtil.createPool(owner, prodRH00009);
+        RH00009.setId("RH00009");
+        RH00009.addProvidedProduct(product69);
+
+        Product prodMCT1650 = createSysPurposeProduct(null, "Satellite", null, null, null);
+        Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
+        MCT1650.setId("MCT1650");
+        MCT1650.addProvidedProduct(product69);
+        MCT1650.addProvidedProduct(product89);
+        MCT1650.addProvidedProduct(product100);
+
+        jsRules.reinitTo("test_name_space");
+        JsonJsContext args = new JsonJsContext(mapper);
+        args.put("log", log, false);
+        args.put("consumer", consumer);
+        args.put("compliance", compliance);
+
+        args.put("pool", RH00009);
+        Double RH00009Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        args.put("pool", MCT1650);
+        Double MCT1650Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        assertTrue("Pool RH00009 should have a higher priority than pool MCT1650.",
+            RH00009Priority > MCT1650Priority);
+    }
+
+    /*
+     * This test demonstrates that a pool with no available quantity will not
+     * be selected even though it is a better match. In fact, it should not make it pass the filtering stage.
+     */
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testSysPurposePoolPriorityUseCase3MismatchedRoles() throws NoSuchMethodException {
+        Product product69 = new Product();
+        product69.setId("compliant-69");
+        Product product89 = new Product();
+        product89.setId("non-compliant-89");
+        Product product100 = new Product();
+        product100.setId("non-compliant-100");
+
+        // Consumer specified syspurpose attributes:
+        consumer.setRole("RHEL Server");
+        ConsumerInstalledProduct consumerInstalledProduct =
+            new ConsumerInstalledProduct(product69);
+        consumer.addInstalledProduct(consumerInstalledProduct);
+
+        // --- No satisfied syspurpose attributes on the consumer ---
+
+        // Candidate pools:
+        Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", "Smart Management", null, null);
+        Pool RH00009 = TestUtil.createPool(owner, prodRH00009);
+        RH00009.setId("RH00009");
+        RH00009.addProvidedProduct(product69);
+        RH00009.setQuantity(0L); // No quantity available
+
+        Product prodMCT1650 = createSysPurposeProduct(null, "Satellite", null, null, null);
+        Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
+        MCT1650.setId("MCT1650");
+        MCT1650.addProvidedProduct(product69);
+        MCT1650.addProvidedProduct(product89);
+        MCT1650.addProvidedProduct(product100);
+        MCT1650.setQuantity(1L);
+
+        List<Pool> pools = new ArrayList<>();
+        pools.add(RH00009);
+        pools.add(MCT1650);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{"compliant-69"}, pools, compliance, null, new HashSet<>(), false);
+
+        assertEquals(1, bestPools.size());
+        assertTrue(bestPools.contains(new PoolQuantity(MCT1650, 1)));
+        assertFalse(bestPools.contains(new PoolQuantity(RH00009, 0)));
+    }
+
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testSysPurposePoolPriorityUseCase4RHELVariants() throws NoSuchMethodException {
+        Product product69 = new Product();
+        product69.setId("non-compliant-69");
+        Product product89 = new Product();
+        product89.setId("non-compliant-89");
+        Product product100 = new Product();
+        product100.setId("non-compliant-100");
+
+        // Consumer specified syspurpose attributes:
+        consumer.setRole("RHEL Workstation");
+
+        // --- No satisfied syspurpose attributes on the consumer ---
+
+        // Candidate pools:
+        Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", null, null, null);
+        Pool RH00009 = TestUtil.createPool(owner, prodRH00009);
+        RH00009.setId("RH00009");
+        RH00009.addProvidedProduct(product69);
+
+        Product prodMCT1650 = createSysPurposeProduct(null, "Satellite", null, null, null);
+        Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
+        MCT1650.setId("MCT1650");
+        MCT1650.addProvidedProduct(product69);
+        MCT1650.addProvidedProduct(product89);
+        MCT1650.addProvidedProduct(product100);
+
+        Product prodMCT0352 = createSysPurposeProduct(null, "RHEL Workstation", null, null, null);
+        Pool MCT0352 = TestUtil.createPool(owner, prodMCT0352);
+        MCT0352.setId("MCT0352");
+        MCT0352.addProvidedProduct(product69);
+
+        jsRules.reinitTo("test_name_space");
+        JsonJsContext args = new JsonJsContext(mapper);
+        args.put("log", log, false);
+        args.put("consumer", consumer);
+        args.put("compliance", compliance);
+
+        args.put("pool", RH00009);
+        Double RH00009Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        args.put("pool", MCT1650);
+        Double MCT1650Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        args.put("pool", MCT0352);
+        Double MCT0352Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        assertTrue("Pool MCT0352 should have a higher priority than pool RH00009.",
+            MCT0352Priority > RH00009Priority);
+
+        assertTrue("Pool RH00009 should have equal priority with pool MCT1650.",
+            RH00009Priority.equals(MCT1650Priority));
+    }
+
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testSysPurposePoolPriorityUseCase5RHELServerEUS() throws NoSuchMethodException {
+        // Consumer specified syspurpose attributes:
+        consumer.setRole("RHEL Server");
+        Set<String> addons = new HashSet<>();
+        addons.add("RHEL EUS");
+        consumer.setAddOns(addons);
+
+        // Consumer satisfied role attribute:
+        Product productWithRoleSatisfied = createSysPurposeProduct("compliant-product1", "RHEL Server",
+            null, null, null);
+        Pool poolThatSatisfiesRole = new Pool();
+        poolThatSatisfiesRole.setProduct(productWithRoleSatisfied);
+        Entitlement entitlementThatSatisfiesRole = new Entitlement();
+        entitlementThatSatisfiesRole.setPool(poolThatSatisfiesRole);
+        compliance.addCompliantProduct("compliant-product1", entitlementThatSatisfiesRole);
+
+        // Candidate pools:
+        Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", "RHEL EUS", null, null);
+        Pool RH00009 = TestUtil.createPool(owner, prodRH00009);
+        RH00009.setId("RH00009");
+
+        Product prodMCT1650 = createSysPurposeProduct(null, "Satellite", null, null, null);
+        Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
+        MCT1650.setId("MCT1650");
+
+        Product prodRH00030 = createSysPurposeProduct(null, null, "RHEL EUS", null, null);
+        Pool RH00030 = TestUtil.createPool(owner, prodRH00030);
+        RH00030.setId("RH00030");
+
+        jsRules.reinitTo("test_name_space");
+        JsonJsContext args = new JsonJsContext(mapper);
+        args.put("log", log, false);
+        args.put("consumer", consumer);
+        args.put("compliance", compliance);
+
+        args.put("pool", RH00009);
+        Double RH00009Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        args.put("pool", MCT1650);
+        Double MCT1650Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        args.put("pool", RH00030);
+        Double RH00030Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        assertTrue("Pool RH00030 should have a higher priority than pool RH00009.",
+            RH00030Priority > RH00009Priority);
+
+        assertTrue("Pool RH00009 should have a higher priority than pool MCT1650.",
+            RH00009Priority > MCT1650Priority);
+    }
+
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testSysPurposePoolPriorityUseCase6RHELServerEUSELS() throws NoSuchMethodException {
+        // Consumer specified syspurpose attributes:
+        consumer.setRole("RHEL Server");
+        Set<String> addons = new HashSet<>();
+        addons.add("RHEL EUS");
+        addons.add("RHEL ELS");
+        consumer.setAddOns(addons);
+
+        // Consumer satisfied role attribute:
+        Product productWithRoleSatisfied = createSysPurposeProduct("compliant-product1", "RHEL Server",
+            null, null, null);
+        Pool poolThatSatisfiesRole = new Pool();
+        poolThatSatisfiesRole.setProduct(productWithRoleSatisfied);
+        Entitlement entitlementThatSatisfiesRole = new Entitlement();
+        entitlementThatSatisfiesRole.setPool(poolThatSatisfiesRole);
+        compliance.addCompliantProduct("compliant-product1", entitlementThatSatisfiesRole);
+
+        // Candidate pools:
+        Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", "Smart Management", null, null);
+        Pool RH00009 = TestUtil.createPool(owner, prodRH00009);
+        RH00009.setId("RH00009");
+
+        Product prodMCT1963 = createSysPurposeProduct(null, null, "RHEL ELS", null, null);
+        Pool MCT1963 = TestUtil.createPool(owner, prodMCT1963);
+        MCT1963.setId("MCT1963");
+
+        Product prodRH00030 = createSysPurposeProduct(null, null, "RHEL EUS", null, null);
+        Pool RH00030 = TestUtil.createPool(owner, prodRH00030);
+        RH00030.setId("RH00030");
+
+        jsRules.reinitTo("test_name_space");
+        JsonJsContext args = new JsonJsContext(mapper);
+        args.put("log", log, false);
+        args.put("consumer", consumer);
+        args.put("compliance", compliance);
+
+        args.put("pool", RH00009);
+        Double RH00009Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        args.put("pool", MCT1963);
+        Double MCT1963Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        args.put("pool", RH00030);
+        Double RH00030Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        assertTrue("Pool RH00030 should have a higher priority than pool RH00009.",
+            RH00030Priority > RH00009Priority);
+
+        assertTrue("Pool MCT1963 should have a higher priority than pool RH00009.",
+            MCT1963Priority > RH00009Priority);
+
+        // Check that both pools would have the same priority.
+        assertTrue("Pool MCT1963 should have equal priority with pool MCT1650.",
+            MCT1963Priority.equals(RH00030Priority));
+    }
+
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testSysPurposePoolPriorityUseCase7ComputeNodeAndEUS() throws NoSuchMethodException {
+        // Consumer specified syspurpose attributes:
+        consumer.setRole("RHEL Server");
+        Set<String> addons = new HashSet<>();
+        addons.add("RHEL EUS");
+        consumer.setAddOns(addons);
+
+        // Consumer satisfied role attribute:
+        Product productWithRoleSatisfied = createSysPurposeProduct("compliant-product1", "RHEL Server",
+            null, null, null);
+        Pool poolThatSatisfiesRole = new Pool();
+        poolThatSatisfiesRole.setProduct(productWithRoleSatisfied);
+        Entitlement entitlementThatSatisfiesRole = new Entitlement();
+        entitlementThatSatisfiesRole.setPool(poolThatSatisfiesRole);
+        compliance.addCompliantProduct("compliant-product1", entitlementThatSatisfiesRole);
+
+        // Candidate pools:
+        Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", "Smart Management", null, null);
+        Pool RH00009 = TestUtil.createPool(owner, prodRH00009);
+        RH00009.setId("RH00009");
+
+        Product prodRH00741 = createSysPurposeProduct(null, "RHEL for HPC Compute Node", "RHEL EUS",
+            null, null);
+        Pool RH00741 = TestUtil.createPool(owner, prodRH00741);
+        RH00741.setId("RH00741");
+
+        Product prodRH00030 = createSysPurposeProduct(null, null, "RHEL EUS", null, null);
+        Pool RH00030 = TestUtil.createPool(owner, prodRH00030);
+        RH00030.setId("RH00030");
+
+        jsRules.reinitTo("test_name_space");
+        JsonJsContext args = new JsonJsContext(mapper);
+        args.put("log", log, false);
+        args.put("consumer", consumer);
+        args.put("compliance", compliance);
+
+        args.put("pool", RH00009);
+        Double RH00009Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        args.put("pool", RH00741);
+        Double RH00741Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        args.put("pool", RH00030);
+        Double RH00030Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        assertTrue("Pool RH00030 should have a higher priority than pool RH00741.",
+            RH00030Priority > RH00741Priority);
+
+        assertTrue("Pool RH00741 should have a higher priority than pool RH00009.",
+            RH00741Priority > RH00009Priority);
+    }
+
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testSysPurposePoolPriorityUseCase8CombinationOfRoleAndAddons() throws NoSuchMethodException {
+        // Consumer specified syspurpose attributes:
+        consumer.setRole("RHEL Workstation");
+        Set<String> addons = new HashSet<>();
+        addons.add("RHEL EUS");
+        consumer.setAddOns(addons);
+
+        // Consumer satisfied role attribute:
+        Product productWithRoleSatisfied = createSysPurposeProduct("compliant-product1", "RHEL Workstation",
+            null, null, null);
+        Pool poolThatSatisfiesRole = new Pool();
+        poolThatSatisfiesRole.setProduct(productWithRoleSatisfied);
+        Entitlement entitlementThatSatisfiesRole = new Entitlement();
+        entitlementThatSatisfiesRole.setPool(poolThatSatisfiesRole);
+        compliance.addCompliantProduct("compliant-product1", entitlementThatSatisfiesRole);
+
+        // Candidate pools:
+        Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", "Smart Management", null, null);
+        Pool RH00009 = TestUtil.createPool(owner, prodRH00009);
+        RH00009.setId("RH00009");
+
+        Product prodMCT0352 = createSysPurposeProduct(null, "RHEL Workstation", null, null, null);
+        Pool MCT0352 = TestUtil.createPool(owner, prodMCT0352);
+        MCT0352.setId("MCT0352");
+
+        Product prodRH00030 = createSysPurposeProduct(null, null, "RHEL EUS", null, null);
+        Pool RH00030 = TestUtil.createPool(owner, prodRH00030);
+        RH00030.setId("RH00030");
+
+        jsRules.reinitTo("test_name_space");
+        JsonJsContext args = new JsonJsContext(mapper);
+        args.put("log", log, false);
+        args.put("consumer", consumer);
+        args.put("compliance", compliance);
+
+        args.put("pool", RH00009);
+        Double RH00009Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        args.put("pool", MCT0352);
+        Double MCT0352Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        args.put("pool", RH00030);
+        Double RH00030Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        assertTrue("Pool RH00030 should have a higher priority than pool MCT0352.",
+            RH00030Priority > MCT0352Priority);
+
+        assertTrue("Pool MCT0352 should have a higher priority than pool RH00009.",
+            MCT0352Priority > RH00009Priority);
+    }
+
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testSysPurposePoolPriorityUseCase9PremiumSLADevelopmentUsage() throws NoSuchMethodException {
+        // Consumer specified syspurpose attributes:
+        consumer.setRole("RHEL Server");
+        consumer.setServiceLevel("Premium");
+        consumer.setUsage("Development");
+
+        // --- No satisfied syspurpose attributes on the consumer ---
+
+        // Candidate pools:
+        Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", "Smart Management",
+            "Standard", "Production");
+        Pool RH00009 = TestUtil.createPool(owner, prodRH00009);
+        RH00009.setId("RH00009");
+
+        Product prodRH00008 = createSysPurposeProduct(null, "RHEL Server", "Smart Management",
+            "Premium", "Production");
+        Pool RH00008 = TestUtil.createPool(owner, prodRH00008);
+        RH00008.setId("RH00008");
+
+        jsRules.reinitTo("test_name_space");
+        JsonJsContext args = new JsonJsContext(mapper);
+        args.put("log", log, false);
+        args.put("consumer", consumer);
+        args.put("compliance", compliance);
+
+        args.put("pool", RH00009);
+        Double RH00009Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        args.put("pool", RH00008);
+        Double RH00008Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        assertTrue("Pool RH00008 should have a higher priority than pool RH00009.",
+            RH00008Priority > RH00009Priority);
+    }
+
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testSysPurposePoolPriorityUseCase10RoleMatchesSLABreaksTheTie() throws NoSuchMethodException {
+        // Consumer specified syspurpose attributes:
+        consumer.setRole("RHEL Server");
+        consumer.setServiceLevel("Premium");
+
+        // --- No satisfied syspurpose attributes on the consumer ---
+
+        // Candidate pools:
+        Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", "Smart Management",
+            "Standard", "Production");
+        Pool RH00009 = TestUtil.createPool(owner, prodRH00009);
+        RH00009.setId("RH00009");
+
+        Product prodRH00008 = createSysPurposeProduct(null, "RHEL Server", "Smart Management",
+            "Premium", "Production");
+        Pool RH00008 = TestUtil.createPool(owner, prodRH00008);
+        RH00008.setId("RH00008");
+
+        jsRules.reinitTo("test_name_space");
+        JsonJsContext args = new JsonJsContext(mapper);
+        args.put("log", log, false);
+        args.put("consumer", consumer);
+        args.put("compliance", compliance);
+
+        args.put("pool", RH00009);
+        Double RH00009Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        args.put("pool", RH00008);
+        Double RH00008Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        assertTrue("Pool RH00008 should have a higher priority than pool RH00009.",
+            RH00008Priority > RH00009Priority);
+    }
+
+    /*
+     * This case demonstrates that between two otherwise equal products,
+     * if one product has the SLA defined and it matches the consumer, that product will be used.
+     */
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testSysPurposePoolPriorityUseCase11RoleMatchesSLAGivenNoProductSLA()
+        throws NoSuchMethodException {
+
+        // Consumer specified syspurpose attributes:
+        consumer.setRole("RHEL Server");
+        consumer.setServiceLevel("Standard");
+        consumer.setUsage("Development");
+
+        // --- No satisfied syspurpose attributes on the consumer ---
+
+        // Candidate pools:
+        Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", "Smart Management",
+            "Standard", "Production");
+        Pool RH00009 = TestUtil.createPool(owner, prodRH00009);
+        RH00009.setId("RH00009");
+
+        Product prodI_RH00009 = createSysPurposeProduct(null, "RHEL Server", "Smart Management",
+            null, "Production");
+        Pool I_RH00009 = TestUtil.createPool(owner, prodI_RH00009);
+        I_RH00009.setId("I_RH00009");
+
+        jsRules.reinitTo("test_name_space");
+        JsonJsContext args = new JsonJsContext(mapper);
+        args.put("log", log, false);
+        args.put("consumer", consumer);
+        args.put("compliance", compliance);
+
+        args.put("pool", RH00009);
+        Double RH00009Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        args.put("pool", I_RH00009);
+        Double I_RH00009Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        assertTrue("Pool RH00009 should have a higher priority than pool I_RH00009.",
+            RH00009Priority > I_RH00009Priority);
+    }
+
+    /*
+     * The customer has made a typo in the usage. Since the pool that has a
+     * defined usage is a mismatch, we favor the pool that has usage undefined.
+     */
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testSysPurposePoolPriorityUseCase17UsageMismatch() throws NoSuchMethodException {
+        // Consumer specified syspurpose attributes:
+        consumer.setRole("RHEL Server");
+        consumer.setUsage("Typo");
+
+        // --- No satisfied syspurpose attributes on the consumer ---
+
+        // Candidate pools:
+        Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", "Smart Management",
+            "Standard", "Development");
+        Pool RH00009 = TestUtil.createPool(owner, prodRH00009);
+        RH00009.setId("RH00009");
+
+        Product prodRH00008 = createSysPurposeProduct(null, "RHEL Server", "Smart Management",
+            "Premium", null);
+        Pool RH00008 = TestUtil.createPool(owner, prodRH00008);
+        RH00008.setId("RH00008");
+
+        Product prodMCT1650 = createSysPurposeProduct(null, "Satellite", null, "Premium", null);
+        Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
+        MCT1650.setId("MCT1650");
+
+        jsRules.reinitTo("test_name_space");
+        JsonJsContext args = new JsonJsContext(mapper);
+        args.put("log", log, false);
+        args.put("consumer", consumer);
+        args.put("compliance", compliance);
+
+        args.put("pool", RH00009);
+        Double RH00009Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        args.put("pool", RH00008);
+        Double RH00008Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        args.put("pool", MCT1650);
+        Double MCT1650Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        assertTrue("Pool RH00008 should have a higher priority than pool RH00009.",
+            RH00008Priority > RH00009Priority);
+
+        assertTrue("Pool RH00009 should have a higher priority than pool MCT1650.",
+            RH00009Priority > MCT1650Priority);
+    }
+
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testSysPurposePoolPriorityUseCase19OnlyRoleAndSLAareSpecified()
+        throws NoSuchMethodException {
+
+        // Consumer specified syspurpose attributes:
+        consumer.setRole("Satellite");
+        consumer.setServiceLevel("Premium");
+
+        // --- No satisfied syspurpose attributes on the consumer ---
+
+        // Candidate pools:
+        Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", "Smart Management",
+            "Standard", "Development");
+        Pool RH00009 = TestUtil.createPool(owner, prodRH00009);
+        RH00009.setId("RH00009");
+
+        Product prodI_RH00009 = createSysPurposeProduct(null, "RHEL Server", "Smart Management",
+            "Premium", "Production");
+        Pool I_RH00009 = TestUtil.createPool(owner, prodI_RH00009);
+        I_RH00009.setId("I_RH00009");
+
+        Product prodMCT1650 = createSysPurposeProduct(null, "Satellite", null, null, null);
+        Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
+        MCT1650.setId("MCT1650");
+
+        jsRules.reinitTo("test_name_space");
+        JsonJsContext args = new JsonJsContext(mapper);
+        args.put("log", log, false);
+        args.put("consumer", consumer);
+        args.put("compliance", compliance);
+
+        args.put("pool", RH00009);
+        Double RH00009Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        args.put("pool", I_RH00009);
+        Double I_RH00009Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        args.put("pool", MCT1650);
+        Double MCT1650Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        assertTrue("Pool MCT1650 should have a higher priority than pool I_RH00009.",
+            MCT1650Priority > I_RH00009Priority);
+
+        assertTrue("Pool I_RH00009 should have a higher priority than pool RH00009.",
+            I_RH00009Priority > RH00009Priority);
+    }
+
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testSysPurposePoolPriorityUseCaseSLAOrUsageMatchDoesNotOverpowerRole()
+        throws NoSuchMethodException {
+
+        Product product69 = new Product();
+        product69.setId("non-compliant-69");
+
+        // Consumer specified syspurpose attributes:
+        consumer.setRole("RHEL Server");
+        consumer.setServiceLevel("Premium");
+        consumer.setUsage("Production");
+        ConsumerInstalledProduct consumerInstalledProduct =
+            new ConsumerInstalledProduct(product69);
+        consumer.addInstalledProduct(consumerInstalledProduct);
+
+        // --- No satisfied syspurpose attributes on the consumer ---
+
+        // Candidate pools:
+        Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", null, null, null);
+        Pool RH00009 = TestUtil.createPool(owner, prodRH00009);
+        RH00009.setId("RH00009");
+        RH00009.addProvidedProduct(product69);
+
+        Product prodMCT_HA = createSysPurposeProduct(null, "RHEL High Availability", null,
+            "Premium", "Production");
+        Pool MCT_HA = TestUtil.createPool(owner, prodMCT_HA);
+        MCT_HA.setId("MCT_HA");
+        MCT_HA.addProvidedProduct(product69);
+
+        jsRules.reinitTo("test_name_space");
+        JsonJsContext args = new JsonJsContext(mapper);
+        args.put("log", log, false);
+        args.put("consumer", consumer);
+        args.put("compliance", compliance);
+
+        args.put("pool", RH00009);
+        Double RH00009Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        args.put("pool", MCT_HA);
+        Double MCT_HAPriority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        assertTrue("Pool RH00009 should have a higher priority than pool MCT_HA.",
+            RH00009Priority > MCT_HAPriority);
+    }
+
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testSysPurposePoolPriorityUseCaseSLABeatsUsage()
+        throws NoSuchMethodException {
+
+        Product product69 = new Product();
+        product69.setId("non-compliant-69");
+
+        // Consumer specified syspurpose attributes:
+        consumer.setRole("RHEL Server");
+        consumer.setServiceLevel("Standard");
+        consumer.setUsage("Development");
+        Set<String> addons = new HashSet<>();
+        addons.add("RHEL EUS");
+        consumer.setAddOns(addons);
+        ConsumerInstalledProduct consumerInstalledProduct =
+            new ConsumerInstalledProduct(product69);
+        consumer.addInstalledProduct(consumerInstalledProduct);
+
+        // --- No satisfied syspurpose attributes on the consumer ---
+
+        // Candidate pools:
+        Product prodRH0000W = createSysPurposeProduct(null, "RHEL Workstation", null, "Standard", null);
+        Pool RH0000W = TestUtil.createPool(owner, prodRH0000W);
+        RH0000W.setId("RH0000W");
+        RH0000W.addProvidedProduct(product69);
+
+        Product prodRH0000D = createSysPurposeProduct(null, "RHEL Desktop", null, null, "Development");
+        Pool RH0000D = TestUtil.createPool(owner, prodRH0000D);
+        RH0000D.setId("RH0000D");
+        RH0000D.addProvidedProduct(product69);
+
+        jsRules.reinitTo("test_name_space");
+        JsonJsContext args = new JsonJsContext(mapper);
+        args.put("log", log, false);
+        args.put("consumer", consumer);
+        args.put("compliance", compliance);
+
+        args.put("pool", RH0000W);
+        Double RH0000WPriority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        args.put("pool", RH0000D);
+        Double RH0000DPriority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        assertTrue("Pool RH0000W should have a higher priority than pool RH0000D.",
+            RH0000WPriority > RH0000DPriority);
+    }
+
+    /*
+     * The RH00009 pool matches the role, but everything else is a mismatch
+     * and the RH00008 pool doesn't match the role but matches everything else.
+     */
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testSysPurposePoolPriorityUseCaseRoleMismatchOutweighsABunchOfOtherMismatches()
+        throws NoSuchMethodException {
+
+        Product product69 = new Product();
+        product69.setId("non-compliant-69");
+
+        // Consumer specified syspurpose attributes:
+        consumer.setRole("RHEL Server");
+        consumer.setServiceLevel("Premium");
+        consumer.setUsage("Production");
+        Set<String> addons = new HashSet<>();
+        addons.add("Smart Management");
+        consumer.setAddOns(addons);
+        ConsumerInstalledProduct consumerInstalledProduct =
+            new ConsumerInstalledProduct(product69);
+        consumer.addInstalledProduct(consumerInstalledProduct);
+
+        // --- No satisfied syspurpose attributes on the consumer ---
+
+        // Candidate pools:
+        Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", null, "Standard", "Development");
+        Pool RH00009 = TestUtil.createPool(owner, prodRH00009);
+        RH00009.setId("RH00009");
+        RH00009.addProvidedProduct(product69);
+
+        Product prodRH00008 = createSysPurposeProduct(null, "RHEL for HPC Compute Node", "Smart Management",
+            "Premium", "Production");
+        Pool RH00008 = TestUtil.createPool(owner, prodRH00008);
+        RH00008.setId("RH00008");
+        RH00008.addProvidedProduct(product69);
+
+        jsRules.reinitTo("test_name_space");
+        JsonJsContext args = new JsonJsContext(mapper);
+        args.put("log", log, false);
+        args.put("consumer", consumer);
+        args.put("compliance", compliance);
+
+        args.put("pool", RH00009);
+        Double RH00009Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        args.put("pool", RH00008);
+        Double RH00008Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        assertTrue("Pool RH00009 should have a higher priority than pool RH00008.",
+            RH00009Priority > RH00008Priority);
     }
 
     @Test

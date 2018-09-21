@@ -1,4 +1,4 @@
-// Version: 5.28
+// Version: 5.29
 
 /*
  * Default Candlepin rule set.
@@ -38,6 +38,10 @@ function pool_type_name_space() {
     return PoolType;
 }
 
+function test_name_space() {
+    return TestNamespace;
+}
+
 // consumer types
 var SYSTEM_TYPE = "system";
 var HYPERVISOR_TYPE = "hypervisor";
@@ -70,6 +74,8 @@ var VCPU_ATTRIBUTE = "vcpu";
 var MULTI_ENTITLEMENT_ATTRIBUTE = "multi-entitlement";
 var STACKING_ID_ATTRIBUTE = "stacking_id";
 var STORAGE_BAND_ATTRIBUTE = "storage_band";
+var ROLE_ATTRIBUTE = "role";
+var ADDONS_ATTRIBUTE = "addons";
 
 // caller types
 var BEST_POOLS_CALLER = "best_pools";
@@ -108,7 +114,9 @@ var PHYSICAL_ATTRIBUTES = [
     RAM_ATTRIBUTE,
     ARCH_ATTRIBUTE,
     GUEST_LIMIT_ATTRIBUTE,
-    STORAGE_BAND_ATTRIBUTE
+    STORAGE_BAND_ATTRIBUTE,
+    ROLE_ATTRIBUTE,
+    ADDONS_ATTRIBUTE
 ];
 
 /**
@@ -120,7 +128,9 @@ var VIRT_ATTRIBUTES = [
     RAM_ATTRIBUTE,
     ARCH_ATTRIBUTE,
     GUEST_LIMIT_ATTRIBUTE,
-    STORAGE_BAND_ATTRIBUTE
+    STORAGE_BAND_ATTRIBUTE,
+    ROLE_ATTRIBUTE,
+    ADDONS_ATTRIBUTE
 ];
 
 /**
@@ -273,6 +283,43 @@ function createPool(pool) {
         }
         return this.derived_product_list;
     };
+
+    // Returns a list of values the pool has for the provided product attribute.
+    // The argument is the name of any of the syspurpose attributes, as well as 'products'.
+    pool.retrievePoolAttributeValues = function (attribute) {
+        var poolSet = [];
+        if (attribute === 'products') {
+            if (this.hasDerived()) {
+                this.derivedProducts().forEach(function(prod) {
+                    if (prod !== undefined && prod !== null) {
+                        poolSet.push(prod);
+                    }
+                });
+            }
+            else {
+                this.products().forEach(function(prod) {
+                    if (prod !== undefined && prod !== null) {
+                        poolSet.push(prod);
+                    }
+                });
+            }
+            return poolSet;
+        }
+
+        if (!this.productAttributes || !this.getProductAttribute(attribute)) {
+            return poolSet;
+        }
+        else {
+            if (attribute === 'addons' || attribute === 'roles') {
+                poolSet = this.getProductAttribute(attribute).split('\\s*,\\s*');
+            }
+            else if (attribute === 'support_level' || attribute === 'usage') {
+                poolSet = [this.getProductAttribute(attribute)];
+            }
+        }
+        return poolSet;
+    };
+
     return pool;
 }
 
@@ -309,6 +356,98 @@ function createActivationKey(key) {
     return key;
 }
 
+function createConsumer(consumer, compliance) {
+
+    consumer.contextCompliance = compliance;
+
+    /*
+     * Returns an Array object which contains one or more attribute values for the specified attribute.
+     */
+    consumer.retrieveConsumerSpecifiedAttributeValues = function (attribute) {
+        var consumer_specified = [];
+        if (attribute === 'products') {
+            var product_ids = [];
+
+            if (!this.installedProducts) {
+                return product_ids;
+            }
+
+            this.installedProducts.forEach(function(prod) {
+                product_ids.push(prod.productId);
+            });
+            consumer_specified = product_ids;
+        }
+        else if (attribute === 'addons') {
+            if (!this.addOns) {
+                return [];
+            }
+            consumer_specified = this.addOns;
+        }
+        else if (attribute === 'roles') {
+            if (!this.role) {
+                return [];
+            }
+            consumer_specified = [this.role];
+        }
+        else if (attribute === 'usage') {
+            if (!this.usage) {
+                return [];
+            }
+            consumer_specified = [this.usage];
+        }
+        else if (attribute === 'support_level') {
+            if (!this.serviceLevel) {
+                return [];
+            }
+            consumer_specified = [this.serviceLevel];
+        }
+
+        return consumer_specified;
+    };
+
+    consumer.retrieveConsumerSatisfiedAttributeValues = function(attribute) {
+        // Assuming that the list of satisfied products are the ones that are compliant already.
+        if (attribute === 'products') {
+            return Object.keys(this.contextCompliance.compliantProducts);
+        }
+
+        var listOfProductMaps = [];
+        listOfProductMaps.push(this.contextCompliance.compliantProducts);
+        listOfProductMaps.push(this.contextCompliance.partiallyCompliantProducts);
+        listOfProductMaps.push(this.contextCompliance.partialStacks);
+
+        var attr_list = [];
+        listOfProductMaps.forEach(function(productMap) {
+            Object.keys(productMap).forEach(function(productId) {
+                var setOfEntitlements = productMap[productId];
+                setOfEntitlements.forEach(function(entitlement) {
+                    var attr_value = entitlement.pool.getProductAttribute(attribute);
+                    var exists = false;
+                    for (var i = 0 ; i < attr_list.length ; i++) {
+                        if (Utils.equalsIgnoreCase(attr_list[i], attr_value)) {
+                            exists = true;
+                            break;
+                        }
+                    }
+
+                    if (!exists && attr_value) {
+                        attr_list.push(attr_value);
+                    }
+                });
+            });
+        });
+        return attr_list;
+    };
+
+    consumer.retrieveConsumerUnsatisfiedAttributeValues = function(attribute) {
+        var consumer_satisfied_values = this.retrieveConsumerSatisfiedAttributeValues(attribute);
+        var consumer_specified_values = this.retrieveConsumerSpecifiedAttributeValues(attribute);
+        return Utils.difference(consumer_specified_values, consumer_satisfied_values);
+    };
+
+    return consumer;
+}
+
 /*
  * Creates an object that represents the entitlement that would be created
  * by a given pool.  Uses the maximum quantity available.
@@ -325,7 +464,69 @@ function get_mock_ent_for_pool(pool, consumer) {
 }
 
 function get_pool_priority(pool, consumer) {
+    log.debug("Calculating pool priority for pool " + pool.id + "...");
+    // start with a default
     var priority = 100;
+
+    // list of syspurpose attributes and their corresponding weights.
+    var attrs = {
+        'products': 20,
+        'roles': 10,
+        'addons': 5,
+        'support_level': 3,
+        'usage': 1
+    };
+
+    var matchesPurpose = false;
+    Object.keys(attrs).forEach(function(attr) {
+        var specifiedSet = consumer.retrieveConsumerSpecifiedAttributeValues(attr);
+        var unsatisfiedSet = consumer.retrieveConsumerUnsatisfiedAttributeValues(attr);
+        var poolSet = pool.retrievePoolAttributeValues(attr);
+        log.debug("Number of values found for attribute '" + attr + "': specifiedSet: " + specifiedSet.length + ", unsatisfiedSet: "
+            + unsatisfiedSet.length + ", poolSet: " + poolSet.length);
+
+        var attrScore = 0;
+        var match_rule_score = 0;
+        var null_rule_score = 0;
+        var mismatch_rule_score = 0;
+
+        if (unsatisfiedSet.length === 0 && poolSet.length === 0) {
+            null_rule_score = 0.1;
+        }
+
+        if (unsatisfiedSet.length > 0) {
+            match_rule_score = Utils.intersection(unsatisfiedSet, poolSet).length / unsatisfiedSet.length;
+        }
+
+        if (specifiedSet.length > 0 && poolSet.length > 0) {
+            mismatch_rule_score = (Utils.difference(specifiedSet, poolSet).length / specifiedSet.length) * -0.5;
+        }
+
+        attrScore = (null_rule_score + match_rule_score + mismatch_rule_score) * attrs[attr];
+
+        if (attrScore != 0) {
+            log.debug("evaluating " + attr + " with weight " + attrs[attr]);
+            if (null_rule_score != 0) {
+                log.debug("null rule score: " + null_rule_score);
+            }
+            if (match_rule_score != 0) {
+                log.debug("match rule score: " + match_rule_score);
+                matchesPurpose = true;
+            }
+            if (mismatch_rule_score != 0) {
+                log.debug("mismatch rule score: " + mismatch_rule_score);
+            }
+
+            log.debug("final score = " + attrScore);
+        }
+        priority += attrScore;
+    });
+
+    // increment to give more weightage to syspurpose fields
+    if (matchesPurpose) {
+        priority += 450;
+        log.debug("incrementing syspurpose score by 450");
+    }
 
     // use virt only if possible
     // if the consumer is not virt, the pool will have been filtered out
@@ -371,10 +572,49 @@ function get_pool_priority(pool, consumer) {
             }
         }
     }
-
+    log.debug("Final priority score: " + priority);
     return priority;
 }
 
+/*
+ * Returns true if the following are all true:
+ * - the pool's SLA is non-null, non-empty and not in the exempt list.
+ * - at least one of these is non-null and non-empty: SLA override, consumer's SLA, owner's default SLA.
+ * - the pool's SLA matches either the SLA override, the consumer's SLA, or the owner's default SLA
+ *   (Order of priority is: SLA override > consumer's SLA > owner's default SLA.)
+ *
+ * False otherwise.
+ */
+function should_pool_be_prioritized_for_sla(context, pool) {
+    var poolSLA = pool.getProductAttribute('support_level');
+
+    log.debug("context.serviceLevelOverride: " + context.serviceLevelOverride);
+    var consumerSLA = context.serviceLevelOverride;
+    if (!consumerSLA || consumerSLA == "") {
+        consumerSLA = context.consumer.serviceLevel;
+            if (!consumerSLA || consumerSLA == "") {
+                consumerSLA = context.owner.defaultServiceLevel;
+            }
+    }
+
+    if (!is_pool_sla_null_or_exempt(context, poolSLA) &&
+        consumerSLA && consumerSLA !== "" &&
+        Utils.equalsIgnoreCase(consumerSLA, poolSLA)) {
+        return true;
+    }
+    return false;
+}
+
+/*
+ * Returns true if the pool's SLA is null or empty, or is included in the exempt list; false otherwise.
+ */
+function is_pool_sla_null_or_exempt(context, poolSLA) {
+    if (!poolSLA || poolSLA === "") {
+        return true;
+    }
+
+    return isLevelExempt(poolSLA, context.exemptList);
+}
 
 /* Utility functions */
 function contains(a, obj) {
@@ -778,6 +1018,42 @@ var CoverageCalculator = {
                 return reason;
             },
 
+            addons: function (complianceTracker, prodAttr, consumer) {
+                var supportedAddOns = complianceTracker.enforces(prodAttr) ? complianceTracker.getAccumulatedValue(prodAttr) : [];
+                var consumerAddOns = consumer.addOns != null ? consumer.addOns : [];
+                var anyCoverage = false;
+                for (var index in consumerAddOns) {
+                    if (contains(supportedAddOns, consumerAddOns[index])) {
+                        anyCoverage = true;
+                    }
+                }
+                if (!anyCoverage) {
+                    log.debug("  System addons not covered by: " + supportedAddOns);
+                    return StatusReasonGenerator.buildReason(prodAttr.toUpperCase(),
+                        complianceTracker.type,
+                        complianceTracker.id,
+                        consumerAddOns,
+                        supportedAddOns);
+                }
+                log.debug("  System addons is covered.");
+                return null;
+            },
+
+            role: function (complianceTracker, prodAttr, consumer) {
+                var supportedRoles = complianceTracker.enforces(prodAttr) ? complianceTracker.getAccumulatedValue(prodAttr) : [];
+                var consumerRole = consumer.role != null ? consumer.role : "";
+                if (!contains(supportedRoles, consumerRole)) {
+                    log.debug("  System addons not covered by: " + supportedAddOns);
+                    return StatusReasonGenerator.buildReason(prodAttr.toUpperCase(),
+                        complianceTracker.type,
+                        complianceTracker.id,
+                        consumeRole,
+                        supportedRoles);
+                }
+                log.debug("  System role is covered.");
+                return null;
+            },
+
             /**
              *  The default condition checks is a simple *integer* comparison that makes
              *  sure that the specified product attribute value is >= that of the
@@ -908,7 +1184,7 @@ var CoverageCalculator = {
         // Some stacked attributes do not affect the quantity needed to
         // make the stack valid. Stacking multiple instances of 'arch'
         // does nothing (there is no quantity).
-        var stackableAttrsNotAffectingQuantity = [ARCH_ATTRIBUTE, GUEST_LIMIT_ATTRIBUTE];
+        var stackableAttrsNotAffectingQuantity = [ARCH_ATTRIBUTE, GUEST_LIMIT_ATTRIBUTE, ADDONS_ATTRIBUTE, ROLE_ATTRIBUTE];
         var complianceAttributes = getComplianceAttributes(consumer);
         var complianceAttributesToUse = [];
 
@@ -1077,8 +1353,29 @@ function createComplianceTracker(consumer, id) {
 
                 guest_limit: function (currentStackValue, poolValue, pool, quantity) {
                     return -1; //Value doesn't matter, just need it to be enforced
-                }
+                },
 
+                /**
+                 *  AddOns is accumulated by adding each pool value to
+                 *  a list of addon strings. Each pool value is a comma separated
+                 *  string of supported addons.
+                 */
+                addons: function (currentStackValue, poolValue, pool, quantity) {
+                    var stackValue = currentStackValue || [];
+                    stackValue.push(poolValue);
+                    return stackValue;
+                },
+
+                /**
+                 *  Role is accumulated by adding each pool value to
+                 *  a list of role strings. Each pool value is a comma separated
+                 *  string of supported roles.
+                 */
+                role: function (currentStackValue, poolValue, pool, quantity) {
+                    var stackValue = currentStackValue || [];
+                    stackValue.push(poolValue);
+                    return stackValue;
+                }
             };
 
             var strategy = strategies.default;
@@ -1864,7 +2161,7 @@ var Autobind = {
      * have to know if it's a stack, single entitlement, etc... It is either valid
      * or not, and provides products.
      */
-    create_entitlement_group: function(stackable, stack_id, installed_ids, consumer, attached_ents, consider_derived) {
+    create_entitlement_group: function(stackable, stack_id, installed_ids, consumer, attached_ents, consider_derived, context) {
         return {
             pools: [],
             stackable: stackable,
@@ -2043,7 +2340,7 @@ var Autobind = {
              * checks compliance.  This prevents us from suggesting two fully compliant stacks that
              * enforce different attributes
              */
-            remove_extra_attrs: function() {
+            remove_extra_attrs: function(role, addons) {
                 var possible_pool_sets = [];
                 possible_pool_sets.push(this.pools);
                 var original_provided = this.get_provided_products().length;
@@ -2057,7 +2354,16 @@ var Autobind = {
                         for (var i = 0; i < this.pools.length; i++) {
                             var pool = this.pools[i];
                             var prodAttrValue = pool.getProductAttribute(attr);
-                            if (!prodAttrValue || prodAttrValue === null) {
+                            var poolRole = pool.getProductAttribute("role");
+                            var poolAddons = pool.getProductAttribute("addons") !== null ?
+                                pool.getProductAttribute("addons").split("\\s*,\\s*") : [];
+                            var addonMatch = false;
+                            for (var k = 0; k < poolAddons.length; k++) {
+                                addonMatch = addonMatch || contains(addons, poolAddons[k]);
+                            }
+                            if ((!prodAttrValue || prodAttrValue === null) &&
+                                !role.equals(poolRole) &&
+                                !addonMatch) {
                                 pools_without.push(pool);
                             }
                         }
@@ -2103,12 +2409,13 @@ var Autobind = {
              * Remove all pools that aren't necessary for compliance
              * TODO: needs elaboration
              */
-            prune_pools: function() {
+            prune_pools: function(role, addons) {
                 // We know this group is required at this point,
                 // so we cannot remove the one pool if it's non-stackable
                 if (!this.stackable) {
                     return;
                 }
+
                 // Sort pools such that we preserve virt_only and host_requires if possible
                 this.pools.sort(this.compare_pools);
                 var temp = null;
@@ -2116,9 +2423,18 @@ var Autobind = {
                 var provided_size = this.get_provided_products().length;
                 for (var i = this.pools.length - 1; i >= 0; i--) {
                     temp = this.pools[i];
+
+                    var roleMatch = role == temp.getProductAttribute("role");
+                    var poolAddons = temp.getProductAttribute("addons") !== null ?
+                        temp.getProductAttribute("addons").split("\\s*,\\s*") : [];
+                    var addonMatch = false;
+                    for (var k = 0; k < poolAddons.length; k++) {
+                        addonMatch = addonMatch || contains(addons, poolAddons[k]);
+                    }
                     this.pools.splice(i, 1);
                     var ents = this.get_all_ents(this.pools);
-                    if (ents.length == 0 || !Compliance.getStackCoverage(this.consumer, this.stack_id, ents.concat(this.attached_ents)).covered || this.get_provided_products().length != provided_size) {
+                    if (ents.length == 0 || !Compliance.getStackCoverage(this.consumer, this.stack_id, ents.concat(this.attached_ents)).covered ||
+                        this.get_provided_products().length != provided_size || roleMatch || addonMatch) {
                         // if something has broken, we add the pool back
                         this.pools.push(temp);
                     }
@@ -2257,6 +2573,14 @@ var Autobind = {
                     }
                 }
                 return provided;
+            },
+
+            get_addons: function() {
+                return get_addons_pools(this.pools);
+            },
+
+            get_roles: function() {
+                return get_role_pools(this.pools);
             }
         };
     },
@@ -2309,23 +2633,9 @@ var Autobind = {
             }
         }
 
+        context.consumer = createConsumer(context.consumer, context.compliance);
+
         return context;
-    },
-
-    /*
-     * Only use pools that match the consumer SLA or SLA override, if set
-     */
-    is_pool_sla_valid: function(context, pool, consumerSLA) {
-        var poolSLA = pool.getProductAttribute('support_level');
-        var poolSLAExempt = isLevelExempt(pool.getProductAttribute('support_level'), context.exemptList);
-
-        if (poolSLA && poolSLA != "" && !poolSLAExempt &&
-            consumerSLA && consumerSLA != "" &&
-            !Utils.equalsIgnoreCase(consumerSLA, poolSLA)) {
-            log.debug("Skipping pool " + pool.id + " since SLA does not match that of the consumer.");
-            return false;
-        }
-        return true;
     },
 
     /*
@@ -2354,6 +2664,80 @@ var Autobind = {
         return true;
     },
 
+    /*
+     * The pool is valid if any of these is true:
+     *  - The pool's SLA is null or in the exempt list.
+     *  - The pool's SLA is non-null, non-exempt, and the consumer does not have any existing entitlements.
+     *  - The pool's SLA is non-null, non-exempt, and the consumer has existing entitlements,
+     *    but none of their products has an SLA.
+     *  - The pool's SLA is non-null, non-exempt, and the consumer has existing entitlements,
+     *    and at least one of them has a product with a non-null SLA that matches the pool SLA.
+     *
+     * The pool is invalid if this is true:
+     *  - The pool's SLA is non-null, non-exempt, and the consumer has existing entitlements,
+     *    and one or more of those have products with non-null SLAs,
+     *    but those SLAs do not match with the pool's SLA.
+     */
+    is_pool_sla_valid: function(context, pool) {
+        var poolSLA = pool.getProductAttribute('support_level');
+
+        if (is_pool_sla_null_or_exempt(context, poolSLA)) {
+            return true;
+        }
+
+        var consumer_entitlement_slas = this.get_slas_of_existing_consumer_entitlements_from_compliance_status(context);
+        if (consumer_entitlement_slas.length <= 0) {
+            return true;
+        }
+
+        var is_valid = false;
+        for (i = 0 ; i < consumer_entitlement_slas.length ; i++) {
+            if (Utils.equalsIgnoreCase(poolSLA, consumer_entitlement_slas[i])) {
+                is_valid = true;
+                break;
+            }
+        }
+
+        if (!is_valid) {
+            log.debug("Skipping pool " + pool.id +
+            " since SLA is non-null, non-exempt, and does not match any of the consumer's entitlements' SLAs.");
+        }
+        return is_valid;
+    },
+
+    /*
+     * Traverses the ComplianceStatus object's product maps to find and return a list of
+     * the consumer's entitlements' SLAs. Null SLAs are not returned.
+     */
+    get_slas_of_existing_consumer_entitlements_from_compliance_status: function(context) {
+        var listOfProductMaps = [];
+        listOfProductMaps.push(context.compliance.compliantProducts);
+        listOfProductMaps.push(context.compliance.partiallyCompliantProducts);
+        listOfProductMaps.push(context.compliance.partialStacks);
+
+        var sla_list = [];
+        listOfProductMaps.forEach(function(productMap) {
+            Object.keys(productMap).forEach(function(productId) {
+                var setOfEntitlements = productMap[productId];
+                setOfEntitlements.forEach(function(entitlement) {
+                    var sla = entitlement.pool.getProductAttribute('support_level');
+                    var exists = false;
+                    for (i = 0 ; i < sla_list.length ; i++) {
+                        if (Utils.equalsIgnoreCase(sla_list[i], sla)) {
+                            exists = true;
+                            break;
+                        }
+                    }
+
+                    if (!exists && sla) {
+                        sla_list.push(sla);
+                    }
+                });
+            });
+        });
+        return sla_list;
+    },
+
     is_pool_not_empty: function(pool) {
         if (pool.currently_available > 0) {
             return true;
@@ -2362,25 +2746,8 @@ var Autobind = {
         return false;
     },
 
-    /*
-     * Gets the sla of the consumer, unless serviceLevelOverride is set, in which
-     * case we use that.
-     */
-    get_consumer_sla: function(context) {
-        log.debug("context.serviceLevelOverride: " + context.serviceLevelOverride);
-        var consumerSLA = context.serviceLevelOverride;
-        if (!consumerSLA || consumerSLA == "") {
-            consumerSLA = context.consumer.serviceLevel;
-                if (!consumerSLA || consumerSLA == "") {
-                    consumerSLA = context.owner.defaultServiceLevel;
-                }
-        }
-        return consumerSLA;
-    },
-
     // returns all pools that can be attached to this consumer
     get_valid_pools: function(context) {
-        var consumerSLA = this.get_consumer_sla(context);
         var isGuest = Utils.isGuest(context.consumer);
         var consumerArch = ARCH_FACT in context.consumer.facts ?
                 context.consumer.facts[ARCH_FACT] : null;
@@ -2398,7 +2765,7 @@ var Autobind = {
              */
             if (this.is_pool_arch_valid(context, pool, consumerArch) &&
                     this.is_pool_virt_valid(pool, isGuest) &&
-                    this.is_pool_sla_valid(context, pool, consumerSLA) &&
+                    this.is_pool_sla_valid(context, pool) &&
                     pool_not_empty) {
                 valid_pools.push(pool);
             }
@@ -2409,7 +2776,7 @@ var Autobind = {
     /*
      * Builds entitlement group objects that allow us to treat stacks and individual entitlements the same
      */
-    build_entitlement_groups: function(valid_pools, installed, consumer, attached_ents, consider_derived) {
+    build_entitlement_groups: function(valid_pools, installed, consumer, attached_ents, consider_derived, context) {
         var ent_groups = [];
         for (var i = 0; i < valid_pools.length; i++) {
             var pool = valid_pools[i];
@@ -2427,13 +2794,13 @@ var Autobind = {
                 }
                 // If the pool is stackable, and not part of an existing entitlement group, create a new group and add it
                 if (!found) {
-                    var new_ent_group = this.create_entitlement_group(true, stack_id, installed, consumer, attached_ents, consider_derived);
+                    var new_ent_group = this.create_entitlement_group(true, stack_id, installed, consumer, attached_ents, consider_derived, context);
                     new_ent_group.add_pool(pool);
                     ent_groups.push(new_ent_group);
                 }
             } else {
                 //if the entitlement is not stackable, create a new stack group for it
-                var new_ent_group = this.create_entitlement_group(false, "", installed, consumer, attached_ents, consider_derived);
+                var new_ent_group = this.create_entitlement_group(false, "", installed, consumer, attached_ents, consider_derived, context);
                 new_ent_group.add_pool(pool);
                 ent_groups.push(new_ent_group);
             }
@@ -2456,8 +2823,41 @@ var Autobind = {
         return common_products;
     },
 
+    /*
+     * Returns the list of addons that the stack will cover, which the consumer requires.
+     */
+    get_common_addons: function(addons, group) {
+        var group_addons = group.get_addons();
+        log.debug("group_addons: " + group_addons);
+        var common_addons = [];
+        for (var i = 0; i < group_addons.length; i++) {
+            var group_addon = group_addons[i];
+            if (contains(addons, group_addon)) {
+                common_addons.push(group_addon);
+            }
+        }
+        return common_addons;
+    },
+
+    /*
+     * Returns the list of productIds that the stack will cover, which the consumer requires.
+     */
+    get_common_role: function(role, group) {
+        if (role == null) {
+            return "";
+        }
+        var group_roles = group.get_roles();
+        for (var i = 0; i < group_roles.length; i++) {
+            var group_role = group_roles[i];
+            if (group_role === role) {
+                return role;
+            }
+        }
+        return "";
+    },
+
     // been adding more attributes to break ties, there's probably a better way to write this at this point
-    find_best_ent_group: function(all_groups, installed) {
+    find_best_ent_group: function(all_groups, installed, role, addons) {
         var max_provide = 0;
         var stacked = false;
         var best = null;
@@ -2473,12 +2873,15 @@ var Autobind = {
             var group = all_groups[i];
             var group_avg_prio = group.get_average_priority();
             var intersection = this.get_common_products(installed, group).length;
+            var role_needed = this.get_common_role(role, group) !== "";
+            var addons_needed = this.get_common_addons(addons, group).length > 0;
             var group_poolquantity = group.get_total_quantity();
             var group_num_host_specific = group.num_host_specific();
             var group_num_virt_only = group.num_virt_only();
-            if (intersection <= 0 ||
+
+            if (!role_needed && !addons_needed && (intersection <= 0 ||
                 (host_specific_found && group_num_host_specific < best_num_host_specific) ||
-                (virt_only_found && group_num_virt_only < best_num_virt_only)) {
+                (virt_only_found && group_num_virt_only < best_num_virt_only))) {
                 // Skip this group if we've found virt or host_specific and this group is not.
                 continue;
             }
@@ -2498,12 +2901,6 @@ var Autobind = {
             else if (group_num_virt_only < best_num_virt_only) {
                 new_best_found = false;
             }
-            else if (intersection > max_provide) {
-                new_best_found = true;
-            }
-            else if (intersection < max_provide) {
-                new_best_found = false;
-            }
             else if (group_avg_prio > best_avg_prio) {
                 new_best_found = true;
             }
@@ -2517,6 +2914,9 @@ var Autobind = {
                 new_best_found = false;
             }
             else if (stacked && !group.stackable) {
+                new_best_found = true;
+            }
+            else if(role_needed || addons_needed) {
                 new_best_found = true;
             }
 
@@ -2534,9 +2934,8 @@ var Autobind = {
         return best;
     },
 
-    get_best_entitlement_groups: function(all_groups, installed, compliance) {
+    get_best_entitlement_groups: function(all_groups, installed, compliance, role, addons) {
         var best = [];
-
         var partial_stacks = [];
         for (var stack_id in compliance["partialStacks"]) {
             if (compliance["partialStacks"].hasOwnProperty(stack_id)) {
@@ -2552,9 +2951,9 @@ var Autobind = {
                         best.push(current_group);
 
                         for (var j = installed.length - 1; j >= 0; j--) {
-                            var current= installed[j];
+                            var current = installed[j];
                             if (in_common.indexOf(current) != -1) {
-                               installed.splice(j, 1);
+                                installed.splice(j, 1);
                             }
                         }
                     }
@@ -2562,18 +2961,34 @@ var Autobind = {
             }
         }
 
-        var group = this.find_best_ent_group(all_groups, installed);
+        var group = this.find_best_ent_group(all_groups, installed, role, addons);
         while (group != null) {
             best.push(group);
-            var in_common = this.get_common_products(installed, group);
+            var prods_in_common = this.get_common_products(installed, group);
             for (var j = installed.length - 1; j >= 0; j--) {
                 var current = installed[j];
-                if (in_common.indexOf(current) != -1) {
-                   installed.splice(j, 1);
+                if (prods_in_common.indexOf(current) !== -1) {
+                    installed.splice(j, 1);
                 }
             }
-            group.installed = in_common;
-            group = this.find_best_ent_group(all_groups, installed);
+            group.installed = prods_in_common;
+
+            var addons_in_common = this.get_common_addons(addons, group);
+            for (var j = addons.length -1; j >= 0; j--) {
+                var current = addons[j];
+                if (addons_in_common.indexOf(current) !== -1) {
+                    addons.splice(j, 1);
+                }
+            }
+            group.addons = addons_in_common;
+
+            var role_in_common = this.get_common_role(role, group);
+            if (role_in_common.indexOf(role) !== -1) {
+                role = "";
+            }
+            group.roles = role_in_common;
+
+            group = this.find_best_ent_group(all_groups, installed, role, addons);
         }
         return best;
     },
@@ -2608,6 +3023,47 @@ var Autobind = {
         return attached_ents;
     },
 
+    get_remaining_role: function (role, attached_ents) {
+        if (role === null) {
+            return "";
+        }
+        if (attached_ents.length === 0 || role === "") {
+            return role;
+        }
+        var attached_pools = [];
+        for (var i = 0; i < attached_ents.length; i++) {
+            attached_pools.push(attached_ents[i].pool);
+        }
+        if (contains(get_role_pools(attached_pools), role)) {
+            return "";
+        }
+        else {
+            return role;
+        }
+    },
+
+
+    get_remaining_addons: function (addons, attached_ents) {
+        if (addons === null) {
+            return [];
+        }
+        var remaining_addons = [];
+        if (attached_ents.length === 0 || addons === []) {
+            return addons;
+        }
+        var attached_pools = [];
+        for (var i = 0; i < attached_ents.length; i++) {
+            attached_pools.push(attached_ents[i].pool);
+        }
+        var attached_addons = get_addons_pools(attached_pools);
+        for (var i = 0; i < addons.length; i++) {
+            if (!contains(attached_addons, addons[i])) {
+                remaining_addons.push(addons[i]);
+            }
+        }
+        return remaining_addons;
+    },
+
     select_pools: function() {
         var context = this.create_autobind_context();
         log.debug("considerDerived = " + context.considerDerived);
@@ -2624,20 +3080,29 @@ var Autobind = {
                 installed.splice(installed.indexOf(prod), 1);
             }
         }
-        var ent_groups = this.build_entitlement_groups(valid_pools, installed, context.consumer, attached_ents, context.considerDerived);
+        // filter role if it has been fulfilled
+        var role = this.get_remaining_role(context.consumer.role, attached_ents);
+        // filter addons that are already fulfilled
+        var addons = this.get_remaining_addons(context.consumer.addOns, attached_ents);
+
+        var ent_groups = this.build_entitlement_groups(valid_pools, installed, context.consumer, attached_ents, context.considerDerived, context);
         log.debug("Total ent groups: " + ent_groups.length);
 
         var valid_groups = [];
         for (var i = ent_groups.length - 1; i >= 0; i--) {
             var ent_group = ent_groups[i];
             if (ent_group.validate()) {
-                // Only really consider the group if it provides a necessary product, or stacks with an existing partial stack
-                if (this.get_common_products(installed, ent_group).length > 0 || (ent_group.attached_ents !== null && ent_group.attached_ents.length > 0)) {
+                // Only really consider the group if it provides a necessary product, role, addon,
+                // or stacks with an existing partial stack
+                if (this.get_common_products(installed, ent_group).length > 0 ||
+                    this.get_common_role(role, ent_group).length > 0 ||
+                    this.get_common_addons(addons, ent_group).length > 0 ||
+                    (ent_group.attached_ents !== null && ent_group.attached_ents.length > 0)) {
                     valid_groups.push(ent_group);
-                    ent_group.remove_extra_attrs();
-                    ent_group.prune_pools();
+                    ent_group.remove_extra_attrs(role, addons);
+                    ent_group.prune_pools(role, addons);
                 } else {
-                    log.debug("Group " + ent_group.stack_id + " provides no installed products");
+                    log.debug("Group " + ent_group.stack_id + " provides no needed products");
                 }
             } else {
                 log.debug("Group " + ent_group.stack_id + " failed validation.");
@@ -2646,8 +3111,10 @@ var Autobind = {
         log.debug("valid ent groups size: " + valid_groups.length);
 
         log.debug("finding best ent groups");
+        log.debug("remaining role: " + role);
+        log.debug("remaining addons: " + addons);
         var best_groups = this.get_best_entitlement_groups(valid_groups, installed, context.compliance,
-                                                           context.considerDerived);
+                                                           role, addons);
         log.debug("best_groups size: " + best_groups.length);
 
         selected_pools = Utils.getJsMap();
@@ -2695,6 +3162,34 @@ function find_relevant_pids(entitlement, consumer) {
         }
     }
     return provided_pids;
+}
+
+// Returns list of all addons from the given array of pools.
+function get_addons_pools(in_pools) {
+    var addons = [];
+    for (var i = 0; i < in_pools.length; i++) {
+        var pool = in_pools[i];
+        var pool_addons = pool.retrievePoolAttributeValues("addons");
+        for (var k = 0; k < pool_addons.length; k++) {
+            addons.push(pool_addons[k]);
+        }
+    }
+    log.debug("get_addons_pools:  " + addons);
+    return addons;
+}
+
+// Returns list of all roles from the given array of pools.
+function get_role_pools(in_pools) {
+    var roles = [];
+    for (var i = 0; i < in_pools.length; i++) {
+        var pool = in_pools[i];
+        var pool_roles = pool.retrievePoolAttributeValues("roles");
+        for (var k = 0 ; k < pool_roles.length ; k++) {
+            roles.push(pool_roles[k]);
+        }
+    }
+    log.debug("get_role_pools:  " + roles);
+    return roles;
 }
 
 /*
@@ -3515,5 +4010,92 @@ var Utils = {
 
     isMultiEnt: function(pool) {
         return Utils.equalsIgnoreCase(pool.getProductAttribute(MULTI_ENTITLEMENT_ATTRIBUTE), "yes");
+    },
+
+    /*
+     * Returns an array with all the items in array1, that are not included in array2.
+     */
+    difference: function(array1, array2) {
+        var diffArray = array1.slice();
+
+        array2.forEach(function(elem) {
+            var index = diffArray.indexOf(elem);
+            if(index >= 0) {
+                diffArray.splice(index, 1);
+            }
+        });
+        return diffArray;
+    },
+
+    /*
+     * Returns an array with all the items in array1, that are also included in array2.
+     */
+    intersection: function(array1, array2) {
+        var temp = [];
+
+        array1.forEach(function(elem) {
+            if(array2.indexOf(elem) >= 0) {
+                temp.push(elem);
+            }
+        });
+
+        return temp;
+    }
+
+}
+
+/*
+ * This namespace contains utility methods strictly used for testing.
+ */
+var TestNamespace = {
+
+    /*
+     * Utility method for testing that wraps around the get_pool_priority method without
+     * having to invoke the whole auto-attach call stack (select_pools).
+     */
+    get_pool_priority_test: function() {
+        var context = TestNamespace.create_get_pool_priority_context();
+        return get_pool_priority(context.pool, context.consumer);
+    },
+
+    create_get_pool_priority_context: function() {
+        var context = JSON.parse(json_context);
+
+        // Also need to convert all pools reported in compliance.
+        var compliance = context.compliance;
+
+        // Create the pools for all entitlement maps in compliance.
+        // The number of entitlements should be relatively small.
+        var createPoolsFor = ["partialStacks",
+                              "partiallyCompliantProducts",
+                              "compliantProducts"];
+
+        for (var i = 0; i < createPoolsFor.length; i++) {
+            var nextMapAttrName = createPoolsFor[i];
+            var nextMap = compliance[nextMapAttrName];
+            for (var key in nextMap) {
+                var ents = nextMap[key];
+                for (var entIdx = 0; entIdx < ents.length; entIdx++) {
+                    ents[entIdx].pool = createPool(ents[entIdx].pool);
+                }
+            }
+        }
+
+        var pool = createPool(context.pool);
+        if (pool.quantity == -1) {
+            // In the unlimited case, we need at most the number required to cover the system
+            pool.currently_available = Quantity.get_suggested_pool_quantity(pool, context.consumer, []);
+            // Can use an empty list here because global attributes don't necessarily change quantity
+        } else {
+            pool.currently_available = pool.getAvailable();
+        }
+        // If the pool is not multi-entitlable, only one may be used
+        if (pool.currently_available > 0 && !Utils.isMultiEnt(pool)) {
+            pool.currently_available = 1;
+        }
+
+        context.consumer = createConsumer(context.consumer, context.compliance);
+
+        return context;
     }
 }

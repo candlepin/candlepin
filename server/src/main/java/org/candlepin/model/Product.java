@@ -92,6 +92,9 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      * Commonly used/recognized product attributes
      */
     public static final class Attributes {
+        /** Attribute used to specify a comma separated list of addons the product can offer */
+        public static final String ADDONS = "addons";
+
         /** Attribute to specify the architecture on which a given product can be installed/run; may be set
          *  to the value "ALL" to specify all architectures */
         public static final String ARCHITECTURE = "arch";
@@ -128,6 +131,9 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         /** Attribute specifying the amount of RAM that can be covered by an entitlement using the SKU */
         public static final String RAM = "ram";
 
+        /** Attribute used to specify a comma separated list of roles the product can offer */
+        public static final String ROLES = "roles";
+
         /** Attribute specifying the number of sockets that can be covered by an entitlement using the SKU */
         public static final String SOCKETS = "sockets";
 
@@ -148,6 +154,9 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
 
         /** Attribute representing the product type; passed down to the certificate */
         public static final String TYPE = "type";
+
+        /** Attribute used to specify the usage of the product */
+        public static final String USAGE = "usage";
 
         /** Attribute representing the product variant; passed down to the certificate */
         public static final String VARIANT = "variant";
