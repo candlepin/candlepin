@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.4.7
+Version: 2.4.8
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,9 @@ fi
 
 #raw
 %changelog
+* Tue Sep 25 2018 Kevin Howell <khowell@redhat.com> 2.4.8-1
+- 1632764: Added limits to the size of link headers (crog@redhat.com)
+
 * Wed Sep 19 2018 Kevin Howell <khowell@redhat.com> 2.4.7-1
 - 1628595: Update epoch on Java requirement (khowell@redhat.com)
 - 1624447: Do not set connection-ttl-override (khowell@redhat.com)
