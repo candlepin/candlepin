@@ -48,8 +48,16 @@ public class ProductTranslatorTest extends
     protected ContentTranslatorTest contentTranslatorTest = new ContentTranslatorTest();
 
     @Override
+    public void init() {
+        this.contentTranslatorTest.init();
+
+        super.init();
+    }
+
+    @Override
     protected void initModelTranslator(ModelTranslator modelTranslator) {
-        modelTranslator.registerTranslator(this.contentTranslator, Content.class, ContentDTO.class);
+        this.contentTranslatorTest.initModelTranslator(modelTranslator);
+
         modelTranslator.registerTranslator(this.productTranslator, Product.class, ProductDTO.class);
     }
 

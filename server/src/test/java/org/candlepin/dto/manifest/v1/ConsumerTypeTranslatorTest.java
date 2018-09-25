@@ -33,16 +33,14 @@ import org.junit.runner.RunWith;
 public class ConsumerTypeTranslatorTest extends
     AbstractTranslatorTest<ConsumerType, ConsumerTypeDTO, ConsumerTypeTranslator> {
 
-    protected ConsumerTypeTranslator translator = new ConsumerTypeTranslator();
+    @Override
+    protected ConsumerTypeTranslator initObjectTranslator() {
+        return new ConsumerTypeTranslator();
+    }
 
     @Override
     protected void initModelTranslator(ModelTranslator modelTranslator) {
         modelTranslator.registerTranslator(this.translator, ConsumerType.class, ConsumerTypeDTO.class);
-    }
-
-    @Override
-    protected ConsumerTypeTranslator initObjectTranslator() {
-        return this.translator;
     }
 
     @Override

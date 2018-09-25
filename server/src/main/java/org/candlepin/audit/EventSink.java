@@ -20,6 +20,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Rules;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.dto.Subscription;
+import org.candlepin.policy.SystemPurposeComplianceStatus;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 
 import java.util.List;
@@ -58,6 +59,8 @@ public interface EventSink {
     void emitRulesDeleted(Rules rules);
 
     void emitCompliance(Consumer consumer, ComplianceStatus compliance);
+
+    void emitCompliance(Consumer consumer, SystemPurposeComplianceStatus compliance);
 
     List<QueueStatus> getQueueInfo();
 }

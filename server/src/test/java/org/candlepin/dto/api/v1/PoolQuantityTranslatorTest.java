@@ -30,21 +30,25 @@ import static org.junit.Assert.*;
 public class PoolQuantityTranslatorTest extends
     AbstractTranslatorTest<PoolQuantity, PoolQuantityDTO, PoolQuantityTranslator> {
 
-    protected PoolQuantityTranslator translator = new PoolQuantityTranslator();
-
-    protected PoolTranslatorTest poolTranslatorTest =
-        new PoolTranslatorTest();
+    protected PoolTranslatorTest poolTranslatorTest = new PoolTranslatorTest();
 
     @Override
-    protected void initModelTranslator(ModelTranslator modelTranslator) {
-        this.poolTranslatorTest.initModelTranslator(modelTranslator);
-        modelTranslator.registerTranslator(
-            this.translator, PoolQuantity.class, PoolQuantityDTO.class);
+    public void init() {
+        this.poolTranslatorTest.init();
+
+        super.init();
     }
 
     @Override
     protected PoolQuantityTranslator initObjectTranslator() {
-        return this.translator;
+        return new PoolQuantityTranslator();
+    }
+
+    @Override
+    protected void initModelTranslator(ModelTranslator modelTranslator) {
+        this.poolTranslatorTest.initModelTranslator(modelTranslator);
+
+        modelTranslator.registerTranslator(this.translator, PoolQuantity.class, PoolQuantityDTO.class);
     }
 
     @Override

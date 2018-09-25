@@ -36,19 +36,25 @@ import static org.junit.Assert.*;
 public class ActivationKeyTranslatorTest extends
     AbstractTranslatorTest<ActivationKey, ActivationKeyDTO, ActivationKeyTranslator> {
 
-    protected ActivationKeyTranslator translator = new ActivationKeyTranslator();
-
     protected OwnerTranslatorTest ownerTranslatorTest = new OwnerTranslatorTest();
 
     @Override
-    protected void initModelTranslator(ModelTranslator modelTranslator) {
-        this.ownerTranslatorTest.initModelTranslator(modelTranslator);
-        modelTranslator.registerTranslator(this.translator, ActivationKey.class, ActivationKeyDTO.class);
+    public void init() {
+        this.ownerTranslatorTest.init();
+
+        super.init();
     }
 
     @Override
     protected ActivationKeyTranslator initObjectTranslator() {
-        return this.translator;
+        return new ActivationKeyTranslator();
+    }
+
+    @Override
+    protected void initModelTranslator(ModelTranslator modelTranslator) {
+        this.ownerTranslatorTest.initModelTranslator(modelTranslator);
+
+        modelTranslator.registerTranslator(this.translator, ActivationKey.class, ActivationKeyDTO.class);
     }
 
     @Override

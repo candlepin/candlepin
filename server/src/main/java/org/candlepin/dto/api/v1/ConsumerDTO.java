@@ -64,6 +64,10 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
     protected String username;
     protected String entitlementStatus;
     protected String serviceLevel;
+    protected String role;
+    protected String usage;
+    protected Set<String> addOns;
+    protected String systemPurposeStatus;
     protected String releaseVer;
     protected OwnerDTO owner;
     protected EnvironmentDTO environment;
@@ -247,6 +251,103 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
         this.serviceLevel = serviceLevel;
         return this;
     }
+
+    /**
+     * Retrieves the role field of this ConsumerDTO object.
+     *
+     * @return the role of the consumer, or null if it has not yet been defined
+     */
+    public String getRole() {
+        return this.role;
+    }
+
+    /**
+     * Sets the role to set on this ConsumerDTO object.
+     *
+     * @param role the role to set on this ConsumerDTO object.
+     *
+     * @return a reference to this DTO object.
+     */
+    public ConsumerDTO setRole(String role) {
+        this.role = role;
+        return this;
+    }
+
+
+    /**
+     * Retrieves the usage field of this ConsumerDTO object.
+     *
+     * @return the usage of the consumer, or null if it has not yet been defined
+     */
+    public String getUsage() {
+        return this.usage;
+    }
+
+    /**
+     * Sets the usage to set on this ConsumerDTO object.
+     *
+     * @param usage the usage to set on this ConsumerDTO object.
+     *
+     * @return a reference to this DTO object.
+     */
+    public ConsumerDTO setUsage(String usage) {
+        this.usage = usage;
+        return this;
+    }
+
+    /**
+     * Retrieves the system purpose status for this consumer.
+     *
+     * @return the current system purpose status of this consumer.
+     */
+    public String getSystemPurposeStatus() {
+        return this.systemPurposeStatus;
+    }
+
+    /**
+     * Sets the system purpose status for this ConsumerDTO.
+     *
+     * @param systemPurposeStatus the status value to set.
+     * @return a reference to this DTO object.
+     */
+    public ConsumerDTO setSystemPurposeStatus(String systemPurposeStatus) {
+        this.systemPurposeStatus = systemPurposeStatus;
+        return this;
+    }
+
+    /**
+     * Retrieves the system purpose add ons of this ConsumerDTO object.
+     *
+     * @return the system purpose add ons of the consumer, or null if it has not yet been defined
+     */
+    public Set<String> getAddOns() {
+        return this.addOns != null ? new SetView<>(this.addOns) : null;
+    }
+
+    /**
+     * Sets the system purpose add ons on this ConsumerDTO object.
+     *
+     * @param addOns the add ons to set on this ConsumerDTO object.
+     *
+     * @return a reference to this DTO object.
+     */
+    public ConsumerDTO setAddOns(Set<String> addOns) {
+        if (addOns != null) {
+            if (this.addOns == null) {
+                this.addOns = new HashSet<>();
+            }
+            else {
+                this.addOns.clear();
+            }
+            this.addOns.addAll(addOns);
+        }
+        else {
+            this.addOns = null;
+        }
+        return this;
+    }
+
+    /**
 
     /**
      * Retrieves the releaseVer field of this ConsumerDTO object.
@@ -889,6 +990,10 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
                 .append(this.getUsername(), that.getUsername())
                 .append(this.getEntitlementStatus(), that.getEntitlementStatus())
                 .append(this.getServiceLevel(), that.getServiceLevel())
+                .append(this.getRole(), that.getRole())
+                .append(this.getUsage(), that.getUsage())
+                .append(this.getSystemPurposeStatus(), that.getSystemPurposeStatus())
+                .append(this.getAddOns(), that.getAddOns())
                 .append(this.getReleaseVersion(), that.getReleaseVersion())
                 .append(thisOid, thatOid)
                 .append(thisEnvId, thatEnvId)
@@ -931,6 +1036,10 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
             .append(this.getUsername())
             .append(this.getEntitlementStatus())
             .append(this.getServiceLevel())
+            .append(this.getRole())
+            .append(this.getUsage())
+            .append(this.getSystemPurposeStatus())
+            .append(this.getAddOns())
             .append(this.getReleaseVersion())
             .append(oid)
             .append(envId)
@@ -970,6 +1079,8 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
         copy.type = type != null ? type.clone() : null;
         copy.idCert = idCert != null ? idCert.clone() : null;
 
+        copy.setAddOns(this.getAddOns());
+
         return copy;
     }
 
@@ -986,6 +1097,10 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
         this.setUsername(source.getUsername());
         this.setEntitlementStatus(source.getEntitlementStatus());
         this.setServiceLevel(source.getServiceLevel());
+        this.setRole(source.getRole());
+        this.setUsage(source.getUsage());
+        this.setAddOns(source.getAddOns());
+        this.setSystemPurposeStatus(source.getSystemPurposeStatus());
         this.setReleaseVersion(source.getReleaseVersion());
         this.setOwner(source.getOwner());
         this.setEnvironment(source.getEnvironment());

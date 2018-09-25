@@ -35,23 +35,29 @@ import org.junit.runner.RunWith;
 public class UpstreamConsumerTranslatorTest extends
     AbstractTranslatorTest<UpstreamConsumer, UpstreamConsumerDTO, UpstreamConsumerTranslator> {
 
-    protected UpstreamConsumerTranslator translator = new UpstreamConsumerTranslator();
-
     protected CertificateTranslatorTest certificateTranslatorTest = new CertificateTranslatorTest();
     protected ConsumerTypeTranslatorTest consumerTypeTranslatorTest = new ConsumerTypeTranslatorTest();
 
+    @Override
+    public void init() {
+        this.certificateTranslatorTest.init();
+        this.consumerTypeTranslatorTest.init();
+
+        super.init();
+    }
+
+    @Override
+    protected UpstreamConsumerTranslator initObjectTranslator() {
+        return new UpstreamConsumerTranslator();
+    }
 
     @Override
     protected void initModelTranslator(ModelTranslator modelTranslator) {
         this.certificateTranslatorTest.initModelTranslator(modelTranslator);
         this.consumerTypeTranslatorTest.initModelTranslator(modelTranslator);
+
         modelTranslator.registerTranslator(
             this.translator, UpstreamConsumer.class, UpstreamConsumerDTO.class);
-    }
-
-    @Override
-    protected UpstreamConsumerTranslator initObjectTranslator() {
-        return this.translator;
     }
 
     @Override

@@ -40,26 +40,31 @@ public class ConsumerTranslatorTest extends
     protected ConsumerTypeCurator mockConsumerTypeCurator;
     protected OwnerCurator mockOwnerCurator;
 
-    protected ConsumerTranslator translator;
-
     protected ConsumerTypeTranslatorTest consumerTypeTranslatorTest = new ConsumerTypeTranslatorTest();
     protected OwnerTranslatorTest ownerTranslatorTest = new OwnerTranslatorTest();
 
     @Override
-    protected void initModelTranslator(ModelTranslator modelTranslator) {
-        this.consumerTypeTranslatorTest.initModelTranslator(modelTranslator);
-        this.ownerTranslatorTest.initModelTranslator(modelTranslator);
+    public void init() {
+        this.ownerTranslatorTest.init();
+        this.consumerTypeTranslatorTest.init();
 
-        this.mockConsumerTypeCurator = mock(ConsumerTypeCurator.class);
-        this.mockOwnerCurator = mock(OwnerCurator.class);
-        this.translator = new ConsumerTranslator(this.mockConsumerTypeCurator, this.mockOwnerCurator);
-
-        modelTranslator.registerTranslator(this.translator, Consumer.class, ConsumerDTO.class);
+        super.init();
     }
 
     @Override
     protected ConsumerTranslator initObjectTranslator() {
-        return this.translator;
+        this.mockConsumerTypeCurator = mock(ConsumerTypeCurator.class);
+        this.mockOwnerCurator = mock(OwnerCurator.class);
+
+        return new ConsumerTranslator(this.mockConsumerTypeCurator, this.mockOwnerCurator);
+    }
+
+    @Override
+    protected void initModelTranslator(ModelTranslator modelTranslator) {
+        this.ownerTranslatorTest.initModelTranslator(modelTranslator);
+        this.consumerTypeTranslatorTest.initModelTranslator(modelTranslator);
+
+        modelTranslator.registerTranslator(this.translator, Consumer.class, ConsumerDTO.class);
     }
 
     @Override

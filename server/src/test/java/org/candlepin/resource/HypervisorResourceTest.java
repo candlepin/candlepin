@@ -48,6 +48,7 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
+import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.resource.dto.HypervisorCheckInResult;
@@ -99,6 +100,7 @@ public class HypervisorResourceTest {
     @Mock private ActivationKeyCurator activationKeyCurator;
     @Mock private UserPrincipal principal;
     @Mock private ComplianceRules complianceRules;
+    @Mock private SystemPurposeComplianceRules systemPurposeComplianceRules;
     @Mock private DeletedConsumerCurator deletedConsumerCurator;
     @Mock private ConsumerBindUtil consumerBindUtil;
     @Mock private EventBuilder consumerEventBuilder;
@@ -138,7 +140,7 @@ public class HypervisorResourceTest {
             this.consumerTypeCurator, null, this.subscriptionService, this.ownerService, null,
             this.idCertService, null, this.i18n, this.sink, this.eventFactory, null, null,
             this.userService, null, null, this.ownerCurator,
-            this.activationKeyCurator, null, this.complianceRules,
+            this.activationKeyCurator, null, this.complianceRules, this.systemPurposeComplianceRules,
             this.deletedConsumerCurator, null, null, config,
             null, null, null, this.consumerBindUtil, null, null,
             new FactValidator(config, this.i18nProvider), null, consumerEnricher, migrationProvider,

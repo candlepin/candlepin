@@ -46,25 +46,27 @@ public class ConsumerTranslatorTest extends
 
     protected ConsumerTypeCurator mockConsumerTypeCurator;
     protected OwnerCurator mockOwnerCurator;
-    protected ConsumerTranslator translator;
 
     protected ConsumerTypeTranslatorTest consumerTypeTranslatorTest = new ConsumerTypeTranslatorTest();
     protected OwnerTranslatorTest ownerTranslatorTest = new OwnerTranslatorTest();
 
     @Override
-    protected void initModelTranslator(ModelTranslator modelTranslator) {
-        this.consumerTypeTranslatorTest.initModelTranslator(modelTranslator);
-        this.ownerTranslatorTest.initModelTranslator(modelTranslator);
+    protected ConsumerTranslator initObjectTranslator() {
         this.mockConsumerTypeCurator = mock(ConsumerTypeCurator.class);
         this.mockOwnerCurator = mock(OwnerCurator.class);
-        this.translator = new ConsumerTranslator(this.mockConsumerTypeCurator, this.mockOwnerCurator);
 
-        modelTranslator.registerTranslator(this.translator, Consumer.class, ConsumerDTO.class);
+        this.consumerTypeTranslatorTest.initObjectTranslator();
+        this.ownerTranslatorTest.initObjectTranslator();
+
+        return new ConsumerTranslator(this.mockConsumerTypeCurator, this.mockOwnerCurator);
     }
 
     @Override
-    protected ConsumerTranslator initObjectTranslator() {
-        return this.translator;
+    protected void initModelTranslator(ModelTranslator modelTranslator) {
+        this.consumerTypeTranslatorTest.initModelTranslator(modelTranslator);
+        this.ownerTranslatorTest.initModelTranslator(modelTranslator);
+
+        modelTranslator.registerTranslator(this.translator, Consumer.class, ConsumerDTO.class);
     }
 
     @Override
@@ -76,10 +78,18 @@ public class ConsumerTranslatorTest extends
         consumer.setUuid("consumer_uuid");
         consumer.setUsername("consumer_user_name");
         consumer.setServiceLevel("consumer_service_level");
+        consumer.setRole("consumer_role");
+        consumer.setUsage("consumer_usage");
         Owner owner = this.ownerTranslatorTest.initSourceObject();
         when(mockOwnerCurator.findOwnerById(eq(owner.getId()))).thenReturn(owner);
         consumer.setOwner(owner);
         consumer.setType(ctype);
+
+        Set<String> addOns = new HashSet<>();
+        for (int i = 0; i < 5; i++) {
+            addOns.add("add-on-" + i);
+        }
+        consumer.setAddOns(addOns);
 
         Map<String, String> facts = new HashMap<>();
         for (int i = 0; i < 5; ++i) {
@@ -122,6 +132,9 @@ public class ConsumerTranslatorTest extends
             assertEquals(source.getUuid(), dest.getUuid());
             assertEquals(source.getUsername(), dest.getUsername());
             assertEquals(source.getServiceLevel(), dest.getServiceLevel());
+            assertEquals(source.getRole(), dest.getRole());
+            assertEquals(source.getUsage(), dest.getUsage());
+            assertEquals(source.getAddOns(), dest.getAddOns());
             assertEquals(source.getFacts(), dest.getFacts());
             assertEquals(source.getCreated(), dest.getCreated());
             assertEquals(source.getUpdated(), dest.getUpdated());

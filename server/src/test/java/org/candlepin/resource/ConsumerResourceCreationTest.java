@@ -55,6 +55,7 @@ import org.candlepin.model.Role;
 import org.candlepin.model.User;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
+import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.resource.util.ConsumerBindUtil;
@@ -123,6 +124,7 @@ public class ConsumerResourceCreationTest {
     @Mock protected EventFactory factory;
     @Mock protected ActivationKeyCurator activationKeyCurator;
     @Mock protected ComplianceRules complianceRules;
+    @Mock protected SystemPurposeComplianceRules systemPurposeComplianceRules;
     @Mock protected DeletedConsumerCurator deletedConsumerCurator;
     @Mock protected ConsumerContentOverrideCurator consumerContentOverrideCurator;
     @Mock protected ServiceLevelValidator serviceLevelValidator;
@@ -160,8 +162,8 @@ public class ConsumerResourceCreationTest {
             this.consumerCurator, this.consumerTypeCurator, null, this.subscriptionService, this.ownerService,
             null, this.idCertService, null, this.i18n, this.sink, null, null, null, this.userService, null,
             null, this.ownerCurator, this.activationKeyCurator, null, this.complianceRules,
-            this.deletedConsumerCurator, null, null, this.config, null, null, null, this.consumerBindUtil,
-            null, null, new FactValidator(this.config, this.i18nProvider),
+            this.systemPurposeComplianceRules, this.deletedConsumerCurator, null, null, this.config, null,
+            null, null, this.consumerBindUtil, null, null, new FactValidator(this.config, this.i18nProvider),
             null, consumerEnricher, migrationProvider, modelTranslator);
 
         this.system = this.initConsumerType();
