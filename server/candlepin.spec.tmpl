@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.3.9
+Version: 2.3.10
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,23 @@ fi
 
 #raw
 %changelog
+* Tue Sep 25 2018 Kevin Howell <khowell@redhat.com> 2.3.10-1
+- 1631518: Get system purpose attributes for an owner. (awood@redhat.com)
+- Update auto attach to allow for addons and role (wpoteat@redhat.com)
+- Bug fix: added syspurpose to list in capabilities. (jhnidek@redhat.com)
+- Compute system purpose compliance (adarshvritant@gmail.com)
+- ENT-716 Implemented syspurpose prioritization (nmoumoul@redhat.com)
+- syspurpose capability (wpoteat@redhat.com)
+- Added system purpose to rules ConsumerDTO (mstead@redhat.com)
+- Create/Update Consumer now updates syspurpose data (mstead@redhat.com)
+- [Intent] Dont filter pools based on SLA on auto-attach, but prioritize
+  (#1973) (nmoumoul@redhat.com)
+- Accept new intent fields from clients (adarshvritant@gmail.com)
+- Updated gen-certs for compatibility with Tomcat 8.5+ (crog@redhat.com)
+- setOwnerId incorrect (wpoteat@redhat.com)
+- 1619752: Recalculating pool quantities during refresh is now transactional
+  (crog@redhat.com)
+
 * Fri Jul 27 2018 Kevin Howell <khowell@redhat.com> 2.3.9-1
 - 1600695: Remove method that leads to persistence errors (awood@redhat.com)
 - Add toString for GuestId and correct typo in logging statement.
