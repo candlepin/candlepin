@@ -57,6 +57,16 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
         super(OwnerProduct.class);
     }
 
+    @Transactional
+    public OwnerProduct getOwnerProductByProductId(Owner owner, String productId) {
+        return (OwnerProduct) this.createSecureCriteria()
+            .createAlias("owner", "owner")
+            .createAlias("product", "product")
+            .add(Restrictions.eq("owner.id", owner.getId()))
+            .add(Restrictions.eq("product.id", productId))
+            .uniqueResult();
+    }
+
     public Product getProductById(Owner owner, String productId) {
         return this.getProductById(owner.getId(), productId);
     }

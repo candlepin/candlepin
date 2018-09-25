@@ -757,17 +757,19 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
 
         for (int i = 0; i < count; ++i) {
             int rand = TestUtil.randomInt(10000);
-            String id = String.format("%s-%d-%d", prefix, (i + 1), rand);
-            Product product = TestUtil.createProduct(id, id);
 
             String cid = String.format("%s_content-%d-%d", prefix, (i + 1), rand);
-            Content content = this.createContent(cid, cid, owner);
 
+            Content content = TestUtil.createContent(cid, cid);
             for (Product rprod : required) {
                 content.addModifiedProductId(rprod.getId());
             }
+            this.createContent(content, owner);
 
+            String id = String.format("%s-%d-%d", prefix, (i + 1), rand);
+            Product product = new Product(id, id);
             product.addContent(content, true);
+
             products.add(this.createProduct(product, owner));
         }
 

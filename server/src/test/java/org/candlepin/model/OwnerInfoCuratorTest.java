@@ -22,6 +22,7 @@ import org.candlepin.auth.permissions.Permission;
 import org.candlepin.auth.permissions.UsernameConsumersPermission;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.test.DatabaseTestFixture;
+import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
 import org.junit.Before;
@@ -241,7 +242,11 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
     @Test
     public void testOwnerPoolEntitlementCountProductOnly() {
         ConsumerType type = consumerTypeCurator.getByLabel("system");
-        pool1.getProduct().setAttribute(Pool.Attributes.REQUIRES_CONSUMER_TYPE, type.getLabel());
+        Product prod = new Product("sysProd", "sysProd");
+        prod.setAttribute(Pool.Attributes.ENABLED_CONSUMER_TYPES, type.getLabel());
+        createProduct(prod, owner);
+        pool1.setProduct(prod);
+
         owner.addEntitlementPool(pool1);
 
         OwnerInfo info = ownerInfoCurator.getByOwner(owner);
@@ -262,7 +267,10 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         ConsumerType type = consumerTypeCurator.getByLabel("domain");
         ConsumerType type2 = consumerTypeCurator.getByLabel("system");
         pool1.setAttribute(Pool.Attributes.REQUIRES_CONSUMER_TYPE, type.getLabel());
-        pool1.getProduct().setAttribute(Pool.Attributes.REQUIRES_CONSUMER_TYPE, type2.getLabel());
+        Product prod = new Product("sysProd", "sysProd");
+        prod.setAttribute(Pool.Attributes.ENABLED_CONSUMER_TYPES, type2.getLabel());
+        createProduct(prod, owner);
+        pool1.setProduct(prod);
         owner.addEntitlementPool(pool1);
         this.poolCurator.merge(pool1);
 
@@ -360,7 +368,10 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
     @Test
     public void testOwnerPoolEnabledCountProductOnly() {
         ConsumerType type = consumerTypeCurator.getByLabel("system");
-        pool1.getProduct().setAttribute(Pool.Attributes.ENABLED_CONSUMER_TYPES, type.getLabel());
+        Product prod = new Product("sysProd", "sysProd");
+        prod.setAttribute(Pool.Attributes.ENABLED_CONSUMER_TYPES, type.getLabel());
+        createProduct(prod, owner);
+        pool1.setProduct(prod);
         owner.addEntitlementPool(pool1);
         this.poolCurator.merge(pool1);
 
@@ -380,7 +391,12 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         ConsumerType type = consumerTypeCurator.getByLabel("domain");
         ConsumerType type2 = consumerTypeCurator.getByLabel("system");
         pool1.setAttribute(Pool.Attributes.ENABLED_CONSUMER_TYPES, type.getLabel());
-        pool1.getProduct().setAttribute(Pool.Attributes.ENABLED_CONSUMER_TYPES, type2.getLabel());
+        Product prod = new Product("sysProd", "sysProd");
+        prod.setAttribute(Pool.Attributes.ENABLED_CONSUMER_TYPES, type2.getLabel());
+        createProduct(prod, owner);
+        pool1.setProduct(prod);
+
+
         owner.addEntitlementPool(pool1);
         this.poolCurator.merge(pool1);
 
@@ -486,7 +502,10 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         owner.addEntitlementPool(pool1);
 
         pool1.setAttribute(Pool.Attributes.PRODUCT_FAMILY, "test family");
-        pool1.getProduct().setAttribute(Pool.Attributes.PRODUCT_FAMILY, "bad test family");
+        Product product = new Product("testProd", "testProd");
+        product.setAttribute(Pool.Attributes.PRODUCT_FAMILY, "bad test family");
+        createProduct(product, owner);
+        pool1.setProduct(product);
 
         ConsumerType type = consumerTypeCurator.getByLabel("system");
         Consumer consumer = new Consumer("test-consumer", "test-user", owner, type);
@@ -514,7 +533,10 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
     public void testOwnerInfoEntitlementsConsumedByFamilySortsByFamily() {
         owner.addEntitlementPool(pool1);
 
-        pool1.getProduct().setAttribute(Pool.Attributes.PRODUCT_FAMILY, "test family");
+        Product product = TestUtil.createProduct();
+        product.setAttribute(Pool.Attributes.PRODUCT_FAMILY, "test family");
+        createProduct(product, owner);
+        pool1.setProduct(product);
 
         ConsumerType type = consumerTypeCurator.getByLabel("system");
         Consumer consumer = new Consumer("test-consumer", "test-user", owner, type);
@@ -543,7 +565,10 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         // other tests look at physical, so just do virtual
         owner.addEntitlementPool(pool1);
 
-        pool1.getProduct().setAttribute(Pool.Attributes.VIRT_ONLY, "true");
+        Product product = TestUtil.createProduct();
+        product.setAttribute(Pool.Attributes.VIRT_ONLY, "true");
+        createProduct(product, owner);
+        pool1.setProduct(product);
 
         ConsumerType type = consumerTypeCurator.getByLabel("system");
         Consumer consumer = new Consumer("test-consumer", "test-user", owner, type);
@@ -572,8 +597,11 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
     public void testOwnerInfoEntitlementsConsumedByFamilySeperatesVirtExplicitFamily() {
         owner.addEntitlementPool(pool1);
 
-        pool1.getProduct().setAttribute(Pool.Attributes.PRODUCT_FAMILY, "test family");
-        pool1.getProduct().setAttribute(Pool.Attributes.VIRT_ONLY, "true");
+        Product product = TestUtil.createProduct();
+        product.setAttribute(Pool.Attributes.PRODUCT_FAMILY, "test family");
+        product.setAttribute(Pool.Attributes.VIRT_ONLY, "true");
+        createProduct(product, owner);
+        pool1.setProduct(product);
 
         ConsumerType type = consumerTypeCurator.getByLabel("system");
         Consumer consumer = new Consumer("test-consumer", "test-user", owner, type);

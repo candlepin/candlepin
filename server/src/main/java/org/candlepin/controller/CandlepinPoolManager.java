@@ -2330,7 +2330,6 @@ public class CandlepinPoolManager implements PoolManager {
 
                 this.productCurator.hydratePoolProvidedProducts(poolsToHydrate);
 
-
                 // Fire post-unbind events for revoked entitlements
                 log.info("Firing post-unbind events for {} entitlements...", entitlements.size());
                 for (Entitlement entitlement : entitlements) {

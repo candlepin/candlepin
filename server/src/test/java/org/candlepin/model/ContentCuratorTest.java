@@ -14,13 +14,10 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.assertEquals;
-
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
 import org.junit.Before;
-import org.junit.Test;
 
 import java.util.HashSet;
 
@@ -56,26 +53,5 @@ public class ContentCuratorTest extends DatabaseTestFixture {
         updates.setReleaseVersion("releaseVer");
         updates.setMetadataExpiration(new Long(1));
         updates.setModifiedProductIds(new HashSet<String>() { { add("productIdOne"); } });
-    }
-
-    @Test
-    public void shouldUpdateContentWithNewValues() {
-        Content toBeUpdated = TestUtil.createContent(updates.getId(), "Test Content");
-
-        contentCurator.create(toBeUpdated);
-
-        updates.setUuid(toBeUpdated.getUuid());
-        toBeUpdated = contentCurator.merge(updates);
-
-        assertEquals(toBeUpdated.getName(), updates.getName());
-        assertEquals(toBeUpdated.getLabel(), updates.getLabel());
-        assertEquals(toBeUpdated.getType(), updates.getType());
-        assertEquals(toBeUpdated.getVendor(), updates.getVendor());
-        assertEquals(toBeUpdated.getContentUrl(), updates.getContentUrl());
-        assertEquals(toBeUpdated.getRequiredTags(), updates.getRequiredTags());
-        assertEquals(toBeUpdated.getReleaseVersion(), updates.getReleaseVersion());
-        assertEquals(toBeUpdated.getMetadataExpiration(), updates.getMetadataExpiration());
-        assertEquals(toBeUpdated.getModifiedProductIds(), updates.getModifiedProductIds());
-        assertEquals(toBeUpdated.getArches(), updates.getArches());
     }
 }

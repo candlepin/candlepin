@@ -29,7 +29,7 @@ import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.Filter;
 import org.hibernate.Hibernate;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.ReplicationMode;
 import org.hibernate.Session;
 import org.hibernate.criterion.Criterion;
@@ -1581,7 +1581,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     private void markCertificatesDirtyForPoolsWithNormalProducts(Owner owner, Collection<String> productIds) {
         String statement = "update Entitlement e set e.dirty=true where e.pool.id in " +
-            "(select p.id from Pool p where p.product.id in :productIds) and e.owner = :owner";
+            "(select p.id from Pool p where p.owner=:owner and p.product.id in :productIds)";
         Query query = currentSession().createQuery(statement);
         query.setParameter("owner", owner);
         query.setParameterList("productIds", productIds);

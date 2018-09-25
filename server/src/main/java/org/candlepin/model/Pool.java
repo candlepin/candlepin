@@ -929,11 +929,13 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
     }
 
     public void setProvidedProducts(Collection<Product> providedProducts) {
-        this.providedProducts.clear();
         this.providedProductDtos = null;
 
         if (providedProducts != null) {
-            this.providedProducts.addAll(providedProducts);
+            this.providedProducts = new HashSet<>(providedProducts);
+        }
+        else {
+            this.providedProducts = new HashSet<>();
         }
     }
 
@@ -965,11 +967,13 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
     }
 
     public void setDerivedProvidedProducts(Collection<Product> derivedProvidedProducts) {
-        this.derivedProvidedProducts.clear();
         this.derivedProvidedProductDtos = null;
 
         if (derivedProvidedProducts != null) {
-            this.derivedProvidedProducts.addAll(derivedProvidedProducts);
+            this.derivedProvidedProducts = new HashSet<>(derivedProvidedProducts);
+        }
+        else {
+            this.derivedProvidedProducts = new HashSet<>();
         }
     }
 

@@ -14,6 +14,11 @@
  */
 package org.candlepin.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.candlepin.jackson.CandlepinAttributeDeserializer;
 import org.candlepin.jackson.CandlepinLegacyAttributeSerializer;
 import org.candlepin.model.dto.ProductData;
@@ -22,34 +27,18 @@ import org.candlepin.util.ListView;
 import org.candlepin.util.MapView;
 import org.candlepin.util.SetView;
 import org.candlepin.util.Util;
-
 import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.annotations.Type;
-
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.StringTokenizer;
 
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
@@ -69,7 +58,16 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.StringTokenizer;
 
 
 /**
@@ -81,7 +79,9 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
+@Immutable
 @Table(name = Product.DB_TABLE)
+@Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 public class Product extends AbstractHibernateObject implements SharedEntity, Linkable, Cloneable, Eventful,
     ProductInfo {
 
@@ -205,16 +205,20 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     @CollectionTable(name = "cp2_product_attributes", joinColumns = @JoinColumn(name = "product_uuid"))
     @MapKeyColumn(name = "name")
     @Column(name = "value")
-    @Cascade({ CascadeType.ALL })
+    @Cascade({CascadeType.DELETE, CascadeType.PERSIST})
     @Fetch(FetchMode.SUBSELECT)
     @JsonSerialize(using = CandlepinLegacyAttributeSerializer.class)
     @JsonDeserialize(using = CandlepinAttributeDeserializer.class)
+    @Immutable
+    @Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
     private Map<String, String> attributes;
 
-    @OneToMany(mappedBy = "product", orphanRemoval = true)
+    @OneToMany(mappedBy = "product")
     @BatchSize(size = 32)
-    @Cascade({ CascadeType.ALL })
+    @Cascade({CascadeType.DELETE, CascadeType.PERSIST})
     @LazyCollection(LazyCollectionOption.EXTRA) // allows .size() without loading all data
+    @Immutable
+    @Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
     private List<ProductContent> productContent;
 
     /*
@@ -227,6 +231,8 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         joinColumns = @JoinColumn(name = "product_uuid"))
     @Column(name = "element")
     @BatchSize(size = 32)
+    @Immutable
+    @Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
     @LazyCollection(LazyCollectionOption.FALSE)
     private Set<String> dependentProductIds;
 
@@ -1074,13 +1080,13 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
 
             // Compare content UUIDs
             equals = equals && Util.collectionsAreEqual(this.productContent, that.productContent,
-                new Comparator<ProductContent>() {
-                    public int compare(ProductContent pc1, ProductContent pc2) {
-                        // We're assuming the collections are well-formed and won't contain null
-                        // objects, but we'll verify that just in case they do.
-                        return pc1 == pc2 || (pc1 != null && pc1.equals(pc2)) ? 0 : 1;
-                    }
-                });
+                    new Comparator<ProductContent>() {
+                        public int compare(ProductContent pc1, ProductContent pc2) {
+                            // We're assuming the collections are well-formed and won't contain null
+                            // objects, but we'll verify that just in case they do.
+                            return pc1 == pc2 || (pc1 != null && pc1.equals(pc2)) ? 0 : 1;
+                        }
+                    });
         }
 
         return equals;

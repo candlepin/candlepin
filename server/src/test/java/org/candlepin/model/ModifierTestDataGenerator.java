@@ -69,11 +69,9 @@ public class ModifierTestDataGenerator {
 
     public void createTestData(Owner owner) {
         this.owner = owner;
-        for (int i = 0; i < 10; i++) {
-            Product prod = TestUtil.createProduct("E" + i, "EName" + i);
-            prod = productCurator.create(prod);
-            this.ownerProductCurator.mapProductToOwner(prod, owner);
 
+        for (int i = 0; i < 10; i++) {
+            Product prod = new Product("E" + i, "EName" + i);
             engProducts.add(prod);
         }
 
@@ -116,17 +114,21 @@ public class ModifierTestDataGenerator {
             contents.add(content);
         }
 
-        for (int i = 0; i < 3; i++) {
-            Consumer cons = createConsumer(owner, "C" + i);
-            consumers.add(cons);
-        }
-
         /**
          * Attach engineering products to content
          */
         for (int i = 0; i < 10; i++) {
             engProducts.get(i).addContent(contents.get(i), true);
-            productCurator.merge(engProducts.get(i));
+        }
+
+        for (Product prod: engProducts) {
+            productCurator.create(prod);
+            this.ownerProductCurator.mapProductToOwner(prod, owner);
+        }
+
+        for (int i = 0; i < 3; i++) {
+            Consumer cons = createConsumer(owner, "C" + i);
+            consumers.add(cons);
         }
 
         for (int i = 0; i < 10; i++) {

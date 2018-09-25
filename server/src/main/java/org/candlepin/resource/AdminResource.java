@@ -21,7 +21,6 @@ import org.candlepin.auth.SystemPrincipal;
 import org.candlepin.cache.CandlepinCache;
 import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.common.config.Configuration;
-import org.candlepin.model.Product;
 import org.candlepin.model.User;
 import org.candlepin.model.UserCurator;
 import org.candlepin.service.UserServiceAdapter;
@@ -35,9 +34,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-import javax.cache.Cache;
 import javax.ws.rs.GET;
-import javax.ws.rs.DELETE;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
@@ -113,17 +110,4 @@ public class AdminResource {
     public List<QueueStatus> getQueueStats() {
         return sink.getQueueInfo();
     }
-
-    @DELETE
-    @Path("cache/product")
-    @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(
-        notes = "Clears the product cache",
-        value = "Clear product cache")
-    public void clearProductCache() {
-        log.debug("Removing all from the product cache");
-        Cache<String, Product> productCache = candlepinCache.getProductCache();
-        productCache.removeAll();
-    }
-
 }

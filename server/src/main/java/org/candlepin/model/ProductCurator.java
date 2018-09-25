@@ -14,15 +14,13 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.cache.CandlepinCache;
-import org.candlepin.common.config.Configuration;
-import org.candlepin.util.AttributeValidator;
-
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
-
+import org.candlepin.common.config.Configuration;
+import org.candlepin.util.AttributeValidator;
 import org.hibernate.Criteria;
+import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
@@ -30,6 +28,11 @@ import org.hibernate.sql.JoinType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Singleton;
+import javax.persistence.Cache;
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
+import javax.persistence.TypedQuery;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
@@ -37,17 +40,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javax.cache.Cache;
-import javax.inject.Singleton;
-import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
-import javax.persistence.Query;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
-import javax.persistence.criteria.ParameterExpression;
-import javax.persistence.criteria.Path;
 
 
 
@@ -59,20 +51,18 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     private static Logger log = LoggerFactory.getLogger(ProductCurator.class);
 
     private Configuration config;
-    private CandlepinCache candlepinCache;
     private AttributeValidator attributeValidator;
 
     /**
      * default ctor
      */
     @Inject
-    public ProductCurator(Configuration config, CandlepinCache candlepinCache,
+    public ProductCurator(Configuration config,
         AttributeValidator attributeValidator) {
 
         super(Product.class);
 
         this.config = config;
-        this.candlepinCache = candlepinCache;
         this.attributeValidator = attributeValidator;
     }
 
@@ -168,24 +158,39 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             return new HashSet<>();
         }
 
+        // Determine what is already in the L2 cache and load it directly. Multiload the remainder.
+        // This is because of https://hibernate.atlassian.net/browse/HHH-12944 where multiload ignores the
+        // L2 Cache.
         Set<Product> products = new HashSet<>();
-        Set<String> notInCache = new HashSet<>();
-        Cache<String, Product> productCache = candlepinCache.getProductCache();
+        Set<String> productsNotInCache = new HashSet<>();
+        Cache cache = currentSession().getSessionFactory().getCache();
+        for (String uuid : productUuids) {
+            if (cache.contains(this.entityType(), uuid)) {
+                products.add(currentSession().get(Product.class, uuid));
+            }
+            else {
+                productsNotInCache.add(uuid);
+            }
+        }
+        if (productsNotInCache.size() > 0) {
+            log.debug("Loading objects that were not already in the cache: " + productsNotInCache.size());
+            Session session = this.currentSession();
+            java.util.List entities = session.byMultipleIds(this.entityType())
+                .enableSessionCheck(true)
+                .multiLoad(productsNotInCache.toArray(new String[productsNotInCache.size()]));
+            products.addAll(entities);
+        }
 
-        //First find all products that are in cache. Those keys that
-        //are not present in the cache will not be in the result Map
-        Map<String, Product> productsFromCache = productCache.getAll(productUuids);
-        products.addAll(productsFromCache.values());
-
-        notInCache.addAll(productUuids);
-        notInCache.removeAll(productsFromCache.keySet());
-
-        //Now find, hydrate and cache all the products that has been
-        //missing in the cache
-        Map<String, Product> freshProducts = this.getHydratedProductsByUuid(notInCache);
-
-        productCache.putAll(freshProducts);
-        products.addAll(freshProducts.values());
+        // Hydrate all the objects fully this is because a lot of serialization happens outside of
+        // the transactional boundry when we do not have a valid session.
+        for (Product product : products) {
+            // Fetching the size on these collections triggers a lazy load of the collections
+            product.getAttributes().size();
+            product.getDependentProductIds().size();
+            for (ProductContent pc : product.getProductContent()) {
+                pc.getContent().getModifiedProductIds().size();
+            }
+        }
 
         return products;
     }
@@ -228,135 +233,73 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      */
     public int hydratePoolProvidedProducts(Iterable<Pool> pools) {
         int count = 0;
-
         if (pools != null && pools.iterator().hasNext()) {
             EntityManager entityManager = this.getEntityManager();
-            Cache<String, Product> productCache = this.candlepinCache.getProductCache();
 
             // We use these set for both product UUIDs and product instances, once populated
-            Map<String, Set> poolProvidedProducts = new HashMap<>();
-            Map<String, Set> poolDerivedProvidedProducts = new HashMap<>();
-
-            Set<String> poolIds = new HashSet<>();
-            Set<String> productUuids = new HashSet<>();
+            Map<String, Set<String>> poolProvidedProducts = new HashMap<>();
+            Map<String, Set<String>> poolDerivedProvidedProducts = new HashMap<>();
+            Map<String, Product> allProducts = new HashMap<>();
 
             for (Pool pool : pools) {
-                poolIds.add(pool.getId());
+                poolProvidedProducts.put(pool.getId(), new HashSet<>());
+                poolDerivedProvidedProducts.put(pool.getId(), new HashSet<>());
             }
 
             String ppSql =
-                "SELECT pool_id, product_uuid FROM cp2_pool_provided_products WHERE pool_id IN (:pids)";
+                "SELECT pool_id, product_uuid FROM cp2_pool_provided_products WHERE pool_id IN (:poolIds)";
             String dpSql =
-                "SELECT pool_id, product_uuid FROM cp2_pool_derprov_products WHERE pool_id IN (:pids)";
+                "SELECT pool_id, product_uuid FROM cp2_pool_derprov_products WHERE pool_id IN (:poolIds)";
 
             Query ppUuidQuery = entityManager.createNativeQuery(ppSql);
             Query dpUuidQuery = entityManager.createNativeQuery(dpSql);
 
             int blockSize = this.getInBlockSize();
-            for (List<String> block : Iterables.partition(poolIds, blockSize)) {
+            for (List<String> block : Iterables.partition(poolProvidedProducts.keySet(), blockSize)) {
                 // Fetch pool provided products...
-                ppUuidQuery.setParameter("pids", block);
+                ppUuidQuery.setParameter("poolIds", block);
 
                 for (Object[] row : (List<Object[]>) ppUuidQuery.getResultList()) {
                     String poolId = (String) row[0];
                     String productUuid = (String) row[1];
-
-                    Set<Object> ppSet = poolProvidedProducts.get(poolId);
-                    if (ppSet == null) {
-                        ppSet = new HashSet<>();
-                        poolProvidedProducts.put(poolId, ppSet);
-                    }
-
-                    Product product = productCache.get(productUuid);
-                    if (product != null) {
-                        ppSet.add(product);
-                    }
-                    else {
-                        ppSet.add(productUuid);
-                        productUuids.add(productUuid);
-                    }
+                    Set<String> ppSet = poolProvidedProducts.get(poolId);
+                    ppSet.add(productUuid);
+                    allProducts.put(productUuid, null);
                 }
 
-                dpUuidQuery.setParameter("pids", block);
+                dpUuidQuery.setParameter("poolIds", block);
 
                 for (Object[] row : (List<Object[]>) dpUuidQuery.getResultList()) {
                     String poolId = (String) row[0];
                     String productUuid = (String) row[1];
-
-                    Set<Object> dpSet = poolDerivedProvidedProducts.get(poolId);
-                    if (dpSet == null) {
-                        dpSet = new HashSet<>();
-                        poolDerivedProvidedProducts.put(poolId, dpSet);
-                    }
-
-                    Product product = productCache.get(productUuid);
-                    if (product != null) {
-                        dpSet.add(product);
-                    }
-                    else {
-                        dpSet.add(productUuid);
-                        productUuids.add(productUuid);
-                    }
+                    Set<String> dpSet = poolDerivedProvidedProducts.get(poolId);
+                    dpSet.add(productUuid);
+                    allProducts.put(productUuid, null);
                 }
             }
 
-            // Fetch remaining products that we don't already have in the cache
-            if (productUuids.size() > 0) {
-                CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-                CriteriaQuery<Product> prodQuery = builder.createQuery(Product.class);
-                Root<Product> root = prodQuery.from(Product.class);
-                Path<String> target = root.<String>get("uuid");
-                ParameterExpression<List> param = builder.parameter(List.class);
-
-                root.fetch("attributes", javax.persistence.criteria.JoinType.LEFT);
-                root.fetch("dependentProductIds", javax.persistence.criteria.JoinType.LEFT);
-                root.fetch("productContent", javax.persistence.criteria.JoinType.LEFT);
-
-                prodQuery.select(root).where(target.in(param));
-
-                for (List<String> block : Iterables.partition(productUuids, blockSize)) {
-                    List<Product> products = entityManager.createQuery(prodQuery)
-                        .setParameter(param, block)
-                        .getResultList();
-
-                    for (Product product : products) {
-                        // Make sure we fetch all the dependent/modified products for each product's
-                        // content before we go about caching it...
-                        for (ProductContent pc : product.getProductContent()) {
-                            pc.getContent().getModifiedProductIds().size();
-                        }
-
-                        // Populate the cache for future products
-                        productCache.put(product.getUuid(), product);
-                        ++count;
-
-                        // Continue filling in our product maps (ugh...)
-                        // If this proves to be a bottleneck, we can always add *another* map to
-                        // track product=>pool mappings so we can skip pools that don't reference
-                        // a given product
-                        for (String poolId : poolIds) {
-                            Set<Object> ppSet = poolProvidedProducts.get(poolId);
-                            Set<Object> dpSet = poolDerivedProvidedProducts.get(poolId);
-
-                            if (ppSet != null && ppSet.remove(product.getUuid())) {
-                                ppSet.add(product);
-                            }
-
-                            if (dpSet != null && dpSet.remove(product.getUuid())) {
-                                dpSet.add(product);
-                            }
-                        }
-                    }
-                }
+            // Now go get all the products and hydrate them
+            Set<Product> hydratedProducts = getProductsByUuidCached(allProducts.keySet());
+            for (Product product : hydratedProducts) {
+                allProducts.put(product.getUuid(), product);
             }
 
-            // Set our provided and derived provided products on the pools
+            // Use the UUID sets for each pools provided & derived provided products
+            // to populate the actual product models.
             for (Pool pool : pools) {
-                pool.setProvidedProducts((Set<Product>) poolProvidedProducts.get(pool.getId()));
-                pool.setDerivedProvidedProducts((Set<Product>) poolDerivedProvidedProducts.get(pool.getId()));
-            }
+                Set<Product> providedProducts = new HashSet<>();
+                for (String uuid : poolProvidedProducts.get(pool.getId())) {
+                    providedProducts.add(allProducts.get(uuid));
+                }
 
-            // Done!
+                Set<Product> derivedProvidedProducts = new HashSet<>();
+                for (String uuid : poolDerivedProvidedProducts.get(pool.getId())) {
+                    derivedProvidedProducts.add(allProducts.get(uuid));
+                }
+
+                pool.setProvidedProducts(providedProducts);
+                pool.setDerivedProvidedProducts(derivedProvidedProducts);
+            }
         }
 
         return count;
@@ -398,7 +341,15 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
 
         this.validateProductReferences(entity);
 
-        return super.create(entity);
+        Product newProduct = super.create(entity, false);
+
+        for (ProductContent productContent : entity.getProductContent()) {
+            if (productContent.getId() == null) {
+                this.currentSession().save(productContent);
+            }
+        }
+
+        return newProduct;
     }
 
     @Transactional
