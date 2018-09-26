@@ -108,4 +108,26 @@ public class SuspendModeTransitionerTest {
         verifyNoMoreInteractions(modeManager);
     }
 
+    @Test
+    public void transitionFromConnectedToMissingExchange() throws Exception {
+        when(modeManager.getLastCandlepinModeChange()).thenReturn(normalModeChange);
+
+        transitioner.onStatusUpdate(QpidStatus.CONNECTED, QpidStatus.MISSING_EXCHANGE);
+
+        verify(modeManager, times(1)).getLastCandlepinModeChange();
+        verify(modeManager, times(1)).enterMode(Mode.SUSPEND, Reason.QPID_MISSING_EXCHANGE);
+        verifyNoMoreInteractions(modeManager);
+    }
+
+    @Test
+    public void transitionFromConnectedToMissingBinding() {
+        when(modeManager.getLastCandlepinModeChange()).thenReturn(normalModeChange);
+
+        transitioner.onStatusUpdate(QpidStatus.CONNECTED, QpidStatus.MISSING_BINDING);
+
+        verify(modeManager, times(1)).getLastCandlepinModeChange();
+        verify(modeManager, times(1)).enterMode(Mode.SUSPEND, Reason.QPID_MISSING_BINDING);
+        verifyNoMoreInteractions(modeManager);
+    }
+
 }
