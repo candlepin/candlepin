@@ -85,6 +85,8 @@ public class QpidConnection implements QpidStatusListener {
     private Configuration candlepinConfig;
 
     protected boolean isFlowStopped = false;
+    protected boolean isMissingBinding = false;
+    protected boolean exchangeMissing = false;
 
     /**
      * This class is a singleton, just in case that multiple threads
@@ -95,6 +97,7 @@ public class QpidConnection implements QpidStatusListener {
     @Inject
     public QpidConnection(QpidConfigBuilder config, Configuration candlepinConfiguration) {
         try {
+            this.producerMap = new HashMap<>();
             this.config = config;
             this.candlepinConfig = candlepinConfiguration;
             ctx = createInitialContext();
@@ -125,6 +128,14 @@ public class QpidConnection implements QpidStatusListener {
             throw new QpidConnectionException("Message not sent: No connection to Qpid.");
         }
 
+        if (this.exchangeMissing) {
+            throw new QpidConnectionException("Message not sent: Qpid queue has no exchange.");
+        }
+
+        if (this.isMissingBinding) {
+            throw new QpidConnectionException("Message not sent: Qpid queue's exchange has no bindings.");
+        }
+
         if (this.isFlowStopped) {
             throw new QpidConnectionException("Message not sent: Qpid queue is FLOW_STOPPED.");
         }
@@ -135,6 +146,9 @@ public class QpidConnection implements QpidStatusListener {
             if (m != null) {
                 TopicPublisher tp = m.get(type);
                 tp.send(session.createTextMessage(msg));
+            }
+            else {
+                log.warn("Publisher did not exist! Message will not be sent!");
             }
         }
         catch (JMSException jmse) {
@@ -153,6 +167,8 @@ public class QpidConnection implements QpidStatusListener {
      */
     public void connect() throws Exception {
         synchronized (connectionLock) {
+            ctx = createInitialContext();
+            connectionFactory = createConnectionFactory();
             connection = newConnection();
             log.debug("creating topic session");
             session = createTopicSession();
@@ -160,6 +176,7 @@ public class QpidConnection implements QpidStatusListener {
             Map<Target, Map<Type, TopicPublisher>> pm = new HashMap<>();
             buildAllTopicPublishers(pm);
             producerMap = pm;
+            connection.start();
         }
 
     }
@@ -261,33 +278,64 @@ public class QpidConnection implements QpidStatusListener {
      */
     @Override
     public void onStatusUpdate(QpidStatus oldStatus, QpidStatus newStatus) {
-        // When the status changes to CONNECTED, rebuild the connection to Qpid.
-        // Since the connection went down, the JMS objects are stale, it is necessary
-        // to recreate them.
-        //
-        // NOTE: We do not shut down the connection when FLOW_STOPPED is detected as there is no
-        //       need to. Message sends are just blocked in that case as the connection is fine.
-        if (QpidStatus.CONNECTED.equals(newStatus) && QpidStatus.DOWN.equals(oldStatus)) {
-            log.info("Attempting to connect to QPID");
-            try {
-                connect();
-            }
-            catch (Exception e) {
-                throw new RuntimeException("Unable to connect to Qpid.", e);
-            }
-        }
-        else if (QpidStatus.DOWN.equals(newStatus) && !QpidStatus.DOWN.equals(oldStatus)) {
-            // If the connection changes to DOWN, close the existing connection to
-            // ensure that we don't leave a stale one open.
-            log.debug("Connection to Qpid was lost. Closing current connection.");
-            closeConnection();
-        }
 
         // Qpid queue is in flow_stopped and will not accept any new messages
         // until it catches up. Set the state so that we can use it to prevent
         // sending messages until the state goes back to connected.
         this.isFlowStopped = QpidStatus.FLOW_STOPPED.equals(newStatus);
         log.debug("Qpid is flow stopped: {}", this.isFlowStopped);
+
+        // Qpid queue is missing its exchange.
+        this.exchangeMissing = QpidStatus.MISSING_EXCHANGE.equals(newStatus);
+
+        // Qpid queue's exchange is missing a binding.
+        this.isMissingBinding = QpidStatus.MISSING_BINDING.equals(newStatus);
+
+
+        switch (newStatus) {
+            // When the status changes to CONNECTED, rebuild the connection to Qpid.
+            // Since the connection went down, the JMS objects are stale, it is necessary
+            // to recreate them.
+            //
+            // NOTE: We do not shut down the connection when FLOW_STOPPED is detected as there is no
+            //       need to. Message sends are just blocked in that case as the connection is fine.
+            case CONNECTED:
+                if (QpidStatus.DOWN.equals(oldStatus) ||
+                    QpidStatus.MISSING_BINDING.equals(oldStatus) ||
+                    QpidStatus.MISSING_EXCHANGE.equals(oldStatus)) {
+                    log.info("Attempting to connect to QPID due to status change: {} --> {}",
+                        oldStatus, newStatus);
+                    try {
+                        connect();
+                    }
+                    catch (Exception e) {
+                        throw new RuntimeException("Unable to connect to Qpid.", e);
+                    }
+                }
+                break;
+            case DOWN:
+                if (!QpidStatus.DOWN.equals(oldStatus)) {
+                    // If the connection changes to DOWN, close the existing connection to
+                    // ensure that we don't leave a stale one open.
+                    log.warn("Connection to Qpid was lost! Cleaning up current connection!");
+                    closeConnection();
+                }
+                break;
+            case MISSING_BINDING:
+                if (!QpidStatus.MISSING_BINDING.equals(oldStatus)) {
+                    log.warn("Closing connection to Qpid since the binding is missing!");
+                    closeConnection();
+                }
+                break;
+            case MISSING_EXCHANGE:
+                if (!QpidStatus.MISSING_EXCHANGE.equals(oldStatus)) {
+                    log.warn("Shutting down connection to Qpid since the exchange is missing!");
+                    closeConnection();
+                }
+                break;
+            default:
+                // Nothing to do.
+        }
     }
 
     /**

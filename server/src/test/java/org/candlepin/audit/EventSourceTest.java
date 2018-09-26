@@ -132,22 +132,17 @@ public class EventSourceTest {
 
     @Test
     public void eventSourceClosesEventReceiverClientConsumerWhenQpidGoesDown() throws Exception {
-        ClientSession session = mock(ClientSession.class);
-        EventSource eventSource = createEventSourceStubbedWithFactoryCreation();
-        when(clientSessionFactory.createSession(eq(false), eq(false), eq(0))).thenReturn(session);
+        assertEventSourceClosesClientConsumerOnStatusChange(QpidStatus.DOWN);
+    }
 
-        ClientConsumer consumer = mock(ClientConsumer.class);
-        when(session.createConsumer(any(String.class))).thenReturn(consumer);
+    @Test
+    public void eventSourceClosesEventReceiverClientConsumerWhenQpidExchangeMissing() throws Exception {
+        assertEventSourceClosesClientConsumerOnStatusChange(QpidStatus.MISSING_EXCHANGE);
+    }
 
-        EventListener listener = mock(EventListener.class);
-        when(listener.requiresQpid()).thenReturn(true);
-        eventSource.registerListener(listener);
-
-        eventSource.onStatusUpdate(QpidStatus.CONNECTED, QpidStatus.DOWN);
-        // Start was called only on construction
-        verify(session, times(1)).start();
-        verify(consumer).close();
-        verify(session, never()).stop();
+    @Test
+    public void eventSourceClosesEventReceiverClientConsumerWhenQpidBindingMissing() throws Exception {
+        assertEventSourceClosesClientConsumerOnStatusChange(QpidStatus.MISSING_BINDING);
     }
 
     @Test
@@ -190,6 +185,25 @@ public class EventSourceTest {
         eventSource.onStatusUpdate(QpidStatus.DOWN, QpidStatus.CONNECTED);
         // Start was called only on construction
         verify(session, times(1)).start();
+        verify(session, never()).stop();
+    }
+
+    private void assertEventSourceClosesClientConsumerOnStatusChange(QpidStatus status) throws Exception {
+        ClientSession session = mock(ClientSession.class);
+        EventSource eventSource = createEventSourceStubbedWithFactoryCreation();
+        when(clientSessionFactory.createSession(eq(false), eq(false), eq(0))).thenReturn(session);
+
+        ClientConsumer consumer = mock(ClientConsumer.class);
+        when(session.createConsumer(any(String.class))).thenReturn(consumer);
+
+        EventListener listener = mock(EventListener.class);
+        when(listener.requiresQpid()).thenReturn(true);
+        eventSource.registerListener(listener);
+
+        eventSource.onStatusUpdate(QpidStatus.CONNECTED, status);
+        // Start was called only on construction
+        verify(session, times(1)).start();
+        verify(consumer).close();
         verify(session, never()).stop();
     }
 

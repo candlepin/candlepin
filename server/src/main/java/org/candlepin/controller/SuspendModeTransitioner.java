@@ -86,19 +86,43 @@ public class SuspendModeTransitioner implements QpidStatusListener {
         log.debug("Qpid status is {}, the current mode is {}", status, modeChange);
 
         if (modeChange.getMode() == Mode.SUSPEND) {
+            Mode newMode;
+            Reason newReason;
             switch (status) {
                 case CONNECTED:
                     log.info("Connection to qpid is restored! Reconnecting Qpid and" +
                         " entering NORMAL mode");
-                    modeManager.enterMode(Mode.NORMAL, Reason.QPID_UP);
-                    cleanStatusCache();
+                    newMode = Mode.NORMAL;
+                    newReason = Reason.QPID_UP;
                     break;
                 case FLOW_STOPPED:
+                    newMode = Mode.SUSPEND;
+                    newReason = Reason.QPID_FLOW_STOPPED;
+                    break;
+                case MISSING_EXCHANGE:
+                    newMode = Mode.SUSPEND;
+                    newReason = Reason.QPID_MISSING_EXCHANGE;
+                    break;
+                case MISSING_BINDING:
+                    newMode = Mode.SUSPEND;
+                    newReason = Reason.QPID_MISSING_BINDING;
+                    break;
                 case DOWN:
                     log.debug("Staying in {} mode.", status);
+                    newMode = Mode.SUSPEND;
+                    newReason = Reason.QPID_DOWN;
                     break;
                 default:
                     throw new RuntimeException("Unknown status: " + status);
+            }
+
+            if (!modeChange.getMode().equals(newMode) || !modeChange.getReason().equals(newReason)) {
+                log.debug("Change since going into SUSPEND MODE: {}:{}", newMode, newReason);
+                modeManager.enterMode(newMode, newReason);
+                cleanStatusCache();
+            }
+            else {
+                log.debug("No mode change since going into SUSPEND MODE.");
             }
         }
         else if (modeChange.getMode() == Mode.NORMAL) {
@@ -107,6 +131,18 @@ public class SuspendModeTransitioner implements QpidStatusListener {
                     log.debug("Will need to transition Candlepin into SUSPEND Mode because " +
                         "the Qpid connection is flow stopped");
                     modeManager.enterMode(Mode.SUSPEND, Reason.QPID_FLOW_STOPPED);
+                    cleanStatusCache();
+                    break;
+                case MISSING_EXCHANGE:
+                    log.debug("Will need to transition Candlepin into SUSPEND Mode because " +
+                        "the Qpid event queue's exchange is missing.");
+                    modeManager.enterMode(Mode.SUSPEND, Reason.QPID_MISSING_EXCHANGE);
+                    cleanStatusCache();
+                    break;
+                case MISSING_BINDING:
+                    log.debug("Will need to transition Candlepin into SUSPEND Mode because " +
+                        "the Qpid event queue's exchange has no binding.");
+                    modeManager.enterMode(Mode.SUSPEND, Reason.QPID_MISSING_BINDING);
                     cleanStatusCache();
                     break;
                 case DOWN:

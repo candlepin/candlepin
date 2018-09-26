@@ -31,5 +31,15 @@ public enum QpidStatus {
     /**
      * Qpid is down.
      */
-    DOWN
+    DOWN,
+
+    /**
+     * Qpid is up but is missing the appropriate exchange.
+     */
+    MISSING_EXCHANGE,
+
+    /**
+     * Qpid is up but the queue's exchange has no bindings.
+     */
+    MISSING_BINDING
 }
