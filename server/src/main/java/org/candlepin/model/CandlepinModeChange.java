@@ -69,7 +69,16 @@ public class CandlepinModeChange implements Serializable {
         /**
          * The ActiveMQ broker has gone down and is not available.
          */
-        ACTIVEMQ_DOWN
+        ACTIVEMQ_DOWN,
+
+        /**
+         * Qpid event queue is missing the appropriate exchange.
+         */
+        QPID_MISSING_EXCHANGE,
+        /**
+         * Qpid event queue's exchange has no bindings.
+         */
+        QPID_MISSING_BINDING
     }
 
     public CandlepinModeChange(Date changeTime, Mode mode, Reason ... reasons) {
@@ -95,6 +104,5 @@ public class CandlepinModeChange implements Serializable {
         return "CandlepinModeChange [mode=" + mode + ", reasons=" + reasons + ", changeTime=" +
             changeTime + "]";
     }
-
 
 }
