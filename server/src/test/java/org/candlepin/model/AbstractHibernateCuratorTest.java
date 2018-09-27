@@ -80,18 +80,17 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testBulkSQLUpdate() throws Exception {
-        Owner owner = this.createOwner();
 
-        Content c1 = this.createContent("c1", "content 1", owner);
-        Content c2 = this.createContent("c2", "content 2", owner);
-        Content c3 = this.createContent("c3", "content 3", owner);
+        Cdn c1 = this.createCdn("c1", "http://url1.com");
+        Cdn c2 = this.createCdn("c2", "http://url2.com");
+        Cdn c3 = this.createCdn("c3", "http://url3.com");
 
         Map<Object, Object> values = new HashMap<>();
-        values.put("content 1", "update 1");
-        values.put("content 2", "update 2");
+        values.put("c1", "c1updated");
+        values.put("c2", "c2updated");
         values.put("content ?", "should not exist");
 
-        int result = this.testContentCurator.bulkSQLUpdate(Content.DB_TABLE, "name", values, null);
+        int result = this.cdnCurator.bulkSQLUpdate(Cdn.DB_TABLE, "name", values, null);
 
         // Note:
         // This looks like it should be 2, and technically that's what's happening here, but with
@@ -99,135 +98,138 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
         // themselves.
         assertEquals(3, result);
 
-        testContentCurator.refresh(c1, c2, c3);
+        this.getEntityManager().refresh(c1);
+        this.getEntityManager().refresh(c2);
+        this.getEntityManager().refresh(c3);
 
-        assertEquals("update 1", c1.getName());
-        assertEquals("update 2", c2.getName());
-        assertEquals("content 3", c3.getName());
+        assertEquals("c1updated", c1.getName());
+        assertEquals("c2updated", c2.getName());
+        assertEquals("c3", c3.getName());
     }
 
     @Test
     public void testBulkSQLUpdateSingleUpdate() throws Exception {
-        Owner owner = this.createOwner();
 
-        Content c1 = this.createContent("c1", "content 1", owner);
-        Content c2 = this.createContent("c2", "content 2", owner);
-        Content c3 = this.createContent("c3", "content 3", owner);
+        Cdn c1 = this.createCdn("c1", "http://url1.com");
+        Cdn c2 = this.createCdn("c2", "http://url2.com");
+        Cdn c3 = this.createCdn("c3", "http://url3.com");
 
         Map<Object, Object> values = new HashMap<>();
-        values.put("content 1", "update 1");
+        values.put("http://url1.com", "http://url1Updated.com");
 
-        int result = this.testContentCurator.bulkSQLUpdate(Content.DB_TABLE, "name", values, null);
+        int result = this.cdnCurator.bulkSQLUpdate(Cdn.DB_TABLE, "url", values, null);
 
         assertEquals(1, result);
 
-        testContentCurator.refresh(c1, c2, c3);
+        this.getEntityManager().refresh(c1);
+        this.getEntityManager().refresh(c2);
+        this.getEntityManager().refresh(c3);
 
-        assertEquals("update 1", c1.getName());
-        assertEquals("content 2", c2.getName());
-        assertEquals("content 3", c3.getName());
+        assertEquals("http://url1Updated.com", c1.getUrl());
+        assertEquals("http://url2.com", c2.getUrl());
+        assertEquals("http://url3.com", c3.getUrl());
     }
 
     @Test
     public void testBulkSQLUpdateSingleUpdateNoChange() throws Exception {
-        Owner owner = this.createOwner();
-
-        Content c1 = this.createContent("c1", "content 1", owner);
-        Content c2 = this.createContent("c2", "content 2", owner);
-        Content c3 = this.createContent("c3", "content 3", owner);
+        Cdn c1 = this.createCdn("c1", "http://url1.com");
+        Cdn c2 = this.createCdn("c2", "http://url2.com");
+        Cdn c3 = this.createCdn("c3", "http://url3.com");
 
         Map<Object, Object> values = new HashMap<>();
         values.put("content B", "update 1");
 
-        int result = this.testContentCurator.bulkSQLUpdate(Content.DB_TABLE, "name", values, null);
+        int result = this.cdnCurator.bulkSQLUpdate(Content.DB_TABLE, "name", values, null);
 
         assertEquals(0, result);
 
-        testContentCurator.refresh(c1, c2, c3);
+        this.getEntityManager().refresh(c1);
+        this.getEntityManager().refresh(c2);
+        this.getEntityManager().refresh(c3);
 
-        assertEquals("content 1", c1.getName());
-        assertEquals("content 2", c2.getName());
-        assertEquals("content 3", c3.getName());
+        assertEquals("c1", c1.getName());
+        assertEquals("c2", c2.getName());
+        assertEquals("c3", c3.getName());
     }
 
     @Test
     public void testBulkSQLUpdateWithEmptyValues() throws Exception {
-        Owner owner = this.createOwner();
-
-        Content c1 = this.createContent("c1", "content 1", owner);
-        Content c2 = this.createContent("c2", "content 2", owner);
-        Content c3 = this.createContent("c3", "content 3", owner);
+        Cdn c1 = this.createCdn("c1", "http://url1.com");
+        Cdn c2 = this.createCdn("c2", "http://url2.com");
+        Cdn c3 = this.createCdn("c3", "http://url3.com");
 
         Map<Object, Object> values = new HashMap<>();
 
-        int result = this.testContentCurator.bulkSQLUpdate(Content.DB_TABLE, "name", values, null);
+        int result = this.cdnCurator.bulkSQLUpdate(Cdn.DB_TABLE, "name", values, null);
 
         assertEquals(0, result);
 
-        testContentCurator.refresh(c1, c2, c3);
+        this.getEntityManager().refresh(c1);
+        this.getEntityManager().refresh(c2);
+        this.getEntityManager().refresh(c3);
 
-        assertEquals("content 1", c1.getName());
-        assertEquals("content 2", c2.getName());
-        assertEquals("content 3", c3.getName());
+        assertEquals("c1", c1.getName());
+        assertEquals("c2", c2.getName());
+        assertEquals("c3", c3.getName());
     }
 
     @Test
     public void testBulkSQLUpdateWithSingleCriteria() {
-        Owner owner = this.createOwner();
-
-        Content c1 = this.createContent("c1", "content 1", owner);
-        Content c2 = this.createContent("c2", "content 2", owner);
-        Content c3 = this.createContent("c3", "content 3", owner);
+        Cdn c1 = this.createCdn("c1", "http://url1.com");
+        Cdn c2 = this.createCdn("c2", "http://url2.com");
+        Cdn c3 = this.createCdn("c3", "http://url3.com");
 
         Map<Object, Object> values = new HashMap<>();
-        values.put("content 1", "update 1");
-        values.put("content 2", "update 2");
-        values.put("content ?", "should not exist");
+        values.put("c1", "c1a");
+        values.put("c2", "c2a");
+        values.put("c4", "c4a");
 
         Map<String, Object> criteria = new HashMap<>();
         criteria.put("name", values.keySet());
 
-        int result = this.testContentCurator.bulkSQLUpdate(Content.DB_TABLE, "name", values, criteria);
+        int result = this.cdnCurator.bulkSQLUpdate(Cdn.DB_TABLE, "name", values, criteria);
 
         // Unlike the base test where the result count is 3, this filters by only the values we
         // intend to update, so it should be 2.
         assertEquals(2, result);
 
-        testContentCurator.refresh(c1, c2, c3);
+        this.getEntityManager().refresh(c1);
+        this.getEntityManager().refresh(c2);
+        this.getEntityManager().refresh(c3);
 
-        assertEquals("update 1", c1.getName());
-        assertEquals("update 2", c2.getName());
-        assertEquals("content 3", c3.getName());
+        assertEquals("c1a", c1.getName());
+        assertEquals("c2a", c2.getName());
+        assertEquals("c3", c3.getName());
     }
 
     @Test
     public void testBulkSQLUpdateWithMultipleCriteria() {
-        Owner owner = this.createOwner();
-
-        Content c1 = this.createContent("c1", "content 1", owner);
-        Content c2 = this.createContent("c2", "content 2", owner);
-        Content c3 = this.createContent("c3", "content 3", owner);
+        Cdn c1 = this.createCdn("c1", "http://url1.com");
+        Cdn c2 = this.createCdn("c2", "http://url2.com");
+        Cdn c3 = this.createCdn("c3", "http://url3.com");
 
         Map<Object, Object> values = new HashMap<>();
-        values.put("content 1", "update 1");
-        values.put("content 2", "update 2");
+        values.put("c1", "update 1");
+        values.put("c2", "update 2");
         values.put("content ?", "should not exist");
 
         Map<String, Object> criteria = new HashMap<>();
         criteria.put("name", values.keySet());
-        criteria.put("content_id", "c2");
+        criteria.put("id", c2.getId());
 
-        int result = this.testContentCurator.bulkSQLUpdate(Content.DB_TABLE, "name", values, criteria);
+        int result = this.cdnCurator.bulkSQLUpdate(Cdn.DB_TABLE, "name", values, criteria);
 
         // Unlike the base test where the result count is 3, this filters by only the values we
         // intend to update, so it should be 1.
         assertEquals(1, result);
 
-        testContentCurator.refresh(c1, c2, c3);
+        this.getEntityManager().refresh(c1);
+        this.getEntityManager().refresh(c2);
+        this.getEntityManager().refresh(c3);
 
-        assertEquals("content 1", c1.getName());
+        assertEquals("c1", c1.getName());
         assertEquals("update 2", c2.getName());
-        assertEquals("content 3", c3.getName());
+        assertEquals("c3", c3.getName());
     }
 
     protected Object[][] largeValueSetSizes() {
