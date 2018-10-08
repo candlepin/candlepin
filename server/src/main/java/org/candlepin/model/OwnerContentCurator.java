@@ -469,8 +469,8 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
         // the product manager to fork/update products when a related content entity changes.
 
         // environment content
-        List<String> ids = session.createSQLQuery("SELECT id FROM cp_environment WHERE owner_id = ?1")
-            .setParameter("1", owner.getId())
+        List<String> ids = session.createSQLQuery("SELECT id FROM cp_environment WHERE owner_id = :ownerId")
+            .setParameter("ownerId", owner.getId())
             .list();
 
         if (ids != null && !ids.isEmpty()) {
@@ -530,9 +530,9 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
             // the product manager to fork/update products when a related content entity changes.
 
             // environment content
-            String sql = "SELECT id FROM " + Environment.DB_TABLE + " WHERE owner_id = ?1";
+            String sql = "SELECT id FROM " + Environment.DB_TABLE + " WHERE owner_id = :ownerId";
             List<String> ids = session.createSQLQuery(sql)
-                .setParameter("1", owner.getId())
+                .setParameter("ownerId", owner.getId())
                 .list();
 
             if (ids != null && !ids.isEmpty()) {

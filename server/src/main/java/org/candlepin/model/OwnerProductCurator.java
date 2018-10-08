@@ -557,8 +557,8 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
         log.debug("{} pools updated", count);
 
         // pool provided products
-        List<String> ids = session.createSQLQuery("SELECT id FROM cp_pool WHERE owner_id = ?1")
-            .setParameter("1", owner.getId())
+        List<String> ids = session.createSQLQuery("SELECT id FROM cp_pool WHERE owner_id = :ownerId")
+            .setParameter("ownerId", owner.getId())
             .list();
 
         if (ids != null && !ids.isEmpty()) {
@@ -579,8 +579,8 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
 
 
         // Activation key products
-        ids = session.createSQLQuery("SELECT id FROM cp_activation_key WHERE owner_id = ?1")
-            .setParameter("1", owner.getId())
+        ids = session.createSQLQuery("SELECT id FROM cp_activation_key WHERE owner_id = :ownerId")
+            .setParameter("ownerId", owner.getId())
             .list();
 
         if (ids != null && !ids.isEmpty()) {
@@ -674,9 +674,9 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
             // is unlinked from an owner, but one or more of its contents are not.
 
             // Activation key products ///////////////////////
-            String sql = "SELECT id FROM " + ActivationKey.DB_TABLE + " WHERE owner_id = ?1";
+            String sql = "SELECT id FROM " + ActivationKey.DB_TABLE + " WHERE owner_id = :ownerId";
             List<String> ids = session.createSQLQuery(sql)
-                .setParameter("1", owner.getId())
+                .setParameter("ownerId", owner.getId())
                 .list();
 
             if (ids != null && !ids.isEmpty()) {

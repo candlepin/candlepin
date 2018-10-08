@@ -34,7 +34,6 @@ import org.hibernate.Criteria;
 import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.SQLQuery;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
@@ -48,6 +47,7 @@ import org.hibernate.internal.SessionImpl;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.query.NativeQuery;
 import org.hibernate.transform.ResultTransformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -838,44 +838,6 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     }
 
     /**
-     * Performs a direct SQL update or delete operation with a collection by breaking the collection
-     * into chunks and repeatedly performing the update.
-     * <p></p>
-     * The parameter receiving the collection chunks must be the last parameter in the query and the
-     * provided collection must support the subList operation.
-     *
-     * @param sql
-     *  The SQL statement to execute; must be an UPDATE or DELETE operation
-     *
-     * @param collection
-     *  The collection to be broken up into chunks
-     *
-     * @return
-     *  the number of rows updated as a result of this query
-     */
-    protected int safeSQLUpdateWithCollection(String sql, Collection<?> collection, Object... params) {
-        int count = 0;
-
-        Session session = this.currentSession();
-        SQLQuery query = session.createSQLQuery(sql);
-
-        for (List<?> block : this.partition(collection)) {
-            int index = 1;
-
-            if (params != null) {
-                for (; index <= params.length; ++index) {
-                    query.setParameter(String.valueOf(index), params[index - 1]);
-                }
-            }
-            query.setParameterList(String.valueOf(index), block);
-
-            count += query.executeUpdate();
-        }
-
-        return count;
-    }
-
-    /**
      * Locks the specified entity with a pessimistic write lock. Note that the entity will not be
      * refreshed as a result of a call to this method. If the entity needs to be locked and
      * refreshed, use the lockAndLoad method family instead.
@@ -1298,7 +1260,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         int lastBlock = -1;
 
         Session session = this.currentSession();
-        SQLQuery query = null;
+        NativeQuery query = null;
 
         for (List<Map.Entry<Object, Object>> block : blocks) {
             if (block.size() != lastBlock) {
@@ -1314,15 +1276,15 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
                     builder.append("CASE");
 
                     for (int i = 0; i < block.size(); ++i) {
-                        builder.append(" WHEN ").append(column).append(" = ?").append(++param)
-                            .append(" THEN ?").append(++param);
+                        builder.append(" WHEN ").append(column).append(" = :param").append(++param)
+                            .append(" THEN :param").append(++param);
                     }
 
                     builder.append(" ELSE ").append(column).append(" END ");
                 }
                 else {
-                    builder.append('?').append(++param).append(" WHERE ").append(column).append(" = ?")
-                        .append(++param).append(' ');
+                    builder.append(":param").append(++param).append(" WHERE ").append(column)
+                        .append(" = :param").append(++param).append(' ');
 
                     whereStarted = true;
                 }
@@ -1346,14 +1308,14 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
                                             builder.append(" OR ");
                                         }
 
-                                        builder.append(criterion.getKey()).append(" IN (?").append(++param)
-                                            .append(')');
+                                        builder.append(criterion.getKey()).append(" IN (:param")
+                                            .append(++param).append(')');
                                     }
 
                                     builder.append(')');
                                 }
                                 else {
-                                    builder.append(criterion.getKey()).append(" IN (?").append(++param)
+                                    builder.append(criterion.getKey()).append(" IN (:param").append(++param)
                                         .append(')');
                                 }
                             }
@@ -1362,12 +1324,12 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
                             builder.append(whereStarted ? " AND " : " WHERE ");
                             whereStarted = true;
 
-                            builder.append(criterion.getKey()).append(" = ?").append(++param);
+                            builder.append(criterion.getKey()).append(" = :param").append(++param);
                         }
                     }
                 }
 
-                query = session.createSQLQuery(builder.toString());
+                query = session.createNativeQuery(builder.toString());
             }
 
             // Set params
@@ -1375,15 +1337,15 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
             if (block.size() > 1) {
                 for (Map.Entry<Object, Object> entry : block) {
-                    query.setParameter(String.valueOf(++param), entry.getKey())
-                        .setParameter(String.valueOf(++param), entry.getValue());
+                    query.setParameter("param" + String.valueOf(++param), entry.getKey())
+                        .setParameter("param" + String.valueOf(++param), entry.getValue());
                 }
             }
             else {
                 Map.Entry<Object, Object> entry = block.get(0);
 
-                query.setParameter(String.valueOf(++param), entry.getValue())
-                    .setParameter(String.valueOf(++param), entry.getKey());
+                query.setParameter("param" + String.valueOf(++param), entry.getValue())
+                    .setParameter("param" + String.valueOf(++param), entry.getKey());
             }
 
             // Set criteria if the block size has changed
@@ -1393,11 +1355,11 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
                         Iterable<List> inBlocks = this.partition((Collection) criterion);
 
                         for (List inBlock : inBlocks) {
-                            query.setParameterList(String.valueOf(++param), inBlock);
+                            query.setParameterList("param" + String.valueOf(++param), inBlock);
                         }
                     }
                     else {
-                        query.setParameter(String.valueOf(++param), criterion);
+                        query.setParameter("param" + String.valueOf(++param), criterion);
                     }
                 }
             }
@@ -1458,14 +1420,15 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
                                     builder.append(" OR ");
                                 }
 
-                                builder.append(criterion.getKey()).append(" IN (?").append(++param)
+                                builder.append(criterion.getKey()).append(" IN ( :param").append(++param)
                                     .append(')');
                             }
 
                             builder.append(')');
                         }
                         else {
-                            builder.append(criterion.getKey()).append(" IN (?").append(++param) .append(')');
+                            builder.append(criterion.getKey()).append(" IN ( :param")
+                                .append(++param) .append(')');
                         }
                     }
                 }
@@ -1473,12 +1436,12 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
                     builder.append(whereStarted ? " AND " : " WHERE ");
                     whereStarted = true;
 
-                    builder.append(criterion.getKey()).append(" = ?").append(++param);
+                    builder.append(criterion.getKey()).append(" = :param").append(++param);
                 }
             }
         }
 
-        SQLQuery query = this.currentSession().createSQLQuery(builder.toString());
+        NativeQuery query = this.currentSession().createNativeQuery(builder.toString());
 
         if (criteria != null && !criteria.isEmpty()) {
             int param = 0;
@@ -1488,11 +1451,11 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
                     Iterable<List> inBlocks = this.partition((Collection) criterion);
 
                     for (List inBlock : inBlocks) {
-                        query.setParameterList(String.valueOf(++param), inBlock);
+                        query.setParameterList("param" + String.valueOf(++param), inBlock);
                     }
                 }
                 else {
-                    query.setParameter(String.valueOf(++param), criterion);
+                    query.setParameter("param" + String.valueOf(++param), criterion);
                 }
             }
         }

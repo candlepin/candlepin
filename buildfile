@@ -88,11 +88,11 @@ SLF4J = 'org.slf4j:slf4j-api:jar:1.7.25'
 
 LOGGING = [LOGBACK, SLF4J_BRIDGES, SLF4J]
 
-JAVAX = ['org.hibernate.javax.persistence:hibernate-jpa-2.1-api:jar:1.0.0.Final',
-         'javax.transaction:jta:jar:1.1']
+JAVAX = ['org.hibernate.javax.persistence:hibernate-jpa-2.1-api:jar:1.0.2.Final',
+         'javax.transaction:jta:jar:1.1', 'javax.persistence:javax.persistence-api:jar:2.2']
 ANTLR = ['antlr:antlr:jar:2.7.7']
 
-EHCACHE = ['org.hibernate:hibernate-ehcache:jar:5.2.17.Final',
+EHCACHE = ['org.hibernate:hibernate-ehcache:jar:5.3.6.Final',
            'net.sf.ehcache:ehcache:jar:2.10.1',
            'org.ehcache:jcache:jar:1.0.0', 'javax.cache:cache-api:jar:1.0.0',
            'net.sf.ehcache:management-ehcache-v2:jar:2.10.1']
@@ -101,15 +101,17 @@ VALIDATOR = ['org.hibernate.validator:hibernate-validator:jar:6.0.7.Final',
              'org.hibernate.validator:hibernate-validator-annotation-processor:jar:6.0.7.Final',
              'javax.validation:validation-api:jar:2.0.1.Final']
 
-HIBERNATE = [group('hibernate-core', 'hibernate-entitymanager', 'hibernate-c3p0',
+HIBERNATE = [group('hibernate-core', 'hibernate-c3p0',
                    :under => 'org.hibernate',
-                   :version => '5.2.17.Final'),
+                   :version => '5.3.6.Final'),
+
              'org.hibernate.common:hibernate-commons-annotations:jar:5.0.2.Final',
              'org.hibernate:hibernate-tools:jar:3.2.4.GA',
              ANTLR,
              EHCACHE,
              VALIDATOR,
-             'asm:asm:jar:3.0',
+             'org.ow2.asm:asm:jar:6.2.1',
+             'net.bytebuddy:byte-buddy-dep:jar:1.8.18',
              'cglib:cglib:jar:2.2',
              'org.javassist:javassist:jar:3.20.0-GA',
              'com.fasterxml:classmate:jar:1.3.1',
