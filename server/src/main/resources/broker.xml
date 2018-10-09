@@ -41,7 +41,6 @@
         <journal-directory>/var/lib/candlepin/activemq-artemis/journal</journal-directory>
         <large-messages-directory>/var/lib/candlepin/activemq-artemis/largemsgs</large-messages-directory>
         <paging-directory>/var/lib/candlepin/activemq-artemis/paging</paging-directory>
-        <journal-buffer-size>102400</journal-buffer-size>
 
         <!-- Use default thread pool max sizes as defined by Artemis. -->
         <!-- Uncomment to customize.                                  -->
@@ -68,7 +67,7 @@
                 <auto-create-queues>true</auto-create-queues>
                 <max-size-bytes>10485760</max-size-bytes>
 
-                <address-full-policy>PAGE</address-full-policy>
+                <!-- By default, Artemis will page messages when the queue address is full. -->
                 <page-size-bytes>1048576</page-size-bytes>
 
                 <!--
@@ -86,7 +85,7 @@
                 <auto-create-queues>true</auto-create-queues>
                 <max-size-bytes>10485760</max-size-bytes>
 
-                <address-full-policy>PAGE</address-full-policy>
+                <!-- By default, Artemis will page messages when the queue address is full. -->
                 <page-size-bytes>1048576</page-size-bytes>
 
                 <!--
