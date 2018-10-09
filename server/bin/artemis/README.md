@@ -43,7 +43,5 @@ Options:
 
 version: Allows you to install a specific version of the artemis broker.
 broker-config: Allows you to specify any broker config template.
-broker-name: Allows you to specify a custom broker name
-broker-data-dir: Allows you to specify a custom location for the message data.
 
 

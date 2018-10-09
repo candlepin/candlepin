@@ -34,31 +34,14 @@ DEFAULT_VERSION = "2.4.0"
 # the caller.
 INSTALL_DIR = "/opt"
 BROKER_ROOT = "/var/lib/artemis"
+BROKER_NAME = "candlepin"
 
 SELINUX_BASE_DIR = os.path.join(BASE_DIR, "selinux");
 SELINUX_POLICY_TEMPLATE = os.path.join(SELINUX_BASE_DIR, "artemis.te")
 SELINUX_BUILD_DIR = os.path.join(SELINUX_BASE_DIR, "build")
 
-SERVICE_FILE_PATH = "/usr/lib/systemd/system/artemis.service"
-SERVICE_FILE_TEMPLATE = \
-"""
-[Unit]
-Description=Apache ActiveMQ Artemis
-Requires=network.target
-After=network.target
-
-[Service]
-User=artemis
-Group=artemis
-PIDFile=/var/lib/artemis/%s/data/artemis.pid
-ExecStart=/var/lib/artemis/%s/bin/artemis-service start
-ExecStop=/var/lib/artemis/%s/bin/artemis-service stop
-ExecReload=/var/lib/artemis/%s/bin/artemis-service restart
-Restart=always
-
-[Install]
-WantedBy=mult-user.target
-"""
+SERVICE_TEMPLATE_PATH = os.path.join(BASE_DIR, "service", "artemis.service");
+SERVICE_FILE_TARGET_PATH = "/usr/lib/systemd/system/artemis.service"
 
 @contextmanager
 def open_xml(filename):
@@ -113,11 +96,11 @@ def install_artemis(version, install_path="/opt"):
     dl_file_path = download_artemis(version, install_path)
     return extract_artemis(install_path, dl_file_path)
 
-def create_broker(artemis_install_path, broker_root_path, broker_name):
+def create_broker(artemis_install_path, broker_root_path):
     if not os.path.exists(broker_root_path):
         os.mkdir(broker_root_path)
 
-    broker_path = os.path.join(broker_root_path, broker_name)
+    broker_path = os.path.join(broker_root_path, BROKER_NAME)
     if os.path.exists(broker_path):
         logger.info("Broker already exists, skipping creation.")
         return broker_path
@@ -136,7 +119,7 @@ def call(cmd, error_msg, allow_failure=False):
         if not allow_failure and ret:
             raise RuntimeError(error_msg)
 
-def install_artemis_service(broker_name):
+def install_artemis_service():
     logger.info("Setting up artemis service.")
 
     logger.debug("Creating artemis user.")
@@ -146,8 +129,7 @@ def install_artemis_service(broker_name):
     call("sudo chown -R artemis:artemis %s" % BROKER_ROOT, "Failed to set permissions for artemis user.")
 
     logger.debug("Installing artemis service file.")
-    with open(SERVICE_FILE_PATH, "w+") as te:
-        te.write(SERVICE_FILE_TEMPLATE % (broker_name, broker_name, broker_name, broker_name))
+    shutil.copy(SERVICE_TEMPLATE_PATH, SERVICE_FILE_TARGET_PATH)
 
     logger.debug("Reloading systemd daemons.")
     call("sudo systemctl daemon-reload", "Failed to reload systemd daemons.")
@@ -171,13 +153,9 @@ def setup_selinux():
     call("sudo semodule -vi %s/artemis.pp" % SELINUX_BUILD_DIR,
          "Failed to load SELinux policy for artemis service")
 
-# Default broker_data_dir is relative to the broker instance.
-def modify_broker_xml(broker_xml_path, broker_data_dir):
+def modify_broker_xml(broker_xml_path):
     logger.info("Updating broker configuration...")
-
-    # Default the data dir in case it was not set.
-    if not broker_data_dir:
-        broker_data_dir = "./data"
+    broker_data_dir = "./data"
 
     with open_xml(broker_xml_path) as doc:
         ctx = doc.xpathNewContext()
@@ -204,8 +182,7 @@ def modify_broker_xml(broker_xml_path, broker_data_dir):
 
         doc.saveFile(broker_xml_path)
 
-
-def update_broker_config(broker_path, candlepin_broker_conf, broker_data_dir):
+def update_broker_config(broker_path, candlepin_broker_conf):
     # Move the generated conf file if it needs to be referenced later.
     broker_xml = os.path.join(broker_path, "etc/broker.xml")
     old_broker_xml = os.path.join(broker_path, "etc/broker.xml.old")
@@ -219,7 +196,7 @@ def update_broker_config(broker_path, candlepin_broker_conf, broker_data_dir):
     shutil.copy(candlepin_broker_conf, new_location)
 
     # Update the Acceptor configuration.
-    modify_broker_xml(broker_xml, broker_data_dir)
+    modify_broker_xml(broker_xml)
 
 def cleanup(version, install_dir, broker_root):
     logger.info("Cleaning up artemis installation.")
@@ -237,9 +214,9 @@ def cleanup(version, install_dir, broker_root):
 
 def uninstall_service():
     call("sudo semodule -vr artemisservice", "", allow_failure=True)
-    if os.path.exists(SERVICE_FILE_PATH):
+    if os.path.exists(SERVICE_FILE_TARGET_PATH):
         call("sudo systemctl disable artemis", "Failed to disable artemis service", allow_failure=True)
-        os.remove(SERVICE_FILE_PATH)
+        os.remove(SERVICE_FILE_TARGET_PATH)
     call("sudo systemctl daemon-reload", "Failed to reload systemd daemons.")
     call("sudo systemctl reset-failed", "Failed to reset failed services.")
 
@@ -254,11 +231,6 @@ def parse_options():
     parser.add_option("--broker-config", action="store", type="string",
                       default="%s/../../src/main/resources/broker.xml" % (BASE_DIR),
                       help="the broker config file to use.")
-    parser.add_option("--broker-name", action="store", type="string",
-                      default="candlepin",
-                      help="the name of the broker to be installed")
-    parser.add_option("--broker-data-dir", action="store", type="string",
-                      help="the location to store the broker's data files (defaults to broker's data dir)")
     parser.add_option("--clean", action="store_true", help="clean current installation")
     parser.add_option("--start", action="store_true", help="start broker after install")
     parser.add_option("--debug", action="store_true", help="enables debug logging")
@@ -277,9 +249,9 @@ def main():
 
     logger.info("Installing Artemis...")
     artemis_path = install_artemis(options.version, INSTALL_DIR)
-    broker_path = create_broker(artemis_path, BROKER_ROOT, options.broker_name)
-    install_artemis_service(options.broker_name)
-    update_broker_config(broker_path, options.broker_config, options.broker_data_dir)
+    broker_path = create_broker(artemis_path, BROKER_ROOT)
+    install_artemis_service()
+    update_broker_config(broker_path, options.broker_config)
     logger.info("Artemis was successfully installed!")
 
     if options.start:
