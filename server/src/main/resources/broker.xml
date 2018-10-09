@@ -48,9 +48,6 @@
         <!-- <thread-pool-max-size>30</thread-pool-max-size> -->
         <!-- <scheduled-thread-pool-max-size>5</scheduled-thread-pool-max-size> -->
 
-        <!-- 24 Hours -->
-        <connection-ttl-override>86400000</connection-ttl-override>
-
         <addresses>
             <address name="event.default">
                 <multicast>
