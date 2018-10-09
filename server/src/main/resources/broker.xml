@@ -81,7 +81,7 @@
                 <redelivery-delay-multiplier>2</redelivery-delay-multiplier>
                 <max-delivery-attempts>0</max-delivery-attempts>
             </address-setting>
-            <address-setting match="event.default">
+            <address-setting match="event.qpid">
                 <auto-create-queues>true</auto-create-queues>
                 <max-size-bytes>10485760</max-size-bytes>
 
