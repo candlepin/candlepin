@@ -1,0 +1,6 @@
+rootProject.name = 'candlepin-parent'
+include ':candlepin-common'
+include ':candlepin'
+
+project(':candlepin-common').projectDir = "$rootDir/common" as File
+project(':candlepin').projectDir = "$rootDir/server" as File
