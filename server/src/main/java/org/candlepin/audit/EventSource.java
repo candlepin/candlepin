@@ -17,10 +17,10 @@ package org.candlepin.audit;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 
-import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
 import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
-import org.apache.activemq.artemis.core.remoting.impl.invm.InVMConnectorFactory;
+import org.candlepin.common.config.Configuration;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.QpidStatusListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,11 +40,11 @@ public class EventSource implements QpidStatusListener {
 
 
     @Inject
-    public EventSource(ObjectMapper mapper) {
+    public EventSource(ObjectMapper mapper, Configuration config) {
         this.mapper = mapper;
 
         try {
-            factory =  createSessionFactory();
+            factory =  createSessionFactory(config);
         }
         catch (Exception e) {
             throw new RuntimeException(e);
@@ -55,9 +55,9 @@ public class EventSource implements QpidStatusListener {
      * @return new instance of {@link ClientSessionFactory}
      * @throws Exception
      */
-    protected ClientSessionFactory createSessionFactory() throws Exception {
-        return ActiveMQClient.createServerLocatorWithoutHA(
-            new TransportConfiguration(InVMConnectorFactory.class.getName())).createSessionFactory();
+    protected ClientSessionFactory createSessionFactory(Configuration config) throws Exception {
+        String serverUrl = config.getProperty(ConfigProperties.ACTIVEMQ_BROKER_URL);
+        return ActiveMQClient.createServerLocator(serverUrl).createSessionFactory();
     }
 
     protected void shutDown() {

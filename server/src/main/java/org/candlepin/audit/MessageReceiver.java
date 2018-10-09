@@ -17,7 +17,6 @@ package org.candlepin.audit;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.activemq.artemis.api.core.ActiveMQException;
-import org.apache.activemq.artemis.api.core.ActiveMQExceptionType;
 import org.apache.activemq.artemis.api.core.client.ClientConsumer;
 import org.apache.activemq.artemis.api.core.client.ClientSession;
 import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
@@ -56,19 +55,6 @@ public abstract class MessageReceiver implements MessageHandler {
         // A message ack batch size of 0 is specified to prevent duplicate messages
         // if the server goes down before the batch ack size is reached.
         session = sessionFactory.createSession(false, false, 0);
-
-        try {
-            // Create a durable queue that will be persisted to disk:
-            session.createQueue(getQueueAddress(), queueName, true);
-            log.debug("created new event queue: {}", queueName);
-        }
-        catch (ActiveMQException e) {
-            // if the queue exists already we already created it in a previous run,
-            // so that's fine.
-            if (e.getType() != ActiveMQExceptionType.QUEUE_EXISTS) {
-                throw e;
-            }
-        }
 
         consumer = session.createConsumer(queueName);
         consumer.setMessageHandler(this);

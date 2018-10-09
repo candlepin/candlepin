@@ -1,0 +1,16 @@
+[Unit]
+Description=Apache ActiveMQ Artemis
+Requires=network.target
+After=network.target
+
+[Service]
+User=artemis
+Group=artemis
+PIDFile=/var/lib/artemis/candlepin/data/artemis.pid
+ExecStart=/var/lib/artemis/candlepin/bin/artemis-service start
+ExecStop=/var/lib/artemis/candlepin/bin/artemis-service stop
+ExecReload=/var/lib/artemis/candlepin/bin/artemis-service restart
+Restart=always
+
+[Install]
+WantedBy=mult-user.target

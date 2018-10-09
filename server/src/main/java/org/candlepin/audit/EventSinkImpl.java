@@ -30,14 +30,12 @@ import com.google.inject.Singleton;
 
 import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.activemq.artemis.api.core.SimpleString;
-import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
 import org.apache.activemq.artemis.api.core.client.ClientMessage;
 import org.apache.activemq.artemis.api.core.client.ClientProducer;
 import org.apache.activemq.artemis.api.core.client.ClientSession;
 import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
 import org.apache.activemq.artemis.api.core.client.ServerLocator;
-import org.apache.activemq.artemis.core.remoting.impl.invm.InVMConnectorFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -91,8 +89,8 @@ public class EventSinkImpl implements EventSink {
     }
 
     protected ClientSessionFactory createClientSessionFactory() throws Exception {
-        ServerLocator locator = ActiveMQClient.createServerLocatorWithoutHA(
-            new TransportConfiguration(InVMConnectorFactory.class.getName()));
+        String serverUrl = config.getProperty(ConfigProperties.ACTIVEMQ_BROKER_URL);
+        ServerLocator locator = ActiveMQClient.createServerLocator(serverUrl);
         locator.setMinLargeMessageSize(largeMsgSize);
         locator.setReconnectAttempts(-1);
         return locator.createSessionFactory();

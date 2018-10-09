@@ -23,6 +23,7 @@ import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.activemq.artemis.api.core.client.ClientConsumer;
 import org.apache.activemq.artemis.api.core.client.ClientSession;
 import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
+import org.candlepin.common.config.Configuration;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -199,8 +200,8 @@ public class EventSourceTest {
      * @return the new EventSource
      */
     private EventSource createEventSourceStubbedWithFactoryCreation() {
-        return new EventSource(new ObjectMapper()) {
-            protected ClientSessionFactory createSessionFactory() {
+        return new EventSource(new ObjectMapper(), mock(Configuration.class)) {
+            protected ClientSessionFactory createSessionFactory(Configuration config) {
                 return clientSessionFactory;
             }
         };

@@ -68,39 +68,14 @@ public class QpidEventMessageReceiverTest {
         fail("Should have thrown ActiveMQException");
     }
 
-    @Test(expected = ActiveMQException.class)
-    public void shouldThrowExceptionWhenQueueCreationFails() throws Exception {
-        doThrow(new ActiveMQException(ActiveMQExceptionType.DISCONNECTED))
-            .when(clientSession).createQueue(anyString(), anyString(), eq(true));
-
-        new QpidEventMessageReceiver(eventListener, clientSessionFactory, new ObjectMapper());
-        verify(clientSession, never()).createConsumer(anyString()); //should not be invoked
-        verify(clientSession, never()).start();
-    }
-
     @Test
-    public void shouldCreateNewConsumerWhenQueueExistsOnRegisterListenerCall()
+    public void shouldCreateNewConsumer()
         throws Exception {
-        doThrow(new ActiveMQException(ActiveMQExceptionType.QUEUE_EXISTS))
-            .when(clientSession).createQueue(anyString(), anyString());
-
         QpidEventMessageReceiver receiver = new QpidEventMessageReceiver(eventListener, clientSessionFactory,
             new ObjectMapper());
 
         verify(clientSession).createConsumer(anyString());
         verify(clientConsumer).setMessageHandler(eq(receiver));
-        verify(clientSession).start();
-    }
-
-    @Test
-    public void shouldCreateNewConsumerWhenQueueDoesNotExistOnRegisterListenerCall()
-        throws Exception {
-        new QpidEventMessageReceiver(eventListener, clientSessionFactory, new ObjectMapper());
-
-        //make sure queue is created.
-        verify(clientSession).createQueue(anyString(), anyString(), eq(true));
-        verify(clientSession).createConsumer(anyString());
-        verify(clientConsumer).setMessageHandler(any(QpidEventMessageReceiver.class));
         verify(clientSession).start();
     }
 
