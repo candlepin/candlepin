@@ -35,7 +35,10 @@ DEFAULT_VERSION = "2.4.0"
 INSTALL_DIR = "/opt"
 BROKER_ROOT = "/var/lib/artemis"
 
-SELINUX_BUILD_DIR = os.path.join(BASE_DIR, "selinux")
+SELINUX_BASE_DIR = os.path.join(BASE_DIR, "selinux");
+SELINUX_POLICY_TEMPLATE = os.path.join(SELINUX_BASE_DIR, "artemis.te")
+SELINUX_BUILD_DIR = os.path.join(SELINUX_BASE_DIR, "build")
+
 SERVICE_FILE_PATH = "/usr/lib/systemd/system/artemis.service"
 SERVICE_FILE_TEMPLATE = \
 """
@@ -55,20 +58,6 @@ Restart=always
 
 [Install]
 WantedBy=mult-user.target
-"""
-
-SELINUX_TEMPLATE = \
-"""
-module artemis 1.0;
-
-require {
-    type var_lib_t;
-	type init_t;
-	class file { execute execute_no_trans };
-}
-
-#============= init_t ==============
-allow init_t var_lib_t:file { execute execute_no_trans };
 """
 
 @contextmanager
@@ -174,10 +163,7 @@ def setup_selinux():
     if not os.path.exists(SELINUX_BUILD_DIR):
         os.mkdir(SELINUX_BUILD_DIR)
 
-    with open("%s/artemis.te" % SELINUX_BUILD_DIR, "w+") as te:
-        te.write(SELINUX_TEMPLATE)
-
-    call("checkmodule -M -m -o %s/artemis.mod %s/artemis.te" % (SELINUX_BUILD_DIR, SELINUX_BUILD_DIR),
+    call("checkmodule -M -m -o %s/artemis.mod %s" % (SELINUX_BUILD_DIR, SELINUX_POLICY_TEMPLATE),
          "Failed to compile SELinux module for artemis service.")
     call("semodule_package -m %s/artemis.mod -o %s/artemis.pp" % (SELINUX_BUILD_DIR, SELINUX_BUILD_DIR),
          "Failed to package SELinux module for artemis service.")
