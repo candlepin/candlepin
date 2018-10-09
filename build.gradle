@@ -1,0 +1,175 @@
+plugins {
+  id "nebula.lint" version "10.1.2"
+}
+
+allprojects {
+
+  group = 'org.candlepin'
+  version = '2.0'
+  apply plugin: 'maven'
+  apply plugin: 'nebula.lint'
+
+  gradleLint {
+    rules = ['dependency-parentheses']
+//    rules = ['dependency-parentheses', 'unused-exclude-by-dep']
+//    criticalRules = ['unused-dependency']
+  }
+
+  configurations {
+    antlr
+    commons
+    collections
+    core_testing
+    ehcache
+    guice
+    jackson
+    javax
+    jukito
+    logging_deps
+    liquibase
+    liquibase_slf4j
+    oauth
+    resteasy
+    sun_jaxb
+    swagger
+  }
+
+
+  dependencies {
+    resteasy 'org.jboss.resteasy:resteasy-jaxrs:3.5.1.Final' exclude module: '*'
+    resteasy 'org.jboss.resteasy:resteasy-jaxb-provider:3.5.1.Final' exclude module: '*'
+    resteasy 'org.jboss.resteasy:resteasy-guice:3.5.1.Final' exclude module: '*'
+    resteasy 'org.jboss.resteasy:resteasy-atom-provider:3.5.1.Final' exclude module: '*'
+    resteasy 'org.jboss.resteasy:resteasy-multipart-provider:3.5.1.Final' exclude module: '*'
+    resteasy 'org.scannotation:scannotation:1.0.3' exclude module: '*'
+    resteasy 'org.apache.httpcomponents:httpclient:4.3.2' exclude module: '*'
+    resteasy 'org.apache.james:apache-mime4j:0.6' exclude module: '*'
+    resteasy 'javax.mail:mail:1.4.7' exclude module: '*'
+    resteasy 'javax.ws.rs:javax.ws.rs-api:2.1' exclude module: '*'
+    resteasy 'javax.json.bind:javax.json.bind-api:1.0' exclude module: '*'
+    resteasy 'org.jboss.spec.javax.ws.rs:jboss-jaxrs-api_2.1_spec:1.0.0.Final' exclude module: '*'
+    resteasy 'javax.annotation:javax.annotation-api:1.3.2' exclude module: '*'
+    resteasy 'org.eclipse.microprofile.rest.client:microprofile-rest-client-api:1.0.1' exclude module: '*'
+    resteasy 'org.reactivestreams:reactive-streams:1.0.0.final' exclude module: '*'
+
+
+    jackson "com.fasterxml.jackson.core:jackson-annotations:2.9.4" exclude module: '*'
+    jackson 'com.fasterxml.jackson.core:jackson-core:2.9.4' exclude module: '*'
+    jackson 'com.fasterxml.jackson.core:jackson-databind:2.9.4' exclude module: '*'
+    jackson 'com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:2.9.4' exclude module: '*'
+    jackson 'com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:2.9.4' exclude module: '*'
+    jackson 'com.fasterxml.jackson.module:jackson-module-jsonSchema:2.9.4' exclude module: '*'
+    jackson 'com.fasterxml.jackson.module:jackson-module-jaxb-annotations:2.9.4' exclude module: '*'
+    jackson 'com.fasterxml.jackson.datatype:jackson-datatype-hibernate5:2.9.4' exclude module: '*'
+    jackson 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.9.4' exclude module: '*'
+
+    // Used for swagger
+    swagger 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.4' exclude module: '*'
+    swagger 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.9.4' exclude module: '*'
+    swagger 'io.swagger:swagger-jaxrs:1.5.7' exclude module: '*'
+    swagger 'io.swagger:swagger-core:1.5.7' exclude module: '*'
+    swagger 'io.swagger:swagger-models:1.5.7' exclude module: '*'
+    swagger 'io.swagger:swagger-annotations:1.5.7' exclude module: '*'
+    swagger 'org.reflections:reflections:0.9.10' exclude module: '*'
+    swagger 'org.apache.commons:commons-lang3:3.2.1' exclude module: '*'
+
+
+    sun_jaxb 'com.sun.xml.bind:jaxb-impl:2.3.0' exclude module: '*'
+    sun_jaxb 'com.sun.xml.bind:jaxb-core:2.3.0' exclude module: '*'
+
+    core_testing 'junit:junit:4.12'
+    core_testing 'org.hamcrest:hamcrest-library:1.3'
+    core_testing 'org.hamcrest:hamcrest-core:1.3'
+    core_testing 'org.mockito:mockito-all:1.9.5'
+    core_testing 'pl.pragmatists:JUnitParams:1.0.3'
+
+    jukito 'org.jukito:jukito:1.4'
+
+    logging_deps 'ch.qos.logback:logback-core:1.2.3' exclude module: '*'
+    logging_deps 'ch.qos.logback:logback-classic:1.2.3' exclude module: '*'
+    // Artifacts that bridge other logging frameworks to slf4j. Mime4j uses
+    // JCL for example.
+    logging_deps 'org.slf4j:jcl-over-slf4j:1.7.12' exclude module: '*'
+    logging_deps 'org.slf4j:log4j-over-slf4j:1.7.12' exclude module: '*'
+    logging_deps 'org.slf4j:slf4j-api:1.7.25' exclude module: '*'
+
+    javax 'org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.2.Final' exclude module: '*'
+    javax 'javax.transaction:jta:1.1' exclude module: '*'
+    javax 'javax.persistence:javax.persistence-api:2.2' exclude module: '*'
+
+    antlr 'antlr:antlr:2.7.7' exclude module: '*'
+
+    ehcache 'org.hibernate:hibernate-ehcache:5.3.6.Final' exclude module: '*'
+    ehcache 'net.sf.ehcache:ehcache:2.10.1' exclude module: '*'
+    ehcache 'org.ehcache:jcache:1.0.0'exclude module: '*'
+    ehcache 'javax.cache:cache-api:1.0.0' exclude module: '*'
+    ehcache 'net.sf.ehcache:management-ehcache-v2:2.10.1' exclude module: '*'
+
+    commons 'commons-codec:commons-codec:1.11'
+    commons 'commons-collections:commons-collections:3.2.2'
+    commons 'commons-io:commons-io:1.4'
+    commons 'commons-lang:commons-lang:2.5'
+
+    guice 'com.google.inject.extensions:guice-assistedinject:4.1.0' exclude module: '*'
+    guice 'com.google.inject.extensions:guice-multibindings:4.1.0' exclude module: '*'
+    guice 'com.google.inject.extensions:guice-servlet:4.1.0' exclude module: '*'
+    guice 'com.google.inject.extensions:guice-throwingproviders:4.1.0' exclude module: '*'
+    guice 'com.google.inject.extensions:guice-persist:4.1.0' exclude module: '*'
+    guice 'com.google.inject:guice:4.1.0' exclude module: '*'
+    guice 'aopalliance:aopalliance:1.0' exclude module: '*'
+    guice 'javax.inject:javax.inject:1' exclude module: '*'
+
+    liquibase 'org.liquibase:liquibase-core:3.1.0' exclude module: '*'
+    liquibase_slf4j 'com.mattbertolini:liquibase-slf4j:1.2.1' exclude module: '*'
+
+    oauth 'net.oauth.core:oauth:20100527' exclude module: '*'
+    oauth 'net.oauth.core:oauth-provider:20100527' exclude module: '*'
+
+    collections 'com.google.guava:guava:25.1-jre' exclude module: '*'
+
+    /*
+
+
+VALIDATOR = ['org.hibernate.validator:hibernate-validator:jar:6.0.7.Final',
+             'org.hibernate.validator:hibernate-validator-annotation-processor:jar:6.0.7.Final',
+             'javax.validation:validation-api:jar:2.0.1.Final']
+
+SERVLET = 'javax.servlet:servlet-api:jar:2.5'
+
+
+SCHEMASPY = 'net.sourceforge:schemaSpy:jar:4.1.1'
+
+
+# required by LOGDRIVER
+LOG4J_BRIDGE = 'org.slf4j:log4j-over-slf4j:jar:1.7.5'
+LOGDRIVER = 'logdriver:logdriver:jar:1.0'
+
+SCANNOTATION = 'org.scannotation:scannotation:jar:1.0.3'
+
+CHECKSTYLE = ['com.puppycrawl.tools:checkstyle:jar:8.2',
+              'org.antlr:antlr4-runtime:jar:4.5.3'] + ANTLR
+
+     */
+
+  }
+}
+
+subprojects {
+  apply plugin: 'java'
+  sourceCompatibility = 1.8
+  targetCompatibility = 1.8
+  tasks.withType(JavaCompile) {
+  	options.encoding = 'UTF-8'
+//    options.compilerArgs << '-Xlint:deprecation'
+  }
+
+  repositories {
+    mavenLocal()
+    mavenCentral()
+
+    maven { url "http://repo.jenkins-ci.org/public/" }
+    maven { url "http://repository.jboss.org/nexus/content/groups/public/" }
+    maven { url "http://oauth.googlecode.com/svn/code/maven/" }
+  }
+
+}

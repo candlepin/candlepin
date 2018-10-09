@@ -63,3 +63,7 @@ buildconf/scripts/import_products.json
 
 # Vagrant
 .vagrant/
+
+# Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
+!gradle-wrapper.jar
+.gradle
