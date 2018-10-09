@@ -150,26 +150,26 @@ def call(cmd, error_msg, allow_failure=False):
 def install_artemis_service(broker_name):
     logger.info("Setting up artemis service.")
 
-    logger.debug("    Creating artemis user.")
+    logger.debug("Creating artemis user.")
     call("sudo useradd artemis --home %s" % BROKER_ROOT, "Failed to create 'artemis' user.", True)
 
-    logger.debug("    Setting file permissions for artemis user.")
+    logger.debug("Setting file permissions for artemis user.")
     call("sudo chown -R artemis:artemis %s" % BROKER_ROOT, "Failed to set permissions for artemis user.")
 
-    logger.debug("    Installing artemis service file.")
+    logger.debug("Installing artemis service file.")
     with open(SERVICE_FILE_PATH, "w+") as te:
         te.write(SERVICE_FILE_TEMPLATE % (broker_name, broker_name, broker_name, broker_name))
 
-    logger.debug("    Reloading systemd daemons.")
+    logger.debug("Reloading systemd daemons.")
     call("sudo systemctl daemon-reload", "Failed to reload systemd daemons.")
 
-    logger.debug("    Enabling artemis service.")
+    logger.debug("Enabling artemis service.")
     call("sudo systemctl enable artemis", "Failed to enable artemis service")
 
     setup_selinux()
 
 def setup_selinux():
-    logger.debug("    Setting up SELinux policy.")
+    logger.debug("Setting up SELinux policy.")
 
     if not os.path.exists(SELINUX_BUILD_DIR):
         os.mkdir(SELINUX_BUILD_DIR)
@@ -251,13 +251,6 @@ def cleanup(version, install_dir, broker_root):
 
 def uninstall_service():
     call("sudo semodule -vr artemisservice", "", allow_failure=True)
-    # to_delete = ["%s/artemisservice.mod" % BASE_DIR,
-    #              "%s/artemisservice.pp" % BASE_DIR,
-    #              "/usr/lib/systemd/system/artemis.service"]
-    #
-    # for next_file in to_delete:
-    #     if os.path.exists(next_file): os.remove(next_file)
-
     if os.path.exists(SERVICE_FILE_PATH):
         call("sudo systemctl disable artemis", "Failed to disable artemis service", allow_failure=True)
         os.remove(SERVICE_FILE_PATH)
