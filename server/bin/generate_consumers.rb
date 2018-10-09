@@ -90,22 +90,28 @@ def get_pools_to_consume(rand, owner, pools)
   if use_random_pools
     pool_count = Integer(@options[:pools])
     log("INFO", "Using #{pool_count} random pools")
+    selected_pool_ids = []
 
     p = 0
     while p < pool_count
-      if pools.empty?
+      if pools.empty? || selected_pool_ids.length >= pools.length
         log("ERROR", "Out of pools to consume")
         exit
       end
 
-      keys = pools.keys
+      keys = pools.keys - selected_pool_ids
       pool_id = keys.sample(random: rand)
       pool = pools[pool_id]
+      selected_pool_ids << pool_id
 
       quantity = get_quantity_to_consume(pool)
 
       if quantity > 0
         output << [pool_id, quantity]
+
+        # Simulate the consumed count going up so we don't over-consume this pool
+        pool['consumed'] = Integer(pool['consumed']) + quantity
+
         p = p + 1
       else
         log("WARN", "Skipping unconsumable pool: #{pool['productName']}")
@@ -198,20 +204,20 @@ optparse = OptionParser.new do |opts|
     end
 
     @options[:consumers] = 3
-    opts.on('--consumers', 'The number of consumers to generate per org; defaults to 3') do
-        @options[:consumers] = true
+    opts.on('--consumers [CONSUMERS]', 'The number of consumers to generate per org; defaults to 3') do |opt|
+        @options[:consumers] = opt.to_i
     end
 
     @options[:pools] = 3
-    opts.on('--pools [POOL]', 'The pools to consume per consumer. If this value is numeric, that many ' +
+    opts.on('--pools [POOLS|POOLIDS]', 'The pools to consume per consumer. If this value is numeric, that many ' +
         'pools will be randomly selected to be consumed, otherwise the list is processed as a ' +
         'comma-delimited list of pool IDs; defaults to 3') do |opt|
-        @options[:pools] = opt
+        @options[:pools] = opt.to_i
     end
 
     @options[:rng_seed] = 79135
-    opts.on('--seed', 'Seed to use for any random selection; defaults to 79135') do
-        @options[:rng_seed] = true
+    opts.on('--seed [SEED]', 'Seed to use for any random selection; defaults to 79135') do |opt|
+        @options[:rng_seed] = opt.to_i
     end
 
     @options[:silent] = false
@@ -221,8 +227,6 @@ optparse = OptionParser.new do |opts|
 
     opts.on('-?', '--help', 'Displays command and option information') do
         puts opts
-        puts
-        print_commands(commands)
         exit
     end
 end
