@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.5.6
+Version: 2.5.7
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -221,6 +221,15 @@ fi
 
 #raw
 %changelog
+* Thu Oct 11 2018 Kevin Howell <khowell@redhat.com> 2.5.7-1
+- Fixed an issue with object desync during pool cleanup (crog@redhat.com)
+- Update deploy script for sql trace & HHH-12927 (bcourt@redhat.com)
+- Update buildfile for Hibernate 5.3.6 (bcourt@redhat.com)
+- Updated the update-server-xml script for changes required in F28
+  (crog@redhat.com)
+- Add Immutable Entity & Hibernate 2nd level cache support (bcourt@redhat.com)
+- Fixed several issues with the generate_consumers script (crog@redhat.com)
+
 * Fri Sep 21 2018 Kevin Howell <khowell@redhat.com> 2.5.6-1
 - Remove Status object obviated by merge from master (awood@redhat.com)
 - Update auto attach to allow for addons and role (wpoteat@redhat.com)
