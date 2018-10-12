@@ -149,12 +149,14 @@ public class HypervisorResource {
         }
 
         Owner owner = this.getOwner(ownerKey);
-        if (owner.isAutobindDisabled()) {
-            log.debug("Could not update host/guest mapping. Auto-attach is disabled for owner {}",
-                owner.getKey());
+        if (owner.isAutobindDisabled() || owner.isContentAccessEnabled()) {
+            String caMessage = owner.isContentAccessEnabled() ?
+                " because of the content access mode setting" : "";
+            log.debug("Could not update host/guest mapping. Auto-attach is disabled for owner {}{}",
+                owner.getKey(), caMessage);
             throw new BadRequestException(
-                i18n.tr("Could not update host/guest mapping. Auto-attach is disabled for owner {0}.",
-                    owner.getKey()));
+                i18n.tr("Could not update host/guest mapping. Auto-attach is disabled for owner {0}{1}.",
+                     owner.getKey(), caMessage));
         }
 
         if (hostGuestDTOMap.remove("") != null) {

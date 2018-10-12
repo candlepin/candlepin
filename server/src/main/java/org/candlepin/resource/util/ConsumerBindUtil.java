@@ -88,10 +88,12 @@ public class ConsumerBindUtil {
             handleActivationKeyRelease(consumer, key.getReleaseVer());
             keySuccess &= handleActivationKeyServiceLevel(consumer, key.getServiceLevel(), key.getOwner());
             if (key.isAutoAttach() != null && key.isAutoAttach()) {
-                if (autoattachDisabledForOwner) {
+                if (autoattachDisabledForOwner || key.getOwner().isContentAccessEnabled()) {
+                    String caMessage = key.getOwner().isContentAccessEnabled() ?
+                        " because of the content access mode setting" : "";
                     log.warn(
-                        "Auto-attach is disabled for owner. Skipping auto-attach for consumer/key: {}/{}",
-                        consumer.getUuid(), key.getName());
+                        "Auto-attach is disabled for owner{}. Skipping auto-attach for consumer/key: {}/{}",
+                        caMessage, consumer.getUuid(), key.getName());
                 }
                 else {
                     handleActivationKeyAutoBind(consumer, key);

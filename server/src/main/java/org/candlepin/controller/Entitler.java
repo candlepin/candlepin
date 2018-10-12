@@ -204,11 +204,14 @@ public class Entitler {
         Consumer consumer = data.getConsumer();
         Owner owner = data.getOwner();
 
-        if (!consumer.isDev() && owner.isAutobindDisabled()) {
-            log.info("Skipping auto-attach for consumer '{}'. Auto-attach is disabled for owner {}.",
-                consumer, owner.getKey());
-            throw new AutobindDisabledForOwnerException(i18n.tr("Auto-attach is disabled for owner \"{0}\".",
-                owner.getKey()));
+        if ((!consumer.isDev() && owner.isAutobindDisabled()) || owner.isContentAccessEnabled()) {
+            String caMessage = owner.isContentAccessEnabled() ?
+                " because of the content access mode setting" : "";
+            log.info("Skipping auto-attach for consumer '{}'. Auto-attach is disabled for owner {}{}",
+                consumer.getUuid(), owner.getKey(), caMessage);
+            throw new AutobindDisabledForOwnerException(i18n.tr(
+                "Auto-attach is disabled for owner \"{0}\"{1}.",
+                owner.getKey(), caMessage));
         }
 
         // If the consumer is a guest, and has a host, try to heal the host first

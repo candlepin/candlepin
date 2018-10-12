@@ -369,6 +369,7 @@ public class Owner extends AbstractHibernateObject<Owner>
             .append(this.getUpstreamConsumer() != null ? this.getUpstreamConsumer().getId() : null)
             .append(this.getLogLevel())
             .append(this.isAutobindDisabled())
+            .append(this.isContentAccessEnabled())
             .append(this.getContentAccessMode())
             .append(this.getContentAccessModeList());
 
@@ -527,6 +528,16 @@ public class Owner extends AbstractHibernateObject<Owner>
     public boolean isAllowedContentAccessMode(String mode) {
         String[] list = contentAccessModeList.split(",");
         return ArrayUtils.contains(list, mode);
+    }
+
+    /**
+     * Returns whether the content access mode is golden
+     *
+     * @return Boolean
+     */
+    @XmlTransient
+    public boolean isContentAccessEnabled() {
+        return ContentAccessCertServiceAdapter.ORG_ENV_ACCESS_MODE.equals(this.getContentAccessMode());
     }
 
 }
