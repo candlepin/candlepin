@@ -1,0 +1,16 @@
+apply plugin: 'java'
+apply plugin: 'java-gradle-plugin'
+
+
+dependencies {
+    compile gradleApi()
+}
+
+gradlePlugin {
+    plugins {
+        specVersionPlugin {
+            id = 'org.candlepin.gradle.SpecVersion'
+            implementationClass = 'org.candlepin.gradle.SpecVersion'
+        }
+    }
+}
