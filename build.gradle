@@ -1,11 +1,11 @@
 plugins {
   id "nebula.lint" version "10.1.2"
+  id "org.candlepin.gradle.SpecVersion"
 }
 
 allprojects {
 
   group = 'org.candlepin'
-  version = '2.0'
   apply plugin: 'maven'
   apply plugin: 'nebula.lint'
 
