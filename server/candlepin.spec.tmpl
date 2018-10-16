@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.5.7
+Version: 2.6.0
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -221,6 +221,9 @@ fi
 
 #raw
 %changelog
+* Tue Oct 16 2018 Kevin Howell <khowell@redhat.com> 2.6.0-1
+- ActiveMQ sessions are now closed after a commit or rollback (crog@redhat.com)
+
 * Thu Oct 11 2018 Kevin Howell <khowell@redhat.com> 2.5.7-1
 - Fixed an issue with object desync during pool cleanup (crog@redhat.com)
 - Update deploy script for sql trace & HHH-12927 (bcourt@redhat.com)
