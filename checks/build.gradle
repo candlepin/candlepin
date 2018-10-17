@@ -1,0 +1,7 @@
+description 'Candlepin Checkstyle plugin'
+
+dependencies {
+    compile 'com.puppycrawl.tools:checkstyle:8.2' exclude module: '*'
+    compile 'org.antlr:antlr4-runtime:4.5.3' exclude module: '*'
+    compile 'antlr:antlr:2.7.7' exclude module: '*'
+}
