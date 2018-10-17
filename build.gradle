@@ -145,10 +145,6 @@ LOG4J_BRIDGE = 'org.slf4j:log4j-over-slf4j:jar:1.7.5'
 LOGDRIVER = 'logdriver:logdriver:jar:1.0'
 
 SCANNOTATION = 'org.scannotation:scannotation:jar:1.0.3'
-
-CHECKSTYLE = ['com.puppycrawl.tools:checkstyle:jar:8.2',
-              'org.antlr:antlr4-runtime:jar:4.5.3'] + ANTLR
-
      */
 
   }
@@ -172,4 +168,29 @@ subprojects {
     maven { url "http://oauth.googlecode.com/svn/code/maven/" }
   }
 
+}
+
+// Add checkstyle to just the common & server projects
+configure(subprojects.findAll {it.name == 'candlepin-common' || it.name == 'candlepin'} ) {
+  apply plugin: 'checkstyle'
+  configurations {
+    checkstyle
+  }
+
+  checkstyle {
+    configFile = file("${rootProject.rootDir}/project_conf/checks.xml")
+    configProperties = [
+            'checkstyle.header.file': file("${rootProject.rootDir}/project_conf/HEADER.txt").getCanonicalPath(),
+            'javadoc.type.scope': 'package',
+            'javadoc.method.scope': 'public',
+            'javadoc.lazy': 'false',
+            'javadoc.missing.param': 'true',
+            'javadoc.var.scope': 'public',
+            'checkstyle.cache.file': file("${project.buildDir}/cache/checkstyle.cache.src").getCanonicalPath()]
+  }
+
+  dependencies {
+    checkstyle 'com.puppycrawl.tools:checkstyle:8.2'
+    checkstyle project(':checks')
+  }
 }
