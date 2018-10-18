@@ -61,7 +61,7 @@ public class QpidStatusMonitor implements Runnable {
                 defaultDelay);
             delay = defaultDelay;
         }
-        this.lastStatus = QpidStatus.DOWN;
+        this.lastStatus = QpidStatus.UNKNOWN;
     }
 
     /**

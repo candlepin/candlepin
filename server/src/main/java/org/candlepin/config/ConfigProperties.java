@@ -84,6 +84,13 @@ public class ConfigProperties {
      */
     public static final String ACTIVEMQ_LARGE_MSG_SIZE = "candlepin.audit.hornetq.large_msg_size";
 
+    /**
+     * The interval (in milliseconds) at which the ActiveMQStatusMonitor will check the connection state
+     * once the connection has dropped.
+     */
+    public static final String ACTIVEMQ_CONNECTION_MONITOR_INTERVAL =
+        "candlepin.audit.hornetq.monitor.interval";
+
     public static final String AUDIT_LISTENERS = "candlepin.audit.listeners";
     public static final String AUDIT_LOG_FILE = "candlepin.audit.log_file";
     /**
@@ -280,6 +287,7 @@ public class ConfigProperties {
             // By default use the broker.xml file that is packaged in the war.
             this.put(ACTIVEMQ_SERVER_CONFIG_PATH, "");
             this.put(ACTIVEMQ_LARGE_MSG_SIZE, Integer.toString(100 * 1024));
+            this.put(ACTIVEMQ_CONNECTION_MONITOR_INTERVAL, "5000"); // milliseconds
 
             this.put(AUDIT_LISTENERS,
                 "org.candlepin.audit.DatabaseListener," +

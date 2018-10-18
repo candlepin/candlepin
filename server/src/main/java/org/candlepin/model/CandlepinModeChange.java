@@ -15,7 +15,10 @@
 package org.candlepin.model;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Class representing candlepins mode, (NORMAL || SUSPEND),
@@ -24,7 +27,7 @@ import java.util.Date;
 public class CandlepinModeChange implements Serializable {
     private static final long serialVersionUID = -7059065874812188168L;
     private final Mode mode;
-    private final Reason reason;
+    private final Set<Reason> reasons;
     private final Date changeTime;
 
     /**
@@ -45,29 +48,38 @@ public class CandlepinModeChange implements Serializable {
          */
         STARTUP,
         /**
-         * When Qpid broker isn't available, Candlepin must enter
-         * Suspend mode
+         * The Qpid broker has gone down and is not available.
          */
         QPID_DOWN,
         /**
-         * Qpid comes back up
+         * The Qpid broker has come online and is available.
          */
         QPID_UP,
         /**
          * Qpid is overloaded to a point where its not possible to
          * send messages to it
          */
-        QPID_FLOW_STOPPED
+        QPID_FLOW_STOPPED,
+
+        /**
+         * The ActiveMQ broker has come online and is available.
+         */
+        ACTIVEMQ_UP,
+
+        /**
+         * The ActiveMQ broker has gone down and is not available.
+         */
+        ACTIVEMQ_DOWN
     }
 
-    public CandlepinModeChange(Date changeTime, Mode mode, Reason reason) {
+    public CandlepinModeChange(Date changeTime, Mode mode, Reason ... reasons) {
         this.mode = mode;
         this.changeTime = changeTime;
-        this.reason = reason;
+        this.reasons = reasons != null ? new HashSet<>(Arrays.asList(reasons)) : new HashSet<>();
     }
 
-    public Reason getReason() {
-        return reason;
+    public Set<Reason> getReasons() {
+        return reasons;
     }
 
     public Mode getMode() {
@@ -80,7 +92,7 @@ public class CandlepinModeChange implements Serializable {
 
     @Override
     public String toString() {
-        return "CandlepinModeChange [mode=" + mode + ", reason=" + reason + ", changeTime=" +
+        return "CandlepinModeChange [mode=" + mode + ", reasons=" + reasons + ", changeTime=" +
             changeTime + "]";
     }
 

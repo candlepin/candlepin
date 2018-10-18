@@ -32,9 +32,9 @@ public interface ModeManager {
     /**
      * Enters a mode m. Reason should be a machine readable enumeration
      * @param m new Mode into which Candlepin should enter
-     * @param reason why is Candlepin entering this mode?
+     * @param reasons why is Candlepin entering this mode?
      */
-    void enterMode(Mode m, Reason reason);
+    void enterMode(Mode m, Reason ... reasons);
     /**
      * Checks if Candlepin is in suspend mode. In case it is, this method
      * will throw an error. This method is useful to quickly fail requests

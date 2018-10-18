@@ -21,7 +21,9 @@ import com.google.inject.Injector;
 
 import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
 
+import org.candlepin.controller.ActiveMQStatusMonitor;
 import org.candlepin.controller.QpidStatusMonitor;
+import org.candlepin.controller.SuspendModeTransitioner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,11 +89,20 @@ public class ActiveMQContextListener {
             log.info("Candlepin will connect to a remote Artemis server.");
         }
 
-        // Create the event source and register all listeners now that the server is started
-        // and the old queues are cleaned up.
+        ActiveMQStatusMonitor activeMQStatusMonitor = injector.getInstance(ActiveMQStatusMonitor.class);
+        // If suspend mode is enabled, we need the transitioner to listen for connection drops.
+        if (candlepinConfig.getBoolean(ConfigProperties.SUSPEND_MODE_ENABLED)) {
+            activeMQStatusMonitor.registerListener(injector.getInstance(SuspendModeTransitioner.class));
+        }
+
+        // Set up the EventSource.
         eventSource = injector.getInstance(EventSource.class);
+        // EventSource must listen for ActiveMQ status changes so that connections can be rebuilt.
+        activeMQStatusMonitor.registerListener(eventSource);
+
         setupAmqp(injector, candlepinConfig, eventSource);
 
+        // Register all listeners now that a connection to the server is established.
         List<EventListener> eventListeners = new ArrayList<>();
         getActiveMQListeners(candlepinConfig).forEach(listenerClass -> {
             try {
@@ -112,36 +123,18 @@ public class ActiveMQContextListener {
             }
         }
 
-        // Initialize the Event sink AFTER the internal server has been
-        // created and started.
-        EventSink sink = injector.getInstance(EventSink.class);
-        try {
-            sink.initialize();
-        }
-        catch (Exception e) {
-            log.error("Failed to initialize EventSink:", e);
-            throw new RuntimeException(e);
-        }
+        // Initialize the ActiveMQ status monitor so that client sessions can be established
+        // if the broker is active.
+        activeMQStatusMonitor.initialize();
     }
 
     private void setupAmqp(Injector injector, org.candlepin.common.config.Configuration candlepinConfig,
         EventSource eventSource) {
-        try {
-            if (candlepinConfig.getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED)) {
-                // Listen for Qpid connection changes so that the appropriate ClientSessions
-                // can be shutdown/restarted when Qpid status changes.
-                QpidStatusMonitor qpidStatusMonitor = injector.getInstance(QpidStatusMonitor.class);
-                qpidStatusMonitor.addStatusChangeListener(eventSource);
-
-                // TODO Look into whether this connection is required. Qpid connection is NOT a singleton
-                //      so I'm not sure that this connection is required as it isn't doing anything.
-                //Both these classes should be singletons
-                QpidConnection conFactory = injector.getInstance(QpidConnection.class);
-                conFactory.connect();
-            }
-        }
-        catch (Exception e) {
-            log.error("Error starting AMQP client", e);
+        if (candlepinConfig.getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED)) {
+            // Listen for Qpid connection changes so that the appropriate ClientSessions
+            // can be shutdown/restarted when Qpid status changes.
+            QpidStatusMonitor qpidStatusMonitor = injector.getInstance(QpidStatusMonitor.class);
+            qpidStatusMonitor.addStatusChangeListener(eventSource);
         }
     }
 

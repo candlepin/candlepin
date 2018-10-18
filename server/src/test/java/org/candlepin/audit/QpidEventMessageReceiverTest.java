@@ -16,7 +16,6 @@ package org.candlepin.audit;
 
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
-import static org.junit.Assert.fail;
 
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -29,6 +28,8 @@ import org.apache.activemq.artemis.api.core.client.ClientMessage;
 import org.apache.activemq.artemis.api.core.client.ClientSession;
 import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
 import org.candlepin.auth.PrincipalData;
+import org.candlepin.common.config.Configuration;
+import org.candlepin.controller.ActiveMQStatusMonitor;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -52,28 +53,32 @@ public class QpidEventMessageReceiverTest {
     @Spy private ObjectMapper mapper = new ObjectMapper();
     @Spy private ActiveMQBuffer activeMQBuffer = ActiveMQBuffers.fixedBuffer(1000);
 
+    private EventSourceConnection connection;
+    private QpidEventMessageReceiver receiver;
+
     @Before
     public void init() throws Exception {
         when(clientMessage.getBodyBuffer()).thenReturn(activeMQBuffer);
         when(clientSessionFactory.createSession(eq(false), eq(false), eq(0))).thenReturn(clientSession);
         when(clientSession.createConsumer(anyString())).thenReturn(clientConsumer);
-    }
 
-    @Test(expected = ActiveMQException.class)
-    public void shouldThrowActiveMQExceptionWhenSessionCreateFailsDuringEventSourceCreation()
-        throws Exception {
-        doThrow(new ActiveMQException()).when(clientSession).start();
+        this.connection = new EventSourceConnection(mock(ActiveMQStatusMonitor.class),
+            mock(Configuration.class)) {
 
-        new QpidEventMessageReceiver(eventListener, clientSessionFactory, new ObjectMapper());
-        fail("Should have thrown ActiveMQException");
+            @Override
+            ClientSessionFactory getFactory() {
+                return clientSessionFactory;
+            }
+        };
+
+        receiver = new QpidEventMessageReceiver(eventListener, this.connection, new ObjectMapper());
+        // Calling connect will initialize the ClientSession
+        receiver.connect();
     }
 
     @Test
     public void shouldCreateNewConsumer()
         throws Exception {
-        QpidEventMessageReceiver receiver = new QpidEventMessageReceiver(eventListener, clientSessionFactory,
-            new ObjectMapper());
-
         verify(clientSession).createConsumer(anyString());
         verify(clientConsumer).setMessageHandler(eq(receiver));
         verify(clientSession).start();
@@ -81,12 +86,12 @@ public class QpidEventMessageReceiverTest {
 
     @Test
     public void whenMapperReadThrowsExceptionThenMessageShouldBeAckedAndSessionRolledBack() throws Exception {
-        QpidEventMessageReceiver receiver = new QpidEventMessageReceiver(eventListener, clientSessionFactory,
-            mapper);
         doReturn("test123").when(activeMQBuffer).readString();
         doThrow(new JsonMappingException("Induced exception"))
             .when(mapper).readValue(anyString(), eq(Event.class));
+
         receiver.onMessage(clientMessage);
+
         verify(clientMessage).acknowledge();
         verifyZeroInteractions(eventListener);
         verify(clientSession).rollback();
@@ -96,12 +101,12 @@ public class QpidEventMessageReceiverTest {
     @Test
     public void whenMsgAcknowledgeThrowsExceptionSessionIsRolledBack()
         throws Exception {
-        QpidEventMessageReceiver receiver = new QpidEventMessageReceiver(eventListener, clientSessionFactory,
-            mapper);
         doReturn(eventJson()).when(activeMQBuffer).readString();
         doThrow(new ActiveMQException(ActiveMQExceptionType.DISCONNECTED, "Induced exception for testing"))
             .when(clientMessage).acknowledge();
+
         receiver.onMessage(clientMessage);
+
         verify(clientSession).rollback();
         verify(clientSession, never()).commit();
     }
@@ -109,10 +114,10 @@ public class QpidEventMessageReceiverTest {
     @Test
     public void whenProperClientMsgPassedThenOnMessageShouldSucceed()
         throws Exception {
-        QpidEventMessageReceiver receiver = new QpidEventMessageReceiver(eventListener, clientSessionFactory,
-            mapper);
         doReturn(eventJson()).when(activeMQBuffer).readString();
+
         receiver.onMessage(clientMessage);
+
         verify(eventListener).onEvent(any(Event.class));
         verify(clientMessage).acknowledge();
         verify(clientSession).commit();
@@ -121,11 +126,11 @@ public class QpidEventMessageReceiverTest {
 
     @Test
     public void sessionIsRolledBackWhenAnyExceptionIsThrownFromEventListener() throws Exception {
-        QpidEventMessageReceiver receiver = new QpidEventMessageReceiver(eventListener, clientSessionFactory,
-            mapper);
         doReturn(eventJson()).when(activeMQBuffer).readString();
         doThrow(new RuntimeException("Forced")).when(eventListener).onEvent(any(Event.class));
+
         receiver.onMessage(clientMessage);
+
         verify(clientMessage).acknowledge();
         verify(clientSession).rollback();
         verify(clientSession, never()).commit();
@@ -133,11 +138,11 @@ public class QpidEventMessageReceiverTest {
 
     @Test
     public void noRollbackOccursWhenQpidConnectionExceptionIsThrownFromListener() throws Exception {
-        QpidEventMessageReceiver receiver = new QpidEventMessageReceiver(eventListener, clientSessionFactory,
-            mapper);
         doReturn(eventJson()).when(activeMQBuffer).readString();
         doThrow(new QpidConnectionException("Forced")).when(eventListener).onEvent(any(Event.class));
+
         receiver.onMessage(clientMessage);
+
         verify(clientMessage, never()).acknowledge();
         verify(clientSession, never()).rollback();
         verify(clientSession, never()).commit();

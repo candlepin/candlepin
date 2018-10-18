@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2018 Red Hat, Inc.
+ * Copyright (c) 2009 - 2016 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -16,29 +16,25 @@
 package org.candlepin.audit;
 
 /**
- * Represents the status of the connection to the Qpid broker.
+ * Represents the status of the connection to the ActiveMQ broker.
  */
-public enum QpidStatus {
-    /**
-     * Qpid is up and running.
-     */
-    CONNECTED,
+public enum ActiveMQStatus {
 
     /**
-     * Qpid is up but the exchange is flow stopped.
-     */
-
-    FLOW_STOPPED,
-
-    /**
-     * Qpid is down.
+     * The broker instance is down and
      */
     DOWN,
 
     /**
-     * The status of Qpid is currently unknown. This state should only be set on
+     * The broker instance is online and available for new connections.
+     */
+    CONNECTED,
+
+    /**
+     * The broker status is currently unknown. This state should only be set on
      * candlepin startup and should be updated accordingly when the candlepin
      * context is loaded and all listeners have been registered.
      */
     UNKNOWN
+
 }
