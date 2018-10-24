@@ -1048,11 +1048,11 @@ var CoverageCalculator = {
                 var supportedRoles = complianceTracker.enforces(prodAttr) ? complianceTracker.getAccumulatedValue(prodAttr) : [];
                 var consumerRole = consumer.role != null ? consumer.role : "";
                 if (!contains(supportedRoles, consumerRole)) {
-                    log.debug("  System addons not covered by: " + supportedAddOns);
+                    log.debug("  System role not covered by: " + supportedRoles);
                     return StatusReasonGenerator.buildReason(prodAttr.toUpperCase(),
                         complianceTracker.type,
                         complianceTracker.id,
-                        consumeRole,
+                        consumerRole,
                         supportedRoles);
                 }
                 log.debug("  System role is covered.");
