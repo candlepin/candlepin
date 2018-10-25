@@ -40,17 +40,18 @@ public class EmptyStringInterceptor extends EmptyInterceptor {
     public boolean onFlushDirty(Object entity, Serializable id,
         Object[] currentState, Object[] previousState, String[] propertyNames,
         Type[] types) {
+
         return convertEmptyStringToNull(currentState, propertyNames, types);
     }
 
     @Override
     public boolean onSave(Object entity, Serializable id, Object[] state,
         String[] propertyNames, Type[] types) {
+
         return convertEmptyStringToNull(state, propertyNames, types);
     }
 
-    private boolean convertEmptyStringToNull(Object[] state,
-        String[] propertyNames, Type[] types) {
+    private boolean convertEmptyStringToNull(Object[] state, String[] propertyNames, Type[] types) {
         boolean modified = false;
         for (int i = 0; i < types.length; i++) {
             if (types[i] instanceof StringType && "".equals(state[i])) {
