@@ -73,7 +73,7 @@ import org.candlepin.util.Util;
 import org.candlepin.util.Traceable;
 import org.candlepin.util.TraceableParam;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
@@ -97,7 +97,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.stream.Collectors;
+
+
 
 /**
  * PoolManager
@@ -2285,21 +2286,19 @@ public class CandlepinPoolManager implements PoolManager {
                     this.enforcer.postUnbind(entitlement.getConsumer(), this, entitlement);
                 }
 
-                /* Save the consumer IDs and then detach all the keys in the consumerStackEnts map.
-                 * Otherwise during the status calculations, the facts proxy objects objects will be resolved
-                 * and the memory use will grow linearly with the number of consumers instead of remaining
-                 * constant as we calculate the status of each consumer.  See BZ 1584259 */
-                List<String> consumers = consumerStackedEnts.keySet().stream()
-                    .map(Consumer::getId)
-                    .collect(Collectors.toList());
-                this.consumerCurator.batchDetach(consumerStackedEnts.keySet());
-
-                log.info("Recomputing status for {} consumers", consumers.size());
+                log.info("Recomputing status for {} consumers", consumerStackedEnts.keySet().size());
 
                 // Recalculate status for affected consumers
-                for (List<String> subList : Lists.partition(consumers, 1000)) {
-                    for (Consumer consumer : this.consumerCurator.getConsumers(subList).list()) {
+                for (List<Consumer> subList : Iterables.partition(consumerStackedEnts.keySet(), 1000)) {
+                    for (Consumer consumer : subList) {
                         this.complianceRules.getStatus(consumer);
+
+                        // Detach the consumer object (and its children that receive cascaded detaches),
+                        // otherwise during the status calculations, the facts proxy objects objects will be
+                        // resolved and the memory use will grow linearly with the number of consumers
+                        // instead of remaining constant as we calculate the status of each consumer.
+                        //
+                        // See BZ 1584259 for details
                         this.consumerCurator.detach(consumer);
                     }
                     this.consumerCurator.flush();
