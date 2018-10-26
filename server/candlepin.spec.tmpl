@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.1.24
+Version: 2.1.25
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,10 @@ fi
 
 #raw
 %changelog
+* Fri Oct 26 2018 Kevin Howell <khowell@redhat.com> 2.1.25-1
+- 1634040: Fixed an issue with object desync during pool cleanup
+  (crog@redhat.com)
+
 * Thu Oct 04 2018 Kevin Howell <khowell@redhat.com> 2.1.24-1
 - 1635807: Added limits to the size of link headers (crog@redhat.com)
 - 1624449: Do not set connection-ttl-override (khowell@redhat.com)
