@@ -460,4 +460,59 @@ public class ConsumerTest extends DatabaseTestFixture {
         assertEquals(1, lookedUp.getGuestIds().size());
     }
 
+    @Test
+    public void testRoleConvertedToNull() throws Exception {
+        Consumer consumer = new Consumer("consumer1", "consumer1", owner, consumerType);
+        consumerCurator.create(consumer);
+
+        String cid = consumer.getId();
+
+        consumer.setRole("test_role");
+        consumer = consumerCurator.merge(consumer);
+        consumerCurator.flush();
+
+        consumer = null;
+        consumerCurator.clear();
+
+        consumer = consumerCurator.get(cid);
+        assertEquals("test_role", consumer.getRole());
+
+        consumer.setRole("");
+        consumer = consumerCurator.merge(consumer);
+        consumerCurator.flush();
+
+        consumer = null;
+        consumerCurator.clear();
+
+        consumer = consumerCurator.get(cid);
+        assertNull(consumer.getRole());
+    }
+
+    @Test
+    public void testUsageConvertedToNull() throws Exception {
+        Consumer consumer = new Consumer("consumer1", "consumer1", owner, consumerType);
+        consumerCurator.create(consumer);
+
+        String cid = consumer.getId();
+
+        consumer.setUsage("test_usage");
+        consumer = consumerCurator.merge(consumer);
+        consumerCurator.flush();
+
+        consumer = null;
+        consumerCurator.clear();
+
+        consumer = consumerCurator.get(cid);
+        assertEquals("test_usage", consumer.getUsage());
+
+        consumer.setUsage("");
+        consumer = consumerCurator.merge(consumer);
+        consumerCurator.flush();
+
+        consumer = null;
+        consumerCurator.clear();
+
+        consumer = consumerCurator.get(cid);
+        assertNull(consumer.getUsage());
+    }
 }
