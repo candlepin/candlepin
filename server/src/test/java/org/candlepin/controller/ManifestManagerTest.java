@@ -145,7 +145,6 @@ public class ManifestManagerTest {
 
         manager.generateManifest(consumer.getUuid(), cdn.getLabel(), webAppPrefix, apiUrl, extData);
 
-        verify(poolManager).regenerateDirtyEntitlements(eq(ents));
         verify(exporter).getFullExport(eq(consumer), eq(cdn.getLabel()), eq(webAppPrefix), eq(apiUrl),
             eq(extData));
     }
@@ -217,7 +216,6 @@ public class ManifestManagerTest {
             extData);
         assertEquals(manifestFile, result);
 
-        verify(entitlementCurator).listByConsumer(eq(consumer));
         verify(exporter).getFullExport(eq(consumer), eq(cdn.getLabel()), eq(webAppPrefix), eq(apiUrl),
             eq(extData));
 
