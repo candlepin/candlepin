@@ -147,6 +147,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         Map<String, PoolQuantity> poolQuantities, Map<String, Entitlement> entitlements,
         Map<String, Product> products, boolean save)
         throws GeneralSecurityException, IOException {
+
         return doEntitlementCertGeneration(consumer, products, poolQuantities, entitlements, save);
     }
 
@@ -446,6 +447,8 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
             serialMap.put(entry.getKey(), new CertificateSerial(entry.getValue().getPool().getEndDate()));
         }
 
+        log.debug("WE HAVE {} POOL QUANTITIES TO LOOP THROUGH", poolQuantities.size());
+
         Map<String, EntitlementCertificate> entitlementCerts = new HashMap<>();
         for (Entry<String, PoolQuantity> entry : poolQuantities.entrySet()) {
             Pool pool = entry.getValue().getPool();
@@ -536,10 +539,11 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
                 throw new RuntimeException(
                     "Entitlement certificate not found for entitlement during cert generation");
             }
+
             nextCert.setSerial(nextSerial);
             if (save) {
                 Entitlement ent = entitlements.get(entry.getKey());
-                ent.getCertificates().add(nextCert);
+                ent.addCertificate(nextCert);
             }
         }
 
