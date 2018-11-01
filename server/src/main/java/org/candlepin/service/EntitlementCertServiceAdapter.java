@@ -45,7 +45,7 @@ public interface EntitlementCertServiceAdapter {
         throws GeneralSecurityException, IOException;
 
     /**
-     * Generate an entitlement certificate, used to grant access to some
+     * Generate entitlement certificates, used to grant access to some
      * content.
      * End date specified explicitly to allow for flexible termination policies.
      * The Map keys are used to associate the entitlement with its product and

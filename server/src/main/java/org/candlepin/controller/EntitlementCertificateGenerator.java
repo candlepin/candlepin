@@ -38,7 +38,9 @@ import com.google.inject.persist.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -137,7 +139,6 @@ public class EntitlementCertificateGenerator {
      */
     @Transactional
     public EntitlementCertificate generateEntitlementCertificate(Pool pool, Entitlement entitlement) {
-
         Map<String, Product> products = new HashMap<>();
         Map<String, Entitlement> entitlements = new HashMap<>();
         Map<String, PoolQuantity> poolQuantities = new HashMap<>();
@@ -151,7 +152,36 @@ public class EntitlementCertificateGenerator {
     }
 
     /**
-     * Regenerates the certificates for the specified entitlement.
+     * Generates a new entitlement certificate for the given entitlement and pool.
+     *
+     * @param pool
+     *  The pool for which to generate an entitlement certificate
+     *
+     * @param entitlement
+     *  The entitlement to use when generating the certificate
+     *
+     * @return
+     *  The newly generate entitlement certificate
+     */
+    @Transactional
+    public EntitlementCertificate generateEntitlementCertificate(Pool pool, Entitlement entitlement,
+        boolean updateEntitlement) {
+
+        Map<String, Product> products = new HashMap<>();
+        Map<String, Entitlement> entitlements = new HashMap<>();
+        Map<String, PoolQuantity> poolQuantities = new HashMap<>();
+
+        products.put(pool.getId(), pool.getProduct());
+        entitlements.put(pool.getId(), entitlement);
+        poolQuantities.put(pool.getId(), new PoolQuantity(pool, entitlement.getQuantity()));
+
+        return this.generateEntitlementCertificates(entitlement.getConsumer(),
+            products, poolQuantities, entitlements, updateEntitlement).get(pool.getId());
+    }
+
+    /**
+     * Regenerates the certificates for the specified entitlement. If the lazy parameter is set,
+     * this method only marks the entitlement dirty for later certificate regeneration.
      *
      * @param entitlement
      *  The entitlement for which to regenerate certificates
@@ -162,48 +192,15 @@ public class EntitlementCertificateGenerator {
      */
     @Transactional
     public void regenerateCertificatesOf(Entitlement entitlement, boolean lazy) {
-
-        if (lazy) {
-            log.info("Marking certificates dirty for entitlement: {}", entitlement);
-            entitlement.setDirty(true);
-            return;
-        }
-
-        log.debug("Revoking entitlementCertificates of: {}", entitlement);
-
-        Entitlement tempE = new Entitlement();
-        tempE.setCertificates(entitlement.getCertificates());
-        entitlement.setCertificates(null);
-
-        // below call creates new certificates and saves it to the backend.
-        try {
-            EntitlementCertificate generated = this.generateEntitlementCertificate(
-                entitlement.getPool(), entitlement
-            );
-
-            entitlement.setDirty(false);
-            this.entitlementCurator.merge(entitlement);
-            for (EntitlementCertificate ec : tempE.getCertificates()) {
-                log.debug("Deleting entitlementCertificate: #{}", ec.getId());
-                this.entitlementCertificateCurator.delete(ec);
-            }
-
-            // send entitlement changed event.
-            this.eventSink.queueEvent(this.eventFactory.entitlementChanged(entitlement));
-            log.debug("Generated entitlementCertificate: #{}", generated.getId());
-        }
-        catch (CertificateSizeException cse) {
-            entitlement.setCertificates(tempE.getCertificates());
-            log.warn("The certificate cannot be regenerated at this time: {}", cse.getMessage());
-        }
+        this.regenerateCertificatesOf(Arrays.asList(entitlement), lazy);
     }
 
     /**
-     * Regenerates the certificates for the specified entitlements. This method is a utility method
-     * which individually regenerates certificates for each entitlement in the provided collection.
+     * Regenerates the certificates for the specified entitlements. If the lazy parameter is set,
+     * this method only marks the entitlements dirty for later certificate regeneration.
      *
      * @param entitlements
-     *  An iterable collection of entitlements for which to regenerate certificates
+     *  The entitlements for which to regenerate certificates
      *
      * @param lazy
      *  Whether or not to generate the certificate immediately, or mark it dirty and allow it to be
@@ -211,8 +208,59 @@ public class EntitlementCertificateGenerator {
      */
     @Transactional
     public void regenerateCertificatesOf(Iterable<Entitlement> entitlements, boolean lazy) {
-        for (Entitlement entitlement : entitlements) {
-            this.regenerateCertificatesOf(entitlement, lazy);
+        if (lazy) {
+            this.regenerateCertificatesLazyImpl(entitlements);
+        }
+        else {
+            this.regenerateCertificatesImpl(entitlements);
+        }
+    }
+
+    /**
+     * Marks the specified entitlements for regeneration without actually updating them.
+     */
+    private void regenerateCertificatesLazyImpl(Iterable<Entitlement> entitlements) {
+        if (entitlements != null) {
+            for (Entitlement entitlement : entitlements) {
+                entitlement.setDirty(true);
+            }
+        }
+    }
+
+    /**
+     * Regenerates the certificates for the specified entitlements.
+     */
+    private void regenerateCertificatesImpl(Iterable<Entitlement> entitlements) {
+        if (entitlements != null) {
+            Set<String> entIds = new HashSet<>();
+
+            for (Entitlement entitlement : entitlements) {
+                try {
+                    // Generate new cert
+                    EntitlementCertificate generated = this.generateEntitlementCertificate(
+                        entitlement.getPool(), entitlement, false);
+
+                    // Apply to the entitlement
+                    entitlement.setDirty(false);
+                    entitlement.setCertificates(Collections.singleton(generated));
+
+                    // send entitlement changed event.
+                    this.eventSink.queueEvent(this.eventFactory.entitlementChanged(entitlement));
+
+                    entIds.add(entitlement.getId());
+                }
+                catch (CertificateSizeException cse) {
+                    // Uh oh... do nothing for now.
+                    log.warn("The certificate cannot be regenerated at this time: {}", cse.getMessage());
+                }
+            }
+
+            // Clear the old certs before we save so we don't end up in a weird state
+            int count = this.entitlementCertificateCurator.deleteByEntitlementIds(entIds);
+            log.debug("{} old entitlement certificates deleted", count);
+
+            // Save everything
+            this.entitlementCurator.saveOrUpdateAll(entitlements, false, false);
         }
     }
 

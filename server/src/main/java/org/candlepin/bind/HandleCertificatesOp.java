@@ -96,7 +96,7 @@ public class HandleCertificatesOp implements BindOperation {
             Map<String, Entitlement> ents = context.getEntitlementMap();
             for (Entitlement ent: ents.values()) {
                 EntitlementCertificate cert = certs.get(ent.getPool().getId());
-                ent.getCertificates().add(cert);
+                ent.addCertificate(cert);
                 cert.setEntitlement(ent);
             }
             ecCurator.saveAll(certs.values(), false, false);
