@@ -1,5 +1,6 @@
 
 apply plugin: 'war'
+apply plugin: Gettext
 
 description = 'Candlepin Server'
 
@@ -8,8 +9,14 @@ description = 'Candlepin Server'
 // Hibernate annotation based discovery.
 sourceSets.main.output.resourcesDir = new File(buildDir, "classes/java/main")
 
+project.getTasks().getByName("gettext").dependsOn(":candlepin-common:gettext")
+gettext {
+    keys_project_dir = "${project.rootDir}/common"
+}
+
 // Set the JVM arguments to be used for testing
 test {
+    useJUnitPlatform()
     maxHeapSize = '2g'
     jvmArgs '-XX:+HeapDumpOnOutOfMemoryError'
 }
