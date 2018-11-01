@@ -12,5 +12,9 @@ gradlePlugin {
             id = 'org.candlepin.gradle.SpecVersion'
             implementationClass = 'org.candlepin.gradle.SpecVersion'
         }
+        gettextPlugin {
+            id = 'gettext'
+            implementationClass = 'Gettext'
+        }
     }
 }
