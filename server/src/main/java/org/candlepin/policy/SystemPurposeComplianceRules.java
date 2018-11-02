@@ -98,7 +98,6 @@ public class SystemPurposeComplianceRules {
             .collect(Collectors.toSet());
 
         for (Entitlement entitlement : entitlements) {
-
             String unsatisfedRole = consumer.getRole();
             Set<String> unsatisfiedAddons = new HashSet<>(consumer.getAddOns());
             String preferredSla = consumer.getServiceLevel();
@@ -140,9 +139,10 @@ public class SystemPurposeComplianceRules {
                 }
                 unsatisfiedAddons.removeAll(addonsFound);
 
-                if (product.hasAttribute(Product.Attributes.SUPPORT_LEVEL)) {
+                if (StringUtils.isNotEmpty(preferredSla) &&
+                    product.hasAttribute(Product.Attributes.SUPPORT_LEVEL)) {
                     String sla = product.getAttributeValue(Product.Attributes.SUPPORT_LEVEL);
-                    if (StringUtils.isNotEmpty(preferredSla) && sla.equalsIgnoreCase(preferredSla)) {
+                    if (sla.equalsIgnoreCase(preferredSla)) {
                         status.addCompliantSLA(sla, entitlement);
                     }
                     else {
@@ -150,9 +150,10 @@ public class SystemPurposeComplianceRules {
                     }
                 }
 
-                if (product.hasAttribute(Product.Attributes.USAGE)) {
+                if (StringUtils.isNotEmpty(preferredUsage) &&
+                    product.hasAttribute(Product.Attributes.USAGE)) {
                     String usage = product.getAttributeValue(Product.Attributes.USAGE);
-                    if (StringUtils.isNotEmpty(preferredUsage) && usage.equalsIgnoreCase(preferredUsage)) {
+                    if (usage.equalsIgnoreCase(preferredUsage)) {
                         status.addCompliantUsage(usage, entitlement);
                     }
                     else {
