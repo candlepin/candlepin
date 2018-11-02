@@ -51,6 +51,70 @@ describe 'System purpose compliance' do
       status['compliantRole']['myrole'][0]['pool']['id'].should == p.id
   end
 
+  it 'should be valid for any SLA when consumer has null SLA' do
+      product = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:support_level => 'mysla'},
+                               :owner => @owner2['key']})
+      p = create_pool_and_subscription(@owner2['key'], product.id)
+      consumer = @user2.register(
+          random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], nil, [],
+          nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, nil)
+      status = @user2.get_purpose_compliance(consumer['uuid'])
+      @user2.consume_pool(p.id, params={:uuid=>consumer.uuid})
+      status = @user2.get_purpose_compliance(consumer['uuid'])
+      expect(status['status']).to eq('valid')
+      expect(status['compliantSLA']).to be_empty
+  end
+
+  it 'should be valid for any usage when consumer has null usage' do
+      product = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:usage => 'myusage'},
+                               :owner => @owner2['key']})
+      p = create_pool_and_subscription(@owner2['key'], product.id)
+      consumer = @user2.register(
+          random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], nil, [],
+          nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, nil)
+      status = @user2.get_purpose_compliance(consumer['uuid'])
+      @user2.consume_pool(p.id, params={:uuid=>consumer.uuid})
+      status = @user2.get_purpose_compliance(consumer['uuid'])
+      expect(status['status']).to eq('valid')
+      expect(status['compliantUsage']).to be_empty
+  end
+
+  it 'should be valid for any role when consumer has null role' do
+      product = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:roles => 'myrole'},
+                               :owner => @owner2['key']})
+      p = create_pool_and_subscription(@owner2['key'], product.id)
+      consumer = @user2.register(
+          random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], nil, [],
+          nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, nil)
+      status = @user2.get_purpose_compliance(consumer['uuid'])
+      @user2.consume_pool(p.id, params={:uuid=>consumer.uuid})
+      status = @user2.get_purpose_compliance(consumer['uuid'])
+      expect(status['status']).to eq('valid')
+      expect(status['compliantRole']).to be_empty
+  end
+
+  it 'should be valid for any addons when consumer has null addons' do
+      product = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:addons => 'myaddon,myotheraddon'},
+                               :owner => @owner2['key']})
+      p = create_pool_and_subscription(@owner2['key'], product.id)
+      consumer = @user2.register(
+          random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], nil, [],
+          nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, nil)
+      status = @user2.get_purpose_compliance(consumer['uuid'])
+      @user2.consume_pool(p.id, params={:uuid=>consumer.uuid})
+      status = @user2.get_purpose_compliance(consumer['uuid'])
+      expect(status['status']).to eq('valid')
+      expect(status['compliantAddOns']).to be_empty
+  end
+
   it 'should be invalid for unsatisfied usage' do
       consumer = @user2.register(
           random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], nil, [],

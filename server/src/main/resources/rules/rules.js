@@ -1029,11 +1029,16 @@ var CoverageCalculator = {
                 }
                 if (!anyCoverage) {
                     log.debug("  System addons not covered by: " + supportedAddOns);
+                    // The ComplianceReasonDTO expects the "attributes" field to be a Map<String, String>.
+                    // add-ons can be an array and if leave it as such, Jackson won't be able to
+                    // deserialize the JSON it receives from the rules into a ComplianceReasonDTO.
+                    var joinedConsumerAddOns = consumerAddOns.join(', ');
+                    var joinedSupportedAddOns = supportedAddOns.join(', ');
                     return StatusReasonGenerator.buildReason(prodAttr.toUpperCase(),
                         complianceTracker.type,
                         complianceTracker.id,
-                        consumerAddOns,
-                        supportedAddOns);
+                        joinedConsumerAddOns,
+                        joinedSupportedAddOns);
                 }
                 log.debug("  System addons is covered.");
                 return null;
