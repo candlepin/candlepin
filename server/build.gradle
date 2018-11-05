@@ -21,10 +21,10 @@ test {
     jvmArgs '-XX:+HeapDumpOnOutOfMemoryError'
 }
 
-// filter out hostedtest from war
-// TODO Make this controllable
 war {
-    rootSpec.exclude('**/hostedtest/**')
+    if (! System.getenv().get("hostedtest")) {
+        rootSpec.exclude('**/hostedtest/**')
+    }
     manifest {
         attributes(
                 "Implementation-Title": "The Candlepin Project",
