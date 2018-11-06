@@ -687,8 +687,10 @@ public class ProductManager {
                         entity, content, pcd.isEnabled() != null ? pcd.isEnabled() : false);
                 }
                 else {
-                    existingLink.setContent(content);
-
+                    // Build a new content link based on the original but check for changes to the enabled
+                    // state. This is because ProductContent is now immutable so we need a new entity
+                    // regardless of how little has changed.
+                    existingLink = new ProductContent(entity, content, existingLink.isEnabled());
                     if (pcd.isEnabled() != null) {
                         existingLink.setEnabled(pcd.isEnabled());
                     }

@@ -67,28 +67,30 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
         }
     }
 
+    AbstractHibernateCurator<Owner> testOwnerCurator;
     AbstractHibernateCurator<Content> testContentCurator;
 
     @Before
     public void setup() {
         this.testContentCurator = new TestHibernateCurator<>(Content.class);
+        this.testOwnerCurator = new TestHibernateCurator<>(Owner.class);
+        this.injectMembers(this.testOwnerCurator);
         this.injectMembers(this.testContentCurator);
     }
 
     @Test
     public void testBulkSQLUpdate() throws Exception {
-        Owner owner = this.createOwner();
 
-        Content c1 = this.createContent("c1", "content 1", owner);
-        Content c2 = this.createContent("c2", "content 2", owner);
-        Content c3 = this.createContent("c3", "content 3", owner);
+        Cdn c1 = this.createCdn("c1", "http://url1.com");
+        Cdn c2 = this.createCdn("c2", "http://url2.com");
+        Cdn c3 = this.createCdn("c3", "http://url3.com");
 
         Map<Object, Object> values = new HashMap<>();
-        values.put("content 1", "update 1");
-        values.put("content 2", "update 2");
+        values.put("c1", "c1updated");
+        values.put("c2", "c2updated");
         values.put("content ?", "should not exist");
 
-        int result = this.testContentCurator.bulkSQLUpdate(Content.DB_TABLE, "name", values, null);
+        int result = this.cdnCurator.bulkSQLUpdate(Cdn.DB_TABLE, "name", values, null);
 
         // Note:
         // This looks like it should be 2, and technically that's what's happening here, but with
@@ -96,135 +98,138 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
         // themselves.
         assertEquals(3, result);
 
-        testContentCurator.refresh(c1, c2, c3);
+        this.getEntityManager().refresh(c1);
+        this.getEntityManager().refresh(c2);
+        this.getEntityManager().refresh(c3);
 
-        assertEquals("update 1", c1.getName());
-        assertEquals("update 2", c2.getName());
-        assertEquals("content 3", c3.getName());
+        assertEquals("c1updated", c1.getName());
+        assertEquals("c2updated", c2.getName());
+        assertEquals("c3", c3.getName());
     }
 
     @Test
     public void testBulkSQLUpdateSingleUpdate() throws Exception {
-        Owner owner = this.createOwner();
 
-        Content c1 = this.createContent("c1", "content 1", owner);
-        Content c2 = this.createContent("c2", "content 2", owner);
-        Content c3 = this.createContent("c3", "content 3", owner);
+        Cdn c1 = this.createCdn("c1", "http://url1.com");
+        Cdn c2 = this.createCdn("c2", "http://url2.com");
+        Cdn c3 = this.createCdn("c3", "http://url3.com");
 
         Map<Object, Object> values = new HashMap<>();
-        values.put("content 1", "update 1");
+        values.put("http://url1.com", "http://url1Updated.com");
 
-        int result = this.testContentCurator.bulkSQLUpdate(Content.DB_TABLE, "name", values, null);
+        int result = this.cdnCurator.bulkSQLUpdate(Cdn.DB_TABLE, "url", values, null);
 
         assertEquals(1, result);
 
-        testContentCurator.refresh(c1, c2, c3);
+        this.getEntityManager().refresh(c1);
+        this.getEntityManager().refresh(c2);
+        this.getEntityManager().refresh(c3);
 
-        assertEquals("update 1", c1.getName());
-        assertEquals("content 2", c2.getName());
-        assertEquals("content 3", c3.getName());
+        assertEquals("http://url1Updated.com", c1.getUrl());
+        assertEquals("http://url2.com", c2.getUrl());
+        assertEquals("http://url3.com", c3.getUrl());
     }
 
     @Test
     public void testBulkSQLUpdateSingleUpdateNoChange() throws Exception {
-        Owner owner = this.createOwner();
-
-        Content c1 = this.createContent("c1", "content 1", owner);
-        Content c2 = this.createContent("c2", "content 2", owner);
-        Content c3 = this.createContent("c3", "content 3", owner);
+        Cdn c1 = this.createCdn("c1", "http://url1.com");
+        Cdn c2 = this.createCdn("c2", "http://url2.com");
+        Cdn c3 = this.createCdn("c3", "http://url3.com");
 
         Map<Object, Object> values = new HashMap<>();
         values.put("content B", "update 1");
 
-        int result = this.testContentCurator.bulkSQLUpdate(Content.DB_TABLE, "name", values, null);
+        int result = this.cdnCurator.bulkSQLUpdate(Content.DB_TABLE, "name", values, null);
 
         assertEquals(0, result);
 
-        testContentCurator.refresh(c1, c2, c3);
+        this.getEntityManager().refresh(c1);
+        this.getEntityManager().refresh(c2);
+        this.getEntityManager().refresh(c3);
 
-        assertEquals("content 1", c1.getName());
-        assertEquals("content 2", c2.getName());
-        assertEquals("content 3", c3.getName());
+        assertEquals("c1", c1.getName());
+        assertEquals("c2", c2.getName());
+        assertEquals("c3", c3.getName());
     }
 
     @Test
     public void testBulkSQLUpdateWithEmptyValues() throws Exception {
-        Owner owner = this.createOwner();
-
-        Content c1 = this.createContent("c1", "content 1", owner);
-        Content c2 = this.createContent("c2", "content 2", owner);
-        Content c3 = this.createContent("c3", "content 3", owner);
+        Cdn c1 = this.createCdn("c1", "http://url1.com");
+        Cdn c2 = this.createCdn("c2", "http://url2.com");
+        Cdn c3 = this.createCdn("c3", "http://url3.com");
 
         Map<Object, Object> values = new HashMap<>();
 
-        int result = this.testContentCurator.bulkSQLUpdate(Content.DB_TABLE, "name", values, null);
+        int result = this.cdnCurator.bulkSQLUpdate(Cdn.DB_TABLE, "name", values, null);
 
         assertEquals(0, result);
 
-        testContentCurator.refresh(c1, c2, c3);
+        this.getEntityManager().refresh(c1);
+        this.getEntityManager().refresh(c2);
+        this.getEntityManager().refresh(c3);
 
-        assertEquals("content 1", c1.getName());
-        assertEquals("content 2", c2.getName());
-        assertEquals("content 3", c3.getName());
+        assertEquals("c1", c1.getName());
+        assertEquals("c2", c2.getName());
+        assertEquals("c3", c3.getName());
     }
 
     @Test
     public void testBulkSQLUpdateWithSingleCriteria() {
-        Owner owner = this.createOwner();
-
-        Content c1 = this.createContent("c1", "content 1", owner);
-        Content c2 = this.createContent("c2", "content 2", owner);
-        Content c3 = this.createContent("c3", "content 3", owner);
+        Cdn c1 = this.createCdn("c1", "http://url1.com");
+        Cdn c2 = this.createCdn("c2", "http://url2.com");
+        Cdn c3 = this.createCdn("c3", "http://url3.com");
 
         Map<Object, Object> values = new HashMap<>();
-        values.put("content 1", "update 1");
-        values.put("content 2", "update 2");
-        values.put("content ?", "should not exist");
+        values.put("c1", "c1a");
+        values.put("c2", "c2a");
+        values.put("c4", "c4a");
 
         Map<String, Object> criteria = new HashMap<>();
         criteria.put("name", values.keySet());
 
-        int result = this.testContentCurator.bulkSQLUpdate(Content.DB_TABLE, "name", values, criteria);
+        int result = this.cdnCurator.bulkSQLUpdate(Cdn.DB_TABLE, "name", values, criteria);
 
         // Unlike the base test where the result count is 3, this filters by only the values we
         // intend to update, so it should be 2.
         assertEquals(2, result);
 
-        testContentCurator.refresh(c1, c2, c3);
+        this.getEntityManager().refresh(c1);
+        this.getEntityManager().refresh(c2);
+        this.getEntityManager().refresh(c3);
 
-        assertEquals("update 1", c1.getName());
-        assertEquals("update 2", c2.getName());
-        assertEquals("content 3", c3.getName());
+        assertEquals("c1a", c1.getName());
+        assertEquals("c2a", c2.getName());
+        assertEquals("c3", c3.getName());
     }
 
     @Test
     public void testBulkSQLUpdateWithMultipleCriteria() {
-        Owner owner = this.createOwner();
-
-        Content c1 = this.createContent("c1", "content 1", owner);
-        Content c2 = this.createContent("c2", "content 2", owner);
-        Content c3 = this.createContent("c3", "content 3", owner);
+        Cdn c1 = this.createCdn("c1", "http://url1.com");
+        Cdn c2 = this.createCdn("c2", "http://url2.com");
+        Cdn c3 = this.createCdn("c3", "http://url3.com");
 
         Map<Object, Object> values = new HashMap<>();
-        values.put("content 1", "update 1");
-        values.put("content 2", "update 2");
+        values.put("c1", "update 1");
+        values.put("c2", "update 2");
         values.put("content ?", "should not exist");
 
         Map<String, Object> criteria = new HashMap<>();
         criteria.put("name", values.keySet());
-        criteria.put("content_id", "c2");
+        criteria.put("id", c2.getId());
 
-        int result = this.testContentCurator.bulkSQLUpdate(Content.DB_TABLE, "name", values, criteria);
+        int result = this.cdnCurator.bulkSQLUpdate(Cdn.DB_TABLE, "name", values, criteria);
 
         // Unlike the base test where the result count is 3, this filters by only the values we
         // intend to update, so it should be 1.
         assertEquals(1, result);
 
-        testContentCurator.refresh(c1, c2, c3);
+        this.getEntityManager().refresh(c1);
+        this.getEntityManager().refresh(c2);
+        this.getEntityManager().refresh(c3);
 
-        assertEquals("content 1", c1.getName());
+        assertEquals("c1", c1.getName());
         assertEquals("update 2", c2.getName());
-        assertEquals("content 3", c3.getName());
+        assertEquals("c3", c3.getName());
     }
 
     protected Object[][] largeValueSetSizes() {
@@ -397,15 +402,14 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testLockAndLoadSingleEntityRefreshRetainsFlushedChanged() {
-        Owner owner = this.createOwner();
-        Content content = this.createContent("c1", "content-1", owner);
+        Owner owner = this.createOwner("c1", "owner-1");
 
         // Verify that a flush will make the change persistent
-        content.setName("changed_name");
-        testContentCurator.merge(content);
-        testContentCurator.flush();
-        this.testContentCurator.lockAndLoad(content);
-        assertEquals("changed_name", content.getName());
+        owner.setDisplayName("changed_name");
+        testOwnerCurator.merge(owner);
+        testOwnerCurator.flush();
+        testOwnerCurator.lockAndLoad(owner);
+        assertEquals("changed_name", owner.getDisplayName());
     }
 
     @Test
@@ -458,15 +462,13 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testLockAndLoadSingleEntityByIdRefreshRetainsFlushedChanged() {
-        Owner owner = this.createOwner();
-        Content content = this.createContent("c1", "content-1", owner);
-
+        Owner owner = this.createOwner("fooOwner", "displayName");
+        owner.setDisplayName("changed_name");
         // Verify that a flush will make the change persistent
-        content.setName("changed_name");
-        testContentCurator.merge(content);
-        testContentCurator.flush();
-        this.testContentCurator.lockAndLoadById(content.getUuid());
-        assertEquals("changed_name", content.getName());
+        testOwnerCurator.merge(owner);
+        testOwnerCurator.flush();
+        this.testOwnerCurator.lockAndLoadById(owner.getId());
+        assertEquals("changed_name", owner.getName());
     }
 
     @Test
@@ -519,15 +521,14 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testLockAndLoadSingleEntityByClassAndIdRefreshRetainsFlushedChanged() {
-        Owner owner = this.createOwner();
-        Content content = this.createContent("c1", "content-1", owner);
+        Owner owner = this.createOwner("o1", "owner-1");
 
         // Verify that a flush will make the change persistent
-        content.setName("changed_name");
-        testContentCurator.merge(content);
-        testContentCurator.flush();
-        this.testContentCurator.lockAndLoadById(Content.class, content.getUuid());
-        assertEquals("changed_name", content.getName());
+        owner.setDisplayName("changed_name");
+        testOwnerCurator.merge(owner);
+        testOwnerCurator.flush();
+        this.testOwnerCurator.lockAndLoadById(Owner.class, owner.getId());
+        assertEquals("changed_name", owner.getName());
     }
 
     @Test
@@ -613,29 +614,28 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testLockAndLoadMultiEntityRefreshRetainsFlushedChanged() {
-        Owner owner = this.createOwner();
-        Content content1 = this.createContent("c1", "content-1", owner);
-        Content content2 = this.createContent("c2", "content-2", owner);
-        Content content3 = this.createContent("c3", "content-3", owner);
+        Owner owner1 = this.createOwner("o1", "owner-1");
+        Owner owner2 = this.createOwner("o2", "owner-2");
+        Owner owner3 = this.createOwner("o3", "owner-3");
 
         // Verify that a flush will make the change persistent
-        content1.setName("name change 1");
-        content2.setName("name change 2");
-        content3.setName("name change 3");
-        this.testContentCurator.merge(content1);
-        this.testContentCurator.merge(content2);
-        this.testContentCurator.merge(content3);
-        this.testContentCurator.flush();
+        owner1.setDisplayName("name change 1");
+        owner2.setDisplayName("name change 2");
+        owner3.setDisplayName("name change 3");
+        this.testOwnerCurator.merge(owner1);
+        this.testOwnerCurator.merge(owner2);
+        this.testOwnerCurator.merge(owner3);
+        this.testOwnerCurator.flush();
 
-        Collection<Content> output = this.testContentCurator.lockAndLoad(Arrays.asList(content1, content3));
+        Collection<Owner> output = this.testOwnerCurator.lockAndLoad(Arrays.asList(owner1, owner3));
 
         assertEquals(2, output.size());
-        assertTrue(output.contains(content1));
-        assertFalse(output.contains(content2));
-        assertTrue(output.contains(content3));
-        assertEquals("name change 1", content1.getName());
-        assertEquals("name change 2", content2.getName());
-        assertEquals("name change 3", content3.getName());
+        assertTrue(output.contains(owner1));
+        assertFalse(output.contains(owner2));
+        assertTrue(output.contains(owner3));
+        assertEquals("name change 1", owner1.getDisplayName());
+        assertEquals("name change 2", owner2.getDisplayName());
+        assertEquals("name change 3", owner3.getDisplayName());
     }
 
     @Test
@@ -753,30 +753,29 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testLockAndLoadMultiEntityByIdsRefreshRetainsFlushedChanged() {
-        Owner owner = this.createOwner();
-        Content content1 = this.createContent("c1", "content-1", owner);
-        Content content2 = this.createContent("c2", "content-2", owner);
-        Content content3 = this.createContent("c3", "content-3", owner);
+        Owner owner1 = this.createOwner("o1", "owner-1");
+        Owner owner2 = this.createOwner("o2", "owner-2");
+        Owner owner3 = this.createOwner("o3", "owner-3");
 
         // Verify that a flush will make the change persistent
-        content1.setName("name change 1");
-        content2.setName("name change 2");
-        content3.setName("name change 3");
-        this.testContentCurator.merge(content1);
-        this.testContentCurator.merge(content2);
-        this.testContentCurator.merge(content3);
-        this.testContentCurator.flush();
+        owner1.setDisplayName("name change 1");
+        owner2.setDisplayName("name change 2");
+        owner3.setDisplayName("name change 3");
+        this.testOwnerCurator.merge(owner1);
+        this.testOwnerCurator.merge(owner2);
+        this.testOwnerCurator.merge(owner3);
+        this.testOwnerCurator.flush();
 
-        Collection<String> input = Arrays.asList(content1.getUuid(), content3.getUuid());
-        Collection<Content> output = this.testContentCurator.lockAndLoadByIds(input);
+        Collection<String> input = Arrays.asList(owner1.getId(), owner3.getId());
+        Collection<Owner> output = this.testOwnerCurator.lockAndLoadByIds(input);
 
         assertEquals(2, output.size());
-        assertTrue(output.contains(content1));
-        assertFalse(output.contains(content2));
-        assertTrue(output.contains(content3));
-        assertEquals("name change 1", content1.getName());
-        assertEquals("name change 2", content2.getName());
-        assertEquals("name change 3", content3.getName());
+        assertTrue(output.contains(owner1));
+        assertFalse(output.contains(owner2));
+        assertTrue(output.contains(owner3));
+        assertEquals("name change 1", owner1.getDisplayName());
+        assertEquals("name change 2", owner2.getDisplayName());
+        assertEquals("name change 3", owner3.getDisplayName());
     }
 
     @Test
@@ -897,30 +896,29 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testLockAndLoadMultiEntityByClassAndIdsRefreshRetainsFlushedChanged() {
-        Owner owner = this.createOwner();
-        Content content1 = this.createContent("c1", "content-1", owner);
-        Content content2 = this.createContent("c2", "content-2", owner);
-        Content content3 = this.createContent("c3", "content-3", owner);
+        Owner owner1 = this.createOwner("o1", "owner-1");
+        Owner owner2 = this.createOwner("o2", "owner-2");
+        Owner owner3 = this.createOwner("o3", "owner-3");
 
         // Verify that a flush will make the change persistent
-        content1.setName("name change 1");
-        content2.setName("name change 2");
-        content3.setName("name change 3");
-        this.testContentCurator.merge(content1);
-        this.testContentCurator.merge(content2);
-        this.testContentCurator.merge(content3);
-        this.testContentCurator.flush();
+        owner1.setDisplayName("name change 1");
+        owner2.setDisplayName("name change 2");
+        owner3.setDisplayName("name change 3");
+        this.testOwnerCurator.merge(owner1);
+        this.testOwnerCurator.merge(owner2);
+        this.testOwnerCurator.merge(owner3);
+        this.testOwnerCurator.flush();
 
-        Collection<String> input = Arrays.asList(content1.getUuid(), content3.getUuid());
-        Collection<Content> output = this.testContentCurator.lockAndLoadByIds(Content.class, input);
+        Collection<String> input = Arrays.asList(owner1.getId(), owner3.getId());
+        Collection<Owner> output = this.testOwnerCurator.lockAndLoadByIds(Owner.class, input);
 
         assertEquals(2, output.size());
-        assertTrue(output.contains(content1));
-        assertFalse(output.contains(content2));
-        assertTrue(output.contains(content3));
-        assertEquals("name change 1", content1.getName());
-        assertEquals("name change 2", content2.getName());
-        assertEquals("name change 3", content3.getName());
+        assertTrue(output.contains(owner1));
+        assertFalse(output.contains(owner2));
+        assertTrue(output.contains(owner3));
+        assertEquals("name change 1", owner1.getDisplayName());
+        assertEquals("name change 2", owner2.getDisplayName());
+        assertEquals("name change 3", owner3.getDisplayName());
     }
 
     @Test

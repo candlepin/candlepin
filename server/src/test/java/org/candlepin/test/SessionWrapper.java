@@ -26,6 +26,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MultiIdentifierLoadAccess;
 import org.hibernate.NaturalIdLoadAccess;
+import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
 import org.hibernate.ScrollMode;
 import org.hibernate.Session;
@@ -35,6 +36,7 @@ import org.hibernate.SimpleNaturalIdLoadAccess;
 import org.hibernate.Transaction;
 import org.hibernate.TypeHelper;
 import org.hibernate.UnknownProfileException;
+import org.hibernate.cache.spi.CacheTransactionSynchronization;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
@@ -57,7 +59,6 @@ import org.hibernate.jdbc.Work;
 import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.ProcedureCall;
-import org.hibernate.query.Query;
 import org.hibernate.query.spi.NativeQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
@@ -1201,6 +1202,11 @@ public class SessionWrapper implements SessionImplementor {
         return this.sessionImpl.getTimestamp();
     }
 
+    @Override
+    public CacheTransactionSynchronization getCacheTransactionSynchronization() {
+        return this.sessionImpl.getCacheTransactionSynchronization();
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -1477,6 +1483,11 @@ public class SessionWrapper implements SessionImplementor {
     }
 
     @Override
+    public void startTransactionBoundary() {
+        this.sessionImpl.startTransactionBoundary();
+    }
+
+    @Override
     public void afterTransactionBegin() {
 
     }
@@ -1525,6 +1536,11 @@ public class SessionWrapper implements SessionImplementor {
     @Override
     public void markForRollbackOnly() {
 
+    }
+
+    @Override
+    public long getTransactionStartTimestamp() {
+        return this.sessionImpl.getTransactionStartTimestamp();
     }
 
     /**

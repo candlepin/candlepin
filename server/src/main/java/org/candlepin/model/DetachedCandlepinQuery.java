@@ -426,8 +426,8 @@ public class DetachedCandlepinQuery<T> implements CandlepinQuery<T> {
         // Impl note:
         // We're using the projection method here over using a cursor to scroll the results due to
         // limitations on various connectors' cursor implementations. Some don't properly support
-        // fast-forwarding/jumping (Oracle) and others fake the whole thing by running the query
-        // and pretending to scroll (MySQL). Until these are addressed, the hack below is going to
+        // fast-forwarding/jumping (Oracle, if we ever support it) and others fake the whole thing by running
+        // the query and pretending to scroll (MySQL). Until these are addressed, the hack below is going to
         // be far more performant and significantly safer (which makes me sad).
 
         // Remove any ordering that may be applied (since we almost certainly won't have the field

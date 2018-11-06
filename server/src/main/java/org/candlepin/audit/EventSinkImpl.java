@@ -23,6 +23,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Rules;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.dto.manifest.v1.SubscriptionDTO;
+import org.candlepin.policy.SystemPurposeComplianceStatus;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -51,6 +52,7 @@ import javax.inject.Inject;
 @Singleton
 public class EventSinkImpl implements EventSink {
     private static Logger log = LoggerFactory.getLogger(EventSinkImpl.class);
+
     private EventFactory eventFactory;
     private ClientSessionFactory factory;
     private Configuration config;
@@ -71,12 +73,13 @@ public class EventSinkImpl implements EventSink {
     @Inject
     public EventSinkImpl(EventFilter eventFilter, EventFactory eventFactory,
         ObjectMapper mapper, Configuration config, ModeManager modeManager) {
+
         this.eventFactory = eventFactory;
-        this.mapper = mapper;
         this.config = config;
+        this.mapper = mapper;
         this.eventFilter = eventFilter;
+        this.largeMsgSize = config.getInt(ConfigProperties.ACTIVEMQ_LARGE_MSG_SIZE);
         this.modeManager = modeManager;
-        largeMsgSize = config.getInt(ConfigProperties.ACTIVEMQ_LARGE_MSG_SIZE);
     }
 
     /**
@@ -85,7 +88,11 @@ public class EventSinkImpl implements EventSink {
      */
     @Override
     public void initialize() throws Exception {
-        factory = createClientSessionFactory();
+        if (this.factory == null) {
+            this.factory = createClientSessionFactory();
+        }
+
+        log.info("EventSink Initialized");
     }
 
     protected ClientSessionFactory createClientSessionFactory() throws Exception {
@@ -106,29 +113,35 @@ public class EventSinkImpl implements EventSink {
                  * messages safely and the session is then ready to start over the next time
                  * the thread is used.
                  */
-                session = factory.createTransactedSession();
+                session = this.factory.createTransactedSession();
+                this.sessions.set(session);
+
+                log.debug("Created new ActiveMQ session: {}", System.identityHashCode(session));
             }
-            catch (ActiveMQException e) {
+            catch (Exception e) {
                 throw new RuntimeException(e);
             }
-            log.debug("Created new ActiveMQ session.");
-            sessions.set(session);
         }
+
         return session;
     }
 
     protected ClientProducer getClientProducer() {
         ClientProducer producer = producers.get();
-        if (producer == null) {
+        if (producer == null || producer.isClosed()) {
             try {
-                producer = getClientSession().createProducer(MessageAddress.DEFAULT_EVENT_MESSAGE_ADDRESS);
+                ClientSession session = this.getClientSession();
+
+                producer = session.createProducer(MessageAddress.DEFAULT_EVENT_MESSAGE_ADDRESS);
+                this.producers.set(producer);
+
+                log.debug("Created new ActiveMQ producer: {}", System.identityHashCode(producer));
             }
-            catch (ActiveMQException e) {
+            catch (Exception e) {
                 throw new RuntimeException(e);
             }
-            log.info("Created new ActiveMQ producer.");
-            producers.set(producer);
         }
+
         return producer;
     }
 
@@ -136,9 +149,9 @@ public class EventSinkImpl implements EventSink {
     public List<QueueStatus> getQueueInfo() {
         List<QueueStatus> results = new LinkedList<>();
         try {
-
             ClientSession session = getClientSession();
             session.start();
+
             for (String listenerClassName : ActiveMQContextListener.getActiveMQListeners(config)) {
                 String queueName = "event." + listenerClassName;
                 long msgCount = session.queueQuery(new SimpleString(queueName)).getMessageCount();
@@ -146,8 +159,9 @@ public class EventSinkImpl implements EventSink {
             }
         }
         catch (Exception e) {
-            log.error("Error looking up ActiveMQ queue info: ", e);
+            log.error("Error looking up ActiveMQ queue info", e);
         }
+
         return results;
     }
 
@@ -182,7 +196,7 @@ public class EventSinkImpl implements EventSink {
             getClientProducer().send(message);
         }
         catch (Exception e) {
-            log.error("Error while trying to send event: {}", e);
+            log.error("Error while trying to send event", e);
         }
     }
 
@@ -193,9 +207,10 @@ public class EventSinkImpl implements EventSink {
      */
     @Override
     public void sendEvents() {
-        try {
-            log.debug("Committing ActiveMQ transaction.");
-            getClientSession().commit();
+        log.debug("Committing ActiveMQ transaction");
+
+        try (ClientSession session = this.getClientSession()) {
+            session.commit();
         }
         catch (Exception e) {
             // This would be pretty bad, but we always try not to let event errors
@@ -206,9 +221,9 @@ public class EventSinkImpl implements EventSink {
 
     @Override
     public void rollback() {
-        log.warn("Rolling back ActiveMQ transaction.");
-        try {
-            ClientSession session = getClientSession();
+        log.warn("Rolling back ActiveMQ transaction");
+
+        try (ClientSession session = this.getClientSession()) {
             session.rollback();
         }
         catch (ActiveMQException e) {
@@ -268,6 +283,11 @@ public class EventSinkImpl implements EventSink {
 
     @Override
     public void emitCompliance(Consumer consumer, ComplianceStatus compliance) {
+        queueEvent(eventFactory.complianceCreated(consumer, compliance));
+    }
+
+    @Override
+    public void emitCompliance(Consumer consumer, SystemPurposeComplianceStatus compliance) {
         queueEvent(eventFactory.complianceCreated(consumer, compliance));
     }
 }

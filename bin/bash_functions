@@ -177,30 +177,3 @@ init_mysql_jdbc() {
         err_msg "WARNING: candlepin requires READ-COMMITTED isolation level"
     fi
 }
-
-recreate_oracle () {
-    local db_name="$1"
-    local db_user="${2:-$db_name}"
-    local db_host="${DBHOSTNAME:-localhost}"
-    local password="${DBPASSWORD:-$db_name}"
-
-    # this may fail if the user isn't there, IF EXISTS isn't in oracle
-    sqlplus -s "sys/password@//$db_host/XE as sysdba"<<EOF
-DROP USER $db_user CASCADE;
-EOF
-
-    sqlplus -s "sys/password@//$db_host/XE as sysdba"<<EOF | read foo
-CREATE USER $db_user IDENTIFIED BY $password DEFAULT TABLESPACE USERS;
-GRANT CONNECT, RESOURCE, DBA TO $db_user;
-QUIT
-EOF
-
-}
-
-init_oracle_jdbc() {
-    local db_name="$1"
-    local db_host="${DBHOSTNAME:-localhost}"
-    JDBC_DRIVER="oracle.jdbc.OracleDriver"
-    JDBC_JAR="/usr/lib/oracle/11.2/client64/lib/ojdbc6.jar"
-    JDBC_URL="jdbc:oracle:thin:@//$db_host:1521/XE "
-}

@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-06-29 08:26-0400\n"
+"POT-Creation-Date: 2018-09-21 11:36-0400\n"
 "PO-Revision-Date: 2018-02-15 09:48+0000\n"
 "Last-Translator: amoewaki <amoewaki@redhat.com>\n"
 "Language-Team: Japanese\n"
@@ -14,7 +14,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0\n"
-"X-Generator: Zanata 4.4.3\n"
+"X-Generator: Zanata 4.6.2\n"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -338,14 +338,14 @@ msgstr "コンシューマー {1} のコンプライアンスが再計算され�
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: server/src/main/java/org/candlepin/auth/BasicAuth.java:71
+#: server/src/main/java/org/candlepin/auth/BasicAuth.java:74
 #: server/src/main/java/org/candlepin/resource/GuestIdResource.java:313
 msgid "Invalid Credentials"
 msgstr "無効な識別情報"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: server/src/main/java/org/candlepin/auth/BasicAuth.java:85
+#: server/src/main/java/org/candlepin/auth/BasicAuth.java:88
 msgid "Error contacting user service"
 msgstr "ユーザーサービスへの連絡でエラー"
 
@@ -378,42 +378,50 @@ msgstr "OAuth にエラーが発生しました。内部メッセージ: {0}"
 msgid "Error getting OAuth unit key"
 msgstr "OAuth ユニットキーの取得中にエラーが発生しました"
 
+#: server/src/main/java/org/candlepin/auth/UserAuth.java:55
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1065
+#: server/src/main/java/org/candlepin/resource/RoleResource.java:133
+#: server/src/main/java/org/candlepin/resource/UserResource.java:111
+#, java-format
+msgid "User not found: {0}"
+msgstr ""
+
 #: server/src/main/java/org/candlepin/bind/BindContext.java:117
 #, java-format
 msgid "Subscription pool(s) {0} do not exist."
 msgstr "サブスクリプションプール {0} は存在しません。"
 
-#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:381
+#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:289
 #: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:56
 msgid "No owner specified, or owner lacks identifying information"
 msgstr "所有者が指定されていないか、所有者に識別情報がありません"
 
-#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:390
+#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:298
 #: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:64
 #, java-format
 msgid "Unable to find an owner with the key \"{0}\""
 msgstr "キー \"{0}\" を持つ所有者が見つかりません"
 
-#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:398
+#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:306
 #: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:72
 #, java-format
 msgid "Unable to find an owner with the ID \"{0}\""
 msgstr "ID \"{0}\" を持つ所有者が見つかりません"
 
-#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:1958
+#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:1980
 msgid ""
 "Unmapped guest entitlement expired without establishing a host/guest mapping."
 msgstr ""
 "ホストとゲストのマッピングが確立されないまま、マッピングのないゲストエンタイ"
 "トルメントの期限が切れました。"
 
-#: server/src/main/java/org/candlepin/controller/Entitler.java:212
+#: server/src/main/java/org/candlepin/controller/Entitler.java:211
 #, java-format
 msgid "Auto-attach is disabled for owner \"{0}\"."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:260
-#: server/src/main/java/org/candlepin/controller/Entitler.java:498
+#: server/src/main/java/org/candlepin/controller/Entitler.java:439
 msgid ""
 "Development units may only be used on hosted servers and with orgs that have "
 "active subscriptions."
@@ -421,12 +429,12 @@ msgstr ""
 "開発ユニットを使用するには、組織に有効なサブスクリプションが必要があります。"
 "また、ホストサーバーでの使用に限定されます。"
 
-#: server/src/main/java/org/candlepin/controller/Entitler.java:469
+#: server/src/main/java/org/candlepin/controller/Entitler.java:410
 #, java-format
 msgid "SKU product not available to this development unit: \"{0}\""
 msgstr ""
 
-#: server/src/main/java/org/candlepin/controller/Entitler.java:475
+#: server/src/main/java/org/candlepin/controller/Entitler.java:416
 #, java-format
 msgid "Installed product not available to this development unit: \"{0}\""
 msgstr ""
@@ -472,41 +480,26 @@ msgstr ""
 "Candlepin はサスペンドモードです。詳細は、/status リソースを確認してくださ"
 "い。"
 
-#: server/src/main/java/org/candlepin/hostedtest/HostedTestSubscriptionResource.java:296
-#: server/src/main/java/org/candlepin/model/EntitlementCurator.java:426
-#: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:157
-#, java-format
-msgid "Product with ID \"{0}\" could not be found."
-msgstr ""
-
-#: server/src/main/java/org/candlepin/hostedtest/HostedTestSubscriptionResource.java:306
-#: server/src/main/java/org/candlepin/resource/OwnerContentResource.java:127
-#: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:132
-#, java-format
-msgid "Owner with key \"{0}\" was not found."
-msgstr "キーが \"{0}\" の所有者は見つかりませんでした、"
-
-#: server/src/main/java/org/candlepin/hostedtest/HostedTestSubscriptionResource.java:316
-#: server/src/main/java/org/candlepin/resource/OwnerContentResource.java:154
-#: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:182
-#, java-format
-msgid "Content with ID \"{0}\" could not be found."
-msgstr "ID が \"{0}\" のコンテンツは見つかりませんでした。"
-
 #: server/src/main/java/org/candlepin/model/AbstractHibernateCurator.java:837
 msgid "Request failed due to concurrent modification, please re-try."
 msgstr "変更が同時に行われたため要求は失敗しました、やり直してください。"
 
-#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:636
+#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:623
 #, java-format
 msgid "The system with UUID {0} is a virtual guest. It does not have guests."
 msgstr "UUID {0} のシステムは仮想ゲストです。ゲストはありません。"
 
-#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:825
-#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:835
+#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:812
+#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:822
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:167
 #, java-format
 msgid "Unit with ID \"{0}\" could not be found."
+msgstr ""
+
+#: server/src/main/java/org/candlepin/model/EntitlementCurator.java:426
+#: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:157
+#, java-format
+msgid "Product with ID \"{0}\" could not be found."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/model/RulesCurator.java:111
@@ -530,8 +523,8 @@ msgstr "所有者 {0} の ueber 証明書の生成時の問題"
 msgid "Auto-attach is disabled for owner {0}."
 msgstr "所有者 {0} の自動アタッチは無効です。"
 
-#: server/src/main/java/org/candlepin/pinsetter/tasks/HypervisorUpdateJob.java:222
-#: server/src/main/java/org/candlepin/resource/HypervisorResource.java:155
+#: server/src/main/java/org/candlepin/pinsetter/tasks/HypervisorUpdateJob.java:230
+#: server/src/main/java/org/candlepin/resource/HypervisorResource.java:156
 #, java-format
 msgid ""
 "Could not update host/guest mapping. Auto-attach is disabled for owner {0}."
@@ -544,20 +537,20 @@ msgstr ""
 msgid "Subscriptions deleted by {0}"
 msgstr "{0} によって削除されたサブスクリプション"
 
-#: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:82
+#: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:83
 msgid ""
 "Cannot add pools that are restricted to unit type \"person\" to activation "
 "keys."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:86
+#: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:87
 #, java-format
 msgid "Multi-entitlement not supported for pool \"{0}\""
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author khasida
-#: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:89
+#: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:90
 msgid ""
 "Error: Only pools with multi-entitlement product subscriptions can be added "
 "to the activation key with a quantity greater than one."
@@ -567,7 +560,7 @@ msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author khasida
-#: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:94
+#: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:95
 msgid "The quantity must be greater than 0"
 msgstr "数量は 1 以上の数値にしてください"
 
@@ -622,178 +615,163 @@ msgstr "{2}TB のストレージのうち {1}TB だけがサポートされま�
 msgid "{0} COVERAGE PROBLEM.  Supports {1} of {2}"
 msgstr "{0} 対象範囲の問題。{2} の {1} がサポートされます。"
 
-#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:296
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:269
 #, java-format
 msgid "Subscriptions for {0} expired on: {1}"
 msgstr "{0} のサブスクリプションの有効期限: {1}"
 
-#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:384
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:357
 #, java-format
 msgid "\"{0}\" Should contain name, priority and at least one attribute"
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:398
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:371
 msgid "second parameter should be the priority number."
 msgstr "2 つ目のパラメーターは、優先度番号でなければなりません"
 
-#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:157
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:148
 #, java-format
 msgid ""
 "This unit has already had the subscription matching pool ID \"{1}\" attached."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:159
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:150
 #, java-format
 msgid "No subscriptions are available from the pool with ID \"{1}\"."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:161
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:152
 #, java-format
 msgid "Units of this type are not allowed to attach the pool with ID \"{1}\"."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:163
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:154
 #, java-format
 msgid "Multi-entitlement not supported for pool with ID \"{1}\"."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:165
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:156
 #, java-format
 msgid "Pool \"{1}\" is restricted to guests running on host: \"{4}\"."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:167
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:158
 #, java-format
 msgid "Pool \"{1}\" is restricted to a specific consumer."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:169
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:160
 msgid "Pool not available to subscription management applications."
 msgstr "サブスクリプション管理アプリケーションで利用できるプールはありません。"
 
-#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:171
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:162
 #, java-format
 msgid "Pool is restricted to virtual guests: \"{1}\"."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:173
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:164
 #, java-format
 msgid "Pool is restricted to physical systems: \"{1}\"."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:175
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:166
 #, java-format
 msgid ""
 "Subscription \"{2}\" must be attached using a quantity evenly divisible by "
 "{3}"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:177
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:168
 #, java-format
 msgid ""
 "Unit does not support instance based calculation required by pool \"{1}\""
 msgstr ""
 
-#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:179
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:170
 #, java-format
 msgid "Unit does not support band calculation required by pool \"{1}\""
 msgstr ""
 
-#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:181
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:172
 #, java-format
 msgid "Unit does not support core calculation required by pool \"{1}\""
 msgstr ""
 
-#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:183
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:174
 #, java-format
 msgid "Unit does not support RAM calculation required by pool \"{1}\""
 msgstr ""
 
-#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:185
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:176
 #, java-format
 msgid "Unit does not support derived products data required by pool \"{1}\""
 msgstr ""
 
-#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:187
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:178
 #, java-format
 msgid "Pool is restricted to unmapped virtual guests: \"{1}\""
 msgstr ""
 
-#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:189
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:180
 #, java-format
 msgid ""
 "Pool is restricted to virtual guests in their first day of existence: \"{1}\""
 msgstr ""
 
-#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:191
-#, java-format
-msgid "Pool \"{1}\" is a shared pool and sharing a shared pool is prohibited."
-msgstr ""
-
-#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:193
-#, java-format
-msgid "Pool \"{1}\" is a development pool and sharing it is prohibited."
-msgstr ""
-
-#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:195
-#, java-format
-msgid "Pool \"{1}\" is an unmapped guest pool and sharing it is prohibited."
-msgstr ""
-
-#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:197
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:182
 #, java-format
 msgid ""
 "Pool is restricted when it is temporary and begins in the future: \"{1}\""
 msgstr ""
 
-#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:199
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:184
 #, java-format
 msgid "Unable to attach pool with ID \"{1}\".: {0}."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:207
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:192
 #, java-format
 msgid ""
 "This system already has a subscription for the product \"{1}\" attached."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:209
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:194
 #, java-format
 msgid ""
 "There are not enough free subscriptions available for the product \"{1}\""
 msgstr ""
 
-#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:211
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:196
 #, java-format
 msgid "Units of this type are not allowed for the product \"{1}\"."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:213
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:198
 #, java-format
 msgid "Only virtual systems can have subscription \"{1}\" attached."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:215
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:200
 #, java-format
 msgid "Unable to attach subscription for the product \"{1}\": {0}."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:223
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:208
 #, java-format
 msgid ""
 "Insufficient pool quantity available for adjustment to entitlement \"{1}\"."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:225
-#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:227
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:210
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:212
 #, java-format
 msgid ""
 "Multi-entitlement not supported for pool connected with entitlement \"{1}\"."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:229
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:214
 #, java-format
 msgid "Unable to adjust quantity for the entitlement with id \"{1}\": {0}"
 msgstr ""
@@ -805,7 +783,7 @@ msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/ActivationKeyContentOverrideResource.java:70
 #: server/src/main/java/org/candlepin/resource/ActivationKeyResource.java:115
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1474
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1473
 #, java-format
 msgid "ActivationKey with id {0} could not be found."
 msgstr "{0} のアクティベーションキーは見つかりませんでした。"
@@ -822,7 +800,7 @@ msgid "Product ID \"{0}\" has already been registered with this activation key"
 msgstr "製品 ID \"{0}\" は、このアクティベーションキーで既に登録されています。"
 
 #: server/src/main/java/org/candlepin/resource/ActivationKeyResource.java:306
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:445
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:450
 #, java-format
 msgid "Pool with id {0} could not be found."
 msgstr "id {0} のプールは見つかりませんでした。"
@@ -846,265 +824,193 @@ msgstr ""
 msgid "No such content delivery network: {0}"
 msgstr "そのようなコンテンツ配信ネットワークはありません: {0}"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:414
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:419
 msgid "Must specify at least one search criteria."
 msgstr "検索基準を少なくとも 1 つ指定してください。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:422
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:922
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:929
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1204
-#: server/src/main/java/org/candlepin/resource/HypervisorResource.java:304
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1704
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:427
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1120
+#: server/src/main/java/org/candlepin/resource/HypervisorResource.java:305
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1703
 #, java-format
 msgid "owner with key: {0} was not found."
 msgstr "キー: {0} を持つ所有者は見つかりません"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:449
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:454
 #, java-format
 msgid "Consumer with id {0} could not be found."
 msgstr "ID が {0} のコンシューマーは見つかりませんでした。"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:545
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:563
 #, java-format
 msgid "Environment \"{0}\" could not be found."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:698
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:712
 #, java-format
 msgid "User \"{0}\" does not have access to create consumers in org \"{1}\""
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:713
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:727
 msgid "Unit type must be specified."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:718
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:732
 #, java-format
 msgid "Invalid unit type: {0}"
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author khasida
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:740
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:754
 #: server/src/main/java/org/candlepin/resource/ContentOverrideResource.java:228
 msgid "Insufficient permissions"
 msgstr "十分な権限がありません"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:769
-msgid "Only share consumers can specify recipient owners"
-msgstr ""
-
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:847
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:845
 #, java-format
 msgid "Problem creating unit {0}"
 msgstr "ユニット {0} の作成に問題があります。"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:865
-msgid "A consumer cannot be converted to a share type once it has been created"
-msgstr "コンシューマーを一度作成したら、共有タイプには変換できません"
-
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:870
-msgid ""
-"A share consumer cannot be converted to a non share type once it has been "
-"created"
-msgstr ""
-"共有コンシューマーを一度作成したら、非共有タイプに変換することはできません"
-
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:875
-msgid "The share recipient cannot be modified once the share has been created"
-msgstr "共有を一度作成したら、共有の受信者は変更できません"
-
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:890
-msgid "A unit type of \"share\" cannot be used with activation keys"
-msgstr "\"share\" のユニットタイプは、アクティベーションキーでは使用できません"
-
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:893
-msgid "A unit type of \"share\" cannot have a service level"
-msgstr "\"share\" のユニットタイプには、サービスレベルを追加できません"
-
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:896
-msgid "A unit type of \"share\" cannot have a release version"
-msgstr "\"share\" のユニットタイプには、リリースバージョンを追加できません"
-
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:899
-msgid "A unit type of \"share\" cannot have installed products"
-msgstr "\"share\" のユニットタイプには、インストールした製品を追加できません"
-
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:903
-msgid "A unit type of \"share\" cannot have a content access mode"
-msgstr ""
-"\"share\" のユニットタイプには、コンテンツアクセスモードを追加できません"
-
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:906
-msgid "A unit type of \"share\" cannot have guest IDs"
-msgstr "\"share\" のユニットタイプには、ゲスト ID を追加できません"
-
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:909
-msgid "A unit type of \"share\" cannot have a hypervisor ID"
-msgstr "\"share\" のユニットタイプには、ハイパーバイザー ID を追加できません"
-
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:913
-msgid "A unit type of \"share\" must specify a recipient org key"
-msgstr ""
-"\"share\" のユニットタイプには、受信者の組織キーを指定する必要があります"
-
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:916
-msgid "A unit type of \"share\" cannot be a virtual guest"
-msgstr "\"share\" のユニットタイプは、仮想ゲストにできません"
-
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:939
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1422
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:855
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1333
 msgid "The consumer cannot be assigned a content access mode."
 msgstr ""
 "コンシューマーには、コンテンツアクセスモードを割り当てることができません。"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:943
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1414
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:859
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1325
 msgid "The consumer cannot use the supplied content access mode."
 msgstr "コンシューマーは、指定されたコンテンツアクセスモードを使用できません。"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:951
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:867
 msgid "Org required to register with activation keys."
 msgstr "組織は、アクティベーションキーで登録する必要があります。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author khasida
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:955
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:871
 msgid "Cannot specify username with activation keys."
 msgstr "アクティベーションキーでユーザー名は指定できません。"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:965
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:881
 msgid "A unit type of \"person\" cannot be used with activation keys"
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:969
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:976
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:885
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:892
 msgid "System name cannot contain most special characters."
 msgstr "システム名にはほとんどの特殊記号を含めることができません。"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:985
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:901
 msgid "You may not create a manifest consumer via Subscription Manager."
 msgstr ""
 "サブスクリプションマネージャーでは、マニフェストのコンシューマーを作成できま"
 "せん。"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1005
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:921
 msgid "None of the activation keys specified exist for this org."
 msgstr "指定したアクティベーションキーのいずれもこの組織用には存在しません。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author khasida
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1097
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1013
 msgid "System name cannot begin with # character"
 msgstr "システム名は # 文字で開始できません"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1130
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1046
 #, java-format
 msgid "Activation key \"{0}\" not found for organization \"{1}\"."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1149
-#, java-format
-msgid "User with ID \"{0}\" could not be found."
-msgstr ""
-
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1155
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1071
 #, java-format
 msgid "User \"{0}\" has no roles for organization \"{1}\""
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1168
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1084
 #, java-format
 msgid "User \"{0}\" has already registered a personal consumer"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1184
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1100
 msgid "You must specify an organization for new units."
 msgstr "新しいユニット用の組織を指定してください。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author khasida
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1194
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1110
 #, java-format
 msgid "Organization {0} does not exist."
 msgstr "組織 {0} は存在しません。"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1310
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1222
 #, java-format
 msgid "Problem updating unit {0}"
 msgstr "ユニット {0} の更新に問題があります"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1380
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1285
 #, java-format
 msgid "Environment with ID \"{0}\" could not be found."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1674
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1685
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1619
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1630
 #, java-format
 msgid "Consumer with UUID {0} was already deleted."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1701
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1646
 #: server/src/main/java/org/candlepin/resource/GuestIdResource.java:312
 #, java-format
 msgid "Cannot unregister {0} {1} because: {2}"
 msgstr "次の理由で {0} {1} を登録解除できません: {2}"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1760
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1763
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1806
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1819
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1822
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1932
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1935
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1695
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1698
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1736
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1749
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1752
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1852
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1855
 msgid "Cannot retrieve content access certificate"
 msgstr "コンテンツアクセス証明書を取得できません"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1786
-msgid "Content access body can not be requested for a share consumer"
-msgstr "共有コンシューマーでは、コンテンツアクセスの本文を要求できません。"
-
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1792
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1722
 msgid "Content access mode does not allow this request."
 msgstr "コンテンツアクセスモードは、この要求を許可しません。"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1865
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1790
 msgid "Unable to create entitlement certificate archive"
 msgstr "エンタイトルメント証明書アーカイブを作成できません"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1948
-msgid "Share consumers must be bound to a specific pool"
-msgstr "共有コンシューマーは、特定プールにバインドする必要があります"
-
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1961
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1877
 msgid "Cannot bind by multiple parameters."
 msgstr "複数のパラメーターでバインドできません。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author khasida
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1965
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1881
 msgid "Cannot specify a quantity when auto-binding."
 msgstr "自動バインド時に数量を指定できません。"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2079
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1994
 #, java-format
 msgid "Ignoring request to auto-attach. It is disabled for org \"{0}\"."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2126
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2041
 msgid "Owner has autobind disabled."
 msgstr "所有者は、autobind を無効にしています。"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2161
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2271
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2076
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2186
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:197
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:236
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:255
@@ -1114,39 +1020,33 @@ msgstr "所有者は、autobind を無効にしています。"
 msgid "Entitlement with ID \"{0}\" could not be found."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2294
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2209
 #, java-format
 msgid "Entitlement Certificate with serial number \"{0}\" could not be found."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2316
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2231
 #, java-format
 msgid "No entitlements for consumer \"{0}\" with pool id \"{1}\""
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2423
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2482
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2531
-msgid "Can not export manifest of a share consumer"
-msgstr "共有コンシューマーのマニフェストをエクスポートできません"
-
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2433
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2339
 msgid "Unable to create export archive"
 msgstr "エクスポートアーカイブを作成できません"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2656
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2550
 #, java-format
 msgid "Problem regenerating ID cert for unit {0}"
 msgstr "ユニット {0} の ID 証明書の再生成に問題があります"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2700
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2594
 #, java-format
 msgid "The system with UUID {0} is not a virtual guest."
 msgstr "UUID {0} のシステムは仮想ゲストではありません"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2792
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2696
 #, java-format
 msgid "Deletion record for hypervisor \"{0}\" not found."
 msgstr ""
@@ -1183,12 +1083,12 @@ msgstr "UUID が \"{0}\" のコンテンツは見つかりませんでした。"
 msgid "Organization-agnostic content write operations are not supported."
 msgstr "組織に依存しないコンテンツ書き込みの動作には対応していません。"
 
-#: server/src/main/java/org/candlepin/resource/DistributorVersionResource.java:106
+#: server/src/main/java/org/candlepin/resource/DistributorVersionResource.java:165
 #, java-format
 msgid "A distributor version with name {0} already exists"
 msgstr "名前が {0} のディストリビューションバージョンはすでに存在しています"
 
-#: server/src/main/java/org/candlepin/resource/DistributorVersionResource.java:131
+#: server/src/main/java/org/candlepin/resource/DistributorVersionResource.java:196
 #, java-format
 msgid "No such distributor version: {0}"
 msgstr "そのようなディストリビューションバージョンはありません: {0}"
@@ -1295,18 +1195,18 @@ msgstr "json \"{0}\" のゲスト ID がパスゲスト ID \"{1}\" と一致し�
 msgid "Guest with UUID {0} could not be found."
 msgstr "UUID が{0} のゲストは見つかりませんでした。"
 
-#: server/src/main/java/org/candlepin/resource/HypervisorResource.java:147
+#: server/src/main/java/org/candlepin/resource/HypervisorResource.java:148
 msgid "Host to guest mapping was not provided for hypervisor check-in."
 msgstr ""
 "ハイパーバイザーのチェックインでホストからゲストへのマッピングが提供されませ"
 "んでした。"
 
-#: server/src/main/java/org/candlepin/resource/HypervisorResource.java:216
+#: server/src/main/java/org/candlepin/resource/HypervisorResource.java:217
 #, java-format
 msgid "Unable to find hypervisor in org \"{0}\""
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/HypervisorResource.java:288
+#: server/src/main/java/org/candlepin/resource/HypervisorResource.java:289
 msgid "Host to guest mapping was not provided for hypervisor update."
 msgstr ""
 "ハイパーバイザーの更新でホストからゲストへのマッピングが提供されませんでし"
@@ -1345,6 +1245,18 @@ msgstr "ジョブはすでに取り消されています"
 msgid "cannot cancel a job that is in a finished state"
 msgstr "完了状態のジョブは取り消しできません"
 
+#: server/src/main/java/org/candlepin/resource/OwnerContentResource.java:127
+#: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:132
+#, java-format
+msgid "Owner with key \"{0}\" was not found."
+msgstr "キーが \"{0}\" の所有者は見つかりませんでした、"
+
+#: server/src/main/java/org/candlepin/resource/OwnerContentResource.java:154
+#: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:182
+#, java-format
+msgid "Content with ID \"{0}\" could not be found."
+msgstr "ID が \"{0}\" のコンテンツは見つかりませんでした。"
+
 #: server/src/main/java/org/candlepin/resource/OwnerContentResource.java:216
 #: server/src/main/java/org/candlepin/resource/OwnerContentResource.java:278
 #: server/src/main/java/org/candlepin/resource/OwnerContentResource.java:298
@@ -1374,127 +1286,118 @@ msgstr "製品 \"{0}\" がロックされています"
 msgid "Product with ID \"{0}\" cannot be deleted while subscriptions exist."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:293
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:298
 msgid "Owner key is null or empty."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:297
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:302
 #, java-format
 msgid "Owner with key \"{0}\" was not found"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:323
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:328
 msgid "Owner id is null or empty."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:327
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:332
 #, java-format
 msgid "Owner with id \"{0}\" was not found"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:356
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:361
 msgid "Owner lookup failed because id and key were null or empty."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:380
-#: server/src/main/java/org/candlepin/sync/EntitlementImporter.java:610
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:385
 msgid "Entitlement id is null or empty."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:385
-#: server/src/main/java/org/candlepin/sync/EntitlementImporter.java:615
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:390
 #, java-format
 msgid "Entitlement with id {0} could not be found."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:411
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:416
 msgid "Consumer id is null or empty."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:415
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:420
 #: server/src/main/java/org/candlepin/resource/SubscriptionResource.java:155
 #, java-format
 msgid "No such unit: {0}"
 msgstr "そのようなユニットはありません: {0}"
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:441
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:446
 msgid "Pool id is null or empty."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:483
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:488
 #: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:94
 #: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:119
 #, java-format
 msgid "Unable to find a product with the ID \"{0}\" for owner \"{1}\""
 msgstr "所有者が \"{1}\" で ID が \"{0}\"  の製品が見つかりません"
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:534
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:539
 #: server/src/main/java/org/candlepin/sync/ConsumerImporter.java:210
 #, java-format
 msgid "Unable to find parent owner: {0}"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:888
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:893
 msgid "Owners must be created with a valid key"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:902
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:907
 #, java-format
 msgid "The content access mode \"{1}\" is not allowed for this owner."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:910
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:915
 msgid "The default service level cannot be specified during owner creation"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:926
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:931
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:936
 #, java-format
 msgid "Could not create the Owner: {0}"
 msgstr "所有者: {0} を作成できませんでした。"
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:988
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:993
 msgid ""
 "The owner content access mode cannot be set directly in standalone mode."
 msgstr ""
 "この所有者のコンテンツアクセスモードは、スタンドアロンモードに直接設定できま"
 "せん。"
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:993
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:998
 msgid "The content access mode is not allowed for this owner."
 msgstr "この所有者には、コンテンツアクセスモードは許可されていません。"
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1042
-#, java-format
-msgid ""
-"owner \"{0}\" cannot be deleted while there is a share consumer. You may use "
-"\"force\" to bypass."
-msgstr ""
-
 # translation auto-copied from project Candlepin, version master, document
 # keys, author khasida
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1202
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1201
 msgid "Must provide a name for activation key."
 msgstr "アクティベーションキーの名前を指定してください"
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1209
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1208
 #, java-format
 msgid ""
 "The activation key name \"{0}\" must be alphanumeric or include the "
 "characters \"-\" or \"_\""
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1221
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1220
 #, java-format
 msgid "The activation key name \"{0}\" is already in use for owner {1}"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1308
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1307
 #, java-format
 msgid "{0} is not a valid log level"
 msgstr "{0} は有効なログレベルではありません"
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1454
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1453
 #: server/src/main/java/org/candlepin/resource/PoolResource.java:153
 #, java-format
 msgid "Unit: {0} not found"
@@ -1502,68 +1405,60 @@ msgstr "ユニット: {0} は見つかりません"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author khasida
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1464
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1463
 #: server/src/main/java/org/candlepin/resource/PoolResource.java:227
 #, java-format
 msgid "User {0} cannot access consumer {1}"
 msgstr "ユーザー {0} はコンシューマー {1} にアクセスできません"
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1480
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1479
 msgid "The flags add_future and only_future cannot be used at the same time."
 msgstr ""
 "add_future フラグと only_future フラグを同時に使用することはできません。"
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1485
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1484
 msgid ""
 "The flags add_future and only_future cannot be used with the parameter after."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1756
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1755
 msgid "Pool product ID not specified"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1796
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1795
 #, java-format
 msgid "Unable to find a pool with the ID \"{0}\""
 msgstr "ID が \"{0}\" のプールが見つかりません。"
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1804
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1803
 #, java-format
 msgid "Pool \"{0}\" does not belong to the specified owner \"{1}\""
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1810
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1809
 msgid "Cannot update bonus pools, as they are auto generated"
 msgstr "ボーナスプールは自動生成のため更新できません。"
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1814
-msgid ""
-"Cannot update shared pools, This should be triggered by updating the share "
-"entitlement instead"
-msgstr ""
-"共有プールをアップデートできません。共有エンタイトルメントをアップデートする"
-"と、共有プールがアップデートされます。"
-
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1968
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2039
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1960
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2031
 msgid "Error reading export archive"
 msgstr "エクスポートアーカイブの読み込みでエラー"
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2043
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2035
 msgid "Error storing uploaded archive for asynchronous processing."
 msgstr ""
 "非同期の処理中、アップロードしたアーカイブの保存時にエラーが発生しました。"
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2118
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2142
 #, java-format
 msgid "uber certificate for owner {0} was not found. Please generate one."
 msgstr ""
 "所有者 {0} の uber 証明書が見つかりませんでした。証明書の生成を行ってくださ"
 "い。"
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2199
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2223
 msgid "Unknown conflict to force"
 msgstr "force に対する不明な競合です"
 
@@ -1609,8 +1504,8 @@ msgid "consumer: {0} not found"
 msgstr "コンシューマ: {0} は見つかりません"
 
 #: server/src/main/java/org/candlepin/resource/PoolResource.java:246
-#: server/src/main/java/org/candlepin/resource/PoolResource.java:283
-#: server/src/main/java/org/candlepin/resource/PoolResource.java:301
+#: server/src/main/java/org/candlepin/resource/PoolResource.java:278
+#: server/src/main/java/org/candlepin/resource/PoolResource.java:307
 #, java-format
 msgid "Subscription Pool with ID \"{0}\" could not be found."
 msgstr ""
@@ -1624,20 +1519,12 @@ msgstr ""
 msgid "Cannot delete bonus pools, as they are auto generated"
 msgstr "ボーナスプールは自動生成のため、更新できません"
 
-#: server/src/main/java/org/candlepin/resource/PoolResource.java:265
-msgid ""
-"Cannot delete shared pools, This should be triggered by deleting the share "
-"entitlement instead"
-msgstr ""
-"共有プールを削除できません。共有エンタイトルメントを削除すると、共有プールが"
-"削除されます。"
-
-#: server/src/main/java/org/candlepin/resource/PoolResource.java:330
+#: server/src/main/java/org/candlepin/resource/PoolResource.java:336
 #, java-format
 msgid "Pool with ID \"{0}\" could not be found."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/PoolResource.java:335
+#: server/src/main/java/org/candlepin/resource/PoolResource.java:341
 #, java-format
 msgid "A certificate was not found for pool \"{0}\""
 msgstr "プール \"{0}\" の証明書は見つかりませんでした"
@@ -1661,45 +1548,38 @@ msgstr "組織に依存しない製品書き込みの動作には対応してい
 msgid "No product IDs specified"
 msgstr "製品 ID が指定されていません。"
 
-# translation auto-copied from project Candlepin, version master, document
-# keys, author khasida
-#: server/src/main/java/org/candlepin/resource/RoleResource.java:87
+#: server/src/main/java/org/candlepin/resource/RoleResource.java:99
+msgid "role name is null or empty"
+msgstr ""
+
+#: server/src/main/java/org/candlepin/resource/RoleResource.java:104
 #, java-format
-msgid "No such owner: {0}"
-msgstr "そのような所有者は存在しません: {0}"
+msgid "Role not found: {0}"
+msgstr ""
+
+#: server/src/main/java/org/candlepin/resource/RoleResource.java:128
+#: server/src/main/java/org/candlepin/resource/UserResource.java:106
+msgid "username is null or empty"
+msgstr ""
+
+#: server/src/main/java/org/candlepin/resource/RoleResource.java:146
+msgid "role data is null or empty"
+msgstr ""
+
+#: server/src/main/java/org/candlepin/resource/RoleResource.java:150
+msgid "role name not specified"
+msgstr ""
+
+#: server/src/main/java/org/candlepin/resource/RoleResource.java:154
+#, java-format
+msgid "Role already exists: {0}"
+msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author khasida
-#: server/src/main/java/org/candlepin/resource/RoleResource.java:111
-msgid "Role ID does not match path."
-msgstr "ロール ID はパスと一致しません。"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author khasida
-#: server/src/main/java/org/candlepin/resource/RoleResource.java:133
+#: server/src/main/java/org/candlepin/resource/RoleResource.java:197
 msgid "Access type NONE not supported."
 msgstr "アクセスタイプ NONE はサポートされていません"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author khasida
-#: server/src/main/java/org/candlepin/resource/RoleResource.java:169
-#, java-format
-msgid "No such permission: {0} in role: {1}"
-msgstr "そのような権限はありません: ロール: {1} の {0}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author khasida
-#: server/src/main/java/org/candlepin/resource/RoleResource.java:183
-#, java-format
-msgid "No such role: {0}"
-msgstr "そのようなロールはありません: {0}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author khasida
-#: server/src/main/java/org/candlepin/resource/RoleResource.java:191
-#, java-format
-msgid "No such user: {0}"
-msgstr "そのようなユーザーはいません: {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1730,26 +1610,17 @@ msgstr "通知用の電子メール言語が必要です"
 msgid "A subscription with the ID \"{0}\" could not be found."
 msgstr "ID が \"{0}\" のサブスクリプションが見つかりませんでした。"
 
-#: server/src/main/java/org/candlepin/resource/UserResource.java:110
-msgid "username is null or empty"
-msgstr ""
-
-#: server/src/main/java/org/candlepin/resource/UserResource.java:115
-#, java-format
-msgid "User not found: {0}"
-msgstr ""
-
-#: server/src/main/java/org/candlepin/resource/UserResource.java:183
+#: server/src/main/java/org/candlepin/resource/UserResource.java:177
 msgid "user data is null or empty"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/UserResource.java:187
-#, java-format
-msgid "User already exists: {0}"
+#: server/src/main/java/org/candlepin/resource/UserResource.java:181
+msgid "Username not specified"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/UserResource.java:193
-msgid "Username not specified"
+#: server/src/main/java/org/candlepin/resource/UserResource.java:185
+#, java-format
+msgid "User already exists: {0}"
 msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/util/CalculatedAttributesUtil.java:56
@@ -1805,7 +1676,7 @@ msgstr "組織"
 msgid "{0} with id {1} could not be found."
 msgstr "id {1} の {0} が見つかりませんでした。"
 
-#: server/src/main/java/org/candlepin/service/impl/DefaultEntitlementCertServiceAdapter.java:369
+#: server/src/main/java/org/candlepin/service/impl/DefaultEntitlementCertServiceAdapter.java:368
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
@@ -1818,7 +1689,7 @@ msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author khasida
-#: server/src/main/java/org/candlepin/service/impl/ImportSubscriptionServiceAdapter.java:79
+#: server/src/main/java/org/candlepin/service/impl/ImportSubscriptionServiceAdapter.java:103
 msgid "Standalone candlepin does not support redeeming a subscription."
 msgstr ""
 "単独型の candlepin では、サブスクリプションの引き換えサポートは行っていませ"
@@ -1844,7 +1715,7 @@ msgstr ""
 "所有者はすでに別のサブスクリプション管理アプリケーションからのインポートを"
 "行っています。"
 
-#: server/src/main/java/org/candlepin/sync/EntitlementImporter.java:584
+#: server/src/main/java/org/candlepin/sync/EntitlementImporter.java:200
 #, java-format
 msgid "Unable to find product with ID: {0}"
 msgstr "次の ID の製品が見つかりません: {0}"
@@ -1855,95 +1726,95 @@ msgstr "アップデートしたマニフェストファイルは存在しませ
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author khasida
-#: server/src/main/java/org/candlepin/sync/Importer.java:248
+#: server/src/main/java/org/candlepin/sync/Importer.java:249
 #, java-format
 msgid "{0} file imported successfully."
 msgstr "{0} ファイルは正常にインポートされました。"
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:250
+#: server/src/main/java/org/candlepin/sync/Importer.java:251
 #, java-format
 msgid "{0} file imported forcibly."
 msgstr "{0} ファイルが強制的にインポートされました。"
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:254
+#: server/src/main/java/org/candlepin/sync/Importer.java:255
 msgid "No active subscriptions found in the file."
 msgstr "ファイルに有効なサブスクリプションが見つかりません。"
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:258
+#: server/src/main/java/org/candlepin/sync/Importer.java:259
 msgid "One or more inactive subscriptions found in the file."
 msgstr "ファイルに使用されていないサブスクリプションが見つかりました。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: server/src/main/java/org/candlepin/sync/Importer.java:319
+#: server/src/main/java/org/candlepin/sync/Importer.java:320
 msgid "Wrong metadata type"
 msgstr "不正なメタデータタイプ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: server/src/main/java/org/candlepin/sync/Importer.java:328
+#: server/src/main/java/org/candlepin/sync/Importer.java:329
 msgid "Invalid owner"
 msgstr "無効な所有者"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: server/src/main/java/org/candlepin/sync/Importer.java:341
+#: server/src/main/java/org/candlepin/sync/Importer.java:342
 msgid "Import is older than existing data"
 msgstr "インポートは既存データよりも古いものです"
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:360
+#: server/src/main/java/org/candlepin/sync/Importer.java:361
 msgid "Import is the same as existing data"
 msgstr "インポートが既存データと同じです"
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:382
+#: server/src/main/java/org/candlepin/sync/Importer.java:383
 msgid "The archive does not contain the required signature file"
 msgstr "アーカイブには必要な署名ファイルが含まれていません"
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:399
+#: server/src/main/java/org/candlepin/sync/Importer.java:400
 msgid "Archive failed signature check"
 msgstr "アーカイブでの署名チェックに失敗しました"
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:414
+#: server/src/main/java/org/candlepin/sync/Importer.java:415
 msgid "The consumer_export archive has no contents"
 msgstr "consumer_export アーカイブにはコンテンツがありません"
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:435
+#: server/src/main/java/org/candlepin/sync/Importer.java:436
 msgid "The archive does not contain the required consumer_export.zip file"
 msgstr "アーカイブには必要な consumer_export.zip ファイルが含まれていません"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author noriko
-#: server/src/main/java/org/candlepin/sync/Importer.java:440
-#: server/src/main/java/org/candlepin/sync/Importer.java:444
+#: server/src/main/java/org/candlepin/sync/Importer.java:441
+#: server/src/main/java/org/candlepin/sync/Importer.java:445
 msgid "Failed to import archive"
 msgstr "アーカイブのインポートに失敗しました"
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:448
-#: server/src/main/java/org/candlepin/sync/Importer.java:921
+#: server/src/main/java/org/candlepin/sync/Importer.java:449
+#: server/src/main/java/org/candlepin/sync/Importer.java:922
 msgid "Unable to extract export archive"
 msgstr "エクスポートアーカイブが抽出できません"
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:453
+#: server/src/main/java/org/candlepin/sync/Importer.java:454
 msgid "Certificate exception checking archive signature"
 msgstr "証明書例外チェックアーカイブ署名"
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:479
+#: server/src/main/java/org/candlepin/sync/Importer.java:480
 msgid "The archive does not contain the required meta.json file"
 msgstr "アーカイブに必要な meta.json ファイルが含まれていません"
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:484
+#: server/src/main/java/org/candlepin/sync/Importer.java:485
 msgid "The archive does not contain the required consumer_types directory"
 msgstr "アーカイブに必要な consumer_types ディレクトリーが含まれていません"
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:489
+#: server/src/main/java/org/candlepin/sync/Importer.java:490
 msgid "The archive does not contain the required consumer.json file"
 msgstr "アーカイブに必要な consumer.json ファイルが含まれていません"
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:495
+#: server/src/main/java/org/candlepin/sync/Importer.java:496
 msgid "The archive does not contain the required entitlements directory"
 msgstr "アーカイブに必要なエンタイトルメントのディレクトリーが含まれていません"
 
-#: server/src/main/java/org/candlepin/sync/Importer.java:788
+#: server/src/main/java/org/candlepin/sync/Importer.java:789
 #, java-format
 msgid "The archive {0} is not a properly compressed file or is empty"
 msgstr ""

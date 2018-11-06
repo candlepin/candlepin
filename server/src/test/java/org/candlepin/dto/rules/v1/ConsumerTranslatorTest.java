@@ -79,10 +79,18 @@ public class ConsumerTranslatorTest extends
         consumer.setUuid("consumer_uuid");
         consumer.setUsername("consumer_user_name");
         consumer.setServiceLevel("consumer_service_level");
+        consumer.setRole("consumer_role");
+        consumer.setUsage("consumer_usage");
         Owner owner = this.ownerTranslatorTest.initSourceObject();
         when(mockOwnerCurator.findOwnerById(eq(owner.getId()))).thenReturn(owner);
         consumer.setOwner(owner);
         consumer.setType(ctype);
+
+        Set<String> addOns = new HashSet<>();
+        for (int i = 0; i < 5; i++) {
+            addOns.add("add-on-" + i);
+        }
+        consumer.setAddOns(addOns);
 
         Map<String, String> facts = new HashMap<>();
         for (int i = 0; i < 5; ++i) {
@@ -125,6 +133,9 @@ public class ConsumerTranslatorTest extends
             assertEquals(source.getUuid(), dest.getUuid());
             assertEquals(source.getUsername(), dest.getUsername());
             assertEquals(source.getServiceLevel(), dest.getServiceLevel());
+            assertEquals(source.getRole(), dest.getRole());
+            assertEquals(source.getUsage(), dest.getUsage());
+            assertEquals(source.getAddOns(), dest.getAddOns());
             assertEquals(source.getFacts(), dest.getFacts());
             assertEquals(source.getCreated(), dest.getCreated());
             assertEquals(source.getUpdated(), dest.getUpdated());

@@ -14,11 +14,8 @@
  */
 package org.candlepin.cache;
 
-import org.candlepin.model.Product;
-
 import com.google.inject.Inject;
 
-import javax.cache.Cache;
 import javax.cache.CacheManager;
 import javax.inject.Singleton;
 
@@ -29,8 +26,6 @@ import javax.inject.Singleton;
  */
 @Singleton
 public class CandlepinCache {
-    private static final String CACHE_PRODUCT_FULL = "productfullcache";
-
     /**
      * Cache manager for Ehcache configured caches.
      */
@@ -61,12 +56,4 @@ public class CandlepinCache {
         return this.statusCache;
     }
 
-    /**
-     * Cache for fully hydrated Product entities
-     *
-     * @return Cache for Status entity
-     */
-    public Cache<String, Product> getProductCache() {
-        return cacheManager.getCache(CACHE_PRODUCT_FULL);
-    }
 }

@@ -55,6 +55,7 @@ import org.candlepin.dto.api.v1.GuestIdDTO;
 import org.candlepin.dto.api.v1.HypervisorIdDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.PoolQuantityDTO;
+import org.candlepin.dto.api.v1.SystemPurposeComplianceStatusDTO;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.Certificate;
@@ -94,6 +95,8 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.pinsetter.tasks.EntitleByProductsJob;
 import org.candlepin.pinsetter.tasks.EntitlerJob;
+import org.candlepin.policy.SystemPurposeComplianceRules;
+import org.candlepin.policy.SystemPurposeComplianceStatus;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.consumer.ConsumerRules;
@@ -209,6 +212,7 @@ public class ConsumerResource {
     private ActivationKeyCurator activationKeyCurator;
     private Entitler entitler;
     private ComplianceRules complianceRules;
+    private SystemPurposeComplianceRules systemPurposeComplianceRules;
     private DeletedConsumerCurator deletedConsumerCurator;
     private EnvironmentCurator environmentCurator;
     private DistributorVersionCurator distributorVersionCurator;
@@ -237,8 +241,8 @@ public class ConsumerResource {
         EventAdapter eventAdapter, UserServiceAdapter userService, PoolManager poolManager,
         ConsumerRules consumerRules, OwnerCurator ownerCurator,
         ActivationKeyCurator activationKeyCurator, Entitler entitler,
-        ComplianceRules complianceRules, DeletedConsumerCurator deletedConsumerCurator,
-        EnvironmentCurator environmentCurator,
+        ComplianceRules complianceRules, SystemPurposeComplianceRules systemPurposeComplianceRules,
+        DeletedConsumerCurator deletedConsumerCurator, EnvironmentCurator environmentCurator,
         DistributorVersionCurator distributorVersionCurator,
         Configuration config, ContentCurator contentCurator,
         CdnCurator cdnCurator, CalculatedAttributesUtil calculatedAttributesUtil,
@@ -271,6 +275,7 @@ public class ConsumerResource {
         this.activationKeyCurator = activationKeyCurator;
         this.entitler = entitler;
         this.complianceRules = complianceRules;
+        this.systemPurposeComplianceRules = systemPurposeComplianceRules;
         this.deletedConsumerCurator = deletedConsumerCurator;
         this.environmentCurator = environmentCurator;
         this.distributorVersionCurator = distributorVersionCurator;
@@ -502,6 +507,7 @@ public class ConsumerResource {
      * @throws IllegalArgumentException
      *  if either entity or dto are null
      */
+    @SuppressWarnings("checkstyle:methodlength")
     protected void populateEntity(Consumer entity, ConsumerDTO dto) {
         if (entity == null) {
             throw new IllegalArgumentException("the consumer model entity is null");
@@ -533,6 +539,18 @@ public class ConsumerResource {
 
         if (dto.getServiceLevel() != null) {
             entity.setServiceLevel(dto.getServiceLevel());
+        }
+
+        if (dto.getRole() != null) {
+            entity.setRole(dto.getRole());
+        }
+
+        if (dto.getUsage() != null) {
+            entity.setUsage(dto.getUsage());
+        }
+
+        if (dto.getAddOns() != null) {
+            entity.setAddOns(dto.getAddOns());
         }
 
         if (dto.getReleaseVersion() != null) {
@@ -781,7 +799,8 @@ public class ConsumerResource {
         logNewConsumerDebugInfo(consumerToCreate, keys, type);
 
         validateContentAccessMode(consumerToCreate, owner);
-        consumerBindUtil.validateServiceLevel(owner.getId(), consumerToCreate.getServiceLevel());
+        // BZ 1618398 Remove validation check on consumer service level
+        // consumerBindUtil.validateServiceLevel(owner.getId(), consumerToCreate.getServiceLevel());
 
         try {
             Date createdDate = consumerToCreate.getCreated();
@@ -809,6 +828,8 @@ public class ConsumerResource {
             // Don't allow complianceRules to update entitlementStatus, because we're about to perform
             // an update unconditionally.
             complianceRules.getStatus(consumerToCreate, null, false, false);
+            systemPurposeComplianceRules.getStatus(consumerToCreate, consumerToCreate.getEntitlements(),
+                null, false, false);
             consumerCurator.update(consumerToCreate);
 
             log.info("Consumer {} created in org {}",
@@ -1254,14 +1275,7 @@ public class ConsumerResource {
             changesMade = true;
         }
 
-        // Allow optional setting of the service level attribute:
-        String level = updated.getServiceLevel();
-        if (level != null && !level.equals(toUpdate.getServiceLevel())) {
-            log.info("   Updating consumer service level setting.");
-            consumerBindUtil.validateServiceLevel(toUpdate.getOwnerId(), level);
-            toUpdate.setServiceLevel(level);
-            changesMade = true;
-        }
+        changesMade = updateSystemPurposeData(updated, toUpdate) || changesMade;
 
         String environmentId = updated.getEnvironment() == null ? null : updated.getEnvironment().getId();
         if (environmentId != null && (toUpdate.getEnvironmentId() == null ||
@@ -1276,7 +1290,7 @@ public class ConsumerResource {
 
             // reset content access cert
             Owner owner = ownerCurator.findOwnerById(toUpdate.getOwnerId());
-            if (ContentAccessCertServiceAdapter.ORG_ENV_ACCESS_MODE.equals(owner.getContentAccessMode())) {
+            if (owner.isContentAccessEnabled()) {
                 toUpdate.setContentAccessCert(null);
                 contentAccessCertService.removeContentAccessCert(toUpdate);
             }
@@ -1335,11 +1349,46 @@ public class ConsumerResource {
 
             // this should update compliance on toUpdate, but not call the curator
             complianceRules.getStatus(toUpdate, null, false, false);
+            systemPurposeComplianceRules.getStatus(toUpdate, toUpdate.getEntitlements(), null, false, false);
 
             Event event = eventBuilder.setEventData(toUpdate).buildEvent();
             sink.queueEvent(event);
         }
 
+        return changesMade;
+    }
+
+    private boolean updateSystemPurposeData(ConsumerDTO updated, Consumer toUpdate) {
+        boolean changesMade = false;
+        // Allow optional setting of the service level attribute:
+        String level = updated.getServiceLevel();
+        if (level != null && !level.equals(toUpdate.getServiceLevel())) {
+            log.info("   Updating consumer service level setting.");
+            // BZ 1618398 Remove validation check on consumer service level
+            // consumerBindUtil.validateServiceLevel(toUpdate.getOwnerId(), level);
+            toUpdate.setServiceLevel(level);
+            changesMade = true;
+        }
+
+        String role = updated.getRole();
+        if (role != null && !role.equals(toUpdate.getRole())) {
+            log.info("   Updating role setting.");
+            toUpdate.setRole(role);
+            changesMade = true;
+        }
+
+        String usage = updated.getUsage();
+        if (usage != null && !usage.equals(toUpdate.getUsage())) {
+            log.info("   Updating usage setting.");
+            toUpdate.setUsage(usage);
+            changesMade = true;
+        }
+
+        if (updated.getAddOns() != null && !updated.getAddOns().equals(toUpdate.getAddOns())) {
+            log.info("   Updating system purpose add ons.");
+            toUpdate.setAddOns(updated.getAddOns());
+            changesMade = true;
+        }
         return changesMade;
     }
 
@@ -1670,8 +1719,7 @@ public class ConsumerResource {
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
 
         Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
-        String cam = owner.getContentAccessMode();
-        if (!ContentAccessCertServiceAdapter.ORG_ENV_ACCESS_MODE.equals(cam)) {
+        if (!owner.isContentAccessEnabled()) {
             throw new BadRequestException(i18n.tr("Content access mode does not allow this request."));
         }
 
@@ -1991,13 +2039,16 @@ public class ConsumerResource {
         Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
 
         if (owner.isAutobindDisabled()) {
-            throw new BadRequestException(i18n.tr("Owner has autobind disabled."));
+            String caMessage = owner.isContentAccessEnabled() ?
+                " because of the content access mode setting" : "";
+            throw new BadRequestException(i18n.tr("Owner has autobind disabled" + caMessage + "."));
         }
 
         List<PoolQuantity> dryRunPools = new ArrayList<>();
 
         try {
-            consumerBindUtil.validateServiceLevel(consumer.getOwnerId(), serviceLevel);
+            // BZ 1618398 Remove validation check on consumer service level
+            // consumerBindUtil.validateServiceLevel(consumer.getOwnerId(), serviceLevel);
             dryRunPools = entitler.getDryRun(consumer, owner, serviceLevel);
         }
         catch (ForbiddenException fe) {
@@ -2584,6 +2635,28 @@ public class ConsumerResource {
         status = this.complianceRules.getStatus(consumer, date);
 
         return this.translator.translate(status, ComplianceStatusDTO.class);
+    }
+
+    @ApiOperation(notes = "Retrieves the System Purpose Compliance Status of a Consumer.", value =
+        "getSystemPurposeComplianceStatus")
+    @ApiResponses({ @ApiResponse(code = 404, message = "") })
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{consumer_uuid}/purpose_compliance")
+    @Transactional
+    public SystemPurposeComplianceStatusDTO getSystemPurposeComplianceStatus(
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid,
+        @ApiParam("Date to get compliance information for, default is now.")
+        @QueryParam("on_date") String onDate) {
+
+        SystemPurposeComplianceStatus status = null;
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(uuid);
+        Date date = ResourceDateParser.parseDateString(onDate);
+        date = date != null ? date : new Date();
+        List<Entitlement> entitlements = entitlementCurator.listByConsumerAndDate(consumer, date).list();
+        status = this.systemPurposeComplianceRules.getStatus(consumer, entitlements, null, true, true);
+
+        return this.translator.translate(status, SystemPurposeComplianceStatusDTO.class);
     }
 
     @ApiOperation(notes = "Retrieves a Compliance Status list for a list of Consumers",

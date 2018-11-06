@@ -48,6 +48,12 @@ import javax.ws.rs.ext.Provider;
 @Priority(Priorities.HEADER_DECORATOR)
 public class LinkHeaderResponseFilter implements ContainerResponseFilter {
     private static Logger log = LoggerFactory.getLogger(LinkHeaderResponseFilter.class);
+
+    // This needs to be low enough that *all* headers can still reasonably fit after putting in
+    // all four links. Given that the default header buffer size is 8k, we need to make sure
+    // we still leave plenty of space for other headers.
+    public static final int MAX_LINK_LENGTH = 1024;
+
     public static final String LINK_HEADER = "Link";
     public static final String TOTAL_RECORDS_COUNT = "X-total-count";
 
@@ -88,21 +94,30 @@ public class LinkHeaderResponseFilter implements ContainerResponseFilter {
         builder = addUnchangingQueryParams(builder, params);
         //TODO add missing parameters like the default limit if no limit is given.
 
-        LinkHeader header = new LinkHeader();
+        try {
+            LinkHeader header = new LinkHeader();
 
-        Integer next = getNextPage(page);
-        if (next != null) {
-            header.addLink(null, "next", buildPageLink(builder, next), null);
+            Integer next = getNextPage(page);
+            if (next != null) {
+                header.addLink(null, "next", buildPageLink(builder, next), null);
+            }
+
+            Integer prev = getPrevPage(page);
+            if (prev != null) {
+                header.addLink(null, "prev", buildPageLink(builder, prev), null);
+            }
+
+            header.addLink(null, "first", buildPageLink(builder, 1), null);
+            header.addLink(null, "last", buildPageLink(builder, getLastPage(page)), null);
+
+            respContext.getHeaders().add(LINK_HEADER, header.toString());
+        }
+        catch (LinkTooLongException e) {
+            log.warn("Link length exceeded maximum length ({}). " +
+                "Link headers will be omitted from this response.",
+                MAX_LINK_LENGTH, e);
         }
 
-        Integer prev = getPrevPage(page);
-        if (prev != null) {
-            header.addLink(null, "prev", buildPageLink(builder, prev), null);
-        }
-
-        header.addLink(null, "first", buildPageLink(builder, 1), null);
-        header.addLink(null, "last", buildPageLink(builder, getLastPage(page)), null);
-        respContext.getHeaders().add(LINK_HEADER, header.toString());
         respContext.getHeaders().add(TOTAL_RECORDS_COUNT, page.getMaxRecords());
     }
 
@@ -110,7 +125,14 @@ public class LinkHeaderResponseFilter implements ContainerResponseFilter {
         // Copy so we can use the same builder for building each link.
         UriBuilder builder = b.clone();
         builder.queryParam(PageRequest.PAGE_PARAM, String.valueOf(value));
-        return builder.build().toString();
+
+        String link = builder.build().toString();
+
+        if (link.length() > MAX_LINK_LENGTH) {
+            throw new LinkTooLongException(link);
+        }
+
+        return link;
     }
 
     protected Integer getLastPage(Page<?> page) {

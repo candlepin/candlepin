@@ -6,6 +6,7 @@ require 'rexml/document'
 describe 'Consumer Resource' do
 
   include CandlepinMethods
+  include AttributeHelper
 
   before(:each) do
     @owner1 = create_owner random_string('test_owner1')
@@ -709,11 +710,6 @@ describe 'Consumer Resource' do
     consumer = @cp.get_consumer(consumer['uuid'])
     consumer['serviceLevel'].should == 'VIP'
 
-    # Should not be able to set service level to one not available by org
-    lambda do
-        consumer_client.update_consumer({:serviceLevel => 'Ultra-VIP'})
-    end.should raise_exception(RestClient::BadRequest)
-
     # The service level should be case insensitive
     consumer_client.update_consumer({:serviceLevel => ''})
     consumer = @cp.get_consumer(consumer['uuid'])
@@ -722,11 +718,6 @@ describe 'Consumer Resource' do
     consumer_client.update_consumer({:serviceLevel => 'vip'})
     consumer = @cp.get_consumer(consumer['uuid'])
     consumer['serviceLevel'].should == 'vip'
-
-   # Cannot assign exempt level to consumer
-    lambda do
-        consumer_client.update_consumer({:serviceLevel => 'Layered'})
-    end.should raise_exception(RestClient::BadRequest)
 
   end
 
@@ -750,7 +741,7 @@ describe 'Consumer Resource' do
     service_levels.length.should eq(0)
   end
 
-  it 'should allow a consumer dry run an autosubscribe based on service level' do
+  it 'should allow a consumer without existing entitlements to dry run an autoattach based on SLA but not filter on it' do
     product1 = create_product(random_string('product'),
       random_string('product'),
       {:attributes => {:support_level => 'VIP'},
@@ -775,35 +766,101 @@ describe 'Consumer Resource' do
     consumer = @cp.get_consumer(consumer['uuid'])
     consumer['serviceLevel'].should == 'VIP'
 
-    # dry run against the set service level
+    # dry run against the set service level:
+    # should return both pools because we no longer filter on consumer's sla
+    # (unless the consumer has existing entitlements, and in this case we don't).
     pools = @cp.autobind_dryrun(consumer['uuid'])
-    pools.length.should == 1
-    pool_id = pools.first.pool.id
-    pool = @cp.get_pool(pool_id)
+    pools.length.should == 2
+    pool1_id = pools[0].pool.id
+    pool2_id = pools[1].pool.id
+    pool = @cp.get_pool(pool1_id)
     pool.subscriptionId.should == pool1.subscriptionId
+    pool = @cp.get_pool(pool2_id)
+    pool.subscriptionId.should == pool2.subscriptionId
 
-    # dry run against the override service level
+    # dry run against the override service level:
+    # should return both pools because we no longer filter on the SLA override
+    # (unless the consumer has existing entitlements, and in this case we don't).
     pools = @cp.autobind_dryrun(consumer['uuid'], 'Ultra-VIP')
-    pools.length.should == 1
-    pool_id = pools.first.pool.id
-    pool = @cp.get_pool(pool_id)
+    pools.length.should == 2
+    pool1_id = pools[0].pool.id
+    pool2_id = pools[1].pool.id
+    pool = @cp.get_pool(pool1_id)
+    pool.subscriptionId.should == pool1.subscriptionId
+    pool = @cp.get_pool(pool2_id)
     pool.subscriptionId.should == pool2.subscriptionId
 
     # ensure the override use did not change the setting
     consumer = @cp.get_consumer(consumer['uuid'])
     consumer['serviceLevel'].should == 'VIP'
 
-    # dry run with unknown level should return badrequest
-    lambda do
-        @cp.autobind_dryrun(consumer['uuid'], 'Standard').length.should == 0
-    end.should raise_exception(RestClient::BadRequest)
+    # dry run against 1) no consumer SLA 2) no override SLA 3) with owner default SLA:
+    # should return both pools because we no longer filter on the owner's default SLA.
+    # (unless the consumer has existing entitlements, and in this case we don't).
+    consumer_client.update_consumer({:serviceLevel => ''})
+    consumer = @cp.get_consumer(consumer['uuid'])
+    consumer['serviceLevel'].should == ''
+    @cp.update_owner(@owner1['key'], {:defaultServiceLevel => 'VIP'})
 
     # dry run against the override service level should be case insensitive
     pools = @cp.autobind_dryrun(consumer['uuid'], 'Ultra-vip')
-    pools.length.should == 1
-    pool_id = pools.first.pool.id
-    pool = @cp.get_pool(pool_id)
+    pools.length.should == 2
+    pool1_id = pools[0].pool.id
+    pool2_id = pools[1].pool.id
+    pool = @cp.get_pool(pool1_id)
+    pool.subscriptionId.should == pool1.subscriptionId
+    pool = @cp.get_pool(pool2_id)
     pool.subscriptionId.should == pool2.subscriptionId
+  end
+
+  it "should allow a consumer dry run an autoattach based on SLA and filter on their existing entitlement SLAs" do
+    product1 = create_product(random_string('product'),
+      random_string('product'),
+      {:attributes => {:support_level => 'VIP'},
+      :owner => @owner1['key']})
+    product2 = create_product(random_string('product'),
+      random_string('product'),
+      {:attributes => {:support_level => 'Ultra-VIP'},
+      :owner => @owner1['key']})
+    product3 = create_product(random_string('product'),
+      random_string('product'),
+      {:attributes => {:support_level => 'Ultra-VIP'},
+      :owner => @owner1['key']})
+
+    pool1 = create_pool_and_subscription(@owner1['key'], product1.id)
+    pool2 = create_pool_and_subscription(@owner1['key'], product2.id)
+    pool3 = create_pool_and_subscription(@owner1['key'], product3.id)
+
+    user_cp = user_client(@owner1, random_string('billy'))
+    consumer = user_cp.register(random_string('system'), :system, nil,
+      {}, nil, nil, [], [])
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+    installed = [
+        {'productId' => product1.id, 'productName' => product1.name},
+        {'productId' => product2.id, 'productName' => product2.name},
+        {'productId' => product3.id, 'productName' => product3.name}]
+
+    # We set the consumer's SLA as VIP
+    consumer_client.update_consumer({:serviceLevel => 'VIP',
+                                     :installedProducts => installed})
+
+    consumer = @cp.get_consumer(consumer['uuid'])
+    consumer['serviceLevel'].should == 'VIP'
+
+    # We explicitly attach to a pool with Ultra-VIP SLA
+    consumer_client.consume_pool(pool2.id, {:quantity => 1})
+
+    # dry run against the set service level:
+    # should return only one pool because we no longer filter on consumer's sla,
+    # but we do filter on the consumer's existing entitlements' SLA's, and in this case
+    # the consumer has an existing entitlement whose SLA is 'Ultra-VIP',
+    # so only 'Ultra-VIP' pools are eligible during autoattach (and the 'VIP' pool is not).
+    returned_pools = @cp.autobind_dryrun(consumer['uuid'])
+    returned_pools.length.should == 1
+    returned_pool_id = returned_pools.first.pool.id
+    returned_pool = @cp.get_pool(returned_pool_id)
+    returned_pool.subscriptionId.should == pool3.subscriptionId
+    expect(get_attribute_value(returned_pool['productAttributes'], 'support_level')).to eq('Ultra-VIP')
   end
 
   it 'should recognize support level exempt attribute' do
@@ -825,8 +882,8 @@ describe 'Consumer Resource' do
       {:attributes => {:support_level => 'LAYered'},
       :owner => @owner1['key']})
     pool1 = create_pool_and_subscription(@owner1['key'], product1.id)
-    create_pool_and_subscription(@owner1['key'], product2.id, 1, [], '', '', '', nil, nil, true)
-    create_pool_and_subscription(@owner1['key'], product3.id)
+    pool2 = create_pool_and_subscription(@owner1['key'], product2.id)
+    pool3 = create_pool_and_subscription(@owner1['key'], product3.id)
 
     user_cp = user_client(@owner1, random_string('billy'))
     consumer = user_cp.register(random_string('system'), :system, nil,
@@ -843,22 +900,28 @@ describe 'Consumer Resource' do
     consumer = @cp.get_consumer(consumer['uuid'])
     consumer['serviceLevel'].should == 'Ultra-VIP'
 
-    # dry run against the set service level
-    # should get only the exempt product that has subscription
+    # Dry run against the set service level:
+    # Should get pools of both the exempt product (product1) and the other installed product (product2), 
+    # because we no longer filter on the consumer's sla match (unless the consumer has existing entitlements),
+    # and exempt sla pools are always returned.
     pools = @cp.autobind_dryrun(consumer['uuid'])
-    pools.length.should == 1
-    pool_id = pools.first.pool.id
-    pool = @cp.get_pool(pool_id)
+    pools.length.should == 2
+    pool1_id = pools[0].pool.id
+    pool2_id = pools[1].pool.id
+    pool = @cp.get_pool(pool1_id)
     pool.subscriptionId.should == pool1.subscriptionId
+    pool = @cp.get_pool(pool2_id)
+    pool.subscriptionId.should == pool2.subscriptionId
 
     # this product should also get pulled, exempt overrides
     # based on name match
     create_pool_and_subscription(@owner1['key'], product4.id)
     pools = @cp.autobind_dryrun(consumer['uuid'])
-    pools.length.should == 2
+    pools.length.should == 3
 
-    # change service level to one that matches installed
-    # should get 3 pools
+    # changing consumer's service level to one that matches installed
+    # should have no effect because we are not filtering on it (unless the consumer has existing entitlements),
+    # and exempt sla pools are always returned.
     consumer_client.update_consumer({:serviceLevel => 'VIP'})
     pools = @cp.autobind_dryrun(consumer['uuid'])
     pools.length.should == 3

@@ -26,6 +26,12 @@ import java.io.Serializable;
  * This interceptor changes empty strings to null before they are written to the
  * database.  This change is necessary because Oracle treats the empty string
  * as null and we want to mimic the same behavior on PostgreSQL.
+ *
+ * For a time we were attempting to future-proof by remaining compatible with (if
+ * not fully supporting) Oracle.  As of August 2018, the mandate to remain Oracle compatible
+ * is gone, but I am electing to keep this interceptor so that our data storage strategy remains
+ * consistent across Candlepin versions.  I don't want the situation where Candlepin X does store
+ * string but Candlepin X+1 does not.
  */
 public class EmptyStringInterceptor extends EmptyInterceptor {
     private static Logger log = LoggerFactory.getLogger(EmptyStringInterceptor.class);
@@ -34,17 +40,18 @@ public class EmptyStringInterceptor extends EmptyInterceptor {
     public boolean onFlushDirty(Object entity, Serializable id,
         Object[] currentState, Object[] previousState, String[] propertyNames,
         Type[] types) {
+
         return convertEmptyStringToNull(currentState, propertyNames, types);
     }
 
     @Override
     public boolean onSave(Object entity, Serializable id, Object[] state,
         String[] propertyNames, Type[] types) {
+
         return convertEmptyStringToNull(state, propertyNames, types);
     }
 
-    private boolean convertEmptyStringToNull(Object[] state,
-        String[] propertyNames, Type[] types) {
+    private boolean convertEmptyStringToNull(Object[] state, String[] propertyNames, Type[] types) {
         boolean modified = false;
         for (int i = 0; i < types.length; i++) {
             if (types[i] instanceof StringType && "".equals(state[i])) {

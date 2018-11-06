@@ -45,15 +45,20 @@ candlepin.amqp.connect=<%= amqp_server || "tcp://localhost:5671?ssl='true'&ssl_c
 <%- if ENV['external_broker'] -%>
 candlepin.audit.hornetq.embedded=false
 candlepin.audit.hornetq.broker_url=tcp://localhost:61617
-
 <%- end -%>
 
 <%- if hidden_resources -%>
 candlepin.hidden_resources=<%= hidden_resources %>
-
 <%- end -%>
+
+# Turn down hibernate logging by default until we have a fix for HHH-12927
+log4j.logger.org.hibernate.internal.SessionImpl=ERROR
 # uncomment to enable debug logging in candlepin.log:
 #log4j.logger.org.candlepin=DEBUG
+# uncomment to enable logging of SQL statements
+#log4j.logger.org.hibernate.SQL=DEBUG
+# uncomment to enable logging of SQL arguments
+#log4j.logger.org.hibernate.type.descriptor.sql=TRACE
 
 candlepin.pinsetter.enable=<%= pinsetter_enabled || true %>
 

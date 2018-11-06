@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
 
 
 /**
- * Caches a {@link org.candlepin.model.Status} for 5 seconds.
+ * Caches a {@link org.candlepin.dto.api.v1.StatusDTO} for 5 seconds.
  */
 public class StatusCache {
     private static Logger log = LoggerFactory.getLogger(StatusCache.class);

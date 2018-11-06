@@ -26,11 +26,12 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.ProductCertificateDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
-import org.candlepin.model.Content;
 import org.candlepin.model.CandlepinQuery;
+import org.candlepin.model.Content;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.OwnerProduct;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
@@ -277,13 +278,19 @@ public class OwnerProductResource {
         }
 
         Owner owner = this.getOwnerByKey(ownerKey);
-        Product existing = this.fetchProduct(owner, productId);
+
+        // Get the matching owner_product & lock it while we are doing the update for this org
+        // This is done in order to prevent collisions in updates on different parts of the product
+        OwnerProduct ownerProduct = ownerProductCurator.getOwnerProductByProductId(owner, productId);
+        ownerProductCurator.lock(ownerProduct);
+        ownerProductCurator.refresh(ownerProduct);
+
+        Product existing = ownerProduct.getProduct();
 
         if (existing.isLocked()) {
             throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", existing.getId()));
         }
 
-        this.productCurator.lock(existing);
         Product updated = this.productManager.updateProduct(update, owner, true);
 
         return this.translator.translate(updated, ProductDTO.class);
@@ -301,14 +308,20 @@ public class OwnerProductResource {
         @ApiParam(name = "contentMap", required = true) Map<String, Boolean> contentMap) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
-        Product product = this.fetchProduct(owner, productId);
+
+        // Get the matching owner_product & lock it while we are doing the update for this org
+        // This is done in order to prevent collisions in updates on different parts of the product
+        OwnerProduct ownerProduct = ownerProductCurator.getOwnerProductByProductId(owner, productId);
+        ownerProductCurator.lock(ownerProduct);
+        ownerProductCurator.refresh(ownerProduct);
+
+        Product product = ownerProduct.getProduct();
         Collection<ProductContent> productContent = new LinkedList<>();
 
         if (product.isLocked()) {
             throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", product.getId()));
         }
 
-        this.productCurator.lock(product);
         ProductDTO pdto = this.translator.translate(product, ProductDTO.class);
 
         // Impl note:
@@ -367,13 +380,18 @@ public class OwnerProductResource {
         @ApiParam(name = "content", required = true) List<String> contentIds) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
-        Product product = this.fetchProduct(owner, productId);
+
+        // Get the matching owner_product & lock it while we are doing the update for this org
+        // This is done in order to prevent collisions in updates on different parts of the product
+        OwnerProduct ownerProduct = ownerProductCurator.getOwnerProductByProductId(owner, productId);
+        ownerProductCurator.lock(ownerProduct);
+        ownerProductCurator.refresh(ownerProduct);
+        Product product = ownerProduct.getProduct();
 
         if (product.isLocked()) {
             throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", product.getId()));
         }
 
-        this.productCurator.lock(product);
         ProductDTO pdto = this.translator.translate(product, ProductDTO.class);
 
         // Impl note:

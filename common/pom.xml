@@ -68,8 +68,9 @@
     <com.fasterxml.jackson.module-jackson-module-jaxb-annotations.version>2.9.4</com.fasterxml.jackson.module-jackson-module-jaxb-annotations.version>
     <com.fasterxml.jackson.datatype-jackson-datatype-hibernate5.version>2.9.4</com.fasterxml.jackson.datatype-jackson-datatype-hibernate5.version>
     <com.fasterxml.jackson.datatype-jackson-datatype-jdk8.version>2.9.4</com.fasterxml.jackson.datatype-jackson-datatype-jdk8.version>
-    <org.hibernate.javax.persistence-hibernate-jpa-2.1-api.version>1.0.0.Final</org.hibernate.javax.persistence-hibernate-jpa-2.1-api.version>
+    <org.hibernate.javax.persistence-hibernate-jpa-2.1-api.version>1.0.2.Final</org.hibernate.javax.persistence-hibernate-jpa-2.1-api.version>
     <javax.transaction-jta.version>1.1</javax.transaction-jta.version>
+    <javax.persistence-javax.persistence-api.version>2.2</javax.persistence-javax.persistence-api.version>
     <net.oauth.core-oauth.version>20100527</net.oauth.core-oauth.version>
     <net.oauth.core-oauth-provider.version>20100527</net.oauth.core-oauth-provider.version>
     <org.hibernate.validator-hibernate-validator.version>6.0.7.Final</org.hibernate.validator-hibernate-validator.version>
@@ -674,6 +675,17 @@
       <groupId>javax.transaction</groupId>
       <artifactId>jta</artifactId>
       <version>${javax.transaction-jta.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>javax.persistence</groupId>
+      <artifactId>javax.persistence-api</artifactId>
+      <version>${javax.persistence-javax.persistence-api.version}</version>
       <exclusions>
         <exclusion>
           <groupId>*</groupId>

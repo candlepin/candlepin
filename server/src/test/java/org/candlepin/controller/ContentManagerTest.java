@@ -114,10 +114,11 @@ public class ContentManagerTest extends DatabaseTestFixture {
     @Test
     public void testUpdateContentNoChange() {
         Owner owner = this.createOwner("test-owner", "Test Owner");
-        Product product = this.createProduct("p1", "product-1", owner);
         Content content = this.createContent("c1", "content-1", owner);
+
+        Product product = new Product("p1", "product-1");
         product.addContent(content, true);
-        product = this.productCurator.merge(product);
+        this.createProduct(product, owner);
 
         ContentDTO cdto = this.modelTranslator.translate(content, ContentDTO.class);
         Content output = this.contentManager.updateContent(cdto, owner, true);
@@ -132,11 +133,11 @@ public class ContentManagerTest extends DatabaseTestFixture {
     @Parameters({"false", "true"})
     public void testUpdateContent(boolean regenCerts) {
         Owner owner = this.createOwner("test-owner", "Test Owner");
-        Product product = this.createProduct("p1", "product-1", owner);
+        Product product = new Product("p1", "product-1");
         Content content = this.createContent("c1", "content-1", owner);
-        ContentDTO update = TestUtil.createContentDTO("c1", "new content name");
         product.addContent(content, true);
-        product = this.productCurator.merge(product);
+        this.createProduct(product, owner);
+        ContentDTO update = TestUtil.createContentDTO("c1", "new content name");
 
         Content output = this.contentManager.updateContent(update, owner, regenCerts);
 
@@ -168,12 +169,12 @@ public class ContentManagerTest extends DatabaseTestFixture {
     public void testUpdateContentConvergeWithExisting(boolean regenCerts) {
         Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
         Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");
-        Product product = this.createProduct("p1", "product-1", owner1);
+        Product product = new Product("p1", "product-1");
         Content content1 = this.createContent("c1", "content-1", owner1);
         Content content2 = this.createContent("c1", "updated content", owner2);
         ContentDTO update = TestUtil.createContentDTO("c1", "updated content");
         product.addContent(content1, true);
-        product = this.productCurator.merge(product);
+        this.createProduct(product, owner1);
 
         assertTrue(this.ownerContentCurator.isContentMappedToOwner(content1, owner1));
         assertFalse(this.ownerContentCurator.isContentMappedToOwner(content2, owner1));
@@ -202,11 +203,11 @@ public class ContentManagerTest extends DatabaseTestFixture {
     public void testUpdateContentDivergeFromExisting(boolean regenCerts) {
         Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
         Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");
-        Product product = this.createProduct("p1", "product-1", owner1);
         Content content = this.createContent("c1", "content-1", owner1, owner2);
-        ContentDTO update = TestUtil.createContentDTO("c1", "updated content");
+        Product product = new Product("p1", "product-1");
         product.addContent(content, true);
-        product = this.productCurator.merge(product);
+        this.createProduct(product, owner1);
+        ContentDTO update = TestUtil.createContentDTO("c1", "updated content");
 
         assertTrue(this.ownerContentCurator.isContentMappedToOwner(content, owner1));
         assertTrue(this.ownerContentCurator.isContentMappedToOwner(content, owner2));
@@ -243,10 +244,10 @@ public class ContentManagerTest extends DatabaseTestFixture {
     @Parameters({"false", "true"})
     public void testRemoveContent(boolean regenCerts) {
         Owner owner = this.createOwner("test-owner-1", "Test Owner 1");
-        Product product = this.createProduct("p1", "product-1", owner);
         Content content = this.createContent("c1", "content-1", owner);
+        Product product = new Product("p1", "product-1");
         product.addContent(content, true);
-        product = this.productCurator.merge(product);
+        this.createProduct(product, owner);
 
         assertTrue(this.ownerContentCurator.isContentMappedToOwner(content, owner));
 
@@ -277,10 +278,10 @@ public class ContentManagerTest extends DatabaseTestFixture {
     public void testRemoveContentDivergeFromExisting(boolean regenCerts) {
         Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
         Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");
-        Product product = this.createProduct("p1", "product-1", owner1, owner2);
+        Product product = new Product("p1", "product-1");
         Content content = this.createContent("c1", "content-1", owner1, owner2);
         product.addContent(content, true);
-        product = this.productCurator.merge(product);
+        this.createProduct(product, owner1, owner2);
 
         assertTrue(this.ownerContentCurator.isContentMappedToOwner(content, owner1));
         assertTrue(this.ownerContentCurator.isContentMappedToOwner(content, owner2));

@@ -39,7 +39,6 @@ public abstract class LiquibaseCustomTask {
     protected CustomTaskLogger logger;
 
     private Map<String, PreparedStatement> preparedStatements;
-    private int nullType;
 
     protected LiquibaseCustomTask(Database database, CustomTaskLogger logger) {
         if (database == null) {
@@ -57,12 +56,6 @@ public abstract class LiquibaseCustomTask {
         this.database = database;
         this.connection = (JdbcConnection) database.getConnection();
         this.logger = logger;
-
-        // Check which type we need to use for nulls (courtesy of Oracle's moody adapter)
-        // See the comments on this SO question for details:
-        // http://stackoverflow.com/questions/11793483/setobject-method-of-preparedstatement
-        this.nullType =
-            this.database.getDatabaseProductName().matches(".*(?i:oracle).*") ? Types.VARCHAR : Types.NULL;
 
         this.preparedStatements = new HashMap<>();
     }
@@ -93,7 +86,9 @@ public abstract class LiquibaseCustomTask {
             statement.setObject(index, value);
         }
         else {
-            statement.setNull(index, this.nullType);
+            // NB: If Oracle support is ever required, Oracle will want Types.VARCHAR here.  See
+            // http://stackoverflow.com/questions/11793483/setobject-method-of-preparedstatement
+            statement.setNull(index, Types.NULL);
         }
 
         return statement;

@@ -25,17 +25,6 @@ postgresql: &default
 development:
   <<: *default
 
-oracle:
-  static: &oracle_static
-    driver_class: "oracle.jdbc.OracleDriver"
-    dialect: "org.candlepin.hibernate.Oracle10gDialectFollowOnLockingOff"
-    quartz_driver: "org.quartz.impl.jdbcjobstore.oracle.OracleDelegate"
-  server:
-    <<: *common_server
-    <<: *oracle_static
-    jdbc_url: "jdbc:oracle:thin:@//$DB_HOST:1521/XE"
-    password: "candlepin"
-
 mysql:
   static: &mysql_static
     driver_class: "com.mysql.jdbc.Driver"

@@ -38,7 +38,6 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -130,15 +129,14 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     public void nameRequired() {
 
         Product prod = new Product("someproductlabel", null);
-        productCurator.create(prod);
+        productCurator.create(prod, true);
 
     }
 
     @Test(expected = ConstraintViolationException.class)
     public void labelRequired() {
-
         Product prod = new Product(null, "My Product Name");
-        productCurator.create(prod);
+        productCurator.create(prod, true);
     }
 
     @Test
@@ -238,28 +236,6 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         Product lookedUp = productCurator.get(prod.getUuid());
         assertThat(lookedUp.getDependentProductIds(), hasItem("ProductX"));
     }
-
-    /**
-     * Test whether the product updation date is updated when merging.
-     */
-    @Test
-    public void testSubsequentUpdate() {
-        Product prod = TestUtil.createProduct("test-label", "test-product-name");
-        productCurator.create(prod);
-
-        Calendar calendar = Calendar.getInstance();
-        calendar.add(Calendar.MONTH, -2);
-        prod.setUpdated(calendar.getTime());
-
-        long updated = prod.getUpdated().getTime();
-
-        prod.setName("test-changed-name");
-        prod = this.productCurator.merge(prod);
-        this.productCurator.flush();
-
-        assertTrue(prod.getUpdated().getTime() > updated);
-    }
-
 
     @Test
     public void testProductFullConstructor() {
@@ -535,36 +511,6 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testSaveOrUpdateProductNoDuplicateProdContent() {
-        // TODO:
-        // This test may have lost meaning after the various changes and addition of the product
-        // manager
-
-        Product p = createTestProduct();
-        Content content = TestUtil.createContent("best-content");
-
-        p.addContent(content, true);
-        contentCurator.create(content);
-        productCurator.create(p);
-
-        // Technically the same product:
-        Product p2 = createTestProduct();
-        p2.setUuid(p.getUuid());
-
-        // The content isn't quite the same. We just care about matching
-        // product ids with content ids
-        Content contentUpdate = TestUtil.createContent("best-content");
-        contentUpdate.setUuid(content.getUuid());
-        contentUpdate.setGpgUrl("different");
-
-        p2.addContent(contentUpdate, true);
-        productCurator.merge(p2);
-
-        Product result = productCurator.get(p.getUuid());
-        assertEquals(1, result.getProductContent().size());
-    }
-
-    @Test
     public void testGetHydratedProductsByUuid() {
         Product prod = TestUtil.createProduct("test-label-hydrated", "test-product-name-hydrated");
         productCurator.create(prod);
@@ -577,7 +523,6 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         Map<String, Product> products = productCurator.getHydratedProductsByUuid(uuids);
         assertEquals(2, products.size());
     }
-
 
     @Test
     public void testPoolProvidedProducts() {

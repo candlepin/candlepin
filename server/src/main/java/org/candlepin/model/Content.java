@@ -14,23 +14,19 @@
  */
 package org.candlepin.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.candlepin.model.dto.ContentData;
 import org.candlepin.service.model.ContentInfo;
 import org.candlepin.util.SetView;
 import org.candlepin.util.Util;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.Type;
-
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
 
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
@@ -48,7 +44,10 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 
 /**
@@ -57,6 +56,8 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
+@Immutable
+@Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 @Table(name = Content.DB_TABLE)
 public class Content extends AbstractHibernateObject implements SharedEntity, Cloneable, ContentInfo {
 
@@ -105,7 +106,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
     private String requiredTags;
 
     // for selecting Y/Z stream
-    @Column(nullable =  true)
+    @Column(nullable = true)
     @Size(max = 255)
     private String releaseVer;
 
@@ -122,6 +123,8 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
     @CollectionTable(name = "cp2_content_modified_products", joinColumns = @JoinColumn(name = "content_uuid"))
     @Column(name = "element")
     @Size(max = 255)
+    @Immutable
+    @Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
     private Set<String> modifiedProductIds;
 
     @Column(nullable = true)
@@ -579,7 +582,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
     @Override
     public String toString() {
         return String.format("Content [uuid: %s, id: %s, name: %s, label: %s]",
-            this.uuid, this.id, this.name, this.label);
+                this.uuid, this.id, this.name, this.label);
     }
 
     @PrePersist

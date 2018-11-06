@@ -71,7 +71,6 @@ import java.util.Map.Entry;
  */
 public class Entitler {
     private static Logger log = LoggerFactory.getLogger(Entitler.class);
-    public static final String DEFAULT_DEV_SLA = "Self-Service";
 
     private Configuration config;
     private ConsumerCurator consumerCurator;
@@ -205,11 +204,14 @@ public class Entitler {
         Consumer consumer = data.getConsumer();
         Owner owner = data.getOwner();
 
-        if (!consumer.isDev() && owner.isAutobindDisabled()) {
-            log.info("Skipping auto-attach for consumer '{}'. Auto-attach is disabled for owner {}.",
-                consumer, owner.getKey());
-            throw new AutobindDisabledForOwnerException(i18n.tr("Auto-attach is disabled for owner \"{0}\".",
-                owner.getKey()));
+        if ((!consumer.isDev() && owner.isAutobindDisabled()) || owner.isContentAccessEnabled()) {
+            String caMessage = owner.isContentAccessEnabled() ?
+                " because of the content access mode setting" : "";
+            log.info("Skipping auto-attach for consumer '{}'. Auto-attach is disabled for owner {}{}",
+                consumer.getUuid(), owner.getKey(), caMessage);
+            throw new AutobindDisabledForOwnerException(i18n.tr(
+                "Auto-attach is disabled for owner \"{0}\"{1}.",
+                owner.getKey(), caMessage));
         }
 
         // If the consumer is a guest, and has a host, try to heal the host first
@@ -376,18 +378,6 @@ public class Entitler {
         Map<String, Product> importedProducts = this.productManager
             .importProducts(owner, productMap, importedContent)
             .getImportedEntities();
-
-        Product devProduct = importedProducts.get(sku);
-        if (devProduct != null &&
-            StringUtils.isEmpty(devProduct.getAttributeValue(Product.Attributes.SUPPORT_LEVEL))) {
-
-            // if there is no SLA, apply the default
-            devProduct.setAttribute(Product.Attributes.SUPPORT_LEVEL, DEFAULT_DEV_SLA);
-
-            // Save the changes...
-            devProduct = this.productCurator.merge(devProduct);
-            importedProducts.put(sku, devProduct);
-        }
 
         log.debug("Resolved {} dev product(s) for sku: {}", productMap.size(), sku);
         return new DeveloperProducts(sku, importedProducts);

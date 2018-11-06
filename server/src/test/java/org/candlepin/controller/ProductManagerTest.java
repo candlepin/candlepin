@@ -28,7 +28,6 @@ import org.candlepin.model.Content;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductContent;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
@@ -422,12 +421,11 @@ public class ProductManagerTest extends DatabaseTestFixture {
     public void testUpdateProductContentOnSharedProduct() {
         Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
         Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");
-        Product product = this.createProduct("p1", "prod1", owner1);
+        Product product = new Product("p1", "prod1");
         Content content = this.createContent("c1", "content1", owner1);
+        product.addContent(content, true);
+        product = this.createProduct(product, owner1);
         this.ownerProductCurator.mapProductToOwners(product, owner1, owner2);
-
-        product.setProductContent(Arrays.asList(new ProductContent(product, content, true)));
-        this.productCurator.merge(product);
 
         ProductDTO pdto = this.modelTranslator.translate(product, ProductDTO.class);
         pdto.getProductContent(content.getId()).setEnabled(false);

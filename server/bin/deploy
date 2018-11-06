@@ -4,10 +4,7 @@ APP_DB_NAME="candlepin"
 MAX_STARTUP_WAIT_TIME=30
 
 gendb() {
-    if [ "$USE_ORACLE" == "1" ]; then
-        init_oracle_jdbc $APP_DB_NAME
-        [ -z "$DBPASSWORD" ] && DBPASSWORD="$APP_DB_NAME"
-    elif [ "$USE_MYSQL" == "1" ]; then
+    if [ "$USE_MYSQL" == "1" ]; then
         init_mysql_jdbc $APP_DB_NAME
     else
         init_postgresql_jdbc $APP_DB_NAME
@@ -16,9 +13,7 @@ gendb() {
     if [ "$GENDB" == "1" ]; then
         MESSAGE="Generating New Database"
         CHANGELOG="changelog-create.xml"
-        if [ "$USE_ORACLE" == "1" ]; then
-            recreate_oracle $APP_DB_NAME $DBUSER
-        elif [ "$USE_MYSQL" == "1" ]; then
+        if [ "$USE_MYSQL" == "1" ]; then
             recreate_mysql $APP_DB_NAME $DBUSER
         else
             recreate_postgresql $APP_DB_NAME $DBUSER
@@ -141,7 +136,6 @@ OPTIONS:
   -t          import test data
   -T          import minimal test data, some owners, users, and roles
   -H          include test resources for hosted mode
-  -o          use Oracle
   -l          use Logdriver
   -m          use MySQL
   -a          auto-deploy a generated candlepin.conf
@@ -200,7 +194,6 @@ while getopts ":fqgtTHolmavbd:" opt; do
         q  ) QPID="qpid";;
         t  ) TESTDATA="1";;
         T  ) TESTDATA="MIN";;
-        o  ) USE_ORACLE="1";;
         l  ) LOGDRIVER="logdriver";;
         m  ) USE_MYSQL="1";;
         a  ) AUTOCONF="1";;
@@ -213,11 +206,6 @@ done
 
 shift $(($OPTIND - 1))
 
-if [ "$USE_ORACLE" == "1" -a "$USE_MYSQL" == "1" ]; then
-    err_msg "You can't use Oracle and MySQL at the same time."
-    exit 1
-fi
-
 if [ $(id -u) -ne 0 ]; then
     if ( command -v sudo >/dev/null 2>&1 ) then
         SUDO="sudo"
@@ -226,54 +214,47 @@ if [ $(id -u) -ne 0 ]; then
     fi
 fi
 
-if [ "$JBOSS_HOME" != "" ]; then
-    # we're using JBOSS AS
-    isrpm $JBOSS_HOME
+# use tomcat 6, unless it doesnt exist and tomcat does
+TC=tomcat6
+TC_VERSION=6
 
-    if [ "$?" -ne 0 ]; then
-        START="$JBOSS_HOME/bin/run.sh 2>&1 > console.log &"
-        STOP="$JBOSS_HOME/bin/shutdown.sh --shutdown"
-        DEPLOY="$JBOSS_HOME/server/default/deploy/"
-    else
-        START="$SUDO /sbin/service jbossas start"
-        STOP="$SUDO /sbin/service jbossas stop"
-        DEPLOY="$JBOSS_HOME/server/default/deploy/"
-    fi
+if ( [ -f /usr/sbin/tomcat ] && (! [ -f /usr/sbin/tomcat6 ] ) );
+then
+    TC=tomcat
 
-    CONTAINER_CONF_DIR="$JBOSS_HOME/conf"
-    CLEAN="$JBOSS_HOME/server/default/deploy/candlepin*"
-else
-    # use tomcat 6, unless it doesnt exist and tomcat does
-    TC=tomcat6
-    if ( [ -f /usr/sbin/tomcat ] && (! [ -f /usr/sbin/tomcat6 ] ) );
-    then
-        TC=tomcat
-    fi
-    if [ -z $TC_HOME ]; then
-        TC_HOME=/var/lib/$TC
-    fi
-
-    isrpm $TC_HOME
-
-    if [ "$?" -ne 0 ]; then
-        START="$TC_HOME/bin/catalina.sh jpda start"
-        STOP="$TC_HOME/bin/catalina.sh stop"
-        CONTAINER_CONF_DIR="$TC_HOME/conf"
-    else
-        START="$SUDO /sbin/service $TC start"
-        STOP="$SUDO /sbin/service $TC stop"
-        CONTAINER_CONF_DIR="/etc/$TC"
-    fi
-
-    # Check if we're in a container using supervisord instead:
-    if [ "$SUPERVISOR" == "1" ]; then
-        START="supervisorctl start tomcat"
-        STOP="supervisorctl stop tomcat"
-    fi
-
-    DEPLOY="$TC_HOME/webapps/candlepin.war"
-    CLEAN="$TC_HOME/webapps/candlepin/"
+    # Determine which Tomcat version we're using
+    TC_VERSION=$(rpm -q tomcat | grep -oP "(?<=^tomcat-)[0-9]+\.[0-9]+")
 fi
+
+if [ -z $TC_HOME ]; then
+    TC_HOME=/var/lib/$TC
+fi
+
+info_msg "Configuring Tomcat $TC_VERSION found at $TC_HOME"
+
+isrpm $TC_HOME
+if [ "$?" -ne 0 ]; then
+    START="$TC_HOME/bin/catalina.sh jpda start"
+    STOP="$TC_HOME/bin/catalina.sh stop"
+    CONTAINER_CONF_DIR="$TC_HOME/conf"
+else
+    START="$SUDO /sbin/service $TC start"
+    STOP="$SUDO /sbin/service $TC stop"
+    CONTAINER_CONF_DIR="/etc/$TC"
+fi
+
+# Check if we're in a container using supervisord instead:
+if [ "$SUPERVISOR" == "1" ]; then
+    START="supervisorctl start tomcat"
+    STOP="supervisorctl stop tomcat"
+fi
+
+DEPLOY="$TC_HOME/webapps/candlepin.war"
+CLEAN="$TC_HOME/webapps/candlepin/"
+
+
+
+
 
 # stop the appserver
 eval $STOP
@@ -330,10 +311,7 @@ else
 fi
 
 
-if [ "$USE_ORACLE" == "1" ]; then
-    info_msg "Building with Oracle JDBC jar"
-    ENV_BUILDR="oracle"
-elif [ "$USE_MYSQL" == "1" ]; then
+if [ "$USE_MYSQL" == "1" ]; then
     ENV_BUILDR="mysql"
 else
     # "development" is the default buildr environment.  It has been aliased to the postgresql environment
@@ -361,7 +339,7 @@ bash $SELF_DIR/gen-certs $GEN_CERTS_ARGS
 update_keystore
 
 # update server.xml
-$SUDO python $PROJECT_DIR/bin/update-server-xml.py $CONTAINER_CONF_DIR
+$SUDO python $PROJECT_DIR/bin/update-server-xml.py --tomcat-version $TC_VERSION $CONTAINER_CONF_DIR
 
 create_var_lib_candlepin
 create_var_log_candlepin

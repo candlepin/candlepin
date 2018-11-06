@@ -266,10 +266,6 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
             dialect, DatabaseConfigFactory.SupportedDatabase.MYSQL.getLabel())) {
             return DatabaseConfigFactory.SupportedDatabase.MYSQL;
         }
-        else if (StringUtils.containsIgnoreCase(
-            dialect, DatabaseConfigFactory.SupportedDatabase.ORACLE.getLabel())) {
-            return DatabaseConfigFactory.SupportedDatabase.ORACLE;
-        }
         return DatabaseConfigFactory.SupportedDatabase.POSTGRESQL;
     }
 

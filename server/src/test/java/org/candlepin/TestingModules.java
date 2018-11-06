@@ -131,7 +131,6 @@ import java.io.InputStream;
 import java.util.Date;
 import java.util.Properties;
 
-import javax.cache.Cache;
 import javax.inject.Provider;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -256,7 +255,6 @@ public class TestingModules {
         public void configure() {
             bindScope(TestSingleton.class, TestScope.SINGLETON);
             CandlepinCache mockedCandlepinCache = mock(CandlepinCache.class);
-            when(mockedCandlepinCache.getProductCache()).thenReturn(mock(Cache.class));
             when(mockedCandlepinCache.getStatusCache()).thenReturn(mock(StatusCache.class));
             // This is not necessary in the normal module because the config is bound in the
             // context listener

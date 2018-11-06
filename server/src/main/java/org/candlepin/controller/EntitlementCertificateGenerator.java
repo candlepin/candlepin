@@ -277,8 +277,7 @@ public class EntitlementCertificateGenerator {
 
         // we need to clear the content access cert on regenerate
         Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
-        if (ContentAccessCertServiceAdapter.ORG_ENV_ACCESS_MODE.equals(
-            owner.getContentAccessMode())) {
+        if (owner.isContentAccessEnabled()) {
             contentAccessCertServiceAdapter.removeContentAccessCert(consumer);
         }
         // TODO - Assumes only 1 entitlement certificate exists per entitlement

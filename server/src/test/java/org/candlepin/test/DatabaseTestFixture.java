@@ -402,6 +402,14 @@ public class DatabaseTestFixture {
         return content;
     }
 
+    protected Content createContent(Content content, Owner... owners) {
+        content = this.contentCurator.create(content);
+        this.ownerContentCurator.mapContentToOwners(content, owners);
+
+        return content;
+    }
+
+
     protected Consumer createConsumer(Owner owner, ConsumerType ctype) {
         if (ctype == null) {
             ctype = this.createConsumerType();
