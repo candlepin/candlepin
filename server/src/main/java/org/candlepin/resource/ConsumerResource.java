@@ -1290,7 +1290,7 @@ public class ConsumerResource {
 
             // reset content access cert
             Owner owner = ownerCurator.findOwnerById(toUpdate.getOwnerId());
-            if (ContentAccessCertServiceAdapter.ORG_ENV_ACCESS_MODE.equals(owner.getContentAccessMode())) {
+            if (owner.isContentAccessEnabled()) {
                 toUpdate.setContentAccessCert(null);
                 contentAccessCertService.removeContentAccessCert(toUpdate);
             }
@@ -1719,8 +1719,7 @@ public class ConsumerResource {
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
 
         Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
-        String cam = owner.getContentAccessMode();
-        if (!ContentAccessCertServiceAdapter.ORG_ENV_ACCESS_MODE.equals(cam)) {
+        if (!owner.isContentAccessEnabled()) {
             throw new BadRequestException(i18n.tr("Content access mode does not allow this request."));
         }
 
@@ -2040,7 +2039,9 @@ public class ConsumerResource {
         Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
 
         if (owner.isAutobindDisabled()) {
-            throw new BadRequestException(i18n.tr("Owner has autobind disabled."));
+            String caMessage = owner.isContentAccessEnabled() ?
+                " because of the content access mode setting" : "";
+            throw new BadRequestException(i18n.tr("Owner has autobind disabled" + caMessage + "."));
         }
 
         List<PoolQuantity> dryRunPools = new ArrayList<>();

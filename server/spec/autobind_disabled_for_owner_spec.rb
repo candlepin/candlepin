@@ -61,7 +61,17 @@ describe 'Autobind Disabled On Owner' do
   end
 
   it 'will still register when activation key has autobind enabled' do
-      @user_cp.register("foofy", :system, nil, {'cpu.cpu_socket(s)' => '8'}, nil, @owner['key'], [@activation_key['name']], [])
+    @user_cp.register("foofy", :system, nil, {'cpu.cpu_socket(s)' => '8'}, nil, @owner['key'], [@activation_key['name']], [])
+  end
+
+  it 'will still register when content access setting enabled and autobind enabled on activation key' do
+    owner = create_owner(random_string("test_owner"), nil, {
+        'contentAccessModeList' => 'org_environment,test_access_mode,entitlement',
+        'contentAccessMode' => "org_environment"
+    })
+    activation_key = @cp.create_activation_key(owner['key'], random_string('test_token'), nil, true)
+    user_cp = user_client(owner, random_string("test-user"))
+    user_cp.register(random_string("consumer"), :system, nil, {}, nil, owner['key'], [activation_key['name']])
   end
 
   it 'fails to heal entire org' do
@@ -72,5 +82,16 @@ describe 'Autobind Disabled On Owner' do
     job['result'].should == "Auto-attach is disabled for owner #{@owner['key']}."
   end
 
-
+  it 'fails to heal entire org if content access is org_environment' do
+    owner = create_owner(random_string("test_owner"), nil, {
+        'contentAccessModeList' => 'org_environment,test_access_mode,entitlement',
+        'contentAccessMode' => "org_environment"
+    })
+    user_cp = user_client(owner, random_string("test-user"))
+    job = @cp.heal_owner(owner['key'])
+    wait_for_job(job['id'], 3)
+    job = @cp.get_job(job['id'])
+    job['state'].should == "FAILED"
+    job['result'].should == "Auto-attach is disabled for owner #{owner['key']} because of the content access mode setting."
+  end
 end

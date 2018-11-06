@@ -415,4 +415,38 @@ describe 'Content Access' do
       cert_time.should < before
  end
 
+ it 'should not auto-attach when org_environment is set for owner' do
+   mkt_product1 = create_product(random_string('product'),
+                                 random_string('product'),
+                                 {:owner => @owner['key']})
+   eng_product = create_product(random_string('product'),
+                                random_string('product'),
+                                {:owner => @owner['key']})
+   p1 = create_pool_and_subscription(@owner['key'], mkt_product1.id, 10, [eng_product.id])
+
+   installed = [
+       {'productId' => eng_product.id, 'productName' => eng_product['name']}]
+
+   consumer_cp = consumer_client(@user, @consumername, type=:system, username=nil, facts= {'system.certificate_version' => '3.3'})
+   consumer_cp.update_consumer({:installedProducts => installed})
+
+   lambda do
+     consumer_cp.consume_product()
+   end.should raise_exception(RestClient::BadRequest)
+
+   # confirm that there is a content access cert
+   #  and only a content access cert
+   certs = consumer_cp.list_certificates()
+   certs.length.should == 1
+
+   json_body = extract_payload(certs[0]['cert'])
+   #puts ("json_body:%s" % json_body)
+
+   content = json_body['products'][0]['content'][0]
+   content['type'].should == 'ctype'
+   content['name'].should == @content.name
+   content['label'].should == @content.label
+   content['vendor'].should == @content.vendor
+   content['path'].should == '/' + @owner['key'] + '/this/is/the/path'
+ end
 end

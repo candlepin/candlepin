@@ -73,9 +73,11 @@ public class HealEntireOrgJob extends UniqueByEntityJob {
             JobDataMap map = ctx.getMergedJobDataMap();
             String ownerId = (String) map.get(JobStatus.TARGET_ID);
             Owner owner = ownerCurator.getByKey(ownerId);
-            if (owner.isAutobindDisabled()) {
-                throw new BadRequestException(i18n.tr("Auto-attach is disabled for owner {0}.",
-                    owner.getKey()));
+            if (owner.isAutobindDisabled() || owner.isContentAccessEnabled()) {
+                String caMessage = owner.isContentAccessEnabled() ?
+                    " because of the content access mode setting" : "";
+                throw new BadRequestException(i18n.tr("Auto-attach is disabled for owner {0}{1}.",
+                    owner.getKey(), caMessage));
             }
 
             Date entitleDate = (Date) map.get("entitle_date");
