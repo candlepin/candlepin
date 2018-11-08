@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.4.8
+Version: 2.4.9
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,10 @@ fi
 
 #raw
 %changelog
+* Thu Nov 08 2018 Kevin Howell <khowell@redhat.com> 2.4.9-1
+- 1643582: Fixed an issue with object desync during pool cleanup
+  (crog@redhat.com)
+
 * Tue Sep 25 2018 Kevin Howell <khowell@redhat.com> 2.4.8-1
 - 1632764: Added limits to the size of link headers (crog@redhat.com)
 
