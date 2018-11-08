@@ -1349,7 +1349,7 @@ public class ConsumerResource {
 
             // this should update compliance on toUpdate, but not call the curator
             complianceRules.getStatus(toUpdate, null, false, false);
-            systemPurposeComplianceRules.getStatus(toUpdate, toUpdate.getEntitlements(), null, false, false);
+            systemPurposeComplianceRules.getStatus(toUpdate, toUpdate.getEntitlements(), null, false, true);
 
             Event event = eventBuilder.setEventData(toUpdate).buildEvent();
             sink.queueEvent(event);
