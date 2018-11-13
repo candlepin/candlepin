@@ -1,29 +1,15 @@
-# Custom Buildr Tasks
+# Custom Build Tasks
 Unless otherwise noted, these tasks are all recursive: they will run on
 the project you are in and all subprojects contained within.
 
 ## Internationalization
-* `buildr gettext:extract` runs `xgettext`
-* `buildr gettext:merge` runs `msgmerge`
-* `buildr msgfmt` runs `msgfmt`
-
-The `msgfmt` task is run during compilation and it can take awhile to run on
-every different locale we support.  To alleviate the slowness, the task looks
-at the environment variable `nopo`.  If the variable is set to a locale or
-comma separated list of locales, `msgfmt` will only run against those locales.
-Setting `nopo` to anything else will prevent `msgfmt` from running at all.
-
-If you keep forgetting to set `nopo` you can have Buildr do it for you
-automatically by placing something like the following in `~/.buildr/buildr.rb`:
-
-```ruby
-#! /usr/bin/env ruby
-
-ENV['nopo'] ||= 'de'
-```
-
-Buildr will automatically evaluate that file and set `nopo` to "de" unless
-the variable is already set.
+* `./gradlew gettext` runs `xgettext` to extract strings from source files. 
+* `./gradlew msgmerge` runs `msgmerge` to merge translation updates back into the 
+primary keys.pot file. 
+* `./gradlew msgfmt` runs `msgfmt` to convert the keys .po & .pot files into the
+generated java source files for compilation into the build. This task is run as 
+a prerequisite of the compileJava task so it is run automatically every time 
+compilation is done. 
 
 ## Check for Dependencies with CVEs
 * `buildr dependency:check`
@@ -37,7 +23,7 @@ between 1.0 and 10.0.  Any CVEs above the maximum allowed CVSS score will
 cause the build to fail.
 
 ## Checkstyle
-* `buildr checkstyle`
+* `./gradlew checkstyleMain`
 
 Buildr provides a Checkstyle task, but we have our own that reads from the
 Eclipse Checkstyle Plugin configuration.  The Eclipse configuration defines
