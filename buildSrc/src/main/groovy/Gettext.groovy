@@ -27,8 +27,10 @@ class Gettext implements Plugin<Project> {
         //Set Default value for project directory
         extension.keys_project_dir = project.projectDir
         def gettext_task = project.task('gettext') {
-            doLast {
+            description = 'Extract strings for translation from source java files'
+            group = 'Build'
 
+            doLast {
                 File source_files = new File("${project.buildDir}/gettext_file_list.tmp")
                 def root_dir_length = project.getRootDir().getCanonicalPath().size()
                 println("Root dir length: ${root_dir_length}")
@@ -42,7 +44,6 @@ class Gettext implements Plugin<Project> {
                 // Find the keys file, if it already exists merge into the existing one.
 
                 File keys_file = new File("${extension.keys_project_dir}/po/keys.pot")
-                println keys_file
                 // Perform the extraction
                 List gettext_args = ["-k", "-F", "-ktrc:1c,2", "-ktrnc:1c,2,3","-ktr",
                                      "-kmarktr", "-ktrn:1,2", "--from-code=utf-8", "-o", "${keys_file}"
@@ -61,6 +62,23 @@ class Gettext implements Plugin<Project> {
                     workingDir project.getRootDir()
                 }
 
+            }
+        }
+
+        def msgmerge_task = project.task('msgmerge') {
+            description = 'Merge updates from each locale specific translation po file pack into the primary keys.pot.'
+            group = 'Build'
+            doLast {
+                def po_files = new FileNameFinder().getFileNames("${extension.keys_project_dir}/po/", '*.po')
+                File keys_file = new File("${extension.keys_project_dir}/po/keys.pot")
+                po_files.each {
+                    def msgmerge_args = ['-N','--backup', 'none', '-U', it, "${extension.keys_project_dir}/po/keys.pot"]
+                    project.exec {
+                        executable "msgmerge"
+                        args msgmerge_args
+                        workingDir project.getRootDir()
+                    }
+                }
             }
         }
     }
