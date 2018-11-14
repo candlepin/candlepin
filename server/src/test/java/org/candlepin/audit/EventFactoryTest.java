@@ -17,6 +17,7 @@ package org.candlepin.audit;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.candlepin.auth.Principal;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.Consumer;
@@ -45,7 +46,7 @@ public class EventFactoryTest {
         principalProvider = mock(PrincipalProvider.class);
         Principal principal = mock(Principal.class);
         when(principalProvider.get()).thenReturn(principal);
-        eventFactory = new EventFactory(principalProvider);
+        eventFactory = new EventFactory(principalProvider, new ObjectMapper());
     }
 
     @Test

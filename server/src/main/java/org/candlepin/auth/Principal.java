@@ -14,6 +14,7 @@
  */
 package org.candlepin.auth;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.util.Util;
 
@@ -120,7 +121,13 @@ public abstract class Principal implements Serializable, java.security.Principal
 
     @Override
     public String toString() {
-        return Util.toJson(this.getData());
+        try {
+            return Util.toJson(this.getData());
+        }
+        catch (JsonProcessingException e) {
+            log.error("Error while building JSON for principal.", e);
+            return "";
+        }
     }
 
 }

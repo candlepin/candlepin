@@ -14,6 +14,7 @@
  */
 package org.candlepin.util;
 
+import com.google.inject.name.Named;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Branding;
@@ -31,9 +32,6 @@ import org.candlepin.model.dto.TinySubscription;
 import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
@@ -67,6 +65,7 @@ import java.util.zip.InflaterOutputStream;
 public class X509V3ExtensionUtil extends X509Util {
 
     private static Logger log = LoggerFactory.getLogger(X509V3ExtensionUtil.class);
+    private ObjectMapper mapper;
     private Configuration config;
     private EntitlementCurator entCurator;
     private String thisVersion = "3.3";
@@ -77,10 +76,13 @@ public class X509V3ExtensionUtil extends X509Util {
     private static boolean treeDebug = false;
 
     @Inject
-    public X509V3ExtensionUtil(Configuration config, EntitlementCurator entCurator) {
+    public X509V3ExtensionUtil(Configuration config, EntitlementCurator entCurator,
+        @Named("X509V3ExtensionUtilObjectMapper") ObjectMapper objectMapper) {
+
         // Output everything in UTC
         this.config = config;
         this.entCurator = entCurator;
+        this.mapper = objectMapper;
     }
 
     public Set<X509ExtensionWrapper> getExtensions() {
@@ -841,13 +843,10 @@ public class X509V3ExtensionUtil extends X509Util {
         return "";
     }
 
-    public static String toJson(Object anObject) {
+    private String toJson(Object anObject) {
         String output = "";
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-        mapper.setVisibility(PropertyAccessor.FIELD, Visibility.ANY);
         try {
-            output = mapper.writeValueAsString(anObject);
+            output = this.mapper.writeValueAsString(anObject);
         }
         catch (Exception e) {
             log.error("Could no serialize the object to json " + anObject, e);

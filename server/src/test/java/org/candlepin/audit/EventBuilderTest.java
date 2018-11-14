@@ -14,6 +14,7 @@
  */
 package org.candlepin.audit;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.candlepin.auth.Principal;
 import org.candlepin.common.exceptions.IseException;
 import org.candlepin.guice.PrincipalProvider;
@@ -40,7 +41,7 @@ public class EventBuilderTest {
     public void init() throws Exception {
         principalProvider = mock(PrincipalProvider.class);
         Principal principal = mock(Principal.class);
-        factory = new EventFactory(principalProvider);
+        factory = new EventFactory(principalProvider, new ObjectMapper());
         when(principalProvider.get()).thenReturn(principal);
     }
 

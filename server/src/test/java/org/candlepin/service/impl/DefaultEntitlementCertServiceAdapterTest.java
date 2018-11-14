@@ -21,6 +21,8 @@ import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.name.Named;
 import org.candlepin.TestingModules;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.model.CertificateSerial;
@@ -141,6 +143,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     @Inject private PKIUtility realPKI;
     @Inject private Configuration config;
     @Inject private X509ExtensionUtil extensionUtil;
+    @Inject @Named("X509V3ExtensionUtilObjectMapper") private ObjectMapper mapper;
 
     @Mock private Configuration mockConfig;
     @Mock private X509V3ExtensionUtil mockV3extensionUtil;
@@ -216,7 +219,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         );
         injector.injectMembers(this);
 
-        v3extensionUtil = new X509V3ExtensionUtil(config, entCurator);
+        v3extensionUtil = new X509V3ExtensionUtil(config, entCurator, mapper);
         certServiceAdapter = new DefaultEntitlementCertServiceAdapter(
             mockedPKI, extensionUtil, v3extensionUtil,
             mock(EntitlementCertificateCurator.class),

@@ -14,12 +14,15 @@
  */
 package org.candlepin.audit;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.PrincipalData;
 import org.candlepin.model.Persisted;
 import org.candlepin.util.Util;
 
 import org.hibernate.annotations.GenericGenerator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 
@@ -48,6 +51,8 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement(namespace = "http://fedorahosted.org/candlepin/Event")
 @XmlAccessorType(XmlAccessType.PROPERTY)
 public class Event implements Persisted {
+
+    private static final Logger log = LoggerFactory.getLogger(Event.class);
 
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp_event";
@@ -155,7 +160,13 @@ public class Event implements Persisted {
         this.targetName = targetName;
 
         // TODO: toString good enough? Need something better?
-        this.principalStore = Util.toJson(principal.getData());
+        try {
+            this.principalStore = Util.toJson(principal.getData());
+        }
+        catch (JsonProcessingException e) {
+            log.error("Error while building JSON for event.", e);
+            this.principalStore = "";
+        }
         this.ownerId = ownerId;
 
         this.entityId = entityId;
@@ -199,7 +210,13 @@ public class Event implements Persisted {
     }
 
     public void setPrincipal(PrincipalData principal) {
-        this.principalStore = Util.toJson(principal);
+        try {
+            this.principalStore = Util.toJson(principal);
+        }
+        catch (JsonProcessingException e) {
+            log.error("Error while building JSON for principal.", e);
+            this.principalStore = "";
+        }
     }
 
     public Date getTimestamp() {

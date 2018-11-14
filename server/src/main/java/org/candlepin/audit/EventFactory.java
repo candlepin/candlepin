@@ -14,12 +14,11 @@
  */
 package org.candlepin.audit;
 
+import com.google.inject.name.Named;
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
 import org.candlepin.common.exceptions.IseException;
-import org.candlepin.common.jackson.HateoasBeanPropertyFilter;
 import org.candlepin.guice.PrincipalProvider;
-import org.candlepin.jackson.PoolEventFilter;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.GuestId;
@@ -33,15 +32,7 @@ import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.dto.manifest.v1.SubscriptionDTO;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.AnnotationIntrospector;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair;
-import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
-import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
-import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
-import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
@@ -61,43 +52,14 @@ public class EventFactory {
     private static Logger log = LoggerFactory.getLogger(EventFactory.class);
 
     protected final PrincipalProvider principalProvider;
-    private final ObjectMapper mapper;
+    private ObjectMapper mapper;
 
     @Inject
-    public EventFactory(PrincipalProvider principalProvider) {
+    public EventFactory(PrincipalProvider principalProvider,
+        @Named("EventFactoryObjectMapper") ObjectMapper objectMapper) {
+
+        this.mapper = objectMapper;
         this.principalProvider = principalProvider;
-
-        mapper = new ObjectMapper();
-
-        // When serializing entity JSON for events, we want to use a reduced number
-        // of fields nested objects, so enable the event and API HATEOAS filters:
-        SimpleFilterProvider filterProvider = new SimpleFilterProvider();
-        filterProvider.setFailOnUnknownId(false);
-        filterProvider = filterProvider.addFilter("PoolFilter", new PoolEventFilter());
-        filterProvider = filterProvider.addFilter("ConsumerFilter", new HateoasBeanPropertyFilter());
-        filterProvider = filterProvider.addFilter("EntitlementFilter", new HateoasBeanPropertyFilter());
-        filterProvider = filterProvider.addFilter("OwnerFilter", new HateoasBeanPropertyFilter());
-        filterProvider = filterProvider.addFilter("IdentityCertificateFilter",
-            SimpleBeanPropertyFilter.serializeAllExcept("cert", "key"));
-        filterProvider = filterProvider.addFilter("EntitlementCertificateFilter",
-            SimpleBeanPropertyFilter.serializeAllExcept("cert", "key"));
-        filterProvider = filterProvider.addFilter("PoolAttributeFilter",
-            SimpleBeanPropertyFilter.serializeAllExcept("created", "updated", "id"));
-        filterProvider = filterProvider.addFilter("ProductPoolAttributeFilter",
-            SimpleBeanPropertyFilter.serializeAllExcept("created", "updated", "productId", "id"));
-        filterProvider = filterProvider.addFilter("SubscriptionCertificateFilter",
-            SimpleBeanPropertyFilter.serializeAllExcept("cert", "key"));
-        mapper.setFilterProvider(filterProvider);
-
-        Hibernate5Module hbm = new Hibernate5Module();
-        hbm.enable(Hibernate5Module.Feature.FORCE_LAZY_LOADING);
-        mapper.registerModule(hbm);
-        mapper.registerModule(new Jdk8Module());
-
-        AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
-        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector(mapper.getTypeFactory());
-        AnnotationIntrospector pair = new AnnotationIntrospectorPair(primary, secondary);
-        mapper.setAnnotationIntrospector(pair);
     }
 
     public EventBuilder getEventBuilder(Target target, Type type) {

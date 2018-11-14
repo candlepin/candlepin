@@ -17,6 +17,7 @@ package org.candlepin.util;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.codec.binary.Base64;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -432,7 +433,7 @@ public class UtilTest {
     }
 
     @Test
-    public void json() {
+    public void json() throws JsonProcessingException {
         String test = "I Love JSON";
         String json = Util.toJson(test);
         String result = (String) Util.fromJson(json, String.class);

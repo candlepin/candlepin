@@ -16,8 +16,8 @@ package org.candlepin.pinsetter.tasks;
 
 import static org.quartz.JobBuilder.*;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.name.Named;
 import org.candlepin.auth.Principal;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.filter.LoggingFilter;
@@ -83,9 +83,7 @@ public class HypervisorUpdateJob extends KingpinJob {
 
     private static Logger log = LoggerFactory.getLogger(HypervisorUpdateJob.class);
 
-    // Reuse this instance of ObjectMapper since they are expensive to create.
-    private static ObjectMapper mapper = configureObjectMapper();
-
+    private ObjectMapper mapper;
     private OwnerCurator ownerCurator;
     private ConsumerCurator consumerCurator;
     private ConsumerResource consumerResource;
@@ -104,7 +102,8 @@ public class HypervisorUpdateJob extends KingpinJob {
     @Inject
     public HypervisorUpdateJob(OwnerCurator ownerCurator, ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator, ConsumerResource consumerResource, I18n i18n,
-        SubscriptionServiceAdapter subAdapter, ComplianceRules complianceRules, ModelTranslator translator) {
+        SubscriptionServiceAdapter subAdapter, ComplianceRules complianceRules, ModelTranslator translator,
+        @Named("HypervisorUpdateJobObjectMapper") ObjectMapper objectMapper) {
         this.ownerCurator = ownerCurator;
         this.consumerCurator = consumerCurator;
         this.consumerResource = consumerResource;
@@ -113,6 +112,7 @@ public class HypervisorUpdateJob extends KingpinJob {
         this.complianceRules = complianceRules;
         this.translator = translator;
         this.hypervisorType = consumerTypeCurator.getByLabel(ConsumerTypeEnum.HYPERVISOR.getLabel(), true);
+        this.mapper = objectMapper;
     }
 
     public static JobStatus scheduleJob(JobCurator jobCurator, Scheduler scheduler, JobDetail detail,
@@ -521,11 +521,5 @@ public class HypervisorUpdateJob extends KingpinJob {
         consumerCurator.updateLastCheckin(consumer, now);
         consumer.setLastCheckin(now);
         return consumer;
-    }
-
-    private static ObjectMapper configureObjectMapper() {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        return mapper;
     }
 }

@@ -14,6 +14,7 @@
  */
 package org.candlepin.audit;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
 import org.junit.Before;
@@ -29,7 +30,7 @@ public class ActivationListenerTest {
     @Before
     public void init() {
         subscriptionService = mock(ImportSubscriptionServiceAdapter.class);
-        listener = new ActivationListener(subscriptionService);
+        listener = new ActivationListener(subscriptionService, new ObjectMapper());
     }
 
     @Test
