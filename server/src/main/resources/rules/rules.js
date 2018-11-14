@@ -1,4 +1,4 @@
-// Version: 5.29
+// Version: 5.30
 
 /*
  * Default Candlepin rule set.
@@ -55,6 +55,8 @@ var ARCH_FACT = "uname.machine";
 var IS_VIRT_GUEST_FACT = "virt.is_guest";
 var STORAGE_BAND_USAGE = "band.storage.usage";
 var PROD_ARCHITECTURE_SEPARATOR = ",";
+var PROD_ROLE_SEPARATOR = ",";
+var PROD_ADDON_SEPARATOR = ",";
 
 // Product attribute names
 var SOCKETS_ATTRIBUTE = "sockets";
@@ -74,7 +76,7 @@ var VCPU_ATTRIBUTE = "vcpu";
 var MULTI_ENTITLEMENT_ATTRIBUTE = "multi-entitlement";
 var STACKING_ID_ATTRIBUTE = "stacking_id";
 var STORAGE_BAND_ATTRIBUTE = "storage_band";
-var ROLE_ATTRIBUTE = "role";
+var ROLES_ATTRIBUTE = "roles";
 var ADDONS_ATTRIBUTE = "addons";
 
 // caller types
@@ -115,7 +117,7 @@ var PHYSICAL_ATTRIBUTES = [
     ARCH_ATTRIBUTE,
     GUEST_LIMIT_ATTRIBUTE,
     STORAGE_BAND_ATTRIBUTE,
-    ROLE_ATTRIBUTE,
+    ROLES_ATTRIBUTE,
     ADDONS_ATTRIBUTE
 ];
 
@@ -129,7 +131,7 @@ var VIRT_ATTRIBUTES = [
     ARCH_ATTRIBUTE,
     GUEST_LIMIT_ATTRIBUTE,
     STORAGE_BAND_ATTRIBUTE,
-    ROLE_ATTRIBUTE,
+    ROLES_ATTRIBUTE,
     ADDONS_ATTRIBUTE
 ];
 
@@ -731,6 +733,34 @@ function architectureMatches(productArchStr, consumerUnameMachine, consumerType)
    return true;
 }
 
+function roleMatches(productRolesStr, consumerRoleStr) {
+    var supportedRoles = [];
+    if (productRolesStr !== null) {
+        supportedRoles = productRolesStr.toUpperCase().split(PROD_ROLE_SEPARATOR);
+
+        if(!Utils.inArray(supportedRoles, 'ALL') && (!consumerRoleStr ||
+           !Utils.inArray(supportedRoles, consumerRoleStr.toUpperCase()))) {
+           return false;
+       }
+   }
+
+   return true;
+}
+
+function addonMatches(productAddonsStr, consumerAddonStr) {
+    var supportedAddons = [];
+    if (productAddonsStr !== null) {
+        supportedAddons = productAddonsStr.toUpperCase().split(PROD_ADDON_SEPARATOR);
+
+        if(!Utils.inArray(supportedAddons, 'ALL') && (!consumerAddonStr ||
+           !Utils.inArray(supportedAddons, consumerAddonStr.toUpperCase()))) {
+           return false;
+       }
+   }
+
+   return true;
+}
+
 /**
  * Get the quantity of the specified attribute that each
  * entitlement from a pool covers. If the attribute is
@@ -1021,39 +1051,54 @@ var CoverageCalculator = {
             addons: function (complianceTracker, prodAttr, consumer) {
                 var supportedAddOns = complianceTracker.enforces(prodAttr) ? complianceTracker.getAccumulatedValue(prodAttr) : [];
                 var consumerAddOns = consumer.addOns != null ? consumer.addOns : [];
+
                 var anyCoverage = false;
-                for (var index in consumerAddOns) {
-                    if (contains(supportedAddOns, consumerAddOns[index])) {
-                        anyCoverage = true;
+                for (var supportedIndex in supportedAddOns) {
+                    var supportedAddonString = supportedAddOns[supportedIndex];
+                    for (var consumerIndex in consumerAddOns) {
+                        if (addonMatches(supportedAddonString, consumerAddOns[consumerIndex])) {
+                            anyCoverage = true;
+                        }
                     }
                 }
+
                 if (!anyCoverage) {
-                    log.debug("  System addons not covered by: " + supportedAddOns);
                     // The ComplianceReasonDTO expects the "attributes" field to be a Map<String, String>.
                     // add-ons can be an array and if leave it as such, Jackson won't be able to
                     // deserialize the JSON it receives from the rules into a ComplianceReasonDTO.
-                    var joinedConsumerAddOns = consumerAddOns.join(', ');
-                    var joinedSupportedAddOns = supportedAddOns.join(', ');
+                    var joinedConsumerAddOns = consumerAddOns.join(',');
+                    var joinedSupportedAddOns = supportedAddOns.join(',');
+                    log.debug("  System addons not covered by: " + joinedSupportedAddOns);
                     return StatusReasonGenerator.buildReason(prodAttr.toUpperCase(),
                         complianceTracker.type,
                         complianceTracker.id,
                         joinedConsumerAddOns,
                         joinedSupportedAddOns);
                 }
-                log.debug("  System addons is covered.");
+                log.debug("  System addons are covered.");
                 return null;
             },
 
-            role: function (complianceTracker, prodAttr, consumer) {
+            roles: function (complianceTracker, prodAttr, consumer) {
                 var supportedRoles = complianceTracker.enforces(prodAttr) ? complianceTracker.getAccumulatedValue(prodAttr) : [];
-                var consumerRole = consumer.role != null ? consumer.role : "";
-                if (!contains(supportedRoles, consumerRole)) {
-                    log.debug("  System role not covered by: " + supportedRoles);
-                    return StatusReasonGenerator.buildReason(prodAttr.toUpperCase(),
-                        complianceTracker.type,
-                        complianceTracker.id,
-                        consumerRole,
-                        supportedRoles);
+                var consumerRole = consumer.role;
+
+                var anyCoverage = false;
+                for (var index in supportedRoles) {
+                    var roleString = supportedRoles[index];
+                    if (roleMatches(roleString, consumerRole)) {
+                        anyCoverage = true;
+                    }
+                }
+
+                if (!anyCoverage) {
+                        var joinedSupportedRoles = supportedRoles.join(',');
+                        log.debug("  System role not covered by: " + joinedSupportedRoles);
+                        return StatusReasonGenerator.buildReason(prodAttr.toUpperCase(),
+                                                             complianceTracker.type,
+                                                             complianceTracker.id,
+                                                             consumerRole,
+                                                             joinedSupportedRoles);
                 }
                 log.debug("  System role is covered.");
                 return null;
@@ -1189,7 +1234,7 @@ var CoverageCalculator = {
         // Some stacked attributes do not affect the quantity needed to
         // make the stack valid. Stacking multiple instances of 'arch'
         // does nothing (there is no quantity).
-        var stackableAttrsNotAffectingQuantity = [ARCH_ATTRIBUTE, GUEST_LIMIT_ATTRIBUTE, ADDONS_ATTRIBUTE, ROLE_ATTRIBUTE];
+        var stackableAttrsNotAffectingQuantity = [ARCH_ATTRIBUTE, GUEST_LIMIT_ATTRIBUTE, ADDONS_ATTRIBUTE, ROLES_ATTRIBUTE];
         var complianceAttributes = getComplianceAttributes(consumer);
         var complianceAttributesToUse = [];
 
@@ -1376,7 +1421,7 @@ function createComplianceTracker(consumer, id) {
                  *  a list of role strings. Each pool value is a comma separated
                  *  string of supported roles.
                  */
-                role: function (currentStackValue, poolValue, pool, quantity) {
+                roles: function (currentStackValue, poolValue, pool, quantity) {
                     var stackValue = currentStackValue || [];
                     stackValue.push(poolValue);
                     return stackValue;
@@ -2359,7 +2404,7 @@ var Autobind = {
                         for (var i = 0; i < this.pools.length; i++) {
                             var pool = this.pools[i];
                             var prodAttrValue = pool.getProductAttribute(attr);
-                            var poolRole = pool.getProductAttribute("role");
+                            var poolRole = pool.getProductAttribute("roles");
                             var poolAddons = pool.getProductAttribute("addons") !== null ?
                                 pool.getProductAttribute("addons").split("\\s*,\\s*") : [];
                             var addonMatch = false;
@@ -2429,7 +2474,7 @@ var Autobind = {
                 for (var i = this.pools.length - 1; i >= 0; i--) {
                     temp = this.pools[i];
 
-                    var roleMatch = role == temp.getProductAttribute("role");
+                    var roleMatch = role == temp.getProductAttribute("roles");
                     var poolAddons = temp.getProductAttribute("addons") !== null ?
                         temp.getProductAttribute("addons").split("\\s*,\\s*") : [];
                     var addonMatch = false;

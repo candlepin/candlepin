@@ -255,7 +255,7 @@ describe 'Autobind On Owner' do
     status['compliantAddOns']['addon1'][0]['pool']['id'].should == p1.id
   end
 
-  it 'should attach more than on addon pool when needed' do
+  it 'should attach more than one addon pool when needed' do
     product1 = create_product(random_string('product'),
                               random_string('product'),
                               {:attributes => {:addons => "addon1"},

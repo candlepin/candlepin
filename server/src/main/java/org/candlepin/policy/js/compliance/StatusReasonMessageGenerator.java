@@ -69,6 +69,10 @@ public class StatusReasonMessageGenerator {
             " For more information, please see https://access.redhat.com/solutions/1592573"));
         REASON_MESSAGES.put(ComplianceReason.ReasonKeys.STORAGE_BAND,
             I18n.marktr("Only supports {1}TB of {2}TB of storage."));
+        REASON_MESSAGES.put(ComplianceReason.ReasonKeys.ROLES,
+            I18n.marktr("Supports role(s) {1} but the system has {2}."));
+        REASON_MESSAGES.put(ComplianceReason.ReasonKeys.ADDONS,
+            I18n.marktr("Supports addon(s) {1} but the system has {2}."));
         DEFAULT_REASON_MESSAGE =
             I18n.marktr("{0} COVERAGE PROBLEM.  Supports {1} of {2}");
     }

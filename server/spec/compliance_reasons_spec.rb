@@ -738,4 +738,90 @@ describe 'Stacking Compliance Reasons' do
         assert_reason(reason, expectation["key"], expectation.message, expectation.attributes)
     end
   end
+
+  it 'should still attach to pool that provides product but has mismatched role' do
+    product1 = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:roles => "supported-role1,supported-role2"},
+                               :owner => @owner['key']})
+    pool1 = create_pool_and_subscription(@owner['key'], product1.id)
+
+    installed = [
+        {'productId' => product1.id, 'productName' => product1['name']}]
+
+    consumer = @cp.register(
+        random_string('systempurpose'), :system, nil, {}, nil, @owner['key'], [], installed, nil, [],
+        nil, [], nil, nil, nil, nil,
+        nil, 0, nil, nil, "unsupported-role", nil, [])
+    purpose_status = @cp.get_purpose_compliance(consumer['uuid'])
+    purpose_status['status'].should == 'invalid'
+    purpose_status['nonCompliantRole'].include?('unsupported-role').should == true
+
+    @cp.consume_pool(pool1.id, {:uuid => consumer.uuid})
+    entitlements = @cp.list_entitlements(:uuid => consumer.uuid)
+    entitlements.size.should == 1
+
+    purpose_status = @cp.get_purpose_compliance(consumer.uuid)
+    purpose_status['status'].should == 'invalid'
+    purpose_status['nonCompliantRole'].include?('unsupported-role').should == true
+
+    overall_status = @cp.get_compliance(consumer['uuid'])
+    overall_status['status'].should == 'partial'
+    overall_status['partiallyCompliantProducts'][product1.id].size.should == 1
+    overall_status['reasons'].size.should == 1
+
+    expected_has = "unsupported-role"
+    expected_covered = "supported-role1,supported-role2"
+    expected_message = "Supports role(s) %s but the system has %s." % [expected_covered, expected_has]
+
+    assert_reason(overall_status['reasons'][0], 'ROLES', expected_message, {
+                                                    'entitlement_id' => entitlements[0].id,
+                                                    'covered' => expected_covered,
+                                                    'has' => expected_has,
+                                                    'name' => product1['name']})
+  end
+
+  it 'should still attach to pool that provides product but has mismatched addons' do
+    product1 = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:addons => "supported-addon1,supported-addon2"},
+                               :owner => @owner['key']})
+    pool1 = create_pool_and_subscription(@owner['key'], product1.id)
+
+    installed = [
+        {'productId' => product1.id, 'productName' => product1['name']}]
+
+    consumer = @cp.register(
+        random_string('systempurpose'), :system, nil, {}, nil, @owner['key'], [], installed, nil, [],
+        nil, [], nil, nil, nil, nil,
+        nil, 0, nil, nil, nil, nil, ['unsupported-addon1','unsupported-addon2'])
+    purpose_status = @cp.get_purpose_compliance(consumer.uuid)
+    purpose_status['status'].should == 'invalid'
+    purpose_status['nonCompliantAddOns'].include?('unsupported-addon1').should == true
+    purpose_status['nonCompliantAddOns'].include?('unsupported-addon2').should == true
+
+    @cp.consume_pool(pool1.id, {:uuid => consumer.uuid})
+    entitlements = @cp.list_entitlements(:uuid => consumer.uuid)
+    entitlements.size.should == 1
+
+    purpose_status = @cp.get_purpose_compliance(consumer.uuid)
+    purpose_status['status'].should == 'invalid'
+    purpose_status['nonCompliantAddOns'].include?('unsupported-addon1').should == true
+    purpose_status['nonCompliantAddOns'].include?('unsupported-addon2').should == true
+
+    overall_status = @cp.get_compliance(consumer['uuid'])
+    overall_status['status'].should == 'partial'
+    overall_status['partiallyCompliantProducts'][product1.id].size.should == 1
+    overall_status['reasons'].size.should == 1
+
+    expected_has = "unsupported-addon1,unsupported-addon2"
+    expected_covered = "supported-addon1,supported-addon2"
+    expected_message = "Supports addon(s) %s but the system has %s." % [expected_covered, expected_has]
+
+    assert_reason(overall_status['reasons'][0], 'ADDONS', expected_message, {
+                                                    'entitlement_id' => entitlements[0].id,
+                                                    'covered' => expected_covered,
+                                                    'has' => expected_has,
+                                                    'name' => product1['name']})
+  end
 end

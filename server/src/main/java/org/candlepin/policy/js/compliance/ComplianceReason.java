@@ -76,6 +76,12 @@ public class ComplianceReason {
 
         /** TODO: Fill this in */
         public static final String STORAGE_BAND = "STORAGE_BAND";
+
+        /** Key for specifying the role of the system is not covered */
+        public static final String ROLES = "ROLES";
+
+        /** Key for specifying an addon of the system is not covered */
+        public static final String ADDONS = "ADDONS";
     }
 
     private String key;

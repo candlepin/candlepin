@@ -1027,7 +1027,7 @@ public class AutobindRulesTest {
         product100.setId("non-compliant-100");
 
         // Consumer specified syspurpose attributes:
-        consumer.setRole("RHEL Server");
+        consumer.setUsage("good-usage");
         ConsumerInstalledProduct consumerInstalledProduct =
             new ConsumerInstalledProduct(product69);
         consumer.addInstalledProduct(consumerInstalledProduct);
@@ -1035,13 +1035,13 @@ public class AutobindRulesTest {
         // --- No satisfied syspurpose attributes on the consumer ---
 
         // Candidate pools:
-        Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", "Smart Management", null, null);
+        Product prodRH00009 = createSysPurposeProduct(null, null, "Smart Management", null, "good-usage");
         Pool RH00009 = TestUtil.createPool(owner, prodRH00009);
         RH00009.setId("RH00009");
         RH00009.addProvidedProduct(product69);
         RH00009.setQuantity(0L); // No quantity available
 
-        Product prodMCT1650 = createSysPurposeProduct(null, "Satellite", null, null, null);
+        Product prodMCT1650 = createSysPurposeProduct(null, null, null, null, "bad-usage");
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
         MCT1650.setId("MCT1650");
         MCT1650.addProvidedProduct(product69);
@@ -1693,6 +1693,232 @@ public class AutobindRulesTest {
 
         assertTrue("Pool RH00009 should have a higher priority than pool RH00008.",
             RH00009Priority > RH00008Priority);
+    }
+
+    /*
+     * This test demonstrates that a pool that provides certain role(s) will not be selected
+     * during autoattach if none of those roles match the one that the consumer has specified,
+     * even though the pool does satisfy the consumer's installed product.
+     */
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testSelectBestPoolsShouldNotSelectPoolWithMismatchedRole() {
+        Product product69 = new Product();
+        product69.setId("compliant-69");
+
+        // Consumer specified syspurpose attributes:
+        consumer.setRole("RHEL Server");
+        ConsumerInstalledProduct consumerInstalledProduct =
+            new ConsumerInstalledProduct(product69);
+        consumer.addInstalledProduct(consumerInstalledProduct);
+
+        // --- No satisfied syspurpose attributes on the consumer ---
+
+        // Candidate pools:
+        Product prodMCT1650 = createSysPurposeProduct(null, "Random Role,Another Role", null,
+            null, null);
+        Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
+        MCT1650.setId("MCT1650");
+        MCT1650.addProvidedProduct(product69);
+        MCT1650.setQuantity(1L);
+
+        List<Pool> pools = new ArrayList<>();
+        pools.add(MCT1650);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{"compliant-69"}, pools, compliance, null, new HashSet<>(), false);
+
+        assertEquals(0, bestPools.size());
+    }
+
+    /*
+     * This test demonstrates that a pool that provides certain addon(s) will not be selected
+     * during autoattach if none of those addons match the one that the consumer has specified,
+     * even though the pool does satisfy the consumer's installed product.
+     */
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testSelectBestPoolsShouldNotSelectPoolWithMismatchedAddon() {
+        Product product69 = new Product();
+        product69.setId("compliant-69");
+
+        // Consumer specified syspurpose attributes:
+        Set<String> addons = new HashSet<>();
+        addons.add("My Type of Management");
+        consumer.setAddOns(addons);
+        ConsumerInstalledProduct consumerInstalledProduct =
+            new ConsumerInstalledProduct(product69);
+        consumer.addInstalledProduct(consumerInstalledProduct);
+
+        // --- No satisfied syspurpose attributes on the consumer ---
+
+        // Candidate pools:
+        Product prodMCT1650 = createSysPurposeProduct(null, null, "Smart Management,Other Management",
+            null, null);
+        Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
+        MCT1650.setId("MCT1650");
+        MCT1650.addProvidedProduct(product69);
+        MCT1650.setQuantity(1L);
+
+        List<Pool> pools = new ArrayList<>();
+        pools.add(MCT1650);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{"compliant-69"}, pools, compliance, null, new HashSet<>(), false);
+
+        assertEquals(0, bestPools.size());
+    }
+
+    /*
+     * This test demonstrates that a pool that provides certain role(s) will be selected
+     * during autoattach if at least one of those roles match the one that the consumer has specified.
+     */
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testSelectBestPoolsShouldSelectPoolWhenAtLeastOneRoleMatches() {
+        Product product69 = new Product();
+        product69.setId("compliant-69");
+
+        // Consumer specified syspurpose attributes:
+        consumer.setRole("RHEL Server");
+        ConsumerInstalledProduct consumerInstalledProduct =
+            new ConsumerInstalledProduct(product69);
+        consumer.addInstalledProduct(consumerInstalledProduct);
+
+        // --- No satisfied syspurpose attributes on the consumer ---
+
+        // Candidate pools:
+        Product prodMCT1650 = createSysPurposeProduct(null, "Random Role,RHEL Server", null,
+            null, null);
+        Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
+        MCT1650.setId("MCT1650");
+        MCT1650.addProvidedProduct(product69);
+        MCT1650.setQuantity(1L);
+
+        List<Pool> pools = new ArrayList<>();
+        pools.add(MCT1650);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{"compliant-69"}, pools, compliance, null, new HashSet<>(), false);
+
+        assertEquals(1, bestPools.size());
+        assertTrue(bestPools.contains(new PoolQuantity(MCT1650, 1)));
+    }
+
+    /*
+     * This test demonstrates that a pool that provides certain addons(s) will be selected
+     * during autoattach if at least one of those addons match the one that the consumer has specified.
+     */
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testSelectBestPoolsShouldSelectPoolWhenAtLeastOneAddonMatches() {
+        Product product69 = new Product();
+        product69.setId("compliant-69");
+
+        // Consumer specified syspurpose attributes:
+        Set<String> addons = new HashSet<>();
+        addons.add("My Type of Management");
+        addons.add("Other Management");
+        consumer.setAddOns(addons);
+        ConsumerInstalledProduct consumerInstalledProduct =
+            new ConsumerInstalledProduct(product69);
+        consumer.addInstalledProduct(consumerInstalledProduct);
+
+        // --- No satisfied syspurpose attributes on the consumer ---
+
+        // Candidate pools:
+        Product prodMCT1650 = createSysPurposeProduct(null, null, "Smart Management,Other Management",
+            null, null);
+        Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
+        MCT1650.setId("MCT1650");
+        MCT1650.addProvidedProduct(product69);
+        MCT1650.setQuantity(1L);
+
+        List<Pool> pools = new ArrayList<>();
+        pools.add(MCT1650);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{"compliant-69"}, pools, compliance, null, new HashSet<>(), false);
+
+        assertEquals(1, bestPools.size());
+        assertTrue(bestPools.contains(new PoolQuantity(MCT1650, 1)));
+    }
+
+    /*
+     * This test demonstrates that a pool that provides no addons at all, will be selected
+     * during autoattach even if the consumer has addons specified
+     * (as long as the pool satisfies the consumer's installed product).
+     */
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testSelectBestPoolsShouldSelectPoolThatProvidesNoAddons() {
+        Product product69 = new Product();
+        product69.setId("compliant-69");
+
+        // Consumer specified syspurpose attributes:
+        Set<String> addons = new HashSet<>();
+        addons.add("My Type of Management");
+        addons.add("Other Management");
+        consumer.setAddOns(addons);
+        ConsumerInstalledProduct consumerInstalledProduct =
+            new ConsumerInstalledProduct(product69);
+        consumer.addInstalledProduct(consumerInstalledProduct);
+
+        // --- No satisfied syspurpose attributes on the consumer ---
+
+        // Candidate pools:
+        Product prodMCT1650 = createSysPurposeProduct(null, null, null,
+            null, null);
+        Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
+        MCT1650.setId("MCT1650");
+        MCT1650.addProvidedProduct(product69);
+        MCT1650.setQuantity(1L);
+
+        List<Pool> pools = new ArrayList<>();
+        pools.add(MCT1650);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{"compliant-69"}, pools, compliance, null, new HashSet<>(), false);
+
+        assertEquals(1, bestPools.size());
+        assertTrue(bestPools.contains(new PoolQuantity(MCT1650, 1)));
+    }
+
+    /*
+     * This test demonstrates that a pool that provides no roles at all, will be selected
+     * during autoattach even if the consumer has a role specified
+     * (as long as the pool satisfies the consumer's installed product).
+     */
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testSelectBestPoolsShouldSelectPoolThatProvidesNoRoles() {
+        Product product69 = new Product();
+        product69.setId("compliant-69");
+
+        // Consumer specified syspurpose attributes:
+        consumer.setRole("My Role");
+        ConsumerInstalledProduct consumerInstalledProduct =
+            new ConsumerInstalledProduct(product69);
+        consumer.addInstalledProduct(consumerInstalledProduct);
+
+        // --- No satisfied syspurpose attributes on the consumer ---
+
+        // Candidate pools:
+        Product prodMCT1650 = createSysPurposeProduct(null, null, null,
+            null, null);
+        Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
+        MCT1650.setId("MCT1650");
+        MCT1650.addProvidedProduct(product69);
+        MCT1650.setQuantity(1L);
+
+        List<Pool> pools = new ArrayList<>();
+        pools.add(MCT1650);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{"compliant-69"}, pools, compliance, null, new HashSet<>(), false);
+
+        assertEquals(1, bestPools.size());
+        assertTrue(bestPools.contains(new PoolQuantity(MCT1650, 1)));
     }
 
     @Test
