@@ -14,6 +14,7 @@
  */
 package org.candlepin.audit;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
 import org.candlepin.common.exceptions.IseException;
@@ -25,9 +26,7 @@ import org.candlepin.model.Named;
 import org.candlepin.model.Owned;
 import org.candlepin.model.Pool;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
+import org.candlepin.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,13 +42,9 @@ public class EventBuilder {
 
     private static final Logger log = LoggerFactory.getLogger(EventBuilder.class);
 
-    private final ObjectMapper mapper;
-
     private Event event;
 
     public EventBuilder(EventFactory factory, Target target, Type type) {
-        this.mapper = new ObjectMapper();
-
         event = new Event(type, target, null, factory.principalProvider.get(),
                 null, null, null, null, null, null);
     }
@@ -122,11 +117,11 @@ public class EventBuilder {
                 eventData.put("subscriptionId", ((Pool) entity).getSubscriptionId());
 
                 try {
-                    event.setEventData(mapper.writeValueAsString(eventData));
+                    event.setEventData(Util.toJson(eventData));
                 }
                 catch (JsonProcessingException e) {
                     log.error("Error while building JSON for pool.created event.", e);
-                    throw new IseException("Error while building JSON for pool.created event.");
+                    throw new IseException("Error while building JSON for pool.created event.", e);
                 }
             }
         }

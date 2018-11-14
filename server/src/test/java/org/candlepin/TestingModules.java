@@ -17,6 +17,18 @@ package org.candlepin;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.databind.AnnotationIntrospector;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair;
+import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
+import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
+import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 import org.candlepin.audit.EventSink;
 import org.candlepin.audit.NoopEventSinkImpl;
 import org.candlepin.auth.Principal;
@@ -28,6 +40,7 @@ import org.candlepin.cache.StatusCache;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.guice.HttpMethodMatcher;
 import org.candlepin.common.guice.JPAInitializer;
+import org.candlepin.common.jackson.HateoasBeanPropertyFilter;
 import org.candlepin.common.validation.CandlepinMessageInterpolator;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.controller.CandlepinPoolManager;
@@ -44,6 +57,7 @@ import org.candlepin.guice.ScriptEngineProvider;
 import org.candlepin.guice.TestPrincipalProvider;
 import org.candlepin.guice.TestingRequestScope;
 import org.candlepin.guice.ValidationListenerProvider;
+import org.candlepin.jackson.PoolEventFilter;
 import org.candlepin.model.CPRestrictions;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
@@ -336,6 +350,51 @@ public class TestingModules {
 
             // Bind model translator
             bind(ModelTranslator.class).to(StandardTranslator.class).asEagerSingleton();
+        }
+
+        @Provides @Singleton @Named("EventFactoryObjectMapper")
+        private ObjectMapper configureEventFactoryObjectMapper() {
+            ObjectMapper mapper = new ObjectMapper();
+
+            // When serializing entity JSON for events, we want to use a reduced number
+            // of fields nested objects, so enable the event and API HATEOAS filters:
+            SimpleFilterProvider filterProvider = new SimpleFilterProvider();
+            filterProvider.setFailOnUnknownId(false);
+            filterProvider = filterProvider.addFilter("PoolFilter", new PoolEventFilter());
+            filterProvider = filterProvider.addFilter("ConsumerFilter", new HateoasBeanPropertyFilter());
+            filterProvider = filterProvider.addFilter("EntitlementFilter", new HateoasBeanPropertyFilter());
+            filterProvider = filterProvider.addFilter("OwnerFilter", new HateoasBeanPropertyFilter());
+            filterProvider = filterProvider.addFilter("IdentityCertificateFilter",
+                SimpleBeanPropertyFilter.serializeAllExcept("cert", "key"));
+            filterProvider = filterProvider.addFilter("EntitlementCertificateFilter",
+                SimpleBeanPropertyFilter.serializeAllExcept("cert", "key"));
+            filterProvider = filterProvider.addFilter("PoolAttributeFilter",
+                SimpleBeanPropertyFilter.serializeAllExcept("created", "updated", "id"));
+            filterProvider = filterProvider.addFilter("ProductPoolAttributeFilter",
+                SimpleBeanPropertyFilter.serializeAllExcept("created", "updated", "productId", "id"));
+            filterProvider = filterProvider.addFilter("SubscriptionCertificateFilter",
+                SimpleBeanPropertyFilter.serializeAllExcept("cert", "key"));
+            mapper.setFilterProvider(filterProvider);
+
+            Hibernate5Module hbm = new Hibernate5Module();
+            hbm.enable(Hibernate5Module.Feature.FORCE_LAZY_LOADING);
+            mapper.registerModule(hbm);
+            mapper.registerModule(new Jdk8Module());
+
+            AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
+            AnnotationIntrospector secondary = new JaxbAnnotationIntrospector(mapper.getTypeFactory());
+            AnnotationIntrospector pair = new AnnotationIntrospectorPair(primary, secondary);
+            mapper.setAnnotationIntrospector(pair);
+
+            return mapper;
+        }
+
+        @Provides @Singleton @Named("X509V3ExtensionUtilObjectMapper")
+        private ObjectMapper configureX509V3ExtensionUtilObjectMapper() {
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+            mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+            return mapper;
         }
     }
 }

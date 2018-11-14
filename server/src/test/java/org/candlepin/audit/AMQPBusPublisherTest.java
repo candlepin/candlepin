@@ -61,7 +61,7 @@ public class AMQPBusPublisherTest {
         PrincipalProvider pp = mock(PrincipalProvider.class);
         when(pp.get()).thenReturn(TestUtil.createPrincipal("admin", null, null));
 
-        EventFactory factory = new EventFactory(pp);
+        EventFactory factory = new EventFactory(pp, new ObjectMapper());
         Consumer c = TestUtil.createConsumer();
         Event e = factory.consumerCreated(c);
 
@@ -77,7 +77,7 @@ public class AMQPBusPublisherTest {
         PrincipalProvider pp = mock(PrincipalProvider.class);
         when(pp.get()).thenReturn(TestUtil.createPrincipal("admin", null, null));
 
-        EventFactory factory = new EventFactory(pp);
+        EventFactory factory = new EventFactory(pp, mapper);
         Consumer c = TestUtil.createConsumer();
         Event e = factory.consumerCreated(c);
 

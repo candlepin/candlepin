@@ -83,7 +83,7 @@ public class EventSinkImplTest {
 
     @Before
     public void init() throws Exception {
-        this.factory = new EventFactory(mockPrincipalProvider);
+        this.factory = new EventFactory(mockPrincipalProvider, mapper);
         this.principal = TestUtil.createOwnerPrincipal();
         eventFilter = new EventFilter(new CandlepinCommonTestConfig());
         when(mockPrincipalProvider.get()).thenReturn(this.principal);

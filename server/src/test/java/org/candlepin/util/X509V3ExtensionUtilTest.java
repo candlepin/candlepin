@@ -17,6 +17,7 @@ package org.candlepin.util;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
@@ -55,7 +56,7 @@ public class X509V3ExtensionUtilTest {
     public void init() {
         config = mock(Configuration.class);
         ec = mock(EntitlementCurator.class);
-        util = new X509V3ExtensionUtil(config, ec);
+        util = new X509V3ExtensionUtil(config, ec, new ObjectMapper());
     }
 
     @Test

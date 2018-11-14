@@ -63,11 +63,11 @@ public class ResultDataUserType implements UserType, DynamicParameterizedType {
     private static final Logger log = LoggerFactory.getLogger(ResultDataUserType.class);
     public static final String JSON_CLASS = "jsonClass";
 
-    private ObjectMapper mapper;
+    private static ObjectMapper mapper = configureObjectMapper();
     private Class<?> jsonClass;
 
-    public ResultDataUserType() {
-        mapper = new ObjectMapper();
+    private static ObjectMapper configureObjectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
 
         Hibernate5Module hbm = new Hibernate5Module();
         hbm.enable(Hibernate5Module.Feature.FORCE_LAZY_LOADING);
@@ -83,6 +83,8 @@ public class ResultDataUserType implements UserType, DynamicParameterizedType {
         // We're not going to want any of the JSON filters like DynamicPropertyFilter that we apply elsewhere
         filterProvider.setFailOnUnknownId(false);
         mapper.setFilterProvider(filterProvider);
+
+        return mapper;
     }
 
     @Override

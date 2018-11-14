@@ -39,9 +39,9 @@ import java.io.IOException;
 /**
  * SyncUtils
  */
-class SyncUtils {
+public class SyncUtils {
     private Configuration config;
-    private ProductCachedSerializationModule productCachedModule;
+    private ObjectMapper mapper;
 
     File makeTempDir(String baseName) throws IOException {
         File baseDir = new File(config.getString(ConfigProperties.SYNC_WORK_DIR));
@@ -65,20 +65,17 @@ class SyncUtils {
     @Inject
     public SyncUtils(Configuration config, ProductCachedSerializationModule productCachedModule) {
         this.config = config;
-        this.productCachedModule = productCachedModule;
-    }
 
-    public ObjectMapper getObjectMapper() {
-        ObjectMapper mapper = new ObjectMapper();
+        this.mapper = new ObjectMapper();
         AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
-        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector(mapper.getTypeFactory());
+        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector(this.mapper.getTypeFactory());
         AnnotationIntrospector pair = new AnnotationIntrospectorPair(primary, secondary);
 
-        mapper.setAnnotationIntrospector(pair);
-        mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+        this.mapper.setAnnotationIntrospector(pair);
+        this.mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
         // Add support for new JDK8 features
-        mapper.registerModule(new Jdk8Module());
+        this.mapper.registerModule(new Jdk8Module());
 
         // Filter specific things we do not want exported:
         SimpleFilterProvider filterProvider = new SimpleFilterProvider();
@@ -86,24 +83,16 @@ class SyncUtils {
         filterProvider = filterProvider.addFilter("EntitlementFilter",
             SimpleBeanPropertyFilter.serializeAllExcept("consumer"));
 
-        mapper.setFilterProvider(filterProvider);
-        mapper.registerModule(productCachedModule);
+        this.mapper.setFilterProvider(filterProvider);
+        this.mapper.registerModule(productCachedModule);
 
         if (config != null) {
-            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
+            this.mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
                 config.getBoolean(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES));
         }
-
-        return mapper;
     }
 
-    File tempFileReference(String name) throws IOException {
-        File baseDir = new File(config.getString(ConfigProperties.SYNC_WORK_DIR));
-        if (!baseDir.exists() && !baseDir.mkdirs()) {
-            throw new IseException("Unable to create base dir for sync: " + baseDir);
-        }
-
-        return new File(baseDir, name);
+    public ObjectMapper getObjectMapper() {
+        return this.mapper;
     }
-
 }

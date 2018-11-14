@@ -14,6 +14,7 @@
  */
 package org.candlepin.util;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.candlepin.model.CuratorException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -361,15 +362,9 @@ public class Util {
         return new String(Hex.encodeHex(sha1hash));
     }
 
-    public static String toJson(Object anObject) {
-        String output = "";
-        try {
-            output = mapper.writeValueAsString(anObject);
-        }
-        catch (Exception e) {
-            log.error("Could no serialize the object to json " + anObject, e);
-        }
-        return output;
+
+    public static String toJson(Object anObject) throws JsonProcessingException {
+        return mapper.writeValueAsString(anObject);
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
