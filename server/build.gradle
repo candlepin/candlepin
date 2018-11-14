@@ -1,3 +1,4 @@
+import org.gradle.api.tasks.options.Option
 
 apply plugin: 'war'
 apply plugin: Gettext
@@ -47,6 +48,61 @@ configurations {
         extendsFrom(core_testing, jukito, liquibase_slf4j)
     }
 }
+
+class Rspec extends DefaultTask {
+
+    Rspec() {
+        description = 'Run ruby based spec tests'
+        group = 'Verification'
+    }
+
+    @Input
+    String test = ""
+
+    @Input
+    String spec = ""
+
+    @Option(option = 'spec', description = 'The name of the spec file to search. Example: "core_and_ram"')
+    void setSpec(final String specfile_name) {
+        this.spec = specfile_name
+    }
+
+    @Option(option = 'test', description = 'Set the name of the spec test to run')
+    void setTest(final String test_name) {
+        this.test = test_name
+    }
+
+    @TaskAction
+    runRspec() {
+        def rspec_args = [
+                "--format", "documentation",
+                "--force-color",
+                "--require", "${project.rootDir}/tasks/failure_formatter",
+                "--format", "ModifiedRSpec::FailuresFormatter",
+                "-I", "${project.getProjectDir()}/client/ruby"
+        ]
+
+        // Use --pattern to match the name of the spec file for the spec argument
+        if (spec){
+            rspec_args.add("--pattern")
+            rspec_args.add("**/${spec}*_spec.rb")
+        }
+
+        // use -e to match the name of a specific test within the matched spec files
+        if (test){
+            rspec_args.add("-e")
+            rspec_args.add(test)
+        }
+
+        project.exec {
+            executable 'rspec'
+            args rspec_args
+            workingDir project.getProjectDir()
+        }
+    }
+}
+
+task rspec(type: Rspec)
 
 dependencies {
 
