@@ -821,7 +821,8 @@ public class ConsumerResource {
         logNewConsumerDebugInfo(consumerToCreate, keys, type);
 
         validateContentAccessMode(consumerToCreate, owner);
-        consumerBindUtil.validateServiceLevel(owner.getId(), consumerToCreate.getServiceLevel());
+        // BZ 1618398 Remove validation check on consumer service level
+        // consumerBindUtil.validateServiceLevel(owner.getId(), consumerToCreate.getServiceLevel());
 
         try {
             Date createdDate = consumerToCreate.getCreated();
@@ -1465,7 +1466,8 @@ public class ConsumerResource {
         String level = updated.getServiceLevel();
         if (level != null && !level.equals(toUpdate.getServiceLevel())) {
             log.info("   Updating consumer service level setting.");
-            consumerBindUtil.validateServiceLevel(toUpdate.getOwnerId(), level);
+            // BZ 1618398 Remove validation check on consumer service level
+            // consumerBindUtil.validateServiceLevel(toUpdate.getOwnerId(), level);
             toUpdate.setServiceLevel(level);
             changesMade = true;
         }
@@ -2153,7 +2155,8 @@ public class ConsumerResource {
         List<PoolQuantity> dryRunPools = new ArrayList<>();
 
         try {
-            consumerBindUtil.validateServiceLevel(consumer.getOwnerId(), serviceLevel);
+            // BZ 1618398 Remove validation check on consumer service level
+            // consumerBindUtil.validateServiceLevel(consumer.getOwnerId(), serviceLevel);
             dryRunPools = entitler.getDryRun(consumer, owner, serviceLevel);
         }
         catch (ForbiddenException fe) {
