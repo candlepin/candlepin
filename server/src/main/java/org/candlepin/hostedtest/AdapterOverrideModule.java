@@ -35,7 +35,7 @@ public class AdapterOverrideModule extends AbstractModule {
 
         bind(SubscriptionServiceAdapter.class).to(HostedTestSubscriptionServiceAdapter.class)
                 .asEagerSingleton();
-        bind(HostedTestSubscriptionResource.class).asEagerSingleton();
+        bind(HostedTestSubscriptionResource.class);
     }
 
 }
