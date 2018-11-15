@@ -710,11 +710,6 @@ describe 'Consumer Resource' do
     consumer = @cp.get_consumer(consumer['uuid'])
     consumer['serviceLevel'].should == 'VIP'
 
-    # Should not be able to set service level to one not available by org
-    lambda do
-        consumer_client.update_consumer({:serviceLevel => 'Ultra-VIP'})
-    end.should raise_exception(RestClient::BadRequest)
-
     # The service level should be case insensitive
     consumer_client.update_consumer({:serviceLevel => ''})
     consumer = @cp.get_consumer(consumer['uuid'])
@@ -723,11 +718,6 @@ describe 'Consumer Resource' do
     consumer_client.update_consumer({:serviceLevel => 'vip'})
     consumer = @cp.get_consumer(consumer['uuid'])
     consumer['serviceLevel'].should == 'vip'
-
-   # Cannot assign exempt level to consumer
-    lambda do
-        consumer_client.update_consumer({:serviceLevel => 'Layered'})
-    end.should raise_exception(RestClient::BadRequest)
 
   end
 
@@ -811,11 +801,6 @@ describe 'Consumer Resource' do
     consumer = @cp.get_consumer(consumer['uuid'])
     consumer['serviceLevel'].should == ''
     @cp.update_owner(@owner1['key'], {:defaultServiceLevel => 'VIP'})
-
-    # dry run with unknown level should return badrequest
-    lambda do
-        @cp.autobind_dryrun(consumer['uuid'], 'Standard').length.should == 0
-    end.should raise_exception(RestClient::BadRequest)
 
     # dry run against the override service level should be case insensitive
     pools = @cp.autobind_dryrun(consumer['uuid'], 'Ultra-vip')
