@@ -26,6 +26,8 @@ import org.apache.activemq.artemis.api.core.client.ClientMessage;
 import org.apache.activemq.artemis.api.core.client.ClientSession;
 import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
 import org.candlepin.auth.PrincipalData;
+import org.candlepin.common.config.Configuration;
+import org.candlepin.controller.ActiveMQStatusMonitor;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,7 +37,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import java.io.StringWriter;
 
-import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -55,31 +56,34 @@ public class EventMessageReceiverTest {
     @Mock private ClientConsumer clientConsumer;
     @Mock private EventListener eventListener;
     @Mock private ClientMessage clientMessage;
+    @Mock private ActiveMQStatusMonitor monitor;
+    @Mock private Configuration config;
     @Spy
     private ObjectMapper mapper = new ObjectMapper();
     @Spy private ActiveMQBuffer activeMQBuffer = ActiveMQBuffers.fixedBuffer(1000);
+
+    private EventSourceConnection connection;
+    private EventMessageReceiver receiver;
 
     @Before
     public void init() throws Exception {
         when(clientMessage.getBodyBuffer()).thenReturn(activeMQBuffer);
         when(clientSessionFactory.createSession(eq(false), eq(false), eq(0))).thenReturn(clientSession);
         when(clientSession.createConsumer(anyString())).thenReturn(clientConsumer);
-    }
 
-    @Test(expected = ActiveMQException.class)
-    public void shouldThrowActiveMQExceptionWhenSessionCreateFailsDuringEventSourceCreation()
-        throws Exception {
-        doThrow(new ActiveMQException()).when(clientSession).start();
+        this.connection = new EventSourceConnection(monitor, config) {
+            @Override
+            ClientSessionFactory getFactory() {
+                return clientSessionFactory;
+            }
+        };
 
-        new EventMessageReceiver(eventListener, clientSessionFactory, new ObjectMapper());
-        fail("Should have thrown ActiveMQException");
+        receiver = new EventMessageReceiver(eventListener, this.connection, mapper);
+        receiver.connect();
     }
 
     @Test
     public void shouldCreateNewConsumer() throws Exception {
-        EventMessageReceiver receiver = new EventMessageReceiver(eventListener, clientSessionFactory,
-            new ObjectMapper());
-
         verify(clientSession).createConsumer(anyString());
         verify(clientConsumer).setMessageHandler(eq(receiver));
         verify(clientSession).start();
@@ -87,7 +91,6 @@ public class EventMessageReceiverTest {
 
     @Test
     public void whenMapperReadThrowsExceptionThenMessageShouldBeAckedAndSessionRolledBack() throws Exception {
-        EventMessageReceiver receiver = new EventMessageReceiver(eventListener, clientSessionFactory, mapper);
         doReturn("test123").when(activeMQBuffer).readString();
         doThrow(new JsonMappingException("Induced exception"))
             .when(mapper).readValue(anyString(), eq(Event.class));
@@ -101,7 +104,6 @@ public class EventMessageReceiverTest {
     @Test
     public void whenMsgAcknowledgeThrowsExceptionSessionIsRolledBack()
         throws Exception {
-        EventMessageReceiver receiver = new EventMessageReceiver(eventListener, clientSessionFactory, mapper);
         doReturn(eventJson()).when(activeMQBuffer).readString();
         doThrow(new ActiveMQException(ActiveMQExceptionType.DISCONNECTED, "Induced exception for testing"))
             .when(clientMessage).acknowledge();
@@ -113,7 +115,6 @@ public class EventMessageReceiverTest {
     @Test
     public void whenProperClientMsgPassedThenOnMessageShouldSucceed()
         throws Exception {
-        EventMessageReceiver receiver = new EventMessageReceiver(eventListener, clientSessionFactory, mapper);
         doReturn(eventJson()).when(activeMQBuffer).readString();
         receiver.onMessage(clientMessage);
         verify(eventListener).onEvent(any(Event.class));
@@ -124,13 +125,33 @@ public class EventMessageReceiverTest {
 
     @Test
     public void sessionIsRolledBackWhenAnyExceptionIsThrownFromEventListener() throws Exception {
-        EventMessageReceiver receiver = new EventMessageReceiver(eventListener, clientSessionFactory, mapper);
         doReturn(eventJson()).when(activeMQBuffer).readString();
         doThrow(new RuntimeException("Forced")).when(eventListener).onEvent(any(Event.class));
         receiver.onMessage(clientMessage);
         verify(clientMessage).acknowledge();
         verify(clientSession).rollback();
         verify(clientSession, never()).commit();
+    }
+
+    @Test
+    public void sessionCloseIgnoredIfSessionIsNull() throws Exception {
+        EventMessageReceiver receiver = new EventMessageReceiver(eventListener, this.connection, mapper);
+        receiver.close();
+        verify(clientSession, never()).close();
+
+        // Should never get called if the session is null
+        verify(clientSession, never()).isClosed();
+    }
+
+    @Test
+    public void sessionCloseIgnoredIfSessionIsAlreadyClosed() throws Exception {
+        when(clientSession.isClosed()).thenReturn(true);
+        receiver.close();
+
+        verify(clientSession, never()).close();
+
+        // Should get called if the session is not null
+        verify(clientSession).isClosed();
     }
 
     private String eventJson() throws Exception {

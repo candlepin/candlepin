@@ -83,6 +83,15 @@ public class QpidConnectionTest {
     }
 
     @Test
+    public void connectionIsMadeWhenUpdatingFromUnknownState() throws Exception {
+        connection.onStatusUpdate(QpidStatus.UNKNOWN, QpidStatus.CONNECTED);
+
+        verify(connection, never()).closeConnection();
+        verify(connection, never()).close();
+        verify(connection, times(1)).connect();
+    }
+
+    @Test
     public void connectionIsReconnectedWhenQpidConnectedStatusIsReportedAndQpidWasPreviouslyDown()
         throws Exception {
         connection.onStatusUpdate(QpidStatus.DOWN, QpidStatus.CONNECTED);

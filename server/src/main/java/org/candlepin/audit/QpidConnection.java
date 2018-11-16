@@ -86,17 +86,12 @@ public class QpidConnection implements QpidStatusListener {
 
     protected boolean isFlowStopped = false;
 
-    /**
-     * This class is a singleton, just in case that multiple threads
-     * try to reconnect concurrently, we want to shield ourselves
-     */
-    private static Object connectionLock = new Object();
-
     @Inject
     public QpidConnection(QpidConfigBuilder config, Configuration candlepinConfiguration) {
         try {
             this.config = config;
             this.candlepinConfig = candlepinConfiguration;
+            this.producerMap = new HashMap<>();
             ctx = createInitialContext();
             connectionFactory = createConnectionFactory();
         }
@@ -151,17 +146,14 @@ public class QpidConnection implements QpidStatusListener {
      * it must recreate all JMS objects such as Connection, TopicSession, TopicPublisher.
      * @throws Exception errors during connecting to the Broker
      */
-    public void connect() throws Exception {
-        synchronized (connectionLock) {
-            connection = newConnection();
-            log.debug("creating topic session");
-            session = createTopicSession();
-            log.info("AMQP session created successfully...");
-            Map<Target, Map<Type, TopicPublisher>> pm = new HashMap<>();
-            buildAllTopicPublishers(pm);
-            producerMap = pm;
-        }
-
+    public synchronized void connect() throws Exception {
+        connection = newConnection();
+        log.debug("creating topic session");
+        session = createTopicSession();
+        log.info("AMQP session created successfully...");
+        Map<Target, Map<Type, TopicPublisher>> pm = new HashMap<>();
+        buildAllTopicPublishers(pm);
+        producerMap = pm;
     }
 
     /**
@@ -267,7 +259,8 @@ public class QpidConnection implements QpidStatusListener {
         //
         // NOTE: We do not shut down the connection when FLOW_STOPPED is detected as there is no
         //       need to. Message sends are just blocked in that case as the connection is fine.
-        if (QpidStatus.CONNECTED.equals(newStatus) && QpidStatus.DOWN.equals(oldStatus)) {
+        if (QpidStatus.CONNECTED.equals(newStatus) &&
+            (QpidStatus.DOWN.equals(oldStatus) || QpidStatus.UNKNOWN.equals(oldStatus))) {
             log.info("Attempting to connect to QPID");
             try {
                 connect();

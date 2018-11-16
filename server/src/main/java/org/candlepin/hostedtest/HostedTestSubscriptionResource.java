@@ -18,28 +18,19 @@ import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.exceptions.ConflictException;
 import org.candlepin.common.util.SuppressSwaggerCheck;
-import org.candlepin.controller.ProductManager;
-import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
-import org.candlepin.model.OwnerContentCurator;
-import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.ProductContent;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductContentData;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
-import org.candlepin.resource.util.ResolverUtil;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.service.model.ContentInfo;
 import org.candlepin.service.model.ProductInfo;
 import org.candlepin.service.model.SubscriptionInfo;
 
 import com.google.inject.persist.Transactional;
-
-import org.xnap.commons.i18n.I18n;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -76,30 +67,6 @@ public class HostedTestSubscriptionResource {
 
     @Inject
     private UniqueIdGenerator idGenerator;
-
-    @Inject
-    private ResolverUtil resolverUtil;
-
-    @Inject
-    private ProductManager productManager;
-
-    @Inject
-    private ProductCurator productCurator;
-
-    @Inject
-    private OwnerContentCurator ownerContentCurator;
-
-    @Inject
-    private OwnerCurator ownerCurator;
-
-    @Inject
-    private OwnerProductCurator ownerProductCurator;
-
-    @Inject
-    private I18n i18n;
-
-    @Inject
-    private ModelTranslator translator;
 
     /**
      * API to check if resource is alive

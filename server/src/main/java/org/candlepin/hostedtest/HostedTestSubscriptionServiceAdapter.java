@@ -49,9 +49,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import javax.inject.Inject;
 import javax.inject.Singleton;
 
 
@@ -87,16 +89,17 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
     /**
      * Creates a new HostedTestSubscriptionServiceAdapter instance
      */
+    @Inject
     public HostedTestSubscriptionServiceAdapter() {
-        this.ownerMap = new HashMap<>();
+        this.ownerMap = new ConcurrentHashMap<>();
 
-        this.subscriptionMap = new HashMap<>();
+        this.subscriptionMap = new ConcurrentHashMap();
 
-        this.productMap = new HashMap<>();
-        this.contentMap = new HashMap<>();
+        this.productMap = new ConcurrentHashMap();
+        this.contentMap = new ConcurrentHashMap();
 
-        this.contentProductMap = new HashMap<>();
-        this.productSubscriptionMap = new HashMap<>();
+        this.contentProductMap = new ConcurrentHashMap();
+        this.productSubscriptionMap = new ConcurrentHashMap();
     }
 
 

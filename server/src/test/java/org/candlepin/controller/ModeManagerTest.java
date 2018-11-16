@@ -57,10 +57,26 @@ public class ModeManagerTest {
         sleep(1);
         modeManager.enterMode(mode, testReason);
         assertEquals(mode, modeManager.getLastCandlepinModeChange().getMode());
-        assertEquals(testReason, modeManager.getLastCandlepinModeChange().getReason());
+        assertEquals(1, modeManager.getLastCandlepinModeChange().getReasons().size());
+        assertTrue(modeManager.getLastCandlepinModeChange().getReasons().contains(testReason));
         assertTrue(previousTime.before(modeManager.getLastCandlepinModeChange().getChangeTime()));
     }
 
+    @Test
+    public void testEnterModeWithMultipleReasons() throws InterruptedException {
+        Date previousTime = modeManager.getLastCandlepinModeChange().getChangeTime();
+        Mode mode = Mode.SUSPEND;
+        sleep(1);
+
+        // Using this two reasons for testing purposes, but does not make sense
+        // in the context of candlepin -- this is Ok.
+        modeManager.enterMode(mode, testReason, Reason.QPID_UP);
+        assertEquals(mode, modeManager.getLastCandlepinModeChange().getMode());
+        assertEquals(2, modeManager.getLastCandlepinModeChange().getReasons().size());
+        assertTrue(modeManager.getLastCandlepinModeChange().getReasons().contains(testReason));
+        assertTrue(modeManager.getLastCandlepinModeChange().getReasons().contains(Reason.QPID_UP));
+        assertTrue(previousTime.before(modeManager.getLastCandlepinModeChange().getChangeTime()));
+    }
     @Test(expected = IllegalArgumentException.class)
     public void testEnterModeNeedsReason() {
         modeManager.enterMode(Mode.NORMAL, null);

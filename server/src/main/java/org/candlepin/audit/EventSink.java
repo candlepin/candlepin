@@ -30,8 +30,6 @@ import java.util.List;
  */
 public interface EventSink {
 
-    void initialize() throws Exception;
-
     void queueEvent(Event event);
 
     void sendEvents();
