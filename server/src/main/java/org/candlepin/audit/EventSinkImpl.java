@@ -15,8 +15,8 @@
 package org.candlepin.audit;
 
 import org.candlepin.common.config.Configuration;
-import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.ModeManager;
+import org.candlepin.guice.CandlepinRequestScoped;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
@@ -27,18 +27,12 @@ import org.candlepin.policy.SystemPurposeComplianceStatus;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.Singleton;
 
 import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.activemq.artemis.api.core.SimpleString;
-import org.apache.activemq.artemis.api.core.TransportConfiguration;
-import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
 import org.apache.activemq.artemis.api.core.client.ClientMessage;
 import org.apache.activemq.artemis.api.core.client.ClientProducer;
 import org.apache.activemq.artemis.api.core.client.ClientSession;
-import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
-import org.apache.activemq.artemis.api.core.client.ServerLocator;
-import org.apache.activemq.artemis.core.remoting.impl.invm.InVMConnectorFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,110 +44,42 @@ import javax.inject.Inject;
 /**
  * EventSink - Queues events to be sent after request/job completes, and handles actual
  * sending of events on successful job or API request, as well as rollback if either fails.
+ *
+ * An single instance of this object will be created per request/job.
  */
-@Singleton
+@CandlepinRequestScoped
 public class EventSinkImpl implements EventSink {
     private static Logger log = LoggerFactory.getLogger(EventSinkImpl.class);
 
     private EventFactory eventFactory;
-    private ClientSessionFactory factory;
-    private Configuration config;
     private ObjectMapper mapper;
     private EventFilter eventFilter;
-    private int largeMsgSize;
     private ModeManager modeManager;
+    private Configuration config;
 
-    /*
-     * Important use of ThreadLocal here, each Tomcat/Quartz thread gets it's own session
-     * which is reused across invocations. Sessions must have commit or rollback called
-     * on them per request/job. This is handled in EventFilter for the API, and KingpinJob
-     * for quartz jobs.
-     */
-    private ThreadLocal<ClientSession> sessions = new ThreadLocal<>();
-    private ThreadLocal<ClientProducer> producers = new ThreadLocal<>();
+    private EventSinkConnection connection;
+    private EventMessageSender messageSender;
 
     @Inject
     public EventSinkImpl(EventFilter eventFilter, EventFactory eventFactory,
-        ObjectMapper mapper, Configuration config, ModeManager modeManager) {
-
+        ObjectMapper mapper, Configuration config, EventSinkConnection connection,
+        ModeManager modeManager) throws ActiveMQException {
         this.eventFactory = eventFactory;
-        this.config = config;
         this.mapper = mapper;
         this.eventFilter = eventFilter;
-        this.largeMsgSize = config.getInt(ConfigProperties.ACTIVEMQ_LARGE_MSG_SIZE);
         this.modeManager = modeManager;
+        this.config = config;
+        this.connection = connection;
     }
 
-    /**
-     * Initializes the Singleton from the ContextListener not from the ctor.
-     * @throws Exception thrown if there's a problem creating the session factory.
-     */
-    @Override
-    public void initialize() throws Exception {
-        if (this.factory == null) {
-            this.factory = createClientSessionFactory();
-        }
-
-        log.info("EventSink Initialized");
-    }
-
-    protected ClientSessionFactory createClientSessionFactory() throws Exception {
-        ServerLocator locator = ActiveMQClient.createServerLocatorWithoutHA(
-            new TransportConfiguration(InVMConnectorFactory.class.getName()));
-        locator.setMinLargeMessageSize(largeMsgSize);
-        locator.setReconnectAttempts(-1);
-        return locator.createSessionFactory();
-    }
-
-    protected ClientSession getClientSession() {
-        ClientSession session = sessions.get();
-        if (session == null || session.isClosed()) {
-            try {
-                /*
-                 * Use a transacted ActiveMQ session, events will not be dispatched until
-                 * commit() is called on it, and a call to rollback() will revert any queued
-                 * messages safely and the session is then ready to start over the next time
-                 * the thread is used.
-                 */
-                session = this.factory.createTransactedSession();
-                this.sessions.set(session);
-
-                log.debug("Created new ActiveMQ session: {}", System.identityHashCode(session));
-            }
-            catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        return session;
-    }
-
-    protected ClientProducer getClientProducer() {
-        ClientProducer producer = producers.get();
-        if (producer == null || producer.isClosed()) {
-            try {
-                ClientSession session = this.getClientSession();
-
-                producer = session.createProducer(MessageAddress.DEFAULT_EVENT_MESSAGE_ADDRESS);
-                this.producers.set(producer);
-
-                log.debug("Created new ActiveMQ producer: {}", System.identityHashCode(producer));
-            }
-            catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        return producer;
-    }
-
+    // FIXME This method really does not belong here. It should probably be moved
+    //       to its own class.
     @Override
     public List<QueueStatus> getQueueInfo() {
         List<QueueStatus> results = new LinkedList<>();
-        try {
-            ClientSession session = getClientSession();
-            session.start();
 
+        try (ClientSession session = this.connection.createClientSession()) {
+            session.start();
             for (String listenerClassName : ActiveMQContextListener.getActiveMQListeners(config)) {
                 String queueName = "event." + listenerClassName;
                 long msgCount = session.queueQuery(new SimpleString(queueName)).getMessageCount();
@@ -161,9 +87,8 @@ public class EventSinkImpl implements EventSink {
             }
         }
         catch (Exception e) {
-            log.error("Error looking up ActiveMQ queue info", e);
+            log.error("Error looking up ActiveMQ queue info: ", e);
         }
-
         return results;
     }
 
@@ -189,13 +114,12 @@ public class EventSinkImpl implements EventSink {
         log.debug("Queuing event: {}", event);
 
         try {
-            ClientSession session = getClientSession();
-            ClientMessage message = session.createMessage(true);
-            String eventString = mapper.writeValueAsString(event);
-            message.getBodyBuffer().writeString(eventString);
-
-            // NOTE: not actually send until we commit the session.
-            getClientProducer().send(message);
+            // Lazily initialize the message sender when the first
+            // message gets queued.
+            if (messageSender == null) {
+                messageSender = new EventMessageSender(this.connection);
+            }
+            messageSender.queueMessage(mapper.writeValueAsString(event));
         }
         catch (Exception e) {
             log.error("Error while trying to send event", e);
@@ -209,28 +133,24 @@ public class EventSinkImpl implements EventSink {
      */
     @Override
     public void sendEvents() {
-        log.debug("Committing ActiveMQ transaction");
-
-        try (ClientSession session = this.getClientSession()) {
-            session.commit();
+        if (!hasQueuedMessages()) {
+            log.debug("No events to send.");
+            return;
         }
-        catch (Exception e) {
-            // This would be pretty bad, but we always try not to let event errors
-            // interfere with the operation of the overall application.
-            log.error("Error committing ActiveMQ transaction", e);
-        }
+        messageSender.sendMessages();
     }
 
     @Override
     public void rollback() {
-        log.warn("Rolling back ActiveMQ transaction");
+        if (!hasQueuedMessages()) {
+            log.debug("No events to roll back.");
+            return;
+        }
+        messageSender.cancelMessages();
+    }
 
-        try (ClientSession session = this.getClientSession()) {
-            session.rollback();
-        }
-        catch (ActiveMQException e) {
-            log.error("Error rolling back ActiveMQ transaction", e);
-        }
+    private boolean hasQueuedMessages() {
+        return messageSender != null;
     }
 
     public void emitConsumerCreated(Consumer newConsumer) {
@@ -291,5 +211,64 @@ public class EventSinkImpl implements EventSink {
     @Override
     public void emitCompliance(Consumer consumer, SystemPurposeComplianceStatus compliance) {
         queueEvent(eventFactory.complianceCreated(consumer, compliance));
+    }
+
+    /**
+     * An internal class responsible for encapsulating a single session to the
+     * event message broker.
+     */
+    private class EventMessageSender {
+
+        private ActiveMQConnection connection;
+        private ClientSession session;
+        private ClientProducer producer;
+
+        public EventMessageSender(ActiveMQConnection connection) {
+            try {
+                /*
+                 * Uses a transacted ActiveMQ session, events will not be dispatched until
+                 * commit() is called on it, and a call to rollback() will revert any queued
+                 * messages safely and the session is then ready to start over the next time
+                 * the thread is used.
+                 */
+                session = connection.createClientSession();
+                producer = session.createProducer(MessageAddress.DEFAULT_EVENT_MESSAGE_ADDRESS);
+            }
+            catch (ActiveMQException e) {
+                throw new RuntimeException(e);
+            }
+            log.debug("Created new message sender.");
+        }
+
+        public void queueMessage(String eventString) throws ActiveMQException {
+            ClientMessage message = session.createMessage(true);
+            message.getBodyBuffer().writeString(eventString);
+
+            // NOTE: not actually sent until we commit the session.
+            producer.send(message);
+        }
+
+        public void sendMessages() {
+            log.debug("Committing ActiveMQ transaction.");
+            try (ClientSession toClose = session) {
+                toClose.commit();
+            }
+            catch (Exception e) {
+                // This would be pretty bad, but we always try not to let event errors
+                // interfere with the operation of the overall application.
+                log.error("Error committing ActiveMQ transaction", e);
+            }
+        }
+
+        public void cancelMessages() {
+            log.warn("Rolling back ActiveMQ transaction.");
+            try (ClientSession toClose = session) {
+                toClose.rollback();
+            }
+            catch (ActiveMQException e) {
+                log.error("Error rolling back ActiveMQ transaction", e);
+            }
+        }
+
     }
 }

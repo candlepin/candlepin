@@ -60,7 +60,7 @@ public class ModeManagerImpl implements ModeManager {
     }
 
     @Override
-    public void enterMode(Mode m, Reason reason) {
+    public void enterMode(Mode m, Reason ... reasons) {
         /**
          * When suspend mode is disabled, the Candlepin should never get into Suspend Mode.
          * Candlepin is starting always in NORMAL mode, so disalowing the transition here should
@@ -74,22 +74,22 @@ public class ModeManagerImpl implements ModeManager {
             return;
         }
 
-        if (reason == null) {
+        if (reasons == null || reasons.length == 0) {
             String noReasonErrorString = "No reason supplied when trying to change CandlepinModeChange.";
             log.error(noReasonErrorString);
             throw new IllegalArgumentException(noReasonErrorString);
         }
-        log.info("Entering new mode {} for reason {}", m, reason);
+        log.info("Entering new mode {} for the following reasons: {}", m, reasons);
 
         Mode previousMode = cpMode.getMode();
         if (previousMode != m) {
             fireModeChangeEvent(m);
         }
         if (m.equals(Mode.SUSPEND)) {
-            log.warn("Candlepin is entering suspend mode for the following reason: {}", reason);
+            log.warn("Candlepin is entering suspend mode for the following reasons: {}", reasons);
         }
 
-        cpMode = new CandlepinModeChange(new Date(), m, reason);
+        cpMode = new CandlepinModeChange(new Date(), m, reasons);
     }
 
     @Override

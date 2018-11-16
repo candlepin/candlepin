@@ -23,6 +23,9 @@ import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.activemq.artemis.api.core.client.ClientConsumer;
 import org.apache.activemq.artemis.api.core.client.ClientSession;
 import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
+import org.apache.activemq.artemis.api.core.client.ServerLocator;
+import org.candlepin.common.config.Configuration;
+import org.candlepin.controller.ActiveMQStatusMonitor;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -38,15 +41,25 @@ public class EventSourceTest {
     @Mock private ClientSessionFactory clientSessionFactory;
 
     @Test
-    public void registeringNewListenerCreatesNewSessionAndStartsIt() throws Exception {
-        ClientSession clientSession = mock(ClientSession.class);
-        EventSource source = createEventSourceStubbedWithFactoryCreation();
-        when(clientSessionFactory.createSession(eq(false), eq(false), eq(0))).thenReturn(clientSession);
-        when(clientSession.createConsumer(any(String.class))).thenReturn(mock(ClientConsumer.class));
-
+    public void eventSourceDoesNotConnectEventReceiversUntilNotifiedConnectionEstablished() throws Exception {
+        EventSourceConnection connection = createConnection();
+        EventSource source = new EventSource(connection, new ObjectMapper());
         source.registerListener(mock(EventListener.class));
+
+        // Should not attempt to create a client session.
+        verifyZeroInteractions(clientSessionFactory);
+
+        ClientSession session = mock(ClientSession.class);
+        when(clientSessionFactory.createSession(eq(false), eq(false), eq(0))).thenReturn(session);
+        when(session.createConsumer(any(String.class))).thenReturn(mock(ClientConsumer.class));
+
+        // Simulate connection notification.
+        source.onStatusUpdate(ActiveMQStatus.UNKNOWN, ActiveMQStatus.CONNECTED);
         verify(clientSessionFactory).createSession(eq(false), eq(false), eq(0));
-        verify(clientSession).start();
+        verify(session).createConsumer(any(String.class));
+        verify(session, times(1)).start();
+        verify(session, never()).stop();
+
     }
 
     @Test
@@ -54,14 +67,13 @@ public class EventSourceTest {
         ClientSession session1 = mock(ClientSession.class);
         ClientSession session2 = mock(ClientSession.class);
 
-        EventSource eventSource = createEventSourceStubbedWithFactoryCreation();
         when(clientSessionFactory.createSession(eq(false), eq(false), eq(0)))
             .thenReturn(session1).thenReturn(session2);
         when(session1.createConsumer(any(String.class))).thenReturn(mock(ClientConsumer.class));
         when(session2.createConsumer(any(String.class))).thenReturn(mock(ClientConsumer.class));
 
-        eventSource.registerListener(mock(EventListener.class));
-        eventSource.registerListener(mock(EventListener.class));
+        EventSource eventSource = createEventSourceStubbedWithFactoryCreation(
+            mock(EventListener.class), mock(EventListener.class));
         eventSource.shutDown();
 
         // Verify that all client sessions were stopped and closed.
@@ -79,12 +91,11 @@ public class EventSourceTest {
     public void shouldStopAndCloseSessionOnShutdownWhenExceptionThrownOnStop() throws Exception {
         ClientSession session = mock(ClientSession.class);
 
-        EventSource eventSource = createEventSourceStubbedWithFactoryCreation();
         when(clientSessionFactory.createSession(eq(false), eq(false), eq(0))).thenReturn(session);
         when(session.createConsumer(any(String.class))).thenReturn(mock(ClientConsumer.class));
         doThrow(new ActiveMQException("Forced")).when(session).stop();
 
-        eventSource.registerListener(mock(EventListener.class));
+        EventSource eventSource = createEventSourceStubbedWithFactoryCreation(mock(EventListener.class));
         eventSource.shutDown();
 
         // Verify that close was at least still called.
@@ -98,12 +109,11 @@ public class EventSourceTest {
     public void shouldStopAndCloseSessionOnShutdownWhenExceptionThrownOnClose() throws Exception {
         ClientSession session = mock(ClientSession.class);
 
-        EventSource eventSource = createEventSourceStubbedWithFactoryCreation();
         when(clientSessionFactory.createSession(eq(false), eq(false), eq(0))).thenReturn(session);
         when(session.createConsumer(any(String.class))).thenReturn(mock(ClientConsumer.class));
         doThrow(new ActiveMQException("Forced")).when(session).close();
 
-        eventSource.registerListener(mock(EventListener.class));
+        EventSource eventSource = createEventSourceStubbedWithFactoryCreation(mock(EventListener.class));
         eventSource.shutDown();
 
         // Verify that stop was at least still called.
@@ -116,16 +126,17 @@ public class EventSourceTest {
     @Test
     public void eventSourceDoesNothingWhenQpidStatusDoesntChange() throws Exception {
         ClientSession session = mock(ClientSession.class);
-        EventSource eventSource = createEventSourceStubbedWithFactoryCreation();
         when(clientSessionFactory.createSession(eq(false), eq(false), eq(0))).thenReturn(session);
         when(session.createConsumer(any(String.class))).thenReturn(mock(ClientConsumer.class));
 
         EventListener listener = mock(EventListener.class);
         when(listener.requiresQpid()).thenReturn(true);
+
+        EventSource eventSource = createEventSourceStubbedWithFactoryCreation(listener);
         eventSource.registerListener(listener);
 
         eventSource.onStatusUpdate(QpidStatus.DOWN, QpidStatus.DOWN);
-        // Start was called only on construction
+        // Start was called only during setup.
         verify(session, times(1)).start();
         verify(session, never()).stop();
     }
@@ -133,7 +144,6 @@ public class EventSourceTest {
     @Test
     public void eventSourceClosesEventReceiverClientConsumerWhenQpidGoesDown() throws Exception {
         ClientSession session = mock(ClientSession.class);
-        EventSource eventSource = createEventSourceStubbedWithFactoryCreation();
         when(clientSessionFactory.createSession(eq(false), eq(false), eq(0))).thenReturn(session);
 
         ClientConsumer consumer = mock(ClientConsumer.class);
@@ -141,7 +151,8 @@ public class EventSourceTest {
 
         EventListener listener = mock(EventListener.class);
         when(listener.requiresQpid()).thenReturn(true);
-        eventSource.registerListener(listener);
+
+        EventSource eventSource = createEventSourceStubbedWithFactoryCreation(listener);
 
         eventSource.onStatusUpdate(QpidStatus.CONNECTED, QpidStatus.DOWN);
         // Start was called only on construction
@@ -153,7 +164,6 @@ public class EventSourceTest {
     @Test
     public void eventSourceCreatesNewEventReceiverClientSessionWhenQpidComesUp() throws Exception {
         ClientSession session = mock(ClientSession.class);
-        EventSource eventSource = createEventSourceStubbedWithFactoryCreation();
         when(clientSessionFactory.createSession(eq(false), eq(false), eq(0))).thenReturn(session);
 
         // Initially created before qpid goes down.
@@ -166,10 +176,11 @@ public class EventSourceTest {
 
         EventListener listener = mock(EventListener.class);
         when(listener.requiresQpid()).thenReturn(true);
-        eventSource.registerListener(listener);
 
+        EventSource eventSource = createEventSourceStubbedWithFactoryCreation(listener);
         eventSource.onStatusUpdate(QpidStatus.DOWN, QpidStatus.CONNECTED);
-        // Start was called only on construction
+
+        // Start was called only during setup.
         verify(session, times(1)).start();
         verify(session, never()).stop();
         verify(session, times(2)).createConsumer(any(String.class));
@@ -179,16 +190,16 @@ public class EventSourceTest {
     public void eventSourceDoesNothingWithEventReceiverClientSessionWhenListenerDoesntRequireQpid()
         throws Exception {
         ClientSession session = mock(ClientSession.class);
-        EventSource eventSource = createEventSourceStubbedWithFactoryCreation();
         when(clientSessionFactory.createSession(eq(false), eq(false), eq(0))).thenReturn(session);
         when(session.createConsumer(any(String.class))).thenReturn(mock(ClientConsumer.class));
 
         EventListener listener = mock(EventListener.class);
         when(listener.requiresQpid()).thenReturn(false);
-        eventSource.registerListener(listener);
 
+        EventSource eventSource = createEventSourceStubbedWithFactoryCreation(listener);
         eventSource.onStatusUpdate(QpidStatus.DOWN, QpidStatus.CONNECTED);
-        // Start was called only on construction
+
+        // Start was called only during setup.
         verify(session, times(1)).start();
         verify(session, never()).stop();
     }
@@ -198,11 +209,31 @@ public class EventSourceTest {
      *
      * @return the new EventSource
      */
-    private EventSource createEventSourceStubbedWithFactoryCreation() {
-        return new EventSource(new ObjectMapper()) {
-            protected ClientSessionFactory createSessionFactory() {
+    private EventSource createEventSourceStubbedWithFactoryCreation(EventListener ... listeners)
+        throws Exception {
+        EventSourceConnection connection = createConnection();
+        EventSource source = new EventSource(connection, new ObjectMapper());
+
+        for (EventListener listener : listeners) {
+            source.registerListener(listener);
+        }
+
+        // Listener client sessions are not created until the source has been notified
+        // that the connection can be made. Simulate this.
+        source.onStatusUpdate(ActiveMQStatus.UNKNOWN, ActiveMQStatus.CONNECTED);
+        return source;
+    }
+
+    private EventSourceConnection createConnection() {
+        return new EventSourceConnection(mock(ActiveMQStatusMonitor.class), mock(Configuration.class)) {
+
+            @Override
+            ClientSessionFactory getFactory() {
+                this.locator = mock(ServerLocator.class);
+                this.factory = clientSessionFactory;
                 return clientSessionFactory;
             }
+
         };
     }
 

@@ -17,7 +17,6 @@ package org.candlepin.audit;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.activemq.artemis.api.core.client.ClientMessage;
-import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,9 +29,9 @@ public class QpidEventMessageReceiver extends MessageReceiver {
     private static final String AMQ_ORIG_ADDRESS = "_AMQ_ORIG_ADDRESS";
     private static final String AMQ_ORIG_MSG_ID = "_AMQ_ORIG_MESSAGE_ID";
 
-    public QpidEventMessageReceiver(EventListener listener, ClientSessionFactory sessionFactory,
+    public QpidEventMessageReceiver(EventListener listener, ActiveMQConnection connection,
         ObjectMapper mapper) throws ActiveMQException {
-        super(listener, sessionFactory, mapper);
+        super(listener, connection, mapper);
     }
 
     /**

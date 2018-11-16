@@ -108,7 +108,8 @@ create_var_cache_candlepin() {
 }
 
 autoconf() {
-  buildr -s -e $1 app_db_name=$APP_DB_NAME app_db_host=${DBHOSTNAME:-localhost} erb $2 $3
+
+  buildr -s -e $1 app_db_name=$APP_DB_NAME app_db_host=${DBHOSTNAME:-localhost} erb $2 $3 $4
 
   if [ "$?" -ne "0" ]; then
     err_msg "ERROR: candlepin.conf generation failed!"
@@ -139,8 +140,9 @@ OPTIONS:
   -m          use MySQL
   -a          auto-deploy a generated candlepin.conf
   -v          verbose output
-  -d <name>   specify a database name to use when creating or updating the
-              Candlepin database
+  -d <name>   specify a database name to use when creating or updating the Candlepin database
+  -b          deploy candlepin with an external Artemis message broker
+
 HELP
 }
 
@@ -184,7 +186,7 @@ init
 
 DBUSER="candlepin"
 
-while getopts ":fqgtTHolmavd:" opt; do
+while getopts ":fqgtTHolmavbd:" opt; do
     case $opt in
         f  ) FORCECERT="1" ;;
         g  ) GENDB="1";;
@@ -197,6 +199,7 @@ while getopts ":fqgtTHolmavd:" opt; do
         a  ) AUTOCONF="1";;
         v  ) VERBOSE="1";;
         d  ) APP_DB_NAME="${OPTARG}";;
+        b  ) EXTERNAL_BROKER="1";;
         ?  ) usage; exit;;
     esac
 done
@@ -255,6 +258,14 @@ CLEAN="$TC_HOME/webapps/candlepin/"
 
 # stop the appserver
 eval $STOP
+
+if [ "$EXTERNAL_BROKER" == "1" ]; then
+    # Set up an external Artemis server
+    $SUDO $PROJECT_DIR/bin/artemis/configure-artemis.py --start
+    EXTERNAL_BROKER="external_broker=yes"
+else
+    EXTERNAL_BROKER=""
+fi
 
 # generate the postgresql DB
 if [ "$LOGDRIVER" == "logdriver" ]; then
@@ -335,7 +346,7 @@ create_var_log_candlepin
 create_var_cache_candlepin
 
 if [ "$AUTOCONF" == "1" ]; then
-  autoconf $ENV_BUILDR $LOGDRIVER $HOSTEDTEST $QPID
+  autoconf $ENV_BUILDR $LOGDRIVER $HOSTEDTEST $QPID $EXTERNAL_BROKER
 fi
 
 # deploy the webapp

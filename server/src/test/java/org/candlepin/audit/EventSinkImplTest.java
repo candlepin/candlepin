@@ -29,13 +29,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.auth.Principal;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.controller.ModeManager;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.test.TestUtil;
@@ -71,9 +71,9 @@ public class EventSinkImplTest {
     @Mock private ClientMessage mockClientMessage;
     @Mock private PrincipalProvider mockPrincipalProvider;
     @Mock private ServerLocator mockLocator;
-    @Mock private ProductCurator mockProductCurator;
     @Mock private ModeManager mockModeManager;
 
+    private EventSinkConnection eventSinkConnection;
     private EventFactory factory;
     private EventFilter eventFilter;
     private EventSinkImpl eventSinkImpl;
@@ -93,6 +93,15 @@ public class EventSinkImplTest {
         when(mockClientMessage.getBodyBuffer()).thenReturn(
             ActiveMQBuffers.fixedBuffer(2000));
         when(mockSessionFactory.getServerLocator()).thenReturn(mockLocator);
+
+        this.eventSinkConnection = new EventSinkConnection(mock(Configuration.class)) {
+
+            @Override
+            ClientSessionFactory getFactory() {
+                return mockSessionFactory;
+            }
+        };
+
         this.mapper = spy(new ObjectMapper());
         this.eventSinkImpl = createEventSink(mockSessionFactory);
         o = new Owner("test owner");
@@ -104,14 +113,7 @@ public class EventSinkImplTest {
      */
     private EventSinkImpl createEventSink(final ClientSessionFactory sessionFactory) throws Exception {
         EventSinkImpl sink = new EventSinkImpl(eventFilter, factory, mapper,
-            new CandlepinCommonTestConfig(), mockModeManager) {
-
-            @Override
-            protected ClientSessionFactory createClientSessionFactory() {
-                return sessionFactory;
-            }
-        };
-        sink.initialize();
+            new CandlepinCommonTestConfig(), eventSinkConnection, mockModeManager);
         return sink;
     }
 

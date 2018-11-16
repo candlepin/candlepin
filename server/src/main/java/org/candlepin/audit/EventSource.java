@@ -17,10 +17,8 @@ package org.candlepin.audit;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 
-import org.apache.activemq.artemis.api.core.TransportConfiguration;
-import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
-import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
-import org.apache.activemq.artemis.core.remoting.impl.invm.InVMConnectorFactory;
+import com.google.inject.Singleton;
+import org.candlepin.controller.ActiveMQStatusListener;
 import org.candlepin.controller.QpidStatusListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,46 +29,33 @@ import java.util.List;
 /**
  * EventSource
  */
-public class EventSource implements QpidStatusListener {
+@Singleton
+public class EventSource implements QpidStatusListener, ActiveMQStatusListener {
     private static  Logger log = LoggerFactory.getLogger(EventSource.class);
 
-    private ClientSessionFactory factory;
     private ObjectMapper mapper;
+    private EventSourceConnection connection;
     private List<MessageReceiver> messageReceivers = new LinkedList<>();
 
 
     @Inject
-    public EventSource(ObjectMapper mapper) {
+    public EventSource(EventSourceConnection connection, ObjectMapper mapper) {
+        this.connection = connection;
         this.mapper = mapper;
-
-        try {
-            factory =  createSessionFactory();
-        }
-        catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    /**
-     * @return new instance of {@link ClientSessionFactory}
-     * @throws Exception
-     */
-    protected ClientSessionFactory createSessionFactory() throws Exception {
-        return ActiveMQClient.createServerLocatorWithoutHA(
-            new TransportConfiguration(InVMConnectorFactory.class.getName())).createSessionFactory();
     }
 
     protected void shutDown() {
         closeEventReceivers();
-        factory.close();
+        this.connection.close();
     }
 
     void registerListener(EventListener listener) throws Exception {
+        log.debug("Registering event listener for queue: {}", EventSource.getQueueName(listener));
         if (listener.requiresQpid()) {
-            this.messageReceivers.add(new QpidEventMessageReceiver(listener, factory, mapper));
+            this.messageReceivers.add(new QpidEventMessageReceiver(listener, this.connection, mapper));
         }
         else {
-            this.messageReceivers.add(new EventMessageReceiver(listener, factory, mapper));
+            this.messageReceivers.add(new EventMessageReceiver(listener, this.connection, mapper));
         }
     }
 
@@ -81,7 +66,6 @@ public class EventSource implements QpidStatusListener {
     @Override
     public void onStatusUpdate(QpidStatus oldStatus, QpidStatus newStatus) {
         if (newStatus.equals(oldStatus)) {
-            log.debug("Status has not changed.");
             return;
         }
 
@@ -91,18 +75,54 @@ public class EventSource implements QpidStatusListener {
                 continue;
             }
 
-            if (QpidStatus.FLOW_STOPPED.equals(newStatus) || QpidStatus.DOWN.equals(newStatus)) {
-                log.debug("Stopping session for EventReciever.");
-                receiver.stopSession();
+            switch (newStatus) {
+                case FLOW_STOPPED:
+                case DOWN:
+                    receiver.pause();
+                    break;
+                case CONNECTED:
+                    receiver.resume();
+                    break;
+                default:
+                    // do nothing
             }
-            else if (QpidStatus.CONNECTED.equals(newStatus)) {
-                log.debug("Starting session for EventReciever.");
-                receiver.startSession();
-            }
+        }
+    }
+
+    /**
+     * Called when the ActiveMQStatusMonitor determines that the connection to the
+     * ActiveMQ broker has changed.
+     *
+     * @param oldStatus the old status of the broker.
+     * @param newStatus the current status of the broker.
+     */
+    @Override
+    public void onStatusUpdate(ActiveMQStatus oldStatus, ActiveMQStatus newStatus) {
+        log.debug("ActiveMQ status has been updated: {}:{}", oldStatus, newStatus);
+        if (ActiveMQStatus.DOWN.equals(newStatus) && !ActiveMQStatus.DOWN.equals(oldStatus)) {
+            log.info("Shutting down all message receivers because the broker went down.");
+            shutDown();
+        }
+        else if (ActiveMQStatus.CONNECTED.equals(newStatus) && !ActiveMQStatus.CONNECTED.equals(oldStatus)) {
+            log.info("Connecting to message broker and initializing all message listeners.");
+
+            // Attempt a shutdown to be sure that all resources are cleared.
+            shutDown();
+
+            this.messageReceivers.forEach(receiver -> {
+                try {
+                    receiver.connect();
+                }
+                catch (Exception e) {
+                    log.warn("Unable to reconnect message listeners. Messages will not be received: {}",
+                        receiver.getQueueAddress(), e);
+                }
+            });
         }
     }
 
     public static String getQueueName(EventListener listener) {
         return MessageAddress.EVENT_ADDRESS_PREFIX + "." + listener.getClass().getCanonicalName();
     }
+
 }

@@ -14,6 +14,7 @@
  */
 package org.candlepin.servlet.filter;
 
+import com.google.inject.Injector;
 import org.candlepin.audit.EventSink;
 import org.candlepin.common.filter.TeeHttpServletResponse;
 
@@ -46,17 +47,20 @@ public class EventFilter implements Filter {
 
     private static Logger log = LoggerFactory.getLogger(EventFilter.class);
 
-    private final EventSink eventSink;
+    private Injector injector;
 
     @Inject
-    public EventFilter(EventSink eventSink) {
-        this.eventSink = eventSink;
+    public EventFilter(Injector injector) {
+        this.injector = injector;
     }
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response,
         FilterChain chain) throws IOException, ServletException {
-
+        // EventSink must get injected here instead of in the constructor
+        // because on creation of the filter we will be out of the
+        // CandlepinRequestScope as the filter must be a singleton.
+        EventSink eventSink = injector.getInstance(EventSink.class);
         TeeHttpServletResponse resp = new TeeHttpServletResponse((HttpServletResponse) response);
         chain.doFilter(request, resp);
         Status status = Status.fromStatusCode(resp.getStatus());

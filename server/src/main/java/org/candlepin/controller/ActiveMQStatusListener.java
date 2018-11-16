@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2018 Red Hat, Inc.
+ * Copyright (c) 2009 - 2016 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -12,33 +12,22 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
+package org.candlepin.controller;
 
-package org.candlepin.audit;
+import org.candlepin.audit.ActiveMQStatus;
 
 /**
- * Represents the status of the connection to the Qpid broker.
+ * An interface for Objects that wish to be notified about ActiveMQ broker
+ * status changes.
  */
-public enum QpidStatus {
-    /**
-     * Qpid is up and running.
-     */
-    CONNECTED,
+public interface ActiveMQStatusListener {
 
     /**
-     * Qpid is up but the exchange is flow stopped.
+     * Called each time the ActiveMQStatusListener checks the status of the broker.
+     *
+     * @param oldStatus the old status of the broker.
+     * @param newStatus the current status of the broker.
      */
+    void onStatusUpdate(ActiveMQStatus oldStatus, ActiveMQStatus newStatus);
 
-    FLOW_STOPPED,
-
-    /**
-     * Qpid is down.
-     */
-    DOWN,
-
-    /**
-     * The status of Qpid is currently unknown. This state should only be set on
-     * candlepin startup and should be updated accordingly when the candlepin
-     * context is loaded and all listeners have been registered.
-     */
-    UNKNOWN
 }

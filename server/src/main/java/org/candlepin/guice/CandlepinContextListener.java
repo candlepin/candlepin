@@ -174,13 +174,9 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         }
 
         if (config.getBoolean(ACTIVEMQ_ENABLED)) {
-            try {
-                activeMQContextListener = injector.getInstance(ActiveMQContextListener.class);
-                activeMQContextListener.contextInitialized(injector);
-            }
-            catch (Exception e) {
-                log.error("Exception occurred while trying to load ActiveMQ", e);
-            }
+            // If Artemis can not be started candlepin will not start.
+            activeMQContextListener = injector.getInstance(ActiveMQContextListener.class);
+            activeMQContextListener.contextInitialized(injector);
         }
 
         if (config.getBoolean(ConfigProperties.CACHE_JMX_STATS)) {

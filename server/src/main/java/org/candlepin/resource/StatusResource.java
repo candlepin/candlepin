@@ -37,6 +37,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
 import java.util.Date;
+import java.util.Iterator;
 import java.util.Map;
 
 import javax.ws.rs.GET;
@@ -137,7 +138,9 @@ public class StatusResource {
 
         CandlepinModeChange modeChange = modeManager.getLastCandlepinModeChange();
         CandlepinModeChange.Mode mode = modeChange.getMode();
-        CandlepinModeChange.Reason modeChangeReason = modeChange.getReason();
+
+        Iterator<CandlepinModeChange.Reason> reasonItr = modeChange.getReasons().iterator();
+        CandlepinModeChange.Reason modeChangeReason = reasonItr.hasNext() ? reasonItr.next() : null;
 
         if (mode != CandlepinModeChange.Mode.NORMAL) {
             good = false;

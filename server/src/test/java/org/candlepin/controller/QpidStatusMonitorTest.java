@@ -75,8 +75,9 @@ public class QpidStatusMonitorTest {
             .thenReturn(QpidStatus.FLOW_STOPPED)
             .thenReturn(QpidStatus.DOWN);
 
+
         monitor.run();
-        verify(listener, times(1)).onStatusUpdate(eq(QpidStatus.DOWN), eq(QpidStatus.CONNECTED));
+        verify(listener, times(1)).onStatusUpdate(eq(QpidStatus.UNKNOWN), eq(QpidStatus.CONNECTED));
 
         monitor.run();
         verify(listener, times(1)).onStatusUpdate(eq(QpidStatus.CONNECTED), eq(QpidStatus.FLOW_STOPPED));

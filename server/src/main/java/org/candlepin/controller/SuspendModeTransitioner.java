@@ -14,6 +14,7 @@
  */
 package org.candlepin.controller;
 
+import org.candlepin.audit.ActiveMQStatus;
 import org.candlepin.audit.QpidStatus;
 import org.candlepin.cache.CandlepinCache;
 import org.candlepin.model.CandlepinModeChange;
@@ -25,17 +26,23 @@ import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 
 /**
  * Logic to transition Candlepin between different modes (SUSPEND, NORMAL) based
- * on what the current status of Qpid Broker. This class is notified of state
- * changes by listening for events from the QpidStatusMonitor.
+ * on what the current status of ActiveMQ/Qpid brokers. This class is notified of state
+ * changes by listening for events from the QpidStatusMonitor and the ActiveMQStatusMonitor.
  *
  * Using this class, clients can attempt to transition to appropriate mode. The
  * attempt may be no-op if no transition is required.
  *
  */
-public class SuspendModeTransitioner implements QpidStatusListener {
+public class SuspendModeTransitioner implements QpidStatusListener, ActiveMQStatusListener {
     private static Logger log = LoggerFactory.getLogger(SuspendModeTransitioner.class);
 
     private ModeManager modeManager;
@@ -65,61 +72,131 @@ public class SuspendModeTransitioner implements QpidStatusListener {
      */
     @Override
     public void onStatusUpdate(QpidStatus oldStatus, QpidStatus newStatus) {
-        transitionAppropriately(newStatus);
+        if (oldStatus.equals(newStatus)) {
+            // nothing to do
+            return;
+        }
+
+        Reason reason;
+        if (QpidStatus.CONNECTED.equals(newStatus)) {
+            reason = Reason.QPID_UP;
+        }
+        else if (QpidStatus.DOWN.equals(newStatus)) {
+            reason = Reason.QPID_DOWN;
+        }
+        else if (QpidStatus.FLOW_STOPPED.equals(newStatus)) {
+            reason = Reason.QPID_FLOW_STOPPED;
+        }
+        else {
+            String msg = String.format("Could not transition candlepin mode: Unknown Qpid status: %s",
+                newStatus);
+            throw new IllegalArgumentException(msg);
+        }
+        transitionAppropriately(reason);
+    }
+
+    /**
+     * Called each time the ActiveMQStatusMonitor checks the status of the broker.
+     * Updates the current mode based on the status.
+     */
+    @Override
+    public void onStatusUpdate(ActiveMQStatus oldStatus, ActiveMQStatus newStatus) {
+        if (oldStatus.equals(newStatus)) {
+            // nothing to do
+            return;
+        }
+
+        Reason reason;
+        if (ActiveMQStatus.CONNECTED.equals(newStatus)) {
+            reason = Reason.ACTIVEMQ_UP;
+        }
+        else if (ActiveMQStatus.DOWN.equals(newStatus)) {
+            reason = Reason.ACTIVEMQ_DOWN;
+        }
+        else {
+            String msg = String.format("Could not transition candlepin mode: Unknown ActiveMQ status: %s",
+                newStatus);
+            throw new IllegalArgumentException(msg);
+        }
+        transitionAppropriately(reason);
     }
 
     /**
      * Attempts to transition Candlepin according to current Mode and current status of
-     * the Qpid Broker. Logs and swallows possible exceptions - theoretically
+     * the Qpid/ActiveMQ broker. Logs and swallows possible exceptions - theoretically
      * there should be none.
      *
      * Most of the time the transition won't be required and this method will be no-op.
+     *
+     * Because suspend mode can be triggered by multiple sources, transitioning is based
+     * on reasons why the mode was changed. For example, in a case where the Qpid and
+     * ActiveMQ brokers are down, candlepin should remain in suspend mode until both
+     * brokers come back up. In this case, when a single broker comes back online, if
+     * the previous reason indicates that the other broker was down, then candlepin
+     * remains in suspend mode.
+     *
      * There is an edge-case when transitioning from SUSPEND to NORMAL mode.
      * During that transition, there is a small time window between checking the
      * Qpid status and attempt to reconnect. If the Qpid status is reported as
      * Qpid up, the transitioner will try to reconnect to the broker. This reconnect
      * may fail. In that case the transition to NORMAL mode shouldn't go through.
      */
-    private synchronized void transitionAppropriately(QpidStatus status) {
+    private synchronized void transitionAppropriately(Reason reason) {
         log.debug("Attempting to transition to appropriate Mode");
-        CandlepinModeChange modeChange = modeManager.getLastCandlepinModeChange();
-        log.debug("Qpid status is {}, the current mode is {}", status, modeChange);
+        CandlepinModeChange lastModeChange = modeManager.getLastCandlepinModeChange();
 
-        if (modeChange.getMode() == Mode.SUSPEND) {
-            switch (status) {
-                case CONNECTED:
-                    log.info("Connection to qpid is restored! Reconnecting Qpid and" +
-                        " entering NORMAL mode");
-                    modeManager.enterMode(Mode.NORMAL, Reason.QPID_UP);
-                    cleanStatusCache();
+        if (lastModeChange.getReasons().contains(reason)) {
+            log.debug("No transition required. {} already known.");
+            return;
+        }
+
+        log.debug("Reason for transition is {}, the current mode is {}", reason, lastModeChange);
+        Set<Reason> lastReasons = new HashSet<>(lastModeChange.getReasons());
+        if (lastModeChange.getMode() == Mode.SUSPEND) {
+            switch (reason) {
+                case QPID_UP:
+                    resetQpidReasons(lastReasons);
                     break;
-                case FLOW_STOPPED:
-                case DOWN:
-                    log.debug("Staying in {} mode.", status);
+                case QPID_FLOW_STOPPED:
+                case QPID_DOWN:
+                    resetQpidReasons(lastReasons, reason);
+                    break;
+                case ACTIVEMQ_UP:
+                    resetActiveMQReasons(lastReasons);
+                    break;
+                case ACTIVEMQ_DOWN:
+                    resetActiveMQReasons(lastReasons, reason);
                     break;
                 default:
-                    throw new RuntimeException("Unknown status: " + status);
+                    throw new RuntimeException("Unknown reason for entering SUSPEND mode: " + reason);
+            }
+
+            // No more issues, can exit suspend mode
+            if (lastReasons.isEmpty()) {
+                log.info("Entering NORMAL mode.");
+                modeManager.enterMode(Mode.NORMAL, reason);
+                cleanStatusCache();
+            }
+            else {
+                modeManager.enterMode(Mode.SUSPEND, lastReasons.toArray(new Reason[lastReasons.size()]));
+                cleanStatusCache();
             }
         }
-        else if (modeChange.getMode() == Mode.NORMAL) {
-            switch (status) {
-                case FLOW_STOPPED:
-                    log.debug("Will need to transition Candlepin into SUSPEND Mode because " +
-                        "the Qpid connection is flow stopped");
-                    modeManager.enterMode(Mode.SUSPEND, Reason.QPID_FLOW_STOPPED);
+        else if (lastModeChange.getMode() == Mode.NORMAL) {
+            switch (reason) {
+                case QPID_FLOW_STOPPED:
+                case QPID_DOWN:
+                case ACTIVEMQ_DOWN:
+                    log.debug("Will need to transition Candlepin into SUSPEND Mode: {}", reason);
+                    modeManager.enterMode(Mode.SUSPEND, reason);
                     cleanStatusCache();
                     break;
-                case DOWN:
-                    log.debug("Will need to transition Candlepin into SUSPEND Mode because " +
-                        "the Qpid connection is down");
-                    modeManager.enterMode(Mode.SUSPEND, Reason.QPID_DOWN);
-                    cleanStatusCache();
-                    break;
-                case CONNECTED:
-                    log.debug("Connection to Qpid is ok and current mode is NORMAL. No-op!");
+                case QPID_UP:
+                case ACTIVEMQ_UP:
+                    log.debug("All connections are Ok and current mode is NORMAL. No-op!");
                     break;
                 default:
-                    throw new RuntimeException("Unknown status: " + status);
+                    throw new RuntimeException("Unknown reason for entering NORMAL mode: " + reason);
             }
         }
     }
@@ -130,6 +207,26 @@ public class SuspendModeTransitioner implements QpidStatusListener {
      */
     private void cleanStatusCache() {
         candlepinCache.getStatusCache().clear();
+    }
+
+    private void resetQpidReasons(Set<Reason> reasons, Reason ... keep) {
+        List<Reason> allAMQ = Arrays.asList(Reason.QPID_UP, Reason.QPID_DOWN, Reason.QPID_FLOW_STOPPED);
+        resetReasonGroup(reasons, allAMQ, keep);
+    }
+
+    private void resetActiveMQReasons(Set<Reason> reasons, Reason ... keep) {
+        List<Reason> allAMQ = Arrays.asList(Reason.ACTIVEMQ_DOWN, Reason.ACTIVEMQ_UP);
+        resetReasonGroup(reasons, allAMQ, keep);
+    }
+
+    private void resetReasonGroup(Set<Reason> reasons, List<Reason> reasonGroup, Reason ... keep) {
+        List<Reason> toKeep = keep != null ? Arrays.asList(keep) : new ArrayList<>();
+        if (!reasonGroup.containsAll(toKeep)) {
+            throw new IllegalArgumentException(
+                String.format("One of %s is not part of group: %s", reasonGroup, toKeep));
+        }
+        reasons.removeAll(reasonGroup);
+        reasons.addAll(toKeep);
     }
 
 }

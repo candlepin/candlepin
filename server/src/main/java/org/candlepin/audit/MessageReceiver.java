@@ -17,10 +17,8 @@ package org.candlepin.audit;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.activemq.artemis.api.core.ActiveMQException;
-import org.apache.activemq.artemis.api.core.ActiveMQExceptionType;
 import org.apache.activemq.artemis.api.core.client.ClientConsumer;
 import org.apache.activemq.artemis.api.core.client.ClientSession;
-import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
 import org.apache.activemq.artemis.api.core.client.MessageHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +31,8 @@ public abstract class MessageReceiver implements MessageHandler {
 
     private static Logger log = LoggerFactory.getLogger(MessageReceiver.class);
 
+    private ActiveMQConnection connection;
+
     protected ClientSession session;
     protected ObjectMapper mapper;
     protected EventListener listener;
@@ -41,63 +41,48 @@ public abstract class MessageReceiver implements MessageHandler {
 
     protected abstract String getQueueAddress();
 
-    public MessageReceiver(EventListener listener, ClientSessionFactory sessionFactory,
+    public MessageReceiver(EventListener listener, ActiveMQConnection connection,
         ObjectMapper mapper) throws ActiveMQException {
+        this.connection = connection;
         this.mapper = mapper;
         this.listener = listener;
-
-        queueName = EventSource.getQueueName(listener);
-        log.debug("registering listener for {}", queueName);
-
-        // The client session is created without auto-acking enabled. This means
-        // that the client handlers will have to manage the session themselves.
-        // The session management will be done by each individual ListenerWrapper.
-        //
-        // A message ack batch size of 0 is specified to prevent duplicate messages
-        // if the server goes down before the batch ack size is reached.
-        session = sessionFactory.createSession(false, false, 0);
-
-        try {
-            // Create a durable queue that will be persisted to disk:
-            session.createQueue(getQueueAddress(), queueName, true);
-            log.debug("created new event queue: {}", queueName);
-        }
-        catch (ActiveMQException e) {
-            // if the queue exists already we already created it in a previous run,
-            // so that's fine.
-            if (e.getType() != ActiveMQExceptionType.QUEUE_EXISTS) {
-                throw e;
-            }
-        }
-
-        consumer = session.createConsumer(queueName);
-        consumer.setMessageHandler(this);
-        session.start();
+        this.queueName = EventSource.getQueueName(listener);
     }
 
     public boolean requiresQpid() {
         return this.listener.requiresQpid();
     }
 
-    public void stopSession() {
+    /**
+     * Pause message consumption for this receiver.
+     */
+    public void pause() {
         try {
+            log.debug("Pausing message consumption for: {}.", listener);
             this.consumer.close();
         }
         catch (ActiveMQException e) {
-            log.warn("QpidEventMessageReceiver could not stop client consumer.", e);
+            log.warn("Message receiver could not stop client consumer.", e);
         }
     }
 
-    public void startSession() {
+    /**
+     * Resume message consumption for this receiver.
+     */
+    public void resume() {
+        if (session.isClosed()) {
+            log.warn("MessageReceiver was unable to resume message consumption. Artemis DOWN!");
+            return;
+        }
         try {
             if (this.consumer.isClosed()) {
-                log.debug("### Recreating the ActiveMQ client for {}.", listener);
+                log.debug("Resuming message consumption for {}.", listener);
                 this.consumer = session.createConsumer(queueName);
                 this.consumer.setMessageHandler(this);
             }
         }
         catch (ActiveMQException e) {
-            log.warn("QpidEventMessageReceiver could not start client session.", e);
+            log.warn("MessageReceiver could not start client session.", e);
         }
     }
 
@@ -106,18 +91,32 @@ public abstract class MessageReceiver implements MessageHandler {
      */
     public void close() {
         log.debug("Shutting down message receiver for {}.", listener);
-        try {
-            this.session.stop();
-        }
-        catch (ActiveMQException e) {
-            log.warn("QpidEventMessageReceiver could not stop client session.", e);
+        if (session != null && !session.isClosed()) {
+
+            try {
+                this.session.stop();
+            }
+            catch (ActiveMQException e) {
+                log.warn("MessageReceiver could not stop client session.", e);
+            }
+
+            try {
+                this.session.close();
+            }
+            catch (ActiveMQException e) {
+                log.warn("Error closing client session.", e);
+            }
         }
 
-        try {
-            this.session.close();
-        }
-        catch (ActiveMQException e) {
-            log.warn("Error closing client session.", e);
+    }
+
+    public void connect() throws ActiveMQException {
+        if (session == null || session.isClosed()) {
+            session = this.connection.createClientSession();
+
+            consumer = session.createConsumer(queueName);
+            consumer.setMessageHandler(this);
+            session.start();
         }
     }
 }
