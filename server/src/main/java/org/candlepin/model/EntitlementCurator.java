@@ -526,18 +526,11 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
      *  a collection of dirty entitlements for the given consumer
      */
     public List<Entitlement> listDirty(Consumer consumer) {
-        String jpql = "SELECT e FROM Entitlement e " +
-            "WHERE e.consumer.id = :consumer_id AND e.dirty = true " +
-            "ORDER BY e.id ASC";
+        Criteria criteria = this.currentSession().createCriteria(Entitlement.class)
+            .add(Restrictions.eq("consumer", consumer))
+            .add(Restrictions.eq("dirty", true));
 
-        if (consumer != null) {
-            return this.getEntityManager()
-                .createQuery(jpql, Entitlement.class)
-                .setParameter("consumer_id", consumer.getId())
-                .getResultList();
-        }
-
-        return Collections.<Entitlement>emptyList();
+        return criteria.list();
     }
 
     /**
@@ -756,7 +749,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             this.deleteImpl(toDelete);
 
             // Maintain runtime consistency.
-            entity.setCertificates(null);
+            entity.getCertificates().clear();
             entity.getConsumer().getEntitlements().remove(entity);
             entity.getPool().getEntitlements().remove(entity);
         }
@@ -776,7 +769,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             this.deleteImpl(entitlement);
 
             // Maintain runtime consistency.
-            entitlement.setCertificates(null);
+            entitlement.getCertificates().clear();
 
             if (Hibernate.isInitialized(entitlement.getConsumer().getEntitlements())) {
                 entitlement.getConsumer().getEntitlements().remove(entitlement);

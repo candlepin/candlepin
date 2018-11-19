@@ -2389,27 +2389,18 @@ public class CandlepinPoolManager implements PoolManager {
 
     @Override
     public void regenerateDirtyEntitlements(Consumer consumer) {
-        if (consumer != null) {
-            this.ecGenerator.regenerateCertificatesOf(this.entitlementCurator.listDirty(consumer), false);
-        }
+        this.regenerateDirtyEntitlements(this.entitlementCurator.listDirty(consumer));
     }
 
     @Override
     public void regenerateDirtyEntitlements(Iterable<Entitlement> entitlements) {
         if (entitlements != null) {
-            Map<String, Entitlement> dirty = new HashMap<>();
-
             for (Entitlement entitlement : entitlements) {
-                if (entitlement.isDirty() && !dirty.containsKey(entitlement.getId())) {
+                if (entitlement.isDirty()) {
                     log.info("Found dirty entitlement to regenerate: {}", entitlement);
-
-                    // Store the entitlement for later processing
-                    dirty.put(entitlement.getId(), entitlement);
+                    this.ecGenerator.regenerateCertificatesOf(entitlement, false);
                 }
             }
-
-            // Regenerate the dirty entitlements we found...
-            this.ecGenerator.regenerateCertificatesOf(dirty.values(), false);
         }
     }
 

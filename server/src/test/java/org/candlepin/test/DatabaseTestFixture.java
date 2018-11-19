@@ -433,10 +433,6 @@ public class DatabaseTestFixture {
         return this.consumerTypeCurator.create(ctype);
     }
 
-    protected Entitlement createEntitlement(Owner owner, Consumer consumer, Pool pool) {
-        return this.createEntitlement(owner, consumer, pool, null);
-    }
-
     protected Entitlement createEntitlement(Owner owner, Consumer consumer, Pool pool,
         EntitlementCertificate cert) {
 
@@ -454,39 +450,24 @@ public class DatabaseTestFixture {
 
         if (cert != null) {
             cert.setEntitlement(entitlement);
-            entitlement.addCertificate(cert);
+            entitlement.getCertificates().add(cert);
 
             this.entitlementCertificateCurator.merge(cert);
-            entitlement = this.entitlementCurator.merge(entitlement);
+            this.entitlementCurator.merge(entitlement);
         }
 
         return entitlement;
     }
 
     protected EntitlementCertificate createEntitlementCertificate(String key, String cert) {
-        return this.createEntitlementCertificate(null, key, cert);
-    }
-
-    protected EntitlementCertificate createEntitlementCertificate(Entitlement entitlement, String key,
-        String cert) {
-
-        EntitlementCertificate entcert = new EntitlementCertificate();
+        EntitlementCertificate toReturn = new EntitlementCertificate();
         CertificateSerial certSerial = new CertificateSerial(new Date());
-        this.certSerialCurator.create(certSerial);
+        certSerialCurator.create(certSerial);
+        toReturn.setKeyAsBytes(key.getBytes());
+        toReturn.setCertAsBytes(cert.getBytes());
+        toReturn.setSerial(certSerial);
 
-        entcert.setKeyAsBytes(key.getBytes());
-        entcert.setCertAsBytes(cert.getBytes());
-        entcert.setSerial(certSerial);
-
-        if (entitlement != null) {
-            entcert.setEntitlement(entitlement);
-            entitlement.addCertificate(entcert);
-
-            entcert = this.entitlementCertificateCurator.create(entcert);
-            this.entitlementCurator.merge(entitlement);
-        }
-
-        return entcert;
+        return toReturn;
     }
 
     protected Environment createEnvironment(Owner owner, String id) {
