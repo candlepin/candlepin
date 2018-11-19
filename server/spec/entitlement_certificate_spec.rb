@@ -43,13 +43,10 @@ describe 'Entitlement Certificate' do
     @system.regenerate_entitlement_certificates()
 
     new_certs = @system.list_certificates()
-
-    expect(new_certs.size).to eq(old_certs.size)
-
+    old_certs.size.should == new_certs.size
     old_ids = old_certs.map { |cert| cert['serial']['id']}
     new_ids = new_certs.map { |cert| cert['serial']['id']}
-
-    expect((old_ids & new_ids).size).to eq(0)
+    (old_ids & new_ids).size.should == 0
   end
 
   it 'can regenerate certificate by entitlement id' do

@@ -276,24 +276,16 @@ public class Entitlement extends AbstractHibernateObject<Entitlement>
     }
 
     public void setCertificates(Set<EntitlementCertificate> certificates) {
-        this.certificates = new HashSet<>();
+        this.certificates.clear();
 
         if (certificates != null) {
-            for (EntitlementCertificate cert : certificates) {
-                this.addCertificate(cert);
-            }
+            this.certificates.addAll(certificates);
         }
     }
 
     public void addCertificate(EntitlementCertificate certificate) {
-        if (certificate != null) {
-            certificate.setEntitlement(this);
-            certificates.add(certificate);
-        }
-    }
-
-    public boolean removeCertificate(EntitlementCertificate certificate) {
-        return this.certificates.remove(certificate);
+        certificate.setEntitlement(this);
+        certificates.add(certificate);
     }
 
     @Override

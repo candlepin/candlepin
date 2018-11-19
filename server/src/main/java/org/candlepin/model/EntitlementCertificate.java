@@ -99,16 +99,4 @@ public class EntitlementCertificate extends RevocableCertificate<EntitlementCert
         }
         return false;
     }
-
-    @Override
-    public String toString() {
-        Entitlement entitlement = this.getEntitlement();
-        String entitlementId = entitlement != null ? entitlement.getId() : null;
-
-        CertificateSerial serial = this.getSerial();
-        Long serialId = serial != null ? serial.getId() : null;
-
-        return String.format("EntitlementCertificate [id: %s, entitlement: %s, serial: %s]",
-            this.getId(), entitlementId, serialId);
-    }
 }
