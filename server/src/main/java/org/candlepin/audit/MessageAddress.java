@@ -27,12 +27,18 @@ public final class MessageAddress {
     /**
      * The default address that all event based messages are sent.
      */
-    static final String DEFAULT_EVENT_MESSAGE_ADDRESS = String.format("%s.default", EVENT_ADDRESS_PREFIX);
+    public static final String DEFAULT_EVENT_MESSAGE_ADDRESS =
+        String.format("%s.default", EVENT_ADDRESS_PREFIX);
 
     /**
      * The address that Qpid bound messages are sent to.
      */
-    static final String QPID_EVENT_MESSAGE_ADDRESS = String.format("%s.qpid", EVENT_ADDRESS_PREFIX);
+    public static final String QPID_EVENT_MESSAGE_ADDRESS = String.format("%s.qpid", EVENT_ADDRESS_PREFIX);
+
+    /**
+     * The address that job event messages are sent to.
+     */
+    public static final String JOB_MESSAGE_ADDRESS = String.format("candlepin.jobs", EVENT_ADDRESS_PREFIX);
 
     private MessageAddress() {
     }
