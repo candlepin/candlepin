@@ -19,6 +19,7 @@ import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
 
 import org.hibernate.annotations.Type;
+import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
@@ -117,6 +118,13 @@ public class JobStatus extends AbstractHibernateObject {
     @Type(type = "org.candlepin.hibernate.ResultDataUserType")
     private Object resultData;
 
+    @Column(name = "job_data")
+    private String jobData;
+
+    @Column(name = "job_origin")
+    private String jobOrigin;
+
+
     @Transient
     private boolean cloakData = false;
 
@@ -127,42 +135,26 @@ public class JobStatus extends AbstractHibernateObject {
     }
 
     public JobStatus(JobDetail jobDetail, boolean waiting) {
+        if (jobDetail == null) {
+            throw new IllegalArgumentException("jobDetail is null");
+        }
+
         this.id = jobDetail.getKey().getName();
         this.jobGroup = jobDetail.getKey().getGroup();
+
         this.state = waiting ? JobState.WAITING : JobState.CREATED;
-        this.ownerId = this.getOwnerId(jobDetail);
-        this.targetType = getTargetType(jobDetail);
-        this.targetId = getTargetId(jobDetail);
-        this.principalName = getPrincipalName(jobDetail);
-        this.jobClass = getJobClass(jobDetail);
-        this.correlationId = getCorrelationId(jobDetail);
-    }
 
-    private String getPrincipalName(JobDetail detail) {
-        Principal p = (Principal) detail.getJobDataMap().get(
-            PinsetterJobListener.PRINCIPAL_KEY);
-        return p != null ? p.getPrincipalName() : "unknown";
-    }
+        JobDataMap datamap = jobDetail.getJobDataMap();
 
-    private TargetType getTargetType(JobDetail jobDetail) {
-        return (TargetType) jobDetail.getJobDataMap().get(TARGET_TYPE);
-    }
+        Principal principal = (Principal) datamap.get(PinsetterJobListener.PRINCIPAL_KEY);
+        this.principalName = principal != null ? principal.getPrincipalName() : "unknown";
+        this.correlationId = (String) datamap.get(CORRELATION_ID);
 
-    private String getTargetId(JobDetail jobDetail) {
-        return (String) jobDetail.getJobDataMap().get(TARGET_ID);
-    }
+        this.ownerId = (String) datamap.get(OWNER_ID);
+        this.targetType = (TargetType) datamap.get(TARGET_TYPE);
+        this.targetId = (String) datamap.get(TARGET_ID);
 
-    private String getOwnerId(JobDetail jobDetail) {
-        return (String) jobDetail.getJobDataMap().get(OWNER_ID);
-    }
-
-    public String getCorrelationId(JobDetail jobDetail) {
-        return (String) jobDetail.getJobDataMap().get(CORRELATION_ID);
-    }
-
-    @SuppressWarnings("unchecked")
-    private String getJobClass(JobDetail jobDetail) {
-        return  jobDetail.getJobClass() != null ? jobDetail.getJobClass().getCanonicalName() : null;
+        this.jobClass = jobDetail.getJobClass() != null ? jobDetail.getJobClass().getCanonicalName() : null;
     }
 
     public void update(JobExecutionContext context) {
@@ -287,6 +279,24 @@ public class JobStatus extends AbstractHibernateObject {
     public JobStatus cloakResultData(boolean cloak) {
         this.cloakData = cloak;
         return this;
+    }
+
+    public JobStatus setJobData(String jobData) {
+        this.jobData = jobData;
+        return this;
+    }
+
+    public String getJobData() {
+        return this.jobData;
+    }
+
+    public JobStatus setJobOrigin(String origin) {
+        this.jobOrigin = origin;
+        return this;
+    }
+
+    public String getJobOrigin() {
+        return this.jobOrigin;
     }
 
     public String toString() {

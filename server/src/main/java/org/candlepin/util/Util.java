@@ -32,6 +32,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.net.InetAddress;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -564,5 +567,27 @@ public class Util {
         }
 
         return true;
+    }
+
+    /**
+     * Fetches the hostname for this system without going through the network stack and DNS
+     *
+     * @return
+     *  the hostname of this system
+     */
+    public static String getHostname() {
+        try {
+            Field implField = InetAddress.class.getDeclaredField("impl");
+            implField.setAccessible(true);
+
+            Object impl = implField.get(null);
+            Method method = impl.getClass().getDeclaredMethod("getLocalHostName");
+            method.setAccessible(true);
+
+            return (String) method.invoke(impl);
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }
