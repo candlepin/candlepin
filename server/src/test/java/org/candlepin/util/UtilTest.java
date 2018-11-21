@@ -531,4 +531,15 @@ public class UtilTest {
     private interface TestClosable {
         void close();
     }
+
+    @Test
+    public void testGetHostname() {
+        try {
+            String hostname = Util.getHostname();
+            assertNotNull(hostname);
+        }
+        catch (Exception e) {
+            fail("getHostname should not throw an exception");
+        }
+    }
 }

@@ -137,6 +137,7 @@
     <include file="db/changelog/20180820091431-revert-share-fields.xml"/>
     <include file="db/changelog/20180430101420-add-intent-fields-to-consumer.xml"/>
     <include file="db/changelog/20181116110941-virt-fact-index.xml"/>
+    <include file="db/changelog/20181121151738-add-columns-for-async-job-system.xml"/>
     <include file="db/changelog/20190401093722-add-content-override-index.xml"/>
     <include file="db/changelog/20190423122527-add-syspurpose-fields-to-act-key.xml"/>
 </databaseChangeLog>
