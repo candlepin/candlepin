@@ -177,6 +177,7 @@ public class EntitlerJob extends KingpinJob {
         if (status != null && !isSchedulable(jobCurator, status)) {
             trigger = null;
         }
+
         return KingpinJob.scheduleJob(jobCurator, scheduler, detail, trigger);
     }
 }

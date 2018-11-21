@@ -21,6 +21,7 @@ import com.google.inject.Injector;
 
 import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
 
+import org.candlepin.common.config.Configuration;
 import org.candlepin.controller.ActiveMQStatusMonitor;
 import org.candlepin.controller.QpidStatusMonitor;
 import org.candlepin.controller.SuspendModeTransitioner;
@@ -57,8 +58,7 @@ public class ActiveMQContextListener {
     }
 
     public void contextInitialized(Injector injector) {
-        org.candlepin.common.config.Configuration candlepinConfig =
-            injector.getInstance(org.candlepin.common.config.Configuration.class);
+        Configuration candlepinConfig = injector.getInstance(Configuration.class);
 
         boolean embedded = candlepinConfig.getBoolean(ConfigProperties.ACTIVEMQ_EMBEDDED);
         if (embedded) {
@@ -128,8 +128,7 @@ public class ActiveMQContextListener {
         activeMQStatusMonitor.initialize();
     }
 
-    private void setupAmqp(Injector injector, org.candlepin.common.config.Configuration candlepinConfig,
-        EventSource eventSource) {
+    private void setupAmqp(Injector injector, Configuration candlepinConfig, EventSource eventSource) {
         if (candlepinConfig.getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED)) {
             // Listen for Qpid connection changes so that the appropriate ClientSessions
             // can be shutdown/restarted when Qpid status changes.
@@ -142,8 +141,7 @@ public class ActiveMQContextListener {
      * @param candlepinConfig
      * @return List of class names that will be configured as ActiveMQ listeners.
      */
-    public static List<String> getActiveMQListeners(
-        org.candlepin.common.config.Configuration candlepinConfig) {
+    public static List<String> getActiveMQListeners(Configuration candlepinConfig) {
         //AMQP integration here - If it is disabled, don't add it to listeners.
         List<String> listeners = Lists.newArrayList(
             candlepinConfig.getList(ConfigProperties.AUDIT_LISTENERS));
