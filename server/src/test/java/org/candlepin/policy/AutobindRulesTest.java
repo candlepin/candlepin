@@ -2355,4 +2355,58 @@ public class AutobindRulesTest {
         PoolQuantity q = bestPools.get(0);
         assertEquals(new Integer(2), q.getQuantity());
     }
+
+    /*
+     * This test demonstrates that autoattach should select both pools in the same stack, if one provides the
+     * consumer's installed product, and the other provides the consumer's specified role.
+     */
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testSelectBestPoolsShouldSelectBothPoolsInStackWhenOneOfThemProvidesTheSpecifiedRole() {
+        Product product69 = new Product();
+        product69.setId("compliant-69");
+
+        // Consumer specified syspurpose attributes:
+        consumer.setRole("RHEL Server");
+        ConsumerInstalledProduct consumerInstalledProduct =
+            new ConsumerInstalledProduct(product69);
+        consumer.addInstalledProduct(consumerInstalledProduct);
+
+        // --- No satisfied syspurpose attributes on the consumer ---
+
+        // Candidate pools:
+
+        // Create a stackable pool with a product which provides the role the consumer has,
+        // but not the installed product the consumer has.
+        Product prodMCT1650 = createSysPurposeProduct(null, "RHEL Server", null,
+            null, null);
+        prodMCT1650.setAttribute(Product.Attributes.STACKING_ID, "bob");
+        prodMCT1650.setAttribute("multi-entitlement", "yes");
+        Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
+        MCT1650.setId("MCT1650");
+        MCT1650.setQuantity(1L);
+
+        // Create a stackable pool (of the same stack as the previous pool)
+        // with a product which provides the installed product the consumer has,
+        // but not the role the consumer has.
+        Product prodMCT80 = createSysPurposeProduct(null, null, null,
+            null, null);
+        prodMCT80.setAttribute(Product.Attributes.STACKING_ID, "bob");
+        prodMCT80.setAttribute("multi-entitlement", "yes");
+        Pool MCT80 = TestUtil.createPool(owner, prodMCT80);
+        MCT80.setId("MCT80");
+        MCT80.setQuantity(1L);
+        MCT80.addProvidedProduct(product69);
+
+        List<Pool> pools = new ArrayList<>();
+        pools.add(MCT1650);
+        pools.add(MCT80);
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{"compliant-69"}, pools, compliance, null, new HashSet<>(), false);
+
+        assertEquals(2, bestPools.size());
+        assertTrue(bestPools.contains(new PoolQuantity(MCT1650, 1)));
+        assertTrue(bestPools.contains(new PoolQuantity(MCT80, 1)));
+    }
+
 }

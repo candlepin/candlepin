@@ -74,7 +74,7 @@ var VCPU_ATTRIBUTE = "vcpu";
 var MULTI_ENTITLEMENT_ATTRIBUTE = "multi-entitlement";
 var STACKING_ID_ATTRIBUTE = "stacking_id";
 var STORAGE_BAND_ATTRIBUTE = "storage_band";
-var ROLE_ATTRIBUTE = "role";
+var ROLE_ATTRIBUTE = "roles";
 var ADDONS_ATTRIBUTE = "addons";
 
 // caller types
@@ -1044,7 +1044,7 @@ var CoverageCalculator = {
                 return null;
             },
 
-            role: function (complianceTracker, prodAttr, consumer) {
+            roles: function (complianceTracker, prodAttr, consumer) {
                 var supportedRoles = complianceTracker.enforces(prodAttr) ? complianceTracker.getAccumulatedValue(prodAttr) : [];
                 var consumerRole = consumer.role != null ? consumer.role : "";
                 if (!contains(supportedRoles, consumerRole)) {
@@ -1376,7 +1376,7 @@ function createComplianceTracker(consumer, id) {
                  *  a list of role strings. Each pool value is a comma separated
                  *  string of supported roles.
                  */
-                role: function (currentStackValue, poolValue, pool, quantity) {
+                roles: function (currentStackValue, poolValue, pool, quantity) {
                     var stackValue = currentStackValue || [];
                     stackValue.push(poolValue);
                     return stackValue;
@@ -2359,7 +2359,7 @@ var Autobind = {
                         for (var i = 0; i < this.pools.length; i++) {
                             var pool = this.pools[i];
                             var prodAttrValue = pool.getProductAttribute(attr);
-                            var poolRole = pool.getProductAttribute("role");
+                            var poolRole = pool.getProductAttribute("roles");
                             var poolAddons = pool.getProductAttribute("addons") !== null ?
                                 pool.getProductAttribute("addons").split("\\s*,\\s*") : [];
                             var addonMatch = false;
@@ -2428,8 +2428,7 @@ var Autobind = {
                 var provided_size = this.get_provided_products().length;
                 for (var i = this.pools.length - 1; i >= 0; i--) {
                     temp = this.pools[i];
-
-                    var roleMatch = role == temp.getProductAttribute("role");
+                    var roleMatch = role == temp.getProductAttribute("roles");
                     var poolAddons = temp.getProductAttribute("addons") !== null ?
                         temp.getProductAttribute("addons").split("\\s*,\\s*") : [];
                     var addonMatch = false;
