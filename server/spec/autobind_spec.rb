@@ -322,4 +322,217 @@ describe 'Autobind On Owner' do
     status['nonCompliantUsage'].should be_nil
     status['compliantUsage']['my_usage'][0]['pool']['id'].should == p1.id
   end
+
+  it 'pool with matching role should be attached even if it covers no products' do
+    mkt_product1 = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:roles => "provided_role,another_role"},
+                               :owner => owner_key})
+    p1 = create_pool_and_subscription(owner_key, mkt_product1.id, 10, [])
+
+    eng_product = create_product(random_string('product'),
+                                 random_string('product'),
+                                 {:owner => owner_key})
+
+    installed = [
+        {'productId' => eng_product.id, 'productName' => eng_product['name']}]
+
+    consumer = @cp.register(
+        random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, nil, [],
+        nil, [], nil, nil, nil, nil, nil, 0, nil, nil, "provided_role", nil, [])
+
+    status = @cp.get_purpose_compliance(consumer['uuid'])
+    status['status'].should == 'invalid'
+    status['nonCompliantRole'].include?('provided_role').should == true
+
+    @cp.consume_product(nil, {:uuid => consumer.uuid})
+    entitlements = @cp.list_entitlements(:uuid => consumer.uuid)
+    entitlements.size.should == 1
+    entitlements[0].pool.id.should == p1.id
+
+    status = @cp.get_purpose_compliance(consumer.uuid)
+    status['status'].should == 'valid'
+    status['nonCompliantRole'].should be_nil
+    status['compliantRole']['provided_role'][0]['pool']['id'].should == p1.id
+  end
+
+  it 'pool with matching addon should be attached even if it covers no products' do
+    mkt_product1 = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:addons => "provided_addon,another_addon"},
+                               :owner => owner_key})
+    p1 = create_pool_and_subscription(owner_key, mkt_product1.id, 10, [])
+
+    eng_product = create_product(random_string('product'),
+                                 random_string('product'),
+                                 {:owner => owner_key})
+
+    installed = [
+        {'productId' => eng_product.id, 'productName' => eng_product['name']}]
+
+    consumer = @cp.register(
+        random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, nil, [],
+        nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, ["provided_addon", "random_addon"])
+
+    status = @cp.get_purpose_compliance(consumer['uuid'])
+    status['status'].should == 'invalid'
+    status['nonCompliantAddOns'].include?('provided_addon').should == true
+    status['nonCompliantAddOns'].include?('random_addon').should == true
+
+    @cp.consume_product(nil, {:uuid => consumer.uuid})
+    entitlements = @cp.list_entitlements(:uuid => consumer.uuid)
+    entitlements.size.should == 1
+    entitlements[0].pool.id.should == p1.id
+
+    status = @cp.get_purpose_compliance(consumer.uuid)
+    status['status'].should == 'partial'
+    status['nonCompliantAddOns'].include?('random_addon').should == true
+    status['compliantAddOns']['provided_addon'][0]['pool']['id'].should == p1.id
+  end
+
+  it 'pool with matching usage should not be attached when it covers no products' do
+    mkt_product1 = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:usage => "provided_usage"},
+                               :owner => owner_key})
+    p1 = create_pool_and_subscription(owner_key, mkt_product1.id, 10, [])
+
+    eng_product = create_product(random_string('product'),
+                                 random_string('product'),
+                                 {:owner => owner_key})
+
+    installed = [
+        {'productId' => eng_product.id, 'productName' => eng_product['name']}]
+
+    consumer = @cp.register(
+        random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, nil, [],
+        nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, "provided_usage", [])
+
+    status = @cp.get_purpose_compliance(consumer['uuid'])
+    status['status'].should == 'invalid'
+    status['nonCompliantUsage'].include?('provided_usage').should == true
+
+    @cp.consume_product(nil, {:uuid => consumer.uuid})
+    entitlements = @cp.list_entitlements(:uuid => consumer.uuid)
+    entitlements.size.should == 0
+
+    status = @cp.get_purpose_compliance(consumer.uuid)
+    status['status'].should == 'invalid'
+    status['nonCompliantUsage'].include?('provided_usage').should == true
+  end
+
+  it 'pool with matching SLA should not be attached when it covers no products' do
+    mkt_product1 = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:support_level => "provided_sla"},
+                               :owner => owner_key})
+    p1 = create_pool_and_subscription(owner_key, mkt_product1.id, 10, [])
+
+    eng_product = create_product(random_string('product'),
+                                 random_string('product'),
+                                 {:owner => owner_key})
+
+    installed = [
+        {'productId' => eng_product.id, 'productName' => eng_product['name']}]
+
+    consumer = @cp.register(
+        random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, nil, [],
+        nil, [], nil, nil, nil, nil, nil, 0, nil, "provided_sla", nil, nil, [])
+
+    status = @cp.get_purpose_compliance(consumer['uuid'])
+    status['status'].should == 'invalid'
+    status['nonCompliantSLA'].include?('provided_sla').should == true
+
+    @cp.consume_product(nil, {:uuid => consumer.uuid})
+    entitlements = @cp.list_entitlements(:uuid => consumer.uuid)
+    entitlements.size.should == 0
+
+    status = @cp.get_purpose_compliance(consumer.uuid)
+    status['status'].should == 'invalid'
+    status['nonCompliantSLA'].include?('provided_sla').should == true
+  end
+
+  it 'all pools with matching either role, addon or installed product should be attached, but not if they match usage or SLA only' do
+    eng_product = create_product(random_string('product'),
+                             random_string('product'),
+                             {:owner => owner_key})
+
+    mkt_prod_with_eng_product_only = create_product(random_string('product'),
+                              random_string('product'),
+                              {
+                               :owner => owner_key})
+    pool_with_eng_product_only = create_pool_and_subscription(owner_key, mkt_prod_with_eng_product_only.id,
+                              10, [eng_product.id])
+
+    mkt_prod_with_role_only = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:roles => "provided_role,non_provided_role"},
+                               :owner => owner_key})
+    pool_with_role_only = create_pool_and_subscription(owner_key, mkt_prod_with_role_only.id, 10, [])
+
+    mkt_prod_with_addon_only = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:addons => "provided_addon,non_provided_addon"},
+                               :owner => owner_key})
+    pool_with_addon_only = create_pool_and_subscription(owner_key, mkt_prod_with_addon_only.id, 10, [])
+
+    mkt_prod_with_usage_only = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:usage => "provided_usage"},
+                               :owner => owner_key})
+    pool_with_usage_only = create_pool_and_subscription(owner_key, mkt_prod_with_usage_only.id, 10, [])
+
+    mkt_prod_with_sla_only = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:support_level => "provided_sla"},
+                               :owner => owner_key})
+    pool_with_sla_only = create_pool_and_subscription(owner_key, mkt_prod_with_sla_only.id, 10, [])
+
+    installed = [
+        {'productId' => eng_product.id, 'productName' => eng_product['name']}]
+
+    consumer = @cp.register(
+            random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, nil, [],
+            nil, [], nil, nil, nil, nil, nil, 0, nil,
+            "provided_sla", "provided_role", "provided_usage", ["provided_addon", "another_addon"])
+
+    status = @cp.get_purpose_compliance(consumer['uuid'])
+    status['status'].should == 'invalid'
+    status['nonCompliantSLA'].include?('provided_sla').should == true
+    status['nonCompliantUsage'].include?('provided_usage').should == true
+    status['nonCompliantRole'].include?('provided_role').should == true
+    status['nonCompliantAddOns'].include?('provided_addon').should == true
+    status['nonCompliantAddOns'].include?('another_addon').should == true
+
+    @cp.consume_product(nil, {:uuid => consumer.uuid})
+    entitlements = @cp.list_entitlements(:uuid => consumer.uuid)
+    entitlements.size.should == 3
+
+    # Check which pools are attached:
+    # The pools attached should be: pool_with_addon_only, pool_with_role_only and pool_with_eng_product_only
+    # The pools NOT attached should be: pool_with_usage_only and pool_with_sla_only
+    entitlements.each do |entitlement|
+      if entitlement.pool.id != pool_with_addon_only.id \
+        and entitlement.pool.id != pool_with_role_only.id \
+        and entitlement.pool.id != pool_with_eng_product_only.id
+          if entitlement.pool.id == pool_with_usage_only.id
+            fail("pool #{entitlement.pool.id} should not have been attached because
+                  it only provides a matching usage!")
+          end
+          if entitlement.pool.id == pool_with_sla_only.id
+            fail("pool #{entitlement.pool.id} should not have been attached because
+                  it only provides a matching SLA!")
+          end
+      end
+    end
+
+    status = @cp.get_purpose_compliance(consumer.uuid)
+    status['status'].should == 'invalid'
+    status['nonCompliantSLA'].include?('provided_sla').should == true
+    status['nonCompliantUsage'].include?('provided_usage').should == true
+    status['nonCompliantAddOns'].include?('another_addon').should == true
+
+    status['compliantAddOns']['provided_addon'][0]['pool']['id'].should == pool_with_addon_only.id
+    status['compliantRole']['provided_role'][0]['pool']['id'].should == pool_with_role_only.id
+  end
 end
