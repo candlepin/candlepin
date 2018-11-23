@@ -305,7 +305,7 @@ function createPool(pool) {
         }
         else {
             if (attribute === 'addons' || attribute === 'roles') {
-                poolSet = this.getProductAttribute(attribute).split('\\s*,\\s*');
+                poolSet = this.getProductAttribute(attribute).split(',');
             }
             else if (attribute === 'support_level' || attribute === 'usage') {
                 poolSet = [this.getProductAttribute(attribute)];
