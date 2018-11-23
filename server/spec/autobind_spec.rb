@@ -287,4 +287,39 @@ describe 'Autobind On Owner' do
     status['compliantAddOns']['addon1'][0]['pool']['id'].should == p1.id
     status['compliantAddOns']['addon2'][0]['pool']['id'].should == p2.id
   end
+
+  it 'pool with usage should have priority over pool without' do
+    mkt_product1 = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:usage => "my_usage"},
+                               :owner => owner_key})
+    mkt_product2 = create_product(random_string('product'),
+                              random_string('product'),
+                              {:owner => owner_key})
+    eng_product = create_product(random_string('product'),
+                                 random_string('product'),
+                                 {:owner => owner_key})
+    p1 = create_pool_and_subscription(owner_key, mkt_product1.id, 10, [eng_product.id])
+    p2 = create_pool_and_subscription(owner_key, mkt_product2.id, 10, [eng_product.id])
+
+    installed = [
+        {'productId' => eng_product.id, 'productName' => eng_product['name']}]
+
+    consumer = @cp.register(
+        random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, nil, [],
+        nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, "my_usage", [])
+    status = @cp.get_purpose_compliance(consumer['uuid'])
+    status['status'].should == 'invalid'
+    status['nonCompliantUsage'].include?('my_usage').should == true
+
+    @cp.consume_product(nil, {:uuid => consumer.uuid})
+    entitlements = @cp.list_entitlements(:uuid => consumer.uuid)
+    entitlements.size.should == 1
+    entitlements[0].pool.id.should == p1.id
+
+    status = @cp.get_purpose_compliance(consumer.uuid)
+    status['status'].should == 'valid'
+    status['nonCompliantUsage'].should be_nil
+    status['compliantUsage']['my_usage'][0]['pool']['id'].should == p1.id
+  end
 end

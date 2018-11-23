@@ -107,6 +107,7 @@ public class ComplianceRulesTest {
     private ModelTranslator translator;
     private I18n i18n;
     private JsRunnerProvider provider;
+    private Consumer consumer;
 
     private Map<String, String> activeGuestAttrs;
 
@@ -134,6 +135,11 @@ public class ComplianceRulesTest {
         activeGuestAttrs = new HashMap<>();
         activeGuestAttrs.put("virtWhoType", "libvirt");
         activeGuestAttrs.put("active", "1");
+
+        ConsumerType ctype = new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM);
+        ctype.setId("test-ctype");
+
+        consumer = new Consumer("test consumer", "test user", owner, ctype);
     }
 
     /*
@@ -2113,5 +2119,65 @@ public class ComplianceRulesTest {
         when(cqmock.list()).thenReturn(ents);
         when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
         when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(cqmock);
+    }
+
+    /*
+     * This test demonstrates that a syspurpose role mismatch should not affect a consumer's
+     * entitlement compliance status.
+     */
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testRoleMismatchShouldNotAffectEntitlementComplianceStatus() {
+        Product engineeringProduct = new Product();
+        engineeringProduct.setId("compliant-69");
+
+        // Consumer specified syspurpose attributes:
+        Consumer myconsumer = mockConsumer(engineeringProduct);
+        myconsumer.setRole("my_role");
+
+        List<Entitlement> ents = new LinkedList<>();
+        Product marketingProduct = TestUtil.createProduct("Awesome Product");
+        marketingProduct.setAttribute(Product.Attributes.ROLES, "provided_role");
+        ents.add(mockEntitlement(myconsumer, marketingProduct, engineeringProduct));
+        mockEntCurator(myconsumer, ents);
+
+        ComplianceStatus status = compliance.getStatus(myconsumer, TestUtil.createDate(2011, 8, 30));
+
+        assertEquals(status.getStatus(), "valid");
+        assertEquals(1, status.getCompliantProducts().size());
+        assertTrue(status.getCompliantProducts().keySet().contains(engineeringProduct.getId()));
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(0, status.getPartiallyCompliantProducts().size());
+    }
+
+    /*
+     * This test demonstrates that a syspurpose addon mismatch should not affect a consumer's
+     * entitlement compliance status.
+     */
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testAddonMismatchShouldNotAffectEntitlementComplianceStatus() {
+        Product engineeringProduct = new Product();
+        engineeringProduct.setId("compliant-69");
+
+        // Consumer specified syspurpose attributes:
+        Consumer myconsumer = mockConsumer(engineeringProduct);
+        Set<String> addons = new HashSet<>();
+        addons.add("my_addon");
+        myconsumer.setAddOns(addons);
+
+        List<Entitlement> ents = new LinkedList<>();
+        Product marketingProduct = TestUtil.createProduct("Awesome Product");
+        marketingProduct.setAttribute(Product.Attributes.ADDONS, "provided_addon");
+        ents.add(mockEntitlement(myconsumer, marketingProduct, engineeringProduct));
+        mockEntCurator(myconsumer, ents);
+
+        ComplianceStatus status = compliance.getStatus(myconsumer, TestUtil.createDate(2011, 8, 30));
+
+        assertEquals(status.getStatus(), "valid");
+        assertEquals(1, status.getCompliantProducts().size());
+        assertTrue(status.getCompliantProducts().keySet().contains(engineeringProduct.getId()));
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(0, status.getPartiallyCompliantProducts().size());
     }
 }
