@@ -23,10 +23,10 @@ import java.util.Map;
  * An enumeration representing the various types of system purpose attributes.
  */
 public enum SystemPurposeAttributeType {
-    ROLE("role"),
-    ADDONS("addons"),
-    SERVICE_LEVEL("serviceLevel"),
-    USAGE("usage");
+    ROLES(Product.Attributes.ROLES),
+    ADDONS(Product.Attributes.ADDONS),
+    SERVICE_LEVEL(Product.Attributes.SUPPORT_LEVEL),
+    USAGE(Product.Attributes.USAGE);
 
     private String name;
     private static final Map<String, SystemPurposeAttributeType> ENUM_MAP;
