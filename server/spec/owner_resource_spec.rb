@@ -596,14 +596,19 @@ describe 'Owner Resource' do
     product = create_product(random_string("p1"), random_string("Product1"),
       {
         :owner => owner_key,
-        :attributes => {:usage => "Development", :role => "Server"}
+        :attributes => {:usage => "Development", :roles => "Server1,Server2", :addons => "addon1,addon2",
+          :support_level => "mysla"}
       }
     )
     create_pool_and_subscription(owner_key, product.id, 10, [], '', '', '', nil, nil, true)
     res = @cp.get_owner_syspurpose(owner_key)
     expect(res["owner"]["key"]).to eq(owner_key)
     expect(res["systemPurposeAttributes"]["usage"]).to include("Development")
-    expect(res["systemPurposeAttributes"]["role"]).to include("Server")
+    expect(res["systemPurposeAttributes"]["roles"]).to include("Server1")
+    expect(res["systemPurposeAttributes"]["roles"]).to include("Server2")
+    expect(res["systemPurposeAttributes"]["addons"]).to include("addon1")
+    expect(res["systemPurposeAttributes"]["addons"]).to include("addon2")
+    expect(res["systemPurposeAttributes"]["support_level"]).to include("mysla")
   end
 end
 
