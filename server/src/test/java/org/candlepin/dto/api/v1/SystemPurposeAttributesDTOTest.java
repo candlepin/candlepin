@@ -14,8 +14,6 @@
  */
 package org.candlepin.dto.api.v1;
 
-import static org.junit.Assert.*;
-
 import org.candlepin.dto.AbstractDTOTest;
 import org.candlepin.model.SystemPurposeAttributeType;
 
@@ -56,7 +54,7 @@ public class SystemPurposeAttributesDTOTest extends AbstractDTOTest<SystemPurpos
         attrSet2.add("Server");
 
         attributes.put(SystemPurposeAttributeType.ADDONS.toString(), attrSet);
-        attributes.put(SystemPurposeAttributeType.ROLE.toString(), attrSet2);
+        attributes.put(SystemPurposeAttributeType.ROLES.toString(), attrSet2);
 
         this.values.put("Owner", owner);
         this.values.put("SystemPurposeAttributes", attributes);
