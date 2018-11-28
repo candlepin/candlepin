@@ -2,6 +2,24 @@
 Unless otherwise noted, these tasks are all recursive: they will run on
 the project you are in and all subprojects contained within.
 
+## Building with Gradle
+Candlepin uses gradle & gradle wrapper for building & running unit tests. 
+To build Candlepin run `./gradlew war` from the root of the project. 
+
+## Custom Build Properties
+A number of build flags can be passed to Gradle in order to rurn on or off 
+certain features. The available flags are as follows:
+* `-Pdatabase_server=(mariadb|postgres)` Specify Mariadb or postgres as the database
+server to target. This defaults to postgres. 
+* `-Pdb_host="hostname"` Specify the hostname for the databse server. This 
+defaults to localhost
+* `-Papp_db_name="db_name"` Specify the name of the db schema to use. This defaults
+to `candlepin`
+* `-Plogdriver=true` Enable Logdriver support in config file generation & the 
+generated war file. 
+* `-Pqpid=true` Enable qpid configuration when generating a config file
+* `-Phostedtest=true` Enable the hosted test suite
+
 ## Internationalization
 * `./gradlew gettext` runs `xgettext` to extract strings from source files. 
 * `./gradlew msgmerge` runs `msgmerge` to merge translation updates back into the 
@@ -55,12 +73,6 @@ runs `my_test_name` in the `my_spec_name` file.
   colon and an argument.  In this case the argument is a brief description of
   the nature of the changeset.  Be sure to quote the task name to prevent the
   shell from interpreting the spaces.
-
-## ERB
-* `buildr erb` renders any templates found under the `erb` directory
-
-This plugin is discussed in detail at
-<http://www.candlepinproject.org/docs/candlepin/auto_conf.html>
 
 ## Swagger
 
@@ -118,7 +130,6 @@ Fedora 28.  Change those values as appropriate.
   ```
 
 ## Miscellaneous
-* `buildr syntastic` creates `.syntastic_class_path` for the Vim Syntastic plugin
 * `buildr pom` creates a `pom.xml` file with the project dependencies in it
 * `buildr rpmlint` runs `rpmlint` on all `*.spec` files
 

@@ -1,3 +1,4 @@
+import groovy.text.GStringTemplateEngine
 import org.gradle.api.tasks.options.Option
 
 apply plugin: 'war'
@@ -23,7 +24,7 @@ test {
 }
 
 war {
-    if (! System.getenv().get("hostedtest")) {
+    if (! hostedtest){
         rootSpec.exclude('**/hostedtest/**')
     }
     manifest {
@@ -104,6 +105,21 @@ class Rspec extends DefaultTask {
 
 task rspec(type: Rspec)
 
+// A task to generate the the candlepin config file for use in etc or other locations.
+task generateConfig() {
+    def template = file('conf/candlepin.conf.template')
+    def targetFile = file("$buildDir/candlepin.conf")
+    doLast {
+        // change contents via cli options
+        def binding = [project: project]
+        // change file contents
+        def tmp = new GStringTemplateEngine()
+                .createTemplate(template)
+                .make(binding)
+        targetFile.write(tmp.toString(), 'UTF-8')
+    }
+}
+
 dependencies {
 
     compile project(':candlepin-common')
@@ -170,4 +186,9 @@ dependencies {
     compile 'javax.validation:validation-api:2.0.1.Final' exclude module: '*'
 
     providedCompile 'javax.servlet:servlet-api:2.5' exclude module: '*'
+
+    if (use_logdriver){
+        compile 'org.slf4j:log4j-over-slf4j:1.7.5'
+        compile 'logdriver:logdriver:1.0'
+    }
 }
