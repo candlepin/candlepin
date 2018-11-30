@@ -196,6 +196,11 @@ public class JobStatus extends AbstractHibernateObject {
         return jobGroup;
     }
 
+    public JobStatus setGroup(String group) {
+        this.jobGroup = group;
+        return this;
+    }
+
     public Date getFinishTime() {
         return finishTime;
     }
