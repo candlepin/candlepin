@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.5.7
+Version: 2.5.8
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -221,6 +221,24 @@ fi
 
 #raw
 %changelog
+* Fri Nov 30 2018 Michael Stead <mstead@redhat.com> 2.5.8-1
+- 1654453: auto-attach selects pools with matching role/addon - auto-attach
+  will now select pools that only provide either a matching role or addon, but
+  do not provide any installed products. (nmoumoul@redhat.com)
+- 1654445: role & addons should not affect entitlement status - Entitlement
+  Compliance status will no longer be affected by role & addons attributes. -
+  Added tests for this use case, and also further syspurpose/auto-attach
+  regression tests. - When a stack now contains a pool that provides a matching
+  role or addon, that pool will stay in the stack and be selected.
+  (nmoumoul@redhat.com)
+- 1640688: Fix incorrect partial compliance status on consumers
+  (awood@redhat.com)
+- 1653747: Use Product attribute names for owner syspurpose
+  (nmoumoul@redhat.com)
+- 1642621: Remove service level checking for consumers (nmoumoul@redhat.com)
+- 1645673: Fixed an issue with syspurpose changes not updating status
+  (crog@redhat.com)
+
 * Thu Oct 11 2018 Kevin Howell <khowell@redhat.com> 2.5.7-1
 - Fixed an issue with object desync during pool cleanup (crog@redhat.com)
 - Update deploy script for sql trace & HHH-12927 (bcourt@redhat.com)
