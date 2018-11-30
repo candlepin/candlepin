@@ -38,7 +38,7 @@ public final class MessageAddress {
     /**
      * The address that job event messages are sent to.
      */
-    public static final String JOB_MESSAGE_ADDRESS = String.format("candlepin.jobs", EVENT_ADDRESS_PREFIX);
+    public static final String JOB_MESSAGE_ADDRESS = "job";
 
     private MessageAddress() {
     }
