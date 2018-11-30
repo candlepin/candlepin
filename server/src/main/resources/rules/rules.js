@@ -1,4 +1,4 @@
-// Version: 5.29
+// Version: 5.30
 
 /*
  * Default Candlepin rule set.
@@ -74,8 +74,6 @@ var VCPU_ATTRIBUTE = "vcpu";
 var MULTI_ENTITLEMENT_ATTRIBUTE = "multi-entitlement";
 var STACKING_ID_ATTRIBUTE = "stacking_id";
 var STORAGE_BAND_ATTRIBUTE = "storage_band";
-var ROLE_ATTRIBUTE = "role";
-var ADDONS_ATTRIBUTE = "addons";
 
 // caller types
 var BEST_POOLS_CALLER = "best_pools";
@@ -114,9 +112,7 @@ var PHYSICAL_ATTRIBUTES = [
     RAM_ATTRIBUTE,
     ARCH_ATTRIBUTE,
     GUEST_LIMIT_ATTRIBUTE,
-    STORAGE_BAND_ATTRIBUTE,
-    ROLE_ATTRIBUTE,
-    ADDONS_ATTRIBUTE
+    STORAGE_BAND_ATTRIBUTE
 ];
 
 /**
@@ -128,9 +124,7 @@ var VIRT_ATTRIBUTES = [
     RAM_ATTRIBUTE,
     ARCH_ATTRIBUTE,
     GUEST_LIMIT_ATTRIBUTE,
-    STORAGE_BAND_ATTRIBUTE,
-    ROLE_ATTRIBUTE,
-    ADDONS_ATTRIBUTE
+    STORAGE_BAND_ATTRIBUTE
 ];
 
 /**
@@ -311,7 +305,7 @@ function createPool(pool) {
         }
         else {
             if (attribute === 'addons' || attribute === 'roles') {
-                poolSet = this.getProductAttribute(attribute).split('\\s*,\\s*');
+                poolSet = this.getProductAttribute(attribute).split(',');
             }
             else if (attribute === 'support_level' || attribute === 'usage') {
                 poolSet = [this.getProductAttribute(attribute)];
@@ -1018,42 +1012,6 @@ var CoverageCalculator = {
                 return reason;
             },
 
-            addons: function (complianceTracker, prodAttr, consumer) {
-                var supportedAddOns = complianceTracker.enforces(prodAttr) ? complianceTracker.getAccumulatedValue(prodAttr) : [];
-                var consumerAddOns = consumer.addOns != null ? consumer.addOns : [];
-                var anyCoverage = false;
-                for (var index in consumerAddOns) {
-                    if (contains(supportedAddOns, consumerAddOns[index])) {
-                        anyCoverage = true;
-                    }
-                }
-                if (!anyCoverage) {
-                    log.debug("  System addons not covered by: " + supportedAddOns);
-                    return StatusReasonGenerator.buildReason(prodAttr.toUpperCase(),
-                        complianceTracker.type,
-                        complianceTracker.id,
-                        consumerAddOns,
-                        supportedAddOns);
-                }
-                log.debug("  System addons is covered.");
-                return null;
-            },
-
-            role: function (complianceTracker, prodAttr, consumer) {
-                var supportedRoles = complianceTracker.enforces(prodAttr) ? complianceTracker.getAccumulatedValue(prodAttr) : [];
-                var consumerRole = consumer.role != null ? consumer.role : "";
-                if (!contains(supportedRoles, consumerRole)) {
-                    log.debug("  System addons not covered by: " + supportedAddOns);
-                    return StatusReasonGenerator.buildReason(prodAttr.toUpperCase(),
-                        complianceTracker.type,
-                        complianceTracker.id,
-                        consumeRole,
-                        supportedRoles);
-                }
-                log.debug("  System role is covered.");
-                return null;
-            },
-
             /**
              *  The default condition checks is a simple *integer* comparison that makes
              *  sure that the specified product attribute value is >= that of the
@@ -1109,7 +1067,6 @@ var CoverageCalculator = {
     getStackCoverage: function(complianceTracker, consumer, entitlements) {
         log.debug("Coverage calculator is checking stack coverage...");
         var conditions = this.getDefaultConditions();
-
         var complianceAttributes = getComplianceAttributes(consumer);
         for (var attrIdx in complianceAttributes) {
             var nextAttr = complianceAttributes[attrIdx];
@@ -1184,7 +1141,7 @@ var CoverageCalculator = {
         // Some stacked attributes do not affect the quantity needed to
         // make the stack valid. Stacking multiple instances of 'arch'
         // does nothing (there is no quantity).
-        var stackableAttrsNotAffectingQuantity = [ARCH_ATTRIBUTE, GUEST_LIMIT_ATTRIBUTE, ADDONS_ATTRIBUTE, ROLE_ATTRIBUTE];
+        var stackableAttrsNotAffectingQuantity = [ARCH_ATTRIBUTE, GUEST_LIMIT_ATTRIBUTE];
         var complianceAttributes = getComplianceAttributes(consumer);
         var complianceAttributesToUse = [];
 
@@ -1353,28 +1310,6 @@ function createComplianceTracker(consumer, id) {
 
                 guest_limit: function (currentStackValue, poolValue, pool, quantity) {
                     return -1; //Value doesn't matter, just need it to be enforced
-                },
-
-                /**
-                 *  AddOns is accumulated by adding each pool value to
-                 *  a list of addon strings. Each pool value is a comma separated
-                 *  string of supported addons.
-                 */
-                addons: function (currentStackValue, poolValue, pool, quantity) {
-                    var stackValue = currentStackValue || [];
-                    stackValue.push(poolValue);
-                    return stackValue;
-                },
-
-                /**
-                 *  Role is accumulated by adding each pool value to
-                 *  a list of role strings. Each pool value is a comma separated
-                 *  string of supported roles.
-                 */
-                role: function (currentStackValue, poolValue, pool, quantity) {
-                    var stackValue = currentStackValue || [];
-                    stackValue.push(poolValue);
-                    return stackValue;
                 }
             };
 
@@ -2354,15 +2289,20 @@ var Autobind = {
                         for (var i = 0; i < this.pools.length; i++) {
                             var pool = this.pools[i];
                             var prodAttrValue = pool.getProductAttribute(attr);
-                            var poolRole = pool.getProductAttribute("role");
+
+                            var poolRoles = pool.getProductAttribute("roles") !== null ?
+                                pool.getProductAttribute("roles").split(",") : [];
+                            var roleMatch = contains(poolRoles, role);
+
                             var poolAddons = pool.getProductAttribute("addons") !== null ?
-                                pool.getProductAttribute("addons").split("\\s*,\\s*") : [];
+                                pool.getProductAttribute("addons").split(",") : [];
                             var addonMatch = false;
                             for (var k = 0; k < poolAddons.length; k++) {
                                 addonMatch = addonMatch || contains(addons, poolAddons[k]);
                             }
+
                             if ((!prodAttrValue || prodAttrValue === null) &&
-                                !role.equals(poolRole) &&
+                                !roleMatch &&
                                 !addonMatch) {
                                 pools_without.push(pool);
                             }
@@ -2424,13 +2364,17 @@ var Autobind = {
                 for (var i = this.pools.length - 1; i >= 0; i--) {
                     temp = this.pools[i];
 
-                    var roleMatch = role == temp.getProductAttribute("role");
+                    var poolRoles = temp.getProductAttribute("roles") !== null ?
+                        temp.getProductAttribute("roles").split(",") : [];
+                    var roleMatch = contains(poolRoles, role);
+
                     var poolAddons = temp.getProductAttribute("addons") !== null ?
-                        temp.getProductAttribute("addons").split("\\s*,\\s*") : [];
+                        temp.getProductAttribute("addons").split(",") : [];
                     var addonMatch = false;
                     for (var k = 0; k < poolAddons.length; k++) {
                         addonMatch = addonMatch || contains(addons, poolAddons[k]);
                     }
+
                     this.pools.splice(i, 1);
                     var ents = this.get_all_ents(this.pools);
                     if (ents.length == 0 || !Compliance.getStackCoverage(this.consumer, this.stack_id, ents.concat(this.attached_ents)).covered ||
