@@ -249,6 +249,7 @@ public class JobManager {
             JobStatus job = new JobStatus(detail, false);
             job.setJobData(this.objMapper.writeValueAsString(detail.getJobDataMap()));
             job.setJobOrigin(Util.getHostname());
+            job.setGroup("message.job");
 
             job = this.jobCurator.create(job);
 
