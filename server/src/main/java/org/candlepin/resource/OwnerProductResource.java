@@ -309,11 +309,10 @@ public class OwnerProductResource {
 
         Owner owner = this.getOwnerByKey(ownerKey);
 
-        // Get the matching owner_product & lock it while we are doing the update for this org
+        // Get the owner & lock it while we are doing the update for this org
         // This is done in order to prevent collisions in updates on different parts of the product
+        ownerCurator.lock(owner);
         OwnerProduct ownerProduct = ownerProductCurator.getOwnerProductByProductId(owner, productId);
-        ownerProductCurator.lock(ownerProduct);
-        ownerProductCurator.refresh(ownerProduct);
 
         Product product = ownerProduct.getProduct();
         Collection<ProductContent> productContent = new LinkedList<>();
