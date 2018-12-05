@@ -86,6 +86,66 @@ describe 'Owner Product Resource' do
     prod['productContent'].should be_empty
   end
 
+  it 'adds content to products' do
+    prod = create_product
+    content = create_content
+    @cp.add_content_to_product(@owner['key'], prod['id'], content['id'])
+    prod = @cp.get_product(@owner['key'], prod['id'])
+    prod['productContent'].size.should == 1
+  end
+
+  it 'concurrently adds content to products' do
+    product = create_product
+    content1 = create_content
+    content2 = create_content
+    content3 = create_content
+    content4 = create_content
+    content5 = create_content
+
+    t1 = Thread.new{@cp.add_content_to_product(@owner['key'], product['id'], content1['id'])}
+    t2 = Thread.new{@cp.add_content_to_product(@owner['key'], product['id'], content2['id'])}
+    t3 = Thread.new{@cp.add_content_to_product(@owner['key'], product['id'], content3['id'])}
+    t4 = Thread.new{@cp.add_content_to_product(@owner['key'], product['id'], content4['id'])}
+    t5 = Thread.new{@cp.add_content_to_product(@owner['key'], product['id'], content5['id'])}
+    t1.join
+    t2.join
+    t3.join
+    t4.join
+    t5.join
+
+    prod = @cp.get_product(@owner['key'], product['id'])
+    prod['productContent'].size.should == 5
+  end
+
+  it 'concurrently removes content from products' do
+    product = create_product
+    content1 = create_content
+    content2 = create_content
+    content3 = create_content
+    content4 = create_content
+    content5 = create_content
+    @cp.add_content_to_product(@owner['key'], product['id'], content1['id'])
+    @cp.add_content_to_product(@owner['key'], product['id'], content2['id'])
+    @cp.add_content_to_product(@owner['key'], product['id'], content3['id'])
+    @cp.add_content_to_product(@owner['key'], product['id'], content4['id'])
+    @cp.add_content_to_product(@owner['key'], product['id'], content5['id'])
+    prod = @cp.get_product(@owner['key'], product['id'])
+    prod['productContent'].size.should == 5
+
+    t6 = Thread.new{@cp.remove_content_from_product(@owner['key'], product['id'], content1['id'])}
+    t7 = Thread.new{@cp.remove_content_from_product(@owner['key'], product['id'], content2['id'])}
+    t8 = Thread.new{@cp.remove_content_from_product(@owner['key'], product['id'], content3['id'])}
+    t9 = Thread.new{@cp.remove_content_from_product(@owner['key'], product['id'], content4['id'])}
+    t10 = Thread.new{@cp.remove_content_from_product(@owner['key'], product['id'], content5['id'])}
+    t6.join
+    t7.join
+    t8.join
+    t9.join
+    t10.join
+    prod = @cp.get_product(@owner['key'], product['id'])
+    prod['productContent'].size.should == 0
+  end
+
   it 'allows regular users to view products' do
     owner = create_owner random_string('test')
     user_cp = user_client(owner, random_string('testuser'), true)
