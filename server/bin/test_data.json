@@ -2016,7 +2016,236 @@
             "provided_products": [
                 "37060"
             ]
+        },
+        {
+            "name": "SP Server (S: Standard)",
+            "id": "sp-server",
+            "type": "MKT",
+            "provided_products": [
+                "99000"
+            ],
+            "attributes": {
+                "sockets": 128,
+                "management_enabled" : 1,
+                "support_level" : "Standard",
+                "support_type" : "L1-L3"
+            }
+        },
+        {
+            "name": "SP Server Premium (S: Premium, U: Production, R: SP Server)",
+            "id": "sp-server-prem-prod",
+            "type": "MKT",
+            "provided_products": [
+                "99000"
+            ],
+            "attributes": {
+                "sockets": 128,
+                "management_enabled" : 1,
+                "support_level" : "Premium",
+                "support_type" : "L1-L3",
+                "usage" : "Production",
+                "roles" : "SP Server"
+            }
+        },
+        {
+            "name": "SP Server (U: Production, R: SP Server)",
+            "id": "sp-server-prod",
+            "type": "MKT",
+            "provided_products": [
+                "99000"
+            ],
+            "attributes": {
+                "sockets": 128,
+                "management_enabled" : 1,
+                "usage" : "Production",
+                "roles" : "SP Server"
+            }
+        },
+        {
+            "name": "SP Server (S: Layered, U: Production, R: SP Server)",
+            "id": "sp-server-layered-prod",
+            "type": "MKT",
+            "provided_products": [
+                "99000"
+            ],
+            "attributes": {
+                "management_enabled" : 1,
+                "support_level": "Layered",
+                "support_level_exempt": "true",
+                "usage" : "Production",
+                "roles" : "SP Server"
+            }
+        },
+        {
+            "name": "SP Server Standard (U: Development, R: SP Server)",
+            "id": "sp-server-dev",
+            "type": "MKT",
+            "provided_products": [
+                "99000"
+            ],
+            "attributes": {
+                "sockets": 128,
+                "management_enabled" : 1,
+                "support_level" : "Standard",
+                "support_type" : "L1-L3",
+                "usage" : "Development",
+                "roles" : "SP Server"
+            }
+        },
+        {
+            "name": "SP Starter Pack (S: Premium, R: SP Starter)",
+            "id": "sp-starter-pack",
+            "type": "MKT",
+            "provided_products": [
+                "99000",
+                "99001"
+            ],
+            "attributes": {
+                "sockets": 128,
+                "management_enabled" : 1,
+                "support_level" : "Premium",
+                "support_type" : "L1-L3",
+                "roles" : "SP Starter"
+            }
+        },
+        {
+            "name": "SP Smart Management (A: ADDON1)",
+            "id": "sp-with-addon-1",
+            "type": "MKT",
+            "provided_products": [
+                "99003"
+            ],
+            "attributes": {
+                "management_enabled" : 1,
+                "addons": "ADDON1"
+            }
+        },
+        {
+            "name": "SP Addon 2 (A: ADDON2)",
+            "id": "sp-with-addon-2",
+            "type": "MKT",
+            "provided_products": [
+                "99004"
+            ],
+            "attributes": {
+                "management_enabled" : 1,
+                "addons": "ADDON2"
+            }
+        },
+        {
+            "name": "SP Addon 3 (S: Premium, R: SP Server,SP Starter, A: ADDON3)",
+            "id": "sp-with-addon-3",
+            "type": "MKT",
+            "provided_products": [
+                "99005"
+            ],
+            "attributes": {
+                "management_enabled" : 1,
+                "support_level": "Premium",
+                "support_type": "L1-L3",
+                "roles": "SP Server,SP Starter",
+                "addons": "ADDON3"
+            }
+        },
+        {
+            "name": "SP Additional Packages (R: SP Server)",
+            "id": "additional-sp-pkgs",
+            "type": "MKT",
+            "provided_products": [
+                "99006"
+            ],
+            "attributes": {
+                "management_enabled" : 1,
+                "role": "SP Server"
+            }
+        },
+        {
+            "name": "SP Server Bits",
+            "id": "99000",
+            "version": "3.11",
+            "arch": "x86_64",
+            "attributes": {
+                "brand_type": "OS"
+            },
+            "content": [
+                [11113, false],
+                [100, false],
+                [11124, false],
+                [11123, false],
+                [11125, false],
+                [11128, false],
+                [11126, false],
+                [11121, false]
+            ]
+        },
+        {
+            "name": "SP Starter Pack Bits",
+            "id": "99001",
+            "version": "3.11",
+            "arch": "x86_64",
+            "attributes": {
+                "brand_type": "OS"
+            },
+            "content": [
+                [11113, false],
+                [100, false],
+                [11124, false],
+                [11123, false],
+                [11125, false]
+            ]
+        },
+        {
+            "name": "SP Addon 1 bits",
+            "id": "99003",
+            "version": "3.11",
+            "arch": "x86_64",
+            "attributes": {
+                "brand_type": "OS"
+            },
+            "content": [
+                [11113, false],
+                [100, false]
+            ]
+        },
+        {
+            "name": "SP Addon 2 bits",
+            "id": "99004",
+            "version": "3.11",
+            "arch": "x86_64",
+            "attributes": {
+                "brand_type": "OS"
+            },
+            "content": [
+                [11113, false],
+                [100, false]
+            ]
+        },
+        {
+            "name": "SP Addon 3 bits",
+            "id": "99005",
+            "version": "3.11",
+            "arch": "x86_64",
+            "attributes": {
+                "brand_type": "OS"
+            },
+            "content": [
+                [11113, false]
+            ]
+        },
+        {
+            "name": "SP Additional bits",
+            "id": "99006",
+            "version": "3.11",
+            "arch": "x86_64",
+            "attributes": {
+                "brand_type": "OS"
+            },
+            "content": [
+                [11113, false],
+                [100, false]
+            ]
         }
+
     ]
 }
 
