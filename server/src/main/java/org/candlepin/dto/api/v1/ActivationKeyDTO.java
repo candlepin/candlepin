@@ -14,6 +14,7 @@
  */
 package org.candlepin.dto.api.v1;
 
+import org.candlepin.dto.CandlepinDTO;
 import org.candlepin.dto.TimestampedCandlepinDTO;
 import org.candlepin.jackson.SingleValueWrapSerializer;
 import org.candlepin.jackson.SingleValueWrapDeserializer;
@@ -48,7 +49,7 @@ public class ActivationKeyDTO extends TimestampedCandlepinDTO<ActivationKeyDTO> 
     /**
      * Join object DTO for joining the activation key to pools
      */
-    public static class ActivationKeyPoolDTO {
+    public static class ActivationKeyPoolDTO extends CandlepinDTO<ActivationKeyPoolDTO> {
         protected final String poolId;
         protected final Long quantity;
 

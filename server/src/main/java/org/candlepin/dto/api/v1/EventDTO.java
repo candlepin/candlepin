@@ -42,7 +42,7 @@ public class EventDTO extends CandlepinDTO<EventDTO> {
     /**
      * Internal DTO object for PrincipalData.
      */
-    public static class PrincipalDataDTO {
+    public static class PrincipalDataDTO extends CandlepinDTO<PrincipalDataDTO> {
         private final String type;
         private final String name;
 
