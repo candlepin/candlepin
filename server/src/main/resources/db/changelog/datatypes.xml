@@ -17,5 +17,8 @@
 
     <property name="cert.type" value="BLOB" dbms="oracle,mysql,mariadb,hsqldb"/>
     <property name="cert.type" value="bytea" dbms="postgresql"/>
+
+    <property name="blob.type" value="BLOB" dbms="oracle,mysql,mariadb,hsqldb"/>
+    <property name="blob.type" value="bytea" dbms="postgresql"/>
 </databaseChangeLog>
 
