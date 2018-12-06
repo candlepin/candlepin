@@ -705,14 +705,7 @@ public class ConsumerResource {
         Consumer consumer = null;
         if (ownerKey != null && dto.getFact("dmi.system.uuid") != null &&
             !"true".equalsIgnoreCase(dto.getFact("virt.is_guest"))) {
-
             Owner owner = ownerCurator.getByKey(ownerKey);
-            if (!principal.canAccess(owner, SubResource.CONSUMERS, Access.CREATE)) {
-                throw new ForbiddenException(
-                    i18n.tr("User \"{0}\" does not have access to create consumers in org \"{1}\"",
-                    principal.getName(), owner.getKey()));
-            }
-
             if (owner != null) {
                 consumer = consumerCurator.getHypervisor(dto.getFact("dmi.system.uuid"), owner);
                 if (consumer != null) {
