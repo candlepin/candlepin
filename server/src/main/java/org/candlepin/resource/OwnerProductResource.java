@@ -309,18 +309,12 @@ public class OwnerProductResource {
 
         Owner owner = this.getOwnerByKey(ownerKey);
 
-        // Get the matching owner_product & lock it while we are doing the update for this org
-        // This is done in order to prevent collisions in updates on different parts of the product
+        // Lock the relation so we don't do multiple updates in parallel and clobber one of them
+        ownerProductCurator.lockOwnerProductRelation(owner.getId(), productId);
         OwnerProduct ownerProduct = ownerProductCurator.getOwnerProductByProductId(owner, productId);
-        ownerProductCurator.lock(ownerProduct);
-        ownerProductCurator.refresh(ownerProduct);
 
         Product product = ownerProduct.getProduct();
         Collection<ProductContent> productContent = new LinkedList<>();
-
-        if (product.isLocked()) {
-            throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", product.getId()));
-        }
 
         ProductDTO pdto = this.translator.translate(product, ProductDTO.class);
 
@@ -381,16 +375,11 @@ public class OwnerProductResource {
 
         Owner owner = this.getOwnerByKey(ownerKey);
 
-        // Get the matching owner_product & lock it while we are doing the update for this org
-        // This is done in order to prevent collisions in updates on different parts of the product
+        // Lock the relation so we don't do multiple updates in parallel and clobber one of them
+        ownerProductCurator.lockOwnerProductRelation(owner.getId(), productId);
         OwnerProduct ownerProduct = ownerProductCurator.getOwnerProductByProductId(owner, productId);
-        ownerProductCurator.lock(ownerProduct);
-        ownerProductCurator.refresh(ownerProduct);
-        Product product = ownerProduct.getProduct();
 
-        if (product.isLocked()) {
-            throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", product.getId()));
-        }
+        Product product = ownerProduct.getProduct();
 
         ProductDTO pdto = this.translator.translate(product, ProductDTO.class);
 
