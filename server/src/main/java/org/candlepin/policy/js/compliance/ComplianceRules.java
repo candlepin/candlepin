@@ -197,7 +197,11 @@ public class ComplianceRules {
         try {
             ComplianceStatusDTO statusDTO = mapper.toObject(json, ComplianceStatusDTO.class);
             ComplianceStatus status = new ComplianceStatus();
-            populateEntity(status, statusDTO);
+            Set<Entitlement> allEntitlements = Stream.concat(
+                newEntitlements != null ? newEntitlements.stream() : Stream.empty(),
+                consumer.getEntitlements() != null ? consumer.getEntitlements().stream() : Stream.empty())
+                .collect(Collectors.toSet());
+            populateEntity(status, statusDTO, allEntitlements);
 
             for (ComplianceReason reason : status.getReasons()) {
                 generator.setMessage(consumer, reason, status.getDate());
@@ -303,7 +307,9 @@ public class ComplianceRules {
      *  if either entity or dto are null
      */
     @SuppressWarnings("checkstyle:methodlength")
-    protected void populateEntity(ComplianceStatus entity, ComplianceStatusDTO dto) {
+    protected void populateEntity(ComplianceStatus entity, ComplianceStatusDTO dto,
+        Set<Entitlement> allExistingEntitlements) {
+
         if (entity == null) {
             throw new IllegalArgumentException("entity is null");
         }
@@ -467,6 +473,13 @@ public class ComplianceRules {
                 }
 
                 entitlementModel.setPool(pool);
+            }
+
+            for (Entitlement existingEntitlement : allExistingEntitlements) {
+                if (entitlementModel.getId().equals(existingEntitlement.getId()) &&
+                    entitlementModel.getPool() != null && existingEntitlement.getPool() != null) {
+                    entitlementModel.getPool().setOwner(existingEntitlement.getPool().getOwner());
+                }
             }
 
             translated.put(entitlementModel.getId(), entitlementModel);
