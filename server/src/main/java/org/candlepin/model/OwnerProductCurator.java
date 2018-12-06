@@ -30,6 +30,8 @@ import org.hibernate.sql.JoinType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.persistence.LockModeType;
+import javax.persistence.NoResultException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -70,6 +72,46 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
             .add(Restrictions.eq("owner.id", ownerId))
             .add(Restrictions.eq("product.id", productId))
             .uniqueResult();
+    }
+
+    @Transactional
+    public OwnerProduct getOwnerProductByProductId(Owner owner, String productId) {
+        return (OwnerProduct) this.createSecureCriteria()
+            .createAlias("owner", "owner")
+            .createAlias("product", "product")
+            .add(Restrictions.eq("owner.id", owner.getId()))
+            .add(Restrictions.eq("product.id", productId))
+            .uniqueResult();
+    }
+
+    /**
+     * Locks the owner-product relation for the given owner ID and product ID. This should be done
+     * before the product is fetched to ensure the proper state is fetched.
+     *
+     * @param ownerId
+     *  The ID of the owner for the owner-product relation to lock
+     *
+     * @param productId
+     *  The ID of the product for the owner-product relation to lock
+     *
+     * @return
+     *  true if the owner-product relation was found and locked successfully; false otherwise
+     */
+    public boolean lockOwnerProductRelation(String ownerId, String productId) {
+        String jpql = "SELECT op FROM OwnerProduct op " +
+            "WHERE op.owner.id = :owner_id AND op.product.id = :product_id";
+        try {
+            OwnerProduct op = this.getEntityManager()
+                .createQuery(jpql, OwnerProduct.class)
+                .setParameter("owner_id", ownerId)
+                .setParameter("product_id", productId)
+                .setLockMode(LockModeType.PESSIMISTIC_WRITE)
+                .getSingleResult();
+            return true;
+        }
+        catch (NoResultException e) {
+            return false;
+        }
     }
 
     public CandlepinQuery<Owner> getOwnersByProduct(Product product) {

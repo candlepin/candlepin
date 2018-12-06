@@ -32,6 +32,7 @@ import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.OwnerProduct;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
@@ -304,14 +305,19 @@ public class OwnerProductResource {
         @ApiParam(name = "contentMap", required = true) Map<String, Boolean> contentMap) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
-        Product product = this.fetchProduct(owner, productId);
-        Collection<ProductContent> productContent = new LinkedList<>();
 
+        // Lock the relation so we don't do multiple updates in parallel and clobber one of them
+        ownerProductCurator.lockOwnerProductRelation(owner.getId(), productId);
+        OwnerProduct ownerProduct = ownerProductCurator.getOwnerProductByProductId(owner, productId);
+        if (ownerProduct == null) {
+            throw new NotFoundException(i18n.tr("Product with ID \"{0}\" could not be found.", productId));
+        }
+        Product product = ownerProduct.getProduct();
         if (product.isLocked()) {
             throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", product.getId()));
         }
 
-        this.productCurator.lock(product);
+        Collection<ProductContent> productContent = new LinkedList<>();
         ProductDTO pdto = this.translator.translate(product, ProductDTO.class);
 
         // Impl note:
@@ -370,13 +376,18 @@ public class OwnerProductResource {
         @ApiParam(name = "content", required = true) List<String> contentIds) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
-        Product product = this.fetchProduct(owner, productId);
 
+        // Lock the relation so we don't do multiple updates in parallel and clobber one of them
+        ownerProductCurator.lockOwnerProductRelation(owner.getId(), productId);
+        OwnerProduct ownerProduct = ownerProductCurator.getOwnerProductByProductId(owner, productId);
+        if (ownerProduct == null) {
+            throw new NotFoundException(i18n.tr("Product with ID \"{0}\" could not be found.", productId));
+        }
+        Product product = ownerProduct.getProduct();
         if (product.isLocked()) {
             throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", product.getId()));
         }
 
-        this.productCurator.lock(product);
         ProductDTO pdto = this.translator.translate(product, ProductDTO.class);
 
         // Impl note:
@@ -423,8 +434,13 @@ public class OwnerProductResource {
         @PathParam("product_id") String productId) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
-        Product product = this.fetchProduct(owner, productId);
-
+        // Lock the relation so we don't do multiple updates in parallel and clobber one of them
+        ownerProductCurator.lockOwnerProductRelation(owner.getId(), productId);
+        OwnerProduct ownerProduct = ownerProductCurator.getOwnerProductByProductId(owner, productId);
+        if (ownerProduct == null) {
+            throw new NotFoundException(i18n.tr("Product with ID \"{0}\" could not be found.", productId));
+        }
+        Product product = ownerProduct.getProduct();
         if (product.isLocked()) {
             throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", product.getId()));
         }

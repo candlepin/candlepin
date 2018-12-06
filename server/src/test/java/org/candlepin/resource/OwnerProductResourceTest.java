@@ -16,7 +16,7 @@ package org.candlepin.resource;
 
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -29,6 +29,7 @@ import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.model.Content;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.OwnerProduct;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
@@ -158,6 +159,7 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
         OwnerCurator oc = mock(OwnerCurator.class);
         OwnerProductCurator opc = mock(OwnerProductCurator.class);
         ProductCurator pc = mock(ProductCurator.class);
+        OwnerProduct op = mock(OwnerProduct.class);
         I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
 
         OwnerProductResource pr = new OwnerProductResource(
@@ -168,6 +170,11 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
 
         when(oc.lookupByKey(eq("owner"))).thenReturn(o);
         when(opc.getProductById(eq(o), eq("10"))).thenReturn(p);
+        when(opc.lockOwnerProductRelation(any(String.class), any(String.class))).thenReturn(true);
+        when(opc.getOwnerProductByProductId(any(Owner.class), any(String.class))).thenReturn(op);
+        when(op.getOwner()).thenReturn(o);
+        when(op.getProduct()).thenReturn(p);
+        when(p.isLocked()).thenReturn(false);
 
         Set<Subscription> subs = new HashSet<>();
         Subscription s = mock(Subscription.class);

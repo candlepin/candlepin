@@ -28,6 +28,7 @@ import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerContent;
 import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.ProductCurator;
@@ -267,13 +268,21 @@ public class OwnerContentResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("/{content_id}")
+    @Transactional
     public ContentDTO updateContent(@PathParam("owner_key") String ownerKey,
         @PathParam("content_id") String contentId,
         @ApiParam(name = "content", required = true) ContentDTO content) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
-        Content existing  = this.fetchContent(owner, contentId);
-
+        // Lock the relation so we don't do multiple updates in parallel and clobber one of them
+        ownerContentCurator.lockOwnerContentRelation(owner.getId(), contentId);
+        OwnerContent ownerContent = ownerContentCurator.getOwnerContentByContentId(owner, contentId);
+        if (ownerContent == null) {
+            throw new NotFoundException(
+                    i18n.tr("Content with ID \"{0}\" could not be found.", contentId)
+            );
+        }
+        Content existing = ownerContent.getContent();
         if (existing.isLocked()) {
             throw new ForbiddenException(i18n.tr("content \"{0}\" is locked", existing.getId()));
         }
@@ -288,12 +297,20 @@ public class OwnerContentResource {
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{content_id}")
+    @Transactional
     public void remove(@PathParam("owner_key") String ownerKey,
         @PathParam("content_id") String contentId) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
-        Content content = this.fetchContent(owner, contentId);
-
+        // Lock the relation so we don't do multiple updates in parallel and clobber one of them
+        ownerContentCurator.lockOwnerContentRelation(owner.getId(), contentId);
+        OwnerContent ownerContent = ownerContentCurator.getOwnerContentByContentId(owner, contentId);
+        if (ownerContent == null) {
+            throw new NotFoundException(
+                    i18n.tr("Content with ID \"{0}\" could not be found.", contentId)
+            );
+        }
+        Content content = ownerContent.getContent();
         if (content.isLocked()) {
             throw new ForbiddenException(i18n.tr("content \"{0}\" is locked", content.getId()));
         }
