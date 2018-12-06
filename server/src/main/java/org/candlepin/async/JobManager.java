@@ -15,10 +15,12 @@
 package org.candlepin.async;
 
 import org.candlepin.audit.MessageAddress;
+import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.pinsetter.core.model.JobStatus;
-import org.candlepin.model.JobCurator;
+import org.candlepin.model.AsyncJobStatus;
+import org.candlepin.model.AsyncJobStatus.JobState;
+import org.candlepin.model.AsyncJobStatusCurator;
 import org.candlepin.util.Util;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -34,6 +36,8 @@ import org.apache.activemq.artemis.api.core.client.ClientSession;
 import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
 import org.apache.activemq.artemis.api.core.client.ServerLocator;
 import org.apache.activemq.artemis.core.remoting.impl.invm.InVMConnectorFactory;
+
+import org.apache.log4j.MDC;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +56,7 @@ public class JobManager {
     private static Logger log = LoggerFactory.getLogger(JobManager.class);
 
     protected Configuration config;
-    protected JobCurator jobCurator;
+    protected AsyncJobStatusCurator jobCurator;
     protected ObjectMapper objMapper;
 
     private ClientSessionFactory sessionFactory;
@@ -83,15 +87,11 @@ public class JobManager {
     }
 
 
-
-
-
-
     /**
      * Creates a new JobManager instance
      */
     @Inject
-    public JobManager(Configuration config, JobCurator jobCurator, ObjectMapper objMapper) {
+    public JobManager(Configuration config, AsyncJobStatusCurator jobCurator, ObjectMapper objMapper) {
         this.config = config;
         this.jobCurator = jobCurator;
         this.objMapper = objMapper;
@@ -179,27 +179,60 @@ public class JobManager {
      *
      * @param JobMessage jobMessage
      */
-    private void sendJobMessage(JobMessage jobMessage) {
+    private void sendJobMessage(JobMessage jobMessage) throws ActiveMQException, JsonProcessingException {
         // TODO: Clean this up. JobMessage probably shouldn't exist.
 
-        try {
-            ClientSession session = this.getClientSession();
-            ClientMessage message = session.createMessage(true);
-            message.putStringProperty("job_class", jobMessage.getJobClass());
+        ClientSession session = this.getClientSession();
+        ClientMessage message = session.createMessage(true);
+        message.putStringProperty("job_class", jobMessage.getJobClass());
 
-            String eventString = this.objMapper.writeValueAsString(message);
-            message.getBodyBuffer().writeString(eventString);
+        String eventString = this.objMapper.writeValueAsString(message);
+        message.getBodyBuffer().writeString(eventString);
 
-            log.debug("Sending message to {}: {}", MessageAddress.JOB_MESSAGE_ADDRESS, eventString);
+        log.debug("Sending message to {}: {}", MessageAddress.JOB_MESSAGE_ADDRESS, eventString);
 
-            ClientProducer producer = this.getClientProducer();
-            producer.send(MessageAddress.JOB_MESSAGE_ADDRESS, message);
-        }
-        catch (Exception e) {
-            log.error("Error while trying to send job message: {}", e);
-            throw new RuntimeException("Error trying to send job message.", e);
-        }
+        ClientProducer producer = this.getClientProducer();
+        producer.send(MessageAddress.JOB_MESSAGE_ADDRESS, message);
     }
+
+    /**
+     * Builds an AsyncJobStatus instance from the given job details. The job status will not be
+     * a managed entity and will need to be manually persisted by the caller.
+     *
+     * @param detail
+     *  The job detail to use to build the job status
+     *
+     * @throws IllegalArgumentException
+     *  if detail is null
+     *
+     * @return
+     *  the newly constructed, unmanaged AsyncJobStatus instance
+     */
+    private AsyncJobStatus buildJobStatus(JobDetail detail) {
+        if (detail == null) {
+            throw new IllegalArgumentException("job detail is null");
+        }
+
+        // TODO: Rewrite this method to use the upcoming JobBuilder
+
+        AsyncJobStatus job = new AsyncJobStatus();
+
+        job.setJobClass(detail.getJobClass());
+        job.setName(detail.getKey().getName());
+        job.setGroup(detail.getKey().getGroup());
+
+        // Note: these could be metadata fields
+        job.setOrigin(Util.getHostname());
+        job.setCorrelationId((String) MDC.get(LoggingFilter.CSID));
+        job.setPrincipal("temporarily ignored"); // This is only used in exactly one job
+
+        job.setMaxAttempts(detail.requestsRecovery() ? 3 : 1);
+        job.setJobData(detail.getJobDataMap());
+
+        return job;
+    }
+
+
 
 
     /**
@@ -215,10 +248,10 @@ public class JobManager {
      * @param
      *
      * @return
-     *  a JobStatus instance representing the queued job's status, or the status of the existing
-     *  job if it already exists
+     *  an AsyncJobStatus instance representing the queued job's status, or the status of the
+     *  existing job if it already exists
      */
-    public JobStatus queueJob(JobDetail detail) {
+    public AsyncJobStatus queueJob(JobDetail detail) {
         if (detail == null) {
             throw new IllegalArgumentException("job detail is null");
         }
@@ -241,31 +274,33 @@ public class JobManager {
         //
         //      jobManager.queueJob(builder);
 
+
+        AsyncJobStatus job = this.buildJobStatus(detail);
+
         // TODO:
         // Add job filtering/deduplication by criteria
 
-        // Create the job in the job table
         try {
-            JobStatus job = new JobStatus(detail, false);
-            job.setJobData(this.objMapper.writeValueAsString(detail.getJobDataMap()));
-            job.setJobOrigin(Util.getHostname());
-            job.setGroup("message.job");
-
-            job = this.jobCurator.create(job);
-
             // Build the job message
             JobMessage message = new JobMessage(job.getId(), job.getJobClass());
 
             // Send the message
             this.sendJobMessage(message);
 
-            // Done!
-            return job;
+            job.setState(JobState.QUEUED);
         }
-        // TODO: Clean up the exception handling here.
-        catch (JsonProcessingException jpe) {
-            throw new RuntimeException(jpe);
+        catch (Exception e) {
+            job.setState(JobState.FAILED);
+            job.setJobResult(e);
+
+            // Do we need to persist the job status in this branch? It's basically perma-dead.
         }
+
+        // Persist the job status
+        job = this.jobCurator.create(job);
+
+        // Done!
+        return job;
     }
 
 
@@ -284,7 +319,7 @@ public class JobManager {
      * @return
      *  a JobStatus instance representing the job's status
      */
-    public JobStatus executeJob() {
+    public AsyncJobStatus executeJob() {
         // TODO: Finish me
 
         return null;

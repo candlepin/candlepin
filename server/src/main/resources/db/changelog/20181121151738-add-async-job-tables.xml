@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <!-- Include definitions for cert.type, timestamp.type, etc. -->
+    <include file="db/changelog/datatypes.xml"/>
+
+    <changeSet id="20181121151738-1" author="crog">
+        <createTable tableName="cp2_async_jobs">
+            <column name="id" type="varchar(36)">
+                <constraints primaryKey="true" primaryKeyName="cp2_async_jobs_pk"/>
+            </column>
+
+            <column name="created" type="${timestamp.type}"/>
+            <column name="updated" type="${timestamp.type}"/>
+
+            <column name="name" type="varchar(255)"/>
+            <column name="job_class" type="varchar(255)"/>
+            <column name="job_group" type="varchar(32)"/>
+            <column name="origin" type="varchar(255)"/>
+            <column name="principal" type="varchar(255)"/>
+            <column name="correlation_id" type="varchar(255)"/>
+
+            <column name="state" type="int"/>
+            <column name="attempts" type="int"/>
+            <column name="max_attempts" type="int"/>
+            <column name="start_time" type="${timestamp.type}"/>
+            <column name="end_time" type="${timestamp.type}"/>
+
+            <column name="job_data" type="${blob.type}"/>
+            <column name="job_result" type="${blob.type}"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20181121151738-2" author="crog">
+        <createTable tableName="cp2_async_job_constraints">
+            <column name="job_id" type="varchar(255)">
+                <constraints
+                    nullable="false"
+                    foreignKeyName="cp2_async_job_constraints_fk1"
+                    references="cp2_async_jobs(id)"
+                    deleteCascade="true"
+                />
+            </column>
+
+            <column name="key" type="varchar(255)"/>
+            <column name="value" type="varchar(255)"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20181121151738-3" author="crog">
+        <addPrimaryKey tableName="cp2_async_job_constraints"
+            columnNames="job_id,key"
+            constraintName="cp2_async_job_constraints_pk"
+        />
+    </changeSet>
+
+</databaseChangeLog>
+<!-- vim: set expandtab sts=4 sw=4 ai: -->
