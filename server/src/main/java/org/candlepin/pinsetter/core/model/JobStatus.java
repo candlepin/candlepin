@@ -118,13 +118,6 @@ public class JobStatus extends AbstractHibernateObject {
     @Type(type = "org.candlepin.hibernate.ResultDataUserType")
     private Object resultData;
 
-    @Column(name = "job_data")
-    private String jobData;
-
-    @Column(name = "job_origin")
-    private String jobOrigin;
-
-
     @Transient
     private boolean cloakData = false;
 
@@ -284,24 +277,6 @@ public class JobStatus extends AbstractHibernateObject {
     public JobStatus cloakResultData(boolean cloak) {
         this.cloakData = cloak;
         return this;
-    }
-
-    public JobStatus setJobData(String jobData) {
-        this.jobData = jobData;
-        return this;
-    }
-
-    public String getJobData() {
-        return this.jobData;
-    }
-
-    public JobStatus setJobOrigin(String origin) {
-        this.jobOrigin = origin;
-        return this;
-    }
-
-    public String getJobOrigin() {
-        return this.jobOrigin;
     }
 
     public String toString() {
