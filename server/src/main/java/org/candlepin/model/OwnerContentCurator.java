@@ -27,6 +27,8 @@ import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.persistence.LockModeType;
+import javax.persistence.NoResultException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -62,6 +64,46 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
             .add(Restrictions.eq("owner.id", ownerId))
             .add(Restrictions.eq("content.id", contentId))
             .uniqueResult();
+    }
+
+    @Transactional
+    public OwnerContent getOwnerContentByContentId(Owner owner, String contentId) {
+        return (OwnerContent) this.createSecureCriteria()
+            .createAlias("owner", "owner")
+            .createAlias("content", "content")
+            .add(Restrictions.eq("owner.id", owner.getId()))
+            .add(Restrictions.eq("content.id", contentId))
+            .uniqueResult();
+    }
+
+    /**
+     * Locks the owner-product relation for the given owner ID and product ID. This should be done
+     * before the product is fetched to ensure the proper state is fetched.
+     *
+     * @param ownerId
+     *  The ID of the owner for the owner-product relation to lock
+     *
+     * @param contentId
+     *  The ID of the product for the owner-product relation to lock
+     *
+     * @return
+     *  true if the owner-product relation was found and locked successfully; false otherwise
+     */
+    public boolean lockOwnerContentRelation(String ownerId, String contentId) {
+        String jpql = "SELECT oc FROM OwnerContent oc " +
+            "WHERE oc.owner.id = :owner_id AND oc.content.id = :content_id";
+        try {
+            OwnerContent op = this.getEntityManager()
+                .createQuery(jpql, OwnerContent.class)
+                .setParameter("owner_id", ownerId)
+                .setParameter("content_id", contentId)
+                .setLockMode(LockModeType.PESSIMISTIC_WRITE)
+                .getSingleResult();
+            return true;
+        }
+        catch (NoResultException e) {
+            return false;
+        }
     }
 
     public CandlepinQuery<Owner> getOwnersByContent(Content content) {

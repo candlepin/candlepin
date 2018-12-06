@@ -124,4 +124,19 @@ describe 'Owner Content Resource' do
     # Verify the serial has changed (the entitlement has been regenerated)
     original_serial.should_not == new_serial
   end
+
+  it 'concurrently updates content in the org' do
+    content1 = create_content("name" => "content1")
+    content2 = create_content("name" => "content2")
+    content3 = create_content("name" => "content3")
+    t6 = Thread.new{@cp.update_content(@owner['key'], content1['id'], {"name" => "content4"})}
+    t7 = Thread.new{@cp.update_content(@owner['key'], content2['id'], {"name" => "content5"})}
+    t8 = Thread.new{@cp.update_content(@owner['key'], content3['id'], {"name" => "content6"})}
+    t6.join
+    t7.join
+    t8.join
+    @cp.get_content(@owner['key'], content1['id'])["name"].should == "content4"
+    @cp.get_content(@owner['key'], content2['id'])["name"].should == "content5"
+    @cp.get_content(@owner['key'], content3['id'])["name"].should == "content6"
+  end
 end
