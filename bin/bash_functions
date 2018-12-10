@@ -171,6 +171,11 @@ init_mysql_jdbc() {
     JDBC_JAR="/usr/share/java/mysql-connector-java.jar"
     JDBC_URL="jdbc:mysql://$db_host/$db_name"
 
+    # Change once the mariadb-java-client RPM is available in EPEL
+    # JDBC_DRIVER="org.mariadb.jdbc.Driver"
+    # JDBC_JAR="/usr/lib/java/mariadb-java-client.jar"
+    # JDBC_URL="jdbc:mariadb://$db_host/$db_name"
+
     local isolation_level=$(mysql -h $db_host $db_name  --user=$db_user --password="$password"  -e 'select @@global.tx_isolation')
     local READ_COMMITTED="READ-COMMITTED"
     if [[ $isolation_level != *$READ_COMMITTED* ]]; then

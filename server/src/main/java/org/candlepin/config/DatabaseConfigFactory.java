@@ -56,7 +56,8 @@ public class DatabaseConfigFactory {
      */
     public enum SupportedDatabase {
         POSTGRESQL("postgresql", POSTGRESQL_CONFIG),
-        MYSQL("mysql", MYSQL_CONFIG);
+        MYSQL("mysql", MYSQL_CONFIG),
+        MARIADB("mariadb", MYSQL_CONFIG);
 
         private final String label;
         private final Map<String, String> settings;

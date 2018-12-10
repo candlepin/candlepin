@@ -24,6 +24,7 @@ PACKAGES=(
     liquibase
     mariadb
     mysql-connector-java
+    mariadb-java-client
     openssl
     postgresql
     postgresql-jdbc

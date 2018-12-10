@@ -135,9 +135,9 @@ SWAGGER = [group('swagger-jaxrs', 'swagger-core','swagger-models','swagger-annot
                   :version => JACKSON_VERSION)
          ]
 
-MYSQL = 'mysql:mysql-connector-java:jar:5.1.26'
+MARIADB = 'org.mariadb.jdbc:mariadb-java-client:jar:2.3.0'
 
-DB = [POSTGRESQL, MYSQL]
+DB = [POSTGRESQL, MARIADB]
 
 HSQLDB = 'org.hsqldb:hsqldb:jar:2.3.2'
 HSQLDB_OLD = 'org.hsqldb:hsqldb:jar:1.8.0.10'
