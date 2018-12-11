@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.5.8
+Version: 2.5.9
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -221,6 +221,9 @@ fi
 
 #raw
 %changelog
+* Tue Dec 11 2018 Kevin Howell <khowell@redhat.com> 2.5.9-1
+- Allow tomcat to read the candlepin CA cert (jturel@redhat.com)
+
 * Fri Nov 30 2018 Michael Stead <mstead@redhat.com> 2.5.8-1
 - 1654453: auto-attach selects pools with matching role/addon - auto-attach
   will now select pools that only provide either a matching role or addon, but
