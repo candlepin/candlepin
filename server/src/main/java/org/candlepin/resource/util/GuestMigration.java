@@ -61,7 +61,9 @@ public class GuestMigration {
 
     public void migrate(boolean flush) {
         if (!migrationPending) {
-            throw new IllegalStateException("No migration is pending");
+            // we can accept this and continue
+            log.debug("Guest migration found no consumers.");
+            return;
         }
 
         manifest.writeMigrationChanges();
