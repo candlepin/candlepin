@@ -51,7 +51,7 @@ public class SSLCertTest {
         certificateFactory = CertificateFactory.getInstance("X.509");
 
         certificatePath = (X509Certificate) certificateFactory.generateCertificate(
-            getClass().getResourceAsStream("certchain.crt"));
+            getClass().getResourceAsStream("leaf.crt"));
 
         selfSignedCertificate = (X509Certificate) certificateFactory.generateCertificate(
             getClass().getResourceAsStream("selfsigned.crt"));
@@ -73,7 +73,7 @@ public class SSLCertTest {
         // PKIXCertPathValidatorResult result = (PKIXCertPathValidatorResult)
         cpv.validate(cp, PKIXparams);
 
-        assertEquals("CN=Robert Paulson, OU=org unit, O=org, L=Halifax, ST=NS, C=CA",
+        assertEquals("CN=www.example.com, L=Halifax, ST=NS, C=CA",
             certificatePath.getSubjectDN().getName());
     }
 
