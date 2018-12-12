@@ -21,9 +21,6 @@ retry() {
 }
 
 setup_mysql() {
-    # moving install to setup-devel-env.sh
-    # yum install -y mariadb mysql-connector-java
-
     retry 20 "mysql" mysqladmin --host=db --user=root --password=password status
 
     mysql --user=root mysql --password=password --host=db --execute="CREATE USER 'candlepin'; GRANT ALL PRIVILEGES on candlepin.* TO 'candlepin' WITH GRANT OPTION"
@@ -35,6 +32,8 @@ setup_mysql() {
 }
 
 setup_postgres() {
+    # if pg_is ready isn't there source the scl version
+    command -v pg_isready 2> /dev/null || source scl_source enable rh-postgresql96 || true
     retry 20 "postgres" pg_isready -h db
 }
 

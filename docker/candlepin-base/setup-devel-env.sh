@@ -19,9 +19,6 @@ PACKAGES=(
     git
     hostname
     java-$JAVA_VERSION-openjdk-devel
-    java-1.6.0-openjdk-devel  # FIXME see if still necessary
-    #java-1.7.0-openjdk-devel
-    java-1.8.0-openjdk-devel  # FIXME redundant?
     jss
     libxml2-python
     liquibase
@@ -47,18 +44,9 @@ yum install -y ${PACKAGES[@]}
 # pg_isready is used to check if the postgres server is up
 # it is not included in postgresql versions < 9.3.0.
 # therefore we must build it
-if [[ $(printf "$(psql --version | awk '{print $3}')\n9.3.0" | sort -V | head -1) != '9.3.0' ]]; then
-  git clone https://github.com/postgres/postgres.git /root/postgres
-  cd /root/postgres
-  yum install -y bison bison-devel flex flex-devel readline-devel zlib-devel openssl-devel wget
-  ./configure
-  # just builds the scripts folder, use installed postgres for everything else
-  make install src/bin/scripts/
-  # only need pg_isready for now
-  cp /usr/local/pgsql/bin/pg_isready /usr/local/bin/
-  # cleanup
-  cd /
-  rm -rf /root/postgres
+if ! type pg_isready 2> /dev/null; then
+  yum install -y centos-release-scl
+  yum install -y yum install rh-postgresql96
 fi
 
 # Setup for autoconf:
@@ -78,12 +66,13 @@ git clone https://github.com/candlepin/candlepin.git /candlepin
 cd /candlepin
 
 # Setup and install rvm, ruby and pals
-gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3
+gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
 # turning off verbose mode, rvm is nuts with this
 set +v
-curl -sSL https://get.rvm.io | bash -s stable  # CURL TO BASH!!! THE BEST THE BEST THE BEST
-source /etc/profile.d/rvm.sh
-
+curl -O https://raw.githubusercontent.com/rvm/rvm/master/binscripts/rvm-installer
+curl -O https://raw.githubusercontent.com/rvm/rvm/master/binscripts/rvm-installer.asc
+gpg --verify rvm-installer.asc && bash rvm-installer stable
+source /etc/profile.d/rvm.sh || true
 
 rvm install 2.0.0
 rvm use --default 2.0.0
