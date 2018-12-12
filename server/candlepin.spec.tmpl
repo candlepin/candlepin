@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.3.11
+Version: 2.3.12
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,15 @@ fi
 
 #raw
 %changelog
+* Wed Dec 12 2018 Kevin Howell <khowell@redhat.com> 2.3.12-1
+- Updated the update-server-xml script for changes required in F28
+  (crog@redhat.com)
+- Upgraded postgresql-jdbc driver to the latest (mstead@redhat.com)
+- 1633829: Fixed StaleStateException during dirty entitlement regeneration
+  (crog@redhat.com)
+- 1651713: Unneeded guest migration call leads to exception
+  (wpoteat@redhat.com)
+
 * Wed Nov 28 2018 Michael Stead <mstead@redhat.com> 2.3.11-1
 - 1652968: auto-attach selects pools with matching role/addon - auto-attach
   will now select pools that only provide either a matching role or addon, but
