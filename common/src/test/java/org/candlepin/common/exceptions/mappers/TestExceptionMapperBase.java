@@ -20,13 +20,13 @@ import static org.candlepin.common.test.RegexMatcher.*;
 
 import org.candlepin.common.exceptions.ExceptionMessage;
 import org.candlepin.common.guice.CommonI18nProvider;
+import org.candlepin.common.guice.TestingScope;
 
+import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.servlet.RequestScoped;
 
-import org.jukito.JukitoModule;
-import org.jukito.TestScope;
 import org.junit.Before;
 import org.xnap.commons.i18n.I18n;
 
@@ -63,7 +63,7 @@ public abstract class TestExceptionMapperBase {
 
     public abstract Class<?> getMapperClass();
 
-    public static class MapperTestModule extends JukitoModule {
+    public static class MapperTestModule extends AbstractModule {
         private Class<?> mapper;
 
         public MapperTestModule(Class<?> clazz) {
@@ -71,8 +71,8 @@ public abstract class TestExceptionMapperBase {
         }
 
         @Override
-        protected void configureTest() {
-            bindScope(RequestScoped.class, TestScope.EAGER_SINGLETON);
+        protected void configure() {
+            bindScope(RequestScoped.class, TestingScope.EAGER_SINGLETON);
             bind(mapper);
             bind(HttpServletRequest.class).toInstance(mock(HttpServletRequest.class));
             bind(ServletRequest.class).toInstance(mock(HttpServletRequest.class));

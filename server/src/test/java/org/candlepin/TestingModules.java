@@ -55,7 +55,7 @@ import org.candlepin.guice.I18nProvider;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.guice.ScriptEngineProvider;
 import org.candlepin.guice.TestPrincipalProvider;
-import org.candlepin.guice.TestingRequestScope;
+import org.candlepin.guice.TestingScope;
 import org.candlepin.guice.ValidationListenerProvider;
 import org.candlepin.jackson.PoolEventFilter;
 import org.candlepin.model.CPRestrictions;
@@ -132,8 +132,6 @@ import com.google.inject.servlet.RequestScoped;
 import org.hibernate.Session;
 import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
 import org.hibernate.validator.HibernateValidator;
-import org.jukito.TestScope;
-import org.jukito.TestSingleton;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.quartz.JobListener;
@@ -267,7 +265,6 @@ public class TestingModules {
 
         @Override
         public void configure() {
-            bindScope(TestSingleton.class, TestScope.SINGLETON);
             CandlepinCache mockedCandlepinCache = mock(CandlepinCache.class);
             when(mockedCandlepinCache.getStatusCache()).thenReturn(mock(StatusCache.class));
             // This is not necessary in the normal module because the config is bound in the
@@ -280,7 +277,7 @@ public class TestingModules {
             bindScope(CandlepinRequestScoped.class, requestScope);
             //RequestScoped doesn't exist in unit tests, so we must
             //define test alternative for it.
-            bindScope(RequestScoped.class, new TestingRequestScope());
+            bindScope(RequestScoped.class, TestingScope.EAGER_SINGLETON);
             bind(CandlepinRequestScope.class).toInstance(requestScope);
 
             bind(X509ExtensionUtil.class);
