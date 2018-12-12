@@ -139,9 +139,11 @@ public class ManifestManager {
         log.info("Exporting consumer {}", consumerUuid);
 
         Consumer consumer = validateConsumerForExport(consumerUuid, cdnLabel);
-        poolManager.regenerateDirtyEntitlements(entitlementCurator.listByConsumer(consumer));
+        poolManager.regenerateDirtyEntitlements(consumer);
+
         File export = exporter.getFullExport(consumer, cdnLabel, webUrl, apiUrl, extensionData);
         sink.queueEvent(eventFactory.exportCreated(consumer));
+
         return export;
     }
 
@@ -389,9 +391,9 @@ public class ManifestManager {
      */
     public File generateEntitlementArchive(Consumer consumer, Set<Long> serials)
         throws ExportCreationException {
+
         log.debug("Getting client certificate zip file for consumer: {}", consumer.getUuid());
-        poolManager.regenerateDirtyEntitlements(
-            entitlementCurator.listByConsumer(consumer));
+        poolManager.regenerateDirtyEntitlements(consumer);
 
         return exporter.getEntitlementExport(consumer, serials);
     }

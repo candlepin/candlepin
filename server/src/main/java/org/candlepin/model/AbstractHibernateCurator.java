@@ -23,8 +23,6 @@ import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.DatabaseConfigFactory;
 import org.candlepin.guice.PrincipalProvider;
 
-import org.apache.commons.collections.CollectionUtils;
-
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -655,8 +653,8 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         return entities;
     }
 
-    public Collection<E> saveOrUpdateAll(Collection<E> entities, boolean flush, boolean evict) {
-        if (CollectionUtils.isNotEmpty(entities)) {
+    public Iterable<E> saveOrUpdateAll(Iterable<E> entities, boolean flush, boolean evict) {
+        if (entities != null) {
             try {
                 Session session = this.currentSession();
                 EntityManager em = this.getEntityManager();
