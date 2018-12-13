@@ -1,4 +1,4 @@
-// Version: 5.30
+// Version: 5.31
 
 /*
  * Default Candlepin rule set.
@@ -351,6 +351,24 @@ function createActivationKey(key) {
 }
 
 function createConsumer(consumer, compliance) {
+
+    /*
+     * Add the default consumer system purpose data so that we can be backwards compatible
+     * with older versions of candlepin. By doing this, we avoid errors when attributes
+     * are undefined vs null.
+     */
+    if (!consumer.addOns) {
+        // Defaulting the addOns consumer data.
+        consumer.addOns = [];
+    }
+
+    if (!consumer.role) {
+        consumer.role = null;
+    }
+
+    if (!consumer.usage) {
+        consumer.usage = null;
+    }
 
     consumer.contextCompliance = compliance;
 
