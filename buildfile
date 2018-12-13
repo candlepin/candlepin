@@ -66,6 +66,9 @@ SUN_JAXB = ['com.sun.xml.bind:jaxb-impl:jar:2.3.0',
 
 CORE_TESTING = [
   'junit:junit:jar:4.12',
+  'org.junit.jupiter:junit-jupiter-api:jar:5.3.2',
+  'org.junit.jupiter:junit-jupiter-engine:jar:5.3.2',
+  'org.junit.vintage:junit-vintage-engine:jar:5.3.2',
   'org.hamcrest:hamcrest-library:jar:1.3',
   'org.hamcrest:hamcrest-core:jar:1.3',
   'org.mockito:mockito-all:jar:1.9.5',
