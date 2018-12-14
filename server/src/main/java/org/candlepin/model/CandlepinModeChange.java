@@ -57,7 +57,15 @@ public class CandlepinModeChange implements Serializable {
          * Qpid is overloaded to a point where its not possible to
          * send messages to it
          */
-        QPID_FLOW_STOPPED
+        QPID_FLOW_STOPPED,
+        /**
+         * Qpid event queue is missing the appropriate exchange.
+         */
+        QPID_MISSING_EXCHANGE,
+        /**
+         * Qpid event queue's exchange has no bindings.
+         */
+        QPID_MISSING_BINDING
     }
 
     public CandlepinModeChange(Date changeTime, Mode mode, Reason reason) {

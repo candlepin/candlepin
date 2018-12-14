@@ -32,12 +32,11 @@ import java.util.List;
  * EventSource
  */
 public class EventSource implements QpidStatusListener {
-    private static  Logger log = LoggerFactory.getLogger(EventSource.class);
+    private static Logger log = LoggerFactory.getLogger(EventSource.class);
 
     private ClientSessionFactory factory;
     private ObjectMapper mapper;
     private List<MessageReceiver> messageReceivers = new LinkedList<>();
-
 
     @Inject
     public EventSource(ObjectMapper mapper) {
@@ -91,7 +90,10 @@ public class EventSource implements QpidStatusListener {
                 continue;
             }
 
-            if (QpidStatus.FLOW_STOPPED.equals(newStatus) || QpidStatus.DOWN.equals(newStatus)) {
+            if (QpidStatus.FLOW_STOPPED.equals(newStatus) ||
+                QpidStatus.MISSING_BINDING.equals(newStatus) ||
+                QpidStatus.MISSING_EXCHANGE.equals(newStatus) ||
+                QpidStatus.DOWN.equals(newStatus)) {
                 log.debug("Stopping session for EventReciever.");
                 receiver.stopSession();
             }

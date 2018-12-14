@@ -93,6 +93,26 @@ public class QpidConnectionTest {
     }
 
     @Test
+    public void connectionIsReconnectedWhenQpidConnectedStatusIsReportedAndQpidHadNoExchange()
+        throws Exception {
+        connection.onStatusUpdate(QpidStatus.MISSING_EXCHANGE, QpidStatus.CONNECTED);
+
+        verify(connection, never()).closeConnection();
+        verify(connection, never()).close();
+        verify(connection, times(1)).connect();
+    }
+
+    @Test
+    public void connectionIsReconnectedWhenQpidConnectedStatusIsReportedAndQpidHadNoExchangeBinding()
+        throws Exception {
+        connection.onStatusUpdate(QpidStatus.MISSING_BINDING, QpidStatus.CONNECTED);
+
+        verify(connection, never()).closeConnection();
+        verify(connection, never()).close();
+        verify(connection, times(1)).connect();
+    }
+
+    @Test
     public void connectedToFlowStoppedDoesNotRequireDisconnect() throws Exception {
         connection.onStatusUpdate(QpidStatus.CONNECTED, QpidStatus.FLOW_STOPPED);
 
@@ -133,6 +153,72 @@ public class QpidConnectionTest {
 
         connection.onStatusUpdate(QpidStatus.DOWN, QpidStatus.FLOW_STOPPED);
         assertTrue(connection.isFlowStopped());
+
+        connection.onStatusUpdate(QpidStatus.FLOW_STOPPED, QpidStatus.MISSING_EXCHANGE);
+        assertFalse(connection.isFlowStopped());
+
+        connection.onStatusUpdate(QpidStatus.FLOW_STOPPED, QpidStatus.MISSING_BINDING);
+        assertFalse(connection.isFlowStopped());
+    }
+
+    @Test
+    public void checkMissingExchangeValueOnStateChange() throws Exception {
+        // Force connection so that the producer map is initialized.
+        connection.connect();
+
+        connection.onStatusUpdate(QpidStatus.CONNECTED, QpidStatus.CONNECTED);
+        assertFalse(connection.isMissingExchange());
+
+        connection.onStatusUpdate(QpidStatus.CONNECTED, QpidStatus.MISSING_EXCHANGE);
+        assertTrue(connection.isMissingExchange());
+
+        connection.onStatusUpdate(QpidStatus.MISSING_EXCHANGE, QpidStatus.MISSING_EXCHANGE);
+        assertTrue(connection.isMissingExchange());
+
+        connection.onStatusUpdate(QpidStatus.MISSING_EXCHANGE, QpidStatus.CONNECTED);
+        assertFalse(connection.isMissingExchange());
+
+        connection.onStatusUpdate(QpidStatus.MISSING_EXCHANGE, QpidStatus.DOWN);
+        assertFalse(connection.isMissingExchange());
+
+        connection.onStatusUpdate(QpidStatus.DOWN, QpidStatus.MISSING_EXCHANGE);
+        assertTrue(connection.isMissingExchange());
+
+        connection.onStatusUpdate(QpidStatus.MISSING_EXCHANGE, QpidStatus.FLOW_STOPPED);
+        assertFalse(connection.isMissingExchange());
+
+        connection.onStatusUpdate(QpidStatus.MISSING_EXCHANGE, QpidStatus.MISSING_BINDING);
+        assertFalse(connection.isMissingExchange());
+    }
+
+    @Test
+    public void checkMissingBindingValueOnStateChange() throws Exception {
+        // Force connection so that the producer map is initialized.
+        connection.connect();
+
+        connection.onStatusUpdate(QpidStatus.CONNECTED, QpidStatus.CONNECTED);
+        assertFalse(connection.isMissingBinding());
+
+        connection.onStatusUpdate(QpidStatus.CONNECTED, QpidStatus.MISSING_BINDING);
+        assertTrue(connection.isMissingBinding());
+
+        connection.onStatusUpdate(QpidStatus.MISSING_BINDING, QpidStatus.MISSING_BINDING);
+        assertTrue(connection.isMissingBinding());
+
+        connection.onStatusUpdate(QpidStatus.MISSING_BINDING, QpidStatus.CONNECTED);
+        assertFalse(connection.isMissingBinding());
+
+        connection.onStatusUpdate(QpidStatus.MISSING_BINDING, QpidStatus.DOWN);
+        assertFalse(connection.isMissingBinding());
+
+        connection.onStatusUpdate(QpidStatus.DOWN, QpidStatus.MISSING_BINDING);
+        assertTrue(connection.isMissingBinding());
+
+        connection.onStatusUpdate(QpidStatus.MISSING_BINDING, QpidStatus.FLOW_STOPPED);
+        assertFalse(connection.isMissingBinding());
+
+        connection.onStatusUpdate(QpidStatus.MISSING_BINDING, QpidStatus.MISSING_EXCHANGE);
+        assertFalse(connection.isMissingBinding());
     }
 
     @Test
@@ -150,6 +236,37 @@ public class QpidConnectionTest {
         verify(connection, atMost(1)).connect();
     }
 
+    @Test
+    public void connectionIsClosedWhenExchangeIsLost()
+        throws Exception {
+        // Force connection so that the producer map is initialized.
+        connection.connect();
+
+        connection.onStatusUpdate(QpidStatus.CONNECTED, QpidStatus.MISSING_EXCHANGE);
+
+        // Initial connection.
+        verify(connection, times(1)).connect();
+        // Expect the connection to be closed.
+        verify(connection, times(1)).closeConnection();
+        // Don't expect a hard close where the session factory is also closed.
+        verify(connection, never()).close();
+    }
+
+    @Test
+    public void connectionIsClosedWhenBindingIsMissing()
+        throws Exception {
+        // Force connection so that the producer map is initialized.
+        connection.connect();
+
+        connection.onStatusUpdate(QpidStatus.CONNECTED, QpidStatus.MISSING_BINDING);
+
+        // Initial connection.
+        verify(connection, times(1)).connect();
+        // Expect the connection to be closed.
+        verify(connection, times(1)).closeConnection();
+        // Don't expect a hard close where the session factory is also closed.
+        verify(connection, never()).close();
+    }
 
     /**
      * A stubbed test class to avoid trying to configure and make an actual
@@ -183,6 +300,14 @@ public class QpidConnectionTest {
 
         public boolean isFlowStopped() {
             return this.isFlowStopped;
+        }
+
+        public boolean isMissingExchange() {
+            return this.exchangeMissing;
+        }
+
+        public boolean isMissingBinding() {
+            return this.isMissingBinding;
         }
     }
 }
