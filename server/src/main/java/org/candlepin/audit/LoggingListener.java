@@ -88,4 +88,9 @@ public class LoggingListener implements EventListener {
         );
     }
 
+    @Override
+    public boolean requiresQpid() {
+        return false;
+    }
+
 }

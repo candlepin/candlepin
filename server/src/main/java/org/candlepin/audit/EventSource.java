@@ -17,27 +17,26 @@ package org.candlepin.audit;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 
-import org.apache.activemq.artemis.api.core.ActiveMQException;
-import org.apache.activemq.artemis.api.core.ActiveMQExceptionType;
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
-import org.apache.activemq.artemis.api.core.client.ClientConsumer;
-import org.apache.activemq.artemis.api.core.client.ClientSession;
 import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
 import org.apache.activemq.artemis.core.remoting.impl.invm.InVMConnectorFactory;
+import org.candlepin.controller.QpidStatusListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * EventSource
  */
-public class EventSource {
-    private static  Logger log = LoggerFactory.getLogger(EventSource.class);
-    static final String QUEUE_ADDRESS = "event";
-    private ClientSession session;
+public class EventSource implements QpidStatusListener {
+    private static Logger log = LoggerFactory.getLogger(EventSource.class);
+
     private ClientSessionFactory factory;
     private ObjectMapper mapper;
-
+    private List<MessageReceiver> messageReceivers = new LinkedList<>();
 
     @Inject
     public EventSource(ObjectMapper mapper) {
@@ -45,12 +44,6 @@ public class EventSource {
 
         try {
             factory =  createSessionFactory();
-            // Specify a message ack batch size of 0 to have ActiveMQ immediately ack
-            // any message successfully received with the server. Not doing so can lead
-            // to duplicate messages if the server goes down before the batch ack size is
-            // reached.
-            session = factory.createSession(true, true, 0);
-            session.start();
         }
         catch (Exception e) {
             throw new RuntimeException(e);
@@ -67,39 +60,51 @@ public class EventSource {
     }
 
     protected void shutDown() {
-        try {
-            session.stop();
-            session.close();
-            factory.close();
+        closeEventReceivers();
+        factory.close();
+    }
+
+    void registerListener(EventListener listener) throws Exception {
+        if (listener.requiresQpid()) {
+            this.messageReceivers.add(new QpidEventMessageReceiver(listener, factory, mapper));
         }
-        catch (ActiveMQException e) {
-            log.warn("Exception while trying to shutdown ActiveMQ", e);
+        else {
+            this.messageReceivers.add(new EventMessageReceiver(listener, factory, mapper));
         }
     }
 
-    void registerListener(EventListener listener) {
-        String queueName = QUEUE_ADDRESS + "." + listener.getClass().getCanonicalName();
-        log.debug("registering listener for {}", queueName);
+    private void closeEventReceivers() {
+        this.messageReceivers.forEach(MessageReceiver::close);
+    }
 
-        try {
-            try {
-                // Create a durable queue that will be persisted to disk:
-                session.createQueue(QUEUE_ADDRESS, queueName, true);
-                log.debug("created new event queue " + queueName);
-            }
-            catch (ActiveMQException e) {
-                // if the queue exists already we already created it in a previous run,
-                // so that's fine.
-                if (e.getType() != ActiveMQExceptionType.QUEUE_EXISTS) {
-                    throw e;
-                }
+    @Override
+    public void onStatusUpdate(QpidStatus oldStatus, QpidStatus newStatus) {
+        if (newStatus.equals(oldStatus)) {
+            log.debug("Status has not changed.");
+            return;
+        }
+
+        log.debug("EventSource was notified of a QpidStatus change: {}", newStatus);
+        for (MessageReceiver receiver : this.messageReceivers) {
+            if (!receiver.requiresQpid()) {
+                continue;
             }
 
-            ClientConsumer consumer = session.createConsumer(queueName);
-            consumer.setMessageHandler(new ListenerWrapper(listener, mapper));
+            if (QpidStatus.FLOW_STOPPED.equals(newStatus) ||
+                QpidStatus.MISSING_BINDING.equals(newStatus) ||
+                QpidStatus.MISSING_EXCHANGE.equals(newStatus) ||
+                QpidStatus.DOWN.equals(newStatus)) {
+                log.debug("Stopping session for EventReciever.");
+                receiver.stopSession();
+            }
+            else if (QpidStatus.CONNECTED.equals(newStatus)) {
+                log.debug("Starting session for EventReciever.");
+                receiver.startSession();
+            }
         }
-        catch (ActiveMQException e) {
-            log.error("Unable to register listener :" + listener, e);
-        }
+    }
+
+    public static String getQueueName(EventListener listener) {
+        return MessageAddress.EVENT_ADDRESS_PREFIX + "." + listener.getClass().getCanonicalName();
     }
 }

@@ -16,6 +16,7 @@
 package org.candlepin.controller;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import org.candlepin.audit.QpidConnection;
 import org.candlepin.audit.QpidQmf;
 import org.candlepin.audit.QpidStatus;
@@ -33,6 +34,7 @@ import java.util.concurrent.TimeUnit;
  *  A process that checks the current state of Qpid and notifies any listeners
  *  when the Qpid state has changed.
  */
+@Singleton
 public class QpidStatusMonitor implements Runnable {
 
     private static Logger log = LoggerFactory.getLogger(QpidStatusMonitor.class);

@@ -15,8 +15,21 @@
 package org.candlepin.audit;
 
 /**
- * EventListener
+ * Listens for Events that are put on the event queue.
  */
 public interface EventListener {
+
+    /**
+     * Called when an event was received from the event queue.
+     *
+     * @param e the event that was received.
+     */
     void onEvent(Event e);
+
+    /**
+     * Defines whether this event listener requires a Qpid connection.
+     *
+     * @return true if a qpid connection is required to handle the message, false otherwise.
+     */
+    boolean requiresQpid();
 }

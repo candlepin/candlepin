@@ -12,34 +12,28 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-
 package org.candlepin.audit;
 
 /**
- * Represents the status of the connection to the Qpid broker.
+ * Defines the addresses that are used when sending and receiving messages from Artemis.
  */
-public enum QpidStatus {
-    /**
-     * Qpid is up and running.
-     */
-    CONNECTED,
+public final class MessageAddress {
 
     /**
-     * Qpid is up but the exchange is flow stopped.
+     * The address prefix for all of candlepin's event message addresses.
      */
-    FLOW_STOPPED,
-    /**
-     * Qpid is down.
-     */
-    DOWN,
+    static final String EVENT_ADDRESS_PREFIX = "event";
 
     /**
-     * Qpid is up but is missing the appropriate exchange.
+     * The default address that all event based messages are sent.
      */
-    MISSING_EXCHANGE,
+    static final String DEFAULT_EVENT_MESSAGE_ADDRESS = String.format("%s.default", EVENT_ADDRESS_PREFIX);
 
     /**
-     * Qpid is up but the queue's exchange has no bindings.
+     * The address that Qpid bound messages are sent to.
      */
-    MISSING_BINDING
+    static final String QPID_EVENT_MESSAGE_ADDRESS = String.format("%s.qpid", EVENT_ADDRESS_PREFIX);
+
+    private MessageAddress() {
+    }
 }

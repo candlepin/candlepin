@@ -123,7 +123,7 @@ public class EventSinkImpl implements EventSink {
         ClientProducer producer = producers.get();
         if (producer == null) {
             try {
-                producer = getClientSession().createProducer(EventSource.QUEUE_ADDRESS);
+                producer = getClientSession().createProducer(MessageAddress.DEFAULT_EVENT_MESSAGE_ADDRESS);
             }
             catch (ActiveMQException e) {
                 throw new RuntimeException(e);

@@ -12,34 +12,18 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-
 package org.candlepin.audit;
 
 /**
- * Represents the status of the connection to the Qpid broker.
+ * Represents an exception that occurs when a message send fails due to a Qpid connection issue.
  */
-public enum QpidStatus {
-    /**
-     * Qpid is up and running.
-     */
-    CONNECTED,
+public class QpidConnectionException extends RuntimeException {
 
-    /**
-     * Qpid is up but the exchange is flow stopped.
-     */
-    FLOW_STOPPED,
-    /**
-     * Qpid is down.
-     */
-    DOWN,
+    public QpidConnectionException(String message) {
+        super(message);
+    }
 
-    /**
-     * Qpid is up but is missing the appropriate exchange.
-     */
-    MISSING_EXCHANGE,
-
-    /**
-     * Qpid is up but the queue's exchange has no bindings.
-     */
-    MISSING_BINDING
+    public QpidConnectionException(String message, Throwable throwable) {
+        super(message, throwable);
+    }
 }

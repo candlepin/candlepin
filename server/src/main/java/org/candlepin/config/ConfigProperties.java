@@ -106,6 +106,34 @@ public class ConfigProperties {
      */
     public static final String ACTIVEMQ_MAX_PAGE_SIZE = "candlepin.audit.hornetq.max_page_size";
 
+    /**
+     * For more on Artemis redelivery delays, see:
+     * https://activemq.apache.org/artemis/docs/2.4.0/undelivered-messages.html
+     */
+
+    /**
+     * The number of milliseconds to wait before redelivering failed messages to the listeners.
+     */
+    public static final String ACTIVEMQ_REDELIVERY_DELAY = "candlepin.audit.hornetq.redelivery_delay";
+
+    /**
+     * The maximum number of milliseconds to wait before redelivering failed messages to the listeners.
+     */
+    public static final String ACTIVEMQ_MAX_REDELIVERY_DELAY = "candlepin.audit.hornetq.max_redelivery_delay";
+
+    /**
+     * A multiplier allowing the redelivery delay to increase to ACTIVEMQ_MAX_REDELIVERY_DELAY
+     * after each attempt to deliver a message.
+     */
+    public static final String ACTIVEMQ_REDELIVERY_MULTIPLIER =
+        "candlepin.audit.hornetq.redelivery_multiplier";
+
+    /**
+     * The maximum number of redelivery attempts that should be made.
+     */
+    public static final String ACTIVEMQ_MAX_DELIVERY_ATTEMPTS =
+        "candlepin.audit.hornetq.max_delivery_attempts";
+
     public static final String AUDIT_LISTENERS = "candlepin.audit.listeners";
     public static final String AUDIT_LOG_FILE = "candlepin.audit.log_file";
     /**
@@ -304,6 +332,15 @@ public class ConfigProperties {
             this.put(ACTIVEMQ_ADDRESS_FULL_POLICY, "PAGE");
             this.put(ACTIVEMQ_MAX_QUEUE_SIZE, "10");
             this.put(ACTIVEMQ_MAX_PAGE_SIZE, "1");
+
+            // Re-deliver after 15 minutes on first failure.
+            this.put(ACTIVEMQ_REDELIVERY_DELAY, "30000");
+            // Maximum re-delivery delay of 1 hour.
+            this.put(ACTIVEMQ_MAX_REDELIVERY_DELAY, "3600000");
+            this.put(ACTIVEMQ_REDELIVERY_MULTIPLIER, "2");
+            // By default, never stop delivery attempts.
+            this.put(ACTIVEMQ_MAX_DELIVERY_ATTEMPTS, "0");
+
             this.put(AUDIT_LISTENERS,
                 "org.candlepin.audit.DatabaseListener," +
                 "org.candlepin.audit.LoggingListener," +

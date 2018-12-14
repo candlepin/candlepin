@@ -42,9 +42,19 @@ public class AMQPBusPublisher implements EventListener {
         try {
             sender.sendTextMessage(e.getTarget(), e.getType(), this.apply(e));
         }
+        catch (QpidConnectionException qce) {
+            // We rethrow QpidConnectionExceptions since the message receiver will
+            // handle those independently of other exceptions.
+            throw qce;
+        }
         catch (Exception ex) {
             throw new RuntimeException("Error sending event to message bus", ex);
         }
+    }
+
+    @Override
+    public boolean requiresQpid() {
+        return true;
     }
 
     public void close() {
