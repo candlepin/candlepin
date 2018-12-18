@@ -91,7 +91,6 @@ public class QpidConnection implements QpidStatusListener {
     @Inject
     public QpidConnection(QpidConfigBuilder config, Configuration candlepinConfiguration) {
         try {
-            this.producerMap = new HashMap<>();
             this.config = config;
             this.candlepinConfig = candlepinConfiguration;
             this.producerMap = new HashMap<>();
